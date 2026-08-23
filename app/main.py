@@ -1,51 +1,159 @@
 from fastapi import FastAPI
+
 from app.core.config import settings
 from app.core.logging import configure_logging, logger
-from app.api import health, workflow, incidents
-from app.agents.triage_agent import TriageAgent
-from app.tools.registry import tool_registry
 from app.core.exceptions import register_exception_handlers
 
-# پیکربندی لاگینگ
+from app.api import health
+from app.api import workflow
+from app.api import incidents
+from app.api import a2a
+
+from app.agents.triage_agent import TriageAgent
+
+from app.tools.registry import tool_registry
+from app.tools.mock_executor import MockExecutorTool
+
+
+# ================================================================
+# Logging
+# ================================================================
+
 configure_logging()
 
-# ایجاد اپلیکیشن
+
+# ================================================================
+# Application
+# ================================================================
+
 app = FastAPI(
     title=settings.APP_NAME,
     version=settings.APP_VERSION,
     debug=settings.DEBUG,
 )
 
-# ثبت هندلرهای خطا
+
+# ================================================================
+# Exception handlers
+# ================================================================
+
 register_exception_handlers(app)
 
-# ثبت routerها
-app.include_router(health.router, prefix="/api/v1", tags=["Health"])
-app.include_router(workflow.router, prefix="/api/v1", tags=["Workflow"])
-app.include_router(incidents.router, prefix="/api/v1", tags=["Incidents"])
-# در بخش ثبت routerها اضافه کنید
-from app.api import a2a
-app.include_router(a2a.router, prefix="/api/v1", tags=["A2A"])
+
+# ================================================================
+# Routers
+# ================================================================
+
+app.include_router(
+    health.router,
+    prefix="/api/v1",
+    tags=["Health"],
+)
+
+app.include_router(
+    workflow.router,
+    prefix="/api/v1",
+    tags=["Workflow"],
+)
+
+app.include_router(
+    incidents.router,
+    prefix="/api/v1",
+    tags=["Incidents"],
+)
+
+app.include_router(
+    a2a.router,
+    prefix="/api/v1",
+    tags=["A2A"],
+)
+
+
+# ================================================================
+# Root
+# ================================================================
 
 @app.get("/")
 async def root():
-    logger.info("Root endpoint called")
+
     return {
-        "message": f"Welcome to {settings.APP_NAME}",
+        "message": (
+            f"Welcome to "
+            f"{settings.APP_NAME}"
+        ),
         "version": settings.APP_VERSION,
-        "docs": "/docs"
+        "docs": "/docs",
     }
+
+
+# ================================================================
+# Startup
+# ================================================================
 
 @app.on_event("startup")
 async def startup_event():
-    logger.info(f"Starting {settings.APP_NAME} v{settings.APP_VERSION}")
-    logger.info(f"LLM Provider: {settings.LLM_PROVIDER}")
-    logger.info(f"Log Level: {settings.LOG_LEVEL}")
-    
+
+    logger.info(
+        f"Starting "
+        f"{settings.APP_NAME} "
+        f"v{settings.APP_VERSION}"
+    )
+
+    logger.info(
+        f"LLM Provider: "
+        f"{settings.LLM_PROVIDER}"
+    )
+
+    logger.info(
+        f"Log Level: "
+        f"{settings.LOG_LEVEL}"
+    )
+
+    # ------------------------------------------------------------
+    # Register Agents
+    # ------------------------------------------------------------
+
     triage_agent = TriageAgent()
-    logger.info(f"Agent registered: {triage_agent.name} - {triage_agent.description}")
-    logger.info(f"Tools available: {tool_registry.list_tools()}")
+
+    logger.info(
+        f"Agent registered: "
+        f"{triage_agent.name} - "
+        f"{triage_agent.description}"
+    )
+
+    # ------------------------------------------------------------
+    # Register Development Tools
+    # ------------------------------------------------------------
+
+    mock_executor = MockExecutorTool()
+
+    tool_registry.register(
+        mock_executor
+    )
+
+    logger.info(
+        "Development tool registered: "
+        "mock_executor"
+    )
+
+    # ------------------------------------------------------------
+    # Registry state
+    # ------------------------------------------------------------
+
+    logger.info(
+        f"Tools available: "
+        f"{tool_registry.list_tools()}"
+    )
+
+
+# ================================================================
+# Shutdown
+# ================================================================
 
 @app.on_event("shutdown")
 async def shutdown_event():
-    logger.info("Shutting down application")
+
+    logger.info(
+        f"Shutting down "
+        f"{settings.APP_NAME}"
+    )
