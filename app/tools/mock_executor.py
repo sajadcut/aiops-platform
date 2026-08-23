@@ -1,6 +1,10 @@
+# ============================================================
+# FILE: app/tools/mock_executor.py
+# ============================================================
+
 import asyncio
 import time
-from typing import Dict, Any
+from typing import Any, Dict
 
 from app.tools.base import BaseTool, ToolInput, ToolOutput
 from app.core.logging import logger
@@ -8,20 +12,11 @@ from app.core.logging import logger
 
 class MockExecutorTool(BaseTool):
     """
-    Development-only execution tool.
+    Development-only executor.
 
-    This tool NEVER changes a real system.
-
-    It simulates an operational action and returns a deterministic
-    post-execution result that can be consumed by VerificationEngine.
-
-    Intended for:
-        - local development
-        - integration tests
-        - workflow validation
-        - approval/execution testing
-
-    It must NOT be used as a production executor.
+    It never changes real infrastructure.
+    It simulates an operational action and returns
+    before/after metrics for verification.
     """
 
     @property
@@ -34,13 +29,6 @@ class MockExecutorTool(BaseTool):
 
     @property
     def requires_approval(self) -> bool:
-        """
-        Mock execution is intentionally low risk.
-
-        This allows us to test the execution pipeline without
-        requiring real production approval.
-        """
-
         return False
 
     async def validate(
@@ -54,10 +42,6 @@ class MockExecutorTool(BaseTool):
         if not input_data.target:
             return False
 
-        if input_data.timeout is not None:
-            if input_data.timeout <= 0:
-                return False
-
         return True
 
     async def execute(
@@ -65,59 +49,29 @@ class MockExecutorTool(BaseTool):
         input_data: ToolInput,
     ) -> ToolOutput:
 
-        started_at = time.perf_counter()
-
-        logger.info(
-            "MockExecutorTool: "
-            f"executing action='{input_data.action}' "
-            f"target='{input_data.target}'"
-        )
+        started = time.perf_counter()
 
         try:
-
-            # ------------------------------------------------------
-            # Simulate execution latency
-            # ------------------------------------------------------
-
             await asyncio.sleep(0.05)
 
-            parameters = dict(
+            parameters: Dict[str, Any] = (
                 input_data.parameters or {}
             )
 
-            # ------------------------------------------------------
-            # Deterministic failure switch for testing
-            # ------------------------------------------------------
-
-            force_failure = bool(
-                parameters.get(
-                    "force_failure",
-                    False,
-                )
-            )
-
-            if force_failure:
-
-                execution_time = (
-                    time.perf_counter()
-                    - started_at
-                )
-
+            if parameters.get("force_failure") is True:
                 return ToolOutput(
                     success=False,
                     result={
-                        "action": input_data.action,
-                        "target": input_data.target,
                         "simulated": True,
                         "status": "failed",
+                        "action": input_data.action,
+                        "target": input_data.target,
                     },
-                    error="Mock execution failure requested.",
-                    execution_time=execution_time,
+                    error="Forced mock execution failure",
+                    execution_time=(
+                        time.perf_counter() - started
+                    ),
                 )
-
-            # ------------------------------------------------------
-            # Simulated operational effect
-            # ------------------------------------------------------
 
             before = {
                 "error_rate": float(
@@ -161,46 +115,38 @@ class MockExecutorTool(BaseTool):
                 ),
             }
 
-            execution_time = (
-                time.perf_counter()
-                - started_at
-            )
+            result = {
+                "simulated": True,
+                "status": "completed",
+                "action": input_data.action,
+                "target": input_data.target,
+                "before": before,
+                "after": after,
+            }
 
             logger.info(
-                "MockExecutorTool: "
-                f"action='{input_data.action}' "
-                f"completed successfully"
+                f"Mock execution completed: "
+                f"{input_data.action} "
+                f"target={input_data.target}"
             )
 
             return ToolOutput(
                 success=True,
-                result={
-                    "action": input_data.action,
-                    "target": input_data.target,
-                    "simulated": True,
-                    "status": "completed",
-                    "before": before,
-                    "after": after,
-                    "parameters": parameters,
-                },
-                error=None,
-                execution_time=execution_time,
+                result=result,
+                execution_time=(
+                    time.perf_counter() - started
+                ),
             )
 
         except Exception as exc:
-
-            execution_time = (
-                time.perf_counter()
-                - started_at
-            )
-
             logger.exception(
-                "MockExecutorTool failed"
+                "Mock executor failed"
             )
 
             return ToolOutput(
                 success=False,
-                result=None,
                 error=str(exc),
-                execution_time=execution_time,
+                execution_time=(
+                    time.perf_counter() - started
+                ),
             )

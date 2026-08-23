@@ -1,13 +1,20 @@
+# ============================================================
+# FILE: app/main.py
+# ============================================================
+
 from fastapi import FastAPI
 
 from app.core.config import settings
 from app.core.logging import configure_logging, logger
 from app.core.exceptions import register_exception_handlers
 
-from app.api import health
-from app.api import workflow
-from app.api import incidents
-from app.api import a2a
+from app.api import (
+    health,
+    workflow,
+    incidents,
+    a2a,
+    execution,
+)
 
 from app.agents.triage_agent import TriageAgent
 
@@ -15,16 +22,8 @@ from app.tools.registry import tool_registry
 from app.tools.mock_executor import MockExecutorTool
 
 
-# ================================================================
-# Logging
-# ================================================================
-
 configure_logging()
 
-
-# ================================================================
-# Application
-# ================================================================
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -33,16 +32,8 @@ app = FastAPI(
 )
 
 
-# ================================================================
-# Exception handlers
-# ================================================================
-
 register_exception_handlers(app)
 
-
-# ================================================================
-# Routers
-# ================================================================
 
 app.include_router(
     health.router,
@@ -68,34 +59,30 @@ app.include_router(
     tags=["A2A"],
 )
 
+app.include_router(
+    execution.router,
+    prefix="/api/v1",
+    tags=["Execution"],
+)
 
-# ================================================================
-# Root
-# ================================================================
 
 @app.get("/")
 async def root():
 
     return {
         "message": (
-            f"Welcome to "
-            f"{settings.APP_NAME}"
+            f"Welcome to {settings.APP_NAME}"
         ),
         "version": settings.APP_VERSION,
         "docs": "/docs",
     }
 
 
-# ================================================================
-# Startup
-# ================================================================
-
 @app.on_event("startup")
 async def startup_event():
 
     logger.info(
-        f"Starting "
-        f"{settings.APP_NAME} "
+        f"Starting {settings.APP_NAME} "
         f"v{settings.APP_VERSION}"
     )
 
@@ -109,10 +96,6 @@ async def startup_event():
         f"{settings.LOG_LEVEL}"
     )
 
-    # ------------------------------------------------------------
-    # Register Agents
-    # ------------------------------------------------------------
-
     triage_agent = TriageAgent()
 
     logger.info(
@@ -121,24 +104,13 @@ async def startup_event():
         f"{triage_agent.description}"
     )
 
-    # ------------------------------------------------------------
-    # Register Development Tools
-    # ------------------------------------------------------------
-
-    mock_executor = MockExecutorTool()
-
-    tool_registry.register(
-        mock_executor
-    )
-
-    logger.info(
-        "Development tool registered: "
+    if tool_registry.get_tool(
         "mock_executor"
-    )
+    ) is None:
 
-    # ------------------------------------------------------------
-    # Registry state
-    # ------------------------------------------------------------
+        tool_registry.register(
+            MockExecutorTool()
+        )
 
     logger.info(
         f"Tools available: "
@@ -146,14 +118,9 @@ async def startup_event():
     )
 
 
-# ================================================================
-# Shutdown
-# ================================================================
-
 @app.on_event("shutdown")
 async def shutdown_event():
 
     logger.info(
-        f"Shutting down "
-        f"{settings.APP_NAME}"
+        f"Shutting down {settings.APP_NAME}"
     )

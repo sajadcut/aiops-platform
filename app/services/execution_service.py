@@ -1,3 +1,7 @@
+# ============================================================
+# FILE: app/services/execution_service.py
+# ============================================================
+
 from typing import Dict, Any, Optional
 
 from pydantic import BaseModel, Field
@@ -8,14 +12,8 @@ from app.tools.registry import tool_registry
 
 
 class ExecutionRequest(BaseModel):
-    """
-    Standard request for controlled operational execution.
-    """
-
     tool_name: str
-
     action: str
-
     target: str
 
     parameters: Dict[str, Any] = Field(
@@ -32,16 +30,10 @@ class ExecutionRequest(BaseModel):
 
 
 class ExecutionResult(BaseModel):
-    """
-    Standard result returned by ExecutionService.
-    """
-
     success: bool
 
     tool_name: str
-
     action: str
-
     target: str
 
     execution_blocked: bool = False
@@ -58,25 +50,6 @@ class ExecutionResult(BaseModel):
 
 
 class ExecutionService:
-    """
-    Controlled execution boundary.
-
-    No Agent should execute an operational Tool directly.
-
-    Flow:
-
-        Decision
-            ↓
-        Approval
-            ↓
-        ExecutionService
-            ↓
-        ToolRegistry
-            ↓
-        Tool
-            ↓
-        ExecutionResult
-    """
 
     @classmethod
     async def execute(
@@ -85,32 +58,17 @@ class ExecutionService:
     ) -> ExecutionResult:
 
         logger.info(
-            "ExecutionService: "
-            f"request received "
+            f"Execution request: "
             f"tool={request.tool_name}, "
             f"action={request.action}, "
             f"target={request.target}"
         )
-
-        # ----------------------------------------------------------
-        # Tool lookup
-        # ----------------------------------------------------------
 
         tool = tool_registry.get_tool(
             request.tool_name
         )
 
         if tool is None:
-
-            message = (
-                f"Tool '{request.tool_name}' "
-                "is not registered."
-            )
-
-            logger.warning(
-                f"ExecutionService: {message}"
-            )
-
             return ExecutionResult(
                 success=False,
                 tool_name=request.tool_name,
@@ -118,29 +76,17 @@ class ExecutionService:
                 target=request.target,
                 execution_blocked=True,
                 reason="tool_not_found",
-                error=message,
+                error=(
+                    f"Tool '{request.tool_name}' "
+                    "is not registered"
+                ),
                 approval_id=request.approval_id,
             )
-
-        # ----------------------------------------------------------
-        # Approval guard
-        # ----------------------------------------------------------
 
         if (
             tool.requires_approval
             and not request.approval_granted
         ):
-
-            message = (
-                f"Tool '{request.tool_name}' "
-                "requires approval."
-            )
-
-            logger.warning(
-                "ExecutionService: "
-                f"execution blocked - {message}"
-            )
-
             return ExecutionResult(
                 success=False,
                 tool_name=request.tool_name,
@@ -148,13 +94,12 @@ class ExecutionService:
                 target=request.target,
                 execution_blocked=True,
                 reason="approval_required",
-                error=message,
+                error=(
+                    f"Tool '{request.tool_name}' "
+                    "requires approval"
+                ),
                 approval_id=request.approval_id,
             )
-
-        # ----------------------------------------------------------
-        # Build ToolInput
-        # ----------------------------------------------------------
 
         tool_input = ToolInput(
             action=request.action,
@@ -162,10 +107,6 @@ class ExecutionService:
             parameters=request.parameters,
             timeout=request.timeout,
         )
-
-        # ----------------------------------------------------------
-        # Execute through Registry
-        # ----------------------------------------------------------
 
         result = await tool_registry.execute_tool(
             tool_name=request.tool_name,
@@ -175,39 +116,22 @@ class ExecutionService:
             approval_id=request.approval_id,
         )
 
-        # ----------------------------------------------------------
-        # Normalize result
-        # ----------------------------------------------------------
-
-        success = bool(
-            result.get(
-                "success",
-                False,
-            )
-        )
-
-        execution_blocked = bool(
-            result.get(
-                "execution_blocked",
-                False,
-            )
-        )
-
         return ExecutionResult(
-            success=success,
+            success=bool(
+                result.get("success", False)
+            ),
             tool_name=request.tool_name,
             action=request.action,
             target=request.target,
-            execution_blocked=execution_blocked,
-            reason=result.get(
-                "reason"
+            execution_blocked=bool(
+                result.get(
+                    "execution_blocked",
+                    False,
+                )
             ),
-            result=result.get(
-                "result"
-            ),
-            error=result.get(
-                "error"
-            ),
+            reason=result.get("reason"),
+            result=result.get("result"),
+            error=result.get("error"),
             execution_time=result.get(
                 "execution_time"
             ),
