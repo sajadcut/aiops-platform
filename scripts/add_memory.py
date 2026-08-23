@@ -5,9 +5,9 @@ from uuid import uuid4
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from app.infrastructure.database import AsyncSessionLocal
-from app.services.operational_memory import OperationalMemoryService
-from app.core.logging import logger
+from database import AsyncSessionLocal
+from apps.memory_service import OperationalMemoryService
+from domain.contracts.logging import logger
 
 async def add_sample_memory():
     try:

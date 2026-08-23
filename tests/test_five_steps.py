@@ -4,19 +4,19 @@
 
 import asyncio
 
-from app.tools.registry import tool_registry
-from app.tools.mock_executor import MockExecutorTool
+from apps.execution_service.tools.registry import tool_registry
+from apps.execution_service.tools.mock_executor import MockExecutorTool
 
-from app.services.approval_service import (
+from apps.approval_service import (
     ApprovalService,
 )
 
-from app.services.execution_service import (
+from apps.execution_service import (
     ExecutionService,
     ExecutionRequest,
 )
 
-from app.services.verification_engine import (
+from apps.verification_engine import (
     VerificationEngine,
 )
 

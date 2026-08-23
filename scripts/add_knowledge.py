@@ -5,8 +5,8 @@ from pathlib import Path
 # اضافه کردن مسیر ریشه پروژه به sys.path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from app.infrastructure.database import AsyncSessionLocal
-from app.services.knowledge_rag import KnowledgeRAGService
+from database import AsyncSessionLocal
+from apps.rag_service import KnowledgeRAGService
 
 async def add_sample_knowledge():
     """افزودن چند سند دانش نمونه به دیتابیس"""
