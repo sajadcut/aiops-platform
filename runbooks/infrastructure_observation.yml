@@ -1,0 +1,13 @@
+id: infrastructure-observation
+owner: sre
+version: "1.0"
+timeout: 60
+preconditions:
+  - resource_pressure: true
+steps:
+  - action: inspect_cpu
+  - action: inspect_memory
+  - action: inspect_disk
+rollback:
+  - action: none
+risk: low
