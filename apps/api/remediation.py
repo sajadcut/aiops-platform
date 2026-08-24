@@ -105,3 +105,53 @@ async def execute_approved_remediation(
         {"approval_id": approval_id, "result": result.model_dump()},
     )
     return result.model_dump()
+
+
+class VMVerificationRequest(BaseModel):
+    target: str = Field(min_length=1)
+    cpu_threshold: float = Field(default=70.0, ge=1.0, le=100.0)
+
+
+@router.post("/approvals/{approval_id}/verify")
+async def verify_remediation(
+    approval_id: str,
+    payload: VMVerificationRequest,
+    _user=Depends(require_permission("read:incident")),
+):
+    async with AsyncSessionLocal() as db:
+        approval = await PostgreSQLApprovalStore(db).get(approval_id)
+    if approval is None:
+        raise HTTPException(status_code=404, detail="Approval not found")
+    if approval.get("status") != "approved":
+        raise HTTPException(status_code=409, detail="Approval is not approved")
+
+    request = ExecutionRequest(
+        tool_name="vm_telemetry",
+        action="collect_vm_metrics",
+        target=payload.target,
+        parameters={},
+        agent_name="verification",
+        approval_granted=True,
+    )
+    result = await ExecutionService.execute(request)
+    metrics = (result.result or {}).get("metrics", {}) if result.success else {}
+    cpu = metrics.get("cpu_usage")
+    success = bool(result.success and isinstance(cpu, (int, float)) and float(cpu) <= payload.cpu_threshold)
+    status = "verified" if success else "not_recovered"
+
+    AuditService.record(
+        "verification_completed",
+        "verification",
+        approval["incident_id"],
+        approval["action"],
+        status,
+        {"approval_id": approval_id, "metrics": metrics, "cpu_threshold": payload.cpu_threshold},
+    )
+    return {
+        "approval_id": approval_id,
+        "status": status,
+        "cpu_usage": cpu,
+        "cpu_threshold": payload.cpu_threshold,
+        "metrics": metrics,
+        "execution": result.model_dump(),
+    }
