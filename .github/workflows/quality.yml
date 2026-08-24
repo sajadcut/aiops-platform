@@ -18,6 +18,13 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install pytest pytest-asyncio
+      - name: Repository hygiene
+        shell: bash
+        run: |
+          if git ls-files | grep -E '(^|/)(__pycache__/|.*\.pyc$|.*\.pyo$|.*\.zip$)'; then
+            echo "Tracked cache/bytecode/archive artifacts detected. Remove them before merge."
+            exit 1
+          fi
       - name: Syntax check
         run: python -m compileall agents apps domain integrations knowledge memory
       - name: Unit and integration tests
