@@ -1,0 +1,13 @@
+id: kubernetes-health
+owner: sre
+version: "1.0"
+timeout: 90
+preconditions:
+  - unhealthy_workload: true
+steps:
+  - action: inspect_pod_status
+  - action: inspect_events
+  - action: inspect_health_probes
+rollback:
+  - action: none
+risk: low
