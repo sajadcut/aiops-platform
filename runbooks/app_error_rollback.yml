@@ -1,0 +1,13 @@
+id: app-error-rollback
+owner: sre
+version: "1.0"
+timeout: 120
+preconditions:
+  - error_rate_percent_gt: 10
+  - recent_deployment: true
+steps:
+  - action: compare_release
+  - action: rollback_previous_release
+rollback:
+  - action: restore_previous_state
+risk: medium
