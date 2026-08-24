@@ -8,14 +8,11 @@ from domain.contracts.config import settings
 from domain.contracts.logging import configure_logging, logger
 from domain.contracts.exceptions import register_exception_handlers
 
-from apps.api import health, workflow, incidents, a2a, execution
+from apps.api import health, workflow, incidents, a2a, execution, e2e_workflow, audit
 from agents.triage import TriageAgent
 from apps.execution_service.tools.registry import tool_registry
 from apps.execution_service.tools.mock_executor import MockExecutorTool
 
-# ============================================================
-# راه‌اندازی
-# ============================================================
 configure_logging()
 
 app = FastAPI(
@@ -26,11 +23,10 @@ app = FastAPI(
 
 register_exception_handlers(app)
 
-# ============================================================
-# ثبت روت‌ها (با app درست)
-# ============================================================
 app.include_router(health.router, prefix="/api/v1", tags=["Health"])
 app.include_router(workflow.router, prefix="/api/v1", tags=["Workflow"])
+app.include_router(e2e_workflow.router, prefix="/api/v1", tags=["E2E Workflow"])
+app.include_router(audit.router, prefix="/api/v1", tags=["Audit"])
 app.include_router(incidents.router, prefix="/api/v1", tags=["Incidents"])
 app.include_router(a2a.router, prefix="/api/v1", tags=["A2A"])
 app.include_router(execution.router, prefix="/api/v1", tags=["Execution"])
