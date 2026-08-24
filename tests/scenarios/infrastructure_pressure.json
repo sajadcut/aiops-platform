@@ -1,0 +1,5 @@
+{
+  "name": "infrastructure-pressure",
+  "input": {"service": "core-api", "cpu_percent": 92, "memory_percent": 88, "disk_percent": 81},
+  "expected": {"context_required": true, "low_risk_observation": true, "verification_required": true}
+}
