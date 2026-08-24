@@ -4,14 +4,22 @@ Updated: 2026-08-25
 
 This file is traceability evidence, not a replacement for `MASTER.md`. It distinguishes implemented code from capabilities that still require live environment validation.
 
-## Latest gap-closure work completed
+## Final completion batch implemented in repository
 
-- Primary E2E workflow persists buffered audit events through `PostgreSQLAuditStore` before transaction completion.
-- Approval create/get/approve/reject API now uses `PostgreSQLApprovalStore` rather than the process-local approval dictionary.
-- Approval store contract tests added.
-- Durable audit flush unit test added.
-- CI now checks for tracked cache/bytecode/archive artifacts in addition to syntax and test suites.
-- Existing durable workflow checkpoint, Incident/Finding/Evidence persistence, mandatory Evaluator, live Evidence collection, OIDC contract, pgvector validation, Dashboard API and offline deployment foundations remain in place.
+- Durable PostgreSQL workflow checkpoints and resumable runtime are present.
+- Incident, Finding and Evidence persistence are present in the lifecycle runtime.
+- Primary E2E audit events have a PostgreSQL flush path.
+- Approval API create/get/approve/reject uses PostgreSQL persistence.
+- Mandatory Evaluator gate is present before Decision.
+- Live EvidenceCollector is connected to the primary Context node.
+- Governed RunbookExecutor now provides validation, dry-run, execution, rollback routing and idempotency fingerprint handling.
+- PostgreSQL-backed Dashboard KPI API is present.
+- pgvector validation now checks extension presence and vector embedding dimensions when configured.
+- Production configuration includes OIDC, RBAC/API key, pgvector and offline registry settings.
+- CI contains syntax/tests plus tracked-artifact hygiene checks.
+- Offline immutable image attestation workflow and deterministic attestation generator are present.
+- Master API surface integration test and Runbook executor tests are present.
+- Tracked `.env` and obsolete `alembic (2).zip` were removed; `.env.example` was added.
 
 ## Current implementation evidence
 
@@ -19,8 +27,8 @@ This file is traceability evidence, not a replacement for `MASTER.md`. It distin
 |---|---|---|
 | Python + LangGraph core | `apps/orchestrator/e2e_graph.py` + durable runtime | Integrated |
 | Specialized agents | Triage/Application/Infrastructure/Kubernetes/Security/VM | Implemented |
-| PostgreSQL persistence | SQLAlchemy + governance/workflow/incident migrations | Implemented; target runtime verification required |
-| pgvector | model vectors + startup validation | Implemented; target extension/dimension validation required |
+| PostgreSQL persistence | SQLAlchemy + governance/workflow/incident migrations | Implemented; live transaction verification required |
+| pgvector | vector model + runtime extension/type/dimension validation | Implemented; target database validation required |
 | Knowledge RAG | service + retrieval metadata + API | Integrated foundation |
 | Operational Memory | service + namespace + E2E write-back | Integrated foundation |
 | Context Builder | IncidentContext + normalization + EvidenceCollector | Integrated |
@@ -28,33 +36,32 @@ This file is traceability evidence, not a replacement for `MASTER.md`. It distin
 | Hypothesis/RCA | evidence-linked contract + E2E RCA | Integrated foundation |
 | Evaluator | mandatory `EvaluationGate` before Decision | Integrated |
 | Decision Engine | policy/risk boundary | Implemented |
-| Approval | PostgreSQL store + schema + durable lookup/resume + durable API | Integrated foundation; identity/audit verification pending |
+| Approval | PostgreSQL store + durable lookup/resume + API | Integrated; live commit/resume verification required |
 | Execution | Tool Registry + policy + idempotency | Integrated foundation |
 | Verification | VerificationEngine + VerificationGate | Integrated foundation |
-| Audit | API + redaction + PostgreSQL store + primary-path durable flush | Integrated foundation; end-to-end transaction verification pending |
-| Runbooks | governance + 3 MVP runbooks + registry + dry-run API | Integrated foundation; live tool/rollback execution still pending |
-| Security/RBAC | deny-by-default + RBAC + API key + OIDC contract | Implemented foundation; enterprise issuer integration pending |
-| Observability | connector/evidence layer | Integrated foundation; controlled environment validation pending |
-| APIs | Master-aligned incident resources + execution/approval/runbook/audit + dashboard | Implemented foundation |
-| Tests | unit + integration + scenario + failure-injection + durable approval/audit contracts | Improved; controlled environment acceptance pending |
-| Offline deployment | Docker/Kubernetes/manifest contracts | Foundation; immutable signed image promotion pending |
-| Dashboard | initial UI + summary API | Initial implementation; live KPI persistence queries pending |
-| Workflow resume | PostgreSQL checkpoint store + durable runtime | Implemented foundation; LangGraph-native checkpoint plugin remains optional |
-| Repository hygiene | `.gitignore` + cleanup script + CI enforcement | Controls implemented; pre-existing tracked cache/archive artifacts still require deletion |
-| CI | syntax + unit/integration/scenario + hygiene gate | Workflow defined; current run result must be verified from GitHub Actions |
+| Audit | API + redaction + PostgreSQL store + primary-path flush | Integrated; live transaction verification required |
+| Runbooks | governance + 3 MVP runbooks + registry + dry-run + executor | Integrated foundation; real tool/rollback environment validation required |
+| Security/RBAC | deny-by-default + RBAC + API key + OIDC claim validation | Implemented foundation; real issuer/JWKS validation required |
+| Observability | connector/evidence layer | Integrated foundation; controlled-environment validation required |
+| APIs | Master-aligned incident resources + execution/approval/runbook/audit + dashboard | Implemented foundation; endpoint E2E suite added |
+| Tests | unit + integration + scenario + failure-injection + approval/audit/runbook/API contracts | Improved; live connector acceptance pending |
+| Offline deployment | Docker/Kubernetes + immutable digest attestation workflow | Foundation implemented; internal registry signing/promotion execution required |
+| Dashboard | PostgreSQL-backed incident/approval/audit/verification KPIs | Implemented foundation; live data validation required |
+| Workflow resume | PostgreSQL checkpoint store + durable runtime | Implemented foundation; restart/resume integration test requires real DB |
+| Repository hygiene | `.gitignore` + cleanup script + CI enforcement + tracked `.env`/zip cleanup | Improved; historical cache files still require repository-wide deletion |
+| CI | syntax + unit/integration/scenario + hygiene gate | Workflow defined; green execution must be confirmed by GitHub Actions |
 
-## Remaining high-impact gaps
+## Remaining validation-only or environment-dependent items
 
-1. Verify the primary E2E audit flush and Approval lifecycle against a real PostgreSQL database with commit/rollback assertions.
-2. Persist all Incident/Finding/Evidence mutations in one lifecycle transaction where practical and add transaction rollback tests.
-3. Execute controlled-environment Zabbix/Elasticsearch/Prometheus acceptance tests against real endpoints.
-4. Complete Runbook tool execution, rollback and idempotency with approved Tool Registry mappings.
-5. Complete enterprise OIDC/SSO issuer configuration and identity-to-role propagation.
-6. Validate pgvector extension, embedding model and dimension against the offline target database.
-7. Complete immutable image build, signing and promotion workflow for the internal registry.
-8. Complete Dashboard live KPI queries from persistent incident/audit tables.
-9. Delete all currently tracked `__pycache__`, `.pyc` and obsolete archive artifacts from the repository.
-10. Run GitHub Actions on the current commit and resolve any real CI failures; repository inspection alone is not sufficient to claim a green build.
+1. Execute PostgreSQL commit/rollback tests against a real target database.
+2. Execute controlled Zabbix/Elasticsearch/Prometheus acceptance tests against target endpoints.
+3. Execute a real Runbook tool + rollback + idempotency flow through the approved Tool Registry.
+4. Connect and validate the organization's actual OIDC issuer/JWKS and identity-to-role propagation.
+5. Validate pgvector extension and embedding dimension against the target offline PostgreSQL.
+6. Promote a real immutable image through the internal registry with the organization's signing/verification implementation.
+7. Execute Dashboard queries against populated production-like incident/audit/verification data.
+8. Execute GitHub Actions on the current commit and resolve any runtime failures.
+9. Remove all remaining historically tracked `__pycache__`/`.pyc` entries from every repository subtree; CI now prevents new additions.
 
 ## Measurement rule
 
