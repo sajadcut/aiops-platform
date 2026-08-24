@@ -5,12 +5,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    """Single source of truth for runtime configuration.
-
-    Application code and integration adapters must read configuration from this
-    object instead of embedding URLs, usernames, passwords or API keys.
-    `.env.example` documents the complete configuration contract.
-    """
+    """Single source of truth for runtime configuration."""
 
     # Application
     APP_NAME: str = "AI Ops NeoBankingOperation Platform"
@@ -54,6 +49,16 @@ class Settings(BaseSettings):
     # Prometheus
     PROMETHEUS_URL: str = "http://localhost:9090"
     PROMETHEUS_TIMEOUT_SECONDS: int = 10
+
+    # VM / SSH execution boundary
+    SSH_ENABLED: bool = False
+    SSH_USERNAME: str = ""
+    SSH_PRIVATE_KEY_PATH: Optional[str] = None
+    SSH_KNOWN_HOSTS: Optional[str] = None
+    SSH_STRICT_HOST_KEY_CHECKING: bool = True
+    SSH_PORT: int = 22
+    SSH_CONNECT_TIMEOUT: int = 10
+    VM_CPU_RECOVERY_THRESHOLD: float = 70.0
 
     # OIDC / SSO
     OIDC_ISSUER_URL: Optional[str] = None
