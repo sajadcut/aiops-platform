@@ -5,59 +5,57 @@ Updated: 2026-08-25
 This file records implementation evidence separately from the architecture contract in `MASTER.md`.
 It is not a replacement for `MASTER.md`.
 
-## Current completion state
-
-The repository has moved from foundation-only implementation to an integrated MVP-oriented workflow. The primary E2E graph now enforces `Context -> Agents -> RCA -> Evaluator -> Decision -> Approval/Execution -> Verification -> Memory`, with Audit events emitted throughout the workflow.
-
 ## Current implementation evidence
 
 | MASTER capability | Current implementation | Status |
 |---|---|---|
 | Python + LangGraph core | `apps/orchestrator/graph.py`, `apps/orchestrator/e2e_graph.py` | Integrated MVP foundation |
 | Specialized agents | Triage/Application/Infrastructure/Kubernetes/Security/VM | Implemented |
-| PostgreSQL persistence | SQLAlchemy async layer + domain models + governance migration | Implemented; target runtime verification required |
+| PostgreSQL persistence | SQLAlchemy + domain models + governance migration | Implemented; target runtime verification required |
 | pgvector | KnowledgeDocument/MemoryEntry vectors | Implemented; extension/dimension verification required |
-| Knowledge RAG | `KnowledgeRAGService` + retrieval metadata contract | Integrated foundation |
-| Operational Memory | `OperationalMemoryService` + namespace + E2E write-back | Integrated foundation |
-| Context Builder | IncidentContext + normalization + live EvidenceCollector path | Integrated foundation |
-| Evidence policy | Source allowlist + normalization | Implemented foundation |
-| Zabbix evidence | connector + normalized evidence | Integrated foundation; live environment verification required |
-| Elasticsearch evidence | hardened search connector | Integrated foundation; live environment verification required |
-| Prometheus evidence | metrics connector + evidence adapter | Integrated foundation; live environment verification required |
-| Evidence aggregation | `EvidenceCollector` | Integrated into E2E context node |
-| Hypothesis | Evidence-linked domain contract | Implemented contract; richer RCA ranking pending |
+| Knowledge RAG | `KnowledgeRAGService` + retrieval metadata contract + API | Integrated foundation |
+| Operational Memory | `OperationalMemoryService` + namespace + E2E write-back + API | Integrated foundation |
+| Context Builder | IncidentContext + normalization + EvidenceCollector path | Integrated foundation |
+| Zabbix evidence | connector + normalized evidence | Integrated foundation; live verification required |
+| Elasticsearch evidence | hardened connector | Integrated foundation; live verification required |
+| Prometheus evidence | connector + evidence adapter | Integrated foundation; live verification required |
+| Evidence aggregation | `EvidenceCollector` | Connected to primary E2E context node |
+| Hypothesis | evidence-linked domain contract | Contract implemented; richer RCA ranking pending |
 | RCA | E2E graph RCA node | Integrated foundation |
-| Evaluator | `EvaluationGate` is now a mandatory graph node before Decision | Integrated MVP gate |
+| Evaluator | `EvaluationGate` is a mandatory E2E node before Decision | Integrated MVP gate |
 | Decision Engine | policy-based decision boundary | Implemented |
-| Approval | In-memory service + PostgreSQL store + migration | Transitional; durable graph resume still pending |
+| Approval | In-memory service + PostgreSQL store + schema migration | Transitional; durable cross-process resume pending |
 | Execution | ExecutionService + Tool Registry + policy + idempotency | Integrated foundation |
 | Verification | VerificationEngine + VerificationGate | Integrated foundation |
-| Audit | Audit service + redaction + PostgreSQL store + migration | Integrated foundation; E2E DB persistence still pending |
-| Runbooks | governance validator + 3 MVP runbooks + runtime registry + dry-run API | Implemented foundation; actual execution/rollback pipeline pending |
-| Security/RBAC | deny-by-default policy + RBAC + API-key/role dependency + protected execution API | Implemented foundation; production SSO/least-privilege hardening pending |
-| Offline deployment | artifact manifest + offline Docker contract + Kubernetes deployment with probes | Foundation implemented; immutable promotion pipeline pending |
-| Scenario tests | unit, failure-injection and E2E safety integration coverage + reference fixtures | Improved; full live connector scenario suite pending |
+| Audit | service/API + redaction + PostgreSQL store + schema migration | Integrated foundation; graph-to-DB flush pending |
+| Runbooks | governance validator + 3 MVP runbooks + runtime registry + dry-run API | Integrated foundation; real tool/rollback execution pending |
+| Security/RBAC | deny-by-default policy + RBAC + API key/role dependency + protected execution API | Implemented foundation; enterprise SSO pending |
+| Offline deployment | artifact manifest + offline Docker contract + Kubernetes deployment/probes | Foundation implemented; immutable promotion/signing pipeline pending |
+| Scenario/failure tests | unit + E2E safety + failure-injection + reference fixtures | Improved; full controlled-environment connector scenarios pending |
 | Dashboard | initial incident operations dashboard | Initial implementation |
+| Master-aligned APIs | context/evidence/knowledge/memory/plan/verification/audit/runbook endpoints | Implemented foundation |
+| Repository hygiene | `.gitignore` + cleanup script | Added; existing tracked cache artifacts still require deletion commit |
+| CI | syntax + unit/integration/scenario GitHub Actions workflow | Added; runtime CI result not yet verified in this environment |
 
-## High-impact remaining gaps
+## Remaining high-impact gaps
 
-1. Durable workflow state/checkpoint and approval resume in PostgreSQL.
-2. Persist E2E Audit events to PostgreSQL from the primary graph path.
-3. Persist Incident/Finding/Evidence lifecycle data from the E2E graph rather than returning state only.
-4. Real production credentials/configuration and live verification for Zabbix/Elasticsearch/Prometheus.
-5. Runbook execution adapter with dry-run enforcement, rollback execution and idempotency at runbook level.
-6. API completion for incident context/evidence/knowledge/memory/plan/verification resources.
-7. Production SSO/RBAC and least-privilege identity propagation.
-8. Full integration/scenario suite including connector failure, timeout, missing evidence and verification failure against controlled environments.
-9. pgvector extension/dimension/model compatibility validation in the target offline environment.
-10. Immutable internal image build/promotion/signing process and Kubernetes secret/config deployment.
-11. Dashboard integration with real KPI sources and automation lifecycle data.
-12. Repository hygiene cleanup for tracked `__pycache__`/`.pyc` artifacts and obsolete archives/scripts.
+1. Durable LangGraph checkpoint/workflow resume with PostgreSQL.
+2. Persist graph Audit events directly to PostgreSQL in the primary E2E path.
+3. Replace the in-memory approval lookup in the E2E resume path with the PostgreSQL approval store.
+4. Persist Incident/Finding/Evidence records as first-class lifecycle objects during E2E processing.
+5. Real production configuration and controlled-environment validation for Zabbix/Elasticsearch/Prometheus.
+6. Runbook tool execution, dry-run enforcement and rollback execution with runbook-level idempotency.
+7. Enterprise authentication/SSO and identity propagation beyond the basic internal API key/RBAC contract.
+8. Complete scenario acceptance tests against controlled observability and execution environments.
+9. pgvector extension/model-dimension validation in the offline target environment.
+10. Immutable internal image build, signing and promotion workflow.
+11. Dashboard live KPI sources and incident lifecycle UX.
+12. Remove tracked `__pycache__`, `.pyc` and obsolete archive artifacts from Git history/working tree.
 
-## Traceability rule
+## Definition-of-Done rule
 
-A capability is only considered fully aligned when implementation, tests, error handling, security, audit, deployment and scenario acceptance exist. A source file alone does not count as Done.
+A capability is only fully aligned when implementation, tests, error handling, security, audit, deployment and scenario acceptance exist. A source file or placeholder contract alone does not count as Done.
 
-## Measurement rule for future audits
+## Measurement rule
 
-Future alignment percentages should be calculated from this status plus direct repository inspection, with separate scoring for architecture, integrated behavior, tests, security and production readiness. Do not count placeholder files or contracts as fully implemented capabilities.
+Future Master alignment percentages must be based on direct repository inspection plus this status file, with separate scoring for architecture, integrated behavior, persistence, tests, security and production readiness. Placeholder files must not be treated as full implementation.
