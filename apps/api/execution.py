@@ -4,8 +4,8 @@ from uuid import uuid4
 
 from fastapi import APIRouter, Depends, HTTPException
 
-from apps.approval_service import ApprovalService
 from apps.approval_service.postgres import PostgreSQLApprovalStore
+from apps.audit_service import AuditService
 from apps.execution_service import ExecutionRequest, ExecutionService
 from apps.security.auth import require_permission
 from database import AsyncSessionLocal
@@ -55,7 +55,6 @@ async def approve(approval_id: str, _user=Depends(require_permission("approve:lo
         approval = await PostgreSQLApprovalStore(db).set_status(approval_id, "approved")
     if approval is None:
         raise HTTPException(status_code=404, detail="Approval not found")
-    AuditService = __import__("apps.audit_service", fromlist=["AuditService"]).AuditService
     AuditService.record("approval_granted", "api", approval["incident_id"], approval["action"], "recorded", {"approval_id": approval_id})
     return approval
 
