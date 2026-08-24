@@ -1,10 +1,12 @@
 from fastapi import FastAPI
+from fastapi.responses import FileResponse
+from pathlib import Path
 
 from domain.contracts.config import settings
 from domain.contracts.logging import configure_logging, logger
 from domain.contracts.exceptions import register_exception_handlers
 
-from apps.api import health, workflow, incidents, a2a, execution, e2e_workflow, audit, runbooks, incident_resources, dashboard, runbook_execution
+from apps.api import health, workflow, incidents, a2a, execution, e2e_workflow, audit, runbooks, incident_resources, dashboard, runbook_execution, dashboard_incidents
 from agents.triage import TriageAgent
 from apps.execution_service.tools.registry import tool_registry
 from apps.execution_service.tools.mock_executor import MockExecutorTool
@@ -27,13 +29,24 @@ for router, tags in [
     (a2a.router, ["A2A"]),
     (execution.router, ["Execution"]),
     (dashboard.router, ["Dashboard"]),
+    (dashboard_incidents.router, ["Dashboard Incidents"]),
 ]:
     app.include_router(router, prefix="/api/v1", tags=tags)
 
 
 @app.get("/")
 async def root():
-    return {"message": f"Welcome to {settings.APP_NAME}", "version": settings.APP_VERSION, "docs": "/docs"}
+    return {"message": f"Welcome to {settings.APP_NAME}", "version": settings.APP_VERSION, "docs": "/docs", "dashboard": "/dashboard"}
+
+
+@app.get("/dashboard", include_in_schema=False)
+async def dashboard_page():
+    return FileResponse(Path(__file__).resolve().parents[2] / "dashboards" / "index.html")
+
+
+@app.get("/dashboard/", include_in_schema=False)
+async def dashboard_page_slash():
+    return FileResponse(Path(__file__).resolve().parents[2] / "dashboards" / "index.html")
 
 
 @app.on_event("startup")
