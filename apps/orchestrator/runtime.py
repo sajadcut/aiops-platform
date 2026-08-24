@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Any, Dict
 
+from apps.audit_service import AuditService
+from apps.audit_service.postgres import PostgreSQLAuditStore
 from apps.incident_service.repository import IncidentRepository
 from apps.orchestrator.e2e_graph import E2EOrchestrator
 from apps.orchestrator.workflow_store import WorkflowCheckpointStore
@@ -11,9 +13,9 @@ from apps.approval_service.postgres import PostgreSQLApprovalStore
 class DurableWorkflowRuntime:
     """Application runtime around the LangGraph workflow.
 
-    It persists the incident, live evidence, findings and resumable graph state.
-    Approval-gated workflows can be resumed in a new process by loading the
-    PostgreSQL checkpoint and checking the durable approval record.
+    Incident state, findings, evidence, workflow checkpoints and primary-path
+    audit events are persisted through PostgreSQL-backed stores. Approval
+    resume reads the durable approval record rather than process memory.
     """
 
     def __init__(self, session):
@@ -21,6 +23,10 @@ class DurableWorkflowRuntime:
         self.checkpoints = WorkflowCheckpointStore(session)
         self.incidents = IncidentRepository(session)
         self.approvals = PostgreSQLApprovalStore(session)
+        self.audit = PostgreSQLAuditStore(session)
+
+    async def _flush_audit(self, incident_id: str) -> None:
+        await AuditService.flush_to_store(self.audit, incident_id=incident_id)
 
     async def start(self, state: Dict[str, Any]) -> Dict[str, Any]:
         incident_id = str(state["incident_id"])
@@ -39,6 +45,7 @@ class DurableWorkflowRuntime:
         await self.incidents.add_evidence(incident_id, result.get("live_evidence", {}).get("evidence", []))
         status = "completed" if result.get("current_node") == "end" and not result.get("approval") else "paused"
         await self.checkpoints.save(incident_id, result, status=status)
+        await self._flush_audit(incident_id)
         await self.incidents.commit()
         return result
 
@@ -64,5 +71,6 @@ class DurableWorkflowRuntime:
         result = await orchestrator._end_node(result)
         await self.checkpoints.mark_completed(incident_id, result)
         await self.incidents.add_findings(incident_id, result.get("findings", []))
+        await self._flush_audit(incident_id)
         await self.incidents.commit()
         return result
