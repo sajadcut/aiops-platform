@@ -21,8 +21,9 @@ jobs:
       - name: Repository hygiene
         shell: bash
         run: |
-          if git ls-files | grep -E '(^|/)(__pycache__/|.*\.pyc$|.*\.pyo$|.*\.zip$)'; then
-            echo "Tracked cache/bytecode/archive artifacts detected. Remove them before merge."
+          set -euo pipefail
+          if git ls-files | grep -E '(^|/)(__pycache__/|.*\.(pyc|pyo|zip)$)'; then
+            echo 'Tracked cache/bytecode/archive artifact detected'
             exit 1
           fi
       - name: Syntax check
