@@ -10,6 +10,8 @@ from apps.api import health, workflow, incidents, a2a, execution, e2e_workflow, 
 from agents.triage import TriageAgent
 from apps.execution_service.tools.registry import tool_registry
 from apps.execution_service.tools.mock_executor import MockExecutorTool
+from apps.execution_service.tools.ssh_vm import SSHVMTool
+from integrations.vm.ssh_connector import SSHVMConnector
 from apps.database.vector_validation import validate_pgvector
 from database import AsyncSessionLocal
 
@@ -54,8 +56,14 @@ async def startup_event():
     logger.info(f"Starting {settings.APP_NAME} v{settings.APP_VERSION}")
     triage_agent = TriageAgent()
     logger.info(f"Agent registered: {triage_agent.name} - {triage_agent.description}")
+
     if tool_registry.get_tool("mock_executor") is None:
         tool_registry.register(MockExecutorTool())
+
+    if settings.SSH_ENABLED and tool_registry.get_tool("ssh_vm") is None:
+        tool_registry.register(SSHVMTool(SSHVMConnector()))
+        logger.info("Governed SSH VM tool registered")
+
     if settings.PGVECTOR_VALIDATE_ON_STARTUP:
         try:
             async with AsyncSessionLocal() as db:
