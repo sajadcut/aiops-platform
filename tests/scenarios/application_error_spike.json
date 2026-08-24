@@ -1,0 +1,5 @@
+{
+  "name": "application-error-spike",
+  "input": {"service": "payments", "error_rate": 25, "recent_deployment": true, "http_5xx": true},
+  "expected": {"requires_evidence": true, "requires_decision": true, "verification_required": true}
+}
