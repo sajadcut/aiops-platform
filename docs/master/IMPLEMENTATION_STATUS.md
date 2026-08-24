@@ -18,8 +18,14 @@ This file is traceability evidence, not a replacement for `MASTER.md`. It distin
 - `FINAL_ACCEPTANCE_REPORT.md` added with requirement-by-requirement PASS/PENDING matrix.
 - Centralized runtime configuration contract added in `/domain/contracts/config.py` and documented by `/.env.example` + `docs/CONFIGURATION.md`.
 - Zabbix, Elasticsearch and Prometheus adapters now consume URL/credential/timeout settings only from centralized `settings` without independent hard-coded fallbacks.
-- Kubernetes Deployment now consumes configuration through `aiops-platform-config` and `aiops-platform-secrets` via `envFrom`.
+- Kubernetes Deployment consumes configuration through `aiops-platform-config` and `aiops-platform-secrets` via `envFrom`.
 - Centralized configuration contract tests added.
+- Governed Linux VM execution boundary added: read-only `vm_telemetry` plus high-risk `ssh_vm` with allow-listed actions and strict target/service validation.
+- VM SSH telemetry is included in live Evidence when `SSH_ENABLED=True`.
+- Production Orchestrator switches to the real Zabbix adapter when `APP_ENV=production`; development/CI retain the Mock connector.
+- Incident remediation API now supports request → PostgreSQL approval → approved VM service restart → post-action CPU verification.
+- Remediation dry-run and action allow-listing are enforced at the API boundary.
+- VM CPU remediation runbook/documentation and execution-boundary unit tests added.
 
 ## Current implementation evidence
 
@@ -31,22 +37,23 @@ This file is traceability evidence, not a replacement for `MASTER.md`. It distin
 | pgvector | vector model + extension/type/dimension validation | PASS (repository); target DB validation pending |
 | Knowledge RAG | service + retrieval metadata + API | PASS (repository) |
 | Operational Memory | service + namespace + E2E write-back | PASS (repository) |
-| Context Builder | IncidentContext + normalization + EvidenceCollector | PASS |
-| Evidence | Zabbix + Elasticsearch + Prometheus aggregation | PASS (controlled harness); target endpoint acceptance pending |
+| Context Builder | IncidentContext + normalization + EvidenceCollector + VM telemetry | PASS |
+| Evidence | Zabbix + Elasticsearch + Prometheus + VM SSH aggregation | PASS (controlled harness); target endpoint acceptance pending |
 | Hypothesis/RCA | evidence-linked contract + E2E RCA | PASS |
 | Evaluator | mandatory `EvaluationGate` before Decision | PASS |
 | Decision Engine | policy/risk boundary | PASS |
 | Approval | PostgreSQL store + durable lookup/resume + API | PASS (repository); live commit/resume test pending |
-| Execution | Tool Registry + policy + idempotency | PASS (repository); real target execution pending |
-| Verification | VerificationEngine + VerificationGate | PASS |
+| Execution | Tool Registry + policy + idempotency + governed `ssh_vm` | PASS (repository); real target execution pending |
+| Verification | VerificationEngine + VerificationGate + VM CPU verification API | PASS (repository); live target validation pending |
 | Audit | API + redaction + PostgreSQL store + primary-path flush | PASS (repository); live transaction test pending |
 | Runbooks | governance + 3 MVP runbooks + registry + dry-run + executor | PASS (repository); controlled real-tool/rollback acceptance pending |
 | Security/RBAC | deny-by-default + API key + signed OIDC JWT + RBAC | PASS (repository); enterprise issuer acceptance pending |
 | Observability | connector/evidence layer + controlled harness | PASS (repository); target endpoint acceptance pending |
-| APIs | Master-aligned incident resources + execution/approval/runbook/audit/dashboard | PASS (repository) |
+| APIs | Master-aligned incident resources + execution/approval/remediation/runbook/audit/dashboard | PASS (repository) |
 | Health | `/health`, `/health/live`, `/health/ready` | PASS |
-| Tests | unit + integration + scenario + failure-injection + OIDC/health/connector/config contracts | PASS (repository) |
+| Tests | unit + integration + scenario + failure-injection + OIDC/health/connector/config/VM contracts | PASS (repository) |
 | Centralized configuration | `Settings` + root `.env.example` + Kubernetes `envFrom` + config tests | PASS (repository) |
+| VM remediation | `remediation-requests` → approval → `ssh_vm` → `vm_telemetry` verification | PASS (repository); live target acceptance pending |
 | Offline deployment | Docker/Kubernetes + immutable digest attestation workflow | PASS (repository); internal registry signing/promotion pending |
 | Dashboard | PostgreSQL-backed incident/approval/audit/verification KPIs + remediation action | PASS (repository); populated-data validation pending |
 | Workflow resume | PostgreSQL checkpoint store + durable runtime | PASS application-level; restart test against real DB pending |
@@ -57,12 +64,14 @@ This file is traceability evidence, not a replacement for `MASTER.md`. It distin
 
 1. PostgreSQL commit/rollback and restart/resume against a real ephemeral/target PostgreSQL instance.
 2. Controlled Zabbix/Elasticsearch/Prometheus API contract tests (repository harness is present) plus populated endpoint acceptance.
-3. Real Runbook tool execution, rollback and idempotency cycle through the Tool Registry.
-4. Real OIDC issuer/JWKS integration and identity-to-role propagation.
-5. pgvector extension/index/dimension validation against target PostgreSQL.
-6. Immutable image signing/verification/promotion against the selected internal registry implementation.
-7. GitHub Actions green result for the current `main` after cleanup automation executes.
-8. Final repository-tree verification that no tracked generated artifacts remain.
+3. Real VM SSH execution with a dedicated service account and least-privilege sudoers rule.
+4. Real post-remediation CPU recovery cycle against a target VM.
+5. Real Runbook tool execution, rollback and idempotency cycle through the Tool Registry.
+6. Real OIDC issuer/JWKS integration and identity-to-role propagation.
+7. pgvector extension/index/dimension validation against target PostgreSQL.
+8. Immutable image signing/verification/promotion against the selected internal registry implementation.
+9. GitHub Actions green result for the current `main` after cleanup automation executes.
+10. Final repository-tree verification that no tracked generated artifacts remain.
 
 ## Measurement rule
 
