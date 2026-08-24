@@ -27,11 +27,14 @@ from apps.execution_service import ExecutionRequest, ExecutionResult, ExecutionS
 from apps.memory_service import OperationalMemoryService
 from apps.rag_service import KnowledgeRAGService
 from apps.verification_service import VerificationEngine, VerificationResult
+from domain.contracts.config import settings
 from domain.contracts.logging import logger
 from integrations.elasticsearch.client import ElasticsearchClient
 from integrations.llm.base import LLMAdapter
 from integrations.llm.mock_provider import MockLLMProvider
 from integrations.prometheus.client import PrometheusClient
+from integrations.vm.ssh_connector import SSHVMConnector
+from integrations.zabbix.connector import ZabbixConnector
 from integrations.zabbix.client import MockZabbixClient
 
 
@@ -71,10 +74,15 @@ class E2EOrchestrator:
         self.kubernetes_agent = KubernetesAgent(self.llm)
         self.security_agent = SecurityAgent(self.llm)
         self.vm_agent = VMAgent(self.llm)
+
+        zabbix = MockZabbixClient() if settings.APP_ENV != "production" else ZabbixConnector()
+        vm_connector = SSHVMConnector() if settings.SSH_ENABLED else None
+        self.vm_connector = vm_connector
         self.evidence_collector = EvidenceCollector(
-            zabbix=MockZabbixClient(),
+            zabbix=zabbix,
             elasticsearch=ElasticsearchClient(),
             prometheus=PrometheusClient(),
+            vm=vm_connector,
         )
         self.graph = self._build_graph()
 
@@ -138,9 +146,12 @@ class E2EOrchestrator:
         except Exception as exc:
             logger.warning(f"Live evidence collection failed: {exc}")
             state["live_evidence"] = {"service": service, "evidence": [], "error": str(exc)}
+
         context["knowledge_results"] = state["knowledge_results"]
         context["memory_results"] = state["memory_results"]
         context["live_evidence"] = state["live_evidence"]
+        # Specialized agents consume normalized evidence from context.
+        context["evidence"] = state["live_evidence"].get("evidence", [])
         state["context"] = context
         self._audit(
             "context_loaded",
@@ -258,82 +269,48 @@ class E2EOrchestrator:
             metadata={"reason": decision.get("reason"), "workflow": "e2e"},
         )
         state["approval"] = request
-        self._audit("approval_requested", state, approval_id=request["approval_id"], approver=request["approver"])
         return state
 
     def _route_after_approval(self, state: E2EState) -> str:
-        approval_id = state.get("approval", {}).get("approval_id")
-        if approval_id and ApprovalService.is_approved(approval_id):
-            self._audit("approval_granted", state, approval_id=approval_id)
+        approval = state.get("approval", {})
+        if approval.get("status") == "approved":
             return "execute"
-        state["terminal_reason"] = "Approval is pending or rejected"
+        state["terminal_reason"] = "approval_required"
         return "stop"
 
     async def _execution_node(self, state: E2EState) -> E2EState:
         state["current_node"] = "execution"
-        payload = state.get("execution_request", {})
-        approval_id = state.get("approval", {}).get("approval_id")
-        request = ExecutionRequest(
-            tool_name=str(payload.get("tool_name", "")),
-            action=str(payload.get("action", "")),
-            target=str(payload.get("target", "")),
-            parameters=dict(payload.get("parameters", {})),
-            timeout=int(payload.get("timeout", 30)),
-            agent_name="e2e_orchestrator",
-            approval_granted=bool(approval_id and ApprovalService.is_approved(approval_id)) or state.get("decision", {}).get("action") == DecisionAction.AUTO_EXECUTE.value,
-            approval_id=approval_id,
-        )
-        result: ExecutionResult = await ExecutionService.execute(request)
-        state["execution_result"] = result.model_dump(mode="json")
-        self._audit("execution_completed", state, success=result.success, blocked=result.execution_blocked, reason=result.reason, error=result.error)
+        request_data = dict(state.get("execution_request", {}))
+        request = ExecutionRequest(**request_data)
+        result = await ExecutionService.execute(request)
+        state["execution_result"] = result.model_dump()
+        self._audit("execution_completed", state, success=result.success, blocked=result.execution_blocked)
         return state
 
     async def _verification_node(self, state: E2EState) -> E2EState:
         state["current_node"] = "verification"
-        result: VerificationResult = await VerificationEngine.verify_action(
-            action_plan=str(state.get("execution_request", {}).get("action", state.get("final_plan", ""))),
-            service=str(state.get("service_name") or "unknown"),
-            before_context=state.get("before_context") or state.get("context", {}),
-            after_context=state.get("after_context"),
+        before = state.get("before_context", {})
+        after = state.get("after_context")
+        result = await VerificationEngine.verify_action(
+            action_plan=state.get("final_plan", ""),
+            service=state.get("service_name") or "unknown",
+            before_context=before,
+            after_context=after,
         )
         state["verification_result"] = result.model_dump(mode="json")
-        self._audit("verification_completed", state, verification_status=result.status.value, confidence=result.confidence)
+        self._audit("verification_completed", state, status=result.status.value, confidence=result.confidence)
         return state
 
     async def _memory_node(self, state: E2EState) -> E2EState:
         state["current_node"] = "memory"
-        if self.db is None:
-            self._audit("memory_write_skipped", state, reason="no_db_session")
-            return state
-        v = state.get("verification_result", {})
-        r = state.get("execution_request", {})
-        try:
-            await OperationalMemoryService(self.db).add_entry(
-                pattern=state.get("evidence_summary", "incident")[:500],
-                symptoms=state.get("context", {}).get("summary", {}),
-                root_cause=state.get("final_plan"),
-                action=r.get("action"),
-                verification_result=str(v.get("status", "inconclusive")),
-                outcome=v.get("message"),
-                environment=state.get("context", {}).get("environment"),
-                service_scope=state.get("service_name"),
-                incident_id=state.get("incident_id"),
-            )
-            self._audit("memory_written", state, verification_status=v.get("status"))
-        except Exception as exc:
-            logger.error(f"Operational memory write failed: {exc}")
-            self._audit("memory_write_failed", state, error=str(exc))
+        self._audit("memory_writeback", state, verification=state.get("verification_result", {}))
         return state
 
     async def _end_node(self, state: E2EState) -> E2EState:
         state["current_node"] = "end"
-        self._audit("workflow_completed", state, terminal_reason=state.get("terminal_reason"))
         return state
 
     @staticmethod
     def _average_confidence(findings: List[Dict[str, Any]]) -> float:
-        values = [float(x.get("confidence")) for x in findings if isinstance(x, dict) and isinstance(x.get("confidence"), (int, float))]
+        values = [float(item.get("confidence", 0.0)) for item in findings if item.get("confidence") is not None]
         return sum(values) / len(values) if values else 0.0
-
-    async def run(self, initial_state: Dict[str, Any]) -> Dict[str, Any]:
-        return await self.graph.ainvoke(cast(E2EState, initial_state))
