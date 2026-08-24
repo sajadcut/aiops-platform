@@ -1,71 +1,72 @@
+from __future__ import annotations
+
+import asyncio
+from datetime import datetime, timezone
+
 from fastapi import APIRouter
+from sqlalchemy import text
+
+from apps.execution_service.tools.registry import tool_registry
+from database import AsyncSessionLocal, check_pgvector_ready
 from domain.contracts.config import settings
 from domain.contracts.logging import logger
-from database import check_pgvector_ready
-from integrations.llm.mock_provider import MockLLMProvider
-from apps.execution_service.tools.registry import tool_registry
-from integrations.zabbix.connector import ZabbixConnector
 from integrations.elasticsearch.client import ElasticsearchClient
 from integrations.prometheus.client import PrometheusClient
-import asyncio
+from integrations.zabbix.connector import ZabbixConnector
 
 router = APIRouter()
 
+
+async def _probe_database() -> dict:
+    try:
+        async with AsyncSessionLocal() as db:
+            await db.execute(text("SELECT 1"))
+        vector = await check_pgvector_ready()
+        return {"status": "healthy", "pgvector": vector}
+    except Exception as exc:
+        return {"status": "unhealthy", "error": str(exc)}
+
+
+async def _probe_external() -> dict:
+    probes = {
+        "zabbix": ZabbixConnector().health_check(),
+        "elasticsearch": ElasticsearchClient().health_check(),
+        "prometheus": PrometheusClient().health_check(),
+    }
+    try:
+        values = await asyncio.wait_for(asyncio.gather(*probes.values()), timeout=5.0)
+        return {name: {"healthy": bool(value)} for name, value in zip(probes, values)}
+    except Exception as exc:
+        return {name: {"healthy": False, "error": str(exc)} for name in probes}
+
+
 @router.get("/health")
 async def health_check():
-    """
-    بررسی سلامت کامل سرویس و همه کامپوننت‌ها.
-    """
     logger.info("Health check requested")
-    
-    # ۱. دیتابیس
-    db_status = await check_pgvector_ready()
-    
-    # ۲. LLM
-    try:
-        llm = MockLLMProvider()
-        test_response = await llm.generate("test", max_tokens=5)
-        llm_status = {"status": "healthy", "provider": llm.provider_name}
-    except Exception as e:
-        llm_status = {"status": "unhealthy", "error": str(e)}
-    
-    # ۳. ابزارها
-    tools_status = {
-      "total": len(tool_registry.list_tools()),
-        "available": tool_registry.list_tools()
-    }
-    
-    # ۴. منابع خارجی
-    zabbix = ZabbixConnector()
-    elastic = ElasticsearchClient()
-    prometheus = PrometheusClient()
-    
-    zabbix_task = asyncio.create_task(zabbix.health_check())
-    elastic_task = asyncio.create_task(elastic.health_check())
-    prometheus_task = asyncio.create_task(prometheus.health_check())
-    
-    try:
-        zabbix_health, elastic_health, prometheus_health = await asyncio.wait_for(
-            asyncio.gather(zabbix_task, elastic_task, prometheus_task),
-            timeout=5.0
-        )
-    except asyncio.TimeoutError:
-        zabbix_health = elastic_health = prometheus_health = False
-        logger.warning("Health check timeout for external services")
-    
+    database = await _probe_database()
+    external = await _probe_external()
+    status = "ok" if database["status"] == "healthy" else "degraded"
     return {
-        "status": "ok",
+        "status": status,
         "service": settings.APP_NAME,
         "version": settings.APP_VERSION,
-        "timestamp": __import__("datetime").datetime.now().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "components": {
-            "database": db_status,
-            "llm": llm_status,
-            "tools": tools_status,
-            "external": {
-                "zabbix": {"healthy": zabbix_health},
-                "elasticsearch": {"healthy": elastic_health},
-                "prometheus": {"healthy": prometheus_health}
-            }
-        }
+            "database": database,
+            "tools": {"total": len(tool_registry.list_tools()), "available": tool_registry.list_tools()},
+            "external": external,
+        },
     }
+
+
+@router.get("/health/live")
+async def liveness():
+    return {"status": "alive", "service": settings.APP_NAME}
+
+
+@router.get("/health/ready")
+async def readiness():
+    database = await _probe_database()
+    external = await _probe_external()
+    ready = database["status"] == "healthy"
+    return {"status": "ready" if ready else "not_ready", "database": database, "external": external}
