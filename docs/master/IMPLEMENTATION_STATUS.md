@@ -16,6 +16,10 @@ This file is traceability evidence, not a replacement for `MASTER.md`. It distin
 - Automated repository-hygiene workflow added to remove tracked `__pycache__`, `.pyc`, `.pyo` and `.zip` artifacts on `main`.
 - Tracked deployment `.env` containing a database password was removed.
 - `FINAL_ACCEPTANCE_REPORT.md` added with requirement-by-requirement PASS/PENDING matrix.
+- Centralized runtime configuration contract added in `/domain/contracts/config.py` and documented by `/.env.example` + `docs/CONFIGURATION.md`.
+- Zabbix, Elasticsearch and Prometheus adapters now consume URL/credential/timeout settings only from centralized `settings` without independent hard-coded fallbacks.
+- Kubernetes Deployment now consumes configuration through `aiops-platform-config` and `aiops-platform-secrets` via `envFrom`.
+- Centralized configuration contract tests added.
 
 ## Current implementation evidence
 
@@ -41,7 +45,8 @@ This file is traceability evidence, not a replacement for `MASTER.md`. It distin
 | Observability | connector/evidence layer + controlled harness | PASS (repository); target endpoint acceptance pending |
 | APIs | Master-aligned incident resources + execution/approval/runbook/audit/dashboard | PASS (repository) |
 | Health | `/health`, `/health/live`, `/health/ready` | PASS |
-| Tests | unit + integration + scenario + failure-injection + OIDC/health/connector contracts | PASS (repository) |
+| Tests | unit + integration + scenario + failure-injection + OIDC/health/connector/config contracts | PASS (repository) |
+| Centralized configuration | `Settings` + root `.env.example` + Kubernetes `envFrom` + config tests | PASS (repository) |
 | Offline deployment | Docker/Kubernetes + immutable digest attestation workflow | PASS (repository); internal registry signing/promotion pending |
 | Dashboard | PostgreSQL-backed incident/approval/audit/verification KPIs + remediation action | PASS (repository); populated-data validation pending |
 | Workflow resume | PostgreSQL checkpoint store + durable runtime | PASS application-level; restart test against real DB pending |
