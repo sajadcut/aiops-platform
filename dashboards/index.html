@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>AIOps Incident Operations</title>
+  <style>
+    body{font-family:system-ui,sans-serif;background:#0f172a;color:#e2e8f0;margin:0;padding:24px}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+    .card{background:#1e293b;border-radius:12px;padding:18px}
+    .value{font-size:28px;font-weight:700;margin-top:8px}
+    table{width:100%;border-collapse:collapse;margin-top:24px;background:#1e293b;border-radius:12px;overflow:hidden}
+    th,td{padding:12px;text-align:left;border-bottom:1px solid #334155}
+    .ok{color:#34d399}.warn{color:#fbbf24}.bad{color:#f87171}
+  </style>
+</head>
+<body>
+  <h1>AIOps Incident Operations</h1>
+  <div class="grid">
+    <div class="card"><div>Open Incidents</div><div id="open" class="value">—</div></div>
+    <div class="card"><div>Automation Success</div><div id="automation" class="value">—</div></div>
+    <div class="card"><div>Approval Rate</div><div id="approval" class="value">—</div></div>
+    <div class="card"><div>Verification Confidence</div><div id="verification" class="value">—</div></div>
+  </div>
+  <table><thead><tr><th>Incident</th><th>Service</th><th>Status</th><th>Decision</th><th>Verification</th></tr></thead>
+  <tbody id="incidents"><tr><td colspan="5">Connect this dashboard to /api/v1/incidents for live data.</td></tr></tbody></table>
+  <script>
+    async function load(){
+      try{
+        const r=await fetch('/api/v1/incidents');
+        if(!r.ok)return;
+        const data=await r.json();
+        const items=data.items||data||[];
+        document.getElementById('open').textContent=items.filter(x=>!['closed','resolved'].includes(String(x.status||'').toLowerCase())).length;
+        document.getElementById('incidents').innerHTML=items.slice(0,20).map(x=>`<tr><td>${x.id||''}</td><td>${x.service||''}</td><td>${x.status||''}</td><td>${x.decision||'—'}</td><td>${x.verification||'—'}</td></tr>`).join('')||'<tr><td colspan="5">No incidents.</td></tr>';
+      }catch(e){console.warn(e)}
+    }
+    load();
+    setInterval(load,30000);
+  </script>
+</body>
+</html>
