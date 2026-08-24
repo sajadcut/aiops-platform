@@ -1,0 +1,5 @@
+{
+  "name": "kubernetes-health",
+  "input": {"service": "orders", "unhealthy_workload": true, "probe_failures": true},
+  "expected": {"context_required": true, "runbook_candidate": "kubernetes-health", "verification_required": true}
+}
