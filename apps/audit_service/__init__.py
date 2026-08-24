@@ -1,13 +1,8 @@
-"""Operational audit trail service.
-
-The service keeps a normalized audit contract independent from the transport
-layer. Persistence is intentionally injectable so PostgreSQL storage can be
-added without changing callers.
-"""
+"""Operational audit trail service with durable flush support."""
 
 from __future__ import annotations
 
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 from uuid import uuid4
@@ -52,15 +47,23 @@ class AuditService:
         return event
 
     @classmethod
-    def list_events(
-        cls,
-        incident_id: Optional[str] = None,
-        limit: int = 100,
-    ) -> List[Dict[str, Any]]:
+    def list_events(cls, incident_id: Optional[str] = None, limit: int = 100) -> List[Dict[str, Any]]:
         events = cls._events
         if incident_id:
             events = [e for e in events if e.incident_id == incident_id]
         return [asdict(e) for e in events[-max(1, limit):]]
+
+    @classmethod
+    async def flush_to_store(cls, store: Any, incident_id: Optional[str] = None) -> int:
+        """Persist buffered events through an injected durable store."""
+        pending = cls.list_events(incident_id=incident_id, limit=max(len(cls._events), 1))
+        for event in pending:
+            await store.append(event)
+        if incident_id:
+            cls._events = [e for e in cls._events if e.incident_id != incident_id]
+        else:
+            cls._events.clear()
+        return len(pending)
 
     @classmethod
     def clear(cls) -> None:
