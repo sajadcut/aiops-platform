@@ -1,0 +1,34 @@
+name: repository-hygiene
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Remove tracked generated artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          find . -type d -name '__pycache__' -prune -exec git rm -r --cached --ignore-unmatch {} + || true
+          git ls-files -z '*.pyc' '*.pyo' '*.zip' | xargs -0 -r git rm --cached
+      - name: Commit cleanup
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'aiops-platform-bot'
+          git config user.email 'aiops-platform-bot@users.noreply.github.com'
+          if git diff --cached --quiet; then
+            echo 'Repository hygiene: clean'
+            exit 0
+          fi
+          git commit -m 'chore: remove tracked generated artifacts'
+          git push origin HEAD:main
