@@ -4,10 +4,12 @@ from domain.contracts.config import settings
 from domain.contracts.logging import configure_logging, logger
 from domain.contracts.exceptions import register_exception_handlers
 
-from apps.api import health, workflow, incidents, a2a, execution, e2e_workflow, audit, runbooks, incident_resources
+from apps.api import health, workflow, incidents, a2a, execution, e2e_workflow, audit, runbooks, incident_resources, dashboard
 from agents.triage import TriageAgent
 from apps.execution_service.tools.registry import tool_registry
 from apps.execution_service.tools.mock_executor import MockExecutorTool
+from apps.database.vector_validation import validate_pgvector
+from database import AsyncSessionLocal
 
 configure_logging()
 
@@ -23,6 +25,7 @@ app.include_router(incident_resources.router, prefix="/api/v1", tags=["Incident 
 app.include_router(incidents.router, prefix="/api/v1", tags=["Incidents"])
 app.include_router(a2a.router, prefix="/api/v1", tags=["A2A"])
 app.include_router(execution.router, prefix="/api/v1", tags=["Execution"])
+app.include_router(dashboard.router, prefix="/api/v1", tags=["Dashboard"])
 
 
 @app.get("/")
@@ -39,6 +42,12 @@ async def startup_event():
     logger.info(f"Agent registered: {triage_agent.name} - {triage_agent.description}")
     if tool_registry.get_tool("mock_executor") is None:
         tool_registry.register(MockExecutorTool())
+    if getattr(settings, "PGVECTOR_VALIDATE_ON_STARTUP", True):
+        try:
+            async with AsyncSessionLocal() as db:
+                logger.info(f"pgvector validation: {await validate_pgvector(db)}")
+        except Exception as exc:
+            logger.warning(f"pgvector validation unavailable: {exc}")
     logger.info(f"Tools available: {tool_registry.list_tools()}")
 
 
