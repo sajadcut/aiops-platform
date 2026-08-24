@@ -5,16 +5,23 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 
 async def validate_pgvector(session: AsyncSession, expected_dimension: int | None = None) -> dict:
-    ext = (await session.execute(text("SELECT extname FROM pg_extension WHERE extname='vector'"))).scalar_one_or_none()
-    result = {"extension_installed": bool(ext), "expected_dimension": expected_dimension, "dimension_valid": None}
-    if not ext or expected_dimension is None:
+    ext = (await session.execute(text("SELECT extversion FROM pg_extension WHERE extname='vector'"))).scalar_one_or_none()
+    result = {"extension_installed": bool(ext), "extension_version": ext, "expected_dimension": expected_dimension, "dimension_valid": None}
+    if not ext:
         return result
-    # Validate that vector columns are actually typed as vector and expose dimensions.
     rows = (await session.execute(text("""
-        SELECT table_name, column_name, udt_name
-        FROM information_schema.columns
-        WHERE table_schema='public' AND column_name='embedding'
+        SELECT table_name, column_name,
+               CASE WHEN udt_name='vector' THEN atttypmod - 4 ELSE NULL END AS dimension
+        FROM information_schema.columns c
+        LEFT JOIN pg_attribute a
+          ON a.attrelid = format('%I.%I', c.table_schema, c.table_name)::regclass
+         AND a.attname = c.column_name
+        WHERE c.table_schema='public' AND c.column_name='embedding'
     """))).mappings().all()
     result["embedding_columns"] = [dict(r) for r in rows]
-    result["dimension_valid"] = bool(rows)
+    if expected_dimension is None:
+        result["dimension_valid"] = bool(rows)
+    else:
+        dimensions = [r.get("dimension") for r in rows if r.get("dimension") is not None]
+        result["dimension_valid"] = bool(dimensions) and all(int(d) == int(expected_dimension) for d in dimensions)
     return result
