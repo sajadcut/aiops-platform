@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aiops-platform
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: aiops-platform
+  template:
+    metadata:
+      labels:
+        app: aiops-platform
+    spec:
+      containers:
+        - name: api
+          image: registry.internal/aiops-platform:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8000
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: aiops-platform-secrets
+                  key: DATABASE_URL
+          readinessProbe:
+            httpGet:
+              path: /api/v1/health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /api/v1/health
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 20
+          securityContext:
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: aiops-platform
+spec:
+  selector:
+    app: aiops-platform
+  ports:
+    - port: 8000
+      targetPort: 8000
