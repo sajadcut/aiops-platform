@@ -5,7 +5,9 @@ Updated: 2026-08-25
 This file records implementation evidence separately from the architecture contract in `MASTER.md`.
 It must not be treated as a replacement for `MASTER.md`.
 
-## Recent completed implementation stages
+## Recent implementation batch
+
+### Prior completed batch
 
 1. Evidence-aware Plan Evaluator contract.
 2. Explicit ActionPlan domain contract.
@@ -21,47 +23,83 @@ It must not be treated as a replacement for `MASTER.md`.
 12. Evaluator unit tests.
 13. Execution policy security tests.
 14. Offline production deployment contract.
-15. This implementation-status baseline and traceability record.
+15. Initial implementation-status baseline.
+
+### Current 30-stage batch
+
+1. Structured IncidentContext contract.
+2. Evidence-linked Hypothesis contract.
+3. Allowlisted operational EvidenceSourcePolicy.
+4. Evidence normalization/filtering.
+5. Prometheus evidence adapter.
+6. Zabbix evidence normalization adapter.
+7. Formal Evaluator thresholds.
+8. Executable EvaluationGate.
+9. Deterministic execution idempotency fingerprint.
+10. Execution idempotency guard foundation.
+11. Audit secret redaction utility.
+12. Basic RBAC policy contract.
+13. Runbook governance validator.
+14. MVP application error rollback runbook.
+15. MVP Kubernetes health inspection runbook.
+16. MVP infrastructure observation runbook.
+17. Explicit Verification gate contract.
+18. Operational Memory namespace contract.
+19. RAG retrieval metadata contract.
+20. Incident lifecycle transition policy.
+21. Context evidence policy tests.
+22. Idempotency tests.
+23. RBAC policy tests.
+24. Runbook governance tests.
+25. Verification gate tests.
+26. Application error spike scenario fixture.
+27. Kubernetes health scenario fixture.
+28. Infrastructure pressure scenario fixture.
+29. Offline artifact supply-chain manifest.
+30. Updated implementation traceability record.
 
 ## Current implementation evidence
 
 | MASTER capability | Current implementation | Status |
 |---|---|---|
-| Python + LangGraph core | `apps/orchestrator/graph.py`, `apps/orchestrator/e2e_graph.py` | Implemented |
+| Python + LangGraph core | `apps/orchestrator/graph.py`, `apps/orchestrator/e2e_graph.py` | Implemented foundation |
 | Specialized agents | Triage/Application/Infrastructure/Kubernetes/Security/VM | Implemented |
-| PostgreSQL persistence | SQLAlchemy async layer + domain models | Implemented |
-| pgvector model layer | KnowledgeDocument/MemoryEntry vector fields | Implemented; environment verification required |
-| Knowledge RAG | `KnowledgeRAGService` | Implemented |
-| Operational Memory | `OperationalMemoryService` | Implemented |
-| Context Builder | `apps/context_service/builder.py` | Implemented |
-| Zabbix evidence boundary | `integrations/zabbix/client.py` | Implemented; live environment verification required |
-| Elasticsearch evidence | `integrations/elasticsearch/client.py` | Implemented; live environment verification required |
-| Prometheus evidence | `integrations/prometheus/client.py` | Implemented; live environment verification required |
-| Evidence aggregation | `EvidenceCollector` | Implemented |
-| RCA | E2E graph RCA node | Implemented |
-| Evaluator | `apps/evaluator` + guardrails | Implemented foundation; E2E graph insertion still required |
+| PostgreSQL persistence | SQLAlchemy async layer + domain models | Implemented; runtime verification required |
+| pgvector model layer | KnowledgeDocument/MemoryEntry vector fields | Implemented; target extension/dimension verification required |
+| Knowledge RAG | `KnowledgeRAGService` + retrieval contract | Implemented foundation |
+| Operational Memory | `OperationalMemoryService` + namespace contract | Implemented foundation |
+| Context Builder | `apps/context_service/builder.py` + IncidentContext + normalization | Implemented foundation |
+| Evidence policy | Zabbix/Elasticsearch/Prometheus allowlist + normalization | Implemented foundation |
+| Zabbix evidence | connector + evidence normalization | Implemented foundation; live verification required |
+| Elasticsearch evidence | hardened client | Implemented foundation; live verification required |
+| Prometheus evidence | connector + evidence adapter | Implemented foundation; live verification required |
+| Evidence aggregation | `EvidenceCollector` + policy boundary | Implemented foundation |
+| Hypothesis | evidence-linked domain contract | Implemented contract; RCA integration pending |
+| RCA | E2E graph RCA node | Implemented foundation |
+| Evaluator | `apps/evaluator`, thresholds, gate, guardrails, unit tests | Implemented foundation; mandatory graph wiring still pending |
 | Decision Engine | `apps/decision_engine` | Implemented |
-| Approval | In-memory service + PostgreSQL adapter | Transitional |
-| Execution | `ExecutionService` + Tool Registry | Implemented foundation |
-| Verification | `VerificationEngine` | Implemented foundation |
-| Audit | Audit service + API + structured event contract | Implemented foundation; persistent store pending |
-| Runbooks | Contract exists | Foundation; runtime registry/CRUD pending |
-| Security policy | ToolPolicy + tests | Foundation |
-| Offline deployment | deployment contract | Foundation; actual manifests/image pipeline pending |
-| Scenario/integration tests | unit tests started | Incomplete |
+| Approval | In-memory service + PostgreSQL adapter | Transitional; durable workflow resume pending |
+| Execution | `ExecutionService` + Tool Registry + policy/idempotency foundations | Implemented foundation |
+| Verification | `VerificationEngine` + verification gate/tests | Implemented foundation |
+| Audit | service/API + domain event + redaction | Implemented foundation; PostgreSQL persistence pending |
+| Runbooks | governed contract + three MVP runbooks | Implemented foundation; runtime registry/dry-run/rollback execution pending |
+| Security | deny-by-default policy + RBAC contract + tests | Foundation; API authentication/least privilege pending |
+| Offline deployment | offline contract + artifact manifest | Foundation; actual immutable image pipeline/manifests pending |
+| Scenario tests | three reference scenario fixtures + unit coverage | Improved; executable integration scenarios still pending |
 | Dashboard | repository area exists | Incomplete |
 
-## Important production gaps that remain
+## Remaining high-impact gaps
 
+- Make Evaluator a mandatory node in `e2e_graph.py` before Decision.
 - Persist Approval and Audit records in PostgreSQL and make workflow resume/idempotency durable.
-- Insert Evaluator as a mandatory E2E graph gate before Decision.
-- Connect `EvidenceCollector` to the real Context Builder and incident lifecycle.
-- Define and register up to three low-risk MVP Runbooks with rollback and dry-run support.
-- Add failure-injection and scenario tests for the three MASTER reference incidents.
-- Add security/RBAC authentication and least-privilege enforcement at API/tool boundaries.
-- Add production deployment manifests and immutable internal-image promotion workflow.
-- Validate pgvector extension and embedding dimension/model compatibility in the target environment.
-- Complete dashboard/API coverage for incident context, evidence, knowledge, memory, plan, approval and verification.
+- Connect the real `EvidenceCollector` output into ContextBuilder and Incident persistence.
+- Register Runbooks in a runtime registry with owner/version/preconditions/timeout/rollback validation and dry-run tests.
+- Add executable integration/scenario tests for Application Error Spike, Kubernetes Health/CrashLoop, and Infrastructure Pressure.
+- Add API authentication, role enforcement and least-privilege checks at execution/approval boundaries.
+- Add actual deployment manifests, health/readiness configuration and immutable internal image promotion flow.
+- Validate pgvector availability and embedding dimensional compatibility in the target environment.
+- Complete API coverage for context/evidence/knowledge/memory/plan/approval/verification endpoints.
+- Complete dashboard support for Incident lifecycle and Automation status.
 
 ## Traceability rule
 
