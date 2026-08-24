@@ -1,0 +1,37 @@
+name: offline-image-attestation
+
+on:
+  workflow_dispatch:
+    inputs:
+      image:
+        description: OCI image reference
+        required: true
+        type: string
+      digest:
+        description: Immutable image digest (sha256:...)
+        required: true
+        type: string
+
+jobs:
+  attest:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify immutable digest format
+        shell: bash
+        env:
+          IMAGE: ${{ inputs.image }}
+          DIGEST: ${{ inputs.digest }}
+        run: |
+          set -euo pipefail
+          [[ "$DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]]
+          printf '%s@%s\n' "$IMAGE" "$DIGEST" > image-reference.txt
+      - name: Generate offline promotion manifest
+        run: |
+          python scripts/generate_image_attestation.py image-reference.txt deployment/docker/offline/image-attestation.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: image-attestation
+          path: deployment/docker/offline/image-attestation.json
