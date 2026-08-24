@@ -6,11 +6,12 @@ from domain.contracts.config import settings
 from domain.contracts.logging import configure_logging, logger
 from domain.contracts.exceptions import register_exception_handlers
 
-from apps.api import health, workflow, incidents, a2a, execution, e2e_workflow, audit, runbooks, incident_resources, dashboard, runbook_execution, dashboard_incidents
+from apps.api import health, workflow, incidents, a2a, execution, e2e_workflow, audit, runbooks, incident_resources, dashboard, runbook_execution, dashboard_incidents, remediation
 from agents.triage import TriageAgent
 from apps.execution_service.tools.registry import tool_registry
 from apps.execution_service.tools.mock_executor import MockExecutorTool
 from apps.execution_service.tools.ssh_vm import SSHVMTool
+from apps.execution_service.tools.vm_telemetry import VMTelemetryTool
 from integrations.vm.ssh_connector import SSHVMConnector
 from apps.database.vector_validation import validate_pgvector
 from database import AsyncSessionLocal
@@ -28,6 +29,7 @@ for router, tags in [
     (runbook_execution.router, ["Runbook Execution"]),
     (incident_resources.router, ["Incident Resources"]),
     (incidents.router, ["Incidents"]),
+    (remediation.router, ["Remediation"]),
     (a2a.router, ["A2A"]),
     (execution.router, ["Execution"]),
     (dashboard.router, ["Dashboard"]),
@@ -60,9 +62,14 @@ async def startup_event():
     if tool_registry.get_tool("mock_executor") is None:
         tool_registry.register(MockExecutorTool())
 
-    if settings.SSH_ENABLED and tool_registry.get_tool("ssh_vm") is None:
-        tool_registry.register(SSHVMTool(SSHVMConnector()))
-        logger.info("Governed SSH VM tool registered")
+    if settings.SSH_ENABLED:
+        vm_connector = SSHVMConnector()
+        if tool_registry.get_tool("ssh_vm") is None:
+            tool_registry.register(SSHVMTool(vm_connector))
+            logger.info("Governed SSH VM tool registered")
+        if tool_registry.get_tool("vm_telemetry") is None:
+            tool_registry.register(VMTelemetryTool(vm_connector))
+            logger.info("Read-only VM telemetry tool registered")
 
     if settings.PGVECTOR_VALIDATE_ON_STARTUP:
         try:
