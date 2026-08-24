@@ -21,7 +21,7 @@ router = APIRouter()
 class RemediationRequest(BaseModel):
     target: str = Field(min_length=1)
     service: str = Field(min_length=1)
-    action: str = Field(default="restart_service")
+    action: str = Field(default="restart_service", pattern="^restart_service$")
     dry_run: bool = False
     reason: str | None = None
 
@@ -68,7 +68,7 @@ async def create_remediation_request(
         str(incident_id),
         payload.action,
         "pending_approval",
-        {"approval_id": approval_id, "target": payload.target, "service": payload.service},
+        {"approval_id": approval_id, "target": payload.target, "service": payload.service, "dry_run": payload.dry_run},
     )
     return saved
 
@@ -86,6 +86,19 @@ async def execute_approved_remediation(
         raise HTTPException(status_code=409, detail="Approval is not approved")
 
     metadata: Dict[str, Any] = approval.get("metadata") or {}
+    if bool(metadata.get("dry_run")):
+        result = {
+            "success": True,
+            "execution_blocked": True,
+            "reason": "dry_run",
+            "tool_name": "ssh_vm",
+            "action": approval["action"],
+            "target": metadata.get("target"),
+            "approval_id": approval_id,
+        }
+        AuditService.record("remediation_dry_run", "remediation_workflow", approval["incident_id"], approval["action"], "simulated", {"approval_id": approval_id})
+        return result
+
     request = ExecutionRequest(
         tool_name=str(metadata.get("tool_name", "ssh_vm")),
         action=str(approval["action"]),
