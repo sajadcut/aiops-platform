@@ -1,76 +1,28 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException, Depends, Request
+from datetime import datetime, timezone
+from typing import Any, Dict
+from uuid import UUID, uuid4
+
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
-from sqlalchemy import select, desc
-from domain.schemas import IncidentCreate
+from sqlalchemy import desc, select, update
+
+from apps.approval_service.postgres import PostgreSQLApprovalStore
+from apps.audit_service import AuditService
+from apps.audit_service.postgres import PostgreSQLAuditStore
+from apps.decision_engine import DecisionEngine
+from apps.incident_service.repository import IncidentRepository
+from apps.orchestrator.runtime import DurableWorkflowRuntime
+from apps.security.auth import require_permission
+from database import AsyncSessionLocal
+from domain.contracts.context import get_trace_id
 from domain.contracts.logging import logger
 from domain.contracts.rate_limit import rate_limiter_default, rate_limiter_strict
-from domain.contracts.context import get_trace_id
-from database import AsyncSessionLocal
-from domain.models import Incident, Finding
-from apps.approval_service.postgres import PostgreSQLApprovalStore
-from apps.security.auth import require_permission
-from uuid import uuid4
-from datetime import datetime, timezone
+from domain.models import Incident, IncidentStatus, Finding
+from domain.schemas import IncidentCreate, IncidentResponse
 
 router = APIRouter()
-
-
-@router.post("/incidents/simulate", dependencies=[Depends(rate_limiter_default)])
-async def simulate_incident(request: Request, incident_data: IncidentCreate):
-    try:
-        trace_id = get_trace_id()
-        from apps.context_service import ContextBuilder
-        full_context = await ContextBuilder().build_context(incident_data)
-        return {"status": "success", "incident": incident_data.model_dump(), "context": full_context,
-                "message": "Context built successfully.", "trace_id": trace_id}
-    except Exception as exc:
-        logger.error(f"Simulation failed: {str(exc)}", trace_id=get_trace_id())
-        raise HTTPException(status_code=500, detail=str(exc))
-
-
-@router.post("/incidents/analyze", dependencies=[Depends(rate_limiter_strict)])
-async def analyze_incident(request: Request, incident_data: IncidentCreate):
-    try:
-        trace_id = get_trace_id()
-        from apps.context_service import ContextBuilder
-        from apps.orchestrator.runtime import DurableWorkflowRuntime
-
-        full_context = await ContextBuilder().build_context(incident_data)
-        incident_id = str(uuid4())
-        summary = full_context.get("summary", {})
-        evidence_summary = (
-            f"Service: {incident_data.service}\n"
-            f"Log count: {summary.get('log_count', 0)}\n"
-            f"Metric count: {summary.get('metric_count', 0)}\n"
-            f"Alert count: {summary.get('alert_count', 0)}\n"
-            f"Average CPU: {summary.get('avg_cpu', 'N/A')}\n"
-            f"Average Memory: {summary.get('avg_memory', 'N/A')}"
-        )
-        initial_state = {
-            "incident_id": incident_id,
-            "evidence_summary": evidence_summary,
-            "service_name": incident_data.service,
-            "context": full_context,
-            "messages": [],
-            "findings": [],
-            "confidence": 0.0,
-        }
-        async with AsyncSessionLocal() as db:
-            result = await DurableWorkflowRuntime(db).start(initial_state)
-        return {
-            "status": "success", "incident": incident_data.model_dump(), "incident_id": incident_id,
-            "context": result.get("context", {}), "live_evidence": result.get("live_evidence", {}),
-            "rag_results": result.get("knowledge_results", []), "similar_incidents": result.get("memory_results", []),
-            "analysis": {"triage_result": result.get("triage_result"), "analysis_results": result.get("analysis_results", []),
-                         "final_plan": result.get("final_plan"), "messages": result.get("messages", []), "findings": result.get("findings", [])},
-            "evaluation": result.get("evaluation"), "decision": result.get("decision"), "approval": result.get("approval"),
-            "execution": result.get("execution_result"), "verification": result.get("verification_result"), "trace_id": trace_id,
-        }
-    except Exception as exc:
-        logger.error(f"Analysis failed: {str(exc)}", trace_id=get_trace_id())
-        raise HTTPException(status_code=500, detail=str(exc))
 
 
 class RemediationRequest(BaseModel):
@@ -79,25 +31,195 @@ class RemediationRequest(BaseModel):
     approver: str = Field(default="Team-Lead")
 
 
-@router.post("/incidents/{incident_id}/remediate")
-async def request_remediation(incident_id: str, payload: RemediationRequest, _user=Depends(require_permission("approve:low_risk"))):
-    """Create a guarded remediation request from the latest incident finding.
+async def _load_incident(db, incident_id: UUID) -> Incident:
+    incident = await db.get(Incident, incident_id)
+    if incident is None:
+        raise HTTPException(status_code=404, detail="Incident not found")
+    return incident
 
-    This endpoint intentionally does not execute a tool. It creates a durable
-    approval request so execution can only happen after policy + human approval.
-    """
+
+@router.post("/incidents", response_model=IncidentResponse, status_code=201, dependencies=[Depends(rate_limiter_default)])
+async def create_incident(incident_data: IncidentCreate, _user=Depends(require_permission("read:incident"))):
     async with AsyncSessionLocal() as db:
-        try:
-            incident = await db.get(Incident, incident_id)
-        except Exception:
-            incident = None
-        if incident is None:
-            raise HTTPException(status_code=404, detail="Incident not found")
+        incident = Incident(
+            id=uuid4(),
+            source=incident_data.source,
+            severity=incident_data.severity,
+            service=incident_data.service,
+            summary=incident_data.summary,
+            context=incident_data.context or {},
+            status=IncidentStatus.OPEN,
+        )
+        db.add(incident)
+        await db.commit()
+        await db.refresh(incident)
 
-        finding = (await db.execute(
-            select(Finding).where(Finding.incident_id == incident_id)
-            .order_by(desc(Finding.created_at)).limit(1)
-        )).scalars().first()
+        AuditService.record(
+            "incident_created",
+            "api",
+            str(incident.id),
+            None,
+            "recorded",
+            {"source": incident.source, "severity": incident.severity, "service": incident.service},
+        )
+        await AuditService.flush_to_store(PostgreSQLAuditStore(db), incident_id=str(incident.id))
+        return incident
+
+
+@router.get("/incidents/{incident_id}", response_model=IncidentResponse)
+async def get_incident(incident_id: UUID, _user=Depends(require_permission("read:incident"))):
+    async with AsyncSessionLocal() as db:
+        return await _load_incident(db, incident_id)
+
+
+@router.post("/incidents/{incident_id}/analyze", dependencies=[Depends(rate_limiter_strict)])
+async def analyze_incident_by_id(request: Request, incident_id: UUID, _user=Depends(require_permission("read:incident"))):
+    async with AsyncSessionLocal() as db:
+        incident = await _load_incident(db, incident_id)
+
+        from apps.context_service import ContextBuilder
+
+        input_data = IncidentCreate(
+            source=incident.source,
+            severity=incident.severity,
+            service=incident.service,
+            summary=incident.summary,
+            context=incident.context or {},
+        )
+        full_context = await ContextBuilder().build_context(input_data)
+        initial_state: Dict[str, Any] = {
+            "incident_id": str(incident.id),
+            "evidence_summary": incident.summary or f"Operational incident for {incident.service or 'unknown'}",
+            "service_name": incident.service,
+            "context": full_context,
+            "messages": [],
+            "findings": [],
+            "confidence": 0.0,
+        }
+        result = await DurableWorkflowRuntime(db).start(initial_state)
+        return {
+            "status": "success",
+            "incident_id": str(incident.id),
+            "context": result.get("context", {}),
+            "live_evidence": result.get("live_evidence", {}),
+            "rag_results": result.get("knowledge_results", []),
+            "similar_incidents": result.get("memory_results", []),
+            "analysis": {
+                "triage_result": result.get("triage_result"),
+                "analysis_results": result.get("analysis_results", []),
+                "final_plan": result.get("final_plan"),
+                "messages": result.get("messages", []),
+                "findings": result.get("findings", []),
+            },
+            "evaluation": result.get("evaluation"),
+            "decision": result.get("decision"),
+            "approval": result.get("approval"),
+            "execution": result.get("execution_result"),
+            "verification": result.get("verification_result"),
+            "trace_id": get_trace_id(),
+        }
+
+
+# Backward-compatible analysis endpoint. New callers should create an incident first.
+@router.post("/incidents/analyze", dependencies=[Depends(rate_limiter_strict)])
+async def analyze_incident_legacy(request: Request, incident_data: IncidentCreate, _user=Depends(require_permission("read:incident"))):
+    async with AsyncSessionLocal() as db:
+        incident = Incident(
+            id=uuid4(),
+            source=incident_data.source,
+            severity=incident_data.severity,
+            service=incident_data.service,
+            summary=incident_data.summary,
+            context=incident_data.context or {},
+            status=IncidentStatus.OPEN,
+        )
+        db.add(incident)
+        await db.commit()
+        await db.refresh(incident)
+        incident_id = incident.id
+
+    return await analyze_incident_by_id(request, incident_id, _user)
+
+
+@router.post("/incidents/{incident_id}/approve")
+async def approve_incident(incident_id: UUID, _user=Depends(require_permission("approve:low_risk"))):
+    async with AsyncSessionLocal() as db:
+        await _load_incident(db, incident_id)
+        row = (
+            await db.execute(
+                select(
+                    text("approval_id"),
+                )
+            )
+            if False else None
+        )
+        approval = (
+            await db.execute(
+                __import__("sqlalchemy").text(
+                    "SELECT approval_id FROM approvals WHERE incident_id=:incident_id AND status='pending' ORDER BY created_at DESC LIMIT 1"
+                ),
+                {"incident_id": str(incident_id)},
+            )
+        ).scalar_one_or_none()
+        if not approval:
+            raise HTTPException(status_code=404, detail="No pending approval for incident")
+        saved = await PostgreSQLApprovalStore(db).set_status(str(approval), "approved")
+        if saved is None:
+            raise HTTPException(status_code=404, detail="Approval not found")
+        AuditService.record(
+            "approval_granted",
+            "api",
+            str(incident_id),
+            saved.get("action"),
+            "approved",
+            {"approval_id": str(approval)},
+        )
+        await AuditService.flush_to_store(PostgreSQLAuditStore(db), incident_id=str(incident_id))
+        return saved
+
+
+@router.post("/incidents/{incident_id}/execute")
+async def execute_incident(incident_id: UUID, _user=Depends(require_permission("execute:approved"))):
+    async with AsyncSessionLocal() as db:
+        await _load_incident(db, incident_id)
+        checkpoint = await DurableWorkflowRuntime(db).checkpoints.load(str(incident_id))
+        if not checkpoint:
+            raise HTTPException(status_code=409, detail="No resumable workflow checkpoint for incident")
+        approval = checkpoint.get("state", {}).get("approval") or {}
+        approval_id = approval.get("approval_id")
+        if not approval_id:
+            raise HTTPException(status_code=409, detail="Incident has no approval gate")
+        approval_record = await PostgreSQLApprovalStore(db).get(str(approval_id))
+        if not approval_record or approval_record.get("status") != "approved":
+            raise HTTPException(status_code=409, detail="Approval is not granted")
+
+        try:
+            result = await DurableWorkflowRuntime(db).resume_after_approval(str(incident_id))
+        except ValueError as exc:
+            raise HTTPException(status_code=409, detail=str(exc)) from exc
+        return {
+            "incident_id": str(incident_id),
+            "approval_id": str(approval_id),
+            "execution": result.get("execution_result"),
+            "verification": result.get("verification_result"),
+            "memory": result.get("memory_results", []),
+            "status": "completed",
+        }
+
+
+@router.post("/incidents/{incident_id}/remediate")
+async def request_remediation(
+    incident_id: UUID,
+    payload: RemediationRequest,
+    _user=Depends(require_permission("approve:low_risk")),
+):
+    async with AsyncSessionLocal() as db:
+        incident = await _load_incident(db, incident_id)
+        finding = (
+            await db.execute(
+                select(Finding).where(Finding.incident_id == incident_id).order_by(desc(Finding.created_at)).limit(1)
+            )
+        ).scalars().first()
         action = finding.statement if finding else f"Remediate incident for service {incident.service or 'unknown'}"
         approval_id = str(uuid4())
         record = {
@@ -107,18 +229,19 @@ async def request_remediation(incident_id: str, payload: RemediationRequest, _us
             "risk_level": payload.risk_level,
             "approver": payload.approver,
             "status": "pending",
-            "metadata": {"source": "dashboard", "reason": payload.reason},
+            "metadata": {"source": "incident_api", "reason": payload.reason},
             "created_at": datetime.now(timezone.utc),
             "approved_at": None,
             "rejected_at": None,
         }
-        await PostgreSQLApprovalStore(db).save(record)
-        return {
-            "status": "approval_required",
-            "incident_id": str(incident_id),
-            "approval_id": approval_id,
-            "action": action,
-            "risk_level": payload.risk_level,
-            "approver": payload.approver,
-            "message": "Remediation request created. Execution is blocked until approval.",
-        }
+        saved = await PostgreSQLApprovalStore(db).save(record)
+        AuditService.record(
+            "remediation_requested",
+            "api",
+            str(incident_id),
+            action,
+            "pending_approval",
+            {"approval_id": approval_id, "risk_level": payload.risk_level},
+        )
+        await AuditService.flush_to_store(PostgreSQLAuditStore(db), incident_id=str(incident_id))
+        return saved
