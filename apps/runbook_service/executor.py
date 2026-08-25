@@ -24,9 +24,6 @@ class RunbookExecutor:
         self._completed: Dict[str, ExecutionResult] = {}
 
     def validate(self, runbook_id: str, parameters: Dict[str, Any]) -> Dict[str, Any]:
-        runbook = self.registry.get(runbook_id)
-        if not runbook:
-            raise ValueError("runbook_not_found")
         return self.registry.validate(runbook_id, parameters)
 
     async def execute(
@@ -39,11 +36,11 @@ class RunbookExecutor:
         timeout: int = 30,
         dry_run: bool = False,
         approval_id: Optional[str] = None,
+        approval_granted: bool = False,
+        incident_id: Optional[str] = None,
         rollback_requested: bool = False,
     ) -> Dict[str, Any]:
         runbook = self.registry.get(runbook_id)
-        if not runbook:
-            raise ValueError("runbook_not_found")
         self.registry.validate(runbook_id, parameters)
 
         fingerprint = execution_fingerprint(tool_name, runbook_id, target, parameters)
@@ -69,8 +66,9 @@ class RunbookExecutor:
             parameters=parameters,
             timeout=timeout,
             agent_name="runbook_executor",
-            approval_granted=bool(approval_id),
+            approval_granted=approval_granted,
             approval_id=approval_id,
+            incident_id=incident_id,
         )
         result = await ExecutionService.execute(request)
         if result.success:

@@ -1,22 +1,37 @@
-from fastapi import Depends, FastAPI
-from fastapi.responses import FileResponse
 from pathlib import Path
 
-from domain.contracts.config import settings
-from domain.contracts.logging import configure_logging, logger
-from domain.contracts.exceptions import register_exception_handlers
-from domain.contracts.rate_limit import rate_limiter_strict
+from fastapi import Depends, FastAPI
+from fastapi.responses import FileResponse
 
-from apps.api import health, workflow, incidents, a2a, execution, e2e_workflow, audit, runbooks, incident_resources, dashboard, runbook_execution, dashboard_incidents, remediation
 from agents.triage import TriageAgent
-from apps.execution_service.tools.registry import tool_registry
+from apps.api import (
+    a2a,
+    audit,
+    dashboard,
+    dashboard_incidents,
+    e2e_workflow,
+    execution,
+    health,
+    incident_resources,
+    incidents,
+    knowledge,
+    remediation,
+    runbook_execution,
+    runbooks,
+    workflow,
+)
+from apps.database.vector_validation import validate_pgvector
 from apps.execution_service.tools.mock_executor import MockExecutorTool
+from apps.execution_service.tools.registry import tool_registry
 from apps.execution_service.tools.ssh_vm import SSHVMTool
 from apps.execution_service.tools.vm_telemetry import VMTelemetryTool
-from integrations.vm.ssh_connector import SSHVMConnector
-from apps.database.vector_validation import validate_pgvector
-from database import AsyncSessionLocal
 from apps.security.auth import require_permission
+from database import AsyncSessionLocal
+from domain.contracts.config import settings
+from domain.contracts.exceptions import register_exception_handlers
+from domain.contracts.logging import configure_logging, logger
+from domain.contracts.rate_limit import rate_limiter_strict
+from integrations.vm.ssh_connector import SSHVMConnector
 
 configure_logging()
 app = FastAPI(title=settings.APP_NAME, version=settings.APP_VERSION, debug=settings.DEBUG)
@@ -36,19 +51,48 @@ for router, tags in [
     (execution.router, ["Execution"]),
     (dashboard.router, ["Dashboard"]),
     (dashboard_incidents.router, ["Dashboard Incidents"]),
+    (knowledge.router, ["Knowledge"]),
 ]:
     app.include_router(router, prefix="/api/v1", tags=tags)
 
 
-# Master API contract guard. This keeps the published paths present even if a
-# router is refactored or accidentally omitted from the aggregate registration.
+# MASTER.md Section 19 canonical public contract guard.
 _MASTER_API_ROUTES = {
     "/api/v1/health": (health.health_check, ["GET"], []),
-    "/api/v1/incidents/analyze": (incidents.analyze_incident, ["POST"], [Depends(rate_limiter_strict)]),
+    "/api/v1/incidents": (incidents.create_incident, ["POST"], []),
+    "/api/v1/incidents/{incident_id}": (incidents.get_incident, ["GET"], []),
+    "/api/v1/incidents/{incident_id}/analyze": (
+        incidents.analyze_incident_by_id,
+        ["POST"],
+        [Depends(rate_limiter_strict)],
+    ),
+    "/api/v1/incidents/{incident_id}/approve": (
+        incidents.approve_incident,
+        ["POST"],
+        [Depends(require_permission("approve:low_risk"))],
+    ),
+    "/api/v1/incidents/{incident_id}/execute": (
+        incidents.execute_incident,
+        ["POST"],
+        [Depends(require_permission("execute:approved"))],
+    ),
     "/api/v1/dashboard/summary": (dashboard.dashboard_summary, ["GET"], []),
-    "/api/v1/approvals": (execution.create_approval, ["POST"], [Depends(require_permission("approve:low_risk"))]),
-    "/api/v1/runbooks/{runbook_id}/execute": (runbook_execution.execute_runbook, ["POST"], [Depends(require_permission("execute:approved"))]),
-    "/api/v1/runbooks/{runbook_id}/dry-run": (runbook_execution.dry_run, ["POST"], [Depends(require_permission("read:incident"))]),
+    "/api/v1/approvals": (
+        execution.create_approval,
+        ["POST"],
+        [Depends(require_permission("approve:low_risk"))],
+    ),
+    "/api/v1/runbooks/{runbook_id}/execute": (
+        runbook_execution.execute_runbook,
+        ["POST"],
+        [Depends(require_permission("execute:approved"))],
+    ),
+    "/api/v1/runbooks/{runbook_id}/dry-run": (
+        runbook_execution.dry_run,
+        ["POST"],
+        [Depends(require_permission("read:incident"))],
+    ),
+    "/api/v1/knowledge": (knowledge.list_knowledge, ["GET"], []),
 }
 for _path, (_endpoint, _methods, _dependencies) in _MASTER_API_ROUTES.items():
     if not any(getattr(route, "path", None) == _path for route in app.routes):
@@ -57,7 +101,12 @@ for _path, (_endpoint, _methods, _dependencies) in _MASTER_API_ROUTES.items():
 
 @app.get("/")
 async def root():
-    return {"message": f"Welcome to {settings.APP_NAME}", "version": settings.APP_VERSION, "docs": "/docs", "dashboard": "/dashboard"}
+    return {
+        "message": f"Welcome to {settings.APP_NAME}",
+        "version": settings.APP_VERSION,
+        "docs": "/docs",
+        "dashboard": "/dashboard",
+    }
 
 
 @app.get("/dashboard", include_in_schema=False)
@@ -105,4 +154,4 @@ async def startup_event():
 
 @app.on_event("shutdown")
 async def shutdown_event():
-    logger.info(f"Shutting down {settings.APP_NAME}")
+    logger.info(f"Shutting down {settings.APP_NAME} v{settings.APP_VERSION}")

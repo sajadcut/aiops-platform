@@ -8,10 +8,28 @@ class RolePolicy:
     permissions: FrozenSet[str]
 
 
+COMMON_READ = frozenset({"read:incident", "read:audit"})
+
 POLICIES = {
-    "viewer": RolePolicy("viewer", frozenset({"read:incident", "read:audit"})),
-    "operator": RolePolicy("operator", frozenset({"read:incident", "read:audit", "approve:low_risk", "execute:low_risk", "runbook:dry_run"})),
-    "sre": RolePolicy("sre", frozenset({"read:incident", "read:audit", "approve:low_risk", "approve:high_risk", "execute:low_risk", "execute:approved", "runbook:dry_run"})),
+    "viewer": RolePolicy("viewer", COMMON_READ),
+    "operator": RolePolicy(
+        "operator",
+        COMMON_READ
+        | frozenset({"approve:low_risk", "execute:low_risk", "runbook:dry_run", "manage:knowledge", "manage:runbook"}),
+    ),
+    "sre": RolePolicy(
+        "sre",
+        COMMON_READ
+        | frozenset({
+            "approve:low_risk",
+            "approve:high_risk",
+            "execute:low_risk",
+            "execute:approved",
+            "runbook:dry_run",
+            "manage:knowledge",
+            "manage:runbook",
+        }),
+    ),
 }
 
 

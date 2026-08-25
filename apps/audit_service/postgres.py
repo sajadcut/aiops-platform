@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import json
 from typing import Any, Dict, List, Optional
+
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -12,6 +14,12 @@ class PostgreSQLAuditStore:
         self.session = session
 
     async def append(self, event: Dict[str, Any]) -> Dict[str, Any]:
+        # asyncpg's JSONB encoder expects a string for an explicit CAST(... AS jsonb).
+        # Normalize the Python mapping here so audit writes work consistently with
+        # the asyncpg SQLAlchemy dialect.
+        params = dict(event)
+        params["metadata"] = json.dumps(params.get("metadata") or {}, ensure_ascii=False)
+
         await self.session.execute(
             text(
                 """INSERT INTO audit_events
@@ -19,7 +27,7 @@ class PostgreSQLAuditStore:
                 VALUES (:event_id, :event_type, :actor, :incident_id, :action,
                         :status, CAST(:metadata AS jsonb), :created_at)"""
             ),
-            event,
+            params,
         )
         await self.session.commit()
         return event
