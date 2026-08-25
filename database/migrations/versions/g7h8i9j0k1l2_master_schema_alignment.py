@@ -6,9 +6,6 @@ Revises: f1a2b3c4d5e6
 from typing import Sequence, Union
 
 from alembic import op
-import sqlalchemy as sa
-from sqlalchemy.dialects.postgresql import UUID
-from pgvector.sqlalchemy import Vector
 
 revision: str = "g7h8i9j0k1l2"
 down_revision: Union[str, Sequence[str], None] = "f1a2b3c4d5e6"
@@ -17,8 +14,6 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    # The original governance migration used incident_id as the PK name.
-    # MASTER/domain models use id. Rename only when the legacy column exists.
     op.execute("""
         DO $$
         BEGIN
@@ -33,12 +28,11 @@ def upgrade() -> None:
             END IF;
         END $$;
     """)
-
+    op.execute("ALTER TABLE incidents ALTER COLUMN service DROP NOT NULL")
     op.execute("ALTER TABLE incidents ADD COLUMN IF NOT EXISTS context JSONB")
     op.execute("CREATE INDEX IF NOT EXISTS ix_incidents_service ON incidents(service)")
     op.execute("CREATE INDEX IF NOT EXISTS ix_incidents_status ON incidents(status)")
 
-    # Canonical ORM tables required by MASTER/domain models.
     op.execute("""
         CREATE TABLE IF NOT EXISTS evidences (
             id UUID PRIMARY KEY,
@@ -71,7 +65,6 @@ def upgrade() -> None:
     op.execute("CREATE INDEX IF NOT EXISTS ix_findings_incident_id ON findings(incident_id)")
     op.execute("CREATE INDEX IF NOT EXISTS ix_findings_agent ON findings(agent)")
 
-    # Copy legacy operational data into canonical tables without deleting it.
     op.execute("""
         INSERT INTO evidences (id, incident_id, type, source, query, time_range, reference, raw_data, confidence, created_at)
         SELECT gen_random_uuid(), ie.incident_id,
@@ -180,4 +173,3 @@ def downgrade() -> None:
     op.execute("DROP TABLE IF EXISTS action_plans")
     op.execute("DROP TABLE IF EXISTS findings")
     op.execute("DROP TABLE IF EXISTS evidences")
-    # Do not rename incidents back or drop context: existing installations may rely on them.
