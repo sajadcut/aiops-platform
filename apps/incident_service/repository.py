@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Any, Dict, Iterable, Optional
 from uuid import UUID, uuid4
 
-from sqlalchemy import select
+from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from domain.models import Evidence, EvidenceType, Finding, Incident, IncidentStatus
@@ -52,6 +53,41 @@ class IncidentRepository:
         incident = await self.session.get(Incident, UUID(str(incident_id)))
         if incident is not None:
             incident.status = IncidentStatus(str(status).lower())
+
+    async def acquire_correlation_lock(self, fingerprint: str) -> None:
+        """Serialize creation for a deterministic correlation fingerprint."""
+        await self.session.execute(
+            text("SELECT pg_advisory_xact_lock(hashtextextended(:fingerprint, 0))"),
+            {"fingerprint": str(fingerprint)},
+        )
+
+    async def find_correlated_open_incident(
+        self,
+        *,
+        fingerprint: str,
+        service: str,
+        since: datetime,
+        limit: int = 25,
+    ) -> Optional[str]:
+        """Find a bounded open/analyzing incident with the same fingerprint."""
+        rows = (
+            await self.session.execute(
+                select(Incident)
+                .where(
+                    Incident.service == str(service),
+                    Incident.started_at >= since,
+                    Incident.status.in_([IncidentStatus.OPEN, IncidentStatus.ANALYZING]),
+                )
+                .order_by(Incident.started_at.desc())
+                .limit(max(1, min(int(limit), 100)))
+            )
+        ).scalars().all()
+        for incident in rows:
+            context = dict(incident.context or {})
+            correlation = dict(context.get("correlation") or {})
+            if str(correlation.get("fingerprint") or "") == str(fingerprint):
+                return str(incident.id)
+        return None
 
     async def find_incident_by_evidence_reference(
         self,
