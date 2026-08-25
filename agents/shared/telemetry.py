@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from threading import Lock
-from typing import Any, Dict
+from typing import Any, Dict, Iterable
 
 from domain.contracts.config import settings
 
@@ -44,11 +44,10 @@ class AgentTelemetry:
         confidence: float,
         evidence_coverage: float,
         handoff_count: int = 0,
-        disagreement: bool = False,
         conflict_count: int = 0,
         human_review: bool = False,
     ) -> None:
-        """Record the validated operational result without incrementing invocation count."""
+        """Record one validated result corresponding to one invocation."""
         with cls._lock:
             row = cls._data[agent]
             confidence = max(0.0, min(1.0, float(confidence)))
@@ -59,10 +58,25 @@ class AgentTelemetry:
                 row["low_confidence"] += 1
             row["handoffs"] += max(0, int(handoff_count))
             row["conflicts"] += max(0, int(conflict_count))
-            if disagreement:
-                row["disagreements"] += 1
             if human_review:
                 row["human_reviews"] += 1
+
+    @classmethod
+    def record_collaboration(
+        cls,
+        agents: Iterable[str],
+        *,
+        disagreement: bool,
+        contradiction_count: int,
+    ) -> None:
+        """Attach collaboration outcomes without duplicating result averages."""
+        names = {str(name) for name in agents if str(name)}
+        with cls._lock:
+            for name in names:
+                row = cls._data[name]
+                if disagreement:
+                    row["disagreements"] += 1
+                row["collaboration_contradictions"] += max(0, int(contradiction_count))
 
     @classmethod
     def snapshot(cls) -> Dict[str, Dict[str, Any]]:
@@ -79,6 +93,7 @@ class AgentTelemetry:
                     "handoffs": int(raw.get("handoffs", 0)),
                     "conflicts": int(raw.get("conflicts", 0)),
                     "disagreements": int(raw.get("disagreements", 0)),
+                    "collaboration_contradictions": int(raw.get("collaboration_contradictions", 0)),
                     "human_reviews": int(raw.get("human_reviews", 0)),
                     "avg_duration_seconds": round(raw.get("duration_seconds_total", 0.0) / invocations, 4) if invocations else 0.0,
                     "avg_confidence": round(raw.get("confidence_total", 0.0) / invocations, 4) if invocations else 0.0,
