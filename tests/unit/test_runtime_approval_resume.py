@@ -8,12 +8,16 @@ class FakeCheckpointStore:
     def __init__(self, state):
         self.state = state
         self.completed = None
+        self.failed = None
 
     async def load(self, incident_id):
         return {"state": self.state, "status": "paused"}
 
     async def mark_completed(self, incident_id, result):
         self.completed = (incident_id, result)
+
+    async def mark_failed(self, incident_id, result):
+        self.failed = (incident_id, result)
 
 
 class FakeApprovalStore:
@@ -23,6 +27,16 @@ class FakeApprovalStore:
             "incident_id": "incident-1",
             "action": "restart_service",
             "status": "approved",
+            "metadata": {"target": "vm01", "tool_name": "ssh_vm"},
+        }
+
+    async def consume(self, approval_id):
+        return {
+            "approval_id": approval_id,
+            "incident_id": "incident-1",
+            "action": "restart_service",
+            "status": "consumed",
+            "metadata": {"target": "vm01", "tool_name": "ssh_vm"},
         }
 
 
@@ -50,7 +64,7 @@ class FakeOrchestrator:
         return state
 
     async def _verification_node(self, state):
-        state["verification_result"] = {"status": "verified"}
+        state["verification_result"] = {"status": "success"}
         return state
 
     async def _memory_node(self, state):
@@ -89,5 +103,6 @@ async def test_resume_injects_persisted_approval_into_execution_request(monkeypa
     result = await runtime.resume_after_approval("incident-1")
 
     assert result["current_node"] == "end"
+    assert runtime.checkpoints.completed is not None
     assert FakeOrchestrator.captured_execution_request["approval_granted"] is True
     assert FakeOrchestrator.captured_execution_request["approval_id"] == "approval-123"
