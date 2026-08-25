@@ -12,7 +12,6 @@ class Settings(BaseSettings):
     ``.env.example`` documents the complete non-secret template contract.
     """
 
-    # Application
     APP_NAME: str = Field(...)
     APP_VERSION: str = Field(...)
     APP_ENV: str = Field(...)
@@ -20,20 +19,17 @@ class Settings(BaseSettings):
     HOST: str = Field(...)
     PORT: int = Field(...)
 
-    # PostgreSQL / migrations
     DATABASE_URL: str = Field(...)
     ALEMBIC_DATABASE_URL: Optional[str] = Field(...)
     DATABASE_POOL_SIZE: int = Field(...)
     DATABASE_MAX_OVERFLOW: int = Field(...)
 
-    # LLM
     LLM_PROVIDER: str = Field(...)
     LLM_API_KEY: Optional[str] = Field(...)
     LLM_BASE_URL: Optional[str] = Field(...)
     LLM_MODEL: str = Field(...)
     LLM_TIMEOUT_SECONDS: int = Field(...)
 
-    # Embeddings / pgvector
     EMBEDDING_PROVIDER: str = Field(...)
     EMBEDDING_BASE_URL: Optional[str] = Field(...)
     EMBEDDING_API_KEY: Optional[str] = Field(...)
@@ -43,11 +39,9 @@ class Settings(BaseSettings):
     PGVECTOR_EXPECTED_DIMENSION: Optional[int] = Field(...)
     PGVECTOR_VALIDATE_ON_STARTUP: bool = Field(...)
 
-    # Knowledge governance
     KNOWLEDGE_ALLOWED_SOURCE_TYPES: List[str] = Field(...)
     KNOWLEDGE_REQUIRE_GOVERNANCE_PRODUCTION: bool = Field(...)
 
-    # Logging / API / security
     LOG_LEVEL: str = Field(...)
     LOG_JSON: bool = Field(...)
     INTERNAL_API_KEY: Optional[str] = Field(...)
@@ -56,26 +50,25 @@ class Settings(BaseSettings):
     RATE_LIMIT_STRICT_REQUESTS: int = Field(...)
     RATE_LIMIT_LOOSE_REQUESTS: int = Field(...)
     RATE_LIMIT_WINDOW_SECONDS: int = Field(...)
+    RETRY_MAX_ATTEMPTS: int = Field(...)
+    RETRY_DELAY_SECONDS: float = Field(...)
+    RETRY_BACKOFF_FACTOR: float = Field(...)
     CORS_ORIGINS: List[str] = Field(...)
     APPROVAL_TTL_SECONDS: int = Field(...)
 
-    # Zabbix
     ZABBIX_URL: str = Field(...)
     ZABBIX_USERNAME: Optional[str] = Field(...)
     ZABBIX_PASSWORD: Optional[str] = Field(...)
     ZABBIX_TIMEOUT_SECONDS: int = Field(...)
 
-    # Elasticsearch
     ELASTICSEARCH_HOSTS: List[str] = Field(...)
     ELASTICSEARCH_USERNAME: Optional[str] = Field(...)
     ELASTICSEARCH_PASSWORD: Optional[str] = Field(...)
     ELASTICSEARCH_TIMEOUT_SECONDS: int = Field(...)
 
-    # Prometheus
     PROMETHEUS_URL: str = Field(...)
     PROMETHEUS_TIMEOUT_SECONDS: int = Field(...)
 
-    # VM / SSH
     SSH_ENABLED: bool = Field(...)
     SSH_USERNAME: str = Field(...)
     SSH_PRIVATE_KEY_PATH: Optional[str] = Field(...)
@@ -85,12 +78,10 @@ class Settings(BaseSettings):
     SSH_CONNECT_TIMEOUT: int = Field(...)
     VM_CPU_RECOVERY_THRESHOLD: float = Field(...)
 
-    # OIDC / SSO
     OIDC_ISSUER_URL: Optional[str] = Field(...)
     OIDC_AUDIENCE: Optional[str] = Field(...)
     OIDC_JWKS_URL: Optional[str] = Field(...)
 
-    # Offline deployment
     OFFLINE_IMAGE_REGISTRY: Optional[str] = Field(...)
     IMAGE_PULL_POLICY: str = Field(...)
 
