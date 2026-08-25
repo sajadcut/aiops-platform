@@ -1,56 +1,60 @@
 import asyncio
 from typing import TypeVar, Callable, Any, Optional
 from functools import wraps
+
+from domain.contracts.config import settings
 from domain.contracts.logging import logger
 
-T = TypeVar('T')
+T = TypeVar("T")
+
 
 class RetryError(Exception):
-    """خطای مربوط به تلاش مجدد"""
     pass
+
 
 async def retry_async(
     func: Callable[..., Any],
     *args,
-    max_retries: int = 3,
-    delay_seconds: float = 1.0,
-    backoff_factor: float = 2.0,
+    max_retries: Optional[int] = None,
+    delay_seconds: Optional[float] = None,
+    backoff_factor: Optional[float] = None,
     exceptions: tuple = (Exception,),
-    **kwargs
+    **kwargs,
 ) -> Any:
-    """
-    اجرای تابع با قابلیت تلاش مجدد.
-    
-    Args:
-        func: تابع async برای اجرا
-        max_retries: حداکثر تعداد تلاش
-        delay_seconds: تأخیر اولیه
-        backoff_factor: ضریب افزایش تأخیر
-        exceptions: استثناهایی که باعث تلاش مجدد می‌شوند
-    """
+    resolved_max_retries = settings.RETRY_MAX_ATTEMPTS if max_retries is None else max_retries
+    resolved_delay = settings.RETRY_DELAY_SECONDS if delay_seconds is None else delay_seconds
+    resolved_backoff = settings.RETRY_BACKOFF_FACTOR if backoff_factor is None else backoff_factor
+
     last_exception = None
-    current_delay = delay_seconds
-    
-    for attempt in range(1, max_retries + 1):
+    current_delay = resolved_delay
+
+    for attempt in range(1, resolved_max_retries + 1):
         try:
             return await func(*args, **kwargs)
-        except exceptions as e:
-            last_exception = e
-            if attempt < max_retries:
+        except exceptions as exc:
+            last_exception = exc
+            if attempt < resolved_max_retries:
                 logger.warning(
-                    f"Retry {attempt}/{max_retries} for {func.__name__} after error: {str(e)}. Waiting {current_delay:.2f}s"
+                    f"Retry {attempt}/{resolved_max_retries} for {func.__name__} after error: "
+                    f"{str(exc)}. Waiting {current_delay:.2f}s"
                 )
                 await asyncio.sleep(current_delay)
-                current_delay *= backoff_factor
+                current_delay *= resolved_backoff
             else:
-                logger.error(f"All {max_retries} retries failed for {func.__name__}: {str(e)}")
-    
-    raise RetryError(f"Function {func.__name__} failed after {max_retries} attempts") from last_exception
+                logger.error(
+                    f"All {resolved_max_retries} retries failed for {func.__name__}: {str(exc)}"
+                )
 
-def with_retry(max_retries: int = 3, delay_seconds: float = 1.0, backoff_factor: float = 2.0):
-    """
-    Decorator برای اضافه کردن قابلیت Retry به توابع async.
-    """
+    raise RetryError(
+        f"Function {func.__name__} failed after {resolved_max_retries} attempts"
+    ) from last_exception
+
+
+def with_retry(
+    max_retries: Optional[int] = None,
+    delay_seconds: Optional[float] = None,
+    backoff_factor: Optional[float] = None,
+):
     def decorator(func):
         @wraps(func)
         async def wrapper(*args, **kwargs):
@@ -60,7 +64,9 @@ def with_retry(max_retries: int = 3, delay_seconds: float = 1.0, backoff_factor:
                 max_retries=max_retries,
                 delay_seconds=delay_seconds,
                 backoff_factor=backoff_factor,
-                **kwargs
+                **kwargs,
             )
+
         return wrapper
+
     return decorator
