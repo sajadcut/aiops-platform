@@ -16,7 +16,11 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-database_url = os.getenv("DATABASE_URL") or config.get_main_option("sqlalchemy.url")
+raw_database_url = os.getenv("ALEMBIC_DATABASE_URL") or os.getenv("DATABASE_URL") or config.get_main_option("sqlalchemy.url")
+if raw_database_url.startswith("postgresql+asyncpg://"):
+    database_url = raw_database_url.replace("postgresql+asyncpg://", "postgresql+psycopg://", 1)
+else:
+    database_url = raw_database_url
 config.set_main_option("sqlalchemy.url", database_url)
 target_metadata = Base.metadata
 
