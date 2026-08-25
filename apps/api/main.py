@@ -1,4 +1,5 @@
 from fastapi import Depends, FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pathlib import Path
 
@@ -21,6 +22,13 @@ from apps.security.auth import require_permission
 configure_logging()
 app = FastAPI(title=settings.APP_NAME, version=settings.APP_VERSION, debug=settings.DEBUG)
 register_exception_handlers(app)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.CORS_ORIGINS,
+    allow_credentials=False,
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "X-API-Key"],
+)
 
 for router, tags in [
     (health.router, ["Health"]),
@@ -41,8 +49,8 @@ for router, tags in [
 
 _MASTER_API_ROUTES = {
     "/api/v1/health": (health.health_check, ["GET"], []),
-    "/api/v1/incidents/analyze": (incidents.analyze_incident, ["POST"], [Depends(rate_limiter_strict)]),
-    "/api/v1/dashboard/summary": (dashboard.dashboard_summary, ["GET"], []),
+    "/api/v1/incidents/analyze": (incidents.analyze_incident, ["POST"], [Depends(rate_limiter_strict), Depends(require_permission("read:incident"))]),
+    "/api/v1/dashboard/summary": (dashboard.dashboard_summary, ["GET"], [Depends(require_permission("read:incident"))]),
     "/api/v1/approvals": (execution.create_approval, ["POST"], [Depends(require_permission("approve:low_risk"))]),
     "/api/v1/runbooks/{runbook_id}/execute": (runbook_execution.execute_runbook, ["POST"], [Depends(require_permission("execute:approved"))]),
     "/api/v1/runbooks/{runbook_id}/dry-run": (runbook_execution.dry_run, ["POST"], [Depends(require_permission("read:incident"))]),
@@ -67,14 +75,36 @@ async def dashboard_page_slash():
     return FileResponse(Path(__file__).resolve().parents[2] / "dashboards" / "index.html")
 
 
+def _validate_production_configuration() -> None:
+    if settings.APP_ENV != "production":
+        return
+    errors = []
+    if "*" in settings.CORS_ORIGINS:
+        errors.append("CORS_ORIGINS wildcard is forbidden in production")
+    oidc_ready = all((settings.OIDC_ISSUER_URL, settings.OIDC_AUDIENCE, settings.OIDC_JWKS_URL))
+    if not oidc_ready and not settings.INTERNAL_API_KEY:
+        errors.append("production requires OIDC or INTERNAL_API_KEY authentication")
+    if settings.LLM_PROVIDER.strip().lower() == "mock":
+        errors.append("mock LLM provider is forbidden in production")
+    if settings.EMBEDDING_PROVIDER.strip().lower() == "deterministic":
+        errors.append("deterministic embedding provider is forbidden in production")
+    if settings.DATABASE_URL and "user:password@" in settings.DATABASE_URL:
+        errors.append("default database credentials are forbidden in production")
+    if settings.SSH_ENABLED and not settings.SSH_STRICT_HOST_KEY_CHECKING:
+        errors.append("SSH strict host key checking must be enabled in production")
+    if settings.APPROVAL_TTL_SECONDS <= 0:
+        errors.append("APPROVAL_TTL_SECONDS must be positive in production")
+    if errors:
+        raise RuntimeError("production_configuration_invalid: " + "; ".join(errors))
+
+
 @app.on_event("startup")
 async def startup_event():
     logger.info(f"Starting {settings.APP_NAME} v{settings.APP_VERSION}")
+    _validate_production_configuration()
     triage_agent = TriageAgent()
     logger.info(f"Agent registered: {triage_agent.name} - {triage_agent.description}")
 
-    # Mock execution is a development/test aid and must never be exposed as a
-    # production execution path.
     if settings.APP_ENV != "production" and tool_registry.get_tool("mock_executor") is None:
         tool_registry.register(MockExecutorTool())
 
