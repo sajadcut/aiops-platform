@@ -2,12 +2,12 @@ from __future__ import annotations
 
 from typing import Any, Dict
 
+from apps.approval_service.postgres import PostgreSQLApprovalStore
 from apps.audit_service import AuditService
 from apps.audit_service.postgres import PostgreSQLAuditStore
 from apps.incident_service.repository import IncidentRepository
 from apps.orchestrator.e2e_graph import E2EOrchestrator
 from apps.orchestrator.workflow_store import WorkflowCheckpointStore
-from apps.approval_service.postgres import PostgreSQLApprovalStore
 
 
 class DurableWorkflowRuntime:
@@ -45,6 +45,21 @@ class DurableWorkflowRuntime:
         await self.incidents.add_evidence(incident_id, result.get("live_evidence", {}).get("evidence", []))
 
         approval = result.get("approval") or {}
+        if approval:
+            await self.approvals.save({
+                "approval_id": str(approval["approval_id"]),
+                "incident_id": incident_id,
+                "action": str(approval.get("action") or state.get("execution_request", {}).get("action") or "unknown"),
+                "risk_level": str(approval.get("risk_level") or result.get("decision", {}).get("risk_level") or "unknown"),
+                "approver": str(approval.get("approver") or result.get("decision", {}).get("suggested_approver") or "Team-Lead"),
+                "status": str(approval.get("status") or "pending"),
+                "metadata": approval.get("metadata") or {},
+                "created_at": approval.get("created_at"),
+                "approved_at": approval.get("approved_at"),
+                "rejected_at": approval.get("rejected_at"),
+            })
+            AuditService.record("approval_requested", "durable_runtime", incident_id, approval.get("action"), "pending", {"approval_id": approval.get("approval_id")})
+
         verification = result.get("verification_result") or {}
         if approval and approval.get("status") in {"pending", "requested"}:
             status = "analyzing"
@@ -79,6 +94,11 @@ class DurableWorkflowRuntime:
         state = dict(checkpoint["state"])
         state["approval"] = durable
         state["current_node"] = "execution"
+        state.setdefault("execution_request", {})["approval_id"] = approval_id
+        state["execution_request"]["approval_granted"] = True
+        state["execution_request"]["incident_id"] = incident_id
+        state["execution_request"].setdefault("agent_name", "remediation_workflow")
+
         orchestrator = E2EOrchestrator(db=self.session)
         result = await orchestrator._execution_node(state)
         result = await orchestrator._verification_node(result)
