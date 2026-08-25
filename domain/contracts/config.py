@@ -50,6 +50,7 @@ class Settings(BaseSettings):
     AGENT_LOW_CONFIDENCE_THRESHOLD: float = Field(...)
     AGENT_MAX_RECOMMENDATIONS: int = Field(...)
     AGENT_MAX_HYPOTHESES: int = Field(...)
+    AGENT_MAX_AUXILIARY_CONTEXT_ITEMS: int = Field(...)
 
     LOG_LEVEL: str = Field(...)
     LOG_JSON: bool = Field(...)
