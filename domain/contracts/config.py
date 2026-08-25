@@ -65,6 +65,8 @@ class Settings(BaseSettings):
     AGENT_MISSING_EVIDENCE_CONFIDENCE_FACTOR: float = Field(...)
     AGENT_CONFLICT_CONFIDENCE_PENALTY: float = Field(...)
     A2A_TIMEOUT_SECONDS: int = Field(...)
+    A2A_ALLOWED_TARGETS: List[str] = Field(...)
+    A2A_REQUIRE_HTTPS: bool = Field(...)
 
     LOG_LEVEL: str = Field(...)
     LOG_JSON: bool = Field(...)
