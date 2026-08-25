@@ -22,6 +22,12 @@ class DurableWorkflowRuntime:
         self.approvals = PostgreSQLApprovalStore(session)
         self.audit = PostgreSQLAuditStore(session)
 
+    def _orchestrator_type(self) -> Type[E2EOrchestrator]:
+        # Some focused unit tests construct the runtime through ``__new__`` and
+        # monkeypatch E2EOrchestrator directly. Keep that supported while normal
+        # construction defaults to the collaborative SignalAware orchestrator.
+        return getattr(self, "orchestrator_cls", E2EOrchestrator)
+
     async def _flush_audit(self, incident_id: str) -> None:
         await AuditService.flush_to_store(self.audit, incident_id=incident_id)
 
@@ -40,7 +46,7 @@ class DurableWorkflowRuntime:
         await self.incidents.add_evidence(incident_id, state.get("live_evidence", {}).get("evidence", []))
         await self.incidents.commit()
 
-        result = await self.orchestrator_cls(db=self.session).run(state)
+        result = await self._orchestrator_type()(db=self.session).run(state)
         await self.incidents.add_findings(incident_id, result.get("findings", []))
         await self.incidents.add_evidence(incident_id, result.get("live_evidence", {}).get("evidence", []))
 
@@ -116,7 +122,7 @@ class DurableWorkflowRuntime:
         state["execution_request"] = execution_request
         state["current_node"] = "execution"
 
-        orchestrator = self.orchestrator_cls(db=self.session)
+        orchestrator = self._orchestrator_type()(db=self.session)
         result = await orchestrator._execution_node(state)
         execution_result = result.get("execution_result") or {}
         if not execution_result.get("success"):
