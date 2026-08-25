@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Dict, Iterable
+from typing import Any, Dict, Iterable, Optional
 from uuid import UUID, uuid4
 
 from sqlalchemy import select
@@ -23,6 +23,7 @@ class IncidentRepository:
         severity: str | None,
         summary: str | None,
         status: str = "open",
+        context: Optional[Dict[str, Any]] = None,
     ) -> None:
         incident_uuid = UUID(str(incident_id))
         incident = await self.session.get(Incident, incident_uuid)
@@ -35,6 +36,7 @@ class IncidentRepository:
                 service=service,
                 status=normalized_status,
                 summary=summary,
+                context=context,
             )
             self.session.add(incident)
         else:
@@ -43,6 +45,33 @@ class IncidentRepository:
             incident.service = service
             incident.status = normalized_status
             incident.summary = summary
+            if context is not None:
+                incident.context = context
+
+    async def find_incident_by_evidence_reference(
+        self,
+        *,
+        source: str,
+        reference: str,
+    ) -> Optional[str]:
+        """Return the incident already owning a source event/reference.
+
+        This is the fail-safe idempotency key for webhook retries. Cross-source
+        correlation is deliberately not inferred here; only the exact source +
+        source event identity is deduplicated.
+        """
+        incident_id = (
+            await self.session.execute(
+                select(Evidence.incident_id)
+                .where(
+                    Evidence.source == str(source),
+                    Evidence.reference == str(reference),
+                )
+                .order_by(Evidence.created_at.desc())
+                .limit(1)
+            )
+        ).scalar_one_or_none()
+        return str(incident_id) if incident_id is not None else None
 
     async def add_findings(self, incident_id: str, findings: Iterable[Dict[str, Any]]) -> None:
         incident_uuid = UUID(str(incident_id))
@@ -54,7 +83,7 @@ class IncidentRepository:
                 Finding(
                     id=uuid4(),
                     incident_id=incident_uuid,
-                    agent=str(finding.get("agent") or "unknown"),
+                    agent=str(finding.get("agent_name") or finding.get("agent") or "unknown"),
                     finding_type=str(finding.get("finding_type") or "analysis"),
                     statement=str(statement),
                     evidence_ids=list(finding.get("evidence_ids") or []),
@@ -85,6 +114,8 @@ class IncidentRepository:
                 ).scalar_one_or_none()
                 if existing:
                     continue
+            raw_confidence = item.get("confidence")
+            confidence = 1.0 if raw_confidence is None else float(raw_confidence)
             self.session.add(
                 Evidence(
                     id=uuid4(),
@@ -95,7 +126,7 @@ class IncidentRepository:
                     time_range=item.get("time_range"),
                     reference=str(reference) if reference else None,
                     raw_data=item.get("raw_data") or item,
-                    confidence=float(item.get("confidence") or 1.0),
+                    confidence=confidence,
                 )
             )
 
