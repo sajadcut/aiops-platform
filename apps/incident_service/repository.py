@@ -89,6 +89,29 @@ class IncidentRepository:
                 return str(incident.id)
         return None
 
+    async def attach_correlated_signal(
+        self,
+        incident_id: str,
+        *,
+        evidence: Dict[str, Any],
+        signal_metadata: Dict[str, Any],
+    ) -> None:
+        """Attach a related trigger without rewriting the incident's primary source."""
+        incident = await self.session.get(Incident, UUID(str(incident_id)))
+        if incident is None:
+            raise ValueError("correlated_incident_not_found")
+        await self.add_evidence(incident_id, [evidence])
+        context = dict(incident.context or {})
+        related = list(context.get("related_signals") or [])
+        identity = (str(signal_metadata.get("source") or ""), str(signal_metadata.get("source_id") or ""))
+        if identity not in {
+            (str(item.get("source") or ""), str(item.get("source_id") or ""))
+            for item in related if isinstance(item, dict)
+        }:
+            related.append(dict(signal_metadata))
+        context["related_signals"] = related[-100:]
+        incident.context = context
+
     async def find_incident_by_evidence_reference(
         self,
         *,
