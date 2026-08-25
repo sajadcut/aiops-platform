@@ -91,13 +91,14 @@ jobs:
                   rows = cur.fetchall()
                   assert len(rows) == 2, rows
                   assert all(row[2] == 'vector' for row in rows), rows
+                  vector = "[" + ",".join(["0.1"] * 1536) + "]"
                   cur.execute(
-                      "INSERT INTO knowledge_documents (id,title,content,source,embedding) VALUES (%s,%s,%s,%s,%s)",
-                      (uuid4(), 'ci', 'pgvector acceptance', 'ci', [0.1] * 1536),
+                      "INSERT INTO knowledge_documents (id,title,content,source,embedding) VALUES (%s,%s,%s,%s,%s::vector)",
+                      (uuid4(), 'ci', 'pgvector acceptance', 'ci', vector),
                   )
                   cur.execute(
-                      "SELECT embedding <=> %s FROM knowledge_documents ORDER BY embedding <=> %s LIMIT 1",
-                      ([0.1] * 1536, [0.1] * 1536),
+                      "SELECT embedding <=> %s::vector FROM knowledge_documents ORDER BY embedding <=> %s::vector LIMIT 1",
+                      (vector, vector),
                   )
                   distance = cur.fetchone()[0]
                   assert distance == 0.0, distance
