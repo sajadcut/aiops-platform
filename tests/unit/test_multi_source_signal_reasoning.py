@@ -8,7 +8,8 @@ from apps.context_service.evidence_collector import EvidenceCollector
 from apps.orchestrator.runtime import DurableWorkflowRuntime
 from apps.orchestrator.signal_aware import SignalAwareE2EOrchestrator
 from apps.security.rbac import allowed
-from apps.signal_gateway import signal_from_elasticsearch, signal_from_prometheus, signal_from_zabbix
+from apps.signal_gateway import SignalGateway, signal_from_elasticsearch, signal_from_prometheus, signal_from_zabbix
+from apps.signal_gateway.correlation import build_correlation_identity, signal_family
 from integrations.base import LogEntry, MetricPoint
 
 
@@ -111,6 +112,82 @@ def test_prometheus_and_zabbix_can_also_initiate_incidents():
     assert zbx.source == "zabbix"
     assert zbx.service == "vm-pay-01"
     assert isinstance(zbx.raw_data["host"], dict)
+
+
+def test_cross_source_error_signals_share_deterministic_fingerprint():
+    asset = {
+        "environment": "prod",
+        "cluster": "core-k8s",
+        "namespace": "payments",
+        "workload_kind": "deployment",
+        "workload": "payment-api",
+    }
+    elk = build_correlation_identity(
+        service="payment-api",
+        signal_type="signal",
+        summary="ConnectionTimeout spike",
+        asset=asset,
+    )
+    prom = build_correlation_identity(
+        service="payment-api",
+        signal_type="HighErrorRate",
+        summary="HTTP errors elevated",
+        asset=asset,
+    )
+    zabbix = build_correlation_identity(
+        service="payment-api",
+        signal_type="HTTP 500 rate high",
+        summary="HTTP 500 rate high",
+        asset=asset,
+    )
+    assert elk.signal_family == "service_error"
+    assert elk.fingerprint == prom.fingerprint == zabbix.fingerprint
+
+
+def test_correlation_refuses_unknown_family_or_unknown_service():
+    assert signal_family("CustomBusinessEvent", "nothing operational") == "uncorrelated"
+    unknown_family = build_correlation_identity(
+        service="payment-api",
+        signal_type="CustomBusinessEvent",
+        summary="nothing operational",
+    )
+    unknown_service = build_correlation_identity(
+        service="unknown",
+        signal_type="HTTP 500",
+        summary="500s elevated",
+    )
+    assert unknown_family.fingerprint is None
+    assert unknown_service.fingerprint is None
+
+
+def test_explicit_correlation_key_is_stable_and_not_plaintext():
+    left = build_correlation_identity(
+        service="payment-api",
+        signal_type="anything",
+        summary="anything",
+        explicit_key="INCIDENT-123",
+    )
+    right = build_correlation_identity(
+        service="payment-api",
+        signal_type="different",
+        summary="different",
+        explicit_key="incident-123",
+    )
+    assert left.fingerprint == right.fingerprint
+    assert "incident-123" not in str(left.fingerprint)
+
+
+def test_append_trigger_to_checkpoint_is_idempotent():
+    signal = signal_from_prometheus({
+        "fingerprint": "prom-77",
+        "labels": {"alertname": "HighErrorRate", "service": "payment-api"},
+    })
+    evidence = signal.to_evidence()
+    state = {"context": {"trigger_evidence": [], "evidence": []}}
+    SignalGateway._append_trigger_to_checkpoint(state, signal, evidence)
+    SignalGateway._append_trigger_to_checkpoint(state, signal, evidence)
+    assert len(state["context"]["trigger_evidence"]) == 1
+    assert len(state["context"]["evidence"]) == 1
 
 
 def test_peer_findings_are_published_as_auxiliary_operational_context():
