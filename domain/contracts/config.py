@@ -40,6 +40,7 @@ class Settings(BaseSettings):
     LOG_LEVEL: str = "INFO"
     LOG_JSON: bool = False
     INTERNAL_API_KEY: Optional[str] = None
+    INTERNAL_API_ROLE: str = "operator"
     API_RATE_LIMIT_PER_MINUTE: int = 120
     CORS_ORIGINS: List[str] = ["*"]
 
