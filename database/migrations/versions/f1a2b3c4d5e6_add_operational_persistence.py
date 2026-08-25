@@ -26,7 +26,7 @@ def upgrade() -> None:
             created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
             approved_at TIMESTAMPTZ NULL,
             rejected_at TIMESTAMPTZ NULL,
-            CONSTRAINT approvals_status_ck CHECK (status IN ('pending','approved','rejected','expired'))
+            CONSTRAINT approvals_status_ck CHECK (status IN ('pending','approved','rejected','expired','consumed'))
         )
     """)
     op.execute("CREATE INDEX IF NOT EXISTS ix_approvals_incident_id ON approvals(incident_id)")
