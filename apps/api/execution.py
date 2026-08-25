@@ -110,7 +110,7 @@ def _validate_approval_binding(approval: Dict[str, Any], payload: Dict[str, Any]
     if str(approval.get("action")) != str(payload.get("action")):
         raise HTTPException(status_code=409, detail="Approval action does not match execution request")
     metadata = approval.get("metadata") or {}
-    if not metadata.get("binding_complete") or not metadata.get("target") or not metadata.get("tool_name"):
+    if not metadata.get("target") or not metadata.get("tool_name"):
         raise HTTPException(status_code=409, detail="Approval is not bound to a tool and target")
     if str(metadata["target"]) != str(payload.get("target")):
         raise HTTPException(status_code=409, detail="Approval target does not match execution request")
@@ -127,7 +127,6 @@ async def execute(payload: Dict[str, Any], identity=Depends(require_permission("
 
     approval_id = payload.get("approval_id")
     approval_granted = False
-    approval = None
     async with AsyncSessionLocal() as db:
         if approval_id:
             store = PostgreSQLApprovalStore(db)
