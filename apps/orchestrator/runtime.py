@@ -6,14 +6,15 @@ from apps.audit_service import AuditService
 from apps.audit_service.postgres import PostgreSQLAuditStore
 from apps.incident_service.repository import IncidentRepository
 from apps.orchestrator.e2e_graph import E2EOrchestrator
+from apps.orchestrator.signal_aware import SignalAwareE2EOrchestrator
 from apps.orchestrator.workflow_store import WorkflowCheckpointStore
 from apps.approval_service.postgres import PostgreSQLApprovalStore
 
 
 class DurableWorkflowRuntime:
-    """PostgreSQL-backed runtime around the governed LangGraph workflow."""
+    """PostgreSQL-backed runtime around the governed collaborative LangGraph workflow."""
 
-    def __init__(self, session, orchestrator_cls: Type[E2EOrchestrator] = E2EOrchestrator):
+    def __init__(self, session, orchestrator_cls: Type[E2EOrchestrator] = SignalAwareE2EOrchestrator):
         self.session = session
         self.orchestrator_cls = orchestrator_cls
         self.checkpoints = WorkflowCheckpointStore(session)
