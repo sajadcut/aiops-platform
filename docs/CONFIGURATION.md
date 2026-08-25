@@ -1,51 +1,58 @@
 # Centralized Configuration
 
-## Single source of truth
+`/MASTER.md` remains the project Single Source of Truth. This document only explains how its centralized-configuration requirement is implemented.
 
-`/.env.example` is the canonical configuration contract for the application. It contains every runtime key and is the only file that should be consulted to discover configuration names.
+## Runtime configuration contract
 
-Runtime values are supplied through one of these mechanisms:
+All application runtime values come from environment variables. For local/dev/test execution the runtime loader reads the root `/.env` file. `/.env` is intentionally gitignored because it may contain secrets.
 
-- local development: `.env` (never committed)
-- Kubernetes: `aiops-platform-config` ConfigMap + `aiops-platform-secrets` Secret
-- offline/container deployment: environment variables injected by the deployment platform
+`/.env.example` is **only the complete safe template/schema for creating `.env`**. It mirrors every field accepted by `domain.contracts.config.Settings`, but it is not a second runtime configuration source.
 
-Python code must read configuration only through `domain.contracts.config.settings`.
+Runtime mechanisms are:
+
+- local development/test: copy `/.env.example` to `/.env`, then set environment-specific values in `.env`;
+- CI: create an ignored `.env` from `/.env.example` during the workflow and override CI-specific values in that generated file;
+- Kubernetes/OpenShift: provide the same environment keys through `aiops-platform-config` ConfigMap and `aiops-platform-secrets` Secret;
+- offline/container deployment: inject the same environment contract through the deployment platform.
+
+Python code must consume runtime configuration only through `domain.contracts.config.settings`. `config.py` defines types and validation only; it must not contain runtime values or operational defaults.
 
 ## Configuration groups
 
-| Group | Canonical keys |
+| Group | Environment keys |
 |---|---|
 | Application | `APP_*`, `DEBUG`, `HOST`, `PORT` |
-| PostgreSQL | `DATABASE_*` |
+| PostgreSQL/Alembic | `DATABASE_*`, `ALEMBIC_DATABASE_URL` |
 | LLM | `LLM_*` |
-| API/Security | `INTERNAL_API_KEY`, `API_RATE_LIMIT_PER_MINUTE`, `CORS_ORIGINS` |
+| Embeddings/pgvector | `EMBEDDING_*`, `PGVECTOR_*` |
+| Knowledge governance | `KNOWLEDGE_*` |
+| API/Security | `INTERNAL_API_*`, `API_RATE_LIMIT_PER_MINUTE`, `RATE_LIMIT_*`, `CORS_ORIGINS`, `APPROVAL_TTL_SECONDS` |
 | Zabbix | `ZABBIX_*` |
 | Elasticsearch | `ELASTICSEARCH_*` |
 | Prometheus | `PROMETHEUS_*` |
+| VM/SSH | `SSH_*`, `VM_*` |
 | OIDC | `OIDC_*` |
-| pgvector | `PGVECTOR_*` |
 | Offline Registry | `OFFLINE_IMAGE_REGISTRY`, `IMAGE_PULL_POLICY` |
 
 ## Secrets policy
 
-Passwords, API keys, OIDC credentials and private endpoints must never be embedded in Python, YAML, Dockerfiles, runbooks or committed `.env` files.
+Passwords, tokens, API keys, private keys and private endpoint values must never be embedded in Python, YAML, Dockerfiles, runbooks or a committed `.env` file.
 
-The repository intentionally contains only empty placeholders in `.env.example`. Production values are injected at runtime.
+The repository stores empty secret placeholders only in `.env.example`. Real values belong in the ignored `.env` or the target platform secret store.
 
-## Kubernetes
+## Kubernetes/OpenShift
 
-The API Deployment consumes configuration only through `envFrom`:
+The API Deployment consumes configuration through `envFrom`:
 
-- `aiops-platform-config` for non-secret configuration
-- `aiops-platform-secrets` for credentials and tokens
+- `aiops-platform-config` for non-secret environment values;
+- `aiops-platform-secrets` for credentials and tokens.
 
-See `deployment/kubernetes/configuration.example.yaml` for the expected resource names.
+`deployment/kubernetes/configuration.example.yaml` intentionally contains no duplicated values; the resources are generated from the same root environment contract.
 
 ## Adding a new setting
 
-1. Add the key once to `domain/contracts/config.py`.
-2. Add the same key to `/.env.example`.
-3. Consume it through `settings.<KEY>`.
-4. Add/update the relevant configuration test.
-5. Do not add the same value to another code/deployment file.
+1. Add the typed required field to `domain/contracts/config.py` without a value/default.
+2. Add the corresponding safe template key to `/.env.example`.
+3. Consume it only through `settings.<KEY>`.
+4. Update the centralized configuration tests if needed.
+5. Do not introduce a direct `os.getenv()` or duplicate runtime value elsewhere in application code.
