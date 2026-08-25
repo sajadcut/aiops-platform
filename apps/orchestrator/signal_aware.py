@@ -13,7 +13,7 @@ class SignalAwareE2EOrchestrator(E2EOrchestrator):
     It preserves initiating Evidence and exposes structured peer findings,
     consensus, contradictions and evidence requests to subsequent specialist
     passes. Agents do not free-chat; collaboration happens through audited
-    Incident state.
+    Incident state. Peer findings are context, not new Evidence.
     """
 
     async def _context_node(self, state: E2EState) -> E2EState:
@@ -75,17 +75,27 @@ class SignalAwareE2EOrchestrator(E2EOrchestrator):
     @staticmethod
     def _publish_peer_context(state: E2EState, findings: list[Dict[str, Any]], coordination: Dict[str, Any]) -> None:
         context = state.setdefault("context", {})
-        context["peer_findings"] = findings
-        context["agent_coordination"] = {
-            "confidence": coordination.get("confidence"),
-            "agreement_score": coordination.get("agreement_score"),
-            "disagreement": coordination.get("disagreement"),
-            "contradictions": coordination.get("contradictions", []),
-            "consensus_hypotheses": coordination.get("consensus_hypotheses", []),
-            "missing_evidence": coordination.get("missing_evidence", []),
-            "evidence_requests": coordination.get("evidence_requests", []),
-            "handoff_agents": coordination.get("handoff_agents", []),
+        peer_context = {
+            "policy": "peer_findings_are_auxiliary_context_not_live_evidence",
+            "findings": findings,
+            "coordination": {
+                "confidence": coordination.get("confidence"),
+                "agreement_score": coordination.get("agreement_score"),
+                "disagreement": coordination.get("disagreement"),
+                "contradictions": coordination.get("contradictions", []),
+                "consensus_hypotheses": coordination.get("consensus_hypotheses", []),
+                "missing_evidence": coordination.get("missing_evidence", []),
+                "evidence_requests": coordination.get("evidence_requests", []),
+                "handoff_agents": coordination.get("handoff_agents", []),
+            },
         }
+        context["peer_findings"] = findings
+        context["agent_coordination"] = peer_context["coordination"]
+        # All current specialist prompts consume ContextSummary; expose the peer
+        # context there without mixing it into Knowledge RAG or Operational Memory.
+        summary = dict(context.get("summary") or {})
+        summary["peer_operational_context"] = peer_context
+        context["summary"] = summary
 
     async def _parallel_agents_node(self, state: E2EState) -> E2EState:
         state["current_node"] = "parallel_agents"
@@ -94,13 +104,10 @@ class SignalAwareE2EOrchestrator(E2EOrchestrator):
         )
         selected = list(routing.get("selected", []))
 
-        # First specialist pass shares the same live Incident context.
         findings = await self._run_specialists(selected, state)
         coordination = self.coordinator.synthesize(findings)
         self._publish_peer_context(state, findings, coordination)
 
-        # Structured handoff / second opinion. New Agents see prior peer findings
-        # and the coordinator's consensus/contradictions in their AgentInput context.
         requested_handoffs = [
             name for name in coordination.get("handoff_agents", [])
             if name not in selected and self.registry.get(name) is not None
@@ -113,9 +120,6 @@ class SignalAwareE2EOrchestrator(E2EOrchestrator):
             self._publish_peer_context(state, findings, coordination)
             self._audit("agent_handoff_completed", state, handoff_agents=requested_handoffs)
 
-        # Bounded targeted Evidence refresh. Re-running specialists after refresh
-        # now includes the previous peer analysis, making the second reasoning pass
-        # genuinely cumulative instead of stateless.
         evidence_requests = list(coordination.get("evidence_requests") or [])
         if evidence_requests and await self._additional_evidence_round(state, evidence_requests):
             self._publish_peer_context(state, findings, coordination)
