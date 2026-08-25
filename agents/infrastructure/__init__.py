@@ -1,87 +1,82 @@
-from typing import Optional, List
 import json
-from agents.shared.base import BaseAgent, AgentInput, AgentOutput
-from integrations.llm.base import LLMAdapter
-from integrations.llm.mock_provider import MockLLMProvider
+from typing import List, Optional
+
+from agents.shared.base import AgentInput, AgentOutput, BaseAgent, OperationalHypothesis
+from domain.contracts.config import settings
 from domain.contracts.logging import logger
+from integrations.llm.base import LLMAdapter
+
 
 class InfrastructureAgent(BaseAgent):
     def __init__(self, llm_adapter: Optional[LLMAdapter] = None):
-        self.llm = llm_adapter or MockLLMProvider()
-    
+        super().__init__(llm_adapter)
+
     @property
     def name(self) -> str:
         return "infrastructure"
-    
+
     @property
     def description(self) -> str:
-        return "Infrastructure-level analysis: CPU, memory, disk, network, nodes"
-    
+        return "Infrastructure diagnostics: saturation, capacity, network, hosts, storage and dependency health"
+
     @property
     def allowed_tools(self) -> List[str]:
-        return []
-    
+        return ["prometheus_query", "zabbix_read", "vm_telemetry", "knowledge_search"]
+
     async def analyze(self, input_data: AgentInput) -> AgentOutput:
         logger.info(f"InfrastructureAgent analyzing: {input_data.incident_id}")
-        evidence = input_data.context.get("evidence", []) if input_data.context else []
-        metrics = [e for e in evidence if e.get("type") == "metric"]
-        latest_metrics = metrics[:3] if metrics else []
-        metrics_json = json.dumps(latest_metrics, indent=2, default=str) if latest_metrics else 'No metrics available'
-        context_json = json.dumps(input_data.context, indent=2, default=str) if input_data.context else 'None'
-        prompt = f"""
-You are an infrastructure specialist. Analyze the underlying infrastructure issues.
-Incident Details:
-- Service: {input_data.service_name or 'unknown'}
-- Evidence Summary: {input_data.evidence_summary}
-- Recent Metrics: {metrics_json}
-- Context: {context_json}
-Focus on:
-1. **Resource Saturation**: CPU, memory, disk, network
-2. **Node Health**: Are nodes healthy?
-3. **Network Issues**: Latency, packet loss
-4. **VM/Container Performance**: Resource limits?
-Provide a structured JSON response:
-{{
-    "resource_saturation": ["list"],
-    "node_health": "Healthy|Degraded|Unhealthy",
-    "network_issues": ["list"],
-    "confidence": 0.0-1.0,
-    "immediate_actions": ["action1", "action2"]
-}}
-"""
+        evidence = self.evidence_items(input_data)
+        evidence_ids = self.evidence_ids(input_data)
+        metrics = [item for item in evidence if str(item.get("type", "")).lower() == "metric"]
+        alerts = [item for item in evidence if str(item.get("type", "")).lower() == "alert"]
+        missing = self.missing_evidence_for(input_data, ["metric"])
+        prompt = f"""You are a senior infrastructure/SRE analyst. Use only supplied evidence. Do not infer host state, saturation or network faults without evidence.
+Return JSON keys: severity, health_status, saturation_signals, capacity_risks, network_signals, node_signals, affected_components, blast_radius, hypotheses, missing_evidence, handoff_agents, immediate_checks, confidence.
+Hypotheses entries: hypothesis, probability, evidence_ids, falsification_checks. Immediate checks are read-only.
+Incident={input_data.incident_id}\nService={input_data.service_name}\nSummary={input_data.evidence_summary}\nEvidence={json.dumps(evidence, default=str)}\nContextSummary={json.dumps(input_data.context.get('summary', {}), default=str)}"""
         try:
-            response = await self.llm.generate(prompt, temperature=0.3)
-            try:
-                result = json.loads(response.content)
-                resource_saturation = result.get("resource_saturation", [])
-                node_health = result.get("node_health", "Unknown")
-                network_issues = result.get("network_issues", [])
-                confidence = result.get("confidence", 0.5)
-                actions = result.get("immediate_actions", ["Check infrastructure metrics"])
-            except:
-                resource_saturation = ["Unknown"]
-                node_health = "Unknown"
-                network_issues = []
-                confidence = 0.5
-                actions = ["Check infrastructure metrics"]
-            statement = f"Infrastructure analysis: Resources: {', '.join(resource_saturation)}. Node health: {node_health}. Network: {', '.join(network_issues) if network_issues else 'No issues'}"
-            return AgentOutput(
-                agent_name=self.name,
-                finding_type="infrastructure_analysis",
-                statement=statement[:300],
-                confidence=float(confidence),
-                evidence_ids=[],
-                recommendations=actions,
-                requires_approval=False
-            )
-        except Exception as e:
-            logger.error(f"InfrastructureAgent failed: {str(e)}")
-            return AgentOutput(
-                agent_name=self.name,
-                finding_type="infrastructure_error",
-                statement=f"Infrastructure analysis failed: {str(e)}",
-                confidence=0.0,
-                evidence_ids=[],
-                recommendations=["Escalate to infrastructure team"],
-                requires_approval=True
-            )
+            result = json.loads((await self.llm.generate(prompt, temperature=settings.AGENT_LLM_TEMPERATURE)).content)
+        except Exception as exc:
+            logger.error(f"InfrastructureAgent analysis failed: {exc}")
+            result = {"severity": "unknown", "health_status": "unknown", "saturation_signals": [], "capacity_risks": [], "network_signals": [], "node_signals": [], "affected_components": [], "blast_radius": "unknown", "hypotheses": [], "handoff_agents": ["triage"], "immediate_checks": ["Collect host and service metrics"], "confidence": 0.0}
+            missing = sorted(set(missing + ["successful structured infrastructure analysis"]))
+
+        confidence = self.safe_confidence(result.get("confidence"), len(evidence))
+        actions = self.normalize_list(result.get("immediate_checks"), settings.AGENT_MAX_RECOMMENDATIONS)
+        hypotheses = []
+        for item in result.get("hypotheses", [])[: settings.AGENT_MAX_HYPOTHESES]:
+            if isinstance(item, dict) and item.get("hypothesis"):
+                hypotheses.append(OperationalHypothesis(
+                    hypothesis=str(item["hypothesis"]),
+                    probability=self.safe_confidence(item.get("probability", 0), len(evidence)),
+                    evidence_ids=[str(x) for x in item.get("evidence_ids", []) if str(x) in evidence_ids],
+                    falsification_checks=self.normalize_list(item.get("falsification_checks"), 4),
+                ))
+        saturation = self.normalize_list(result.get("saturation_signals"), 6)
+        statement = "Infrastructure evidence indicates " + ("; ".join(saturation) if saturation else "no confirmed saturation or host fault yet")
+        return AgentOutput(
+            agent_name=self.name,
+            finding_type="infrastructure_analysis",
+            statement=statement[:600],
+            severity=str(result.get("severity", "unknown")).lower(),
+            health_status=str(result.get("health_status", "unknown")).lower(),
+            confidence=confidence,
+            evidence_ids=evidence_ids,
+            evidence_count=len(evidence),
+            recommendations=actions,
+            recommended_actions=self.analysis_only_actions(actions),
+            hypotheses=hypotheses,
+            missing_evidence=sorted(set(missing + self.normalize_list(result.get("missing_evidence"), 6))),
+            handoff_agents=self.normalize_list(result.get("handoff_agents"), 4),
+            affected_components=self.normalize_list(result.get("affected_components"), 8),
+            blast_radius=str(result.get("blast_radius", "unknown")),
+            requires_human_review=self.human_review_required(confidence, missing),
+            analysis_details={
+                "saturation_signals": saturation,
+                "capacity_risks": result.get("capacity_risks", []),
+                "network_signals": result.get("network_signals", []),
+                "node_signals": result.get("node_signals", []),
+                "metric_evidence_count": len(metrics),
+                "alert_evidence_count": len(alerts),
+            },
+        )
