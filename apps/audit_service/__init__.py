@@ -1,4 +1,4 @@
-"""Operational audit trail service with durable flush support."""
+"""Operational audit trail service with durable flush support and secret redaction."""
 
 from __future__ import annotations
 
@@ -22,6 +22,24 @@ class AuditEvent:
 
 class AuditService:
     _events: List[AuditEvent] = []
+    _SENSITIVE_KEYS = {
+        "password", "passwd", "secret", "token", "access_token", "refresh_token",
+        "authorization", "api_key", "apikey", "x_api_key", "private_key",
+        "client_secret", "cookie", "set-cookie",
+    }
+
+    @classmethod
+    def _redact(cls, value: Any, key: Optional[str] = None) -> Any:
+        normalized = (key or "").lower().replace("-", "_")
+        if normalized in cls._SENSITIVE_KEYS or any(term in normalized for term in ("password", "secret", "token", "api_key", "private_key")):
+            return "[REDACTED]"
+        if isinstance(value, dict):
+            return {str(k): cls._redact(v, str(k)) for k, v in value.items()}
+        if isinstance(value, list):
+            return [cls._redact(item) for item in value]
+        if isinstance(value, tuple):
+            return tuple(cls._redact(item) for item in value)
+        return value
 
     @classmethod
     def record(
@@ -40,7 +58,7 @@ class AuditService:
             incident_id=incident_id,
             action=action,
             status=status,
-            metadata=metadata or {},
+            metadata=cls._redact(metadata or {}),
             created_at=datetime.now(timezone.utc).isoformat(),
         )
         cls._events.append(event)
@@ -55,7 +73,6 @@ class AuditService:
 
     @classmethod
     async def flush_to_store(cls, store: Any, incident_id: Optional[str] = None) -> int:
-        """Persist buffered events through an injected durable store."""
         pending = cls.list_events(incident_id=incident_id, limit=max(len(cls._events), 1))
         for event in pending:
             await store.append(event)
