@@ -39,6 +39,8 @@ def incident_input():
                 {"id": "metric-1", "type": "metric", "source": "prometheus", "name": "latency", "value": 2.1},
                 {"id": "alert-1", "type": "alert", "source": "zabbix", "severity": "high"},
             ],
+            "knowledge_results": [{"source_id": "rag-1", "title": "Authentication runbook", "relevance": 0.91}],
+            "memory_results": [{"id": "memory-1", "pattern": "past auth latency incident", "outcome": "verified"}],
         },
     )
 
@@ -47,7 +49,7 @@ def incident_input():
 @pytest.mark.parametrize(
     "agent_cls,payload",
     [
-        (ApplicationAgent, {"severity":"high","health_status":"degraded","error_patterns":["401 spike"],"deployment_correlation":"unconfirmed","dependency_signals":[],"affected_components":["payments-api"],"blast_radius":"single service","hypotheses":[{"hypothesis":"auth dependency degradation","probability":0.7,"evidence_ids":["log-1","metric-1"],"falsification_checks":["compare auth dependency latency"]}],"missing_evidence":[],"handoff_agents":["security"],"immediate_checks":["Inspect correlated application logs"],"confidence":0.8}),
+        (ApplicationAgent, {"severity":"high","health_status":"degraded","error_patterns":["401 spike"],"deployment_correlation":"unconfirmed","dependency_signals":[],"affected_components":["payments-api"],"blast_radius":"single service","hypotheses":[{"hypothesis":"auth dependency degradation","probability":0.7,"evidence_ids":["log-1","metric-1","rag-1"],"conflicting_evidence_ids":["alert-1","memory-1"],"falsification_checks":["compare auth dependency latency"]}],"missing_evidence":[],"handoff_agents":["security"],"immediate_checks":["Inspect correlated application logs"],"confidence":0.8}),
         (InfrastructureAgent, {"severity":"medium","health_status":"degraded","saturation_signals":["latency elevated"],"capacity_risks":[],"network_signals":[],"node_signals":[],"affected_components":["payments-api"],"blast_radius":"single service","hypotheses":[],"missing_evidence":[],"handoff_agents":["application"],"immediate_checks":["Inspect service latency metrics"],"confidence":0.7}),
         (KubernetesAgent, {"severity":"medium","health_status":"degraded","workload_signals":["service latency elevated"],"rollout_signals":[],"scheduling_signals":[],"network_signals":[],"resource_signals":[],"affected_components":["payments-api"],"blast_radius":"single workload","hypotheses":[],"missing_evidence":[],"handoff_agents":["application"],"immediate_checks":["Inspect workload status"],"confidence":0.7}),
         (SecurityAgent, {"severity":"high","health_status":"degraded","authentication_signals":["401 increase"],"authorization_signals":[],"suspicious_signals":["authentication failures"],"exposure_signals":[],"policy_signals":[],"affected_components":["payments-api"],"blast_radius":"single service","hypotheses":[],"missing_evidence":[],"handoff_agents":["application"],"immediate_checks":["Inspect authentication logs"],"containment_recommendations":["Disable compromised credential only if compromise is independently confirmed"],"confidence":0.8}),
@@ -58,10 +60,15 @@ async def test_specialized_agents_preserve_evidence_and_operational_contract(age
     result = await agent_cls(StaticLLM(payload)).analyze(incident_input())
     assert result.evidence_count == 3
     assert set(result.evidence_ids) == {"log-1", "metric-1", "alert-1"}
+    assert "rag-1" not in result.evidence_ids
+    assert "memory-1" not in result.evidence_ids
     assert 0 <= result.confidence <= 1
     assert result.severity != "unknown"
     assert result.recommended_actions
     assert all(action.read_only for action in result.recommended_actions if action.purpose == "investigation")
+    if result.hypotheses:
+        assert "rag-1" not in result.hypotheses[0].evidence_ids
+        assert "memory-1" not in result.hypotheses[0].conflicting_evidence_ids
 
 
 @pytest.mark.asyncio
@@ -92,6 +99,8 @@ async def test_triage_routes_specialists_and_exposes_evidence_gaps():
     assert result.handoff_agents == ["security", "application"]
     assert "identity-provider audit trail" in result.missing_evidence
     assert result.requires_human_review is True
+    assert result.analysis_details["knowledge_context_count"] == 1
+    assert result.analysis_details["memory_context_count"] == 1
 
 
 def test_agent_source_does_not_hardcode_mock_provider_or_fake_vm_os():
