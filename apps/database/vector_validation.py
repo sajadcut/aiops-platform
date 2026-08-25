@@ -22,9 +22,8 @@ async def validate_pgvector(
     if not ext:
         return result
 
-    # Do not derive the vector dimension from PostgreSQL's internal typmod.
-    # pgvector versions can expose typmod details differently. The canonical
-    # SQL type is stable and is reported as vector(N), so parse N directly.
+    # Read the canonical SQL type (vector(N)) instead of PostgreSQL's internal
+    # typmod arithmetic. This remains stable across pgvector versions.
     rows = (
         await session.execute(
             text(
@@ -39,8 +38,8 @@ async def validate_pgvector(
                             regexp_match(
                                 format_type(a.atttypid, a.atttypmod),
                                 '^vector\\(([0-9]+)\\)$'
-                            )[1]
-                        )::integer
+                            )
+                        )[1]::integer
                         ELSE NULL
                     END AS dimension
                 FROM information_schema.columns c
