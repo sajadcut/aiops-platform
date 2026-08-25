@@ -42,6 +42,15 @@ class Settings(BaseSettings):
     KNOWLEDGE_ALLOWED_SOURCE_TYPES: List[str] = Field(...)
     KNOWLEDGE_REQUIRE_GOVERNANCE_PRODUCTION: bool = Field(...)
 
+    # Agent runtime policy. Agents are analysis-only and use these values to
+    # bound context size, confidence, and escalation behavior.
+    AGENT_LLM_TEMPERATURE: float = Field(...)
+    AGENT_MAX_EVIDENCE_ITEMS: int = Field(...)
+    AGENT_MIN_EVIDENCE_ITEMS: int = Field(...)
+    AGENT_LOW_CONFIDENCE_THRESHOLD: float = Field(...)
+    AGENT_MAX_RECOMMENDATIONS: int = Field(...)
+    AGENT_MAX_HYPOTHESES: int = Field(...)
+
     LOG_LEVEL: str = Field(...)
     LOG_JSON: bool = Field(...)
     INTERNAL_API_KEY: Optional[str] = Field(...)
