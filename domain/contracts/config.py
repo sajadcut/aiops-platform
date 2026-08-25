@@ -42,8 +42,6 @@ class Settings(BaseSettings):
     KNOWLEDGE_ALLOWED_SOURCE_TYPES: List[str] = Field(...)
     KNOWLEDGE_REQUIRE_GOVERNANCE_PRODUCTION: bool = Field(...)
 
-    # Agent runtime policy. Agents are analysis-only and use these values to
-    # bound context, routing, parsing, evidence collection and escalation.
     AGENT_LLM_TEMPERATURE: float = Field(...)
     AGENT_MAX_TOKENS: int = Field(...)
     AGENT_MAX_EVIDENCE_ITEMS: int = Field(...)
@@ -87,6 +85,15 @@ class Settings(BaseSettings):
 
     PROMETHEUS_URL: str = Field(...)
     PROMETHEUS_TIMEOUT_SECONDS: int = Field(...)
+
+    # Read-only Kubernetes evidence connector. No write verbs are implemented.
+    KUBERNETES_API_URL: Optional[str] = Field(...)
+    KUBERNETES_TOKEN: Optional[str] = Field(...)
+    KUBERNETES_TOKEN_FILE: Optional[str] = Field(...)
+    KUBERNETES_CA_CERT_PATH: Optional[str] = Field(...)
+    KUBERNETES_NAMESPACE: str = Field(...)
+    KUBERNETES_TIMEOUT_SECONDS: int = Field(...)
+    KUBERNETES_LOG_TAIL_LINES: int = Field(...)
 
     SSH_ENABLED: bool = Field(...)
     SSH_USERNAME: str = Field(...)
