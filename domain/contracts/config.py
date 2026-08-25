@@ -48,6 +48,7 @@ class Settings(BaseSettings):
     AGENT_MIN_EVIDENCE_ITEMS: int = Field(...)
     AGENT_MIN_EVIDENCE_COVERAGE: float = Field(...)
     AGENT_LOW_CONFIDENCE_THRESHOLD: float = Field(...)
+    AGENT_MIN_CONSENSUS_SCORE: float = Field(...)
     AGENT_MAX_RECOMMENDATIONS: int = Field(...)
     AGENT_MAX_HYPOTHESES: int = Field(...)
     AGENT_MAX_AUXILIARY_CONTEXT_ITEMS: int = Field(...)
