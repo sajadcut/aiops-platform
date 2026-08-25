@@ -1,10 +1,15 @@
 from __future__ import annotations
 
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict
 
 from agents.shared.telemetry import AgentTelemetry
 from apps.context_service.asset_identity import AssetIdentityResolver
+from apps.decision_engine import DecisionEngine
+from apps.execution_service.tools.registry import tool_registry
 from apps.orchestrator.e2e_graph import E2EOrchestrator, E2EState
+from domain.contracts.config import settings
+from domain.contracts.logging import logger
 
 
 class SignalAwareE2EOrchestrator(E2EOrchestrator):
@@ -91,8 +96,6 @@ class SignalAwareE2EOrchestrator(E2EOrchestrator):
         }
         context["peer_findings"] = findings
         context["agent_coordination"] = peer_context["coordination"]
-        # All current specialist prompts consume ContextSummary; expose the peer
-        # context there without mixing it into Knowledge RAG or Operational Memory.
         summary = dict(context.get("summary") or {})
         summary["peer_operational_context"] = peer_context
         context["summary"] = summary
@@ -164,3 +167,81 @@ class SignalAwareE2EOrchestrator(E2EOrchestrator):
             peer_context_shared=True,
         )
         return state
+
+    async def _decision_node(self, state: E2EState) -> E2EState:
+        """Bind deterministic policy to the concrete tool/action/target request."""
+        state["current_node"] = "decision"
+        request = dict(state.get("execution_request") or {})
+        tool = tool_registry.get_tool(str(request.get("tool_name") or "")) if request else None
+        result = DecisionEngine.evaluate_plan(
+            state.get("final_plan", ""),
+            state.get("findings", []),
+            execution_request=request or None,
+            tool_risk_level=tool.risk_level if tool is not None else None,
+            tool_requires_approval=bool(tool.requires_approval) if tool is not None else False,
+            tool_exists=(tool is not None) if request else True,
+        )
+        state["decision"] = result.model_dump(mode="json")
+        self._audit(
+            "decision_made",
+            state,
+            decision=result.action.value,
+            risk=result.risk_level.value,
+            reason=result.reason,
+            policy_metadata=result.metadata,
+        )
+        return state
+
+    async def _execution_node(self, state: E2EState) -> E2EState:
+        """Refresh the verification baseline immediately before a write/read tool call.
+
+        Approval may be granted minutes after initial analysis, so the initial
+        Incident context is not a trustworthy before-state for verification.
+        A failed refresh is explicit and the older context is retained only as a
+        degraded fallback; it is never silently presented as fresh.
+        """
+        service = state.get("service_name") or "unknown"
+        baseline_degraded = False
+        try:
+            since = datetime.now(timezone.utc) - timedelta(
+                seconds=settings.AGENT_REFRESH_EVIDENCE_WINDOW_SECONDS
+            )
+            fresh_before = await self.evidence_collector.collect(service, since)
+            state["before_context"] = {
+                "captured_at": datetime.now(timezone.utc).isoformat(),
+                "capture_reason": "immediately_before_execution",
+                "live_evidence": fresh_before,
+            }
+            state.setdefault("context", {})["pre_execution_evidence"] = fresh_before
+            self._audit(
+                "pre_execution_evidence_refreshed",
+                state,
+                evidence_count=len(fresh_before.get("evidence", [])),
+            )
+        except Exception as exc:
+            baseline_degraded = True
+            logger.warning("Pre-execution evidence refresh failed: %s", exc)
+            state.setdefault("context", {})["verification_precondition_degraded"] = True
+            self._audit("pre_execution_evidence_refresh_failed", state, error=str(exc))
+
+        result_state = await super()._execution_node(state)
+        execution_result = result_state.get("execution_result") or {}
+        execution_result["verification_baseline_degraded"] = baseline_degraded
+        result_state["execution_result"] = execution_result
+        if not execution_result.get("success"):
+            result_state["terminal_reason"] = execution_result.get("reason") or "execution_failed"
+        return result_state
+
+    async def _memory_node(self, state: E2EState) -> E2EState:
+        execution = state.get("execution_result") or {}
+        if execution and not execution.get("success"):
+            state["current_node"] = "memory"
+            self._audit(
+                "memory_writeback",
+                state,
+                persisted=False,
+                verification_status=(state.get("verification_result") or {}).get("status"),
+                reason="execution_not_successful",
+            )
+            return state
+        return await super()._memory_node(state)
