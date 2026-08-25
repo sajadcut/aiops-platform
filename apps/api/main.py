@@ -8,7 +8,7 @@ from domain.contracts.logging import configure_logging, logger
 from domain.contracts.exceptions import register_exception_handlers
 from domain.contracts.rate_limit import rate_limiter_strict
 
-from apps.api import health, workflow, incidents, a2a, execution, e2e_workflow, audit, runbooks, incident_resources, dashboard, runbook_execution, dashboard_incidents, remediation, agents
+from apps.api import health, workflow, incidents, a2a, execution, e2e_workflow, audit, runbooks, incident_resources, dashboard, runbook_execution, dashboard_incidents, remediation, agents, signals
 from apps.execution_service.tools.registry import tool_registry
 from apps.execution_service.tools.mock_executor import MockExecutorTool
 from apps.execution_service.tools.ssh_vm import SSHVMTool
@@ -38,6 +38,7 @@ for router, tags in [
     (runbook_execution.router, ["Runbook Execution"]),
     (incident_resources.router, ["Incident Resources"]),
     (incidents.router, ["Incidents"]),
+    (signals.router, ["Signals"]),
     (remediation.router, ["Remediation"]),
     (a2a.router, ["A2A"]),
     (execution.router, ["Execution"]),
