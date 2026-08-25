@@ -9,7 +9,7 @@ from domain.runbook_validation import validate_runbook
 
 
 class RunbookRegistry:
-    """Loads governed runbooks from the repository and validates them before use."""
+    """Loads governed runbooks from repository artifacts and validates them."""
 
     def __init__(self, root: str = "runbooks"):
         self.root = Path(root)
@@ -19,7 +19,11 @@ class RunbookRegistry:
         self._cache.clear()
         for path in sorted(self.root.glob("*.yml")):
             data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
-            validate_runbook(data)
+            validation = validate_runbook(data)
+            if not validation["valid"]:
+                raise ValueError(f"Invalid runbook {path.name}: {validation}")
+            if data.get("enabled", True) is False:
+                continue
             name = str(data["name"])
             self._cache[name] = data
         return list(self._cache.values())
@@ -30,7 +34,7 @@ class RunbookRegistry:
         try:
             return self._cache[name]
         except KeyError as exc:
-            raise KeyError(f"Unknown runbook: {name}") from exc
+            raise KeyError(f"Unknown or disabled runbook: {name}") from exc
 
     def list(self) -> List[Dict[str, Any]]:
         if not self._cache:
@@ -44,5 +48,5 @@ class RunbookRegistry:
             "version": runbook["version"],
             "dry_run": True,
             "steps": runbook.get("steps", []),
-            "rollback_steps": runbook.get("rollback_steps", []),
+            "rollback_steps": runbook.get("rollback_steps", runbook.get("rollback", [])),
         }
