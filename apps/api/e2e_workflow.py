@@ -1,11 +1,14 @@
 from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
+from uuid import uuid4
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
-from apps.orchestrator.e2e_graph import E2EOrchestrator
+from apps.orchestrator.runtime import DurableWorkflowRuntime
+from apps.security.auth import require_permission
+from apps.security.rbac import allowed
 from database import AsyncSessionLocal
 
 router = APIRouter()
@@ -42,12 +45,37 @@ class E2EWorkflowResponse(BaseModel):
     terminal_reason: Optional[str] = None
 
 
+def _response_from_result(result: Dict[str, Any]) -> E2EWorkflowResponse:
+    return E2EWorkflowResponse(
+        success=True,
+        current_node=result.get("current_node"),
+        decision=result.get("decision"),
+        approval=result.get("approval"),
+        execution_result=result.get("execution_result"),
+        verification_result=result.get("verification_result"),
+        final_plan=result.get("final_plan"),
+        findings=result.get("findings", []),
+        messages=result.get("messages", []),
+        terminal_reason=result.get("terminal_reason"),
+    )
+
+
 @router.post("/workflow/e2e", response_model=E2EWorkflowResponse)
-async def run_e2e_workflow(request: E2EWorkflowRequest) -> E2EWorkflowResponse:
-    """Run the guarded incident lifecycle without bypassing Decision/Approval."""
+async def run_e2e_workflow(
+    request: E2EWorkflowRequest,
+    identity=Depends(require_permission("read:incident")),
+) -> E2EWorkflowResponse:
+    """Run the guarded durable incident lifecycle without bypassing Decision/Approval."""
     try:
+        if request.execution_request is not None and not any(
+            allowed(role, "execute:low_risk") or allowed(role, "execute:approved")
+            for role in identity.roles
+        ):
+            raise HTTPException(status_code=403, detail="execution_permission_required")
+
+        incident_id = request.incident_id or str(uuid4())
         initial_state: Dict[str, Any] = {
-            "incident_id": request.incident_id,
+            "incident_id": incident_id,
             "evidence_summary": request.evidence_summary,
             "service_name": request.service_name,
             "context": request.context,
@@ -61,19 +89,26 @@ async def run_e2e_workflow(request: E2EWorkflowRequest) -> E2EWorkflowResponse:
             initial_state["execution_request"] = request.execution_request.model_dump()
 
         async with AsyncSessionLocal() as db:
-            result = await E2EOrchestrator(db=db).run(initial_state)
+            result = await DurableWorkflowRuntime(db).start(initial_state)
 
-        return E2EWorkflowResponse(
-            success=True,
-            current_node=result.get("current_node"),
-            decision=result.get("decision"),
-            approval=result.get("approval"),
-            execution_result=result.get("execution_result"),
-            verification_result=result.get("verification_result"),
-            final_plan=result.get("final_plan"),
-            findings=result.get("findings", []),
-            messages=result.get("messages", []),
-            terminal_reason=result.get("terminal_reason"),
-        )
+        return _response_from_result(result)
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@router.post("/workflow/e2e/{incident_id}/resume", response_model=E2EWorkflowResponse)
+async def resume_e2e_workflow(
+    incident_id: str,
+    _identity=Depends(require_permission("execute:approved")),
+) -> E2EWorkflowResponse:
+    """Resume a paused workflow only after its durable approval is granted."""
+    try:
+        async with AsyncSessionLocal() as db:
+            result = await DurableWorkflowRuntime(db).resume_after_approval(incident_id)
+        return _response_from_result(result)
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
