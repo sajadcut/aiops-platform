@@ -17,7 +17,7 @@ class ApplicationAgent(BaseAgent):
 
     @property
     def description(self) -> str:
-        return "Application reliability analysis: errors, dependencies, releases, latency and configuration"
+        return "Application reliability analysis: errors, dependencies, releases, latency, endpoints and configuration"
 
     @property
     def allowed_tools(self) -> List[str]:
@@ -31,8 +31,9 @@ class ApplicationAgent(BaseAgent):
         logs = [item for item in evidence if str(item.get("type", "")).lower() == "log"]
         metrics = [item for item in evidence if str(item.get("type", "")).lower() == "metric"]
         missing = self.missing_evidence_for(input_data, ["log", "metric"])
-        prompt = f"""You are a senior SRE application analyst. LIVE EVIDENCE is authoritative. Auxiliary Knowledge RAG and Operational Memory may suggest checks/patterns but must never be cited as proof of current state. Never invent deployments, dependencies, versions, errors or executed actions.
-Return JSON keys: severity, health_status, findings, error_patterns, deployment_correlation, dependency_signals, probable_dependencies, affected_components, blast_radius, hypotheses, missing_evidence, handoff_agents, immediate_checks, escalation_target, risk_level, uncertainty_reason, confidence.
+        prompt = f"""You are a senior SRE application analyst. LIVE EVIDENCE is authoritative. Auxiliary Knowledge RAG and Operational Memory may suggest checks/patterns but must never be cited as proof of current state. Never invent deployments, dependencies, versions, configuration changes, exceptions or executed actions.
+Analyze: 4xx/5xx patterns, latency/error-rate changes, exception clustering, endpoint-level impact, dependency health, release/deployment correlation, config drift signals and saturation visible at the application boundary.
+Return JSON keys: severity, health_status, findings, error_patterns, http_status_patterns, latency_signals, exception_clusters, endpoint_impacts, deployment_correlation, config_drift_signals, dependency_signals, probable_dependencies, affected_components, blast_radius, hypotheses, missing_evidence, handoff_agents, immediate_checks, escalation_target, risk_level, uncertainty_reason, confidence.
 Each hypothesis: hypothesis, probability, evidence_ids, conflicting_evidence_ids, falsification_checks, impacted_components, recommended_next_evidence. Only LIVE EVIDENCE IDs may appear in evidence fields. Immediate checks are read-only.
 Incident={input_data.incident_id}\nService={input_data.service_name}\nSummary={input_data.evidence_summary}\nLIVE_EVIDENCE={json.dumps(evidence, default=str)}\nAUXILIARY_CONTEXT={json.dumps(auxiliary, default=str)}\nContextSummary={json.dumps(input_data.context.get('summary', {}), default=str)}"""
         try:
@@ -88,7 +89,12 @@ Incident={input_data.incident_id}\nService={input_data.service_name}\nSummary={i
             requires_human_review=self.human_review_required(confidence, all_missing),
             analysis_details={
                 "error_patterns": patterns,
+                "http_status_patterns": result.get("http_status_patterns", []),
+                "latency_signals": result.get("latency_signals", []),
+                "exception_clusters": result.get("exception_clusters", []),
+                "endpoint_impacts": result.get("endpoint_impacts", []),
                 "deployment_correlation": result.get("deployment_correlation"),
+                "config_drift_signals": result.get("config_drift_signals", []),
                 "dependency_signals": result.get("dependency_signals", []),
                 "log_evidence_count": len(logs),
                 "metric_evidence_count": len(metrics),
