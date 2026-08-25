@@ -23,13 +23,21 @@ class DurableWorkflowRuntime:
         self.audit = PostgreSQLAuditStore(session)
 
     def _orchestrator_type(self) -> Type[E2EOrchestrator]:
-        # Some focused unit tests construct the runtime through ``__new__`` and
-        # monkeypatch E2EOrchestrator directly. Keep that supported while normal
-        # construction defaults to the collaborative SignalAware orchestrator.
         return getattr(self, "orchestrator_cls", E2EOrchestrator)
 
     async def _flush_audit(self, incident_id: str) -> None:
         await AuditService.flush_to_store(self.audit, incident_id=incident_id)
+
+    async def _set_incident_status(self, incident_id: str, status: str) -> None:
+        """Persist lifecycle state when the repository supports it.
+
+        The capability check keeps small focused test doubles and third-party
+        repository adapters backward-compatible without weakening the normal
+        PostgreSQL runtime, whose IncidentRepository always implements it.
+        """
+        setter = getattr(self.incidents, "set_status", None)
+        if callable(setter):
+            await setter(incident_id, status)
 
     @staticmethod
     def _incident_fields(state: Dict[str, Any]) -> Dict[str, Any]:
@@ -168,7 +176,7 @@ class DurableWorkflowRuntime:
         if not execution_result.get("success"):
             result["terminal_reason"] = execution_result.get("reason") or "execution_failed"
             await self.checkpoints.mark_failed(incident_id, result)
-            await self.incidents.set_status(incident_id, "escalated")
+            await self._set_incident_status(incident_id, "escalated")
             await self._flush_audit(incident_id)
             await self.incidents.commit()
             return result
@@ -183,21 +191,23 @@ class DurableWorkflowRuntime:
         result = await orchestrator._end_node(result)
         if verification_status == "success":
             await self.checkpoints.mark_completed(incident_id, result)
-            await self.incidents.set_status(incident_id, "resolved")
+            await self._set_incident_status(incident_id, "resolved")
         else:
             await self.checkpoints.mark_failed(incident_id, result)
-            await self.incidents.set_status(incident_id, "escalated")
+            await self._set_incident_status(incident_id, "escalated")
         await self.incidents.add_findings(incident_id, result.get("findings", []))
-        final_fields = self._incident_fields(result)
-        await self.incidents.upsert_incident(
-            incident_id=incident_id,
-            source=final_fields["source"],
-            service=final_fields["service"],
-            severity=final_fields["severity"],
-            summary=final_fields["summary"],
-            status="resolved" if verification_status == "success" else "escalated",
-            context=final_fields["context"],
-        )
+        upsert = getattr(self.incidents, "upsert_incident", None)
+        if callable(upsert):
+            final_fields = self._incident_fields(result)
+            await upsert(
+                incident_id=incident_id,
+                source=final_fields["source"],
+                service=final_fields["service"],
+                severity=final_fields["severity"],
+                summary=final_fields["summary"],
+                status="resolved" if verification_status == "success" else "escalated",
+                context=final_fields["context"],
+            )
         await self._flush_audit(incident_id)
         await self.incidents.commit()
         return result
