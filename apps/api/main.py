@@ -8,7 +8,7 @@ from domain.contracts.logging import configure_logging, logger
 from domain.contracts.exceptions import register_exception_handlers
 from domain.contracts.rate_limit import rate_limiter_strict
 
-from apps.api import health, workflow, incidents, a2a, execution, e2e_workflow, audit, runbooks, incident_resources, dashboard, runbook_execution, dashboard_incidents, remediation
+from apps.api import health, workflow, incidents, a2a, execution, e2e_workflow, audit, runbooks, incident_resources, dashboard, runbook_execution, dashboard_incidents, remediation, agents
 from apps.execution_service.tools.registry import tool_registry
 from apps.execution_service.tools.mock_executor import MockExecutorTool
 from apps.execution_service.tools.ssh_vm import SSHVMTool
@@ -43,6 +43,7 @@ for router, tags in [
     (execution.router, ["Execution"]),
     (dashboard.router, ["Dashboard"]),
     (dashboard_incidents.router, ["Dashboard Incidents"]),
+    (agents.router, ["Agents"]),
 ]:
     app.include_router(router, prefix="/api/v1", tags=tags)
 
@@ -61,7 +62,13 @@ for _path, (_endpoint, _methods, _dependencies) in _MASTER_API_ROUTES.items():
 
 @app.get("/")
 async def root():
-    return {"message": f"Welcome to {settings.APP_NAME}", "version": settings.APP_VERSION, "docs": "/docs", "dashboard": "/dashboard"}
+    return {
+        "message": f"Welcome to {settings.APP_NAME}",
+        "version": settings.APP_VERSION,
+        "docs": "/docs",
+        "dashboard": "/dashboard",
+        "agent_dashboard": "/dashboard/agents",
+    }
 
 
 @app.get("/dashboard", include_in_schema=False)
@@ -72,6 +79,11 @@ async def dashboard_page():
 @app.get("/dashboard/", include_in_schema=False)
 async def dashboard_page_slash():
     return FileResponse(Path(__file__).resolve().parents[2] / "dashboards" / "index.html")
+
+
+@app.get("/dashboard/agents", include_in_schema=False)
+async def agent_dashboard_page():
+    return FileResponse(Path(__file__).resolve().parents[2] / "dashboards" / "agents.html")
 
 
 def _validate_production_configuration() -> None:
@@ -93,6 +105,10 @@ def _validate_production_configuration() -> None:
         errors.append("SSH strict host key checking must be enabled in production")
     if settings.APPROVAL_TTL_SECONDS <= 0:
         errors.append("APPROVAL_TTL_SECONDS must be positive in production")
+    if settings.AGENT_MAX_PARALLELISM <= 0 or settings.AGENT_MAX_EVIDENCE_ROUNDS <= 0:
+        errors.append("agent routing limits must be positive")
+    if not settings.AGENT_ENABLED_AGENTS:
+        errors.append("at least one specialist agent must be enabled")
     if errors:
         raise RuntimeError("production_configuration_invalid: " + "; ".join(errors))
 
