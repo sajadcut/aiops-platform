@@ -43,7 +43,15 @@ class DurableWorkflowRuntime:
         result = await E2EOrchestrator(db=self.session).run(state)
         await self.incidents.add_findings(incident_id, result.get("findings", []))
         await self.incidents.add_evidence(incident_id, result.get("live_evidence", {}).get("evidence", []))
-        status = "completed" if result.get("current_node") == "end" and not result.get("approval") else "paused"
+
+        approval = result.get("approval") or {}
+        if approval.get("approval_id"):
+            # The graph creates the approval request at the policy boundary;
+            # the durable runtime is responsible for persisting it before the
+            # workflow is paused so another process can approve and resume it.
+            await self.approvals.save(approval)
+
+        status = "completed" if result.get("current_node") == "end" and not approval else "paused"
         await self.checkpoints.save(incident_id, result, status=status)
         await self._flush_audit(incident_id)
         await self.incidents.commit()
@@ -63,7 +71,18 @@ class DurableWorkflowRuntime:
 
         state = checkpoint["state"]
         state["approval"] = durable
+        execution_request = dict(state.get("execution_request") or {})
+        if not execution_request:
+            raise ValueError("execution_request_not_found_in_checkpoint")
+
+        # Bind the persisted approval to this exact resumed execution. This is
+        # required by ExecutionService and prevents an approved workflow from
+        # being blocked again at the tool registry boundary.
+        execution_request["approval_granted"] = True
+        execution_request["approval_id"] = str(approval_id)
+        state["execution_request"] = execution_request
         state["current_node"] = "execution"
+
         orchestrator = E2EOrchestrator(db=self.session)
         result = await orchestrator._execution_node(state)
         result = await orchestrator._verification_node(result)
