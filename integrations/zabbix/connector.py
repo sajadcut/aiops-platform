@@ -1,13 +1,18 @@
 import httpx
 from typing import Optional, List, Dict, Any
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from integrations.base import BaseConnector, Alert, LogEntry, MetricPoint
 from domain.contracts.config import settings
 from domain.contracts.logging import logger
 
 
 class ZabbixConnector(BaseConnector):
-    """Zabbix connector with deterministic host/asset enrichment."""
+    """Zabbix connector with deterministic host/asset enrichment.
+
+    Read methods fail closed on transport/auth/API unavailability. Returning an
+    empty list means a successful query with no matching records, not a hidden
+    connector failure; the Evidence layer relies on that distinction.
+    """
 
     def __init__(self, api_url: Optional[str] = None, username: Optional[str] = None, password: Optional[str] = None, timeout: Optional[int] = None):
         self.api_url = api_url or settings.ZABBIX_URL
@@ -35,17 +40,22 @@ class ZabbixConnector(BaseConnector):
             return False
 
     async def _authenticate(self) -> str:
-        if self._token and self._last_auth and (datetime.now() - self._last_auth) < timedelta(minutes=10):
+        now = datetime.now(timezone.utc)
+        if self._token and self._last_auth and (now - self._last_auth).total_seconds() < 600:
             return self._token
         if not self.username or not self.password:
-            raise RuntimeError("ZABBIX_USERNAME and ZABBIX_PASSWORD must be configured")
+            raise RuntimeError("zabbix_credentials_not_configured")
         async with httpx.AsyncClient(timeout=self.timeout) as client:
-            response = await client.post(self._api_endpoint, json={"jsonrpc": "2.0", "method": "user.login", "params": {"username": self.username, "password": self.password}, "id": 1})
+            response = await client.post(
+                self._api_endpoint,
+                json={"jsonrpc": "2.0", "method": "user.login", "params": {"username": self.username, "password": self.password}, "id": 1},
+            )
+            response.raise_for_status()
             data = response.json()
             if "result" not in data:
-                raise RuntimeError("Zabbix authentication failed")
+                raise RuntimeError("zabbix_authentication_failed")
             self._token = data["result"]
-            self._last_auth = datetime.now()
+            self._last_auth = now
             return self._token
 
     async def _request(self, method: str, params: dict) -> dict:
@@ -55,36 +65,41 @@ class ZabbixConnector(BaseConnector):
             response.raise_for_status()
             data = response.json()
             if "error" in data:
-                raise RuntimeError(f"Zabbix API error: {data['error']}")
+                raise RuntimeError("zabbix_api_error")
             return data
 
     async def get_alerts(self, since: Optional[datetime] = None, service: Optional[str] = None, limit: int = 100) -> List[Alert]:
-        try:
-            if not await self.health_check():
-                return []
-            params: Dict[str, Any] = {"output": "extend", "selectTags": "extend", "sortfield": "clock", "sortorder": "DESC", "limit": limit}
-            if service:
-                host_id = await self._get_host_id(service)
-                if host_id:
-                    params["hostids"] = host_id
-            if since:
-                params["time_from"] = int(since.timestamp())
-            data = await self._request("problem.get", params)
-            severity_map = {0: "not_classified", 1: "information", 2: "warning", 3: "average", 4: "high", 5: "disaster"}
-            alerts: List[Alert] = []
-            for problem in data.get("result", []):
-                raw = dict(problem)
-                try:
-                    raw.update(await self._asset_metadata_for_problem(problem))
-                except Exception as exc:
-                    logger.warning(f"Zabbix asset enrichment failed for event {problem.get('eventid')}: {exc}")
-                host = raw.get("host") or {}
-                resolved_service = service or host.get("host") or host.get("name")
-                alerts.append(Alert(source="zabbix", source_id=str(problem.get("eventid", "")), severity=severity_map.get(int(problem.get("severity", 0)), "unknown"), service=resolved_service, message=problem.get("name", problem.get("message", "No message")), timestamp=datetime.fromtimestamp(int(problem.get("clock", 0))), raw_data=raw))
-            return alerts
-        except Exception as exc:
-            logger.error(f"Failed to get Zabbix alerts: {exc}")
-            return []
+        if not await self.health_check():
+            raise RuntimeError("zabbix_unavailable")
+        params: Dict[str, Any] = {"output": "extend", "selectTags": "extend", "sortfield": "clock", "sortorder": "DESC", "limit": limit}
+        if service:
+            host_id = await self._get_host_id(service)
+            if host_id:
+                params["hostids"] = host_id
+        if since:
+            params["time_from"] = int(since.timestamp())
+        data = await self._request("problem.get", params)
+        severity_map = {0: "not_classified", 1: "information", 2: "warning", 3: "average", 4: "high", 5: "disaster"}
+        alerts: List[Alert] = []
+        for problem in data.get("result", []):
+            raw = dict(problem)
+            try:
+                raw.update(await self._asset_metadata_for_problem(problem))
+            except Exception as exc:
+                # Core alert Evidence remains valid even if optional enrichment fails.
+                logger.warning(f"Zabbix asset enrichment failed for event {problem.get('eventid')}: {exc}")
+            host = raw.get("host") or {}
+            resolved_service = service or host.get("host") or host.get("name")
+            alerts.append(Alert(
+                source="zabbix",
+                source_id=str(problem.get("eventid", "")),
+                severity=severity_map.get(int(problem.get("severity", 0)), "unknown"),
+                service=resolved_service,
+                message=problem.get("name", problem.get("message", "No message")),
+                timestamp=datetime.fromtimestamp(int(problem.get("clock", 0)), tz=timezone.utc),
+                raw_data=raw,
+            ))
+        return alerts
 
     async def _asset_metadata_for_problem(self, problem: Dict[str, Any]) -> Dict[str, Any]:
         trigger_id = str(problem.get("objectid") or "")
