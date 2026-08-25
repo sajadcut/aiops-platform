@@ -8,7 +8,7 @@ from abc import ABC, abstractmethod
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from agents.shared.telemetry import AgentTelemetry
 from domain.contracts.config import settings
@@ -58,6 +58,18 @@ class RecommendedAction(BaseModel):
     expected_evidence: List[str] = Field(default_factory=list)
 
 
+class EvidenceRequest(BaseModel):
+    """Bounded read-only request for the Context/Evidence layer.
+
+    Agents never execute this request. Orchestration maps the canonical evidence
+    type to an allowlisted read connector.
+    """
+
+    evidence_type: str
+    reason: str
+    preferred_source: Optional[str] = None
+
+
 class AgentOutput(BaseModel):
     agent_name: str
     finding_type: str
@@ -70,9 +82,13 @@ class AgentOutput(BaseModel):
     evidence_coverage: float = Field(default=0.0, ge=0, le=1)
     findings: List[str] = Field(default_factory=list)
     recommendations: List[str] = Field(default_factory=list)
+    recommended_checks: List[str] = Field(default_factory=list)
     recommended_actions: List[RecommendedAction] = Field(default_factory=list)
     hypotheses: List[OperationalHypothesis] = Field(default_factory=list)
+    supporting_evidence_ids: List[str] = Field(default_factory=list)
+    conflicting_evidence_ids: List[str] = Field(default_factory=list)
     missing_evidence: List[str] = Field(default_factory=list)
+    evidence_requests: List[EvidenceRequest] = Field(default_factory=list)
     handoff_agents: List[str] = Field(default_factory=list)
     probable_dependencies: List[str] = Field(default_factory=list)
     affected_components: List[str] = Field(default_factory=list)
@@ -86,9 +102,64 @@ class AgentOutput(BaseModel):
     model_metadata: Dict[str, Any] = Field(default_factory=dict)
     timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
+    @model_validator(mode="after")
+    def derive_operational_fields(self) -> "AgentOutput":
+        if not self.supporting_evidence_ids:
+            self.supporting_evidence_ids = _unique(
+                ref for hypothesis in self.hypotheses for ref in hypothesis.evidence_ids
+            )
+        if not self.conflicting_evidence_ids:
+            self.conflicting_evidence_ids = _unique(
+                ref for hypothesis in self.hypotheses for ref in hypothesis.conflicting_evidence_ids
+            )
+        if not self.recommended_checks:
+            self.recommended_checks = _unique(
+                action.action for action in self.recommended_actions if action.read_only
+            )
+        if not self.evidence_requests:
+            requests: List[EvidenceRequest] = []
+            seen: set[str] = set()
+            for missing in self.missing_evidence:
+                evidence_type, source = _canonical_evidence_request(missing)
+                if evidence_type and evidence_type not in seen:
+                    requests.append(EvidenceRequest(
+                        evidence_type=evidence_type,
+                        reason=str(missing),
+                        preferred_source=source,
+                    ))
+                    seen.add(evidence_type)
+                if len(requests) >= settings.AGENT_MAX_DYNAMIC_EVIDENCE_TYPES:
+                    break
+            self.evidence_requests = requests
+        return self
+
 
 class StructuredAgentResponseError(RuntimeError):
     pass
+
+
+def _unique(values) -> List[str]:
+    result: List[str] = []
+    for raw in values:
+        value = str(raw).strip()
+        if value and value not in result:
+            result.append(value)
+    return result
+
+
+def _canonical_evidence_request(text: str) -> tuple[Optional[str], Optional[str]]:
+    value = str(text).lower()
+    if any(token in value for token in ("kubernetes", "pod", "event", "workload", "probe")):
+        return "event", "kubernetes"
+    if any(token in value for token in ("log", "audit", "trace", "authentication", "authorization", "query")):
+        return "log", "elasticsearch"
+    if any(token in value for token in ("vm", "host", "process", "service status", "telemetry")):
+        return "telemetry", "vm"
+    if any(token in value for token in ("metric", "latency", "cpu", "memory", "disk", "network", "capacity", "queue", "replication")):
+        return "metric", "prometheus"
+    if "alert" in value:
+        return "alert", "zabbix"
+    return None, None
 
 
 class BaseAgent(ABC):
@@ -144,6 +215,7 @@ class BaseAgent(ABC):
                     "usage": response.usage or {},
                 }
                 result = self._parse_json_object(response.content)
+                self._validate_structured_shape(result)
                 AgentTelemetry.record(
                     self.name,
                     duration_seconds=time.monotonic() - started,
@@ -171,6 +243,29 @@ class BaseAgent(ABC):
         if not isinstance(obj, dict):
             raise StructuredAgentResponseError("agent_response_must_be_json_object")
         return obj
+
+    @staticmethod
+    def _validate_structured_shape(obj: Dict[str, Any]) -> None:
+        list_fields = {
+            "findings", "affected_components", "probable_dependencies", "hypotheses",
+            "missing_evidence", "handoff_agents", "immediate_checks", "recommendations",
+        }
+        for key in list_fields:
+            if key in obj and not isinstance(obj[key], list):
+                raise StructuredAgentResponseError(f"agent_response_{key}_must_be_list")
+        if "confidence" in obj:
+            confidence = float(obj["confidence"])
+            if not 0 <= confidence <= 1:
+                raise StructuredAgentResponseError("agent_response_confidence_out_of_range")
+        for hypothesis in obj.get("hypotheses", []):
+            if not isinstance(hypothesis, dict) or not str(hypothesis.get("hypothesis", "")).strip():
+                raise StructuredAgentResponseError("invalid_hypothesis_shape")
+            probability = float(hypothesis.get("probability", 0))
+            if not 0 <= probability <= 1:
+                raise StructuredAgentResponseError("hypothesis_probability_out_of_range")
+            for key in ("evidence_ids", "conflicting_evidence_ids", "falsification_checks", "impacted_components", "recommended_next_evidence"):
+                if key in hypothesis and not isinstance(hypothesis[key], list):
+                    raise StructuredAgentResponseError(f"hypothesis_{key}_must_be_list")
 
     @staticmethod
     def _parse_evidence_timestamp(item: Dict[str, Any]) -> Optional[datetime]:
@@ -275,7 +370,8 @@ class BaseAgent(ABC):
         if evidence_count < settings.AGENT_MIN_EVIDENCE_ITEMS or coverage < settings.AGENT_MIN_EVIDENCE_COVERAGE:
             confidence = min(confidence, settings.AGENT_LOW_CONFIDENCE_THRESHOLD)
         if conflict_count:
-            confidence *= max(0.25, 1.0 - min(conflict_count, 3) * 0.2)
+            penalty = min(conflict_count, 3) * settings.AGENT_CONFLICT_CONFIDENCE_PENALTY
+            confidence *= max(0.25, 1.0 - penalty)
         return round(confidence, 4)
 
     @staticmethod
