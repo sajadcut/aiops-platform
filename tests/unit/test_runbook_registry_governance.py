@@ -20,6 +20,7 @@ def test_repository_runbooks_load_with_governance_and_verification():
         assert item["name"] == item["id"]
         result = registry.validate(item["id"], {})
         assert result["valid"] is True
+        assert result["strict"] is True
         assert result["verification"]["checks"]
 
 
@@ -32,7 +33,7 @@ def test_registry_dry_run_exposes_preconditions_rollback_and_verification():
     assert "rollback_steps" not in result
 
 
-def test_validator_rejects_missing_verification():
+def test_strict_validator_rejects_missing_verification():
     result = validate_runbook({
         "id": "bad",
         "owner": "sre",
@@ -42,9 +43,22 @@ def test_validator_rejects_missing_verification():
         "steps": [{"action": "inspect"}],
         "rollback": [],
         "risk": "low",
-    })
+    }, strict=True)
     assert result["valid"] is False
     assert "verification" in result["missing"]
+
+
+def test_legacy_validator_contract_remains_backward_compatible():
+    result = validate_runbook({
+        "owner": "sre",
+        "version": "1",
+        "preconditions": [],
+        "steps": [],
+        "timeout": 30,
+        "rollback": [],
+    })
+    assert result["valid"] is True
+    assert result["strict"] is False
 
 
 def test_registry_rejects_invalid_runbook_file(tmp_path: Path):
