@@ -4,6 +4,13 @@ metadata:
   name: aiops-platform
 spec:
   replicas: 2
+  minReadySeconds: 10
+  progressDeadlineSeconds: 300
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
   selector:
     matchLabels:
       app: aiops-platform
@@ -12,40 +19,97 @@ spec:
       labels:
         app: aiops-platform
     spec:
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 30
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: aiops-platform
       containers:
         - name: api
-          image: registry.internal/aiops-platform:latest
+          # Production promotion MUST replace this tag with an approved signed digest.
+          image: registry.internal/aiops-platform:2.2
           imagePullPolicy: IfNotPresent
           ports:
-            - containerPort: 8000
+            - name: http
+              containerPort: 8000
+          env:
+            - name: TMPDIR
+              value: /tmp
           envFrom:
             - configMapRef:
                 name: aiops-platform-config
             - secretRef:
                 name: aiops-platform-secrets
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: "2"
+              memory: 2Gi
+          startupProbe:
+            httpGet:
+              path: /api/v1/health/live
+              port: http
+            periodSeconds: 5
+            failureThreshold: 24
           readinessProbe:
             httpGet:
               path: /api/v1/health/ready
-              port: 8000
-            initialDelaySeconds: 10
+              port: http
             periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
           livenessProbe:
             httpGet:
               path: /api/v1/health/live
-              port: 8000
-            initialDelaySeconds: 30
+              port: http
             periodSeconds: 20
+            timeoutSeconds: 3
+            failureThreshold: 3
           securityContext:
             runAsNonRoot: true
             allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: aiops-platform
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: aiops-platform
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: aiops-platform
 spec:
+  type: ClusterIP
   selector:
     app: aiops-platform
   ports:
-    - port: 8000
-      targetPort: 8000
+    - name: http
+      port: 8000
+      targetPort: http
