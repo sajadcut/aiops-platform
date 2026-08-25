@@ -1,112 +1,85 @@
-from typing import Optional, List
 import json
-from agents.shared.base import BaseAgent, AgentInput, AgentOutput
-from integrations.llm.base import LLMAdapter
-from integrations.llm.mock_provider import MockLLMProvider
+from typing import List, Optional
+
+from agents.shared.base import AgentInput, AgentOutput, BaseAgent, OperationalHypothesis
+from domain.contracts.config import settings
 from domain.contracts.logging import logger
+from integrations.llm.base import LLMAdapter
+
 
 class KubernetesAgent(BaseAgent):
-    """
-    Agent تخصصی برای تحلیل مشکلات Kubernetes
-    شامل: Pods, Deployments, Services, Ingress, Events
-    """
-    
     def __init__(self, llm_adapter: Optional[LLMAdapter] = None):
-        self.llm = llm_adapter or MockLLMProvider()
-    
+        super().__init__(llm_adapter)
+
     @property
     def name(self) -> str:
         return "kubernetes"
-    
+
     @property
     def description(self) -> str:
-        return "Kubernetes-level analysis: pods, deployments, services, ingress, events"
-    
+        return "Kubernetes diagnostics: workload health, rollout, scheduling, networking, resources and events"
+
     @property
     def allowed_tools(self) -> List[str]:
-        return ["kubectl_get", "kubectl_describe", "kubectl_logs"]
-    
+        return ["kubectl_get", "kubectl_describe", "kubectl_logs", "prometheus_query", "knowledge_search"]
+
     async def analyze(self, input_data: AgentInput) -> AgentOutput:
         logger.info(f"KubernetesAgent analyzing: {input_data.incident_id}")
-        
-        evidence = input_data.context.get("evidence", []) if input_data.context else []
-        logs = [e for e in evidence if e.get("type") == "log"]
-        metrics = [e for e in evidence if e.get("type") == "metric"]
-        
-        # استخراج اطلاعات مرتبط با Kubernetes از Context
-        context_summary = input_data.context.get("summary", {}) if input_data.context else {}
-        
-        prompt = f"""
-You are a Kubernetes specialist. Analyze the Kubernetes-related issues.
-
-Incident Details:
-- Service: {input_data.service_name or 'unknown'}
-- Evidence Summary: {input_data.evidence_summary}
-- Logs: {len(logs)} items
-- Metrics: {len(metrics)} items
-- Context Summary: {json.dumps(context_summary, indent=2, default=str) if context_summary else 'None'}
-
-Focus on:
-1. **Pod Health**: Are pods running? Any CrashLoopBackOff, ImagePullBackOff, or OOMKilled?
-2. **Deployment Status**: Is the deployment healthy? Any rollout failures?
-3. **Service/Ingress**: Are services and ingress routes properly configured?
-4. **Resource Limits**: Are there any resource constraints (CPU/Memory limits)?
-5. **Events**: Any warning or error events in the namespace?
-
-Provide a structured JSON response:
-{{
-    "pod_health": "Healthy|Degraded|Unhealthy",
-    "deployment_issues": ["list", "of", "issues"],
-    "service_status": "Healthy|Degraded|Unhealthy",
-    "resource_constraints": ["list", "of", "constraints"],
-    "confidence": 0.0-1.0,
-    "immediate_actions": ["action1", "action2"]
-}}
-"""
-        
+        evidence = self.evidence_items(input_data)
+        evidence_ids = self.evidence_ids(input_data)
+        logs = [item for item in evidence if str(item.get("type", "")).lower() == "log"]
+        metrics = [item for item in evidence if str(item.get("type", "")).lower() == "metric"]
+        events = [item for item in evidence if str(item.get("type", "")).lower() in {"event", "alert"}]
+        missing = self.missing_evidence_for(input_data, ["log", "metric"])
+        prompt = f"""You are a Kubernetes SRE. Analyze only supplied evidence; do not claim pod states, rollout failures, OOMKills, scheduling failures or network faults unless evidenced.
+Return JSON keys: severity, health_status, workload_signals, rollout_signals, scheduling_signals, network_signals, resource_signals, affected_components, blast_radius, hypotheses, missing_evidence, handoff_agents, immediate_checks, confidence.
+Hypotheses entries: hypothesis, probability, evidence_ids, falsification_checks. immediate_checks must be read-only kubectl/metrics/log inspection.
+Incident={input_data.incident_id}\nService={input_data.service_name}\nSummary={input_data.evidence_summary}\nEvidence={json.dumps(evidence, default=str)}\nContextSummary={json.dumps(input_data.context.get('summary', {}), default=str)}"""
         try:
-            response = await self.llm.generate(prompt, temperature=0.3)
-            try:
-                result = json.loads(response.content)
-                pod_health = result.get("pod_health", "Unknown")
-                deployment_issues = result.get("deployment_issues", [])
-                service_status = result.get("service_status", "Unknown")
-                resource_constraints = result.get("resource_constraints", [])
-                confidence = result.get("confidence", 0.5)
-                actions = result.get("immediate_actions", ["Check pod status"])
-            except json.JSONDecodeError:
-                pod_health = "Unknown"
-                deployment_issues = []
-                service_status = "Unknown"
-                resource_constraints = []
-                confidence = 0.5
-                actions = ["Check pod status and logs"]
-            
-            statement = (
-                f"Kubernetes analysis: Pod health: {pod_health}. "
-                f"Deployment issues: {', '.join(deployment_issues) if deployment_issues else 'None'}. "
-                f"Service status: {service_status}. "
-                f"Resource constraints: {', '.join(resource_constraints) if resource_constraints else 'None'}"
-            )
-            
-            return AgentOutput(
-                agent_name=self.name,
-                finding_type="kubernetes_analysis",
-                statement=statement[:300],
-                confidence=float(confidence),
-                evidence_ids=[],
-                recommendations=actions,
-                requires_approval=False
-            )
-            
-        except Exception as e:
-            logger.error(f"KubernetesAgent failed: {str(e)}")
-            return AgentOutput(
-                agent_name=self.name,
-                finding_type="kubernetes_error",
-                statement=f"Kubernetes analysis failed: {str(e)}",
-                confidence=0.0,
-                evidence_ids=[],
-                recommendations=["Check Kubernetes cluster status manually"],
-                requires_approval=True
-            )
+            result = json.loads((await self.llm.generate(prompt, temperature=settings.AGENT_LLM_TEMPERATURE)).content)
+        except Exception as exc:
+            logger.error(f"KubernetesAgent analysis failed: {exc}")
+            result = {"severity": "unknown", "health_status": "unknown", "workload_signals": [], "affected_components": [], "blast_radius": "unknown", "hypotheses": [], "handoff_agents": ["infrastructure"], "immediate_checks": ["Inspect workload status, events and recent logs"], "confidence": 0.0}
+            missing = sorted(set(missing + ["successful structured kubernetes analysis"]))
+
+        confidence = self.safe_confidence(result.get("confidence"), len(evidence))
+        actions = self.normalize_list(result.get("immediate_checks"), settings.AGENT_MAX_RECOMMENDATIONS)
+        hypotheses = []
+        for item in result.get("hypotheses", [])[: settings.AGENT_MAX_HYPOTHESES]:
+            if isinstance(item, dict) and item.get("hypothesis"):
+                hypotheses.append(OperationalHypothesis(
+                    hypothesis=str(item["hypothesis"]),
+                    probability=self.safe_confidence(item.get("probability", 0), len(evidence)),
+                    evidence_ids=[str(x) for x in item.get("evidence_ids", []) if str(x) in evidence_ids],
+                    falsification_checks=self.normalize_list(item.get("falsification_checks"), 4),
+                ))
+        workload = self.normalize_list(result.get("workload_signals"), 6)
+        statement = "Kubernetes evidence indicates " + ("; ".join(workload) if workload else "no confirmed workload failure yet")
+        return AgentOutput(
+            agent_name=self.name,
+            finding_type="kubernetes_analysis",
+            statement=statement[:600],
+            severity=str(result.get("severity", "unknown")).lower(),
+            health_status=str(result.get("health_status", "unknown")).lower(),
+            confidence=confidence,
+            evidence_ids=evidence_ids,
+            evidence_count=len(evidence),
+            recommendations=actions,
+            recommended_actions=self.analysis_only_actions(actions, suggested_tool="kubectl_get"),
+            hypotheses=hypotheses,
+            missing_evidence=sorted(set(missing + self.normalize_list(result.get("missing_evidence"), 6))),
+            handoff_agents=self.normalize_list(result.get("handoff_agents"), 4),
+            affected_components=self.normalize_list(result.get("affected_components"), 8),
+            blast_radius=str(result.get("blast_radius", "unknown")),
+            requires_human_review=self.human_review_required(confidence, missing),
+            analysis_details={
+                "workload_signals": workload,
+                "rollout_signals": result.get("rollout_signals", []),
+                "scheduling_signals": result.get("scheduling_signals", []),
+                "network_signals": result.get("network_signals", []),
+                "resource_signals": result.get("resource_signals", []),
+                "log_evidence_count": len(logs),
+                "metric_evidence_count": len(metrics),
+                "event_evidence_count": len(events),
+            },
+        )
