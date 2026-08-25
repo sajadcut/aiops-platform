@@ -3,12 +3,14 @@ from __future__ import annotations
 import asyncio
 import json
 import re
+import time
 from abc import ABC, abstractmethod
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
+from agents.shared.telemetry import AgentTelemetry
 from domain.contracts.config import settings
 from integrations.llm.base import LLMAdapter
 from integrations.llm.openai_compatible import configured_llm_adapter
@@ -121,6 +123,8 @@ class BaseAgent(ABC):
         full_prompt = f"{UNTRUSTED_INPUT_POLICY}\n\n{prompt}"
         last_error: Optional[Exception] = None
         attempts = 1 + max(0, settings.AGENT_STRUCTURED_REPAIR_ATTEMPTS)
+        started = time.monotonic()
+        parse_failure = False
         for attempt in range(attempts):
             current = full_prompt if attempt == 0 else (
                 full_prompt + "\n\nYour previous response was invalid. Return exactly one valid JSON object, no markdown."
@@ -139,9 +143,23 @@ class BaseAgent(ABC):
                     "model": response.model,
                     "usage": response.usage or {},
                 }
-                return self._parse_json_object(response.content)
+                result = self._parse_json_object(response.content)
+                AgentTelemetry.record(
+                    self.name,
+                    duration_seconds=time.monotonic() - started,
+                    success=True,
+                    parse_failure=parse_failure,
+                )
+                return result
             except (asyncio.TimeoutError, json.JSONDecodeError, StructuredAgentResponseError, TypeError, ValueError) as exc:
                 last_error = exc
+                parse_failure = True
+        AgentTelemetry.record(
+            self.name,
+            duration_seconds=time.monotonic() - started,
+            success=False,
+            parse_failure=parse_failure,
+        )
         raise StructuredAgentResponseError(f"structured_agent_response_failed:{last_error}")
 
     @staticmethod
@@ -155,6 +173,29 @@ class BaseAgent(ABC):
         return obj
 
     @staticmethod
+    def _parse_evidence_timestamp(item: Dict[str, Any]) -> Optional[datetime]:
+        raw = item.get("observed_at") or item.get("timestamp") or item.get("created_at")
+        if raw is None:
+            return None
+        try:
+            if isinstance(raw, (int, float)):
+                return datetime.fromtimestamp(float(raw), tz=timezone.utc)
+            parsed = datetime.fromisoformat(str(raw).replace("Z", "+00:00"))
+            if parsed.tzinfo is None:
+                parsed = parsed.replace(tzinfo=timezone.utc)
+            return parsed.astimezone(timezone.utc)
+        except (TypeError, ValueError, OverflowError):
+            return None
+
+    @classmethod
+    def evidence_is_stale(cls, item: Dict[str, Any]) -> bool:
+        observed = cls._parse_evidence_timestamp(item)
+        if observed is None:
+            return False
+        age = (datetime.now(timezone.utc) - observed).total_seconds()
+        return age > settings.AGENT_STALE_EVIDENCE_SECONDS
+
+    @staticmethod
     def evidence_items(input_data: AgentInput) -> List[Dict[str, Any]]:
         raw = input_data.context.get("evidence", []) if input_data.context else []
         if not isinstance(raw, list):
@@ -162,7 +203,7 @@ class BaseAgent(ABC):
         seen: set[str] = set()
         result: List[Dict[str, Any]] = []
         for item in raw:
-            if not isinstance(item, dict):
+            if not isinstance(item, dict) or BaseAgent.evidence_is_stale(item):
                 continue
             ref = str(item.get("evidence_id") or item.get("id") or item.get("reference") or item.get("source_id") or item)
             if ref in seen:
@@ -172,6 +213,20 @@ class BaseAgent(ABC):
             if len(result) >= settings.AGENT_MAX_EVIDENCE_ITEMS:
                 break
         return result
+
+    @staticmethod
+    def stale_evidence_ids(input_data: AgentInput) -> List[str]:
+        raw = input_data.context.get("evidence", []) if input_data.context else []
+        if not isinstance(raw, list):
+            return []
+        ids: List[str] = []
+        for item in raw:
+            if not isinstance(item, dict) or not BaseAgent.evidence_is_stale(item):
+                continue
+            ref = item.get("evidence_id") or item.get("id") or item.get("reference") or item.get("source_id")
+            if ref is not None:
+                ids.append(str(ref))
+        return ids
 
     @staticmethod
     def knowledge_items(input_data: AgentInput) -> List[Dict[str, Any]]:
@@ -244,7 +299,10 @@ class BaseAgent(ABC):
     def missing_evidence_for(input_data: AgentInput, required_types: List[str]) -> List[str]:
         evidence = BaseAgent.evidence_items(input_data)
         available_types = {str(item.get("type", "")).lower() for item in evidence}
-        return [f"{kind} evidence" for kind in required_types if kind.lower() not in available_types]
+        missing = [f"{kind} evidence" for kind in required_types if kind.lower() not in available_types]
+        if BaseAgent.stale_evidence_ids(input_data):
+            missing.append("fresh evidence replacing stale observations")
+        return missing
 
     def human_review_required(self, confidence: float, missing_evidence: List[str], severe: bool = False) -> bool:
         return severe or confidence < settings.AGENT_LOW_CONFIDENCE_THRESHOLD or bool(missing_evidence)
