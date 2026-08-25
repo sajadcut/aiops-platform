@@ -48,6 +48,11 @@ class IncidentRepository:
             if context is not None:
                 incident.context = context
 
+    async def set_status(self, incident_id: str, status: str) -> None:
+        incident = await self.session.get(Incident, UUID(str(incident_id)))
+        if incident is not None:
+            incident.status = IncidentStatus(str(status).lower())
+
     async def find_incident_by_evidence_reference(
         self,
         *,
@@ -79,12 +84,26 @@ class IncidentRepository:
             statement = finding.get("statement") or finding.get("description") or finding.get("summary")
             if not statement:
                 continue
+            agent = str(finding.get("agent_name") or finding.get("agent") or "unknown")
+            finding_type = str(finding.get("finding_type") or "analysis")
+            existing = (
+                await self.session.execute(
+                    select(Finding.id).where(
+                        Finding.incident_id == incident_uuid,
+                        Finding.agent == agent,
+                        Finding.finding_type == finding_type,
+                        Finding.statement == str(statement),
+                    ).limit(1)
+                )
+            ).scalar_one_or_none()
+            if existing:
+                continue
             self.session.add(
                 Finding(
                     id=uuid4(),
                     incident_id=incident_uuid,
-                    agent=str(finding.get("agent_name") or finding.get("agent") or "unknown"),
-                    finding_type=str(finding.get("finding_type") or "analysis"),
+                    agent=agent,
+                    finding_type=finding_type,
                     statement=str(statement),
                     evidence_ids=list(finding.get("evidence_ids") or []),
                     confidence=float(finding.get("confidence") or 0.0),
