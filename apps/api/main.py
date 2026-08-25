@@ -39,9 +39,6 @@ for router, tags in [
 ]:
     app.include_router(router, prefix="/api/v1", tags=tags)
 
-
-# Master API contract guard. This keeps the published paths present even if a
-# router is refactored or accidentally omitted from the aggregate registration.
 _MASTER_API_ROUTES = {
     "/api/v1/health": (health.health_check, ["GET"], []),
     "/api/v1/incidents/analyze": (incidents.analyze_incident, ["POST"], [Depends(rate_limiter_strict)]),
@@ -76,7 +73,9 @@ async def startup_event():
     triage_agent = TriageAgent()
     logger.info(f"Agent registered: {triage_agent.name} - {triage_agent.description}")
 
-    if tool_registry.get_tool("mock_executor") is None:
+    # Mock execution is a development/test aid and must never be exposed as a
+    # production execution path.
+    if settings.APP_ENV != "production" and tool_registry.get_tool("mock_executor") is None:
         tool_registry.register(MockExecutorTool())
 
     if settings.SSH_ENABLED:
@@ -92,13 +91,18 @@ async def startup_event():
         try:
             async with AsyncSessionLocal() as db:
                 validation = await validate_pgvector(db, settings.PGVECTOR_EXPECTED_DIMENSION)
-                if not validation.get("extension_installed"):
-                    logger.warning("pgvector extension is not installed")
-                elif validation.get("dimension_valid") is False:
-                    logger.warning("pgvector embedding dimension validation failed")
-                else:
-                    logger.info(f"pgvector validation: {validation}")
+            valid = validation.get("extension_installed") and validation.get("dimension_valid") is not False
+            if not valid:
+                message = f"pgvector startup validation failed: {validation}"
+                if settings.APP_ENV == "production":
+                    raise RuntimeError(message)
+                logger.warning(message)
+            else:
+                logger.info(f"pgvector validation: {validation}")
         except Exception as exc:
+            if settings.APP_ENV == "production":
+                logger.error(f"Production startup blocked by pgvector validation: {exc}")
+                raise
             logger.warning(f"pgvector validation unavailable: {exc}")
     logger.info(f"Tools available: {tool_registry.list_tools()}")
 
