@@ -20,7 +20,10 @@ class FakeSession:
         self.row = None
 
     async def execute(self, statement, params=None):
-        self.calls.append((str(statement), params))
+        sql = str(statement)
+        self.calls.append((sql, params))
+        if "UPDATE approvals SET status" in sql and params:
+            self.row = {"approval_id": params.get("id", "a1"), "status": params.get("status", "approved")}
         return Result(self.row)
 
     async def commit(self):
@@ -40,7 +43,7 @@ async def test_approval_store_status_update_uses_durable_sql():
     session = FakeSession()
     session.row = {
         "approval_id": "a1",
-        "status": "approved",
+        "status": "pending",
     }
     store = PostgreSQLApprovalStore(session)
     result = await store.set_status("a1", "approved")
