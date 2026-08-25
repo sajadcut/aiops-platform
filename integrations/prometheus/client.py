@@ -1,13 +1,13 @@
 import httpx
-from typing import Optional, List
-from datetime import datetime
+from typing import Optional, List, Any
+from datetime import datetime, timezone
 from integrations.base import BaseConnector, Alert, LogEntry, MetricPoint
 from domain.contracts.config import settings
 from domain.contracts.logging import logger
 
 
 class PrometheusClient(BaseConnector):
-    """Client for Prometheus; endpoint and timeout are centrally configured."""
+    """Prometheus client preserving labels needed for deterministic asset identity."""
 
     def __init__(self, url: Optional[str] = None, timeout: Optional[int] = None):
         self.url = url or settings.PROMETHEUS_URL
@@ -30,6 +30,18 @@ class PrometheusClient(BaseConnector):
             logger.warning(f"Prometheus health check failed: {exc}")
             return False
 
+    @staticmethod
+    def _parse_time(raw: Any) -> datetime:
+        if isinstance(raw, (int, float)):
+            return datetime.fromtimestamp(float(raw), tz=timezone.utc)
+        if raw:
+            try:
+                parsed = datetime.fromisoformat(str(raw).replace("Z", "+00:00"))
+                return parsed if parsed.tzinfo else parsed.replace(tzinfo=timezone.utc)
+            except ValueError:
+                pass
+        return datetime.now(timezone.utc)
+
     async def get_alerts(self, since: Optional[datetime] = None, service: Optional[str] = None, limit: int = 100) -> List[Alert]:
         try:
             if not await self.health_check():
@@ -40,18 +52,17 @@ class PrometheusClient(BaseConnector):
                     return []
                 alerts = []
                 for alert in response.json().get("data", {}).get("alerts", [])[:limit]:
-                    labels = alert.get("labels", {})
-                    alerts.append(
-                        Alert(
-                            source="prometheus",
-                            source_id=alert.get("fingerprint", ""),
-                            severity=labels.get("severity", "unknown"),
-                            service=labels.get("service", service),
-                            message=alert.get("annotations", {}).get("summary", alert.get("message", "")),
-                            timestamp=datetime.fromtimestamp(alert.get("activeAt", 0)),
-                            raw_data=alert,
-                        )
-                    )
+                    labels = alert.get("labels", {}) or {}
+                    resolved_service = labels.get("service") or labels.get("service_name") or labels.get("app") or service
+                    alerts.append(Alert(
+                        source="prometheus",
+                        source_id=str(alert.get("fingerprint", "")),
+                        severity=str(labels.get("severity", "unknown")),
+                        service=resolved_service,
+                        message=str(alert.get("annotations", {}).get("summary", alert.get("message", ""))),
+                        timestamp=self._parse_time(alert.get("activeAt")),
+                        raw_data=alert,
+                    ))
                 return alerts
         except Exception as exc:
             logger.error(f"Failed to get Prometheus alerts: {exc}")
@@ -70,25 +81,25 @@ class PrometheusClient(BaseConnector):
             async with httpx.AsyncClient(timeout=self.timeout) as client:
                 for metric_name in metric_names:
                     query = f'{metric_name}{{service="{service}"}}' if service else metric_name
-                    response = await client.get(
-                        f"{self._base_url}/api/v1/query_range",
-                        params={"query": query, "start": start_ts, "end": end_ts, "step": "60"},
-                    )
+                    response = await client.get(f"{self._base_url}/api/v1/query_range", params={"query": query, "start": start_ts, "end": end_ts, "step": "60"})
                     if response.status_code != 200:
                         continue
                     for result in response.json().get("data", {}).get("result", []):
-                        labels = result.get("metric", {})
+                        labels = {str(k): str(v) for k, v in (result.get("metric", {}) or {}).items()}
+                        resolved_service = labels.get("service") or labels.get("service_name") or labels.get("app") or service
                         for ts, value in result.get("values", []):
-                            metrics.append(
-                                MetricPoint(
-                                    timestamp=datetime.fromtimestamp(ts),
-                                    service=service,
-                                    name=metric_name,
-                                    value=float(value) if isinstance(value, (int, float)) else 0.0,
-                                    labels=labels,
-                                    source="prometheus",
-                                )
-                            )
+                            try:
+                                numeric_value = float(value)
+                            except (TypeError, ValueError):
+                                continue
+                            metrics.append(MetricPoint(
+                                timestamp=self._parse_time(ts),
+                                service=resolved_service,
+                                name=metric_name,
+                                value=numeric_value,
+                                labels=labels,
+                                source="prometheus",
+                            ))
             return metrics
         except Exception as exc:
             logger.error(f"Failed to get Prometheus metrics: {exc}")
