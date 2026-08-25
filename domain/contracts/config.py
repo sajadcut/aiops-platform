@@ -31,6 +31,12 @@ class Settings(BaseSettings):
     EMBEDDING_DIMENSION: int = 1536
     EMBEDDING_TIMEOUT_SECONDS: int = 30
 
+    KNOWLEDGE_ALLOWED_SOURCE_TYPES: List[str] = [
+        "runbook", "sop", "architecture", "service_catalog",
+        "operations_standard", "troubleshooting",
+    ]
+    KNOWLEDGE_REQUIRE_GOVERNANCE_PRODUCTION: bool = True
+
     LOG_LEVEL: str = "INFO"
     LOG_JSON: bool = False
     INTERNAL_API_KEY: Optional[str] = None
