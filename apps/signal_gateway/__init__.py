@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, Literal, Optional
 from uuid import uuid4
 
@@ -11,6 +11,8 @@ from apps.incident_service.repository import IncidentRepository
 from apps.orchestrator.runtime import DurableWorkflowRuntime
 from apps.orchestrator.signal_aware import SignalAwareE2EOrchestrator
 from apps.orchestrator.workflow_store import WorkflowCheckpointStore
+from apps.signal_gateway.correlation import build_correlation_identity
+from domain.contracts.config import settings
 
 
 SignalSource = Literal["zabbix", "elasticsearch", "prometheus", "kubernetes", "security", "manual"]
@@ -75,30 +77,54 @@ class OperationalSignal(BaseModel):
 class SignalGateway:
     """Source-agnostic entry point for operational anomalies and alerts.
 
-    Any source may initiate an Incident. The initiating signal is retained as
-    immutable seed Evidence, then the normal E2E workflow actively queries other
-    configured evidence sources for corroboration. No LLM is used for signal
-    normalization, asset identity, authentication, policy, approval or execution.
-
-    Exact ``source + source_id`` retries are idempotent. Cross-source incident
-    correlation remains a separate deterministic policy concern and is not
-    guessed from free text or by an LLM.
+    Any source may initiate an Incident. Exact source-event retries are
+    idempotent. Cross-source correlation is deterministic and bounded by stable
+    service/workload identity, a conservative signal family and a short time
+    window. LLM/free-text similarity is never merge authority.
     """
+
+    @staticmethod
+    def _append_trigger_to_checkpoint(state: Dict[str, Any], signal: OperationalSignal, evidence: Dict[str, Any]) -> None:
+        context = state.setdefault("context", {})
+        triggers = list(context.get("trigger_evidence") or [])
+        if not any(
+            str(item.get("source")) == signal.source and str(item.get("reference")) == signal.source_id
+            for item in triggers if isinstance(item, dict)
+        ):
+            triggers.append(evidence)
+        context["trigger_evidence"] = triggers
+        evidence_items = list(context.get("evidence") or [])
+        if not any(
+            str(item.get("source")) == signal.source and str(item.get("reference")) == signal.source_id
+            for item in evidence_items if isinstance(item, dict)
+        ):
+            evidence_items.append(evidence)
+        context["evidence"] = evidence_items
 
     @staticmethod
     async def ingest(session, signal: OperationalSignal) -> Dict[str, Any]:
         trigger_evidence = signal.to_evidence()
         asset = AssetIdentityResolver.resolve([trigger_evidence], signal.service)
         resolved_service = str(asset.get("service") or signal.service or "unknown")
-        correlation_key = signal.correlation_key or f"{resolved_service}:{signal.source}:{signal.source_id}"
+        correlation = build_correlation_identity(
+            service=resolved_service,
+            signal_type=signal.signal_type,
+            summary=signal.summary,
+            asset=asset,
+            explicit_key=signal.correlation_key,
+        )
+        correlation_key = signal.correlation_key or correlation.fingerprint or f"{resolved_service}:{signal.source}:{signal.source_id}"
 
         incidents = IncidentRepository(session)
+        checkpoints = WorkflowCheckpointStore(session)
+
+        # Exact retry idempotency always wins and requires no fuzzy/cross-source logic.
         existing_incident_id = await incidents.find_incident_by_evidence_reference(
             source=signal.source,
             reference=signal.source_id,
         )
         if existing_incident_id:
-            checkpoint = await WorkflowCheckpointStore(session).load(existing_incident_id)
+            checkpoint = await checkpoints.load(existing_incident_id)
             existing_state = dict((checkpoint or {}).get("state") or {})
             existing_state["incident_id"] = existing_incident_id
             existing_state["trigger_source"] = signal.source
@@ -106,9 +132,72 @@ class SignalGateway:
             existing_state["correlation_key"] = correlation_key
             existing_state["deduplicated"] = True
             existing_state["deduplication_reason"] = "same_source_event_reference"
+            existing_state["correlated"] = False
             return existing_state
 
+        if settings.SIGNAL_CORRELATION_ENABLED and correlation.fingerprint:
+            # Transaction-scoped PostgreSQL advisory lock closes the concurrent
+            # webhook race for one fingerprint. Recheck exact idempotency after
+            # acquiring it because another request may have committed meanwhile.
+            await incidents.acquire_correlation_lock(correlation.fingerprint)
+            existing_incident_id = await incidents.find_incident_by_evidence_reference(
+                source=signal.source,
+                reference=signal.source_id,
+            )
+            if not existing_incident_id:
+                existing_incident_id = await incidents.find_correlated_open_incident(
+                    fingerprint=correlation.fingerprint,
+                    service=resolved_service,
+                    since=signal.timestamp - timedelta(seconds=settings.SIGNAL_CORRELATION_WINDOW_SECONDS),
+                    limit=settings.SIGNAL_CORRELATION_CANDIDATE_LIMIT,
+                )
+            if existing_incident_id:
+                signal_metadata = {
+                    "source": signal.source,
+                    "source_id": signal.source_id,
+                    "signal_type": signal.signal_type,
+                    "severity": signal.severity,
+                    "timestamp": signal.timestamp.isoformat(),
+                    "correlation_fingerprint": correlation.fingerprint,
+                    "signal_family": correlation.signal_family,
+                }
+                await incidents.attach_correlated_signal(
+                    existing_incident_id,
+                    evidence=trigger_evidence,
+                    signal_metadata=signal_metadata,
+                )
+                checkpoint = await checkpoints.load(existing_incident_id)
+                existing_state = dict((checkpoint or {}).get("state") or {})
+                if existing_state:
+                    SignalGateway._append_trigger_to_checkpoint(existing_state, signal, trigger_evidence)
+                    existing_state["correlated_signals"] = list(
+                        (existing_state.get("correlated_signals") or []) + [signal_metadata]
+                    )[-100:]
+                    await checkpoints.save(
+                        existing_incident_id,
+                        existing_state,
+                        status=str((checkpoint or {}).get("status") or "paused"),
+                    )
+                else:
+                    await incidents.commit()
+                existing_state["incident_id"] = existing_incident_id
+                existing_state["trigger_source"] = signal.source
+                existing_state["trigger_signal_type"] = signal.signal_type
+                existing_state["correlation_key"] = correlation_key
+                existing_state["deduplicated"] = True
+                existing_state["deduplication_reason"] = "cross_source_correlation"
+                existing_state["correlated"] = True
+                existing_state["correlation_fingerprint"] = correlation.fingerprint
+                return existing_state
+
         incident_id = str(uuid4())
+        correlation_context = {
+            "fingerprint": correlation.fingerprint,
+            "signal_family": correlation.signal_family,
+            "scope": correlation.scope,
+            "explicit": correlation.explicit,
+            "window_seconds": settings.SIGNAL_CORRELATION_WINDOW_SECONDS,
+        }
         incident_context = {
             "source": signal.source,
             "severity": signal.severity,
@@ -125,6 +214,8 @@ class SignalGateway:
                 "incident": incident_context,
                 "service": resolved_service,
                 "asset_context": asset,
+                "correlation": correlation_context,
+                "related_signals": [],
                 "trigger_signal": signal.model_dump(mode="json"),
                 "trigger_evidence": [trigger_evidence],
                 "evidence": [trigger_evidence],
@@ -140,7 +231,9 @@ class SignalGateway:
         result["trigger_source"] = signal.source
         result["trigger_signal_type"] = signal.signal_type
         result["correlation_key"] = correlation_key
+        result["correlation_fingerprint"] = correlation.fingerprint
         result["deduplicated"] = False
+        result["correlated"] = False
         return result
 
 
