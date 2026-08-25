@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any, Dict, Iterable, List, Optional, Set
 
+from apps.context_service.asset_identity import AssetIdentityResolver
 from domain.contracts.config import settings
 from integrations.kubernetes.client import KubernetesEvidenceClient
 
@@ -14,6 +15,9 @@ class EvidenceCollector:
     context pass may collect all configured sources; later Agent evidence rounds
     pass canonical evidence types here, which are mapped to allowlisted read
     connectors. Free-form LLM commands are never executed.
+
+    Every collection also derives a deterministic AssetContext from source
+    metadata so routing never needs to guess Linux/Windows/Kubernetes identity.
     """
 
     _KNOWN_TYPES = {"alert", "log", "metric", "event", "telemetry"}
@@ -28,7 +32,6 @@ class EvidenceCollector:
             self.kubernetes = KubernetesEvidenceClient()
 
     async def collect(self, service: str, since: datetime, until: datetime | None = None) -> Dict[str, Any]:
-        """Collect the full configured read-only Evidence set."""
         return await self._collect(service, since, until, requested_types=None)
 
     async def collect_requested(
@@ -38,11 +41,6 @@ class EvidenceCollector:
         requests: Iterable[Dict[str, Any] | str],
         until: datetime | None = None,
     ) -> Dict[str, Any]:
-        """Collect only canonical evidence types requested by Agent coordination.
-
-        Unknown/free-form types are ignored rather than forwarded to connectors.
-        This keeps the dynamic evidence loop bounded and non-executable.
-        """
         types: Set[str] = set()
         for request in requests:
             value = request.get("evidence_type") if isinstance(request, dict) else request
@@ -58,6 +56,7 @@ class EvidenceCollector:
                 "until": until.isoformat() if until else None,
                 "requested_types": [],
                 "evidence": [],
+                "asset_context": AssetIdentityResolver.resolve([], service),
             }
         result = await self._collect(service, since, until, requested_types=types)
         result["requested_types"] = sorted(types)
@@ -82,13 +81,12 @@ class EvidenceCollector:
         if self.elasticsearch and (wants_all or "log" in wants):
             logs = await self.elasticsearch.get_logs(service, since, until)
         if self.prometheus and (wants_all or "metric" in wants):
-            # Keep collection generic and read-only; specialist interpretation is performed by Agents.
-            metrics = await self.prometheus.get_metrics(service, ["up"], since, until)
+            metrics = await self.prometheus.get_metrics(service, ["up", "cpu_usage", "memory_usage"], since, until)
 
         for item in alerts:
             evidence.append({
                 "type": "alert",
-                "source": "zabbix",
+                "source": getattr(item, "source", "zabbix"),
                 "reference": getattr(item, "source_id", None),
                 "timestamp": getattr(item, "timestamp", None),
                 "raw_data": getattr(item, "raw_data", {}),
@@ -96,7 +94,7 @@ class EvidenceCollector:
         for item in logs:
             evidence.append({
                 "type": "log",
-                "source": "elasticsearch",
+                "source": getattr(item, "source", "elasticsearch"),
                 "reference": f"log:{getattr(item, 'timestamp', '')}",
                 "timestamp": getattr(item, "timestamp", None),
                 "raw_data": getattr(item, "raw_data", {}),
@@ -104,10 +102,15 @@ class EvidenceCollector:
         for item in metrics:
             evidence.append({
                 "type": "metric",
-                "source": "prometheus",
+                "source": getattr(item, "source", "prometheus"),
                 "reference": f"metric:{getattr(item, 'name', '')}:{getattr(item, 'timestamp', '')}",
                 "timestamp": getattr(item, "timestamp", None),
-                "raw_data": {"value": getattr(item, "value", None), "name": getattr(item, "name", None)},
+                "raw_data": {
+                    "value": getattr(item, "value", None),
+                    "name": getattr(item, "name", None),
+                    "labels": getattr(item, "labels", {}) or {},
+                    "service": getattr(item, "service", None),
+                },
             })
 
         if self.kubernetes and getattr(self.kubernetes, "enabled", False) and (wants_all or "event" in wants):
@@ -141,7 +144,7 @@ class EvidenceCollector:
                     "source": "vm_ssh",
                     "reference": f"vm:{service}",
                     "timestamp": since.isoformat(),
-                    "raw_data": {"error": vm_result.get("error")},
+                    "raw_data": {"error": vm_result.get("error"), "target": service},
                 })
 
         return {
@@ -149,4 +152,5 @@ class EvidenceCollector:
             "since": since.isoformat(),
             "until": until.isoformat() if until else None,
             "evidence": evidence,
+            "asset_context": AssetIdentityResolver.resolve(evidence, service),
         }
