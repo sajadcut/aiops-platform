@@ -107,8 +107,28 @@ def _validate_production_configuration() -> None:
         errors.append("APPROVAL_TTL_SECONDS must be positive in production")
     if settings.AGENT_MAX_PARALLELISM <= 0 or settings.AGENT_MAX_EVIDENCE_ROUNDS <= 0:
         errors.append("agent routing limits must be positive")
+    if settings.AGENT_MAX_DYNAMIC_EVIDENCE_TYPES <= 0:
+        errors.append("AGENT_MAX_DYNAMIC_EVIDENCE_TYPES must be positive")
+    if settings.AGENT_TIMEOUT_SECONDS <= 0 or settings.A2A_TIMEOUT_SECONDS <= 0:
+        errors.append("agent/A2A timeouts must be positive")
+    for name, value in {
+        "AGENT_MIN_EVIDENCE_COVERAGE": settings.AGENT_MIN_EVIDENCE_COVERAGE,
+        "AGENT_LOW_CONFIDENCE_THRESHOLD": settings.AGENT_LOW_CONFIDENCE_THRESHOLD,
+        "AGENT_MIN_CONSENSUS_SCORE": settings.AGENT_MIN_CONSENSUS_SCORE,
+        "AGENT_DISAGREEMENT_CONFIDENCE_FACTOR": settings.AGENT_DISAGREEMENT_CONFIDENCE_FACTOR,
+        "AGENT_MISSING_EVIDENCE_CONFIDENCE_FACTOR": settings.AGENT_MISSING_EVIDENCE_CONFIDENCE_FACTOR,
+        "AGENT_CONFLICT_CONFIDENCE_PENALTY": settings.AGENT_CONFLICT_CONFIDENCE_PENALTY,
+    }.items():
+        if not 0 <= value <= 1:
+            errors.append(f"{name} must be between 0 and 1")
+    if not settings.AGENT_SOURCE_QUALITY_WEIGHTS:
+        errors.append("AGENT_SOURCE_QUALITY_WEIGHTS must not be empty")
+    elif any(not 0 <= float(value) <= 1 for value in settings.AGENT_SOURCE_QUALITY_WEIGHTS.values()):
+        errors.append("AGENT_SOURCE_QUALITY_WEIGHTS values must be between 0 and 1")
     if not settings.AGENT_ENABLED_AGENTS:
         errors.append("at least one specialist agent must be enabled")
+    if settings.A2A_ALLOWED_TARGETS and not settings.A2A_REQUIRE_HTTPS:
+        errors.append("production A2A targets require HTTPS")
     if errors:
         raise RuntimeError("production_configuration_invalid: " + "; ".join(errors))
 
