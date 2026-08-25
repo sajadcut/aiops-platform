@@ -5,7 +5,7 @@
 
 | مشخصه | مقدار |
 |---|---|
-| نسخه | **2.2 - Baseline نهایی Persistence, RAG و Memory** |
+| نسخه | **2.3 - Benchmark-driven Production Hardening** |
 | وضعیت | **Master / Single Source of Truth** |
 | هدف | مرجع واحد برای فهم پروژه، طراحی، پیاده‌سازی، تست و ادامه توسعه |
 | هسته AI | **Python + LangGraph** |
@@ -127,8 +127,6 @@ Verification Engine
 - Memory یا RAG نباید به‌تنهایی مبنای Write Action در Production قرار گیرد.
 - اگر Memory با Evidence فعلی تعارض داشته باشد، **Evidence فعلی اولویت دارد**.
 - برای MVP، **PostgreSQL + pgvector** لایه پایه Vector Search برای Knowledge RAG و Operational Memory است. Mem0 اختیاری است و فقط از طریق Adapter قابل استفاده خواهد بود.
-
-
 
 ## 5.2 قرارداد Storage و Vector Layer
 
@@ -500,52 +498,105 @@ aiops-platform/
 |---|---|---|
 | مدل LLM نهایی | باز | از Adapter استفاده شود؛ هیچ Agent نباید مستقیم به یک SDK مدل وابسته باشد. |
 | محل LLM | باز | اولویت با مدل/سرویس قابل دسترس در شبکه داخلی. |
-| Auth/SSO | باز | برای MVP RBAC ساده؛ Production باید SSO/RBAC داشته باشد. |
+| Auth/SSO Provider | باز | OIDC/RBAC در کد وجود دارد؛ provider/role mapping نهایی با محیط سازمانی validate شود. |
 | **Vector Store / pgvector** | **قطعی** | **PostgreSQL + pgvector لایه Vector مشترک RAG و Memory در MVP است.** |
 | **Memory framework مانند Mem0** | **اختیاری** | **فقط از طریق Adapter؛ Mem0 نباید dependency اجباری یا API داخلی اصلی پروژه باشد.** |
-| Message Broker | باز | در MVP ضروری نیست؛ فقط با نیاز واقعی اضافه شود. |
+| Message Broker / Distributed Worker Queue | باز | در MVP hard-code نشود؛ انتخاب Redis/RabbitMQ/Kafka/Temporal یا گزینه دیگر فقط پس از load/soak evidence و ADR. |
+| MCP | **Selected / Governed only** | MCP transport عمومی Core نیست؛ legacy client non-production است؛ remote MCP نیازمند OAuth 2.1/resource binding/capability policy/Audit و workload identity مناسب است. |
+| Workload Identity Provider | باز | short-lived workload identity/mTLS لازم است؛ SPIFFE/SPIRE الگوی مرجع است ولی انتخاب نهایی با PKI سازمان. |
 | Framework API | پیشنهادی | FastAPI انتخاب پیشنهادی برای Python API؛ الزام مطلق نیست. |
 | Deployment | باز | Docker در توسعه؛ Kubernetes/OpenShift برای محیط پایدار. |
 | سطح Auto-execute | Policy-driven | فقط Runbookهای کم‌ریسک و مشخص. |
 | Multi-tenancy | باز | در MVP خارج از Scope. |
 
-# 23. ADRهای الزامی
+# 23. ADRهای الزامی و تصمیم‌های تکمیلی
 
-- ADR-001: Python + LangGraph به‌عنوان AI Core.
-- ADR-002: Execution Boundary و Tool Registry.
-- ADR-003: LLM Adapter و نحوه تعویض Model.
-- ADR-004: **PostgreSQL و مدل Persistence.**
-- ADR-005: **Operational Memory و مرزبندی آن با Knowledge RAG با استفاده از PostgreSQL + pgvector.**
-- ADR-006: Offline Deployment و Artifact/Model Supply Chain.
-- ADR-007: Approval و Risk Model.
-- ADR-008: Verification مستقل.
-- ADR-009: Knowledge RAG، منبع دانش و Retrieval Policy.
-- ADR-010: عدم وابستگی اجباری MVP به Frameworkهای Memory مانند Mem0.
+ADRهای رسمی و شماره‌گذاری جاری در `docs/adr/DECISIONS.md` نگهداری می‌شوند. حداقل تصمیم‌های زیر باید معتبر بمانند:
 
-# 24. وضعیت فعلی پروژه در زمان صدور این سند
+- Python + LangGraph به‌عنوان AI Core.
+- PostgreSQL + pgvector به‌عنوان Persistence/Vector baseline.
+- Evidence First و جدایی RAG/Memory از Live Evidence.
+- Execution Boundary و منع write مستقیم توسط Agent/LLM.
+- Approval/Risk/Verification مستقل.
+- Deterministic cross-source Incident correlation؛ LLM مجاز به merge authority نیست.
+- MCP فقط selected capability transport و نه جایگزین Tool Registry/Policy/Approval.
+- Hybrid deployment target: reasoning مرکزی + Edge Runtime اختیاری و constrained؛ بدون per-host/per-Pod LLM authority.
 
-وضعیت فعلی، معماری و طراحی مفهومی تثبیت‌شده است؛ پیاده‌سازی عملیاتی کامل هنوز انجام نشده و باید از **Phase 0** شروع شود. این جمله عمداً در سند ثبت شده تا در ادامه پروژه بین «طراحی‌شده» و «پیاده‌سازی‌شده» اشتباه نشود.
+# 24. وضعیت فعلی پروژه — 2026-08-26
 
-| مورد | وضعیت |
+پیاده‌سازی repository از وضعیت تاریخی Phase 0 عبور کرده است. پروژه اکنون یک **advanced governed AIOps implementation** است، اما هنوز strict Production Accepted نیست. وضعیت عملی فعلی عمدتاً **Phase 6 - Production Hardening** با gapهای باقی‌مانده در Phase 4/5/7 است.
+
+| مورد | وضعیت فعلی |
 |---|---|
-| Architecture | Defined |
-| MVP Scope | Defined |
-| Python + LangGraph | Selected |
-| PostgreSQL | Selected / Baseline |
-| pgvector | Selected / Baseline |
-| RAG Boundary | Defined conceptually |
-| Operational Memory Boundary | Defined conceptually |
-| Agent contracts | Defined at conceptual level |
-| Database schema | To be implemented in Phase 0 |
-| Connectors | To be implemented |
-| Knowledge ingestion/retrieval | To be implemented |
-| Operational Memory | To be implemented |
-| Execution Runbooks | To be implemented |
-| Verification | To be implemented |
-| Dashboard | To be implemented |
-| Production readiness | Not yet achieved |
+| Architecture | Implemented / evolving under ADR control |
+| Signal Gateway | Implemented; source-agnostic |
+| Exact event idempotency | Implemented + PostgreSQL transaction lock |
+| Cross-source correlation | Implemented for conservative deterministic families + bounded window; real corpus acceptance pending |
+| Asset Identity | Implemented deterministic multi-source resolver; CMDB authority pending |
+| Zabbix / Elasticsearch / Prometheus | Governed connectors implemented; real customer endpoint acceptance pending |
+| Kubernetes Evidence | Read-only integration implemented; write/remediation breadth partial |
+| VM | Linux governed telemetry/remediation implemented; Windows native constrained path pending |
+| LangGraph workflow | Implemented with durable application checkpoint/resume |
+| Agent Layer | Triage + 13 specialist agents implemented; analysis-only |
+| Multi-agent collaboration | Structured peer context, handoff, coordination and bounded evidence refresh implemented |
+| RCA / Evaluator | Implemented; Evaluator mandatory before Decision |
+| Decision / Policy / Approval | Implemented with concrete tool/action/target risk binding |
+| Execution | Governed Tool Registry; Linux strongest; adapter breadth partial |
+| Verification | Fresh before/after + metric semantics implemented; per-action SLO objectives partial |
+| Knowledge RAG | Implemented on PostgreSQL + pgvector with governance/ACL metadata |
+| Operational Memory | Implemented separately from RAG; verified-outcome reuse contract |
+| Persistence / Audit | PostgreSQL models/migrations/checkpoints/approval/audit implemented |
+| OIDC / RBAC | Repository implementation exists; enterprise issuer/role acceptance pending |
+| MCP | Legacy transport explicitly non-production; modern selected adapter not yet implemented |
+| Offline Docker/Kubernetes | Hardened repository definitions exist; real internal artifact promotion pending |
+| CI | Unit/integration/scenario/security + PostgreSQL/pgvector migration acceptance configured |
+| HA / DR / Scale | Partial; PostgreSQL HA, distributed queue/rate limit, backup/PITR/DR, load/chaos acceptance pending |
+| Production readiness | **Not yet strict Production Ready** |
 
-**Current Phase: Phase 0 - Foundation & Contracts**
+**Current practical Phase: Phase 6 - Production Hardening**
+
+### 24.1 Completed Items
+
+- Canonical Evidence-first multi-source incident flow.
+- Deterministic asset/service context and source failure vs zero-result semantics.
+- Source-agnostic trigger path including ELK-first and Prometheus-first incidents.
+- Exact source-event deduplication and deterministic bounded cross-source correlation with PostgreSQL advisory locks.
+- Triage + specialist multi-agent collaboration, RCA and Evaluator gate.
+- Policy/Approval/Execution separation with write authority outside LLM Agents.
+- Governed Linux VM remediation, fresh Verification baseline and verified Memory learning.
+- PostgreSQL + pgvector persistence for Incident/RAG/Memory/governance.
+- OIDC/RBAC repository contract, Audit, CI, offline container and Kubernetes hardening.
+- 2026 benchmark review against NIST/OWASP/MCP/OTel/OPA/SPIFFE/Sigstore and mature operations automation patterns; matrix in `docs/BENCHMARK_2026.md`.
+
+### 24.2 Next Steps
+
+1. Real Zabbix/Elasticsearch/Prometheus acceptance + CMDB/service catalog mapping.
+2. Correlation corpus benchmark with false-merge/false-split targets and late-signal re-analysis semantics.
+3. Windows constrained Edge/WinRM/JEA telemetry and remediation; no arbitrary PowerShell.
+4. Per-runbook verification objectives/SLOs.
+5. Broader governed K8s/Ansible/Jenkins/DB/network execution adapters and rollback drills.
+6. Decide and implement distributed queue/workers/backpressure after load evidence.
+7. Distributed rate limiting and 500-concurrent-Incident load/soak acceptance.
+8. PostgreSQL HA + backup/restore/PITR/DR exercise.
+9. Enterprise OIDC + short-lived workload identity/mTLS.
+10. OpenTelemetry GenAI/Agent/Tool traces and metrics with sensitive-content controls.
+11. Implement modern governed MCP adapter only for selected integrations if justified.
+12. Immutable signed offline promotion + branch/ruleset protection + formal red-team/chaos acceptance.
+
+### 24.3 Open Issues / Production Blockers
+
+- Real observability, LLM and remediation endpoints have not been externally accepted in the target restricted network.
+- CMDB/service catalog is not yet authoritative identity source.
+- Windows native execution/telemetry is incomplete.
+- Message broker/distributed worker architecture is undecided and 500-Incident concurrency is not proven.
+- API rate limiting is not distributed across replicas.
+- PostgreSQL HA/backup/PITR/DR is not accepted.
+- Workload identity/mTLS rotation is not implemented end-to-end.
+- Agent/LLM telemetry is not yet full OpenTelemetry GenAI instrumentation.
+- Legacy MCP clients are not production-capable under current MCP authorization requirements.
+- Action-specific verification SLOs are incomplete.
+- Load/soak/chaos and formal agentic red-team evidence remain incomplete.
+- Production artifact/model signing and internal registry promotion require external validation.
 
 # 25. قرارداد ادامه کار با AI / Developer
 
@@ -567,6 +618,7 @@ aiops-platform/
 | 2.0 | اصلاح Backend Core از .NET به Python + LangGraph؛ بازطراحی Repository و فازها؛ افزودن Current Status و AI Continuation Contract | رفع تناقض معماری و تبدیل سند به مرجع قابل استفاده در ادامه پروژه |
 | **2.1** | **اصلاح Persistence از SQL Server به PostgreSQL؛ اضافه‌شدن مرزبندی رسمی Evidence / Knowledge RAG / Operational Memory؛ افزودن RAG و Memory به معماری، فازها، API و Repository** | **شفاف‌سازی معماری دانش و حافظه** |
 | **2.2** | **تثبیت PostgreSQL + pgvector به‌عنوان Persistence و Vector Layer مشترک برای RAG و Operational Memory؛ تعریف Mem0 به‌عنوان Adapter اختیاری؛ انتقال Semantic Retrieval به MVP** | **هم‌راستا کردن معماری با الگوی عملیاتی مناسب برای RAG/Memory و حذف ابهام بین Storage، Vector Search و Memory Framework** |
+| **2.3** | **Sync وضعیت واقعی implementation؛ deterministic cross-source correlation؛ MCP governance؛ hybrid central/edge target؛ benchmark 2026؛ production gaps و Next Steps واقعی** | **حذف drift بین SSoT و repository و هم‌راستایی با الگوهای امن Agentic/AIOps 2026 بدون ادعای Production Ready زودهنگام** |
 
 # 27. Definition of Done پروژه
 
@@ -631,7 +683,6 @@ Memory Entry بدون Outcome معتبر نباید به‌عنوان Pattern م
 ## ضمیمه C - اصل معماری نهایی
 
 > **Observe with Evidence. Reason with LangGraph. Consult Knowledge with RAG. Reuse experience with Operational Memory. Decide with Policy. Change only through Execution Boundary. Trust success only after independent Verification.**
-
 
 ## ضمیمه D - قرارداد pgvector و Mem0
 
