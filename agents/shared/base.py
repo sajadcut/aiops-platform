@@ -5,6 +5,7 @@ import json
 import re
 import time
 from abc import ABC, abstractmethod
+from contextvars import ContextVar
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
@@ -28,6 +29,8 @@ _WRITE_ACTION_PATTERN = re.compile(
     r"create|update|alter|shutdown|poweroff|reset|flush|purge)\b",
     re.IGNORECASE,
 )
+
+_CURRENT_EVIDENCE_QUALITY: ContextVar[float] = ContextVar("agent_evidence_quality", default=1.0)
 
 
 class AgentInput(BaseModel):
@@ -80,6 +83,7 @@ class AgentOutput(BaseModel):
     evidence_ids: List[str] = Field(default_factory=list)
     evidence_count: int = 0
     evidence_coverage: float = Field(default=0.0, ge=0, le=1)
+    evidence_quality: float = Field(default_factory=lambda: _CURRENT_EVIDENCE_QUALITY.get(), ge=0, le=1)
     findings: List[str] = Field(default_factory=list)
     recommendations: List[str] = Field(default_factory=list)
     recommended_checks: List[str] = Field(default_factory=list)
@@ -294,6 +298,7 @@ class BaseAgent(ABC):
     def evidence_items(input_data: AgentInput) -> List[Dict[str, Any]]:
         raw = input_data.context.get("evidence", []) if input_data.context else []
         if not isinstance(raw, list):
+            _CURRENT_EVIDENCE_QUALITY.set(settings.AGENT_SOURCE_QUALITY_WEIGHTS.get("unknown", 0.0))
             return []
         seen: set[str] = set()
         result: List[Dict[str, Any]] = []
@@ -307,6 +312,13 @@ class BaseAgent(ABC):
             result.append(item)
             if len(result) >= settings.AGENT_MAX_EVIDENCE_ITEMS:
                 break
+        weights = settings.AGENT_SOURCE_QUALITY_WEIGHTS
+        fallback = max(0.0, min(1.0, float(weights.get("unknown", 0.0))))
+        qualities = [
+            max(0.0, min(1.0, float(weights.get(str(item.get("source", "unknown")).lower(), fallback))))
+            for item in result
+        ]
+        _CURRENT_EVIDENCE_QUALITY.set(round(sum(qualities) / len(qualities), 4) if qualities else fallback)
         return result
 
     @staticmethod
@@ -369,6 +381,7 @@ class BaseAgent(ABC):
         coverage = BaseAgent.evidence_coverage(evidence_count, missing)
         if evidence_count < settings.AGENT_MIN_EVIDENCE_ITEMS or coverage < settings.AGENT_MIN_EVIDENCE_COVERAGE:
             confidence = min(confidence, settings.AGENT_LOW_CONFIDENCE_THRESHOLD)
+        confidence *= max(0.0, min(1.0, _CURRENT_EVIDENCE_QUALITY.get()))
         if conflict_count:
             penalty = min(conflict_count, 3) * settings.AGENT_CONFLICT_CONFIDENCE_PENALTY
             confidence *= max(0.25, 1.0 - penalty)
