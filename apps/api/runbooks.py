@@ -1,8 +1,9 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 
 from apps.runbook_service.registry import RunbookRegistry
+from apps.security.auth import require_permission
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(require_permission("read:incident"))])
 registry = RunbookRegistry()
 
 
@@ -21,6 +22,7 @@ async def get_runbook(name: str):
 
 @router.post("/runbooks/{name}/dry-run")
 async def dry_run(name: str):
+    """Validate a runbook without crossing the real execution boundary."""
     try:
         return registry.dry_run(name)
     except KeyError as exc:
