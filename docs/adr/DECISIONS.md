@@ -142,6 +142,48 @@
 
 ---
 
+## ADR-014 — Deterministic Cross-Source Incident Correlation
+
+**Status:** ACCEPTED
+
+**Decision:** Correlation بین Zabbix/Elasticsearch/Prometheus/Kubernetes باید deterministic و bounded باشد. Exact `source + source_id` همیشه idempotency کلیدی است؛ merge بین sourceها فقط با stable service/workload identity، signal family محدود، correlation window کوتاه یا correlation key صریح انجام می‌شود.
+
+**Concurrency:** برای جلوگیری از race بین webhookهای همزمان، PostgreSQL transaction advisory lock روی fingerprint استفاده می‌شود.
+
+**Forbidden:** LLM similarity، free-text semantic matching یا hostname حدسی به‌تنهایی حق merge کردن Incidentها را ندارد.
+
+**Safety rule:** در ambiguity، Incidentهای جدا بهتر از over-merge خطرناک هستند.
+
+---
+
+## ADR-015 — MCP Is a Selected Capability Transport, Not the Core Execution Authority
+
+**Status:** ACCEPTED
+
+**Decision:** MCP در صورت استفاده، فقط برای integration/edge capabilityهایی به‌کار می‌رود که interoperability آن ارزش واقعی دارد. Native governed connectors برای Observabilityهای ثابت می‌توانند canonical باقی بمانند. MCP هرگز Policy/Approval/Tool Registry را جایگزین نمی‌کند.
+
+**Production remote MCP requirements:** OAuth 2.1، Protected Resource Metadata، resource/audience-bound tokens، HTTPS، token isolation/no passthrough، capability allowlist، per-tool authorization، Audit و در محیط سازمانی workload identity/mTLS.
+
+**Legacy:** `integrations/mcp_client.py` و clientهای وابسته legacy/non-production هستند تا زمانی که adapter استاندارد جدید با این کنترل‌ها ساخته شود.
+
+**Edge MCP:** MCP Server کنار VM/Node فقط به‌عنوان interface یک Edge Runtime constrained قابل قبول است؛ arbitrary shell/PowerShell tool ممنوع است.
+
+---
+
+## ADR-016 — Hybrid Agent Deployment Target
+
+**Status:** ACCEPTED AS TARGET ARCHITECTURE
+
+**Decision:** Reasoning/LLM/Coordinator/RCA/Evaluator/Policy در AIOps Control Plane مرکزی می‌مانند. کنار Linux/Windows/Kubernetes در صورت نیاز Edge Runtime سبک برای telemetry و allowlisted actuation مستقر می‌شود؛ Edge Runtime خودش LLM decision authority ندارد.
+
+**Linux/Windows:** Edge اختیاری است و برای شبکه‌های segmented، credential blast-radius و local diagnostics ترجیح دارد؛ SSH/WinRM می‌تواند برای MVP governed fallback باقی بماند.
+
+**Kubernetes:** AI Agent per Pod ممنوع/غیرضروری است. در صورت نیاز به node-local evidence، Edge Runtime به‌شکل DaemonSet منطقی است؛ reasoning مرکزی باقی می‌ماند.
+
+**Identity target:** Edge/Control-Plane communication باید به سمت short-lived workload identity و mTLS حرکت کند؛ پیاده‌سازی نهایی provider-specific هنوز Open Implementation است.
+
+---
+
 ## Open Decisions
 
 ### O-001 — Final LLM Model
@@ -162,14 +204,20 @@ Status: OPEN
 
 Rule: MVP با RBAC ساده؛ Production نیازمند SSO/RBAC است.
 
-### O-004 — Message Broker
+### O-004 — Message Broker / Distributed Workflow Queue
 
 Status: OPEN
 
-Rule: در MVP ضروری نیست؛ فقط در صورت نیاز واقعی اضافه شود.
+Rule: انتخاب Redis/RabbitMQ/Kafka/Temporal یا گزینه دیگر فقط پس از load/soak evidence و نیاز عملیاتی انجام شود. تا آن زمان هیچ queue technology به Core hard-code نشود.
 
 ### O-005 — Advanced Semantic Memory Strategy
 
 Status: OPEN
 
 Rule: PostgreSQL + pgvector baseline است؛ Mem0 یا ابزار دیگر فقط پس از اثبات ارزش استفاده شود.
+
+### O-006 — Workload Identity Provider
+
+Status: OPEN
+
+Rule: SPIFFE/SPIRE الگوی مرجع قوی برای short-lived workload identity/mTLS است، اما انتخاب implementation نهایی باید با PKI و platform سازمان هماهنگ شود.
