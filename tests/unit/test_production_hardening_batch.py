@@ -1,5 +1,7 @@
 from pathlib import Path
 
+import pytest
+
 from agents.shared.base import AgentInput
 from agents.shared.domain_agent import DomainDiagnosticAgent
 from apps.decision_engine import DecisionAction, DecisionEngine, RiskLevel
@@ -81,6 +83,7 @@ def _context(metrics):
     }
 
 
+@pytest.mark.asyncio
 async def test_verification_respects_metric_direction_and_aggregates_samples():
     before = _context([
         ("error_rate", 20), ("error_rate", 10),
@@ -98,6 +101,7 @@ async def test_verification_respects_metric_direction_and_aggregates_samples():
     assert result.metric_directions["error_rate"] == "lower_is_better"
 
 
+@pytest.mark.asyncio
 async def test_verification_does_not_call_lower_throughput_an_improvement():
     before = _context([("throughput", 100)])
     after = _context([("throughput", 10)])
