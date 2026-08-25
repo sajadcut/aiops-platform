@@ -2,17 +2,18 @@ from __future__ import annotations
 
 from typing import Any, Dict
 
+from agents.shared.telemetry import AgentTelemetry
 from apps.context_service.asset_identity import AssetIdentityResolver
 from apps.orchestrator.e2e_graph import E2EOrchestrator, E2EState
 
 
 class SignalAwareE2EOrchestrator(E2EOrchestrator):
-    """E2E workflow variant that preserves the initiating signal as live Evidence.
+    """Collaborative E2E workflow for source-triggered and API-triggered incidents.
 
-    The normal E2E graph still owns reasoning, routing, RCA, evaluation,
-    decision, execution, verification and memory. This subclass only merges the
-    initiating signal with corroborating live Evidence gathered by the canonical
-    Context node.
+    It preserves initiating Evidence and exposes structured peer findings,
+    consensus, contradictions and evidence requests to subsequent specialist
+    passes. Agents do not free-chat; collaboration happens through audited
+    Incident state.
     """
 
     async def _context_node(self, state: E2EState) -> E2EState:
@@ -68,5 +69,94 @@ class SignalAwareE2EOrchestrator(E2EOrchestrator):
             trigger_source=(trigger_signal or {}).get("source") if isinstance(trigger_signal, dict) else None,
             asset_type=asset_context.get("asset_type"),
             platform=asset_context.get("platform"),
+        )
+        return state
+
+    @staticmethod
+    def _publish_peer_context(state: E2EState, findings: list[Dict[str, Any]], coordination: Dict[str, Any]) -> None:
+        context = state.setdefault("context", {})
+        context["peer_findings"] = findings
+        context["agent_coordination"] = {
+            "confidence": coordination.get("confidence"),
+            "agreement_score": coordination.get("agreement_score"),
+            "disagreement": coordination.get("disagreement"),
+            "contradictions": coordination.get("contradictions", []),
+            "consensus_hypotheses": coordination.get("consensus_hypotheses", []),
+            "missing_evidence": coordination.get("missing_evidence", []),
+            "evidence_requests": coordination.get("evidence_requests", []),
+            "handoff_agents": coordination.get("handoff_agents", []),
+        }
+
+    async def _parallel_agents_node(self, state: E2EState) -> E2EState:
+        state["current_node"] = "parallel_agents"
+        routing = state.get("routing") or self.coordinator.select_agents(
+            state.get("triage_result", {}), self.registry.enabled_names()
+        )
+        selected = list(routing.get("selected", []))
+
+        # First specialist pass shares the same live Incident context.
+        findings = await self._run_specialists(selected, state)
+        coordination = self.coordinator.synthesize(findings)
+        self._publish_peer_context(state, findings, coordination)
+
+        # Structured handoff / second opinion. New Agents see prior peer findings
+        # and the coordinator's consensus/contradictions in their AgentInput context.
+        requested_handoffs = [
+            name for name in coordination.get("handoff_agents", [])
+            if name not in selected and self.registry.get(name) is not None
+        ]
+        if requested_handoffs:
+            second = await self._run_specialists(requested_handoffs, state)
+            findings.extend(second)
+            selected.extend(requested_handoffs)
+            coordination = self.coordinator.synthesize(findings)
+            self._publish_peer_context(state, findings, coordination)
+            self._audit("agent_handoff_completed", state, handoff_agents=requested_handoffs)
+
+        # Bounded targeted Evidence refresh. Re-running specialists after refresh
+        # now includes the previous peer analysis, making the second reasoning pass
+        # genuinely cumulative instead of stateless.
+        evidence_requests = list(coordination.get("evidence_requests") or [])
+        if evidence_requests and await self._additional_evidence_round(state, evidence_requests):
+            self._publish_peer_context(state, findings, coordination)
+            refreshed = await self._run_specialists(selected, state)
+            findings = refreshed
+            coordination = self.coordinator.synthesize(findings)
+            self._publish_peer_context(state, findings, coordination)
+
+        for finding in findings:
+            name = str(finding.get("agent_name") or "unknown")
+            if name == "unknown":
+                continue
+            AgentTelemetry.record_result(
+                name,
+                confidence=float(finding.get("confidence", 0) or 0),
+                evidence_coverage=float(finding.get("evidence_coverage", 0) or 0),
+                disagreement=bool(coordination.get("disagreement")),
+                conflict_count=len(coordination.get("contradictions") or []),
+                human_review=bool(finding.get("requires_human_review")),
+            )
+
+        state["analysis_results"] = findings
+        state["findings"] = [state.get("triage_result", {})] + findings
+        state["coordination"] = coordination
+        state["routing"] = {
+            **routing,
+            "selected": selected,
+            "skipped": sorted(set(self.registry.enabled_names()).difference(selected)),
+        }
+        self._audit(
+            "specialist_analysis_completed",
+            state,
+            selected_agents=selected,
+            skipped_agents=state["routing"]["skipped"],
+            finding_count=len(findings),
+            disagreement=coordination.get("disagreement"),
+            contradictions=coordination.get("contradictions", []),
+            agreement_score=coordination.get("agreement_score"),
+            consensus_hypotheses=coordination.get("consensus_hypotheses", []),
+            evidence_requests=coordination.get("evidence_requests", []),
+            evidence_rounds=state.get("evidence_rounds", 1),
+            peer_context_shared=True,
         )
         return state
