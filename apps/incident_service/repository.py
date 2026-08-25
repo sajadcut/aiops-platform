@@ -1,65 +1,102 @@
 from __future__ import annotations
 
-import json
-from datetime import datetime, timezone
 from typing import Any, Dict, Iterable
+from uuid import UUID, uuid4
 
-from sqlalchemy import text
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from domain.models import Evidence, EvidenceType, Finding, Incident, IncidentStatus
 
 
 class IncidentRepository:
+    """Canonical PostgreSQL repository for Incident, Evidence and Finding."""
+
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def upsert_incident(self, incident_id: str, source: str, service: str, severity: str | None, summary: str | None, status: str = "open") -> None:
-        now = datetime.now(timezone.utc)
-        await self.session.execute(
-            text(
-                """
-                INSERT INTO incidents (incident_id, source, severity, service, status, summary, started_at, created_at, updated_at)
-                VALUES (:id, :source, :severity, :service, :status, :summary, :started_at, :created_at, :updated_at)
-                ON CONFLICT (incident_id) DO UPDATE SET severity=EXCLUDED.severity, service=EXCLUDED.service,
-                    status=EXCLUDED.status, summary=EXCLUDED.summary, updated_at=EXCLUDED.updated_at
-                """
-            ),
-            {"id": incident_id, "source": source, "severity": severity, "service": service, "status": status,
-             "summary": summary, "started_at": now, "created_at": now, "updated_at": now},
-        )
+    async def upsert_incident(
+        self,
+        incident_id: str,
+        source: str,
+        service: str,
+        severity: str | None,
+        summary: str | None,
+        status: str = "open",
+    ) -> None:
+        incident_uuid = UUID(str(incident_id))
+        incident = await self.session.get(Incident, incident_uuid)
+        normalized_status = IncidentStatus(status.lower())
+        if incident is None:
+            incident = Incident(
+                id=incident_uuid,
+                source=source,
+                severity=severity or "unknown",
+                service=service,
+                status=normalized_status,
+                summary=summary,
+            )
+            self.session.add(incident)
+        else:
+            incident.source = source
+            incident.severity = severity or incident.severity or "unknown"
+            incident.service = service
+            incident.status = normalized_status
+            incident.summary = summary
 
     async def add_findings(self, incident_id: str, findings: Iterable[Dict[str, Any]]) -> None:
+        incident_uuid = UUID(str(incident_id))
         for finding in findings:
-            await self.session.execute(
-                text(
-                    """
-                    INSERT INTO incident_findings (incident_id, agent, finding_type, statement, evidence_ids, confidence)
-                    VALUES (:incident_id, :agent, :finding_type, :statement, CAST(:evidence_ids AS jsonb), :confidence)
-                    """
-                ),
-                {
-                    "incident_id": incident_id,
-                    "agent": finding.get("agent"),
-                    "finding_type": finding.get("finding_type"),
-                    "statement": finding.get("statement") or finding.get("description"),
-                    "evidence_ids": json.dumps(finding.get("evidence_ids") or []),
-                    "confidence": finding.get("confidence"),
-                },
+            statement = finding.get("statement") or finding.get("description") or finding.get("summary")
+            if not statement:
+                continue
+            self.session.add(
+                Finding(
+                    id=uuid4(),
+                    incident_id=incident_uuid,
+                    agent=str(finding.get("agent") or "unknown"),
+                    finding_type=str(finding.get("finding_type") or "analysis"),
+                    statement=str(statement),
+                    evidence_ids=list(finding.get("evidence_ids") or []),
+                    confidence=float(finding.get("confidence") or 0.0),
+                )
             )
 
+    @staticmethod
+    def _evidence_type(value: Any) -> EvidenceType:
+        normalized = str(value or "event").lower()
+        try:
+            return EvidenceType(normalized)
+        except ValueError:
+            return EvidenceType.EVENT
+
     async def add_evidence(self, incident_id: str, evidence: Iterable[Dict[str, Any]]) -> None:
+        incident_uuid = UUID(str(incident_id))
         for item in evidence:
-            evidence_id = str(item.get("evidence_id") or item.get("reference") or f"{item.get('source','unknown')}:{item.get('type','unknown')}:{hash(json.dumps(item, sort_keys=True, default=str))}")
-            await self.session.execute(
-                text(
-                    """
-                    INSERT INTO incident_evidence (evidence_id, incident_id, evidence_type, source, reference, payload)
-                    VALUES (:evidence_id, :incident_id, :evidence_type, :source, :reference, CAST(:payload AS jsonb))
-                    ON CONFLICT (evidence_id) DO NOTHING
-                    """
-                ),
-                {"evidence_id": evidence_id, "incident_id": incident_id, "evidence_type": item.get("type", "unknown"),
-                 "source": item.get("source", "unknown"), "reference": item.get("reference"),
-                 "payload": json.dumps(item.get("raw_data") or item, default=str)},
+            reference = item.get("reference") or item.get("evidence_id")
+            if reference:
+                existing = (
+                    await self.session.execute(
+                        select(Evidence.id).where(
+                            Evidence.incident_id == incident_uuid,
+                            Evidence.reference == str(reference),
+                        )
+                    )
+                ).scalar_one_or_none()
+                if existing:
+                    continue
+            self.session.add(
+                Evidence(
+                    id=uuid4(),
+                    incident_id=incident_uuid,
+                    type=self._evidence_type(item.get("type")),
+                    source=str(item.get("source") or "unknown"),
+                    query=item.get("query"),
+                    time_range=item.get("time_range"),
+                    reference=str(reference) if reference else None,
+                    raw_data=item.get("raw_data") or item,
+                    confidence=float(item.get("confidence") or 1.0),
+                )
             )
 
     async def commit(self) -> None:
