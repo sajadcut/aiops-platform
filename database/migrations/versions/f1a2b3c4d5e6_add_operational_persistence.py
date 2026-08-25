@@ -1,4 +1,4 @@
-"""Add governance and durable incident/workflow persistence.
+"""Add governance and durable workflow persistence.
 
 Revision ID: f1a2b3c4d5e6
 Revises: fix_embedding_001
@@ -17,7 +17,7 @@ def upgrade() -> None:
     op.execute("""
         CREATE TABLE IF NOT EXISTS approvals (
             approval_id UUID PRIMARY KEY,
-            incident_id UUID NULL,
+            incident_id UUID NULL REFERENCES incidents(id) ON DELETE CASCADE,
             action TEXT NOT NULL,
             risk_level VARCHAR(50) NOT NULL,
             approver VARCHAR(255) NOT NULL,
@@ -37,7 +37,7 @@ def upgrade() -> None:
             event_id UUID PRIMARY KEY,
             event_type VARCHAR(120) NOT NULL,
             actor VARCHAR(255) NOT NULL,
-            incident_id UUID NULL,
+            incident_id UUID NULL REFERENCES incidents(id) ON DELETE SET NULL,
             action TEXT NULL,
             status VARCHAR(50) NOT NULL,
             metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
@@ -65,66 +65,19 @@ def upgrade() -> None:
     """)
 
     op.execute("""
-        CREATE TABLE IF NOT EXISTS incidents (
-            incident_id UUID PRIMARY KEY,
-            source VARCHAR(64) NOT NULL,
-            severity VARCHAR(32),
-            service VARCHAR(255) NOT NULL,
-            status VARCHAR(32) NOT NULL DEFAULT 'open',
-            summary TEXT,
-            started_at TIMESTAMPTZ,
-            created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
-        )
-    """)
-
-    op.execute("""
         CREATE TABLE IF NOT EXISTS workflow_checkpoints (
-            incident_id UUID PRIMARY KEY,
+            incident_id UUID PRIMARY KEY REFERENCES incidents(id) ON DELETE CASCADE,
             state JSONB NOT NULL,
             status VARCHAR(32) NOT NULL DEFAULT 'paused',
             version BIGINT NOT NULL DEFAULT 1,
-            updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            CONSTRAINT workflow_checkpoints_incident_fk
-                FOREIGN KEY (incident_id) REFERENCES incidents(incident_id) ON DELETE CASCADE
+            updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
         )
     """)
     op.execute("CREATE INDEX IF NOT EXISTS idx_workflow_checkpoints_status ON workflow_checkpoints(status)")
 
-    op.execute("""
-        CREATE TABLE IF NOT EXISTS incident_findings (
-            id BIGSERIAL PRIMARY KEY,
-            incident_id UUID NOT NULL REFERENCES incidents(incident_id) ON DELETE CASCADE,
-            agent VARCHAR(128),
-            finding_type VARCHAR(128),
-            statement TEXT,
-            evidence_ids JSONB NOT NULL DEFAULT '[]'::jsonb,
-            confidence DOUBLE PRECISION,
-            created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
-        )
-    """)
-    op.execute("CREATE INDEX IF NOT EXISTS idx_incident_findings_incident ON incident_findings(incident_id)")
-
-    op.execute("""
-        CREATE TABLE IF NOT EXISTS incident_evidence (
-            evidence_id VARCHAR(255) PRIMARY KEY,
-            incident_id UUID NOT NULL REFERENCES incidents(incident_id) ON DELETE CASCADE,
-            evidence_type VARCHAR(64) NOT NULL,
-            source VARCHAR(128) NOT NULL,
-            reference TEXT,
-            payload JSONB NOT NULL DEFAULT '{}'::jsonb,
-            observed_at TIMESTAMPTZ,
-            created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
-        )
-    """)
-    op.execute("CREATE INDEX IF NOT EXISTS idx_incident_evidence_incident ON incident_evidence(incident_id)")
-
 
 def downgrade() -> None:
-    op.execute("DROP TABLE IF EXISTS incident_evidence")
-    op.execute("DROP TABLE IF EXISTS incident_findings")
     op.execute("DROP TABLE IF EXISTS workflow_checkpoints")
-    op.execute("DROP TABLE IF EXISTS incidents")
     op.execute("DROP TABLE IF EXISTS runbooks")
     op.execute("DROP TABLE IF EXISTS audit_events")
     op.execute("DROP TABLE IF EXISTS approvals")
