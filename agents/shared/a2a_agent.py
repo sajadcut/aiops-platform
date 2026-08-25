@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Any, Dict
+from urllib.parse import urlparse
 
 import httpx
 from pydantic import BaseModel, Field
@@ -19,7 +20,8 @@ class A2AAgent(ABC):
     """Authenticated, bounded transport for optional agent-to-agent RPC.
 
     A2A is coordination only. Remote responses never bypass local policy,
-    approval, evaluator, or execution boundaries.
+    approval, evaluator, or execution boundaries. Targets are restricted to a
+    centrally configured origin allowlist before credentials are attached.
     """
 
     def __init__(self, agent_card: A2AAgentCard):
@@ -30,9 +32,28 @@ class A2AAgent(ABC):
     async def handle_request(self, request: Dict[str, Any]) -> Dict[str, Any]:
         raise NotImplementedError
 
-    async def send_request(self, target_url: str, request: Dict[str, Any]) -> Dict[str, Any]:
-        if not target_url.startswith(("http://", "https://")):
+    @staticmethod
+    def _origin(url: str) -> str:
+        parsed = urlparse(url)
+        if parsed.scheme not in {"http", "https"} or not parsed.netloc:
             raise ValueError("invalid_a2a_target_url")
+        if parsed.username or parsed.password:
+            raise ValueError("a2a_userinfo_forbidden")
+        return f"{parsed.scheme.lower()}://{parsed.netloc.lower()}"
+
+    @classmethod
+    def _validate_target(cls, target_url: str) -> str:
+        origin = cls._origin(target_url)
+        parsed = urlparse(target_url)
+        if settings.A2A_REQUIRE_HTTPS and parsed.scheme.lower() != "https":
+            raise ValueError("a2a_https_required")
+        allowed_origins = {cls._origin(value) for value in settings.A2A_ALLOWED_TARGETS if str(value).strip()}
+        if origin not in allowed_origins:
+            raise ValueError("a2a_target_not_allowlisted")
+        return origin
+
+    async def send_request(self, target_url: str, request: Dict[str, Any]) -> Dict[str, Any]:
+        self._validate_target(target_url)
         payload = {
             "jsonrpc": "2.0",
             "method": "agent.call",
