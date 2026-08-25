@@ -27,15 +27,16 @@ class VMAgent(BaseAgent):
         logger.info(f"VMAgent analyzing: {input_data.incident_id}")
         evidence = self.evidence_items(input_data)
         evidence_ids = self.evidence_ids(input_data)
+        auxiliary = self.auxiliary_context(input_data)
         metrics = [item for item in evidence if str(item.get("type", "")).lower() == "metric"]
         logs = [item for item in evidence if str(item.get("type", "")).lower() == "log"]
         alerts = [item for item in evidence if str(item.get("type", "")).lower() in {"alert", "event"}]
         missing = self.missing_evidence_for(input_data, ["metric", "log"])
-        prompt = f"""You are a senior Linux/Windows guest-OS operations analyst. Use ONLY supplied evidence. Never invent OS version, process state, CPU/memory/disk numbers, service status, reachability or log content.
+        prompt = f"""You are a senior Linux/Windows guest-OS operations analyst. LIVE EVIDENCE is authoritative. Knowledge RAG and Operational Memory are auxiliary only and may suggest known checks or historical patterns, never prove current VM state. Never invent OS version, process state, CPU/memory/disk numbers, service status, reachability or log content.
 Return JSON keys: severity, health_status, reachability, cpu_signals, memory_signals, disk_signals, network_signals, process_signals, service_signals, log_signals, affected_components, blast_radius, hypotheses, missing_evidence, handoff_agents, immediate_checks, remediation_candidates, confidence.
-Hypotheses entries: hypothesis, probability, evidence_ids, falsification_checks.
+Hypotheses entries: hypothesis, probability, evidence_ids, conflicting_evidence_ids, falsification_checks. Only live evidence IDs may be cited.
 immediate_checks are read-only. remediation_candidates are suggestions only and must require Decision/Approval/Execution before mutation.
-Incident={input_data.incident_id}\nVM/Service={input_data.service_name}\nSummary={input_data.evidence_summary}\nEvidence={json.dumps(evidence, default=str)}\nContextSummary={json.dumps(input_data.context.get('summary', {}), default=str)}"""
+Incident={input_data.incident_id}\nVM/Service={input_data.service_name}\nSummary={input_data.evidence_summary}\nLIVE_EVIDENCE={json.dumps(evidence, default=str)}\nAUXILIARY_CONTEXT={json.dumps(auxiliary, default=str)}\nContextSummary={json.dumps(input_data.context.get('summary', {}), default=str)}"""
         try:
             result = json.loads((await self.llm.generate(prompt, temperature=settings.AGENT_LLM_TEMPERATURE)).content)
         except Exception as exc:
@@ -53,6 +54,7 @@ Incident={input_data.incident_id}\nVM/Service={input_data.service_name}\nSummary
                     hypothesis=str(item["hypothesis"]),
                     probability=self.safe_confidence(item.get("probability", 0), len(evidence)),
                     evidence_ids=[str(x) for x in item.get("evidence_ids", []) if str(x) in evidence_ids],
+                    conflicting_evidence_ids=[str(x) for x in item.get("conflicting_evidence_ids", []) if str(x) in evidence_ids],
                     falsification_checks=self.normalize_list(item.get("falsification_checks"), 4),
                 ))
         severity = str(result.get("severity", "unknown")).lower()
@@ -98,5 +100,7 @@ Incident={input_data.incident_id}\nVM/Service={input_data.service_name}\nSummary
                 "metric_evidence_count": len(metrics),
                 "log_evidence_count": len(logs),
                 "alert_evidence_count": len(alerts),
+                "knowledge_context_count": len(auxiliary["knowledge_rag"]),
+                "memory_context_count": len(auxiliary["operational_memory"]),
             },
         )
