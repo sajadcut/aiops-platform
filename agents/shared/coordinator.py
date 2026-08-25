@@ -69,6 +69,7 @@ class IncidentCoordinator:
         health_votes: Dict[str, int] = {}
         missing: List[str] = []
         handoffs: List[str] = []
+        auxiliary_conflicts: List[Dict[str, str]] = []
         hypothesis_map: Dict[str, List[str]] = {}
         evidence_ids: set[str] = set()
         evidence_usage: Dict[str, Dict[str, List[str]]] = {}
@@ -86,7 +87,8 @@ class IncidentCoordinator:
 
             confidence = max(0.0, min(1.0, float(finding.get("confidence", 0) or 0)))
             coverage = max(0.0, min(1.0, float(finding.get("evidence_coverage", 0) or 0)))
-            weight = max(0.1, coverage)
+            quality = max(0.0, min(1.0, float(finding.get("evidence_quality", 1) or 0)))
+            weight = max(0.1, coverage * max(0.25, quality))
             weighted_confidence += confidence * weight
             confidence_weight += weight
 
@@ -95,6 +97,11 @@ class IncidentCoordinator:
                 value = str(item)
                 if value not in missing:
                     missing.append(value)
+            for item in finding.get("auxiliary_conflicts") or []:
+                value = str(item).strip()
+                row = {"agent": agent_name, "description": value}
+                if value and row not in auxiliary_conflicts:
+                    auxiliary_conflicts.append(row)
             for item in finding.get("handoff_agents") or []:
                 value = str(item)
                 if value not in handoffs:
@@ -185,6 +192,7 @@ class IncidentCoordinator:
             "evidence_count": len(evidence_ids),
             "missing_evidence": missing,
             "evidence_requests": evidence_requests[: settings.AGENT_MAX_DYNAMIC_EVIDENCE_TYPES],
+            "auxiliary_conflicts": auxiliary_conflicts,
             "handoff_agents": handoffs,
             "disagreement": disagreement,
             "contradictions": contradictions,
