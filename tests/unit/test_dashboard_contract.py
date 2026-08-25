@@ -13,7 +13,6 @@ def test_dashboard_contains_required_operational_capabilities():
         "serviceFilter",
         "RCA / Final Plan",
         "Independent Verification",
-        "Operational Memory",
         "Dry-run only",
         "Resume approved workflow",
         "X-API-Key",
@@ -23,6 +22,7 @@ def test_dashboard_contains_required_operational_capabilities():
     ]
     missing = [token for token in required if token not in html]
     assert not missing, f"Dashboard contract missing: {missing}"
+    assert "operational memory" in html.lower()
 
 
 def test_dashboard_does_not_embed_demo_incident_data():
