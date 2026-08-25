@@ -1,6 +1,7 @@
 id: app-error-rollback
+name: app-error-rollback
 owner: sre
-version: "1.0"
+version: "1.1"
 timeout: 120
 preconditions:
   - error_rate_percent_gt: 10
@@ -11,3 +12,12 @@ steps:
 rollback:
   - action: restore_previous_state
 risk: medium
+verification:
+  window_seconds: 300
+  checks:
+    - metric: error_rate
+      direction: lower_is_better
+      expected: below_pre_action_baseline
+    - metric: success_rate
+      direction: higher_is_better
+      expected: above_pre_action_baseline
