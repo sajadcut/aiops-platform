@@ -27,13 +27,14 @@ class SecurityAgent(BaseAgent):
         logger.info(f"SecurityAgent analyzing: {input_data.incident_id}")
         evidence = self.evidence_items(input_data)
         evidence_ids = self.evidence_ids(input_data)
+        auxiliary = self.auxiliary_context(input_data)
         logs = [item for item in evidence if str(item.get("type", "")).lower() == "log"]
         alerts = [item for item in evidence if str(item.get("type", "")).lower() in {"alert", "event"}]
         missing = self.missing_evidence_for(input_data, ["log"])
-        prompt = f"""You are a senior SOC analyst. Use only supplied evidence. Never assert compromise, exfiltration, brute force, credential theft or policy violation without direct evidence. Distinguish observation from hypothesis.
+        prompt = f"""You are a senior SOC analyst. LIVE EVIDENCE is authoritative. Knowledge RAG and Operational Memory are auxiliary only and can suggest known indicators, procedures or prior patterns but cannot establish compromise in the current incident. Never assert compromise, exfiltration, brute force, credential theft or policy violation without direct live evidence. Distinguish observation from hypothesis.
 Return JSON keys: severity, health_status, authentication_signals, authorization_signals, suspicious_signals, exposure_signals, policy_signals, affected_components, blast_radius, hypotheses, missing_evidence, handoff_agents, immediate_checks, containment_recommendations, confidence.
-Hypotheses entries: hypothesis, probability, evidence_ids, falsification_checks. immediate_checks are read-only. containment_recommendations may be write actions but MUST be recommendations requiring approval.
-Incident={input_data.incident_id}\nService={input_data.service_name}\nSummary={input_data.evidence_summary}\nEvidence={json.dumps(evidence, default=str)}\nContextSummary={json.dumps(input_data.context.get('summary', {}), default=str)}"""
+Hypotheses entries: hypothesis, probability, evidence_ids, conflicting_evidence_ids, falsification_checks. Only live evidence IDs may be cited. immediate_checks are read-only. containment_recommendations may be write actions but MUST be recommendations requiring approval.
+Incident={input_data.incident_id}\nService={input_data.service_name}\nSummary={input_data.evidence_summary}\nLIVE_EVIDENCE={json.dumps(evidence, default=str)}\nAUXILIARY_CONTEXT={json.dumps(auxiliary, default=str)}\nContextSummary={json.dumps(input_data.context.get('summary', {}), default=str)}"""
         try:
             result = json.loads((await self.llm.generate(prompt, temperature=settings.AGENT_LLM_TEMPERATURE)).content)
         except Exception as exc:
@@ -51,6 +52,7 @@ Incident={input_data.incident_id}\nService={input_data.service_name}\nSummary={i
                     hypothesis=str(item["hypothesis"]),
                     probability=self.safe_confidence(item.get("probability", 0), len(evidence)),
                     evidence_ids=[str(x) for x in item.get("evidence_ids", []) if str(x) in evidence_ids],
+                    conflicting_evidence_ids=[str(x) for x in item.get("conflicting_evidence_ids", []) if str(x) in evidence_ids],
                     falsification_checks=self.normalize_list(item.get("falsification_checks"), 4),
                 ))
         severity = str(result.get("severity", "unknown")).lower()
@@ -89,5 +91,7 @@ Incident={input_data.incident_id}\nService={input_data.service_name}\nSummary={i
                 "policy_signals": result.get("policy_signals", []),
                 "log_evidence_count": len(logs),
                 "alert_evidence_count": len(alerts),
+                "knowledge_context_count": len(auxiliary["knowledge_rag"]),
+                "memory_context_count": len(auxiliary["operational_memory"]),
             },
         )
