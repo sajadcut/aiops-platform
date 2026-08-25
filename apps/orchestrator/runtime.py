@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Dict
+from typing import Any, Dict, Type
 
 from apps.audit_service import AuditService
 from apps.audit_service.postgres import PostgreSQLAuditStore
@@ -13,8 +13,9 @@ from apps.approval_service.postgres import PostgreSQLApprovalStore
 class DurableWorkflowRuntime:
     """PostgreSQL-backed runtime around the governed LangGraph workflow."""
 
-    def __init__(self, session):
+    def __init__(self, session, orchestrator_cls: Type[E2EOrchestrator] = E2EOrchestrator):
         self.session = session
+        self.orchestrator_cls = orchestrator_cls
         self.checkpoints = WorkflowCheckpointStore(session)
         self.incidents = IncidentRepository(session)
         self.approvals = PostgreSQLApprovalStore(session)
@@ -32,10 +33,13 @@ class DurableWorkflowRuntime:
             severity=state.get("context", {}).get("incident", {}).get("severity"),
             summary=state.get("context", {}).get("incident", {}).get("summary") or state.get("evidence_summary"),
         )
+        seed_evidence = list(state.get("context", {}).get("trigger_evidence", []) or [])
+        if seed_evidence:
+            await self.incidents.add_evidence(incident_id, seed_evidence)
         await self.incidents.add_evidence(incident_id, state.get("live_evidence", {}).get("evidence", []))
         await self.incidents.commit()
 
-        result = await E2EOrchestrator(db=self.session).run(state)
+        result = await self.orchestrator_cls(db=self.session).run(state)
         await self.incidents.add_findings(incident_id, result.get("findings", []))
         await self.incidents.add_evidence(incident_id, result.get("live_evidence", {}).get("evidence", []))
 
@@ -111,7 +115,7 @@ class DurableWorkflowRuntime:
         state["execution_request"] = execution_request
         state["current_node"] = "execution"
 
-        orchestrator = E2EOrchestrator(db=self.session)
+        orchestrator = self.orchestrator_cls(db=self.session)
         result = await orchestrator._execution_node(state)
         execution_result = result.get("execution_result") or {}
         if not execution_result.get("success"):
