@@ -41,6 +41,15 @@ class RunbookRegistry:
             self.load()
         return list(self._cache.values())
 
+    def validate(self, name: str, parameters: Dict[str, Any] | None = None) -> Dict[str, Any]:
+        runbook = self.get(name)
+        parameters = parameters or {}
+        required = runbook.get("parameters", {}) or {}
+        missing = [key for key in required if required[key].get("required", False) and key not in parameters]
+        if missing:
+            raise ValueError(f"missing_runbook_parameters:{','.join(missing)}")
+        return {"valid": True, "runbook": name, "parameters": parameters}
+
     def dry_run(self, name: str) -> Dict[str, Any]:
         runbook = self.get(name)
         return {
