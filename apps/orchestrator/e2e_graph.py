@@ -32,7 +32,7 @@ from domain.contracts.config import settings
 from domain.contracts.logging import logger
 from integrations.elasticsearch.client import ElasticsearchClient
 from integrations.llm.base import LLMAdapter
-from integrations.llm.mock_provider import MockLLMProvider
+from integrations.llm.openai_compatible import configured_llm_adapter
 from integrations.prometheus.client import PrometheusClient
 from integrations.vm.ssh_connector import SSHVMConnector
 from integrations.zabbix.connector import ZabbixConnector
@@ -67,9 +67,7 @@ class E2EState(TypedDict, total=False):
 
 class E2EOrchestrator:
     def __init__(self, llm_adapter: Optional[LLMAdapter] = None, db: Any = None):
-        if llm_adapter is None and settings.APP_ENV == "production":
-            raise RuntimeError("production_llm_adapter_required")
-        self.llm = llm_adapter or MockLLMProvider()
+        self.llm = llm_adapter or configured_llm_adapter()
         self.db = db
         self.triage_agent = TriageAgent(self.llm)
         self.application_agent = ApplicationAgent(self.llm)
@@ -81,12 +79,7 @@ class E2EOrchestrator:
         zabbix = MockZabbixClient() if settings.APP_ENV != "production" else ZabbixConnector()
         vm_connector = SSHVMConnector() if settings.SSH_ENABLED else None
         self.vm_connector = vm_connector
-        self.evidence_collector = EvidenceCollector(
-            zabbix=zabbix,
-            elasticsearch=ElasticsearchClient(),
-            prometheus=PrometheusClient(),
-            vm=vm_connector,
-        )
+        self.evidence_collector = EvidenceCollector(zabbix=zabbix, elasticsearch=ElasticsearchClient(), prometheus=PrometheusClient(), vm=vm_connector)
         self.graph = self._build_graph()
 
     def _build_graph(self):
@@ -124,14 +117,7 @@ class E2EOrchestrator:
 
     @staticmethod
     def _audit(event_type: str, state: E2EState, **metadata: Any) -> None:
-        AuditService.record(
-            event_type=event_type,
-            actor="e2e_orchestrator",
-            incident_id=state.get("incident_id"),
-            action=state.get("execution_request", {}).get("action"),
-            status="recorded",
-            metadata=metadata,
-        )
+        AuditService.record(event_type=event_type, actor="e2e_orchestrator", incident_id=state.get("incident_id"), action=state.get("execution_request", {}).get("action"), status="recorded", metadata=metadata)
 
     async def _context_node(self, state: E2EState) -> E2EState:
         state["current_node"] = "context"
@@ -155,7 +141,6 @@ class E2EOrchestrator:
         except Exception as exc:
             logger.warning(f"Live evidence collection failed: {exc}")
             state["live_evidence"] = {"service": service, "evidence": [], "error": str(exc)}
-
         context["knowledge_results"] = state["knowledge_results"]
         context["memory_results"] = state["memory_results"]
         context["live_evidence"] = state["live_evidence"]
