@@ -11,7 +11,7 @@ from domain.contracts.config import settings
 
 
 class PostgreSQLApprovalStore:
-    """Durable approval persistence with expiry and guarded transitions."""
+    """Durable approval persistence with expiry, guarded transitions and one-time consumption."""
 
     def __init__(self, session: AsyncSession):
         self.session = session
@@ -57,8 +57,7 @@ class PostgreSQLApprovalStore:
             created_at = datetime.fromisoformat(created_at.replace("Z", "+00:00"))
         if created_at.tzinfo is None:
             created_at = created_at.replace(tzinfo=timezone.utc)
-        age = (datetime.now(timezone.utc) - created_at.astimezone(timezone.utc)).total_seconds()
-        return age > settings.APPROVAL_TTL_SECONDS
+        return (datetime.now(timezone.utc) - created_at.astimezone(timezone.utc)).total_seconds() > settings.APPROVAL_TTL_SECONDS
 
     async def get(self, approval_id: str) -> Optional[Dict[str, Any]]:
         record = await self._get_raw(approval_id)
@@ -75,11 +74,7 @@ class PostgreSQLApprovalStore:
         if status not in {"approved", "rejected"}:
             raise ValueError("invalid_approval_status")
         current = await self.get(approval_id)
-        if current is None:
-            return None
-        if current.get("status") == "expired":
-            return current
-        if current.get("status") != "pending":
+        if current is None or current.get("status") != "pending":
             return current
         timestamp_column = "approved_at" if status == "approved" else "rejected_at"
         await self.session.execute(
@@ -91,6 +86,24 @@ class PostgreSQLApprovalStore:
         )
         await self.session.commit()
         return await self._get_raw(approval_id)
+
+    async def consume(self, approval_id: str) -> Optional[Dict[str, Any]]:
+        """Atomically consume an approved record exactly once before crossing the execution boundary."""
+        current = await self.get(approval_id)
+        if current is None or current.get("status") != "approved":
+            return current
+        row = (
+            await self.session.execute(
+                text(
+                    "UPDATE approvals SET status='consumed' "
+                    "WHERE approval_id=:id AND status='approved' "
+                    "RETURNING approval_id, incident_id, action, risk_level, approver, status, metadata, created_at, approved_at, rejected_at"
+                ),
+                {"id": approval_id},
+            )
+        ).mappings().first()
+        await self.session.commit()
+        return dict(row) if row else await self._get_raw(approval_id)
 
     async def is_approved(self, approval_id: str) -> bool:
         record = await self.get(approval_id)
