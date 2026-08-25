@@ -43,14 +43,23 @@ class Settings(BaseSettings):
     KNOWLEDGE_REQUIRE_GOVERNANCE_PRODUCTION: bool = Field(...)
 
     # Agent runtime policy. Agents are analysis-only and use these values to
-    # bound context size, confidence, and escalation behavior.
+    # bound context, routing, parsing, evidence collection and escalation.
     AGENT_LLM_TEMPERATURE: float = Field(...)
+    AGENT_MAX_TOKENS: int = Field(...)
     AGENT_MAX_EVIDENCE_ITEMS: int = Field(...)
     AGENT_MIN_EVIDENCE_ITEMS: int = Field(...)
+    AGENT_MIN_EVIDENCE_COVERAGE: float = Field(...)
     AGENT_LOW_CONFIDENCE_THRESHOLD: float = Field(...)
     AGENT_MAX_RECOMMENDATIONS: int = Field(...)
     AGENT_MAX_HYPOTHESES: int = Field(...)
     AGENT_MAX_AUXILIARY_CONTEXT_ITEMS: int = Field(...)
+    AGENT_ENABLED_AGENTS: List[str] = Field(...)
+    AGENT_MAX_PARALLELISM: int = Field(...)
+    AGENT_MAX_EVIDENCE_ROUNDS: int = Field(...)
+    AGENT_TIMEOUT_SECONDS: int = Field(...)
+    AGENT_STRUCTURED_REPAIR_ATTEMPTS: int = Field(...)
+    AGENT_STALE_EVIDENCE_SECONDS: int = Field(...)
+    A2A_TIMEOUT_SECONDS: int = Field(...)
 
     LOG_LEVEL: str = Field(...)
     LOG_JSON: bool = Field(...)
