@@ -9,6 +9,8 @@ from domain.contracts.logging import logger
 class PrometheusClient(BaseConnector):
     """Prometheus client preserving labels needed for deterministic asset identity."""
 
+    SERVICE_LABELS = ("service", "service_name", "app")
+
     def __init__(self, url: Optional[str] = None, timeout: Optional[int] = None):
         self.url = url or settings.PROMETHEUS_URL
         self.timeout = timeout if timeout is not None else settings.PROMETHEUS_TIMEOUT_SECONDS
@@ -41,6 +43,20 @@ class PrometheusClient(BaseConnector):
             except ValueError:
                 pass
         return datetime.now(timezone.utc)
+
+    @staticmethod
+    def _escape_label_value(value: str) -> str:
+        return str(value).replace("\\", "\\\\").replace('"', '\\"').replace("\n", "\\n")
+
+    @classmethod
+    def _metric_queries(cls, metric_name: str, service: Optional[str]) -> List[str]:
+        if not service:
+            return [metric_name]
+        escaped = cls._escape_label_value(service)
+        # Prometheus label schemas vary by exporter/organization. Query the
+        # canonical service label first, then common alternatives, and dedupe
+        # returned series by labels/timestamp below.
+        return [f'{metric_name}{{{label}="{escaped}"}}' for label in cls.SERVICE_LABELS]
 
     async def get_alerts(self, since: Optional[datetime] = None, service: Optional[str] = None, limit: int = 100) -> List[Alert]:
         try:
@@ -76,30 +92,43 @@ class PrometheusClient(BaseConnector):
             if not await self.health_check():
                 return []
             start_ts = int(since.timestamp())
-            end_ts = int(until.timestamp()) if until else int(datetime.now().timestamp())
-            metrics = []
+            end_ts = int(until.timestamp()) if until else int(datetime.now(timezone.utc).timestamp())
+            metrics: List[MetricPoint] = []
+            seen: set[tuple[str, tuple[tuple[str, str], ...], float]] = set()
             async with httpx.AsyncClient(timeout=self.timeout) as client:
                 for metric_name in metric_names:
-                    query = f'{metric_name}{{service="{service}"}}' if service else metric_name
-                    response = await client.get(f"{self._base_url}/api/v1/query_range", params={"query": query, "start": start_ts, "end": end_ts, "step": "60"})
-                    if response.status_code != 200:
-                        continue
-                    for result in response.json().get("data", {}).get("result", []):
-                        labels = {str(k): str(v) for k, v in (result.get("metric", {}) or {}).items()}
-                        resolved_service = labels.get("service") or labels.get("service_name") or labels.get("app") or service
-                        for ts, value in result.get("values", []):
-                            try:
-                                numeric_value = float(value)
-                            except (TypeError, ValueError):
-                                continue
-                            metrics.append(MetricPoint(
-                                timestamp=self._parse_time(ts),
-                                service=resolved_service,
-                                name=metric_name,
-                                value=numeric_value,
-                                labels=labels,
-                                source="prometheus",
-                            ))
+                    for query in self._metric_queries(metric_name, service):
+                        response = await client.get(
+                            f"{self._base_url}/api/v1/query_range",
+                            params={"query": query, "start": start_ts, "end": end_ts, "step": "60"},
+                        )
+                        if response.status_code != 200:
+                            continue
+                        body = response.json()
+                        if body.get("status") != "success":
+                            continue
+                        for result in body.get("data", {}).get("result", []):
+                            labels = {str(k): str(v) for k, v in (result.get("metric", {}) or {}).items()}
+                            resolved_service = labels.get("service") or labels.get("service_name") or labels.get("app") or service
+                            label_key = tuple(sorted(labels.items()))
+                            for ts, value in result.get("values", []):
+                                try:
+                                    numeric_value = float(value)
+                                    timestamp_value = float(ts)
+                                except (TypeError, ValueError):
+                                    continue
+                                key = (metric_name, label_key, timestamp_value)
+                                if key in seen:
+                                    continue
+                                seen.add(key)
+                                metrics.append(MetricPoint(
+                                    timestamp=self._parse_time(ts),
+                                    service=resolved_service,
+                                    name=metric_name,
+                                    value=numeric_value,
+                                    labels=labels,
+                                    source="prometheus",
+                                ))
             return metrics
         except Exception as exc:
             logger.error(f"Failed to get Prometheus metrics: {exc}")
