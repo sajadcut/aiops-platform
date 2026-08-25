@@ -1,13 +1,12 @@
-from sqlalchemy import Column, String, DateTime, JSON, Float, Text, Enum, Integer
+from sqlalchemy import Column, String, DateTime, JSON, Float, Text, Integer
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 from pgvector.sqlalchemy import Vector
 from database import Base
 import uuid
-import enum
 
 
-class IncidentStatus(str, enum.Enum):
+class IncidentStatus:
     OPEN = "open"
     ANALYZING = "analyzing"
     RESOLVED = "resolved"
@@ -15,7 +14,7 @@ class IncidentStatus(str, enum.Enum):
     ESCALATED = "escalated"
 
 
-class EvidenceType(str, enum.Enum):
+class EvidenceType:
     LOG = "log"
     METRIC = "metric"
     EVENT = "event"
@@ -31,7 +30,7 @@ class Incident(Base):
     severity = Column(String(50), nullable=False)
     service = Column(String(255), nullable=True)
     started_at = Column(DateTime(timezone=True), server_default=func.now())
-    status = Column(Enum(IncidentStatus), default=IncidentStatus.OPEN, nullable=False)
+    status = Column(String(32), default=IncidentStatus.OPEN, nullable=False)
     summary = Column(Text, nullable=True)
     context = Column(JSON, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -43,7 +42,7 @@ class Evidence(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     incident_id = Column(UUID(as_uuid=True), nullable=False, index=True)
-    type = Column(Enum(EvidenceType), nullable=False)
+    type = Column(String(32), nullable=False)
     source = Column(String(255), nullable=False)
     query = Column(Text, nullable=True)
     time_range = Column(JSON, nullable=True)
@@ -67,8 +66,6 @@ class Finding(Base):
 
 
 class KnowledgeDocument(Base):
-    """Knowledge RAG document stored in PostgreSQL + pgvector."""
-
     __tablename__ = "knowledge_documents"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -83,8 +80,6 @@ class KnowledgeDocument(Base):
 
 
 class MemoryEntry(Base):
-    """Operational Memory entry; logically separate from Knowledge RAG."""
-
     __tablename__ = "memory_entries"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
