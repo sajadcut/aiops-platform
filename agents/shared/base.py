@@ -15,7 +15,7 @@ class AgentInput(BaseModel):
     """Standard, evidence-first input passed to every operational agent."""
 
     incident_id: Optional[str] = None
-    evidence_summary: str = Field(..., description="Human/machine summary of known evidence")
+    evidence_summary: str = Field(..., description="Human/machine summary of known live evidence")
     service_name: Optional[str] = None
     time_range: Optional[Dict[str, str]] = None
     context: Dict[str, Any] = Field(default_factory=dict)
@@ -25,6 +25,7 @@ class OperationalHypothesis(BaseModel):
     hypothesis: str
     probability: float = Field(ge=0, le=1)
     evidence_ids: List[str] = Field(default_factory=list)
+    conflicting_evidence_ids: List[str] = Field(default_factory=list)
     falsification_checks: List[str] = Field(default_factory=list)
 
 
@@ -64,9 +65,9 @@ class AgentOutput(BaseModel):
 class BaseAgent(ABC):
     """Base contract for analysis-only specialized agents.
 
-    Agents may inspect evidence and recommend controlled actions. They never
-    execute write operations; all mutation remains behind Decision/Approval/
-    Execution Service boundaries.
+    Agents may inspect live evidence and use Knowledge RAG / Operational Memory
+    only as auxiliary context. They never execute write operations; all mutation
+    remains behind Decision/Approval/Execution Service boundaries.
     """
 
     def __init__(self, llm_adapter: Optional[LLMAdapter] = None):
@@ -84,7 +85,7 @@ class BaseAgent(ABC):
 
     @property
     def allowed_tools(self) -> List[str]:
-        """Read-only evidence tools the agent may request through orchestration."""
+        """Read-only evidence capabilities the agent may request via orchestration."""
         return []
 
     @abstractmethod
@@ -100,6 +101,28 @@ class BaseAgent(ABC):
         if not isinstance(raw, list):
             return []
         return [item for item in raw if isinstance(item, dict)][: settings.AGENT_MAX_EVIDENCE_ITEMS]
+
+    @staticmethod
+    def knowledge_items(input_data: AgentInput) -> List[Dict[str, Any]]:
+        raw = input_data.context.get("knowledge_results", []) if input_data.context else []
+        if not isinstance(raw, list):
+            return []
+        return [item for item in raw if isinstance(item, dict)][: settings.AGENT_MAX_AUXILIARY_CONTEXT_ITEMS]
+
+    @staticmethod
+    def memory_items(input_data: AgentInput) -> List[Dict[str, Any]]:
+        raw = input_data.context.get("memory_results", []) if input_data.context else []
+        if not isinstance(raw, list):
+            return []
+        return [item for item in raw if isinstance(item, dict)][: settings.AGENT_MAX_AUXILIARY_CONTEXT_ITEMS]
+
+    @classmethod
+    def auxiliary_context(cls, input_data: AgentInput) -> Dict[str, Any]:
+        return {
+            "knowledge_rag": cls.knowledge_items(input_data),
+            "operational_memory": cls.memory_items(input_data),
+            "policy": "auxiliary_only_not_live_evidence",
+        }
 
     @classmethod
     def evidence_ids(cls, input_data: AgentInput) -> List[str]:
