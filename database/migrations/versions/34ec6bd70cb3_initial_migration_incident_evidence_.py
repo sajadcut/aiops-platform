@@ -19,10 +19,6 @@ evidence_type = sa.Enum("LOG", "METRIC", "EVENT", "TRACE", "ALERT", name="eviden
 
 
 def upgrade() -> None:
-    bind = op.get_bind()
-    incident_status.create(bind, checkfirst=True)
-    evidence_type.create(bind, checkfirst=True)
-
     op.create_table(
         "incidents",
         sa.Column("id", UUID(as_uuid=True), primary_key=True),
