@@ -120,7 +120,7 @@ async def get_incident_audit(incident_id: UUID):
 
 @router.get("/incidents/{incident_id}/lifecycle")
 async def get_incident_lifecycle(incident_id: UUID):
-    """Return durable workflow, decision, approval, execution and verification state for the operations UI."""
+    """Return durable governance plus structured agent routing/collaboration state."""
     async with AsyncSessionLocal() as db:
         incident = await db.get(Incident, incident_id)
         if incident is None:
@@ -143,8 +143,14 @@ async def get_incident_lifecycle(incident_id: UUID):
         "checkpoint_status": (checkpoint or {}).get("status"),
         "checkpoint_version": (checkpoint or {}).get("version"),
         "current_node": state.get("current_node"),
+        "triage": state.get("triage_result") or {},
+        "routing": state.get("routing") or {},
+        "coordination": state.get("coordination") or {},
+        "agents": state.get("analysis_results") or [],
+        "evidence_rounds": state.get("evidence_rounds", 0),
         "final_plan": state.get("final_plan"),
         "decision": state.get("decision"),
+        "evaluation": state.get("evaluation") or {},
         "approval": dict(approval) if approval else state.get("approval"),
         "execution": state.get("execution_result"),
         "verification": state.get("verification_result"),
