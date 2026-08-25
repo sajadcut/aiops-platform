@@ -34,6 +34,8 @@ async def _ingest(signal: OperationalSignal) -> Dict[str, Any]:
             "trigger_source": result.get("trigger_source"),
             "trigger_signal_type": result.get("trigger_signal_type"),
             "correlation_key": result.get("correlation_key"),
+            "deduplicated": bool(result.get("deduplicated", False)),
+            "deduplication_reason": result.get("deduplication_reason"),
             "asset_context": (result.get("context") or {}).get("asset_context"),
             "routing": result.get("routing"),
             "coordination": result.get("coordination"),
@@ -77,7 +79,12 @@ async def ingest_prometheus_signal(
     for alert in alerts:
         if isinstance(alert, dict):
             results.append(await _ingest(signal_from_prometheus(alert)))
-    return {"status": "accepted", "count": len(results), "results": results}
+    return {
+        "status": "accepted",
+        "count": len(results),
+        "deduplicated_count": sum(1 for item in results if item.get("deduplicated")),
+        "results": results,
+    }
 
 
 @router.post("/signals/zabbix", dependencies=[Depends(rate_limiter_strict)])
