@@ -1,142 +1,102 @@
-from typing import Optional, List
 import json
-from agents.shared.base import BaseAgent, AgentInput, AgentOutput
-from integrations.llm.base import LLMAdapter
-from integrations.llm.mock_provider import MockLLMProvider
+from typing import List, Optional
+
+from agents.shared.base import AgentInput, AgentOutput, BaseAgent, OperationalHypothesis, RecommendedAction
+from domain.contracts.config import settings
 from domain.contracts.logging import logger
+from integrations.llm.base import LLMAdapter
+
 
 class VMAgent(BaseAgent):
-    """
-    Agent تخصصی برای تحلیل وضعیت یک ماشین مجازی خاص (Guest OS)
-    شامل: Debian 10/11, Ubuntu, CentOS, Windows Server
-    بررسی: CPU, RAM, Disk, Network, Processes, System Logs
-    """
-    
     def __init__(self, llm_adapter: Optional[LLMAdapter] = None):
-        self.llm = llm_adapter or MockLLMProvider()
-    
+        super().__init__(llm_adapter)
+
     @property
     def name(self) -> str:
         return "vm"
-    
+
     @property
     def description(self) -> str:
-        return "Virtual Machine (Guest OS) analysis: CPU, RAM, Disk, Network, Processes, System Logs"
-    
+        return "Guest OS diagnostics: reachability, CPU, memory, disk, network, processes, services and system logs"
+
     @property
     def allowed_tools(self) -> List[str]:
-        return ["ssh_cmd", "vm_stat", "get_logs"]
-    
+        return ["vm_telemetry", "ssh_readonly", "zabbix_read", "prometheus_query", "knowledge_search"]
+
     async def analyze(self, input_data: AgentInput) -> AgentOutput:
-        logger.info(f"VMAgent analyzing VM for: {input_data.incident_id}")
-        
-        evidence = input_data.context.get("evidence", []) if input_data.context else []
-        metrics = [e for e in evidence if e.get("type") == "metric"]
-        logs = [e for e in evidence if e.get("type") == "log"]
-        alerts = [e for e in evidence if e.get("type") == "alert"]
-        
-        context_summary = input_data.context.get("summary", {}) if input_data.context else {}
-        
-        # ساخت یک نمای کلی از VM برای LLM
-        vm_summary = f"""
-        VM Information:
-        - Service: {input_data.service_name or 'unknown-vm'}
-        - OS: Debian 10 (Buster) / Linux
-        - Metrics available: {len(metrics)}
-        - Logs available: {len(logs)}
-        - Alerts available: {len(alerts)}
-        - Avg CPU: {context_summary.get('avg_cpu', 'N/A')}%
-        - Avg Memory: {context_summary.get('avg_memory', 'N/A')}%
-        - Error Rate: {context_summary.get('error_rate', 'N/A')}%
-        """
-        
-        prompt = f"""
-You are a Virtual Machine (Guest OS) specialist. Analyze the state of this specific VM.
-
-{vm_summary}
-
-Focus on the following aspects (as if you are checking the VM directly):
-
-1. **VM Status**: Is the VM powered on and reachable? (Running/Stopped/Unreachable)
-2. **CPU Load**: CPU usage percentage and load average (1m, 5m, 15m).
-3. **Memory Usage**: RAM usage percentage, swap usage, available memory.
-4. **Disk Storage**: Disk usage percentage (especially root partition), I/O wait.
-5. **Network**: Inbound/Outbound traffic, packet loss, interface status (eth0, ens33).
-6. **Critical Processes**: Are essential services running? (e.g., nginx, postgresql, docker, systemd)
-7. **System Logs**: Any errors in /var/log/syslog, /var/log/kern.log, or /var/log/auth.log?
-
-Provide a structured JSON response:
-{{
-    "vm_status": "Running|Stopped|Unreachable",
-    "cpu_load": {{
-        "usage_percent": 0.0,
-        "load_avg": "x.xx, x.xx, x.xx"
-    }},
-    "memory_usage_percent": 0.0,
-    "disk_usage_percent": 0.0,
-    "network": "Healthy|Degraded|Congested",
-    "critical_processes": {{"nginx": "running", "postgresql": "running"}},
-    "system_log_issues": ["list", "of", "errors"],
-    "confidence": 0.0-1.0,
-    "immediate_actions": ["action1", "action2"]
-}}
-"""
-        
+        logger.info(f"VMAgent analyzing: {input_data.incident_id}")
+        evidence = self.evidence_items(input_data)
+        evidence_ids = self.evidence_ids(input_data)
+        metrics = [item for item in evidence if str(item.get("type", "")).lower() == "metric"]
+        logs = [item for item in evidence if str(item.get("type", "")).lower() == "log"]
+        alerts = [item for item in evidence if str(item.get("type", "")).lower() in {"alert", "event"}]
+        missing = self.missing_evidence_for(input_data, ["metric", "log"])
+        prompt = f"""You are a senior Linux/Windows guest-OS operations analyst. Use ONLY supplied evidence. Never invent OS version, process state, CPU/memory/disk numbers, service status, reachability or log content.
+Return JSON keys: severity, health_status, reachability, cpu_signals, memory_signals, disk_signals, network_signals, process_signals, service_signals, log_signals, affected_components, blast_radius, hypotheses, missing_evidence, handoff_agents, immediate_checks, remediation_candidates, confidence.
+Hypotheses entries: hypothesis, probability, evidence_ids, falsification_checks.
+immediate_checks are read-only. remediation_candidates are suggestions only and must require Decision/Approval/Execution before mutation.
+Incident={input_data.incident_id}\nVM/Service={input_data.service_name}\nSummary={input_data.evidence_summary}\nEvidence={json.dumps(evidence, default=str)}\nContextSummary={json.dumps(input_data.context.get('summary', {}), default=str)}"""
         try:
-            response = await self.llm.generate(prompt, temperature=0.3)
-            try:
-                result = json.loads(response.content)
-                vm_status = result.get("vm_status", "Unknown")
-                cpu_load = result.get("cpu_load", {})
-                memory_usage = result.get("memory_usage_percent", 0.0)
-                disk_usage = result.get("disk_usage_percent", 0.0)
-                network = result.get("network", "Unknown")
-                processes = result.get("critical_processes", {})
-                log_issues = result.get("system_log_issues", [])
-                confidence = result.get("confidence", 0.5)
-                actions = result.get("immediate_actions", ["Check VM via SSH"])
-            except json.JSONDecodeError:
-                vm_status = "Unknown"
-                cpu_load = {}
-                memory_usage = 0.0
-                disk_usage = 0.0
-                network = "Unknown"
-                processes = {}
-                log_issues = []
-                confidence = 0.5
-                actions = ["Check VM via SSH"]
-            
-            # خلاصه‌سازی وضعیت
-            running_processes = [f"{k}: {v}" for k, v in processes.items()]
-            statement = (
-                f"VM analysis: Status: {vm_status}. "
-                f"CPU: {cpu_load.get('usage_percent', 'N/A')}% "
-                f"(Load: {cpu_load.get('load_avg', 'N/A')}). "
-                f"Memory: {memory_usage}%. "
-                f"Disk: {disk_usage}%. "
-                f"Network: {network}. "
-                f"Processes: {', '.join(running_processes) if running_processes else 'N/A'}. "
-                f"Log issues: {len(log_issues)} found."
-            )
-            
-            return AgentOutput(
-                agent_name=self.name,
-                finding_type="vm_analysis",
-                statement=statement[:300],
-                confidence=float(confidence),
-                evidence_ids=[],
-                recommendations=actions,
-                requires_approval=(vm_status.lower() in ["stopped", "unreachable"])
-            )
-            
-        except Exception as e:
-            logger.error(f"VMAgent failed: {str(e)}")
-            return AgentOutput(
-                agent_name=self.name,
-                finding_type="vm_error",
-                statement=f"VM analysis failed: {str(e)}. Manual SSH check required.",
-                confidence=0.0,
-                evidence_ids=[],
-                recommendations=["Escalate to infrastructure team for manual VM check"],
-                requires_approval=True
-            )
+            result = json.loads((await self.llm.generate(prompt, temperature=settings.AGENT_LLM_TEMPERATURE)).content)
+        except Exception as exc:
+            logger.error(f"VMAgent analysis failed: {exc}")
+            result = {"severity": "unknown", "health_status": "unknown", "reachability": "unknown", "affected_components": [], "blast_radius": "unknown", "hypotheses": [], "handoff_agents": ["infrastructure"], "immediate_checks": ["Collect VM telemetry and system logs"], "remediation_candidates": [], "confidence": 0.0}
+            missing = sorted(set(missing + ["successful structured VM analysis"]))
+
+        confidence = self.safe_confidence(result.get("confidence"), len(evidence))
+        immediate = self.normalize_list(result.get("immediate_checks"), settings.AGENT_MAX_RECOMMENDATIONS)
+        remediation = self.normalize_list(result.get("remediation_candidates"), settings.AGENT_MAX_RECOMMENDATIONS)
+        hypotheses = []
+        for item in result.get("hypotheses", [])[: settings.AGENT_MAX_HYPOTHESES]:
+            if isinstance(item, dict) and item.get("hypothesis"):
+                hypotheses.append(OperationalHypothesis(
+                    hypothesis=str(item["hypothesis"]),
+                    probability=self.safe_confidence(item.get("probability", 0), len(evidence)),
+                    evidence_ids=[str(x) for x in item.get("evidence_ids", []) if str(x) in evidence_ids],
+                    falsification_checks=self.normalize_list(item.get("falsification_checks"), 4),
+                ))
+        severity = str(result.get("severity", "unknown")).lower()
+        reachability = str(result.get("reachability", "unknown")).lower()
+        write_risk = "high" if reachability in {"unreachable", "stopped"} or severity in {"critical", "high"} else "medium"
+        recommended_actions = self.analysis_only_actions(immediate, suggested_tool="vm_telemetry")
+        recommended_actions.extend([
+            RecommendedAction(action=action, purpose="remediation_candidate", risk_level=write_risk, requires_approval=True, read_only=False, suggested_tool="ssh_vm")
+            for action in remediation
+        ])
+        confirmed = []
+        for key in ("cpu_signals", "memory_signals", "disk_signals", "network_signals", "service_signals", "log_signals"):
+            confirmed.extend(self.normalize_list(result.get(key), 2))
+        statement = "VM evidence indicates " + ("; ".join(confirmed[:6]) if confirmed else "no confirmed guest-OS fault yet")
+        all_missing = sorted(set(missing + self.normalize_list(result.get("missing_evidence"), 6)))
+        return AgentOutput(
+            agent_name=self.name,
+            finding_type="vm_analysis",
+            statement=statement[:600],
+            severity=severity,
+            health_status=str(result.get("health_status", "unknown")).lower(),
+            confidence=confidence,
+            evidence_ids=evidence_ids,
+            evidence_count=len(evidence),
+            recommendations=immediate + remediation,
+            recommended_actions=recommended_actions,
+            hypotheses=hypotheses,
+            missing_evidence=all_missing,
+            handoff_agents=self.normalize_list(result.get("handoff_agents"), 4),
+            affected_components=self.normalize_list(result.get("affected_components"), 8),
+            blast_radius=str(result.get("blast_radius", "unknown")),
+            requires_approval=bool(remediation),
+            requires_human_review=self.human_review_required(confidence, all_missing, severe=severity in {"critical", "high"}),
+            analysis_details={
+                "reachability": reachability,
+                "cpu_signals": result.get("cpu_signals", []),
+                "memory_signals": result.get("memory_signals", []),
+                "disk_signals": result.get("disk_signals", []),
+                "network_signals": result.get("network_signals", []),
+                "process_signals": result.get("process_signals", []),
+                "service_signals": result.get("service_signals", []),
+                "log_signals": result.get("log_signals", []),
+                "metric_evidence_count": len(metrics),
+                "log_evidence_count": len(logs),
+                "alert_evidence_count": len(alerts),
+            },
+        )
