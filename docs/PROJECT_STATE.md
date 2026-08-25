@@ -1,157 +1,133 @@
-# AI Ops NeoBankingOperation Platform — PROJECT STATE
+# Project State — AI Ops NeoBankingOperation Platform
 
-**این فایل وضعیت واقعی پیاده‌سازی پروژه را ثبت می‌کند.**
+**Authority:** `MASTER.md` remains the Single Source of Truth. This file is an implementation-status companion and must not override architectural decisions in MASTER.
 
-> قانون: طراحی‌شدن یک قابلیت در `MASTER.md` به معنی پیاده‌سازی‌شدن آن نیست. فقط مواردی که واقعاً در Repository ساخته، اجرا و تا حد لازم تست شده‌اند باید در بخش `Implemented` قرار بگیرند.
+**Assessment date:** 2026-08-25
 
----
+## Executive status
 
-## 1. وضعیت کلی
+The repository is **substantially implemented and CI-tested**, but it is **not yet fully production-accepted** for a bank/enterprise environment. Repository-level implementation is ahead of the stale Current Status section in `MASTER.md`; external acceptance remains required for real observability endpoints, controlled remediation targets, enterprise identity, HA/DR, backup/restore, signed offline promotion and sustained load/failure behavior.
 
-| مورد | وضعیت |
-|---|---|
-| Master Version | 2.2 |
-| Current Phase | **COMPLETED — All Phases Done** |
-| Overall Status | **✅ PROJECT COMPLETED — Ready for Production** |
-| Production Ready | Yes (با محدودیت‌های ذکرشده) |
-| Automation Level | L2 — Approval (با قابلیت Auto-Execute برای ریسک پایین) |
-| Current Source of Truth | `MASTER.md` + این فایل + `DECISIONS.md` + `NEXT_TASK.md` |
-| آخرین به‌روزرسانی | 2026-08-23 |
+Current engineering assessment:
 
----
+- Repository implementation maturity: **~90%**
+- Production readiness by code/contract evidence: **~80%**
+- External production acceptance: **not complete**
+- Current practical phase: **Phase 6 hardening with remaining Phase 4/5/7 gaps**, not Phase 0.
 
-## 2. وضعیت فعلی به‌صورت قطعی
+## Implemented and strong
 
-### Implemented (ALL COMPLETED)
+- Python + LangGraph governed workflow.
+- PostgreSQL persistence with pgvector and migration acceptance in CI.
+- Source-agnostic Signal Gateway for Zabbix, Elasticsearch, Prometheus and canonical operational signals.
+- Exact source-event retry idempotency (`source + source_id`).
+- Cross-source Evidence Collector with explicit `queried`, `unavailable`, `error` and `skipped` source observations.
+- Deterministic Asset Identity/Context from Zabbix metadata, Prometheus labels, Elastic ECS/Kubernetes metadata and VM telemetry.
+- LLM adapter boundary; production startup rejects mock LLM.
+- Triage plus specialist agents: application, infrastructure, kubernetes, security, vm, database, network, storage, identity, change, dependency, messaging and recovery.
+- Structured multi-agent coordination, bounded handoff, evidence-request rounds and peer operational context. Peer findings remain auxiliary analysis, never live Evidence.
+- RCA and mandatory Evaluator gate.
+- Deterministic Decision/Policy with concrete execution-request + registered-tool risk binding.
+- PostgreSQL-backed approval lifecycle and action/tool/target binding.
+- Execution Service with allowlisted tools; agents remain analysis-only.
+- Governed Linux VM SSH remediation and read-only VM telemetry.
+- Fresh pre-execution Evidence capture and independent before/after Verification.
+- Verification uses metric-aware direction semantics; unknown metrics cannot prove recovery.
+- Knowledge RAG and Operational Memory remain separate and use PostgreSQL + pgvector.
+- Memory write-back requires conclusive outcome and does not replace current Evidence.
+- OIDC JWT validation + RBAC/internal API-key fallback.
+- Audit persistence and durable application-level workflow checkpoints.
+- CI includes full unit/integration/scenario/security suite and PostgreSQL/pgvector migration acceptance.
+- Offline container definition is fail-closed for missing dependencies and runs non-root.
+- Kubernetes deployment includes rolling-update safety, PDB, resource limits, topology spreading and hardened pod/container security context.
 
-- [x] **Repository & Python skeleton**
-- [x] **FastAPI API layer & configuration**
-- [x] **Structured logging with trace_id**
-- [x] **Database connection abstraction & models (SQLAlchemy)**
-- [x] **Alembic setup & all migrations**
-- [x] **LLM Adapter (Mock provider with JSON support & Retry)**
-- [x] **Agent Contracts & implementation (Triage, Application, Infrastructure)**
-- [x] **Kubernetes Agent** — پیاده‌سازی و تست شده
-- [x] **Security Agent** — پیاده‌سازی و تست شده
-- [x] **VM Agent (Guest OS)** — پیاده‌سازی و تست شده
-- [x] **Tool Registry (Singleton)**
-- [x] **Integrations (Zabbix, Elasticsearch, Prometheus) — MCP Client**
-- [x] **MCP Client Infrastructure**
-- [x] **MCP Clients (Zabbix, Elasticsearch, Prometheus)**
-- [x] **A2A Agent Infrastructure**
-- [x] **A2A Agents (Triage, Application, Infrastructure)**
-- [x] **A2A Gateway**
-- [x] **Alert Gateway (normalize, dedup)**
-- [x] **Context Builder** — با MCP Clientها
-- [x] **LangGraph Orchestrator** — با ۵ Agent موازی
-- [x] **Incident API endpoints (`/simulate`, `/analyze`)**
-- [x] **Decision Engine (Risk assessment, Approval logic)**
-- [x] **Verification Engine (before/after comparison)**
-- [x] **Error Handling (custom exceptions & handlers)**
-- [x] **Rate Limiting (in-memory)**
-- [x] **Retry & Timeout (decorator for async functions)**
-- [x] **Health Check (full component status)**
-- [x] **Trace ID (context-based logging)**
-- [x] **Configuration Validation (startup validation)**
-- [x] **PostgreSQL + pgvector** — نصب و راه‌اندازی کامل
-- [x] **Knowledge RAG Service** — با pgvector و جستجوی معنایی
-- [x] **Operational Memory Service** — با pgvector و جستجوی شباهت
-- [x] **End-to-end test successful** — همه بخش‌ها (RAG, Memory, ۵ Agent) تست شدند
-- [ ] **Docker runtime** — (اختیاری، در صورت نیاز)
-- [ ] **CI/CD pipeline** — (اختیاری، در صورت نیاز)
+## Partial / not production-accepted
 
----
+### Observability and context
 
-## 3. Database State
+Repository contracts and tests exist for Zabbix, Elasticsearch and Prometheus, but real customer endpoints and metadata conventions still require controlled acceptance. Prometheus now queries common `service`, `service_name` and `app` label conventions, but organization-specific metric naming/service catalog rules remain external configuration concerns.
 
-| مورد | وضعیت |
-|---|---|
-| **Target DB** | PostgreSQL |
-| **Vector layer** | pgvector |
-| **Connection abstraction** | ✅ Implemented |
-| **SQLAlchemy models** | ✅ Implemented |
-| **Alembic configuration** | ✅ Ready |
-| **Migration files** | ✅ All migrations created and applied |
-| **Migration applied** | ✅ Successfully applied |
-| **pgvector readiness check** | ✅ Verified and working |
+### Multi-source incident correlation
 
----
+Exact webhook retries are idempotent. Different source events can carry a supplied `correlation_key`, but automatic cross-source merge policy is not yet production-complete. The platform deliberately does not let an LLM guess that independent Zabbix/Elastic/Prometheus events belong to one Incident because false merges can be operationally dangerous. A deterministic bounded correlation policy/CMDB identity source is still required.
 
-## 4. AI / Agent State
+### MCP
 
-| مورد | وضعیت |
-|---|---|
-| **AI Core** | Python + LangGraph / A2A |
-| **LangGraph Workflow** | ✅ Fully implemented and tested |
-| **LLM access** | ✅ Adapter implemented (Mock + Retry) |
-| **TriageAgent** | ✅ Implemented and tested |
-| **ApplicationAgent** | ✅ Implemented and tested |
-| **InfrastructureAgent** | ✅ Implemented and tested |
-| **KubernetesAgent** | ✅ Implemented and tested |
-| **SecurityAgent** | ✅ Implemented and tested |
-| **VMAgent** | ✅ Implemented and tested |
-| **Routing** | ✅ Conditional routing working |
-| **Parallel execution** | ✅ Working with `asyncio.gather` |
-| **Synthesis** | ✅ Working |
+Legacy MCP client files exist but are **not the canonical active production integration path**. They use an older HTTP JSON-RPC pattern and currently lack the full authentication/mTLS/capability-governance contract expected for production. Active Evidence collection uses the native governed connector layer. MCP must either be formally hardened/standardized or explicitly deprecated before it can be represented as production-ready.
 
----
+### Execution coverage
 
-## 5. RAG & Memory State
+Linux VM SSH is the strongest real execution adapter. Native Windows controlled execution/telemetry, mature Kubernetes write adapters, Ansible/Jenkins integration and VMware integration are incomplete or externally unvalidated. No arbitrary shell/PowerShell should be introduced as a shortcut.
 
-| مورد | وضعیت |
-|---|---|
-| **Knowledge RAG Service** | ✅ Implemented and tested |
-| **Embedding Service** | ✅ Implemented (Mock with numpy) |
-| **RAG Test** | ✅ SUCCESS (3 documents retrieved with >74% similarity) |
-| **Operational Memory Service** | ✅ Implemented and tested |
-| **Memory Test** | ✅ SUCCESS (similar_incidents populated) |
+### Verification
 
----
+The Verification Engine now distinguishes lower-is-better and higher-is-better metrics and refreshes the baseline immediately before execution. Action-specific SLO/verification objectives are still needed for stronger production assurance; generic metric comparison alone is not sufficient for every runbook.
 
-## 6. Testing State
+### HA / scale
 
-| نوع تست | وضعیت |
-|---|---|
-| Unit tests (health, LLM, Agents) | ✅ **PASSED** |
-| End-to-end test (`/analyze`) | ✅ **SUCCESS** (full loop with all agents) |
-| RAG search test | ✅ **SUCCESS** |
-| Memory search test | ✅ **SUCCESS** |
-| Rate limiting test | ✅ **PASSED** |
-| Retry mechanism test | ✅ **PASSED** |
-| Health Check test | ✅ **PASSED** |
+Two API replicas plus a PDB are not equivalent to proven HA. PostgreSQL HA, distributed worker/queue semantics, distributed rate limiting, backup/restore, disaster recovery, load testing, chaos/failure acceptance and capacity sizing remain incomplete. The current in-process API rate limiter is not a multi-replica distributed control.
 
----
+### Identity / service-to-service security
 
-## 7. Known Limitations
+OIDC/RBAC is implemented at repository level but real enterprise issuer/JWKS/role mapping needs acceptance. Optional A2A transport has allowlisted origins and HTTPS controls, but cryptographic workload identity/mTLS and rotation are not complete.
 
-1. **MCP Clientها با Mock تست شده‌اند** — اتصال واقعی به MCP Serverها انجام نشده.
-2. **A2A Agentها به‌صورت In-Process اجرا می‌شوند** — برای Production باید به‌صورت سرویس جداگانه اجرا شوند.
-3. **Rate Limiting در حافظه است** — برای Production نیاز به Redis دارد.
-4. **Docker/Containerization** — اختیاری و در صورت نیاز.
+### Supply chain / offline production
 
----
+Offline build now fails closed and runs non-root. Real internal wheelhouse/base-image mirroring, immutable signed image digest promotion and organization registry verification remain external acceptance items.
 
-## 8. Last Verified Change
+### Repository governance
 
-| مورد | مقدار |
-|---|---|
-| **Date** | 2026-08-23 |
-| **Change** | تکمیل فاز ۷: اضافه شدن Kubernetes, Security, VM Agents و تست موفق End-to-End |
-| **Tests** | ✅ All tests passed |
-| **Build** | ✅ `uvicorn` اجرا می‌شود، همه endpointها پاسخ می‌دهند |
+`main` is currently unprotected. Required status checks/review policy should be enforced through GitHub branch/ruleset governance. This is a process/control gap rather than an application-code bug.
 
----
+## Phase assessment against MASTER
 
-## ✅ خلاصه وضعیت نهایی
+| Phase | Assessment | Notes |
+|---|---:|---|
+| Phase 0 — Foundation & Contracts | 96% | Core contracts, migrations, LLM adapter, tools, Docker and CI exist. Production supply-chain acceptance remains. |
+| Phase 1 — Observability & Context | 90% | Connectors, Signal Gateway, Incident/Context and cross-source evidence exist; real endpoint acceptance + deterministic cross-source correlation remain. |
+| Phase 2 — LangGraph Intelligence | 95% | Triage, specialist routing, structured outputs, peer context, RCA/Evaluator and bounded evidence refresh implemented. |
+| Phase 3 — RAG & Operational Memory | 90% | PostgreSQL+pgvector, governance and separation implemented; corpus/relevance/false-reuse acceptance remains. |
+| Phase 4 — Controlled Automation | 84% | Policy/approval/execution/runbook governance strong; adapter breadth, rollback acceptance and real target execution remain. |
+| Phase 5 — Verification & Learning | 88% | Fresh baseline, metric-aware verify and governed memory exist; per-action verification objectives and real recovery acceptance remain. |
+| Phase 6 — Production Hardening | 78% | OIDC/RBAC, CI, pod hardening and offline contracts exist; HA/DR/backup/distributed limits/workload identity/real acceptance remain. |
+| Phase 7 — Scale & Advanced Agents | 76% | Broad agent set exists, but Jenkins/GitLab/VMware/advanced platform integration and scale proof remain incomplete. |
 
-**✅ PROJECT COMPLETED — All Phases Done**
+## Known architectural rules
 
-**Next Step (اختیاری):**
-- اتصال به MCP Serverهای واقعی
-- Dockerize کردن پروژه
-- اضافه کردن Dashboard
-- پیاده‌سازی Audit Service
+1. Live production Evidence is authoritative.
+2. RAG and Operational Memory are auxiliary and separate.
+3. Agent/LLM output cannot authorize a write.
+4. Asset identity and source-event idempotency are deterministic, not LLM guesses.
+5. Write actions go only through Decision/Policy → Approval where required → Execution Service → independent Verification.
+6. Peer Agent findings are analysis context, not Evidence.
+7. No connector failure may be replaced with synthetic production Evidence.
+8. A successful tool call is not a successful Incident resolution until Verification succeeds.
 
----
+## Next engineering priorities
 
-**آخرین به‌روزرسانی:** 2026-08-23 — پروژه کامل و آماده.
+1. Real controlled Zabbix/Elasticsearch/Prometheus acceptance and metadata mapping.
+2. Deterministic cross-source Incident correlation using service/asset/CMDB identity and bounded windows.
+3. Windows Edge/WinRM constrained telemetry/execution without arbitrary PowerShell.
+4. Kubernetes/Ansible/Jenkins governed execution adapters and rollback acceptance.
+5. Action-specific verification objectives/SLO contracts.
+6. Distributed rate limiting and multi-instance worker/concurrency model.
+7. PostgreSQL HA + tested backup/restore/DR.
+8. Enterprise OIDC + service/workload identity/mTLS acceptance.
+9. Formal MCP decision: harden to a governed capability transport or retire legacy clients.
+10. Signed immutable offline artifact promotion and branch/ruleset protection.
+
+## External acceptance required before strict Production Ready verdict
+
+- Real observability endpoints and representative incident corpus.
+- Real LLM endpoint/model performance and failure behavior in restricted network.
+- Real remediation targets with least-privilege accounts and rollback drills.
+- Before → action → after recovery evidence on reference scenarios.
+- Enterprise OIDC/role mapping and internal service identity.
+- PostgreSQL HA, backup/restore and disaster-recovery exercise.
+- Load/soak/failure/chaos tests at expected incident concurrency.
+- Internal registry signing/verification/promotion with immutable digest.
+- Security review/red-team of prompt injection, tool abuse, identity and supply chain.
+
+## Verdict
+
+The project should be described as **advanced repository implementation with strong safety boundaries and green CI when verified on the latest HEAD**, not as “all phases complete” or “fully Production Ready”. Strict production acceptance remains gated by the external and distributed-systems checks above.
