@@ -7,8 +7,10 @@ from uuid import uuid4
 from pydantic import BaseModel, Field, field_validator
 
 from apps.context_service.asset_identity import AssetIdentityResolver
+from apps.incident_service.repository import IncidentRepository
 from apps.orchestrator.runtime import DurableWorkflowRuntime
 from apps.orchestrator.signal_aware import SignalAwareE2EOrchestrator
+from apps.orchestrator.workflow_store import WorkflowCheckpointStore
 
 
 SignalSource = Literal["zabbix", "elasticsearch", "prometheus", "kubernetes", "security", "manual"]
@@ -77,6 +79,10 @@ class SignalGateway:
     immutable seed Evidence, then the normal E2E workflow actively queries other
     configured evidence sources for corroboration. No LLM is used for signal
     normalization, asset identity, authentication, policy, approval or execution.
+
+    Exact ``source + source_id`` retries are idempotent. Cross-source incident
+    correlation remains a separate deterministic policy concern and is not
+    guessed from free text or by an LLM.
     """
 
     @staticmethod
@@ -84,8 +90,25 @@ class SignalGateway:
         trigger_evidence = signal.to_evidence()
         asset = AssetIdentityResolver.resolve([trigger_evidence], signal.service)
         resolved_service = str(asset.get("service") or signal.service or "unknown")
-        incident_id = str(uuid4())
         correlation_key = signal.correlation_key or f"{resolved_service}:{signal.source}:{signal.source_id}"
+
+        incidents = IncidentRepository(session)
+        existing_incident_id = await incidents.find_incident_by_evidence_reference(
+            source=signal.source,
+            reference=signal.source_id,
+        )
+        if existing_incident_id:
+            checkpoint = await WorkflowCheckpointStore(session).load(existing_incident_id)
+            existing_state = dict((checkpoint or {}).get("state") or {})
+            existing_state["incident_id"] = existing_incident_id
+            existing_state["trigger_source"] = signal.source
+            existing_state["trigger_signal_type"] = signal.signal_type
+            existing_state["correlation_key"] = correlation_key
+            existing_state["deduplicated"] = True
+            existing_state["deduplication_reason"] = "same_source_event_reference"
+            return existing_state
+
+        incident_id = str(uuid4())
         incident_context = {
             "source": signal.source,
             "severity": signal.severity,
@@ -117,6 +140,7 @@ class SignalGateway:
         result["trigger_source"] = signal.source
         result["trigger_signal_type"] = signal.signal_type
         result["correlation_key"] = correlation_key
+        result["deduplicated"] = False
         return result
 
 
@@ -134,6 +158,7 @@ def signal_from_elasticsearch(payload: Dict[str, Any]) -> OperationalSignal:
         severity=str(source.get("severity") or rule.get("severity") or "unknown"),
         summary=str(source.get("message") or rule.get("name") or "Elasticsearch anomaly detected"),
         service=str(service) if service else None,
+        correlation_key=source.get("correlation_key") or event.get("correlation_key"),
         raw_data=source,
     )
 
@@ -148,6 +173,7 @@ def signal_from_prometheus(payload: Dict[str, Any]) -> OperationalSignal:
         severity=str(labels.get("severity") or "unknown"),
         summary=str(annotations.get("summary") or annotations.get("description") or labels.get("alertname") or "Prometheus alert"),
         service=labels.get("service") or labels.get("service_name") or labels.get("app"),
+        correlation_key=labels.get("correlation_key") or labels.get("incident_key"),
         raw_data={"labels": labels, "annotations": annotations, **{k: v for k, v in payload.items() if k not in {"labels", "annotations"}}},
     )
 
@@ -165,5 +191,6 @@ def signal_from_zabbix(payload: Dict[str, Any]) -> OperationalSignal:
         severity=str(payload.get("severity") or "unknown"),
         summary=str(payload.get("name") or payload.get("message") or "Zabbix problem detected"),
         service=str(service) if service else None,
+        correlation_key=payload.get("correlation_key") or payload.get("incident_key"),
         raw_data=raw,
     )
