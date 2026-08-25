@@ -11,12 +11,7 @@ from apps.approval_service.postgres import PostgreSQLApprovalStore
 
 
 class DurableWorkflowRuntime:
-    """Application runtime around the LangGraph workflow.
-
-    Incident state, findings, evidence, workflow checkpoints and primary-path
-    audit events are persisted through PostgreSQL-backed stores. Approval
-    resume reads the durable approval record rather than process memory.
-    """
+    """PostgreSQL-backed runtime around the governed LangGraph workflow."""
 
     def __init__(self, session):
         self.session = session
@@ -45,39 +40,72 @@ class DurableWorkflowRuntime:
         await self.incidents.add_evidence(incident_id, result.get("live_evidence", {}).get("evidence", []))
 
         approval = result.get("approval") or {}
+        execution_request = dict(result.get("execution_request") or {})
         if approval.get("approval_id"):
-            # The graph creates the approval request at the policy boundary;
-            # the durable runtime is responsible for persisting it before the
-            # workflow is paused so another process can approve and resume it.
+            metadata = dict(approval.get("metadata") or {})
+            if execution_request.get("target"):
+                metadata["target"] = str(execution_request["target"])
+            if execution_request.get("tool_name"):
+                metadata["tool_name"] = str(execution_request["tool_name"])
+            metadata["binding_complete"] = bool(metadata.get("target") and metadata.get("tool_name"))
+            approval["metadata"] = metadata
+            result["approval"] = approval
             await self.approvals.save(approval)
 
-        status = "completed" if result.get("current_node") == "end" and not approval else "paused"
+        status = "paused" if approval else "completed"
+        if result.get("terminal_reason") and not approval:
+            status = "failed" if "failed" in str(result["terminal_reason"]).lower() else "completed"
         await self.checkpoints.save(incident_id, result, status=status)
         await self._flush_audit(incident_id)
         await self.incidents.commit()
         return result
 
+    @staticmethod
+    def _assert_binding(approval: Dict[str, Any], execution_request: Dict[str, Any]) -> None:
+        metadata = approval.get("metadata") or {}
+        if not metadata.get("binding_complete"):
+            raise ValueError("approval_binding_incomplete")
+        if str(approval.get("action")) != str(execution_request.get("action")):
+            raise ValueError("approval_action_mismatch")
+        if str(metadata.get("target")) != str(execution_request.get("target")):
+            raise ValueError("approval_target_mismatch")
+        if str(metadata.get("tool_name")) != str(execution_request.get("tool_name")):
+            raise ValueError("approval_tool_mismatch")
+
     async def resume_after_approval(self, incident_id: str) -> Dict[str, Any]:
         checkpoint = await self.checkpoints.load(incident_id)
         if not checkpoint:
             raise ValueError("workflow_checkpoint_not_found")
-        approval = checkpoint["state"].get("approval") or {}
+        if checkpoint.get("status") == "completed":
+            raise ValueError("workflow_already_completed")
+
+        state = checkpoint["state"]
+        approval = state.get("approval") or {}
         approval_id = approval.get("approval_id")
         if not approval_id:
             raise ValueError("approval_not_found_in_checkpoint")
-        durable = await self.approvals.get(approval_id)
+        durable = await self.approvals.get(str(approval_id))
         if not durable or durable.get("status") != "approved":
             raise ValueError("approval_not_granted")
 
-        state = checkpoint["state"]
-        state["approval"] = durable
         execution_request = dict(state.get("execution_request") or {})
         if not execution_request:
             raise ValueError("execution_request_not_found_in_checkpoint")
+        self._assert_binding(durable, execution_request)
 
-        # Bind the persisted approval to this exact resumed execution. This is
-        # required by ExecutionService and prevents an approved workflow from
-        # being blocked again at the tool registry boundary.
+        consumed = await self.approvals.consume(str(approval_id))
+        if not consumed or consumed.get("status") != "consumed":
+            raise ValueError("approval_already_consumed")
+        AuditService.record(
+            "approval_consumed",
+            "durable_runtime",
+            incident_id,
+            execution_request.get("action"),
+            "recorded",
+            {"approval_id": str(approval_id), "tool_name": execution_request.get("tool_name"), "target": execution_request.get("target")},
+        )
+
+        state["approval"] = consumed
         execution_request["approval_granted"] = True
         execution_request["approval_id"] = str(approval_id)
         state["execution_request"] = execution_request
@@ -85,10 +113,26 @@ class DurableWorkflowRuntime:
 
         orchestrator = E2EOrchestrator(db=self.session)
         result = await orchestrator._execution_node(state)
+        execution_result = result.get("execution_result") or {}
+        if not execution_result.get("success"):
+            result["terminal_reason"] = execution_result.get("reason") or "execution_failed"
+            await self.checkpoints.mark_failed(incident_id, result)
+            await self._flush_audit(incident_id)
+            await self.incidents.commit()
+            return result
+
         result = await orchestrator._verification_node(result)
+        verification = result.get("verification_result") or {}
+        verification_status = str(verification.get("status") or "inconclusive").lower()
+        if verification_status != "success":
+            result["terminal_reason"] = f"verification_{verification_status}"
+
         result = await orchestrator._memory_node(result)
         result = await orchestrator._end_node(result)
-        await self.checkpoints.mark_completed(incident_id, result)
+        if verification_status == "success":
+            await self.checkpoints.mark_completed(incident_id, result)
+        else:
+            await self.checkpoints.mark_failed(incident_id, result)
         await self.incidents.add_findings(incident_id, result.get("findings", []))
         await self._flush_audit(incident_id)
         await self.incidents.commit()
