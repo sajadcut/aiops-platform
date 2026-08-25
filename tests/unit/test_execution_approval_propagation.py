@@ -1,21 +1,24 @@
 import pytest
 
 from apps.execution_service import ExecutionRequest, ExecutionService
-from apps.execution_service.tools.base import BaseTool, ToolInput, ToolResult
+from apps.execution_service.tools.base import BaseTool, ToolInput, ToolOutput
 from apps.execution_service.tools.registry import tool_registry
 
 
 class ApprovalRequiredTool(BaseTool):
-    name = "approval_required_test"
-    description = "Test-only approval-required execution tool"
-    risk_level = "high"
-    requires_approval = True
+    @property
+    def name(self) -> str:
+        return "approval_required_test"
+
+    @property
+    def risk_level(self) -> str:
+        return "high"
 
     async def validate(self, input_data: ToolInput) -> bool:
         return input_data.action == "restart_service" and bool(input_data.target)
 
-    async def execute(self, input_data: ToolInput) -> ToolResult:
-        return ToolResult(success=True, result={"executed": True})
+    async def execute(self, input_data: ToolInput) -> ToolOutput:
+        return ToolOutput(success=True, result={"executed": True})
 
 
 @pytest.mark.asyncio
