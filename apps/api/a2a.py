@@ -1,18 +1,40 @@
-from fastapi import APIRouter, Request
-from agents.shared.triage_a2a_agent import TriageA2AAgent
-from agents.shared.application_a2a_agent import ApplicationA2AAgent
-from agents.shared.infrastructure_a2a_agent import InfrastructureA2AAgent
+from fastapi import APIRouter, Depends, HTTPException
 
-router = APIRouter()
-agents = {
-    "triage": TriageA2AAgent(),
-    "application": ApplicationA2AAgent(),
-    "infrastructure": InfrastructureA2AAgent()
-}
+from agents.shared.base import AgentInput
+from agents.shared.registry import AgentRegistry
+from agents.triage import TriageAgent
+from apps.security.auth import require_permission
+from integrations.llm.openai_compatible import configured_llm_adapter
+
+router = APIRouter(dependencies=[Depends(require_permission("read:incident"))])
+
 
 @router.post("/a2a/{agent_name}")
-async def a2a_request(agent_name: str, request: Request):
-    if agent_name not in agents:
-        return {"success": False, "error": "Agent not found"}
-    data = await request.json()
-    return await agents[agent_name].handle_request(data)
+async def a2a_request(agent_name: str, request: dict):
+    """Governed in-process A2A analysis endpoint.
+
+    A2A is analysis-only and cannot bypass Evaluator/Decision/Approval/Execution.
+    """
+    if request.get("method") != "analyze":
+        raise HTTPException(status_code=400, detail="unsupported_a2a_method")
+    params = request.get("params") or {}
+    try:
+        input_data = AgentInput(**params)
+    except Exception as exc:
+        raise HTTPException(status_code=422, detail="invalid_agent_input") from exc
+
+    llm = configured_llm_adapter()
+    if agent_name == "triage":
+        agent = TriageAgent(llm)
+    else:
+        agent = AgentRegistry(llm).get(agent_name)
+    if agent is None:
+        raise HTTPException(status_code=404, detail="agent_not_enabled")
+
+    result = await agent.analyze(input_data)
+    return {
+        "success": True,
+        "agent": agent_name,
+        "result": result.model_dump(mode="json"),
+        "execution_boundary": "analysis_only",
+    }
