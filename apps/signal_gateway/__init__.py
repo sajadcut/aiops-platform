@@ -153,12 +153,17 @@ def signal_from_prometheus(payload: Dict[str, Any]) -> OperationalSignal:
 
 
 def signal_from_zabbix(payload: Dict[str, Any]) -> OperationalSignal:
+    raw = dict(payload)
+    host_value = payload.get("host") or payload.get("hostname")
+    if host_value and not isinstance(host_value, dict):
+        raw["host"] = {"host": str(host_value), "name": str(host_value)}
+    service = payload.get("service") or host_value
     return OperationalSignal(
         source="zabbix",
         source_id=str(payload.get("eventid") or payload.get("event_id") or payload.get("id") or uuid4()),
         signal_type=str(payload.get("trigger") or payload.get("name") or "zabbix_problem"),
         severity=str(payload.get("severity") or "unknown"),
         summary=str(payload.get("name") or payload.get("message") or "Zabbix problem detected"),
-        service=payload.get("service") or payload.get("host") or payload.get("hostname"),
-        raw_data=payload,
+        service=str(service) if service else None,
+        raw_data=raw,
     )
