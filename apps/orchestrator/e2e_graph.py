@@ -116,8 +116,10 @@ class E2EOrchestrator:
 
     async def run(self, state: E2EState) -> E2EState:
         """Execute the compiled graph and return its final state."""
-        result = await self.graph.ainvoke(state)
-        return cast(E2EState, result)
+        result = cast(E2EState, await self.graph.ainvoke(state))
+        if not result.get("terminal_reason") and not result.get("execution_result"):
+            result["terminal_reason"] = "workflow_completed_without_execution"
+        return result
 
     @staticmethod
     def _audit(event_type: str, state: E2EState, **metadata: Any) -> None:
@@ -377,6 +379,8 @@ class E2EOrchestrator:
 
     async def _end_node(self, state: E2EState) -> E2EState:
         state["current_node"] = "end"
+        if not state.get("terminal_reason") and not state.get("execution_result"):
+            state["terminal_reason"] = "workflow_completed_without_execution"
         return state
 
     @staticmethod
