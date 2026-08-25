@@ -9,7 +9,6 @@ from domain.contracts.exceptions import register_exception_handlers
 from domain.contracts.rate_limit import rate_limiter_strict
 
 from apps.api import health, workflow, incidents, a2a, execution, e2e_workflow, audit, runbooks, incident_resources, dashboard, runbook_execution, dashboard_incidents, remediation
-from agents.triage import TriageAgent
 from apps.execution_service.tools.registry import tool_registry
 from apps.execution_service.tools.mock_executor import MockExecutorTool
 from apps.execution_service.tools.ssh_vm import SSHVMTool
@@ -102,8 +101,6 @@ def _validate_production_configuration() -> None:
 async def startup_event():
     logger.info(f"Starting {settings.APP_NAME} v{settings.APP_VERSION}")
     _validate_production_configuration()
-    triage_agent = TriageAgent()
-    logger.info(f"Agent registered: {triage_agent.name} - {triage_agent.description}")
 
     if settings.APP_ENV != "production" and tool_registry.get_tool("mock_executor") is None:
         tool_registry.register(MockExecutorTool())
