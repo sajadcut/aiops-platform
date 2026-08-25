@@ -21,7 +21,7 @@ class TriageAgent(BaseAgent):
 
     @property
     def allowed_tools(self) -> List[str]:
-        return ["zabbix_read", "elasticsearch_logs", "prometheus_query", "vm_telemetry", "knowledge_search"]
+        return ["zabbix_read", "elasticsearch_logs", "prometheus_query", "kubectl_get", "vm_telemetry", "knowledge_search"]
 
     async def analyze(self, input_data: AgentInput) -> AgentOutput:
         logger.info(f"TriageAgent analyzing: {input_data.incident_id}")
@@ -36,12 +36,16 @@ class TriageAgent(BaseAgent):
             type_counts[kind] = type_counts.get(kind, 0) + 1
             source_counts[source] = source_counts.get(source, 0) + 1
 
-        domains = ["application","infrastructure","kubernetes","security","vm","database","network","storage","identity","change","unknown"]
+        domains = [
+            "application", "infrastructure", "kubernetes", "security", "vm",
+            "database", "network", "storage", "identity", "change",
+            "dependency", "messaging", "recovery", "unknown",
+        ]
         prompt = f"""You are the incident triage coordinator for a production AIOps platform. LIVE EVIDENCE is authoritative. RAG/Memory are auxiliary only. Your job is classification/routing, never remediation.
 Classify primary_domain from {domains}. Return secondary_domains for cross-layer incidents.
 Return JSON keys: primary_domain, secondary_domains, severity, health_status, urgency_reason, findings, affected_components, probable_dependencies, blast_radius, hypotheses, missing_evidence, specialist_routes, immediate_checks, escalation_target, risk_level, uncertainty_reason, confidence.
 Hypotheses: hypothesis, probability, evidence_ids, conflicting_evidence_ids, falsification_checks, impacted_components, recommended_next_evidence. Only live evidence IDs may be cited.
-Never invent a VM, deployment, compromise, outage, DB failure, packet loss or metric. immediate_checks are read-only evidence collection.
+Never invent a VM, deployment, compromise, outage, DB failure, packet loss, queue backlog, recovery failure or metric. immediate_checks are read-only evidence collection.
 Incident={input_data.incident_id}\nService={input_data.service_name}\nSummary={input_data.evidence_summary}\nLIVE_EVIDENCE={json.dumps(evidence, default=str)}\nAUXILIARY_CONTEXT={json.dumps(auxiliary, default=str)}\nContextSummary={json.dumps(input_data.context.get('summary', {}), default=str)}"""
         try:
             result = await self.generate_structured(prompt)
@@ -56,13 +60,24 @@ Incident={input_data.incident_id}\nService={input_data.service_name}\nSummary={i
                 "risk_level":"low","uncertainty_reason":"structured_analysis_failed","confidence":0.0,
             }
 
-        valid_routes = set(settings.AGENT_ENABLED_AGENTS)
+        valid_routes = {str(name).lower() for name in settings.AGENT_ENABLED_AGENTS}
         primary = str(result.get("primary_domain", "unknown")).lower()
         if primary not in valid_routes and primary != "unknown":
             primary = "unknown"
-        routes = [route for route in self.normalize_list(result.get("specialist_routes"), settings.AGENT_MAX_PARALLELISM) if route in valid_routes]
+        secondary = [
+            domain for domain in self.normalize_list(result.get("secondary_domains"), 6)
+            if domain in valid_routes and domain != primary
+        ]
+        routes = [
+            route for route in self.normalize_list(result.get("specialist_routes"), settings.AGENT_MAX_PARALLELISM)
+            if route in valid_routes
+        ]
         if primary in valid_routes and primary not in routes:
             routes.insert(0, primary)
+        for domain in secondary:
+            if domain not in routes and len(routes) < settings.AGENT_MAX_PARALLELISM:
+                routes.append(domain)
+
         missing = self.normalize_list(result.get("missing_evidence"), 8)
         if len(evidence) < settings.AGENT_MIN_EVIDENCE_ITEMS:
             missing = sorted(set(missing + ["live operational evidence"]))
@@ -111,7 +126,7 @@ Incident={input_data.incident_id}\nService={input_data.service_name}\nSummary={i
             requires_human_review=self.human_review_required(confidence, missing, severe=severity == "critical"),
             analysis_details={
                 "primary_domain": primary,
-                "secondary_domains": [d for d in self.normalize_list(result.get("secondary_domains"), 6) if d in valid_routes],
+                "secondary_domains": secondary,
                 "urgency_reason": result.get("urgency_reason"),
                 "evidence_type_counts": type_counts,
                 "evidence_source_counts": source_counts,
