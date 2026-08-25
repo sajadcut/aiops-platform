@@ -15,6 +15,11 @@ router = APIRouter()
 
 def _approval_record(payload: Dict[str, Any]) -> Dict[str, Any]:
     now = datetime.now(timezone.utc).isoformat()
+    metadata = dict(payload.get("metadata", {}))
+    if payload.get("target") is not None:
+        metadata.setdefault("target", str(payload["target"]))
+    if payload.get("tool_name") is not None:
+        metadata.setdefault("tool_name", str(payload["tool_name"]))
     return {
         "approval_id": str(uuid4()),
         "incident_id": str(payload["incident_id"]),
@@ -22,7 +27,7 @@ def _approval_record(payload: Dict[str, Any]) -> Dict[str, Any]:
         "risk_level": str(payload["risk_level"]),
         "approver": str(payload["approver"]),
         "status": "pending",
-        "metadata": payload.get("metadata", {}),
+        "metadata": metadata,
         "created_at": now,
         "approved_at": None,
         "rejected_at": None,
@@ -68,6 +73,25 @@ async def reject(approval_id: str, _user=Depends(require_permission("approve:low
     return approval
 
 
+def _validate_approval_binding(approval: Dict[str, Any], payload: Dict[str, Any]) -> None:
+    if approval.get("status") != "approved":
+        raise HTTPException(status_code=409, detail="Approval is not approved")
+    incident_id = payload.get("incident_id")
+    if incident_id is None:
+        raise HTTPException(status_code=400, detail="incident_id is required when approval_id is supplied")
+    if str(approval.get("incident_id")) != str(incident_id):
+        raise HTTPException(status_code=409, detail="Approval incident does not match execution request")
+    if str(approval.get("action")) != str(payload.get("action")):
+        raise HTTPException(status_code=409, detail="Approval action does not match execution request")
+    metadata = approval.get("metadata") or {}
+    approved_target = metadata.get("target")
+    if approved_target is not None and str(approved_target) != str(payload.get("target")):
+        raise HTTPException(status_code=409, detail="Approval target does not match execution request")
+    approved_tool = metadata.get("tool_name")
+    if approved_tool is not None and str(approved_tool) != str(payload.get("tool_name")):
+        raise HTTPException(status_code=409, detail="Approval tool does not match execution request")
+
+
 @router.post("/execute")
 async def execute(payload: Dict[str, Any], _user=Depends(require_permission("execute:approved"))):
     required_fields = ["tool_name", "action", "target"]
@@ -82,7 +106,8 @@ async def execute(payload: Dict[str, Any], _user=Depends(require_permission("exe
             approval = await PostgreSQLApprovalStore(db).get(str(approval_id))
         if approval is None:
             raise HTTPException(status_code=404, detail="Approval not found")
-        approval_granted = approval["status"] == "approved"
+        _validate_approval_binding(approval, payload)
+        approval_granted = True
 
     request = ExecutionRequest(
         tool_name=str(payload["tool_name"]),
