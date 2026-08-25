@@ -63,7 +63,7 @@ class DurableWorkflowRuntime:
     @staticmethod
     def _assert_binding(approval: Dict[str, Any], execution_request: Dict[str, Any]) -> None:
         metadata = approval.get("metadata") or {}
-        if not metadata.get("binding_complete"):
+        if not metadata.get("target") or not metadata.get("tool_name"):
             raise ValueError("approval_binding_incomplete")
         if str(approval.get("action")) != str(execution_request.get("action")):
             raise ValueError("approval_action_mismatch")
