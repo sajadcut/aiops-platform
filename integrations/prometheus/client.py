@@ -7,7 +7,12 @@ from domain.contracts.logging import logger
 
 
 class PrometheusClient(BaseConnector):
-    """Prometheus client preserving labels needed for deterministic asset identity."""
+    """Prometheus client preserving labels needed for deterministic asset identity.
+
+    Empty results represent a successful query with no series. Transport/health
+    and Prometheus API failures are propagated so the Evidence layer can record
+    `unavailable`/`error` instead of false negative Evidence.
+    """
 
     SERVICE_LABELS = ("service", "service_name", "app")
 
@@ -53,83 +58,75 @@ class PrometheusClient(BaseConnector):
         if not service:
             return [metric_name]
         escaped = cls._escape_label_value(service)
-        # Prometheus label schemas vary by exporter/organization. Query the
-        # canonical service label first, then common alternatives, and dedupe
-        # returned series by labels/timestamp below.
         return [f'{metric_name}{{{label}="{escaped}"}}' for label in cls.SERVICE_LABELS]
 
+    @staticmethod
+    def _assert_success(payload: Any) -> dict:
+        if not isinstance(payload, dict) or payload.get("status") != "success":
+            raise RuntimeError("prometheus_api_error")
+        return payload
+
     async def get_alerts(self, since: Optional[datetime] = None, service: Optional[str] = None, limit: int = 100) -> List[Alert]:
-        try:
-            if not await self.health_check():
-                return []
-            async with httpx.AsyncClient(timeout=self.timeout) as client:
-                response = await client.get(f"{self._base_url}/api/v1/alerts")
-                if response.status_code != 200:
-                    return []
-                alerts = []
-                for alert in response.json().get("data", {}).get("alerts", [])[:limit]:
-                    labels = alert.get("labels", {}) or {}
-                    resolved_service = labels.get("service") or labels.get("service_name") or labels.get("app") or service
-                    alerts.append(Alert(
-                        source="prometheus",
-                        source_id=str(alert.get("fingerprint", "")),
-                        severity=str(labels.get("severity", "unknown")),
-                        service=resolved_service,
-                        message=str(alert.get("annotations", {}).get("summary", alert.get("message", ""))),
-                        timestamp=self._parse_time(alert.get("activeAt")),
-                        raw_data=alert,
-                    ))
-                return alerts
-        except Exception as exc:
-            logger.error(f"Failed to get Prometheus alerts: {exc}")
-            return []
+        if not await self.health_check():
+            raise RuntimeError("prometheus_unavailable")
+        async with httpx.AsyncClient(timeout=self.timeout) as client:
+            response = await client.get(f"{self._base_url}/api/v1/alerts")
+            response.raise_for_status()
+            payload = self._assert_success(response.json())
+            alerts = []
+            for alert in payload.get("data", {}).get("alerts", [])[:limit]:
+                labels = alert.get("labels", {}) or {}
+                resolved_service = labels.get("service") or labels.get("service_name") or labels.get("app") or service
+                alerts.append(Alert(
+                    source="prometheus",
+                    source_id=str(alert.get("fingerprint", "")),
+                    severity=str(labels.get("severity", "unknown")),
+                    service=resolved_service,
+                    message=str(alert.get("annotations", {}).get("summary", alert.get("message", ""))),
+                    timestamp=self._parse_time(alert.get("activeAt")),
+                    raw_data=alert,
+                ))
+            return alerts
 
     async def get_logs(self, service: str, since: datetime, until: Optional[datetime] = None, level: Optional[str] = None, limit: int = 100) -> List[LogEntry]:
         return []
 
     async def get_metrics(self, service: str, metric_names: List[str], since: datetime, until: Optional[datetime] = None) -> List[MetricPoint]:
-        try:
-            if not await self.health_check():
-                return []
-            start_ts = int(since.timestamp())
-            end_ts = int(until.timestamp()) if until else int(datetime.now(timezone.utc).timestamp())
-            metrics: List[MetricPoint] = []
-            seen: set[tuple[str, tuple[tuple[str, str], ...], float]] = set()
-            async with httpx.AsyncClient(timeout=self.timeout) as client:
-                for metric_name in metric_names:
-                    for query in self._metric_queries(metric_name, service):
-                        response = await client.get(
-                            f"{self._base_url}/api/v1/query_range",
-                            params={"query": query, "start": start_ts, "end": end_ts, "step": "60"},
-                        )
-                        if response.status_code != 200:
-                            continue
-                        body = response.json()
-                        if body.get("status") != "success":
-                            continue
-                        for result in body.get("data", {}).get("result", []):
-                            labels = {str(k): str(v) for k, v in (result.get("metric", {}) or {}).items()}
-                            resolved_service = labels.get("service") or labels.get("service_name") or labels.get("app") or service
-                            label_key = tuple(sorted(labels.items()))
-                            for ts, value in result.get("values", []):
-                                try:
-                                    numeric_value = float(value)
-                                    timestamp_value = float(ts)
-                                except (TypeError, ValueError):
-                                    continue
-                                key = (metric_name, label_key, timestamp_value)
-                                if key in seen:
-                                    continue
-                                seen.add(key)
-                                metrics.append(MetricPoint(
-                                    timestamp=self._parse_time(ts),
-                                    service=resolved_service,
-                                    name=metric_name,
-                                    value=numeric_value,
-                                    labels=labels,
-                                    source="prometheus",
-                                ))
-            return metrics
-        except Exception as exc:
-            logger.error(f"Failed to get Prometheus metrics: {exc}")
-            return []
+        if not await self.health_check():
+            raise RuntimeError("prometheus_unavailable")
+        start_ts = int(since.timestamp())
+        end_ts = int(until.timestamp()) if until else int(datetime.now(timezone.utc).timestamp())
+        metrics: List[MetricPoint] = []
+        seen: set[tuple[str, tuple[tuple[str, str], ...], float]] = set()
+        async with httpx.AsyncClient(timeout=self.timeout) as client:
+            for metric_name in metric_names:
+                for query in self._metric_queries(metric_name, service):
+                    response = await client.get(
+                        f"{self._base_url}/api/v1/query_range",
+                        params={"query": query, "start": start_ts, "end": end_ts, "step": "60"},
+                    )
+                    response.raise_for_status()
+                    payload = self._assert_success(response.json())
+                    for result in payload.get("data", {}).get("result", []):
+                        labels = {str(k): str(v) for k, v in (result.get("metric", {}) or {}).items()}
+                        resolved_service = labels.get("service") or labels.get("service_name") or labels.get("app") or service
+                        label_key = tuple(sorted(labels.items()))
+                        for ts, value in result.get("values", []):
+                            try:
+                                numeric_value = float(value)
+                                timestamp_value = float(ts)
+                            except (TypeError, ValueError):
+                                continue
+                            key = (metric_name, label_key, timestamp_value)
+                            if key in seen:
+                                continue
+                            seen.add(key)
+                            metrics.append(MetricPoint(
+                                timestamp=self._parse_time(ts),
+                                service=resolved_service,
+                                name=metric_name,
+                                value=numeric_value,
+                                labels=labels,
+                                source="prometheus",
+                            ))
+        return metrics
