@@ -1,6 +1,9 @@
 from typing import Any, Dict, List
 from datetime import datetime
 
+from domain.contracts.config import settings
+from integrations.kubernetes.client import KubernetesEvidenceClient
+
 
 class EvidenceCollector:
     """Combines live operational evidence; live evidence remains authoritative.
@@ -15,6 +18,8 @@ class EvidenceCollector:
         self.prometheus = prometheus
         self.vm = vm
         self.kubernetes = kubernetes
+        if self.kubernetes is None and settings.KUBERNETES_API_URL:
+            self.kubernetes = KubernetesEvidenceClient()
 
     async def collect(self, service: str, since: datetime, until: datetime | None = None) -> Dict[str, Any]:
         alerts: List[Any] = []
