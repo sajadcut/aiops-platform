@@ -8,6 +8,7 @@ from __future__ import annotations
 import asyncio
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional, TypedDict, cast
+from uuid import UUID
 
 from langgraph.graph import END, StateGraph
 
@@ -23,10 +24,10 @@ from apps.audit_service import AuditService
 from apps.context_service.evidence_collector import EvidenceCollector
 from apps.evaluator.gate import EvaluationGate
 from apps.decision_engine import DecisionAction, DecisionEngine
-from apps.execution_service import ExecutionRequest, ExecutionResult, ExecutionService
+from apps.execution_service import ExecutionRequest, ExecutionService
 from apps.memory_service import OperationalMemoryService
 from apps.rag_service import KnowledgeRAGService
-from apps.verification_service import VerificationEngine, VerificationResult
+from apps.verification_service import VerificationEngine
 from domain.contracts.config import settings
 from domain.contracts.logging import logger
 from integrations.elasticsearch.client import ElasticsearchClient
@@ -113,6 +114,13 @@ class E2EOrchestrator:
         w.add_edge("end", END)
         return w.compile()
 
+    async def run(self, state: E2EState) -> E2EState:
+        """Execute the compiled graph and return its final state."""
+        result = cast(E2EState, await self.graph.ainvoke(state))
+        if not result.get("terminal_reason") and not result.get("execution_result"):
+            result["terminal_reason"] = "workflow_completed_without_execution"
+        return result
+
     @staticmethod
     def _audit(event_type: str, state: E2EState, **metadata: Any) -> None:
         AuditService.record(
@@ -150,9 +158,10 @@ class E2EOrchestrator:
         context["knowledge_results"] = state["knowledge_results"]
         context["memory_results"] = state["memory_results"]
         context["live_evidence"] = state["live_evidence"]
-        # Specialized agents consume normalized evidence from context.
         context["evidence"] = state["live_evidence"].get("evidence", [])
         state["context"] = context
+        if not state.get("before_context"):
+            state["before_context"] = {"live_evidence": state["live_evidence"]}
         self._audit(
             "context_loaded",
             state,
@@ -289,8 +298,19 @@ class E2EOrchestrator:
 
     async def _verification_node(self, state: E2EState) -> E2EState:
         state["current_node"] = "verification"
-        before = state.get("before_context", {})
-        after = state.get("after_context")
+        before = dict(state.get("before_context") or {})
+        after = dict(state.get("after_context") or {})
+
+        if not after:
+            service = state.get("service_name") or "unknown"
+            try:
+                since = datetime.now(timezone.utc) - timedelta(minutes=5)
+                after["live_evidence"] = await self.evidence_collector.collect(service, since)
+                state["after_context"] = after
+            except Exception as exc:
+                logger.warning(f"Post-execution evidence collection failed: {exc}")
+                after = {}
+
         result = await VerificationEngine.verify_action(
             action_plan=state.get("final_plan", ""),
             service=state.get("service_name") or "unknown",
@@ -298,16 +318,69 @@ class E2EOrchestrator:
             after_context=after,
         )
         state["verification_result"] = result.model_dump(mode="json")
-        self._audit("verification_completed", state, status=result.status.value, confidence=result.confidence)
+        state.setdefault("context", {})["post_execution_evidence"] = after.get("live_evidence", {})
+        self._audit(
+            "verification_completed",
+            state,
+            status=result.status.value,
+            confidence=result.confidence,
+            evidence_count=len(after.get("live_evidence", {}).get("evidence", [])),
+        )
         return state
 
     async def _memory_node(self, state: E2EState) -> E2EState:
         state["current_node"] = "memory"
-        self._audit("memory_writeback", state, verification=state.get("verification_result", {}))
+        verification = state.get("verification_result", {})
+        status = str(verification.get("status", "inconclusive"))
+        outcome = verification.get("message")
+        persisted = False
+
+        if self.db is not None and status != "inconclusive" and outcome:
+            incident_uuid: Optional[UUID] = None
+            incident_id = state.get("incident_id")
+            if incident_id:
+                try:
+                    incident_uuid = UUID(str(incident_id))
+                except ValueError:
+                    incident_uuid = None
+
+            try:
+                triage = state.get("triage_result", {})
+                root_cause = triage.get("likely_cause") or triage.get("summary") or state.get("final_plan")
+                evidence_refs: List[str] = []
+                for finding in state.get("findings", []):
+                    evidence_refs.extend(str(ref) for ref in finding.get("evidence_ids", []) if ref)
+                await OperationalMemoryService(self.db).add_entry(
+                    pattern=state.get("evidence_summary", "incident pattern"),
+                    symptoms={
+                        "findings": state.get("findings", []),
+                        "evidence_refs": sorted(set(evidence_refs)),
+                    },
+                    root_cause=root_cause,
+                    action=state.get("final_plan"),
+                    verification_result=status,
+                    outcome=outcome,
+                    environment=settings.APP_ENV,
+                    service_scope=state.get("service_name") or "unknown",
+                    incident_id=incident_uuid,
+                )
+                persisted = True
+            except Exception as exc:
+                logger.error(f"Operational memory write-back failed: {exc}")
+                self._audit("memory_writeback_failed", state, error=str(exc))
+
+        self._audit(
+            "memory_writeback",
+            state,
+            persisted=persisted,
+            verification_status=status,
+        )
         return state
 
     async def _end_node(self, state: E2EState) -> E2EState:
         state["current_node"] = "end"
+        if not state.get("terminal_reason") and not state.get("execution_result"):
+            state["terminal_reason"] = "workflow_completed_without_execution"
         return state
 
     @staticmethod

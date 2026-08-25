@@ -6,6 +6,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
 from apps.orchestrator.e2e_graph import E2EOrchestrator
+from database import AsyncSessionLocal
 
 router = APIRouter()
 
@@ -59,7 +60,9 @@ async def run_e2e_workflow(request: E2EWorkflowRequest) -> E2EWorkflowResponse:
         if request.execution_request is not None:
             initial_state["execution_request"] = request.execution_request.model_dump()
 
-        result = await E2EOrchestrator().run(initial_state)
+        async with AsyncSessionLocal() as db:
+            result = await E2EOrchestrator(db=db).run(initial_state)
+
         return E2EWorkflowResponse(
             success=True,
             current_node=result.get("current_node"),

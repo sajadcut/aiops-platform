@@ -1,10 +1,11 @@
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.responses import FileResponse
 from pathlib import Path
 
 from domain.contracts.config import settings
 from domain.contracts.logging import configure_logging, logger
 from domain.contracts.exceptions import register_exception_handlers
+from domain.contracts.rate_limit import rate_limiter_strict
 
 from apps.api import health, workflow, incidents, a2a, execution, e2e_workflow, audit, runbooks, incident_resources, dashboard, runbook_execution, dashboard_incidents, remediation
 from agents.triage import TriageAgent
@@ -15,6 +16,7 @@ from apps.execution_service.tools.vm_telemetry import VMTelemetryTool
 from integrations.vm.ssh_connector import SSHVMConnector
 from apps.database.vector_validation import validate_pgvector
 from database import AsyncSessionLocal
+from apps.security.auth import require_permission
 
 configure_logging()
 app = FastAPI(title=settings.APP_NAME, version=settings.APP_VERSION, debug=settings.DEBUG)
@@ -36,6 +38,21 @@ for router, tags in [
     (dashboard_incidents.router, ["Dashboard Incidents"]),
 ]:
     app.include_router(router, prefix="/api/v1", tags=tags)
+
+
+# Master API contract guard. This keeps the published paths present even if a
+# router is refactored or accidentally omitted from the aggregate registration.
+_MASTER_API_ROUTES = {
+    "/api/v1/health": (health.health_check, ["GET"], []),
+    "/api/v1/incidents/analyze": (incidents.analyze_incident, ["POST"], [Depends(rate_limiter_strict)]),
+    "/api/v1/dashboard/summary": (dashboard.dashboard_summary, ["GET"], []),
+    "/api/v1/approvals": (execution.create_approval, ["POST"], [Depends(require_permission("approve:low_risk"))]),
+    "/api/v1/runbooks/{runbook_id}/execute": (runbook_execution.execute_runbook, ["POST"], [Depends(require_permission("execute:approved"))]),
+    "/api/v1/runbooks/{runbook_id}/dry-run": (runbook_execution.dry_run, ["POST"], [Depends(require_permission("read:incident"))]),
+}
+for _path, (_endpoint, _methods, _dependencies) in _MASTER_API_ROUTES.items():
+    if not any(getattr(route, "path", None) == _path for route in app.routes):
+        app.add_api_route(_path, _endpoint, methods=_methods, dependencies=_dependencies)
 
 
 @app.get("/")

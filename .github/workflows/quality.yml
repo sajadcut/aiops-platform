@@ -14,6 +14,7 @@ jobs:
     env:
       PGVECTOR_VALIDATE_ON_STARTUP: "false"
       INTERNAL_API_KEY: "ci-test-key"
+      PYTHONPATH: ${{ github.workspace }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -34,4 +35,76 @@ jobs:
       - name: Syntax check
         run: python -m compileall agents apps domain integrations knowledge memory tests
       - name: Unit, integration and scenario tests
-        run: pytest -q tests/unit tests/integration tests/scenarios
+        run: python -m pytest -q tests/unit tests/integration tests/scenarios
+
+  database-acceptance:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: aiops
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres -d aiops"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+    env:
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/aiops
+      ALEMBIC_DATABASE_URL: postgresql+psycopg://postgres:postgres@localhost:5432/aiops
+      PYTHONPATH: ${{ github.workspace }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Alembic upgrade
+        run: python -m alembic -c database/migrations/alembic.ini upgrade head
+      - name: Validate extension, vector columns and semantic round-trip
+        run: |
+          python - <<'PY'
+          import psycopg
+          from uuid import uuid4
+          from pgvector.psycopg import register_vector
+
+          url = "postgresql://postgres:postgres@127.0.0.1:5432/aiops"
+          with psycopg.connect(url) as conn:
+              register_vector(conn)
+              with conn.cursor() as cur:
+                  cur.execute("SELECT extversion FROM pg_extension WHERE extname = 'vector'")
+                  assert cur.fetchone(), "pgvector extension is not installed"
+                  cur.execute("""
+                      SELECT table_name, column_name, udt_name
+                      FROM information_schema.columns
+                      WHERE table_name IN ('knowledge_documents', 'memory_entries')
+                        AND column_name = 'embedding'
+                      ORDER BY table_name
+                  """)
+                  rows = cur.fetchall()
+                  assert len(rows) == 2, rows
+                  assert all(row[2] == 'vector' for row in rows), rows
+                  vector = "[" + ",".join(["0.1"] * 1536) + "]"
+                  cur.execute(
+                      "INSERT INTO knowledge_documents (id,title,content,source,embedding) VALUES (%s,%s,%s,%s,%s::vector)",
+                      (uuid4(), 'ci', 'pgvector acceptance', 'ci', vector),
+                  )
+                  cur.execute(
+                      "SELECT embedding <=> %s::vector FROM knowledge_documents ORDER BY embedding <=> %s::vector LIMIT 1",
+                      (vector, vector),
+                  )
+                  distance = cur.fetchone()[0]
+                  assert distance == 0.0, distance
+              conn.commit()
+          PY
+      - name: Migration downgrade and rebuild
+        run: |
+          python -m alembic -c database/migrations/alembic.ini downgrade base
+          python -m alembic -c database/migrations/alembic.ini upgrade head
