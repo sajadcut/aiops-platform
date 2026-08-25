@@ -10,6 +10,7 @@ from apps.orchestrator.runtime import DurableWorkflowRuntime
 from apps.security.auth import require_permission
 from apps.security.rbac import allowed
 from database import AsyncSessionLocal
+from domain.contracts.logging import logger
 
 router = APIRouter()
 
@@ -95,7 +96,8 @@ async def run_e2e_workflow(
     except HTTPException:
         raise
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
+        logger.exception("E2E workflow failed")
+        raise HTTPException(status_code=500, detail="workflow_execution_failed") from exc
 
 
 @router.post("/workflow/e2e/{incident_id}/resume", response_model=E2EWorkflowResponse)
@@ -109,6 +111,8 @@ async def resume_e2e_workflow(
             result = await DurableWorkflowRuntime(db).resume_after_approval(incident_id)
         return _response_from_result(result)
     except ValueError as exc:
+        # Conflict reasons are deliberately bounded by runtime-defined codes.
         raise HTTPException(status_code=409, detail=str(exc)) from exc
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
+        logger.exception("E2E workflow resume failed: incident_id=%s", incident_id)
+        raise HTTPException(status_code=500, detail="workflow_resume_failed") from exc
