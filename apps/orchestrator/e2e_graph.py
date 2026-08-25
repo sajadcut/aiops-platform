@@ -1,7 +1,8 @@
 """Production-oriented end-to-end incident workflow.
 
-Context -> Agents -> RCA -> Evaluator -> Decision -> Approval/Execution ->
-Verification -> Audit/Memory. Agents never execute tools directly.
+Context -> Triage -> Smart Specialist Routing -> Coordination/RCA -> Evaluator ->
+Decision -> Approval/Execution -> Verification -> Audit/Memory.
+Agents never execute write operations directly.
 """
 from __future__ import annotations
 
@@ -12,13 +13,10 @@ from uuid import UUID
 
 from langgraph.graph import END, StateGraph
 
-from agents.application import ApplicationAgent
-from agents.infrastructure import InfrastructureAgent
-from agents.kubernetes import KubernetesAgent
-from agents.security import SecurityAgent
 from agents.shared.base import AgentInput, AgentOutput
+from agents.shared.coordinator import IncidentCoordinator
+from agents.shared.registry import AgentRegistry
 from agents.triage import TriageAgent
-from agents.vm import VMAgent
 from apps.approval_service import ApprovalService
 from apps.audit_service import AuditService
 from apps.context_service.evidence_collector import EvidenceCollector
@@ -49,6 +47,9 @@ class E2EState(TypedDict, total=False):
     findings: List[Dict[str, Any]]
     analysis_results: List[Dict[str, Any]]
     triage_result: Dict[str, Any]
+    routing: Dict[str, Any]
+    coordination: Dict[str, Any]
+    evidence_rounds: int
     final_plan: str
     confidence: float
     knowledge_results: List[Dict[str, Any]]
@@ -70,16 +71,18 @@ class E2EOrchestrator:
         self.llm = llm_adapter or configured_llm_adapter()
         self.db = db
         self.triage_agent = TriageAgent(self.llm)
-        self.application_agent = ApplicationAgent(self.llm)
-        self.infrastructure_agent = InfrastructureAgent(self.llm)
-        self.kubernetes_agent = KubernetesAgent(self.llm)
-        self.security_agent = SecurityAgent(self.llm)
-        self.vm_agent = VMAgent(self.llm)
+        self.registry = AgentRegistry(self.llm)
+        self.coordinator = IncidentCoordinator()
 
         zabbix = MockZabbixClient() if settings.APP_ENV != "production" else ZabbixConnector()
         vm_connector = SSHVMConnector() if settings.SSH_ENABLED else None
         self.vm_connector = vm_connector
-        self.evidence_collector = EvidenceCollector(zabbix=zabbix, elasticsearch=ElasticsearchClient(), prometheus=PrometheusClient(), vm=vm_connector)
+        self.evidence_collector = EvidenceCollector(
+            zabbix=zabbix,
+            elasticsearch=ElasticsearchClient(),
+            prometheus=PrometheusClient(),
+            vm=vm_connector,
+        )
         self.graph = self._build_graph()
 
     def _build_graph(self):
@@ -117,7 +120,14 @@ class E2EOrchestrator:
 
     @staticmethod
     def _audit(event_type: str, state: E2EState, **metadata: Any) -> None:
-        AuditService.record(event_type=event_type, actor="e2e_orchestrator", incident_id=state.get("incident_id"), action=state.get("execution_request", {}).get("action"), status="recorded", metadata=metadata)
+        AuditService.record(
+            event_type=event_type,
+            actor="e2e_orchestrator",
+            incident_id=state.get("incident_id"),
+            action=state.get("execution_request", {}).get("action"),
+            status="recorded",
+            metadata=metadata,
+        )
 
     async def _context_node(self, state: E2EState) -> E2EState:
         state["current_node"] = "context"
@@ -146,50 +156,178 @@ class E2EOrchestrator:
         context["live_evidence"] = state["live_evidence"]
         context["evidence"] = state["live_evidence"].get("evidence", [])
         state["context"] = context
+        state["evidence_rounds"] = 1
         if not state.get("before_context"):
             state["before_context"] = {"live_evidence": state["live_evidence"]}
-        self._audit("context_loaded", state, knowledge_count=len(state["knowledge_results"]), memory_count=len(state["memory_results"]), evidence_count=len(state["live_evidence"].get("evidence", [])))
+        self._audit(
+            "context_loaded",
+            state,
+            knowledge_count=len(state["knowledge_results"]),
+            memory_count=len(state["memory_results"]),
+            evidence_count=len(state["live_evidence"].get("evidence", [])),
+        )
         return state
 
     async def _triage_node(self, state: E2EState) -> E2EState:
         state["current_node"] = "triage"
-        result = await self.triage_agent.analyze(AgentInput(incident_id=state.get("incident_id"), evidence_summary=state.get("evidence_summary", "No evidence provided"), service_name=state.get("service_name"), context=state.get("context", {})))
-        data = result.model_dump()
+        result = await self.triage_agent.analyze(self._agent_input(state))
+        data = result.model_dump(mode="json")
         state["triage_result"] = data
         state["findings"] = state.get("findings", []) + [data]
-        self._audit("triage_completed", state, confidence=data.get("confidence"))
+        routing = self.coordinator.select_agents(data, self.registry.enabled_names())
+        state["routing"] = routing
+        self._audit(
+            "triage_completed",
+            state,
+            confidence=data.get("confidence"),
+            selected_agents=routing["selected"],
+            skipped_agents=routing["skipped"],
+            routing_reason=routing["reason"],
+        )
         return state
+
+    def _agent_input(self, state: E2EState) -> AgentInput:
+        return AgentInput(
+            incident_id=state.get("incident_id"),
+            evidence_summary=state.get("evidence_summary", "No evidence provided"),
+            service_name=state.get("service_name"),
+            context=state.get("context", {}),
+        )
+
+    async def _run_specialists(self, names: List[str], state: E2EState) -> List[Dict[str, Any]]:
+        inp = self._agent_input(state)
+        tasks = []
+        actual_names: List[str] = []
+        for name in names[: settings.AGENT_MAX_PARALLELISM]:
+            agent = self.registry.get(name)
+            if agent is None:
+                continue
+            actual_names.append(name)
+            tasks.append(asyncio.wait_for(agent.analyze(inp), timeout=settings.AGENT_TIMEOUT_SECONDS + 2))
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        findings: List[Dict[str, Any]] = []
+        for name, result in zip(actual_names, results):
+            if isinstance(result, Exception):
+                findings.append({
+                    "agent_name": name,
+                    "finding_type": f"{name}_error",
+                    "statement": "Specialist analysis failed; human review required",
+                    "severity": "unknown",
+                    "health_status": "unknown",
+                    "confidence": 0.0,
+                    "evidence_ids": [],
+                    "evidence_count": 0,
+                    "evidence_coverage": 0.0,
+                    "missing_evidence": ["successful specialist analysis"],
+                    "requires_human_review": True,
+                    "analysis_details": {"error": str(result)},
+                })
+            else:
+                findings.append(cast(AgentOutput, result).model_dump(mode="json"))
+        return findings
+
+    async def _additional_evidence_round(self, state: E2EState) -> bool:
+        rounds = int(state.get("evidence_rounds", 1))
+        if rounds >= settings.AGENT_MAX_EVIDENCE_ROUNDS:
+            return False
+        service = state.get("service_name") or "unknown"
+        try:
+            since = datetime.now(timezone.utc) - timedelta(minutes=10)
+            fresh = await self.evidence_collector.collect(service, since)
+        except Exception as exc:
+            self._audit("agent_evidence_round_failed", state, round=rounds + 1, error=str(exc))
+            return False
+        existing = list(state.setdefault("context", {}).get("evidence", []))
+        merged: Dict[str, Dict[str, Any]] = {}
+        for item in existing + list(fresh.get("evidence", [])):
+            if not isinstance(item, dict):
+                continue
+            key = str(item.get("evidence_id") or item.get("id") or item.get("reference") or item.get("source_id") or item)
+            merged[key] = item
+        state["context"]["evidence"] = list(merged.values())[: settings.AGENT_MAX_EVIDENCE_ITEMS]
+        state["live_evidence"] = {**fresh, "evidence": state["context"]["evidence"]}
+        state["context"]["live_evidence"] = state["live_evidence"]
+        state["evidence_rounds"] = rounds + 1
+        self._audit("agent_evidence_round_completed", state, round=rounds + 1, evidence_count=len(merged))
+        return True
 
     async def _parallel_agents_node(self, state: E2EState) -> E2EState:
         state["current_node"] = "parallel_agents"
-        inp = AgentInput(incident_id=state.get("incident_id"), evidence_summary=state.get("evidence_summary", "No evidence provided"), service_name=state.get("service_name"), context=state.get("context", {}))
-        results = await asyncio.gather(self.application_agent.analyze(inp), self.infrastructure_agent.analyze(inp), self.kubernetes_agent.analyze(inp), self.security_agent.analyze(inp), self.vm_agent.analyze(inp), return_exceptions=True)
-        findings: List[Dict[str, Any]] = []
-        for result in results:
-            if isinstance(result, Exception):
-                findings.append({"agent": "error", "error": str(result), "confidence": 0.0, "evidence_ids": []})
-            else:
-                findings.append(cast(AgentOutput, result).model_dump())
+        routing = state.get("routing") or self.coordinator.select_agents(state.get("triage_result", {}), self.registry.enabled_names())
+        selected = list(routing.get("selected", []))
+        findings = await self._run_specialists(selected, state)
+        coordination = self.coordinator.synthesize(findings)
+
+        # Structured handoff/second-opinion pass. Only newly requested enabled specialists run.
+        requested_handoffs = [
+            name for name in coordination.get("handoff_agents", [])
+            if name not in selected and self.registry.get(name) is not None
+        ]
+        if requested_handoffs:
+            second = await self._run_specialists(requested_handoffs, state)
+            findings.extend(second)
+            selected.extend(requested_handoffs)
+            coordination = self.coordinator.synthesize(findings)
+            self._audit("agent_handoff_completed", state, handoff_agents=requested_handoffs)
+
+        # Bounded evidence refresh when specialists report material evidence gaps.
+        if coordination.get("missing_evidence") and await self._additional_evidence_round(state):
+            refreshed = await self._run_specialists(selected, state)
+            findings = refreshed
+            coordination = self.coordinator.synthesize(findings)
+
         state["analysis_results"] = findings
-        state["findings"] = state.get("findings", []) + findings
-        self._audit("parallel_analysis_completed", state, finding_count=len(findings))
+        state["findings"] = [state.get("triage_result", {})] + findings
+        state["coordination"] = coordination
+        state["routing"] = {
+            **routing,
+            "selected": selected,
+            "skipped": sorted(set(self.registry.enabled_names()).difference(selected)),
+        }
+        self._audit(
+            "specialist_analysis_completed",
+            state,
+            selected_agents=selected,
+            skipped_agents=state["routing"]["skipped"],
+            finding_count=len(findings),
+            disagreement=coordination.get("disagreement"),
+            consensus_hypotheses=coordination.get("consensus_hypotheses", []),
+            evidence_rounds=state.get("evidence_rounds", 1),
+        )
         return state
 
     async def _rca_node(self, state: E2EState) -> E2EState:
         state["current_node"] = "rca"
-        prompt = "Analyze only supplied operational evidence. Return root cause, evidence references, confidence and recommended action plan. Never claim execution.\n" + f"Triage={state.get('triage_result', {})}\nFindings={state.get('findings', [])}\nContext={state.get('context', {})}"
+        prompt = (
+            "You are the RCA synthesis stage. Treat live evidence as authoritative. "
+            "Synthesize evidence-linked hypotheses, explicitly preserve disagreements, missing evidence and falsification checks. "
+            "RAG/Memory are auxiliary. Never claim execution. Return a concise root-cause assessment and recommended action plan.\n"
+            f"Triage={state.get('triage_result', {})}\n"
+            f"SpecialistFindings={state.get('analysis_results', [])}\n"
+            f"Coordination={state.get('coordination', {})}\n"
+            f"LiveEvidence={state.get('context', {}).get('evidence', [])}"
+        )
         try:
-            state["final_plan"] = (await self.llm.generate(prompt, temperature=0.2)).content
+            state["final_plan"] = (
+                await asyncio.wait_for(
+                    self.llm.generate(prompt, temperature=settings.AGENT_LLM_TEMPERATURE, max_tokens=settings.AGENT_MAX_TOKENS),
+                    timeout=settings.AGENT_TIMEOUT_SECONDS,
+                )
+            ).content
         except Exception as exc:
             state["final_plan"] = "Manual investigation required: RCA generation failed."
             logger.error(f"RCA generation failed: {exc}")
-        state["confidence"] = self._average_confidence(state.get("findings", []))
-        self._audit("rca_completed", state, confidence=state["confidence"])
+        state["confidence"] = float(state.get("coordination", {}).get("confidence", self._average_confidence(state.get("findings", []))))
+        self._audit("rca_completed", state, confidence=state["confidence"], coordination=state.get("coordination", {}))
         return state
 
     async def _evaluator_node(self, state: E2EState) -> E2EState:
         state["current_node"] = "evaluator"
-        result = EvaluationGate.evaluate(state.get("findings", []), state.get("final_plan", ""))
+        result = EvaluationGate.evaluate(
+            state.get("findings", []),
+            state.get("final_plan", ""),
+            coordination=state.get("coordination", {}),
+        )
         state["evaluation"] = result
         self._audit("evaluation_completed", state, **result)
         return state
@@ -225,7 +363,13 @@ class E2EOrchestrator:
     async def _approval_node(self, state: E2EState) -> E2EState:
         state["current_node"] = "approval"
         decision = state.get("decision", {})
-        request = ApprovalService.create_request(incident_id=state.get("incident_id") or "unknown", action=state.get("execution_request", {}).get("action", "unknown"), risk_level=str(decision.get("risk_level", "unknown")), approver=str(decision.get("suggested_approver") or "Team-Lead"), metadata={"reason": decision.get("reason"), "workflow": "e2e"})
+        request = ApprovalService.create_request(
+            incident_id=state.get("incident_id") or "unknown",
+            action=state.get("execution_request", {}).get("action", "unknown"),
+            risk_level=str(decision.get("risk_level", "unknown")),
+            approver=str(decision.get("suggested_approver") or "Team-Lead"),
+            metadata={"reason": decision.get("reason"), "workflow": "e2e"},
+        )
         state["approval"] = request
         return state
 
@@ -258,10 +402,21 @@ class E2EOrchestrator:
             except Exception as exc:
                 logger.warning(f"Post-execution evidence collection failed: {exc}")
                 after = {}
-        result = await VerificationEngine.verify_action(action_plan=state.get("final_plan", ""), service=state.get("service_name") or "unknown", before_context=before, after_context=after)
+        result = await VerificationEngine.verify_action(
+            action_plan=state.get("final_plan", ""),
+            service=state.get("service_name") or "unknown",
+            before_context=before,
+            after_context=after,
+        )
         state["verification_result"] = result.model_dump(mode="json")
         state.setdefault("context", {})["post_execution_evidence"] = after.get("live_evidence", {})
-        self._audit("verification_completed", state, status=result.status.value, confidence=result.confidence, evidence_count=len(after.get("live_evidence", {}).get("evidence", [])))
+        self._audit(
+            "verification_completed",
+            state,
+            status=result.status.value,
+            confidence=result.confidence,
+            evidence_count=len(after.get("live_evidence", {}).get("evidence", [])),
+        )
         return state
 
     async def _memory_node(self, state: E2EState) -> E2EState:
@@ -284,7 +439,17 @@ class E2EOrchestrator:
                 evidence_refs: List[str] = []
                 for finding in state.get("findings", []):
                     evidence_refs.extend(str(ref) for ref in finding.get("evidence_ids", []) if ref)
-                await OperationalMemoryService(self.db).add_entry(pattern=state.get("evidence_summary", "incident pattern"), symptoms={"findings": state.get("findings", []), "evidence_refs": sorted(set(evidence_refs))}, root_cause=root_cause, action=state.get("final_plan"), verification_result=status, outcome=outcome, environment=settings.APP_ENV, service_scope=state.get("service_name") or "unknown", incident_id=incident_uuid)
+                await OperationalMemoryService(self.db).add_entry(
+                    pattern=state.get("evidence_summary", "incident pattern"),
+                    symptoms={"findings": state.get("findings", []), "evidence_refs": sorted(set(evidence_refs))},
+                    root_cause=root_cause,
+                    action=state.get("final_plan"),
+                    verification_result=status,
+                    outcome=outcome,
+                    environment=settings.APP_ENV,
+                    service_scope=state.get("service_name") or "unknown",
+                    incident_id=incident_uuid,
+                )
                 persisted = True
             except Exception as exc:
                 logger.error(f"Operational memory write-back failed: {exc}")
