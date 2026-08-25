@@ -71,12 +71,11 @@ jobs:
       - name: Validate extension, vector columns and semantic round-trip
         run: |
           python - <<'PY'
-          import os
           import psycopg
           from uuid import uuid4
           from pgvector.psycopg import register_vector
 
-          url = os.environ["ALEMBIC_DATABASE_URL"]
+          url = "postgresql://postgres:postgres@127.0.0.1:5432/aiops"
           with psycopg.connect(url) as conn:
               register_vector(conn)
               with conn.cursor() as cur:
