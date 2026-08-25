@@ -15,7 +15,7 @@ POLICIES = {
     "operator": RolePolicy(
         "operator",
         COMMON_READ
-        | frozenset({"approve:low_risk", "execute:low_risk", "runbook:dry_run", "manage:knowledge"}),
+        | frozenset({"approve:low_risk", "execute:low_risk", "runbook:dry_run", "manage:knowledge", "manage:runbook"}),
     ),
     "sre": RolePolicy(
         "sre",
@@ -27,6 +27,7 @@ POLICIES = {
             "execute:approved",
             "runbook:dry_run",
             "manage:knowledge",
+            "manage:runbook",
         }),
     ),
 }
