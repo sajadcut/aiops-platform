@@ -27,6 +27,15 @@ class Settings(BaseSettings):
     LLM_MODEL: str = "gpt-4"
     LLM_TIMEOUT_SECONDS: int = 60
 
+    # Embedding adapter. deterministic is test/dev only; production must use
+    # an explicitly configured OpenAI-compatible offline/internal gateway.
+    EMBEDDING_PROVIDER: str = "deterministic"
+    EMBEDDING_BASE_URL: Optional[str] = None
+    EMBEDDING_API_KEY: Optional[str] = None
+    EMBEDDING_MODEL: str = "text-embedding-3-small"
+    EMBEDDING_DIMENSION: int = 1536
+    EMBEDDING_TIMEOUT_SECONDS: int = 30
+
     # Logging / API
     LOG_LEVEL: str = "INFO"
     LOG_JSON: bool = False
