@@ -3,23 +3,26 @@ from __future__ import annotations
 from typing import Any, Dict, List
 
 
-REQUIRED = ("owner", "version", "preconditions", "steps", "timeout", "rollback", "risk", "verification")
+BASE_REQUIRED = ("owner", "version", "preconditions", "steps", "timeout", "rollback")
+STRICT_REQUIRED = BASE_REQUIRED + ("risk", "verification")
 ALLOWED_RISKS = {"low", "medium", "high", "critical"}
 ALLOWED_DIRECTIONS = {"lower_is_better", "higher_is_better", "equals", "absent"}
 
 
-def validate_runbook(data: Dict[str, Any]) -> Dict[str, Any]:
-    """Validate the static governance contract for a repository runbook.
+def validate_runbook(data: Dict[str, Any], *, strict: bool = False) -> Dict[str, Any]:
+    """Validate a runbook definition.
 
-    Runtime operational preconditions are evaluated by the orchestrator/tool
-    boundary against live Evidence. This validator ensures an invalid runbook
-    cannot enter the registry in the first place.
+    ``strict=False`` preserves the historical lightweight validation contract
+    used by older callers/tests. Production registry/execution paths MUST call
+    ``strict=True``; that mode requires identity, risk, verification objectives,
+    non-empty actionable steps and stronger type constraints.
     """
-    missing: List[str] = [key for key in REQUIRED if key not in data]
+    required = STRICT_REQUIRED if strict else BASE_REQUIRED
+    missing: List[str] = [key for key in required if key not in data]
     errors: List[str] = []
 
     runbook_id = str(data.get("id") or data.get("name") or "").strip()
-    if not runbook_id:
+    if strict and not runbook_id:
         errors.append("id_or_name_required")
     if not str(data.get("owner") or "").strip():
         errors.append("owner_required")
@@ -31,9 +34,11 @@ def validate_runbook(data: Dict[str, Any]) -> Dict[str, Any]:
         errors.append("preconditions_must_be_list")
 
     steps = data.get("steps")
-    if not isinstance(steps, list) or not steps:
+    if not isinstance(steps, list):
+        errors.append("steps_must_be_list")
+    elif strict and not steps:
         errors.append("steps_must_be_non_empty_list")
-    elif any(not isinstance(step, dict) or not str(step.get("action") or "").strip() for step in steps):
+    elif strict and any(not isinstance(step, dict) or not str(step.get("action") or "").strip() for step in steps):
         errors.append("each_step_requires_action")
 
     rollback = data.get("rollback")
@@ -41,15 +46,15 @@ def validate_runbook(data: Dict[str, Any]) -> Dict[str, Any]:
         errors.append("rollback_must_be_list")
 
     timeout = data.get("timeout")
-    if isinstance(timeout, bool) or not isinstance(timeout, int) or timeout <= 0:
+    if strict and (isinstance(timeout, bool) or not isinstance(timeout, int) or timeout <= 0):
         errors.append("timeout_must_be_positive_integer")
 
     risk = str(data.get("risk") or "").strip().lower()
-    if risk and risk not in ALLOWED_RISKS:
+    if strict and risk not in ALLOWED_RISKS:
         errors.append("risk_not_allowlisted")
 
     verification = data.get("verification")
-    if verification is not None:
+    if strict:
         if not isinstance(verification, dict):
             errors.append("verification_must_be_object")
         else:
@@ -72,4 +77,5 @@ def validate_runbook(data: Dict[str, Any]) -> Dict[str, Any]:
         "missing": missing,
         "errors": errors,
         "runbook_id": runbook_id or None,
+        "strict": strict,
     }
