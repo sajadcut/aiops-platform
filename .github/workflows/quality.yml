@@ -63,6 +63,8 @@ jobs:
           assert settings.INTERNAL_API_KEY == 'ci-test-key'
           assert settings.RATE_LIMIT_STRICT_REQUESTS > 0
           assert settings.ALEMBIC_DATABASE_URL
+          assert settings.SIGNAL_CORRELATION_ENABLED is True
+          assert 0 < settings.SIGNAL_CORRELATION_WINDOW_SECONDS <= 3600
           PY
       - name: Syntax check
         run: python -m compileall -q agents apps domain integrations knowledge memory tests
@@ -172,6 +174,10 @@ jobs:
                   assert cur.fetchone()[0] == 0.0
               conn.commit()
           PY
+      - name: Validate PostgreSQL signal-correlation locking and bounded lookup
+        env:
+          RUN_DB_CORRELATION_TEST: '1'
+        run: python -m pytest -q tests/integration/test_signal_correlation_db.py
       - name: Migration downgrade and clean rebuild
         run: |
           python -m alembic -c database/migrations/alembic.ini downgrade base
