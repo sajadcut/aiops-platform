@@ -54,7 +54,8 @@ jobs:
           --health-timeout=5s
           --health-retries=20
     env:
-      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/aiops
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/aiops
+      ALEMBIC_DATABASE_URL: postgresql+psycopg://postgres:postgres@localhost:5432/aiops
       PYTHONPATH: ${{ github.workspace }}
     steps:
       - uses: actions/checkout@v4
@@ -75,7 +76,7 @@ jobs:
           from uuid import uuid4
           from pgvector.psycopg import register_vector
 
-          url = os.environ["DATABASE_URL"]
+          url = os.environ["ALEMBIC_DATABASE_URL"]
           with psycopg.connect(url) as conn:
               register_vector(conn)
               with conn.cursor() as cur:
@@ -91,12 +92,14 @@ jobs:
                   rows = cur.fetchall()
                   assert len(rows) == 2, rows
                   assert all(row[2] == 'vector' for row in rows), rows
-                  cur.execute("SELECT embedding FROM knowledge_documents WHERE false")
                   cur.execute(
                       "INSERT INTO knowledge_documents (id,title,content,source,embedding) VALUES (%s,%s,%s,%s,%s)",
                       (uuid4(), 'ci', 'pgvector acceptance', 'ci', [0.1] * 1536),
                   )
-                  cur.execute("SELECT embedding <=> %s FROM knowledge_documents ORDER BY embedding <=> %s LIMIT 1", ([0.1] * 1536, [0.1] * 1536))
+                  cur.execute(
+                      "SELECT embedding <=> %s FROM knowledge_documents ORDER BY embedding <=> %s LIMIT 1",
+                      ([0.1] * 1536, [0.1] * 1536),
+                  )
                   distance = cur.fetchone()[0]
                   assert distance == 0.0, distance
               conn.commit()
