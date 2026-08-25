@@ -2,13 +2,13 @@ from __future__ import annotations
 
 from typing import Any, Dict, Type
 
+from apps.approval_service.postgres import PostgreSQLApprovalStore
 from apps.audit_service import AuditService
 from apps.audit_service.postgres import PostgreSQLAuditStore
 from apps.incident_service.repository import IncidentRepository
 from apps.orchestrator.e2e_graph import E2EOrchestrator
 from apps.orchestrator.signal_aware import SignalAwareE2EOrchestrator
 from apps.orchestrator.workflow_store import WorkflowCheckpointStore
-from apps.approval_service.postgres import PostgreSQLApprovalStore
 
 
 class DurableWorkflowRuntime:
@@ -31,14 +31,43 @@ class DurableWorkflowRuntime:
     async def _flush_audit(self, incident_id: str) -> None:
         await AuditService.flush_to_store(self.audit, incident_id=incident_id)
 
+    @staticmethod
+    def _incident_fields(state: Dict[str, Any]) -> Dict[str, Any]:
+        context = dict(state.get("context") or {})
+        incident = dict(context.get("incident") or {})
+        return {
+            "source": str(incident.get("source") or "api"),
+            "service": str(state.get("service_name") or context.get("service") or "unknown"),
+            "severity": incident.get("severity"),
+            "summary": incident.get("summary") or state.get("evidence_summary"),
+            "context": context,
+        }
+
+    @staticmethod
+    def _final_incident_status(result: Dict[str, Any]) -> str:
+        if result.get("approval"):
+            return "analyzing"
+        verification = str((result.get("verification_result") or {}).get("status") or "").lower()
+        if verification == "success":
+            return "resolved"
+        execution = result.get("execution_result") or {}
+        if execution and not execution.get("success"):
+            return "escalated"
+        if result.get("execution_request") and result.get("terminal_reason"):
+            return "escalated"
+        return "open"
+
     async def start(self, state: Dict[str, Any]) -> Dict[str, Any]:
         incident_id = str(state["incident_id"])
+        fields = self._incident_fields(state)
         await self.incidents.upsert_incident(
             incident_id=incident_id,
-            source=str(state.get("context", {}).get("incident", {}).get("source") or "api"),
-            service=str(state.get("service_name") or "unknown"),
-            severity=state.get("context", {}).get("incident", {}).get("severity"),
-            summary=state.get("context", {}).get("incident", {}).get("summary") or state.get("evidence_summary"),
+            source=fields["source"],
+            service=fields["service"],
+            severity=fields["severity"],
+            summary=fields["summary"],
+            status="analyzing",
+            context=fields["context"],
         )
         seed_evidence = list(state.get("context", {}).get("trigger_evidence", []) or [])
         if seed_evidence:
@@ -63,10 +92,21 @@ class DurableWorkflowRuntime:
             result["approval"] = approval
             await self.approvals.save(approval)
 
-        status = "paused" if approval else "completed"
+        checkpoint_status = "paused" if approval else "completed"
         if result.get("terminal_reason") and not approval:
-            status = "failed" if "failed" in str(result["terminal_reason"]).lower() else "completed"
-        await self.checkpoints.save(incident_id, result, status=status)
+            checkpoint_status = "failed" if "failed" in str(result["terminal_reason"]).lower() else "completed"
+        await self.checkpoints.save(incident_id, result, status=checkpoint_status)
+
+        final_fields = self._incident_fields(result)
+        await self.incidents.upsert_incident(
+            incident_id=incident_id,
+            source=final_fields["source"],
+            service=final_fields["service"],
+            severity=final_fields["severity"],
+            summary=final_fields["summary"],
+            status=self._final_incident_status(result),
+            context=final_fields["context"],
+        )
         await self._flush_audit(incident_id)
         await self.incidents.commit()
         return result
@@ -128,6 +168,7 @@ class DurableWorkflowRuntime:
         if not execution_result.get("success"):
             result["terminal_reason"] = execution_result.get("reason") or "execution_failed"
             await self.checkpoints.mark_failed(incident_id, result)
+            await self.incidents.set_status(incident_id, "escalated")
             await self._flush_audit(incident_id)
             await self.incidents.commit()
             return result
@@ -142,9 +183,21 @@ class DurableWorkflowRuntime:
         result = await orchestrator._end_node(result)
         if verification_status == "success":
             await self.checkpoints.mark_completed(incident_id, result)
+            await self.incidents.set_status(incident_id, "resolved")
         else:
             await self.checkpoints.mark_failed(incident_id, result)
+            await self.incidents.set_status(incident_id, "escalated")
         await self.incidents.add_findings(incident_id, result.get("findings", []))
+        final_fields = self._incident_fields(result)
+        await self.incidents.upsert_incident(
+            incident_id=incident_id,
+            source=final_fields["source"],
+            service=final_fields["service"],
+            severity=final_fields["severity"],
+            summary=final_fields["summary"],
+            status="resolved" if verification_status == "success" else "escalated",
+            context=final_fields["context"],
+        )
         await self._flush_audit(incident_id)
         await self.incidents.commit()
         return result
