@@ -69,6 +69,12 @@ class Settings(BaseSettings):
     A2A_ALLOWED_TARGETS: List[str] = Field(...)
     A2A_REQUIRE_HTTPS: bool = Field(...)
 
+    # Source-agnostic incident correlation is deterministic and bounded. LLM
+    # output/free text is never used as the merge authority.
+    SIGNAL_CORRELATION_ENABLED: bool = Field(...)
+    SIGNAL_CORRELATION_WINDOW_SECONDS: int = Field(..., ge=1, le=3600)
+    SIGNAL_CORRELATION_CANDIDATE_LIMIT: int = Field(..., ge=1, le=100)
+
     LOG_LEVEL: str = Field(...)
     LOG_JSON: bool = Field(...)
     INTERNAL_API_KEY: Optional[str] = Field(...)
