@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict, Iterable, List, Optional, Set
 
 from apps.context_service.asset_identity import AssetIdentityResolver
@@ -39,12 +39,12 @@ class EvidenceCollector:
         return None if text.lower() in cls._UNKNOWN_SERVICE_VALUES else text
 
     @staticmethod
-    def _observation(source: str, reference: str, since: datetime, *, status: str, result_count: int = 0, service: Optional[str] = None, detail: Optional[str] = None) -> Dict[str, Any]:
+    def _observation(source: str, reference: str, *, status: str, result_count: int = 0, service: Optional[str] = None, detail: Optional[str] = None) -> Dict[str, Any]:
         return {
             "type": "source_observation",
             "source": source,
             "reference": reference,
-            "timestamp": since.isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "confidence": 1.0,
             "raw_data": {
                 "status": status,
@@ -106,7 +106,6 @@ class EvidenceCollector:
         evidence: List[Dict[str, Any]] = []
         requested_service = self._known_service(service)
 
-        # Stage 1: alert/asset identity. An unknown service is never used as a host filter.
         alerts: List[Any] = []
         if self.zabbix and (wants_all or "alert" in wants):
             healthy = await self._healthy(self.zabbix)
@@ -115,51 +114,50 @@ class EvidenceCollector:
                     alerts = await self.zabbix.get_alerts(since=since, service=requested_service)
                     evidence.extend(self._alert_evidence(alerts))
                     evidence.append(self._observation(
-                        "zabbix", f"zabbix-observation:{since.isoformat()}", since,
+                        "zabbix", f"zabbix-observation:{since.isoformat()}",
                         status="queried", result_count=len(alerts), service=requested_service,
                         detail="matching_active_alerts",
                     ))
                 except Exception as exc:
-                    evidence.append(self._observation("zabbix", f"zabbix-error:{since.isoformat()}", since, status="error", service=requested_service, detail=str(exc)))
+                    evidence.append(self._observation("zabbix", f"zabbix-error:{since.isoformat()}", status="error", service=requested_service, detail=str(exc)))
             else:
-                evidence.append(self._observation("zabbix", f"zabbix-unavailable:{since.isoformat()}", since, status="unavailable", service=requested_service))
+                evidence.append(self._observation("zabbix", f"zabbix-unavailable:{since.isoformat()}", status="unavailable", service=requested_service))
 
         partial_asset = AssetIdentityResolver.resolve(evidence, requested_service)
         effective_service = self._known_service(partial_asset.get("service")) or self._known_service(partial_asset.get("hostname")) or requested_service
         query_service = effective_service or service
 
-        # Stage 2: correlate the resolved asset across Elastic and Prometheus.
         logs: List[Any] = []
         metrics: List[Any] = []
         if self.elasticsearch and (wants_all or "log" in wants):
             if not effective_service:
-                evidence.append(self._observation("elasticsearch", f"elastic-skipped:{since.isoformat()}", since, status="skipped", detail="asset_service_unresolved"))
+                evidence.append(self._observation("elasticsearch", f"elastic-skipped:{since.isoformat()}", status="skipped", detail="asset_service_unresolved"))
             elif await self._healthy(self.elasticsearch):
                 try:
                     logs = await self.elasticsearch.get_logs(effective_service, since, until)
                     evidence.append(self._observation(
-                        "elasticsearch", f"elastic-observation:{effective_service}:{since.isoformat()}", since,
+                        "elasticsearch", f"elastic-observation:{effective_service}:{since.isoformat()}",
                         status="queried", result_count=len(logs), service=effective_service, detail="matching_logs",
                     ))
                 except Exception as exc:
-                    evidence.append(self._observation("elasticsearch", f"elastic-error:{since.isoformat()}", since, status="error", service=effective_service, detail=str(exc)))
+                    evidence.append(self._observation("elasticsearch", f"elastic-error:{since.isoformat()}", status="error", service=effective_service, detail=str(exc)))
             else:
-                evidence.append(self._observation("elasticsearch", f"elastic-unavailable:{since.isoformat()}", since, status="unavailable", service=effective_service))
+                evidence.append(self._observation("elasticsearch", f"elastic-unavailable:{since.isoformat()}", status="unavailable", service=effective_service))
 
         if self.prometheus and (wants_all or "metric" in wants):
             if not effective_service:
-                evidence.append(self._observation("prometheus", f"prom-skipped:{since.isoformat()}", since, status="skipped", detail="asset_service_unresolved"))
+                evidence.append(self._observation("prometheus", f"prom-skipped:{since.isoformat()}", status="skipped", detail="asset_service_unresolved"))
             elif await self._healthy(self.prometheus):
                 try:
                     metrics = await self.prometheus.get_metrics(effective_service, ["up", "cpu_usage", "memory_usage", "error_rate"], since, until)
                     evidence.append(self._observation(
-                        "prometheus", f"prom-observation:{effective_service}:{since.isoformat()}", since,
+                        "prometheus", f"prom-observation:{effective_service}:{since.isoformat()}",
                         status="queried", result_count=len(metrics), service=effective_service, detail="matching_metric_samples",
                     ))
                 except Exception as exc:
-                    evidence.append(self._observation("prometheus", f"prom-error:{since.isoformat()}", since, status="error", service=effective_service, detail=str(exc)))
+                    evidence.append(self._observation("prometheus", f"prom-error:{since.isoformat()}", status="error", service=effective_service, detail=str(exc)))
             else:
-                evidence.append(self._observation("prometheus", f"prom-unavailable:{since.isoformat()}", since, status="unavailable", service=effective_service))
+                evidence.append(self._observation("prometheus", f"prom-unavailable:{since.isoformat()}", status="unavailable", service=effective_service))
 
         for item in logs:
             evidence.append({
@@ -188,20 +186,19 @@ class EvidenceCollector:
 
         if self.kubernetes and getattr(self.kubernetes, "enabled", False) and (wants_all or "event" in wants):
             if not effective_service:
-                evidence.append(self._observation("kubernetes_api", f"k8s-skipped:{since.isoformat()}", since, status="skipped", detail="asset_service_unresolved"))
+                evidence.append(self._observation("kubernetes_api", f"k8s-skipped:{since.isoformat()}", status="skipped", detail="asset_service_unresolved"))
             else:
                 try:
                     k8s_evidence = await self.kubernetes.collect_evidence(effective_service)
                     evidence.extend(k8s_evidence)
                     evidence.append(self._observation(
-                        "kubernetes_api", f"k8s-observation:{effective_service}:{since.isoformat()}", since,
+                        "kubernetes_api", f"k8s-observation:{effective_service}:{since.isoformat()}",
                         status="queried", result_count=len(k8s_evidence), service=effective_service,
                     ))
                     asset = AssetIdentityResolver.resolve(evidence, effective_service)
                 except Exception as exc:
-                    evidence.append(self._observation("kubernetes_api", f"k8s-error:{since.isoformat()}", since, status="error", service=effective_service, detail=str(exc)))
+                    evidence.append(self._observation("kubernetes_api", f"k8s-error:{since.isoformat()}", status="error", service=effective_service, detail=str(exc)))
 
-        # SSH is Linux-specific and remains read-only here.
         should_query_vm = bool(self.vm and effective_service and (wants_all or "telemetry" in wants or "metric" in wants))
         if should_query_vm and str(asset.get("os_family") or "unknown").lower() != "windows" and str(asset.get("platform") or "unknown").lower() != "kubernetes":
             try:
@@ -213,14 +210,14 @@ class EvidenceCollector:
                             evidence.append({
                                 "type": "metric", "source": "vm_ssh",
                                 "reference": f"vm:{effective_service}:{name}:{since.isoformat()}",
-                                "timestamp": since.isoformat(),
+                                "timestamp": datetime.now(timezone.utc).isoformat(),
                                 "raw_data": {"name": name, "value": value, "target": effective_service},
                             })
-                    evidence.append(self._observation("vm_ssh", f"vm-observation:{effective_service}:{since.isoformat()}", since, status="queried", result_count=len(vm_metrics), service=effective_service))
+                    evidence.append(self._observation("vm_ssh", f"vm-observation:{effective_service}:{since.isoformat()}", status="queried", result_count=len(vm_metrics), service=effective_service))
                 else:
-                    evidence.append(self._observation("vm_ssh", f"vm-error:{effective_service}:{since.isoformat()}", since, status="error", service=effective_service, detail=str(vm_result.get("error"))))
+                    evidence.append(self._observation("vm_ssh", f"vm-error:{effective_service}:{since.isoformat()}", status="error", service=effective_service, detail=str(vm_result.get("error"))))
             except Exception as exc:
-                evidence.append(self._observation("vm_ssh", f"vm-error:{effective_service}:{since.isoformat()}", since, status="error", service=effective_service, detail=str(exc)))
+                evidence.append(self._observation("vm_ssh", f"vm-error:{effective_service}:{since.isoformat()}", status="error", service=effective_service, detail=str(exc)))
 
         final_asset = AssetIdentityResolver.resolve(evidence, effective_service)
         return {
