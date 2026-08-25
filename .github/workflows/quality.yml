@@ -12,12 +12,6 @@ jobs:
   test:
     runs-on: ubuntu-latest
     env:
-      APP_ENV: test
-      LLM_PROVIDER: mock
-      EMBEDDING_PROVIDER: deterministic
-      PGVECTOR_VALIDATE_ON_STARTUP: "false"
-      INTERNAL_API_KEY: "ci-test-key"
-      INTERNAL_API_ROLE: "sre"
       PYTHONPATH: ${{ github.workspace }}
     steps:
       - uses: actions/checkout@v4
@@ -25,6 +19,25 @@ jobs:
         with:
           python-version: '3.12'
           cache: pip
+      - name: Build CI runtime .env from canonical template
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp .env.example .env
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('.env')
+          text = path.read_text()
+          replacements = {
+              'APP_ENV=development': 'APP_ENV=test',
+              'INTERNAL_API_KEY=': 'INTERNAL_API_KEY=ci-test-key',
+              'INTERNAL_API_ROLE=operator': 'INTERNAL_API_ROLE=sre',
+              'PGVECTOR_VALIDATE_ON_STARTUP=True': 'PGVECTOR_VALIDATE_ON_STARTUP=False',
+          }
+          for old, new in replacements.items():
+              text = text.replace(old, new, 1)
+          path.write_text(text)
+          PY
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
@@ -42,6 +55,15 @@ jobs:
             echo 'Potential committed secret detected'
             exit 1
           fi
+      - name: Validate centralized configuration contract
+        run: |
+          python - <<'PY'
+          from domain.contracts.config import settings
+          assert settings.APP_ENV == 'test'
+          assert settings.INTERNAL_API_KEY == 'ci-test-key'
+          assert settings.RATE_LIMIT_STRICT_REQUESTS > 0
+          assert settings.ALEMBIC_DATABASE_URL
+          PY
       - name: Syntax check
         run: python -m compileall -q agents apps domain integrations knowledge memory tests
       - name: Full unit integration scenario and security suite
@@ -64,10 +86,6 @@ jobs:
           --health-timeout=5s
           --health-retries=20
     env:
-      APP_ENV: test
-      DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/aiops
-      ALEMBIC_DATABASE_URL: postgresql+psycopg://postgres:postgres@localhost:5432/aiops
-      PGVECTOR_VALIDATE_ON_STARTUP: "false"
       PYTHONPATH: ${{ github.workspace }}
     steps:
       - uses: actions/checkout@v4
@@ -75,6 +93,25 @@ jobs:
         with:
           python-version: '3.12'
           cache: pip
+      - name: Build database CI .env from canonical template
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp .env.example .env
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('.env')
+          text = path.read_text()
+          replacements = {
+              'APP_ENV=development': 'APP_ENV=test',
+              'DATABASE_URL=postgresql+asyncpg://user:password@localhost:5432/aiops': 'DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/aiops',
+              'ALEMBIC_DATABASE_URL=postgresql+psycopg://user:password@localhost:5432/aiops': 'ALEMBIC_DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/aiops',
+              'PGVECTOR_VALIDATE_ON_STARTUP=True': 'PGVECTOR_VALIDATE_ON_STARTUP=False',
+          }
+          for old, new in replacements.items():
+              text = text.replace(old, new, 1)
+          path.write_text(text)
+          PY
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
@@ -88,8 +125,9 @@ jobs:
           import psycopg
           from uuid import uuid4
           from pgvector.psycopg import register_vector
+          from domain.contracts.config import settings
 
-          url = "postgresql://postgres:postgres@127.0.0.1:5432/aiops"
+          url = settings.ALEMBIC_DATABASE_URL.replace('postgresql+psycopg://', 'postgresql://', 1)
           with psycopg.connect(url) as conn:
               register_vector(conn)
               with conn.cursor() as cur:
@@ -124,7 +162,8 @@ jobs:
                   cur.execute("UPDATE approvals SET status='consumed' WHERE approval_id=%s AND status='approved' RETURNING status", (approval_id,))
                   assert cur.fetchone()[0] == 'consumed'
 
-                  vector = "[" + ",".join(["0.1"] * 1536) + "]"
+                  dimension = settings.EMBEDDING_DIMENSION
+                  vector = "[" + ",".join(["0.1"] * dimension) + "]"
                   cur.execute(
                       "INSERT INTO knowledge_documents (id,title,content,source,version,extra_metadata,embedding) VALUES (%s,%s,%s,%s,%s,%s::json,%s::vector)",
                       (uuid4(),'ci','pgvector acceptance','ci','1','{"namespace":"knowledge","source_type":"runbook","owner":"ci","acl":["internal"]}',vector),
