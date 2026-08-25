@@ -27,6 +27,7 @@ class TriageAgent(BaseAgent):
         logger.info(f"TriageAgent analyzing: {input_data.incident_id}")
         evidence = self.evidence_items(input_data)
         evidence_ids = self.evidence_ids(input_data)
+        auxiliary = self.auxiliary_context(input_data)
         type_counts = {}
         source_counts = {}
         for item in evidence:
@@ -35,12 +36,12 @@ class TriageAgent(BaseAgent):
             type_counts[kind] = type_counts.get(kind, 0) + 1
             source_counts[source] = source_counts.get(source, 0) + 1
 
-        prompt = f"""You are the incident commander triage agent for an AIOps platform. Use only supplied evidence. Your job is classification and routing, not remediation.
-Classify primary_domain as one of application,infrastructure,kubernetes,security,vm,unknown. Also return secondary_domains when evidence spans layers.
+        prompt = f"""You are the incident commander triage agent for an AIOps platform. LIVE EVIDENCE is the source of truth. Knowledge RAG and Operational Memory are auxiliary only and may suggest prior patterns or useful checks, never establish current incident facts. Your job is classification and routing, not remediation.
+Classify primary_domain as one of application,infrastructure,kubernetes,security,vm,unknown. Also return secondary_domains when live evidence spans layers.
 Return JSON keys: primary_domain, secondary_domains, severity, health_status, urgency_reason, affected_components, blast_radius, hypotheses, missing_evidence, specialist_routes, immediate_checks, confidence.
-Hypotheses entries: hypothesis, probability, evidence_ids, falsification_checks.
+Hypotheses entries: hypothesis, probability, evidence_ids, conflicting_evidence_ids, falsification_checks. Only live evidence IDs may be cited.
 Never invent a specific VM, deployment, compromise, outage or metric. immediate_checks must be read-only evidence collection.
-Incident={input_data.incident_id}\nService={input_data.service_name}\nSummary={input_data.evidence_summary}\nEvidence={json.dumps(evidence, default=str)}\nContextSummary={json.dumps(input_data.context.get('summary', {}), default=str)}"""
+Incident={input_data.incident_id}\nService={input_data.service_name}\nSummary={input_data.evidence_summary}\nLIVE_EVIDENCE={json.dumps(evidence, default=str)}\nAUXILIARY_CONTEXT={json.dumps(auxiliary, default=str)}\nContextSummary={json.dumps(input_data.context.get('summary', {}), default=str)}"""
         try:
             result = json.loads((await self.llm.generate(prompt, temperature=settings.AGENT_LLM_TEMPERATURE)).content)
         except Exception as exc:
@@ -77,6 +78,7 @@ Incident={input_data.incident_id}\nService={input_data.service_name}\nSummary={i
                     hypothesis=str(item["hypothesis"]),
                     probability=self.safe_confidence(item.get("probability", 0), len(evidence)),
                     evidence_ids=[str(x) for x in item.get("evidence_ids", []) if str(x) in evidence_ids],
+                    conflicting_evidence_ids=[str(x) for x in item.get("conflicting_evidence_ids", []) if str(x) in evidence_ids],
                     falsification_checks=self.normalize_list(item.get("falsification_checks"), 4),
                 ))
         severity = str(result.get("severity", "unknown")).lower()
@@ -104,5 +106,7 @@ Incident={input_data.incident_id}\nService={input_data.service_name}\nSummary={i
                 "urgency_reason": result.get("urgency_reason"),
                 "evidence_type_counts": type_counts,
                 "evidence_source_counts": source_counts,
+                "knowledge_context_count": len(auxiliary["knowledge_rag"]),
+                "memory_context_count": len(auxiliary["operational_memory"]),
             },
         )
