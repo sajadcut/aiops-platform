@@ -23,7 +23,7 @@ class RunbookRegistry:
         self._cache.clear()
         for path in sorted(self.root.glob("*.yml")):
             data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
-            result = validate_runbook(data)
+            result = validate_runbook(data, strict=True)
             if not result["valid"]:
                 raise ValueError(
                     f"invalid_runbook:{path.name}:missing={result['missing']}:errors={result['errors']}"
@@ -60,7 +60,7 @@ class RunbookRegistry:
         bind to authoritative Evidence.
         """
         runbook = self.get(name)
-        result = validate_runbook(runbook)
+        result = validate_runbook(runbook, strict=True)
         if not result["valid"]:
             raise ValueError(f"invalid_runbook:{name}")
         return {
