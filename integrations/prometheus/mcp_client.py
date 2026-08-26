@@ -1,60 +1,67 @@
+from __future__ import annotations
+
+from datetime import datetime, timezone
+from typing import List, Optional
+
+from domain.contracts.config import settings
+from integrations.base import Alert, MetricPoint
 from integrations.mcp_client import MCPClient
-from integrations.base import MetricPoint, Alert
-from datetime import datetime
-from typing import Optional, List
+
 
 class PrometheusMCPClient(MCPClient):
-    def __init__(self, server_url: str = "http://prometheus-mcp:9090"):
-        super().__init__(server_url, "prometheus")
+    """Canonical Control-Plane connector for Prometheus/Alertmanager via MCP."""
 
-    async def get_metrics(
-        self,
-        service: str,
-        metric_names: List[str],
-        since: datetime,
-        until: Optional[datetime] = None
-    ) -> List[MetricPoint]:
-        """دریافت متریک‌ها از Prometheus از طریق MCP"""
-        args = {
+    def __init__(self, server_url: Optional[str] = None):
+        super().__init__(
+            server_url or settings.PROMETHEUS_MCP_URL,
+            "prometheus",
+            allowed_tools={"query_metrics", "get_prometheus_alerts"},
+            protocol_version=settings.MCP_PROTOCOL_VERSION,
+            timeout=settings.MCP_TIMEOUT_SECONDS,
+            bearer_token=settings.MCP_BEARER_TOKEN,
+            ca_cert_path=settings.MCP_CA_CERT_PATH,
+            client_cert_path=settings.MCP_CLIENT_CERT_PATH,
+            client_key_path=settings.MCP_CLIENT_KEY_PATH,
+            require_https=settings.MCP_REQUIRE_HTTPS,
+        )
+
+    @staticmethod
+    def _dt(value: object) -> datetime:
+        if not value:
+            return datetime.now(timezone.utc)
+        try:
+            return datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+        except ValueError:
+            return datetime.now(timezone.utc)
+
+    async def get_metrics(self, service: str, metric_names: List[str], since: datetime, until: Optional[datetime] = None) -> List[MetricPoint]:
+        result = await self.call_tool("query_metrics", {
             "service": service,
-            "metric_names": metric_names,
+            "metric_names": [str(x) for x in metric_names[:25]],
             "since": since.isoformat(),
-            "until": until.isoformat() if until else None
-        }
-        result = await self._call_tool("query_metrics", args)
-        
-        metrics = []
-        for item in result.get("content", []):
-            metrics.append(MetricPoint(
-                timestamp=datetime.fromisoformat(item.get("timestamp")),
-                service=service,
-                name=item.get("metric_name"),
-                value=float(item.get("value", 0.0)),
-                labels=item.get("labels", {}),
-                source="prometheus"
-            ))
-        return metrics
+            "until": until.isoformat() if until else None,
+        })
+        return [MetricPoint(
+            timestamp=self._dt(item.get("timestamp")),
+            service=str(item.get("service") or service),
+            name=str(item.get("metric_name") or item.get("name") or "unknown"),
+            value=float(item.get("value", 0.0)),
+            labels=item.get("labels", {}) or {},
+            source="prometheus",
+        ) for item in result.get("content", [])]
 
-    async def get_alerts(
-        self, since: Optional[datetime] = None, service: Optional[str] = None, limit: int = 100
-    ) -> List[Alert]:
-        """دریافت Alertها از AlertManager از طریق MCP"""
-        args = {
+    async def get_alerts(self, since: Optional[datetime] = None, service: Optional[str] = None, limit: int = 100) -> List[Alert]:
+        result = await self.call_tool("get_prometheus_alerts", {
             "service": service,
-            "limit": limit,
-            "since": since.isoformat() if since else None
-        }
-        result = await self._call_tool("get_prometheus_alerts", args)
-        
-        alerts = []
-        for item in result.get("content", []):
-            alerts.append(Alert(
-                source="prometheus",
-                source_id=item.get("fingerprint"),
-                severity=item.get("severity", "unknown"),
-                service=service,
-                message=item.get("message", ""),
-                timestamp=datetime.fromisoformat(item.get("activeAt")),
-                raw_data=item
-            ))
-        return alerts
+            "limit": min(max(int(limit), 1), 500),
+            "since": since.isoformat() if since else None,
+        })
+        return [Alert(
+            source="prometheus",
+            source_id=str(item.get("fingerprint") or item.get("id") or ""),
+            severity=str(item.get("severity") or "unknown"),
+            service=str(item.get("service") or service or "unknown"),
+            message=str(item.get("message") or item.get("summary") or ""),
+            timestamp=self._dt(item.get("activeAt") or item.get("timestamp")),
+            raw_data=item,
+        ) for item in result.get("content", [])]
