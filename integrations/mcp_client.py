@@ -20,13 +20,11 @@ from domain.contracts.logging import logger
 
 
 class MCPClient:
-    """Small governed remote MCP client for stateless Streamable HTTP.
+    """Governed remote MCP client for stateless Streamable HTTP.
 
-    It sends the 2026 HTTP routing headers (`Mcp-Method`/`Mcp-Name`) while
-    retaining the JSON-RPC request envelope expected by current internal MCP
-    servers. Authentication is bearer-token and/or mTLS. Tool names are
-    allowlisted client-side so an Agent-provided string can never invoke an
-    arbitrary remote capability.
+    Tool names are allowlisted client-side. Optional write tools use a distinct
+    bearer identity so compromise of read-only Evidence credentials cannot
+    authorize mutation capabilities.
     """
 
     production_supported = True
@@ -38,9 +36,11 @@ class MCPClient:
         server_name: str,
         *,
         allowed_tools: Iterable[str],
+        write_tools: Iterable[str] = (),
         protocol_version: str = "2026-07-28",
         timeout: float = 30.0,
         bearer_token: Optional[str] = None,
+        write_bearer_token: Optional[str] = None,
         ca_cert_path: Optional[str] = None,
         client_cert_path: Optional[str] = None,
         client_key_path: Optional[str] = None,
@@ -49,9 +49,13 @@ class MCPClient:
         self.server_url = str(server_url or "").strip()
         self.server_name = server_name
         self.allowed_tools = frozenset(str(x) for x in allowed_tools)
+        self.write_tools = frozenset(str(x) for x in write_tools)
+        if not self.write_tools <= self.allowed_tools:
+            raise ValueError("mcp_write_tools_must_be_allowlisted")
         self.protocol_version = protocol_version
         self.timeout = float(timeout)
         self.bearer_token = bearer_token
+        self.write_bearer_token = write_bearer_token
         self.require_https = bool(require_https)
 
         parsed = urlparse(self.server_url)
@@ -75,8 +79,11 @@ class MCPClient:
         }
         if name:
             headers["Mcp-Name"] = name
-        if self.bearer_token:
-            headers["Authorization"] = f"Bearer {self.bearer_token}"
+        token = self.write_bearer_token if name in self.write_tools else self.bearer_token
+        if name in self.write_tools and not token:
+            raise PermissionError(f"mcp_write_identity_required:{self.server_name}:{name}")
+        if token:
+            headers["Authorization"] = f"Bearer {token}"
         return headers
 
     async def _request(self, method: str, params: Dict[str, Any], *, name: Optional[str] = None) -> Dict[str, Any]:
@@ -85,6 +92,8 @@ class MCPClient:
             response = await self._client.post(self.server_url, json=payload, headers=self._headers(method, name))
             response.raise_for_status()
             result = response.json()
+        except PermissionError:
+            raise
         except Exception as exc:
             logger.error("MCP request failed server=%s method=%s: %s", self.server_name, method, exc)
             raise RuntimeError(f"mcp_transport_error:{self.server_name}") from exc
@@ -98,13 +107,11 @@ class MCPClient:
         return await self._request("tools/call", {"name": tool_name, "arguments": arguments}, name=tool_name)
 
     async def _call_tool(self, tool_name: str, arguments: Dict[str, Any]) -> Dict[str, Any]:
-        """Compatibility alias for integration-specific clients."""
         return await self.call_tool(tool_name, arguments)
 
     async def list_tools(self) -> list:
         result = await self._request("tools/list", {})
         tools = result.get("tools", [])
-        # Never expose capabilities that are not locally allowlisted.
         return [tool for tool in tools if isinstance(tool, dict) and tool.get("name") in self.allowed_tools]
 
     async def health_check(self) -> bool:
