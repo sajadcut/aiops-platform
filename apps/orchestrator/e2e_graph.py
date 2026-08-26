@@ -29,13 +29,14 @@ from apps.rag_service import KnowledgeRAGService
 from apps.verification_service import VerificationEngine
 from domain.contracts.config import settings
 from domain.contracts.logging import logger
-from integrations.elasticsearch.client import ElasticsearchClient
+from integrations.elasticsearch.mcp_client import ElasticsearchMCPClient
 from integrations.llm.base import LLMAdapter
 from integrations.llm.openai_compatible import configured_llm_adapter
-from integrations.prometheus.client import PrometheusClient
-from integrations.vm.ssh_connector import SSHVMConnector
-from integrations.zabbix.connector import ZabbixConnector
+from integrations.prometheus.mcp_client import PrometheusMCPClient
+from integrations.vm.mcp_client import VMEdgeMCPClient
+from integrations.zabbix.mcp_client import ZabbixMCPClient
 from integrations.zabbix.client import MockZabbixClient
+from integrations.kubernetes.mcp_client import KubernetesMCPClient
 
 
 class E2EState(TypedDict, total=False):
@@ -75,14 +76,18 @@ class E2EOrchestrator:
         self.registry = AgentRegistry(self.llm)
         self.coordinator = IncidentCoordinator()
 
-        zabbix = MockZabbixClient() if settings.APP_ENV != "production" else ZabbixConnector()
-        vm_connector = SSHVMConnector() if settings.SSH_ENABLED else None
+        # Local mock input is not an external system; every real operational
+        # provider is reached through the governed MCP boundary.
+        zabbix = MockZabbixClient() if settings.APP_ENV == "test" else ZabbixMCPClient()
+        vm_connector = VMEdgeMCPClient() if settings.VM_MCP_URL else None
+        kubernetes = KubernetesMCPClient() if settings.KUBERNETES_MCP_URL else None
         self.vm_connector = vm_connector
         self.evidence_collector = EvidenceCollector(
             zabbix=zabbix,
-            elasticsearch=ElasticsearchClient(),
-            prometheus=PrometheusClient(),
+            elasticsearch=ElasticsearchMCPClient(),
+            prometheus=PrometheusMCPClient(),
             vm=vm_connector,
+            kubernetes=kubernetes,
         )
         self.graph = self._build_graph()
 
@@ -302,7 +307,6 @@ class E2EOrchestrator:
         findings = await self._run_specialists(selected, state)
         coordination = self.coordinator.synthesize(findings)
 
-        # Structured handoff/second-opinion pass. Only newly requested enabled specialists run.
         requested_handoffs = [
             name for name in coordination.get("handoff_agents", [])
             if name not in selected and self.registry.get(name) is not None
@@ -314,14 +318,12 @@ class E2EOrchestrator:
             coordination = self.coordinator.synthesize(findings)
             self._audit("agent_handoff_completed", state, handoff_agents=requested_handoffs)
 
-        # Bounded targeted evidence refresh. Only canonical evidence types reach the collector.
         evidence_requests = list(coordination.get("evidence_requests") or [])
         if evidence_requests and await self._additional_evidence_round(state, evidence_requests):
             refreshed = await self._run_specialists(selected, state)
             findings = refreshed
             coordination = self.coordinator.synthesize(findings)
 
-        # Record final collaboration state after handoff/evidence refresh.
         for finding in findings:
             name = str(finding.get("agent_name") or "unknown")
             if name == "unknown":
