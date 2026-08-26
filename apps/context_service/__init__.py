@@ -7,39 +7,41 @@ from typing import Any, Dict, Optional
 from domain.contracts.config import settings
 from domain.contracts.logging import logger
 from domain.schemas import IncidentCreate
-from integrations.elasticsearch.client import ElasticsearchClient
-from integrations.prometheus.client import PrometheusClient
-from integrations.vm.ssh_connector import SSHVMConnector
-from integrations.zabbix.connector import ZabbixConnector
+from integrations.elasticsearch.mcp_client import ElasticsearchMCPClient
+from integrations.prometheus.mcp_client import PrometheusMCPClient
+from integrations.vm.mcp_client import VMEdgeMCPClient
+from integrations.zabbix.mcp_client import ZabbixMCPClient
+from integrations.kubernetes.mcp_client import KubernetesMCPClient
 
 from .evidence_collector import EvidenceCollector
 
 
 class ContextBuilder:
-    """Build a production-safe operational context from live connectors only.
+    """Build operational context through governed MCP external-tool boundaries.
 
-    No synthetic/mock Evidence is created when a connector fails. Connector
-    failures and empty observations remain explicit in the Evidence set so
-    downstream Agents can distinguish "source checked and empty" from
-    "source unavailable".
+    The Control Plane never connects directly to Zabbix, Elasticsearch,
+    Prometheus, Kubernetes or VM/Edge systems. Native connectors may exist for
+    MCP server-side adapters/tests, but are not instantiated here.
     """
 
     def __init__(self, collector: Optional[EvidenceCollector] = None):
         if collector is not None:
             self.collector = collector
             return
-        vm = SSHVMConnector() if settings.SSH_ENABLED else None
+        vm = VMEdgeMCPClient() if settings.VM_MCP_URL else None
+        kubernetes = KubernetesMCPClient() if settings.KUBERNETES_MCP_URL else None
         self.collector = EvidenceCollector(
-            zabbix=ZabbixConnector(),
-            elasticsearch=ElasticsearchClient(),
-            prometheus=PrometheusClient(),
+            zabbix=ZabbixMCPClient(),
+            elasticsearch=ElasticsearchMCPClient(),
+            prometheus=PrometheusMCPClient(),
             vm=vm,
+            kubernetes=kubernetes,
         )
 
     async def build_context(self, incident_data: IncidentCreate) -> Dict[str, Any]:
         requested_service = str(incident_data.service or "unknown").strip() or "unknown"
         since = datetime.now(timezone.utc) - timedelta(seconds=settings.AGENT_INITIAL_EVIDENCE_WINDOW_SECONDS)
-        logger.info("Building live context for service=%s", requested_service)
+        logger.info("Building MCP-backed live context for service=%s", requested_service)
 
         live = await self.collector.collect(requested_service, since)
         asset = dict(live.get("asset_context") or {})
@@ -66,10 +68,7 @@ class ContextBuilder:
         return {
             "incident": incident_data.model_dump(mode="json"),
             "service": resolved_service,
-            "time_window": {
-                "since": live.get("since"),
-                "until": live.get("until"),
-            },
+            "time_window": {"since": live.get("since"), "until": live.get("until")},
             "asset_context": asset,
             "live_evidence": live,
             "evidence": evidence,
