@@ -29,15 +29,21 @@ def test_mcp_transport_is_canonical_and_governed():
     assert MCPClient.production_supported is True
     source = Path("integrations/mcp_client.py").read_text(encoding="utf-8")
     for required in (
-        "all external integrations",
+        "external integrations",
         "allowed_tools",
-        "Mcp-Protocol-Version",
-        "Mcp-Method",
-        "Mcp-Name",
+        "MCP-Protocol-Version",
+        "Mcp-Session-Id",
+        '"initialize"',
+        '"notifications/initialized"',
         "Authorization",
-        "MCP is a transport/capability boundary",
+        "text/event-stream",
     ):
         assert required in source
+
+    # Routing is standard MCP JSON-RPC tools/list + tools/call. Do not require
+    # private/non-upstream Mcp-Method/Mcp-Name headers.
+    assert '"tools/list"' in source
+    assert '"tools/call"' in source
 
     adr = Path("docs/adr/DECISIONS.md").read_text(encoding="utf-8")
     assert "MCP Is the Canonical External-Tool Transport" in adr
