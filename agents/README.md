@@ -167,7 +167,7 @@ Durable per-Incident routing/collaboration remains in workflow state and Audit; 
 
 ## Runtime configuration
 
-All Agent runtime policy is centralized through `.env`/`.env.example`, including:
+All Agent runtime policy is centralized through the canonical root `.env`, including:
 
 - temperature and max tokens
 - Evidence and auxiliary-context limits
@@ -188,7 +188,7 @@ All Agent runtime policy is centralized through `.env`/`.env.example`, including
 1. Confirm the domain does not overlap an existing specialist/capability.
 2. Implement `BaseAgent` directly or define a `DomainSpec` using `DomainDiagnosticAgent`.
 3. Define required Evidence and read-only capabilities.
-4. Add the Agent to Registry and `.env.example` only if it should be enabled by default.
+4. Add the Agent to Registry and `.env` only if it should be enabled by default.
 5. Add deterministic routing/handoff relationships.
 6. Add unit + scenario tests, including Evidence grounding, malformed output and failure behavior.
 7. Document the domain here.
