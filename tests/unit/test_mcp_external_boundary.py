@@ -20,6 +20,17 @@ def test_context_builder_uses_mcp_clients_not_native_external_connectors():
     assert "from integrations.vm.ssh_connector import" not in text
 
 
+def test_evidence_collector_has_no_native_external_fallbacks():
+    text = (ROOT / "apps/context_service/evidence_collector.py").read_text()
+    assert "KubernetesEvidenceClient" not in text
+    assert "SSHVMConnector" not in text
+    assert "ElasticsearchClient" not in text
+    assert "PrometheusClient" not in text
+    assert "ZabbixConnector" not in text
+    assert '"source": "vm_mcp"' in text
+    assert 'self.kubernetes = kubernetes' in text
+
+
 def test_api_execution_registration_does_not_open_direct_ssh():
     text = (ROOT / "apps/api/main.py").read_text()
     assert "VMEdgeMCPClient" in text
