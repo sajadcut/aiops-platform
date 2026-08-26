@@ -1,14 +1,14 @@
 from __future__ import annotations
 
 from apps.execution_service.tools.base import BaseTool, ToolInput, ToolOutput
-from integrations.vm.ssh_connector import SSHVMConnector
+from integrations.vm.mcp_client import VMEdgeMCPClient
 
 
 class VMTelemetryTool(BaseTool):
-    """Read-only VM telemetry tool used by evidence/verification paths."""
+    """Read-only VM telemetry tool backed by MCP Edge transport."""
 
-    def __init__(self, connector: SSHVMConnector | None = None):
-        self.connector = connector or SSHVMConnector()
+    def __init__(self, connector: VMEdgeMCPClient | None = None):
+        self.connector = connector or VMEdgeMCPClient()
 
     @property
     def name(self) -> str:
