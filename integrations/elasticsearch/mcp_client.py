@@ -9,13 +9,13 @@ from integrations.mcp_client import MCPClient
 
 
 class ElasticsearchMCPClient(MCPClient):
-    """Canonical Control-Plane connector for Elastic log Evidence via MCP."""
+    """Elastic upstream MCP adapter using list_indices/search/esql contracts."""
 
     def __init__(self, server_url: Optional[str] = None):
         super().__init__(
             server_url or settings.ELASTICSEARCH_MCP_URL,
             "elasticsearch",
-            allowed_tools={"search_logs"},
+            allowed_tools={"list_indices", "get_mappings", "search", "esql", "get_shards"},
             protocol_version=settings.MCP_PROTOCOL_VERSION,
             timeout=settings.MCP_TIMEOUT_SECONDS,
             bearer_token=settings.MCP_BEARER_TOKEN,
@@ -25,23 +25,34 @@ class ElasticsearchMCPClient(MCPClient):
             require_https=settings.MCP_REQUIRE_HTTPS,
         )
 
-    async def get_logs(
-        self,
-        service: str,
-        since: datetime,
-        until: Optional[datetime] = None,
-        level: Optional[str] = None,
-        limit: int = 100,
-    ) -> List[LogEntry]:
-        result = await self.call_tool("search_logs", {
-            "service": service,
-            "since": since.isoformat(),
-            "until": until.isoformat() if until else None,
-            "level": level,
-            "limit": min(max(int(limit), 1), 500),
+    async def get_logs(self, service: str, since: datetime, until: Optional[datetime] = None, level: Optional[str] = None, limit: int = 100) -> List[LogEntry]:
+        filters = [
+            {"range": {"@timestamp": {"gte": since.isoformat(), **({"lte": until.isoformat()} if until else {})}}},
+            {"bool": {"should": [
+                {"term": {"service.name": service}},
+                {"term": {"service": service}},
+                {"match_phrase": {"service.name": service}},
+            ], "minimum_should_match": 1}},
+        ]
+        if level:
+            filters.append({"bool": {"should": [
+                {"term": {"log.level": level}},
+                {"term": {"level": level}},
+            ], "minimum_should_match": 1}})
+        query_body = {
+            "size": min(max(int(limit), 1), 500),
+            "sort": [{"@timestamp": {"order": "desc"}}],
+            "query": {"bool": {"filter": filters}},
+        }
+        result = await self.call_tool("search", {
+            "index": settings.ELASTICSEARCH_MCP_INDEX_PATTERN,
+            "fields": ["@timestamp", "message", "service.name", "service", "log.level", "level", "host.name", "trace.id", "transaction.id"],
+            "query_body": query_body,
         })
         logs: List[LogEntry] = []
-        for item in result.get("content", []):
+        for item in self.json_content(result):
+            if not isinstance(item, dict):
+                continue
             raw_ts = item.get("@timestamp") or item.get("timestamp")
             try:
                 timestamp = datetime.fromisoformat(str(raw_ts).replace("Z", "+00:00")) if raw_ts else datetime.now(timezone.utc)
