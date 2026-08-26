@@ -17,9 +17,11 @@ class VMEdgeMCPClient(MCPClient):
             url,
             "vm-edge",
             allowed_tools={"collect_vm_metrics", "service_status", "process_snapshot", "restart_service"},
+            write_tools={"restart_service"},
             protocol_version=settings.MCP_PROTOCOL_VERSION,
             timeout=settings.MCP_TIMEOUT_SECONDS,
             bearer_token=settings.MCP_BEARER_TOKEN,
+            write_bearer_token=settings.MCP_WRITE_BEARER_TOKEN,
             ca_cert_path=settings.MCP_CA_CERT_PATH,
             client_cert_path=settings.MCP_CLIENT_CERT_PATH,
             client_key_path=settings.MCP_CLIENT_KEY_PATH,
@@ -43,5 +45,7 @@ class VMEdgeMCPClient(MCPClient):
     async def process_snapshot(self, target: str) -> Dict[str, Any]:
         return await self._invoke("process_snapshot", target)
 
-    async def restart_service(self, target: str, service: str) -> Dict[str, Any]:
-        return await self._invoke("restart_service", target, service=service)
+    async def restart_service(self, target: str, service: str, approval_id: str) -> Dict[str, Any]:
+        if not approval_id:
+            raise PermissionError("mcp_write_approval_id_required")
+        return await self._invoke("restart_service", target, service=service, approval_id=approval_id)
