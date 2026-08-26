@@ -1,7 +1,9 @@
-from pydantic import BaseModel, Field
 from datetime import datetime
-from typing import Optional, List, Dict, Any
+from typing import Any, Dict, List, Optional
 from uuid import UUID
+
+from pydantic import BaseModel, ConfigDict, Field
+
 
 # --- Schemas برای Incident ---
 class IncidentCreate(BaseModel):
@@ -11,7 +13,10 @@ class IncidentCreate(BaseModel):
     summary: Optional[str] = None
     context: Optional[Dict[str, Any]] = None
 
+
 class IncidentResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: UUID
     source: str
     severity: str
@@ -19,9 +24,7 @@ class IncidentResponse(BaseModel):
     started_at: datetime
     status: str
     summary: Optional[str]
-    
-    class Config:
-        from_attributes = True
+
 
 # --- Schemas برای Evidence ---
 class EvidenceCreate(BaseModel):
@@ -34,16 +37,17 @@ class EvidenceCreate(BaseModel):
     raw_data: Optional[Dict[str, Any]] = None
     confidence: float = 1.0
 
+
 class EvidenceResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: UUID
     incident_id: UUID
     type: str
     source: str
     reference: Optional[str]
     confidence: float
-    
-    class Config:
-        from_attributes = True
+
 
 # --- Schemas برای Finding ---
 class FindingCreate(BaseModel):
@@ -54,16 +58,17 @@ class FindingCreate(BaseModel):
     evidence_ids: Optional[List[UUID]] = None
     confidence: float = 0.0
 
+
 class FindingResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: UUID
     incident_id: UUID
     agent: str
     finding_type: str
     statement: str
     confidence: float
-    
-    class Config:
-        from_attributes = True
+
 
 # --- State برای LangGraph ---
 class AgentState(BaseModel):
