@@ -28,6 +28,8 @@ Current engineering assessment:
 - Knowledge RAG and Operational Memory remain separate and use PostgreSQL + pgvector.
 - OIDC/RBAC, Audit, durable workflow checkpoints and hardened CI/deployment contracts.
 - Repository-wide Python import/dependency integrity validation.
+- Operator-grade AIOps Control Center with live Command Center, prioritized attention queue, service health aggregation, incident workbench, Agent/RCA view, MCP health and durable governance timeline.
+- Dashboard service health is derived only from durable incident/approval/verification state; no synthetic dependency topology, SLO values, fake incident data or decorative fallback telemetry is generated when production data is absent.
 
 ## Canonical MCP external-tool boundary
 
@@ -55,6 +57,10 @@ Control-Plane MCP boundaries and provider adapters are implemented, but real Zab
 ### Multi-source incident correlation
 
 Deterministic bounded correlation is implemented and race-guarded for PostgreSQL. It still requires real corpus measurements for false-merge/false-split behavior and CMDB/service-catalog authority.
+
+### Service topology and SLO UX
+
+The dashboard now has a durable service-centric health view, but a true dependency/service topology and SLO/error-budget experience are intentionally not fabricated. They remain pending until authoritative CMDB/service-catalog dependency data and SLO contracts are available to the Control Plane.
 
 ### Agent deployment
 
@@ -109,6 +115,7 @@ Offline build is fail-closed and non-root. Real internal wheelhouse/base-image m
 8. Peer Agent findings are analysis context, not Evidence.
 9. Connector/MCP failure cannot be interpreted as zero anomalies.
 10. Elastic Evidence uses Agent Builder MCP >=9.2; standalone Elastic MCP is forbidden.
+11. Dashboard operational health must be derived from durable/live state; synthetic service topology, SLOs and fake fallback telemetry are forbidden.
 
 ## Next engineering priorities
 
@@ -118,12 +125,13 @@ Offline build is fail-closed and non-root. Real internal wheelhouse/base-image m
 4. Build Windows Edge MCP Server with constrained JEA/WinRM/PowerShell actions and no arbitrary PowerShell.
 5. Build Kubernetes MCP Server write capabilities behind Execution/Approval and retain read-only Evidence tools.
 6. Bind per-runbook verification objectives to Execution receipts.
-7. Add correlation corpus acceptance and CMDB/service catalog authority.
-8. Decide distributed queue/workers/backpressure after load evidence.
-9. Add distributed rate limiting and 500-concurrent-Incident load/soak tests.
-10. PostgreSQL HA + backup/restore/PITR/DR.
-11. OpenTelemetry GenAI/Agent/MCP/tool tracing.
-12. Signed immutable offline artifact promotion and branch/ruleset protection.
+7. Add correlation corpus acceptance and CMDB/service catalog authority, including authoritative service dependencies for topology UX.
+8. Add SLO/error-budget contracts so the dashboard can expose real SLI, burn-rate and business-impact views without inference.
+9. Decide distributed queue/workers/backpressure after load evidence.
+10. Add distributed rate limiting and 500-concurrent-Incident load/soak tests.
+11. PostgreSQL HA + backup/restore/PITR/DR.
+12. OpenTelemetry GenAI/Agent/MCP/tool tracing.
+13. Signed immutable offline artifact promotion and branch/ruleset protection.
 
 ## External acceptance required before strict Production Ready verdict
 
@@ -139,4 +147,4 @@ Offline build is fail-closed and non-root. Real internal wheelhouse/base-image m
 
 ## Verdict
 
-The project has a single MCP external-tool boundary at the Control Plane. Elastic now uses the current Agent Builder MCP architecture rather than the deprecated standalone MCP provider, while Evidence-first reasoning and Policy/Approval authority remain unchanged. Strict Production Ready status still depends on real endpoint acceptance, workload identity, HA/DR and scale/failure evidence.
+The project has a single MCP external-tool boundary at the Control Plane. Elastic now uses the current Agent Builder MCP architecture rather than the deprecated standalone MCP provider, while Evidence-first reasoning and Policy/Approval authority remain unchanged. The operator dashboard is now service- and incident-centric and refuses to fabricate missing operational context. Strict Production Ready status still depends on real endpoint acceptance, authoritative service/SLO data, workload identity, HA/DR and scale/failure evidence.
