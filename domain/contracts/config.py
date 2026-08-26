@@ -82,7 +82,6 @@ class Settings(BaseSettings):
     CORS_ORIGINS: List[str] = Field(...)
     APPROVAL_TTL_SECONDS: int = Field(...)
 
-    # Canonical MCP transport used by Control Plane external integrations.
     MCP_PROTOCOL_VERSION: str = Field(...)
     MCP_REQUIRE_HTTPS: bool = Field(...)
     MCP_BEARER_TOKEN: Optional[str] = Field(...)
@@ -96,10 +95,13 @@ class Settings(BaseSettings):
 
     ZABBIX_MCP_URL: str = Field(...)
     ZABBIX_MCP_SERVER_NAME: Optional[str] = Field(...)
+    ZABBIX_MCP_AUTH_HEADER: Optional[str] = Field(...)
     ELASTICSEARCH_MCP_URL: str = Field(...)
     ELASTICSEARCH_MCP_INDEX_PATTERN: str = Field(...)
+    ELASTICSEARCH_MCP_AUTH_HEADER: Optional[str] = Field(...)
     PROMETHEUS_MCP_URL: str = Field(...)
     PROMETHEUS_MCP_SERVICE_LABEL: str = Field(...)
+    PROMETHEUS_MCP_AUTH_HEADER: Optional[str] = Field(...)
     KUBERNETES_MCP_URL: Optional[str] = Field(...)
     VM_MCP_URL: Optional[str] = Field(...)
 
