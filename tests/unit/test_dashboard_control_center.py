@@ -10,11 +10,15 @@ def test_dashboard_is_single_live_control_center():
     css = (ROOT / "dashboards/control-center.css").read_text(encoding="utf-8")
 
     assert "AIOps Control Center" in html
-    assert "MCP Servers" in html
+    assert "Command Center" in html
+    assert "MCP Fabric" in html
+    assert "Service Health" in html
+    assert "Operator Attention Queue" in html
     assert "Incident Intelligence" in html
     assert "Audit & Governance" in html
     assert "/api/v1/dashboard/summary" in js
     assert "/api/v1/dashboard/incidents?limit=100" in js
+    assert "/api/v1/dashboard/services?limit=100" in js
     assert "/api/v1/health" in js
     assert "/evidence?limit=100" in js
     assert "/lifecycle" in js
@@ -22,8 +26,9 @@ def test_dashboard_is_single_live_control_center():
     assert "/api/v1/agents/catalog" in js
     assert "/api/v1/agents/metrics" in js
     assert "fake" not in js.lower()
-    assert "--panel" in css
-    assert ".workspace" in css
+    assert "--surface" in css
+    assert ".command-grid" in css
+    assert ".incident-layout" in css
 
 
 def test_dashboard_assets_and_agent_route_are_served_by_fastapi():
