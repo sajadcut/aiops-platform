@@ -156,17 +156,25 @@
 
 ---
 
-## ADR-015 — MCP Is a Selected Capability Transport, Not the Core Execution Authority
+## ADR-015 — MCP Is the Canonical External-Tool Transport
 
-**Status:** ACCEPTED
+**Status:** ACCEPTED / SUPERSEDES PREVIOUS SELECTED-ONLY POLICY
 
-**Decision:** MCP در صورت استفاده، فقط برای integration/edge capabilityهایی به‌کار می‌رود که interoperability آن ارزش واقعی دارد. Native governed connectors برای Observabilityهای ثابت می‌توانند canonical باقی بمانند. MCP هرگز Policy/Approval/Tool Registry را جایگزین نمی‌کند.
+**Decision:** تمام ارتباط Control Plane با operational toolهای خارجی باید از MCP عبور کند. این شامل Zabbix، Elasticsearch، Prometheus/Alertmanager، Kubernetes، VM/Edge و integrationهای خارجی بعدی است. Control Plane نباید برای Evidence یا Execution مستقیماً credential/API/SSH ابزار مقصد را مصرف کند.
 
-**Production remote MCP requirements:** OAuth 2.1، Protected Resource Metadata، resource/audience-bound tokens، HTTPS، token isolation/no passthrough، capability allowlist، per-tool authorization، Audit و در محیط سازمانی workload identity/mTLS.
+**Boundary:** Agent فقط EvidenceRequest/Recommendation تولید می‌کند. Evidence Collector یا Execution Service قابلیت canonical را انتخاب می‌کند و MCP Client آن را به MCP Server مربوطه می‌فرستد. MCP هرگز Policy/Approval/Tool Registry/Verification/Audit را جایگزین نمی‌کند.
 
-**Legacy:** `integrations/mcp_client.py` و clientهای وابسته legacy/non-production هستند تا زمانی که adapter استاندارد جدید با این کنترل‌ها ساخته شود.
+**Trust-zone rule:** MCP Server در trust zone نزدیک ابزار مقصد مستقر می‌شود و خودش با API/SDK/SSH/WinRM محلیِ آن ابزار کار می‌کند. credential ابزار مقصد در Control Plane نگهداری نمی‌شود.
 
-**Edge MCP:** MCP Server کنار VM/Node فقط به‌عنوان interface یک Edge Runtime constrained قابل قبول است؛ arbitrary shell/PowerShell tool ممنوع است.
+**Production remote MCP requirements:** HTTPS، protocol-version pinning، `Mcp-Method`/`Mcp-Name` route metadata، bearer identity و/یا mTLS، capability allowlist، per-tool authorization، timeout، no token passthrough، Audit و trace correlation. انتخاب نهایی OAuth/EMA/workload-identity provider با PKI سازمان هماهنگ می‌شود.
+
+**Read tools:** Zabbix alert read، Elastic log search، Prometheus metrics، Kubernetes evidence و VM telemetry می‌توانند بدون human approval و طبق read policy استفاده شوند.
+
+**Write tools:** restart/rollback/delete/reboot/change و هر mutation فقط Execution Service → Policy → Approval → MCP Client → MCP Server انجام می‌شود؛ Agent حق MCP write call مستقیم ندارد.
+
+**Native connectors:** native connectorها فقط به‌عنوان MCP server-side adapter، migration/test utility یا isolated development fixture مجازند و canonical Control-Plane path نیستند.
+
+**Forbidden:** arbitrary shell، arbitrary PowerShell، arbitrary Elasticsearch query تولیدشده توسط LLM، dynamic ungoverned tool discovery و direct Control-Plane SSH/Kubernetes access در Production.
 
 ---
 
@@ -176,11 +184,11 @@
 
 **Decision:** Reasoning/LLM/Coordinator/RCA/Evaluator/Policy در AIOps Control Plane مرکزی می‌مانند. کنار Linux/Windows/Kubernetes در صورت نیاز Edge Runtime سبک برای telemetry و allowlisted actuation مستقر می‌شود؛ Edge Runtime خودش LLM decision authority ندارد.
 
-**Linux/Windows:** Edge اختیاری است و برای شبکه‌های segmented، credential blast-radius و local diagnostics ترجیح دارد؛ SSH/WinRM می‌تواند برای MVP governed fallback باقی بماند.
+**Linux/Windows:** ارتباط Control Plane با Edge Runtime از MCP است. SSH/WinRM فقط پشت Edge/MCP Server و داخل trust zone مقصد قابل استفاده است؛ direct SSH/WinRM از Control Plane مسیر Production نیست.
 
-**Kubernetes:** AI Agent per Pod ممنوع/غیرضروری است. در صورت نیاز به node-local evidence، Edge Runtime به‌شکل DaemonSet منطقی است؛ reasoning مرکزی باقی می‌ماند.
+**Kubernetes:** AI Agent per Pod ممنوع/غیرضروری است. Kubernetes MCP Server می‌تواند کنار control-plane integration service یا Edge DaemonSet مستقر شود؛ reasoning مرکزی باقی می‌ماند.
 
-**Identity target:** Edge/Control-Plane communication باید به سمت short-lived workload identity و mTLS حرکت کند؛ پیاده‌سازی نهایی provider-specific هنوز Open Implementation است.
+**Identity target:** Edge/Control-Plane communication باید با bearer/workload identity و ترجیحاً short-lived mTLS محافظت شود؛ provider نهایی با PKI سازمان انتخاب می‌شود.
 
 ---
 
