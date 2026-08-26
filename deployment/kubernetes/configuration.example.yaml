@@ -1,20 +1,21 @@
 # Do not commit real credentials.
-# Create these resources in the target namespace from the canonical .env.example values.
+# Build target ConfigMap/Secret values from the canonical root .env key contract.
 # Non-secret values belong in aiops-platform-config; credentials/tokens belong in aiops-platform-secrets.
 #
 # Example:
 #   kubectl create configmap aiops-platform-config --from-env-file=platform.env
 #   kubectl create secret generic aiops-platform-secrets --from-env-file=platform.secrets.env
 #
-# platform.env and platform.secrets.env are generated from the root .env.example contract.
+# platform.env and platform.secrets.env are environment-specific projections of
+# the root .env contract. Never copy non-empty production secrets back into Git.
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: aiops-platform-config
-# data is intentionally omitted: populate from the canonical root .env.example.
+# data is intentionally omitted: populate non-secret keys from the canonical root .env contract.
 ---
 apiVersion: v1
 kind: Secret
 metadata:
   name: aiops-platform-secrets
-# stringData is intentionally omitted: never commit real credentials.
+# stringData is intentionally omitted: inject real credentials outside Git.
