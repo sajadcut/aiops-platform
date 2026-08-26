@@ -87,13 +87,10 @@ class Settings(BaseSettings):
     CORS_ORIGINS: List[str] = Field(...)
     APPROVAL_TTL_SECONDS: int = Field(...)
 
-    # Canonical external-tool transport. The Control Plane talks to MCP Servers,
-    # never directly to operational systems. One shared bearer/mTLS identity can
-    # be overridden later by a dedicated credential broker without changing the
-    # connector contracts.
     MCP_PROTOCOL_VERSION: str = Field(...)
     MCP_REQUIRE_HTTPS: bool = Field(...)
     MCP_BEARER_TOKEN: Optional[str] = Field(...)
+    MCP_WRITE_BEARER_TOKEN: Optional[str] = Field(...)
     MCP_CA_CERT_PATH: Optional[str] = Field(...)
     MCP_CLIENT_CERT_PATH: Optional[str] = Field(...)
     MCP_CLIENT_KEY_PATH: Optional[str] = Field(...)
@@ -106,9 +103,7 @@ class Settings(BaseSettings):
     KUBERNETES_MCP_URL: Optional[str] = Field(...)
     VM_MCP_URL: Optional[str] = Field(...)
 
-    # Legacy/direct endpoint settings are retained only for MCP server-side
-    # adapters, migration tooling and tests. The Control Plane must not use
-    # these fields for operational Evidence or execution.
+    # Direct endpoint settings are only for MCP server-side adapters/tests.
     ZABBIX_URL: str = Field(...)
     ZABBIX_USERNAME: Optional[str] = Field(...)
     ZABBIX_PASSWORD: Optional[str] = Field(...)
