@@ -19,11 +19,44 @@ jobs:
         with:
           python-version: '3.12'
           cache: pip
-      - name: Build CI runtime .env from canonical template
+      - name: Repository hygiene and canonical env safety
         shell: bash
         run: |
           set -euo pipefail
-          cp .env.example .env
+          test -f .env
+          test ! -e .env.example
+          if git ls-files | grep -E '(^|/)(__pycache__/|.*\.(pyc|pyo|zip)$|\.pytest_cache/|\.DS_Store$)'; then
+            echo 'Tracked generated artifact detected'
+            exit 1
+          fi
+          if git grep -n -I -E '(BEGIN (RSA|OPENSSH|EC) PRIVATE KEY|AKIA[0-9A-Z]{16})' -- ':!tests/**'; then
+            echo 'Potential committed secret detected'
+            exit 1
+          fi
+          python - <<'PY'
+          from pathlib import Path
+          sensitive = {
+              'LLM_API_KEY', 'EMBEDDING_API_KEY', 'INTERNAL_API_KEY',
+              'MCP_BEARER_TOKEN', 'MCP_WRITE_BEARER_TOKEN',
+              'ZABBIX_MCP_AUTH_HEADER', 'ELASTICSEARCH_MCP_AUTH_HEADER',
+              'PROMETHEUS_MCP_AUTH_HEADER', 'ZABBIX_PASSWORD',
+              'ELASTICSEARCH_PASSWORD', 'KUBERNETES_TOKEN',
+              'OIDC_JWKS_URL',
+          }
+          values = {}
+          for raw in Path('.env').read_text(encoding='utf-8').splitlines():
+              line = raw.strip()
+              if not line or line.startswith('#') or '=' not in line:
+                  continue
+              key, value = line.split('=', 1)
+              values[key] = value.strip()
+          leaked = {k: values.get(k) for k in sensitive if values.get(k)}
+          assert not leaked, f'Committed .env contains non-empty sensitive values: {sorted(leaked)}'
+          PY
+      - name: Build CI runtime from canonical .env
+        shell: bash
+        run: |
+          set -euo pipefail
           python - <<'PY'
           from pathlib import Path
           path = Path('.env')
@@ -43,18 +76,6 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip check
-      - name: Repository hygiene
-        shell: bash
-        run: |
-          set -euo pipefail
-          if git ls-files | grep -E '(^|/)(__pycache__/|.*\.(pyc|pyo|zip)$|(^|/)\.env$|\.pytest_cache/|\.DS_Store$)'; then
-            echo 'Tracked generated or secret artifact detected'
-            exit 1
-          fi
-          if git grep -n -I -E '(BEGIN (RSA|OPENSSH|EC) PRIVATE KEY|AKIA[0-9A-Z]{16})' -- ':!tests/**'; then
-            echo 'Potential committed secret detected'
-            exit 1
-          fi
       - name: Validate centralized configuration contract
         run: |
           python - <<'PY'
@@ -97,11 +118,12 @@ jobs:
         with:
           python-version: '3.12'
           cache: pip
-      - name: Build database CI .env from canonical template
+      - name: Build database CI runtime from canonical .env
         shell: bash
         run: |
           set -euo pipefail
-          cp .env.example .env
+          test -f .env
+          test ! -e .env.example
           python - <<'PY'
           from pathlib import Path
           path = Path('.env')
