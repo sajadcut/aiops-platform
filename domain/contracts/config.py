@@ -69,8 +69,6 @@ class Settings(BaseSettings):
     A2A_ALLOWED_TARGETS: List[str] = Field(...)
     A2A_REQUIRE_HTTPS: bool = Field(...)
 
-    # Source-agnostic incident correlation is deterministic and bounded. LLM
-    # output/free text is never used as the merge authority.
     SIGNAL_CORRELATION_ENABLED: bool = Field(...)
     SIGNAL_CORRELATION_WINDOW_SECONDS: int = Field(..., ge=1, le=3600)
     SIGNAL_CORRELATION_CANDIDATE_LIMIT: int = Field(..., ge=1, le=100)
@@ -89,20 +87,36 @@ class Settings(BaseSettings):
     CORS_ORIGINS: List[str] = Field(...)
     APPROVAL_TTL_SECONDS: int = Field(...)
 
+    # Canonical external-tool transport. The Control Plane talks to MCP Servers,
+    # never directly to operational systems. One shared bearer/mTLS identity can
+    # be overridden later by a dedicated credential broker without changing the
+    # connector contracts.
+    MCP_PROTOCOL_VERSION: str = Field(...)
+    MCP_REQUIRE_HTTPS: bool = Field(...)
+    MCP_BEARER_TOKEN: Optional[str] = Field(...)
+    MCP_CA_CERT_PATH: Optional[str] = Field(...)
+    MCP_CLIENT_CERT_PATH: Optional[str] = Field(...)
+    MCP_CLIENT_KEY_PATH: Optional[str] = Field(...)
+    MCP_TIMEOUT_SECONDS: int = Field(...)
+    ZABBIX_MCP_URL: str = Field(...)
+    ELASTICSEARCH_MCP_URL: str = Field(...)
+    PROMETHEUS_MCP_URL: str = Field(...)
+    KUBERNETES_MCP_URL: Optional[str] = Field(...)
+    VM_MCP_URL: Optional[str] = Field(...)
+
+    # Legacy/direct endpoint settings are retained only for MCP server-side
+    # adapters, migration tooling and tests. The Control Plane must not use
+    # these fields for operational Evidence or execution.
     ZABBIX_URL: str = Field(...)
     ZABBIX_USERNAME: Optional[str] = Field(...)
     ZABBIX_PASSWORD: Optional[str] = Field(...)
     ZABBIX_TIMEOUT_SECONDS: int = Field(...)
-
     ELASTICSEARCH_HOSTS: List[str] = Field(...)
     ELASTICSEARCH_USERNAME: Optional[str] = Field(...)
     ELASTICSEARCH_PASSWORD: Optional[str] = Field(...)
     ELASTICSEARCH_TIMEOUT_SECONDS: int = Field(...)
-
     PROMETHEUS_URL: str = Field(...)
     PROMETHEUS_TIMEOUT_SECONDS: int = Field(...)
-
-    # Read-only Kubernetes evidence connector. No write verbs are implemented.
     KUBERNETES_API_URL: Optional[str] = Field(...)
     KUBERNETES_TOKEN: Optional[str] = Field(...)
     KUBERNETES_TOKEN_FILE: Optional[str] = Field(...)
@@ -110,7 +124,6 @@ class Settings(BaseSettings):
     KUBERNETES_NAMESPACE: str = Field(...)
     KUBERNETES_TIMEOUT_SECONDS: int = Field(...)
     KUBERNETES_LOG_TAIL_LINES: int = Field(...)
-
     SSH_ENABLED: bool = Field(...)
     SSH_USERNAME: str = Field(...)
     SSH_PRIVATE_KEY_PATH: Optional[str] = Field(...)
