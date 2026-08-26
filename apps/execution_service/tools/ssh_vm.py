@@ -1,14 +1,18 @@
 from __future__ import annotations
 
 from apps.execution_service.tools.base import BaseTool, ToolInput, ToolOutput
-from integrations.vm.ssh_connector import SSHVMConnector
+from integrations.vm.mcp_client import VMEdgeMCPClient
 
 
 class SSHVMTool(BaseTool):
-    """Governed Linux VM tool for telemetry and approved remediation."""
+    """Backward-compatible governed VM tool backed by MCP Edge transport.
 
-    def __init__(self, connector: SSHVMConnector | None = None):
-        self.connector = connector or SSHVMConnector()
+    The public tool name remains ``ssh_vm`` so existing runbooks/approvals keep
+    working, but the Control Plane no longer opens SSH sessions itself.
+    """
+
+    def __init__(self, connector: VMEdgeMCPClient | None = None):
+        self.connector = connector or VMEdgeMCPClient()
 
     @property
     def name(self) -> str:
@@ -23,17 +27,10 @@ class SSHVMTool(BaseTool):
         return True
 
     async def validate(self, input_data: ToolInput) -> bool:
-        if not input_data.target or input_data.action not in {
-            "collect_vm_metrics",
-            "service_status",
-            "restart_service",
-            "process_snapshot",
-        }:
+        if not input_data.target or input_data.action not in {"collect_vm_metrics", "service_status", "restart_service", "process_snapshot"}:
             return False
-        if input_data.action in {"service_status", "restart_service"}:
-            service = str((input_data.parameters or {}).get("service", ""))
-            if not service:
-                return False
+        if input_data.action in {"service_status", "restart_service"} and not str((input_data.parameters or {}).get("service", "")):
+            return False
         return True
 
     async def execute(self, input_data: ToolInput) -> ToolOutput:
@@ -48,8 +45,4 @@ class SSHVMTool(BaseTool):
             result = await self.connector.process_snapshot(input_data.target)
         else:
             result = {"success": False, "error": "unsupported_action"}
-        return ToolOutput(
-            success=bool(result.get("success")),
-            result=result,
-            error=result.get("error"),
-        )
+        return ToolOutput(success=bool(result.get("success")), result=result, error=result.get("error"))
