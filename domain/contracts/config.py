@@ -5,12 +5,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    """Typed loader for the centralized runtime environment contract.
-
-    Runtime values MUST come from process environment variables or the root
-    ``.env`` file. This module intentionally contains no operational defaults;
-    ``.env.example`` documents the complete non-secret template contract.
-    """
+    """Typed loader for the centralized runtime environment contract."""
 
     APP_NAME: str = Field(...)
     APP_VERSION: str = Field(...)
@@ -87,6 +82,7 @@ class Settings(BaseSettings):
     CORS_ORIGINS: List[str] = Field(...)
     APPROVAL_TTL_SECONDS: int = Field(...)
 
+    # Canonical MCP transport used by Control Plane external integrations.
     MCP_PROTOCOL_VERSION: str = Field(...)
     MCP_REQUIRE_HTTPS: bool = Field(...)
     MCP_BEARER_TOKEN: Optional[str] = Field(...)
@@ -97,9 +93,13 @@ class Settings(BaseSettings):
     MCP_TIMEOUT_SECONDS: int = Field(...)
     MCP_SERVER_PROVIDER: str = Field(...)
     MCP_SERVER_REQUIRE_AUTH: bool = Field(...)
+
     ZABBIX_MCP_URL: str = Field(...)
+    ZABBIX_MCP_SERVER_NAME: Optional[str] = Field(...)
     ELASTICSEARCH_MCP_URL: str = Field(...)
+    ELASTICSEARCH_MCP_INDEX_PATTERN: str = Field(...)
     PROMETHEUS_MCP_URL: str = Field(...)
+    PROMETHEUS_MCP_SERVICE_LABEL: str = Field(...)
     KUBERNETES_MCP_URL: Optional[str] = Field(...)
     VM_MCP_URL: Optional[str] = Field(...)
 
