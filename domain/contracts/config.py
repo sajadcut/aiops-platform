@@ -1,6 +1,6 @@
 from typing import Dict, List, Optional
 
-from pydantic import Field
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -96,9 +96,16 @@ class Settings(BaseSettings):
     ZABBIX_MCP_URL: str = Field(...)
     ZABBIX_MCP_SERVER_NAME: Optional[str] = Field(...)
     ZABBIX_MCP_AUTH_HEADER: Optional[str] = Field(...)
+
+    # Elastic Agent Builder MCP is the only supported Elastic Control-Plane path.
+    # Agent Builder MCP requires Elastic Stack >= 9.2. 9.3+ is the recommended
+    # Production baseline because it includes important Agent Builder/MCP fixes.
+    ELASTIC_STACK_VERSION: str = Field(...)
     ELASTICSEARCH_MCP_URL: str = Field(...)
-    ELASTICSEARCH_MCP_INDEX_PATTERN: str = Field(...)
     ELASTICSEARCH_MCP_AUTH_HEADER: Optional[str] = Field(...)
+    ELASTIC_AGENT_BUILDER_MCP_NAMESPACES: List[str] = Field(...)
+    ELASTIC_AGENT_BUILDER_INDEX_PATTERN: str = Field(...)
+
     PROMETHEUS_MCP_URL: str = Field(...)
     PROMETHEUS_MCP_SERVICE_LABEL: str = Field(...)
     PROMETHEUS_MCP_AUTH_HEADER: Optional[str] = Field(...)
@@ -138,6 +145,35 @@ class Settings(BaseSettings):
 
     OFFLINE_IMAGE_REGISTRY: Optional[str] = Field(...)
     IMAGE_PULL_POLICY: str = Field(...)
+
+    @field_validator("ELASTIC_STACK_VERSION")
+    @classmethod
+    def validate_elastic_agent_builder_version(cls, value: str) -> str:
+        parts = str(value).strip().split(".")
+        try:
+            major = int(parts[0])
+            minor = int(parts[1]) if len(parts) > 1 else 0
+        except (ValueError, IndexError) as exc:
+            raise ValueError("ELASTIC_STACK_VERSION must be a semantic version such as 9.3.2") from exc
+        if (major, minor) < (9, 2):
+            raise ValueError("Elastic Agent Builder MCP requires Elastic Stack >= 9.2")
+        return str(value).strip()
+
+    @field_validator("ELASTICSEARCH_MCP_URL")
+    @classmethod
+    def validate_elastic_agent_builder_endpoint(cls, value: str) -> str:
+        path = str(value).strip()
+        if "/api/agent_builder/mcp" not in path:
+            raise ValueError("ELASTICSEARCH_MCP_URL must target Kibana Agent Builder MCP /api/agent_builder/mcp")
+        return path
+
+    @field_validator("ELASTIC_AGENT_BUILDER_MCP_NAMESPACES")
+    @classmethod
+    def validate_elastic_namespaces(cls, value: List[str]) -> List[str]:
+        normalized = [str(item).strip() for item in value if str(item).strip()]
+        if "platform.core" not in normalized:
+            raise ValueError("Elastic MCP namespaces must include platform.core for deterministic ES|QL Evidence")
+        return normalized
 
     model_config = SettingsConfigDict(
         env_file=".env",
