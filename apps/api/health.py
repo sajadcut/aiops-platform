@@ -10,9 +10,9 @@ from apps.execution_service.tools.registry import tool_registry
 from database import AsyncSessionLocal, check_pgvector_ready
 from domain.contracts.config import settings
 from domain.contracts.logging import logger
-from integrations.elasticsearch.client import ElasticsearchClient
-from integrations.prometheus.client import PrometheusClient
-from integrations.zabbix.connector import ZabbixConnector
+from integrations.elasticsearch.mcp_client import ElasticsearchMCPClient
+from integrations.prometheus.mcp_client import PrometheusMCPClient
+from integrations.zabbix.mcp_client import ZabbixMCPClient
 
 router = APIRouter()
 
@@ -28,16 +28,21 @@ async def _probe_database() -> dict:
 
 
 async def _probe_external() -> dict:
-    probes = {
-        "zabbix": ZabbixConnector().health_check(),
-        "elasticsearch": ElasticsearchClient().health_check(),
-        "prometheus": PrometheusClient().health_check(),
+    connectors = {
+        "zabbix_mcp": ZabbixMCPClient(),
+        "elasticsearch_mcp": ElasticsearchMCPClient(),
+        "prometheus_mcp": PrometheusMCPClient(),
     }
     try:
-        values = await asyncio.wait_for(asyncio.gather(*probes.values()), timeout=5.0)
-        return {name: {"healthy": bool(value)} for name, value in zip(probes, values)}
+        values = await asyncio.wait_for(
+            asyncio.gather(*(client.health_check() for client in connectors.values())),
+            timeout=min(float(settings.MCP_TIMEOUT_SECONDS) + 1.0, 15.0),
+        )
+        return {name: {"healthy": bool(value)} for name, value in zip(connectors, values)}
     except Exception as exc:
-        return {name: {"healthy": False, "error": str(exc)} for name in probes}
+        return {name: {"healthy": False, "error": type(exc).__name__} for name in connectors}
+    finally:
+        await asyncio.gather(*(client.close() for client in connectors.values()), return_exceptions=True)
 
 
 @router.get("/health")
