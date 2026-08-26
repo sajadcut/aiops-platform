@@ -31,28 +31,26 @@ Current engineering assessment:
 
 ## Canonical MCP external-tool boundary
 
-ADR-015 now defines **MCP as the mandatory Control-Plane transport for every external operational tool**. The active ContextBuilder instantiates `ZabbixMCPClient`, `ElasticsearchMCPClient`, `PrometheusMCPClient`, optional `KubernetesMCPClient`, and optional `VMEdgeMCPClient`. The Control Plane no longer instantiates direct Zabbix/Elastic/Prometheus/SSH connectors for operational Evidence.
+ADR-015 defines MCP as the mandatory Control-Plane transport for every external operational tool. ContextBuilder uses MCP clients for Zabbix, Elastic, Prometheus and optional Kubernetes/VM Edge integrations. Native connectors are not the canonical Control-Plane production path.
 
-The execution-side VM tool keeps its historical registry name `ssh_vm` for runbook/approval backward compatibility, but its connector is now `VMEdgeMCPClient`; the Control Plane no longer opens SSH itself. Direct SSH/WinRM may exist only behind the Edge/MCP Server inside the destination trust zone.
+### Elastic Agent Builder MCP
 
-Production MCP controls implemented in repository contracts include:
+Elastic integration has been migrated to **Elastic Agent Builder MCP**. The deprecated standalone `elastic/mcp-server-elasticsearch` provider is no longer supported by AIOps.
 
-- protocol-version pinning (`2026-07-28` baseline),
-- `Mcp-Method` / `Mcp-Name` HTTP routing metadata,
-- HTTPS enforcement in Production,
-- bearer identity and/or mTLS client certificate support,
-- client-side tool allowlists,
-- bounded timeouts,
-- no Agent access to raw MCP clients,
-- write authority remaining behind Tool Registry → Policy → Approval → Execution → Audit.
-
-Native direct connectors remain only as MCP server-side adapters, migration/test utilities or isolated development fixtures. They are not the canonical Control-Plane path.
+- Minimum supported Elastic Stack: **9.2**.
+- Recommended Production baseline: **9.3+**, pinned to an approved patched release.
+- Canonical endpoint: Kibana `/api/agent_builder/mcp` or Space-aware `/s/{space}/api/agent_builder/mcp`.
+- MCP namespace discovery is constrained by `ELASTIC_AGENT_BUILDER_MCP_NAMESPACES`; `platform.core` is mandatory.
+- Log Evidence uses only the read-only `platform.core.execute_esql` capability.
+- ES|QL is generated deterministically by the provider adapter from trusted service/time/level context and a configured index pattern; Agent/LLM output cannot provide arbitrary ES|QL or Query DSL.
+- `platform.core.search` and `platform.core.generate_esql` are intentionally excluded from the Evidence path to avoid nested AI/query-generation authority inside Evidence collection.
+- Unattended Production access targets a least-privilege Elastic API key and appropriate Kibana/Agent Builder/index privileges.
 
 ## Partial / not production-accepted
 
 ### MCP servers and external integrations
 
-The Control-Plane MCP client boundary is implemented, but real Zabbix/Elasticsearch/Prometheus/Kubernetes/VM MCP Servers are external deployment components and still require controlled acceptance in the target restricted network. Their tool schemas, server-side authorization, downstream credentials, audit export and HA must be validated against the actual environment.
+Control-Plane MCP boundaries and provider adapters are implemented, but real Zabbix, Elastic Agent Builder, Prometheus, Kubernetes and VM MCP endpoints still require controlled acceptance in the target restricted network. Tool schemas, TLS/authentication, downstream permissions, audit export and HA must be validated against actual deployments.
 
 ### Multi-source incident correlation
 
@@ -64,7 +62,7 @@ The target remains hybrid: reasoning/LLM/RCA/Policy centralized; constrained Edg
 
 ### Execution coverage
 
-VM execution is now MCP-backed, but real Edge MCP Server implementation/acceptance and Windows constrained actions remain incomplete. Kubernetes/Ansible/Jenkins/DB/network governed write adapters also remain partial.
+VM execution is MCP-backed, but real Edge MCP Server implementation/acceptance and Windows constrained actions remain incomplete. Kubernetes/Ansible/Jenkins/DB/network governed write adapters also remain partial.
 
 ### Verification
 
@@ -76,7 +74,7 @@ PostgreSQL HA, distributed worker/queue semantics, distributed rate limiting, ba
 
 ### Identity / service-to-service security
 
-OIDC/RBAC exists at repository level. MCP supports bearer and mTLS configuration, but short-lived workload identity issuance/rotation and organization PKI integration are not yet externally accepted.
+OIDC/RBAC exists at repository level. MCP supports provider-specific authorization and mTLS configuration, but short-lived workload identity issuance/rotation and organization PKI integration are not yet externally accepted.
 
 ### AI-platform observability
 
@@ -110,12 +108,12 @@ Offline build is fail-closed and non-root. Real internal wheelhouse/base-image m
 7. Write actions go through Decision/Policy → Approval where required → Execution Service → MCP → independent Verification.
 8. Peer Agent findings are analysis context, not Evidence.
 9. Connector/MCP failure cannot be interpreted as zero anomalies.
-10. Native direct connectors are server-side/test adapters, not the Control-Plane production path.
+10. Elastic Evidence uses Agent Builder MCP >=9.2; standalone Elastic MCP is forbidden.
 
 ## Next engineering priorities
 
-1. Implement/deploy production MCP Servers for Zabbix, Elasticsearch and Prometheus and validate real payloads.
-2. Define versioned MCP tool schemas and capability manifests for every external system.
+1. Deploy and acceptance-test Elastic Agent Builder MCP against a real Elastic Stack >=9.2, preferably >=9.3 patched.
+2. Deploy and acceptance-test Zabbix and Prometheus MCP endpoints with pinned upstream versions.
 3. Integrate enterprise workload identity/mTLS certificate issuance/rotation for MCP.
 4. Build Windows Edge MCP Server with constrained JEA/WinRM/PowerShell actions and no arbitrary PowerShell.
 5. Build Kubernetes MCP Server write capabilities behind Execution/Approval and retain read-only Evidence tools.
@@ -129,7 +127,8 @@ Offline build is fail-closed and non-root. Real internal wheelhouse/base-image m
 
 ## External acceptance required before strict Production Ready verdict
 
-- Real MCP Servers and downstream Zabbix/Elastic/Prometheus/K8s/VM endpoints.
+- Real Elastic Agent Builder MCP, Zabbix MCP, Prometheus MCP and optional K8s/VM Edge MCP endpoints.
+- Elastic feature/license/Space/API-key privilege validation on the selected >=9.2 deployment.
 - Real tool-schema compatibility and source metadata conventions.
 - Enterprise MCP identity/mTLS and server-side authorization.
 - Real remediation targets with least privilege and rollback drills.
@@ -140,4 +139,4 @@ Offline build is fail-closed and non-root. Real internal wheelhouse/base-image m
 
 ## Verdict
 
-The project now has a **single MCP external-tool boundary at the Control Plane** while preserving Evidence-first reasoning and Policy/Approval authority. This removes the previous architectural ambiguity between native and MCP paths. Strict Production Ready status still depends on real MCP server deployment, workload identity, external integration acceptance, HA/DR and scale/failure evidence.
+The project has a single MCP external-tool boundary at the Control Plane. Elastic now uses the current Agent Builder MCP architecture rather than the deprecated standalone MCP provider, while Evidence-first reasoning and Policy/Approval authority remain unchanged. Strict Production Ready status still depends on real endpoint acceptance, workload identity, HA/DR and scale/failure evidence.
