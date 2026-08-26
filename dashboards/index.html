@@ -1,6 +1,104 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AIOps Control Center</title><script>if((location.protocol==='http:'||location.protocol==='https:')&&!location.pathname.endsWith('/')){location.replace(location.pathname+'/'+location.search+location.hash)}</script><link rel="stylesheet" href="control-center.css"></head><body><div class="app"><aside class="sidebar"><div class="brand"><div class="brand-mark">AI</div><div><div class="brand-title">AIOps Platform</div><div class="brand-sub">NeoBanking Operations</div></div></div><nav class="nav"><button class="active" data-view="overview" onclick="setView('overview')"><span class="ico">⌂</span>Overview</button><button data-view="incidents" onclick="setView('incidents')"><span class="ico">◈</span>Incidents</button><button data-view="agents" onclick="setView('agents')"><span class="ico">◎</span>Agents & RCA</button><button data-view="mcp" onclick="setView('mcp')"><span class="ico">◇</span>MCP Servers</button><button data-view="audit" onclick="setView('audit')"><span class="ico">▣</span>Audit & Governance</button><button onclick="window.open('/docs','_blank')"><span class="ico">↗</span>API Docs</button></nav><div class="sidebar-foot"><div class="safe-note"><b>Governed automation</b><br>Live Evidence → RCA/Evaluator → Policy → Approval → Execution → Independent Verification</div></div></aside><main class="main"><header class="topbar"><div class="title"><h1 id="pageTitle">Operations Overview</h1><p id="pageSub">Real-time governed AIOps control plane</p></div><div class="top-actions"><input id="globalSearch" class="search" placeholder="Search incidents, services, evidence…" oninput="document.querySelector('#incidentSearch').value=this.value;renderIncidents()"><div class="auth"><span id="liveDot" class="live-dot"></span><input id="apiKey" type="password" placeholder="API key"><button class="btn" onclick="saveKey()">Connect</button></div><button class="btn" onclick="loadAll()">↻ Refresh</button></div></header><div id="error" class="alert hidden"></div>
-<section class="view active" data-view="overview"><div class="kpis"><div class="card kpi"><div class="label">Active Incidents</div><div id="kActive" class="value">—</div><div class="hint">open operational work</div></div><div class="card kpi red"><div class="label">Critical Alerts</div><div id="kCritical" class="value">—</div><div class="hint">critical active incidents</div></div><div class="card kpi"><div class="label">Pending Approvals</div><div id="kPending" class="value">—</div><div class="hint">human safety gate</div></div><div class="card kpi green"><div class="label">Verified Remediations</div><div id="kSuccess" class="value">—</div><div class="hint">independently verified</div></div><div class="card kpi blue"><div class="label">Automation Success</div><div id="kRate" class="value">—</div><div class="hint">verification outcomes</div></div><div class="card kpi violet"><div class="label">Agent Confidence</div><div id="kConfidence" class="value">—</div><div class="hint">mean durable findings</div></div></div><div class="section-grid"><section class="card"><div class="panel-head"><strong>Platform & MCP Health</strong><span id="updated" class="muted">Connecting…</span></div><div id="components" class="panel-body component-grid"></div></section><section class="card"><div class="panel-head"><strong>Incident Severity</strong><span class="pill">live</span></div><div id="severityBreakdown" class="panel-body"></div></section></div><div class="section-grid"><section class="card"><div class="panel-head"><strong>Incident Activity</strong><span class="muted">latest queue profile</span></div><div class="panel-body"><div id="incidentSpark" class="spark"></div></div></section><section class="card"><div class="panel-head"><strong>Recent Governance Events</strong><button class="btn" onclick="setView('audit')">View audit</button></div><div id="auditPreview" class="panel-body audit-list"></div></section></div></section>
-<section class="view" data-view="incidents"><div class="toolbar"><input id="incidentSearch" placeholder="Search incident, service, summary…" oninput="renderIncidents()"><select id="severityFilter" onchange="renderIncidents()"><option value="">All severities</option><option value="critical">Critical</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select><select id="statusFilter" onchange="renderIncidents()"><option value="">All statuses</option><option value="open">Open</option><option value="analyzing">Analyzing</option><option value="escalated">Escalated</option><option value="resolved">Resolved</option><option value="closed">Closed</option></select><span id="incidentCount" class="pill">0</span></div><div class="workspace"><section class="card"><div class="panel-head"><strong>Incident Queue</strong><span class="muted">PostgreSQL-backed</span></div><div class="table-wrap"><table><thead><tr><th>Incident</th><th>Service</th><th>Severity</th><th>Status</th><th>Confidence</th><th>Decision</th><th>Approval</th><th>Verification</th><th>Created</th></tr></thead><tbody id="incidentRows"></tbody></table></div></section><aside class="card"><div class="panel-head"><strong>Incident Intelligence</strong><span class="pill blue">durable state</span></div><div id="detail"><div class="detail-empty">Select an incident to inspect Evidence, Agent collaboration, RCA, Decision, Approval, Execution and Verification.</div></div></aside></div></section>
-<section class="view" data-view="agents"><div class="kpis"><div class="card kpi blue"><div class="label">Boundary</div><div class="value" style="font-size:17px">Analysis Only</div><div class="hint">no direct write authority</div></div><div class="card kpi green"><div class="label">Evidence First</div><div class="value" style="font-size:17px">Live Truth</div><div class="hint">RAG/Memory auxiliary</div></div><div class="card kpi violet"><div class="label">Collaboration</div><div class="value" style="font-size:17px">Structured</div><div class="hint">peer context + evaluator</div></div></div><div id="agentsGrid" class="agents-grid"></div></section>
-<section class="view" data-view="mcp"><div class="card" style="margin-top:14px"><div class="panel-head"><strong>Canonical External Tool Fabric</strong><span class="pill green">MCP-only Control Plane</span></div><div class="panel-body muted">Control Plane integrations reach Zabbix, Elastic Agent Builder and Prometheus through governed MCP clients. Native provider credentials remain outside Agent reasoning.</div></div><div id="mcpGrid" class="mcp-grid"></div></section>
-<section class="view" data-view="audit"><div class="section-grid" style="grid-template-columns:1fr .55fr"><section class="card"><div class="panel-head"><strong>Recent Audit Events</strong><span class="pill blue">durable</span></div><div id="auditList" class="panel-body audit-list"></div></section><section class="card"><div class="panel-head"><strong>Governance Invariants</strong></div><div class="panel-body"><div class="event"><b>LLM is not authority</b><small>Policy and approval own write authorization.</small></div><div class="event"><b>Evidence is authoritative</b><small>RAG and Memory cannot override live operational evidence.</small></div><div class="event"><b>External tools use MCP</b><small>No direct operational provider connection from the Control Plane.</small></div><div class="event"><b>Verification is independent</b><small>Successful tool execution does not imply incident recovery.</small></div></div></section></div></section></main></div><div id="toast" class="toast"></div><script src="control-center.js"></script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>AIOps Control Center</title>
+  <script>if((location.protocol==='http:'||location.protocol==='https:')&&!location.pathname.endsWith('/')){location.replace(location.pathname+'/'+location.search+location.hash)}</script>
+  <link rel="stylesheet" href="control-center.css">
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="brand"><div class="brand-mark">AI</div><div><div class="brand-title">AIOps Control Center</div><div class="brand-sub">NeoBanking Operations</div></div></div>
+    <div class="nav-label">Operate</div>
+    <nav class="nav">
+      <button class="active" data-view="overview" onclick="setView('overview')"><span>⌂</span>Command Center</button>
+      <button data-view="incidents" onclick="setView('incidents')"><span>◈</span>Incidents</button>
+      <button data-view="services" onclick="setView('services')"><span>▦</span>Services</button>
+      <button data-view="agents" onclick="setView('agents')"><span>◎</span>Agents & RCA</button>
+      <button data-view="mcp" onclick="setView('mcp')"><span>◇</span>MCP Fabric</button>
+      <button data-view="audit" onclick="setView('audit')"><span>▣</span>Audit & Governance</button>
+    </nav>
+    <div class="sidebar-spacer"></div>
+    <div class="trust-card"><div class="trust-title"><span class="dot green"></span> Governed Automation</div><p>Evidence → RCA → Policy → Approval → Execution → Independent Verification</p></div>
+    <button class="docs-link" onclick="window.open('/docs','_blank')">API documentation <span>↗</span></button>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div><div class="eyebrow">AIOps / Operations</div><h1 id="pageTitle">Command Center</h1><p id="pageSub">Prioritized live operational state across incidents, services and governed automation.</p></div>
+      <div class="top-actions">
+        <div class="search-box"><span>⌕</span><input id="globalSearch" placeholder="Search incident or service" oninput="syncGlobalSearch(this.value)"></div>
+        <div class="auth-box"><span id="liveDot" class="live-dot"></span><input id="apiKey" type="password" placeholder="API key"><button onclick="saveKey()">Connect</button></div>
+        <button class="icon-btn" title="Refresh" onclick="loadAll()">↻</button>
+      </div>
+    </header>
+
+    <div id="error" class="alert hidden"></div>
+
+    <section class="view active" data-view="overview">
+      <div class="status-ribbon">
+        <div><span id="platformState" class="state-label">Connecting</span><small>Control plane</small></div>
+        <div><strong id="lastUpdated">—</strong><small>Last refresh</small></div>
+        <div><strong id="attentionCount">—</strong><small>Items needing attention</small></div>
+        <div><strong id="serviceRiskCount">—</strong><small>Services at risk</small></div>
+      </div>
+
+      <div class="kpis">
+        <article class="kpi"><div class="kpi-top"><span>Active incidents</span><span class="metric-icon">◈</span></div><strong id="kActive">—</strong><small>Unresolved operational work</small></article>
+        <article class="kpi critical"><div class="kpi-top"><span>Critical</span><span class="metric-icon">!</span></div><strong id="kCritical">—</strong><small>Immediate response required</small></article>
+        <article class="kpi warning"><div class="kpi-top"><span>Pending approvals</span><span class="metric-icon">⌛</span></div><strong id="kPending">—</strong><small>Human safety gates</small></article>
+        <article class="kpi success"><div class="kpi-top"><span>Verified remediations</span><span class="metric-icon">✓</span></div><strong id="kSuccess">—</strong><small>Independent verification passed</small></article>
+        <article class="kpi"><div class="kpi-top"><span>Automation success</span><span class="metric-icon">↗</span></div><strong id="kRate">—</strong><small>Verified outcomes only</small></article>
+        <article class="kpi"><div class="kpi-top"><span>Mean confidence</span><span class="metric-icon">◎</span></div><strong id="kConfidence">—</strong><small>Durable agent findings</small></article>
+      </div>
+
+      <div class="command-grid">
+        <section class="panel attention-panel"><div class="panel-head"><div><span class="section-kicker">Priority</span><h2>Operator Attention Queue</h2></div><span id="attentionBadge" class="badge">live</span></div><div id="attentionQueue" class="attention-list"></div></section>
+        <section class="panel"><div class="panel-head"><div><span class="section-kicker">Service health</span><h2>Most Impacted Services</h2></div><button class="link-btn" onclick="setView('services')">View all →</button></div><div id="servicePreview" class="service-preview"></div></section>
+      </div>
+
+      <div class="command-grid secondary">
+        <section class="panel"><div class="panel-head"><div><span class="section-kicker">Connectivity</span><h2>Evidence & MCP Health</h2></div><span class="badge neutral">MCP-only</span></div><div id="components" class="component-grid"></div></section>
+        <section class="panel"><div class="panel-head"><div><span class="section-kicker">Incident profile</span><h2>Severity Distribution</h2></div><span class="badge neutral">active set</span></div><div id="severityBreakdown" class="severity-panel"></div></section>
+      </div>
+
+      <section class="panel audit-strip"><div class="panel-head"><div><span class="section-kicker">Governance</span><h2>Recent Control-Plane Events</h2></div><button class="link-btn" onclick="setView('audit')">Full audit →</button></div><div id="auditPreview" class="timeline compact"></div></section>
+    </section>
+
+    <section class="view" data-view="incidents">
+      <div class="view-toolbar">
+        <div class="filter-group"><input id="incidentSearch" placeholder="Search incidents" oninput="renderIncidents()"><select id="severityFilter" onchange="renderIncidents()"><option value="">All severities</option><option value="critical">Critical</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select><select id="statusFilter" onchange="renderIncidents()"><option value="">All statuses</option><option value="open">Open</option><option value="analyzing">Analyzing</option><option value="escalated">Escalated</option><option value="resolved">Resolved</option><option value="closed">Closed</option></select></div>
+        <span id="incidentCount" class="badge neutral">0 incidents</span>
+      </div>
+      <div class="incident-layout">
+        <section class="panel incident-table-panel"><div class="panel-head"><div><span class="section-kicker">Live queue</span><h2>Incident Workbench</h2></div><span class="muted">PostgreSQL durable state</span></div><div class="table-wrap"><table><thead><tr><th>Incident</th><th>Service</th><th>Severity</th><th>Status</th><th>Confidence</th><th>Risk</th><th>Approval</th><th>Verification</th><th>Created</th></tr></thead><tbody id="incidentRows"></tbody></table></div></section>
+        <aside class="panel detail-panel"><div class="panel-head"><div><span class="section-kicker">Investigation</span><h2>Incident Intelligence</h2></div><span class="badge neutral">durable</span></div><div id="detail"><div class="empty-state tall">Select an incident to inspect evidence, RCA, agent collaboration, approval, execution and verification.</div></div></aside>
+      </div>
+    </section>
+
+    <section class="view" data-view="services">
+      <div class="view-toolbar"><div class="filter-group"><input id="serviceSearch" placeholder="Search services" oninput="renderServices()"><select id="serviceRiskFilter" onchange="renderServices()"><option value="">All health states</option><option value="critical">Critical</option><option value="degraded">Degraded</option><option value="healthy">Healthy</option></select></div><span id="serviceCount" class="badge neutral">0 services</span></div>
+      <div id="serviceGrid" class="service-grid"></div>
+    </section>
+
+    <section class="view" data-view="agents">
+      <div class="policy-banner"><div><span class="section-kicker">Safety boundary</span><h2>Agents analyze and recommend; they never own write authority.</h2></div><div class="policy-chips"><span>Evidence-first</span><span>Structured collaboration</span><span>Policy-gated execution</span></div></div>
+      <div id="agentsGrid" class="agent-grid"></div>
+    </section>
+
+    <section class="view" data-view="mcp">
+      <div class="policy-banner"><div><span class="section-kicker">External tool boundary</span><h2>Operational integrations are MCP-mediated from the Control Plane.</h2></div><div class="policy-chips"><span>Zabbix</span><span>Elastic Agent Builder</span><span>Prometheus</span></div></div>
+      <div id="mcpGrid" class="mcp-grid"></div>
+    </section>
+
+    <section class="view" data-view="audit">
+      <div class="audit-layout"><section class="panel"><div class="panel-head"><div><span class="section-kicker">Durable history</span><h2>Audit Timeline</h2></div><span class="badge neutral">PostgreSQL</span></div><div id="auditList" class="timeline"></div></section><aside class="panel governance-panel"><div class="panel-head"><div><span class="section-kicker">Invariants</span><h2>Governance Controls</h2></div></div><div class="governance-list"><div><span>01</span><p><b>LLM is not authority</b><small>Policy and approval authorize operational writes.</small></p></div><div><span>02</span><p><b>Live evidence is authoritative</b><small>RAG and Memory cannot override current production evidence.</small></p></div><div><span>03</span><p><b>MCP is the operational boundary</b><small>Control Plane agents do not receive native provider clients.</small></p></div><div><span>04</span><p><b>Verification is independent</b><small>Tool success is not equivalent to service recovery.</small></p></div></div></aside></div>
+    </section>
+  </main>
+</div>
+<div id="toast" class="toast"></div>
+<script src="control-center.js"></script>
+</body>
+</html>
