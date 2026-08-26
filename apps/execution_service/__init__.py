@@ -1,7 +1,3 @@
-# ============================================================
-# FILE 2: app/services/execution_service.py
-# ============================================================
-
 from typing import Dict, Any, Optional
 
 from pydantic import BaseModel, Field
@@ -15,7 +11,6 @@ class ExecutionRequest(BaseModel):
     tool_name: str
     action: str
     target: str
-
     parameters: Dict[str, Any] = Field(default_factory=dict)
     timeout: int = 30
     agent_name: str = "execution_service"
@@ -86,6 +81,7 @@ class ExecutionService:
             target=request.target,
             parameters=request.parameters,
             timeout=request.timeout,
+            approval_id=request.approval_id,
         )
 
         validation = await tool.validate(tool_input)
