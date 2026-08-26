@@ -19,6 +19,7 @@ class ZabbixMCPClient(MCPClient):
             protocol_version=settings.MCP_PROTOCOL_VERSION,
             timeout=settings.MCP_TIMEOUT_SECONDS,
             bearer_token=settings.MCP_BEARER_TOKEN,
+            authorization_header=settings.ZABBIX_MCP_AUTH_HEADER,
             ca_cert_path=settings.MCP_CA_CERT_PATH,
             client_cert_path=settings.MCP_CLIENT_CERT_PATH,
             client_key_path=settings.MCP_CLIENT_KEY_PATH,
@@ -59,8 +60,6 @@ class ZabbixMCPClient(MCPClient):
         if server_name:
             args["server"] = server_name
 
-        # problem_get is part of the core Monitoring API surface and therefore
-        # safer for deterministic Evidence collection than broad/raw API tools.
         result = await self.call_tool("problem_get", args)
         alerts: List[Alert] = []
         for payload in self.json_content(result):
