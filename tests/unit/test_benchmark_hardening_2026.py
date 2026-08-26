@@ -25,14 +25,21 @@ def test_correlation_repository_uses_postgresql_transaction_advisory_lock():
     assert "IncidentStatus.ANALYZING" in source
 
 
-def test_legacy_mcp_transport_is_explicitly_non_production():
-    assert MCPClient.production_supported is False
+def test_mcp_transport_is_canonical_and_governed():
+    assert MCPClient.production_supported is True
     source = Path("integrations/mcp_client.py").read_text(encoding="utf-8")
     for required in (
-        "legacy non-production transport",
-        "OAuth 2.1",
-        "resource/audience binding",
-        "workload identity/mTLS",
-        "Tool Registry / Policy / Approval / Audit",
+        "all external integrations",
+        "allowed_tools",
+        "Mcp-Protocol-Version",
+        "Mcp-Method",
+        "Mcp-Name",
+        "Authorization",
+        "MCP is a transport/capability boundary",
     ):
         assert required in source
+
+    adr = Path("docs/adr/DECISIONS.md").read_text(encoding="utf-8")
+    assert "MCP Is the Canonical External-Tool Transport" in adr
+    assert "Control Plane" in adr
+    assert "Native connectors" in adr
