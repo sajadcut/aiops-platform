@@ -98,6 +98,8 @@ class Settings(BaseSettings):
     MCP_CLIENT_CERT_PATH: Optional[str] = Field(...)
     MCP_CLIENT_KEY_PATH: Optional[str] = Field(...)
     MCP_TIMEOUT_SECONDS: int = Field(...)
+    MCP_SERVER_PROVIDER: str = Field(...)
+    MCP_SERVER_REQUIRE_AUTH: bool = Field(...)
     ZABBIX_MCP_URL: str = Field(...)
     ELASTICSEARCH_MCP_URL: str = Field(...)
     PROMETHEUS_MCP_URL: str = Field(...)
