@@ -61,6 +61,8 @@ for _path, (_endpoint, _methods, _dependencies) in _MASTER_API_ROUTES.items():
     if not any(getattr(route, "path", None) == _path for route in app.routes):
         app.add_api_route(_path, _endpoint, methods=_methods, dependencies=_dependencies)
 
+_DASHBOARD_DIR = Path(__file__).resolve().parents[2] / "dashboards"
+
 
 @app.get("/")
 async def root():
@@ -75,17 +77,27 @@ async def root():
 
 @app.get("/dashboard", include_in_schema=False)
 async def dashboard_page():
-    return FileResponse(Path(__file__).resolve().parents[2] / "dashboards" / "index.html")
+    return FileResponse(_DASHBOARD_DIR / "index.html")
 
 
 @app.get("/dashboard/", include_in_schema=False)
 async def dashboard_page_slash():
-    return FileResponse(Path(__file__).resolve().parents[2] / "dashboards" / "index.html")
+    return FileResponse(_DASHBOARD_DIR / "index.html")
 
 
 @app.get("/dashboard/agents", include_in_schema=False)
 async def agent_dashboard_page():
-    return FileResponse(Path(__file__).resolve().parents[2] / "dashboards" / "agents.html")
+    return FileResponse(_DASHBOARD_DIR / "index.html")
+
+
+@app.get("/dashboard/control-center.css", include_in_schema=False)
+async def dashboard_stylesheet():
+    return FileResponse(_DASHBOARD_DIR / "control-center.css", media_type="text/css")
+
+
+@app.get("/dashboard/control-center.js", include_in_schema=False)
+async def dashboard_script():
+    return FileResponse(_DASHBOARD_DIR / "control-center.js", media_type="application/javascript")
 
 
 def _validate_production_configuration() -> None:
@@ -104,10 +116,6 @@ def _validate_production_configuration() -> None:
     if settings.DATABASE_URL and "user:password@" in settings.DATABASE_URL:
         errors.append("default database credentials are forbidden in production")
 
-    # Canonical external-tool boundary: production Control Plane must reach all
-    # required observability systems through HTTPS MCP endpoints. Authentication
-    # must be bearer identity and/or mTLS. Direct SSH/Kubernetes adapters are
-    # explicitly rejected in the Control Plane.
     required_mcp = {
         "ZABBIX_MCP_URL": settings.ZABBIX_MCP_URL,
         "ELASTICSEARCH_MCP_URL": settings.ELASTICSEARCH_MCP_URL,
