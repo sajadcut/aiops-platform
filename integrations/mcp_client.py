@@ -16,15 +16,18 @@ from urllib.parse import urlparse
 
 import httpx
 
+from domain.contracts.config import settings
 from domain.contracts.logging import logger
 
 
 class MCPClient:
-    """Governed remote MCP client for stateless Streamable HTTP.
+    """Governed remote MCP client for the stateless 2026 protocol core.
 
-    Tool names are allowlisted client-side. Optional write tools use a distinct
-    bearer identity so compromise of read-only Evidence credentials cannot
-    authorize mutation capabilities.
+    Every request is self-describing: protocol version and routing travel in
+    HTTP headers while client identity travels in ``params._meta``. Tool names
+    are allowlisted client-side. Optional write tools use a distinct bearer
+    identity so compromise of read-only Evidence credentials cannot authorize
+    mutation capabilities.
     """
 
     production_supported = True
@@ -86,8 +89,18 @@ class MCPClient:
             headers["Authorization"] = f"Bearer {token}"
         return headers
 
+    def _meta(self) -> Dict[str, Any]:
+        return {
+            "io.modelcontextprotocol/clientInfo": {
+                "name": "aiops-platform",
+                "version": settings.APP_VERSION,
+            }
+        }
+
     async def _request(self, method: str, params: Dict[str, Any], *, name: Optional[str] = None) -> Dict[str, Any]:
-        payload = {"jsonrpc": "2.0", "method": method, "params": params, "id": next(self._ids)}
+        request_params = dict(params)
+        request_params["_meta"] = {**self._meta(), **dict(request_params.get("_meta") or {})}
+        payload = {"jsonrpc": "2.0", "method": method, "params": request_params, "id": next(self._ids)}
         try:
             response = await self._client.post(self.server_url, json=payload, headers=self._headers(method, name))
             response.raise_for_status()
