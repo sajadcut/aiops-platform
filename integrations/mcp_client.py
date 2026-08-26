@@ -33,6 +33,8 @@ class MCPClient:
         timeout: float = 30.0,
         bearer_token: Optional[str] = None,
         write_bearer_token: Optional[str] = None,
+        authorization_header: Optional[str] = None,
+        write_authorization_header: Optional[str] = None,
         ca_cert_path: Optional[str] = None,
         client_cert_path: Optional[str] = None,
         client_key_path: Optional[str] = None,
@@ -49,9 +51,12 @@ class MCPClient:
         self.timeout = float(timeout)
         self.bearer_token = bearer_token
         self.write_bearer_token = write_bearer_token
+        self.authorization_header = str(authorization_header or "").strip() or None
+        self.write_authorization_header = str(write_authorization_header or "").strip() or None
         self.require_https = bool(require_https)
         self.session_id: Optional[str] = None
         self._initialized = False
+        self._legacy_no_initialize = False
 
         parsed = urlparse(self.server_url)
         if parsed.scheme not in {"http", "https"} or not parsed.netloc:
@@ -65,6 +70,19 @@ class MCPClient:
         cert = (client_cert_path, client_key_path) if client_cert_path and client_key_path else None
         self._client = httpx.AsyncClient(timeout=self.timeout, verify=verify, cert=cert)
 
+    def _authorization(self, tool_name: Optional[str]) -> Optional[str]:
+        if tool_name in self.write_tools:
+            if self.write_authorization_header:
+                return self.write_authorization_header
+            if self.write_bearer_token:
+                return f"Bearer {self.write_bearer_token}"
+            raise PermissionError(f"mcp_write_identity_required:{self.server_name}:{tool_name}")
+        if self.authorization_header:
+            return self.authorization_header
+        if self.bearer_token:
+            return f"Bearer {self.bearer_token}"
+        return None
+
     def _headers(self, *, tool_name: Optional[str] = None, include_protocol: bool = True) -> Dict[str, str]:
         headers = {
             "Content-Type": "application/json",
@@ -74,11 +92,9 @@ class MCPClient:
             headers["MCP-Protocol-Version"] = self.negotiated_protocol_version
         if self.session_id:
             headers["Mcp-Session-Id"] = self.session_id
-        token = self.write_bearer_token if tool_name in self.write_tools else self.bearer_token
-        if tool_name in self.write_tools and not token:
-            raise PermissionError(f"mcp_write_identity_required:{self.server_name}:{tool_name}")
-        if token:
-            headers["Authorization"] = f"Bearer {token}"
+        authorization = self._authorization(tool_name)
+        if authorization:
+            headers["Authorization"] = authorization
         return headers
 
     @staticmethod
@@ -90,8 +106,6 @@ class MCPClient:
             data = response.json()
             return data if isinstance(data, dict) else {}
 
-        # Streamable HTTP servers may return one or more SSE events. We need the
-        # JSON-RPC event carrying the response to our request.
         last: Dict[str, Any] = {}
         for line in response.text.splitlines():
             if not line.startswith("data:"):
@@ -129,11 +143,10 @@ class MCPClient:
     async def initialize(self) -> Dict[str, Any]:
         if self._initialized:
             return {"protocolVersion": self.negotiated_protocol_version}
-        request_id = next(self._ids)
         result = await self._post(
             {
                 "jsonrpc": "2.0",
-                "id": request_id,
+                "id": next(self._ids),
                 "method": "initialize",
                 "params": {
                     "protocolVersion": self.protocol_version,
@@ -143,8 +156,16 @@ class MCPClient:
             },
             include_protocol=False,
         )
-        if result.get("error"):
-            raise RuntimeError(f"mcp_initialize_error:{self.server_name}:{result['error']}")
+        error = result.get("error")
+        if error:
+            # Temporary compatibility for the repository's internal legacy MCP
+            # server. Third-party upstream servers are expected to initialize.
+            if isinstance(error, dict) and int(error.get("code", 0)) == -32601:
+                self._legacy_no_initialize = True
+                self._initialized = True
+                return {"protocolVersion": self.negotiated_protocol_version, "legacy": True}
+            raise RuntimeError(f"mcp_initialize_error:{self.server_name}:{error}")
+
         init_result = result.get("result") or {}
         negotiated = init_result.get("protocolVersion")
         if negotiated:
@@ -182,12 +203,7 @@ class MCPClient:
 
     @staticmethod
     def json_content(result: Dict[str, Any]) -> list[Any]:
-        """Extract structured payloads from standard MCP CallToolResult content.
-
-        Third-party servers commonly return JSON as text content. This helper
-        accepts structuredContent, native dict/list content and JSON-encoded text
-        without treating human-readable status lines as Evidence.
-        """
+        """Extract structured payloads from standard MCP CallToolResult content."""
         structured = result.get("structuredContent")
         if isinstance(structured, list):
             return structured
