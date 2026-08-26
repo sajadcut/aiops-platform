@@ -20,7 +20,7 @@ def test_kubernetes_connector_can_be_disabled_without_network(monkeypatch):
 
 
 def test_kubernetes_env_contract_is_centralized():
-    text = Path(".env.example").read_text(encoding="utf-8")
+    text = Path(".env").read_text(encoding="utf-8")
     for key in [
         "KUBERNETES_API_URL",
         "KUBERNETES_TOKEN",
