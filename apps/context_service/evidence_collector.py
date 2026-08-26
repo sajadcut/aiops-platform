@@ -5,7 +5,6 @@ from typing import Any, Dict, Iterable, List, Optional, Set
 
 from apps.context_service.asset_identity import AssetIdentityResolver
 from domain.contracts.config import settings
-from integrations.kubernetes.client import KubernetesEvidenceClient
 
 
 class EvidenceCollector:
@@ -19,6 +18,10 @@ class EvidenceCollector:
     lets reasoning distinguish "Zabbix was checked and had no matching alert"
     from "Zabbix was unavailable/not queried". No free-form Agent command is
     ever forwarded to a connector.
+
+    External connectors are injected by ContextBuilder and, for the production
+    Control Plane, are MCP-backed providers. This class intentionally has no
+    native Kubernetes/SSH/observability fallback path.
     """
 
     _KNOWN_TYPES = {"alert", "log", "metric", "event", "telemetry"}
@@ -30,8 +33,6 @@ class EvidenceCollector:
         self.prometheus = prometheus
         self.vm = vm
         self.kubernetes = kubernetes
-        if self.kubernetes is None and settings.KUBERNETES_API_URL:
-            self.kubernetes = KubernetesEvidenceClient()
 
     @classmethod
     def _known_service(cls, value: Optional[str]) -> Optional[str]:
@@ -208,16 +209,16 @@ class EvidenceCollector:
                     for name, value in vm_metrics.items():
                         if isinstance(value, (int, float)):
                             evidence.append({
-                                "type": "metric", "source": "vm_ssh",
+                                "type": "metric", "source": "vm_mcp",
                                 "reference": f"vm:{effective_service}:{name}:{since.isoformat()}",
                                 "timestamp": datetime.now(timezone.utc).isoformat(),
                                 "raw_data": {"name": name, "value": value, "target": effective_service},
                             })
-                    evidence.append(self._observation("vm_ssh", f"vm-observation:{effective_service}:{since.isoformat()}", status="queried", result_count=len(vm_metrics), service=effective_service))
+                    evidence.append(self._observation("vm_mcp", f"vm-observation:{effective_service}:{since.isoformat()}", status="queried", result_count=len(vm_metrics), service=effective_service))
                 else:
-                    evidence.append(self._observation("vm_ssh", f"vm-error:{effective_service}:{since.isoformat()}", status="error", service=effective_service, detail=str(vm_result.get("error"))))
+                    evidence.append(self._observation("vm_mcp", f"vm-error:{effective_service}:{since.isoformat()}", status="error", service=effective_service, detail=str(vm_result.get("error"))))
             except Exception as exc:
-                evidence.append(self._observation("vm_ssh", f"vm-error:{effective_service}:{since.isoformat()}", status="error", service=effective_service, detail=str(exc)))
+                evidence.append(self._observation("vm_mcp", f"vm-error:{effective_service}:{since.isoformat()}", status="error", service=effective_service, detail=str(exc)))
 
         final_asset = AssetIdentityResolver.resolve(evidence, effective_service)
         return {
