@@ -66,8 +66,10 @@ jobs:
           assert settings.SIGNAL_CORRELATION_ENABLED is True
           assert 0 < settings.SIGNAL_CORRELATION_WINDOW_SECONDS <= 3600
           PY
-      - name: Syntax check
-        run: python -m compileall -q agents apps domain integrations knowledge memory tests
+      - name: Repository-wide syntax check
+        run: python -m compileall -q agents apps database domain integrations knowledge memory scripts tests
+      - name: Import and dependency integrity
+        run: python scripts/check_python_integrity.py
       - name: Full unit integration scenario and security suite
         run: python -m pytest -q tests
 
@@ -154,12 +156,12 @@ jobs:
                   )
                   cur.execute(
                       "INSERT INTO workflow_checkpoints (incident_id,state,status) VALUES (%s,%s::jsonb,%s)",
-                      (incident_id,'{"current_node":"approval"}','paused'),
+                      (incident_id,'{\"current_node\":\"approval\"}','paused'),
                   )
                   approval_id = uuid4()
                   cur.execute(
                       "INSERT INTO approvals (approval_id,incident_id,action,risk_level,approver,status,metadata) VALUES (%s,%s,%s,%s,%s,%s,%s::jsonb)",
-                      (approval_id,incident_id,'restart_service','high','ci','approved','{"target":"vm01","tool_name":"ssh_vm","binding_complete":true}'),
+                      (approval_id,incident_id,'restart_service','high','ci','approved','{\"target\":\"vm01\",\"tool_name\":\"ssh_vm\",\"binding_complete\":true}'),
                   )
                   cur.execute("UPDATE approvals SET status='consumed' WHERE approval_id=%s AND status='approved' RETURNING status", (approval_id,))
                   assert cur.fetchone()[0] == 'consumed'
@@ -168,7 +170,7 @@ jobs:
                   vector = "[" + ",".join(["0.1"] * dimension) + "]"
                   cur.execute(
                       "INSERT INTO knowledge_documents (id,title,content,source,version,extra_metadata,embedding) VALUES (%s,%s,%s,%s,%s,%s::json,%s::vector)",
-                      (uuid4(),'ci','pgvector acceptance','ci','1','{"namespace":"knowledge","source_type":"runbook","owner":"ci","acl":["internal"]}',vector),
+                      (uuid4(),'ci','pgvector acceptance','ci','1','{\"namespace\":\"knowledge\",\"source_type\":\"runbook\",\"owner\":\"ci\",\"acl\":[\"internal\"]}',vector),
                   )
                   cur.execute("SELECT embedding <=> %s::vector FROM knowledge_documents ORDER BY embedding <=> %s::vector LIMIT 1", (vector, vector))
                   assert cur.fetchone()[0] == 0.0
