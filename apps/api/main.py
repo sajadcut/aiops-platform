@@ -2,6 +2,7 @@ from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pathlib import Path
+from urllib.parse import urlparse
 
 from domain.contracts.config import settings
 from domain.contracts.logging import configure_logging, logger
@@ -13,7 +14,7 @@ from apps.execution_service.tools.registry import tool_registry
 from apps.execution_service.tools.mock_executor import MockExecutorTool
 from apps.execution_service.tools.ssh_vm import SSHVMTool
 from apps.execution_service.tools.vm_telemetry import VMTelemetryTool
-from integrations.vm.ssh_connector import SSHVMConnector
+from integrations.vm.mcp_client import VMEdgeMCPClient
 from apps.database.vector_validation import validate_pgvector
 from database import AsyncSessionLocal
 from apps.security.auth import require_permission
@@ -102,8 +103,32 @@ def _validate_production_configuration() -> None:
         errors.append("deterministic embedding provider is forbidden in production")
     if settings.DATABASE_URL and "user:password@" in settings.DATABASE_URL:
         errors.append("default database credentials are forbidden in production")
-    if settings.SSH_ENABLED and not settings.SSH_STRICT_HOST_KEY_CHECKING:
-        errors.append("SSH strict host key checking must be enabled in production")
+
+    # Canonical external-tool boundary: production Control Plane must reach all
+    # required observability systems through HTTPS MCP endpoints. Authentication
+    # must be bearer identity and/or mTLS. Direct SSH/Kubernetes adapters are
+    # explicitly rejected in the Control Plane.
+    required_mcp = {
+        "ZABBIX_MCP_URL": settings.ZABBIX_MCP_URL,
+        "ELASTICSEARCH_MCP_URL": settings.ELASTICSEARCH_MCP_URL,
+        "PROMETHEUS_MCP_URL": settings.PROMETHEUS_MCP_URL,
+    }
+    for name, value in required_mcp.items():
+        if not str(value or "").strip():
+            errors.append(f"{name} is required in production")
+        elif urlparse(str(value)).scheme != "https":
+            errors.append(f"{name} must use HTTPS in production")
+    if not settings.MCP_REQUIRE_HTTPS:
+        errors.append("MCP_REQUIRE_HTTPS must be enabled in production")
+    if not settings.MCP_BEARER_TOKEN and not (settings.MCP_CLIENT_CERT_PATH and settings.MCP_CLIENT_KEY_PATH):
+        errors.append("production MCP requires bearer identity or mTLS client certificate")
+    if bool(settings.MCP_CLIENT_CERT_PATH) != bool(settings.MCP_CLIENT_KEY_PATH):
+        errors.append("MCP client certificate and key must be configured together")
+    if settings.SSH_ENABLED:
+        errors.append("direct Control-Plane SSH is forbidden; configure VM_MCP_URL instead")
+    if settings.KUBERNETES_API_URL:
+        errors.append("direct Control-Plane Kubernetes API access is forbidden; configure KUBERNETES_MCP_URL instead")
+
     if settings.APPROVAL_TTL_SECONDS <= 0:
         errors.append("APPROVAL_TTL_SECONDS must be positive in production")
     if settings.AGENT_MAX_PARALLELISM <= 0 or settings.AGENT_MAX_EVIDENCE_ROUNDS <= 0:
@@ -142,14 +167,14 @@ async def startup_event():
     if settings.APP_ENV != "production" and tool_registry.get_tool("mock_executor") is None:
         tool_registry.register(MockExecutorTool())
 
-    if settings.SSH_ENABLED:
-        vm_connector = SSHVMConnector()
+    if settings.VM_MCP_URL:
+        vm_connector = VMEdgeMCPClient()
         if tool_registry.get_tool("ssh_vm") is None:
             tool_registry.register(SSHVMTool(vm_connector))
-            logger.info("Governed SSH VM tool registered")
+            logger.info("Governed VM MCP execution tool registered")
         if tool_registry.get_tool("vm_telemetry") is None:
             tool_registry.register(VMTelemetryTool(vm_connector))
-            logger.info("Read-only VM telemetry tool registered")
+            logger.info("Read-only VM MCP telemetry tool registered")
 
     if settings.PGVECTOR_VALIDATE_ON_STARTUP:
         try:
