@@ -21,11 +21,11 @@ def test_elastic_adapter_uses_agent_builder_only():
     assert "query_body" not in text
     assert 'call_tool("search"' not in text
     assert '"list_indices"' not in text
-    assert "mcp-server-elasticsearch" in text  # explicit unsupported/deprecated statement
+    assert "mcp-server-elasticsearch" in text
 
 
 def test_elastic_agent_builder_config_is_canonical():
-    env = (ROOT / ".env.example").read_text(encoding="utf-8")
+    env = (ROOT / ".env").read_text(encoding="utf-8")
     assert "ELASTIC_STACK_VERSION=9.3.2" in env
     assert "ELASTICSEARCH_MCP_URL=http://localhost:5601/api/agent_builder/mcp" in env
     assert 'ELASTIC_AGENT_BUILDER_MCP_NAMESPACES=["platform.core"]' in env
@@ -58,7 +58,7 @@ def test_mcp_client_supports_standard_streamable_http_lifecycle():
 
 
 def test_upstream_provider_settings_are_explicit():
-    text = (ROOT / ".env.example").read_text(encoding="utf-8")
+    text = (ROOT / ".env").read_text(encoding="utf-8")
     assert "ZABBIX_MCP_SERVER_NAME=" in text
     assert "ELASTIC_AGENT_BUILDER_MCP_NAMESPACES=" in text
     assert "PROMETHEUS_MCP_SERVICE_LABEL=" in text
