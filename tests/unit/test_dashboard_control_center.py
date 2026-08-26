@@ -31,8 +31,9 @@ def test_dashboard_assets_and_agent_route_are_served_by_fastapi():
     assert '@app.get("/dashboard/control-center.css"' in source
     assert '@app.get("/dashboard/control-center.js"' in source
     assert 'return FileResponse(_DASHBOARD_DIR / "index.html")' in source
-    assert 'agents.html' not in source
 
 
-def test_legacy_agent_dashboard_file_removed():
-    assert not (ROOT / "dashboards/agents.html").exists()
+def test_legacy_agent_url_has_compatibility_redirect_only():
+    html = (ROOT / "dashboards/agents.html").read_text(encoding="utf-8")
+    assert "location.replace('/dashboard')" in html
+    assert "AIOps Agent Intelligence" in html
