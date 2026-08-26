@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import hmac
 from datetime import datetime
-from typing import Any, Awaitable, Callable, Dict
+from typing import Any, Dict
 
 from fastapi import FastAPI, Header, HTTPException
 from pydantic import BaseModel, Field
@@ -23,7 +23,7 @@ class JsonRpcRequest(BaseModel):
 
 
 app = FastAPI(title=f"AIOps MCP Server ({settings.MCP_SERVER_PROVIDER})", docs_url=None, redoc_url=None)
-
+_WRITE_TOOLS = {"restart_service"}
 
 _TOOL_SCHEMAS: Dict[str, Dict[str, Dict[str, Any]]] = {
     "zabbix": {
@@ -58,7 +58,7 @@ _TOOL_SCHEMAS: Dict[str, Dict[str, Dict[str, Any]]] = {
         "collect_vm_metrics": {"description": "Collect allowlisted Linux VM metrics", "inputSchema": {"type": "object", "required": ["target"], "properties": {"target": {"type": "string"}}}},
         "service_status": {"description": "Read service status", "inputSchema": {"type": "object", "required": ["target", "service"], "properties": {"target": {"type": "string"}, "service": {"type": "string"}}}},
         "process_snapshot": {"description": "Read process snapshot", "inputSchema": {"type": "object", "required": ["target"], "properties": {"target": {"type": "string"}}}},
-        "restart_service": {"description": "Restart one validated service; caller must already hold Execution/Approval authority", "inputSchema": {"type": "object", "required": ["target", "service"], "properties": {"target": {"type": "string"}, "service": {"type": "string"}}}},
+        "restart_service": {"description": "Restart one validated service through approved Execution Service", "inputSchema": {"type": "object", "required": ["target", "service", "approval_id"], "properties": {"target": {"type": "string"}, "service": {"type": "string"}, "approval_id": {"type": "string", "minLength": 1}}}},
     },
 }
 
@@ -80,12 +80,15 @@ def _limit(value: Any, default: int = 100) -> int:
     return min(max(int(value or default), 1), 500)
 
 
-def _authorize(authorization: str | None) -> None:
+def _authorize(authorization: str | None, tool: str | None = None) -> None:
+    if settings.APP_ENV == "production" and not settings.MCP_SERVER_REQUIRE_AUTH:
+        raise HTTPException(status_code=503, detail="mcp_server_auth_required_in_production")
     if not settings.MCP_SERVER_REQUIRE_AUTH:
         return
-    token = settings.MCP_BEARER_TOKEN or ""
+    token = settings.MCP_WRITE_BEARER_TOKEN if tool in _WRITE_TOOLS else settings.MCP_BEARER_TOKEN
     if not token:
-        raise HTTPException(status_code=503, detail="mcp_server_identity_not_configured")
+        detail = "mcp_write_identity_not_configured" if tool in _WRITE_TOOLS else "mcp_server_identity_not_configured"
+        raise HTTPException(status_code=503, detail=detail)
     expected = f"Bearer {token}"
     if not authorization or not hmac.compare_digest(authorization, expected):
         raise HTTPException(status_code=401, detail="invalid_mcp_identity")
@@ -143,6 +146,8 @@ async def _call(provider: str, tool: str, args: Dict[str, Any]) -> Any:
         raise ValueError("service_required")
     if tool == "service_status":
         return await connector.service_status(target, service)
+    if not str(args.get("approval_id") or "").strip():
+        raise PermissionError("approval_id_required")
     return await connector.restart_service(target, service)
 
 
@@ -159,12 +164,12 @@ async def mcp(
     mcp_protocol_version: str | None = Header(default=None, alias="Mcp-Protocol-Version"),
     mcp_name: str | None = Header(default=None, alias="Mcp-Name"),
 ) -> Dict[str, Any]:
-    _authorize(authorization)
     if mcp_protocol_version and mcp_protocol_version != settings.MCP_PROTOCOL_VERSION:
         raise HTTPException(status_code=400, detail="unsupported_mcp_protocol_version")
 
     provider = _provider()
     if request.method == "tools/list":
+        _authorize(authorization)
         tools = [{"name": name, **schema} for name, schema in _TOOL_SCHEMAS[provider].items()]
         return {"jsonrpc": "2.0", "id": request.id, "result": {"tools": tools}}
 
@@ -172,6 +177,7 @@ async def mcp(
         return {"jsonrpc": "2.0", "id": request.id, "error": {"code": -32601, "message": "method_not_found"}}
 
     tool = str(request.params.get("name") or "")
+    _authorize(authorization, tool)
     if mcp_name and mcp_name != tool:
         raise HTTPException(status_code=400, detail="mcp_name_mismatch")
     args = request.params.get("arguments") or {}
@@ -182,7 +188,6 @@ async def mcp(
     except PermissionError as exc:
         return {"jsonrpc": "2.0", "id": request.id, "error": {"code": -32602, "message": str(exc)}}
     except Exception as exc:
-        # Do not leak downstream credentials/endpoints/stack traces through MCP.
         return {"jsonrpc": "2.0", "id": request.id, "error": {"code": -32000, "message": type(exc).__name__}}
     if not isinstance(content, list):
         content = [content]
