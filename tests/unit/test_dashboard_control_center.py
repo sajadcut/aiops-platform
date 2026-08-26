@@ -12,7 +12,7 @@ def test_dashboard_is_single_live_control_center():
     assert "AIOps Control Center" in html
     assert "Command Center" in html
     assert "MCP Fabric" in html
-    assert "Service Health" in html
+    assert "Most Impacted Services" in html
     assert "Operator Attention Queue" in html
     assert "Incident Intelligence" in html
     assert "Audit & Governance" in html
