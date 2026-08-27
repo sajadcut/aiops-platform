@@ -1,0 +1,38 @@
+name: documentation-index
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'scripts/generate_file_index_fa.py'
+      - 'docs/CODEBASE_GUIDE_FA.md'
+      - '.github/workflows/documentation-index.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Generate complete Persian file index
+        run: python scripts/generate_file_index_fa.py
+      - name: Commit generated index when changed
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- docs/FILE_INDEX_FA.md && git ls-files --error-unmatch docs/FILE_INDEX_FA.md >/dev/null 2>&1; then
+            echo 'FILE_INDEX_FA.md already current'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add docs/FILE_INDEX_FA.md
+          git commit -m 'docs(codebase): sync complete Persian file index'
+          git push origin HEAD:main
