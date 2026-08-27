@@ -1,3 +1,10 @@
+"""Persistence امن Approval روی PostgreSQL.
+
+Approval یک boolean ساده نیست؛ مجوز باید durable، زمان‌دار، دارای transition محدود و
+یک‌بارمصرف باشد. این store وضعیت‌های pending/approved/rejected/expired/consumed را
+نگه می‌دارد تا restart، race یا replay نتواند execution را بدون مجوز معتبر عبور دهد.
+"""
+
 from __future__ import annotations
 
 import json
@@ -11,12 +18,13 @@ from domain.contracts.config import settings
 
 
 class PostgreSQLApprovalStore:
-    """Durable approval persistence with expiry, guarded transitions and one-time consumption."""
+    """Approval durable با expiry، transition اتمیک و consume یک‌باره قبل از execution."""
 
     def __init__(self, session: AsyncSession):
         self.session = session
 
     async def save(self, record: Dict[str, Any]) -> Dict[str, Any]:
+        """Approval request و metadata binding آن را durable می‌کند."""
         params = dict(record)
         params["metadata"] = json.dumps(record.get("metadata") or {}, default=str)
         await self.session.execute(
@@ -37,6 +45,7 @@ class PostgreSQLApprovalStore:
         return await self.get(str(record["approval_id"])) or record
 
     async def _get_raw(self, approval_id: str) -> Optional[Dict[str, Any]]:
+        """رکورد را بدون اعمال expiry می‌خواند؛ helper داخلی برای جلوگیری از recursion است."""
         row = (
             await self.session.execute(
                 text(
@@ -50,6 +59,7 @@ class PostgreSQLApprovalStore:
 
     @staticmethod
     def _expired(record: Dict[str, Any]) -> bool:
+        """TTL را با زمان UTC محاسبه می‌کند تا timezone محلی روی مجوز اثر نگذارد."""
         created_at = record.get("created_at")
         if created_at is None or settings.APPROVAL_TTL_SECONDS <= 0:
             return False
@@ -60,8 +70,11 @@ class PostgreSQLApprovalStore:
         return (datetime.now(timezone.utc) - created_at.astimezone(timezone.utc)).total_seconds() > settings.APPROVAL_TTL_SECONDS
 
     async def get(self, approval_id: str) -> Optional[Dict[str, Any]]:
+        """رکورد را می‌خواند و Approval منقضی را قبل از استفاده به expired تبدیل می‌کند."""
         record = await self._get_raw(approval_id)
         if record and record.get("status") in {"pending", "approved"} and self._expired(record):
+            # Expiry فقط در حافظه محاسبه نمی‌شود؛ persisted شدن آن باعث می‌شود worker
+            # دیگری هم همان approval را معتبر فرض نکند.
             await self.session.execute(
                 text("UPDATE approvals SET status='expired' WHERE approval_id=:id AND status IN ('pending','approved')"),
                 {"id": approval_id},
@@ -77,15 +90,12 @@ class PostgreSQLApprovalStore:
         *,
         metadata_patch: Optional[Dict[str, Any]] = None,
     ) -> Optional[Dict[str, Any]]:
-        """Atomically transition a pending approval exactly once.
-
-        Returns the transitioned row, or the current row when no pending row was
-        available. Callers must treat any non-matching status as a conflict.
-        """
+        """فقط یک Approval هنوز-pending را اتمیک به approved یا rejected transition می‌دهد."""
         if status not in {"approved", "rejected"}:
             raise ValueError("invalid_approval_status")
 
-        # Expiry is evaluated before the transition. get() persists expired state.
+        # قبل از transition، get() ممکن است رکورد را expired کند. در نتیجه approval
+        # منقضی هیچ‌وقت از مسیر status update به approved برنمی‌گردد.
         current = await self.get(approval_id)
         if current is None or current.get("status") != "pending":
             return current
@@ -110,10 +120,12 @@ class PostgreSQLApprovalStore:
             )
         ).mappings().first()
         await self.session.commit()
+        # شرط status='pending' خود PostgreSQL race دو approver همزمان را حل می‌کند؛
+        # loser فقط وضعیت نهایی را می‌خواند و caller باید conflict را گزارش کند.
         return dict(row) if row else await self._get_raw(approval_id)
 
     async def consume(self, approval_id: str) -> Optional[Dict[str, Any]]:
-        """Atomically consume an approved record exactly once before crossing the execution boundary."""
+        """Approval approved را دقیقاً یک بار درست قبل از عبور از execution boundary مصرف می‌کند."""
         current = await self.get(approval_id)
         if current is None or current.get("status") != "approved":
             return current
@@ -128,8 +140,10 @@ class PostgreSQLApprovalStore:
             )
         ).mappings().first()
         await self.session.commit()
+        # Atomic compare-and-set مانع replay همان approval برای execution دوم می‌شود.
         return dict(row) if row else await self._get_raw(approval_id)
 
     async def is_approved(self, approval_id: str) -> bool:
+        """برای read-only check؛ execution واقعی همچنان باید consume اتمیک انجام دهد."""
         record = await self.get(approval_id)
         return bool(record and record.get("status") == "approved")
