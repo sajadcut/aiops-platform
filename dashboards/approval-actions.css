@@ -1,0 +1,21 @@
+.approval-card{border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:16px;background:rgba(13,18,28,.72)}
+.approval-card.pending{border-color:rgba(245,158,11,.45);box-shadow:inset 0 0 0 1px rgba(245,158,11,.08)}
+.approval-card.approved{border-color:rgba(34,197,94,.4)}
+.approval-card.rejected,.approval-card.expired,.approval-card.consumed{border-color:rgba(239,68,68,.3)}
+.approval-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:14px}
+.approval-card-head h4{margin:3px 0 0;font-size:17px}
+.approval-facts,.approval-result{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 14px}
+.approval-facts>div,.approval-result>div{padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:rgba(255,255,255,.025)}
+.approval-facts label,.approval-result label{display:block;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px}
+.approval-facts strong,.approval-result strong{font-size:13px;word-break:break-word}
+.approval-note{margin:14px 0;color:var(--muted);font-size:12px;line-height:1.6}
+.approval-controls textarea{width:100%;min-height:84px;resize:vertical;border:1px solid var(--line);border-radius:10px;background:rgba(2,6,12,.65);color:var(--text);padding:11px 12px;font:inherit;box-sizing:border-box}
+.approval-controls textarea:focus{outline:none;border-color:rgba(99,102,241,.8);box-shadow:0 0 0 3px rgba(99,102,241,.12)}
+.approval-buttons{display:flex;justify-content:flex-end;gap:10px;margin-top:10px}
+.approval-btn{border:0;border-radius:9px;padding:9px 16px;font-weight:700;cursor:pointer}
+.approval-btn.approve{background:#16a34a;color:#fff}
+.approval-btn.reject{background:rgba(239,68,68,.14);color:#fca5a5;border:1px solid rgba(239,68,68,.35)}
+.approval-btn:hover{filter:brightness(1.08)}
+.approval-reason{grid-column:1/-1}
+.approval-reason p{margin:4px 0 0;white-space:pre-wrap;line-height:1.55}
+@media(max-width:780px){.approval-facts,.approval-result{grid-template-columns:1fr}.approval-buttons{flex-direction:column-reverse}.approval-btn{width:100%}}
