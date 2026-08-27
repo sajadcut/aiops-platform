@@ -48,6 +48,14 @@ async def _audit_durable(db, event_type: str, actor: str, incident_id: str | Non
     await AuditService.flush_to_store(PostgreSQLAuditStore(db), incident_id=incident_id)
 
 
+def _require_pending(current: Dict[str, Any]) -> None:
+    status = str(current.get("status") or "").lower()
+    if status == "expired":
+        raise HTTPException(status_code=409, detail="Approval expired")
+    if status != "pending":
+        raise HTTPException(status_code=409, detail=f"Approval is not pending (status={status or 'unknown'})")
+
+
 @router.post("/approvals")
 async def create_approval(payload: Dict[str, Any], identity=Depends(require_permission("approve:low_risk"))):
     required_fields = ["incident_id", "action", "risk_level", "approver"]
@@ -78,24 +86,56 @@ async def approve(approval_id: str, identity=Depends(require_permission("approve
         current = await store.get(approval_id)
         if current is None:
             raise HTTPException(status_code=404, detail="Approval not found")
+        _require_pending(current)
         _require_risk_permission(identity, str(current.get("risk_level")))
-        approval = await store.set_status(approval_id, "approved")
-        if approval and approval.get("status") == "expired":
-            raise HTTPException(status_code=409, detail="Approval expired")
-        await _audit_durable(db, "approval_granted", identity.subject, str(current.get("incident_id")), str(current.get("action")), {"approval_id": approval_id, "risk_level": current.get("risk_level")})
+        approval = await store.set_status(
+            approval_id,
+            "approved",
+            metadata_patch={"approved_by": identity.subject},
+        )
+        if not approval or approval.get("status") != "approved":
+            raise HTTPException(status_code=409, detail="Approval transition conflict")
+        await _audit_durable(
+            db,
+            "approval_granted",
+            identity.subject,
+            str(current.get("incident_id")),
+            str(current.get("action")),
+            {"approval_id": approval_id, "risk_level": current.get("risk_level")},
+        )
         return approval
 
 
 @router.post("/approvals/{approval_id}/reject")
-async def reject(approval_id: str, identity=Depends(require_permission("approve:low_risk"))):
+async def reject(approval_id: str, payload: Dict[str, Any], identity=Depends(require_permission("approve:low_risk"))):
+    reason = str(payload.get("reason") or "").strip()
+    if not reason:
+        raise HTTPException(status_code=400, detail="rejection reason is required")
+    if len(reason) > 1000:
+        raise HTTPException(status_code=400, detail="rejection reason is too long")
+
     async with AsyncSessionLocal() as db:
         store = PostgreSQLApprovalStore(db)
         current = await store.get(approval_id)
         if current is None:
             raise HTTPException(status_code=404, detail="Approval not found")
+        _require_pending(current)
         _require_risk_permission(identity, str(current.get("risk_level")))
-        approval = await store.set_status(approval_id, "rejected")
-        await _audit_durable(db, "approval_rejected", identity.subject, str(current.get("incident_id")), str(current.get("action")), {"approval_id": approval_id, "risk_level": current.get("risk_level")})
+        approval = await store.set_status(
+            approval_id,
+            "rejected",
+            metadata_patch={"rejection_reason": reason, "rejected_by": identity.subject},
+        )
+        if not approval or approval.get("status") != "rejected":
+            raise HTTPException(status_code=409, detail="Approval transition conflict")
+        await _audit_durable(
+            db,
+            "approval_rejected",
+            identity.subject,
+            str(current.get("incident_id")),
+            str(current.get("action")),
+            {"approval_id": approval_id, "risk_level": current.get("risk_level"), "reason": reason},
+        )
         return approval
 
 
