@@ -12,7 +12,7 @@ async def validate_pgvector(session: AsyncSession, expected_dimension: int) -> D
         raise RuntimeError("pgvector_extension_missing")
 
     dimension = (await session.execute(text(
-        """SELECT atttypmod - 4 FROM pg_attribute
+        """SELECT atttypmod FROM pg_attribute
         WHERE attrelid='knowledge_documents'::regclass
           AND attname='embedding' AND atttypid='vector'::regtype"""
     ))).scalar_one_or_none()
