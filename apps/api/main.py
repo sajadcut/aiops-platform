@@ -100,6 +100,16 @@ async def dashboard_script():
     return FileResponse(_DASHBOARD_DIR / "control-center.js", media_type="application/javascript")
 
 
+@app.get("/dashboard/approval-actions.css", include_in_schema=False)
+async def dashboard_approval_stylesheet():
+    return FileResponse(_DASHBOARD_DIR / "approval-actions.css", media_type="text/css")
+
+
+@app.get("/dashboard/approval-actions.js", include_in_schema=False)
+async def dashboard_approval_script():
+    return FileResponse(_DASHBOARD_DIR / "approval-actions.js", media_type="application/javascript")
+
+
 def _validate_production_configuration() -> None:
     if settings.APP_ENV != "production":
         return
