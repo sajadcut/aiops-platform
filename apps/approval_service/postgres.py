@@ -70,22 +70,47 @@ class PostgreSQLApprovalStore:
             record = await self._get_raw(approval_id)
         return record
 
-    async def set_status(self, approval_id: str, status: str) -> Optional[Dict[str, Any]]:
+    async def set_status(
+        self,
+        approval_id: str,
+        status: str,
+        *,
+        metadata_patch: Optional[Dict[str, Any]] = None,
+    ) -> Optional[Dict[str, Any]]:
+        """Atomically transition a pending approval exactly once.
+
+        Returns the transitioned row, or the current row when no pending row was
+        available. Callers must treat any non-matching status as a conflict.
+        """
         if status not in {"approved", "rejected"}:
             raise ValueError("invalid_approval_status")
+
+        # Expiry is evaluated before the transition. get() persists expired state.
         current = await self.get(approval_id)
         if current is None or current.get("status") != "pending":
             return current
+
+        patch = dict(metadata_patch or {})
+        patch_json = json.dumps(patch, default=str)
         timestamp_column = "approved_at" if status == "approved" else "rejected_at"
-        await self.session.execute(
-            text(
-                f"UPDATE approvals SET status=:status, {timestamp_column}=CURRENT_TIMESTAMP "
-                "WHERE approval_id=:id AND status='pending'"
-            ),
-            {"status": status, "id": approval_id},
-        )
+        row = (
+            await self.session.execute(
+                text(
+                    f"""
+                    UPDATE approvals
+                    SET status=:status,
+                        {timestamp_column}=CURRENT_TIMESTAMP,
+                        metadata=COALESCE(metadata, '{{}}'::jsonb) || CAST(:metadata_patch AS jsonb)
+                    WHERE approval_id=:id AND status='pending'
+                    RETURNING approval_id, incident_id, action, risk_level, approver, status,
+                              metadata, created_at, approved_at, rejected_at
+                    """
+                ),
+                {"status": status, "id": approval_id, "metadata_patch": patch_json},
+            )
+        ).mappings().first()
         await self.session.commit()
-        return await self._get_raw(approval_id)
+        return dict(row) if row else await self._get_raw(approval_id)
 
     async def consume(self, approval_id: str) -> Optional[Dict[str, Any]]:
         """Atomically consume an approved record exactly once before crossing the execution boundary."""
