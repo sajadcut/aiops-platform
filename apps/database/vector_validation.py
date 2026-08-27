@@ -11,7 +11,7 @@ async def validate_pgvector(session: AsyncSession, expected_dimension: int | Non
         return result
     rows = (await session.execute(text("""
         SELECT table_name, column_name,
-               CASE WHEN udt_name='vector' THEN atttypmod - 4 ELSE NULL END AS dimension
+               CASE WHEN udt_name='vector' THEN atttypmod ELSE NULL END AS dimension
         FROM information_schema.columns c
         LEFT JOIN pg_attribute a
           ON a.attrelid = format('%I.%I', c.table_schema, c.table_name)::regclass
