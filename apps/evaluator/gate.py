@@ -1,3 +1,10 @@
+"""Evaluator قطعی بین reasoning Agentها و Decision Engine.
+
+این لایه عمداً deterministic است: حتی اگر LLM/Agent پیشنهاد قانع‌کننده‌ای بدهد، نبود
+Evidence، confidence پایین، disagreement یا recommendation ناامن باید Decision را block
+کند. در نتیجه LLM نمی‌تواند با متن خود این gate را دور بزند.
+"""
+
 from typing import Any, Dict, List, Optional
 
 from apps.evaluator.thresholds import DEFAULT_THRESHOLDS
@@ -5,7 +12,7 @@ from domain.contracts.config import settings
 
 
 class EvaluationGate:
-    """Deterministic quality gate between Agent/RCA output and Decision policy."""
+    """کیفیت RCA را از روی Evidence/Consensus/Safety به‌صورت fail-closed ارزیابی می‌کند."""
 
     @classmethod
     def evaluate(
@@ -15,6 +22,9 @@ class EvaluationGate:
         coordination: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         coordination = coordination or {}
+
+        # Triage فقط routing اولیه است و نباید به‌عنوان specialist evidence باعث بالا رفتن
+        # confidence یا coverage ارزیابی نهایی شود.
         specialist_findings = [f for f in findings if isinstance(f, dict) and f.get("agent_name") != "triage"]
         confidences = [float(f.get("confidence", 0) or 0) for f in specialist_findings]
         max_confidence = max(confidences, default=0.0)
@@ -36,6 +46,8 @@ class EvaluationGate:
             or "successful specialist analysis" in (f.get("missing_evidence") or [])
         ]
 
+        # Agent فقط می‌تواند action پیشنهاد کند. اگر write recommendation بدون approval
+        # requirement ظاهر شود، evaluator آن را unsafe می‌داند و flow را متوقف می‌کند.
         unsafe_recommendations = []
         for finding in specialist_findings:
             for action in finding.get("recommended_actions") or []:
@@ -44,6 +56,8 @@ class EvaluationGate:
                 if not action.get("read_only", True) and not action.get("requires_approval", False):
                     unsafe_recommendations.append(action.get("action", "unknown"))
 
+        # hypothesis با probability بالا ولی بدون Evidence ID یک ادعای ungrounded است؛
+        # این check جلوی تبدیل حدس LLM به RCA قطعی را می‌گیرد.
         hypothesis_without_evidence = False
         for finding in specialist_findings:
             for hypothesis in finding.get("hypotheses") or []:
@@ -79,7 +93,8 @@ class EvaluationGate:
         if human_review:
             blockers.append("human_review_required")
 
-        # Preserve deterministic blocker ordering while removing duplicates.
+        # ترتیب blockerها deterministic نگه داشته می‌شود تا test/audit و تصمیم downstream
+        # برای input یکسان خروجی قابل تکرار داشته باشند.
         blockers = list(dict.fromkeys(blockers))
         approved = not blockers
         return {
