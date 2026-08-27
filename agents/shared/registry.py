@@ -1,3 +1,10 @@
+"""Catalog canonical Agentهای تخصصی و capability/handoff آنها.
+
+این registry با ToolRegistry اجرایی فرق دارد: Agentها فقط تحلیل، hypothesis و recommendation
+تولید می‌کنند و `production_status=analysis_only` دارند. orchestration از manifestها برای
+routing و همکاری استفاده می‌کند، نه برای اعطای write authority.
+"""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -24,6 +31,8 @@ from integrations.llm.base import LLMAdapter
 
 @dataclass(frozen=True)
 class AgentManifest:
+    """Metadata قابل مشاهده برای routing/UI: domain، evidence نیازمند و handoffهای مجاز."""
+
     name: str
     domain: str
     version: str
@@ -36,6 +45,7 @@ class AgentManifest:
     production_status: str = "analysis_only"
 
 
+# فقط کلاس‌های حاضر در این allow-list می‌توانند با نام config وارد runtime شوند.
 _AGENT_CLASSES: Dict[str, Type[BaseAgent]] = {
     "application": ApplicationAgent,
     "infrastructure": InfrastructureAgent,
@@ -52,6 +62,8 @@ _AGENT_CLASSES: Dict[str, Type[BaseAgent]] = {
     "recovery": RecoveryAgent,
 }
 
+# این requirements routing اولیه را راهنمایی می‌کنند. نبود evidence باید در Finding به
+# شکل missing/source unavailable دیده شود، نه اینکه Agent آن را healthy فرض کند.
 _EVIDENCE_REQUIREMENTS: Dict[str, List[str]] = {
     "application": ["log", "metric"],
     "infrastructure": ["metric"],
@@ -68,6 +80,7 @@ _EVIDENCE_REQUIREMENTS: Dict[str, List[str]] = {
     "recovery": ["log", "metric"],
 }
 
+# Handoff یعنی درخواست تحلیل مکمل از specialist دیگر؛ به معنی delegation اجرای write نیست.
 _HANDOFF_TARGETS: Dict[str, List[str]] = {
     "application": ["change", "database", "dependency", "messaging", "security", "identity"],
     "infrastructure": ["network", "storage", "vm", "kubernetes", "recovery"],
@@ -86,11 +99,12 @@ _HANDOFF_TARGETS: Dict[str, List[str]] = {
 
 
 class AgentRegistry:
-    """Canonical runtime registry for analysis-only operational specialists."""
+    """Agentهای analysis-only فعال را بر اساس `.env` instantiate و manifest آنها را ارائه می‌کند."""
 
     def __init__(self, llm_adapter: Optional[LLMAdapter] = None):
         enabled = {name.strip().lower() for name in settings.AGENT_ENABLED_AGENTS}
         unknown = enabled.difference(_AGENT_CLASSES)
+        # typo در AGENT_ENABLED_AGENTS به silent disable تبدیل نمی‌شود؛ startup fail می‌شود.
         if unknown:
             raise RuntimeError(f"unknown_enabled_agents:{sorted(unknown)}")
         self._llm_adapter = llm_adapter
@@ -102,21 +116,26 @@ class AgentRegistry:
         }
 
     def get(self, name: str) -> Optional[BaseAgent]:
+        """Agent فعال را برای routing برمی‌گرداند؛ disabled Agent اجرا نمی‌شود."""
         return self._agents.get(name.lower())
 
     def enabled_names(self) -> List[str]:
+        """نام Agentهای واقعاً فعال runtime را برمی‌گرداند."""
         return sorted(self._agents)
 
     def known_names(self) -> List[str]:
+        """همه Agentهای شناخته‌شده codebase، مستقل از enable/disable config."""
         return sorted(_AGENT_CLASSES)
 
     def manifests(self, include_disabled: bool = True) -> List[AgentManifest]:
+        """Catalog قابل مصرف توسط Dashboard/orchestrator را بدون افشای write authority می‌سازد."""
         result: List[AgentManifest] = []
         names = self.known_names() if include_disabled else self.enabled_names()
         for name in names:
             enabled = name in self._enabled_names
             agent = self._agents.get(name)
             if agent is None:
+                # برای نمایش manifest Agent disabled نمونه ساخته می‌شود اما وارد runtime routing نمی‌شود.
                 agent = _AGENT_CLASSES[name](self._llm_adapter)
             requirements = list(_EVIDENCE_REQUIREMENTS.get(name, []))
             handoffs = list(_HANDOFF_TARGETS.get(name, []))
