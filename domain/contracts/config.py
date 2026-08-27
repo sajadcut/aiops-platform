@@ -69,7 +69,19 @@ class Settings(BaseSettings):
     SIGNAL_CORRELATION_CANDIDATE_LIMIT: int = Field(..., ge=1, le=100)
 
     LOG_LEVEL: str = Field(...)
-    LOG_JSON: bool = Field(...)
+    LOG_CONSOLE_ENABLED: bool = Field(...)
+    LOG_TEXT_FILE_ENABLED: bool = Field(...)
+    LOG_JSON_FILE_ENABLED: bool = Field(...)
+    LOG_DIR: str = Field(...)
+    LOG_TEXT_FILE: str = Field(...)
+    LOG_JSON_FILE: str = Field(...)
+    LOG_ROTATION_MODE: str = Field(...)
+    LOG_MAX_BYTES: int = Field(..., ge=1024)
+    LOG_BACKUP_COUNT: int = Field(..., ge=0)
+    LOG_ROTATION_WHEN: str = Field(...)
+    LOG_ROTATION_INTERVAL: int = Field(..., ge=1)
+    LOG_UTC: bool = Field(...)
+
     INTERNAL_API_KEY: Optional[str] = Field(...)
     INTERNAL_API_ROLE: str = Field(...)
     API_RATE_LIMIT_PER_MINUTE: int = Field(...)
@@ -97,9 +109,6 @@ class Settings(BaseSettings):
     ZABBIX_MCP_SERVER_NAME: Optional[str] = Field(...)
     ZABBIX_MCP_AUTH_HEADER: Optional[str] = Field(...)
 
-    # Elastic Agent Builder MCP is the only supported Elastic Control-Plane path.
-    # Agent Builder MCP requires Elastic Stack >= 9.2. 9.3+ is the recommended
-    # Production baseline because it includes important Agent Builder/MCP fixes.
     ELASTIC_STACK_VERSION: str = Field(...)
     ELASTICSEARCH_MCP_URL: str = Field(...)
     ELASTICSEARCH_MCP_AUTH_HEADER: Optional[str] = Field(...)
@@ -112,7 +121,6 @@ class Settings(BaseSettings):
     KUBERNETES_MCP_URL: Optional[str] = Field(...)
     VM_MCP_URL: Optional[str] = Field(...)
 
-    # Direct endpoint settings are only for MCP server-side adapters/tests.
     ZABBIX_URL: str = Field(...)
     ZABBIX_USERNAME: Optional[str] = Field(...)
     ZABBIX_PASSWORD: Optional[str] = Field(...)
@@ -145,6 +153,22 @@ class Settings(BaseSettings):
 
     OFFLINE_IMAGE_REGISTRY: Optional[str] = Field(...)
     IMAGE_PULL_POLICY: str = Field(...)
+
+    @field_validator("LOG_ROTATION_MODE")
+    @classmethod
+    def validate_log_rotation_mode(cls, value: str) -> str:
+        normalized = str(value).strip().lower()
+        if normalized not in {"size", "time"}:
+            raise ValueError("LOG_ROTATION_MODE must be 'size' or 'time'")
+        return normalized
+
+    @field_validator("LOG_LEVEL")
+    @classmethod
+    def validate_log_level(cls, value: str) -> str:
+        normalized = str(value).strip().upper()
+        if normalized not in {"CRITICAL", "ERROR", "WARNING", "INFO", "DEBUG"}:
+            raise ValueError("LOG_LEVEL must be CRITICAL, ERROR, WARNING, INFO, or DEBUG")
+        return normalized
 
     @field_validator("ELASTIC_STACK_VERSION")
     @classmethod
