@@ -1,0 +1,124 @@
+name: container-acceptance
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  container-acceptance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build dependency wheelhouse base
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > /tmp/Wheelhouse.Dockerfile <<'EOF'
+          FROM python:3.12-slim
+          WORKDIR /build
+          COPY requirements.txt .
+          RUN python -m pip install --upgrade pip \
+              && mkdir -p /opt/wheels \
+              && python -m pip wheel --wheel-dir /opt/wheels -r requirements.txt
+          EOF
+          docker build -t aiops-wheelhouse-ci -f /tmp/Wheelhouse.Dockerfile .
+
+      - name: Build production offline Dockerfile
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker build \
+            --build-arg PYTHON_BASE_IMAGE=aiops-wheelhouse-ci \
+            -t aiops-platform-ci:${GITHUB_SHA} \
+            -f deployment/docker/offline/Dockerfile .
+          docker image inspect aiops-platform-ci:${GITHUB_SHA} >/dev/null
+
+      - name: Assert runtime image hardening
+        shell: bash
+        run: |
+          set -euo pipefail
+          USER_VALUE="$(docker image inspect aiops-platform-ci:${GITHUB_SHA} --format '{{.Config.User}}')"
+          test "$USER_VALUE" = '10001:10001'
+          test "$(docker image inspect aiops-platform-ci:${GITHUB_SHA} --format '{{.Config.WorkingDir}}')" = '/app'
+          IMAGE_ID="$(docker image inspect aiops-platform-ci:${GITHUB_SHA} --format '{{.Id}}')"
+          [[ "$IMAGE_ID" =~ ^sha256:[0-9a-f]{64}$ ]]
+          printf '%s\n' "$IMAGE_ID" > image-id.txt
+
+      - name: Container smoke test
+        shell: bash
+        run: |
+          set -euo pipefail
+          CID="$(docker run -d --rm \
+            -e APP_ENV=test \
+            -e INTERNAL_API_KEY=ci-container-key \
+            -e INTERNAL_API_ROLE=sre \
+            -e PGVECTOR_VALIDATE_ON_STARTUP=false \
+            -e DATABASE_VALIDATE_MIGRATIONS_ON_STARTUP=false \
+            -e LOG_TEXT_FILE_ENABLED=false \
+            -e LOG_JSON_FILE_ENABLED=false \
+            -p 18000:8000 \
+            aiops-platform-ci:${GITHUB_SHA})"
+          trap 'docker logs "$CID" || true; docker stop "$CID" >/dev/null 2>&1 || true' EXIT
+          for i in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:18000/api/v1/health/live > /tmp/live.json; then
+              break
+            fi
+            sleep 1
+          done
+          grep -q 'ok\|healthy' /tmp/live.json
+          curl --fail --silent http://127.0.0.1:18000/api/v1/health/live >/dev/null
+
+      - name: Generate SBOM
+        uses: anchore/sbom-action@v0
+        with:
+          image: aiops-platform-ci:${{ github.sha }}
+          format: cyclonedx-json
+          output-file: sbom.cdx.json
+
+      - name: Scan image for fixable HIGH/CRITICAL vulnerabilities
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: aiops-platform-ci:${{ github.sha }}
+          format: table
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'HIGH,CRITICAL'
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3
+
+      - name: Prove signing and verification path
+        shell: bash
+        env:
+          COSIGN_PASSWORD: ''
+        run: |
+          set -euo pipefail
+          cosign generate-key-pair
+          cosign sign-blob --yes --key cosign.key --output-signature image-id.sig image-id.txt
+          cosign verify-blob --key cosign.pub --signature image-id.sig image-id.txt
+          rm -f cosign.key
+
+      - name: Validate immutable Kubernetes release rendering
+        shell: bash
+        run: |
+          set -euo pipefail
+          IMAGE_REF="registry.internal/aiops-platform@sha256:$(printf '%064d' 1)"
+          python scripts/render_k8s_release.py "$IMAGE_REF" /tmp/rendered
+          grep -F "$IMAGE_REF" /tmp/rendered/aiops-platform.yaml
+          grep -F "$IMAGE_REF" /tmp/rendered/migrate-job.yaml
+          ! grep -R 'registry.invalid\|:2.2\|:latest' /tmp/rendered
+
+      - name: Upload supply-chain evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: container-acceptance-evidence
+          path: |
+            image-id.txt
+            image-id.sig
+            cosign.pub
+            sbom.cdx.json
