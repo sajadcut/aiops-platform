@@ -21,7 +21,7 @@ services:
       VM_MCP_SERVER_SSH_STRICT_HOST_KEY_CHECKING: "true"
       VM_HAPROXY_LAB_01_SSH_KEY: /run/secrets/haproxy_lab_01_key
     volumes:
-      - ../mcp_servers/vm_management/inventory.yml:/run/config/inventory.yml:ro
+      - ${VM_MCP_INVENTORY_PATH:?required}:/run/config/inventory.yml:ro
       - ${VM_MCP_KNOWN_HOSTS:?required}:/run/secrets/known_hosts:ro
       - ${VM_HAPROXY_LAB_01_SSH_KEY:?required}:/run/secrets/haproxy_lab_01_key:ro
     healthcheck:
