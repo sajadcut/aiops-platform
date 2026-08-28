@@ -1,19 +1,12 @@
-"""Registry مرکزی ابزارهایی که اجازه عبور از execution boundary را دارند.
-
-Agent یا LLM نام یک action را پیشنهاد می‌دهد، اما اجرای واقعی فقط وقتی ممکن است که
-ابزار از قبل در این registry ثبت شده باشد، approval لازم حاضر باشد و validation خود
-ابزار نیز موفق شود. بنابراین registry بخشی از allow-list امنیتی پلتفرم است.
-"""
-
+"""Allowlisted execution-tool registry and second authorization boundary."""
 from typing import Any, Dict, List, Optional
 
+from apps.execution_service.capability import ExecutionCapabilityError, verify_execution_capability
 from apps.execution_service.tools.base import BaseTool, ToolInput
 from domain.contracts.logging import logger
 
 
 class ToolRegistry:
-    """ابزارهای شناخته‌شده را نگه می‌دارد و اجرای unknown/unapproved را fail-closed می‌کند."""
-
     _instance: Optional["ToolRegistry"] = None
     _tools: Dict[str, BaseTool]
 
@@ -28,12 +21,7 @@ class ToolRegistry:
         if tool.name in self._tools:
             logger.warning("execution_tool_overwritten", tool=tool.name)
         self._tools[tool.name] = tool
-        logger.info(
-            "execution_tool_registered",
-            tool=tool.name,
-            risk_level=tool.risk_level,
-            requires_approval=tool.requires_approval,
-        )
+        logger.info("execution_tool_registered", tool=tool.name, risk_level=tool.risk_level, requires_approval=tool.requires_approval)
 
     def get_tool(self, name: str) -> Optional[BaseTool]:
         return self._tools.get(name)
@@ -58,32 +46,44 @@ class ToolRegistry:
             logger.exception("execution_tool_validation_exception", tool=tool_name, error_type=type(exc).__name__)
             return {"valid": False, "error": "tool_validation_exception"}
 
-    async def execute_tool(
-        self,
-        tool_name: str,
-        input_data: ToolInput,
-        agent_name: str,
-        approval_granted: bool = False,
-        approval_id: Optional[str] = None,
-    ) -> Dict[str, Any]:
-        """تنها ابزار ثبت‌شده، approved و validated را اجرا می‌کند."""
+    @staticmethod
+    def _verify_authorization(tool_name: str, tool: BaseTool, input_data: ToolInput) -> Optional[str]:
+        if not tool.requires_approval:
+            return None
+        if not input_data.approval_id or not input_data.incident_id or not input_data.execution_capability:
+            return "execution_capability_required"
+        try:
+            verify_execution_capability(
+                input_data.execution_capability,
+                incident_id=input_data.incident_id,
+                approval_id=input_data.approval_id,
+                tool_name=tool_name,
+                action=input_data.action,
+                target=input_data.target,
+                parameters=input_data.parameters,
+                timeout=input_data.timeout,
+                runbook_id=input_data.runbook_id,
+                runbook_version=input_data.runbook_version,
+                rollback=input_data.rollback,
+            )
+        except ExecutionCapabilityError as exc:
+            logger.warning("execution_registry_capability_rejected", tool=tool_name, approval_id=input_data.approval_id, reason=str(exc))
+            return "execution_capability_invalid"
+        return None
+
+    async def execute_tool(self, tool_name: str, input_data: ToolInput, agent_name: str) -> Dict[str, Any]:
         tool = self.get_tool(tool_name)
         if tool is None:
-            return {
-                "success": False,
-                "execution_blocked": True,
-                "reason": "tool_not_found",
-                "error": "tool_not_found",
-            }
+            return {"success": False, "execution_blocked": True, "reason": "tool_not_found", "error": "tool_not_found"}
 
-        if tool.requires_approval and not approval_granted:
-            logger.warning("execution_blocked_approval_required", tool=tool_name, agent=agent_name)
+        authorization_error = self._verify_authorization(tool_name, tool, input_data)
+        if authorization_error:
             return {
                 "success": False,
                 "execution_blocked": True,
-                "reason": "approval_required",
+                "reason": authorization_error,
                 "tool": tool_name,
-                "approval_id": approval_id,
+                "approval_id": input_data.approval_id,
             }
 
         validation = await self.validate_tool(tool_name, input_data)
@@ -97,35 +97,21 @@ class ToolRegistry:
             }
 
         try:
-            logger.info("execution_tool_call_started", agent=agent_name, tool=tool_name, approval_id=approval_id)
+            logger.info("execution_tool_call_started", agent=agent_name, tool=tool_name, approval_id=input_data.approval_id)
             result = await tool.execute(input_data)
             response = result.model_dump()
-            response.update(
-                {
-                    "tool": tool_name,
-                    "agent": agent_name,
-                    "risk_level": tool.risk_level,
-                    "requires_approval": tool.requires_approval,
-                    "approval_id": approval_id,
-                    "execution_blocked": False,
-                }
-            )
-            logger.info(
-                "execution_tool_call_completed",
-                agent=agent_name,
-                tool=tool_name,
-                approval_id=approval_id,
-                success=bool(response.get("success")),
-            )
+            response.update({
+                "tool": tool_name,
+                "agent": agent_name,
+                "risk_level": tool.risk_level,
+                "requires_approval": tool.requires_approval,
+                "approval_id": input_data.approval_id,
+                "execution_blocked": False,
+            })
+            logger.info("execution_tool_call_completed", agent=agent_name, tool=tool_name, approval_id=input_data.approval_id, success=bool(response.get("success")))
             return response
         except Exception as exc:
-            logger.exception(
-                "execution_tool_call_failed",
-                tool=tool_name,
-                agent=agent_name,
-                approval_id=approval_id,
-                error_type=type(exc).__name__,
-            )
+            logger.exception("execution_tool_call_failed", tool=tool_name, agent=agent_name, approval_id=input_data.approval_id, error_type=type(exc).__name__)
             return {
                 "success": False,
                 "execution_blocked": False,
@@ -133,7 +119,7 @@ class ToolRegistry:
                 "error": "tool_execution_failed",
                 "tool": tool_name,
                 "agent": agent_name,
-                "approval_id": approval_id,
+                "approval_id": input_data.approval_id,
             }
 
     def clear(self) -> None:
