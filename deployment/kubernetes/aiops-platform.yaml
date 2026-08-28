@@ -87,9 +87,14 @@ spec:
           volumeMounts:
             - name: tmp
               mountPath: /tmp
+            - name: logs
+              mountPath: /app/logs
       volumes:
         - name: tmp
           emptyDir: {}
+        - name: logs
+          emptyDir:
+            sizeLimit: 1Gi
 ---
 apiVersion: policy/v1
 kind: PodDisruptionBudget
