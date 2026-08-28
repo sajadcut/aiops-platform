@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import hmac
+import json
+import time
 from datetime import datetime
 from typing import Any, Dict
 
@@ -8,6 +10,7 @@ from fastapi import FastAPI, Header, HTTPException
 from pydantic import BaseModel, Field
 
 from domain.contracts.config import settings
+from domain.contracts.logging import configure_logging, logger, redact_value
 from integrations.elasticsearch.client import ElasticsearchClient
 from integrations.kubernetes.client import KubernetesEvidenceClient
 from integrations.prometheus.client import PrometheusClient
@@ -22,6 +25,7 @@ class JsonRpcRequest(BaseModel):
     id: int | str | None = None
 
 
+configure_logging()
 app = FastAPI(title=f"AIOps MCP Server ({settings.MCP_SERVER_PROVIDER})", docs_url=None, redoc_url=None)
 _WRITE_TOOLS = {"restart_service"}
 
@@ -70,6 +74,43 @@ def _provider() -> str:
     return provider
 
 
+def _validate_production_configuration() -> None:
+    if settings.APP_ENV != "production":
+        return
+    errors: list[str] = []
+    provider = _provider()
+    if not settings.MCP_SERVER_REQUIRE_AUTH:
+        errors.append("MCP_SERVER_REQUIRE_AUTH must be enabled in production")
+    if not settings.MCP_BEARER_TOKEN:
+        errors.append("MCP_BEARER_TOKEN is required in production")
+    if provider == "vm":
+        if not settings.MCP_WRITE_BEARER_TOKEN:
+            errors.append("VM MCP requires MCP_WRITE_BEARER_TOKEN")
+        if settings.MCP_WRITE_BEARER_TOKEN and settings.MCP_WRITE_BEARER_TOKEN == settings.MCP_BEARER_TOKEN:
+            errors.append("VM MCP read and write bearer identities must be distinct")
+        if not settings.SSH_ENABLED:
+            errors.append("VM MCP requires SSH_ENABLED=True on the edge server")
+        if not settings.SSH_STRICT_HOST_KEY_CHECKING:
+            errors.append("VM MCP requires strict SSH host-key checking")
+        if not settings.SSH_KNOWN_HOSTS:
+            errors.append("VM MCP requires SSH_KNOWN_HOSTS")
+        if not settings.SSH_PRIVATE_KEY_PATH:
+            errors.append("VM MCP requires key-based SSH credentials")
+        if not settings.SSH_USERNAME.strip() or settings.SSH_USERNAME.strip().lower() == "root":
+            errors.append("VM MCP requires a non-root SSH_USERNAME")
+        if not settings.VM_ALLOWED_TARGETS:
+            errors.append("VM MCP requires a non-empty VM_ALLOWED_TARGETS inventory")
+        if not settings.VM_ALLOWED_SERVICES:
+            errors.append("VM MCP requires a non-empty VM_ALLOWED_SERVICES allowlist")
+    if errors:
+        raise RuntimeError("mcp_server_production_configuration_invalid: " + "; ".join(errors))
+
+
+@app.on_event("startup")
+async def startup_validation() -> None:
+    _validate_production_configuration()
+
+
 def _parse_dt(value: Any) -> datetime | None:
     if not value:
         return None
@@ -92,6 +133,16 @@ def _authorize(authorization: str | None, tool: str | None = None) -> None:
     expected = f"Bearer {token}"
     if not authorization or not hmac.compare_digest(authorization, expected):
         raise HTTPException(status_code=401, detail="invalid_mcp_identity")
+
+
+def _log_payload(value: Any) -> Any:
+    if not settings.LOG_HTTP_BODY_ENABLED:
+        return None
+    safe = redact_value(value)
+    encoded = json.dumps(safe, default=str, ensure_ascii=False).encode("utf-8")
+    if len(encoded) > settings.LOG_HTTP_BODY_MAX_BYTES:
+        return {"truncated": True, "size_bytes": len(encoded)}
+    return safe
 
 
 async def _call(provider: str, tool: str, args: Dict[str, Any]) -> Any:
@@ -164,31 +215,73 @@ async def mcp(
     mcp_protocol_version: str | None = Header(default=None, alias="Mcp-Protocol-Version"),
     mcp_name: str | None = Header(default=None, alias="Mcp-Name"),
 ) -> Dict[str, Any]:
+    started = time.perf_counter()
+    provider = _provider()
+    method = request.method
+    tool = str(request.params.get("name") or "") if method == "tools/call" else None
+
     if mcp_protocol_version and mcp_protocol_version != settings.MCP_PROTOCOL_VERSION:
         raise HTTPException(status_code=400, detail="unsupported_mcp_protocol_version")
 
-    provider = _provider()
-    if request.method == "tools/list":
+    logger.info(
+        "mcp_request",
+        mcp_request_id=request.id,
+        provider=provider,
+        method=method,
+        tool=tool,
+        request_payload=_log_payload(request.params),
+    )
+
+    if method == "initialize":
+        _authorize(authorization)
+        requested = str(request.params.get("protocolVersion") or "")
+        if requested and requested != settings.MCP_PROTOCOL_VERSION:
+            response = {"jsonrpc": "2.0", "id": request.id, "error": {"code": -32602, "message": "unsupported_protocol_version"}}
+        else:
+            response = {
+                "jsonrpc": "2.0",
+                "id": request.id,
+                "result": {
+                    "protocolVersion": settings.MCP_PROTOCOL_VERSION,
+                    "capabilities": {"tools": {"listChanged": False}},
+                    "serverInfo": {"name": f"aiops-{provider}-mcp", "version": settings.APP_VERSION},
+                },
+            }
+    elif method == "notifications/initialized":
+        _authorize(authorization)
+        response = {"jsonrpc": "2.0", "id": request.id, "result": {}}
+    elif method == "tools/list":
         _authorize(authorization)
         tools = [{"name": name, **schema} for name, schema in _TOOL_SCHEMAS[provider].items()]
-        return {"jsonrpc": "2.0", "id": request.id, "result": {"tools": tools}}
+        response = {"jsonrpc": "2.0", "id": request.id, "result": {"tools": tools}}
+    elif method == "tools/call":
+        _authorize(authorization, tool)
+        if mcp_name and mcp_name != tool:
+            raise HTTPException(status_code=400, detail="mcp_name_mismatch")
+        args = request.params.get("arguments") or {}
+        if not isinstance(args, dict):
+            raise HTTPException(status_code=400, detail="invalid_tool_arguments")
+        try:
+            content = await _call(provider, tool or "", args)
+            if not isinstance(content, list):
+                content = [content]
+            response = {"jsonrpc": "2.0", "id": request.id, "result": {"content": content}}
+        except PermissionError as exc:
+            response = {"jsonrpc": "2.0", "id": request.id, "error": {"code": -32602, "message": str(exc)}}
+        except Exception as exc:
+            logger.exception("mcp_tool_call_failed", provider=provider, tool=tool, error_type=type(exc).__name__)
+            response = {"jsonrpc": "2.0", "id": request.id, "error": {"code": -32000, "message": "tool_execution_failed"}}
+    else:
+        response = {"jsonrpc": "2.0", "id": request.id, "error": {"code": -32601, "message": "method_not_found"}}
 
-    if request.method != "tools/call":
-        return {"jsonrpc": "2.0", "id": request.id, "error": {"code": -32601, "message": "method_not_found"}}
-
-    tool = str(request.params.get("name") or "")
-    _authorize(authorization, tool)
-    if mcp_name and mcp_name != tool:
-        raise HTTPException(status_code=400, detail="mcp_name_mismatch")
-    args = request.params.get("arguments") or {}
-    if not isinstance(args, dict):
-        raise HTTPException(status_code=400, detail="invalid_tool_arguments")
-    try:
-        content = await _call(provider, tool, args)
-    except PermissionError as exc:
-        return {"jsonrpc": "2.0", "id": request.id, "error": {"code": -32602, "message": str(exc)}}
-    except Exception as exc:
-        return {"jsonrpc": "2.0", "id": request.id, "error": {"code": -32000, "message": type(exc).__name__}}
-    if not isinstance(content, list):
-        content = [content]
-    return {"jsonrpc": "2.0", "id": request.id, "result": {"content": content}}
+    logger.info(
+        "mcp_response",
+        mcp_request_id=request.id,
+        provider=provider,
+        method=method,
+        tool=tool,
+        success="error" not in response,
+        duration_ms=round((time.perf_counter() - started) * 1000, 3),
+        response_payload=_log_payload(response),
+    )
+    return response
