@@ -1,0 +1,313 @@
+scenarios:
+  - id: VM-SERVICE-DOWN
+    title: Stop a systemd service on an allowlisted staging VM
+    domain: vm
+    destructive: true
+    service: ${AIOPS_TEST_SERVICE}
+    target: ${AIOPS_TEST_VM_HOST}
+    preconditions: [staging VM reachable, service monitored, VM MCP write configured]
+    injection: {action: vm.stop_service, parameters: {service: ${AIOPS_TEST_VM_SERVICE}}, timeout_seconds: 30}
+    monitoring: {expected_sources: [zabbix, prometheus], zabbix_search: ${AIOPS_TEST_VM_SERVICE}, promql: 'up{job="${AIOPS_TEST_SERVICE}"} == 0'}
+    expected: {incident: service unavailable, correlation: duplicate alerts join one incident, evidence: [service state, host telemetry, logs], agents: [vm, infrastructure, application], rca: stopped or failed service, confidence: live evidence required, decision: restart only when policy permits, approval_required: true, remediation_required: true, remediation: restart service through VM MCP, tool: vm_mcp, action: restart_service, verification: service active and health/alerts recovered, audit_events: [approval_granted, approval_consumed, verification_completed]}
+    rollback: {action: vm.start_service, parameters: {service: ${AIOPS_TEST_VM_SERVICE}}, timeout_seconds: 60}
+    timing: {monitor_settle_seconds: 15, incident_timeout_seconds: 240, terminal_timeout_seconds: 360}
+
+  - id: APP-CRASH
+    title: Crash an allowlisted staging application
+    domain: application
+    destructive: true
+    service: ${AIOPS_TEST_SERVICE}
+    target: ${AIOPS_TEST_SERVICE}
+    preconditions: [application monitored by Prometheus and ELK]
+    injection: {action: app.crash, parameters: {}, timeout_seconds: 30}
+    monitoring: {expected_sources: [prometheus, elasticsearch], promql: 'up{job="${AIOPS_TEST_SERVICE}"} == 0', elastic_query: 'service.name:${AIOPS_TEST_SERVICE} AND (error OR fatal OR crash)'}
+    expected: {incident: application crash, correlation: metric and log evidence converge, evidence: [availability metric, crash log], agents: [application, infrastructure], rca: application process crash, confidence: contradictory evidence lowers confidence, decision: safe recovery action, approval_required: true, remediation_required: true, remediation: controlled restart or rollback, verification: health endpoint and error rate recovered, audit_events: [approval_granted, approval_consumed, verification_completed]}
+    rollback: {action: app.start, parameters: {}, timeout_seconds: 60}
+
+  - id: APP-HTTP-5XX
+    title: Force HTTP 5xx responses
+    domain: application
+    destructive: true
+    service: ${AIOPS_TEST_SERVICE}
+    target: ${AIOPS_TEST_SERVICE}
+    preconditions: [fault-capable staging application]
+    injection: {action: app.force_5xx, parameters: {percent: 80}, timeout_seconds: 30}
+    monitoring: {expected_sources: [prometheus, elasticsearch], promql: 'sum(rate(http_requests_total{service="${AIOPS_TEST_SERVICE}",status=~"5.."}[2m])) > 0', elastic_query: 'service.name:${AIOPS_TEST_SERVICE} AND http.response.status_code:[500 TO 599]'}
+    expected: {incident: 5xx spike, correlation: repeated 5xx deduplicated, evidence: [5xx metric, application errors], agents: [application, dependency, change], rca: application or dependency failure, confidence: require metric and log support, decision: remediate root cause not alert symptom, approval_required: true, remediation_required: true, remediation: rollback or restart only if evidence supports it, verification: 5xx rate returns below threshold, audit_events: [verification_completed]}
+    rollback: {action: app.clear_fault, parameters: {}, timeout_seconds: 60}
+
+  - id: APP-LATENCY
+    title: Inject application latency
+    domain: application
+    destructive: true
+    service: ${AIOPS_TEST_SERVICE}
+    target: ${AIOPS_TEST_SERVICE}
+    preconditions: [latency metric exported]
+    injection: {action: app.add_latency, parameters: {milliseconds: 2000}, timeout_seconds: 30}
+    monitoring: {expected_sources: [prometheus], promql: 'histogram_quantile(0.95,sum(rate(http_request_duration_seconds_bucket{service="${AIOPS_TEST_SERVICE}"}[2m])) by (le)) > 1'}
+    expected: {incident: latency SLO breach, correlation: latency alerts correlate by service, evidence: [p95 latency, dependency latency], agents: [application, dependency, network], rca: isolate application versus downstream latency, confidence: missing dependency data requests more evidence, decision: targeted remediation, approval_required: true, remediation_required: true, remediation: rollback/restart only when causal evidence exists, verification: p95 returns below threshold, audit_events: [verification_completed]}
+    rollback: {action: app.clear_fault, parameters: {}, timeout_seconds: 60}
+
+  - id: HOST-CPU-SATURATION
+    title: Saturate CPU on a staging target
+    domain: infrastructure
+    destructive: true
+    service: ${AIOPS_TEST_SERVICE}
+    target: ${AIOPS_TEST_VM_HOST}
+    preconditions: [host CPU metrics available]
+    injection: {action: host.cpu_saturate, parameters: {percent: 95, duration_seconds: 180}, timeout_seconds: 30}
+    monitoring: {expected_sources: [prometheus, zabbix], promql: '100 - avg(rate(node_cpu_seconds_total{instance="${AIOPS_TEST_VM_HOST}",mode="idle"}[2m])) * 100 > 90', zabbix_search: CPU}
+    expected: {incident: CPU saturation, correlation: host and application symptoms linked, evidence: [CPU, load, processes], agents: [infrastructure, vm, application], rca: identify saturation source, confidence: process evidence required for high confidence, decision: avoid blind restart, approval_required: true, remediation_required: true, remediation: policy-approved service recovery or scaling, verification: CPU and service health recover, audit_events: [verification_completed]}
+    rollback: {action: host.clear_cpu_fault, parameters: {}, timeout_seconds: 60}
+
+  - id: HOST-MEMORY-OOM
+    title: Create memory pressure or OOM
+    domain: infrastructure
+    destructive: true
+    service: ${AIOPS_TEST_SERVICE}
+    target: ${AIOPS_TEST_VM_HOST}
+    preconditions: [memory and OOM telemetry available]
+    injection: {action: host.memory_pressure, parameters: {percent: 90, duration_seconds: 180}, timeout_seconds: 30}
+    monitoring: {expected_sources: [prometheus, elasticsearch], promql: '(1 - node_memory_MemAvailable_bytes{instance="${AIOPS_TEST_VM_HOST}"}/node_memory_MemTotal_bytes{instance="${AIOPS_TEST_VM_HOST}"}) > 0.85', elastic_query: 'OOM OR "out of memory"'}
+    expected: {incident: memory pressure or OOM, correlation: OOM logs and memory metric converge, evidence: [memory, swap, OOM logs], agents: [infrastructure, vm, application], rca: memory exhaustion and responsible process, confidence: high only with live evidence, decision: safe bounded recovery, approval_required: true, remediation_required: true, remediation: restart/scale after causal validation, verification: memory pressure and service health recover, audit_events: [verification_completed]}
+    rollback: {action: host.clear_memory_fault, parameters: {}, timeout_seconds: 60}
+
+  - id: HOST-DISK-FULL
+    title: Fill staging filesystem
+    domain: storage
+    destructive: true
+    service: ${AIOPS_TEST_SERVICE}
+    target: ${AIOPS_TEST_VM_HOST}
+    preconditions: [dedicated disposable test filesystem]
+    injection: {action: host.disk_fill, parameters: {mount: ${AIOPS_TEST_MOUNT}, percent: 95}, timeout_seconds: 60}
+    monitoring: {expected_sources: [prometheus, zabbix], promql: '1 - node_filesystem_avail_bytes{instance="${AIOPS_TEST_VM_HOST}",mountpoint="${AIOPS_TEST_MOUNT}"}/node_filesystem_size_bytes{instance="${AIOPS_TEST_VM_HOST}",mountpoint="${AIOPS_TEST_MOUNT}"} > 0.9', zabbix_search: disk}
+    expected: {incident: disk capacity exhaustion, correlation: disk and application write errors correlate, evidence: [capacity, filesystem, write errors], agents: [storage, infrastructure, vm], rca: identify full filesystem, confidence: filesystem evidence required, decision: cleanup only allowlisted test artifacts, approval_required: true, remediation_required: true, remediation: bounded cleanup or service recovery, verification: free space restored and service healthy, audit_events: [verification_completed]}
+    rollback: {action: host.clear_disk_fill, parameters: {mount: ${AIOPS_TEST_MOUNT}}, timeout_seconds: 60}
+
+  - id: HOST-INODE-FULL
+    title: Exhaust inodes on disposable staging filesystem
+    domain: storage
+    destructive: true
+    service: ${AIOPS_TEST_SERVICE}
+    target: ${AIOPS_TEST_VM_HOST}
+    preconditions: [dedicated disposable filesystem]
+    injection: {action: host.inode_fill, parameters: {mount: ${AIOPS_TEST_MOUNT}}, timeout_seconds: 60}
+    monitoring: {expected_sources: [prometheus, zabbix], promql: '1 - node_filesystem_files_free{instance="${AIOPS_TEST_VM_HOST}",mountpoint="${AIOPS_TEST_MOUNT}"}/node_filesystem_files{instance="${AIOPS_TEST_VM_HOST}",mountpoint="${AIOPS_TEST_MOUNT}"} > 0.9', zabbix_search: inode}
+    expected: {incident: inode exhaustion, correlation: filesystem and write failures correlate, evidence: [inode usage, write errors], agents: [storage, infrastructure, vm], rca: inode exhaustion, confidence: require inode metric, decision: bounded cleanup, approval_required: true, remediation_required: true, remediation: remove only injected test files, verification: inode availability and service recover, audit_events: [verification_completed]}
+    rollback: {action: host.clear_inode_fill, parameters: {mount: ${AIOPS_TEST_MOUNT}}, timeout_seconds: 60}
+
+  - id: PG-CONNECTION-EXHAUSTION
+    title: Exhaust PostgreSQL connections
+    domain: database
+    destructive: true
+    service: ${AIOPS_TEST_SERVICE}
+    target: ${AIOPS_TEST_POSTGRES}
+    preconditions: [disposable staging database role and pool]
+    injection: {action: postgres.connection_exhaustion, parameters: {connections: 50}, timeout_seconds: 60}
+    monitoring: {expected_sources: [prometheus, elasticsearch], promql: 'pg_stat_activity_count{instance="${AIOPS_TEST_POSTGRES}"} > 0', elastic_query: '"too many connections" OR "connection pool"'}
+    expected: {incident: database connection exhaustion, correlation: DB and application symptoms converge, evidence: [active connections, max connections, app pool logs], agents: [database, application], rca: connection exhaustion and likely leak or pool pressure, confidence: cross-layer evidence preferred, decision: avoid database restart as first action, approval_required: true, remediation_required: true, remediation: bounded application/pool recovery, verification: connection count and request success recover, audit_events: [verification_completed]}
+    rollback: {action: postgres.release_test_connections, parameters: {}, timeout_seconds: 60}
+
+  - id: PG-DEADLOCK
+    title: Generate a PostgreSQL deadlock
+    domain: database
+    destructive: true
+    service: ${AIOPS_TEST_SERVICE}
+    target: ${AIOPS_TEST_POSTGRES}
+    preconditions: [isolated test tables]
+    injection: {action: postgres.deadlock, parameters: {}, timeout_seconds: 30}
+    monitoring: {expected_sources: [prometheus, elasticsearch], promql: 'increase(pg_stat_database_deadlocks{instance="${AIOPS_TEST_POSTGRES}"}[5m]) > 0', elastic_query: 'deadlock AND postgres'}
+    expected: {incident: PostgreSQL deadlock, correlation: DB log and metric deduplicate, evidence: [deadlock log, lock graph, query context], agents: [database, application], rca: conflicting transactions, confidence: lock evidence required, decision: recommend application/query fix before restart, approval_required: false, remediation_required: false, remediation: analysis-only unless safe runbook exists, verification: deadlock event captured and no unsafe write executed, audit_events: [verification_completed]}
+    rollback: {action: postgres.cleanup_deadlock_fixture, parameters: {}, timeout_seconds: 60}
+
+  - id: PG-SLOW-QUERY
+    title: Trigger slow PostgreSQL query
+    domain: database
+    destructive: true
+    service: ${AIOPS_TEST_SERVICE}
+    target: ${AIOPS_TEST_POSTGRES}
+    preconditions: [isolated staging query fixture]
+    injection: {action: postgres.slow_query, parameters: {seconds: 10}, timeout_seconds: 30}
+    monitoring: {expected_sources: [prometheus, elasticsearch], promql: 'pg_stat_activity_max_tx_duration{instance="${AIOPS_TEST_POSTGRES}"} > 5', elastic_query: 'postgres AND (slow OR duration)'}
+    expected: {incident: query latency regression, correlation: DB latency and app latency correlate, evidence: [query duration, locks, app latency], agents: [database, application], rca: slow query or lock wait, confidence: query evidence required, decision: analysis first, approval_required: false, remediation_required: false, remediation: no destructive action by default, verification: query completes and service recovers, audit_events: [verification_completed]}
+    rollback: {action: postgres.cancel_test_query, parameters: {}, timeout_seconds: 60}
+
+  - id: K8S-CRASHLOOP
+    title: Force CrashLoopBackOff in staging workload
+    domain: kubernetes
+    destructive: true
+    service: ${AIOPS_TEST_SERVICE}
+    target: ${AIOPS_TEST_K8S_WORKLOAD}
+    preconditions: [allowlisted namespace and workload]
+    injection: {action: kubernetes.crashloop, parameters: {namespace: ${AIOPS_TEST_K8S_NAMESPACE}}, timeout_seconds: 60}
+    monitoring: {expected_sources: [prometheus, elasticsearch], promql: 'kube_pod_container_status_waiting_reason{namespace="${AIOPS_TEST_K8S_NAMESPACE}",reason="CrashLoopBackOff"} > 0', elastic_query: 'kubernetes.namespace:${AIOPS_TEST_K8S_NAMESPACE} AND CrashLoopBackOff'}
+    expected: {incident: CrashLoopBackOff, correlation: Kubernetes event and metrics converge, evidence: [pod events, logs, restart state], agents: [kubernetes, application, infrastructure], rca: crashing workload cause, confidence: event plus logs required, decision: rollback/restart only if causal evidence supports it, approval_required: true, remediation_required: true, remediation: controlled rollout recovery through Kubernetes MCP, verification: desired replicas ready and stable, audit_events: [approval_granted, approval_consumed, verification_completed]}
+    rollback: {action: kubernetes.restore_workload, parameters: {namespace: ${AIOPS_TEST_K8S_NAMESPACE}}, timeout_seconds: 120}
+
+  - id: K8S-OOMKILLED
+    title: Force OOMKilled in staging workload
+    domain: kubernetes
+    destructive: true
+    service: ${AIOPS_TEST_SERVICE}
+    target: ${AIOPS_TEST_K8S_WORKLOAD}
+    preconditions: [allowlisted namespace and disposable workload]
+    injection: {action: kubernetes.oom, parameters: {namespace: ${AIOPS_TEST_K8S_NAMESPACE}}, timeout_seconds: 60}
+    monitoring: {expected_sources: [prometheus, elasticsearch], promql: 'kube_pod_container_status_last_terminated_reason{namespace="${AIOPS_TEST_K8S_NAMESPACE}",reason="OOMKilled"} > 0', elastic_query: 'kubernetes.namespace:${AIOPS_TEST_K8S_NAMESPACE} AND OOMKilled'}
+    expected: {incident: OOMKilled, correlation: memory metric and Kubernetes event correlate, evidence: [memory working set, limits, OOM event], agents: [kubernetes, infrastructure, application], rca: memory limit or leak, confidence: memory and event evidence required, decision: no blind pod restart, approval_required: true, remediation_required: true, remediation: safe rollback or resource correction through Kubernetes MCP, verification: stable pods and memory below threshold, audit_events: [verification_completed]}
+    rollback: {action: kubernetes.restore_workload, parameters: {namespace: ${AIOPS_TEST_K8S_NAMESPACE}}, timeout_seconds: 120}
+
+  - id: K8S-READINESS-FAIL
+    title: Break readiness while liveness stays healthy
+    domain: kubernetes
+    destructive: true
+    service: ${AIOPS_TEST_SERVICE}
+    target: ${AIOPS_TEST_K8S_WORKLOAD}
+    preconditions: [staging workload with readiness probe]
+    injection: {action: kubernetes.readiness_fail, parameters: {namespace: ${AIOPS_TEST_K8S_NAMESPACE}}, timeout_seconds: 60}
+    monitoring: {expected_sources: [prometheus], promql: 'kube_deployment_status_replicas_available{namespace="${AIOPS_TEST_K8S_NAMESPACE}"} < kube_deployment_spec_replicas{namespace="${AIOPS_TEST_K8S_NAMESPACE}"}'}
+    expected: {incident: readiness degradation, correlation: service and pod readiness alerts merge, evidence: [probe status, endpoints, events], agents: [kubernetes, application], rca: readiness dependency or config failure, confidence: distinguish liveness from readiness, decision: rollback/config recovery, approval_required: true, remediation_required: true, remediation: restore readiness configuration, verification: all replicas ready and endpoint serves traffic, audit_events: [verification_completed]}
+    rollback: {action: kubernetes.restore_workload, parameters: {namespace: ${AIOPS_TEST_K8S_NAMESPACE}}, timeout_seconds: 120}
+
+  - id: K8S-BAD-ROLLOUT
+    title: Deploy a known-bad staging rollout
+    domain: change
+    destructive: true
+    service: ${AIOPS_TEST_SERVICE}
+    target: ${AIOPS_TEST_K8S_WORKLOAD}
+    preconditions: [previous revision available for rollback]
+    injection: {action: kubernetes.bad_rollout, parameters: {namespace: ${AIOPS_TEST_K8S_NAMESPACE}}, timeout_seconds: 90}
+    monitoring: {expected_sources: [prometheus, elasticsearch], promql: 'kube_deployment_status_replicas_unavailable{namespace="${AIOPS_TEST_K8S_NAMESPACE}"} > 0', elastic_query: 'kubernetes.namespace:${AIOPS_TEST_K8S_NAMESPACE} AND (rollout OR deployment) AND error'}
+    expected: {incident: deployment regression, correlation: change event and service failure linked, evidence: [revision, rollout events, errors], agents: [change, kubernetes, application], rca: bad deployment revision, confidence: change timing must support RCA, decision: rollback candidate, approval_required: true, remediation_required: true, remediation: rollback through controlled Kubernetes MCP, verification: previous revision healthy and alerts clear, audit_events: [approval_granted, approval_consumed, verification_completed]}
+    rollback: {action: kubernetes.restore_workload, parameters: {namespace: ${AIOPS_TEST_K8S_NAMESPACE}}, timeout_seconds: 120}
+
+  - id: NETWORK-DNS-FAIL
+    title: Break DNS resolution for staging service path
+    domain: network
+    destructive: true
+    service: ${AIOPS_TEST_SERVICE}
+    target: ${AIOPS_TEST_NETWORK_TARGET}
+    preconditions: [isolated staging network policy or DNS fixture]
+    injection: {action: network.dns_fail, parameters: {}, timeout_seconds: 30}
+    monitoring: {expected_sources: [prometheus, elasticsearch], promql: 'increase(coredns_dns_responses_total{rcode!="NOERROR"}[2m]) > 0', elastic_query: 'service.name:${AIOPS_TEST_SERVICE} AND (DNS OR "name resolution")'}
+    expected: {incident: DNS resolution failure, correlation: dependency errors and DNS signals converge, evidence: [DNS errors, dependency failures, path telemetry], agents: [network, dependency, application], rca: DNS failure not application crash, confidence: DNS evidence required, decision: restore DNS configuration, approval_required: true, remediation_required: true, remediation: controlled network/config recovery, verification: DNS lookup and application requests succeed, audit_events: [verification_completed]}
+    rollback: {action: network.restore_dns, parameters: {}, timeout_seconds: 60}
+
+  - id: NETWORK-PACKET-LOSS
+    title: Inject packet loss or timeout
+    domain: network
+    destructive: true
+    service: ${AIOPS_TEST_SERVICE}
+    target: ${AIOPS_TEST_NETWORK_TARGET}
+    preconditions: [isolated staging traffic path]
+    injection: {action: network.packet_loss, parameters: {percent: 30}, timeout_seconds: 30}
+    monitoring: {expected_sources: [prometheus], promql: 'probe_success{instance="${AIOPS_TEST_NETWORK_TARGET}"} == 0'}
+    expected: {incident: network degradation, correlation: latency timeout and dependency symptoms merge, evidence: [probe loss, latency, reset/timeout logs], agents: [network, dependency, infrastructure], rca: degraded network path, confidence: path evidence required, decision: restore path before application restart, approval_required: true, remediation_required: true, remediation: controlled network rollback, verification: packet loss and latency normalize, audit_events: [verification_completed]}
+    rollback: {action: network.clear_fault, parameters: {}, timeout_seconds: 60}
+
+  - id: DEPENDENCY-OUTAGE
+    title: Stop an allowlisted downstream dependency
+    domain: dependency
+    destructive: true
+    service: ${AIOPS_TEST_SERVICE}
+    target: ${AIOPS_TEST_DEPENDENCY}
+    preconditions: [dependency is disposable staging component]
+    injection: {action: dependency.stop, parameters: {}, timeout_seconds: 30}
+    monitoring: {expected_sources: [prometheus, elasticsearch], promql: 'up{job="${AIOPS_TEST_DEPENDENCY}"} == 0', elastic_query: 'service.name:${AIOPS_TEST_SERVICE} AND (upstream OR downstream OR timeout)'}
+    expected: {incident: dependency outage, correlation: upstream failures mapped to downstream root, evidence: [dependency health, app errors, topology], agents: [dependency, application, network], rca: downstream dependency unavailable, confidence: topology evidence required, decision: recover dependency not restart unrelated services, approval_required: true, remediation_required: true, remediation: approved dependency recovery, verification: dependency and callers healthy, audit_events: [verification_completed]}
+    rollback: {action: dependency.start, parameters: {}, timeout_seconds: 60}
+
+  - id: OBS-ELASTICSEARCH-DOWN
+    title: Make Elasticsearch unavailable
+    domain: dependency
+    destructive: true
+    service: ${AIOPS_TEST_SERVICE}
+    target: ${AIOPS_TEST_ELASTICSEARCH_TARGET}
+    preconditions: [redundant monitoring sources available]
+    injection: {action: observability.elasticsearch_stop, parameters: {}, timeout_seconds: 30}
+    monitoring: {expected_sources: [prometheus], promql: 'up{job="elasticsearch"} == 0'}
+    expected: {incident: evidence-source outage, correlation: source outage not confused with application root cause, evidence: [Prometheus source health], agents: [dependency, infrastructure], rca: Elasticsearch unavailable, confidence: reduced because log evidence missing, decision: fail safe and request missing evidence, approval_required: true, remediation_required: true, remediation: recover Elasticsearch only if runbook permits, verification: Elasticsearch readiness and evidence collection recover, audit_events: [verification_completed]}
+    rollback: {action: observability.elasticsearch_start, parameters: {}, timeout_seconds: 120}
+
+  - id: OBS-PROMETHEUS-DOWN
+    title: Make Prometheus unavailable
+    domain: dependency
+    destructive: true
+    service: ${AIOPS_TEST_SERVICE}
+    target: ${AIOPS_TEST_PROMETHEUS_TARGET}
+    preconditions: [Zabbix remains available]
+    injection: {action: observability.prometheus_stop, parameters: {}, timeout_seconds: 30}
+    monitoring: {expected_sources: [zabbix], zabbix_search: Prometheus}
+    expected: {incident: metrics-source outage, correlation: source outage tracked separately, evidence: [Zabbix source health], agents: [dependency, infrastructure], rca: Prometheus unavailable, confidence: reduced due missing metrics, decision: fail-safe evidence behavior, approval_required: true, remediation_required: true, remediation: recover Prometheus if policy allows, verification: readiness and metric queries recover, audit_events: [verification_completed]}
+    rollback: {action: observability.prometheus_start, parameters: {}, timeout_seconds: 120}
+
+  - id: OBS-ZABBIX-DOWN
+    title: Make Zabbix unavailable
+    domain: dependency
+    destructive: true
+    service: ${AIOPS_TEST_SERVICE}
+    target: ${AIOPS_TEST_ZABBIX_TARGET}
+    preconditions: [Prometheus remains available]
+    injection: {action: observability.zabbix_stop, parameters: {}, timeout_seconds: 30}
+    monitoring: {expected_sources: [prometheus], promql: 'up{job="zabbix"} == 0'}
+    expected: {incident: alert-source outage, correlation: source outage tracked separately, evidence: [Prometheus source health], agents: [dependency, infrastructure], rca: Zabbix unavailable, confidence: reduced due missing Zabbix evidence, decision: fail-safe evidence behavior, approval_required: true, remediation_required: true, remediation: recover Zabbix if policy allows, verification: Zabbix API and alerts recover, audit_events: [verification_completed]}
+    rollback: {action: observability.zabbix_start, parameters: {}, timeout_seconds: 120}
+
+  - id: IDENTITY-JWKS-FAIL
+    title: Break staging OIDC/JWKS dependency
+    domain: identity
+    destructive: true
+    service: ${AIOPS_TEST_SERVICE}
+    target: ${AIOPS_TEST_IDENTITY_TARGET}
+    preconditions: [break-glass test identity path exists]
+    injection: {action: identity.jwks_fail, parameters: {}, timeout_seconds: 30}
+    monitoring: {expected_sources: [prometheus, elasticsearch], promql: 'sum(rate(http_requests_total{service="${AIOPS_TEST_SERVICE}",status="401"}[2m])) > 0', elastic_query: 'service.name:${AIOPS_TEST_SERVICE} AND (JWKS OR OIDC OR authentication)'}
+    expected: {incident: authentication dependency outage, correlation: auth errors and IdP health correlate, evidence: [401 rate, JWKS/OIDC logs, IdP health], agents: [identity, security, application], rca: JWKS or OIDC dependency failure, confidence: security evidence required, decision: do not weaken authentication, approval_required: true, remediation_required: true, remediation: restore identity dependency/config not bypass auth, verification: valid tokens succeed and invalid tokens remain rejected, audit_events: [verification_completed]}
+    rollback: {action: identity.restore_jwks, parameters: {}, timeout_seconds: 120}
+
+  - id: CONFIG-REGRESSION
+    title: Inject staging configuration regression
+    domain: change
+    destructive: true
+    service: ${AIOPS_TEST_SERVICE}
+    target: ${AIOPS_TEST_SERVICE}
+    preconditions: [known-good config snapshot exists]
+    injection: {action: app.config_regression, parameters: {}, timeout_seconds: 30}
+    monitoring: {expected_sources: [prometheus, elasticsearch], promql: 'up{job="${AIOPS_TEST_SERVICE}"} == 0', elastic_query: 'service.name:${AIOPS_TEST_SERVICE} AND (config OR configuration) AND error'}
+    expected: {incident: configuration regression, correlation: change timestamp and failure symptoms linked, evidence: [config diff, deployment event, error], agents: [change, application], rca: bad configuration, confidence: change evidence required, decision: rollback known-good config, approval_required: true, remediation_required: true, remediation: controlled configuration rollback, verification: startup/readiness and service SLO recover, audit_events: [verification_completed]}
+    rollback: {action: app.restore_config, parameters: {}, timeout_seconds: 120}
+
+  - id: TLS-CERT-FAIL
+    title: Break staging TLS certificate path
+    domain: identity
+    destructive: true
+    service: ${AIOPS_TEST_SERVICE}
+    target: ${AIOPS_TEST_TLS_TARGET}
+    preconditions: [disposable staging certificate endpoint]
+    injection: {action: tls.cert_fail, parameters: {}, timeout_seconds: 30}
+    monitoring: {expected_sources: [prometheus, elasticsearch], promql: 'probe_success{instance="${AIOPS_TEST_TLS_TARGET}"} == 0', elastic_query: 'TLS OR certificate OR x509'}
+    expected: {incident: TLS/certificate failure, correlation: probe and client errors converge, evidence: [certificate metadata, TLS probe, client errors], agents: [identity, security, network], rca: certificate expiry/chain/config failure, confidence: certificate evidence required, decision: restore certificate chain safely, approval_required: true, remediation_required: true, remediation: controlled certificate/config rollback, verification: TLS validates and clients recover, audit_events: [verification_completed]}
+    rollback: {action: tls.restore_cert, parameters: {}, timeout_seconds: 120}
+
+  - id: MESSAGING-CONSUMER-LAG
+    title: Create queue or consumer lag when messaging is configured
+    domain: messaging
+    destructive: true
+    service: ${AIOPS_TEST_SERVICE}
+    target: ${AIOPS_TEST_MESSAGING_TARGET}
+    preconditions: [messaging integration enabled, disposable consumer]
+    injection: {action: messaging.consumer_lag, parameters: {}, timeout_seconds: 30}
+    monitoring: {expected_sources: [prometheus], promql: '${AIOPS_TEST_MESSAGING_LAG_PROMQL}'}
+    expected: {incident: consumer lag, correlation: lag and application symptoms converge, evidence: [queue depth, consumer lag, retry/DLQ], agents: [messaging, application, dependency], rca: consumer or broker degradation, confidence: broker telemetry required, decision: bounded recovery, approval_required: true, remediation_required: true, remediation: restart/scale consumer only when evidence supports it, verification: lag drains and errors normalize, audit_events: [verification_completed]}
+    rollback: {action: messaging.restore_consumer, parameters: {}, timeout_seconds: 120}
+
+  - id: RECOVERY-BACKUP-FAIL
+    title: Fail a disposable staging backup or recovery check
+    domain: recovery
+    destructive: true
+    service: ${AIOPS_TEST_SERVICE}
+    target: ${AIOPS_TEST_BACKUP_TARGET}
+    preconditions: [non-production backup fixture]
+    injection: {action: recovery.backup_fail, parameters: {}, timeout_seconds: 30}
+    monitoring: {expected_sources: [prometheus, elasticsearch], promql: '${AIOPS_TEST_BACKUP_FAILURE_PROMQL}', elastic_query: 'backup AND (failed OR error)'}
+    expected: {incident: backup/recovery protection failure, correlation: backup job and protection telemetry join, evidence: [backup age, job failure, replica/protection state], agents: [recovery, storage, database], rca: failed or stale protection, confidence: recovery evidence required, decision: no destructive restore into production, approval_required: true, remediation_required: true, remediation: retry/repair staging backup workflow, verification: fresh successful backup and recovery check, audit_events: [verification_completed]}
+    rollback: {action: recovery.restore_backup_fixture, parameters: {}, timeout_seconds: 120}
