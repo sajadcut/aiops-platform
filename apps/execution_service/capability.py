@@ -4,6 +4,7 @@ import base64
 import hashlib
 import hmac
 import json
+import os
 import time
 from typing import Any, Dict, Optional
 from uuid import uuid4
@@ -29,8 +30,24 @@ def parameters_digest(parameters: Dict[str, Any]) -> str:
     return hashlib.sha256(encoded).hexdigest()
 
 
+def capability_ttl_seconds() -> int:
+    raw = os.getenv("EXECUTION_CAPABILITY_TTL_SECONDS", "60")
+    try:
+        ttl = int(raw)
+    except ValueError as exc:
+        raise ExecutionCapabilityError("execution_capability_ttl_invalid") from exc
+    if ttl < 5 or ttl > 300:
+        raise ExecutionCapabilityError("execution_capability_ttl_out_of_range")
+    return ttl
+
+
+def capability_secret_configured() -> bool:
+    value = os.getenv("EXECUTION_CAPABILITY_SECRET", "")
+    return bool(value and (settings.APP_ENV != "production" or len(value.encode("utf-8")) >= 32))
+
+
 def _secret() -> bytes:
-    value = str(settings.EXECUTION_CAPABILITY_SECRET or "")
+    value = os.getenv("EXECUTION_CAPABILITY_SECRET", "")
     if not value:
         raise ExecutionCapabilityError("execution_capability_secret_not_configured")
     if settings.APP_ENV == "production" and len(value.encode("utf-8")) < 32:
@@ -53,9 +70,6 @@ def issue_execution_capability(
     execution_id: Optional[str] = None,
 ) -> str:
     now = int(time.time())
-    ttl = int(settings.EXECUTION_CAPABILITY_TTL_SECONDS)
-    if ttl <= 0:
-        raise ExecutionCapabilityError("execution_capability_ttl_invalid")
     payload = {
         "v": 1,
         "iss": "aiops-control-plane",
@@ -72,7 +86,7 @@ def issue_execution_capability(
         "runbook_version": runbook_version,
         "rollback": bool(rollback),
         "iat": now,
-        "exp": now + ttl,
+        "exp": now + capability_ttl_seconds(),
         "jti": str(uuid4()),
     }
     raw = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
