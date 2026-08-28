@@ -8,6 +8,7 @@ from apps.approval_service.binding import assert_bound
 from apps.approval_service.postgres import PostgreSQLApprovalStore
 from apps.audit_service import AuditService
 from apps.audit_service.postgres import PostgreSQLAuditStore
+from apps.execution_service.capability import ExecutionCapabilityError, issue_execution_capability
 from apps.runbook_service.executor import RunbookExecutor
 from apps.runbook_service.registry import RunbookRegistry
 from apps.security.auth import require_permission
@@ -81,6 +82,21 @@ async def execute_runbook(
         consumed = await store.consume(approval_id)
         if not consumed or consumed.get("status") != "consumed":
             raise HTTPException(status_code=409, detail="approval_already_consumed_or_unavailable")
+        try:
+            capability = issue_execution_capability(
+                incident_id=incident_id,
+                approval_id=approval_id,
+                tool_name=tool_name,
+                action=action,
+                target=target,
+                parameters=parameters,
+                timeout=timeout,
+                runbook_id=runbook_id,
+                runbook_version=version,
+                rollback=rollback,
+            )
+        except ExecutionCapabilityError as exc:
+            raise HTTPException(status_code=503, detail=str(exc)) from exc
 
         result = await _executor.execute(
             runbook_id,
@@ -89,8 +105,10 @@ async def execute_runbook(
             parameters=parameters,
             timeout=timeout,
             dry_run=False,
+            incident_id=incident_id,
             approval_id=approval_id,
             approval_granted=True,
+            execution_capability=capability,
             rollback_requested=rollback,
         )
         await _audit_durable(
@@ -125,7 +143,9 @@ async def dry_run(
         parameters=parameters,
         timeout=timeout,
         dry_run=True,
+        incident_id=None,
         approval_id=None,
         approval_granted=False,
+        execution_capability=None,
         rollback_requested=rollback,
     )
