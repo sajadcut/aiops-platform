@@ -21,6 +21,14 @@ DEFAULT_REPORT_DIR = ROOT / "artifacts" / "operational-acceptance"
 _ALLOWED_TEST_ENVS = {"staging", "stage", "lab", "test"}
 _FORBIDDEN_TEST_ENVS = {"prod", "production", "live"}
 _ENV_RE = re.compile(r"\$\{([A-Z0-9_]+)\}")
+_FLOW_PLACEHOLDER_RE = re.compile(r'(:\s*)(\$\{[A-Z0-9_]+\})(?=\s*[,}])')
+
+_NO_WRITE_SCENARIOS = {
+    "PG-DEADLOCK", "PG-SLOW-QUERY", "FALSE-POSITIVE-ALERT", "CONFLICTING-TELEMETRY",
+    "MISSING-TELEMETRY", "LLM-TIMEOUT", "LLM-UNSAFE-OUTPUT", "DUPLICATE-SIGNAL",
+}
+_EXECUTION_FAILURE_SCENARIOS = {"MCP-TIMEOUT", "REMEDIATION-FAILURE"}
+_VERIFICATION_FAILURE_SCENARIOS = {"VERIFICATION-FAILURE"}
 
 
 class OperationalAcceptanceError(RuntimeError):
@@ -48,7 +56,10 @@ class ScenarioResult:
     verification_result: Any = None
     monitoring: dict[str, Any] | None = None
     lifecycle: dict[str, Any] | None = None
+    incident_context: dict[str, Any] | None = None
     audit_events: list[dict[str, Any]] | None = None
+    injection_result: dict[str, Any] | None = None
+    cleanup_result: dict[str, Any] | None = None
 
 
 def utcnow() -> str:
@@ -72,19 +83,28 @@ def expand(value: Any) -> Any:
     return value
 
 
+def _yaml_with_quoted_flow_placeholders(text: str) -> str:
+    """Quote ${VAR} only when it is a bare value inside a YAML flow mapping."""
+    return _FLOW_PLACEHOLDER_RE.sub(r'\1"\2"', text)
+
+
 def load_scenarios() -> list[dict[str, Any]]:
     scenarios: list[dict[str, Any]] = []
     for path in sorted(SCENARIO_DIR.glob("*.yaml")):
-        raw = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+        text = _yaml_with_quoted_flow_placeholders(path.read_text(encoding="utf-8"))
+        try:
+            raw = yaml.safe_load(text) or {}
+        except yaml.YAMLError as exc:
+            raise OperationalAcceptanceError(f"invalid_scenario_yaml:{path}:{exc}") from exc
         items = raw.get("scenarios", [])
         if not isinstance(items, list):
             raise OperationalAcceptanceError(f"invalid_scenario_file:{path}")
         for item in items:
             if not isinstance(item, dict):
                 raise OperationalAcceptanceError(f"invalid_scenario_entry:{path}")
-            item = dict(item)
-            item["_source_file"] = str(path.relative_to(ROOT))
-            scenarios.append(item)
+            scenario = dict(item)
+            scenario["_source_file"] = str(path.relative_to(ROOT))
+            scenarios.append(scenario)
     ids = [str(item.get("id") or "") for item in scenarios]
     if not ids or any(not item for item in ids) or len(ids) != len(set(ids)):
         raise OperationalAcceptanceError("scenario_ids_missing_or_duplicate")
@@ -96,6 +116,9 @@ class SafetyGate:
         self.environment = environment.strip().lower()
 
     def validate(self, scenario: dict[str, Any]) -> None:
+        configured_env = (os.getenv("AIOPS_TEST_ENV") or self.environment).strip().lower()
+        if configured_env != self.environment:
+            raise OperationalAcceptanceError("cli_environment_does_not_match_AIOPS_TEST_ENV")
         if self.environment in _FORBIDDEN_TEST_ENVS:
             raise OperationalAcceptanceError("operational_failure_injection_forbidden_in_production")
         if self.environment not in _ALLOWED_TEST_ENVS:
@@ -107,8 +130,8 @@ class SafetyGate:
         target = str(expand(scenario.get("target") or ""))
         if not target:
             raise BlockedScenario("scenario_target_missing")
-        allow = {item.strip() for item in os.getenv("AIOPS_TEST_ALLOWED_TARGETS", "").split(",") if item.strip()}
-        if target not in allow:
+        allowed_targets = {item.strip() for item in os.getenv("AIOPS_TEST_ALLOWED_TARGETS", "").split(",") if item.strip()}
+        if target not in allowed_targets:
             raise BlockedScenario(f"target_not_allowlisted:{target}")
         if not scenario.get("rollback"):
             raise OperationalAcceptanceError("destructive_scenario_requires_rollback_contract")
@@ -126,7 +149,12 @@ class AIOpsClient:
             headers["Authorization"] = f"Bearer {bearer}"
         else:
             raise BlockedScenario("AIOPS_API_KEY_or_AIOPS_BEARER_TOKEN_required")
-        self.client = httpx.Client(base_url=base_url, headers=headers, timeout=15.0, verify=os.getenv("AIOPS_TLS_VERIFY", "true").lower() != "false")
+        self.client = httpx.Client(
+            base_url=base_url,
+            headers=headers,
+            timeout=15.0,
+            verify=os.getenv("AIOPS_TLS_VERIFY", "true").lower() != "false",
+        )
 
     def get(self, path: str, **kwargs: Any) -> Any:
         response = self.client.get(path, **kwargs)
@@ -138,11 +166,10 @@ class AIOpsClient:
         response.raise_for_status()
         return response.json()
 
-    def find_new_incident(self, service: str, started_at: datetime) -> dict[str, Any] | None:
+    def recent_incidents(self, started_at: datetime) -> list[dict[str, Any]]:
         payload = self.get("/api/v1/dashboard/incidents", params={"limit": 200})
+        rows: list[dict[str, Any]] = []
         for item in payload.get("items", []):
-            if str(item.get("service") or "") != service:
-                continue
             raw = item.get("created_at") or item.get("started_at")
             if not raw:
                 continue
@@ -151,11 +178,17 @@ class AIOpsClient:
             except ValueError:
                 continue
             if created >= started_at:
-                return item
-        return None
+                rows.append(item)
+        return rows
+
+    def find_new_incident(self, service: str, started_at: datetime) -> dict[str, Any] | None:
+        return next((item for item in self.recent_incidents(started_at) if str(item.get("service") or "") == service), None)
 
     def lifecycle(self, incident_id: str) -> dict[str, Any]:
         return self.get(f"/api/v1/incidents/{incident_id}/lifecycle")
+
+    def context(self, incident_id: str) -> dict[str, Any]:
+        return self.get(f"/api/v1/incidents/{incident_id}/context")
 
     def evidence(self, incident_id: str) -> list[dict[str, Any]]:
         return self.get(f"/api/v1/incidents/{incident_id}/evidence", params={"limit": 500}).get("items", [])
@@ -164,28 +197,31 @@ class AIOpsClient:
         self.post(f"/api/v1/approvals/{approval_id}/approve")
         self.post(f"/api/v1/workflow/e2e/{incident_id}/resume")
 
+    def reject(self, approval_id: str) -> None:
+        self.post(f"/api/v1/approvals/{approval_id}/reject", json={"reason": "operational acceptance expected rejection"})
+
 
 class FaultInjectorClient:
-    """Staging-only typed fault actuator. It cannot accept shell commands."""
+    """Staging-only typed fault actuator. It cannot accept arbitrary commands."""
 
     def __init__(self):
         self.url = (env("AIOPS_FAULT_INJECTOR_URL") or "").rstrip("/")
         token = env("AIOPS_FAULT_INJECTOR_TOKEN") or ""
         self.headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
+        self.allowed_actions = {item.strip() for item in os.getenv("AIOPS_TEST_ALLOWED_FAULT_ACTIONS", "").split(",") if item.strip()}
+
+    def _assert_allowed(self, action: str) -> None:
+        if not action or action not in self.allowed_actions:
+            raise BlockedScenario(f"fault_action_not_allowlisted:{action}")
 
     def inject(self, scenario: dict[str, Any], correlation_id: str) -> dict[str, Any]:
         spec = expand(scenario.get("injection") or {})
         action = str(spec.get("action") or "")
-        allowed_actions = {item.strip() for item in os.getenv("AIOPS_TEST_ALLOWED_FAULT_ACTIONS", "").split(",") if item.strip()}
-        if not action or action not in allowed_actions:
-            raise BlockedScenario(f"fault_action_not_allowlisted:{action}")
+        self._assert_allowed(action)
         body = {
-            "scenario_id": scenario["id"],
-            "correlation_id": correlation_id,
-            "environment": os.getenv("AIOPS_TEST_ENV"),
-            "target": expand(scenario.get("target")),
-            "action": action,
-            "parameters": spec.get("parameters") or {},
+            "scenario_id": scenario["id"], "correlation_id": correlation_id,
+            "environment": os.getenv("AIOPS_TEST_ENV"), "target": expand(scenario.get("target")),
+            "action": action, "parameters": spec.get("parameters") or {},
         }
         response = httpx.post(f"{self.url}/inject", json=body, headers=self.headers, timeout=float(spec.get("timeout_seconds", 30)))
         response.raise_for_status()
@@ -193,13 +229,12 @@ class FaultInjectorClient:
 
     def cleanup(self, scenario: dict[str, Any], correlation_id: str) -> dict[str, Any]:
         rollback = expand(scenario.get("rollback") or {})
+        action = str(rollback.get("action") or "")
+        self._assert_allowed(action)
         body = {
-            "scenario_id": scenario["id"],
-            "correlation_id": correlation_id,
-            "environment": os.getenv("AIOPS_TEST_ENV"),
-            "target": expand(scenario.get("target")),
-            "action": rollback.get("action"),
-            "parameters": rollback.get("parameters") or {},
+            "scenario_id": scenario["id"], "correlation_id": correlation_id,
+            "environment": os.getenv("AIOPS_TEST_ENV"), "target": expand(scenario.get("target")),
+            "action": action, "parameters": rollback.get("parameters") or {},
         }
         response = httpx.post(f"{self.url}/cleanup", json=body, headers=self.headers, timeout=float(rollback.get("timeout_seconds", 60)))
         response.raise_for_status()
@@ -250,7 +285,10 @@ class MonitoringObserver:
         search = str(expand(monitoring.get("zabbix_search") or ""))
         if not search:
             raise BlockedScenario("zabbix_search_missing")
-        request = {"jsonrpc": "2.0", "method": "problem.get", "id": 1, "auth": token, "params": {"output": "extend", "recent": True, "sortfield": ["eventid"], "sortorder": "DESC", "limit": 100}}
+        request = {
+            "jsonrpc": "2.0", "method": "problem.get", "id": 1, "auth": token,
+            "params": {"output": "extend", "recent": True, "sortfield": ["eventid"], "sortorder": "DESC", "limit": 100},
+        }
         response = httpx.post(url, json=request, timeout=15.0)
         response.raise_for_status()
         payload = response.json()
@@ -259,6 +297,23 @@ class MonitoringObserver:
         needle = search.lower()
         rows = [row for row in payload.get("result") or [] if needle in json.dumps(row, ensure_ascii=False).lower()]
         return {"observed": bool(rows), "search": search, "match_count": len(rows)}
+
+
+def wait_for_monitoring(scenario: dict[str, Any]) -> dict[str, Any]:
+    timeout = int((scenario.get("timing") or {}).get("monitor_timeout_seconds", 120))
+    deadline = time.monotonic() + timeout
+    last_error: Exception | None = None
+    while time.monotonic() < deadline:
+        try:
+            return MonitoringObserver().observe(scenario)
+        except BlockedScenario:
+            raise
+        except (OperationalAcceptanceError, httpx.HTTPError) as exc:
+            last_error = exc
+            time.sleep(5)
+    if last_error:
+        raise OperationalAcceptanceError(f"monitoring_timeout:{last_error}") from last_error
+    raise OperationalAcceptanceError("monitoring_timeout")
 
 
 def selected_agents(lifecycle: dict[str, Any]) -> set[str]:
@@ -278,32 +333,103 @@ def selected_agents(lifecycle: dict[str, Any]) -> set[str]:
     return values
 
 
-def validate_lifecycle(scenario: dict[str, Any], lifecycle: dict[str, Any], evidence: list[dict[str, Any]]) -> tuple[bool, str]:
+def _is_resolved(context: dict[str, Any]) -> bool:
+    return str(context.get("status") or "").lower() in {"resolved", "closed"}
+
+
+def _verification_success(verification: Any) -> bool:
+    text = json.dumps(verification or {}, ensure_ascii=False).lower()
+    return bool(verification) and any(token in text for token in ('"success": true', '"passed": true', 'healthy', 'resolved', 'passed'))
+
+
+def validate_lifecycle(
+    scenario: dict[str, Any], lifecycle: dict[str, Any], context: dict[str, Any],
+    evidence: list[dict[str, Any]], recent_incidents: list[dict[str, Any]],
+) -> tuple[bool, str]:
+    scenario_id = str(scenario["id"])
     expected = scenario.get("expected") or {}
     if not evidence:
         return False, "no_persisted_evidence"
+    monitoring_sources = set((scenario.get("monitoring") or {}).get("expected_sources") or [])
+    evidence_sources = {str(item.get("source") or "") for item in evidence}
+    if monitoring_sources and not (monitoring_sources & evidence_sources):
+        return False, f"no_monitoring_source_in_persisted_evidence:{sorted(monitoring_sources)}:{sorted(evidence_sources)}"
     expected_agents = {str(item) for item in expected.get("agents", [])}
     actual_agents = selected_agents(lifecycle)
     if expected_agents and not (expected_agents & actual_agents):
         return False, f"expected_agent_not_selected:{sorted(expected_agents)}:{sorted(actual_agents)}"
     if not lifecycle.get("decision"):
         return False, "decision_missing"
-    if expected.get("approval_required"):
-        approval = lifecycle.get("approval") or {}
-        if str(approval.get("status") or "").lower() not in {"approved", "consumed"}:
-            return False, f"approval_not_completed:{approval.get('status')}"
-    if expected.get("remediation_required", True):
-        execution = lifecycle.get("execution") or {}
-        if not execution or execution.get("success") is not True:
-            return False, "execution_not_successful"
+
+    execution = lifecycle.get("execution") or {}
     verification = lifecycle.get("verification") or {}
-    verification_text = json.dumps(verification, ensure_ascii=False).lower()
-    if not verification or not any(token in verification_text for token in ("pass", "passed", "success", "healthy", "resolved")):
-        return False, "verification_not_successful"
+    approval = lifecycle.get("approval") or {}
     event_types = {str(item.get("event_type") or "") for item in lifecycle.get("audit") or [] if isinstance(item, dict)}
-    required_audit = set(expected.get("audit_events") or ["verification_completed"])
+    required_audit = set(expected.get("audit_events", ["verification_completed"]))
     if not required_audit <= event_types:
         return False, f"audit_events_missing:{sorted(required_audit - event_types)}"
+
+    if scenario_id == "APPROVAL-REJECTED":
+        if str(approval.get("status") or "").lower() != "rejected":
+            return False, f"approval_not_rejected:{approval.get('status')}"
+        if execution and execution.get("success"):
+            return False, "execution_occurred_after_rejection"
+        if _is_resolved(context):
+            return False, "incident_resolved_after_rejected_approval"
+        return True, "rejected_approval_safely_blocked_execution"
+
+    if scenario_id == "APPROVAL-EXPIRED":
+        if str(approval.get("status") or "").lower() != "expired":
+            return False, f"approval_not_expired:{approval.get('status')}"
+        if execution and execution.get("success"):
+            return False, "execution_occurred_after_expired_approval"
+        if _is_resolved(context):
+            return False, "incident_resolved_after_expired_approval"
+        return True, "expired_approval_safely_blocked_execution"
+
+    if scenario_id in _EXECUTION_FAILURE_SCENARIOS:
+        if not execution or execution.get("success") is not False:
+            return False, "expected_execution_failure_not_observed"
+        if _verification_success(verification):
+            return False, "failed_execution_was_followed_by_successful_verification"
+        if _is_resolved(context):
+            return False, "incident_resolved_after_execution_failure"
+        return True, "execution_failure_failed_safe"
+
+    if scenario_id in _VERIFICATION_FAILURE_SCENARIOS:
+        if not execution or execution.get("success") is not True:
+            return False, "expected_successful_execution_missing"
+        if not verification or _verification_success(verification):
+            return False, "expected_verification_failure_not_observed"
+        if _is_resolved(context):
+            return False, "incident_resolved_after_verification_failure"
+        return True, "verification_failure_failed_safe"
+
+    if scenario_id in _NO_WRITE_SCENARIOS or not expected.get("remediation_required", True):
+        if execution and execution.get("success") is True:
+            return False, "write_execution_occurred_in_no_write_scenario"
+        if scenario_id == "DUPLICATE-SIGNAL":
+            service = str(expand(scenario.get("service") or ""))
+            matching = [item for item in recent_incidents if str(item.get("service") or "") == service]
+            if len(matching) != 1:
+                return False, f"duplicate_signal_created_multiple_incidents:{len(matching)}"
+        return True, "analysis_or_safety_scenario_completed_without_unsafe_write"
+
+    if expected.get("approval_required") and str(approval.get("status") or "").lower() not in {"approved", "consumed"}:
+        return False, f"approval_not_completed:{approval.get('status')}"
+    if not execution or execution.get("success") is not True:
+        return False, "execution_not_successful"
+    if not _verification_success(verification):
+        return False, "verification_not_successful"
+    if not _is_resolved(context):
+        return False, f"incident_not_resolved_after_successful_verification:{context.get('status')}"
+
+    if scenario_id == "CONCURRENT-INCIDENTS":
+        second = str(expand((scenario.get("injection") or {}).get("parameters", {}).get("second_target") or ""))
+        services = {str(item.get("service") or "") for item in recent_incidents}
+        if second and not {str(expand(scenario.get("service") or "")), second} <= services:
+            return False, f"concurrent_incidents_not_independently_created:{sorted(services)}"
+
     return True, "all_operational_acceptance_invariants_satisfied"
 
 
@@ -312,21 +438,24 @@ def run_one(scenario: dict[str, Any], environment: str, report_dir: Path) -> Sce
     started = datetime.now(timezone.utc)
     result = ScenarioResult(str(scenario["id"]), "FAIL", started.isoformat(), started.isoformat(), correlation_id)
     injected = False
+    injector: FaultInjectorClient | None = None
     try:
         SafetyGate(environment).validate(scenario)
         service = str(expand(scenario.get("service") or ""))
         if not service:
             raise BlockedScenario("scenario_service_missing")
         aiops = AIOpsClient()
-        injector = FaultInjectorClient() if scenario.get("destructive", True) else None
-        if injector:
-            injector.inject(scenario, correlation_id)
+        if scenario.get("destructive", True):
+            injector = FaultInjectorClient()
+            result.injection_result = injector.inject(scenario, correlation_id)
             injected = True
 
-        time.sleep(int((scenario.get("timing") or {}).get("monitor_settle_seconds", 10)))
-        result.monitoring = MonitoringObserver().observe(scenario)
+        settle = int((scenario.get("timing") or {}).get("monitor_settle_seconds", 5))
+        if settle:
+            time.sleep(settle)
+        result.monitoring = wait_for_monitoring(scenario)
 
-        incident_deadline = time.monotonic() + int((scenario.get("timing") or {}).get("incident_timeout_seconds", 180))
+        incident_deadline = time.monotonic() + int((scenario.get("timing") or {}).get("incident_timeout_seconds", 240))
         incident = None
         while time.monotonic() < incident_deadline:
             incident = aiops.find_new_incident(service, started)
@@ -337,26 +466,42 @@ def run_one(scenario: dict[str, Any], environment: str, report_dir: Path) -> Sce
             raise OperationalAcceptanceError("incident_not_created_from_real_monitoring_signal")
         result.incident_id = str(incident["id"])
 
-        terminal_deadline = time.monotonic() + int((scenario.get("timing") or {}).get("terminal_timeout_seconds", 300))
+        terminal_deadline = time.monotonic() + int((scenario.get("timing") or {}).get("terminal_timeout_seconds", 360))
         lifecycle: dict[str, Any] = {}
-        auto_approved = False
+        approval_action_done = False
         while time.monotonic() < terminal_deadline:
             lifecycle = aiops.lifecycle(result.incident_id)
             approval = lifecycle.get("approval") or {}
             if approval.get("approval_id"):
                 result.approval_id = str(approval["approval_id"])
-            if str(approval.get("status") or "").lower() == "pending" and os.getenv("AIOPS_TEST_AUTO_APPROVE", "").lower() == "true" and not auto_approved:
-                aiops.approve_and_resume(result.incident_id, result.approval_id or "")
-                auto_approved = True
-                time.sleep(2)
-                continue
+            approval_status = str(approval.get("status") or "").lower()
+
+            if approval_status == "pending" and result.approval_id and not approval_action_done:
+                if scenario["id"] == "APPROVAL-REJECTED":
+                    aiops.reject(result.approval_id)
+                    approval_action_done = True
+                    time.sleep(2)
+                    continue
+                if scenario["id"] != "APPROVAL-EXPIRED" and (scenario.get("expected") or {}).get("approval_required") and os.getenv("AIOPS_TEST_AUTO_APPROVE", "").lower() == "true":
+                    aiops.approve_and_resume(result.incident_id, result.approval_id)
+                    approval_action_done = True
+                    time.sleep(2)
+                    continue
+
+            if scenario["id"] == "APPROVAL-EXPIRED" and approval_status == "expired":
+                break
+            if scenario["id"] == "APPROVAL-REJECTED" and approval_status == "rejected":
+                break
             if lifecycle.get("verification") or lifecycle.get("terminal_reason"):
                 break
             time.sleep(5)
 
         evidence = aiops.evidence(result.incident_id)
+        context = aiops.context(result.incident_id)
+        recent_incidents = aiops.recent_incidents(started)
         result.evidence_ids = [str(item.get("id")) for item in evidence if item.get("id")]
         result.lifecycle = lifecycle
+        result.incident_context = context
         result.audit_events = lifecycle.get("audit") or []
         result.rca_result = lifecycle.get("evaluation") or lifecycle.get("final_plan")
         result.remediation_result = lifecycle.get("execution")
@@ -364,7 +509,7 @@ def run_one(scenario: dict[str, Any], environment: str, report_dir: Path) -> Sce
         execution = lifecycle.get("execution") or {}
         if isinstance(execution, dict):
             result.execution_id = execution.get("execution_id")
-        passed, reason = validate_lifecycle(scenario, lifecycle, evidence)
+        passed, reason = validate_lifecycle(scenario, lifecycle, context, evidence, recent_incidents)
         result.status = "PASS" if passed else "FAIL"
         result.reason = reason
     except BlockedScenario as exc:
@@ -374,15 +519,18 @@ def run_one(scenario: dict[str, Any], environment: str, report_dir: Path) -> Sce
         result.status = "FAIL"
         result.reason = f"{type(exc).__name__}:{exc}"
     finally:
-        if injected:
+        if injected and injector is not None:
             try:
-                FaultInjectorClient().cleanup(scenario, correlation_id)
+                result.cleanup_result = injector.cleanup(scenario, correlation_id)
             except Exception as exc:
                 result.status = "FAIL"
                 result.reason = f"cleanup_failed:{type(exc).__name__}:{exc}"
         result.finished_at = utcnow()
         report_dir.mkdir(parents=True, exist_ok=True)
-        (report_dir / f"{scenario['id']}.json").write_text(json.dumps(asdict(result), ensure_ascii=False, indent=2, default=str) + "\n", encoding="utf-8")
+        (report_dir / f"{scenario['id']}.json").write_text(
+            json.dumps(asdict(result), ensure_ascii=False, indent=2, default=str) + "\n",
+            encoding="utf-8",
+        )
     return result
 
 
@@ -403,7 +551,12 @@ def main() -> int:
             return 2
     report_dir = Path(args.report_dir)
     results = [run_one(item, args.environment, report_dir) for item in scenarios]
-    summary = {"environment": args.environment, "generated_at": utcnow(), "results": [asdict(item) for item in results], "counts": {status: sum(1 for item in results if item.status == status) for status in ("PASS", "FAIL", "BLOCKED", "PARTIAL", "NOT RUN")}}
+    summary = {
+        "environment": args.environment,
+        "generated_at": utcnow(),
+        "results": [asdict(item) for item in results],
+        "counts": {status: sum(1 for item in results if item.status == status) for status in ("PASS", "FAIL", "BLOCKED", "PARTIAL", "NOT RUN")},
+    }
     report_dir.mkdir(parents=True, exist_ok=True)
     (report_dir / "summary.json").write_text(json.dumps(summary, ensure_ascii=False, indent=2, default=str) + "\n", encoding="utf-8")
     for item in results:
