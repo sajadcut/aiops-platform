@@ -3,13 +3,16 @@ from __future__ import annotations
 import asyncio
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Response, status
+from fastapi import APIRouter, Depends, Response, status
+from prometheus_client import CONTENT_TYPE_LATEST
 from sqlalchemy import text
 
 from apps.execution_service.tools.registry import tool_registry
-from database import AsyncSessionLocal, check_pgvector_ready
+from apps.security.auth import require_permission
+from database import AsyncSessionLocal, check_pgvector_ready, engine
 from domain.contracts.config import settings
 from domain.contracts.logging import logger
+from domain.contracts.metrics import render_metrics, update_db_pool_metrics
 from integrations.elasticsearch.mcp_client import ElasticsearchMCPClient
 from integrations.prometheus.mcp_client import PrometheusMCPClient
 from integrations.zabbix.mcp_client import ZabbixMCPClient
@@ -93,3 +96,9 @@ async def readiness(response: Response):
         "database": database,
         "external": external,
     }
+
+
+@router.get("/metrics")
+async def metrics(_identity=Depends(require_permission("read:audit"))):
+    update_db_pool_metrics(engine)
+    return Response(content=render_metrics(), media_type=CONTENT_TYPE_LATEST)
