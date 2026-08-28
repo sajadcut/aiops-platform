@@ -6,6 +6,7 @@ import pytest
 
 from domain.contracts.http_logging import (
     RequestResponseLoggingMiddleware,
+    _decode_body,
     sanitize,
     sanitize_headers,
     sanitize_query_string,
@@ -37,6 +38,20 @@ def test_headers_and_query_redact_credentials():
     assert "haproxy" in query
     assert "abc" not in query
     assert "def" not in query
+
+
+def test_form_urlencoded_body_redacts_sensitive_fields():
+    value = _decode_body(
+        b"username=alice&password=super-secret&token=raw-token&service=haproxy",
+        "application/x-www-form-urlencoded",
+        False,
+    )
+    assert value["username"] == "alice"
+    assert value["service"] == "haproxy"
+    assert value["password"] == "[REDACTED]"
+    assert value["token"] == "[REDACTED]"
+    assert "super-secret" not in json.dumps(value)
+    assert "raw-token" not in json.dumps(value)
 
 
 @pytest.mark.asyncio
