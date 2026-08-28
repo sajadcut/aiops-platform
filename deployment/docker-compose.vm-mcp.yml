@@ -1,0 +1,31 @@
+services:
+  vm-management-mcp:
+    build:
+      context: ..
+      dockerfile: mcp_servers/vm_management/Dockerfile
+    image: aiops-vm-management-mcp:local
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8765:8765"
+    environment:
+      VM_MCP_SERVER_ENVIRONMENT: production
+      VM_MCP_SERVER_HOST: 0.0.0.0
+      VM_MCP_SERVER_PORT: 8765
+      VM_MCP_SERVER_INVENTORY_PATH: /run/config/inventory.yml
+      VM_MCP_SERVER_REQUIRE_AUTH: "true"
+      VM_MCP_SERVER_READ_TOKEN: ${VM_MCP_SERVER_READ_TOKEN:?required}
+      VM_MCP_SERVER_WRITE_TOKEN: ${VM_MCP_SERVER_WRITE_TOKEN:?required}
+      VM_MCP_SERVER_WRITE_ENABLED: ${VM_MCP_SERVER_WRITE_ENABLED:-false}
+      VM_MCP_SERVER_SSH_AUTH_MODE: key
+      VM_MCP_SERVER_SSH_KNOWN_HOSTS: /run/secrets/known_hosts
+      VM_MCP_SERVER_SSH_STRICT_HOST_KEY_CHECKING: "true"
+      VM_HAPROXY_LAB_01_SSH_KEY: /run/secrets/haproxy_lab_01_key
+    volumes:
+      - ${VM_MCP_INVENTORY_PATH:?required}:/run/config/inventory.yml:ro
+      - ${VM_MCP_KNOWN_HOSTS:?required}:/run/secrets/known_hosts:ro
+      - ${VM_HAPROXY_LAB_01_SSH_KEY:?required}:/run/secrets/haproxy_lab_01_key:ro
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8765/health', timeout=2)"]
+      interval: 30s
+      timeout: 3s
+      retries: 3

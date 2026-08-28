@@ -1,0 +1,16 @@
+vms:
+  - id: haproxy-lab-01
+    hostname: haproxy-lab-01
+    ip: 10.100.6.199
+    environment: test
+    role: load-balancer
+    ssh_user: root
+    ssh_port: 22
+    credential_ref: VM_HAPROXY_LAB_01_SSH_KEY
+    allowed_operations:
+      - collect_vm_metrics
+      - service_status
+      - process_snapshot
+      - restart_service
+    allowed_services:
+      - haproxy

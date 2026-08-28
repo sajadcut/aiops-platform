@@ -10,12 +10,16 @@ from __future__ import annotations
 
 import itertools
 import json
+import time
 from typing import Any, Dict, Iterable, Optional
 from urllib.parse import urlparse
 
 import httpx
 
+from domain.contracts.config import settings
+from domain.contracts.http_logging import sanitize
 from domain.contracts.logging import logger
+from domain.contracts.context import get_trace_id
 
 
 class MCPClient:
@@ -69,6 +73,18 @@ class MCPClient:
         verify: bool | str = ca_cert_path or True
         cert = (client_cert_path, client_key_path) if client_cert_path and client_key_path else None
         self._client = httpx.AsyncClient(timeout=self.timeout, verify=verify, cert=cert)
+
+    @staticmethod
+    def _bounded_log_value(value: Any) -> Any:
+        sanitized = sanitize(value)
+        try:
+            encoded = json.dumps(sanitized, default=str, separators=(",", ":"))
+        except Exception:
+            encoded = str(sanitized)
+        limit = int(settings.LOG_HTTP_BODY_MAX_BYTES)
+        if len(encoded.encode("utf-8", errors="replace")) <= limit:
+            return sanitized
+        return {"truncated": True, "preview": encoded[:limit]}
 
     def _authorization(self, tool_name: Optional[str]) -> Optional[str]:
         if tool_name in self.write_tools:
@@ -124,6 +140,8 @@ class MCPClient:
         return last
 
     async def _post(self, payload: Dict[str, Any], *, tool_name: Optional[str] = None, include_protocol: bool = True) -> Dict[str, Any]:
+        started = time.perf_counter()
+        response: httpx.Response | None = None
         try:
             response = await self._client.post(
                 self.server_url,
@@ -133,11 +151,36 @@ class MCPClient:
             response.raise_for_status()
             if response.headers.get("Mcp-Session-Id"):
                 self.session_id = response.headers["Mcp-Session-Id"]
-            return self._decode_response(response)
+            decoded = self._decode_response(response)
+            logger.info(
+                "mcp_request_completed",
+                trace_id=get_trace_id() or None,
+                server=self.server_name,
+                method=payload.get("method"),
+                rpc_id=payload.get("id"),
+                tool_name=tool_name,
+                status_code=response.status_code,
+                duration_ms=round((time.perf_counter() - started) * 1000, 3),
+                session_present=bool(self.session_id),
+                request=self._bounded_log_value(payload),
+                response=self._bounded_log_value(decoded),
+            )
+            return decoded
         except PermissionError:
             raise
         except Exception as exc:
-            logger.error("MCP request failed server=%s method=%s: %s", self.server_name, payload.get("method"), exc)
+            logger.error(
+                "mcp_request_failed",
+                trace_id=get_trace_id() or None,
+                server=self.server_name,
+                method=payload.get("method"),
+                rpc_id=payload.get("id"),
+                tool_name=tool_name,
+                status_code=response.status_code if response is not None else None,
+                duration_ms=round((time.perf_counter() - started) * 1000, 3),
+                request=self._bounded_log_value(payload),
+                error_type=type(exc).__name__,
+            )
             raise RuntimeError(f"mcp_transport_error:{self.server_name}") from exc
 
     async def initialize(self) -> Dict[str, Any]:

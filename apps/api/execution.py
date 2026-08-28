@@ -22,6 +22,8 @@ def _approval_record(payload: Dict[str, Any]) -> Dict[str, Any]:
         metadata.setdefault("target", str(payload["target"]))
     if payload.get("tool_name") is not None:
         metadata.setdefault("tool_name", str(payload["tool_name"]))
+    if payload.get("parameters") is not None:
+        metadata.setdefault("parameters", dict(payload.get("parameters") or {}))
     metadata["binding_complete"] = bool(metadata.get("target") and metadata.get("tool_name"))
     return {
         "approval_id": str(uuid4()),
@@ -157,6 +159,17 @@ def _validate_approval_binding(approval: Dict[str, Any], payload: Dict[str, Any]
     if str(metadata["tool_name"]) != str(payload.get("tool_name")):
         raise HTTPException(status_code=409, detail="Approval tool does not match execution request")
 
+    requested_parameters = dict(payload.get("parameters") or {})
+    approved_parameters = metadata.get("parameters")
+    if isinstance(approved_parameters, dict) and approved_parameters != requested_parameters:
+        raise HTTPException(status_code=409, detail="Approval parameters do not match execution request")
+
+    # Backward-compatible binding for persisted remediation approvals created
+    # before the generic parameter binding existed.
+    if metadata.get("service") is not None:
+        if str(metadata.get("service")) != str(requested_parameters.get("service")):
+            raise HTTPException(status_code=409, detail="Approval service does not match execution request")
+
 
 @router.post("/execute")
 async def execute(payload: Dict[str, Any], identity=Depends(require_permission("execute:approved"))):
@@ -178,7 +191,7 @@ async def execute(payload: Dict[str, Any], identity=Depends(require_permission("
             if not consumed or consumed.get("status") != "consumed":
                 raise HTTPException(status_code=409, detail="Approval already consumed or unavailable")
             approval_granted = True
-            await _audit_durable(db, "approval_consumed", identity.subject, str(approval.get("incident_id")), str(payload["action"]), {"approval_id": approval_id, "tool_name": payload["tool_name"], "target": payload["target"]})
+            await _audit_durable(db, "approval_consumed", identity.subject, str(approval.get("incident_id")), str(payload["action"]), {"approval_id": approval_id, "tool_name": payload["tool_name"], "target": payload["target"], "parameters": payload.get("parameters", {})})
 
         request = ExecutionRequest(
             tool_name=str(payload["tool_name"]),
@@ -192,5 +205,5 @@ async def execute(payload: Dict[str, Any], identity=Depends(require_permission("
         )
         result = await ExecutionService.execute(request)
         incident_id = str(payload.get("incident_id")) if payload.get("incident_id") else None
-        await _audit_durable(db, "direct_execution_completed", identity.subject, incident_id, request.action, {"tool_name": request.tool_name, "target": request.target, "success": result.success, "blocked": result.execution_blocked, "approval_id": approval_id})
+        await _audit_durable(db, "direct_execution_completed", identity.subject, incident_id, request.action, {"tool_name": request.tool_name, "target": request.target, "parameters": request.parameters, "success": result.success, "blocked": result.execution_blocked, "approval_id": approval_id})
         return result.model_dump()

@@ -81,6 +81,9 @@ class Settings(BaseSettings):
     LOG_ROTATION_WHEN: str = Field(...)
     LOG_ROTATION_INTERVAL: int = Field(..., ge=1)
     LOG_UTC: bool = Field(...)
+    LOG_HTTP_REQUEST_RESPONSE_ENABLED: bool = Field(...)
+    LOG_HTTP_BODY_MAX_BYTES: int = Field(..., ge=1024, le=1048576)
+    LOG_HTTP_HEADERS_ENABLED: bool = Field(...)
 
     INTERNAL_API_KEY: Optional[str] = Field(...)
     INTERNAL_API_ROLE: str = Field(...)

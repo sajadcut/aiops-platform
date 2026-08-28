@@ -52,3 +52,51 @@ def test_approval_id_requires_incident_binding():
     with pytest.raises(HTTPException) as exc:
         _validate_approval_binding(BASE_APPROVAL, payload)
     assert exc.value.status_code == 400
+
+
+def test_bound_parameters_cannot_be_changed_after_approval():
+    approval = {
+        **BASE_APPROVAL,
+        "metadata": {
+            "target": "vm01",
+            "tool_name": "ssh_vm",
+            "parameters": {"service": "haproxy"},
+        },
+    }
+    with pytest.raises(HTTPException) as exc:
+        _validate_approval_binding(
+            approval,
+            {
+                "incident_id": "incident-1",
+                "action": "restart_service",
+                "target": "vm01",
+                "tool_name": "ssh_vm",
+                "parameters": {"service": "postgresql"},
+            },
+        )
+    assert exc.value.status_code == 409
+    assert "parameters" in str(exc.value.detail).lower()
+
+
+def test_legacy_remediation_service_binding_is_enforced():
+    approval = {
+        **BASE_APPROVAL,
+        "metadata": {
+            "target": "vm01",
+            "tool_name": "ssh_vm",
+            "service": "haproxy",
+        },
+    }
+    with pytest.raises(HTTPException) as exc:
+        _validate_approval_binding(
+            approval,
+            {
+                "incident_id": "incident-1",
+                "action": "restart_service",
+                "target": "vm01",
+                "tool_name": "ssh_vm",
+                "parameters": {"service": "nginx"},
+            },
+        )
+    assert exc.value.status_code == 409
+    assert "service" in str(exc.value.detail).lower()
