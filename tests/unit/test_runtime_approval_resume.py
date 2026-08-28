@@ -1,6 +1,7 @@
 import pytest
 
 import apps.orchestrator.runtime as runtime_module
+from apps.approval_service.binding import bind_metadata
 from apps.orchestrator.runtime import DurableWorkflowRuntime
 
 
@@ -21,13 +22,28 @@ class FakeCheckpointStore:
 
 
 class FakeApprovalStore:
+    @staticmethod
+    def _metadata():
+        return bind_metadata(
+            {},
+            incident_id="incident-1",
+            tool_name="ssh_vm",
+            action="restart_service",
+            target="vm01",
+            parameters={},
+            timeout=30,
+            runbook_id=None,
+            runbook_version=None,
+            rollback=False,
+        )
+
     async def get(self, approval_id):
         return {
             "approval_id": approval_id,
             "incident_id": "incident-1",
             "action": "restart_service",
             "status": "approved",
-            "metadata": {"target": "vm01", "tool_name": "ssh_vm"},
+            "metadata": self._metadata(),
         }
 
     async def consume(self, approval_id):
@@ -36,7 +52,7 @@ class FakeApprovalStore:
             "incident_id": "incident-1",
             "action": "restart_service",
             "status": "consumed",
-            "metadata": {"target": "vm01", "tool_name": "ssh_vm"},
+            "metadata": self._metadata(),
         }
 
 
