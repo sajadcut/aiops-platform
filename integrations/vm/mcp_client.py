@@ -32,7 +32,13 @@ class VMEdgeMCPClient(MCPClient):
         result = await self.call_tool(name, {"target": target, **params})
         payloads = self.json_content(result)
         if payloads and isinstance(payloads[0], dict):
-            return payloads[0]
+            envelope = payloads[0]
+            data = envelope.get("data")
+            if isinstance(data, dict):
+                # Preserve the pre-existing Control Plane contract (metrics/status at
+                # the top level) while keeping the server-side uniform envelope.
+                return {**data, **{k: v for k, v in envelope.items() if k != "data"}}
+            return envelope
         return result
 
     async def collect_metrics(self, target: str) -> Dict[str, Any]:
