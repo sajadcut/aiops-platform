@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, Type
 
+from apps.approval_service.binding import approval_matches_execution, bind_execution_metadata
 from apps.approval_service.postgres import PostgreSQLApprovalStore
 from apps.audit_service import AuditService
 from apps.audit_service.postgres import PostgreSQLAuditStore
@@ -29,12 +30,6 @@ class DurableWorkflowRuntime:
         await AuditService.flush_to_store(self.audit, incident_id=incident_id)
 
     async def _set_incident_status(self, incident_id: str, status: str) -> None:
-        """Persist lifecycle state when the repository supports it.
-
-        The capability check keeps small focused test doubles and third-party
-        repository adapters backward-compatible without weakening the normal
-        PostgreSQL runtime, whose IncidentRepository always implements it.
-        """
         setter = getattr(self.incidents, "set_status", None)
         if callable(setter):
             await setter(incident_id, status)
@@ -90,12 +85,11 @@ class DurableWorkflowRuntime:
         approval = result.get("approval") or {}
         execution_request = dict(result.get("execution_request") or {})
         if approval.get("approval_id"):
-            metadata = dict(approval.get("metadata") or {})
-            if execution_request.get("target"):
-                metadata["target"] = str(execution_request["target"])
-            if execution_request.get("tool_name"):
-                metadata["tool_name"] = str(execution_request["tool_name"])
-            metadata["binding_complete"] = bool(metadata.get("target") and metadata.get("tool_name"))
+            metadata = bind_execution_metadata(
+                approval.get("metadata") or {},
+                execution_request,
+                incident_id,
+            )
             approval["metadata"] = metadata
             result["approval"] = approval
             await self.approvals.save(approval)
@@ -130,6 +124,9 @@ class DurableWorkflowRuntime:
             raise ValueError("approval_target_mismatch")
         if str(metadata.get("tool_name")) != str(execution_request.get("tool_name")):
             raise ValueError("approval_tool_mismatch")
+        bound_request = {**execution_request, "incident_id": approval.get("incident_id")}
+        if not approval_matches_execution(approval, bound_request):
+            raise ValueError("approval_execution_binding_mismatch")
 
     async def resume_after_approval(self, incident_id: str) -> Dict[str, Any]:
         checkpoint = await self.checkpoints.load(incident_id)
@@ -167,6 +164,7 @@ class DurableWorkflowRuntime:
         state["approval"] = consumed
         execution_request["approval_granted"] = True
         execution_request["approval_id"] = str(approval_id)
+        execution_request.setdefault("agent_name", "durable_runtime")
         state["execution_request"] = execution_request
         state["current_node"] = "execution"
 
