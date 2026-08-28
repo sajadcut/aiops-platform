@@ -1,3 +1,5 @@
+from datetime import datetime, timezone
+
 import pytest
 
 from apps.approval_service.postgres import PostgreSQLApprovalStore
@@ -68,3 +70,41 @@ async def test_approval_store_rejection_can_persist_reason_metadata():
     assert result["status"] == "rejected"
     update = [call for call in session.calls if "UPDATE approvals" in call[0] and "SET status=:status" in call[0]][-1]
     assert "rejection_reason" in update[1]["metadata_patch"]
+
+
+@pytest.mark.asyncio
+async def test_approval_store_save_normalizes_iso_timestamps_for_asyncpg():
+    session = FakeSession()
+    store = PostgreSQLApprovalStore(session)
+    created_at = "2026-08-28T10:25:28.742174+00:00"
+
+    await store.save(
+        {
+            "approval_id": "a1",
+            "incident_id": "i1",
+            "action": "restart_service",
+            "risk_level": "high",
+            "approver": "Team-Lead",
+            "status": "pending",
+            "metadata": {"tool_name": "ssh_vm"},
+            "created_at": created_at,
+            "approved_at": None,
+            "rejected_at": None,
+        }
+    )
+
+    insert = [call for call in session.calls if "INSERT INTO approvals" in call[0]][0]
+    assert isinstance(insert[1]["created_at"], datetime)
+    assert insert[1]["created_at"] == datetime.fromisoformat(created_at)
+    assert insert[1]["approved_at"] is None
+    assert insert[1]["rejected_at"] is None
+
+
+def test_approval_store_timestamp_normalizer_preserves_datetime_values():
+    value = datetime(2026, 8, 28, 10, 25, tzinfo=timezone.utc)
+    assert PostgreSQLApprovalStore._as_datetime(value) is value
+
+
+def test_approval_store_timestamp_normalizer_rejects_invalid_types():
+    with pytest.raises(TypeError, match="invalid_approval_timestamp_type:int"):
+        PostgreSQLApprovalStore._as_datetime(123)
