@@ -30,10 +30,9 @@ class VMEdgeMCPClient(MCPClient):
 
     async def _invoke(self, name: str, target: str, **params: Any) -> Dict[str, Any]:
         result = await self.call_tool(name, {"target": target, **params})
-        if isinstance(result.get("content"), list) and result["content"]:
-            first = result["content"][0]
-            if isinstance(first, dict):
-                return first
+        payloads = self.json_content(result)
+        if payloads and isinstance(payloads[0], dict):
+            return payloads[0]
         return result
 
     async def collect_metrics(self, target: str) -> Dict[str, Any]:
