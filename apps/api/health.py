@@ -139,7 +139,9 @@ async def readiness():
     database, external = await asyncio.gather(_probe_database(), _probe_external())
     ready = database["status"] == "healthy" and _external_required_ready(external)
     payload = {"status": "ready" if ready else "not_ready", "database": database, "external": external}
-    return JSONResponse(status_code=200 if ready else 503, content=payload)
+    if ready:
+        return payload
+    return JSONResponse(status_code=503, content=payload)
 
 
 @router.get("/metrics", include_in_schema=False)
