@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
+import yaml
 
 from agents.shared.base import AgentInput
 from agents.shared.domain_agent import DomainDiagnosticAgent
@@ -164,6 +165,10 @@ def test_offline_dockerfile_fails_closed_and_runs_non_root():
     assert "pip check" in text
 
 
+def _yaml_documents(path):
+    return [doc for doc in yaml.safe_load_all(Path(path).read_text()) if doc]
+
+
 def test_kubernetes_manifest_has_availability_and_security_guards():
     text = Path("deployment/kubernetes/aiops-platform.yaml").read_text()
     for required in (
@@ -178,3 +183,31 @@ def test_kubernetes_manifest_has_availability_and_security_guards():
     ):
         assert required in text
     assert ":latest" not in text
+
+
+def test_api_and_migration_manifests_use_same_artifact_and_hardened_runtime():
+    deployment = next(doc for doc in _yaml_documents("deployment/kubernetes/aiops-platform.yaml") if doc.get("kind") == "Deployment")
+    migrate = _yaml_documents("deployment/kubernetes/migrate-job.yaml")[0]
+
+    api_pod = deployment["spec"]["template"]["spec"]
+    migration_pod = migrate["spec"]["template"]["spec"]
+    api = api_pod["containers"][0]
+    migration = migration_pod["containers"][0]
+
+    assert api["image"] == migration["image"], "API and migration must run the exact same promoted artifact reference"
+    assert api_pod["automountServiceAccountToken"] is False
+    assert migration_pod["automountServiceAccountToken"] is False
+    assert api["securityContext"]["runAsNonRoot"] is True
+    assert migration["securityContext"]["runAsNonRoot"] is True
+    assert api["securityContext"]["readOnlyRootFilesystem"] is True
+    assert migration["securityContext"]["readOnlyRootFilesystem"] is True
+    assert api["securityContext"]["allowPrivilegeEscalation"] is False
+    assert migration["securityContext"]["allowPrivilegeEscalation"] is False
+    assert api["securityContext"]["capabilities"]["drop"] == ["ALL"]
+    assert migration["securityContext"]["capabilities"]["drop"] == ["ALL"]
+    assert any(item == {"name": "APP_ENV", "value": "production"} for item in api["env"])
+    assert any(item == {"name": "APP_ENV", "value": "production"} for item in migration["env"])
+    assert migration["command"][-2:] == ["upgrade", "head"]
+    assert api["startupProbe"]["httpGet"]["path"] == "/api/v1/health/live"
+    assert api["readinessProbe"]["httpGet"]["path"] == "/api/v1/health/ready"
+    assert api["livenessProbe"]["httpGet"]["path"] == "/api/v1/health/live"
