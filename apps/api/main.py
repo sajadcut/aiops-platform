@@ -10,6 +10,7 @@ from domain.contracts.exceptions import register_exception_handlers
 from domain.contracts.rate_limit import rate_limiter_strict
 
 from apps.api import health, workflow, incidents, a2a, execution, e2e_workflow, audit, runbooks, incident_resources, dashboard, runbook_execution, dashboard_incidents, remediation, agents, signals
+from apps.api.http_logging import HTTPTransactionLoggingMiddleware
 from apps.execution_service.tools.registry import tool_registry
 from apps.execution_service.tools.mock_executor import MockExecutorTool
 from apps.execution_service.tools.ssh_vm import SSHVMTool
@@ -17,6 +18,7 @@ from apps.execution_service.tools.vm_telemetry import VMTelemetryTool
 from integrations.vm.mcp_client import VMEdgeMCPClient
 from apps.database.vector_validation import validate_pgvector
 from database import AsyncSessionLocal
+from database.migration_validation import validate_migration_head
 from apps.security.auth import require_permission
 
 configure_logging()
@@ -27,8 +29,16 @@ app.add_middleware(
     allow_origins=settings.CORS_ORIGINS,
     allow_credentials=False,
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allow_headers=["Authorization", "Content-Type", "X-API-Key"],
+    allow_headers=[
+        "Authorization",
+        "Content-Type",
+        "X-API-Key",
+        "X-Request-ID",
+        "X-Correlation-ID",
+        "X-Execution-ID",
+    ],
 )
+app.add_middleware(HTTPTransactionLoggingMiddleware)
 
 for router, tags in [
     (health.router, ["Health"]),
@@ -110,15 +120,33 @@ async def dashboard_approval_script():
     return FileResponse(_DASHBOARD_DIR / "approval-actions.js", media_type="application/javascript")
 
 
+def _is_https(value: str | None) -> bool:
+    return bool(value and urlparse(str(value)).scheme == "https")
+
+
 def _validate_production_configuration() -> None:
     if settings.APP_ENV != "production":
         return
-    errors = []
+
+    errors: list[str] = []
+    if settings.DEBUG:
+        errors.append("DEBUG must be disabled in production")
     if "*" in settings.CORS_ORIGINS:
         errors.append("CORS_ORIGINS wildcard is forbidden in production")
+    if not settings.DATABASE_VALIDATE_MIGRATIONS_ON_STARTUP:
+        errors.append("DATABASE_VALIDATE_MIGRATIONS_ON_STARTUP must be enabled in production")
+
     oidc_ready = all((settings.OIDC_ISSUER_URL, settings.OIDC_AUDIENCE, settings.OIDC_JWKS_URL))
     if not oidc_ready and not settings.INTERNAL_API_KEY:
         errors.append("production requires OIDC or INTERNAL_API_KEY authentication")
+    if oidc_ready:
+        for name, value in {
+            "OIDC_ISSUER_URL": settings.OIDC_ISSUER_URL,
+            "OIDC_JWKS_URL": settings.OIDC_JWKS_URL,
+        }.items():
+            if not _is_https(value):
+                errors.append(f"{name} must use HTTPS in production")
+
     if settings.LLM_PROVIDER.strip().lower() == "mock":
         errors.append("mock LLM provider is forbidden in production")
     if settings.EMBEDDING_PROVIDER.strip().lower() == "deterministic":
@@ -134,14 +162,24 @@ def _validate_production_configuration() -> None:
     for name, value in required_mcp.items():
         if not str(value or "").strip():
             errors.append(f"{name} is required in production")
-        elif urlparse(str(value)).scheme != "https":
+        elif not _is_https(str(value)):
             errors.append(f"{name} must use HTTPS in production")
+    if settings.KUBERNETES_MCP_URL and not _is_https(settings.KUBERNETES_MCP_URL):
+        errors.append("KUBERNETES_MCP_URL must use HTTPS in production")
+    if settings.VM_MCP_URL and not _is_https(settings.VM_MCP_URL):
+        errors.append("VM_MCP_URL must use HTTPS in production")
     if not settings.MCP_REQUIRE_HTTPS:
         errors.append("MCP_REQUIRE_HTTPS must be enabled in production")
     if not settings.MCP_BEARER_TOKEN and not (settings.MCP_CLIENT_CERT_PATH and settings.MCP_CLIENT_KEY_PATH):
         errors.append("production MCP requires bearer identity or mTLS client certificate")
     if bool(settings.MCP_CLIENT_CERT_PATH) != bool(settings.MCP_CLIENT_KEY_PATH):
         errors.append("MCP client certificate and key must be configured together")
+    if settings.VM_MCP_URL:
+        if not settings.MCP_WRITE_BEARER_TOKEN:
+            errors.append("VM MCP write capability requires MCP_WRITE_BEARER_TOKEN")
+        elif settings.MCP_BEARER_TOKEN and settings.MCP_WRITE_BEARER_TOKEN == settings.MCP_BEARER_TOKEN:
+            errors.append("MCP write identity must be distinct from read identity")
+
     if settings.SSH_ENABLED:
         errors.append("direct Control-Plane SSH is forbidden; configure VM_MCP_URL instead")
     if settings.KUBERNETES_API_URL:
@@ -149,6 +187,8 @@ def _validate_production_configuration() -> None:
 
     if settings.APPROVAL_TTL_SECONDS <= 0:
         errors.append("APPROVAL_TTL_SECONDS must be positive in production")
+    if settings.MCP_TIMEOUT_SECONDS <= 0:
+        errors.append("MCP_TIMEOUT_SECONDS must be positive")
     if settings.AGENT_MAX_PARALLELISM <= 0 or settings.AGENT_MAX_EVIDENCE_ROUNDS <= 0:
         errors.append("agent routing limits must be positive")
     if settings.AGENT_MAX_DYNAMIC_EVIDENCE_TYPES <= 0:
@@ -173,13 +213,14 @@ def _validate_production_configuration() -> None:
         errors.append("at least one specialist agent must be enabled")
     if settings.A2A_ALLOWED_TARGETS and not settings.A2A_REQUIRE_HTTPS:
         errors.append("production A2A targets require HTTPS")
+
     if errors:
         raise RuntimeError("production_configuration_invalid: " + "; ".join(errors))
 
 
 @app.on_event("startup")
 async def startup_event():
-    logger.info(f"Starting {settings.APP_NAME} v{settings.APP_VERSION}")
+    logger.info("application_starting", app=settings.APP_NAME, version=settings.APP_VERSION, environment=settings.APP_ENV)
     _validate_production_configuration()
 
     if settings.APP_ENV != "production" and tool_registry.get_tool("mock_executor") is None:
@@ -189,10 +230,10 @@ async def startup_event():
         vm_connector = VMEdgeMCPClient()
         if tool_registry.get_tool("ssh_vm") is None:
             tool_registry.register(SSHVMTool(vm_connector))
-            logger.info("Governed VM MCP execution tool registered")
+            logger.info("governed_vm_mcp_execution_tool_registered")
         if tool_registry.get_tool("vm_telemetry") is None:
             tool_registry.register(VMTelemetryTool(vm_connector))
-            logger.info("Read-only VM MCP telemetry tool registered")
+            logger.info("vm_mcp_telemetry_tool_registered")
 
     if settings.PGVECTOR_VALIDATE_ON_STARTUP:
         try:
@@ -203,17 +244,29 @@ async def startup_event():
                 message = f"pgvector startup validation failed: {validation}"
                 if settings.APP_ENV == "production":
                     raise RuntimeError(message)
-                logger.warning(message)
+                logger.warning("pgvector_startup_validation_failed", validation=validation)
             else:
-                logger.info(f"pgvector validation: {validation}")
-        except Exception as exc:
+                logger.info("pgvector_startup_validation_ok", validation=validation)
+        except Exception:
             if settings.APP_ENV == "production":
-                logger.error(f"Production startup blocked by pgvector validation: {exc}")
+                logger.exception("production_startup_blocked_by_pgvector_validation")
                 raise
-            logger.warning(f"pgvector validation unavailable: {exc}")
-    logger.info(f"Tools available: {tool_registry.list_tools()}")
+            logger.exception("pgvector_validation_unavailable")
+
+    if settings.DATABASE_VALIDATE_MIGRATIONS_ON_STARTUP:
+        async with AsyncSessionLocal() as db:
+            migration = await validate_migration_head(db)
+        if not migration["valid"]:
+            if settings.APP_ENV == "production":
+                logger.error("production_startup_blocked_by_migration_drift", migration=migration)
+                raise RuntimeError("database_migration_head_mismatch")
+            logger.warning("database_migration_head_mismatch", migration=migration)
+        else:
+            logger.info("database_migration_head_ok", migration=migration)
+
+    logger.info("execution_tools_available", tools=tool_registry.list_tools())
 
 
 @app.on_event("shutdown")
 async def shutdown_event():
-    logger.info(f"Shutting down {settings.APP_NAME}")
+    logger.info("application_shutting_down", app=settings.APP_NAME)

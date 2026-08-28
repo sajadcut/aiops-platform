@@ -2,7 +2,7 @@
 
 تمام repository/storeهای runtime باید از همین engine/sessionmaker استفاده کنند تا pool،
 health check و تنظیمات DB یک‌جا کنترل شوند. Migrationها engine جداگانه Alembic دارند اما
-به همان قرارداد `.env` متصل‌اند.
+به همان قرارداد runtime متصل‌اند.
 """
 
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
@@ -11,7 +11,6 @@ from sqlalchemy import text
 from domain.contracts.config import settings
 from domain.contracts.logging import logger
 
-# تمام ORM modelها از این Base مشتق می‌شوند؛ Alembic metadata همین graph مدل را می‌بیند.
 Base = declarative_base()
 
 engine = create_async_engine(
@@ -19,7 +18,6 @@ engine = create_async_engine(
     echo=settings.DEBUG,
     pool_size=settings.DATABASE_POOL_SIZE,
     max_overflow=settings.DATABASE_MAX_OVERFLOW,
-    # اتصال stale قبل از تحویل از pool بررسی می‌شود تا request به connection مرده نخورد.
     pool_pre_ping=True,
 )
 
@@ -29,13 +27,12 @@ AsyncSessionLocal = async_sessionmaker(
 
 
 async def get_db() -> AsyncSession:
-    """Dependency ساده FastAPI که عمر session را به request محدود می‌کند."""
     async with AsyncSessionLocal() as session:
         yield session
 
 
 async def check_pgvector_ready() -> dict:
-    """Connectivity و وجود extension pgvector را برای health/readiness بررسی می‌کند."""
+    """Connectivity و وجود extension pgvector را بدون افشای DSN/error text بررسی می‌کند."""
     result = {
         "db_connected": False,
         "pgvector_available": False,
@@ -52,15 +49,12 @@ async def check_pgvector_ready() -> dict:
 
             if version:
                 result["pgvector_available"] = True
-                logger.info(f"pgvector extension found, version: {version}")
+                logger.info("pgvector_extension_found", version=str(version))
             else:
-                # نبود extension با DB-down فرق دارد؛ health endpoint این دو failure mode
-                # را جدا گزارش می‌کند تا نبود vector به‌اشتباه healthy تلقی نشود.
-                logger.warning("pgvector extension not found in PostgreSQL")
+                logger.warning("pgvector_extension_not_found")
 
-    except Exception as e:
-        error_msg = str(e)
-        result["error"] = error_msg
-        logger.warning(f"Database not available: {error_msg}")
+    except Exception as exc:
+        result["error"] = type(exc).__name__
+        logger.exception("database_pgvector_probe_failed")
 
     return result

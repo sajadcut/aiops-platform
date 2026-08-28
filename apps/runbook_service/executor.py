@@ -17,7 +17,12 @@ class RunbookExecution:
 
 
 class RunbookExecutor:
-    """Safe runtime boundary for registered runbooks."""
+    """Safe runtime boundary for registered runbooks.
+
+    ``approval_id`` is correlation data only. The caller must explicitly pass
+    ``approval_granted=True`` after validating and atomically consuming a
+    durable approval; a random/non-empty ID can never grant execution.
+    """
 
     def __init__(self, registry: RunbookRegistry):
         self.registry = registry
@@ -39,6 +44,7 @@ class RunbookExecutor:
         timeout: int = 30,
         dry_run: bool = False,
         approval_id: Optional[str] = None,
+        approval_granted: bool = False,
         rollback_requested: bool = False,
     ) -> Dict[str, Any]:
         runbook = self.registry.get(runbook_id)
@@ -69,8 +75,8 @@ class RunbookExecutor:
             parameters=parameters,
             timeout=timeout,
             agent_name="runbook_executor",
-            approval_granted=bool(approval_id),
-            approval_id=approval_id,
+            approval_granted=bool(approval_granted),
+            approval_id=approval_id if approval_granted else None,
         )
         result = await ExecutionService.execute(request)
         if result.success:

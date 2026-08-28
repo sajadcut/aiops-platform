@@ -2,7 +2,6 @@ name: quality
 
 on:
   push:
-    branches: [ main ]
   pull_request:
 
 permissions:
@@ -19,17 +18,20 @@ jobs:
         with:
           python-version: '3.12'
           cache: pip
-      - name: Repository hygiene and canonical env safety
+      - name: Repository hygiene and configuration safety
         shell: bash
         run: |
           set -euo pipefail
-          test -f .env
-          test ! -e .env.example
+          test -f .env.example
+          if git ls-files --error-unmatch .env >/dev/null 2>&1; then
+            echo 'A populated .env must never be tracked'
+            exit 1
+          fi
           if git ls-files | grep -E '(^|/)(__pycache__/|.*\.(pyc|pyo|zip)$|\.pytest_cache/|\.DS_Store$)'; then
             echo 'Tracked generated artifact detected'
             exit 1
           fi
-          if git grep -n -I -E '(BEGIN (RSA|OPENSSH|EC) PRIVATE KEY|AKIA[0-9A-Z]{16})' -- ':!tests/**'; then
+          if git grep -n -I -E '(BEGIN (RSA|OPENSSH|EC|DSA) PRIVATE KEY|AKIA[0-9A-Z]{16}|Bearer[[:space:]]+[A-Za-z0-9._~+/=-]{12,})' -- ':!tests/**'; then
             echo 'Potential committed secret detected'
             exit 1
           fi
@@ -41,22 +43,22 @@ jobs:
               'ZABBIX_MCP_AUTH_HEADER', 'ELASTICSEARCH_MCP_AUTH_HEADER',
               'PROMETHEUS_MCP_AUTH_HEADER', 'ZABBIX_PASSWORD',
               'ELASTICSEARCH_PASSWORD', 'KUBERNETES_TOKEN',
-              'OIDC_JWKS_URL',
           }
           values = {}
-          for raw in Path('.env').read_text(encoding='utf-8').splitlines():
+          for raw in Path('.env.example').read_text(encoding='utf-8').splitlines():
               line = raw.strip()
               if not line or line.startswith('#') or '=' not in line:
                   continue
               key, value = line.split('=', 1)
               values[key] = value.strip()
           leaked = {k: values.get(k) for k in sensitive if values.get(k)}
-          assert not leaked, f'Committed .env contains non-empty sensitive values: {sorted(leaked)}'
+          assert not leaked, f'.env.example contains non-empty sensitive values: {sorted(leaked)}'
           PY
-      - name: Build CI runtime from canonical .env
+      - name: Build ephemeral CI runtime configuration
         shell: bash
         run: |
           set -euo pipefail
+          cp .env.example .env
           python - <<'PY'
           from pathlib import Path
           path = Path('.env')
@@ -66,26 +68,38 @@ jobs:
               'INTERNAL_API_KEY=': 'INTERNAL_API_KEY=ci-test-key',
               'INTERNAL_API_ROLE=operator': 'INTERNAL_API_ROLE=sre',
               'PGVECTOR_VALIDATE_ON_STARTUP=True': 'PGVECTOR_VALIDATE_ON_STARTUP=False',
+              'DATABASE_VALIDATE_MIGRATIONS_ON_STARTUP=True': 'DATABASE_VALIDATE_MIGRATIONS_ON_STARTUP=False',
           }
           for old, new in replacements.items():
               text = text.replace(old, new, 1)
           path.write_text(text)
           PY
-      - name: Install dependencies
+      - name: Install dependencies and security tooling
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+          pip install pip-audit bandit
           pip check
+      - name: Dependency vulnerability audit
+        run: pip-audit -r requirements.txt
+      - name: High severity static security audit
+        run: bandit -q -r apps database domain integrations -x tests -lll
       - name: Validate centralized configuration contract
         run: |
           python - <<'PY'
-          from domain.contracts.config import settings
+          from domain.contracts.config import Settings, settings
+          from pathlib import Path
           assert settings.APP_ENV == 'test'
           assert settings.INTERNAL_API_KEY == 'ci-test-key'
           assert settings.RATE_LIMIT_STRICT_REQUESTS > 0
           assert settings.ALEMBIC_DATABASE_URL
           assert settings.SIGNAL_CORRELATION_ENABLED is True
-          assert 0 < settings.SIGNAL_CORRELATION_WINDOW_SECONDS <= 3600
+          keys = set()
+          for line in Path('.env.example').read_text().splitlines():
+              if line.strip() and not line.lstrip().startswith('#') and '=' in line:
+                  keys.add(line.split('=', 1)[0].strip())
+          missing = set(Settings.model_fields) - keys
+          assert not missing, f'Configuration drift: {sorted(missing)}'
           PY
       - name: Repository-wide syntax check
         run: python -m compileall -q agents apps database domain integrations knowledge memory scripts tests
@@ -118,12 +132,11 @@ jobs:
         with:
           python-version: '3.12'
           cache: pip
-      - name: Build database CI runtime from canonical .env
+      - name: Build ephemeral database CI configuration
         shell: bash
         run: |
           set -euo pipefail
-          test -f .env
-          test ! -e .env.example
+          cp .env.example .env
           python - <<'PY'
           from pathlib import Path
           path = Path('.env')
@@ -143,9 +156,21 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip check
-      - name: Alembic upgrade
+      - name: Alembic clean database upgrade
         run: python -m alembic -c database/migrations/alembic.ini upgrade head
-      - name: Validate canonical schema, pgvector and governance persistence
+      - name: Validate migration head
+        run: |
+          python - <<'PY'
+          import asyncio
+          from database import AsyncSessionLocal
+          from database.migration_validation import validate_migration_head
+          async def main():
+              async with AsyncSessionLocal() as db:
+                  result = await validate_migration_head(db)
+              assert result['valid'], result
+          asyncio.run(main())
+          PY
+      - name: Validate canonical schema pgvector and governance persistence
         run: |
           python - <<'PY'
           import psycopg
@@ -202,6 +227,36 @@ jobs:
         env:
           RUN_DB_CORRELATION_TEST: '1'
         run: python -m pytest -q tests/integration/test_signal_correlation_db.py
+      - name: Validate upgrade from an existing older database
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m alembic -c database/migrations/alembic.ini downgrade fix_embedding_001
+          python - <<'PY'
+          import psycopg
+          from uuid import uuid4
+          from domain.contracts.config import settings
+          url = settings.ALEMBIC_DATABASE_URL.replace('postgresql+psycopg://', 'postgresql://', 1)
+          with psycopg.connect(url) as conn:
+              with conn.cursor() as cur:
+                  cur.execute(
+                      "INSERT INTO incidents (id,source,severity,service,status,summary) VALUES (%s,%s,%s,%s,%s,%s)",
+                      (uuid4(),'existing-db','medium','legacy-service','OPEN','must survive forward migration'),
+                  )
+              conn.commit()
+          PY
+          python -m alembic -c database/migrations/alembic.ini upgrade head
+          python - <<'PY'
+          import psycopg
+          from domain.contracts.config import settings
+          url = settings.ALEMBIC_DATABASE_URL.replace('postgresql+psycopg://', 'postgresql://', 1)
+          with psycopg.connect(url) as conn:
+              with conn.cursor() as cur:
+                  cur.execute("SELECT count(*) FROM incidents WHERE source='existing-db' AND service='legacy-service'")
+                  assert cur.fetchone()[0] == 1, 'existing incident was not preserved'
+                  cur.execute("SELECT version_num FROM alembic_version")
+                  assert cur.fetchone()[0] == 'f2b3c4d5e6f7'
+          PY
       - name: Migration downgrade and clean rebuild
         run: |
           python -m alembic -c database/migrations/alembic.ini downgrade base

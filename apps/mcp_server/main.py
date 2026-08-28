@@ -4,10 +4,12 @@ import hmac
 from datetime import datetime
 from typing import Any, Dict
 
-from fastapi import FastAPI, Header, HTTPException
+from fastapi import FastAPI, Header, HTTPException, Request
 from pydantic import BaseModel, Field
 
+from apps.api.http_logging import HTTPTransactionLoggingMiddleware
 from domain.contracts.config import settings
+from domain.contracts.logging import configure_logging, logger
 from integrations.elasticsearch.client import ElasticsearchClient
 from integrations.kubernetes.client import KubernetesEvidenceClient
 from integrations.prometheus.client import PrometheusClient
@@ -22,7 +24,9 @@ class JsonRpcRequest(BaseModel):
     id: int | str | None = None
 
 
+configure_logging()
 app = FastAPI(title=f"AIOps MCP Server ({settings.MCP_SERVER_PROVIDER})", docs_url=None, redoc_url=None)
+app.add_middleware(HTTPTransactionLoggingMiddleware)
 _WRITE_TOOLS = {"restart_service"}
 
 _TOOL_SCHEMAS: Dict[str, Dict[str, Dict[str, Any]]] = {
@@ -80,23 +84,25 @@ def _limit(value: Any, default: int = 100) -> int:
     return min(max(int(value or default), 1), 500)
 
 
-def _authorize(authorization: str | None, tool: str | None = None) -> None:
+def _authorize(authorization: str | None, tool: str | None = None) -> str:
     if settings.APP_ENV == "production" and not settings.MCP_SERVER_REQUIRE_AUTH:
         raise HTTPException(status_code=503, detail="mcp_server_auth_required_in_production")
     if not settings.MCP_SERVER_REQUIRE_AUTH:
-        return
-    token = settings.MCP_WRITE_BEARER_TOKEN if tool in _WRITE_TOOLS else settings.MCP_BEARER_TOKEN
+        return "mcp-anonymous-development"
+    write = tool in _WRITE_TOOLS
+    token = settings.MCP_WRITE_BEARER_TOKEN if write else settings.MCP_BEARER_TOKEN
     if not token:
-        detail = "mcp_write_identity_not_configured" if tool in _WRITE_TOOLS else "mcp_server_identity_not_configured"
+        detail = "mcp_write_identity_not_configured" if write else "mcp_server_identity_not_configured"
         raise HTTPException(status_code=503, detail=detail)
     expected = f"Bearer {token}"
     if not authorization or not hmac.compare_digest(authorization, expected):
         raise HTTPException(status_code=401, detail="invalid_mcp_identity")
+    return "mcp-write" if write else "mcp-read"
 
 
 async def _call(provider: str, tool: str, args: Dict[str, Any]) -> Any:
     if tool not in _TOOL_SCHEMAS[provider]:
-        raise PermissionError(f"tool_not_allowed:{provider}:{tool}")
+        raise PermissionError("tool_not_allowed")
 
     if provider == "zabbix":
         connector = ZabbixConnector()
@@ -151,6 +157,34 @@ async def _call(provider: str, tool: str, args: Dict[str, Any]) -> Any:
     return await connector.restart_service(target, service)
 
 
+def _validate_production_server() -> None:
+    if settings.APP_ENV != "production":
+        return
+    errors: list[str] = []
+    provider = _provider()
+    if not settings.MCP_SERVER_REQUIRE_AUTH:
+        errors.append("MCP_SERVER_REQUIRE_AUTH must be true")
+    if not settings.MCP_BEARER_TOKEN:
+        errors.append("MCP_BEARER_TOKEN is required")
+    if provider == "vm":
+        if not settings.MCP_WRITE_BEARER_TOKEN:
+            errors.append("MCP_WRITE_BEARER_TOKEN is required for VM writes")
+        elif settings.MCP_WRITE_BEARER_TOKEN == settings.MCP_BEARER_TOKEN:
+            errors.append("VM read and write identities must be distinct")
+        try:
+            SSHVMConnector()
+        except Exception as exc:
+            errors.append(str(exc))
+    if errors:
+        raise RuntimeError("mcp_server_configuration_invalid:" + ";".join(errors))
+
+
+@app.on_event("startup")
+async def startup_event() -> None:
+    _validate_production_server()
+    logger.info("mcp_server_started", provider=_provider(), protocol=settings.MCP_PROTOCOL_VERSION)
+
+
 @app.get("/health")
 async def health() -> Dict[str, Any]:
     provider = _provider()
@@ -159,7 +193,8 @@ async def health() -> Dict[str, Any]:
 
 @app.post("/mcp")
 async def mcp(
-    request: JsonRpcRequest,
+    rpc: JsonRpcRequest,
+    http_request: Request,
     authorization: str | None = Header(default=None),
     mcp_protocol_version: str | None = Header(default=None, alias="Mcp-Protocol-Version"),
     mcp_name: str | None = Header(default=None, alias="Mcp-Name"),
@@ -168,27 +203,49 @@ async def mcp(
         raise HTTPException(status_code=400, detail="unsupported_mcp_protocol_version")
 
     provider = _provider()
-    if request.method == "tools/list":
-        _authorize(authorization)
+    if rpc.method == "initialize":
+        actor = _authorize(authorization)
+        http_request.state.identity_subject = actor
+        return {
+            "jsonrpc": "2.0",
+            "id": rpc.id,
+            "result": {
+                "protocolVersion": settings.MCP_PROTOCOL_VERSION,
+                "capabilities": {"tools": {"listChanged": False}},
+                "serverInfo": {"name": f"aiops-{provider}-mcp", "version": settings.APP_VERSION},
+            },
+        }
+
+    if rpc.method == "notifications/initialized":
+        actor = _authorize(authorization)
+        http_request.state.identity_subject = actor
+        return {"jsonrpc": "2.0", "id": rpc.id, "result": {}}
+
+    if rpc.method == "tools/list":
+        actor = _authorize(authorization)
+        http_request.state.identity_subject = actor
         tools = [{"name": name, **schema} for name, schema in _TOOL_SCHEMAS[provider].items()]
-        return {"jsonrpc": "2.0", "id": request.id, "result": {"tools": tools}}
+        return {"jsonrpc": "2.0", "id": rpc.id, "result": {"tools": tools}}
 
-    if request.method != "tools/call":
-        return {"jsonrpc": "2.0", "id": request.id, "error": {"code": -32601, "message": "method_not_found"}}
+    if rpc.method != "tools/call":
+        return {"jsonrpc": "2.0", "id": rpc.id, "error": {"code": -32601, "message": "method_not_found"}}
 
-    tool = str(request.params.get("name") or "")
-    _authorize(authorization, tool)
+    tool = str(rpc.params.get("name") or "")
+    actor = _authorize(authorization, tool)
+    http_request.state.identity_subject = actor
     if mcp_name and mcp_name != tool:
         raise HTTPException(status_code=400, detail="mcp_name_mismatch")
-    args = request.params.get("arguments") or {}
+    args = rpc.params.get("arguments") or {}
     if not isinstance(args, dict):
         raise HTTPException(status_code=400, detail="invalid_tool_arguments")
     try:
         content = await _call(provider, tool, args)
     except PermissionError as exc:
-        return {"jsonrpc": "2.0", "id": request.id, "error": {"code": -32602, "message": str(exc)}}
+        logger.warning("mcp_tool_call_denied", provider=provider, tool=tool, error_type=type(exc).__name__)
+        return {"jsonrpc": "2.0", "id": rpc.id, "error": {"code": -32602, "message": str(exc)}}
     except Exception as exc:
-        return {"jsonrpc": "2.0", "id": request.id, "error": {"code": -32000, "message": type(exc).__name__}}
+        logger.exception("mcp_tool_call_failed", provider=provider, tool=tool, error_type=type(exc).__name__)
+        return {"jsonrpc": "2.0", "id": rpc.id, "error": {"code": -32000, "message": "tool_call_failed"}}
     if not isinstance(content, list):
         content = [content]
-    return {"jsonrpc": "2.0", "id": request.id, "result": {"content": content}}
+    return {"jsonrpc": "2.0", "id": rpc.id, "result": {"content": content}}

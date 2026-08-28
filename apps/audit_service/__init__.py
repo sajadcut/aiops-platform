@@ -7,6 +7,8 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
+from domain.contracts.redaction import redact
+
 
 @dataclass(frozen=True)
 class AuditEvent:
@@ -22,24 +24,10 @@ class AuditEvent:
 
 class AuditService:
     _events: List[AuditEvent] = []
-    _SENSITIVE_KEYS = {
-        "password", "passwd", "secret", "token", "access_token", "refresh_token",
-        "authorization", "api_key", "apikey", "x_api_key", "private_key",
-        "client_secret", "cookie", "set-cookie",
-    }
 
     @classmethod
     def _redact(cls, value: Any, key: Optional[str] = None) -> Any:
-        normalized = (key or "").lower().replace("-", "_")
-        if normalized in cls._SENSITIVE_KEYS or any(term in normalized for term in ("password", "secret", "token", "api_key", "private_key")):
-            return "[REDACTED]"
-        if isinstance(value, dict):
-            return {str(k): cls._redact(v, str(k)) for k, v in value.items()}
-        if isinstance(value, list):
-            return [cls._redact(item) for item in value]
-        if isinstance(value, tuple):
-            return tuple(cls._redact(item) for item in value)
-        return value
+        return redact(value, key)
 
     @classmethod
     def record(

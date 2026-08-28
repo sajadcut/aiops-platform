@@ -4,10 +4,14 @@ FROM ${PYTHON_BASE_IMAGE}
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
-    PIP_NO_CACHE_DIR=1
+    PIP_NO_CACHE_DIR=1 \
+    APP_ENV=production \
+    LOG_DIR=/var/log/aiops
 
 RUN addgroup --system aiops \
-    && adduser --system --ingroup aiops --uid 10001 aiops
+    && adduser --system --ingroup aiops --uid 10001 aiops \
+    && mkdir -p /var/log/aiops \
+    && chown -R aiops:aiops /var/log/aiops
 
 WORKDIR /app
 
@@ -19,9 +23,14 @@ RUN test -d /opt/wheels \
     && python -m pip install --no-index --find-links=/opt/wheels -r requirements.txt \
     && python -m pip check
 
+# .dockerignore excludes .env, VCS metadata, logs and local artifacts. Runtime
+# secrets/configuration are injected by the deployment platform, never baked.
 COPY --chown=aiops:aiops . .
 
 USER 10001:10001
 
 EXPOSE 8000
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health/live', timeout=3).read()" || exit 1
+
 CMD ["python", "-m", "uvicorn", "apps.api.main:app", "--host", "0.0.0.0", "--port", "8000", "--no-access-log"]
