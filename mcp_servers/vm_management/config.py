@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Literal
+
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -14,6 +16,7 @@ class VMManagementSettings(BaseSettings):
     WRITE_TOKEN: str = Field(default="", min_length=0)
     REQUIRE_AUTH: bool = True
     WRITE_ENABLED: bool = False
+    SSH_AUTH_MODE: Literal["key", "password"] = "key"
     SSH_CONNECT_TIMEOUT: int = Field(default=10, ge=1, le=120)
     SSH_COMMAND_TIMEOUT: int = Field(default=30, ge=1, le=600)
     SSH_KNOWN_HOSTS: str = ""
