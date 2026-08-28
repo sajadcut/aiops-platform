@@ -9,6 +9,8 @@ from apps.approval_service.postgres import PostgreSQLApprovalStore
 from apps.audit_service import AuditService
 from apps.audit_service.postgres import PostgreSQLAuditStore
 from apps.execution_service import ExecutionRequest, ExecutionService
+from apps.execution_service.capability import ExecutionCapabilityError, issue_execution_capability
+from apps.execution_service.tools.registry import tool_registry
 from apps.security.auth import require_permission
 from apps.security.rbac import allowed
 from database import AsyncSessionLocal
@@ -31,15 +33,9 @@ def _approval_record(payload: Dict[str, Any]) -> Dict[str, Any]:
     if binding_complete:
         try:
             metadata = bind_metadata(
-                metadata,
-                incident_id=payload["incident_id"],
-                tool_name=payload["tool_name"],
-                action=payload["action"],
-                target=payload["target"],
-                parameters=payload.get("parameters", {}),
-                timeout=payload.get("timeout", 30),
-                runbook_id=payload.get("runbook_id"),
-                runbook_version=payload.get("runbook_version"),
+                metadata, incident_id=payload["incident_id"], tool_name=payload["tool_name"], action=payload["action"],
+                target=payload["target"], parameters=payload.get("parameters", {}), timeout=payload.get("timeout", 30),
+                runbook_id=payload.get("runbook_id"), runbook_version=payload.get("runbook_version"),
                 rollback=payload.get("rollback", False),
             )
         except (TypeError, ValueError) as exc:
@@ -48,16 +44,9 @@ def _approval_record(payload: Dict[str, Any]) -> Dict[str, Any]:
         metadata["binding_complete"] = False
 
     return {
-        "approval_id": str(uuid4()),
-        "incident_id": str(payload["incident_id"]),
-        "action": str(payload["action"]),
-        "risk_level": _normalize_risk_level(payload["risk_level"]),
-        "approver": str(payload["approver"]),
-        "status": "pending",
-        "metadata": metadata,
-        "created_at": now,
-        "approved_at": None,
-        "rejected_at": None,
+        "approval_id": str(uuid4()), "incident_id": str(payload["incident_id"]), "action": str(payload["action"]),
+        "risk_level": _normalize_risk_level(payload["risk_level"]), "approver": str(payload["approver"]),
+        "status": "pending", "metadata": metadata, "created_at": now, "approved_at": None, "rejected_at": None,
     }
 
 
@@ -91,18 +80,10 @@ async def create_approval(payload: Dict[str, Any], identity=Depends(require_perm
     record = _approval_record(payload)
     async with AsyncSessionLocal() as db:
         saved = await PostgreSQLApprovalStore(db).save(record)
-        await _audit_durable(
-            db,
-            "approval_requested",
-            identity.subject,
-            record["incident_id"],
-            record["action"],
-            {
-                "approval_id": record["approval_id"],
-                "risk_level": record["risk_level"],
-                "binding_complete": bool(record["metadata"].get("binding_complete")),
-            },
-        )
+        await _audit_durable(db, "approval_requested", identity.subject, record["incident_id"], record["action"], {
+            "approval_id": record["approval_id"], "risk_level": record["risk_level"],
+            "binding_complete": bool(record["metadata"].get("binding_complete")),
+        })
         return saved
 
 
@@ -127,14 +108,9 @@ async def approve(approval_id: str, identity=Depends(require_permission("approve
         approval = await store.set_status(approval_id, "approved", metadata_patch={"approved_by": identity.subject})
         if not approval or approval.get("status") != "approved":
             raise HTTPException(status_code=409, detail="approval_transition_conflict")
-        await _audit_durable(
-            db,
-            "approval_granted",
-            identity.subject,
-            str(current.get("incident_id")),
-            str(current.get("action")),
-            {"approval_id": approval_id, "risk_level": current.get("risk_level")},
-        )
+        await _audit_durable(db, "approval_granted", identity.subject, str(current.get("incident_id")), str(current.get("action")), {
+            "approval_id": approval_id, "risk_level": current.get("risk_level"),
+        })
         return approval
 
 
@@ -145,7 +121,6 @@ async def reject(approval_id: str, payload: Dict[str, Any], identity=Depends(req
         raise HTTPException(status_code=400, detail="rejection_reason_required")
     if len(reason) > 1000:
         raise HTTPException(status_code=400, detail="rejection_reason_too_long")
-
     async with AsyncSessionLocal() as db:
         store = PostgreSQLApprovalStore(db)
         current = await store.get(approval_id)
@@ -153,21 +128,12 @@ async def reject(approval_id: str, payload: Dict[str, Any], identity=Depends(req
             raise HTTPException(status_code=404, detail="approval_not_found")
         _require_pending(current)
         _require_risk_permission(identity, str(current.get("risk_level")))
-        approval = await store.set_status(
-            approval_id,
-            "rejected",
-            metadata_patch={"rejection_reason": reason, "rejected_by": identity.subject},
-        )
+        approval = await store.set_status(approval_id, "rejected", metadata_patch={"rejection_reason": reason, "rejected_by": identity.subject})
         if not approval or approval.get("status") != "rejected":
             raise HTTPException(status_code=409, detail="approval_transition_conflict")
-        await _audit_durable(
-            db,
-            "approval_rejected",
-            identity.subject,
-            str(current.get("incident_id")),
-            str(current.get("action")),
-            {"approval_id": approval_id, "risk_level": current.get("risk_level"), "reason": reason},
-        )
+        await _audit_durable(db, "approval_rejected", identity.subject, str(current.get("incident_id")), str(current.get("action")), {
+            "approval_id": approval_id, "risk_level": current.get("risk_level"), "reason": reason,
+        })
         return approval
 
 
@@ -177,15 +143,9 @@ def _validate_approval_binding(approval: Dict[str, Any], payload: Dict[str, Any]
         raise HTTPException(status_code=400, detail="incident_id_required_for_approval")
     try:
         assert_bound(
-            approval,
-            incident_id=incident_id,
-            tool_name=payload.get("tool_name"),
-            action=payload.get("action"),
-            target=payload.get("target"),
-            parameters=payload.get("parameters", {}),
-            timeout=payload.get("timeout", 30),
-            runbook_id=payload.get("runbook_id"),
-            runbook_version=payload.get("runbook_version"),
+            approval, incident_id=incident_id, tool_name=payload.get("tool_name"), action=payload.get("action"),
+            target=payload.get("target"), parameters=payload.get("parameters", {}), timeout=payload.get("timeout", 30),
+            runbook_id=payload.get("runbook_id"), runbook_version=payload.get("runbook_version"),
             rollback=payload.get("rollback", False),
         )
     except (TypeError, ValueError) as exc:
@@ -199,10 +159,20 @@ async def execute(payload: Dict[str, Any], identity=Depends(require_permission("
     if missing:
         raise HTTPException(status_code=400, detail={"code": "MISSING_FIELDS", "fields": missing})
 
+    tool_name = str(payload["tool_name"])
+    tool = tool_registry.get_tool(tool_name)
+    if tool is None:
+        raise HTTPException(status_code=400, detail="tool_not_registered")
     approval_id = payload.get("approval_id")
-    approval_granted = False
+    incident_id = str(payload.get("incident_id") or "")
+    capability = None
+
     async with AsyncSessionLocal() as db:
-        if approval_id:
+        if tool.requires_approval:
+            if not approval_id:
+                raise HTTPException(status_code=400, detail="approval_id_required")
+            if not incident_id:
+                raise HTTPException(status_code=400, detail="incident_id_required_for_approval")
             store = PostgreSQLApprovalStore(db)
             approval = await store.get(str(approval_id))
             if approval is None:
@@ -211,40 +181,33 @@ async def execute(payload: Dict[str, Any], identity=Depends(require_permission("
             consumed = await store.consume(str(approval_id))
             if not consumed or consumed.get("status") != "consumed":
                 raise HTTPException(status_code=409, detail="approval_already_consumed_or_unavailable")
-            approval_granted = True
-            await _audit_durable(
-                db,
-                "approval_consumed",
-                identity.subject,
-                str(approval.get("incident_id")),
-                str(payload["action"]),
-                {"approval_id": approval_id, "tool_name": payload["tool_name"], "target": payload["target"]},
-            )
+            try:
+                capability = issue_execution_capability(
+                    incident_id=incident_id, approval_id=str(approval_id), tool_name=tool_name,
+                    action=str(payload["action"]), target=str(payload["target"]),
+                    parameters=dict(payload.get("parameters") or {}), timeout=int(payload.get("timeout", 30)),
+                    runbook_id=payload.get("runbook_id"), runbook_version=payload.get("runbook_version"),
+                    rollback=bool(payload.get("rollback", False)),
+                )
+            except ExecutionCapabilityError as exc:
+                raise HTTPException(status_code=503, detail=str(exc)) from exc
+            await _audit_durable(db, "approval_consumed", identity.subject, incident_id, str(payload["action"]), {
+                "approval_id": approval_id, "tool_name": tool_name, "target": payload["target"],
+            })
+        elif approval_id:
+            raise HTTPException(status_code=400, detail="approval_not_applicable_to_tool")
 
         request = ExecutionRequest(
-            tool_name=str(payload["tool_name"]),
-            action=str(payload["action"]),
-            target=str(payload["target"]),
-            parameters=payload.get("parameters", {}),
-            timeout=int(payload.get("timeout", 30)),
-            agent_name=str(payload.get("agent_name", "api")),
-            approval_granted=approval_granted,
-            approval_id=approval_id,
+            tool_name=tool_name, action=str(payload["action"]), target=str(payload["target"]),
+            parameters=payload.get("parameters", {}), timeout=int(payload.get("timeout", 30)),
+            agent_name=str(payload.get("agent_name", "api")), incident_id=incident_id or None,
+            approval_id=str(approval_id) if approval_id else None, execution_capability=capability,
+            runbook_id=payload.get("runbook_id"), runbook_version=payload.get("runbook_version"),
+            rollback=bool(payload.get("rollback", False)),
         )
         result = await ExecutionService.execute(request)
-        incident_id = str(payload.get("incident_id")) if payload.get("incident_id") else None
-        await _audit_durable(
-            db,
-            "direct_execution_completed",
-            identity.subject,
-            incident_id,
-            request.action,
-            {
-                "tool_name": request.tool_name,
-                "target": request.target,
-                "success": result.success,
-                "blocked": result.execution_blocked,
-                "approval_id": approval_id,
-            },
-        )
+        await _audit_durable(db, "direct_execution_completed", identity.subject, incident_id or None, request.action, {
+            "tool_name": request.tool_name, "target": request.target, "success": result.success,
+            "blocked": result.execution_blocked, "approval_id": approval_id,
+        })
         return result.model_dump()
