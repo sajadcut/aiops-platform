@@ -33,9 +33,6 @@ jobs:
             echo 'Tracked generated artifact detected'
             exit 1
           fi
-          # Require a token-like value, not ordinary prose such as "Bearer authentication".
-          # Opaque production bearer credentials are expected to be high-entropy and at
-          # least 24 characters; JWTs and API tokens are substantially longer.
           SECRET_PATTERN='(BEGIN (RSA|OPENSSH|EC|DSA) PRIVATE KEY|AKIA[0-9A-Z]{16}|Bearer[[:space:]]+[A-Za-z0-9._~+/=-]{24,})'
           if git grep -n -I -E "$SECRET_PATTERN" -- ':!tests/**'; then
             echo 'Potential committed secret detected in current tree'
@@ -88,11 +85,11 @@ jobs:
       - name: Install dependencies and security tooling
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install -r requirements.txt -r requirements-dev.txt
           pip install pip-audit bandit
           pip check
       - name: Dependency vulnerability audit
-        run: pip-audit -r requirements.txt
+        run: pip-audit
       - name: High severity static security audit
         run: bandit -q -r apps database domain integrations -x tests -lll
       - name: Validate centralized configuration contract
@@ -116,7 +113,7 @@ jobs:
         run: python -m compileall -q agents apps database domain integrations knowledge memory scripts tests
       - name: Import and dependency integrity
         run: python scripts/check_python_integrity.py
-      - name: Full unit integration scenario and security suite
+      - name: Full unit integration scenario security and harness suite
         run: python -m pytest -q tests
 
   database-acceptance:
@@ -165,7 +162,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install -r requirements.txt -r requirements-dev.txt
           pip check
       - name: Alembic clean database upgrade
         run: python -m alembic -c database/migrations/alembic.ini upgrade head
@@ -199,14 +196,12 @@ jobs:
                   tables = {row[0] for row in cur.fetchall()}
                   required = {'incidents','evidences','findings','knowledge_documents','memory_entries','approvals','audit_events','workflow_checkpoints','runbooks'}
                   assert required <= tables, required - tables
-
                   cur.execute("""
                       SELECT table_name, udt_name FROM information_schema.columns
                       WHERE table_name IN ('knowledge_documents','memory_entries') AND column_name='embedding'
                   """)
                   vector_rows = cur.fetchall()
                   assert len(vector_rows) == 2 and all(row[1] == 'vector' for row in vector_rows), vector_rows
-
                   incident_id = uuid4()
                   cur.execute(
                       "INSERT INTO incidents (id,source,severity,service,status,summary) VALUES (%s,%s,%s,%s,%s,%s)",
@@ -223,7 +218,6 @@ jobs:
                   )
                   cur.execute("UPDATE approvals SET status='consumed' WHERE approval_id=%s AND status='approved' RETURNING status", (approval_id,))
                   assert cur.fetchone()[0] == 'consumed'
-
                   dimension = settings.EMBEDDING_DIMENSION
                   vector = "[" + ",".join(["0.1"] * dimension) + "]"
                   cur.execute(
