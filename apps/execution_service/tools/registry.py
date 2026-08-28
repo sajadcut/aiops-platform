@@ -5,7 +5,7 @@ Agent یا LLM نام یک action را پیشنهاد می‌دهد، اما ا�
 ابزار نیز موفق شود. بنابراین registry بخشی از allow-list امنیتی پلتفرم است.
 """
 
-from typing import Dict, List, Optional, Any
+from typing import Any, Dict, List, Optional
 
 from apps.execution_service.tools.base import BaseTool, ToolInput
 from domain.contracts.logging import logger
@@ -18,8 +18,6 @@ class ToolRegistry:
     _tools: Dict[str, BaseTool]
 
     def __new__(cls):
-        # Singleton بودن باعث می‌شود startup registration و API/workflow execution یک
-        # allow-list مشترک ببینند؛ Agent registry جدا از این write registry است.
         if cls._instance is None:
             instance = super().__new__(cls)
             instance._tools = {}
@@ -27,13 +25,14 @@ class ToolRegistry:
         return cls._instance
 
     def register(self, tool: BaseTool) -> None:
-        """یک implementation صریح را با metadata ریسک/approval آن ثبت می‌کند."""
         if tool.name in self._tools:
-            logger.warning(f"Tool '{tool.name}' already registered, overwriting")
+            logger.warning("execution_tool_overwritten", tool=tool.name)
         self._tools[tool.name] = tool
         logger.info(
-            f"Tool '{tool.name}' registered "
-            f"(risk={tool.risk_level}, requires_approval={tool.requires_approval})"
+            "execution_tool_registered",
+            tool=tool.name,
+            risk_level=tool.risk_level,
+            requires_approval=tool.requires_approval,
         )
 
     def get_tool(self, name: str) -> Optional[BaseTool]:
@@ -46,21 +45,18 @@ class ToolRegistry:
         return [tool.name for tool in tools]
 
     def get_allowed_tools(self, agent_name: str, risk_level: Optional[str] = None) -> List[str]:
-        """فهرست capabilityهای executable؛ agent_name به معنی اعطای اختیار جدید نیست."""
         return self.list_tools(risk_level)
 
     async def validate_tool(self, tool_name: str, input_data: ToolInput) -> Dict[str, Any]:
-        """Precondition/target/parameter validation ابزار را قبل از write اجرا می‌کند."""
         tool = self.get_tool(tool_name)
         if tool is None:
-            return {"valid": False, "error": f"Tool '{tool_name}' not found"}
+            return {"valid": False, "error": "tool_not_found"}
         try:
             valid = await tool.validate(input_data)
-            return {"valid": bool(valid), "error": None if valid else "Tool validation failed"}
+            return {"valid": bool(valid), "error": None if valid else "tool_validation_failed"}
         except Exception as exc:
-            # Exception در validation هرگز به «اجازه اجرا» تبدیل نمی‌شود.
-            logger.exception(f"Validation failed for tool '{tool_name}'")
-            return {"valid": False, "error": str(exc)}
+            logger.exception("execution_tool_validation_exception", tool=tool_name, error_type=type(exc).__name__)
+            return {"valid": False, "error": "tool_validation_exception"}
 
     async def execute_tool(
         self,
@@ -77,13 +73,11 @@ class ToolRegistry:
                 "success": False,
                 "execution_blocked": True,
                 "reason": "tool_not_found",
-                "error": f"Tool '{tool_name}' not found",
+                "error": "tool_not_found",
             }
 
-        # این check دفاع دوم است؛ حتی اگر caller اشتباه کند، tool حساس بدون approval
-        # از registry عبور نمی‌کند. Binding/consume approval در لایه API/store انجام می‌شود.
         if tool.requires_approval and not approval_granted:
-            logger.warning(f"Execution blocked for '{tool_name}': approval required")
+            logger.warning("execution_blocked_approval_required", tool=tool_name, agent=agent_name)
             return {
                 "success": False,
                 "execution_blocked": True,
@@ -103,7 +97,7 @@ class ToolRegistry:
             }
 
         try:
-            logger.info(f"Agent '{agent_name}' executing tool '{tool_name}'")
+            logger.info("execution_tool_call_started", agent=agent_name, tool=tool_name, approval_id=approval_id)
             result = await tool.execute(input_data)
             response = result.model_dump()
             response.update(
@@ -116,23 +110,33 @@ class ToolRegistry:
                     "execution_blocked": False,
                 }
             )
+            logger.info(
+                "execution_tool_call_completed",
+                agent=agent_name,
+                tool=tool_name,
+                approval_id=approval_id,
+                success=bool(response.get("success")),
+            )
             return response
         except Exception as exc:
-            # failure واقعی executor با blocked شدن قبل از اجرا فرق دارد؛ این distinction
-            # برای Audit/Verification و تصمیم rollback اهمیت دارد.
-            logger.exception(f"Tool '{tool_name}' execution failed")
+            logger.exception(
+                "execution_tool_call_failed",
+                tool=tool_name,
+                agent=agent_name,
+                approval_id=approval_id,
+                error_type=type(exc).__name__,
+            )
             return {
                 "success": False,
                 "execution_blocked": False,
                 "reason": "execution_failed",
-                "error": str(exc),
+                "error": "tool_execution_failed",
                 "tool": tool_name,
                 "agent": agent_name,
                 "approval_id": approval_id,
             }
 
     def clear(self) -> None:
-        """فقط برای reset lifecycle/test؛ production startup ابزارها را صریح ثبت می‌کند."""
         self._tools.clear()
 
 
