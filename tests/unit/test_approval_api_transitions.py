@@ -2,6 +2,7 @@ import pytest
 from fastapi import HTTPException
 
 from apps.api import execution
+from apps.approval_service.binding import bind_execution_metadata
 
 
 class Identity:
@@ -40,13 +41,21 @@ class FakeStore:
 
 @pytest.fixture(autouse=True)
 def fake_dependencies(monkeypatch):
+    execution_request = {
+        "incident_id": "i1",
+        "tool_name": "ssh_vm",
+        "action": "restart_service",
+        "target": "vm01",
+        "parameters": {"service": "nginx"},
+        "timeout": 30,
+    }
     FakeStore.current = {
         "approval_id": "a1",
         "incident_id": "i1",
         "action": "restart_service",
         "risk_level": "high",
         "status": "pending",
-        "metadata": {"target": "vm01", "tool_name": "ssh_vm"},
+        "metadata": bind_execution_metadata({}, execution_request, "i1"),
     }
     FakeStore.last_patch = None
     FakeStore.last_status = None
