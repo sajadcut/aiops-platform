@@ -9,6 +9,7 @@ from domain.contracts.config import settings
 from domain.contracts.context import set_trace_id
 from domain.contracts.logging import logger
 from domain.contracts.redaction import redact
+from domain.observability import HTTP_REQUESTS_IN_PROGRESS, observe_http
 
 ASGIApp = Callable[[dict[str, Any], Callable[[], Awaitable[dict[str, Any]]], Callable[[dict[str, Any]], Awaitable[None]]], Awaitable[None]]
 
@@ -45,13 +46,7 @@ def _value(body: Any, *names: str) -> Any:
 
 
 class HTTPTransactionLoggingMiddleware:
-    """ASGI middleware that persists one redacted, correlated transaction event.
-
-    Request/response bodies are captured only up to a configured cap and only
-    parsed for JSON. Headers are never emitted wholesale. Authentication code
-    writes the resolved identity into ``scope['state']`` so the final event can
-    include identity without logging credentials.
-    """
+    """Persist one redacted, correlated event for every HTTP transaction."""
 
     def __init__(self, app: ASGIApp):
         self.app = app
@@ -63,11 +58,7 @@ class HTTPTransactionLoggingMiddleware:
 
         incoming_headers = _headers(scope)
         request_id = incoming_headers.get("x-request-id") or str(uuid4())
-        correlation_id = (
-            incoming_headers.get("x-correlation-id")
-            or incoming_headers.get("x-trace-id")
-            or request_id
-        )
+        correlation_id = incoming_headers.get("x-correlation-id") or incoming_headers.get("x-trace-id") or request_id
         path = str(scope.get("path") or "")
         execution_id = incoming_headers.get("x-execution-id")
         if not execution_id and (path.endswith("/execute") or "/execute/" in path):
@@ -85,6 +76,7 @@ class HTTPTransactionLoggingMiddleware:
         response_content_type = ""
         status_code = 500
         started = time.perf_counter()
+        HTTP_REQUESTS_IN_PROGRESS.inc()
 
         async def logging_receive() -> dict[str, Any]:
             message = await receive()
@@ -120,17 +112,11 @@ class HTTPTransactionLoggingMiddleware:
             raised = exc
             raise
         finally:
-            duration_ms = round((time.perf_counter() - started) * 1000, 3)
-            request_payload = _safe_json_body(
-                bytes(request_body),
-                incoming_headers.get("content-type", ""),
-                enabled=settings.LOG_HTTP_BODY_ENABLED,
-            )
-            response_payload = _safe_json_body(
-                bytes(response_body),
-                response_content_type,
-                enabled=settings.LOG_HTTP_BODY_ENABLED,
-            )
+            HTTP_REQUESTS_IN_PROGRESS.dec()
+            duration_seconds = time.perf_counter() - started
+            duration_ms = round(duration_seconds * 1000, 3)
+            request_payload = _safe_json_body(bytes(request_body), incoming_headers.get("content-type", ""), enabled=settings.LOG_HTTP_BODY_ENABLED)
+            response_payload = _safe_json_body(bytes(response_body), response_content_type, enabled=settings.LOG_HTTP_BODY_ENABLED)
             route = getattr(scope.get("route"), "path", None) or path
             path_params = scope.get("path_params") or {}
             identity = state.get("identity_subject")
@@ -163,3 +149,4 @@ class HTTPTransactionLoggingMiddleware:
             if raised is not None:
                 event["error_type"] = type(raised).__name__
             logger.info("http_transaction", **redact(event))
+            observe_http(str(scope.get("method") or "UNKNOWN"), str(route), status_code, duration_seconds)
