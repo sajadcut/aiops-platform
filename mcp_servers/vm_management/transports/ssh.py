@@ -6,27 +6,30 @@ import os
 import shlex
 from typing import Any, Dict
 
+import asyncssh
+
 from mcp_servers.vm_management.config import VMManagementSettings
 from mcp_servers.vm_management.inventory import VMRecord
 from mcp_servers.vm_management.transports.base import VMTransport
 
 
 class OpenSSHTransport(VMTransport):
-    """Allowlisted VM operations over the system OpenSSH client.
+    """Allowlisted VM operations over SSH.
 
-    Callers never provide a command. Remote commands are fixed templates selected
-    by capability handlers. Inventory validation constrains target/service input.
+    Key auth remains the default. Password auth is an explicit lab mode and reads
+    its secret only from the inventory credential_ref environment variable.
+    Callers never provide arbitrary commands.
     """
 
     def __init__(self, settings: VMManagementSettings):
         self.settings = settings
         self._semaphore = asyncio.Semaphore(settings.MAX_CONCURRENCY)
 
-    def _identity_file(self, vm: VMRecord) -> str:
-        path = str(os.environ.get(vm.credential_ref, "")).strip()
-        if not path:
+    def _credential(self, vm: VMRecord) -> str:
+        value = str(os.environ.get(vm.credential_ref, "")).strip()
+        if not value:
             raise PermissionError("vm_credential_not_configured")
-        return path
+        return value
 
     def _ssh_args(self, vm: VMRecord, command: str) -> list[str]:
         args = [
@@ -36,7 +39,7 @@ class OpenSSHTransport(VMTransport):
             "-o", "IdentitiesOnly=yes",
             "-o", "LogLevel=ERROR",
             "-p", str(vm.ssh_port),
-            "-i", self._identity_file(vm),
+            "-i", self._credential(vm),
         ]
         if self.settings.SSH_STRICT_HOST_KEY_CHECKING:
             args += [
@@ -48,26 +51,58 @@ class OpenSSHTransport(VMTransport):
         args += [f"{vm.ssh_user}@{vm.ip}", command]
         return args
 
-    async def _run(self, vm: VMRecord, command: str) -> Dict[str, Any]:
-        async with self._semaphore:
-            process = await asyncio.create_subprocess_exec(
-                *self._ssh_args(vm, command),
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
+    async def _run_key(self, vm: VMRecord, command: str) -> Dict[str, Any]:
+        process = await asyncio.create_subprocess_exec(
+            *self._ssh_args(vm, command),
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        try:
+            stdout, stderr = await asyncio.wait_for(
+                process.communicate(), timeout=self.settings.SSH_COMMAND_TIMEOUT
             )
-            try:
-                stdout, stderr = await asyncio.wait_for(
-                    process.communicate(), timeout=self.settings.SSH_COMMAND_TIMEOUT
-                )
-            except asyncio.TimeoutError:
-                process.kill()
-                await process.communicate()
-                raise TimeoutError("vm_ssh_command_timeout")
+        except asyncio.TimeoutError:
+            process.kill()
+            await process.communicate()
+            raise TimeoutError("vm_ssh_command_timeout")
         output = stdout.decode("utf-8", errors="replace").strip()
         error = stderr.decode("utf-8", errors="replace").strip()
         if process.returncode != 0:
             raise RuntimeError(f"vm_ssh_command_failed:exit={process.returncode}:{error[:400]}")
         return {"exit_code": int(process.returncode or 0), "stdout": output}
+
+    async def _run_password(self, vm: VMRecord, command: str) -> Dict[str, Any]:
+        known_hosts = self.settings.SSH_KNOWN_HOSTS if self.settings.SSH_STRICT_HOST_KEY_CHECKING else None
+        try:
+            async with asyncssh.connect(
+                vm.ip,
+                port=vm.ssh_port,
+                username=vm.ssh_user,
+                password=self._credential(vm),
+                known_hosts=known_hosts,
+                client_keys=None,
+                login_timeout=self.settings.SSH_CONNECT_TIMEOUT,
+            ) as conn:
+                result = await asyncio.wait_for(
+                    conn.run(command, check=False), timeout=self.settings.SSH_COMMAND_TIMEOUT
+                )
+        except asyncio.TimeoutError as exc:
+            raise TimeoutError("vm_ssh_command_timeout") from exc
+        except (asyncssh.Error, OSError) as exc:
+            raise RuntimeError(f"vm_ssh_connection_failed:{type(exc).__name__}") from exc
+
+        output = (result.stdout or "").strip()
+        error = (result.stderr or "").strip()
+        exit_status = int(result.exit_status if result.exit_status is not None else 255)
+        if exit_status != 0:
+            raise RuntimeError(f"vm_ssh_command_failed:exit={exit_status}:{error[:400]}")
+        return {"exit_code": exit_status, "stdout": output}
+
+    async def _run(self, vm: VMRecord, command: str) -> Dict[str, Any]:
+        async with self._semaphore:
+            if self.settings.SSH_AUTH_MODE == "password":
+                return await self._run_password(vm, command)
+            return await self._run_key(vm, command)
 
     async def collect_vm_metrics(self, vm: VMRecord) -> Dict[str, Any]:
         command = (
