@@ -7,6 +7,7 @@ from uuid import uuid4
 
 from domain.contracts.config import settings
 from domain.contracts.logging import logger, redact_value
+from domain.contracts.metrics import HTTP_IN_FLIGHT, observe_http
 
 ASGIApp = Callable[[dict[str, Any], Callable[[], Awaitable[dict[str, Any]]], Callable[[dict[str, Any]], Awaitable[None]]], Awaitable[None]]
 _SAFE_BODY_TYPES = ("application/json", "application/problem+json", "text/")
@@ -75,7 +76,7 @@ def _operational_context(payload: Any) -> dict[str, Any]:
 
 
 class RequestLoggingMiddleware:
-    """ASGI middleware for correlation, bounded body capture, and structured request logs."""
+    """ASGI middleware for correlation, bounded body capture, metrics, and structured request logs."""
 
     def __init__(self, app: ASGIApp):
         self.app = app
@@ -86,6 +87,7 @@ class RequestLoggingMiddleware:
             return
 
         started = time.perf_counter()
+        HTTP_IN_FLIGHT.inc()
         headers = _header_map(list(scope.get("headers") or []))
         request_id = _bounded_identifier(headers.get("x-request-id")) or str(uuid4())
         correlation_id = _bounded_identifier(headers.get("x-correlation-id")) or request_id
@@ -138,6 +140,11 @@ class RequestLoggingMiddleware:
         try:
             await self.app(scope, wrapped_receive, wrapped_send)
         finally:
+            duration_seconds = max(time.perf_counter() - started, 0.0)
+            route_template = getattr(scope.get("route"), "path", None) or scope.get("path") or "unknown"
+            observe_http(str(scope.get("method") or "UNKNOWN"), str(route_template), response_status, duration_seconds)
+            HTTP_IN_FLIGHT.dec()
+
             request_body = _decode_body(bytes(request_capture)) if request_capture else None
             response_body = _decode_body(bytes(response_capture)) if response_capture else None
             context = _operational_context(request_body)
@@ -153,8 +160,9 @@ class RequestLoggingMiddleware:
                 "correlation_id": correlation_id,
                 "method": scope.get("method"),
                 "path": scope.get("path"),
+                "route": route_template,
                 "status": response_status,
-                "duration_ms": round((time.perf_counter() - started) * 1000, 3),
+                "duration_ms": round(duration_seconds * 1000, 3),
                 "identity": state.get("identity_subject"),
                 "roles": state.get("identity_roles"),
                 **context,
