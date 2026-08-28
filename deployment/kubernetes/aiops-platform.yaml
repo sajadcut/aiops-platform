@@ -53,10 +53,14 @@ spec:
               value: production
             - name: TMPDIR
               value: /tmp
-            - name: LOG_DIR
-              value: /var/log/aiops
             - name: DATABASE_VALIDATE_MIGRATIONS_ON_STARTUP
               value: "true"
+            - name: LOG_CONSOLE_ENABLED
+              value: "true"
+            - name: LOG_TEXT_FILE_ENABLED
+              value: "false"
+            - name: LOG_JSON_FILE_ENABLED
+              value: "false"
           envFrom:
             - configMapRef:
                 name: aiops-platform-config
@@ -98,12 +102,8 @@ spec:
           volumeMounts:
             - name: tmp
               mountPath: /tmp
-            - name: logs
-              mountPath: /var/log/aiops
       volumes:
         - name: tmp
-          emptyDir: {}
-        - name: logs
           emptyDir: {}
 ---
 apiVersion: policy/v1
