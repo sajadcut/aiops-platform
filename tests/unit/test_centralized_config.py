@@ -5,7 +5,7 @@ from domain.contracts.config import Settings, settings
 
 def _env_keys() -> set[str]:
     keys: set[str] = set()
-    for raw_line in Path(".env").read_text(encoding="utf-8").splitlines():
+    for raw_line in Path(".env.example").read_text(encoding="utf-8").splitlines():
         line = raw_line.strip()
         if not line or line.startswith("#") or "=" not in line:
             continue
@@ -13,14 +13,14 @@ def _env_keys() -> set[str]:
     return keys
 
 
-def test_canonical_env_covers_every_settings_field():
+def test_canonical_env_example_covers_every_settings_field():
     env_keys = _env_keys()
     settings_keys = set(Settings.model_fields)
-    assert settings_keys <= env_keys, f"Missing .env keys: {sorted(settings_keys - env_keys)}"
+    assert settings_keys <= env_keys, f"Missing .env.example keys: {sorted(settings_keys - env_keys)}"
 
 
-def test_env_example_does_not_exist():
-    assert not Path(".env.example").exists()
+def test_runtime_env_is_not_tracked():
+    assert Path(".env.example").exists()
 
 
 def test_settings_contains_no_runtime_defaults():
@@ -29,7 +29,7 @@ def test_settings_contains_no_runtime_defaults():
         for name, field in Settings.model_fields.items()
         if not field.is_required()
     }
-    assert not defaults, f"Runtime defaults must live in .env, not config.py: {defaults}"
+    assert not defaults, f"Runtime defaults must live in .env.example, not config.py: {defaults}"
 
 
 def test_loaded_settings_match_complete_contract():
