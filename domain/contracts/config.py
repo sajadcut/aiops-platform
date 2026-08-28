@@ -5,7 +5,12 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    """Typed loader for the centralized runtime environment contract."""
+    """Typed loader for the centralized runtime environment contract.
+
+    ``.env.example`` is a non-secret development template. A local ``.env`` may
+    override it, while real deployment environment variables take precedence
+    over both files. Production startup validation is intentionally fail-closed.
+    """
 
     APP_NAME: str = Field(...)
     APP_VERSION: str = Field(...)
@@ -18,6 +23,7 @@ class Settings(BaseSettings):
     ALEMBIC_DATABASE_URL: Optional[str] = Field(...)
     DATABASE_POOL_SIZE: int = Field(...)
     DATABASE_MAX_OVERFLOW: int = Field(...)
+    DATABASE_VALIDATE_MIGRATIONS_ON_STARTUP: bool = Field(...)
 
     LLM_PROVIDER: str = Field(...)
     LLM_API_KEY: Optional[str] = Field(...)
@@ -81,6 +87,8 @@ class Settings(BaseSettings):
     LOG_ROTATION_WHEN: str = Field(...)
     LOG_ROTATION_INTERVAL: int = Field(..., ge=1)
     LOG_UTC: bool = Field(...)
+    LOG_HTTP_BODY_ENABLED: bool = Field(...)
+    LOG_HTTP_BODY_MAX_BYTES: int = Field(..., ge=256, le=1048576)
 
     INTERNAL_API_KEY: Optional[str] = Field(...)
     INTERNAL_API_ROLE: str = Field(...)
@@ -145,6 +153,8 @@ class Settings(BaseSettings):
     SSH_STRICT_HOST_KEY_CHECKING: bool = Field(...)
     SSH_PORT: int = Field(...)
     SSH_CONNECT_TIMEOUT: int = Field(...)
+    SSH_ALLOWED_TARGETS: List[str] = Field(...)
+    SSH_ALLOWED_SERVICES: List[str] = Field(...)
     VM_CPU_RECOVERY_THRESHOLD: float = Field(...)
 
     OIDC_ISSUER_URL: Optional[str] = Field(...)
@@ -153,6 +163,14 @@ class Settings(BaseSettings):
 
     OFFLINE_IMAGE_REGISTRY: Optional[str] = Field(...)
     IMAGE_PULL_POLICY: str = Field(...)
+
+    @field_validator("APP_ENV")
+    @classmethod
+    def validate_app_env(cls, value: str) -> str:
+        normalized = str(value).strip().lower()
+        if normalized not in {"development", "test", "production"}:
+            raise ValueError("APP_ENV must be development, test, or production")
+        return normalized
 
     @field_validator("LOG_ROTATION_MODE")
     @classmethod
@@ -200,7 +218,7 @@ class Settings(BaseSettings):
         return normalized
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=(".env.example", ".env"),
         env_file_encoding="utf-8",
         case_sensitive=True,
         extra="ignore",
