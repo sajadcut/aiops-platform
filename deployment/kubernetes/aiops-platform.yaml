@@ -41,8 +41,9 @@ spec:
               app: aiops-platform
       containers:
         - name: api
-          # Production promotion MUST replace this tag with an approved signed digest.
-          image: registry.internal/aiops-platform:2.2
+          # Fail-closed template. scripts/render_k8s_release.py must replace this
+          # with the exact promoted immutable digest before kubectl apply.
+          image: registry.invalid/aiops-platform@sha256:0000000000000000000000000000000000000000000000000000000000000000
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
