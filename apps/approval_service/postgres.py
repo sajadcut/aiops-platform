@@ -23,9 +23,23 @@ class PostgreSQLApprovalStore:
     def __init__(self, session: AsyncSession):
         self.session = session
 
+    @staticmethod
+    def _as_datetime(value: Any) -> Optional[datetime]:
+        """Timestamp ورودی را قبل از bind شدن به PostgreSQL به datetime تبدیل می‌کند."""
+        if value is None:
+            return None
+        if isinstance(value, datetime):
+            return value
+        if isinstance(value, str):
+            return datetime.fromisoformat(value.replace("Z", "+00:00"))
+        raise TypeError(f"invalid_approval_timestamp_type:{type(value).__name__}")
+
     async def save(self, record: Dict[str, Any]) -> Dict[str, Any]:
         """Approval request و metadata binding آن را durable می‌کند."""
         params = dict(record)
+        params["created_at"] = self._as_datetime(record.get("created_at"))
+        params["approved_at"] = self._as_datetime(record.get("approved_at"))
+        params["rejected_at"] = self._as_datetime(record.get("rejected_at"))
         params["metadata"] = json.dumps(record.get("metadata") or {}, default=str)
         await self.session.execute(
             text(
