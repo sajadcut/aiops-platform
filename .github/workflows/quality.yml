@@ -14,6 +14,8 @@ jobs:
       PYTHONPATH: ${{ github.workspace }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -34,8 +36,13 @@ jobs:
           # Require a token-like value, not ordinary prose such as "Bearer authentication".
           # Opaque production bearer credentials are expected to be high-entropy and at
           # least 24 characters; JWTs and API tokens are substantially longer.
-          if git grep -n -I -E '(BEGIN (RSA|OPENSSH|EC|DSA) PRIVATE KEY|AKIA[0-9A-Z]{16}|Bearer[[:space:]]+[A-Za-z0-9._~+/=-]{24,})' -- ':!tests/**'; then
-            echo 'Potential committed secret detected'
+          SECRET_PATTERN='(BEGIN (RSA|OPENSSH|EC|DSA) PRIVATE KEY|AKIA[0-9A-Z]{16}|Bearer[[:space:]]+[A-Za-z0-9._~+/=-]{24,})'
+          if git grep -n -I -E "$SECRET_PATTERN" -- ':!tests/**'; then
+            echo 'Potential committed secret detected in current tree'
+            exit 1
+          fi
+          if git log --all -p -- . ':(exclude)tests/**' | grep -E "$SECRET_PATTERN"; then
+            echo 'Potential committed secret detected in git history'
             exit 1
           fi
           python - <<'PY'
