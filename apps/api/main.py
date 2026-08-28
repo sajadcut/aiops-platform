@@ -6,6 +6,7 @@ from urllib.parse import urlparse
 
 from domain.contracts.config import settings
 from domain.contracts.logging import configure_logging, logger
+from domain.contracts.http_logging import RequestResponseLoggingMiddleware
 from domain.contracts.exceptions import register_exception_handlers
 from domain.contracts.rate_limit import rate_limiter_strict
 
@@ -27,7 +28,13 @@ app.add_middleware(
     allow_origins=settings.CORS_ORIGINS,
     allow_credentials=False,
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allow_headers=["Authorization", "Content-Type", "X-API-Key"],
+    allow_headers=["Authorization", "Content-Type", "X-API-Key", "X-Request-ID"],
+)
+app.add_middleware(
+    RequestResponseLoggingMiddleware,
+    enabled=settings.LOG_HTTP_REQUEST_RESPONSE_ENABLED,
+    body_max_bytes=settings.LOG_HTTP_BODY_MAX_BYTES,
+    log_headers=settings.LOG_HTTP_HEADERS_ENABLED,
 )
 
 for router, tags in [
@@ -131,15 +138,24 @@ def _validate_production_configuration() -> None:
         "ELASTICSEARCH_MCP_URL": settings.ELASTICSEARCH_MCP_URL,
         "PROMETHEUS_MCP_URL": settings.PROMETHEUS_MCP_URL,
     }
+    optional_mcp = {
+        "KUBERNETES_MCP_URL": settings.KUBERNETES_MCP_URL,
+        "VM_MCP_URL": settings.VM_MCP_URL,
+    }
     for name, value in required_mcp.items():
         if not str(value or "").strip():
             errors.append(f"{name} is required in production")
         elif urlparse(str(value)).scheme != "https":
             errors.append(f"{name} must use HTTPS in production")
+    for name, value in optional_mcp.items():
+        if str(value or "").strip() and urlparse(str(value)).scheme != "https":
+            errors.append(f"{name} must use HTTPS in production when configured")
     if not settings.MCP_REQUIRE_HTTPS:
         errors.append("MCP_REQUIRE_HTTPS must be enabled in production")
     if not settings.MCP_BEARER_TOKEN and not (settings.MCP_CLIENT_CERT_PATH and settings.MCP_CLIENT_KEY_PATH):
         errors.append("production MCP requires bearer identity or mTLS client certificate")
+    if settings.VM_MCP_URL and not settings.MCP_WRITE_BEARER_TOKEN:
+        errors.append("VM_MCP_URL requires MCP_WRITE_BEARER_TOKEN for governed write execution in production")
     if bool(settings.MCP_CLIENT_CERT_PATH) != bool(settings.MCP_CLIENT_KEY_PATH):
         errors.append("MCP client certificate and key must be configured together")
     if settings.SSH_ENABLED:
