@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import pytest
+from pydantic import ValidationError
 
 from mcp_servers.vm_management.config import VMManagementSettings
 from mcp_servers.vm_management.inventory import VMInventory, VMRecord
@@ -73,6 +74,30 @@ def test_inventory_rejects_unknown_operation():
         VMRecord(
             id="x", hostname="x", ip="127.0.0.1", environment="test", role="test",
             ssh_user="root", credential_ref="KEY", allowed_operations=["execute_command"], allowed_services=[]
+        )
+
+
+def test_production_forbids_password_authentication():
+    with pytest.raises(ValidationError, match="password_auth_forbidden"):
+        VMManagementSettings(
+            ENVIRONMENT="production",
+            REQUIRE_AUTH=True,
+            READ_TOKEN="read-token",
+            WRITE_TOKEN="write-token",
+            SSH_AUTH_MODE="password",
+            SSH_STRICT_HOST_KEY_CHECKING=True,
+        )
+
+
+def test_production_requires_strict_host_key_checking():
+    with pytest.raises(ValidationError, match="strict_host_key_checking_required"):
+        VMManagementSettings(
+            ENVIRONMENT="production",
+            REQUIRE_AUTH=True,
+            READ_TOKEN="read-token",
+            WRITE_TOKEN="write-token",
+            SSH_AUTH_MODE="key",
+            SSH_STRICT_HOST_KEY_CHECKING=False,
         )
 
 
