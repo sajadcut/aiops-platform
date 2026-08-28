@@ -174,7 +174,10 @@ async def test_oom_multi_agent_analysis_is_grounded_and_reaches_consensus():
         assert result.evidence_count == 3
         assert set(result.evidence_ids) == live_ids
         assert not result.missing_evidence
-        assert not result.requires_human_review
+        # Complete evidence must not bypass the source-quality-adjusted confidence policy.
+        assert result.requires_human_review == (
+            result.confidence < settings.AGENT_LOW_CONFIDENCE_THRESHOLD
+        )
         for hypothesis in result.hypotheses:
             assert set(hypothesis.evidence_ids).issubset(live_ids)
             assert hypothesis.falsification_checks
