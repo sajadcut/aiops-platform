@@ -4,16 +4,20 @@ from pydantic import BaseModel, Field
 
 
 class ToolInput(BaseModel):
-    """ورودی استاندارد برای هر ابزار"""
+    """Standard, policy-bound input for an execution tool."""
     action: str
     target: str
     parameters: Dict[str, Any] = Field(default_factory=dict)
     timeout: Optional[int] = 30
+    incident_id: Optional[str] = None
     approval_id: Optional[str] = None
+    execution_capability: Optional[str] = None
+    runbook_id: Optional[str] = None
+    runbook_version: Optional[str] = None
+    rollback: bool = False
 
 
 class ToolOutput(BaseModel):
-    """خروجی استاندارد از هر ابزار"""
     success: bool
     result: Optional[Dict[str, Any]] = None
     error: Optional[str] = None
@@ -21,8 +25,6 @@ class ToolOutput(BaseModel):
 
 
 class BaseTool(ABC):
-    """کلاس پایه برای همه ابزارهای اجرایی"""
-
     @property
     @abstractmethod
     def name(self) -> str:
