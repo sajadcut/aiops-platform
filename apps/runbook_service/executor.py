@@ -19,9 +19,9 @@ class RunbookExecution:
 class RunbookExecutor:
     """Safe runtime boundary for registered runbooks.
 
-    ``approval_id`` is correlation data only. The caller must explicitly pass
-    ``approval_granted=True`` after validating and atomically consuming a
-    durable approval; a random/non-empty ID can never grant execution.
+    Approval booleans are compatibility metadata only. Approval-required tools
+    must carry a signed execution capability issued after durable approval
+    validation and consume.
     """
 
     def __init__(self, registry: RunbookRegistry):
@@ -43,8 +43,10 @@ class RunbookExecutor:
         parameters: Dict[str, Any],
         timeout: int = 30,
         dry_run: bool = False,
+        incident_id: Optional[str] = None,
         approval_id: Optional[str] = None,
         approval_granted: bool = False,
+        execution_capability: Optional[str] = None,
         rollback_requested: bool = False,
     ) -> Dict[str, Any]:
         runbook = self.registry.get(runbook_id)
@@ -59,24 +61,16 @@ class RunbookExecutor:
 
         if dry_run:
             return {
-                "status": "dry_run",
-                "fingerprint": fingerprint,
-                "runbook_id": runbook_id,
-                "tool_name": tool_name,
-                "target": target,
-                "parameters": parameters,
+                "status": "dry_run", "fingerprint": fingerprint, "runbook_id": runbook_id,
+                "tool_name": tool_name, "target": target, "parameters": parameters,
             }
 
         action = "rollback" if rollback_requested else runbook.get("action", runbook_id)
         request = ExecutionRequest(
-            tool_name=tool_name,
-            action=action,
-            target=target,
-            parameters=parameters,
-            timeout=timeout,
-            agent_name="runbook_executor",
-            approval_granted=bool(approval_granted),
-            approval_id=approval_id if approval_granted else None,
+            tool_name=tool_name, action=action, target=target, parameters=parameters, timeout=timeout,
+            agent_name="runbook_executor", incident_id=incident_id, approval_granted=bool(approval_granted),
+            approval_id=approval_id, execution_capability=execution_capability,
+            runbook_id=runbook_id, runbook_version=str(runbook.get("version") or ""), rollback=rollback_requested,
         )
         result = await ExecutionService.execute(request)
         if result.success:
