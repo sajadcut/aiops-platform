@@ -7,6 +7,7 @@ from pathlib import Path
 import structlog
 
 from domain.contracts.config import settings
+from domain.contracts.redaction import redact_event_dict
 
 
 def _processor_formatter(renderer):
@@ -17,6 +18,7 @@ def _processor_formatter(renderer):
         structlog.processors.TimeStamper(fmt="iso", utc=settings.LOG_UTC),
         structlog.processors.StackInfoRenderer(),
         structlog.processors.format_exc_info,
+        redact_event_dict,
     ]
     return structlog.stdlib.ProcessorFormatter(
         processor=renderer,
@@ -44,11 +46,11 @@ def _file_handler(path: Path) -> logging.Handler:
 
 
 def configure_logging() -> None:
-    """Configure human-readable console/text logs and JSON-line file logs.
+    """Configure human console/text logs and JSON-line file logs.
 
-    Runtime values come exclusively from the canonical `.env`.  The same event
-    may be emitted to three destinations: console (human), rotating text file
-    (human), and rotating JSON-lines file (machine/SIEM ingestion).
+    Every event passes through the same recursive redaction processor, including
+    traceback text from stdlib/FastAPI/Uvicorn loggers. This keeps file logging
+    useful for incident reconstruction without persisting credentials.
     """
     log_level = getattr(logging, settings.LOG_LEVEL.upper(), logging.INFO)
 
@@ -60,6 +62,7 @@ def configure_logging() -> None:
             structlog.processors.TimeStamper(fmt="iso", utc=settings.LOG_UTC),
             structlog.processors.StackInfoRenderer(),
             structlog.processors.format_exc_info,
+            redact_event_dict,
             structlog.processors.UnicodeDecoder(),
             structlog.stdlib.ProcessorFormatter.wrap_for_formatter,
         ],
@@ -99,8 +102,7 @@ def configure_logging() -> None:
         handler.setLevel(log_level)
         root_logger.addHandler(handler)
 
-    # Route Uvicorn/FastAPI standard-library logs through the same handlers so
-    # access/errors are persisted in both human and JSON formats as well.
+    # Route Uvicorn/FastAPI stdlib logs through the same file/JSON/redaction path.
     for logger_name in ("uvicorn", "uvicorn.error", "uvicorn.access"):
         uvicorn_logger = logging.getLogger(logger_name)
         uvicorn_logger.handlers.clear()
