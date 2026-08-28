@@ -6,6 +6,7 @@ from apps.approval_service.binding import assert_bound, bind_metadata
 from apps.approval_service.postgres import PostgreSQLApprovalStore
 from apps.audit_service import AuditService
 from apps.audit_service.postgres import PostgreSQLAuditStore
+from apps.execution_service.capability import issue_execution_capability
 from apps.incident_service.repository import IncidentRepository
 from apps.orchestrator.e2e_graph import E2EOrchestrator
 from apps.orchestrator.signal_aware import SignalAwareE2EOrchestrator
@@ -65,12 +66,8 @@ class DurableWorkflowRuntime:
         fields = self._incident_fields(state)
         await self.incidents.upsert_incident(
             incident_id=incident_id,
-            source=fields["source"],
-            service=fields["service"],
-            severity=fields["severity"],
-            summary=fields["summary"],
-            status="analyzing",
-            context=fields["context"],
+            source=fields["source"], service=fields["service"], severity=fields["severity"],
+            summary=fields["summary"], status="analyzing", context=fields["context"],
         )
         seed_evidence = list(state.get("context", {}).get("trigger_evidence", []) or [])
         if seed_evidence:
@@ -88,16 +85,11 @@ class DurableWorkflowRuntime:
             if not execution_request:
                 raise ValueError("approval_execution_request_missing")
             approval["metadata"] = bind_metadata(
-                dict(approval.get("metadata") or {}),
-                incident_id=incident_id,
-                tool_name=execution_request.get("tool_name"),
-                action=execution_request.get("action"),
-                target=execution_request.get("target"),
-                parameters=execution_request.get("parameters", {}),
-                timeout=execution_request.get("timeout", 30),
-                runbook_id=execution_request.get("runbook_id"),
-                runbook_version=execution_request.get("runbook_version"),
-                rollback=execution_request.get("rollback", False),
+                dict(approval.get("metadata") or {}), incident_id=incident_id,
+                tool_name=execution_request.get("tool_name"), action=execution_request.get("action"),
+                target=execution_request.get("target"), parameters=execution_request.get("parameters", {}),
+                timeout=execution_request.get("timeout", 30), runbook_id=execution_request.get("runbook_id"),
+                runbook_version=execution_request.get("runbook_version"), rollback=execution_request.get("rollback", False),
             )
             result["approval"] = approval
             await self.approvals.save(approval)
@@ -109,13 +101,9 @@ class DurableWorkflowRuntime:
 
         final_fields = self._incident_fields(result)
         await self.incidents.upsert_incident(
-            incident_id=incident_id,
-            source=final_fields["source"],
-            service=final_fields["service"],
-            severity=final_fields["severity"],
-            summary=final_fields["summary"],
-            status=self._final_incident_status(result),
-            context=final_fields["context"],
+            incident_id=incident_id, source=final_fields["source"], service=final_fields["service"],
+            severity=final_fields["severity"], summary=final_fields["summary"],
+            status=self._final_incident_status(result), context=final_fields["context"],
         )
         await self._flush_audit(incident_id)
         await self.incidents.commit()
@@ -124,16 +112,26 @@ class DurableWorkflowRuntime:
     @staticmethod
     def _assert_binding(approval: Dict[str, Any], execution_request: Dict[str, Any]) -> None:
         assert_bound(
-            approval,
-            incident_id=approval.get("incident_id"),
-            tool_name=execution_request.get("tool_name"),
-            action=execution_request.get("action"),
-            target=execution_request.get("target"),
-            parameters=execution_request.get("parameters", {}),
-            timeout=execution_request.get("timeout", 30),
+            approval, incident_id=approval.get("incident_id"), tool_name=execution_request.get("tool_name"),
+            action=execution_request.get("action"), target=execution_request.get("target"),
+            parameters=execution_request.get("parameters", {}), timeout=execution_request.get("timeout", 30),
+            runbook_id=execution_request.get("runbook_id"), runbook_version=execution_request.get("runbook_version"),
+            rollback=execution_request.get("rollback", False),
+        )
+
+    @staticmethod
+    def _issue_capability(incident_id: str, approval_id: str, execution_request: Dict[str, Any]) -> str:
+        return issue_execution_capability(
+            incident_id=incident_id,
+            approval_id=approval_id,
+            tool_name=str(execution_request.get("tool_name") or ""),
+            action=str(execution_request.get("action") or ""),
+            target=str(execution_request.get("target") or ""),
+            parameters=dict(execution_request.get("parameters") or {}),
+            timeout=int(execution_request.get("timeout", 30)),
             runbook_id=execution_request.get("runbook_id"),
             runbook_version=execution_request.get("runbook_version"),
-            rollback=execution_request.get("rollback", False),
+            rollback=bool(execution_request.get("rollback", False)),
         )
 
     async def resume_after_approval(self, incident_id: str) -> Dict[str, Any]:
@@ -161,17 +159,15 @@ class DurableWorkflowRuntime:
         if not consumed or consumed.get("status") != "consumed":
             raise ValueError("approval_already_consumed")
         AuditService.record(
-            "approval_consumed",
-            "durable_runtime",
-            incident_id,
-            execution_request.get("action"),
-            "recorded",
+            "approval_consumed", "durable_runtime", incident_id, execution_request.get("action"), "recorded",
             {"approval_id": str(approval_id), "tool_name": execution_request.get("tool_name"), "target": execution_request.get("target")},
         )
 
         state["approval"] = consumed
-        execution_request["approval_granted"] = True
+        execution_request["approval_granted"] = True  # compatibility signal only; service ignores it for authorization
         execution_request["approval_id"] = str(approval_id)
+        execution_request["incident_id"] = incident_id
+        execution_request["execution_capability"] = self._issue_capability(incident_id, str(approval_id), execution_request)
         state["execution_request"] = execution_request
         state["current_node"] = "execution"
 
@@ -205,13 +201,9 @@ class DurableWorkflowRuntime:
         if callable(upsert):
             final_fields = self._incident_fields(result)
             await upsert(
-                incident_id=incident_id,
-                source=final_fields["source"],
-                service=final_fields["service"],
-                severity=final_fields["severity"],
-                summary=final_fields["summary"],
-                status="resolved" if verification_status == "success" else "escalated",
-                context=final_fields["context"],
+                incident_id=incident_id, source=final_fields["source"], service=final_fields["service"],
+                severity=final_fields["severity"], summary=final_fields["summary"],
+                status="resolved" if verification_status == "success" else "escalated", context=final_fields["context"],
             )
         await self._flush_audit(incident_id)
         await self.incidents.commit()
