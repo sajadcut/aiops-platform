@@ -13,6 +13,7 @@ env/
 *.log
 coverage.xml
 htmlcov/
+artifacts/
 .DS_Store
 Thumbs.db
 *.zip
