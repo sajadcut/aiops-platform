@@ -38,7 +38,7 @@ class KubernetesOOMScenarioLLM(LLMAdapter):
                 }],
                 "missing_evidence": [],
                 "handoff_agents": ["infrastructure"],
-                "immediate_checks": ["Inspect pod events, restart count, memory limit and working set"],
+                "immediate_checks": ["Inspect pod events, container termination history, memory limit and working set"],
                 "escalation_target": "platform-sre",
                 "risk_level": "high",
                 "uncertainty_reason": "",
