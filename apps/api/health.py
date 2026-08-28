@@ -15,7 +15,9 @@ from domain.contracts.config import settings
 from domain.contracts.logging import logger
 from domain.observability import DB_POOL_CHECKED_OUT, DB_POOL_OVERFLOW, DB_POOL_SIZE, DEPENDENCY_UP
 from integrations.elasticsearch.mcp_client import ElasticsearchMCPClient
+from integrations.kubernetes.mcp_client import KubernetesMCPClient
 from integrations.prometheus.mcp_client import PrometheusMCPClient
+from integrations.vm.mcp_client import VMEdgeMCPClient
 from integrations.zabbix.mcp_client import ZabbixMCPClient
 
 router = APIRouter()
@@ -91,6 +93,10 @@ async def _probe_external() -> dict:
         "elasticsearch_mcp": ElasticsearchMCPClient(),
         "prometheus_mcp": PrometheusMCPClient(),
     }
+    if settings.KUBERNETES_MCP_URL:
+        connectors["kubernetes_mcp"] = KubernetesMCPClient()
+    if settings.VM_MCP_URL:
+        connectors["vm_mcp"] = VMEdgeMCPClient()
     pairs = await asyncio.gather(*(_probe_one(name, client) for name, client in connectors.items()))
     return dict(pairs)
 
@@ -98,7 +104,11 @@ async def _probe_external() -> dict:
 def _external_required_ready(external: dict) -> bool:
     if settings.APP_ENV != "production":
         return True
-    required = ("zabbix_mcp", "elasticsearch_mcp", "prometheus_mcp")
+    required = ["zabbix_mcp", "elasticsearch_mcp", "prometheus_mcp"]
+    if settings.KUBERNETES_MCP_URL:
+        required.append("kubernetes_mcp")
+    if settings.VM_MCP_URL:
+        required.append("vm_mcp")
     return all(bool((external.get(name) or {}).get("healthy")) for name in required)
 
 
