@@ -45,7 +45,25 @@ class VMEdgeMCPClient(MCPClient):
     async def process_snapshot(self, target: str) -> Dict[str, Any]:
         return await self._invoke("process_snapshot", target)
 
-    async def restart_service(self, target: str, service: str, approval_id: str) -> Dict[str, Any]:
+    async def restart_service(
+        self,
+        target: str,
+        service: str,
+        approval_id: str,
+        incident_id: str,
+        execution_capability: str,
+    ) -> Dict[str, Any]:
         if not approval_id:
             raise PermissionError("mcp_write_approval_id_required")
-        return await self._invoke("restart_service", target, service=service, approval_id=approval_id)
+        if not incident_id:
+            raise PermissionError("mcp_write_incident_id_required")
+        if not execution_capability:
+            raise PermissionError("mcp_write_execution_capability_required")
+        return await self._invoke(
+            "restart_service",
+            target,
+            service=service,
+            approval_id=approval_id,
+            incident_id=incident_id,
+            execution_capability=execution_capability,
+        )
