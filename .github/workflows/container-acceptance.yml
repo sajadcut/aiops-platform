@@ -99,7 +99,7 @@ jobs:
       - name: Scan merged runtime filesystem for fixable HIGH/CRITICAL vulnerabilities
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
-          trivy-version: v0.72.0
+          version: v0.72.0
           scan-type: rootfs
           scan-ref: runtime-rootfs
           format: table
@@ -112,7 +112,7 @@ jobs:
       - name: Generate CycloneDX SBOM from merged runtime filesystem
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
-          trivy-version: v0.72.0
+          version: v0.72.0
           scan-type: rootfs
           scan-ref: runtime-rootfs
           format: cyclonedx
