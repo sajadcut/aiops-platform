@@ -12,6 +12,18 @@ class _Registry:
         return {"valid": True}
 
 
+def _result(*, success: bool, blocked: bool):
+    return ExecutionResult(
+        success=success,
+        tool_name="ssh_vm",
+        action="restart_service",
+        target="vm01",
+        execution_blocked=blocked,
+        reason="approval_required" if blocked else None,
+        result={} if success else None,
+    )
+
+
 @pytest.mark.asyncio
 async def test_non_empty_approval_id_does_not_grant_execution(monkeypatch):
     captured = {}
@@ -19,7 +31,7 @@ async def test_non_empty_approval_id_does_not_grant_execution(monkeypatch):
     async def fake_execute(request):
         captured["approval_granted"] = request.approval_granted
         captured["approval_id"] = request.approval_id
-        return ExecutionResult(success=False, execution_blocked=True, reason="approval_required")
+        return _result(success=False, blocked=True)
 
     monkeypatch.setattr(ExecutionService, "execute", fake_execute)
     executor = RunbookExecutor(_Registry())
@@ -41,7 +53,7 @@ async def test_validated_caller_must_explicitly_grant_approval(monkeypatch):
     async def fake_execute(request):
         captured["approval_granted"] = request.approval_granted
         captured["approval_id"] = request.approval_id
-        return ExecutionResult(success=True, result={})
+        return _result(success=True, blocked=False)
 
     monkeypatch.setattr(ExecutionService, "execute", fake_execute)
     executor = RunbookExecutor(_Registry())
