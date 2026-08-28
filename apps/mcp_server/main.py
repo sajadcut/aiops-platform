@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hmac
+import time
 from datetime import datetime
 from typing import Any, Dict
 
@@ -8,6 +9,7 @@ from fastapi import FastAPI, Header, HTTPException, Request
 from pydantic import BaseModel, Field
 
 from apps.api.http_logging import HTTPTransactionLoggingMiddleware
+from apps.execution_service.capability import ExecutionCapabilityError, capability_secret_configured, verify_execution_capability
 from domain.contracts.config import settings
 from domain.contracts.logging import configure_logging, logger
 from integrations.elasticsearch.client import ElasticsearchClient
@@ -28,6 +30,8 @@ configure_logging()
 app = FastAPI(title=f"AIOps MCP Server ({settings.MCP_SERVER_PROVIDER})", docs_url=None, redoc_url=None)
 app.add_middleware(HTTPTransactionLoggingMiddleware)
 _WRITE_TOOLS = {"restart_service"}
+_CONSUMED_CAPABILITIES: Dict[str, int] = {}
+_MAX_REPLAY_CACHE_ITEMS = 10000
 
 _TOOL_SCHEMAS: Dict[str, Dict[str, Dict[str, Any]]] = {
     "zabbix": {
@@ -62,7 +66,20 @@ _TOOL_SCHEMAS: Dict[str, Dict[str, Dict[str, Any]]] = {
         "collect_vm_metrics": {"description": "Collect allowlisted Linux VM metrics", "inputSchema": {"type": "object", "required": ["target"], "properties": {"target": {"type": "string"}}}},
         "service_status": {"description": "Read service status", "inputSchema": {"type": "object", "required": ["target", "service"], "properties": {"target": {"type": "string"}, "service": {"type": "string"}}}},
         "process_snapshot": {"description": "Read process snapshot", "inputSchema": {"type": "object", "required": ["target"], "properties": {"target": {"type": "string"}}}},
-        "restart_service": {"description": "Restart one validated service through approved Execution Service", "inputSchema": {"type": "object", "required": ["target", "service", "approval_id"], "properties": {"target": {"type": "string"}, "service": {"type": "string"}, "approval_id": {"type": "string", "minLength": 1}}}},
+        "restart_service": {
+            "description": "Restart one validated service through approved Execution Service",
+            "inputSchema": {
+                "type": "object",
+                "required": ["target", "service", "approval_id", "incident_id", "execution_capability"],
+                "properties": {
+                    "target": {"type": "string"},
+                    "service": {"type": "string"},
+                    "approval_id": {"type": "string", "minLength": 1},
+                    "incident_id": {"type": "string", "minLength": 1},
+                    "execution_capability": {"type": "string", "minLength": 32},
+                },
+            },
+        },
     },
 }
 
@@ -98,6 +115,22 @@ def _authorize(authorization: str | None, tool: str | None = None) -> str:
     if not authorization or not hmac.compare_digest(authorization, expected):
         raise HTTPException(status_code=401, detail="invalid_mcp_identity")
     return "mcp-write" if write else "mcp-read"
+
+
+def _consume_capability_jti(claims: Dict[str, Any]) -> None:
+    now = int(time.time())
+    expired = [jti for jti, exp in _CONSUMED_CAPABILITIES.items() if exp <= now]
+    for jti in expired:
+        _CONSUMED_CAPABILITIES.pop(jti, None)
+    jti = str(claims.get("jti") or "")
+    if not jti:
+        raise PermissionError("execution_capability_jti_missing")
+    if jti in _CONSUMED_CAPABILITIES:
+        raise PermissionError("execution_capability_replayed")
+    if len(_CONSUMED_CAPABILITIES) >= _MAX_REPLAY_CACHE_ITEMS:
+        oldest = min(_CONSUMED_CAPABILITIES, key=_CONSUMED_CAPABILITIES.get)
+        _CONSUMED_CAPABILITIES.pop(oldest, None)
+    _CONSUMED_CAPABILITIES[jti] = int(claims.get("exp") or now)
 
 
 async def _call(provider: str, tool: str, args: Dict[str, Any]) -> Any:
@@ -152,8 +185,29 @@ async def _call(provider: str, tool: str, args: Dict[str, Any]) -> Any:
         raise ValueError("service_required")
     if tool == "service_status":
         return await connector.service_status(target, service)
-    if not str(args.get("approval_id") or "").strip():
+
+    approval_id = str(args.get("approval_id") or "").strip()
+    incident_id = str(args.get("incident_id") or "").strip()
+    capability = str(args.get("execution_capability") or "").strip()
+    if not approval_id:
         raise PermissionError("approval_id_required")
+    if not incident_id:
+        raise PermissionError("incident_id_required")
+    if not capability:
+        raise PermissionError("execution_capability_required")
+    try:
+        claims = verify_execution_capability(
+            capability,
+            incident_id=incident_id,
+            approval_id=approval_id,
+            tool_name="ssh_vm",
+            action="restart_service",
+            target=target,
+            parameters={"service": service},
+        )
+    except ExecutionCapabilityError as exc:
+        raise PermissionError(str(exc)) from exc
+    _consume_capability_jti(claims)
     return await connector.restart_service(target, service)
 
 
@@ -171,6 +225,8 @@ def _validate_production_server() -> None:
             errors.append("MCP_WRITE_BEARER_TOKEN is required for VM writes")
         elif settings.MCP_WRITE_BEARER_TOKEN == settings.MCP_BEARER_TOKEN:
             errors.append("VM read and write identities must be distinct")
+        if not capability_secret_configured():
+            errors.append("EXECUTION_CAPABILITY_SECRET >=32 bytes is required for VM writes")
         try:
             SSHVMConnector()
         except Exception as exc:
@@ -206,15 +262,7 @@ async def mcp(
     if rpc.method == "initialize":
         actor = _authorize(authorization)
         http_request.state.identity_subject = actor
-        return {
-            "jsonrpc": "2.0",
-            "id": rpc.id,
-            "result": {
-                "protocolVersion": settings.MCP_PROTOCOL_VERSION,
-                "capabilities": {"tools": {"listChanged": False}},
-                "serverInfo": {"name": f"aiops-{provider}-mcp", "version": settings.APP_VERSION},
-            },
-        }
+        return {"jsonrpc": "2.0", "id": rpc.id, "result": {"protocolVersion": settings.MCP_PROTOCOL_VERSION, "capabilities": {"tools": {"listChanged": False}}, "serverInfo": {"name": f"aiops-{provider}-mcp", "version": settings.APP_VERSION}}}
 
     if rpc.method == "notifications/initialized":
         actor = _authorize(authorization)
