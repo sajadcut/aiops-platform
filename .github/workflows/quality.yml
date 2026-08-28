@@ -31,7 +31,10 @@ jobs:
             echo 'Tracked generated artifact detected'
             exit 1
           fi
-          if git grep -n -I -E '(BEGIN (RSA|OPENSSH|EC|DSA) PRIVATE KEY|AKIA[0-9A-Z]{16}|Bearer[[:space:]]+[A-Za-z0-9._~+/=-]{12,})' -- ':!tests/**'; then
+          # Require a token-like value, not ordinary prose such as "Bearer authentication".
+          # Opaque production bearer credentials are expected to be high-entropy and at
+          # least 24 characters; JWTs and API tokens are substantially longer.
+          if git grep -n -I -E '(BEGIN (RSA|OPENSSH|EC|DSA) PRIVATE KEY|AKIA[0-9A-Z]{16}|Bearer[[:space:]]+[A-Za-z0-9._~+/=-]{24,})' -- ':!tests/**'; then
             echo 'Potential committed secret detected'
             exit 1
           fi
