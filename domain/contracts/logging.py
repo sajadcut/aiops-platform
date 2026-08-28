@@ -1,12 +1,65 @@
 from __future__ import annotations
 
 import logging
+import re
 from logging.handlers import RotatingFileHandler, TimedRotatingFileHandler
 from pathlib import Path
+from typing import Any
 
 import structlog
 
 from domain.contracts.config import settings
+
+_REDACTED = "[REDACTED]"
+_SENSITIVE_EXACT_KEYS = {
+    "authorization",
+    "proxy-authorization",
+    "x-api-key",
+    "x_api_key",
+    "api_key",
+    "apikey",
+    "cookie",
+    "set-cookie",
+    "password",
+    "passwd",
+    "secret",
+    "client_secret",
+    "private_key",
+    "private_key_data",
+    "ssh_credential",
+    "ssh_password",
+    "database_url",
+    "alembic_database_url",
+}
+_SENSITIVE_SUFFIXES = ("_token", "_password", "_secret", "_api_key", "_private_key")
+_BEARER_RE = re.compile(r"(?i)\bBearer\s+[A-Za-z0-9._~+/=-]+")
+_URL_CREDENTIAL_RE = re.compile(r"(?i)(\b(?:postgresql|postgres|mysql|mariadb|redis|amqp)(?:\+[a-z0-9_]+)?://[^:\s/@]+:)([^@\s/]+)(@)")
+_PRIVATE_KEY_RE = re.compile(r"-----BEGIN [A-Z0-9 ]*PRIVATE KEY-----.*?-----END [A-Z0-9 ]*PRIVATE KEY-----", re.DOTALL)
+
+
+def _sensitive_key(key: Any) -> bool:
+    normalized = str(key).strip().lower().replace(" ", "_")
+    return normalized in _SENSITIVE_EXACT_KEYS or normalized.endswith(_SENSITIVE_SUFFIXES)
+
+
+def redact_value(value: Any, *, key: Any = None) -> Any:
+    """Recursively redact known secret-bearing keys and credential-shaped strings."""
+    if key is not None and _sensitive_key(key):
+        return _REDACTED
+    if isinstance(value, dict):
+        return {str(k): redact_value(v, key=k) for k, v in value.items()}
+    if isinstance(value, (list, tuple, set)):
+        return [redact_value(item) for item in value]
+    if isinstance(value, str):
+        sanitized = _BEARER_RE.sub("Bearer [REDACTED]", value)
+        sanitized = _URL_CREDENTIAL_RE.sub(r"\1[REDACTED]\3", sanitized)
+        sanitized = _PRIVATE_KEY_RE.sub(_REDACTED, sanitized)
+        return sanitized
+    return value
+
+
+def _redact_processor(_logger, _method_name: str, event_dict: dict[str, Any]) -> dict[str, Any]:
+    return redact_value(event_dict)
 
 
 def _processor_formatter(renderer):
@@ -17,6 +70,7 @@ def _processor_formatter(renderer):
         structlog.processors.TimeStamper(fmt="iso", utc=settings.LOG_UTC),
         structlog.processors.StackInfoRenderer(),
         structlog.processors.format_exc_info,
+        _redact_processor,
     ]
     return structlog.stdlib.ProcessorFormatter(
         processor=renderer,
@@ -44,12 +98,7 @@ def _file_handler(path: Path) -> logging.Handler:
 
 
 def configure_logging() -> None:
-    """Configure human-readable console/text logs and JSON-line file logs.
-
-    Runtime values come exclusively from the canonical `.env`.  The same event
-    may be emitted to three destinations: console (human), rotating text file
-    (human), and rotating JSON-lines file (machine/SIEM ingestion).
-    """
+    """Configure redacted human-readable and structured JSON logging sinks."""
     log_level = getattr(logging, settings.LOG_LEVEL.upper(), logging.INFO)
 
     structlog.configure(
@@ -61,6 +110,7 @@ def configure_logging() -> None:
             structlog.processors.StackInfoRenderer(),
             structlog.processors.format_exc_info,
             structlog.processors.UnicodeDecoder(),
+            _redact_processor,
             structlog.stdlib.ProcessorFormatter.wrap_for_formatter,
         ],
         context_class=dict,
@@ -99,8 +149,6 @@ def configure_logging() -> None:
         handler.setLevel(log_level)
         root_logger.addHandler(handler)
 
-    # Route Uvicorn/FastAPI standard-library logs through the same handlers so
-    # access/errors are persisted in both human and JSON formats as well.
     for logger_name in ("uvicorn", "uvicorn.error", "uvicorn.access"):
         uvicorn_logger = logging.getLogger(logger_name)
         uvicorn_logger.handlers.clear()
