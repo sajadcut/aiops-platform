@@ -95,6 +95,7 @@ class DurableWorkflowRuntime:
                 metadata["target"] = str(execution_request["target"])
             if execution_request.get("tool_name"):
                 metadata["tool_name"] = str(execution_request["tool_name"])
+            metadata["parameters"] = dict(execution_request.get("parameters") or {})
             metadata["binding_complete"] = bool(metadata.get("target") and metadata.get("tool_name"))
             approval["metadata"] = metadata
             result["approval"] = approval
@@ -130,6 +131,14 @@ class DurableWorkflowRuntime:
             raise ValueError("approval_target_mismatch")
         if str(metadata.get("tool_name")) != str(execution_request.get("tool_name")):
             raise ValueError("approval_tool_mismatch")
+        approved_parameters = metadata.get("parameters")
+        if isinstance(approved_parameters, dict):
+            if approved_parameters != dict(execution_request.get("parameters") or {}):
+                raise ValueError("approval_parameters_mismatch")
+        elif metadata.get("service") is not None:
+            requested_service = dict(execution_request.get("parameters") or {}).get("service")
+            if str(metadata.get("service")) != str(requested_service):
+                raise ValueError("approval_service_mismatch")
 
     async def resume_after_approval(self, incident_id: str) -> Dict[str, Any]:
         checkpoint = await self.checkpoints.load(incident_id)
@@ -161,7 +170,7 @@ class DurableWorkflowRuntime:
             incident_id,
             execution_request.get("action"),
             "recorded",
-            {"approval_id": str(approval_id), "tool_name": execution_request.get("tool_name"), "target": execution_request.get("target")},
+            {"approval_id": str(approval_id), "tool_name": execution_request.get("tool_name"), "target": execution_request.get("target"), "parameters": execution_request.get("parameters", {})},
         )
 
         state["approval"] = consumed
