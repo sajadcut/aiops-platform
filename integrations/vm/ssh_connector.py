@@ -14,11 +14,7 @@ _SAFE_SERVICE = re.compile(r"^[A-Za-z0-9@_.:-]+$")
 
 
 class SSHVMConnector:
-    """Controlled Linux VM adapter using the host OpenSSH client.
-
-    No arbitrary shell command is accepted. Only telemetry, service status,
-    service restart and process inspection are exposed.
-    """
+    """Controlled Linux VM adapter using noninteractive, allowlisted OpenSSH operations."""
 
     source_name = "vm_ssh"
 
@@ -28,20 +24,46 @@ class SSHVMConnector:
     def _validate_target(self, target: str) -> None:
         if not target or not _SAFE_HOST.fullmatch(target):
             raise ValueError("invalid_vm_target")
+        allowed = {str(item).strip() for item in settings.VM_ALLOWED_TARGETS if str(item).strip()}
+        if allowed and target not in allowed:
+            raise PermissionError("vm_target_not_allowlisted")
 
     def _validate_service(self, service: str) -> None:
         if not service or not _SAFE_SERVICE.fullmatch(service):
             raise ValueError("invalid_service_name")
+        allowed = {str(item).strip() for item in settings.VM_ALLOWED_SERVICES if str(item).strip()}
+        if allowed and service not in allowed:
+            raise PermissionError("vm_service_not_allowlisted")
 
     def _base_ssh_args(self, target: str) -> list[str]:
         self._validate_target(target)
-        args = ["ssh", "-p", str(settings.SSH_PORT), "-o", f"ConnectTimeout={self.timeout}"]
+        if settings.APP_ENV == "production":
+            if not settings.SSH_STRICT_HOST_KEY_CHECKING:
+                raise RuntimeError("production_ssh_requires_strict_host_key_checking")
+            if not settings.SSH_KNOWN_HOSTS:
+                raise RuntimeError("production_ssh_known_hosts_required")
+            if not settings.SSH_PRIVATE_KEY_PATH:
+                raise RuntimeError("production_ssh_private_key_required")
+            if not settings.SSH_USERNAME.strip() or settings.SSH_USERNAME.strip().lower() == "root":
+                raise RuntimeError("production_ssh_non_root_username_required")
+
+        args = [
+            "ssh",
+            "-p",
+            str(settings.SSH_PORT),
+            "-o",
+            f"ConnectTimeout={self.timeout}",
+            "-o",
+            "BatchMode=yes",
+            "-o",
+            "PasswordAuthentication=no",
+        ]
         strict = settings.SSH_STRICT_HOST_KEY_CHECKING
         args += ["-o", f"StrictHostKeyChecking={'yes' if strict else 'no'}"]
         if settings.SSH_KNOWN_HOSTS:
             args += ["-o", f"UserKnownHostsFile={settings.SSH_KNOWN_HOSTS}"]
         if settings.SSH_PRIVATE_KEY_PATH:
-            args += ["-i", settings.SSH_PRIVATE_KEY_PATH]
+            args += ["-o", "IdentitiesOnly=yes", "-i", settings.SSH_PRIVATE_KEY_PATH]
         user = settings.SSH_USERNAME.strip()
         destination = f"{user}@{target}" if user else target
         args.append(destination)
@@ -75,7 +97,6 @@ class SSHVMConnector:
         return bool(result.get("success")) and result.get("stdout") == "connected"
 
     async def collect_metrics(self, target: str) -> Dict[str, Any]:
-        # POSIX/Linux only. Commands are fixed and contain no user-controlled shell fragments.
         command = (
             "LC_ALL=C; "
             "cpu=$(awk '/^cpu / {usage=($2+$4)*100/($2+$4+$5); printf \"%.2f\", usage}' /proc/stat); "
@@ -90,7 +111,7 @@ class SSHVMConnector:
         try:
             payload = json.loads(result["stdout"])
         except json.JSONDecodeError:
-            return {"success": False, "error": "invalid_metric_payload", "raw": result.get("stdout")}
+            return {"success": False, "error": "invalid_metric_payload"}
         return {"success": True, "metrics": payload, "execution_time": result.get("execution_time")}
 
     async def service_status(self, target: str, service: str) -> Dict[str, Any]:
@@ -102,9 +123,9 @@ class SSHVMConnector:
         self._validate_service(service)
         result = await self._run(target, f"sudo -n systemctl restart {service}")
         if not result.get("success"):
-            logger.warning("VM service restart failed for %s: %s", target, result.get("stderr"))
-        return {"success": result.get("success", False), "service": service, "target": target, "error": result.get("stderr")}
+            logger.warning("vm_service_restart_failed", target=target, service=service, error_type="ssh_command_failed")
+        return {"success": result.get("success", False), "service": service, "target": target, "error": "restart_failed" if not result.get("success") else None}
 
     async def process_snapshot(self, target: str) -> Dict[str, Any]:
         result = await self._run(target, "ps -eo pid,comm,%cpu,%mem --sort=-%cpu | head -n 11")
-        return {"success": result.get("success", False), "processes": result.get("stdout", ""), "error": result.get("stderr")}
+        return {"success": result.get("success", False), "processes": result.get("stdout", ""), "error": "process_snapshot_failed" if not result.get("success") else None}
