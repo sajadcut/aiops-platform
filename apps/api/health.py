@@ -4,6 +4,7 @@ import asyncio
 from datetime import datetime, timezone
 
 from fastapi import APIRouter
+from fastapi.responses import JSONResponse
 from sqlalchemy import text
 
 from apps.execution_service.tools.registry import tool_registry
@@ -74,4 +75,9 @@ async def readiness():
     database = await _probe_database()
     external = await _probe_external()
     ready = database["status"] == "healthy"
-    return {"status": "ready" if ready else "not_ready", "database": database, "external": external}
+    body = {"status": "ready" if ready else "not_ready", "database": database, "external": external}
+    if not ready:
+        # Kubernetes HTTP probes only use the status code. Returning 200 with a
+        # "not_ready" body incorrectly admits traffic to an unhealthy replica.
+        return JSONResponse(status_code=503, content=body)
+    return body
