@@ -21,7 +21,7 @@ class RunbookExecutor:
 
     Approval booleans are compatibility metadata only. Approval-required tools
     must carry a signed execution capability issued after durable approval
-    validation and consume.
+    validation and consume. Unvalidated approval identifiers are not propagated.
     """
 
     def __init__(self, registry: RunbookRegistry):
@@ -66,10 +66,12 @@ class RunbookExecutor:
             }
 
         action = "rollback" if rollback_requested else runbook.get("action", runbook_id)
+        authorized_approval_id = approval_id if execution_capability else None
         request = ExecutionRequest(
             tool_name=tool_name, action=action, target=target, parameters=parameters, timeout=timeout,
-            agent_name="runbook_executor", incident_id=incident_id, approval_granted=bool(approval_granted),
-            approval_id=approval_id, execution_capability=execution_capability,
+            agent_name="runbook_executor", incident_id=incident_id if execution_capability else None,
+            approval_granted=bool(approval_granted and execution_capability), approval_id=authorized_approval_id,
+            execution_capability=execution_capability,
             runbook_id=runbook_id, runbook_version=str(runbook.get("version") or ""), rollback=rollback_requested,
         )
         result = await ExecutionService.execute(request)
