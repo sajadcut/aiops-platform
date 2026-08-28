@@ -18,6 +18,10 @@ spec:
     metadata:
       labels:
         app: aiops-platform
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: /api/v1/metrics
+        prometheus.io/port: "8000"
     spec:
       automountServiceAccountToken: false
       terminationGracePeriodSeconds: 30
@@ -44,8 +48,14 @@ spec:
             - name: http
               containerPort: 8000
           env:
+            - name: APP_ENV
+              value: production
             - name: TMPDIR
               value: /tmp
+            - name: LOG_DIR
+              value: /var/log/aiops
+            - name: DATABASE_VALIDATE_MIGRATIONS_ON_STARTUP
+              value: "true"
           envFrom:
             - configMapRef:
                 name: aiops-platform-config
@@ -87,8 +97,12 @@ spec:
           volumeMounts:
             - name: tmp
               mountPath: /tmp
+            - name: logs
+              mountPath: /var/log/aiops
       volumes:
         - name: tmp
+          emptyDir: {}
+        - name: logs
           emptyDir: {}
 ---
 apiVersion: policy/v1
