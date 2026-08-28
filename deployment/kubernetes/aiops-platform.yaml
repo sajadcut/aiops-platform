@@ -44,6 +44,21 @@ spec:
             - name: http
               containerPort: 8000
           env:
+            # These safety-critical values are pinned here instead of relying on
+            # an environment projection of the development-oriented root .env.
+            - name: APP_ENV
+              value: production
+            - name: DEBUG
+              value: "False"
+            # Containers use stdout/stderr as the durable log hand-off boundary.
+            # File handlers would conflict with readOnlyRootFilesystem unless a
+            # dedicated writable log volume is deliberately mounted.
+            - name: LOG_CONSOLE_ENABLED
+              value: "True"
+            - name: LOG_TEXT_FILE_ENABLED
+              value: "False"
+            - name: LOG_JSON_FILE_ENABLED
+              value: "False"
             - name: TMPDIR
               value: /tmp
           envFrom:
