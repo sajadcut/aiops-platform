@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field
 
 from apps.approval_service.postgres import PostgreSQLApprovalStore
 from apps.audit_service import AuditService
+from apps.audit_service.postgres import PostgreSQLAuditStore
 from apps.execution_service import ExecutionRequest, ExecutionService
 from apps.security.auth import require_permission
 from database import AsyncSessionLocal
@@ -26,11 +27,24 @@ class RemediationRequest(BaseModel):
     reason: str | None = None
 
 
+async def _audit_durable(
+    db,
+    event_type: str,
+    actor: str,
+    incident_id: str | None,
+    action: str | None,
+    status: str,
+    metadata: Dict[str, Any],
+) -> None:
+    AuditService.record(event_type, actor, incident_id, action, status, metadata)
+    await AuditService.flush_to_store(PostgreSQLAuditStore(db), incident_id=incident_id)
+
+
 @router.post("/incidents/{incident_id}/remediation-requests")
 async def create_remediation_request(
     incident_id: UUID,
     payload: RemediationRequest,
-    _user=Depends(require_permission("approve:low_risk")),
+    identity=Depends(require_permission("approve:low_risk")),
 ):
     async with AsyncSessionLocal() as db:
         incident = await db.get(Incident, incident_id)
@@ -41,6 +55,7 @@ async def create_remediation_request(
         )).scalars().first()
 
         approval_id = str(uuid4())
+        parameters = {"service": payload.service}
         record = {
             "approval_id": approval_id,
             "incident_id": str(incident_id),
@@ -52,119 +67,174 @@ async def create_remediation_request(
                 "tool_name": "ssh_vm",
                 "target": payload.target,
                 "service": payload.service,
+                "parameters": parameters,
                 "dry_run": payload.dry_run,
                 "reason": payload.reason,
                 "finding": finding.statement if finding else None,
+                "binding_complete": True,
             },
             "created_at": datetime.now(timezone.utc).isoformat(),
             "approved_at": None,
             "rejected_at": None,
         }
         saved = await PostgreSQLApprovalStore(db).save(record)
-
-    AuditService.record(
-        "remediation_requested",
-        "dashboard",
-        str(incident_id),
-        payload.action,
-        "pending_approval",
-        {"approval_id": approval_id, "target": payload.target, "service": payload.service, "dry_run": payload.dry_run},
-    )
-    return saved
+        await _audit_durable(
+            db,
+            "remediation_requested",
+            identity.subject,
+            str(incident_id),
+            payload.action,
+            "pending_approval",
+            {
+                "approval_id": approval_id,
+                "target": payload.target,
+                "parameters": parameters,
+                "dry_run": payload.dry_run,
+            },
+        )
+        return saved
 
 
 @router.post("/approvals/{approval_id}/execute")
 async def execute_approved_remediation(
     approval_id: str,
-    _user=Depends(require_permission("execute:approved")),
+    identity=Depends(require_permission("execute:approved")),
 ):
     async with AsyncSessionLocal() as db:
-        approval = await PostgreSQLApprovalStore(db).get(approval_id)
-    if approval is None:
-        raise HTTPException(status_code=404, detail="Approval not found")
-    if approval.get("status") != "approved":
-        raise HTTPException(status_code=409, detail="Approval is not approved")
+        store = PostgreSQLApprovalStore(db)
+        approval = await store.get(approval_id)
+        if approval is None:
+            raise HTTPException(status_code=404, detail="Approval not found")
+        if approval.get("status") != "approved":
+            raise HTTPException(status_code=409, detail="Approval is not approved")
 
-    metadata: Dict[str, Any] = approval.get("metadata") or {}
-    if bool(metadata.get("dry_run")):
-        result = {
-            "success": True,
-            "execution_blocked": True,
-            "reason": "dry_run",
-            "tool_name": "ssh_vm",
-            "action": approval["action"],
-            "target": metadata.get("target"),
-            "approval_id": approval_id,
-        }
-        AuditService.record("remediation_dry_run", "remediation_workflow", approval["incident_id"], approval["action"], "simulated", {"approval_id": approval_id})
-        return result
+        metadata: Dict[str, Any] = approval.get("metadata") or {}
+        target = str(metadata.get("target") or "").strip()
+        service = str(metadata.get("service") or "").strip()
+        tool_name = str(metadata.get("tool_name") or "").strip()
+        if not target or not service or tool_name != "ssh_vm":
+            raise HTTPException(status_code=409, detail="Approval remediation binding is incomplete")
 
-    request = ExecutionRequest(
-        tool_name=str(metadata.get("tool_name", "ssh_vm")),
-        action=str(approval["action"]),
-        target=str(metadata["target"]),
-        parameters={"service": metadata["service"]},
-        agent_name="remediation_workflow",
-        approval_granted=True,
-        approval_id=approval_id,
-    )
-    result = await ExecutionService.execute(request)
-    AuditService.record(
-        "remediation_executed",
-        "remediation_workflow",
-        approval["incident_id"],
-        approval["action"],
-        "success" if result.success else "failed",
-        {"approval_id": approval_id, "result": result.model_dump()},
-    )
-    return result.model_dump()
+        if bool(metadata.get("dry_run")):
+            result = {
+                "success": True,
+                "execution_blocked": True,
+                "reason": "dry_run",
+                "tool_name": tool_name,
+                "action": approval["action"],
+                "target": target,
+                "approval_id": approval_id,
+            }
+            await _audit_durable(
+                db,
+                "remediation_dry_run",
+                identity.subject,
+                str(approval["incident_id"]),
+                str(approval["action"]),
+                "simulated",
+                {"approval_id": approval_id, "target": target, "service": service},
+            )
+            return result
+
+        consumed = await store.consume(approval_id)
+        if not consumed or consumed.get("status") != "consumed":
+            raise HTTPException(status_code=409, detail="Approval already consumed or unavailable")
+        await _audit_durable(
+            db,
+            "approval_consumed",
+            identity.subject,
+            str(approval["incident_id"]),
+            str(approval["action"]),
+            "recorded",
+            {"approval_id": approval_id, "tool_name": tool_name, "target": target, "service": service},
+        )
+
+        request = ExecutionRequest(
+            tool_name=tool_name,
+            action=str(approval["action"]),
+            target=target,
+            parameters={"service": service},
+            agent_name="remediation_workflow",
+            approval_granted=True,
+            approval_id=approval_id,
+        )
+        result = await ExecutionService.execute(request)
+        await _audit_durable(
+            db,
+            "remediation_executed",
+            identity.subject,
+            str(approval["incident_id"]),
+            str(approval["action"]),
+            "success" if result.success else "failed",
+            {"approval_id": approval_id, "result": result.model_dump()},
+        )
+        return result.model_dump()
 
 
 class VMVerificationRequest(BaseModel):
-    target: str = Field(min_length=1)
-    cpu_threshold: float = Field(default=70.0, ge=1.0, le=100.0)
+    # Kept optional for backward API compatibility. If supplied it must match
+    # the target persisted in the approval binding.
+    target: str | None = None
 
 
 @router.post("/approvals/{approval_id}/verify")
 async def verify_remediation(
     approval_id: str,
     payload: VMVerificationRequest,
-    _user=Depends(require_permission("read:incident")),
+    identity=Depends(require_permission("read:incident")),
 ):
     async with AsyncSessionLocal() as db:
         approval = await PostgreSQLApprovalStore(db).get(approval_id)
-    if approval is None:
-        raise HTTPException(status_code=404, detail="Approval not found")
-    if approval.get("status") != "approved":
-        raise HTTPException(status_code=409, detail="Approval is not approved")
+        if approval is None:
+            raise HTTPException(status_code=404, detail="Approval not found")
+        if approval.get("status") != "consumed":
+            raise HTTPException(status_code=409, detail="Approval has not been consumed by an execution")
 
-    request = ExecutionRequest(
-        tool_name="vm_telemetry",
-        action="collect_vm_metrics",
-        target=payload.target,
-        parameters={},
-        agent_name="verification",
-        approval_granted=True,
-    )
-    result = await ExecutionService.execute(request)
-    metrics = (result.result or {}).get("metrics", {}) if result.success else {}
-    cpu = metrics.get("cpu_usage")
-    success = bool(result.success and isinstance(cpu, (int, float)) and float(cpu) <= payload.cpu_threshold)
-    status = "verified" if success else "not_recovered"
+        metadata: Dict[str, Any] = approval.get("metadata") or {}
+        target = str(metadata.get("target") or "").strip()
+        service = str(metadata.get("service") or "").strip()
+        if not target or not service:
+            raise HTTPException(status_code=409, detail="Approval remediation binding is incomplete")
+        if payload.target is not None and str(payload.target) != target:
+            raise HTTPException(status_code=409, detail="Verification target does not match approved target")
 
-    AuditService.record(
-        "verification_completed",
-        "verification",
-        approval["incident_id"],
-        approval["action"],
-        status,
-        {"approval_id": approval_id, "metrics": metrics, "cpu_threshold": payload.cpu_threshold},
-    )
-    return {
-        "approval_id": approval_id,
-        "status": status,
-        "cpu_usage": cpu,
-        "cpu_threshold": payload.cpu_threshold,
-        "metrics": metrics,
-        "execution": result.model_dump(),
-    }
+        request = ExecutionRequest(
+            tool_name="vm_telemetry",
+            action="service_status",
+            target=target,
+            parameters={"service": service},
+            agent_name="verification",
+            approval_granted=False,
+        )
+        result = await ExecutionService.execute(request)
+        service_status = (result.result or {}).get("status", {}) if result.success else {}
+        active_state = str(service_status.get("ActiveState") or "unknown")
+        sub_state = str(service_status.get("SubState") or "unknown")
+        success = bool(result.success and active_state == "active")
+        status = "verified" if success else "not_recovered"
+
+        await _audit_durable(
+            db,
+            "verification_completed",
+            identity.subject,
+            str(approval["incident_id"]),
+            str(approval["action"]),
+            status,
+            {
+                "approval_id": approval_id,
+                "target": target,
+                "service": service,
+                "active_state": active_state,
+                "sub_state": sub_state,
+                "execution": result.model_dump(),
+            },
+        )
+        return {
+            "approval_id": approval_id,
+            "status": status,
+            "target": target,
+            "service": service,
+            "active_state": active_state,
+            "sub_state": sub_state,
+            "execution": result.model_dump(),
+        }
