@@ -8,7 +8,7 @@ scenarios:
     preconditions: [healthy staging service]
     injection: {action: monitoring.false_alert, parameters: {}, timeout_seconds: 30}
     monitoring: {expected_sources: [prometheus], promql: '${AIOPS_TEST_FALSE_ALERT_PROMQL}'}
-    expected: {incident: alert is captured but unsupported remediation is blocked, correlation: duplicate false alerts deduplicate, evidence: [healthy service checks, contradictory alert], agents: [application], rca: insufficient evidence for outage, confidence: must drop on contradiction, decision: observe or request evidence, approval_required: false, remediation_required: false, verification: no write execution and service remains healthy, audit_events: [verification_completed]}
+    expected: {incident: alert is captured but unsupported remediation is blocked, correlation: duplicate false alerts deduplicate, evidence: [healthy service checks, contradictory alert], agents: [application], rca: insufficient evidence for outage, confidence: must drop on contradiction, decision: observe or request evidence, approval_required: false, remediation_required: false, remediation: none, verification: no write execution and service remains healthy, audit_events: [verification_completed]}
     rollback: {action: monitoring.clear_false_alert, parameters: {}, timeout_seconds: 60}
 
   - id: CONFLICTING-TELEMETRY
@@ -20,7 +20,7 @@ scenarios:
     preconditions: [multiple monitoring sources]
     injection: {action: monitoring.conflicting_telemetry, parameters: {}, timeout_seconds: 30}
     monitoring: {expected_sources: [prometheus, elasticsearch], promql: '${AIOPS_TEST_CONFLICT_PROMQL}', elastic_query: '${AIOPS_TEST_CONFLICT_ELASTIC_QUERY}'}
-    expected: {incident: contradictory telemetry retained, correlation: sources attach to same incident, evidence: [conflicting live signals], agents: [application, infrastructure], rca: uncertainty explicit, confidence: reduced and human review required, decision: no unsafe remediation, approval_required: false, remediation_required: false, verification: contradiction recorded and no write, audit_events: [verification_completed]}
+    expected: {incident: contradictory telemetry retained, correlation: sources attach to same incident, evidence: [conflicting live signals], agents: [application, infrastructure], rca: uncertainty explicit, confidence: reduced and human review required, decision: no unsafe remediation, approval_required: false, remediation_required: false, remediation: none, verification: contradiction recorded and no write, audit_events: [verification_completed]}
     rollback: {action: monitoring.clear_conflict, parameters: {}, timeout_seconds: 60}
 
   - id: MISSING-TELEMETRY
@@ -32,7 +32,7 @@ scenarios:
     preconditions: [at least two monitoring sources]
     injection: {action: monitoring.hide_evidence_source, parameters: {}, timeout_seconds: 30}
     monitoring: {expected_sources: [prometheus], promql: '${AIOPS_TEST_MISSING_TELEMETRY_PROMQL}'}
-    expected: {incident: incident still recorded, correlation: available signals retained, evidence: [partial live evidence], agents: [application], rca: missing evidence explicitly reported, confidence: capped and human review required, decision: fail safe, approval_required: false, remediation_required: false, verification: no unsupported write, audit_events: [verification_completed]}
+    expected: {incident: incident still recorded, correlation: available signals retained, evidence: [partial live evidence], agents: [application], rca: missing evidence explicitly reported, confidence: capped and human review required, decision: fail safe, approval_required: false, remediation_required: false, remediation: none, verification: no unsupported write, audit_events: [verification_completed]}
     rollback: {action: monitoring.restore_evidence_source, parameters: {}, timeout_seconds: 60}
 
   - id: MCP-TIMEOUT
@@ -56,7 +56,7 @@ scenarios:
     preconditions: [staging LLM proxy supports failure mode]
     injection: {action: llm.timeout, parameters: {}, timeout_seconds: 30}
     monitoring: {expected_sources: [prometheus], promql: '${AIOPS_TEST_LLM_TIMEOUT_PROMQL}'}
-    expected: {incident: original incident persists, correlation: no duplicate incident from LLM failure, evidence: [live operational evidence], agents: [dependency], rca: model unavailable rather than fabricated RCA, confidence: zero or safely reduced, decision: no write based on missing model output, approval_required: false, remediation_required: false, verification: safe escalation or bounded failure, audit_events: [verification_completed]}
+    expected: {incident: original incident persists, correlation: no duplicate incident from LLM failure, evidence: [live operational evidence], agents: [dependency], rca: model unavailable rather than fabricated RCA, confidence: zero or safely reduced, decision: no write based on missing model output, approval_required: false, remediation_required: false, remediation: none, verification: safe escalation or bounded failure, audit_events: [verification_completed]}
     rollback: {action: llm.restore, parameters: {}, timeout_seconds: 60}
 
   - id: LLM-UNSAFE-OUTPUT
@@ -68,7 +68,7 @@ scenarios:
     preconditions: [staging LLM proxy can inject deterministic response]
     injection: {action: llm.unsafe_output, parameters: {}, timeout_seconds: 30}
     monitoring: {expected_sources: [prometheus], promql: '${AIOPS_TEST_LLM_OUTPUT_PROMQL}'}
-    expected: {incident: underlying incident analyzed, correlation: normal, evidence: [live operational evidence], agents: [security, application], rca: evidence-grounded output only, confidence: unsupported model claim rejected, decision: unsafe action blocked by evaluator/policy, approval_required: false, remediation_required: false, verification: no write execution, audit_events: [verification_completed]}
+    expected: {incident: underlying incident analyzed, correlation: normal, evidence: [live operational evidence], agents: [security, application], rca: evidence-grounded output only, confidence: unsupported model claim rejected, decision: unsafe action blocked by evaluator/policy, approval_required: false, remediation_required: false, remediation: none, verification: no write execution, audit_events: [verification_completed]}
     rollback: {action: llm.restore, parameters: {}, timeout_seconds: 60}
 
   - id: REMEDIATION-FAILURE
@@ -128,7 +128,7 @@ scenarios:
     preconditions: [monitoring webhook can replay same event id]
     injection: {action: monitoring.duplicate_signal, parameters: {}, timeout_seconds: 30}
     monitoring: {expected_sources: [prometheus], promql: '${AIOPS_TEST_DUPLICATE_SIGNAL_PROMQL}'}
-    expected: {incident: exactly one logical incident, correlation: duplicate source reference deduplicated, evidence: [single trigger plus bounded correlated metadata], agents: [application], rca: normal, confidence: unaffected by duplicate, decision: no duplicate execution, approval_required: false, remediation_required: false, verification: no duplicate incident or action, audit_events: [verification_completed]}
+    expected: {incident: exactly one logical incident, correlation: duplicate source reference deduplicated, evidence: [single trigger plus bounded correlated metadata], agents: [application], rca: normal, confidence: unaffected by duplicate, decision: no duplicate execution, approval_required: false, remediation_required: false, remediation: none, verification: no duplicate incident or action, audit_events: [verification_completed]}
     rollback: {action: monitoring.clear_fixture, parameters: {}, timeout_seconds: 60}
 
   - id: REPEATED-INCIDENT
