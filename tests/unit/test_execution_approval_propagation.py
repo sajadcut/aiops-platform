@@ -1,6 +1,7 @@
 import pytest
 
 from apps.execution_service import ExecutionRequest, ExecutionService
+from apps.execution_service.capability import issue_execution_capability
 from apps.execution_service.tools.base import BaseTool, ToolInput, ToolOutput
 from apps.execution_service.tools.registry import tool_registry
 
@@ -22,16 +23,28 @@ class ApprovalRequiredTool(BaseTool):
 
 
 @pytest.mark.asyncio
-async def test_approved_request_reaches_tool_registry_with_approval_context():
+async def test_signed_capability_reaches_tool_registry(monkeypatch):
+    monkeypatch.setenv("EXECUTION_CAPABILITY_SECRET", "test-execution-capability-secret-32-bytes-minimum")
     tool_registry.register(ApprovalRequiredTool())
     try:
+        capability = issue_execution_capability(
+            incident_id="incident-1",
+            approval_id="approval-123",
+            tool_name="approval_required_test",
+            action="restart_service",
+            target="vm01",
+            parameters={},
+            timeout=30,
+        )
         result = await ExecutionService.execute(
             ExecutionRequest(
                 tool_name="approval_required_test",
                 action="restart_service",
                 target="vm01",
-                approval_granted=True,
+                incident_id="incident-1",
+                approval_granted=False,
                 approval_id="approval-123",
+                execution_capability=capability,
             )
         )
         assert result.success is True
@@ -42,7 +55,7 @@ async def test_approved_request_reaches_tool_registry_with_approval_context():
 
 
 @pytest.mark.asyncio
-async def test_approved_request_without_persisted_approval_id_is_blocked():
+async def test_forged_approval_boolean_without_capability_is_blocked():
     tool_registry.register(ApprovalRequiredTool())
     try:
         result = await ExecutionService.execute(
@@ -50,11 +63,45 @@ async def test_approved_request_without_persisted_approval_id_is_blocked():
                 tool_name="approval_required_test",
                 action="restart_service",
                 target="vm01",
+                incident_id="incident-1",
                 approval_granted=True,
+                approval_id="approval-123",
             )
         )
         assert result.success is False
         assert result.execution_blocked is True
-        assert result.reason == "approval_id_required"
+        assert result.reason == "execution_capability_required"
+    finally:
+        tool_registry.clear()
+
+
+@pytest.mark.asyncio
+async def test_capability_is_bound_to_target_and_parameters(monkeypatch):
+    monkeypatch.setenv("EXECUTION_CAPABILITY_SECRET", "test-execution-capability-secret-32-bytes-minimum")
+    tool_registry.register(ApprovalRequiredTool())
+    try:
+        capability = issue_execution_capability(
+            incident_id="incident-1",
+            approval_id="approval-123",
+            tool_name="approval_required_test",
+            action="restart_service",
+            target="vm01",
+            parameters={"service": "api"},
+            timeout=30,
+        )
+        result = await ExecutionService.execute(
+            ExecutionRequest(
+                tool_name="approval_required_test",
+                action="restart_service",
+                target="vm02",
+                parameters={"service": "api"},
+                incident_id="incident-1",
+                approval_granted=True,
+                approval_id="approval-123",
+                execution_capability=capability,
+            )
+        )
+        assert result.success is False
+        assert result.reason == "execution_capability_invalid"
     finally:
         tool_registry.clear()
