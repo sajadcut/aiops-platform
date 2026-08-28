@@ -81,6 +81,8 @@ class Settings(BaseSettings):
     LOG_ROTATION_WHEN: str = Field(...)
     LOG_ROTATION_INTERVAL: int = Field(..., ge=1)
     LOG_UTC: bool = Field(...)
+    LOG_HTTP_BODY_ENABLED: bool = Field(...)
+    LOG_HTTP_BODY_MAX_BYTES: int = Field(..., ge=256, le=65536)
 
     INTERNAL_API_KEY: Optional[str] = Field(...)
     INTERNAL_API_ROLE: str = Field(...)
@@ -145,6 +147,8 @@ class Settings(BaseSettings):
     SSH_STRICT_HOST_KEY_CHECKING: bool = Field(...)
     SSH_PORT: int = Field(...)
     SSH_CONNECT_TIMEOUT: int = Field(...)
+    VM_ALLOWED_TARGETS: List[str] = Field(...)
+    VM_ALLOWED_SERVICES: List[str] = Field(...)
     VM_CPU_RECOVERY_THRESHOLD: float = Field(...)
 
     OIDC_ISSUER_URL: Optional[str] = Field(...)
@@ -200,7 +204,7 @@ class Settings(BaseSettings):
         return normalized
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=(".env.example", ".env"),
         env_file_encoding="utf-8",
         case_sensitive=True,
         extra="ignore",
