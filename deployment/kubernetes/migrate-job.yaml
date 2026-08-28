@@ -21,8 +21,9 @@ spec:
           type: RuntimeDefault
       containers:
         - name: migrate
-          # MUST be the exact immutable image digest promoted for the API rollout.
-          image: registry.internal/aiops-platform:2.2
+          # Fail-closed template. scripts/render_k8s_release.py must inject the
+          # same promoted digest used by the API deployment.
+          image: registry.invalid/aiops-platform@sha256:0000000000000000000000000000000000000000000000000000000000000000
           imagePullPolicy: IfNotPresent
           command:
             - python
