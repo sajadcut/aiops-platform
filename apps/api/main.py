@@ -6,6 +6,7 @@ from urllib.parse import urlparse
 
 from domain.contracts.config import settings
 from domain.contracts.logging import configure_logging, logger
+from domain.contracts.http_logging import RequestLoggingMiddleware
 from domain.contracts.exceptions import register_exception_handlers
 from domain.contracts.rate_limit import rate_limiter_strict
 
@@ -27,8 +28,9 @@ app.add_middleware(
     allow_origins=settings.CORS_ORIGINS,
     allow_credentials=False,
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allow_headers=["Authorization", "Content-Type", "X-API-Key"],
+    allow_headers=["Authorization", "Content-Type", "X-API-Key", "X-Request-ID", "X-Correlation-ID"],
 )
+app.add_middleware(RequestLoggingMiddleware)
 
 for router, tags in [
     (health.router, ["Health"]),
@@ -114,6 +116,8 @@ def _validate_production_configuration() -> None:
     if settings.APP_ENV != "production":
         return
     errors = []
+    if settings.DEBUG:
+        errors.append("DEBUG must be disabled in production")
     if "*" in settings.CORS_ORIGINS:
         errors.append("CORS_ORIGINS wildcard is forbidden in production")
     oidc_ready = all((settings.OIDC_ISSUER_URL, settings.OIDC_AUDIENCE, settings.OIDC_JWKS_URL))
