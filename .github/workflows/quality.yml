@@ -23,8 +23,12 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test -f .env
-          test ! -e .env.example
+          test -f .env.example
+          test ! -e .env
+          if git ls-files .env | grep -q .; then
+            echo 'Runtime .env must never be tracked'
+            exit 1
+          fi
           if git ls-files | grep -E '(^|/)(__pycache__/|.*\.(pyc|pyo|zip)$|\.pytest_cache/|\.DS_Store$)'; then
             echo 'Tracked generated artifact detected'
             exit 1
@@ -41,22 +45,22 @@ jobs:
               'ZABBIX_MCP_AUTH_HEADER', 'ELASTICSEARCH_MCP_AUTH_HEADER',
               'PROMETHEUS_MCP_AUTH_HEADER', 'ZABBIX_PASSWORD',
               'ELASTICSEARCH_PASSWORD', 'KUBERNETES_TOKEN',
-              'OIDC_JWKS_URL',
           }
           values = {}
-          for raw in Path('.env').read_text(encoding='utf-8').splitlines():
+          for raw in Path('.env.example').read_text(encoding='utf-8').splitlines():
               line = raw.strip()
               if not line or line.startswith('#') or '=' not in line:
                   continue
               key, value = line.split('=', 1)
               values[key] = value.strip()
           leaked = {k: values.get(k) for k in sensitive if values.get(k)}
-          assert not leaked, f'Committed .env contains non-empty sensitive values: {sorted(leaked)}'
+          assert not leaked, f'Committed .env.example contains non-empty sensitive values: {sorted(leaked)}'
           PY
-      - name: Build CI runtime from canonical .env
+      - name: Build CI runtime from canonical template
         shell: bash
         run: |
           set -euo pipefail
+          cp .env.example .env
           python - <<'PY'
           from pathlib import Path
           path = Path('.env')
@@ -86,6 +90,7 @@ jobs:
           assert settings.ALEMBIC_DATABASE_URL
           assert settings.SIGNAL_CORRELATION_ENABLED is True
           assert 0 < settings.SIGNAL_CORRELATION_WINDOW_SECONDS <= 3600
+          assert settings.LOG_HTTP_BODY_MAX_BYTES >= 256
           PY
       - name: Repository-wide syntax check
         run: python -m compileall -q agents apps database domain integrations knowledge memory scripts tests
@@ -118,12 +123,13 @@ jobs:
         with:
           python-version: '3.12'
           cache: pip
-      - name: Build database CI runtime from canonical .env
+      - name: Build database CI runtime from canonical template
         shell: bash
         run: |
           set -euo pipefail
-          test -f .env
-          test ! -e .env.example
+          test -f .env.example
+          test ! -e .env
+          cp .env.example .env
           python - <<'PY'
           from pathlib import Path
           path = Path('.env')
@@ -143,6 +149,11 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip check
+      - name: Validate single migration head
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(python -m alembic -c database/migrations/alembic.ini heads | grep -c '(head)')" -eq 1
       - name: Alembic upgrade
         run: python -m alembic -c database/migrations/alembic.ini upgrade head
       - name: Validate canonical schema, pgvector and governance persistence
@@ -202,6 +213,9 @@ jobs:
         env:
           RUN_DB_CORRELATION_TEST: '1'
         run: python -m pytest -q tests/integration/test_signal_correlation_db.py
+      - name: Migration current/head consistency
+        shell: bash
+        run: python -m alembic -c database/migrations/alembic.ini current | grep '(head)'
       - name: Migration downgrade and clean rebuild
         run: |
           python -m alembic -c database/migrations/alembic.ini downgrade base
