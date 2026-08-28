@@ -13,17 +13,22 @@ jobs:
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
-      - name: Build dependency wheelhouse base
+      - name: Build hardened dependency wheelhouse base
         shell: bash
         run: |
           set -euo pipefail
           cat > /tmp/Wheelhouse.Dockerfile <<'EOF'
           FROM python:3.12-slim
+          RUN apt-get update \
+              && DEBIAN_FRONTEND=noninteractive apt-get upgrade -y \
+              && rm -rf /var/lib/apt/lists/* \
+              && python -m pip install --upgrade pip 'setuptools>=78.1.1' 'msgpack>=1.2.1' \
+              && rm -rf /root/.cache/pip
           WORKDIR /build
           COPY requirements.txt .
-          RUN python -m pip install --upgrade pip \
-              && mkdir -p /opt/wheels \
-              && python -m pip wheel --wheel-dir /opt/wheels -r requirements.txt
+          RUN mkdir -p /opt/wheels \
+              && python -m pip wheel --wheel-dir /opt/wheels -r requirements.txt \
+              && rm -rf /root/.cache/pip
           EOF
           docker build -t aiops-wheelhouse-ci -f /tmp/Wheelhouse.Dockerfile .
 
