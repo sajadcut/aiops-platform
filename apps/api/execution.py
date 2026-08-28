@@ -4,6 +4,7 @@ from uuid import uuid4
 
 from fastapi import APIRouter, Depends, HTTPException
 
+from apps.approval_service.binding import approval_matches_execution, bind_execution_metadata
 from apps.approval_service.postgres import PostgreSQLApprovalStore
 from apps.audit_service import AuditService
 from apps.audit_service.postgres import PostgreSQLAuditStore
@@ -17,12 +18,17 @@ router = APIRouter()
 
 def _approval_record(payload: Dict[str, Any]) -> Dict[str, Any]:
     now = datetime.now(timezone.utc).isoformat()
-    metadata = dict(payload.get("metadata", {}))
-    if payload.get("target") is not None:
-        metadata.setdefault("target", str(payload["target"]))
-    if payload.get("tool_name") is not None:
-        metadata.setdefault("tool_name", str(payload["tool_name"]))
-    metadata["binding_complete"] = bool(metadata.get("target") and metadata.get("tool_name"))
+    metadata = bind_execution_metadata(
+        payload.get("metadata", {}),
+        {
+            "tool_name": payload.get("tool_name"),
+            "action": payload.get("action"),
+            "target": payload.get("target"),
+            "parameters": payload.get("parameters", {}),
+            "timeout": payload.get("timeout", 30),
+        },
+        payload.get("incident_id"),
+    )
     return {
         "approval_id": str(uuid4()),
         "incident_id": str(payload["incident_id"]),
@@ -58,15 +64,27 @@ def _require_pending(current: Dict[str, Any]) -> None:
 
 @router.post("/approvals")
 async def create_approval(payload: Dict[str, Any], identity=Depends(require_permission("approve:low_risk"))):
-    required_fields = ["incident_id", "action", "risk_level", "approver"]
-    missing = [field for field in required_fields if field not in payload]
+    required_fields = ["incident_id", "action", "risk_level", "approver", "target", "tool_name"]
+    missing = [field for field in required_fields if field not in payload or payload[field] in (None, "")]
     if missing:
         raise HTTPException(status_code=400, detail={"code": "MISSING_FIELDS", "fields": missing})
     _require_risk_permission(identity, str(payload["risk_level"]))
     record = _approval_record(payload)
     async with AsyncSessionLocal() as db:
         saved = await PostgreSQLApprovalStore(db).save(record)
-        await _audit_durable(db, "approval_requested", identity.subject, record["incident_id"], record["action"], {"approval_id": record["approval_id"], "risk_level": record["risk_level"], "binding_complete": record["metadata"]["binding_complete"]})
+        await _audit_durable(
+            db,
+            "approval_requested",
+            identity.subject,
+            record["incident_id"],
+            record["action"],
+            {
+                "approval_id": record["approval_id"],
+                "risk_level": record["risk_level"],
+                "binding_complete": record["metadata"]["binding_complete"],
+                "binding_version": record["metadata"].get("binding_version"),
+            },
+        )
         return saved
 
 
@@ -88,6 +106,8 @@ async def approve(approval_id: str, identity=Depends(require_permission("approve
             raise HTTPException(status_code=404, detail="Approval not found")
         _require_pending(current)
         _require_risk_permission(identity, str(current.get("risk_level")))
+        if not (current.get("metadata") or {}).get("binding_complete"):
+            raise HTTPException(status_code=409, detail="Approval execution binding is incomplete")
         approval = await store.set_status(
             approval_id,
             "approved",
@@ -156,6 +176,8 @@ def _validate_approval_binding(approval: Dict[str, Any], payload: Dict[str, Any]
         raise HTTPException(status_code=409, detail="Approval target does not match execution request")
     if str(metadata["tool_name"]) != str(payload.get("tool_name")):
         raise HTTPException(status_code=409, detail="Approval tool does not match execution request")
+    if not approval_matches_execution(approval, payload):
+        raise HTTPException(status_code=409, detail="Approval execution parameters do not match execution request")
 
 
 @router.post("/execute")
@@ -178,9 +200,17 @@ async def execute(payload: Dict[str, Any], identity=Depends(require_permission("
             if not consumed or consumed.get("status") != "consumed":
                 raise HTTPException(status_code=409, detail="Approval already consumed or unavailable")
             approval_granted = True
-            await _audit_durable(db, "approval_consumed", identity.subject, str(approval.get("incident_id")), str(payload["action"]), {"approval_id": approval_id, "tool_name": payload["tool_name"], "target": payload["target"]})
+            await _audit_durable(
+                db,
+                "approval_consumed",
+                identity.subject,
+                str(approval.get("incident_id")),
+                str(payload["action"]),
+                {"approval_id": approval_id, "tool_name": payload["tool_name"], "target": payload["target"]},
+            )
 
         request = ExecutionRequest(
+            execution_id=str(payload["execution_id"]) if payload.get("execution_id") else str(uuid4()),
             tool_name=str(payload["tool_name"]),
             action=str(payload["action"]),
             target=str(payload["target"]),
@@ -192,5 +222,19 @@ async def execute(payload: Dict[str, Any], identity=Depends(require_permission("
         )
         result = await ExecutionService.execute(request)
         incident_id = str(payload.get("incident_id")) if payload.get("incident_id") else None
-        await _audit_durable(db, "direct_execution_completed", identity.subject, incident_id, request.action, {"tool_name": request.tool_name, "target": request.target, "success": result.success, "blocked": result.execution_blocked, "approval_id": approval_id})
+        await _audit_durable(
+            db,
+            "direct_execution_completed",
+            identity.subject,
+            incident_id,
+            request.action,
+            {
+                "execution_id": result.execution_id,
+                "tool_name": request.tool_name,
+                "target": request.target,
+                "success": result.success,
+                "blocked": result.execution_blocked,
+                "approval_id": approval_id,
+            },
+        )
         return result.model_dump()
