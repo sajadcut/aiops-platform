@@ -21,7 +21,24 @@ WORKDIR /app
 COPY requirements.txt ./
 RUN test -d /opt/wheels \
     && python -m pip install --no-index --find-links=/opt/wheels -r requirements.txt \
-    && python -m pip check
+    && python -m pip check \
+    && current_openssl="$(dpkg-query -W -f='${Version}' openssl)" \
+    && dpkg --compare-versions "$current_openssl" ge '3.5.7-1~deb13u2' \
+    && python - <<'PY'
+from importlib.metadata import PackageNotFoundError, version
+from packaging.version import Version
+
+minimums = {"setuptools": "78.1.1", "msgpack": "1.2.1"}
+for package, minimum in minimums.items():
+    try:
+        installed = version(package)
+    except PackageNotFoundError:
+        continue
+    if Version(installed) < Version(minimum):
+        raise SystemExit(f"vulnerable runtime package: {package}={installed} < {minimum}")
+PY
+
+RUN rm -rf /root/.cache/pip
 
 # .dockerignore excludes .env, VCS metadata, logs and local artifacts. Runtime
 # secrets/configuration are injected by the deployment platform, never baked.
