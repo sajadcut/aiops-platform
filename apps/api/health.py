@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 from datetime import datetime, timezone
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Response, status
 from sqlalchemy import text
 
 from apps.execution_service.tools.registry import tool_registry
@@ -22,9 +22,12 @@ async def _probe_database() -> dict:
         async with AsyncSessionLocal() as db:
             await db.execute(text("SELECT 1"))
         vector = await check_pgvector_ready()
-        return {"status": "healthy", "pgvector": vector}
+        if not vector.get("pgvector_available"):
+            return {"status": "unhealthy", "error": "pgvector_unavailable"}
+        return {"status": "healthy", "pgvector": {"available": True}}
     except Exception as exc:
-        return {"status": "unhealthy", "error": str(exc)}
+        logger.warning("database_health_probe_failed", error_type=type(exc).__name__)
+        return {"status": "unhealthy", "error": "database_unavailable"}
 
 
 async def _probe_external() -> dict:
@@ -40,9 +43,14 @@ async def _probe_external() -> dict:
         )
         return {name: {"healthy": bool(value)} for name, value in zip(connectors, values)}
     except Exception as exc:
-        return {name: {"healthy": False, "error": type(exc).__name__} for name in connectors}
+        logger.warning("external_health_probe_failed", error_type=type(exc).__name__)
+        return {name: {"healthy": False, "error": "dependency_unavailable"} for name in connectors}
     finally:
         await asyncio.gather(*(client.close() for client in connectors.values()), return_exceptions=True)
+
+
+def _external_ready(external: dict) -> bool:
+    return bool(external) and all(bool(component.get("healthy")) for component in external.values())
 
 
 @router.get("/health")
@@ -50,9 +58,11 @@ async def health_check():
     logger.info("Health check requested")
     database = await _probe_database()
     external = await _probe_external()
-    status = "ok" if database["status"] == "healthy" else "degraded"
+    database_healthy = database["status"] == "healthy"
+    external_healthy = _external_ready(external)
+    healthy = database_healthy and (external_healthy if settings.APP_ENV == "production" else True)
     return {
-        "status": status,
+        "status": "ok" if healthy else "degraded",
         "service": settings.APP_NAME,
         "version": settings.APP_VERSION,
         "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -70,8 +80,16 @@ async def liveness():
 
 
 @router.get("/health/ready")
-async def readiness():
+async def readiness(response: Response):
     database = await _probe_database()
     external = await _probe_external()
-    ready = database["status"] == "healthy"
-    return {"status": "ready" if ready else "not_ready", "database": database, "external": external}
+    database_ready = database["status"] == "healthy"
+    external_ready = _external_ready(external)
+    ready = database_ready and (external_ready if settings.APP_ENV == "production" else True)
+    if not ready:
+        response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+    return {
+        "status": "ready" if ready else "not_ready",
+        "database": database,
+        "external": external,
+    }
