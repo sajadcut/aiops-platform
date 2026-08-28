@@ -57,8 +57,14 @@ class FakeApprovalStore:
 
 
 class FakeIncidentRepository:
+    def __init__(self):
+        self.statuses = []
+
     async def add_findings(self, incident_id, findings):
         return None
+
+    async def set_status(self, incident_id, status):
+        self.statuses.append((incident_id, status))
 
     async def commit(self):
         return None
@@ -70,6 +76,7 @@ class FakeAuditStore:
 
 class FakeOrchestrator:
     captured_execution_request = None
+    verification_calls = 0
 
     def __init__(self, db=None):
         self.db = db
@@ -80,6 +87,7 @@ class FakeOrchestrator:
         return state
 
     async def _verification_node(self, state):
+        FakeOrchestrator.verification_calls += 1
         state["verification_result"] = {"status": "success"}
         return state
 
@@ -91,9 +99,31 @@ class FakeOrchestrator:
         return state
 
 
-@pytest.mark.asyncio
-async def test_resume_injects_persisted_approval_into_execution_request(monkeypatch):
-    state = {
+class ExecutionFailsOrchestrator(FakeOrchestrator):
+    verification_calls = 0
+
+    async def _execution_node(self, state):
+        state["execution_result"] = {
+            "success": False,
+            "execution_blocked": False,
+            "reason": "mcp_write_failed",
+        }
+        return state
+
+    async def _verification_node(self, state):
+        ExecutionFailsOrchestrator.verification_calls += 1
+        raise AssertionError("verification must not run after failed execution")
+
+
+class VerificationFailsOrchestrator(FakeOrchestrator):
+    async def _verification_node(self, state):
+        state["verification_result"] = {"status": "failed", "message": "service still unhealthy"}
+        return state
+
+
+
+def _paused_state():
+    return {
         "approval": {"approval_id": "approval-123", "status": "pending"},
         "execution_request": {
             "tool_name": "ssh_vm",
@@ -103,6 +133,8 @@ async def test_resume_injects_persisted_approval_into_execution_request(monkeypa
         "findings": [],
     }
 
+
+def _runtime(state):
     runtime = DurableWorkflowRuntime.__new__(DurableWorkflowRuntime)
     runtime.session = object()
     runtime.checkpoints = FakeCheckpointStore(state)
@@ -114,11 +146,51 @@ async def test_resume_injects_persisted_approval_into_execution_request(monkeypa
         return None
 
     runtime._flush_audit = no_audit
+    return runtime
+
+
+@pytest.mark.asyncio
+async def test_resume_injects_persisted_approval_into_execution_request(monkeypatch):
+    runtime = _runtime(_paused_state())
+    FakeOrchestrator.verification_calls = 0
     monkeypatch.setattr(runtime_module, "E2EOrchestrator", FakeOrchestrator)
 
     result = await runtime.resume_after_approval("incident-1")
 
     assert result["current_node"] == "end"
     assert runtime.checkpoints.completed is not None
+    assert runtime.checkpoints.failed is None
     assert FakeOrchestrator.captured_execution_request["approval_granted"] is True
     assert FakeOrchestrator.captured_execution_request["approval_id"] == "approval-123"
+    assert FakeOrchestrator.verification_calls == 1
+    assert runtime.incidents.statuses[-1] == ("incident-1", "resolved")
+
+
+@pytest.mark.asyncio
+async def test_failed_execution_never_runs_verification_or_resolves_incident(monkeypatch):
+    runtime = _runtime(_paused_state())
+    ExecutionFailsOrchestrator.verification_calls = 0
+    monkeypatch.setattr(runtime_module, "E2EOrchestrator", ExecutionFailsOrchestrator)
+
+    result = await runtime.resume_after_approval("incident-1")
+
+    assert result["terminal_reason"] == "mcp_write_failed"
+    assert runtime.checkpoints.failed is not None
+    assert runtime.checkpoints.completed is None
+    assert ExecutionFailsOrchestrator.verification_calls == 0
+    assert runtime.incidents.statuses[-1] == ("incident-1", "escalated")
+
+
+@pytest.mark.asyncio
+async def test_failed_verification_never_resolves_incident(monkeypatch):
+    runtime = _runtime(_paused_state())
+    monkeypatch.setattr(runtime_module, "E2EOrchestrator", VerificationFailsOrchestrator)
+
+    result = await runtime.resume_after_approval("incident-1")
+
+    assert result["execution_result"]["success"] is True
+    assert result["verification_result"]["status"] == "failed"
+    assert result["terminal_reason"] == "verification_failed"
+    assert runtime.checkpoints.failed is not None
+    assert runtime.checkpoints.completed is None
+    assert runtime.incidents.statuses[-1] == ("incident-1", "escalated")
