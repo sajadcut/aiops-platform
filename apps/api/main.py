@@ -11,6 +11,7 @@ from domain.contracts.rate_limit import rate_limiter_strict
 
 from apps.api import health, workflow, incidents, a2a, execution, e2e_workflow, audit, runbooks, incident_resources, dashboard, runbook_execution, dashboard_incidents, remediation, agents, signals
 from apps.api.http_logging import HTTPTransactionLoggingMiddleware
+from apps.execution_service.capability import capability_secret_configured, capability_ttl_seconds, ExecutionCapabilityError
 from apps.execution_service.tools.registry import tool_registry
 from apps.execution_service.tools.mock_executor import MockExecutorTool
 from apps.execution_service.tools.ssh_vm import SSHVMTool
@@ -29,14 +30,7 @@ app.add_middleware(
     allow_origins=settings.CORS_ORIGINS,
     allow_credentials=False,
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allow_headers=[
-        "Authorization",
-        "Content-Type",
-        "X-API-Key",
-        "X-Request-ID",
-        "X-Correlation-ID",
-        "X-Execution-ID",
-    ],
+    allow_headers=["Authorization", "Content-Type", "X-API-Key", "X-Request-ID", "X-Correlation-ID", "X-Execution-ID"],
 )
 app.add_middleware(HTTPTransactionLoggingMiddleware)
 
@@ -76,13 +70,7 @@ _DASHBOARD_DIR = Path(__file__).resolve().parents[2] / "dashboards"
 
 @app.get("/")
 async def root():
-    return {
-        "message": f"Welcome to {settings.APP_NAME}",
-        "version": settings.APP_VERSION,
-        "docs": "/docs",
-        "dashboard": "/dashboard",
-        "agent_dashboard": "/dashboard/agents",
-    }
+    return {"message": f"Welcome to {settings.APP_NAME}", "version": settings.APP_VERSION, "docs": "/docs", "dashboard": "/dashboard", "agent_dashboard": "/dashboard/agents"}
 
 
 @app.get("/dashboard", include_in_schema=False)
@@ -140,10 +128,7 @@ def _validate_production_configuration() -> None:
     if not oidc_ready and not settings.INTERNAL_API_KEY:
         errors.append("production requires OIDC or INTERNAL_API_KEY authentication")
     if oidc_ready:
-        for name, value in {
-            "OIDC_ISSUER_URL": settings.OIDC_ISSUER_URL,
-            "OIDC_JWKS_URL": settings.OIDC_JWKS_URL,
-        }.items():
+        for name, value in {"OIDC_ISSUER_URL": settings.OIDC_ISSUER_URL, "OIDC_JWKS_URL": settings.OIDC_JWKS_URL}.items():
             if not _is_https(value):
                 errors.append(f"{name} must use HTTPS in production")
 
@@ -154,11 +139,7 @@ def _validate_production_configuration() -> None:
     if settings.DATABASE_URL and "user:password@" in settings.DATABASE_URL:
         errors.append("default database credentials are forbidden in production")
 
-    required_mcp = {
-        "ZABBIX_MCP_URL": settings.ZABBIX_MCP_URL,
-        "ELASTICSEARCH_MCP_URL": settings.ELASTICSEARCH_MCP_URL,
-        "PROMETHEUS_MCP_URL": settings.PROMETHEUS_MCP_URL,
-    }
+    required_mcp = {"ZABBIX_MCP_URL": settings.ZABBIX_MCP_URL, "ELASTICSEARCH_MCP_URL": settings.ELASTICSEARCH_MCP_URL, "PROMETHEUS_MCP_URL": settings.PROMETHEUS_MCP_URL}
     for name, value in required_mcp.items():
         if not str(value or "").strip():
             errors.append(f"{name} is required in production")
@@ -179,12 +160,17 @@ def _validate_production_configuration() -> None:
             errors.append("VM MCP write capability requires MCP_WRITE_BEARER_TOKEN")
         elif settings.MCP_BEARER_TOKEN and settings.MCP_WRITE_BEARER_TOKEN == settings.MCP_BEARER_TOKEN:
             errors.append("MCP write identity must be distinct from read identity")
+        if not capability_secret_configured():
+            errors.append("EXECUTION_CAPABILITY_SECRET must be configured with at least 32 bytes for VM writes")
+        try:
+            capability_ttl_seconds()
+        except ExecutionCapabilityError as exc:
+            errors.append(str(exc))
 
     if settings.SSH_ENABLED:
         errors.append("direct Control-Plane SSH is forbidden; configure VM_MCP_URL instead")
     if settings.KUBERNETES_API_URL:
         errors.append("direct Control-Plane Kubernetes API access is forbidden; configure KUBERNETES_MCP_URL instead")
-
     if settings.APPROVAL_TTL_SECONDS <= 0:
         errors.append("APPROVAL_TTL_SECONDS must be positive in production")
     if settings.MCP_TIMEOUT_SECONDS <= 0:
