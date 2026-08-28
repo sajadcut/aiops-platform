@@ -80,11 +80,21 @@ def _decode_body(body: bytes, content_type: str, truncated: bool) -> Any:
         return {"logged": False, "reason": "non_text_body", "bytes": len(body)}
     text = body.decode("utf-8", errors="replace")
     value: Any = text
-    if "json" in content_type.lower():
+    lowered_content_type = content_type.lower()
+    if "json" in lowered_content_type:
         try:
             value = json.loads(text)
         except json.JSONDecodeError:
             value = text
+    elif "application/x-www-form-urlencoded" in lowered_content_type:
+        try:
+            pairs = parse_qsl(text, keep_blank_values=True)
+            value = {
+                key: "[REDACTED]" if _sensitive_key(key) else _scrub_text(item)
+                for key, item in pairs
+            }
+        except Exception:
+            value = _scrub_text(text)
     sanitized = sanitize(value)
     if truncated:
         return {"truncated": True, "value": sanitized}
