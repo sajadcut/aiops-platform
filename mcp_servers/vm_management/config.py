@@ -2,13 +2,14 @@ from __future__ import annotations
 
 from typing import Literal
 
-from pydantic import Field
+from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class VMManagementSettings(BaseSettings):
     """Runtime contract for the standalone VM MCP boundary."""
 
+    ENVIRONMENT: Literal["development", "test", "production"] = "development"
     HOST: str = "0.0.0.0"
     PORT: int = Field(default=8765, ge=1, le=65535)
     INVENTORY_PATH: str = "mcp_servers/vm_management/inventory.yml"
@@ -30,6 +31,21 @@ class VMManagementSettings(BaseSettings):
         env_file_encoding="utf-8",
         extra="ignore",
     )
+
+    @model_validator(mode="after")
+    def validate_environment_security(self):
+        if self.ENVIRONMENT == "production":
+            if not self.REQUIRE_AUTH:
+                raise ValueError("vm_mcp_production_requires_auth")
+            if self.SSH_AUTH_MODE != "key":
+                raise ValueError("vm_mcp_password_auth_forbidden_in_production")
+            if not self.SSH_STRICT_HOST_KEY_CHECKING:
+                raise ValueError("vm_mcp_strict_host_key_checking_required_in_production")
+            if not self.READ_TOKEN:
+                raise ValueError("vm_mcp_production_read_token_required")
+            if self.WRITE_ENABLED and not self.WRITE_TOKEN:
+                raise ValueError("vm_mcp_production_write_token_required_when_write_enabled")
+        return self
 
     @classmethod
     def from_environment(cls) -> "VMManagementSettings":
