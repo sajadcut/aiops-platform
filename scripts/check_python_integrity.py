@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Iterable
 
 ROOT = Path(__file__).resolve().parents[1]
-REQUIREMENTS = ROOT / "requirements.txt"
+REQUIREMENT_FILES = (ROOT / "requirements.txt", ROOT / "requirements-dev.txt")
 SKIP_PARTS = {".git", ".pytest_cache", "__pycache__", ".venv", "venv", "site-packages"}
 
 
@@ -64,11 +64,16 @@ def main() -> int:
             elif isinstance(node, ast.ImportFrom) and node.level == 0 and node.module:
                 imported_top_levels.add(node.module.split(".", 1)[0])
 
-    declared = {
-        name
-        for line in REQUIREMENTS.read_text(encoding="utf-8").splitlines()
-        if (name := _requirement_name(line))
-    }
+    declared: set[str] = set()
+    for requirement_file in REQUIREMENT_FILES:
+        if not requirement_file.exists():
+            errors.append(f"requirements_file_missing:{requirement_file.name}")
+            continue
+        declared.update(
+            name
+            for line in requirement_file.read_text(encoding="utf-8").splitlines()
+            if (name := _requirement_name(line))
+        )
 
     installed = {_norm(dist.metadata["Name"]) for dist in importlib.metadata.distributions() if dist.metadata.get("Name")}
     missing_declared = sorted(declared - installed)
