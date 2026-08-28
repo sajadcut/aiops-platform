@@ -2,6 +2,7 @@ import pytest
 
 import apps.orchestrator.runtime as runtime_module
 from apps.approval_service.binding import bind_metadata
+from apps.execution_service.capability import verify_execution_capability
 from apps.orchestrator.runtime import DurableWorkflowRuntime
 
 
@@ -25,35 +26,15 @@ class FakeApprovalStore:
     @staticmethod
     def _metadata():
         return bind_metadata(
-            {},
-            incident_id="incident-1",
-            tool_name="ssh_vm",
-            action="restart_service",
-            target="vm01",
-            parameters={},
-            timeout=30,
-            runbook_id=None,
-            runbook_version=None,
-            rollback=False,
+            {}, incident_id="incident-1", tool_name="ssh_vm", action="restart_service", target="vm01",
+            parameters={}, timeout=30, runbook_id=None, runbook_version=None, rollback=False,
         )
 
     async def get(self, approval_id):
-        return {
-            "approval_id": approval_id,
-            "incident_id": "incident-1",
-            "action": "restart_service",
-            "status": "approved",
-            "metadata": self._metadata(),
-        }
+        return {"approval_id": approval_id, "incident_id": "incident-1", "action": "restart_service", "status": "approved", "metadata": self._metadata()}
 
     async def consume(self, approval_id):
-        return {
-            "approval_id": approval_id,
-            "incident_id": "incident-1",
-            "action": "restart_service",
-            "status": "consumed",
-            "metadata": self._metadata(),
-        }
+        return {"approval_id": approval_id, "incident_id": "incident-1", "action": "restart_service", "status": "consumed", "metadata": self._metadata()}
 
 
 class FakeIncidentRepository:
@@ -103,11 +84,7 @@ class ExecutionFailsOrchestrator(FakeOrchestrator):
     verification_calls = 0
 
     async def _execution_node(self, state):
-        state["execution_result"] = {
-            "success": False,
-            "execution_blocked": False,
-            "reason": "mcp_write_failed",
-        }
+        state["execution_result"] = {"success": False, "execution_blocked": False, "reason": "mcp_write_failed"}
         return state
 
     async def _verification_node(self, state):
@@ -121,15 +98,10 @@ class VerificationFailsOrchestrator(FakeOrchestrator):
         return state
 
 
-
 def _paused_state():
     return {
         "approval": {"approval_id": "approval-123", "status": "pending"},
-        "execution_request": {
-            "tool_name": "ssh_vm",
-            "action": "restart_service",
-            "target": "vm01",
-        },
+        "execution_request": {"tool_name": "ssh_vm", "action": "restart_service", "target": "vm01"},
         "findings": [],
     }
 
@@ -149,8 +121,13 @@ def _runtime(state):
     return runtime
 
 
+def _capability_secret(monkeypatch):
+    monkeypatch.setenv("EXECUTION_CAPABILITY_SECRET", "test-execution-capability-secret-32-bytes-minimum")
+
+
 @pytest.mark.asyncio
 async def test_resume_injects_persisted_approval_into_execution_request(monkeypatch):
+    _capability_secret(monkeypatch)
     runtime = _runtime(_paused_state())
     FakeOrchestrator.verification_calls = 0
     monkeypatch.setattr(runtime_module, "E2EOrchestrator", FakeOrchestrator)
@@ -160,20 +137,26 @@ async def test_resume_injects_persisted_approval_into_execution_request(monkeypa
     assert result["current_node"] == "end"
     assert runtime.checkpoints.completed is not None
     assert runtime.checkpoints.failed is None
-    assert FakeOrchestrator.captured_execution_request["approval_granted"] is True
-    assert FakeOrchestrator.captured_execution_request["approval_id"] == "approval-123"
+    request = FakeOrchestrator.captured_execution_request
+    assert request["approval_granted"] is True
+    assert request["approval_id"] == "approval-123"
+    assert request["incident_id"] == "incident-1"
+    claims = verify_execution_capability(
+        request["execution_capability"], incident_id="incident-1", approval_id="approval-123",
+        tool_name="ssh_vm", action="restart_service", target="vm01", parameters={}, timeout=30,
+    )
+    assert claims["jti"]
     assert FakeOrchestrator.verification_calls == 1
     assert runtime.incidents.statuses[-1] == ("incident-1", "resolved")
 
 
 @pytest.mark.asyncio
 async def test_failed_execution_never_runs_verification_or_resolves_incident(monkeypatch):
+    _capability_secret(monkeypatch)
     runtime = _runtime(_paused_state())
     ExecutionFailsOrchestrator.verification_calls = 0
     monkeypatch.setattr(runtime_module, "E2EOrchestrator", ExecutionFailsOrchestrator)
-
     result = await runtime.resume_after_approval("incident-1")
-
     assert result["terminal_reason"] == "mcp_write_failed"
     assert runtime.checkpoints.failed is not None
     assert runtime.checkpoints.completed is None
@@ -183,11 +166,10 @@ async def test_failed_execution_never_runs_verification_or_resolves_incident(mon
 
 @pytest.mark.asyncio
 async def test_failed_verification_never_resolves_incident(monkeypatch):
+    _capability_secret(monkeypatch)
     runtime = _runtime(_paused_state())
     monkeypatch.setattr(runtime_module, "E2EOrchestrator", VerificationFailsOrchestrator)
-
     result = await runtime.resume_after_approval("incident-1")
-
     assert result["execution_result"]["success"] is True
     assert result["verification_result"]["status"] == "failed"
     assert result["terminal_reason"] == "verification_failed"
