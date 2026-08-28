@@ -16,7 +16,9 @@ from apps.execution_service.tools.registry import tool_registry
 from apps.execution_service.tools.mock_executor import MockExecutorTool
 from apps.execution_service.tools.ssh_vm import SSHVMTool
 from apps.execution_service.tools.vm_telemetry import VMTelemetryTool
+from apps.execution_service.tools.kubernetes_mcp import KubernetesMCPTool
 from integrations.vm.mcp_client import VMEdgeMCPClient
+from integrations.kubernetes.mcp_client import KubernetesMCPClient
 from apps.database.vector_validation import validate_pgvector
 from database import AsyncSessionLocal
 from database.migration_validation import validate_migration_head
@@ -155,13 +157,15 @@ def _validate_production_configuration() -> None:
         errors.append("production MCP requires bearer identity or mTLS client certificate")
     if bool(settings.MCP_CLIENT_CERT_PATH) != bool(settings.MCP_CLIENT_KEY_PATH):
         errors.append("MCP client certificate and key must be configured together")
-    if settings.VM_MCP_URL:
+
+    if settings.VM_MCP_URL or settings.KUBERNETES_MCP_URL:
+        boundary = "VM/Kubernetes MCP write capability"
         if not settings.MCP_WRITE_BEARER_TOKEN:
-            errors.append("VM MCP write capability requires MCP_WRITE_BEARER_TOKEN")
+            errors.append(f"{boundary} requires MCP_WRITE_BEARER_TOKEN")
         elif settings.MCP_BEARER_TOKEN and settings.MCP_WRITE_BEARER_TOKEN == settings.MCP_BEARER_TOKEN:
             errors.append("MCP write identity must be distinct from read identity")
         if not capability_secret_configured():
-            errors.append("EXECUTION_CAPABILITY_SECRET must be configured with at least 32 bytes for VM writes")
+            errors.append("EXECUTION_CAPABILITY_SECRET must be configured with at least 32 bytes for governed writes")
         try:
             capability_ttl_seconds()
         except ExecutionCapabilityError as exc:
@@ -220,6 +224,10 @@ async def startup_event():
         if tool_registry.get_tool("vm_telemetry") is None:
             tool_registry.register(VMTelemetryTool(vm_connector))
             logger.info("vm_mcp_telemetry_tool_registered")
+
+    if settings.KUBERNETES_MCP_URL and tool_registry.get_tool("kubernetes_mcp") is None:
+        tool_registry.register(KubernetesMCPTool(KubernetesMCPClient()))
+        logger.info("governed_kubernetes_mcp_execution_tool_registered")
 
     if settings.PGVECTOR_VALIDATE_ON_STARTUP:
         try:
