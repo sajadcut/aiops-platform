@@ -10,13 +10,20 @@ from knowledge import EmbeddingService
 from knowledge.retrieval_contract import validate_retrieval
 from domain.contracts.config import settings
 from domain.contracts.logging import logger
+from integrations.cognia import CogniaClient, CogniaContractError
 
 
 class KnowledgeRAGService:
-    """Governed Knowledge RAG backed by PostgreSQL + pgvector."""
+    """Provider-neutral governed Knowledge RAG boundary.
 
-    def __init__(self, db: AsyncSession):
+    ``local_pgvector`` remains available for development/test fixtures. Cognia is
+    the production governed provider when production knowledge governance is
+    enabled. Operational Memory remains a separate local concern.
+    """
+
+    def __init__(self, db: Optional[AsyncSession]):
         self.db = db
+        self.provider = settings.KNOWLEDGE_PROVIDER
 
     @staticmethod
     def _govern_metadata(metadata: Dict[str, Any], version: Optional[str]) -> Dict[str, Any]:
@@ -36,6 +43,11 @@ class KnowledgeRAGService:
             raise ValueError("knowledge_source_type_not_allowlisted")
         return governed
 
+    def _require_local_db(self) -> AsyncSession:
+        if self.db is None:
+            raise RuntimeError("local_pgvector_database_session_required")
+        return self.db
+
     async def add_document(
         self,
         title: str,
@@ -44,8 +56,13 @@ class KnowledgeRAGService:
         version: Optional[str] = None,
         metadata: Optional[Dict[str, Any]] = None,
     ) -> UUID:
+        if self.provider != "local_pgvector":
+            # Cognia registration requires an explicit KB, Scope, taxonomy and
+            # Idempotency-Key. The old local method cannot safely infer them.
+            raise RuntimeError("knowledge_authoring_must_use_cognia_governed_api")
         if not title.strip() or not content.strip() or not source.strip():
             raise ValueError("knowledge_title_content_source_required")
+        db = self._require_local_db()
         extra_metadata = self._govern_metadata(dict(metadata or {}), version)
         embedding = await EmbeddingService.generate_embedding(content)
         doc = KnowledgeDocument(
@@ -57,10 +74,10 @@ class KnowledgeRAGService:
             extra_metadata=extra_metadata,
             embedding=embedding,
         )
-        self.db.add(doc)
-        await self.db.commit()
-        await self.db.refresh(doc)
-        logger.info(f"Added governed knowledge document: {title} (ID: {doc.id})")
+        db.add(doc)
+        await db.commit()
+        await db.refresh(doc)
+        logger.info(f"Added governed local knowledge document: {title} (ID: {doc.id})")
         return doc.id
 
     @staticmethod
@@ -76,9 +93,123 @@ class KnowledgeRAGService:
         limit: int = 5,
         min_similarity: float = 0.5,
         access_scopes: Optional[List[str]] = None,
+        scope_context: Optional[Dict[str, Any]] = None,
     ) -> List[Dict[str, Any]]:
         if not query.strip():
             return []
+        if limit <= 0:
+            raise ValueError("knowledge_search_limit_must_be_positive")
+        if not 0 <= min_similarity <= 1:
+            raise ValueError("knowledge_min_relevance_must_be_between_0_and_1")
+        if self.provider == "cognia":
+            return await self._search_cognia(
+                query,
+                limit=limit,
+                min_relevance=min_similarity,
+                scope_context=scope_context,
+            )
+        return await self._search_local(
+            query,
+            limit=limit,
+            min_similarity=min_similarity,
+            access_scopes=access_scopes,
+        )
+
+    async def _search_cognia(
+        self,
+        query: str,
+        *,
+        limit: int,
+        min_relevance: float,
+        scope_context: Optional[Dict[str, Any]],
+    ) -> List[Dict[str, Any]]:
+        retrieved_at = datetime.now(timezone.utc).isoformat()
+        async with CogniaClient() as client:
+            payload = await client.search(
+                query,
+                knowledge_base_ids=settings.COGNIA_KNOWLEDGE_BASE_IDS,
+                limit=limit,
+                scope_context=scope_context,
+            )
+
+        documents: List[Dict[str, Any]] = []
+        for raw in payload.get("items", []):
+            if not isinstance(raw, dict):
+                raise CogniaContractError("cognia_search_item_must_be_object")
+            required = (
+                "knowledgeBaseId",
+                "knowledgeId",
+                "revisionId",
+                "revisionNumber",
+                "chunkId",
+                "chunkText",
+                "relevanceScore",
+            )
+            missing = [key for key in required if raw.get(key) is None]
+            if missing:
+                raise CogniaContractError("cognia_search_item_missing:" + ",".join(missing))
+            try:
+                relevance = float(raw["relevanceScore"])
+            except (TypeError, ValueError) as exc:
+                raise CogniaContractError("cognia_relevance_score_invalid") from exc
+            if not 0 <= relevance <= 1:
+                raise CogniaContractError("cognia_relevance_score_out_of_range")
+            if relevance < min_relevance:
+                continue
+
+            knowledge_base_id = int(raw["knowledgeBaseId"])
+            knowledge_id = int(raw["knowledgeId"])
+            revision_id = int(raw["revisionId"])
+            revision_number = int(raw["revisionNumber"])
+            chunk_id = int(raw["chunkId"])
+            source_id = (
+                f"cognia:{knowledge_base_id}:{knowledge_id}:"
+                f"{revision_id}:{chunk_id}"
+            )
+            item: Dict[str, Any] = {
+                "id": source_id,
+                "source_id": source_id,
+                "provider": "cognia",
+                "source": "cognia",
+                "knowledge_base_id": knowledge_base_id,
+                "knowledge_id": knowledge_id,
+                "revision_id": revision_id,
+                "revision_number": revision_number,
+                "version": str(revision_number),
+                "chunk_id": chunk_id,
+                "chunk_index": raw.get("chunkIndex"),
+                "content": str(raw["chunkText"]),
+                "start_offset": raw.get("startOffset"),
+                "end_offset": raw.get("endOffset"),
+                "approximate_token_count": raw.get("approximateTokenCount"),
+                "knowledge_type": raw.get("knowledgeType"),
+                "scope": raw.get("scope"),
+                "rank": raw.get("rank"),
+                "relevance": relevance,
+                "retrieved_at": retrieved_at,
+            }
+            if not validate_retrieval(item):
+                raise CogniaContractError("cognia_retrieval_contract_invalid")
+            documents.append(item)
+            if len(documents) >= limit:
+                break
+
+        logger.info(
+            "cognia_rag_search_completed",
+            count=len(documents),
+            knowledge_base_count=len(settings.COGNIA_KNOWLEDGE_BASE_IDS),
+        )
+        return documents
+
+    async def _search_local(
+        self,
+        query: str,
+        *,
+        limit: int,
+        min_similarity: float,
+        access_scopes: Optional[List[str]],
+    ) -> List[Dict[str, Any]]:
+        db = self._require_local_db()
         scopes = access_scopes or ["internal"]
         query_embedding = await EmbeddingService.generate_embedding(query)
         stmt = (
@@ -90,7 +221,7 @@ class KnowledgeRAGService:
             .order_by("distance")
             .limit(max(limit * 3, limit))
         )
-        result = await self.db.execute(stmt)
+        result = await db.execute(stmt)
         rows = result.all()
         retrieved_at = datetime.now(timezone.utc).isoformat()
         documents: List[Dict[str, Any]] = []
@@ -109,6 +240,7 @@ class KnowledgeRAGService:
             item = {
                 "id": str(doc.id),
                 "source_id": str(doc.id),
+                "provider": "local_pgvector",
                 "title": doc.title,
                 "content": doc.content[:500] + "..." if len(doc.content) > 500 else doc.content,
                 "source": doc.source,
@@ -127,17 +259,40 @@ class KnowledgeRAGService:
             if len(documents) >= limit:
                 break
 
-        logger.info(f"Governed RAG search returned {len(documents)} documents")
+        logger.info(f"Governed local RAG search returned {len(documents)} documents")
         return documents
 
+    async def generate_context(
+        self,
+        task: str,
+        *,
+        subject: Optional[Dict[str, str]] = None,
+        context_profile_id: Optional[int] = None,
+    ) -> Dict[str, Any]:
+        if self.provider != "cognia":
+            raise RuntimeError("context_generation_requires_cognia_provider")
+        profile_id = context_profile_id or settings.COGNIA_CONTEXT_PROFILE_ID
+        if profile_id is None:
+            raise RuntimeError("cognia_context_profile_id_not_configured")
+        async with CogniaClient() as client:
+            return await client.generate_context(
+                task,
+                context_profile_id=profile_id,
+                subject=subject,
+            )
+
     async def get_all_documents(self, limit: int = 100) -> List[Dict[str, Any]]:
+        if self.provider != "local_pgvector":
+            raise RuntimeError("cognia_knowledge_listing_requires_explicit_kb_contract")
+        db = self._require_local_db()
         stmt = select(KnowledgeDocument).limit(limit)
-        result = await self.db.execute(stmt)
+        result = await db.execute(stmt)
         docs = result.scalars().all()
         return [
             {
                 "id": str(doc.id),
                 "source_id": str(doc.id),
+                "provider": "local_pgvector",
                 "title": doc.title,
                 "content": doc.content[:200] + "..." if len(doc.content) > 200 else doc.content,
                 "source": doc.source,
@@ -149,12 +304,16 @@ class KnowledgeRAGService:
         ]
 
     async def delete_document(self, doc_id: UUID) -> bool:
+        if self.provider != "local_pgvector":
+            # Cognia V1 consumer API does not expose Knowledge delete.
+            raise RuntimeError("cognia_knowledge_delete_not_supported")
+        db = self._require_local_db()
         stmt = select(KnowledgeDocument).where(KnowledgeDocument.id == doc_id)
-        result = await self.db.execute(stmt)
+        result = await db.execute(stmt)
         doc = result.scalar_one_or_none()
         if not doc:
             return False
-        await self.db.delete(doc)
-        await self.db.commit()
-        logger.info(f"Deleted knowledge document: {doc_id}")
+        await db.delete(doc)
+        await db.commit()
+        logger.info(f"Deleted local knowledge document: {doc_id}")
         return True
