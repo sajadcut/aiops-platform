@@ -1,29 +1,22 @@
-ARG PYTHON_BASE_IMAGE=python:3.12-slim
-FROM ${PYTHON_BASE_IMAGE}
+ARG PYTHON_BUILDER_IMAGE=python:3.12-slim
+ARG PYTHON_RUNTIME_IMAGE=python:3.12-slim
 
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+# Build stage: the approved builder image provides the offline wheelhouse.
+# Nothing from this stage is inherited by the runtime image except /opt/venv.
+FROM ${PYTHON_BUILDER_IMAGE} AS builder
+
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1 \
     PIP_NO_CACHE_DIR=1 \
-    APP_ENV=production \
-    LOG_DIR=/var/log/aiops
+    PIP_NO_INDEX=1 \
+    VIRTUAL_ENV=/opt/venv \
+    PATH="/opt/venv/bin:${PATH}"
 
-RUN addgroup --system aiops \
-    && adduser --system --ingroup aiops --uid 10001 aiops \
-    && mkdir -p /var/log/aiops \
-    && chown -R aiops:aiops /var/log/aiops
-
-WORKDIR /app
-
-# Offline production contract: the approved base image/build environment must
-# provide the complete wheelhouse at /opt/wheels. Missing dependencies fail the
-# image build; a partially installed runtime is never accepted.
+WORKDIR /build
 COPY requirements.txt ./
 RUN test -d /opt/wheels \
+    && python -m venv "$VIRTUAL_ENV" \
     && python -m pip install --no-index --find-links=/opt/wheels -r requirements.txt \
     && python -m pip check \
-    && current_openssl="$(dpkg-query -W -f='${Version}' openssl)" \
-    && dpkg --compare-versions "$current_openssl" ge '3.5.7-1~deb13u2' \
     && python - <<'PY'
 from importlib.metadata import PackageNotFoundError, version
 from packaging.version import Version
@@ -38,11 +31,41 @@ for package, minimum in minimums.items():
         raise SystemExit(f"vulnerable runtime package: {package}={installed} < {minimum}")
 PY
 
-RUN rm -rf /root/.cache/pip
+# Runtime stage: start from the approved hardened runtime base, not the
+# wheelhouse/builder image. This prevents /opt/wheels and build-only artifacts
+# from becoming part of the promoted production filesystem.
+FROM ${PYTHON_RUNTIME_IMAGE} AS runtime
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PIP_NO_CACHE_DIR=1 \
+    APP_ENV=production \
+    LOG_DIR=/var/log/aiops \
+    VIRTUAL_ENV=/opt/venv \
+    PATH="/opt/venv/bin:${PATH}"
+
+RUN addgroup --system aiops \
+    && adduser --system --ingroup aiops --uid 10001 aiops \
+    && mkdir -p /var/log/aiops \
+    && chown -R aiops:aiops /var/log/aiops
+
+WORKDIR /app
+
+COPY --from=builder --chown=root:root /opt/venv /opt/venv
 
 # .dockerignore excludes .env, VCS metadata, logs and local artifacts. Runtime
 # secrets/configuration are injected by the deployment platform, never baked.
 COPY --chown=aiops:aiops . .
+
+# Fail closed if an approved runtime base accidentally contains build material.
+# The OpenSSL check applies to the Debian 13 Python 3.12 runtime contract used
+# by this project and is also exercised by container acceptance.
+RUN test ! -e /opt/wheels \
+    && test ! -e /build \
+    && python -m pip check \
+    && current_openssl="$(dpkg-query -W -f='${Version}' openssl)" \
+    && dpkg --compare-versions "$current_openssl" ge '3.5.7-1~deb13u2'
 
 USER 10001:10001
 

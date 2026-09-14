@@ -13,16 +13,21 @@ jobs:
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
-      - name: Build hardened dependency wheelhouse base
+      - name: Build hardened runtime base and dependency wheelhouse builder
         shell: bash
         run: |
           set -euo pipefail
-          cat > /tmp/Wheelhouse.Dockerfile <<'EOF'
+          cat > /tmp/RuntimeBase.Dockerfile <<'EOF'
           FROM python:3.12-slim
           RUN apt-get update \
               && DEBIAN_FRONTEND=noninteractive apt-get upgrade -y \
-              && rm -rf /var/lib/apt/lists/* \
-              && python -m pip install --upgrade pip 'setuptools>=78.1.1' 'msgpack>=1.2.1' \
+              && rm -rf /var/lib/apt/lists/*
+          EOF
+          docker build -t aiops-runtime-base-ci -f /tmp/RuntimeBase.Dockerfile .
+
+          cat > /tmp/Wheelhouse.Dockerfile <<'EOF'
+          FROM aiops-runtime-base-ci
+          RUN python -m pip install --upgrade pip 'setuptools>=78.1.1' 'msgpack>=1.2.1' \
               && rm -rf /root/.cache/pip
           WORKDIR /build
           COPY requirements.txt .
@@ -37,12 +42,13 @@ jobs:
         run: |
           set -euo pipefail
           docker build \
-            --build-arg PYTHON_BASE_IMAGE=aiops-wheelhouse-ci \
+            --build-arg PYTHON_BUILDER_IMAGE=aiops-wheelhouse-ci \
+            --build-arg PYTHON_RUNTIME_IMAGE=aiops-runtime-base-ci \
             -t aiops-platform-ci:${GITHUB_SHA} \
             -f deployment/docker/offline/Dockerfile .
           docker image inspect aiops-platform-ci:${GITHUB_SHA} >/dev/null
 
-      - name: Assert runtime image hardening
+      - name: Assert runtime image hardening and builder isolation
         shell: bash
         run: |
           set -euo pipefail
@@ -52,6 +58,12 @@ jobs:
           IMAGE_ID="$(docker image inspect aiops-platform-ci:${GITHUB_SHA} --format '{{.Id}}')"
           [[ "$IMAGE_ID" =~ ^sha256:[0-9a-f]{64}$ ]]
           printf '%s\n' "$IMAGE_ID" > image-id.txt
+          docker run --rm --entrypoint /bin/sh aiops-platform-ci:${GITHUB_SHA} -ec '
+            test ! -e /opt/wheels
+            test ! -e /build
+            test -x /opt/venv/bin/python
+            python -m pip check
+          '
 
       - name: Container smoke test
         shell: bash
@@ -93,8 +105,10 @@ jobs:
           CID="$(docker create aiops-platform-ci:${GITHUB_SHA})"
           trap 'docker rm -f "$CID" >/dev/null 2>&1 || true' EXIT
           docker export "$CID" | tar -C runtime-rootfs -xf -
-          test -x runtime-rootfs/usr/local/bin/python
+          test -x runtime-rootfs/opt/venv/bin/python
           test -f runtime-rootfs/app/apps/api/main.py
+          test ! -e runtime-rootfs/opt/wheels
+          test ! -e runtime-rootfs/build
 
       - name: Scan merged runtime filesystem for fixable HIGH/CRITICAL vulnerabilities
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
