@@ -2,7 +2,7 @@
 
 Governed AIOps control plane for Signal ingestion, durable Incident/Evidence/RCA workflows, human approval, allowlisted execution through MCP, verification and audit.
 
-The architecture contract is [`MASTER.md`](MASTER.md). Production operational guidance is in [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md), configuration is in [`docs/CONFIGURATION.md`](docs/CONFIGURATION.md), and the latest production-readiness audit is in [`docs/PRODUCTION_READINESS_AUDIT_2026-08-28.md`](docs/PRODUCTION_READINESS_AUDIT_2026-08-28.md).
+The architecture contract is [`MASTER.md`](MASTER.md). Strict production acceptance criteria are in [`PRODUCTION_ACCEPTANCE.md`](PRODUCTION_ACCEPTANCE.md), the current acceptance report is [`FINAL_ACCEPTANCE_REPORT.md`](FINAL_ACCEPTANCE_REPORT.md), production operational guidance is in [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md), and configuration is in [`docs/CONFIGURATION.md`](docs/CONFIGURATION.md).
 
 ## Local clean startup
 
@@ -27,20 +27,24 @@ Do **not** deploy by copying the development template unchanged. The production 
 
 Promotion sequence:
 
-1. Build the approved Python 3.12 image from an approved offline wheelhouse and pin/sign the resulting image digest.
-2. Inject ConfigMap/Secret values; do not bake `.env` into the image.
-3. Rotate/verify all credentials, including any credential-like values that have ever appeared in repository history.
-4. Run `deployment/kubernetes/migrate-job.yaml` using the exact image digest being promoted.
-5. Require the migration job to succeed before rolling the API Deployment.
-6. Wait for `/api/v1/health/ready` to return HTTP 200; `not_ready` is HTTP 503.
-7. Scrape `/api/v1/metrics` and ship stdout plus `/var/log/aiops` JSON/text logs to the production log platform.
-8. Run the production smoke/E2E checks in `docs/DEPLOYMENT.md` before enabling write execution.
+1. Build the approved Python 3.12 image from an approved offline wheelhouse/runtime base and pin the resulting image digest.
+2. Require the repository container gate to pass: builder/runtime isolation, smoke, exact-rootfs validation, Trivy policy, CycloneDX SBOM, cosign signing-path verification and immutable Kubernetes rendering.
+3. Sign and verify the actual OCI artifact in the approved internal registry according to the organization promotion policy.
+4. Inject ConfigMap/Secret values; do not bake `.env` into the image.
+5. Rotate/verify all credentials, including any credential-like values that have ever appeared in repository history.
+6. Run `deployment/kubernetes/migrate-job.yaml` using the exact image digest being promoted.
+7. Require the migration job to succeed before rolling the API Deployment.
+8. Wait for `/api/v1/health/ready` to return HTTP 200; `not_ready` is HTTP 503.
+9. Scrape `/api/v1/metrics` and ship stdout plus `/var/log/aiops` JSON/text logs to the production log platform.
+10. Run the production smoke/E2E checks in `docs/DEPLOYMENT.md` and the acceptance scenarios in `PRODUCTION_ACCEPTANCE.md` before enabling write execution.
 
 ## Safety boundaries
 
 - Operational API routes use explicit RBAC permissions; health/liveness/readiness/metrics and static dashboard assets are intentionally unauthenticated.
 - Agents cannot directly register arbitrary write tools. Writes cross `ExecutionService` and the Tool Registry.
-- Durable approvals expire, are bound to the complete execution intent, and are atomically consumed before writes.
+- Durable approvals expire, are bound to the execution intent, and are atomically consumed before approval-gated writes.
+- Governed writes require a short-lived signed execution capability bound to the concrete incident/approval/tool/action/target/parameters/timeout/runbook/rollback intent; caller-provided `approval_granted` is not authorization.
+- MCP is the canonical Control-Plane boundary for external operational tools.
 - VM writes go through the VM MCP edge. The Control Plane does not open SSH sessions.
 - Production VM MCP requires a non-root key-only SSH identity, strict known-host verification, and target/service allowlists.
 - MCP write identity is separated from read identity, and MCP writes are not transport-retried automatically.
@@ -48,6 +52,8 @@ Promotion sequence:
 
 ## Tests and CI
 
-The `quality` workflow runs on feature-branch pushes and pull requests with Python 3.12. It performs repository/config hygiene checks, dependency and high-severity static security audits, the full test suite, clean PostgreSQL+pgvector migration acceptance, approval locking/correlation checks, forward migration from an older schema and downgrade/rebuild validation.
+The `quality` workflow runs with Python 3.12 and performs repository/config hygiene checks, dependency and high-severity static security audits, the full unit/integration/scenario/security suite, clean PostgreSQL+pgvector migration acceptance, approval/correlation locking checks, forward migration from an older schema and downgrade/rebuild validation.
 
-The production offline image still depends on the organization's approved wheelhouse/image-signing pipeline. A successful source CI run is necessary but not sufficient for production promotion.
+The `container-acceptance` workflow builds separate hardened runtime and wheelhouse-builder images, then builds the production image as a true multi-stage artifact. Only `/opt/venv` crosses from builder to runtime; `/opt/wheels` and `/build` are rejected from the final filesystem. The gate then runs a container smoke test, exports the exact merged runtime rootfs, blocks fixable HIGH/CRITICAL Trivy findings, emits a CycloneDX SBOM, proves a cosign sign/verify path, validates immutable Kubernetes digest rendering and uploads the supply-chain evidence.
+
+A green repository container gate is necessary but not sufficient for production promotion. The target environment must still prove approved internal wheelhouse/base-image supply, real OCI registry signing/verification/promotion, enterprise identity, real MCP endpoints, HA/DR and the production-like acceptance scenarios in `PRODUCTION_ACCEPTANCE.md`.
