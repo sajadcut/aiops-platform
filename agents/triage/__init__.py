@@ -85,6 +85,12 @@ Incident={input_data.incident_id}\nService={input_data.service_name}\nSummary={i
             # production triage does not default to a database-only diagnosis.
             deterministic_routes = ["database", "application", "dependency", "infrastructure"]
             primary = "database"
+        elif asset_type == "network":
+            # Network-device incidents can present as generic application timeouts.
+            # Keep Infrastructure and Dependency in the first deterministic wave
+            # so DNS/path/reachability faults are checked before symptom-only RCA.
+            deterministic_routes = ["network", "infrastructure", "dependency"]
+            primary = "network"
         elif asset_type == "vm" or platform == "vm" or str(asset.get("os_family") or "unknown").lower() in {"linux", "windows"}:
             # A guest service outage can be caused by the process itself, host
             # pressure or a reachability/path fault. Keep Network in the first
