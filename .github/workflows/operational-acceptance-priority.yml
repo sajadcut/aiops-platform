@@ -1,0 +1,176 @@
+name: operational-acceptance-priority
+
+on:
+  push:
+    branches:
+      - ops-acceptance-priority-20260914
+
+permissions:
+  contents: read
+
+jobs:
+  priority-operational-acceptance:
+    runs-on: ubuntu-latest
+    environment: staging
+    timeout-minutes: 90
+    env:
+      AIOPS_TEST_ENV: staging
+      ALLOW_DESTRUCTIVE_TESTS: "true"
+      AIOPS_TEST_AUTO_APPROVE: "true"
+      AIOPS_TLS_VERIFY: ${{ vars.AIOPS_TLS_VERIFY || 'true' }}
+      AIOPS_BASE_URL: ${{ vars.AIOPS_BASE_URL || secrets.AIOPS_BASE_URL }}
+      AIOPS_API_KEY: ${{ secrets.AIOPS_API_KEY }}
+      AIOPS_BEARER_TOKEN: ${{ secrets.AIOPS_BEARER_TOKEN }}
+      AIOPS_FAULT_INJECTOR_URL: ${{ vars.AIOPS_FAULT_INJECTOR_URL || secrets.AIOPS_FAULT_INJECTOR_URL }}
+      AIOPS_FAULT_INJECTOR_TOKEN: ${{ secrets.AIOPS_FAULT_INJECTOR_TOKEN }}
+      AIOPS_TEST_SERVICE: ${{ vars.AIOPS_TEST_SERVICE || secrets.AIOPS_TEST_SERVICE }}
+      AIOPS_TEST_K8S_WORKLOAD: ${{ vars.AIOPS_TEST_K8S_WORKLOAD || secrets.AIOPS_TEST_K8S_WORKLOAD }}
+      AIOPS_TEST_K8S_NAMESPACE: ${{ vars.AIOPS_TEST_K8S_NAMESPACE || secrets.AIOPS_TEST_K8S_NAMESPACE }}
+      AIOPS_TEST_MCP_TARGET: ${{ vars.AIOPS_TEST_MCP_TARGET || secrets.AIOPS_TEST_MCP_TARGET }}
+      AIOPS_TEST_SECOND_TARGET: ${{ vars.AIOPS_TEST_SECOND_TARGET || secrets.AIOPS_TEST_SECOND_TARGET }}
+      AIOPS_TEST_ALLOWED_TARGETS: ${{ vars.AIOPS_TEST_ALLOWED_TARGETS || secrets.AIOPS_TEST_ALLOWED_TARGETS }}
+      AIOPS_TEST_ALLOWED_FAULT_ACTIONS: ${{ vars.AIOPS_TEST_ALLOWED_FAULT_ACTIONS || secrets.AIOPS_TEST_ALLOWED_FAULT_ACTIONS }}
+      PROMETHEUS_URL: ${{ vars.PROMETHEUS_URL || secrets.PROMETHEUS_URL }}
+      ELASTICSEARCH_URL: ${{ vars.ELASTICSEARCH_URL || secrets.ELASTICSEARCH_URL }}
+      ELASTICSEARCH_API_KEY: ${{ secrets.ELASTICSEARCH_API_KEY }}
+      AIOPS_TEST_MCP_TIMEOUT_PROMQL: ${{ vars.AIOPS_TEST_MCP_TIMEOUT_PROMQL || secrets.AIOPS_TEST_MCP_TIMEOUT_PROMQL }}
+      AIOPS_TEST_APPROVAL_PROMQL: ${{ vars.AIOPS_TEST_APPROVAL_PROMQL || secrets.AIOPS_TEST_APPROVAL_PROMQL }}
+      AIOPS_TEST_REMEDIATION_FAILURE_PROMQL: ${{ vars.AIOPS_TEST_REMEDIATION_FAILURE_PROMQL || secrets.AIOPS_TEST_REMEDIATION_FAILURE_PROMQL }}
+      AIOPS_TEST_VERIFICATION_FAILURE_PROMQL: ${{ vars.AIOPS_TEST_VERIFICATION_FAILURE_PROMQL || secrets.AIOPS_TEST_VERIFICATION_FAILURE_PROMQL }}
+      AIOPS_TEST_CONCURRENT_INCIDENTS_PROMQL: ${{ vars.AIOPS_TEST_CONCURRENT_INCIDENTS_PROMQL || secrets.AIOPS_TEST_CONCURRENT_INCIDENTS_PROMQL }}
+
+    steps:
+      - name: Checkout tested commit
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install operational acceptance dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
+      - name: Record staging preflight without exposing values
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/operational-acceptance
+          python - <<'PY'
+          import json, os
+          required = [
+              "AIOPS_BASE_URL",
+              "AIOPS_FAULT_INJECTOR_URL",
+              "AIOPS_FAULT_INJECTOR_TOKEN",
+              "AIOPS_TEST_SERVICE",
+              "AIOPS_TEST_K8S_WORKLOAD",
+              "AIOPS_TEST_K8S_NAMESPACE",
+              "AIOPS_TEST_MCP_TARGET",
+              "AIOPS_TEST_SECOND_TARGET",
+              "AIOPS_TEST_ALLOWED_TARGETS",
+              "AIOPS_TEST_ALLOWED_FAULT_ACTIONS",
+              "PROMETHEUS_URL",
+              "ELASTICSEARCH_URL",
+              "AIOPS_TEST_MCP_TIMEOUT_PROMQL",
+              "AIOPS_TEST_APPROVAL_PROMQL",
+              "AIOPS_TEST_REMEDIATION_FAILURE_PROMQL",
+              "AIOPS_TEST_VERIFICATION_FAILURE_PROMQL",
+              "AIOPS_TEST_CONCURRENT_INCIDENTS_PROMQL",
+          ]
+          auth_present = bool(os.getenv("AIOPS_API_KEY") or os.getenv("AIOPS_BEARER_TOKEN"))
+          present = {name: bool(os.getenv(name)) for name in required}
+          payload = {
+              "environment": os.getenv("AIOPS_TEST_ENV"),
+              "auth_present": auth_present,
+              "present": present,
+              "missing": [name for name, ok in present.items() if not ok] + ([] if auth_present else ["AIOPS_API_KEY_or_AIOPS_BEARER_TOKEN"]),
+          }
+          with open("artifacts/operational-acceptance/preflight.json", "w", encoding="utf-8") as fh:
+              json.dump(payload, fh, indent=2)
+          print(json.dumps(payload, indent=2))
+          PY
+
+      - name: Execute seven priority staging scenarios
+        id: acceptance
+        shell: bash
+        run: |
+          set -uo pipefail
+          mkdir -p artifacts/operational-acceptance
+          scenarios=(
+            APP-HTTP-5XX
+            K8S-CRASHLOOP
+            MCP-TIMEOUT
+            APPROVAL-EXPIRED
+            REMEDIATION-FAILURE
+            VERIFICATION-FAILURE
+            CONCURRENT-INCIDENTS
+          )
+          overall_rc=0
+          for scenario in "${scenarios[@]}"; do
+            echo "=== ${scenario} ==="
+            python -m tests.operational.run_operational_acceptance \
+              --environment staging \
+              --scenario "${scenario}" \
+              --report-dir artifacts/operational-acceptance || overall_rc=1
+          done
+          echo "${overall_rc}" > artifacts/operational-acceptance/runner-exit-code.txt
+
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          scenarios = [
+              "APP-HTTP-5XX",
+              "K8S-CRASHLOOP",
+              "MCP-TIMEOUT",
+              "APPROVAL-EXPIRED",
+              "REMEDIATION-FAILURE",
+              "VERIFICATION-FAILURE",
+              "CONCURRENT-INCIDENTS",
+          ]
+          root = Path("artifacts/operational-acceptance")
+          results = []
+          for scenario in scenarios:
+              path = root / f"{scenario}.json"
+              if path.exists():
+                  results.append(json.loads(path.read_text(encoding="utf-8")))
+              else:
+                  results.append({"scenario_id": scenario, "status": "BLOCKED", "reason": "runner_report_missing"})
+          counts = {status: sum(1 for r in results if r.get("status") == status) for status in ["PASS", "FAIL", "BLOCKED", "PARTIAL", "NOT RUN"]}
+          payload = {"environment": "staging", "results": results, "counts": counts}
+          (root / "priority-summary.json").write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+          print(json.dumps({"counts": counts, "results": [{"scenario_id": r.get("scenario_id"), "status": r.get("status"), "reason": r.get("reason")} for r in results]}, indent=2, ensure_ascii=False))
+          PY
+          exit 0
+
+      - name: Upload operational acceptance evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: priority-operational-acceptance-evidence
+          path: artifacts/operational-acceptance/
+          if-no-files-found: error
+
+      - name: Enforce acceptance verdict
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          path = Path("artifacts/operational-acceptance/priority-summary.json")
+          if not path.exists():
+              raise SystemExit("operational acceptance summary missing")
+          payload = json.loads(path.read_text(encoding="utf-8"))
+          results = payload.get("results", [])
+          bad = [r for r in results if r.get("status") != "PASS"]
+          if bad:
+              for item in bad:
+                  print(f"{item.get('scenario_id')}: {item.get('status')} - {item.get('reason')}")
+              raise SystemExit(1)
+          print("All seven priority operational acceptance scenarios passed with staging evidence.")
+          PY
