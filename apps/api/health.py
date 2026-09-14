@@ -14,6 +14,7 @@ from database.migration_validation import validate_migration_head
 from domain.contracts.config import settings
 from domain.contracts.logging import logger
 from domain.observability import DB_POOL_CHECKED_OUT, DB_POOL_OVERFLOW, DB_POOL_SIZE, DEPENDENCY_UP
+from integrations.cognia import CogniaClient
 from integrations.elasticsearch.mcp_client import ElasticsearchMCPClient
 from integrations.kubernetes.mcp_client import KubernetesMCPClient
 from integrations.prometheus.mcp_client import PrometheusMCPClient
@@ -74,13 +75,18 @@ async def _probe_database() -> dict:
 
 
 async def _probe_one(name: str, client) -> tuple[str, dict]:
+    timeout = (
+        float(settings.COGNIA_TIMEOUT_SECONDS) + 1.0
+        if name == "cognia"
+        else float(settings.MCP_TIMEOUT_SECONDS) + 1.0
+    )
     try:
-        value = await asyncio.wait_for(client.health_check(), timeout=min(float(settings.MCP_TIMEOUT_SECONDS) + 1.0, 15.0))
+        value = await asyncio.wait_for(client.health_check(), timeout=min(timeout, 30.0))
         healthy = bool(value)
         DEPENDENCY_UP.labels(dependency=name).set(1 if healthy else 0)
         return name, {"healthy": healthy}
     except Exception as exc:
-        logger.warning("mcp_health_probe_failed", dependency=name, error_type=type(exc).__name__)
+        logger.warning("dependency_health_probe_failed", dependency=name, error_type=type(exc).__name__)
         DEPENDENCY_UP.labels(dependency=name).set(0)
         return name, {"healthy": False, "error": type(exc).__name__}
     finally:
@@ -97,6 +103,8 @@ async def _probe_external() -> dict:
         connectors["kubernetes_mcp"] = KubernetesMCPClient()
     if settings.VM_MCP_URL:
         connectors["vm_mcp"] = VMEdgeMCPClient()
+    if settings.KNOWLEDGE_PROVIDER == "cognia":
+        connectors["cognia"] = CogniaClient()
     pairs = await asyncio.gather(*(_probe_one(name, client) for name, client in connectors.items()))
     return dict(pairs)
 
@@ -109,6 +117,8 @@ def _external_required_ready(external: dict) -> bool:
         required.append("kubernetes_mcp")
     if settings.VM_MCP_URL:
         required.append("vm_mcp")
+    if settings.KNOWLEDGE_PROVIDER == "cognia":
+        required.append("cognia")
     return all(bool((external.get(name) or {}).get("healthy")) for name in required)
 
 
