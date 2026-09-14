@@ -105,7 +105,7 @@ jobs:
           CID="$(docker create aiops-platform-ci:${GITHUB_SHA})"
           trap 'docker rm -f "$CID" >/dev/null 2>&1 || true' EXIT
           docker export "$CID" | tar -C runtime-rootfs -xf -
-          test -x runtime-rootfs/opt/venv/bin/python
+          test -f runtime-rootfs/opt/venv/pyvenv.cfg
           test -f runtime-rootfs/app/apps/api/main.py
           test ! -e runtime-rootfs/opt/wheels
           test ! -e runtime-rootfs/build
