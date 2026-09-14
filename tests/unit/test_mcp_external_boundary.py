@@ -69,7 +69,6 @@ def test_mcp_client_rejects_non_allowlisted_tool():
         "http://mcp.test/mcp",
         "test",
         allowed_tools={"read_safe"},
-        require_https=False,
     )
     with pytest.raises(PermissionError):
         import asyncio
