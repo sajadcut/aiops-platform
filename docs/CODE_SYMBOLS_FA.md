@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 246 | Dashboard JS files scanned: 2 | Symbols indexed: 1422**
+**Python files scanned: 247 | Dashboard JS files scanned: 2 | Symbols indexed: 1427**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -970,6 +970,11 @@
 | `tests/scenarios/test_kubernetes_oom_acceptance.py` | `test_oom_triage_routes_to_kubernetes_and_infrastructure` | 144 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/scenarios/test_kubernetes_oom_acceptance.py` | `test_oom_multi_agent_analysis_is_grounded_and_reaches_consensus` | 163 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/scenarios/test_kubernetes_oom_acceptance.py` | `test_oom_agent_cannot_disguise_restart_as_read_only_investigation` | 204 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/scenarios/test_network_asset_routing_acceptance.py` | `NetworkRoutingScenarioLLM` | 12 | class | کلاس | module |
+| `tests/scenarios/test_network_asset_routing_acceptance.py` | `NetworkRoutingScenarioLLM.provider_name` | 14 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | NetworkRoutingScenarioLLM |
+| `tests/scenarios/test_network_asset_routing_acceptance.py` | `NetworkRoutingScenarioLLM.generate` | 17 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | NetworkRoutingScenarioLLM |
+| `tests/scenarios/test_network_asset_routing_acceptance.py` | `NetworkRoutingScenarioLLM.generate_with_messages` | 41 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | NetworkRoutingScenarioLLM |
+| `tests/scenarios/test_network_asset_routing_acceptance.py` | `test_zabbix_network_device_identity_forces_network_cross_layer_triage` | 46 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/scenarios/test_postgresql_connection_exhaustion_acceptance.py` | `PostgresConnectionExhaustionScenarioLLM` | 13 | class | Deterministic INC-002 adapter that exercises normal parsing and safety contracts. | module |
 | `tests/scenarios/test_postgresql_connection_exhaustion_acceptance.py` | `PostgresConnectionExhaustionScenarioLLM.provider_name` | 17 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | PostgresConnectionExhaustionScenarioLLM |
 | `tests/scenarios/test_postgresql_connection_exhaustion_acceptance.py` | `PostgresConnectionExhaustionScenarioLLM.generate` | 20 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | PostgresConnectionExhaustionScenarioLLM |
