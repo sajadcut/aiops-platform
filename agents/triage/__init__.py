@@ -86,7 +86,11 @@ Incident={input_data.incident_id}\nService={input_data.service_name}\nSummary={i
             deterministic_routes = ["database", "application", "dependency", "infrastructure"]
             primary = "database"
         elif asset_type == "vm" or platform == "vm" or str(asset.get("os_family") or "unknown").lower() in {"linux", "windows"}:
-            deterministic_routes = ["vm", "infrastructure"]
+            # A guest service outage can be caused by the process itself, host
+            # pressure or a reachability/path fault. Keep Network in the first
+            # deterministic wave so an unreachable service is not diagnosed as
+            # a guest-only failure before path/DNS/connectivity evidence exists.
+            deterministic_routes = ["vm", "infrastructure", "network"]
             if primary == "unknown":
                 primary = "vm"
         for route in reversed(deterministic_routes):
