@@ -65,6 +65,8 @@ api = api.replace('metadata={"provider": settings.KNOWLEDGE_PROVIDER, "error_typ
                   'metadata={"provider": "cognia", "error_type": type(exc).__name__}')
 api = api.replace('return {"provider": settings.KNOWLEDGE_PROVIDER, "items": items}',
                   'return {"provider": "cognia", "items": items}')
+api = api.replace('"KNOWLEDGE_PROVIDER_UNAVAILABLE"', '"COGNIA_RAG_UNAVAILABLE"')
+api = api.replace('"KNOWLEDGE_PROVIDER_CONTRACT_ERROR"', '"COGNIA_RAG_CONTRACT_ERROR"')
 write("apps/api/incident_resources.py", api)
 
 # The incident resource module no longer needs settings after removing provider selection.
