@@ -1,0 +1,33 @@
+name: cognia-final-alignment
+
+on:
+  push:
+    branches:
+      - fix/cognia-final-alignment-20260914
+    paths:
+      - .github/workflows/cognia-final-alignment.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Apply final Cognia alignment patch
+        run: |
+          set -euo pipefail
+          python scripts/cognia_final_alignment_patch.py
+          git diff --check
+          python -m compileall -q apps integrations knowledge tests
+      - name: Commit product changes
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add apps/api/cognia_scope.py apps/api/e2e_workflow.py apps/api/workflow.py apps/rag_service/__init__.py integrations/cognia/client.py knowledge/__init__.py tests/unit/test_cognia_scope_guard.py tests/unit/test_cognia_rag_service.py tests/unit/test_cognia_only_rag_architecture.py MASTER.md docs/COGNIA_INTEGRATION.md
+          git commit -m "fix: complete Cognia-only trust and authoring contract"
+          git push origin HEAD:fix/cognia-final-alignment-20260914
