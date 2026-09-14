@@ -23,7 +23,7 @@ Production startup fails when any of these safety rules is violated:
 - mock LLM or deterministic embedding provider is selected;
 - placeholder database credentials are still in use;
 - migration-head startup validation is disabled or the database is not at Alembic HEAD;
-- Cognia RAG lacks Application Client credentials or an explicit positive KB allowlist, uses a non-HTTP(S) URL, or uses HTTPS with TLS verification disabled;
+- Cognia RAG lacks Application Client credentials or an explicit positive KB allowlist, or uses a non-HTTP(S) URL;
 - required Zabbix, Elasticsearch or Prometheus MCP URLs are missing/non-HTTP(S);
 - neither MCP bearer identity nor mTLS identity is configured;
 - VM MCP is enabled without a distinct write bearer token;
@@ -41,7 +41,7 @@ Cognia is the **only** Knowledge RAG provider in every environment. There is no 
 - `COGNIA_KNOWLEDGE_BASE_IDS` is explicit on Search; Cognia remains authoritative for KB grants and Scope.
 - Search/index/dependency failures are provider failures, never empty-result fallback.
 - `COGNIA_CONTEXT_PROFILE_ID` remains optional because Context Generation is a separate Cognia capability.
-- The supplied sandpod guide uses HTTP and AIOps supports it. HTTPS is also supported; when HTTPS is selected in Production, TLS certificate verification is mandatory.
+- The supplied sandpod guide uses HTTP and AIOps supports it. HTTPS is also supported; project transport policy intentionally disables HTTPS server-certificate/hostname validation.
 
 ## Configuration inventory
 
@@ -95,13 +95,12 @@ All fields below are required by `Settings`. “Secret” means the tracked temp
 | `MCP_BEARER_TOKEN` | MCP read identity | Yes | Required unless mTLS identity is used for clients; required by authenticated internal server. |
 | `MCP_WRITE_BEARER_TOKEN` | MCP write identity | Yes | Required for VM writes and must differ from read bearer in production. |
 | `MCP_CLIENT_CERT_PATH`, `MCP_CLIENT_KEY_PATH` | MCP TLS/mTLS | key path points to secret material | optional client cert/key must be configured together when used for client identity; server certificates are not validated. |
-| `MCP_SERVER_PROVIDER`, `MCP_SERVER_REQUIRE_AUTH` | internal edge MCP server | No | Unsupported provider fails; auth must be true in production. |
-| `ZABBIX_MCP_URL`, `ZABBIX_MCP_SERVER_NAME`, `ZABBIX_MCP_AUTH_HEADER` | Zabbix MCP client | auth header Yes | URL required/HTTPS in production. |
-| `ELASTIC_STACK_VERSION`, `ELASTICSEARCH_MCP_URL`, `ELASTICSEARCH_MCP_AUTH_HEADER` | Elastic Agent Builder MCP | auth header Yes | Stack must be >=9.2; URL must be Agent Builder MCP path and HTTPS in production. |
+| `MCP_SERVER_PROVIDER`, `MCP_SERVER_REQUIRE_AUTH` | internal edge MCP server | No | Unsupported provider fails; auth must be true in production. Zabbix is intentionally not a supported internal provider. |
+| `ZABBIX_MCP_URL`, `ZABBIX_MCP_SERVER_NAME`, `ZABBIX_MCP_AUTH_HEADER` | initMAX Zabbix MCP client | auth header Yes | This is the only supported Zabbix boundary. URL may use HTTP or HTTPS; HTTPS server certificates are not validated. `ZABBIX_MCP_AUTH_HEADER` carries the MCP-client Authorization value, normally `Bearer <token>`. |
+| `ELASTIC_STACK_VERSION`, `ELASTICSEARCH_MCP_URL`, `ELASTICSEARCH_MCP_AUTH_HEADER` | Elastic Agent Builder MCP | auth header Yes | Stack must be >=9.2; URL must be Agent Builder MCP path. HTTP and HTTPS are supported; HTTPS server certificates are not validated. |
 | `ELASTIC_AGENT_BUILDER_MCP_NAMESPACES`, `ELASTIC_AGENT_BUILDER_INDEX_PATTERN` | Elastic evidence contract | No | namespaces must include `platform.core`. |
-| `PROMETHEUS_MCP_URL`, `PROMETHEUS_MCP_SERVICE_LABEL`, `PROMETHEUS_MCP_AUTH_HEADER` | Prometheus MCP client | auth header Yes | URL required/HTTPS in production. |
-| `KUBERNETES_MCP_URL`, `VM_MCP_URL` | governed external MCPs | No | If configured in production they must be HTTPS. VM MCP write token is mandatory. |
-| `ZABBIX_URL`, `ZABBIX_USERNAME`, `ZABBIX_PASSWORD`, `ZABBIX_TIMEOUT_SECONDS` | edge/native Zabbix adapter | password Yes | Server-side helper; Control Plane should use MCP. |
+| `PROMETHEUS_MCP_URL`, `PROMETHEUS_MCP_SERVICE_LABEL`, `PROMETHEUS_MCP_AUTH_HEADER` | Prometheus MCP client | auth header Yes | URL required; HTTP and HTTPS are supported and HTTPS server certificates are not validated. |
+| `KUBERNETES_MCP_URL`, `VM_MCP_URL` | governed external MCPs | No | If configured, HTTP and HTTPS are supported; HTTPS server certificates are not validated. VM MCP write token is mandatory. |
 | `ELASTICSEARCH_HOSTS`, `ELASTICSEARCH_USERNAME`, `ELASTICSEARCH_PASSWORD`, `ELASTICSEARCH_TIMEOUT_SECONDS` | edge/native Elasticsearch adapter | password Yes | Server-side helper; Control Plane should use MCP. |
 | `PROMETHEUS_URL`, `PROMETHEUS_TIMEOUT_SECONDS` | edge/native Prometheus adapter | No | Server-side helper; Control Plane should use MCP. |
 | `KUBERNETES_API_URL`, `KUBERNETES_TOKEN`, `KUBERNETES_TOKEN_FILE`, `KUBERNETES_NAMESPACE`, `KUBERNETES_TIMEOUT_SECONDS`, `KUBERNETES_LOG_TAIL_LINES` | edge/native Kubernetes adapter | token Yes | Direct Control-Plane `KUBERNETES_API_URL` is forbidden in production. |
@@ -115,8 +114,9 @@ All fields below are required by `Settings`. “Secret” means the tracked temp
 
 - **Secret:** API keys, bearer tokens, passwords, Cognia `clientSecret`, Kubernetes token, client/private-key material and database credentials are deployment secrets.
 - **Unsafe development defaults:** `LLM_PROVIDER=mock`, `EMBEDDING_PROVIDER=deterministic`, wildcard CORS and HTTP and HTTPS integration URLs are both supported in every environment; HTTPS certificate verification is intentionally disabled by project policy.
-- **Cognia environment boundary:** the supplied consumer documentation describes a sandpod endpoint over HTTP, and AIOps intentionally supports both HTTP and HTTPS Cognia endpoints. For HTTPS in Production, certificate verification must remain enabled.
-- **Server-side/edge-only legacy compatibility:** direct Zabbix/Elasticsearch/Prometheus/Kubernetes/SSH adapter settings exist for MCP server/provider migration and tests. Direct Control-Plane Kubernetes and SSH are explicitly production-blocked.
+- **Cognia environment boundary:** the supplied consumer documentation describes a sandpod endpoint over HTTP, and AIOps intentionally supports both HTTP and HTTPS Cognia endpoints. HTTPS server-certificate/hostname validation is intentionally disabled by the project transport policy.
+- **Zabbix boundary:** Zabbix is MCP-only through `initMAX/zabbix-mcp-server`. Direct Zabbix URL/username/password settings and the native connector are intentionally absent.
+- **Server-side/edge-only legacy compatibility:** direct Elasticsearch/Prometheus/Kubernetes/SSH adapter settings exist for MCP server/provider migration and tests. Direct Control-Plane Kubernetes and SSH are explicitly production-blocked.
 - **Deployment-only:** `OFFLINE_IMAGE_REGISTRY` and `IMAGE_PULL_POLICY` are not consumed by the running API and should not be mistaken for application runtime controls.
 
 ## Secrets policy
@@ -127,7 +127,7 @@ The repository history previously contained credential-like values. Removing `.e
 
 ## Kubernetes / OpenShift
 
-- `aiops-platform-config`: non-secret runtime values, including `COGNIA_BASE_URL`, `COGNIA_CLIENT_APPLICATION_ID` when scoped retrieval is used, KB IDs, optional Context Profile ID, timeout and TLS policy.
+- `aiops-platform-config`: non-secret runtime values, including `COGNIA_BASE_URL`, `COGNIA_CLIENT_APPLICATION_ID` when scoped retrieval is used, KB IDs, optional Context Profile ID and timeout.
 - `aiops-platform-secrets`: credentials/tokens/secret paths, including `COGNIA_CLIENT_SECRET` (and `COGNIA_CLIENT_ID` if your organization classifies it as secret integration metadata).
 - `deployment/kubernetes/migrate-job.yaml`: run the exact promoted image and `alembic upgrade head` before Deployment rollout.
 - `deployment/kubernetes/aiops-platform.yaml`: forces `APP_ENV=production`, migration validation, writable `/var/log/aiops`, readiness/liveness and metrics scraping. It imports the environment-specific ConfigMap/Secret via `envFrom`, so Cognia values are injected without being committed to the manifest.
@@ -143,8 +143,8 @@ The repository history previously contained credential-like values. Removing `.e
 
 ## Cognia canonical Knowledge RAG
 
-Cognia is the only Governed Knowledge RAG in every environment. There is no runtime provider selector and no local/retired Knowledge RAG. Development/test may leave Cognia connection values empty so a clean checkout can import, but any attempted Knowledge retrieval fails explicitly as Cognia misconfiguration rather than switching providers. Production requires HTTPS, TLS verification, machine `COGNIA_CLIENT_ID`/`COGNIA_CLIENT_SECRET` and explicit `COGNIA_KNOWLEDGE_BASE_IDS`.
+Cognia is the only Governed Knowledge RAG in every environment. There is no runtime provider selector and no local/retired Knowledge RAG. Development/test may leave Cognia connection values empty so a clean checkout can import, but any attempted Knowledge retrieval fails explicitly as Cognia misconfiguration rather than switching providers. Production requires an HTTP or HTTPS Cognia endpoint, machine `COGNIA_CLIENT_ID`/`COGNIA_CLIENT_SECRET` and explicit `COGNIA_KNOWLEDGE_BASE_IDS`.
 
 `COGNIA_CLIENT_APPLICATION_ID` is a numeric Cognia Scope identity and is **not** the same value as the machine-auth `COGNIA_CLIENT_ID`. External Subject must come from an explicit upstream contract and is never inferred from a service/customer name. `COGNIA_CONTEXT_PROFILE_ID` is optional until a profile is provisioned.
 
-If Cognia is outside the Kubernetes cluster, default-deny networking requires an infrastructure-managed allowlisted HTTPS/FQDN/proxy egress path. Do not widen the application NetworkPolicy to unrestricted Internet egress.
+If Cognia is outside the Kubernetes cluster, default-deny networking requires an infrastructure-managed allowlisted HTTP/HTTPS egress path. The application NetworkPolicy permits TCP/80 and TCP/443 only to namespaces explicitly labeled for AIOps egress; do not widen it to unrestricted Internet egress.
