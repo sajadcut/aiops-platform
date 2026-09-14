@@ -115,9 +115,9 @@ class KnowledgeTopologyResolver:
         expected_fqdns: Optional[Iterable[str]] = None,
     ) -> Dict[str, Any]:
         expected = {
-            str(value).lower().rstrip(".")
+            normalized
             for value in (expected_fqdns or [])
-            if str(value).strip()
+            if (normalized := cls._normalize_fqdn(str(value)))
         }
         fields: Dict[str, str] = {}
         field_sources: Dict[str, str] = {}
