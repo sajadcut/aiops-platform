@@ -1,25 +1,27 @@
 # Final Acceptance Report — AI Ops NeoBankingOperation Platform
 
-Baseline: `MASTER.md 2.3 - Benchmark-driven Production Hardening`
+Baseline: `MASTER.md 2.4 - Cognia Governed Knowledge RAG`
 
-Assessed repository HEAD: `a0d9da2f4923d2f3ea264a1010babebe576e2e6d`
+Assessed Cognia code baseline: `64c69f194b9ca2bfc60c74b10fc6e2743742219e` on `feat/cognia-rag-integration`
 
 Assessment date: 2026-09-14
 
 ## Verdict first
 
-The repository is **not yet eligible for a strict “Production Ready / fully accepted” verdict**. It is an advanced governed AIOps implementation with strong repository-level safety, database and container-supply-chain controls. Strict production acceptance still depends on real MCP-backed integrations, enterprise/workload identity, HA/DR, production-like load/failure behavior, controlled remediation/rollback drills and recorded recovery evidence.
+The repository is **not yet eligible for a strict “Production Ready / fully accepted” verdict**. It is an advanced governed AIOps implementation with strong repository-level safety, database, Cognia consumer-contract and container-supply-chain controls. Strict production acceptance still depends on real Cognia and MCP integrations, enterprise/workload identity, PostgreSQL HA/DR, production-like load/failure behavior, controlled remediation/rollback drills and recorded recovery evidence.
 
 Current evidence-based status:
 
-- Source/security/unit/integration CI on assessed HEAD: **PASS**.
-- PostgreSQL migration/pgvector/governance acceptance on assessed HEAD: **PASS**.
-- Container runtime isolation, Trivy HIGH/CRITICAL scan, CycloneDX SBOM, cosign sign/verify path and immutable Kubernetes rendering: **PASS at repository CI level**.
-- External production acceptance: **incomplete**.
+- Source/security/unit/integration suite on the assessed Cognia code baseline: **PASS**.
+- PostgreSQL migration/pgvector/governance acceptance remains part of the required quality gate and must be green on the promoted HEAD.
+- Container runtime isolation, Trivy HIGH/CRITICAL scan, CycloneDX SBOM, cosign sign/verify path and immutable Kubernetes rendering remain required on the promoted HEAD.
+- Cognia repository consumer contract: **PASS (repo contract)**.
+- Real Cognia environment acceptance: **REAL ENV REQUIRED**.
+- Overall external production acceptance: **incomplete**.
 
 This report intentionally avoids a synthetic readiness percentage. Production acceptance is evidence-gated: unresolved `PARTIAL`, `REAL ENV REQUIRED` and `NOT TESTED` items remain blockers regardless of repository implementation maturity.
 
-See `docs/BENCHMARK_2026.md` for the benchmark control matrix and `PRODUCTION_ACCEPTANCE.md` for the strict acceptance gate.
+See `MASTER.md`, `docs/COGNIA_INTEGRATION.md`, `docs/PRODUCTION_ACCEPTANCE_MATRIX.md` and `PRODUCTION_ACCEPTANCE.md` for the governing contracts and acceptance gates.
 
 ## Acceptance matrix
 
@@ -41,24 +43,26 @@ See `docs/BENCHMARK_2026.md` for the benchmark control matrix and `PRODUCTION_AC
 | Approval binding | persisted approval bound to incident/action/tool/target and consumed once | PASS |
 | Execution boundary | allowlisted tools + durable approval where required + signed execution capability bound to complete execution intent | PASS (repo) |
 | Verification | fresh pre-execution baseline + metric-direction-aware before/after | PASS (repo) / PARTIAL per-action SLO coverage |
-| Memory | conclusive outcome gating + successful-pattern retrieval | PASS (repo); false-reuse/scale acceptance pending |
-| Knowledge RAG | canonical Cognia machine-auth/Search/Context/authoring contract with full chunk traceability and no hidden fallback | PASS (repo contract); REAL ENV REQUIRED for Cognia endpoint/grants/scope/lifecycle/context acceptance |
-| PostgreSQL persistence | Incident/Evidence/Finding/Approval/Audit/checkpoint/runbook models | PASS |
-| pgvector | schema + migration/database acceptance | PASS in current CI |
+| Operational Memory | conclusive outcome gating + PostgreSQL/pgvector successful-pattern retrieval | PASS (repo); false-reuse/scale acceptance pending |
+| Cognia canonical Governed Knowledge RAG | Application Client machine auth; opaque token lifecycle; explicit KBs; separate numeric Scope identity; Active-Revision Chunk traceability; typed status/errors; no hidden fallback; authoring idempotency; Revision concurrency; no machine approval; optional Context Generation | PASS (repo contract); **REAL ENV REQUIRED** for HTTPS endpoint/grants/scope/lifecycle/index/context acceptance |
+| Local Knowledge pgvector | deterministic development/test + migration compatibility only | PASS as compatibility path; **not Production Knowledge authority** |
+| PostgreSQL persistence | Incident/Evidence/Finding/Approval/Audit/checkpoint/runbook/Memory models | PASS |
+| pgvector | Operational Memory schema + migration/database acceptance | PASS in repository acceptance path |
 | Workflow durability | application-level PostgreSQL checkpoint/resume | PASS (repo); distributed failover semantics remain |
 | OIDC/RBAC | JWT issuer/audience/JWKS validation + permission policy | PASS (repo); enterprise issuer/role-map acceptance pending |
 | A2A | structured collaboration + target/HTTPS controls | PARTIAL; cryptographic workload identity/mTLS lifecycle remains |
-| MCP | canonical Control-Plane external-tool boundary with provider adapters and policy controls | PASS (repo contract) / PARTIAL real endpoint acceptance |
+| MCP operational boundary | canonical Control-Plane external operational-tool boundary with provider adapters and policy controls | PASS (repo contract) / PARTIAL real endpoint acceptance |
 | Elastic MCP | Elastic Agent Builder MCP >= 9.2, deterministic read-only ES|QL evidence path | PASS (repo contract); target Elastic acceptance pending |
 | API rate limiting | in-memory limiter | PARTIAL; not a multi-replica distributed control |
-| Offline image | true multi-stage build; runtime receives `/opt/venv` only; builder wheelhouse/build artifacts excluded | PASS (repo definition + container acceptance) |
-| Container vulnerability gate | exact exported runtime rootfs scanned for fixable HIGH/CRITICAL vulnerabilities | PASS on assessed HEAD |
-| SBOM | CycloneDX generated from exact exported runtime rootfs | PASS on assessed HEAD |
-| Signing path | cosign key generation + image-ID blob signing + verification | PASS on assessed HEAD; real OCI registry signing/promotion still external |
-| Immutable Kubernetes release rendering | app + migration render the same immutable digest | PASS on assessed HEAD |
+| Offline image | true multi-stage build; runtime receives `/opt/venv` only; builder wheelhouse/build artifacts excluded | PASS (repo definition + container acceptance path) |
+| Container vulnerability gate | exact exported runtime rootfs scanned for fixable HIGH/CRITICAL vulnerabilities | PASS on verified container heads; must remain green on promotion head |
+| SBOM | CycloneDX generated from exact exported runtime rootfs | PASS on verified container heads |
+| Signing path | cosign key generation + image-ID blob signing + verification | PASS repository path; real OCI registry signing/promotion still external |
+| Immutable Kubernetes release rendering | app + migration render the same immutable digest | PASS repository path |
 | Kubernetes pod hardening | rolling update, PDB, resources, topology spread, seccomp, non-root, read-only root | PASS (definition) |
+| Cognia production network path | default-deny app network retained; narrow approved HTTPS/FQDN/proxy route is an infrastructure responsibility | REAL ENV REQUIRED |
 | Application HA | replicas + PDB/topology | PARTIAL; not end-to-end HA proof |
-| PostgreSQL HA / backup / DR | no accepted topology/exercise | PENDING |
+| PostgreSQL HA / backup / DR | no accepted topology/exercise | PENDING / REAL ENV REQUIRED |
 | Windows execution | no mature constrained native/edge adapter accepted | PENDING |
 | Kubernetes/Ansible/Jenkins/VMware action breadth | incomplete or unvalidated | PENDING |
 | AI/LLM OpenTelemetry | process-local AgentTelemetry only | PARTIAL |
@@ -66,60 +70,58 @@ See `docs/BENCHMARK_2026.md` for the benchmark control matrix and `PRODUCTION_AC
 | Load/soak/chaos | no sustained production-scale acceptance | PENDING |
 | Real internal registry promotion | repository proves scan/SBOM/signing path/immutable render, not target registry policy and promotion | PENDING EXTERNAL VALIDATION |
 | Branch protection/ruleset | repository governance controls still require formal enforcement/acceptance | PENDING |
-| CI unit/integration/scenario/security | GitHub Actions `quality` workflow | PASS on assessed HEAD |
-| Database migration acceptance | PostgreSQL+pgvector upgrade/downgrade/rebuild job | PASS on assessed HEAD |
-| Container acceptance | hardened build → smoke → rootfs isolation → Trivy → SBOM → cosign → immutable render → evidence artifact | PASS on assessed HEAD |
 
-## Hardening now reflected in HEAD
+## Cognia alignment reflected in the repository
 
-1. Deterministic cross-source correlation uses stable service/workload fingerprints, conservative signal families, a bounded window and PostgreSQL advisory locking.
-2. Related Zabbix/Elastic/Prometheus triggers can attach as additional Evidence to one eligible open/analyzing Incident while every source event remains separately persisted.
-3. MCP is the canonical Control-Plane boundary for external operational tools; provider adapters cover Zabbix, Prometheus, Elastic Agent Builder and optional Kubernetes/VM Edge paths.
-4. Elastic evidence uses the current Elastic Agent Builder MCP architecture rather than the deprecated standalone Elastic MCP provider.
-5. Durable approval is no longer represented by a caller boolean. Governed execution uses durable approval plus a short-lived signed execution capability bound to the concrete execution intent.
-6. Production startup fails closed for unsafe authentication, insecure MCP, migration drift, direct Control-Plane SSH/Kubernetes access and other unsafe production configuration.
-7. The production Docker build is genuinely multi-stage: `/opt/wheels` and `/build` remain outside the promoted runtime filesystem; only the installed virtual environment crosses the builder/runtime boundary.
-8. Container acceptance validates non-root runtime behavior, smoke health, exact exported rootfs isolation, Trivy HIGH/CRITICAL vulnerability policy, CycloneDX SBOM, cosign sign/verify path and immutable Kubernetes rendering.
-9. Source/security/unit/integration tests and PostgreSQL migration acceptance are green on the assessed `main` HEAD.
+1. Cognia is now the **canonical Production Governed Knowledge RAG** in `MASTER.md 2.4`; PostgreSQL/pgvector remains the Operational Memory vector layer and local Knowledge is explicitly non-Production compatibility/dev-test.
+2. Machine integration uses Cognia Client Application authentication only. Machine tokens are opaque, cached within `expiresIn`, never decoded as JWTs and reacquired with client credentials after expiry.
+3. Authentication `clientId/clientSecret` and numeric `clientApplicationId` Scope identity are modeled separately.
+4. Search sends explicit KB IDs and preserves Knowledge Base, Knowledge, Revision, Revision Number and Chunk IDs. `relevanceScore` is retained as retrieval relevance rather than factual confidence.
+5. Cognia successful zero results are distinct from authentication, forbidden, hidden/not-accessible, contract, index/dependency and transport failures. There is no hidden local-pgvector fallback.
+6. External Subject is accepted only from an explicit upstream contract. AIOps does not guess Namespace/ExternalSubjectId from service/customer display names and rejects a mismatched Client Application scope.
+7. Registration supports Cognia Idempotency-Key semantics; transient retry is enabled only when replay is protected by an idempotency key.
+8. Candidate Revision always carries `expectedCurrentCandidateRevisionId`; a concurrency conflict is surfaced and is not blindly retried.
+9. Machine integration intentionally does not expose human Approve/Reject decisions.
+10. Context Generation remains auxiliary and optional until a Context Profile is provisioned; `HTTP 200 + isSufficient=false` is preserved as insufficient context rather than treated as complete.
+11. Production configuration fails closed unless Cognia is selected for governed knowledge and an HTTPS/TLS-verified endpoint, machine credentials and explicit KB IDs are supplied.
+12. Cognia secret material uses the central recursive redaction boundary, and Production deployment must provide secret injection plus narrowly allowlisted network egress.
 
-## Reference flow status
+## Existing platform hardening retained
 
-### Zabbix HTTP 5xx
+- Deterministic cross-source correlation with PostgreSQL advisory locking.
+- MCP as the canonical external **operational-tool** boundary for Zabbix, Prometheus, Elastic Agent Builder and optional Kubernetes/VM Edge paths.
+- Elastic evidence on the Agent Builder MCP architecture rather than deprecated standalone Elastic MCP.
+- Durable approval plus short-lived signed execution capability bound to concrete execution intent.
+- Production startup fail-closed for unsafe authentication, insecure MCP, migration drift and direct Control-Plane SSH/Kubernetes access.
+- True multi-stage production image with builder artifacts excluded from the runtime filesystem.
+- Repository container acceptance for non-root runtime behavior, smoke, rootfs isolation, vulnerability policy, SBOM, signing-path verification and immutable Kubernetes rendering.
 
-`Zabbix MCP → Signal Gateway → deterministic correlation/idempotency → trigger Evidence → Asset Resolution → Elastic/Prometheus/K8s/VM MCP evidence → Triage → Specialists → peer coordination/evidence refresh → RCA → Evaluator → Policy → Approval when required → signed execution capability → Execution Service → governed MCP write → fresh Verification → Audit/Memory`
+## Reference incident flow with Cognia
 
-**Repository path:** substantially implemented. **Strict production acceptance:** pending real endpoint/execution/recovery evidence.
+`Signal → deterministic correlation/idempotency → Live Evidence collection → Asset/Operational Context → Cognia Search (governed auxiliary Knowledge, explicit status) + Operational Memory → Triage → Specialists → coordination/RCA → Evaluator → Policy → Approval when required → signed execution capability → Execution Service → governed MCP write → fresh Verification → Audit/Memory`
 
-### Elasticsearch anomaly without Zabbix alert
+**Authority rule:** Live Evidence is authoritative for the current Incident. Cognia Knowledge and Operational Memory can inform reasoning but cannot authorize a Production write or override contradictory live Evidence.
 
-`Elastic Agent Builder MCP anomaly/evidence → first-class trigger/context → cross-source query → Zabbix queried-zero OR unavailable/error explicitly separated → multi-agent reasoning → RCA/governance → Verification`
-
-**Repository path:** implemented. **Strict production acceptance:** pending real source behavior and target Elastic privileges/license/Space validation.
-
-### Elastic + Prometheus + Zabbix same failure
-
-For eligible service-error/resource/Kubernetes/availability/security families, stable service/workload scope plus the configured time window allows deterministic merge into one open/analyzing Incident. Every source event remains separately persisted as Evidence. Concurrent races are serialized by PostgreSQL advisory locks.
-
-**Repository contract:** implemented. **Production acceptance:** requires a representative alert corpus and accepted false-merge/false-split thresholds before claiming production correctness.
+If Cognia is unavailable, the Incident workflow may continue on Live Evidence with an explicit degraded Knowledge status; it must not manufacture a successful empty Search and must not silently substitute local Knowledge.
 
 ## Remaining production blockers / external acceptance
 
-1. Real Cognia Application Client/HTTPS/KB grants plus Search Scope, authoring→Activated lifecycle, outage/no-fallback and optional Context Profile acceptance.
-1. Real Zabbix, Elastic Agent Builder and Prometheus MCP acceptance with representative schemas, metadata, authentication and outage behavior.
-2. Real Kubernetes/VM Edge MCP write acceptance with least privilege, capability replay rejection, rollback and independent verification.
-3. CMDB/service-catalog authoritative identity plus correlation-quality corpus and service-dependency truth.
-4. Real LLM endpoint/model quality, latency, timeout and restricted-network behavior.
-5. Native constrained Windows telemetry/execution and broader governed action adapters where required.
-6. Action-specific verification objectives/SLOs for each production runbook.
-7. Distributed queue/worker/admission/backpressure behavior and production-scale load/soak evidence.
-8. Distributed rate limiting.
-9. PostgreSQL HA plus tested backup/restore/PITR/DR.
-10. Enterprise OIDC role mapping plus short-lived service/workload identity and mTLS issuance/rotation.
-11. OpenTelemetry GenAI/agent/MCP/tool tracing with sensitive-content policy.
-12. Real approved offline wheelhouse/base-image mirror plus OCI registry signing, verification and immutable promotion policy.
-13. Formal chaos and agentic red-team program.
-14. Repository governance enforcement for mandatory CI/review on protected production branches.
-15. A complete production-like staging acceptance run covering smoke, incidents, writes, verification, rollback and dependency recovery.
+1. Real Cognia Application Client/HTTPS/KB grants plus positive/negative Search authorization, Scope isolation, registration → Approval where required → Processing → Activated → Search, index/dependency outage/no-fallback and optional Context Profile/sufficiency acceptance.
+2. Real Zabbix, Elastic Agent Builder and Prometheus MCP acceptance with representative schemas, metadata, authentication and outage behavior.
+3. Real Kubernetes/VM Edge MCP write acceptance with least privilege, capability replay rejection, rollback and independent verification.
+4. CMDB/service-catalog authoritative identity plus correlation-quality corpus and service-dependency truth.
+5. Real LLM endpoint/model quality, latency, timeout and restricted-network behavior.
+6. Native constrained Windows telemetry/execution and broader governed action adapters where required.
+7. Action-specific verification objectives/SLOs for each production runbook.
+8. Distributed queue/worker/admission/backpressure behavior and production-scale load/soak evidence.
+9. Distributed rate limiting.
+10. PostgreSQL HA plus tested backup/restore/PITR/DR.
+11. Enterprise OIDC role mapping plus short-lived service/workload identity and mTLS issuance/rotation.
+12. OpenTelemetry GenAI/agent/MCP/tool tracing with sensitive-content policy.
+13. Real approved offline wheelhouse/base-image mirror plus OCI registry signing, verification and immutable promotion policy.
+14. Formal chaos and agentic red-team program, including Cognia/RAG scope and prompt-injection abuse cases.
+15. Repository governance enforcement for mandatory CI/review on protected production branches.
+16. A complete production-like staging acceptance run covering Cognia, smoke, incidents, writes, verification, rollback and dependency recovery.
 
 ## Final statement
 
