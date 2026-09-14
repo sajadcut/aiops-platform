@@ -1,0 +1,33 @@
+name: cognia-contract-audit-finalize
+
+on:
+  push:
+    branches:
+      - fix/cognia-contract-audit-20260914
+    paths:
+      - .github/workflows/cognia-contract-audit-finalize.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Apply audited Cognia patch
+        run: |
+          set -euo pipefail
+          python scripts/cognia_contract_audit_patch.py
+          git diff --check
+          python -m compileall -q apps integrations knowledge tests
+      - name: Commit product changes
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add integrations/cognia/client.py apps/rag_service/__init__.py knowledge/retrieval_contract.py apps/orchestrator/e2e_graph.py tests/unit/test_cognia_client.py tests/unit/test_cognia_rag_service.py tests/unit/test_cognia_only_rag_architecture.py MASTER.md docs/CONFIGURATION.md docs/COGNIA_INTEGRATION.md
+          git commit -m "fix: align Cognia contract assumptions"
+          git push origin HEAD:fix/cognia-contract-audit-20260914
