@@ -1,8 +1,8 @@
 # Final Acceptance Report — AI Ops NeoBankingOperation Platform
 
-Baseline: `MASTER.md 2.4 - Cognia Governed Knowledge RAG`
+Baseline: `MASTER.md 2.5 - Cognia-Only Knowledge RAG`
 
-Assessed Cognia code baseline: `64c69f194b9ca2bfc60c74b10fc6e2743742219e` on `feat/cognia-rag-integration`
+Assessed Cognia-only architecture code baseline: `601bdc93ae55b0874908a0134386869a0e1996ba` on `fix/cognia-only-rag`
 
 Assessment date: 2026-09-14
 
@@ -12,9 +12,8 @@ The repository is **not yet eligible for a strict “Production Ready / fully ac
 
 Current evidence-based status:
 
-- Source/security/unit/integration suite on the assessed Cognia code baseline: **PASS**.
-- PostgreSQL migration/pgvector/governance acceptance remains part of the required quality gate and must be green on the promoted HEAD.
-- Container runtime isolation, Trivy HIGH/CRITICAL scan, CycloneDX SBOM, cosign sign/verify path and immutable Kubernetes rendering remain required on the promoted HEAD.
+- Cognia-only architecture/source guard and repository syntax check on the assessed code baseline: **PASS**.
+- Full source/security/unit/integration, PostgreSQL migration/Operational-Memory pgvector acceptance and container acceptance remain mandatory promotion gates and must be green on the final promotion HEAD.
 - Cognia repository consumer contract: **PASS (repo contract)**.
 - Real Cognia environment acceptance: **REAL ENV REQUIRED**.
 - Overall external production acceptance: **incomplete**.
@@ -44,10 +43,9 @@ See `MASTER.md`, `docs/COGNIA_INTEGRATION.md`, `docs/PRODUCTION_ACCEPTANCE_MATRI
 | Execution boundary | allowlisted tools + durable approval where required + signed execution capability bound to complete execution intent | PASS (repo) |
 | Verification | fresh pre-execution baseline + metric-direction-aware before/after | PASS (repo) / PARTIAL per-action SLO coverage |
 | Operational Memory | conclusive outcome gating + PostgreSQL/pgvector successful-pattern retrieval | PASS (repo); false-reuse/scale acceptance pending |
-| Cognia-only Governed Knowledge RAG | Application Client machine auth; opaque token lifecycle; explicit KBs; separate numeric Scope identity; Active-Revision Chunk traceability; typed status/errors; no hidden fallback; authoring idempotency; Revision concurrency; no machine approval; optional Context Generation | PASS (repo contract); **REAL ENV REQUIRED** for HTTPS endpoint/grants/scope/lifecycle/index/context acceptance |
-| Local Knowledge pgvector | deterministic development/test + migration compatibility only | PASS as compatibility path; **not Production Knowledge authority** |
-| PostgreSQL persistence | Incident/Evidence/Finding/Approval/Audit/checkpoint/runbook/Memory models | PASS |
-| pgvector | Operational Memory schema + migration/database acceptance | PASS in repository acceptance path |
+| Cognia-only Governed Knowledge RAG | sole RAG provider; Application Client machine auth; opaque token lifecycle; explicit KBs; separate numeric Scope identity; Active-Revision Chunk traceability; typed status/errors; no alternate-RAG fallback; authoring idempotency; Revision concurrency; no machine approval; optional Context Generation | PASS (repo contract); **REAL ENV REQUIRED** for HTTPS endpoint/grants/scope/lifecycle/index/context acceptance |
+| PostgreSQL persistence | Incident/Evidence/Finding/Approval/Audit/checkpoint/runbook/Operational-Memory models; historical pre-Cognia content is non-RAG archive only | PASS (repo contract) |
+| pgvector | Operational Memory only; active Knowledge vector retrieval is retired | PASS in repository acceptance path |
 | Workflow durability | application-level PostgreSQL checkpoint/resume | PASS (repo); distributed failover semantics remain |
 | OIDC/RBAC | JWT issuer/audience/JWKS validation + permission policy | PASS (repo); enterprise issuer/role-map acceptance pending |
 | A2A | structured collaboration + target/HTTPS controls | PARTIAL; cryptographic workload identity/mTLS lifecycle remains |
@@ -71,20 +69,21 @@ See `MASTER.md`, `docs/COGNIA_INTEGRATION.md`, `docs/PRODUCTION_ACCEPTANCE_MATRI
 | Real internal registry promotion | repository proves scan/SBOM/signing path/immutable render, not target registry policy and promotion | PENDING EXTERNAL VALIDATION |
 | Branch protection/ruleset | repository governance controls still require formal enforcement/acceptance | PENDING |
 
-## Cognia alignment reflected in the repository
+## Cognia-only alignment reflected in the repository
 
-1. Cognia is now the **canonical Production Governed Knowledge RAG** in `MASTER.md 2.4`; PostgreSQL/pgvector remains the Operational Memory vector layer and local Knowledge is explicitly non-Production compatibility/dev-test.
-2. Machine integration uses Cognia Client Application authentication only. Machine tokens are opaque, cached within `expiresIn`, never decoded as JWTs and reacquired with client credentials after expiry.
-3. Authentication `clientId/clientSecret` and numeric `clientApplicationId` Scope identity are modeled separately.
-4. Search sends explicit KB IDs and preserves Knowledge Base, Knowledge, Revision, Revision Number and Chunk IDs. `relevanceScore` is retained as retrieval relevance rather than factual confidence.
-5. Cognia successful zero results are distinct from authentication, forbidden, hidden/not-accessible, contract, index/dependency and transport failures. There is no hidden local-pgvector fallback.
-6. External Subject is accepted only from an explicit upstream contract. AIOps does not guess Namespace/ExternalSubjectId from service/customer display names and rejects a mismatched Client Application scope.
-7. Registration supports Cognia Idempotency-Key semantics; transient retry is enabled only when replay is protected by an idempotency key.
-8. Candidate Revision always carries `expectedCurrentCandidateRevisionId`; a concurrency conflict is surfaced and is not blindly retried.
-9. Machine integration intentionally does not expose human Approve/Reject decisions.
-10. Context Generation remains auxiliary and optional until a Context Profile is provisioned; `HTTP 200 + isSufficient=false` is preserved as insufficient context rather than treated as complete.
-11. Production configuration fails closed unless Cognia is selected for governed knowledge and an HTTPS/TLS-verified endpoint, machine credentials and explicit KB IDs are supplied.
-12. Cognia secret material uses the central recursive redaction boundary, and Production deployment must provide secret injection plus narrowly allowlisted network egress.
+1. Cognia is the **only Governed Knowledge RAG** in development, test and production. No runtime provider selector or PostgreSQL/pgvector Knowledge retriever remains.
+2. PostgreSQL/pgvector is reserved for Operational Memory. Historical pre-Cognia Knowledge content is retained only as a non-RAG archive without an embedding/retrieval path.
+3. Machine integration uses Cognia Client Application authentication only. Machine tokens are opaque, cached within `expiresIn`, never decoded as JWTs and reacquired with client credentials after expiry.
+4. Authentication `clientId/clientSecret` and numeric `clientApplicationId` Scope identity are modeled separately.
+5. Search sends explicit KB IDs and preserves Knowledge Base, Knowledge, Revision, Revision Number and Chunk IDs. `relevanceScore` is retained as retrieval relevance rather than factual confidence.
+6. Cognia successful zero results are distinct from authentication, forbidden, hidden/not-accessible, contract, index/dependency and transport failures. No alternate Knowledge RAG exists to mask a Cognia failure.
+7. External Subject is accepted only from an explicit upstream contract. AIOps does not guess Namespace/ExternalSubjectId from service/customer display names and rejects a mismatched Client Application scope.
+8. Registration supports Cognia Idempotency-Key semantics; transient retry is enabled only when replay is protected by an idempotency key.
+9. Candidate Revision always carries `expectedCurrentCandidateRevisionId`; a concurrency conflict is surfaced and is not blindly retried.
+10. Machine integration intentionally does not expose human Approve/Reject decisions.
+11. Context Generation remains auxiliary and optional until a Context Profile is provisioned; `HTTP 200 + isSufficient=false` is preserved as insufficient context rather than treated as complete.
+12. Production configuration fails closed unless an HTTPS/TLS-verified Cognia endpoint, machine credentials and explicit KB IDs are supplied.
+13. Cognia secret material uses the central recursive redaction boundary, and Production deployment must provide secret injection plus narrowly allowlisted network egress.
 
 ## Existing platform hardening retained
 
@@ -102,7 +101,7 @@ See `MASTER.md`, `docs/COGNIA_INTEGRATION.md`, `docs/PRODUCTION_ACCEPTANCE_MATRI
 
 **Authority rule:** Live Evidence is authoritative for the current Incident. Cognia Knowledge and Operational Memory can inform reasoning but cannot authorize a Production write or override contradictory live Evidence.
 
-If Cognia is unavailable, the Incident workflow may continue on Live Evidence with an explicit degraded Knowledge status; it must not manufacture a successful empty Search and must not silently substitute local Knowledge.
+If Cognia is unavailable, the Incident workflow may continue on Live Evidence with an explicit degraded Knowledge status; it must not manufacture a successful empty Search. There is no second RAG to substitute.
 
 ## Remaining production blockers / external acceptance
 
