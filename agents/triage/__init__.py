@@ -79,7 +79,11 @@ Incident={input_data.incident_id}\nService={input_data.service_name}\nSummary={i
             deterministic_routes = ["kubernetes", "infrastructure"]
             primary = "kubernetes"
         elif asset_type == "database":
-            deterministic_routes = ["database", "infrastructure"]
+            # Database incidents are commonly cross-layer: connection exhaustion,
+            # lock storms and latency may originate in the application or an
+            # upstream/downstream dependency. Route those specialists early so
+            # production triage does not default to a database-only diagnosis.
+            deterministic_routes = ["database", "application", "dependency", "infrastructure"]
             primary = "database"
         elif asset_type == "vm" or platform == "vm" or str(asset.get("os_family") or "unknown").lower() in {"linux", "windows"}:
             deterministic_routes = ["vm", "infrastructure"]
