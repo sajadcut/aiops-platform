@@ -121,6 +121,79 @@ def test_optional_cognia_numeric_ids_parse_empty_template_values_as_none():
     assert configured.COGNIA_CONTEXT_PROFILE_ID is None
 
 
+def test_jenkins_mcp_template_is_off_by_default_and_keeps_credentials_empty():
+    values = _template_values()
+    assert values["JENKINS_MCP_URL"] == ""
+    assert values["JENKINS_MCP_PROTOCOL_VERSION"] == "2025-06-18"
+    assert values["JENKINS_MCP_AUTH_HEADER"] == ""
+    assert values["JENKINS_MCP_WRITE_AUTH_HEADER"] == ""
+    assert values["JENKINS_MCP_EXPECTED_IDENTITY"] == ""
+    assert values["JENKINS_MCP_ENABLE_WRITES"] == "False"
+
+
+def test_jenkins_mcp_requires_official_streamable_endpoint_and_basic_auth():
+    base = _settings_data()
+
+    with pytest.raises(ValidationError, match="/mcp-server/mcp"):
+        Settings(_env_file=None, **{**base, "JENKINS_MCP_URL": "https://jenkins.test/mcp"})
+
+    with pytest.raises(ValidationError, match="Authorization: Basic"):
+        Settings(
+            _env_file=None,
+            **{
+                **base,
+                "JENKINS_MCP_URL": "https://jenkins.test/mcp-server/mcp",
+                "JENKINS_MCP_AUTH_HEADER": "Bearer not-supported",
+            },
+        )
+
+
+def test_production_jenkins_mcp_requires_authenticated_expected_identity():
+    base = _settings_data(
+        APP_ENV="production",
+        COGNIA_BASE_URL="https://cognia.test",
+        COGNIA_CLIENT_ID="app-id",
+        COGNIA_CLIENT_SECRET="test-only-secret",
+        COGNIA_KNOWLEDGE_BASE_IDS=[10],
+        JENKINS_MCP_URL="https://jenkins.test/mcp-server/mcp",
+    )
+
+    with pytest.raises(ValidationError, match="JENKINS_MCP_AUTH_HEADER"):
+        Settings(_env_file=None, **base)
+
+    with pytest.raises(ValidationError, match="JENKINS_MCP_EXPECTED_IDENTITY"):
+        Settings(
+            _env_file=None,
+            **{**base, "JENKINS_MCP_AUTH_HEADER": "Basic dXNlcjp0b2tlbg=="},
+        )
+
+    configured = Settings(
+        _env_file=None,
+        **{
+            **base,
+            "JENKINS_MCP_AUTH_HEADER": "Basic dXNlcjp0b2tlbg==",
+            "JENKINS_MCP_EXPECTED_IDENTITY": "aiops-reader",
+        },
+    )
+    assert configured.JENKINS_MCP_URL.endswith("/mcp-server/mcp")
+
+
+def test_jenkins_mcp_writes_require_separate_basic_identity():
+    base = _settings_data(
+        JENKINS_MCP_URL="https://jenkins.test/mcp-server/mcp",
+        JENKINS_MCP_AUTH_HEADER="Basic dXNlcjp0b2tlbg==",
+        JENKINS_MCP_ENABLE_WRITES=True,
+    )
+    with pytest.raises(ValidationError, match="JENKINS_MCP_WRITE_AUTH_HEADER"):
+        Settings(_env_file=None, **base)
+
+    configured = Settings(
+        _env_file=None,
+        **{**base, "JENKINS_MCP_WRITE_AUTH_HEADER": "Basic d3JpdGU6dG9rZW4="},
+    )
+    assert configured.JENKINS_MCP_ENABLE_WRITES is True
+
+
 def test_alembic_does_not_bypass_centralized_settings():
     source = Path("database/migrations/env.py").read_text(encoding="utf-8")
     assert "os.getenv" not in source
