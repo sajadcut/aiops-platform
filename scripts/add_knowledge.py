@@ -7,12 +7,20 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from database import AsyncSessionLocal
 from apps.rag_service import KnowledgeRAGService
+from domain.contracts.config import settings
+
 
 async def add_sample_knowledge():
-    """افزودن چند سند دانش نمونه به دیتابیس"""
+    """افزودن چند سند نمونه فقط به RAG محلی development/test."""
+    if settings.KNOWLEDGE_PROVIDER != "local_pgvector":
+        raise RuntimeError(
+            "sample_local_knowledge_seed_disabled: Cognia authoring requires explicit "
+            "knowledgeBaseId, Scope and Idempotency-Key through the governed Cognia API"
+        )
+
     async with AsyncSessionLocal() as db:
         service = KnowledgeRAGService(db)
-        
+
         documents = [
             {
                 "title": "Rollback Payment Service",
@@ -36,7 +44,7 @@ async def add_sample_knowledge():
                 "metadata": {"category": "infrastructure", "service": "payment-service"}
             }
         ]
-        
+
         for doc in documents:
             doc_id = await service.add_document(
                 title=doc["title"],
@@ -47,6 +55,7 @@ async def add_sample_knowledge():
             )
             print(f"✅ Added: {doc['title']} (ID: {doc_id})")
 
+
 if __name__ == "__main__":
     asyncio.run(add_sample_knowledge())
-    print("🎉 All sample knowledge documents added!")
+    print("🎉 All local sample knowledge documents added!")
