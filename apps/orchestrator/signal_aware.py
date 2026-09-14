@@ -212,6 +212,17 @@ class SignalAwareE2EOrchestrator(E2EOrchestrator):
         state["current_node"] = "decision"
         request = dict(state.get("execution_request") or {})
         tool = tool_registry.get_tool(str(request.get("tool_name") or "")) if request else None
+        topology_context = dict((state.get("context") or {}).get("topology_context") or {})
+        knowledge_identity_unverified = bool(topology_context.get("requires_live_verification"))
+        # Read-only tools may continue to gather evidence from a Cognia hint. A
+        # governed/mutating tool must wait until MCP/live metadata independently
+        # establishes the target identity.
+        target_identity_verified = not bool(
+            request
+            and tool is not None
+            and tool.requires_approval
+            and knowledge_identity_unverified
+        )
         result = DecisionEngine.evaluate_plan(
             state.get("final_plan", ""),
             state.get("findings", []),
@@ -219,6 +230,7 @@ class SignalAwareE2EOrchestrator(E2EOrchestrator):
             tool_risk_level=tool.risk_level if tool is not None else None,
             tool_requires_approval=bool(tool.requires_approval) if tool is not None else False,
             tool_exists=(tool is not None) if request else True,
+            target_identity_verified=target_identity_verified,
         )
         state["decision"] = result.model_dump(mode="json")
         self._audit(
