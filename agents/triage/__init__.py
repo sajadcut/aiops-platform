@@ -30,6 +30,7 @@ class TriageAgent(BaseAgent):
         auxiliary = self.auxiliary_context(input_data)
         live = input_data.context.get("live_evidence", {}) if input_data.context else {}
         asset = input_data.context.get("asset_context") or (live.get("asset_context", {}) if isinstance(live, dict) else {}) or {}
+        topology_context = input_data.context.get("topology_context", {}) if input_data.context else {}
         type_counts = {}
         source_counts = {}
         for item in evidence:
@@ -43,12 +44,12 @@ class TriageAgent(BaseAgent):
             "database", "network", "storage", "identity", "change",
             "dependency", "messaging", "recovery", "unknown",
         ]
-        prompt = f"""You are the incident triage coordinator for a production AIOps platform. LIVE EVIDENCE is authoritative. RAG/Memory are auxiliary only. ASSET_CONTEXT is deterministic metadata from Zabbix inventory/tags, Prometheus labels, Elastic ECS fields and Kubernetes/VM telemetry; use it for target/platform identity and do not contradict it without explicit live evidence.
+        prompt = f"""You are the incident triage coordinator for a production AIOps platform. LIVE EVIDENCE is authoritative. RAG/Memory are auxiliary only. ASSET_CONTEXT may contain Cognia-assisted topology hints when live metadata was incomplete. Inspect field_provenance and requires_live_verification: knowledge-sourced fields may guide read-only specialist routing and evidence collection, but they are not live proof and must not authorize a write. Live fields win over Cognia on conflict.
 Classify primary_domain from {domains}. Return secondary_domains for cross-layer incidents.
 Return JSON keys: primary_domain, secondary_domains, severity, health_status, urgency_reason, findings, affected_components, probable_dependencies, blast_radius, hypotheses, missing_evidence, specialist_routes, immediate_checks, escalation_target, risk_level, uncertainty_reason, confidence.
 Hypotheses: hypothesis, probability, evidence_ids, conflicting_evidence_ids, falsification_checks, impacted_components, recommended_next_evidence. Only live evidence IDs may be cited.
 Never invent a VM, OS, Kubernetes workload, deployment, compromise, outage, DB failure, packet loss, queue backlog, recovery failure or metric. immediate_checks are read-only evidence collection.
-Incident={input_data.incident_id}\nService={input_data.service_name}\nSummary={input_data.evidence_summary}\nASSET_CONTEXT={json.dumps(asset, default=str)}\nLIVE_EVIDENCE={json.dumps(evidence, default=str)}\nAUXILIARY_CONTEXT={json.dumps(auxiliary, default=str)}\nContextSummary={json.dumps(input_data.context.get('summary', {}), default=str)}"""
+Incident={input_data.incident_id}\nService={input_data.service_name}\nSummary={input_data.evidence_summary}\nASSET_CONTEXT={json.dumps(asset, default=str)}\nTOPOLOGY_CONTEXT={json.dumps(topology_context, default=str)}\nLIVE_EVIDENCE={json.dumps(evidence, default=str)}\nAUXILIARY_CONTEXT={json.dumps(auxiliary, default=str)}\nContextSummary={json.dumps(input_data.context.get('summary', {}), default=str)}"""
         try:
             result = await self.generate_structured(prompt)
         except Exception as exc:
@@ -69,7 +70,8 @@ Incident={input_data.incident_id}\nService={input_data.service_name}\nSummary={i
         secondary = [domain for domain in self.normalize_list(result.get("secondary_domains"), 6) if domain in valid_routes and domain != primary]
         routes = [route for route in self.normalize_list(result.get("specialist_routes"), settings.AGENT_MAX_PARALLELISM) if route in valid_routes]
 
-        # Deterministic asset routing has precedence over model guesses.
+        # Asset/topology identity can deterministically route read-only investigation.
+        # Knowledge-only fields still require live verification before any write.
         asset_type = str(asset.get("asset_type") or "unknown").lower()
         platform = str(asset.get("platform") or "unknown").lower()
         deterministic_routes: List[str] = []
@@ -96,11 +98,16 @@ Incident={input_data.incident_id}\nService={input_data.service_name}\nSummary={i
         missing = self.normalize_list(result.get("missing_evidence"), 8)
         if len(evidence) < settings.AGENT_MIN_EVIDENCE_ITEMS:
             missing = sorted(set(missing + ["live operational evidence"]))
-        if float(asset.get("confidence", 0) or 0) < 0.5:
+        if float(asset.get("confidence", 0) or 0) < 0.5 and not asset.get("knowledge_assisted"):
             missing = sorted(set(missing + ["reliable asset identity metadata"]))
+        if bool(asset.get("requires_live_verification")):
+            missing = sorted(set(missing + ["live verification of knowledge-assisted asset topology"]))
+        topology_conflicts = asset.get("topology_conflicts") or topology_context.get("conflicts") or []
+        if topology_conflicts:
+            missing = sorted(set(missing + ["resolve live-vs-knowledge topology conflict"]))
 
         hypotheses = []
-        conflict_count = 0
+        conflict_count = len(topology_conflicts)
         for item in result.get("hypotheses", [])[: settings.AGENT_MAX_HYPOTHESES]:
             if isinstance(item, dict) and item.get("hypothesis"):
                 conflicts = [str(x) for x in item.get("conflicting_evidence_ids", []) if str(x) in evidence_ids]
@@ -138,6 +145,9 @@ Incident={input_data.incident_id}\nService={input_data.service_name}\nSummary={i
                 "asset_context": asset, "asset_routing": deterministic_routes,
                 "evidence_type_counts": type_counts, "evidence_source_counts": source_counts,
                 "knowledge_context_count": len(auxiliary["knowledge_rag"]), "memory_context_count": len(auxiliary["operational_memory"]),
+                "knowledge_assisted_asset": bool(asset.get("knowledge_assisted")),
+                "asset_requires_live_verification": bool(asset.get("requires_live_verification")),
+                "topology_conflict_count": len(topology_conflicts),
                 "conflicting_evidence_count": conflict_count,
             },
             model_metadata=self._last_model_metadata,
