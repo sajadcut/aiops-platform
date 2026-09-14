@@ -7,12 +7,15 @@ from uuid import uuid4
 from pydantic import BaseModel, Field, field_validator
 
 from apps.context_service.asset_identity import AssetIdentityResolver
+from apps.context_service.knowledge_topology import KnowledgeTopologyResolver
 from apps.incident_service.repository import IncidentRepository
 from apps.orchestrator.runtime import DurableWorkflowRuntime
 from apps.orchestrator.signal_aware import SignalAwareE2EOrchestrator
 from apps.orchestrator.workflow_store import WorkflowCheckpointStore
+from apps.rag_service import KnowledgeRAGService
 from apps.signal_gateway.correlation import build_correlation_identity
 from domain.contracts.config import settings
+from domain.contracts.logging import logger
 
 
 SignalSource = Literal["zabbix", "elasticsearch", "prometheus", "kubernetes", "security", "manual"]
@@ -69,7 +72,12 @@ class OperationalSignal(BaseModel):
 
 
 class SignalGateway:
-    """Source-agnostic, race-safe entry point for operational signals."""
+    """Source-agnostic, race-safe entry point for operational signals.
+
+    Every new signal is also searched against Cognia before correlation. Cognia
+    may supply a service/topology discovery hint when the trigger itself is
+    sparse, while live signal metadata remains authoritative on conflicts.
+    """
 
     @staticmethod
     def _append_trigger_to_checkpoint(state: Dict[str, Any], signal: OperationalSignal, evidence: Dict[str, Any]) -> None:
@@ -91,10 +99,90 @@ class SignalGateway:
         return state
 
     @staticmethod
+    async def _knowledge_assisted_asset(signal: OperationalSignal, trigger_evidence: Dict[str, Any]) -> Dict[str, Any]:
+        live_asset = AssetIdentityResolver.resolve([trigger_evidence], signal.service)
+        incident = {
+            "service": signal.service,
+            "summary": signal.summary,
+            "context": {
+                "url": signal.raw_data.get("url") or signal.raw_data.get("endpoint"),
+                "fqdn": signal.raw_data.get("fqdn"),
+                "host": (
+                    signal.raw_data.get("host")
+                    if isinstance(signal.raw_data.get("host"), str)
+                    else None
+                ),
+            },
+        }
+        query = KnowledgeTopologyResolver.build_discovery_query(incident)
+        expected_fqdns = KnowledgeTopologyResolver.extract_fqdns(
+            " ".join(
+                str(value or "")
+                for value in (
+                    signal.summary,
+                    signal.raw_data.get("url"),
+                    signal.raw_data.get("endpoint"),
+                    signal.raw_data.get("fqdn"),
+                )
+            )
+        )
+        knowledge_results = []
+        knowledge_status: Dict[str, Any] = {
+            "provider": "cognia",
+            "status": "not_queried",
+            "count": 0,
+            "phase": "signal_asset_discovery",
+        }
+        try:
+            knowledge_results = await KnowledgeRAGService().search(
+                query,
+                limit=settings.AGENT_MAX_AUXILIARY_CONTEXT_ITEMS,
+            )
+            knowledge_status = {
+                "provider": "cognia",
+                "status": "available" if knowledge_results else "empty",
+                "count": len(knowledge_results),
+                "phase": "signal_asset_discovery",
+            }
+        except Exception as exc:
+            knowledge_status = {
+                "provider": "cognia",
+                "status": "error",
+                "code": type(exc).__name__,
+                "count": 0,
+                "phase": "signal_asset_discovery",
+            }
+            logger.warning(
+                "signal_asset_discovery_knowledge_query_failed",
+                source=signal.source,
+                error_type=type(exc).__name__,
+            )
+
+        topology = KnowledgeTopologyResolver.resolve(
+            knowledge_results,
+            expected_fqdns=expected_fqdns,
+        )
+        topology_context = KnowledgeTopologyResolver.reconcile(live_asset, topology)
+        return {
+            "asset_context": topology_context["effective_asset"],
+            "live_asset_context": live_asset,
+            "topology_context": topology_context,
+            "knowledge_results": knowledge_results,
+            "knowledge_status": knowledge_status,
+            "knowledge_discovery_query": query,
+        }
+
+    @staticmethod
     async def ingest(session, signal: OperationalSignal) -> Dict[str, Any]:
         trigger_evidence = signal.to_evidence()
-        asset = AssetIdentityResolver.resolve([trigger_evidence], signal.service)
-        resolved_service = str(asset.get("service") or signal.service or "unknown")
+        discovery = await SignalGateway._knowledge_assisted_asset(signal, trigger_evidence)
+        asset = dict(discovery.get("asset_context") or {})
+        resolved_service = str(
+            asset.get("service")
+            or signal.service
+            or asset.get("hostname")
+            or "unknown"
+        )
         correlation = build_correlation_identity(
             service=resolved_service,
             signal_type=signal.signal_type,
@@ -202,6 +290,11 @@ class SignalGateway:
                 "incident": incident_context,
                 "service": resolved_service,
                 "asset_context": asset,
+                "live_asset_context": discovery.get("live_asset_context"),
+                "topology_context": discovery.get("topology_context"),
+                "knowledge_results": discovery.get("knowledge_results", []),
+                "knowledge_status": discovery.get("knowledge_status", {}),
+                "knowledge_discovery_query": discovery.get("knowledge_discovery_query"),
                 "correlation": correlation_context,
                 "related_signals": [],
                 "trigger_signal": signal.model_dump(mode="json"),
@@ -258,12 +351,34 @@ def signal_from_prometheus(payload: Dict[str, Any]) -> OperationalSignal:
     )
 
 
+def _zabbix_service_from_tags(payload: Dict[str, Any]) -> Optional[str]:
+    candidates = []
+    raw_tags = payload.get("tags") or []
+    if isinstance(raw_tags, list):
+        candidates.extend(raw_tags)
+    host = payload.get("host")
+    if isinstance(host, dict) and isinstance(host.get("tags"), list):
+        candidates.extend(host.get("tags") or [])
+    for item in candidates:
+        if not isinstance(item, dict):
+            continue
+        key = str(item.get("tag") or item.get("key") or "").strip().lower()
+        if key in {"service", "service_name", "app"}:
+            value = str(item.get("value") or "").strip()
+            if value:
+                return value
+    return None
+
+
 def signal_from_zabbix(payload: Dict[str, Any]) -> OperationalSignal:
     raw = dict(payload)
     host_value = payload.get("host") or payload.get("hostname")
     if host_value and not isinstance(host_value, dict):
         raw["host"] = {"host": str(host_value), "name": str(host_value)}
-    service = payload.get("service") or host_value
+    # A Zabbix Web Scenario Host can be a logical monitoring container rather
+    # than the runtime service. Treat it as hostname metadata, not service
+    # identity, unless an explicit service field/tag exists.
+    service = payload.get("service") or _zabbix_service_from_tags(payload)
     return OperationalSignal(
         source="zabbix",
         source_id=str(payload.get("eventid") or payload.get("event_id") or payload.get("id") or uuid4()),
