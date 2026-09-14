@@ -21,7 +21,7 @@ def test_network_policy_defaults_to_deny_and_only_allows_labeled_namespaces():
     assert ingress["from"][0]["namespaceSelector"]["matchLabels"]["aiops.network/ingress"] == "allowed"
 
     egress = allow["spec"]["egress"]
-    assert {item["port"] for rule in egress for item in rule["ports"]} == {53, 443, 5432}
+    assert {item["port"] for rule in egress for item in rule["ports"]} == {53, 80, 443, 5432}
     allowed_labels = [rule["to"][0]["namespaceSelector"]["matchLabels"] for rule in egress]
     assert {"kubernetes.io/metadata.name": "kube-system"} in allowed_labels
     assert {"aiops.network/egress": "allowed"} in allowed_labels
