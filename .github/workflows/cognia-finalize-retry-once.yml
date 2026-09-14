@@ -1,0 +1,33 @@
+name: cognia-primary-rag-finalize-retry-once
+
+on:
+  push:
+    branches: [ feat/cognia-rag-integration ]
+    paths:
+      - '.github/workflows/cognia-finalize-retry-once.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  finalize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Apply corrected Cognia finalization
+        run: python scripts/run_cognia_finalizer_retry.py
+      - name: Remove one-time tooling and commit result
+        shell: bash
+        run: |
+          set -euo pipefail
+          git rm scripts/finalize_cognia_primary_rag.py scripts/run_cognia_finalizer_retry.py .github/workflows/cognia-finalize-once.yml .github/workflows/cognia-finalize-retry-once.yml
+          git add -A
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'feat: make Cognia the canonical governed RAG'
+          git push origin HEAD:feat/cognia-rag-integration
