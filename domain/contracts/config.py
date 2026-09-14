@@ -190,9 +190,9 @@ class Settings(BaseSettings):
             raise ValueError("KNOWLEDGE_PROVIDER must be local_pgvector or cognia")
         return normalized
 
-    @field_validator("COGNIA_CONTEXT_PROFILE_ID", mode="before")
+    @field_validator("COGNIA_CONTEXT_PROFILE_ID", "COGNIA_CLIENT_APPLICATION_ID", mode="before")
     @classmethod
-    def parse_optional_cognia_context_profile_id(cls, value):
+    def parse_optional_cognia_ids(cls, value):
         if value is None or (isinstance(value, str) and not value.strip()):
             return None
         return value
