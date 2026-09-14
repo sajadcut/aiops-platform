@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 236 | Dashboard JS files scanned: 2 | Symbols indexed: 1308**
+**Python files scanned: 239 | Dashboard JS files scanned: 2 | Symbols indexed: 1361**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -144,15 +144,15 @@
 | `apps/api/execution.py` | `reject` | 118 | async function | transition مربوط به Approval/Governance را اعمال می‌کند | module |
 | `apps/api/execution.py` | `_validate_approval_binding` | 140 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/execution.py` | `execute` | 156 | async function | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | module |
-| `apps/api/health.py` | `_pool_status` | 27 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/health.py` | `_probe_database` | 50 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/health.py` | `_probe_one` | 77 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/health.py` | `_probe_external` | 96 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/health.py` | `_external_required_ready` | 120 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/health.py` | `health_check` | 133 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/health.py` | `liveness` | 150 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/health.py` | `readiness` | 155 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/health.py` | `metrics` | 165 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/health.py` | `_pool_status` | 28 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/health.py` | `_probe_database` | 51 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/health.py` | `_probe_one` | 78 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/health.py` | `_probe_external` | 97 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/health.py` | `_external_required_ready` | 123 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/health.py` | `health_check` | 138 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/health.py` | `liveness` | 155 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/health.py` | `readiness` | 160 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/health.py` | `metrics` | 170 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/http_logging.py` | `_headers` | 17 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/http_logging.py` | `_safe_json_body` | 24 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/http_logging.py` | `_value` | 38 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
@@ -582,15 +582,18 @@
 | `domain/action_plan.py` | `ActionPlan` | 5 | class | کلاس | module |
 | `domain/audit_event.py` | `AuditEvent` | 6 | class | کلاس | module |
 | `domain/contracts/config.py` | `Settings` | 8 | class | Typed loader for the centralized runtime environment contract. | module |
-| `domain/contracts/config.py` | `Settings.validate_app_env` | 167 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.parse_optional_cognia_ids` | 175 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | Settings |
-| `domain/contracts/config.py` | `Settings.validate_cognia_knowledge_base_ids` | 182 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_log_rotation_mode` | 194 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_log_level` | 202 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_elastic_agent_builder_version` | 210 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_elastic_agent_builder_endpoint` | 223 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_elastic_namespaces` | 231 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_cognia_contract` | 238 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_app_env` | 175 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.parse_optional_cognia_ids` | 183 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | Settings |
+| `domain/contracts/config.py` | `Settings.validate_cognia_knowledge_base_ids` | 190 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_log_rotation_mode` | 202 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_log_level` | 210 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_elastic_agent_builder_version` | 218 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_elastic_agent_builder_endpoint` | 231 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_elastic_namespaces` | 239 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_jenkins_mcp_protocol_version` | 247 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_jenkins_basic_auth_header` | 255 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_external_contracts` | 262 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_cognia_contract` | 286 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
 | `domain/contracts/context.py` | `set_trace_id` | 7 | function | تنظیم trace_id برای درخواست جاری | module |
 | `domain/contracts/context.py` | `get_trace_id` | 11 | function | دریافت trace_id درخواست جاری | module |
 | `domain/contracts/context.py` | `generate_trace_id` | 15 | function | تولید یک trace_id جدید | module |
@@ -707,6 +710,36 @@
 | `integrations/http_transport.py` | `insecure_ssl_context` | 9 | function | Create a TLS context that does not validate server certificates or hostnames. | module |
 | `integrations/http_transport.py` | `insecure_async_client` | 17 | function | Create an outbound HTTP(S) client with TLS certificate validation disabled. | module |
 | `integrations/http_transport.py` | `insecure_sync_client` | 23 | function | Create a synchronous outbound HTTP(S) client with TLS validation disabled. | module |
+| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient` | 10 | class | Governed client for the official Jenkins ``mcp-server`` plugin. | module |
+| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient.__init__` | 45 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | JenkinsMCPClient |
+| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient._headers` | 95 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | JenkinsMCPClient |
+| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient.health_url` | 102 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | JenkinsMCPClient |
+| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient._decoded` | 110 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | JenkinsMCPClient |
+| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient._with_optional` | 119 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | JenkinsMCPClient |
+| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient._require_write_context` | 126 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | JenkinsMCPClient |
+| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient.call_tool` | 134 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | JenkinsMCPClient |
+| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient._read_tool` | 139 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | JenkinsMCPClient |
+| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient._write_tool` | 142 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | JenkinsMCPClient |
+| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient.mcp_health` | 156 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | JenkinsMCPClient |
+| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient.who_am_i` | 172 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | JenkinsMCPClient |
+| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient.get_status` | 176 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | JenkinsMCPClient |
+| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient.health_check` | 180 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | JenkinsMCPClient |
+| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient.get_job` | 206 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | JenkinsMCPClient |
+| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient.get_jobs` | 209 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | JenkinsMCPClient |
+| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient.get_queue_item` | 218 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | JenkinsMCPClient |
+| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient.get_build` | 221 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | JenkinsMCPClient |
+| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient.get_build_log` | 227 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | JenkinsMCPClient |
+| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient.search_build_log` | 247 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | JenkinsMCPClient |
+| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient.get_replay_scripts` | 273 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | JenkinsMCPClient |
+| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient.get_test_results` | 279 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | JenkinsMCPClient |
+| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient.get_job_scm` | 285 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | JenkinsMCPClient |
+| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient.get_build_scm` | 288 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | JenkinsMCPClient |
+| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient.get_build_change_sets` | 294 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | JenkinsMCPClient |
+| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient.find_jobs_with_scm_url` | 300 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | JenkinsMCPClient |
+| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient.trigger_build` | 318 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | JenkinsMCPClient |
+| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient.update_build` | 335 | async method | state یا داده را به‌صورت durable ذخیره/به‌روزرسانی می‌کند | JenkinsMCPClient |
+| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient.rebuild_build` | 362 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | JenkinsMCPClient |
+| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient.replay_build` | 379 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | JenkinsMCPClient |
 | `integrations/kubernetes/client.py` | `KubernetesEvidenceClient` | 13 | class | Strictly read-only Kubernetes API evidence client. | module |
 | `integrations/kubernetes/client.py` | `KubernetesEvidenceClient.__init__` | 20 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KubernetesEvidenceClient |
 | `integrations/kubernetes/client.py` | `KubernetesEvidenceClient.enabled` | 35 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KubernetesEvidenceClient |
@@ -1076,8 +1109,12 @@
 | `tests/unit/test_centralized_config.py` | `test_production_cognia_supports_http_and_https_transport_contract` | 88 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_centralized_config.py` | `test_production_cognia_accepts_machine_identity_and_explicit_kbs` | 103 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_centralized_config.py` | `test_optional_cognia_numeric_ids_parse_empty_template_values_as_none` | 117 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_centralized_config.py` | `test_alembic_does_not_bypass_centralized_settings` | 124 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_centralized_config.py` | `test_rate_limits_are_not_hardcoded_in_runtime_module` | 130 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_centralized_config.py` | `test_jenkins_mcp_template_is_off_by_default_and_keeps_credentials_empty` | 124 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_centralized_config.py` | `test_jenkins_mcp_requires_official_streamable_endpoint_and_basic_auth` | 134 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_centralized_config.py` | `test_production_jenkins_mcp_requires_authenticated_expected_identity` | 151 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_centralized_config.py` | `test_jenkins_mcp_writes_require_separate_basic_identity` | 181 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_centralized_config.py` | `test_alembic_does_not_bypass_centralized_settings` | 197 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_centralized_config.py` | `test_rate_limits_are_not_hardcoded_in_runtime_module` | 203 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_cognia_client.py` | `_search_response` | 10 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_cognia_client.py` | `test_machine_token_is_opaque_cached_and_search_contract_is_exact` | 35 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_cognia_client.py` | `test_machine_token_is_opaque_cached_and_search_contract_is_exact.handler` | 39 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_machine_token_is_opaque_cached_and_search_contract_is_exact |
@@ -1154,7 +1191,7 @@
 | `tests/unit/test_execution_policy.py` | `test_allowlisted_low_risk_can_run_without_approval_requirement` | 8 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_execution_policy.py` | `test_non_allowlisted_tool_is_denied` | 12 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_health_readiness_mcp.py` | `test_production_readiness_requires_cognia_and_configured_optional_mcps` | 4 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_health_readiness_mcp.py` | `test_non_production_readiness_does_not_gate_on_external_dependencies` | 26 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_health_readiness_mcp.py` | `test_non_production_readiness_does_not_gate_on_external_dependencies` | 32 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_http_transport_policy.py` | `test_transport_factories_always_disable_tls_certificate_validation` | 9 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_http_transport_policy.py` | `test_transport_factories_always_disable_tls_certificate_validation.FakeAsync` | 12 | class | کلاس | test_transport_factories_always_disable_tls_certificate_validation |
 | `tests/unit/test_http_transport_policy.py` | `test_transport_factories_always_disable_tls_certificate_validation.FakeAsync.__init__` | 13 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_transport_factories_always_disable_tls_certificate_validation.FakeAsync |
@@ -1168,6 +1205,22 @@
 | `tests/unit/test_internal_api_key_role.py` | `test_internal_api_key_uses_server_configured_role` | 7 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_internal_api_key_role.py` | `test_invalid_internal_api_role_fails_closed` | 15 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_internal_api_key_role.py` | `test_wrong_internal_api_key_is_rejected` | 22 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_jenkins_mcp_client.py` | `_client` | 14 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_jenkins_mcp_client.py` | `test_official_jenkins_mcp_contract_uses_streamable_http_and_2025_06_18` | 26 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_jenkins_mcp_client.py` | `test_jenkins_headers_use_basic_auth_and_optional_origin` | 42 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_jenkins_mcp_client.py` | `test_write_tools_are_disabled_by_default_and_direct_write_call_is_forbidden` | 53 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_jenkins_mcp_client.py` | `test_enabling_writes_requires_separate_write_identity` | 71 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_jenkins_mcp_client.py` | `test_governed_trigger_build_uses_official_tool_shape_and_write_identity` | 76 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_jenkins_mcp_client.py` | `test_governed_trigger_build_uses_official_tool_shape_and_write_identity.fake_call_tool` | 79 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_governed_trigger_build_uses_official_tool_shape_and_write_identity |
+| `tests/unit/test_jenkins_mcp_client.py` | `test_write_wrapper_requires_governance_context` | 107 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_jenkins_mcp_client.py` | `test_write_wrapper_requires_governance_context.fake_call_tool` | 108 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_write_wrapper_requires_governance_context |
+| `tests/unit/test_jenkins_mcp_client.py` | `test_read_wrappers_bound_upstream_pagination_and_log_search` | 127 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_jenkins_mcp_client.py` | `test_read_wrappers_bound_upstream_pagination_and_log_search.fake_call_tool` | 130 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_read_wrappers_bound_upstream_pagination_and_log_search |
+| `tests/unit/test_jenkins_mcp_client.py` | `test_health_check_fails_closed_on_anonymous_or_identity_mismatch` | 166 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_jenkins_mcp_client.py` | `test_health_check_fails_closed_on_anonymous_or_identity_mismatch.healthy` | 169 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_health_check_fails_closed_on_anonymous_or_identity_mismatch |
+| `tests/unit/test_jenkins_mcp_client.py` | `test_health_check_fails_closed_on_anonymous_or_identity_mismatch.anonymous` | 172 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_health_check_fails_closed_on_anonymous_or_identity_mismatch |
+| `tests/unit/test_jenkins_mcp_client.py` | `test_health_check_fails_closed_on_anonymous_or_identity_mismatch.wrong_identity` | 175 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_health_check_fails_closed_on_anonymous_or_identity_mismatch |
+| `tests/unit/test_jenkins_mcp_client.py` | `test_health_check_fails_closed_on_anonymous_or_identity_mismatch.expected_identity` | 178 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_health_check_fails_closed_on_anonymous_or_identity_mismatch |
 | `tests/unit/test_jsonb_persistence_contract.py` | `FakeResult` | 8 | class | کلاس | module |
 | `tests/unit/test_jsonb_persistence_contract.py` | `FakeResult.mappings` | 9 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeResult |
 | `tests/unit/test_jsonb_persistence_contract.py` | `FakeResult.first` | 12 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeResult |
