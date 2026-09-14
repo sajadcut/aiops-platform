@@ -36,7 +36,9 @@ class DecisionEngine:
 
     The free-form LLM/RCA plan is never the sole source of execution risk. When
     an execution request exists, its action and the registered tool contract are
-    evaluated too, and the highest risk wins.
+    evaluated too, and the highest risk wins. A mutating target whose identity
+    still depends on Cognia-only topology is rejected until Live Evidence has
+    independently verified that target.
     """
 
     HIGH_RISK_KEYWORDS = [
@@ -69,6 +71,7 @@ class DecisionEngine:
         tool_risk_level: Optional[str] = None,
         tool_requires_approval: bool = False,
         tool_exists: bool = True,
+        target_identity_verified: bool = True,
     ) -> DecisionResult:
         logger.info("Decision Engine: evaluating plan and execution binding")
         plan_risk = cls._assess_risk(plan)
@@ -89,6 +92,9 @@ class DecisionEngine:
         elif request and not tool_exists:
             decision = DecisionAction.REJECT
             reason = "Requested execution tool is not registered."
+        elif request and not target_identity_verified:
+            decision = DecisionAction.REJECT
+            reason = "Execution target identity depends on unverified Knowledge topology; collect Live Evidence before any write."
         else:
             decision, reason = cls._make_decision(
                 effective_risk,
@@ -97,12 +103,13 @@ class DecisionEngine:
             )
 
         logger.info(
-            "Decision: %s | risk=%s | plan_risk=%s | request_risk=%s | tool_risk=%s | reason=%s",
+            "Decision: %s | risk=%s | plan_risk=%s | request_risk=%s | tool_risk=%s | target_verified=%s | reason=%s",
             decision.value,
             effective_risk.value,
             plan_risk.value,
             request_risk.value,
             tool_risk.value,
+            target_identity_verified,
             reason,
         )
         return DecisionResult(
@@ -126,6 +133,7 @@ class DecisionEngine:
                 "execution_binding_complete": binding_complete,
                 "execution_action": request_action or None,
                 "execution_tool": request.get("tool_name") if request else None,
+                "target_identity_verified": bool(target_identity_verified),
             },
         )
 
