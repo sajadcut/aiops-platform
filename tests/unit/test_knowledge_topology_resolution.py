@@ -105,6 +105,18 @@ def test_live_topology_wins_and_conflict_is_explicit():
     assert reconciled["requires_live_verification"] is True
 
 
+def test_unknown_live_placeholders_do_not_override_cognia_identity():
+    topology = KnowledgeTopologyResolver.resolve([TOPOLOGY_DOC], expected_fqdns=["web.wepod.ir"])
+    reconciled = KnowledgeTopologyResolver.reconcile(
+        {"service": "web-api", "asset_type": "unknown", "platform": "unknown", "confidence": 0.25},
+        topology,
+    )
+    assert reconciled["effective_asset"]["platform"] == "kubernetes"
+    assert reconciled["field_provenance"]["platform"] == "knowledge"
+    assert "platform" in reconciled["knowledge_identity_fields"]
+    assert reconciled["requires_live_verification"] is True
+
+
 @pytest.mark.asyncio
 async def test_context_builder_always_queries_cognia_and_uses_topology_to_seed_live_lookup():
     rag = FakeRAG([TOPOLOGY_DOC])
@@ -159,8 +171,15 @@ async def test_context_builder_queries_cognia_even_when_live_asset_is_complete()
     )
 
     assert len(rag.calls) == 1
-    assert context["asset_context"]["knowledge_assisted"] is False
+    # Cognia may enrich auxiliary metadata such as owner, but all execution-
+    # sensitive identity fields remain live-provenanced so no extra write block
+    # is introduced by that auxiliary enrichment alone.
+    assert context["asset_context"]["knowledge_assisted"] is True
     assert context["asset_context"]["requires_live_verification"] is False
+    assert context["asset_context"]["field_provenance"]["platform"] == "live"
+    assert context["asset_context"]["field_provenance"]["namespace"] == "live"
+    assert context["asset_context"]["field_provenance"]["owner"] == "knowledge"
+    assert context["topology_context"]["knowledge_identity_fields"] == []
     assert context["topology_context"]["deployment_hints"]["repository"].endswith("/web-api.git")
 
 
