@@ -14,6 +14,10 @@ AIOps metric collection maps canonical metric requests to `range_query` and buil
 
 Upstream: `initMAX/zabbix-mcp-server`.
 
+This is the **only supported Zabbix runtime boundary**. AIOps does not contain a native/direct Zabbix API connector and does not accept `ZABBIX_URL`, `ZABBIX_USERNAME`, `ZABBIX_PASSWORD`, or `ZABBIX_TIMEOUT_SECONDS` runtime settings.
+
+The AIOps client connects to the upstream `/mcp` endpoint using `ZABBIX_MCP_URL`. When the initMAX server is protected by an MCP token, configure the complete `Authorization` value in `ZABBIX_MCP_AUTH_HEADER`, normally `Bearer <mcp-token>`. The Zabbix API token used by initMAX to authenticate to Zabbix belongs in the initMAX server configuration, never in the AIOps Control Plane.
+
 Supported Control-Plane read tools include `problem_get`, `problem_active_get`, `event_get`, `host_get`, `host_status_get`, and `health_check`.
 
 AIOps active-alert collection uses bounded `problem_get`. Broad/raw or mutation capabilities are not exposed to Evidence collection.
