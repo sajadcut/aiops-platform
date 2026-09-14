@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 242 | Dashboard JS files scanned: 2 | Symbols indexed: 1397**
+**Python files scanned: 243 | Dashboard JS files scanned: 2 | Symbols indexed: 1400**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1265,6 +1265,9 @@
 | `tests/unit/test_knowledge_topology_resolution.py` | `test_context_builder_queries_cognia_even_when_live_asset_is_complete` | 152 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_knowledge_topology_resolution.py` | `test_zabbix_web_scenario_signal_uses_cognia_when_host_is_only_monitoring_container` | 187 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_knowledge_topology_resolution.py` | `test_zabbix_web_scenario_signal_uses_cognia_when_host_is_only_monitoring_container.fake_search` | 188 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_zabbix_web_scenario_signal_uses_cognia_when_host_is_only_monitoring_container |
+| `tests/unit/test_knowledge_topology_url_normalization.py` | `_doc` | 4 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_knowledge_topology_url_normalization.py` | `test_expected_full_url_is_normalized_before_matching_cognia_topology` | 17 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_knowledge_topology_url_normalization.py` | `test_normalized_expected_url_still_rejects_other_cognia_fqdn` | 29 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_kubernetes_network_policy.py` | `_docs` | 6 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_kubernetes_network_policy.py` | `test_network_policy_defaults_to_deny_and_only_allows_labeled_namespaces` | 10 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_kubernetes_network_policy.py` | `test_production_deployment_uses_stdout_not_ephemeral_log_volume` | 30 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
