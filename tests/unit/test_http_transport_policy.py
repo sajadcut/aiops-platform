@@ -1,8 +1,9 @@
 from pathlib import Path
+import ssl
 
 import httpx
 
-from integrations.http_transport import insecure_async_client, insecure_sync_client
+from integrations.http_transport import insecure_async_client, insecure_ssl_context, insecure_sync_client
 
 
 def test_transport_factories_always_disable_tls_certificate_validation(monkeypatch):
@@ -24,6 +25,20 @@ def test_transport_factories_always_disable_tls_certificate_validation(monkeypat
 
     assert captured[0][1]["verify"] is False
     assert captured[1][1]["verify"] is False
+
+
+def test_insecure_ssl_context_disables_certificate_and_hostname_validation():
+    context = insecure_ssl_context()
+    assert context.check_hostname is False
+    assert context.verify_mode == ssl.CERT_NONE
+
+
+def test_oidc_jwks_client_receives_insecure_ssl_context():
+    source = Path("apps/security/token_validator.py").read_text(encoding="utf-8")
+    assert "PyJWKClient(jwks_url, ssl_context=insecure_ssl_context())" in source
+    # Transport trust is disabled, but JWT cryptographic verification stays enabled.
+    assert "jwt.decode(" in source
+    assert 'algorithms=["RS256", "RS384", "RS512", "ES256", "ES384", "ES512"]' in source
 
 
 def test_no_https_enforcement_or_server_ca_config_remains_in_runtime_contract():
