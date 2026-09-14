@@ -25,6 +25,21 @@ def test_context_builder_uses_mcp_clients_not_native_external_connectors():
         assert marker not in text
 
 
+def test_zabbix_is_mcp_only_and_has_no_direct_runtime_config():
+    assert not (ROOT / "integrations/zabbix/connector.py").exists()
+    config = (ROOT / "domain/contracts/config.py").read_text(encoding="utf-8")
+    template = (ROOT / ".env.example").read_text(encoding="utf-8")
+    server = (ROOT / "apps/mcp_server/main.py").read_text(encoding="utf-8")
+    for obsolete in ("ZABBIX_URL", "ZABBIX_USERNAME", "ZABBIX_PASSWORD", "ZABBIX_TIMEOUT_SECONDS"):
+        assert obsolete not in config
+        assert obsolete not in template
+    assert "ZABBIX_MCP_URL" in config
+    assert "ZABBIX_MCP_AUTH_HEADER" in config
+    assert "ZabbixMCPClient" not in server
+    assert "ZabbixConnector" not in server
+    assert '"zabbix": {' not in server
+
+
 def test_evidence_collector_has_no_native_external_fallbacks():
     text = (ROOT / "apps/context_service/evidence_collector.py").read_text()
     for native in ("KubernetesEvidenceClient", "SSHVMConnector", "ElasticsearchClient", "PrometheusClient", "ZabbixConnector"):
