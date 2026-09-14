@@ -267,8 +267,8 @@
 | `apps/context_service/asset_identity.py` | `AssetIdentityResolver._derive_platform` | 235 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | AssetIdentityResolver |
 | `apps/context_service/asset_identity.py` | `AssetIdentityResolver._os_family` | 247 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | AssetIdentityResolver |
 | `apps/context_service/asset_identity.py` | `AssetIdentityResolver._classify_text` | 256 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | AssetIdentityResolver |
-| `apps/context_service/asset_identity.py` | `AssetIdentityResolver._classify_labels` | 267 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | AssetIdentityResolver |
-| `apps/context_service/asset_identity.py` | `AssetIdentityResolver._classify_elastic` | 276 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | AssetIdentityResolver |
+| `apps/context_service/asset_identity.py` | `AssetIdentityResolver._classify_labels` | 269 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | AssetIdentityResolver |
+| `apps/context_service/asset_identity.py` | `AssetIdentityResolver._classify_elastic` | 278 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | AssetIdentityResolver |
 | `apps/context_service/builder.py` | `ContextBuilder` | 4 | class | Normalizes an incoming incident context and preserves evidence refs. | module |
 | `apps/context_service/builder.py` | `ContextBuilder.build` | 7 | method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | ContextBuilder |
 | `apps/context_service/evidence_collector.py` | `EvidenceCollector` | 10 | class | Read-only cross-source Evidence boundary used by orchestration. | module |
