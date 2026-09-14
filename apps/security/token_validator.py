@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any, Dict
 
 import httpx
-from integrations.http_transport import insecure_async_client
+from integrations.http_transport import insecure_async_client, insecure_ssl_context
 import jwt
 from jwt import PyJWKClient
 
@@ -17,7 +17,7 @@ class OIDCTokenValidator:
         self.issuer = issuer
         self.audience = audience
         self.jwks_url = jwks_url
-        self._keys = PyJWKClient(jwks_url)
+        self._keys = PyJWKClient(jwks_url, ssl_context=insecure_ssl_context())
 
     def validate(self, token: str) -> Identity:
         signing_key = self._keys.get_signing_key_from_jwt(token).key
