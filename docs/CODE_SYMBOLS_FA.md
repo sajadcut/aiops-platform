@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 243 | Dashboard JS files scanned: 2 | Symbols indexed: 1400**
+**Python files scanned: 244 | Dashboard JS files scanned: 2 | Symbols indexed: 1412**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -965,6 +965,18 @@
 | `tests/scenarios/test_kubernetes_oom_acceptance.py` | `test_oom_triage_routes_to_kubernetes_and_infrastructure` | 144 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/scenarios/test_kubernetes_oom_acceptance.py` | `test_oom_multi_agent_analysis_is_grounded_and_reaches_consensus` | 163 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/scenarios/test_kubernetes_oom_acceptance.py` | `test_oom_agent_cannot_disguise_restart_as_read_only_investigation` | 204 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/scenarios/test_postgresql_connection_exhaustion_acceptance.py` | `PostgresConnectionExhaustionScenarioLLM` | 13 | class | Deterministic INC-002 adapter that exercises normal parsing and safety contracts. | module |
+| `tests/scenarios/test_postgresql_connection_exhaustion_acceptance.py` | `PostgresConnectionExhaustionScenarioLLM.provider_name` | 17 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | PostgresConnectionExhaustionScenarioLLM |
+| `tests/scenarios/test_postgresql_connection_exhaustion_acceptance.py` | `PostgresConnectionExhaustionScenarioLLM.generate` | 20 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | PostgresConnectionExhaustionScenarioLLM |
+| `tests/scenarios/test_postgresql_connection_exhaustion_acceptance.py` | `PostgresConnectionExhaustionScenarioLLM.generate_with_messages` | 106 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | PostgresConnectionExhaustionScenarioLLM |
+| `tests/scenarios/test_postgresql_connection_exhaustion_acceptance.py` | `UnsafeDatabaseRecommendationLLM` | 110 | class | کلاس | module |
+| `tests/scenarios/test_postgresql_connection_exhaustion_acceptance.py` | `UnsafeDatabaseRecommendationLLM.provider_name` | 112 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | UnsafeDatabaseRecommendationLLM |
+| `tests/scenarios/test_postgresql_connection_exhaustion_acceptance.py` | `UnsafeDatabaseRecommendationLLM.generate` | 115 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | UnsafeDatabaseRecommendationLLM |
+| `tests/scenarios/test_postgresql_connection_exhaustion_acceptance.py` | `UnsafeDatabaseRecommendationLLM.generate_with_messages` | 138 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | UnsafeDatabaseRecommendationLLM |
+| `tests/scenarios/test_postgresql_connection_exhaustion_acceptance.py` | `postgres_exhaustion_input` | 142 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/scenarios/test_postgresql_connection_exhaustion_acceptance.py` | `test_postgres_exhaustion_routes_database_then_application` | 180 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/scenarios/test_postgresql_connection_exhaustion_acceptance.py` | `test_postgres_exhaustion_multi_agent_analysis_is_grounded_and_reaches_consensus` | 199 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/scenarios/test_postgresql_connection_exhaustion_acceptance.py` | `test_database_agent_cannot_disguise_restart_as_read_only_investigation` | 242 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/security/test_governance_security.py` | `test_audit_redacts_nested_secrets` | 12 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/security/test_governance_security.py` | `test_high_risk_approval_requires_high_risk_role` | 29 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/security/test_governance_security.py` | `test_sre_can_approve_high_risk` | 36 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
