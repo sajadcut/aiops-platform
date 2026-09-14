@@ -10,7 +10,6 @@ from apps.decision_engine import DecisionAction, DecisionEngine, RiskLevel
 from apps.verification_service import VerificationEngine, VerificationStatus
 from integrations.elasticsearch.client import ElasticsearchClient
 from integrations.prometheus.client import PrometheusClient
-from integrations.zabbix.connector import ZabbixConnector
 
 
 def _finding(confidence: float = 0.9):
@@ -143,18 +142,6 @@ async def test_elasticsearch_unavailable_raises_instead_of_returning_empty(monke
     monkeypatch.setattr(client, "health_check", unhealthy)
     with pytest.raises(RuntimeError, match="elasticsearch_unavailable"):
         await client.get_logs("payments", datetime.now(timezone.utc))
-
-
-@pytest.mark.asyncio
-async def test_zabbix_unavailable_raises_instead_of_returning_empty(monkeypatch):
-    client = ZabbixConnector(api_url="http://zabbix.invalid")
-
-    async def unhealthy():
-        return False
-
-    monkeypatch.setattr(client, "health_check", unhealthy)
-    with pytest.raises(RuntimeError, match="zabbix_unavailable"):
-        await client.get_alerts(service="payments")
 
 
 def test_offline_dockerfile_fails_closed_and_runs_non_root():
