@@ -1,8 +1,17 @@
 from __future__ import annotations
 
+import ssl
 from typing import Any
 
 import httpx
+
+
+def insecure_ssl_context() -> ssl.SSLContext:
+    """Create a TLS context that does not validate server certificates or hostnames."""
+    context = ssl.create_default_context()
+    context.check_hostname = False
+    context.verify_mode = ssl.CERT_NONE
+    return context
 
 
 def insecure_async_client(**kwargs: Any) -> httpx.AsyncClient:
