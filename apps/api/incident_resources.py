@@ -6,11 +6,14 @@ from sqlalchemy import desc, select, text
 
 from database import AsyncSessionLocal
 from domain.models import Incident, Evidence, Finding
+from domain.contracts.config import settings
+from domain.contracts.exceptions import AppException
 from apps.rag_service import KnowledgeRAGService
 from apps.memory_service import OperationalMemoryService
 from apps.audit_service.postgres import PostgreSQLAuditStore
 from apps.orchestrator.workflow_store import WorkflowCheckpointStore
 from apps.security.auth import require_permission
+from integrations.cognia import CogniaAPIError, CogniaConfigurationError, CogniaContractError
 
 router = APIRouter(dependencies=[Depends(require_permission("read:incident"))])
 
@@ -65,7 +68,29 @@ async def get_knowledge(incident_id: UUID, limit: int = Query(default=5, le=20))
         if incident is None:
             raise HTTPException(status_code=404, detail="Incident not found")
         query = f"{incident.service or ''} {incident.summary or ''}".strip()
-        return {"items": await KnowledgeRAGService(db).search(query, limit=limit)}
+        try:
+            items = await KnowledgeRAGService(db).search(query, limit=limit)
+        except CogniaAPIError as exc:
+            exposed_status = 503 if exc.status_code in {429, 502, 503, 504} else 502
+            raise AppException(
+                status_code=exposed_status,
+                detail="Governed knowledge provider request failed",
+                error_code="KNOWLEDGE_PROVIDER_UNAVAILABLE",
+                metadata={
+                    "provider": "cognia",
+                    "upstream_status": exc.status_code,
+                    "upstream_code": exc.code,
+                    "trace_id": exc.trace_id,
+                },
+            ) from exc
+        except (CogniaConfigurationError, CogniaContractError) as exc:
+            raise AppException(
+                status_code=502,
+                detail="Governed knowledge provider contract is unavailable",
+                error_code="KNOWLEDGE_PROVIDER_CONTRACT_ERROR",
+                metadata={"provider": settings.KNOWLEDGE_PROVIDER, "error_type": type(exc).__name__},
+            ) from exc
+        return {"provider": settings.KNOWLEDGE_PROVIDER, "items": items}
 
 
 @router.get("/incidents/{incident_id}/memory")
