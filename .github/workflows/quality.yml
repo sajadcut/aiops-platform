@@ -178,7 +178,7 @@ jobs:
               assert result['valid'], result
           asyncio.run(main())
           PY
-      - name: Validate canonical schema pgvector and governance persistence
+      - name: Validate Cognia-only schema Operational Memory pgvector and governance persistence
         run: |
           python - <<'PY'
           import psycopg
@@ -192,16 +192,31 @@ jobs:
               with conn.cursor() as cur:
                   cur.execute("SELECT extversion FROM pg_extension WHERE extname='vector'")
                   assert cur.fetchone(), "pgvector extension missing"
+
                   cur.execute("SELECT table_name FROM information_schema.tables WHERE table_schema='public'")
                   tables = {row[0] for row in cur.fetchall()}
-                  required = {'incidents','evidences','findings','knowledge_documents','memory_entries','approvals','audit_events','workflow_checkpoints','runbooks'}
+                  required = {
+                      'incidents','evidences','findings','memory_entries','approvals',
+                      'audit_events','workflow_checkpoints','runbooks',
+                      'legacy_knowledge_documents_archive'
+                  }
                   assert required <= tables, required - tables
+                  assert 'knowledge_documents' not in tables, 'active local Knowledge RAG table must be retired'
+
                   cur.execute("""
                       SELECT table_name, udt_name FROM information_schema.columns
-                      WHERE table_name IN ('knowledge_documents','memory_entries') AND column_name='embedding'
+                      WHERE table_name='memory_entries' AND column_name='embedding'
                   """)
                   vector_rows = cur.fetchall()
-                  assert len(vector_rows) == 2 and all(row[1] == 'vector' for row in vector_rows), vector_rows
+                  assert vector_rows == [('memory_entries', 'vector')], vector_rows
+
+                  cur.execute("""
+                      SELECT column_name FROM information_schema.columns
+                      WHERE table_name='legacy_knowledge_documents_archive'
+                  """)
+                  legacy_columns = {row[0] for row in cur.fetchall()}
+                  assert 'embedding' not in legacy_columns, legacy_columns
+
                   incident_id = uuid4()
                   cur.execute(
                       "INSERT INTO incidents (id,source,severity,service,status,summary) VALUES (%s,%s,%s,%s,%s,%s)",
@@ -218,13 +233,14 @@ jobs:
                   )
                   cur.execute("UPDATE approvals SET status='consumed' WHERE approval_id=%s AND status='approved' RETURNING status", (approval_id,))
                   assert cur.fetchone()[0] == 'consumed'
+
                   dimension = settings.EMBEDDING_DIMENSION
                   vector = "[" + ",".join(["0.1"] * dimension) + "]"
                   cur.execute(
-                      "INSERT INTO knowledge_documents (id,title,content,source,version,extra_metadata,embedding) VALUES (%s,%s,%s,%s,%s,%s::json,%s::vector)",
-                      (uuid4(),'ci','pgvector compatibility acceptance','ci','1','{\"namespace\":\"knowledge\",\"source_type\":\"runbook\",\"owner\":\"ci\",\"acl\":[\"internal\"]}',vector),
+                      "INSERT INTO memory_entries (id,incident_id,pattern,symptoms,verification_result,outcome,embedding) VALUES (%s,%s,%s,%s::json,%s,%s,%s::vector)",
+                      (uuid4(),incident_id,'ci operational pattern','{}','success','verified recovery',vector),
                   )
-                  cur.execute("SELECT embedding <=> %s::vector FROM knowledge_documents ORDER BY embedding <=> %s::vector LIMIT 1", (vector, vector))
+                  cur.execute("SELECT embedding <=> %s::vector FROM memory_entries ORDER BY embedding <=> %s::vector LIMIT 1", (vector, vector))
                   assert cur.fetchone()[0] == 0.0
               conn.commit()
           PY
@@ -241,6 +257,7 @@ jobs:
           import psycopg
           from uuid import uuid4
           from domain.contracts.config import settings
+
           url = settings.ALEMBIC_DATABASE_URL.replace('postgresql+psycopg://', 'postgresql://', 1)
           with psycopg.connect(url) as conn:
               with conn.cursor() as cur:
@@ -248,19 +265,30 @@ jobs:
                       "INSERT INTO incidents (id,source,severity,service,status,summary) VALUES (%s,%s,%s,%s,%s,%s)",
                       (uuid4(),'existing-db','medium','legacy-service','OPEN','must survive forward migration'),
                   )
+                  cur.execute(
+                      "INSERT INTO knowledge_documents (id,title,content,source,version,extra_metadata) VALUES (%s,%s,%s,%s,%s,%s::json)",
+                      (uuid4(),'historical runbook','pre-Cognia content must be preserved','existing-db','1','{\"owner\":\"legacy\"}'),
+                  )
               conn.commit()
           PY
           python -m alembic -c database/migrations/alembic.ini upgrade head
           python - <<'PY'
           import psycopg
           from domain.contracts.config import settings
+
           url = settings.ALEMBIC_DATABASE_URL.replace('postgresql+psycopg://', 'postgresql://', 1)
           with psycopg.connect(url) as conn:
               with conn.cursor() as cur:
                   cur.execute("SELECT count(*) FROM incidents WHERE source='existing-db' AND service='legacy-service'")
                   assert cur.fetchone()[0] == 1, 'existing incident was not preserved'
+                  cur.execute("SELECT count(*) FROM legacy_knowledge_documents_archive WHERE source='existing-db' AND title='historical runbook'")
+                  assert cur.fetchone()[0] == 1, 'historical Knowledge content was not preserved in non-RAG archive'
+                  cur.execute("SELECT to_regclass('public.knowledge_documents')")
+                  assert cur.fetchone()[0] is None, 'active local Knowledge table still exists'
+                  cur.execute("SELECT column_name FROM information_schema.columns WHERE table_name='legacy_knowledge_documents_archive'")
+                  assert 'embedding' not in {row[0] for row in cur.fetchall()}, 'archive still has vector retrieval capability'
                   cur.execute("SELECT version_num FROM alembic_version")
-                  assert cur.fetchone()[0] == 'f2b3c4d5e6f7'
+                  assert cur.fetchone()[0] == 'c3d4e5f6a7b8'
           PY
       - name: Migration downgrade and clean rebuild
         run: |
