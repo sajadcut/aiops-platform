@@ -1,7 +1,7 @@
 # Production Acceptance Matrix
 
 Baseline: `MASTER.md 2.5 - Cognia-Only Knowledge RAG`
-Branch: `fix/cognia-only-rag` candidate under review
+Branch: `main`
 
 ## Repository-level acceptance
 
