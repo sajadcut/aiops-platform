@@ -1,3 +1,4 @@
+import math
 from typing import Any, Dict
 
 BASE_REQUIRED = ("source_id", "provider", "relevance", "retrieved_at")
@@ -21,6 +22,6 @@ def validate_retrieval(item: Dict[str, Any]) -> bool:
         relevance = float(item.get("relevance"))
     except (TypeError, ValueError):
         return False
-    if not 0.0 <= relevance <= 1.0:
+    if not math.isfinite(relevance):
         return False
     return all(key in item and item.get(key) is not None for key in COGNIA_REQUIRED)

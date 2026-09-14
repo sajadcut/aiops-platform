@@ -214,7 +214,6 @@ class E2EOrchestrator:
                 state["knowledge_results"] = await KnowledgeRAGService().search(
                     query,
                     limit=settings.AGENT_MAX_AUXILIARY_CONTEXT_ITEMS,
-                    min_similarity=0.5,
                     scope_context=scope_context,
                 )
                 state["knowledge_status"] = {

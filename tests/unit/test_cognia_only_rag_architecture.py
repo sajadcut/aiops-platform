@@ -48,6 +48,9 @@ def test_authoritative_docs_do_not_advertise_a_second_rag():
         "development/test compatibility only",
         "local `knowledge_documents`/pgvector path remains",
         "local Knowledge pgvector only fixture",
+        "local Knowledge فقط dev/test compatibility است",
+        "legacy provider selector=cognia",
+        "retired local Knowledge RAG",
     ]
     for doc in docs:
         text = Path(doc).read_text(encoding="utf-8")

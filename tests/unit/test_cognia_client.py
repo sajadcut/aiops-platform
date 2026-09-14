@@ -91,6 +91,25 @@ async def test_machine_token_is_opaque_cached_and_search_contract_is_exact(monke
 
 
 @pytest.mark.asyncio
+async def test_machine_token_requires_explicit_bearer_token_type(monkeypatch):
+    monkeypatch.setattr(settings, "RETRY_MAX_ATTEMPTS", 1)
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.url.path == "/api/access/client-auth/token":
+            return httpx.Response(200, json={"accessToken": "opaque", "expiresIn": 900})
+        return httpx.Response(500)
+
+    async with CogniaClient(
+        base_url="http://cognia.test",
+        client_id="app-token-type",
+        client_secret="secret",
+        transport=httpx.MockTransport(handler),
+    ) as client:
+        with pytest.raises(CogniaContractError, match="cognia_machine_token_response_invalid"):
+            await client.search("query", knowledge_base_ids=[10], limit=5)
+
+
+@pytest.mark.asyncio
 async def test_search_401_reauthenticates_once(monkeypatch):
     monkeypatch.setattr(settings, "RETRY_MAX_ATTEMPTS", 1)
     calls = {"auth": 0, "search": 0}
@@ -125,6 +144,46 @@ async def test_search_401_reauthenticates_once(monkeypatch):
 
     assert payload["items"]
     assert calls == {"auth": 2, "search": 2}
+
+
+@pytest.mark.asyncio
+async def test_search_forwards_documented_filters_and_opaque_continuation(monkeypatch):
+    monkeypatch.setattr(settings, "RETRY_MAX_ATTEMPTS", 1)
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.url.path == "/api/access/client-auth/token":
+            return httpx.Response(200, json={"tokenType": "Bearer", "accessToken": "opaque", "expiresIn": 900})
+        if request.url.path == "/api/engine/search":
+            assert json.loads(request.content) == {
+                "query": "runbook",
+                "knowledgeBaseIds": [10],
+                "limit": 20,
+                "continuationToken": "opaque-continuation",
+                "knowledgeType": "text",
+                "tagIds": [5, 8],
+                "categoryIds": [20],
+                "metadata": {"issuer": "central-bank"},
+            }
+            return httpx.Response(200, json={"items": [], "nextContinuationToken": None})
+        return httpx.Response(404)
+
+    async with CogniaClient(
+        base_url="http://cognia.test",
+        client_id="app-filters",
+        client_secret="secret",
+        transport=httpx.MockTransport(handler),
+    ) as client:
+        payload = await client.search(
+            "runbook",
+            knowledge_base_ids=[10],
+            limit=20,
+            continuation_token="opaque-continuation",
+            knowledge_type="text",
+            tag_ids=[5, 8],
+            category_ids=[20],
+            metadata={"issuer": "central-bank"},
+        )
+    assert payload["items"] == []
 
 
 @pytest.mark.asyncio
@@ -206,6 +265,34 @@ async def test_context_200_may_be_insufficient(monkeypatch):
         )
 
     assert payload["isSufficient"] is False
+
+
+@pytest.mark.asyncio
+async def test_context_fail_generation_422_preserves_cognia_error_code(monkeypatch):
+    monkeypatch.setattr(settings, "RETRY_MAX_ATTEMPTS", 1)
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.url.path == "/api/access/client-auth/token":
+            return httpx.Response(200, json={"tokenType": "Bearer", "accessToken": "opaque", "expiresIn": 900})
+        if request.url.path == "/api/engine/context":
+            return httpx.Response(
+                422,
+                headers={"content-type": "application/problem+json"},
+                json={"status": 422, "code": "CONTEXT_INSUFFICIENT_KNOWLEDGE", "traceId": "ctx-422"},
+            )
+        return httpx.Response(404)
+
+    async with CogniaClient(
+        base_url="http://cognia.test",
+        client_id="app-context-422",
+        client_secret="secret",
+        transport=httpx.MockTransport(handler),
+    ) as client:
+        with pytest.raises(CogniaAPIError) as captured:
+            await client.generate_context("task", context_profile_id=501)
+    assert captured.value.status_code == 422
+    assert captured.value.code == "CONTEXT_INSUFFICIENT_KNOWLEDGE"
+    assert captured.value.trace_id == "ctx-422"
 
 
 @pytest.mark.asyncio

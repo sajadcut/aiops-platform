@@ -63,10 +63,11 @@ All fields below are required by `Settings`. “Secret” means the tracked temp
 | `EMBEDDING_PROVIDER`, `EMBEDDING_BASE_URL`, `EMBEDDING_MODEL`, `EMBEDDING_DIMENSION`, `EMBEDDING_TIMEOUT_SECONDS` | Operational Memory | No except provider-specific URL may be private | deterministic provider forbidden in production because Operational Memory still uses embeddings. |
 | `EMBEDDING_API_KEY` | embedding provider | Yes | Required when selected provider requires it. |
 | `PGVECTOR_EXPECTED_DIMENSION`, `PGVECTOR_VALIDATE_ON_STARTUP` | vector startup validation | No | PostgreSQL/pgvector remains required for Operational Memory; production validation failure blocks startup when enabled. |
-| `COGNIA_BASE_URL` | Cognia client/readiness | No | Required when Cognia is selected; production requires HTTPS. Do not hard-code the sandpod URL into production. |
+| `COGNIA_BASE_URL` | Cognia client/readiness | No | Required in production because Cognia is the only Knowledge RAG; production requires HTTPS. Do not hard-code the sandpod URL into production. |
 | `COGNIA_CLIENT_ID` | Cognia Machine Authentication | Sensitive identifier | Required for Cognia; inject with environment-specific integration configuration. |
 | `COGNIA_CLIENT_SECRET` | Cognia Machine Authentication | **Yes** | Required for Cognia; secret manager only; never log, commit, audit or prompt. |
-| `COGNIA_KNOWLEDGE_BASE_IDS` | Cognia Search | No | Required non-empty positive explicit KB allowlist when Cognia is selected. Cognia still enforces effective `kb.read`. |
+| `COGNIA_CLIENT_APPLICATION_ID` | Cognia Scope / External Subject | No | Numeric Client Application identity; distinct from `COGNIA_CLIENT_ID`. Required only when ClientApplication/ExternalSubject scoped requests are used. |
+| `COGNIA_KNOWLEDGE_BASE_IDS` | Cognia Search | No | Required non-empty positive explicit KB allowlist in production. Cognia still enforces effective `kb.read` on every configured KB. |
 | `COGNIA_CONTEXT_PROFILE_ID` | Cognia Context Generation | No | Optional; when absent the Search path still works but Context Generation is intentionally unavailable. |
 | `COGNIA_TIMEOUT_SECONDS`, `COGNIA_TLS_VERIFY` | Cognia transport | No | Timeout must be positive; production requires TLS verification. |
 | `AGENT_LLM_TEMPERATURE`, `AGENT_MAX_TOKENS` | agent LLM calls | No | Required; invalid provider limits fail agent calls. |
@@ -127,7 +128,7 @@ The repository history previously contained credential-like values. Removing `.e
 
 ## Kubernetes / OpenShift
 
-- `aiops-platform-config`: non-secret runtime values, including `COGNIA_BASE_URL`, KB IDs, optional Context Profile ID, timeout and TLS policy.
+- `aiops-platform-config`: non-secret runtime values, including `COGNIA_BASE_URL`, `COGNIA_CLIENT_APPLICATION_ID` when scoped retrieval is used, KB IDs, optional Context Profile ID, timeout and TLS policy.
 - `aiops-platform-secrets`: credentials/tokens/secret paths, including `COGNIA_CLIENT_SECRET` (and `COGNIA_CLIENT_ID` if your organization classifies it as secret integration metadata).
 - `deployment/kubernetes/migrate-job.yaml`: run the exact promoted image and `alembic upgrade head` before Deployment rollout.
 - `deployment/kubernetes/aiops-platform.yaml`: forces `APP_ENV=production`, migration validation, writable `/var/log/aiops`, readiness/liveness and metrics scraping. It imports the environment-specific ConfigMap/Secret via `envFrom`, so Cognia values are injected without being committed to the manifest.
@@ -143,7 +144,7 @@ The repository history previously contained credential-like values. Removing `.e
 
 ## Cognia canonical Knowledge RAG
 
-Cognia is the canonical Governed Knowledge RAG. `legacy provider selector=cognia` is mandatory for governed Production. The tracked non-secret development template uses `retired local Knowledge RAG` only so a clean checkout does not require real Cognia credentials. Production requires HTTPS, TLS verification, machine `COGNIA_CLIENT_ID`/`COGNIA_CLIENT_SECRET` and explicit `COGNIA_KNOWLEDGE_BASE_IDS`.
+Cognia is the only Governed Knowledge RAG in every environment. There is no runtime provider selector and no local/retired Knowledge RAG. Development/test may leave Cognia connection values empty so a clean checkout can import, but any attempted Knowledge retrieval fails explicitly as Cognia misconfiguration rather than switching providers. Production requires HTTPS, TLS verification, machine `COGNIA_CLIENT_ID`/`COGNIA_CLIENT_SECRET` and explicit `COGNIA_KNOWLEDGE_BASE_IDS`.
 
 `COGNIA_CLIENT_APPLICATION_ID` is a numeric Cognia Scope identity and is **not** the same value as the machine-auth `COGNIA_CLIENT_ID`. External Subject must come from an explicit upstream contract and is never inferred from a service/customer name. `COGNIA_CONTEXT_PROFILE_ID` is optional until a profile is provisioned.
 

@@ -507,7 +507,7 @@ aiops-platform/
 | محل LLM | باز | اولویت با مدل/سرویس قابل دسترس در شبکه داخلی. |
 | Auth/SSO Provider | باز | OIDC/RBAC در کد وجود دارد؛ provider/role mapping نهایی با محیط سازمانی validate شود. |
 | **Governed Knowledge RAG** | **قطعی** | **Cognia مرجع canonical برای Knowledge/Revision/Permission/Search/Context است.** |
-| **Vector Store / pgvector** | **قطعی برای Memory** | **PostgreSQL + pgvector لایه Semantic Retrieval برای Operational Memory است؛ local Knowledge فقط dev/test compatibility است.** |
+| **Vector Store / pgvector** | **قطعی برای Memory** | **PostgreSQL + pgvector فقط لایه Semantic Retrieval برای Operational Memory است؛ هیچ local Knowledge RAG در هیچ environment وجود ندارد.** |
 | **Memory framework مانند Mem0** | **اختیاری** | **فقط از طریق Adapter؛ Mem0 نباید dependency اجباری یا API داخلی اصلی پروژه باشد.** |
 | Message Broker / Distributed Worker Queue | باز | در MVP hard-code نشود؛ انتخاب Redis/RabbitMQ/Kafka/Temporal یا گزینه دیگر فقط پس از load/soak evidence و ADR. |
 | MCP | **Selected / Governed only** | MCP transport عمومی Core نیست؛ legacy client non-production است؛ remote MCP نیازمند OAuth 2.1/resource binding/capability policy/Audit و workload identity مناسب است. |

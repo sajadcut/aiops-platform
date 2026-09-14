@@ -1,3 +1,4 @@
+import math
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
@@ -19,7 +20,7 @@ class KnowledgeRAGService:
         self,
         query: str,
         limit: int = 5,
-        min_similarity: float = 0.5,
+        min_similarity: Optional[float] = None,
         access_scopes: Optional[List[str]] = None,
         scope_context: Optional[Dict[str, Any]] = None,
     ) -> List[Dict[str, Any]]:
@@ -30,12 +31,15 @@ class KnowledgeRAGService:
             return []
         if limit <= 0:
             raise ValueError("knowledge_search_limit_must_be_positive")
-        if not 0 <= min_similarity <= 1:
-            raise ValueError("knowledge_min_relevance_must_be_between_0_and_1")
+        min_relevance: Optional[float] = None
+        if min_similarity is not None:
+            min_relevance = float(min_similarity)
+            if not math.isfinite(min_relevance):
+                raise ValueError("knowledge_min_relevance_must_be_finite")
         return await self._search_cognia(
             query,
             limit=limit,
-            min_relevance=min_similarity,
+            min_relevance=min_relevance,
             scope_context=scope_context,
         )
 
@@ -44,7 +48,7 @@ class KnowledgeRAGService:
         query: str,
         *,
         limit: int,
-        min_relevance: float,
+        min_relevance: Optional[float],
         scope_context: Optional[Dict[str, Any]],
     ) -> List[Dict[str, Any]]:
         retrieved_at = datetime.now(timezone.utc).isoformat()
@@ -76,9 +80,9 @@ class KnowledgeRAGService:
                 relevance = float(raw["relevanceScore"])
             except (TypeError, ValueError) as exc:
                 raise CogniaContractError("cognia_relevance_score_invalid") from exc
-            if not 0 <= relevance <= 1:
-                raise CogniaContractError("cognia_relevance_score_out_of_range")
-            if relevance < min_relevance:
+            if not math.isfinite(relevance):
+                raise CogniaContractError("cognia_relevance_score_not_finite")
+            if min_relevance is not None and relevance < min_relevance:
                 continue
 
             knowledge_base_id = int(raw["knowledgeBaseId"])

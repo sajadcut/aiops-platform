@@ -103,25 +103,27 @@ async def test_cognia_search_maps_chunk_traceability_without_inventing_title(mon
 
 
 @pytest.mark.asyncio
-async def test_cognia_relevance_threshold_is_retrieval_filter_not_probability(monkeypatch):
+async def test_cognia_relevance_score_is_not_assumed_to_be_probability_range(monkeypatch):
     monkeypatch.setattr(settings, "COGNIA_KNOWLEDGE_BASE_IDS", [10])
     monkeypatch.setattr(rag_module, "CogniaClient", FakeCogniaClient)
     FakeCogniaClient.search_payload = {
         "items": [
             {
                 "rank": 1,
-                "relevanceScore": 0.49,
+                "relevanceScore": 7.5,
                 "knowledgeBaseId": 10,
                 "knowledgeId": 1,
                 "revisionId": 2,
                 "revisionNumber": 1,
                 "chunkId": 3,
-                "chunkText": "low retrieval relevance",
+                "chunkText": "provider-defined retrieval relevance",
             }
         ]
     }
 
-    assert await KnowledgeRAGService().search("query", min_similarity=0.5) == []
+    items = await KnowledgeRAGService().search("query")
+    assert items[0]["relevance"] == 7.5
+    assert await KnowledgeRAGService().search("query", min_similarity=8.0) == []
 
 
 @pytest.mark.asyncio

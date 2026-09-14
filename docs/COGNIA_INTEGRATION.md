@@ -21,13 +21,13 @@ Configuration separates:
 
 ## Search
 
-AIOps sends all configured KB IDs explicitly. Cognia authorization is all-or-nothing; the client does not drop unauthorized KBs. Search consumes Current Active Revision chunks only. The adapter preserves KB, Knowledge, Revision, Revision Number and Chunk IDs. `relevanceScore` is retrieval relevance and never becomes factual confidence or live Evidence confidence.
+AIOps sends all configured KB IDs explicitly. Cognia authorization is all-or-nothing; the client does not drop unauthorized KBs. Search consumes Current Active Revision chunks only. The adapter preserves KB, Knowledge, Revision, Revision Number and Chunk IDs. `relevanceScore` is retrieval relevance and never becomes factual confidence or live Evidence confidence. The supplied Cognia contract does not define it as a normalized 0..1 probability, so the default incident path does not impose a client-side normalization threshold; any explicit threshold must be justified by accepted environment evidence.
 
 Successful zero results are represented as `empty`. Authentication, permission, hidden/not-found, contract, index/dependency and transport failures remain separate typed provider status. They are not converted into empty results and do not trigger any alternate RAG fallback.
 
 ## Scope and External Subject
 
-No Subject is inferred from an Incident service/customer name. An upstream caller may provide `context.knowledge_subject` only as an explicit stable contract containing `namespace` and `externalSubjectId` (or the internal snake_case alias). The Search client adds the configured numeric Client Application ID and rejects a mismatched Client Application ID.
+No Subject is inferred from an Incident service/customer name. A trusted upstream integration may provide `context.knowledge_subject` only as an explicit stable contract containing `namespace` and `externalSubjectId` (or the internal snake_case alias). The Search client adds the configured numeric Client Application ID and rejects a mismatched Client Application ID. Client ownership is not a substitute for caller-to-Subject authorization; deployments using sensitive ExternalSubject scopes must bind the upstream caller/incident to that Subject before forwarding it.
 
 For Context Generation the request subject contains only `namespace` and `externalSubjectId`; the Client Application is defined by the Context Profile.
 

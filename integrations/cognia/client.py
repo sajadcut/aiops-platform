@@ -177,12 +177,12 @@ class CogniaClient:
                 json_body={"clientId": self.client_id, "clientSecret": self.client_secret},
             )
             token = str(payload.get("accessToken") or "").strip()
-            token_type = str(payload.get("tokenType") or "Bearer").strip()
+            token_type = str(payload.get("tokenType") or "").strip()
             try:
                 expires_in = int(payload.get("expiresIn"))
             except (TypeError, ValueError) as exc:
                 raise CogniaContractError("cognia_machine_token_expires_in_invalid") from exc
-            if not token or token_type.lower() != "bearer" or expires_in <= 0:
+            if not token or not token_type or token_type.lower() != "bearer" or expires_in <= 0:
                 raise CogniaContractError("cognia_machine_token_response_invalid")
 
             # Keep a small safety margin without inspecting/decoding the opaque token.
