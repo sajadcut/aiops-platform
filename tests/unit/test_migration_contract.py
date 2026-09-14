@@ -25,3 +25,10 @@ def test_approval_consumed_migration_exists():
     text = read("database/migrations/versions/f2b3c4d5e6f7_approval_consumed_state.py")
     assert "consumed" in text
     assert 'down_revision: Union[str, Sequence[str], None] = "f1a2b3c4d5e6"' in text
+
+
+def test_cognia_only_migration_retires_local_knowledge_vector_search():
+    text = read("database/migrations/versions/c3d4e5f6a7b8_retire_local_knowledge_rag.py")
+    assert 'op.rename_table("knowledge_documents", "legacy_knowledge_documents_archive")' in text
+    assert 'op.drop_column("legacy_knowledge_documents_archive", "embedding")' in text
+    assert 'down_revision: Union[str, Sequence[str], None] = "f2b3c4d5e6f7"' in text

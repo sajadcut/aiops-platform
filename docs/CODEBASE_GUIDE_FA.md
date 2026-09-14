@@ -188,7 +188,7 @@ RAG برای دانش رسمی governed و Operational Memory برای تجرب�
 - `incidents`: هویت و lifecycle حادثه.
 - `evidences`: factهای live/provider با FK به Incident.
 - `findings`: تحلیل Agent با reference به evidence.
-- `knowledge_documents`: RAG رسمی با metadata و `vector(1536)`.
+- `legacy_knowledge_documents_archive`: محتوای تاریخی pre-Cognia بدون embedding/retrieval؛ RAG فعال نیست.
 - `memory_entries`: تجربه عملیاتی با embedding و outcome.
 
 Migration `f1a2b3c4d5e6` persistenceهای `approvals`, `audit_events`, `runbooks`, `workflow_checkpoints` را اضافه می‌کند. Migration `f2b3c4d5e6f7` status `consumed` را برای anti-replay approval اضافه می‌کند.

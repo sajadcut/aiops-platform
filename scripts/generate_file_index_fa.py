@@ -64,7 +64,7 @@ def classify(path: str) -> tuple[str, str, str, str, str, str]:
         "apps/security/": ("Security", "Authentication، OIDC/JWT و RBAC", "FastAPI dependencies", "OIDC/config", "security boundary"),
         "apps/signal_gateway/": ("Signal", "ورود، normalization، correlation و dedupe سیگنال", "API/webhooks", "incident repository/context", "ابتدای Incident flow"),
         "apps/verification_service/": ("Verify", "Verification مستقل پس از remediation", "Workflow/execution", "live evidence/audit", "tool success برابر recovery نیست"),
-        "apps/database/": ("DB", "قرارداد/validation pgvector runtime", "startup/CI", "PostgreSQL", "schema/dimension guard"),
+        "apps/database/": ("DB", "قرارداد/validation pgvector فقط برای Operational Memory", "startup/CI", "PostgreSQL", "memory schema/dimension guard"),
     }
     for prefix, (kind, purpose, called_by, deps, notes) in app_rules.items():
         if path.startswith(prefix):
@@ -117,7 +117,7 @@ def classify(path: str) -> tuple[str, str, str, str, str, str]:
         return ("Python", "Adapter provider/read-only integration", "MCP server/test helper", "external API/.env", "Runtime/Helper", "Control Plane production ترجیحاً MCP")
 
     if path.startswith("knowledge/"):
-        return ("Python", "Contract/helper لایه Knowledge RAG", "RAG service", "metadata/ACL", "Runtime", "دانش رسمی governed")
+        return ("Python", "Contract/helper لایه Cognia-only Knowledge RAG", "RAG service", "Cognia retrieval contract", "Runtime", "دانش رسمی governed فقط از Cognia")
     if path.startswith("memory/"):
         return ("Python", "Namespace/contract Operational Memory", "Memory service", "pgvector", "Runtime", "تجربه incidentهای قبلی")
 

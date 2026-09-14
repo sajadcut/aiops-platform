@@ -5,7 +5,7 @@
 
 | مشخصه | مقدار |
 |---|---|
-| نسخه | **2.4 - Cognia Governed Knowledge RAG** |
+| نسخه | **2.5 - Cognia-Only Knowledge RAG** |
 | وضعیت | **Master / Single Source of Truth** |
 | هدف | مرجع واحد برای فهم پروژه، طراحی، پیاده‌سازی، تست و ادامه توسعه |
 | هسته AI | **Python + LangGraph** |
@@ -54,7 +54,7 @@
 - کمینه‌سازی Scope برای MVP از اضافه‌کردن قابلیت‌های نمایشی مهم‌تر است.
 - **Evidence زنده Production مرجع حقیقت است؛ RAG و Memory نمی‌توانند جای آن را بگیرند.**
 - **Operational Memory با Knowledge RAG یکی نیست و باید در مدل، Retrieval و Policy از هم جدا بمانند.**
-- **Cognia مرجع اصلی و canonical برای Governed Knowledge RAG است؛ local PostgreSQL/pgvector مسیر Production Knowledge نیست.**
+- **Cognia تنها Knowledge RAG پروژه در development، test و production است؛ PostgreSQL/pgvector فقط Operational Memory است و هیچ Knowledge retriever محلی یا fallback دیگری مجاز نیست.**
 
 # 3. معماری مرجع
 
@@ -128,13 +128,13 @@ Verification Engine
 - Memory یا RAG نباید به‌تنهایی مبنای Write Action در Production قرار گیرد.
 - اگر Memory با Evidence فعلی تعارض داشته باشد، **Evidence فعلی اولویت دارد**.
 - **Cognia** مرز canonical ثبت، Revision، Approval/Processing lifecycle، Permission، Search و Context برای Governed Knowledge است.
-- **PostgreSQL + pgvector** لایه Semantic Retrieval برای Operational Memory است؛ local Knowledge pgvector فقط fixture توسعه/تست و سازگاری تاریخی است.
-- در خطای Cognia، سیستم حق fallback پنهان به local Knowledge ندارد؛ وضعیت unavailable/forbidden/not-accessible باید از Search موفق با zero result متمایز بماند.
+- **PostgreSQL + pgvector** فقط لایه Semantic Retrieval برای Operational Memory است و هیچ نقش Knowledge RAG ندارد.
+- در خطای Cognia، سیستم حق fallback به هیچ Knowledge RAG دیگری ندارد؛ وضعیت unavailable/forbidden/not-accessible باید از Search موفق با zero result متمایز بماند.
 
 ## 5.2 قرارداد Storage و Knowledge Layer
 
 - **PostgreSQL** Persistence اصلی خود پلتفرم برای Incident، Evidence، Finding، Approval، Audit، Workflow Checkpoint، Runbook و Operational Memory است.
-- **pgvector** Vector Search لایه Operational Memory را فراهم می‌کند. جدول/مدل local Knowledge موجود فقط برای fixtureهای توسعه/تست و migration compatibility نگه داشته می‌شود و System of Record دانش Production نیست.
+- **pgvector** فقط Vector Search لایه Operational Memory را فراهم می‌کند. مدل/جدول فعال Knowledge در PostgreSQL وجود ندارد؛ محتوای تاریخی pre-Cognia صرفاً در archive بدون embedding/retrieval نگهداری می‌شود تا مهاجرت داده قابل کنترل باشد.
 - **Cognia** System of Record و retrieval boundary دانش governed است: Knowledge Base، Permission، Knowledge/Revision، Processing/Activation، Scope، Search Chunk و Context Profile/Package در Cognia authoritative هستند.
 - AIOps نباید Permission/Activation Cognia را با ACL محلی شبیه‌سازی یا دور بزند و نباید Knowledge Cognia را به‌عنوان fallback خاموش در pgvector mirror کند.
 - Machine integration فقط با Client Application انجام می‌شود؛ `clientId/clientSecret` credential احراز هویت است و `clientApplicationId` شناسه عددی Scope است و این دو نباید با هم یکی فرض شوند.
@@ -215,7 +215,7 @@ State مرکزی LangGraph باید بتواند کل Incident را بدون ا�
 | Execution | tool, target, started_at, finished_at, status, result_ref |
 | Verification | checks, before, after, status, confidence |
 | MemoryEntry | pattern, conditions, solution, evidence, outcome, reuse_count, embedding_ref, namespace |
-| KnowledgeDocument | id, source, title, version, metadata, chunk_refs, embedding_model, embedding_status, status |
+| CogniaKnowledgeChunkRef | knowledge_base_id, knowledge_id, revision_id, revision_number, chunk_id, scope, relevance, retrieved_at |
 
 # 11. جریان کامل Incident
 
@@ -630,7 +630,8 @@ ADRهای رسمی و شماره‌گذاری جاری در `docs/adr/DECISIONS.
 | **2.1** | **اصلاح Persistence از SQL Server به PostgreSQL؛ اضافه‌شدن مرزبندی رسمی Evidence / Knowledge RAG / Operational Memory؛ افزودن RAG و Memory به معماری، فازها، API و Repository** | **شفاف‌سازی معماری دانش و حافظه** |
 | **2.2** | **تثبیت PostgreSQL + pgvector به‌عنوان Persistence و Vector Layer مشترک برای RAG و Operational Memory؛ تعریف Mem0 به‌عنوان Adapter اختیاری؛ انتقال Semantic Retrieval به MVP** | **هم‌راستا کردن معماری با الگوی عملیاتی مناسب برای RAG/Memory و حذف ابهام بین Storage، Vector Search و Memory Framework** |
 | **2.3** | **Sync وضعیت واقعی implementation؛ deterministic cross-source correlation؛ MCP governance؛ hybrid central/edge target؛ benchmark 2026؛ production gaps و Next Steps واقعی** | **حذف drift بین SSoT و repository و هم‌راستایی با الگوهای امن Agentic/AIOps 2026 بدون ادعای Production Ready زودهنگام** |
-| **2.4** | **تثبیت Cognia به‌عنوان canonical Governed Knowledge RAG؛ محدودکردن pgvector به Operational Memory/dev-test Knowledge؛ تعریف Machine Auth، Scope، Search/Context، authoring lifecycle و no-hidden-fallback** | **هم‌راستا کردن SSoT با قرارداد رسمی Cognia و تصمیم قطعی پروژه** |
+| **2.4** | **تثبیت Cognia به‌عنوان canonical Governed Knowledge RAG و تعریف Machine Auth، Scope، Search/Context، authoring lifecycle و no-hidden-fallback** | **هم‌راستا کردن SSoT با قرارداد رسمی Cognia** |
+| **2.5** | **حذف کامل provider-switch و local Knowledge RAG از runtime/CI؛ Cognia تنها RAG در همه environmentها؛ pgvector فقط Operational Memory؛ retire کردن Knowledge vector table به archive بدون embedding** | **اجرای تصمیم قطعی Cognia-only و حذف هر ambiguity درباره RAG دوم** |
 
 # 27. Definition of Done پروژه
 
@@ -702,11 +703,11 @@ Memory Entry بدون Outcome معتبر نباید به‌عنوان Pattern م
 
 ### D.1 Cognia
 
-Cognia canonical System of Record برای Governed Knowledge، Revision lifecycle، KB Permission، Scope، Search و Context Generation است. AIOps مصرف‌کننده Cognia است و Permission یا lifecycle آن را locally بازسازی نمی‌کند.
+Cognia تنها System of Record و RAG boundary برای Governed Knowledge، Revision lifecycle، KB Permission، Scope، Search و Context Generation است. AIOps مصرف‌کننده Cognia است و Permission یا lifecycle آن را locally بازسازی نمی‌کند.
 
 ### D.2 pgvector
 
-`pgvector` بخشی از Persistence Architecture Operational Memory است. Embeddingهای Memory در PostgreSQL نگهداری می‌شوند و Similarity برای reuse Incident pattern استفاده می‌شود. local Knowledge pgvector فقط fixture/compatibility غیرProduction است.
+`pgvector` بخشی از Persistence Architecture Operational Memory است. Embeddingهای Memory در PostgreSQL نگهداری می‌شوند و Similarity برای reuse Incident pattern استفاده می‌شود. هیچ local Knowledge RAG وجود ندارد؛ pgvector فقط Operational Memory است.
 
 ### D.3 Mem0
 

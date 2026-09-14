@@ -4,9 +4,9 @@ Status: repository contract implemented; real environment acceptance required.
 
 ## Role in architecture
 
-Cognia is the canonical Governed Knowledge RAG. It owns Knowledge Base permissions, Knowledge/Revision lifecycle, processing/activation, Scope, Search and Context Profile policy. It is not Live Operational Evidence, an LLM, an execution tool or Operational Memory.
+Cognia is the only Governed Knowledge RAG in aiops-platform across development, test and production. It owns Knowledge Base permissions, Knowledge/Revision lifecycle, processing/activation, Scope, Search and Context Profile policy. It is not Live Operational Evidence, an LLM, an execution tool or Operational Memory.
 
-Operational Memory remains PostgreSQL + pgvector. Live Evidence remains authoritative for the current Incident. There is no Cognia → local Knowledge fallback in Production.
+Operational Memory remains PostgreSQL + pgvector. Live Evidence remains authoritative for the current Incident. There is no alternate/local Knowledge RAG or Cognia fallback in any environment.
 
 ## Machine identity
 
@@ -23,7 +23,7 @@ Configuration separates:
 
 AIOps sends all configured KB IDs explicitly. Cognia authorization is all-or-nothing; the client does not drop unauthorized KBs. Search consumes Current Active Revision chunks only. The adapter preserves KB, Knowledge, Revision, Revision Number and Chunk IDs. `relevanceScore` is retrieval relevance and never becomes factual confidence or live Evidence confidence.
 
-Successful zero results are represented as `empty`. Authentication, permission, hidden/not-found, contract, index/dependency and transport failures remain separate typed provider status. They are not converted into empty results and do not trigger local pgvector fallback.
+Successful zero results are represented as `empty`. Authentication, permission, hidden/not-found, contract, index/dependency and transport failures remain separate typed provider status. They are not converted into empty results and do not trigger any alternate RAG fallback.
 
 ## Scope and External Subject
 

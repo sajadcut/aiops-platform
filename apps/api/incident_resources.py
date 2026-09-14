@@ -6,7 +6,6 @@ from sqlalchemy import desc, select, text
 
 from database import AsyncSessionLocal
 from domain.models import Incident, Evidence, Finding
-from domain.contracts.config import settings
 from domain.contracts.exceptions import AppException
 from apps.rag_service import KnowledgeRAGService
 from apps.memory_service import OperationalMemoryService
@@ -69,13 +68,13 @@ async def get_knowledge(incident_id: UUID, limit: int = Query(default=5, le=20))
             raise HTTPException(status_code=404, detail="Incident not found")
         query = f"{incident.service or ''} {incident.summary or ''}".strip()
         try:
-            items = await KnowledgeRAGService(db).search(query, limit=limit)
+            items = await KnowledgeRAGService().search(query, limit=limit)
         except CogniaAPIError as exc:
             exposed_status = 503 if exc.status_code in {429, 502, 503, 504} else 502
             raise AppException(
                 status_code=exposed_status,
                 detail="Governed knowledge provider request failed",
-                error_code="KNOWLEDGE_PROVIDER_UNAVAILABLE",
+                error_code="COGNIA_RAG_UNAVAILABLE",
                 metadata={
                     "provider": "cognia",
                     "upstream_status": exc.status_code,
@@ -87,10 +86,10 @@ async def get_knowledge(incident_id: UUID, limit: int = Query(default=5, le=20))
             raise AppException(
                 status_code=502,
                 detail="Governed knowledge provider contract is unavailable",
-                error_code="KNOWLEDGE_PROVIDER_CONTRACT_ERROR",
-                metadata={"provider": settings.KNOWLEDGE_PROVIDER, "error_type": type(exc).__name__},
+                error_code="COGNIA_RAG_CONTRACT_ERROR",
+                metadata={"provider": "cognia", "error_type": type(exc).__name__},
             ) from exc
-        return {"provider": settings.KNOWLEDGE_PROVIDER, "items": items}
+        return {"provider": "cognia", "items": items}
 
 
 @router.get("/incidents/{incident_id}/memory")

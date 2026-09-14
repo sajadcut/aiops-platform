@@ -6,7 +6,7 @@
 
 ## Executive status
 
-The repository is substantially implemented and CI-tested, but it is not yet fully production-accepted for a bank/enterprise environment. Cognia is now the canonical Governed Knowledge RAG; Operational Memory remains PostgreSQL + pgvector. External acceptance is still required for the real Cognia environment, MCP-backed observability/remediation, enterprise identity, PostgreSQL HA/DR, signed offline promotion and sustained load/failure behavior.
+The repository is substantially implemented and CI-tested, but it is not yet fully production-accepted for a bank/enterprise environment. Cognia is now the only Governed Knowledge RAG; Operational Memory remains PostgreSQL + pgvector. External acceptance is still required for the real Cognia environment, MCP-backed observability/remediation, enterprise identity, PostgreSQL HA/DR, signed offline promotion and sustained load/failure behavior.
 
 This file intentionally avoids a synthetic readiness percentage. Repository implementation evidence and real-environment acceptance are tracked separately.
 
@@ -101,7 +101,7 @@ The repository container gate proves isolated multi-stage runtime construction, 
 | Phase 0 — Foundation & Contracts | Repository implementation strong; external governance controls remain |
 | Phase 1 — Observability & Context | MCP-backed source contracts implemented; real endpoints pending |
 | Phase 2 — LangGraph Intelligence | Triage/specialists/RCA/Evaluator implemented; production-quality/scale acceptance pending |
-| Phase 3 — RAG & Operational Memory | Cognia canonical RAG contract + PostgreSQL/pgvector Memory implemented; real Cognia acceptance pending |
+| Phase 3 — RAG & Operational Memory | Cognia-only RAG contract + PostgreSQL/pgvector Memory implemented; real Cognia acceptance pending |
 | Phase 4 — Controlled Automation | Policy/approval/execution strong; real target and adapter breadth pending |
 | Phase 5 — Verification & Learning | Fresh verification and governed Memory exist; per-action objectives pending |
 | Phase 6 — Production Hardening | CI/container/security controls strong; HA/DR/identity/OTel/external acceptance pending |
@@ -111,7 +111,7 @@ The repository container gate proves isolated multi-stage runtime construction, 
 
 1. Live Production Evidence is authoritative for the current Incident.
 2. Cognia Governed Knowledge and Operational Memory are auxiliary, separate domains.
-3. Cognia is the canonical Production Knowledge RAG; local pgvector Knowledge is not a Production fallback.
+3. Cognia is the canonical Production Knowledge RAG; legacy pre-Cognia Knowledge archive is not a Production fallback.
 4. Agent/LLM output cannot authorize a write.
 5. Asset identity, event idempotency and Incident correlation are deterministic.
 6. Every external operational tool connection from the Control Plane uses MCP.
@@ -147,4 +147,4 @@ The repository container gate proves isolated multi-stage runtime construction, 
 
 ## Verdict
 
-The repository now has a clear separation of trust boundaries: **Cognia is the canonical Governed Knowledge RAG**, **MCP is the canonical external operational-tool boundary**, **PostgreSQL/pgvector is the Operational Memory semantic store**, and **Live Evidence is authoritative for current Incident truth**. Strict Production Ready status still depends on real Cognia/MCP endpoint acceptance, enterprise identity, HA/DR and production-like failure/scale evidence.
+The repository now has a clear separation of trust boundaries: **Cognia is the only Governed Knowledge RAG**, **MCP is the canonical external operational-tool boundary**, **PostgreSQL/pgvector is the Operational Memory semantic store**, and **Live Evidence is authoritative for current Incident truth**. Strict Production Ready status still depends on real Cognia/MCP endpoint acceptance, enterprise identity, HA/DR and production-like failure/scale evidence.

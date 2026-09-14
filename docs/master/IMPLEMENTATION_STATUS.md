@@ -16,7 +16,7 @@ This file is traceability evidence, not a replacement for `MASTER.md`. It distin
 - Governed Linux VM execution boundary exists: read-only VM telemetry plus high-risk governed VM actions through the MCP/Edge trust boundary.
 - Incident remediation supports request → durable approval → governed execution → fresh post-action verification.
 - Remediation dry-run and action allow-listing are enforced at the API/execution boundary.
-- Cognia is now the canonical Governed Knowledge RAG. local PostgreSQL/pgvector Knowledge remains only for deterministic development/test compatibility; Operational Memory remains PostgreSQL/pgvector.
+- Cognia is now the only Governed Knowledge RAG. local PostgreSQL/pgvector Knowledge remains only for deterministic development/test compatibility; Operational Memory remains PostgreSQL/pgvector.
 - Cognia integration implements Application Client machine authentication, separate numeric Client Application Scope identity, opaque access-token lifecycle, explicit KB IDs, registration/idempotency, candidate Revision concurrency, Search Chunk traceability, optional Context Generation, typed upstream failures and no hidden fallback to local Knowledge.
 - Operational Memory remains independent in PostgreSQL/pgvector and is not moved into Cognia.
 

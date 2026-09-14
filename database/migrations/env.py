@@ -10,7 +10,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 from database import Base
 from domain.contracts.config import settings
-from domain.models import Incident, Evidence, Finding, KnowledgeDocument, MemoryEntry  # noqa: F401
+from domain.models import Incident, Evidence, Finding, MemoryEntry  # noqa: F401
 
 config = context.config
 if config.config_file_name is not None:

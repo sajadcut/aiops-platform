@@ -60,21 +60,28 @@ def test_loaded_settings_match_complete_contract():
         assert hasattr(settings, key)
 
 
-def test_cognia_secret_is_empty_in_tracked_template():
+def test_cognia_is_the_only_rag_and_template_has_no_provider_switch():
     values = _template_values()
+    assert ("KNOWLEDGE_" + "PROVIDER") not in values
+    assert ("KNOWLEDGE_ALLOWED_" + "SOURCE_TYPES") not in values
+    assert ("KNOWLEDGE_REQUIRE_GOVERNANCE_" + "PRODUCTION") not in values
     assert values["COGNIA_CLIENT_SECRET"] == ""
     assert values["COGNIA_CLIENT_ID"] == ""
     assert values["COGNIA_BASE_URL"] == ""
+    assert values["COGNIA_CLIENT_APPLICATION_ID"] == ""
 
 
-def test_governed_production_rejects_local_knowledge_provider():
-    with pytest.raises(ValidationError, match="production governed knowledge requires KNOWLEDGE_PROVIDER=cognia"):
+def test_production_cognia_requires_machine_identity_and_explicit_kbs():
+    with pytest.raises(ValidationError, match="Cognia RAG requires"):
         Settings(
             _env_file=None,
             **_settings_data(
                 APP_ENV="production",
-                KNOWLEDGE_PROVIDER="local_pgvector",
-                KNOWLEDGE_REQUIRE_GOVERNANCE_PRODUCTION=True,
+                COGNIA_BASE_URL="https://cognia.test",
+                COGNIA_CLIENT_ID="",
+                COGNIA_CLIENT_SECRET="",
+                COGNIA_KNOWLEDGE_BASE_IDS=[],
+                COGNIA_TLS_VERIFY=True,
             ),
         )
 
@@ -82,8 +89,6 @@ def test_governed_production_rejects_local_knowledge_provider():
 def test_production_cognia_requires_https_and_tls_verification():
     base = _settings_data(
         APP_ENV="production",
-        KNOWLEDGE_PROVIDER="cognia",
-        KNOWLEDGE_REQUIRE_GOVERNANCE_PRODUCTION=True,
         COGNIA_CLIENT_ID="app-id",
         COGNIA_CLIENT_SECRET="test-only-secret",
         COGNIA_KNOWLEDGE_BASE_IDS=[10],
@@ -100,8 +105,6 @@ def test_production_cognia_accepts_machine_identity_and_explicit_kbs():
         _env_file=None,
         **_settings_data(
             APP_ENV="production",
-            KNOWLEDGE_PROVIDER="cognia",
-            KNOWLEDGE_REQUIRE_GOVERNANCE_PRODUCTION=True,
             COGNIA_BASE_URL="https://cognia.test",
             COGNIA_CLIENT_ID="app-id",
             COGNIA_CLIENT_SECRET="test-only-secret",
@@ -110,6 +113,13 @@ def test_production_cognia_accepts_machine_identity_and_explicit_kbs():
         ),
     )
     assert configured.COGNIA_KNOWLEDGE_BASE_IDS == [10, 20]
+
+
+def test_optional_cognia_numeric_ids_parse_empty_template_values_as_none():
+    values = _settings_data(COGNIA_CLIENT_APPLICATION_ID="", COGNIA_CONTEXT_PROFILE_ID="")
+    configured = Settings(_env_file=None, **values)
+    assert configured.COGNIA_CLIENT_APPLICATION_ID is None
+    assert configured.COGNIA_CONTEXT_PROFILE_ID is None
 
 
 def test_alembic_does_not_bypass_centralized_settings():
@@ -124,11 +134,3 @@ def test_rate_limits_are_not_hardcoded_in_runtime_module():
     assert "settings.RATE_LIMIT_STRICT_REQUESTS" in source
     assert "settings.RATE_LIMIT_LOOSE_REQUESTS" in source
     assert "settings.RATE_LIMIT_WINDOW_SECONDS" in source
-
-
-
-def test_cognia_client_application_id_is_distinct_and_dev_template_stays_non_secret():
-    values = _template_values()
-    assert values["KNOWLEDGE_PROVIDER"] == "local_pgvector"
-    assert "COGNIA_CLIENT_APPLICATION_ID" in values
-    assert values["COGNIA_CLIENT_APPLICATION_ID"] == ""

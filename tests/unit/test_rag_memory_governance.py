@@ -1,30 +1,30 @@
 import pytest
 
 from apps.memory_service import OperationalMemoryService
-from apps.rag_service import KnowledgeRAGService
-from domain.contracts.config import settings
+from knowledge.retrieval_contract import validate_retrieval
 
 
-def test_rag_rejects_non_allowlisted_source_type():
-    with pytest.raises(ValueError, match="knowledge_source_type_not_allowlisted"):
-        KnowledgeRAGService._govern_metadata({"source_type": "random_web", "owner": "ops"}, "1")
+def _cognia_item():
+    return {
+        "source_id": "cognia:10:20:30:40",
+        "provider": "cognia",
+        "relevance": 0.9,
+        "retrieved_at": "2026-09-14T00:00:00+00:00",
+        "knowledge_base_id": 10,
+        "knowledge_id": 20,
+        "revision_id": 30,
+        "revision_number": 2,
+        "chunk_id": 40,
+        "version": "2",
+        "content": "governed knowledge",
+    }
 
 
-def test_rag_production_requires_owner_and_version(monkeypatch):
-    monkeypatch.setattr(settings, "APP_ENV", "production")
-    monkeypatch.setattr(settings, "KNOWLEDGE_REQUIRE_GOVERNANCE_PRODUCTION", True)
-    with pytest.raises(ValueError, match="knowledge_owner_required"):
-        KnowledgeRAGService._govern_metadata({"source_type": "runbook"}, "1")
-    with pytest.raises(ValueError, match="knowledge_version_required"):
-        KnowledgeRAGService._govern_metadata({"source_type": "runbook", "owner": "sre"}, None)
-
-
-def test_rag_acl_defaults_to_internal():
-    meta = KnowledgeRAGService._govern_metadata({"source_type": "runbook", "owner": "sre"}, "1")
-    assert meta["namespace"] == "knowledge"
-    assert meta["acl"] == ["internal"]
-    assert KnowledgeRAGService._acl_allowed(meta, ["internal"])
-    assert not KnowledgeRAGService._acl_allowed(meta, ["external"])
+def test_rag_retrieval_contract_accepts_only_cognia():
+    assert validate_retrieval(_cognia_item())
+    local = _cognia_item()
+    local["provider"] = "postgresql"
+    assert not validate_retrieval(local)
 
 
 @pytest.mark.asyncio

@@ -1,8 +1,8 @@
-"""مدل‌های canonical داده برای Incident، Evidence، Finding، RAG و Memory.
+"""مدل‌های canonical داده برای Incident، Evidence، Finding و Operational Memory.
 
 این فایل تعریف می‌کند چه چیزی در PostgreSQL «واقعیت durable» محسوب می‌شود. تفاوت
 Evidence و Finding مهم است: Evidence fact جمع‌آوری‌شده از سیستم واقعی است؛ Finding
-تحلیل Agent روی آن factهاست. Knowledge و Operational Memory نیز دو namespace جدا هستند.
+تحلیل Agent روی آن factهاست. Governed Knowledge در Cognia است و Operational Memory در PostgreSQL/pgvector باقی می‌ماند.
 """
 
 from sqlalchemy import Column, String, DateTime, JSON, Float, Text, Enum, Integer
@@ -88,25 +88,8 @@ class Finding(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
 
-# Knowledge RAG و Operational Memory عمداً جدا هستند: اولی دانش رسمی governed است و
-# دومی تجربه incidentهای قبلی. هیچ‌کدام نباید live Evidence فعلی را override کنند.
-class KnowledgeDocument(Base):
-    """دانش رسمی مثل Runbook/SOP/Architecture با embedding برای RAG."""
-
-    __tablename__ = "knowledge_documents"
-
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    title = Column(String(500), nullable=False)
-    content = Column(Text, nullable=False)
-    source = Column(String(255), nullable=False)
-    version = Column(String(50), nullable=True)
-    # نام extra_metadata از برخورد با attribute رزروشده SQLAlchemy به نام metadata جلوگیری می‌کند.
-    extra_metadata = Column(JSON, nullable=True)
-    embedding = Column(Vector(1536), nullable=True)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-
-
+# Governed Knowledge RAG فقط در Cognia نگهداری/بازیابی می‌شود. PostgreSQL هیچ
+# Knowledge ORM فعال ندارد؛ pgvector اینجا فقط برای Operational Memory است.
 class MemoryEntry(Base):
     """تجربه Operational یک Incident و outcome آن برای بازیابی در رخدادهای مشابه."""
 

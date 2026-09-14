@@ -580,7 +580,7 @@
 | `domain/models.py` | `Incident` | 37 | class | واحد durable کار عملیاتی که چند signal/evidence می‌توانند به آن correlate شوند. | module |
 | `domain/models.py` | `Evidence` | 57 | class | Evidence خام/normalized با provenance منبع برای یک Incident. | module |
 | `domain/models.py` | `Finding` | 75 | class | نتیجه تحلیل Agent؛ evidence_ids نشان می‌دهد ادعا بر کدام factها تکیه دارد. | module |
-| `domain/models.py` | `KnowledgeDocument` | 93 | class | دانش رسمی مثل Runbook/SOP/Architecture با embedding برای RAG. | module |
+| `domain/models.py` | `CogniaKnowledgeChunkRef` | 93 | class | Legacy symbol removed: Governed Knowledge RAG is Cognia-only. | module |
 | `domain/models.py` | `MemoryEntry` | 110 | class | تجربه Operational یک Incident و outcome آن برای بازیابی در رخدادهای مشابه. | module |
 | `domain/runbook.py` | `Runbook` | 5 | class | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | module |
 | `domain/runbook_validation.py` | `validate_runbook` | 12 | function | Validate a runbook definition. | module |

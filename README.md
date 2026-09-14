@@ -6,7 +6,7 @@ The architecture contract is [`MASTER.md`](MASTER.md). Strict production accepta
 
 ## Knowledge architecture
 
-**Cognia is the canonical Governed Knowledge RAG for Production.** It owns Knowledge Base permission, Knowledge/Revision lifecycle, processing/activation, Scope, Search and optional Context Generation. AIOps consumes Cognia through a machine Client Application and never substitutes a hidden local Knowledge source when Cognia is unavailable.
+**Cognia is the only Governed Knowledge RAG for Production.** It owns Knowledge Base permission, Knowledge/Revision lifecycle, processing/activation, Scope, Search and optional Context Generation. AIOps consumes Cognia through a machine Client Application and never substitutes a hidden local Knowledge source when Cognia is unavailable.
 
 PostgreSQL remains the platform persistence layer. pgvector is the semantic retrieval layer for **Operational Memory**. The local `knowledge_documents`/pgvector path remains only for deterministic development/test and migration compatibility; it is not the Production Knowledge system of record. Live operational Evidence remains authoritative for the current Incident.
 
@@ -25,7 +25,7 @@ python -m alembic -c database/migrations/alembic.ini upgrade head
 python -m uvicorn apps.api.main:app --host 0.0.0.0 --port 8000
 ```
 
-A clean checkout has a complete non-secret development configuration in `.env.example`, so imports do not depend on undocumented shell variables. The development template uses local pgvector Knowledge so it does not require real Cognia credentials. Production validation rejects that provider and requires Cognia. `.env` is ignored by Git and Docker.
+A clean checkout has a complete non-secret development configuration in `.env.example`, so imports do not depend on undocumented shell variables. The development template uses legacy pre-Cognia Knowledge archive so it does not require real Cognia credentials. Production validation rejects that provider and requires Cognia. `.env` is ignored by Git and Docker.
 
 ## Production contract
 

@@ -165,7 +165,7 @@ class E2EOrchestrator:
             if exc.trace_id:
                 result["trace_id"] = exc.trace_id
             return result
-        return {"provider": settings.KNOWLEDGE_PROVIDER, "status": "error", "code": type(exc).__name__}
+        return {"provider": "cognia", "status": "error", "code": type(exc).__name__}
 
     async def _context_node(self, state: E2EState) -> E2EState:
         state["current_node"] = "context"
@@ -174,7 +174,7 @@ class E2EOrchestrator:
         query = str(context.get("incident", {}).get("summary") or state.get("evidence_summary") or service)
         state["knowledge_results"] = []
         state["knowledge_status"] = {
-            "provider": settings.KNOWLEDGE_PROVIDER,
+            "provider": "cognia",
             "status": "not_queried",
             "count": 0,
         }
@@ -202,24 +202,23 @@ class E2EOrchestrator:
                         "externalSubjectId": external_subject_id,
                     }
 
-        can_query_knowledge = settings.KNOWLEDGE_PROVIDER == "cognia" or self.db is not None
         if subject_error:
             state["knowledge_status"] = {
-                "provider": settings.KNOWLEDGE_PROVIDER,
+                "provider": "cognia",
                 "status": "invalid_scope",
                 "code": subject_error,
                 "count": 0,
             }
-        elif can_query_knowledge:
+        else:
             try:
-                state["knowledge_results"] = await KnowledgeRAGService(self.db).search(
+                state["knowledge_results"] = await KnowledgeRAGService().search(
                     query,
                     limit=settings.AGENT_MAX_AUXILIARY_CONTEXT_ITEMS,
                     min_similarity=0.5,
                     scope_context=scope_context,
                 )
                 state["knowledge_status"] = {
-                    "provider": settings.KNOWLEDGE_PROVIDER,
+                    "provider": "cognia",
                     "status": "available" if state["knowledge_results"] else "empty",
                     "count": len(state["knowledge_results"]),
                 }
@@ -232,14 +231,6 @@ class E2EOrchestrator:
                     status=state["knowledge_status"].get("status"),
                     code=state["knowledge_status"].get("code"),
                 )
-        else:
-            state["knowledge_status"] = {
-                "provider": settings.KNOWLEDGE_PROVIDER,
-                "status": "misconfigured",
-                "code": "local_pgvector_database_session_required",
-                "count": 0,
-            }
-
         if self.db is not None:
             try:
                 state["memory_results"] = await OperationalMemoryService(self.db).search_similar(

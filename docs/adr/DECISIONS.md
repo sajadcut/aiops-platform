@@ -38,7 +38,7 @@
 
 **Status:** ACCEPTED
 
-**Decision:** pgvector Vector Search Layer اصلی Operational Memory و fixtureهای local development/test است. Governed Knowledge Production از Cognia استفاده می‌کند.
+**Decision:** pgvector فقط Vector Search Layer اصلی Operational Memory است. هیچ Knowledge RAG محلی در معماری فعال نیست؛ Cognia تنها RAG پروژه است.
 
 **Rationale:** PostgreSQL/pgvector تجربه Incident را نزدیک persistence پلتفرم نگه می‌دارد، در حالی‌که Knowledge governance/lifecycle/authorization به Cognia واگذار می‌شود.
 
@@ -50,7 +50,7 @@
 
 **Status:** SUPERSEDED BY ADR-018
 
-**Decision:** Historical MVP used PostgreSQL + pgvector behind a retrieval abstraction. Production Governed Knowledge is now Cognia; local pgvector Knowledge remains dev/test compatibility only.
+**Decision:** Historical MVP used PostgreSQL + pgvector behind a retrieval abstraction. این تصمیم superseded است؛ Cognia تنها Knowledge RAG در development، test و production است و مسیر local Knowledge retrieval وجود ندارد.
 
 **Critical Rule:** RAG منبع حقیقت برای Live Production Evidence نیست.
 
@@ -194,9 +194,9 @@
 
 **Status:** ACCEPTED / CANONICAL KNOWLEDGE PROVIDER
 
-**Decision:** Cognia مرجع اصلی Governed Knowledge RAG است. AIOps با Client Application ماشینی به Cognia متصل می‌شود و KB Permission، Knowledge/Revision lifecycle، Scope، Search و Context را از Cognia می‌پذیرد.
+**Decision:** Cognia تنها Governed Knowledge RAG پروژه در همه environmentها است. AIOps با Client Application ماشینی به Cognia متصل می‌شود و KB Permission، Knowledge/Revision lifecycle، Scope، Search و Context را از Cognia می‌پذیرد.
 
-**No fallback:** خطای Cognia نباید به Search موفق خالی یا fallback پنهان local pgvector تبدیل شود. Incident reasoning می‌تواند با Live Evidence ادامه یابد، اما وضعیت Knowledge provider باید صریح و audit شود.
+**No fallback / no second RAG:** خطای Cognia نباید به Search موفق خالی یا هر Knowledge retriever دیگری تبدیل شود؛ RAG دوم در پروژه وجود ندارد. Incident reasoning می‌تواند با Live Evidence ادامه یابد، اما وضعیت Knowledge provider باید صریح و audit شود.
 
 **Memory boundary:** Operational Memory همچنان PostgreSQL + pgvector است.
 

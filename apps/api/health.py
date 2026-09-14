@@ -104,16 +104,15 @@ async def _probe_external() -> dict:
         connectors["kubernetes_mcp"] = KubernetesMCPClient()
     if settings.VM_MCP_URL:
         connectors["vm_mcp"] = VMEdgeMCPClient()
-    if settings.KNOWLEDGE_PROVIDER == "cognia":
-        if settings.COGNIA_BASE_URL:
-            try:
-                connectors["cognia"] = CogniaClient()
-            except Exception as exc:
-                static["cognia"] = {"healthy": False, "configured": False, "error": type(exc).__name__}
-                DEPENDENCY_UP.labels(dependency="cognia").set(0)
-        else:
-            static["cognia"] = {"healthy": False, "configured": False, "error": "not_configured"}
+    if settings.COGNIA_BASE_URL:
+        try:
+            connectors["cognia"] = CogniaClient()
+        except Exception as exc:
+            static["cognia"] = {"healthy": False, "configured": False, "error": type(exc).__name__}
             DEPENDENCY_UP.labels(dependency="cognia").set(0)
+    else:
+        static["cognia"] = {"healthy": False, "configured": False, "error": "not_configured"}
+        DEPENDENCY_UP.labels(dependency="cognia").set(0)
     pairs = await asyncio.gather(*(_probe_one(name, client) for name, client in connectors.items()))
     return {**dict(pairs), **static}
 
@@ -126,8 +125,7 @@ def _external_required_ready(external: dict) -> bool:
         required.append("kubernetes_mcp")
     if settings.VM_MCP_URL:
         required.append("vm_mcp")
-    if settings.KNOWLEDGE_PROVIDER == "cognia":
-        required.append("cognia")
+    required.append("cognia")
     return all(bool((external.get(name) or {}).get("healthy")) for name in required)
 
 

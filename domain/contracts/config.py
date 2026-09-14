@@ -41,9 +41,6 @@ class Settings(BaseSettings):
     PGVECTOR_EXPECTED_DIMENSION: Optional[int] = Field(...)
     PGVECTOR_VALIDATE_ON_STARTUP: bool = Field(...)
 
-    KNOWLEDGE_PROVIDER: str = Field(...)
-    KNOWLEDGE_ALLOWED_SOURCE_TYPES: List[str] = Field(...)
-    KNOWLEDGE_REQUIRE_GOVERNANCE_PRODUCTION: bool = Field(...)
     COGNIA_BASE_URL: Optional[str] = Field(...)
     COGNIA_CLIENT_ID: Optional[str] = Field(...)
     COGNIA_CLIENT_SECRET: Optional[str] = Field(...)
@@ -182,13 +179,6 @@ class Settings(BaseSettings):
             raise ValueError("APP_ENV must be development, test, or production")
         return normalized
 
-    @field_validator("KNOWLEDGE_PROVIDER")
-    @classmethod
-    def validate_knowledge_provider(cls, value: str) -> str:
-        normalized = str(value).strip().lower()
-        if normalized not in {"local_pgvector", "cognia"}:
-            raise ValueError("KNOWLEDGE_PROVIDER must be local_pgvector or cognia")
-        return normalized
 
     @field_validator("COGNIA_CONTEXT_PROFILE_ID", "COGNIA_CLIENT_APPLICATION_ID", mode="before")
     @classmethod
@@ -263,11 +253,10 @@ class Settings(BaseSettings):
         if self.COGNIA_CLIENT_APPLICATION_ID is not None and self.COGNIA_CLIENT_APPLICATION_ID <= 0:
             raise ValueError("COGNIA_CLIENT_APPLICATION_ID must be positive when configured")
 
-        # Cognia is the canonical Knowledge provider. Development/test may load
-        # the non-secret template without real Cognia credentials; invoking the
-        # provider while unconfigured still fails in CogniaClient. Production is
-        # strictly fail-closed and requires the complete machine identity/KB set.
-        if self.KNOWLEDGE_PROVIDER == "cognia" and self.APP_ENV == "production":
+        # Cognia is the only Knowledge RAG provider. Development/test may load the
+        # tracked non-secret template without real Cognia credentials; any attempted
+        # retrieval remains explicitly misconfigured rather than using another RAG.
+        if self.APP_ENV == "production":
             missing = [
                 name
                 for name, value in {
@@ -280,11 +269,7 @@ class Settings(BaseSettings):
             if not self.COGNIA_KNOWLEDGE_BASE_IDS:
                 missing.append("COGNIA_KNOWLEDGE_BASE_IDS")
             if missing:
-                raise ValueError("Cognia provider requires: " + ", ".join(missing))
-
-        if self.APP_ENV == "production" and self.KNOWLEDGE_REQUIRE_GOVERNANCE_PRODUCTION:
-            if self.KNOWLEDGE_PROVIDER != "cognia":
-                raise ValueError("production governed knowledge requires KNOWLEDGE_PROVIDER=cognia")
+                raise ValueError("Cognia RAG requires: " + ", ".join(missing))
             if urlparse(str(self.COGNIA_BASE_URL or "")).scheme != "https":
                 raise ValueError("COGNIA_BASE_URL must use HTTPS in production")
             if not self.COGNIA_TLS_VERIFY:

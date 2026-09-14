@@ -39,7 +39,6 @@ def reset_fake():
 
 @pytest.mark.asyncio
 async def test_cognia_search_maps_chunk_traceability_without_inventing_title(monkeypatch):
-    monkeypatch.setattr(settings, "KNOWLEDGE_PROVIDER", "cognia")
     monkeypatch.setattr(settings, "COGNIA_KNOWLEDGE_BASE_IDS", [10, 20])
     monkeypatch.setattr(rag_module, "CogniaClient", FakeCogniaClient)
     FakeCogniaClient.search_payload = {
@@ -63,7 +62,7 @@ async def test_cognia_search_maps_chunk_traceability_without_inventing_title(mon
         ]
     }
 
-    items = await KnowledgeRAGService(db=None).search(
+    items = await KnowledgeRAGService().search(
         "connection pool",
         limit=5,
         min_similarity=0.5,
@@ -105,7 +104,6 @@ async def test_cognia_search_maps_chunk_traceability_without_inventing_title(mon
 
 @pytest.mark.asyncio
 async def test_cognia_relevance_threshold_is_retrieval_filter_not_probability(monkeypatch):
-    monkeypatch.setattr(settings, "KNOWLEDGE_PROVIDER", "cognia")
     monkeypatch.setattr(settings, "COGNIA_KNOWLEDGE_BASE_IDS", [10])
     monkeypatch.setattr(rag_module, "CogniaClient", FakeCogniaClient)
     FakeCogniaClient.search_payload = {
@@ -123,12 +121,11 @@ async def test_cognia_relevance_threshold_is_retrieval_filter_not_probability(mo
         ]
     }
 
-    assert await KnowledgeRAGService(db=None).search("query", min_similarity=0.5) == []
+    assert await KnowledgeRAGService().search("query", min_similarity=0.5) == []
 
 
 @pytest.mark.asyncio
 async def test_cognia_contract_error_on_missing_traceability(monkeypatch):
-    monkeypatch.setattr(settings, "KNOWLEDGE_PROVIDER", "cognia")
     monkeypatch.setattr(settings, "COGNIA_KNOWLEDGE_BASE_IDS", [10])
     monkeypatch.setattr(rag_module, "CogniaClient", FakeCogniaClient)
     FakeCogniaClient.search_payload = {
@@ -145,42 +142,33 @@ async def test_cognia_contract_error_on_missing_traceability(monkeypatch):
     }
 
     with pytest.raises(CogniaContractError, match="cognia_search_item_missing:chunkId"):
-        await KnowledgeRAGService(db=None).search("query")
+        await KnowledgeRAGService().search("query")
 
 
 @pytest.mark.asyncio
 async def test_cognia_errors_propagate_and_do_not_fallback_to_local_db(monkeypatch):
-    monkeypatch.setattr(settings, "KNOWLEDGE_PROVIDER", "cognia")
     monkeypatch.setattr(settings, "COGNIA_KNOWLEDGE_BASE_IDS", [10])
     monkeypatch.setattr(rag_module, "CogniaClient", FakeCogniaClient)
     FakeCogniaClient.raised = CogniaAPIError(503, "SEARCH_INDEX_UNAVAILABLE")
 
     with pytest.raises(CogniaAPIError, match="SEARCH_INDEX_UNAVAILABLE"):
-        await KnowledgeRAGService(db=None).search("query")
+        await KnowledgeRAGService().search("query")
 
 
-@pytest.mark.asyncio
-async def test_legacy_local_authoring_is_blocked_for_cognia(monkeypatch):
-    monkeypatch.setattr(settings, "KNOWLEDGE_PROVIDER", "cognia")
-    service = KnowledgeRAGService(db=None)
 
-    with pytest.raises(RuntimeError, match="knowledge_authoring_must_use_cognia_governed_api"):
-        await service.add_document(
-            title="title",
-            content="content",
-            source="source",
-            version="1",
-            metadata={},
-        )
+def test_cognia_service_exposes_no_local_rag_api():
+    service = KnowledgeRAGService()
+    assert not hasattr(service, "add_document")
+    assert not hasattr(service, "get_all_documents")
+    assert not hasattr(service, "_search_local")
 
 
 @pytest.mark.asyncio
 async def test_context_generation_uses_configured_profile(monkeypatch):
-    monkeypatch.setattr(settings, "KNOWLEDGE_PROVIDER", "cognia")
     monkeypatch.setattr(settings, "COGNIA_CONTEXT_PROFILE_ID", 501)
     monkeypatch.setattr(rag_module, "CogniaClient", FakeCogniaClient)
 
-    result = await KnowledgeRAGService(db=None).generate_context(
+    result = await KnowledgeRAGService().generate_context(
         "collect safe runbook context",
         subject={"namespace": "service", "externalSubjectId": "payments"},
     )

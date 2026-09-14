@@ -44,7 +44,7 @@ See `MASTER.md`, `docs/COGNIA_INTEGRATION.md`, `docs/PRODUCTION_ACCEPTANCE_MATRI
 | Execution boundary | allowlisted tools + durable approval where required + signed execution capability bound to complete execution intent | PASS (repo) |
 | Verification | fresh pre-execution baseline + metric-direction-aware before/after | PASS (repo) / PARTIAL per-action SLO coverage |
 | Operational Memory | conclusive outcome gating + PostgreSQL/pgvector successful-pattern retrieval | PASS (repo); false-reuse/scale acceptance pending |
-| Cognia canonical Governed Knowledge RAG | Application Client machine auth; opaque token lifecycle; explicit KBs; separate numeric Scope identity; Active-Revision Chunk traceability; typed status/errors; no hidden fallback; authoring idempotency; Revision concurrency; no machine approval; optional Context Generation | PASS (repo contract); **REAL ENV REQUIRED** for HTTPS endpoint/grants/scope/lifecycle/index/context acceptance |
+| Cognia-only Governed Knowledge RAG | Application Client machine auth; opaque token lifecycle; explicit KBs; separate numeric Scope identity; Active-Revision Chunk traceability; typed status/errors; no hidden fallback; authoring idempotency; Revision concurrency; no machine approval; optional Context Generation | PASS (repo contract); **REAL ENV REQUIRED** for HTTPS endpoint/grants/scope/lifecycle/index/context acceptance |
 | Local Knowledge pgvector | deterministic development/test + migration compatibility only | PASS as compatibility path; **not Production Knowledge authority** |
 | PostgreSQL persistence | Incident/Evidence/Finding/Approval/Audit/checkpoint/runbook/Memory models | PASS |
 | pgvector | Operational Memory schema + migration/database acceptance | PASS in repository acceptance path |
