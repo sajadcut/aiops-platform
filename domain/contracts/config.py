@@ -120,6 +120,14 @@ class Settings(BaseSettings):
     ZABBIX_MCP_SERVER_NAME: Optional[str] = Field(...)
     ZABBIX_MCP_AUTH_HEADER: Optional[str] = Field(...)
 
+    JENKINS_MCP_URL: Optional[str] = Field(...)
+    JENKINS_MCP_PROTOCOL_VERSION: str = Field(...)
+    JENKINS_MCP_AUTH_HEADER: Optional[str] = Field(...)
+    JENKINS_MCP_WRITE_AUTH_HEADER: Optional[str] = Field(...)
+    JENKINS_MCP_EXPECTED_IDENTITY: Optional[str] = Field(...)
+    JENKINS_MCP_ORIGIN: Optional[str] = Field(...)
+    JENKINS_MCP_ENABLE_WRITES: bool = Field(...)
+
     ELASTIC_STACK_VERSION: str = Field(...)
     ELASTICSEARCH_MCP_URL: str = Field(...)
     ELASTICSEARCH_MCP_AUTH_HEADER: Optional[str] = Field(...)
@@ -233,6 +241,46 @@ class Settings(BaseSettings):
         if "platform.core" not in normalized:
             raise ValueError("Elastic MCP namespaces must include platform.core for deterministic ES|QL Evidence")
         return normalized
+
+    @field_validator("JENKINS_MCP_PROTOCOL_VERSION")
+    @classmethod
+    def validate_jenkins_mcp_protocol_version(cls, value: str) -> str:
+        normalized = str(value).strip()
+        if normalized != "2025-06-18":
+            raise ValueError("JENKINS_MCP_PROTOCOL_VERSION must be 2025-06-18 for the supported Jenkins MCP plugin contract")
+        return normalized
+
+    @field_validator("JENKINS_MCP_AUTH_HEADER", "JENKINS_MCP_WRITE_AUTH_HEADER")
+    @classmethod
+    def validate_jenkins_basic_auth_header(cls, value: Optional[str]) -> Optional[str]:
+        normalized = str(value or "").strip()
+        if normalized and not normalized.startswith("Basic "):
+            raise ValueError("Jenkins MCP authentication must use Authorization: Basic <base64(username:api-token)>")
+        return normalized or None
+
+    @model_validator(mode="after")
+    def validate_external_contracts(self) -> "Settings":
+        jenkins_url = str(self.JENKINS_MCP_URL or "").strip()
+        if jenkins_url:
+            parsed = urlparse(jenkins_url)
+            if parsed.scheme.lower() not in {"http", "https"} or not parsed.netloc:
+                raise ValueError("JENKINS_MCP_URL must use HTTP or HTTPS")
+            if not parsed.path.rstrip("/").endswith("/mcp-server/mcp"):
+                raise ValueError("JENKINS_MCP_URL must target the Jenkins Streamable HTTP endpoint /mcp-server/mcp")
+            if self.APP_ENV == "production" and not self.JENKINS_MCP_AUTH_HEADER:
+                raise ValueError("Production Jenkins MCP requires JENKINS_MCP_AUTH_HEADER")
+            if self.APP_ENV == "production" and not str(self.JENKINS_MCP_EXPECTED_IDENTITY or "").strip():
+                raise ValueError("Production Jenkins MCP requires JENKINS_MCP_EXPECTED_IDENTITY for authenticated-principal verification")
+        if self.JENKINS_MCP_ENABLE_WRITES and not jenkins_url:
+            raise ValueError("JENKINS_MCP_ENABLE_WRITES requires JENKINS_MCP_URL")
+        if self.JENKINS_MCP_ENABLE_WRITES and not self.JENKINS_MCP_WRITE_AUTH_HEADER:
+            raise ValueError("JENKINS_MCP_ENABLE_WRITES requires JENKINS_MCP_WRITE_AUTH_HEADER")
+        origin = str(self.JENKINS_MCP_ORIGIN or "").strip()
+        if origin:
+            parsed_origin = urlparse(origin)
+            if parsed_origin.scheme.lower() not in {"http", "https"} or not parsed_origin.netloc:
+                raise ValueError("JENKINS_MCP_ORIGIN must be an HTTP(S) Jenkins root URL")
+        return self
 
     @model_validator(mode="after")
     def validate_cognia_contract(self) -> "Settings":
