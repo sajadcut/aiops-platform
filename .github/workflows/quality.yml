@@ -47,7 +47,7 @@ jobs:
           sensitive = {
               'LLM_API_KEY', 'EMBEDDING_API_KEY', 'INTERNAL_API_KEY',
               'MCP_BEARER_TOKEN', 'MCP_WRITE_BEARER_TOKEN',
-              'EXECUTION_CAPABILITY_SECRET',
+              'EXECUTION_CAPABILITY_SECRET', 'COGNIA_CLIENT_SECRET',
               'ZABBIX_MCP_AUTH_HEADER', 'ELASTICSEARCH_MCP_AUTH_HEADER',
               'PROMETHEUS_MCP_AUTH_HEADER', 'ZABBIX_PASSWORD',
               'ELASTICSEARCH_PASSWORD', 'KUBERNETES_TOKEN',
@@ -222,7 +222,7 @@ jobs:
                   vector = "[" + ",".join(["0.1"] * dimension) + "]"
                   cur.execute(
                       "INSERT INTO knowledge_documents (id,title,content,source,version,extra_metadata,embedding) VALUES (%s,%s,%s,%s,%s,%s::json,%s::vector)",
-                      (uuid4(),'ci','pgvector acceptance','ci','1','{\"namespace\":\"knowledge\",\"source_type\":\"runbook\",\"owner\":\"ci\",\"acl\":[\"internal\"]}',vector),
+                      (uuid4(),'ci','pgvector compatibility acceptance','ci','1','{\"namespace\":\"knowledge\",\"source_type\":\"runbook\",\"owner\":\"ci\",\"acl\":[\"internal\"]}',vector),
                   )
                   cur.execute("SELECT embedding <=> %s::vector FROM knowledge_documents ORDER BY embedding <=> %s::vector LIMIT 1", (vector, vector))
                   assert cur.fetchone()[0] == 0.0
