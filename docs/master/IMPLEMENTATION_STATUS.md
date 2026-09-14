@@ -16,9 +16,10 @@ This file is traceability evidence, not a replacement for `MASTER.md`. It distin
 - Governed Linux VM execution boundary exists: read-only VM telemetry plus high-risk governed VM actions through the MCP/Edge trust boundary.
 - Incident remediation supports request → durable approval → governed execution → fresh post-action verification.
 - Remediation dry-run and action allow-listing are enforced at the API/execution boundary.
-- Cognia is now the only Governed Knowledge RAG. local PostgreSQL/pgvector Knowledge remains only for deterministic development/test compatibility; Operational Memory remains PostgreSQL/pgvector.
-- Cognia integration implements Application Client machine authentication, separate numeric Client Application Scope identity, opaque access-token lifecycle, explicit KB IDs, registration/idempotency, candidate Revision concurrency, Search Chunk traceability, optional Context Generation, typed upstream failures and no hidden fallback to local Knowledge.
+- Cognia is the only Governed Knowledge RAG in development, test and production. There is no local PostgreSQL/pgvector Knowledge retriever or provider switch.
+- Cognia integration implements Application Client machine authentication, separate numeric Client Application Scope identity, opaque access-token lifecycle, explicit KB IDs, registration/idempotency, candidate Revision concurrency, Search Chunk traceability, optional Context Generation, typed upstream failures and no alternate-RAG fallback.
 - Operational Memory remains independent in PostgreSQL/pgvector and is not moved into Cognia.
+- Historical pre-Cognia Knowledge content, where present after migration, is retained only as a non-RAG archive without an embedding/retrieval path.
 
 ## Current implementation evidence
 
@@ -27,10 +28,10 @@ This file is traceability evidence, not a replacement for `MASTER.md`. It distin
 | Python + LangGraph core | `apps/orchestrator/e2e_graph.py` + durable runtime | PASS (repository) |
 | Specialized agents | Triage plus modular specialist agents | PASS |
 | PostgreSQL persistence | SQLAlchemy + governance/workflow/incident migrations | PASS (repository); target HA/DR acceptance pending |
-| pgvector | vector model + extension/type/dimension validation; retained for Operational Memory/local development RAG | PASS (repository); target DB validation pending |
-| Knowledge RAG abstraction | `KnowledgeRAGService` provider boundary + provider-aware traceability contract | PASS (repository) |
-| Cognia governed Knowledge | Canonical RAG: Application Client auth + authoring/Revision + Search + optional Context + readiness + fail-closed/no-fallback | PASS (repository contract); **REAL ENV REQUIRED** for target Cognia acceptance |
-| Operational Memory | service + namespace + E2E write-back, separate from Knowledge RAG | PASS (repository) |
+| pgvector | extension/type/dimension validation for `memory_entries` only | PASS (repository); target DB validation pending |
+| Knowledge RAG boundary | `KnowledgeRAGService` is Cognia-only; no runtime provider selector or local Knowledge retrieval path | PASS (repository) |
+| Cognia governed Knowledge | Sole RAG: Application Client auth + authoring/Revision + Search + optional Context + readiness + fail-closed/no-alternate-RAG behavior | PASS (repository contract); **REAL ENV REQUIRED** for target Cognia acceptance |
+| Operational Memory | service + namespace + E2E write-back, PostgreSQL/pgvector, separate from Knowledge RAG | PASS (repository) |
 | Context Builder | IncidentContext + normalization + MCP-backed EvidenceCollector | PASS |
 | Evidence | Zabbix + Elastic Agent Builder MCP + Prometheus + optional K8s/VM MCP aggregation | PASS (repository); target endpoint acceptance pending |
 | Hypothesis/RCA | evidence-linked contract + E2E RCA | PASS |
@@ -44,9 +45,9 @@ This file is traceability evidence, not a replacement for `MASTER.md`. It distin
 | Security/RBAC | deny-by-default + API key + signed OIDC JWT + RBAC | PASS (repository); enterprise issuer acceptance pending |
 | Observability | MCP external-tool boundary + Evidence layer | PASS (repository); target endpoint acceptance pending |
 | APIs | Master-aligned incident resources + execution/approval/remediation/runbook/audit/dashboard | PASS (repository) |
-| Health | `/health`, `/health/live`, `/health/ready`; Cognia required in production readiness when selected | PASS (repository) |
+| Health | `/health`, `/health/live`, `/health/ready`; Cognia is a required Production dependency because it is the sole Knowledge RAG | PASS (repository) |
 | Tests | unit + integration + scenario + failure-injection + security/config/MCP/Cognia contracts | PASS only when current HEAD CI is green |
-| Centralized configuration | typed `Settings` + tracked `.env.example` + untracked `.env` override + Kubernetes projection | PASS (repository) |
+| Centralized configuration | typed `Settings` + tracked `.env.example` + untracked `.env` override + Kubernetes projection; no RAG provider selector | PASS (repository) |
 | VM remediation | governed Tool → VM Edge MCP → destination-side action → verification | PASS (repository); live target acceptance pending |
 | Offline deployment | hardened Docker/Kubernetes + immutable digest/container supply-chain gates | PASS (repository); internal registry promotion pending |
 | Dashboard | PostgreSQL-backed incident/approval/audit/verification KPIs + remediation action | PASS (repository); populated-data validation pending |
@@ -58,18 +59,19 @@ This file is traceability evidence, not a replacement for `MASTER.md`. It distin
 
 1. Real Cognia HTTPS endpoint + Application Client authentication, assigned KB grants and Search against the exact configured KB IDs.
 2. Cognia authorization negative tests plus General/ClientApplication/ExternalSubject Scope behavior where used by AIOps.
-3. Cognia Search dependency/index outage behavior and proof that AIOps does not silently fall back to local governed Knowledge.
-4. Cognia Context Generation sufficiency/traceability acceptance if an AIOps Context Profile is provisioned.
-5. PostgreSQL HA/DR plus restart/resume against a target topology.
-6. Controlled Zabbix/Elastic Agent Builder MCP/Prometheus contract tests against populated real endpoints.
-7. Real VM/Kubernetes MCP execution with least-privilege destination credentials.
-8. Real before/action/after recovery cycle against controlled targets.
-9. Real Runbook tool execution, rollback and idempotency cycle through the Tool Registry.
-10. Real OIDC issuer/JWKS integration and identity-to-role propagation.
-11. pgvector extension/index/dimension validation against target PostgreSQL for Operational Memory.
-12. Immutable image signing/verification/promotion against the selected internal registry implementation.
-13. Workload identity/mTLS lifecycle for MCP connections.
-14. Load/soak/chaos and failure-isolation validation.
+3. Cognia registration → Approval where required → Processing → Activated → Search lifecycle acceptance.
+4. Cognia Search dependency/index outage behavior and proof that AIOps reports explicit degradation; no second RAG exists to substitute.
+5. Cognia Context Generation sufficiency/traceability acceptance if an AIOps Context Profile is provisioned.
+6. PostgreSQL HA/DR plus restart/resume against a target topology.
+7. Controlled Zabbix/Elastic Agent Builder MCP/Prometheus contract tests against populated real endpoints.
+8. Real VM/Kubernetes MCP execution with least-privilege destination credentials.
+9. Real before/action/after recovery cycle against controlled targets.
+10. Real Runbook tool execution, rollback and idempotency cycle through the Tool Registry.
+11. Real OIDC issuer/JWKS integration and identity-to-role propagation.
+12. pgvector extension/index/dimension validation against target PostgreSQL for Operational Memory.
+13. Immutable image signing/verification/promotion against the selected internal registry implementation.
+14. Workload identity/mTLS lifecycle for MCP connections.
+15. Load/soak/chaos and failure-isolation validation.
 
 ## Measurement rule
 
