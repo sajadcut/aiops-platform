@@ -51,6 +51,7 @@ def test_authoritative_docs_do_not_advertise_a_second_rag():
         "local Knowledge فقط dev/test compatibility است",
         "legacy provider selector=cognia",
         "retired local Knowledge RAG",
+        "embedding service for Knowledge RAG and Memory",
     ]
     for doc in docs:
         text = Path(doc).read_text(encoding="utf-8")

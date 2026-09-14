@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field
 
 from apps.orchestrator.runtime import DurableWorkflowRuntime
 from apps.security.auth import require_permission
+from apps.api.cognia_scope import reject_untrusted_knowledge_subject
 from database import AsyncSessionLocal
 from domain.contracts.logging import logger
 
@@ -40,6 +41,7 @@ async def run_workflow(
     _identity=Depends(require_permission("read:incident")),
 ):
     """Compatibility analysis endpoint backed by the canonical durable E2E runtime."""
+    reject_untrusted_knowledge_subject(request.context)
     incident_id = request.incident_id or str(uuid4())
     try:
         initial_state: Dict[str, Any] = {

@@ -468,7 +468,7 @@ aiops-platform/
 | POST | /api/v1/incidents/{id}/execute | اجرای Action |
 | GET | /api/v1/incidents/{id}/verification | Verification |
 | GET/POST | /api/v1/runbooks | مدیریت Runbook |
-| GET/POST | /api/v1/knowledge | مدیریت Knowledge documents |
+| GET | /api/v1/incidents/{id}/knowledge | بازیابی Governed Knowledge از Cognia برای Incident؛ Authoring/Revision از Cognia consumer API/internal service انجام می‌شود |
 | GET | /api/v1/health | Health Check |
 
 # 20. KPI و معیار موفقیت

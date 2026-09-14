@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field
 from apps.orchestrator.runtime import DurableWorkflowRuntime
 from apps.security.auth import require_permission
 from apps.security.rbac import allowed
+from apps.api.cognia_scope import reject_untrusted_knowledge_subject
 from database import AsyncSessionLocal
 from domain.contracts.logging import logger
 
@@ -67,6 +68,7 @@ async def run_e2e_workflow(
     identity=Depends(require_permission("read:incident")),
 ) -> E2EWorkflowResponse:
     """Run the guarded durable incident lifecycle without bypassing Decision/Approval."""
+    reject_untrusted_knowledge_subject(request.context)
     try:
         if request.execution_request is not None and not any(
             allowed(role, "execute:low_risk") or allowed(role, "execute:approved")

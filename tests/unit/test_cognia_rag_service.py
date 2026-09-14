@@ -29,6 +29,10 @@ class FakeCogniaClient:
     async def generate_context(self, task, **kwargs):
         return {"isSufficient": False, "task": task, **kwargs}
 
+    async def get_knowledge_detail(self, **kwargs):
+        type(self).captured = dict(kwargs)
+        return {"knowledgeId": kwargs["knowledge_id"], "currentCandidateRevisionId": 12001}
+
 
 @pytest.fixture(autouse=True)
 def reset_fake():
@@ -163,6 +167,29 @@ def test_cognia_service_exposes_no_local_rag_api():
     assert not hasattr(service, "add_document")
     assert not hasattr(service, "get_all_documents")
     assert not hasattr(service, "_search_local")
+
+
+@pytest.mark.asyncio
+async def test_get_knowledge_detail_stays_inside_configured_cognia_kb(monkeypatch):
+    monkeypatch.setattr(settings, "COGNIA_KNOWLEDGE_BASE_IDS", [10])
+    monkeypatch.setattr(rag_module, "CogniaClient", FakeCogniaClient)
+
+    result = await KnowledgeRAGService().get_knowledge_detail(
+        knowledge_base_id=10,
+        knowledge_id=9001,
+    )
+
+    assert FakeCogniaClient.captured == {"knowledge_base_id": 10, "knowledge_id": 9001}
+    assert result["currentCandidateRevisionId"] == 12001
+
+
+@pytest.mark.asyncio
+async def test_get_knowledge_detail_rejects_unconfigured_kb(monkeypatch):
+    monkeypatch.setattr(settings, "COGNIA_KNOWLEDGE_BASE_IDS", [10])
+    monkeypatch.setattr(rag_module, "CogniaClient", FakeCogniaClient)
+
+    with pytest.raises(ValueError, match="knowledge_base_not_configured"):
+        await KnowledgeRAGService().get_knowledge_detail(knowledge_base_id=20, knowledge_id=9001)
 
 
 @pytest.mark.asyncio

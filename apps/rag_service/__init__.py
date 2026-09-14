@@ -162,6 +162,19 @@ class KnowledgeRAGService:
                 idempotency_key=idempotency_key,
             )
 
+    async def get_knowledge_detail(
+        self, *, knowledge_base_id: int, knowledge_id: int
+    ) -> Dict[str, Any]:
+        kb_id = self._ensure_configured_kb(knowledge_base_id)
+        knowledge = int(knowledge_id)
+        if knowledge <= 0:
+            raise ValueError("cognia_knowledge_id_must_be_positive")
+        async with CogniaClient() as client:
+            return await client.get_knowledge_detail(
+                knowledge_base_id=kb_id,
+                knowledge_id=knowledge,
+            )
+
     async def create_revision(
         self,
         *,

@@ -27,7 +27,7 @@ Successful zero results are represented as `empty`. Authentication, permission, 
 
 ## Scope and External Subject
 
-No Subject is inferred from an Incident service/customer name. A trusted upstream integration may provide `context.knowledge_subject` only as an explicit stable contract containing `namespace` and `externalSubjectId` (or the internal snake_case alias). The Search client adds the configured numeric Client Application ID and rejects a mismatched Client Application ID. Client ownership is not a substitute for caller-to-Subject authorization; deployments using sensitive ExternalSubject scopes must bind the upstream caller/incident to that Subject before forwarding it.
+No Subject is inferred from an Incident service/customer name. Public `/workflow/analyze` and `/workflow/e2e` requests reject caller-supplied `knowledge_subject`/`knowledgeSubject` because a shared Machine Client identity cannot prove caller-to-Subject authorization. A trusted server-side integration may bind a stable `namespace` + `externalSubjectId` only after its domain authorization. The Search client adds the configured numeric Client Application ID and rejects a mismatched Client Application ID.
 
 For Context Generation the request subject contains only `namespace` and `externalSubjectId`; the Client Application is defined by the Context Profile.
 

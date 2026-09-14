@@ -12,11 +12,12 @@ from domain.contracts.logging import logger
 
 
 class EmbeddingService:
-    """Provider-neutral embedding service for Knowledge RAG and Memory.
+    """Provider-neutral embedding service for Operational Memory only.
 
-    ``deterministic`` is intentionally available for tests and offline
-    development. Production refuses that provider and requires an explicitly
-    configured OpenAI-compatible internal/offline embedding gateway.
+    Cognia owns all Governed Knowledge retrieval and its embeddings/index are
+    never produced by this service. ``deterministic`` remains available only for
+    tests/offline development of Operational Memory; Production requires an
+    explicitly configured OpenAI-compatible internal/offline embedding gateway.
     """
 
     @staticmethod

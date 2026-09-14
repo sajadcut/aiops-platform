@@ -11,7 +11,7 @@ from domain.contracts.logging import logger
 
 
 class CogniaConfigurationError(RuntimeError):
-    """Raised when the Cognia integration is selected but not safely configured."""
+    """Raised when the sole Cognia Knowledge RAG boundary is not safely configured."""
 
 
 class CogniaContractError(RuntimeError):
