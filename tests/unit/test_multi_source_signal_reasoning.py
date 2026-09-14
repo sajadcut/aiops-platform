@@ -110,8 +110,20 @@ def test_prometheus_and_zabbix_can_also_initiate_incidents():
     assert prom.source == "prometheus"
     assert prom.to_evidence()["type"] == "metric"
     assert zbx.source == "zabbix"
-    assert zbx.service == "vm-pay-01"
+    assert zbx.service is None
     assert isinstance(zbx.raw_data["host"], dict)
+
+
+def test_zabbix_explicit_service_tag_is_used_but_monitor_host_is_not():
+    zbx = signal_from_zabbix({
+        "eventid": "z-web-1",
+        "host": "wepod.ir",
+        "name": 'Download speed for "web.wepod.ir" has slowed down.',
+        "severity": "warning",
+        "tags": [{"tag": "service", "value": "web-api"}],
+    })
+    assert zbx.service == "web-api"
+    assert zbx.raw_data["host"]["host"] == "wepod.ir"
 
 
 def test_cross_source_error_signals_share_deterministic_fingerprint():
