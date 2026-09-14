@@ -21,6 +21,16 @@ jobs:
         run: |
           set -euo pipefail
           python scripts/http_transport_policy_patch.py
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('docs/CONFIGURATION.md')
+          text = p.read_text(encoding='utf-8')
+          old = '| `COGNIA_TIMEOUT_SECONDS`, `COGNIA_TLS_VERIFY` | Cognia transport | No | Timeout must be positive. `COGNIA_TLS_VERIFY` is enforced when Production Cognia uses HTTPS; it has no TLS effect for HTTP transport. |'
+          new = '| `COGNIA_TIMEOUT_SECONDS` | Cognia transport | No | Timeout must be positive. Both HTTP and HTTPS are supported; HTTPS server certificates are intentionally not validated. |'
+          if old in text:
+              text = text.replace(old, new, 1)
+          p.write_text(text, encoding='utf-8')
+          PY
           git diff --check
           python -m compileall -q apps agents domain integrations knowledge tests
       - name: Audit obsolete HTTPS enforcement
