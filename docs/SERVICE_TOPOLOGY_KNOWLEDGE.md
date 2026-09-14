@@ -49,13 +49,15 @@ Supported canonical fields are:
 
 The runtime policy is deliberately asymmetric:
 
-1. Cognia is queried for topology/discovery Knowledge.
+1. Cognia is queried for topology/discovery Knowledge even when the trigger or Live Evidence already looks sufficient.
 2. A Cognia service mapping may be used to seed read-only Live Evidence lookup when the alert does not identify the service.
 3. Live Zabbix/Elastic/Prometheus/Kubernetes/VM metadata wins when it conflicts with Cognia.
-4. A field that exists only in Cognia is marked with `field_provenance=knowledge` and `requires_live_verification=true`.
-5. Live-vs-Knowledge and Knowledge-vs-Knowledge conflicts are preserved in `topology_context.conflicts`; they are never silently resolved in favor of Knowledge.
-6. Knowledge-only topology may route read-only investigation, but it must not authorize restart/rollback/deploy/write operations.
-7. Repository and Jenkins Job values are deployment hints. Existence and current permission must be verified through the real Jenkins MCP before any Jenkins action is proposed or executed.
+4. Placeholder live values such as `unknown`, `null` and `n/a` are treated as missing; they do not override a useful Cognia discovery hint.
+5. Execution-sensitive identity fields are `service`, `platform`, `cluster`, `namespace`, `workload_kind` and `workload`. If any of those fields exists only in Cognia, it is marked `field_provenance=knowledge` and `requires_live_verification=true`.
+6. Auxiliary fields such as `owner` may be enriched from Cognia without making an otherwise live-verified execution target unverified.
+7. Live-vs-Knowledge and Knowledge-vs-Knowledge conflicts are preserved in `topology_context.conflicts`; they are never silently resolved in favor of Knowledge.
+8. Knowledge-only topology may route read-only investigation, but it must not authorize restart/rollback/deploy/write operations. The Decision Engine rejects a mutating/approval-gated execution request while target identity remains unverified.
+9. Repository and Jenkins Job values are deployment hints. Existence and current permission must be verified through the real Jenkins MCP before any Jenkins action is proposed or executed.
 
 ## Runtime context shape
 
@@ -81,14 +83,15 @@ Context construction exposes both the raw Live identity and the reconciled view:
     "requires_live_verification": true
   },
   "topology_context": {
+    "knowledge_identity_fields": ["service", "platform", "cluster", "namespace", "workload_kind", "workload"],
     "deployment_hints": {
       "fqdn": "web.wepod.ir",
       "repository": "https://git.example/wepod/web-api.git",
       "jenkins_job": "production/wepod/web-api"
     },
-    "execution_policy": "knowledge_only_topology_must_be_live_verified_before_write"
+    "execution_policy": "knowledge_identity_topology_must_be_live_verified_before_write"
   }
 }
 ```
 
-Once MCP evidence confirms the same platform/namespace/workload, those fields are live-provenanced. If the live system reports a different namespace or workload, the live value is retained and the Cognia mismatch becomes an explicit topology conflict that must be investigated and should normally lead to updating the governed Knowledge record.
+Once MCP evidence confirms the same platform/namespace/workload, those fields are live-provenanced and no longer count as unverified Knowledge identity. If the live system reports a different namespace or workload, the live value is retained and the Cognia mismatch becomes an explicit topology conflict that must be investigated and should normally lead to updating the governed Knowledge record.
