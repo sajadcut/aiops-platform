@@ -132,10 +132,6 @@ class Settings(BaseSettings):
     KUBERNETES_MCP_URL: Optional[str] = Field(...)
     VM_MCP_URL: Optional[str] = Field(...)
 
-    ZABBIX_URL: str = Field(...)
-    ZABBIX_USERNAME: Optional[str] = Field(...)
-    ZABBIX_PASSWORD: Optional[str] = Field(...)
-    ZABBIX_TIMEOUT_SECONDS: int = Field(...)
     ELASTICSEARCH_HOSTS: List[str] = Field(...)
     ELASTICSEARCH_USERNAME: Optional[str] = Field(...)
     ELASTICSEARCH_PASSWORD: Optional[str] = Field(...)
@@ -173,7 +169,6 @@ class Settings(BaseSettings):
         if normalized not in {"development", "test", "production"}:
             raise ValueError("APP_ENV must be development, test, or production")
         return normalized
-
 
     @field_validator("COGNIA_CONTEXT_PROFILE_ID", "COGNIA_CLIENT_APPLICATION_ID", mode="before")
     @classmethod
