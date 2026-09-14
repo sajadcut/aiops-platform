@@ -128,8 +128,8 @@ class KnowledgeTopologyResolver:
             parsed = cls._parse_content(str(item.get("content") or ""))
             if not parsed:
                 continue
-            candidate_fqdn = cls._clean(parsed.get("fqdn"))
-            if expected and candidate_fqdn and candidate_fqdn.lower().rstrip(".") not in expected:
+            candidate_fqdn = cls._normalize_field("fqdn", parsed.get("fqdn"))
+            if expected and candidate_fqdn and candidate_fqdn not in expected:
                 skipped_mismatched_fqdns.append(candidate_fqdn)
                 continue
 
