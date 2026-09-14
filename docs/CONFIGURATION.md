@@ -23,7 +23,7 @@ Production startup fails when any of these safety rules is violated:
 - mock LLM or deterministic embedding provider is selected;
 - placeholder database credentials are still in use;
 - migration-head startup validation is disabled or the database is not at Alembic HEAD;
-- Cognia RAG lacks Application Client credentials, an explicit positive KB allowlist, HTTPS or TLS verification;
+- Cognia RAG lacks Application Client credentials or an explicit positive KB allowlist, uses a non-HTTP(S) URL, or uses HTTPS with TLS verification disabled;
 - required Zabbix, Elasticsearch or Prometheus MCP URLs are missing/non-HTTPS;
 - `MCP_REQUIRE_HTTPS=false`;
 - neither MCP bearer identity nor mTLS identity is configured;
@@ -42,7 +42,7 @@ Cognia is the **only** Knowledge RAG provider in every environment. There is no 
 - `COGNIA_KNOWLEDGE_BASE_IDS` is explicit on Search; Cognia remains authoritative for KB grants and Scope.
 - Search/index/dependency failures are provider failures, never empty-result fallback.
 - `COGNIA_CONTEXT_PROFILE_ID` remains optional because Context Generation is a separate Cognia capability.
-- The supplied sandpod guide uses HTTP; production AIOps still requires an approved HTTPS endpoint with TLS verification.
+- The supplied sandpod guide uses HTTP and AIOps supports it. HTTPS is also supported; when HTTPS is selected in Production, TLS certificate verification is mandatory.
 
 ## Configuration inventory
 
@@ -63,13 +63,13 @@ All fields below are required by `Settings`. “Secret” means the tracked temp
 | `EMBEDDING_PROVIDER`, `EMBEDDING_BASE_URL`, `EMBEDDING_MODEL`, `EMBEDDING_DIMENSION`, `EMBEDDING_TIMEOUT_SECONDS` | Operational Memory | No except provider-specific URL may be private | deterministic provider forbidden in production because Operational Memory still uses embeddings. |
 | `EMBEDDING_API_KEY` | embedding provider | Yes | Required when selected provider requires it. |
 | `PGVECTOR_EXPECTED_DIMENSION`, `PGVECTOR_VALIDATE_ON_STARTUP` | vector startup validation | No | PostgreSQL/pgvector remains required for Operational Memory; production validation failure blocks startup when enabled. |
-| `COGNIA_BASE_URL` | Cognia client/readiness | No | Required in production because Cognia is the only Knowledge RAG; production requires HTTPS. Do not hard-code the sandpod URL into production. |
+| `COGNIA_BASE_URL` | Cognia client/readiness | No | Required in production because Cognia is the only Knowledge RAG; both `http://` and `https://` are supported. Use the environment-specific Cognia endpoint. |
 | `COGNIA_CLIENT_ID` | Cognia Machine Authentication | Sensitive identifier | Required for Cognia; inject with environment-specific integration configuration. |
 | `COGNIA_CLIENT_SECRET` | Cognia Machine Authentication | **Yes** | Required for Cognia; secret manager only; never log, commit, audit or prompt. |
 | `COGNIA_CLIENT_APPLICATION_ID` | Cognia Scope / External Subject | No | Numeric Client Application identity; distinct from `COGNIA_CLIENT_ID`. Required only when ClientApplication/ExternalSubject scoped requests are used. |
 | `COGNIA_KNOWLEDGE_BASE_IDS` | Cognia Search | No | Required non-empty positive explicit KB allowlist in production. Cognia still enforces effective `kb.read` on every configured KB. |
 | `COGNIA_CONTEXT_PROFILE_ID` | Cognia Context Generation | No | Optional; when absent the Search path still works but Context Generation is intentionally unavailable. |
-| `COGNIA_TIMEOUT_SECONDS`, `COGNIA_TLS_VERIFY` | Cognia transport | No | Timeout must be positive; production requires TLS verification. |
+| `COGNIA_TIMEOUT_SECONDS`, `COGNIA_TLS_VERIFY` | Cognia transport | No | Timeout must be positive. `COGNIA_TLS_VERIFY` is enforced when Production Cognia uses HTTPS; it has no TLS effect for HTTP transport. |
 | `AGENT_LLM_TEMPERATURE`, `AGENT_MAX_TOKENS` | agent LLM calls | No | Required; invalid provider limits fail agent calls. |
 | `AGENT_MAX_EVIDENCE_ITEMS`, `AGENT_MIN_EVIDENCE_ITEMS`, `AGENT_MIN_EVIDENCE_COVERAGE` | evidence gates | No | Bound evidence volume/quality; invalid production fractions fail startup validation where covered. |
 | `AGENT_LOW_CONFIDENCE_THRESHOLD`, `AGENT_MIN_CONSENSUS_SCORE` | evaluator/decision gates | No | Must be in `[0,1]` in production. |
@@ -116,7 +116,7 @@ All fields below are required by `Settings`. “Secret” means the tracked temp
 
 - **Secret:** API keys, bearer tokens, passwords, Cognia `clientSecret`, Kubernetes token, client/private-key material and database credentials are deployment secrets.
 - **Unsafe development defaults:** `LLM_PROVIDER=mock`, `EMBEDDING_PROVIDER=deterministic`, wildcard CORS and HTTP MCP URLs are acceptable only because `APP_ENV=development`; governed production startup rejects them where applicable.
-- **Cognia environment boundary:** the supplied consumer documentation describes a sandpod endpoint over HTTP. Production AIOps must receive an environment-specific HTTPS Cognia endpoint and must not disable certificate verification to accommodate a test endpoint.
+- **Cognia environment boundary:** the supplied consumer documentation describes a sandpod endpoint over HTTP, and AIOps intentionally supports both HTTP and HTTPS Cognia endpoints. For HTTPS in Production, certificate verification must remain enabled.
 - **Server-side/edge-only legacy compatibility:** direct Zabbix/Elasticsearch/Prometheus/Kubernetes/SSH adapter settings exist for MCP server/provider migration and tests. Direct Control-Plane Kubernetes and SSH are explicitly production-blocked.
 - **Deployment-only:** `OFFLINE_IMAGE_REGISTRY` and `IMAGE_PULL_POLICY` are not consumed by the running API and should not be mistaken for application runtime controls.
 

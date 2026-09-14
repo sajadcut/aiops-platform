@@ -68,9 +68,9 @@ Elastic integration uses Elastic Agent Builder MCP rather than the deprecated st
 
 ### Cognia real environment
 
-Repository behavior is implemented and tested, but strict Production acceptance requires the real approved Cognia environment. Required evidence includes HTTPS/TLS, Client Application credential issuance/rotation, exact KB grants, positive and negative authorization, Scope isolation, registration → Approval when applicable → Processing → `Activated` → Search, Search dependency/index outage with explicit degradation, and Context Profile/sufficiency behavior if Context Generation is enabled.
+Repository behavior is implemented and tested, but strict Production acceptance requires the real approved Cognia environment. Required evidence includes the approved target HTTP/HTTPS endpoint (and TLS verification when HTTPS is used), Client Application credential issuance/rotation, exact KB grants, positive and negative authorization, Scope isolation, registration → Approval when applicable → Processing → `Activated` → Search, Search dependency/index outage with explicit degradation, and Context Profile/sufficiency behavior if Context Generation is enabled.
 
-The supplied sandpod documentation currently names an HTTP endpoint. That endpoint is suitable only for controlled non-Production acceptance; Production startup requires an approved HTTPS Cognia URL with TLS verification enabled.
+The supplied sandpod documentation names an HTTP endpoint, and AIOps supports that transport. Production may use the approved Cognia HTTP or HTTPS endpoint for the target environment; when HTTPS is used, TLS verification remains mandatory.
 
 ### MCP servers and external integrations
 
@@ -125,7 +125,7 @@ The repository container gate proves isolated multi-stage runtime construction, 
 
 ## Next engineering priorities
 
-1. Acceptance-test Cognia against the real non-Production endpoint with an Application Client, exact KB grants and representative Knowledge/Scope lifecycle; provision an HTTPS Production endpoint/route before promotion.
+1. Acceptance-test Cognia against the real target HTTP/HTTPS endpoint with an Application Client, exact KB grants and representative Knowledge/Scope lifecycle; verify TLS certificates when HTTPS is selected.
 2. Deploy and acceptance-test Elastic Agent Builder, Zabbix and Prometheus MCP endpoints with pinned upstream versions.
 3. Integrate enterprise workload identity/mTLS certificate issuance/rotation for MCP.
 4. Complete constrained Windows and Kubernetes write capabilities behind Execution/Approval.
@@ -138,7 +138,7 @@ The repository container gate proves isolated multi-stage runtime construction, 
 
 ## External acceptance required before strict Production Ready verdict
 
-- Real Cognia HTTPS/Application Client/KB grant/Scope/Search/lifecycle acceptance and optional Context Profile acceptance.
+- Real Cognia HTTP/HTTPS endpoint, Application Client/KB grant/Scope/Search/lifecycle acceptance and optional Context Profile acceptance.
 - Real Elastic Agent Builder MCP, Zabbix MCP, Prometheus MCP and optional K8s/VM Edge MCP endpoints.
 - Enterprise MCP identity/mTLS and server-side authorization.
 - Real remediation targets with least privilege and rollback drills.

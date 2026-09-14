@@ -270,10 +270,11 @@ class Settings(BaseSettings):
                 missing.append("COGNIA_KNOWLEDGE_BASE_IDS")
             if missing:
                 raise ValueError("Cognia RAG requires: " + ", ".join(missing))
-            if urlparse(str(self.COGNIA_BASE_URL or "")).scheme != "https":
-                raise ValueError("COGNIA_BASE_URL must use HTTPS in production")
-            if not self.COGNIA_TLS_VERIFY:
-                raise ValueError("COGNIA_TLS_VERIFY must be enabled in production")
+            cognia_scheme = urlparse(str(self.COGNIA_BASE_URL or "")).scheme.lower()
+            if cognia_scheme not in {"http", "https"}:
+                raise ValueError("COGNIA_BASE_URL must use HTTP or HTTPS")
+            if cognia_scheme == "https" and not self.COGNIA_TLS_VERIFY:
+                raise ValueError("COGNIA_TLS_VERIFY must be enabled when Cognia uses HTTPS in production")
         return self
 
     model_config = SettingsConfigDict(

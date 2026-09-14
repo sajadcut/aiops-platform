@@ -86,18 +86,31 @@ def test_production_cognia_requires_machine_identity_and_explicit_kbs():
         )
 
 
-def test_production_cognia_requires_https_and_tls_verification():
+def test_production_cognia_supports_http_and_https_transport_contract():
     base = _settings_data(
         APP_ENV="production",
         COGNIA_CLIENT_ID="app-id",
         COGNIA_CLIENT_SECRET="test-only-secret",
         COGNIA_KNOWLEDGE_BASE_IDS=[10],
     )
-    with pytest.raises(ValidationError, match="COGNIA_BASE_URL must use HTTPS"):
-        Settings(_env_file=None, **{**base, "COGNIA_BASE_URL": "http://cognia.test", "COGNIA_TLS_VERIFY": True})
 
-    with pytest.raises(ValidationError, match="COGNIA_TLS_VERIFY must be enabled"):
+    http_config = Settings(
+        _env_file=None,
+        **{**base, "COGNIA_BASE_URL": "http://cognia.test", "COGNIA_TLS_VERIFY": False},
+    )
+    assert http_config.COGNIA_BASE_URL == "http://cognia.test"
+
+    https_config = Settings(
+        _env_file=None,
+        **{**base, "COGNIA_BASE_URL": "https://cognia.test", "COGNIA_TLS_VERIFY": True},
+    )
+    assert https_config.COGNIA_BASE_URL == "https://cognia.test"
+
+    with pytest.raises(ValidationError, match="COGNIA_TLS_VERIFY must be enabled when Cognia uses HTTPS"):
         Settings(_env_file=None, **{**base, "COGNIA_BASE_URL": "https://cognia.test", "COGNIA_TLS_VERIFY": False})
+
+    with pytest.raises(ValidationError, match="COGNIA_BASE_URL must use HTTP or HTTPS"):
+        Settings(_env_file=None, **{**base, "COGNIA_BASE_URL": "ftp://cognia.test", "COGNIA_TLS_VERIFY": True})
 
 
 def test_production_cognia_accepts_machine_identity_and_explicit_kbs():

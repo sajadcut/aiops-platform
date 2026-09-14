@@ -26,7 +26,7 @@ Cognia v1 provides the organization-managed Knowledge boundary: Application Clie
 
 ## Security and deployment
 
-- Production Cognia endpoint must be HTTPS and certificate verification stays enabled.
+- Cognia endpoints may use HTTP or HTTPS according to the deployed Cognia environment contract. When HTTPS is used in Production, certificate verification stays enabled.
 - `COGNIA_CLIENT_SECRET` and access tokens are secrets and must be redacted from logs/audit/prompts and injected from the deployment secret store.
 - KB IDs, Client Application ID and Context Profile ID are explicit configuration, never model-generated authority.
 - Default-deny Kubernetes networking remains in force. If Cognia is external to the cluster, platform infrastructure must provide a narrowly allowlisted HTTPS/FQDN/proxy egress path; the application must not open broad `0.0.0.0/0` egress.
@@ -36,4 +36,4 @@ Cognia v1 provides the organization-managed Knowledge boundary: Application Clie
 
 Repository tests must cover opaque-token lifecycle, re-auth, Search traceability, all-or-nothing request construction, no fallback, problem+json status/code handling, authoring idempotency, Scope anti-spoof, optimistic concurrency/no blind retry, Context sufficiency and secret/config fail-closed behavior.
 
-Production PASS still requires real non-production Cognia evidence: approved HTTPS endpoint, Application Client credential rotation, exact KB grants, positive/negative Search authorization, General/ClientApplication/ExternalSubject scope tests where used, registration → processing → Activated → Search, index/dependency outage behavior, and Context Profile/sufficiency tests if Context Generation is enabled.
+Production PASS still requires real non-production Cognia evidence: the approved target HTTP/HTTPS endpoint, Application Client credential rotation, exact KB grants, positive/negative Search authorization, General/ClientApplication/ExternalSubject scope tests where used, registration → processing → Activated → Search, index/dependency outage behavior, and Context Profile/sufficiency tests if Context Generation is enabled.

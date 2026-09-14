@@ -33,7 +33,7 @@ Branch: `main`
 
 ## External validation required
 
-1. Real Cognia Application Client authentication over the target environment's approved HTTPS endpoint.
+1. Real Cognia Application Client authentication over the target environment's approved HTTP or HTTPS endpoint; when HTTPS is selected, certificate verification must succeed.
 2. Search against the exact assigned Knowledge Base IDs with valid and invalid grants, including all-or-nothing authorization behavior.
 3. Cognia Scope validation for General / ClientApplication / ExternalSubject when those scopes are used by AIOps Knowledge.
 4. Cognia lifecycle validation from registration through Approval where required, Processing, Activated and Searchable state.
