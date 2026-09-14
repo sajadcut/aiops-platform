@@ -10,9 +10,10 @@ class KnowledgeTopologyResolver:
     """Deterministic bridge from Cognia Knowledge chunks to asset-discovery hints.
 
     Only a small allowlist of topology fields is parsed. Knowledge can guide
-    discovery, but live operational metadata remains authoritative and any field
-    sourced only from Knowledge is explicitly marked as requiring live
-    verification before a write action can rely on it.
+    discovery, but live operational metadata remains authoritative. Identity
+    fields sourced only from Knowledge must be live-verified before a write can
+    rely on them; auxiliary fields such as owner enrich reasoning without
+    turning an otherwise live-verified target into an execution blocker.
     """
 
     _KEY_ALIASES = {
@@ -47,15 +48,17 @@ class KnowledgeTopologyResolver:
         "owner": "owner",
         "team": "owner",
     }
-    _ASSET_FIELDS = (
+    _IDENTITY_FIELDS = (
         "service",
         "platform",
         "cluster",
         "namespace",
         "workload_kind",
         "workload",
-        "owner",
     )
+    _AUXILIARY_FIELDS = ("owner",)
+    _ASSET_FIELDS = _IDENTITY_FIELDS + _AUXILIARY_FIELDS
+    _UNKNOWN_VALUES = {"unknown", "none", "null", "n/a", "na", "unset", "undefined"}
     _FQDN_RE = re.compile(
         r"(?<![@A-Za-z0-9_-])(?:https?://)?"
         r"((?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\.)+"
@@ -70,13 +73,13 @@ class KnowledgeTopologyResolver:
         summary = cls._clean(incident.get("summary"))
         context = incident.get("context")
         identifiers: List[str] = []
-        if service:
+        if service and service.lower() not in cls._UNKNOWN_VALUES:
             identifiers.append(service)
         identifiers.extend(cls.extract_fqdns(summary or ""))
         if isinstance(context, Mapping):
             for key in ("url", "fqdn", "host", "hostname", "service", "service_name", "endpoint"):
                 value = cls._clean(context.get(key))
-                if not value:
+                if not value or value.lower() in cls._UNKNOWN_VALUES:
                     continue
                 if key in {"url", "fqdn", "host", "hostname", "endpoint"}:
                     identifiers.extend(cls.extract_fqdns(value))
@@ -194,10 +197,19 @@ class KnowledgeTopologyResolver:
                 merged[field] = knowledge_value
                 provenance[field] = "knowledge"
                 knowledge_filled_fields.append(field)
+            elif field in merged and cls._normalize_field(field, merged.get(field)) is None:
+                # Do not expose placeholder values such as "unknown" as resolved
+                # topology after reconciliation.
+                merged[field] = "unknown" if field == "platform" else None
+
+        knowledge_identity_fields = [
+            field for field in knowledge_filled_fields if field in cls._IDENTITY_FIELDS
+        ]
+        requires_live_verification = bool(knowledge_identity_fields or conflicts)
 
         merged["field_provenance"] = provenance
         merged["knowledge_assisted"] = bool(knowledge_filled_fields)
-        merged["requires_live_verification"] = bool(knowledge_filled_fields or conflicts)
+        merged["requires_live_verification"] = requires_live_verification
         merged["topology_conflicts"] = conflicts
 
         return {
@@ -206,9 +218,10 @@ class KnowledgeTopologyResolver:
             "knowledge_topology": topology,
             "field_provenance": provenance,
             "knowledge_filled_fields": knowledge_filled_fields,
+            "knowledge_identity_fields": knowledge_identity_fields,
             "conflicts": conflicts,
-            "requires_live_verification": bool(knowledge_filled_fields or conflicts),
-            "execution_policy": "knowledge_only_topology_must_be_live_verified_before_write",
+            "requires_live_verification": requires_live_verification,
+            "execution_policy": "knowledge_identity_topology_must_be_live_verified_before_write",
             "deployment_hints": {
                 key: knowledge_fields.get(key)
                 for key in ("fqdn", "repository", "jenkins_job")
@@ -284,6 +297,8 @@ class KnowledgeTopologyResolver:
     def _normalize_field(cls, field: str, value: Any) -> Optional[str]:
         text = cls._clean(value)
         if not text:
+            return None
+        if field in cls._ASSET_FIELDS and text.lower() in cls._UNKNOWN_VALUES:
             return None
         if field == "fqdn":
             return cls._normalize_fqdn(text)
