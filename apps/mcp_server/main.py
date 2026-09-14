@@ -16,7 +16,6 @@ from integrations.elasticsearch.client import ElasticsearchClient
 from integrations.kubernetes.client import KubernetesEvidenceClient
 from integrations.prometheus.client import PrometheusClient
 from integrations.vm.ssh_connector import SSHVMConnector
-from integrations.zabbix.connector import ZabbixConnector
 
 
 class JsonRpcRequest(BaseModel):
@@ -34,12 +33,6 @@ _CONSUMED_CAPABILITIES: Dict[str, int] = {}
 _MAX_REPLAY_CACHE_ITEMS = 10000
 
 _TOOL_SCHEMAS: Dict[str, Dict[str, Dict[str, Any]]] = {
-    "zabbix": {
-        "get_zabbix_alerts": {
-            "description": "Read active Zabbix alerts for a service/time window",
-            "inputSchema": {"type": "object", "properties": {"service": {"type": ["string", "null"]}, "since": {"type": ["string", "null"]}, "limit": {"type": "integer", "minimum": 1, "maximum": 500}}},
-        },
-    },
     "elasticsearch": {
         "search_logs": {
             "description": "Read Elasticsearch logs for a service/time window",
@@ -136,11 +129,6 @@ def _consume_capability_jti(claims: Dict[str, Any]) -> None:
 async def _call(provider: str, tool: str, args: Dict[str, Any]) -> Any:
     if tool not in _TOOL_SCHEMAS[provider]:
         raise PermissionError("tool_not_allowed")
-
-    if provider == "zabbix":
-        connector = ZabbixConnector()
-        items = await connector.get_alerts(since=_parse_dt(args.get("since")), service=args.get("service"), limit=_limit(args.get("limit")))
-        return [item.model_dump(mode="json") for item in items]
 
     if provider == "elasticsearch":
         connector = ElasticsearchClient()
