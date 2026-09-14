@@ -1,0 +1,153 @@
+name: postgres-ha-dr-acceptance
+
+on:
+  push:
+    branches:
+      - pg-ha-dr-acceptance-20260914
+
+permissions:
+  contents: read
+
+jobs:
+  postgres-ha-dr-acceptance:
+    runs-on: ubuntu-latest
+    environment: staging
+    timeout-minutes: 90
+    env:
+      AIOPS_TEST_ENV: staging
+      ALLOW_DESTRUCTIVE_TESTS: "true"
+      AIOPS_TEST_AUTO_APPROVE: "true"
+      AIOPS_TLS_VERIFY: ${{ vars.AIOPS_TLS_VERIFY || 'true' }}
+      AIOPS_BASE_URL: ${{ vars.AIOPS_BASE_URL || secrets.AIOPS_BASE_URL }}
+      AIOPS_API_KEY: ${{ secrets.AIOPS_API_KEY }}
+      AIOPS_BEARER_TOKEN: ${{ secrets.AIOPS_BEARER_TOKEN }}
+      AIOPS_FAULT_INJECTOR_URL: ${{ vars.AIOPS_FAULT_INJECTOR_URL || secrets.AIOPS_FAULT_INJECTOR_URL }}
+      AIOPS_FAULT_INJECTOR_TOKEN: ${{ secrets.AIOPS_FAULT_INJECTOR_TOKEN }}
+      AIOPS_TEST_SERVICE: ${{ vars.AIOPS_TEST_SERVICE || secrets.AIOPS_TEST_SERVICE }}
+      AIOPS_TEST_POSTGRES: ${{ vars.AIOPS_TEST_POSTGRES || secrets.AIOPS_TEST_POSTGRES }}
+      AIOPS_TEST_BACKUP_TARGET: ${{ vars.AIOPS_TEST_BACKUP_TARGET || secrets.AIOPS_TEST_BACKUP_TARGET }}
+      AIOPS_TEST_ALLOWED_TARGETS: ${{ vars.AIOPS_TEST_ALLOWED_TARGETS || secrets.AIOPS_TEST_ALLOWED_TARGETS }}
+      AIOPS_TEST_ALLOWED_FAULT_ACTIONS: ${{ vars.AIOPS_TEST_ALLOWED_FAULT_ACTIONS || secrets.AIOPS_TEST_ALLOWED_FAULT_ACTIONS }}
+      PROMETHEUS_URL: ${{ vars.PROMETHEUS_URL || secrets.PROMETHEUS_URL }}
+      ELASTICSEARCH_URL: ${{ vars.ELASTICSEARCH_URL || secrets.ELASTICSEARCH_URL }}
+      ELASTICSEARCH_API_KEY: ${{ secrets.ELASTICSEARCH_API_KEY }}
+      AIOPS_TEST_BACKUP_FAILURE_PROMQL: ${{ vars.AIOPS_TEST_BACKUP_FAILURE_PROMQL || secrets.AIOPS_TEST_BACKUP_FAILURE_PROMQL }}
+
+    steps:
+      - name: Checkout tested commit
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install acceptance dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
+      - name: Record PostgreSQL HA DR staging preflight
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/postgres-ha-dr
+          python - <<'PY'
+          import json, os
+          required = [
+              "AIOPS_BASE_URL",
+              "AIOPS_FAULT_INJECTOR_URL",
+              "AIOPS_FAULT_INJECTOR_TOKEN",
+              "AIOPS_TEST_SERVICE",
+              "AIOPS_TEST_POSTGRES",
+              "AIOPS_TEST_BACKUP_TARGET",
+              "AIOPS_TEST_ALLOWED_TARGETS",
+              "AIOPS_TEST_ALLOWED_FAULT_ACTIONS",
+              "PROMETHEUS_URL",
+              "ELASTICSEARCH_URL",
+              "AIOPS_TEST_BACKUP_FAILURE_PROMQL",
+          ]
+          auth_present = bool(os.getenv("AIOPS_API_KEY") or os.getenv("AIOPS_BEARER_TOKEN"))
+          present = {name: bool(os.getenv(name)) for name in required}
+          payload = {
+              "environment": os.getenv("AIOPS_TEST_ENV"),
+              "auth_present": auth_present,
+              "present": present,
+              "missing": [name for name, ok in present.items() if not ok] + ([] if auth_present else ["AIOPS_API_KEY_or_AIOPS_BEARER_TOKEN"]),
+          }
+          with open("artifacts/postgres-ha-dr/preflight.json", "w", encoding="utf-8") as fh:
+              json.dump(payload, fh, indent=2)
+          print(json.dumps(payload, indent=2))
+          PY
+
+      - name: Execute available real PostgreSQL operational scenarios
+        shell: bash
+        run: |
+          set -uo pipefail
+          mkdir -p artifacts/postgres-ha-dr/scenarios
+          for scenario in PG-CONNECTION-EXHAUSTION RECOVERY-BACKUP-FAIL; do
+            echo "=== ${scenario} ==="
+            python -m tests.operational.run_operational_acceptance \
+              --environment staging \
+              --scenario "${scenario}" \
+              --report-dir artifacts/postgres-ha-dr/scenarios || true
+          done
+
+      - name: Build strict HA DR verdict
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root = Path("artifacts/postgres-ha-dr")
+          sroot = root / "scenarios"
+          def load(name):
+              p = sroot / f"{name}.json"
+              if not p.exists():
+                  return {"status":"BLOCKED","reason":"runner_report_missing"}
+              return json.loads(p.read_text(encoding="utf-8"))
+          conn = load("PG-CONNECTION-EXHAUSTION")
+          recovery = load("RECOVERY-BACKUP-FAIL")
+          checks = [
+              {"check":"backup","status":"BLOCKED","reason":"no_executable_staging_backup_success_contract_in_repository"},
+              {"check":"restore","status":"BLOCKED","reason":"no_executable_staging_restore_contract_in_repository"},
+              {"check":"pitr","status":"BLOCKED","reason":"no_executable_staging_pitr_contract_in_repository"},
+              {"check":"failover","status":"BLOCKED","reason":"no_accepted_postgresql_ha_topology_or_failover_harness_in_repository"},
+              {"check":"connection_exhaustion","status":conn.get("status","BLOCKED"),"reason":conn.get("reason")},
+              {"check":"recovery","status":recovery.get("status","BLOCKED"),"reason":recovery.get("reason")},
+          ]
+          payload = {"environment":"staging","checks":checks,"all_pass":all(x["status"]=="PASS" for x in checks)}
+          (root / "verdict.json").write_text(json.dumps(payload, indent=2, ensure_ascii=False)+"\n", encoding="utf-8")
+          print(json.dumps(payload, indent=2, ensure_ascii=False))
+          PY
+
+      - name: Upload PostgreSQL HA DR evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: postgres-ha-dr-staging-evidence
+          path: artifacts/postgres-ha-dr/
+          if-no-files-found: error
+
+      - name: Enforce PostgreSQL HA DR acceptance
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p = Path("artifacts/postgres-ha-dr/verdict.json")
+          if not p.exists():
+              raise SystemExit("PostgreSQL HA/DR verdict missing")
+          payload = json.loads(p.read_text(encoding="utf-8"))
+          bad = [x for x in payload.get("checks", []) if x.get("status") != "PASS"]
+          for item in bad:
+              print(f"{item['check']}: {item['status']} - {item.get('reason')}")
+          if bad:
+              raise SystemExit(1)
+          print("PostgreSQL HA/DR staging acceptance PASS")
+          PY
