@@ -16,6 +16,7 @@ from domain.contracts.logging import logger
 from domain.observability import DB_POOL_CHECKED_OUT, DB_POOL_OVERFLOW, DB_POOL_SIZE, DEPENDENCY_UP
 from integrations.cognia import CogniaClient
 from integrations.elasticsearch.mcp_client import ElasticsearchMCPClient
+from integrations.jenkins.mcp_client import JenkinsMCPClient
 from integrations.kubernetes.mcp_client import KubernetesMCPClient
 from integrations.prometheus.mcp_client import PrometheusMCPClient
 from integrations.vm.mcp_client import VMEdgeMCPClient
@@ -100,6 +101,8 @@ async def _probe_external() -> dict:
         "prometheus_mcp": PrometheusMCPClient(),
     }
     static: dict = {}
+    if settings.JENKINS_MCP_URL:
+        connectors["jenkins_mcp"] = JenkinsMCPClient()
     if settings.KUBERNETES_MCP_URL:
         connectors["kubernetes_mcp"] = KubernetesMCPClient()
     if settings.VM_MCP_URL:
@@ -121,6 +124,8 @@ def _external_required_ready(external: dict) -> bool:
     if settings.APP_ENV != "production":
         return True
     required = ["zabbix_mcp", "elasticsearch_mcp", "prometheus_mcp"]
+    if settings.JENKINS_MCP_URL:
+        required.append("jenkins_mcp")
     if settings.KUBERNETES_MCP_URL:
         required.append("kubernetes_mcp")
     if settings.VM_MCP_URL:
