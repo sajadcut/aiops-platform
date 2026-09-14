@@ -78,6 +78,9 @@ def test_mcp_client_rejects_non_allowlisted_tool():
     asyncio.run(client.close())
 
 
-def test_mcp_client_requires_https_when_configured():
-    with pytest.raises(ValueError, match="mcp_https_required"):
-        MCPClient("http://mcp.test/mcp", "test", allowed_tools={"read_safe"}, require_https=True)
+def test_mcp_client_supports_http_and_https():
+    import asyncio
+    http_client = MCPClient("http://mcp.test/mcp", "test-http", allowed_tools={"read_safe"})
+    https_client = MCPClient("https://mcp.test/mcp", "test-https", allowed_tools={"read_safe"})
+    asyncio.run(http_client.close())
+    asyncio.run(https_client.close())

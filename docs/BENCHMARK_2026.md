@@ -72,7 +72,7 @@ Scoring is repository/code-contract maturity, not external production acceptance
 | 35 | Memory poisoning protection | Adequate | memory auxiliary and revalidated against live evidence; provenance/signing can improve. |
 | 36 | Audit | Strong | PostgreSQL audit and workflow events. |
 | 37 | OIDC/RBAC | Adequate | signed JWT validation and permissions; enterprise acceptance pending. |
-| 38 | Workload identity/mTLS | Weak | HTTPS/allowlist exists; SPIFFE-like short-lived identity not implemented. |
+| 38 | Workload identity/mTLS | Weak | HTTP(S)/allowlist exists; SPIFFE-like short-lived identity not implemented. |
 | 39 | Secrets management | Partial | centralized env/K8s Secret contract; dedicated secret broker/rotation not proven. |
 | 40 | API security | Adequate | auth/RBAC/rate limits/error hygiene; external pen test pending. |
 | 41 | Distributed rate limiting | Weak | current limiter process-local. |

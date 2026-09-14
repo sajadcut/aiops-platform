@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any, Dict
 
 import httpx
+from integrations.http_transport import insecure_async_client
 import jwt
 from jwt import PyJWKClient
 
@@ -37,7 +38,7 @@ class OIDCTokenValidator:
 
 
 async def discover_jwks(url: str) -> Dict[str, Any]:
-    async with httpx.AsyncClient(timeout=5.0) as client:
+    async with insecure_async_client(timeout=5.0) as client:
         response = await client.get(url)
         response.raise_for_status()
         return response.json()

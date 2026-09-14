@@ -48,7 +48,6 @@ class Settings(BaseSettings):
     COGNIA_KNOWLEDGE_BASE_IDS: List[int] = Field(...)
     COGNIA_CONTEXT_PROFILE_ID: Optional[int] = Field(...)
     COGNIA_TIMEOUT_SECONDS: int = Field(...)
-    COGNIA_TLS_VERIFY: bool = Field(...)
 
     AGENT_LLM_TEMPERATURE: float = Field(...)
     AGENT_MAX_TOKENS: int = Field(...)
@@ -75,7 +74,6 @@ class Settings(BaseSettings):
     AGENT_CONFLICT_CONFIDENCE_PENALTY: float = Field(...)
     A2A_TIMEOUT_SECONDS: int = Field(...)
     A2A_ALLOWED_TARGETS: List[str] = Field(...)
-    A2A_REQUIRE_HTTPS: bool = Field(...)
 
     SIGNAL_CORRELATION_ENABLED: bool = Field(...)
     SIGNAL_CORRELATION_WINDOW_SECONDS: int = Field(..., ge=1, le=3600)
@@ -110,10 +108,8 @@ class Settings(BaseSettings):
     APPROVAL_TTL_SECONDS: int = Field(...)
 
     MCP_PROTOCOL_VERSION: str = Field(...)
-    MCP_REQUIRE_HTTPS: bool = Field(...)
     MCP_BEARER_TOKEN: Optional[str] = Field(...)
     MCP_WRITE_BEARER_TOKEN: Optional[str] = Field(...)
-    MCP_CA_CERT_PATH: Optional[str] = Field(...)
     MCP_CLIENT_CERT_PATH: Optional[str] = Field(...)
     MCP_CLIENT_KEY_PATH: Optional[str] = Field(...)
     MCP_TIMEOUT_SECONDS: int = Field(...)
@@ -149,7 +145,6 @@ class Settings(BaseSettings):
     KUBERNETES_API_URL: Optional[str] = Field(...)
     KUBERNETES_TOKEN: Optional[str] = Field(...)
     KUBERNETES_TOKEN_FILE: Optional[str] = Field(...)
-    KUBERNETES_CA_CERT_PATH: Optional[str] = Field(...)
     KUBERNETES_NAMESPACE: str = Field(...)
     KUBERNETES_TIMEOUT_SECONDS: int = Field(...)
     KUBERNETES_LOG_TAIL_LINES: int = Field(...)
@@ -273,8 +268,6 @@ class Settings(BaseSettings):
             cognia_scheme = urlparse(str(self.COGNIA_BASE_URL or "")).scheme.lower()
             if cognia_scheme not in {"http", "https"}:
                 raise ValueError("COGNIA_BASE_URL must use HTTP or HTTPS")
-            if cognia_scheme == "https" and not self.COGNIA_TLS_VERIFY:
-                raise ValueError("COGNIA_TLS_VERIFY must be enabled when Cognia uses HTTPS in production")
         return self
 
     model_config = SettingsConfigDict(

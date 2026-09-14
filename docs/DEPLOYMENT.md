@@ -28,7 +28,6 @@ APP_ENV=production
 DEBUG=false
 DATABASE_VALIDATE_MIGRATIONS_ON_STARTUP=true
 PGVECTOR_VALIDATE_ON_STARTUP=true
-MCP_REQUIRE_HTTPS=true
 MCP_SERVER_REQUIRE_AUTH=true              # on internal MCP server deployments
 CORS_ORIGINS=["https://<approved-ui-host>"]
 LLM_PROVIDER=<real-provider>

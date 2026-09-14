@@ -12,7 +12,7 @@ The project may be called **100% production-ready only when every item below pas
 
 | # | Scenario | Status | Pass condition / current evidence or blocker |
 |---|---|---|---|
-| 1 | Cold start | PARTIAL | Production validation is fail-closed in code, including authentication, mandatory Cognia HTTP-or-HTTPS endpoint/credentials/KBs and TLS verification when HTTPS is used, MCP TLS/identity, migrations, Operational-Memory pgvector and unsafe direct-control-plane access. A clean production-like staging cold start with real dependencies is still required. |
+| 1 | Cold start | PARTIAL | Production validation is fail-closed in code, including authentication, mandatory Cognia HTTP-or-HTTP/HTTPS endpoint/credentials/KBs and no server-certificate verification for HTTPS, MCP TLS/identity, migrations, Operational-Memory pgvector and unsafe direct-control-plane access. A clean production-like staging cold start with real dependencies is still required. |
 | 2 | Auth/RBAC | PARTIAL | API-key/OIDC/RBAC tests exist and protected routes declare explicit permissions, but exhaustive route-by-route authorization against the enterprise IdP and production role mapping is not yet accepted. |
 | 3 | Secrets | PARTIAL | Repository/config hygiene and recursive redaction cover secret-like keys, including Cognia client secret values by key classification. External secret-store integration, Cognia Client Application credential issuance/rotation and enterprise secret lifecycle still require the real environment. |
 | 4 | Database | PASS when current HEAD CI is green | PostgreSQL migration acceptance must prove empty DB and existing DB migration to head, locking, downgrade and clean rebuild. pgvector is exclusively the Operational Memory vector layer. The old Knowledge vector table is retired into a non-RAG historical archive with no embedding/retrieval path. |
@@ -38,7 +38,7 @@ The project may be called **100% production-ready only when every item below pas
 5. High-risk action requires durable, bound, unexpired, single-use approval.
 6. No Agent or internal caller can bypass policy/approval; write actions require governed execution capability, remain allowlisted and are auditable.
 7. Required MCPs initialize/list/call correctly, enforce TLS/auth/timeouts, separate read/write authority and never automatically retry unsafe writes.
-8. Cognia machine auth, exact KB grants, General/ClientApplication/ExternalSubject behavior where used, registration/Revision/Processing/Activation/Search, authorization failures, index/dependency outage with explicit degradation and Context sufficiency where enabled are proven on a real non-Production environment. Production uses an approved HTTPS Cognia route.
+8. Cognia machine auth, exact KB grants, General/ClientApplication/ExternalSubject behavior where used, registration/Revision/Processing/Activation/Search, authorization failures, index/dependency outage with explicit degradation and Context sufficiency where enabled are proven on a real non-Production environment. Production uses an approved HTTP/HTTPS Cognia route.
 9. VM/Kubernetes real writes are constrained to controlled MCP capabilities and verified after execution.
 10. Representative incidents pass Signal → live Evidence → Cognia/Memory auxiliary context → Agents/RCA → Decision → Approval → Execution → fresh Verification → Audit/Memory.
 11. Execution/verification/Cognia/MCP/dependency failures fail or degrade explicitly and never become false zero-results or successful remediation.

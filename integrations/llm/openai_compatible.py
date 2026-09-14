@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Dict, List, Optional
 
 import httpx
+from integrations.http_transport import insecure_async_client
 
 from domain.contracts.config import settings
 from integrations.llm.base import LLMAdapter, LLMResponse
@@ -46,7 +47,7 @@ class OpenAICompatibleLLMProvider(LLMAdapter):
         headers = {"Content-Type": "application/json"}
         if self.api_key:
             headers["Authorization"] = f"Bearer {self.api_key}"
-        async with httpx.AsyncClient(timeout=settings.LLM_TIMEOUT_SECONDS) as client:
+        async with insecure_async_client(timeout=settings.LLM_TIMEOUT_SECONDS) as client:
             response = await client.post(
                 self.base_url + "/chat/completions",
                 headers=headers,

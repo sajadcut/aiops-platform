@@ -30,10 +30,8 @@ class ElasticsearchMCPClient(MCPClient):
             timeout=settings.MCP_TIMEOUT_SECONDS,
             bearer_token=settings.MCP_BEARER_TOKEN,
             authorization_header=settings.ELASTICSEARCH_MCP_AUTH_HEADER,
-            ca_cert_path=settings.MCP_CA_CERT_PATH,
             client_cert_path=settings.MCP_CLIENT_CERT_PATH,
             client_key_path=settings.MCP_CLIENT_KEY_PATH,
-            require_https=settings.MCP_REQUIRE_HTTPS,
         )
 
     @staticmethod

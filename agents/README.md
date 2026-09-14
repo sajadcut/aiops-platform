@@ -129,7 +129,7 @@ Every evidence round records requested types and evidence counts in Audit.
 
 ## A2A boundary
 
-Optional outbound A2A RPC is disabled by default because `A2A_ALLOWED_TARGETS=[]`. Before the internal API key can be attached, the destination origin must pass the allowlist and HTTPS policy. This prevents an Agent path from becoming an SSRF or credential exfiltration route.
+Optional outbound A2A RPC is disabled by default because `A2A_ALLOWED_TARGETS=[]`. Before the internal API key can be attached, the destination origin must pass the allowlist and HTTP(S) scheme policy. This prevents an Agent path from becoming an SSRF or credential exfiltration route.
 
 Inbound `/api/v1/a2a/{agent_name}` remains authenticated and analysis-only; remote Agent output still passes local RCA/Evaluator/Decision/Approval/Execution boundaries.
 
@@ -179,7 +179,7 @@ All Agent runtime policy is centralized through the canonical root `.env`, inclu
 - Agent timeout and structured-output repair attempts
 - stale-Evidence threshold
 - disagreement/missing/conflict confidence penalties
-- A2A timeout, destination allowlist and HTTPS policy
+- A2A timeout, destination allowlist and HTTP(S) scheme policy
 
 `domain/contracts/config.py` is only the typed loader/validator; it contains no operational defaults.
 

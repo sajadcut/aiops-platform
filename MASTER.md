@@ -579,7 +579,7 @@ ADRهای رسمی و شماره‌گذاری جاری در `docs/adr/DECISIONS.
 
 ### 24.2 Next Steps
 
-1. Real Cognia HTTP/HTTPS endpoint + Application Client/KB grant/Search/Scope acceptance, including outage/no-fallback evidence.
+1. Real Cognia HTTP/HTTP/HTTPS endpoint + Application Client/KB grant/Search/Scope acceptance, including outage/no-fallback evidence.
 2. Real Zabbix/Elasticsearch/Prometheus acceptance + CMDB/service catalog mapping.
 2. Correlation corpus benchmark with false-merge/false-split targets and late-signal re-analysis semantics.
 3. Windows constrained Edge/WinRM/JEA telemetry and remediation; no arbitrary PowerShell.
@@ -595,7 +595,7 @@ ADRهای رسمی و شماره‌گذاری جاری در `docs/adr/DECISIONS.
 
 ### 24.3 Open Issues / Production Blockers
 
-- Real Cognia HTTP/HTTPS endpoint, Application Client identity, KB grants, Scope/Search and optional Context Profile have not yet been externally accepted.
+- Real Cognia HTTP/HTTP/HTTPS endpoint, Application Client identity, KB grants, Scope/Search and optional Context Profile have not yet been externally accepted.
 - Real observability, LLM and remediation endpoints have not been externally accepted in the target restricted network.
 - CMDB/service catalog is not yet authoritative identity source.
 - Windows native execution/telemetry is incomplete.

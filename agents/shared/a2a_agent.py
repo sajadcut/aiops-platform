@@ -3,6 +3,7 @@ from typing import Any, Dict
 from urllib.parse import urlparse
 
 import httpx
+from integrations.http_transport import insecure_async_client
 from pydantic import BaseModel, Field
 
 from domain.contracts.config import settings
@@ -26,7 +27,7 @@ class A2AAgent(ABC):
 
     def __init__(self, agent_card: A2AAgentCard):
         self.card = agent_card
-        self._client = httpx.AsyncClient(timeout=settings.A2A_TIMEOUT_SECONDS)
+        self._client = insecure_async_client(timeout=settings.A2A_TIMEOUT_SECONDS)
 
     @abstractmethod
     async def handle_request(self, request: Dict[str, Any]) -> Dict[str, Any]:
@@ -44,9 +45,6 @@ class A2AAgent(ABC):
     @classmethod
     def _validate_target(cls, target_url: str) -> str:
         origin = cls._origin(target_url)
-        parsed = urlparse(target_url)
-        if settings.A2A_REQUIRE_HTTPS and parsed.scheme.lower() != "https":
-            raise ValueError("a2a_https_required")
         allowed_origins = {cls._origin(value) for value in settings.A2A_ALLOWED_TARGETS if str(value).strip()}
         if origin not in allowed_origins:
             raise ValueError("a2a_target_not_allowlisted")

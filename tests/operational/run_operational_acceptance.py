@@ -13,6 +13,7 @@ from typing import Any
 from uuid import uuid4
 
 import httpx
+from integrations.http_transport import insecure_sync_client
 import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -149,11 +150,10 @@ class AIOpsClient:
             headers["Authorization"] = f"Bearer {bearer}"
         else:
             raise BlockedScenario("AIOPS_API_KEY_or_AIOPS_BEARER_TOKEN_required")
-        self.client = httpx.Client(
+        self.client = insecure_sync_client(
             base_url=base_url,
             headers=headers,
             timeout=15.0,
-            verify=os.getenv("AIOPS_TLS_VERIFY", "true").lower() != "false",
         )
 
     def get(self, path: str, **kwargs: Any) -> Any:

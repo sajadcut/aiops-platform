@@ -31,7 +31,7 @@ A clean checkout has a complete non-secret development configuration in `.env.ex
 
 Do **not** deploy by copying the development template unchanged. The production image forces `APP_ENV=production`, and startup fails closed for unsafe configuration such as mock providers, wildcard CORS, insecure MCP, direct Control-Plane SSH/Kubernetes access, invalid authentication, migration drift, or missing/unsafe Cognia configuration.
 
-Production Cognia configuration requires an approved HTTPS base URL with TLS verification, Client Application `clientId/clientSecret`, and explicit Knowledge Base IDs. `COGNIA_CLIENT_APPLICATION_ID` is a separate numeric Scope identity when Client/ExternalSubject scoping is used; it is not derived from the authentication `clientId`. `COGNIA_CONTEXT_PROFILE_ID` is optional until a profile is provisioned.
+Production Cognia configuration requires an approved HTTP/HTTPS base URL with TLS verification, Client Application `clientId/clientSecret`, and explicit Knowledge Base IDs. `COGNIA_CLIENT_APPLICATION_ID` is a separate numeric Scope identity when Client/ExternalSubject scoping is used; it is not derived from the authentication `clientId`. `COGNIA_CONTEXT_PROFILE_ID` is optional until a profile is provisioned.
 
 Promotion sequence:
 
@@ -40,7 +40,7 @@ Promotion sequence:
 3. Sign and verify the actual OCI artifact in the approved internal registry according to the organization promotion policy.
 4. Inject ConfigMap/Secret values; do not bake `.env` into the image. Cognia `clientSecret` belongs in the external secret store.
 5. Rotate/verify all credentials, including any credential-like values that have ever appeared in repository history.
-6. Ensure the default-deny network path permits only an approved HTTPS/FQDN/proxy route to Cognia; do not add unrestricted Internet egress.
+6. Ensure the default-deny network path permits only an approved HTTP/HTTP(S)/FQDN/proxy route to Cognia; do not add unrestricted Internet egress.
 7. Run `deployment/kubernetes/migrate-job.yaml` using the exact image digest being promoted.
 8. Require the migration job to succeed before rolling the API Deployment.
 9. Wait for `/api/v1/health/ready` to return HTTP 200; Cognia readiness is part of the required Production dependency set because Cognia is the sole Knowledge RAG.
@@ -72,4 +72,4 @@ Cognia repository tests cover opaque machine-token lifecycle, 401 re-authenticat
 
 The `container-acceptance` workflow builds separate hardened runtime and wheelhouse-builder images, then builds the production image as a true multi-stage artifact. Only `/opt/venv` crosses from builder to runtime; `/opt/wheels` and `/build` are rejected from the final filesystem. The gate then runs a container smoke test, exports the exact merged runtime rootfs, blocks fixable HIGH/CRITICAL Trivy findings, emits a CycloneDX SBOM, proves a cosign sign/verify path, validates immutable Kubernetes digest rendering and uploads the supply-chain evidence.
 
-A green repository gate is necessary but not sufficient for production promotion. The target environment must still prove the real Cognia HTTPS/Application Client/KB grants/Scope/lifecycle and optional Context Profile, approved internal wheelhouse/base-image supply, real OCI registry signing/verification/promotion, enterprise identity, real MCP endpoints, HA/DR and the production-like acceptance scenarios in `PRODUCTION_ACCEPTANCE.md`.
+A green repository gate is necessary but not sufficient for production promotion. The target environment must still prove the real Cognia HTTP/HTTPS/Application Client/KB grants/Scope/lifecycle and optional Context Profile, approved internal wheelhouse/base-image supply, real OCI registry signing/verification/promotion, enterprise identity, real MCP endpoints, HA/DR and the production-like acceptance scenarios in `PRODUCTION_ACCEPTANCE.md`.

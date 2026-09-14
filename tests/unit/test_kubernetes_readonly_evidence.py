@@ -25,7 +25,6 @@ def test_kubernetes_env_contract_is_centralized():
         "KUBERNETES_API_URL",
         "KUBERNETES_TOKEN",
         "KUBERNETES_TOKEN_FILE",
-        "KUBERNETES_CA_CERT_PATH",
         "KUBERNETES_NAMESPACE",
         "KUBERNETES_TIMEOUT_SECONDS",
         "KUBERNETES_LOG_TAIL_LINES",

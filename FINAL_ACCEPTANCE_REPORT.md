@@ -45,7 +45,7 @@ See `MASTER.md`, `docs/COGNIA_INTEGRATION.md`, `docs/PRODUCTION_ACCEPTANCE_MATRI
 | Execution boundary | allowlisted tools + durable approval where required + signed execution capability bound to complete execution intent | PASS (repo) |
 | Verification | fresh pre-execution baseline + metric-direction-aware before/after | PASS (repo) / PARTIAL per-action SLO coverage |
 | Operational Memory | conclusive outcome gating + PostgreSQL/pgvector successful-pattern retrieval | PASS (repo); false-reuse/scale acceptance pending |
-| Cognia-only Governed Knowledge RAG | sole RAG provider; Application Client machine auth; opaque token lifecycle; explicit KBs; separate numeric Scope identity; Active-Revision Chunk traceability; typed status/errors; no alternate-RAG fallback; authoring idempotency; Revision concurrency; no machine approval; optional Context Generation | PASS (repo contract); **REAL ENV REQUIRED** for target HTTP/HTTPS endpoint/grants/scope/lifecycle/index/context acceptance |
+| Cognia-only Governed Knowledge RAG | sole RAG provider; Application Client machine auth; opaque token lifecycle; explicit KBs; separate numeric Scope identity; Active-Revision Chunk traceability; typed status/errors; no alternate-RAG fallback; authoring idempotency; Revision concurrency; no machine approval; optional Context Generation | PASS (repo contract); **REAL ENV REQUIRED** for target HTTP/HTTP/HTTPS endpoint/grants/scope/lifecycle/index/context acceptance |
 | PostgreSQL persistence | Incident/Evidence/Finding/Approval/Audit/checkpoint/runbook/Operational-Memory models; historical pre-Cognia content is non-RAG archive only | PASS (repo contract) |
 | pgvector | Operational Memory only; active Knowledge vector retrieval is retired | PASS in repository acceptance path |
 | Workflow durability | application-level PostgreSQL checkpoint/resume | PASS (repo); distributed failover semantics remain |
@@ -84,7 +84,7 @@ See `MASTER.md`, `docs/COGNIA_INTEGRATION.md`, `docs/PRODUCTION_ACCEPTANCE_MATRI
 9. Candidate Revision always carries `expectedCurrentCandidateRevisionId`; a concurrency conflict is surfaced and is not blindly retried.
 10. Machine integration intentionally does not expose human Approve/Reject decisions.
 11. Context Generation remains auxiliary and optional until a Context Profile is provisioned; `HTTP 200 + isSufficient=false` is preserved as insufficient context rather than treated as complete.
-12. Production configuration fails closed unless Cognia uses HTTP or HTTPS with machine credentials and explicit KB IDs; when HTTPS is selected, TLS certificate verification is mandatory.
+12. Production configuration fails closed unless Cognia uses HTTP or HTTPS with machine credentials and explicit KB IDs; when HTTPS is selected, TLS certificate verification is intentionally disabled.
 13. Cognia secret material uses the central recursive redaction boundary, and Production deployment must provide secret injection plus narrowly allowlisted network egress.
 
 ## Existing platform hardening retained
@@ -107,7 +107,7 @@ If Cognia is unavailable, the Incident workflow may continue on Live Evidence wi
 
 ## Remaining production blockers / external acceptance
 
-1. Real Cognia Application Client/target HTTP-or-HTTPS endpoint/KB grants plus positive/negative Search authorization, Scope isolation, registration → Approval where required → Processing → Activated → Search, index/dependency outage/no-fallback and optional Context Profile/sufficiency acceptance.
+1. Real Cognia Application Client/target HTTP-or-HTTP/HTTPS endpoint/KB grants plus positive/negative Search authorization, Scope isolation, registration → Approval where required → Processing → Activated → Search, index/dependency outage/no-fallback and optional Context Profile/sufficiency acceptance.
 2. Real Zabbix, Elastic Agent Builder and Prometheus MCP acceptance with representative schemas, metadata, authentication and outage behavior.
 3. Real Kubernetes/VM Edge MCP write acceptance with least privilege, capability replay rejection, rollback and independent verification.
 4. CMDB/service-catalog authoritative identity plus correlation-quality corpus and service-dependency truth.

@@ -19,13 +19,12 @@ Production startup fails when any of these safety rules is violated:
 - `DEBUG=true`;
 - wildcard CORS;
 - neither OIDC nor internal API-key authentication is configured;
-- configured OIDC issuer/JWKS endpoints are not HTTPS;
+- configured OIDC issuer/JWKS endpoints are not HTTP(S);
 - mock LLM or deterministic embedding provider is selected;
 - placeholder database credentials are still in use;
 - migration-head startup validation is disabled or the database is not at Alembic HEAD;
 - Cognia RAG lacks Application Client credentials or an explicit positive KB allowlist, uses a non-HTTP(S) URL, or uses HTTPS with TLS verification disabled;
-- required Zabbix, Elasticsearch or Prometheus MCP URLs are missing/non-HTTPS;
-- `MCP_REQUIRE_HTTPS=false`;
+- required Zabbix, Elasticsearch or Prometheus MCP URLs are missing/non-HTTP(S);
 - neither MCP bearer identity nor mTLS identity is configured;
 - VM MCP is enabled without a distinct write bearer token;
 - direct Control-Plane SSH or direct Control-Plane Kubernetes API access is enabled;
@@ -69,7 +68,7 @@ All fields below are required by `Settings`. “Secret” means the tracked temp
 | `COGNIA_CLIENT_APPLICATION_ID` | Cognia Scope / External Subject | No | Numeric Client Application identity; distinct from `COGNIA_CLIENT_ID`. Required only when ClientApplication/ExternalSubject scoped requests are used. |
 | `COGNIA_KNOWLEDGE_BASE_IDS` | Cognia Search | No | Required non-empty positive explicit KB allowlist in production. Cognia still enforces effective `kb.read` on every configured KB. |
 | `COGNIA_CONTEXT_PROFILE_ID` | Cognia Context Generation | No | Optional; when absent the Search path still works but Context Generation is intentionally unavailable. |
-| `COGNIA_TIMEOUT_SECONDS`, `COGNIA_TLS_VERIFY` | Cognia transport | No | Timeout must be positive. `COGNIA_TLS_VERIFY` is enforced when Production Cognia uses HTTPS; it has no TLS effect for HTTP transport. |
+| `COGNIA_TIMEOUT_SECONDS` | Cognia transport | No | Timeout must be positive. Both HTTP and HTTPS are supported; HTTPS server certificates are intentionally not validated. |
 | `AGENT_LLM_TEMPERATURE`, `AGENT_MAX_TOKENS` | agent LLM calls | No | Required; invalid provider limits fail agent calls. |
 | `AGENT_MAX_EVIDENCE_ITEMS`, `AGENT_MIN_EVIDENCE_ITEMS`, `AGENT_MIN_EVIDENCE_COVERAGE` | evidence gates | No | Bound evidence volume/quality; invalid production fractions fail startup validation where covered. |
 | `AGENT_LOW_CONFIDENCE_THRESHOLD`, `AGENT_MIN_CONSENSUS_SCORE` | evaluator/decision gates | No | Must be in `[0,1]` in production. |
@@ -80,7 +79,7 @@ All fields below are required by `Settings`. “Secret” means the tracked temp
 | `AGENT_INITIAL_EVIDENCE_WINDOW_SECONDS`, `AGENT_REFRESH_EVIDENCE_WINDOW_SECONDS`, `AGENT_STALE_EVIDENCE_SECONDS` | evidence freshness/windowing | No | Required; wrong values degrade RCA freshness. |
 | `AGENT_TIMEOUT_SECONDS`, `AGENT_STRUCTURED_REPAIR_ATTEMPTS` | agent execution/repair | No | Timeout must be positive in production. |
 | `AGENT_DISAGREEMENT_CONFIDENCE_FACTOR`, `AGENT_MISSING_EVIDENCE_CONFIDENCE_FACTOR`, `AGENT_CONFLICT_CONFIDENCE_PENALTY` | evaluator confidence | No | Fractions must be `[0,1]` in production. |
-| `A2A_TIMEOUT_SECONDS`, `A2A_ALLOWED_TARGETS`, `A2A_REQUIRE_HTTPS` | agent-to-agent transport | No | Timeout positive; configured production targets require HTTPS. |
+| `A2A_TIMEOUT_SECONDS`, `A2A_ALLOWED_TARGETS` | agent-to-agent transport | No | Timeout positive; allowlisted targets may use HTTP or HTTPS. HTTPS server certificates are not validated. |
 | `SIGNAL_CORRELATION_ENABLED`, `SIGNAL_CORRELATION_WINDOW_SECONDS`, `SIGNAL_CORRELATION_CANDIDATE_LIMIT` | Signal Gateway | No | Typed bounds prevent unbounded correlation lookup. |
 | `LOG_LEVEL`, `LOG_CONSOLE_ENABLED`, `LOG_TEXT_FILE_ENABLED`, `LOG_JSON_FILE_ENABLED` | logging setup | No | At least one destination must be enabled or startup fails. |
 | `LOG_DIR`, `LOG_TEXT_FILE`, `LOG_JSON_FILE` | rotating file logging | No | Target path must be writable; Kubernetes mounts `/var/log/aiops`. |
@@ -92,10 +91,10 @@ All fields below are required by `Settings`. “Secret” means the tracked temp
 | `RETRY_MAX_ATTEMPTS`, `RETRY_DELAY_SECONDS`, `RETRY_BACKOFF_FACTOR` | retry helpers/MCP/Cognia read transport | No | Cognia Search/auth and MCP reads use bounded retry; governed writes deliberately do not auto-retry. |
 | `CORS_ORIGINS` | FastAPI CORS | No | Wildcard forbidden in production. |
 | `APPROVAL_TTL_SECONDS` | PostgreSQL approval store | No | Must be positive in production; expired approvals cannot transition/execute. |
-| `MCP_PROTOCOL_VERSION`, `MCP_REQUIRE_HTTPS`, `MCP_TIMEOUT_SECONDS` | MCP clients/server | No | Production requires HTTPS; invalid timeout fails production validation. |
+| `MCP_PROTOCOL_VERSION`, `MCP_TIMEOUT_SECONDS` | MCP clients/server | No | HTTP and HTTPS are supported; invalid timeout fails production validation. HTTPS server certificates are not validated by project policy. |
 | `MCP_BEARER_TOKEN` | MCP read identity | Yes | Required unless mTLS identity is used for clients; required by authenticated internal server. |
 | `MCP_WRITE_BEARER_TOKEN` | MCP write identity | Yes | Required for VM writes and must differ from read bearer in production. |
-| `MCP_CA_CERT_PATH`, `MCP_CLIENT_CERT_PATH`, `MCP_CLIENT_KEY_PATH` | MCP TLS/mTLS | key path points to secret material | cert/key must be configured together; mounts are deployment responsibility. |
+| `MCP_CLIENT_CERT_PATH`, `MCP_CLIENT_KEY_PATH` | MCP TLS/mTLS | key path points to secret material | optional client cert/key must be configured together when used for client identity; server certificates are not validated. |
 | `MCP_SERVER_PROVIDER`, `MCP_SERVER_REQUIRE_AUTH` | internal edge MCP server | No | Unsupported provider fails; auth must be true in production. |
 | `ZABBIX_MCP_URL`, `ZABBIX_MCP_SERVER_NAME`, `ZABBIX_MCP_AUTH_HEADER` | Zabbix MCP client | auth header Yes | URL required/HTTPS in production. |
 | `ELASTIC_STACK_VERSION`, `ELASTICSEARCH_MCP_URL`, `ELASTICSEARCH_MCP_AUTH_HEADER` | Elastic Agent Builder MCP | auth header Yes | Stack must be >=9.2; URL must be Agent Builder MCP path and HTTPS in production. |
@@ -105,17 +104,17 @@ All fields below are required by `Settings`. “Secret” means the tracked temp
 | `ZABBIX_URL`, `ZABBIX_USERNAME`, `ZABBIX_PASSWORD`, `ZABBIX_TIMEOUT_SECONDS` | edge/native Zabbix adapter | password Yes | Server-side helper; Control Plane should use MCP. |
 | `ELASTICSEARCH_HOSTS`, `ELASTICSEARCH_USERNAME`, `ELASTICSEARCH_PASSWORD`, `ELASTICSEARCH_TIMEOUT_SECONDS` | edge/native Elasticsearch adapter | password Yes | Server-side helper; Control Plane should use MCP. |
 | `PROMETHEUS_URL`, `PROMETHEUS_TIMEOUT_SECONDS` | edge/native Prometheus adapter | No | Server-side helper; Control Plane should use MCP. |
-| `KUBERNETES_API_URL`, `KUBERNETES_TOKEN`, `KUBERNETES_TOKEN_FILE`, `KUBERNETES_CA_CERT_PATH`, `KUBERNETES_NAMESPACE`, `KUBERNETES_TIMEOUT_SECONDS`, `KUBERNETES_LOG_TAIL_LINES` | edge/native Kubernetes adapter | token Yes | Direct Control-Plane `KUBERNETES_API_URL` is forbidden in production. |
+| `KUBERNETES_API_URL`, `KUBERNETES_TOKEN`, `KUBERNETES_TOKEN_FILE`, `KUBERNETES_NAMESPACE`, `KUBERNETES_TIMEOUT_SECONDS`, `KUBERNETES_LOG_TAIL_LINES` | edge/native Kubernetes adapter | token Yes | Direct Control-Plane `KUBERNETES_API_URL` is forbidden in production. |
 | `SSH_ENABLED`, `SSH_USERNAME`, `SSH_PRIVATE_KEY_PATH`, `SSH_KNOWN_HOSTS`, `SSH_STRICT_HOST_KEY_CHECKING`, `SSH_PORT`, `SSH_CONNECT_TIMEOUT` | isolated VM MCP SSH adapter | private key is external secret file | Production VM edge requires enabled, non-root user, key path, pinned known hosts and strict checking. Control Plane itself forbids direct SSH. |
 | `SSH_ALLOWED_TARGETS`, `SSH_ALLOWED_SERVICES` | VM MCP authorization | No | Must be non-empty in production VM edge; syntactically valid but unlisted targets/services are rejected. |
 | `VM_CPU_RECOVERY_THRESHOLD` | VM verification/recovery logic | No | Required threshold; API verification request may use its own bounded threshold. |
-| `OIDC_ISSUER_URL`, `OIDC_AUDIENCE`, `OIDC_JWKS_URL` | OIDC JWT validation | No | All-or-nothing effective configuration; issuer/JWKS must use HTTPS in production. |
+| `OIDC_ISSUER_URL`, `OIDC_AUDIENCE`, `OIDC_JWKS_URL` | OIDC JWT validation | No | All-or-nothing effective configuration; issuer/JWKS may use HTTP or HTTPS; JWT signatures are still validated while HTTPS server certificates are not. |
 | `OFFLINE_IMAGE_REGISTRY`, `IMAGE_PULL_POLICY` | offline deployment tooling/docs | No | Deployment metadata; application runtime does not select its own container image. Treat changes as deployment config, not API config. |
 
 ## Known configuration classifications
 
 - **Secret:** API keys, bearer tokens, passwords, Cognia `clientSecret`, Kubernetes token, client/private-key material and database credentials are deployment secrets.
-- **Unsafe development defaults:** `LLM_PROVIDER=mock`, `EMBEDDING_PROVIDER=deterministic`, wildcard CORS and HTTP MCP URLs are acceptable only because `APP_ENV=development`; governed production startup rejects them where applicable.
+- **Unsafe development defaults:** `LLM_PROVIDER=mock`, `EMBEDDING_PROVIDER=deterministic`, wildcard CORS and HTTP and HTTPS integration URLs are both supported in every environment; HTTPS certificate verification is intentionally disabled by project policy.
 - **Cognia environment boundary:** the supplied consumer documentation describes a sandpod endpoint over HTTP, and AIOps intentionally supports both HTTP and HTTPS Cognia endpoints. For HTTPS in Production, certificate verification must remain enabled.
 - **Server-side/edge-only legacy compatibility:** direct Zabbix/Elasticsearch/Prometheus/Kubernetes/SSH adapter settings exist for MCP server/provider migration and tests. Direct Control-Plane Kubernetes and SSH are explicitly production-blocked.
 - **Deployment-only:** `OFFLINE_IMAGE_REGISTRY` and `IMAGE_PULL_POLICY` are not consumed by the running API and should not be mistaken for application runtime controls.

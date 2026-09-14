@@ -57,7 +57,7 @@ This file is traceability evidence, not a replacement for `MASTER.md`. It distin
 
 ## Final acceptance items still requiring execution evidence
 
-1. Real Cognia target HTTP/HTTPS endpoint + Application Client authentication, assigned KB grants and Search against the exact configured KB IDs; verify certificates when HTTPS is selected.
+1. Real Cognia target HTTP/HTTP/HTTPS endpoint + Application Client authentication, assigned KB grants and Search against the exact configured KB IDs; verify certificates when HTTPS is selected.
 2. Cognia authorization negative tests plus General/ClientApplication/ExternalSubject Scope behavior where used by AIOps.
 3. Cognia registration → Approval where required → Processing → Activated → Search lifecycle acceptance.
 4. Cognia Search dependency/index outage behavior and proof that AIOps reports explicit degradation; no second RAG exists to substitute.

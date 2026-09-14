@@ -110,8 +110,11 @@ async def dashboard_approval_script():
     return FileResponse(_DASHBOARD_DIR / "approval-actions.js", media_type="application/javascript")
 
 
-def _is_https(value: str | None) -> bool:
-    return bool(value and urlparse(str(value)).scheme == "https")
+def _is_http_or_https(value: str | None) -> bool:
+    if not value:
+        return False
+    parsed = urlparse(str(value))
+    return parsed.scheme.lower() in {"http", "https"} and bool(parsed.netloc)
 
 
 def _validate_production_configuration() -> None:
@@ -131,8 +134,8 @@ def _validate_production_configuration() -> None:
         errors.append("production requires OIDC or INTERNAL_API_KEY authentication")
     if oidc_ready:
         for name, value in {"OIDC_ISSUER_URL": settings.OIDC_ISSUER_URL, "OIDC_JWKS_URL": settings.OIDC_JWKS_URL}.items():
-            if not _is_https(value):
-                errors.append(f"{name} must use HTTPS in production")
+            if not _is_http_or_https(value):
+                errors.append(f"{name} must use HTTP or HTTPS in production")
 
     if settings.LLM_PROVIDER.strip().lower() == "mock":
         errors.append("mock LLM provider is forbidden in production")
@@ -145,14 +148,12 @@ def _validate_production_configuration() -> None:
     for name, value in required_mcp.items():
         if not str(value or "").strip():
             errors.append(f"{name} is required in production")
-        elif not _is_https(str(value)):
-            errors.append(f"{name} must use HTTPS in production")
-    if settings.KUBERNETES_MCP_URL and not _is_https(settings.KUBERNETES_MCP_URL):
-        errors.append("KUBERNETES_MCP_URL must use HTTPS in production")
-    if settings.VM_MCP_URL and not _is_https(settings.VM_MCP_URL):
-        errors.append("VM_MCP_URL must use HTTPS in production")
-    if not settings.MCP_REQUIRE_HTTPS:
-        errors.append("MCP_REQUIRE_HTTPS must be enabled in production")
+        elif not _is_http_or_https(str(value)):
+            errors.append(f"{name} must use HTTP or HTTPS in production")
+    if settings.KUBERNETES_MCP_URL and not _is_http_or_https(settings.KUBERNETES_MCP_URL):
+        errors.append("KUBERNETES_MCP_URL must use HTTP or HTTPS in production")
+    if settings.VM_MCP_URL and not _is_http_or_https(settings.VM_MCP_URL):
+        errors.append("VM_MCP_URL must use HTTP or HTTPS in production")
     if not settings.MCP_BEARER_TOKEN and not (settings.MCP_CLIENT_CERT_PATH and settings.MCP_CLIENT_KEY_PATH):
         errors.append("production MCP requires bearer identity or mTLS client certificate")
     if bool(settings.MCP_CLIENT_CERT_PATH) != bool(settings.MCP_CLIENT_KEY_PATH):
@@ -201,8 +202,6 @@ def _validate_production_configuration() -> None:
         errors.append("AGENT_SOURCE_QUALITY_WEIGHTS values must be between 0 and 1")
     if not settings.AGENT_ENABLED_AGENTS:
         errors.append("at least one specialist agent must be enabled")
-    if settings.A2A_ALLOWED_TARGETS and not settings.A2A_REQUIRE_HTTPS:
-        errors.append("production A2A targets require HTTPS")
 
     if errors:
         raise RuntimeError("production_configuration_invalid: " + "; ".join(errors))

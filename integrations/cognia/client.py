@@ -5,6 +5,7 @@ import time
 from typing import Any, Dict, List, Optional
 
 import httpx
+from integrations.http_transport import insecure_async_client
 
 from domain.contracts.config import settings
 from domain.contracts.logging import logger
@@ -53,7 +54,6 @@ class CogniaClient:
         client_secret: Optional[str] = None,
         client_application_id: Optional[int] = None,
         timeout_seconds: Optional[float] = None,
-        tls_verify: Optional[bool] = None,
         transport: Optional[httpx.AsyncBaseTransport] = None,
     ) -> None:
         self.base_url = str(base_url or settings.COGNIA_BASE_URL or "").strip().rstrip("/")
@@ -64,16 +64,14 @@ class CogniaClient:
         if self.client_application_id is not None and self.client_application_id <= 0:
             raise CogniaConfigurationError("cognia_client_application_id_must_be_positive")
         self.timeout_seconds = float(timeout_seconds or settings.COGNIA_TIMEOUT_SECONDS)
-        self.tls_verify = settings.COGNIA_TLS_VERIFY if tls_verify is None else bool(tls_verify)
         if not self.base_url:
             raise CogniaConfigurationError("cognia_base_url_required")
         if self.timeout_seconds <= 0:
             raise CogniaConfigurationError("cognia_timeout_must_be_positive")
 
-        self._client = httpx.AsyncClient(
+        self._client = insecure_async_client(
             base_url=self.base_url,
             timeout=self.timeout_seconds,
-            verify=self.tls_verify,
             transport=transport,
             headers={"Accept": "application/json"},
         )

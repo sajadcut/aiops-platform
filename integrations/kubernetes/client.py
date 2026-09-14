@@ -5,6 +5,7 @@ from typing import Any, Dict, List, Optional
 from urllib.parse import quote
 
 import httpx
+from integrations.http_transport import insecure_async_client
 
 from domain.contracts.config import settings
 
@@ -40,15 +41,11 @@ class KubernetesEvidenceClient:
             headers["Authorization"] = f"Bearer {self.token}"
         return headers
 
-    def _verify(self):
-        return settings.KUBERNETES_CA_CERT_PATH or True
-
     async def _get(self, path: str, params: Optional[Dict[str, Any]] = None) -> Any:
         if not self.enabled:
             raise RuntimeError("kubernetes_evidence_connector_disabled")
-        async with httpx.AsyncClient(
+        async with insecure_async_client(
             timeout=settings.KUBERNETES_TIMEOUT_SECONDS,
-            verify=self._verify(),
             headers=self._headers(),
         ) as client:
             response = await client.get(self.api_url.rstrip("/") + path, params=params)

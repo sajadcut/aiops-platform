@@ -129,12 +129,9 @@ async def test_targeted_evidence_collection_does_not_run_unrequested_connectors(
 @pytest.mark.asyncio
 async def test_a2a_rejects_untrusted_target_before_sending(monkeypatch):
     monkeypatch.setattr(settings, "A2A_ALLOWED_TARGETS", ["https://agent.internal"])
-    monkeypatch.setattr(settings, "A2A_REQUIRE_HTTPS", True)
     agent = DummyA2A(A2AAgentCard(name="test", description="test", version="1", endpoint="/a2a"))
     with pytest.raises(ValueError, match="a2a_target_not_allowlisted"):
         await agent.send_request("https://evil.example/rpc", {})
-    with pytest.raises(ValueError, match="a2a_https_required"):
-        await agent.send_request("http://agent.internal/rpc", {})
     await agent.close()
 
 

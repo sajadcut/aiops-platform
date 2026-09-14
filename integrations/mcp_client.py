@@ -9,6 +9,7 @@ from typing import Any, Dict, Iterable, Optional
 from urllib.parse import urlparse
 
 import httpx
+from integrations.http_transport import insecure_async_client
 
 from domain.contracts.config import settings
 from domain.contracts.logging import logger
@@ -32,10 +33,8 @@ class MCPClient:
         write_bearer_token: Optional[str] = None,
         authorization_header: Optional[str] = None,
         write_authorization_header: Optional[str] = None,
-        ca_cert_path: Optional[str] = None,
         client_cert_path: Optional[str] = None,
         client_key_path: Optional[str] = None,
-        require_https: bool = True,
     ):
         self.server_url = str(server_url or "").strip()
         self.server_name = server_name
@@ -50,21 +49,17 @@ class MCPClient:
         self.write_bearer_token = write_bearer_token
         self.authorization_header = str(authorization_header or "").strip() or None
         self.write_authorization_header = str(write_authorization_header or "").strip() or None
-        self.require_https = bool(require_https)
         self.session_id: Optional[str] = None
         self._initialized = False
 
         parsed = urlparse(self.server_url)
         if parsed.scheme not in {"http", "https"} or not parsed.netloc:
             raise ValueError(f"invalid_mcp_server_url:{server_name}")
-        if self.require_https and parsed.scheme != "https":
-            raise ValueError(f"mcp_https_required:{server_name}")
         if bool(client_cert_path) != bool(client_key_path):
             raise ValueError("mcp_client_cert_and_key_must_be_configured_together")
 
-        verify: bool | str = ca_cert_path or True
         cert = (client_cert_path, client_key_path) if client_cert_path and client_key_path else None
-        self._client = httpx.AsyncClient(timeout=self.timeout, verify=verify, cert=cert)
+        self._client = insecure_async_client(timeout=self.timeout, cert=cert)
 
     def _authorization(self, tool_name: Optional[str]) -> Optional[str]:
         if tool_name in self.write_tools:

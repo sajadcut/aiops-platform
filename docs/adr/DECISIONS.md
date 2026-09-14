@@ -164,7 +164,7 @@
 
 **Trust-zone rule:** MCP Server در trust zone نزدیک ابزار مقصد مستقر می‌شود و خودش با API/SDK/SSH/WinRM محلیِ آن ابزار کار می‌کند. credential ابزار مقصد در Control Plane نگهداری نمی‌شود.
 
-**Production remote MCP requirements:** HTTPS، protocol-version pinning، `Mcp-Method`/`Mcp-Name` route metadata، bearer identity و/یا mTLS، capability allowlist، per-tool authorization، timeout، no token passthrough، Audit و trace correlation. انتخاب نهایی OAuth/EMA/workload-identity provider با PKI سازمان هماهنگ می‌شود.
+**Production remote MCP requirements:** HTTP/HTTPS transport، protocol-version pinning، `Mcp-Method`/`Mcp-Name` route metadata، bearer identity و/یا mTLS، capability allowlist، per-tool authorization، timeout، no token passthrough، Audit و trace correlation. انتخاب نهایی OAuth/EMA/workload-identity provider با PKI سازمان هماهنگ می‌شود.
 
 **Read tools:** Zabbix alert read، Elastic log search، Prometheus metrics، Kubernetes evidence و VM telemetry می‌توانند بدون human approval و طبق read policy استفاده شوند.
 

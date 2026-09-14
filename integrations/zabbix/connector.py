@@ -1,4 +1,5 @@
 import httpx
+from integrations.http_transport import insecure_async_client
 from typing import Optional, List, Dict, Any
 from datetime import datetime, timedelta, timezone
 from integrations.base import BaseConnector, Alert, LogEntry, MetricPoint
@@ -32,7 +33,7 @@ class ZabbixConnector(BaseConnector):
 
     async def health_check(self) -> bool:
         try:
-            async with httpx.AsyncClient(timeout=self.timeout) as client:
+            async with insecure_async_client(timeout=self.timeout) as client:
                 response = await client.post(self._api_endpoint, json={"jsonrpc": "2.0", "method": "apiinfo.version", "params": [], "id": 1})
                 return response.status_code == 200
         except Exception as exc:
@@ -45,7 +46,7 @@ class ZabbixConnector(BaseConnector):
             return self._token
         if not self.username or not self.password:
             raise RuntimeError("zabbix_credentials_not_configured")
-        async with httpx.AsyncClient(timeout=self.timeout) as client:
+        async with insecure_async_client(timeout=self.timeout) as client:
             response = await client.post(
                 self._api_endpoint,
                 json={"jsonrpc": "2.0", "method": "user.login", "params": {"username": self.username, "password": self.password}, "id": 1},
@@ -60,7 +61,7 @@ class ZabbixConnector(BaseConnector):
 
     async def _request(self, method: str, params: dict) -> dict:
         token = await self._authenticate()
-        async with httpx.AsyncClient(timeout=self.timeout) as client:
+        async with insecure_async_client(timeout=self.timeout) as client:
             response = await client.post(self._api_endpoint, json={"jsonrpc": "2.0", "method": method, "params": params, "auth": token, "id": 1})
             response.raise_for_status()
             data = response.json()
