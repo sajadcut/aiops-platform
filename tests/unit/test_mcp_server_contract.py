@@ -4,24 +4,30 @@ from apps.mcp_server.main import _TOOL_SCHEMAS
 
 
 def test_provider_tool_names_match_control_plane_clients():
-    assert set(_TOOL_SCHEMAS["zabbix"]) == {"get_zabbix_alerts"}
+    assert "zabbix" not in _TOOL_SCHEMAS
     assert set(_TOOL_SCHEMAS["elasticsearch"]) == {"search_logs"}
     assert set(_TOOL_SCHEMAS["prometheus"]) == {"query_metrics", "get_prometheus_alerts"}
     assert set(_TOOL_SCHEMAS["kubernetes"]) == {"collect_kubernetes_evidence"}
     assert set(_TOOL_SCHEMAS["vm"]) == {"collect_vm_metrics", "service_status", "process_snapshot", "restart_service"}
 
 
-def test_mcp_server_is_the_only_place_native_provider_connectors_are_composed():
+def test_internal_mcp_server_has_no_native_zabbix_provider():
+    server = Path("apps/mcp_server/main.py").read_text(encoding="utf-8")
+    assert "ZabbixConnector" not in server
+    assert '"zabbix": {' not in server
+    assert not Path("integrations/zabbix/connector.py").exists()
+
+
+def test_mcp_server_is_the_only_place_remaining_native_provider_connectors_are_composed():
     server = Path("apps/mcp_server/main.py").read_text(encoding="utf-8")
     assert "ElasticsearchClient" in server
     assert "PrometheusClient" in server
-    assert "ZabbixConnector" in server
     assert "KubernetesEvidenceClient" in server
     assert "SSHVMConnector" in server
 
     context = Path("apps/context_service/__init__.py").read_text(encoding="utf-8")
     execution = Path("apps/api/main.py").read_text(encoding="utf-8")
-    for native in ("ElasticsearchClient", "PrometheusClient", "ZabbixConnector", "KubernetesEvidenceClient", "SSHVMConnector"):
+    for native in ("ElasticsearchClient", "PrometheusClient", "KubernetesEvidenceClient", "SSHVMConnector"):
         assert native not in context
         assert native not in execution
 
