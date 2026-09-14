@@ -4,8 +4,17 @@ on:
   push:
     branches: [ main ]
     paths:
-      - 'scripts/generate_file_index_fa.py'
-      - 'scripts/generate_code_symbols_fa.py'
+      - 'agents/**'
+      - 'apps/**'
+      - 'dashboards/**'
+      - 'database/**'
+      - 'domain/**'
+      - 'integrations/**'
+      - 'knowledge/**'
+      - 'memory/**'
+      - 'scripts/**'
+      - 'tests/**'
+      - 'deployment/**'
       - 'docs/CODEBASE_GUIDE_FA.md'
       - '.github/workflows/documentation-index.yml'
 
