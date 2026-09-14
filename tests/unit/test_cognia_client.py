@@ -69,6 +69,7 @@ async def test_machine_token_is_opaque_cached_and_search_contract_is_exact(monke
         base_url="http://cognia.test",
         client_id="app-1",
         client_secret="secret-1",
+        client_application_id=42,
         transport=httpx.MockTransport(handler),
     )
     try:
