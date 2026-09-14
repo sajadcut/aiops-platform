@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 239 | Dashboard JS files scanned: 2 | Symbols indexed: 1361**
+**Python files scanned: 242 | Dashboard JS files scanned: 2 | Symbols indexed: 1397**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -249,10 +249,12 @@
 | `apps/audit_service/postgres.py` | `PostgreSQLAuditStore.__init__` | 12 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | PostgreSQLAuditStore |
 | `apps/audit_service/postgres.py` | `PostgreSQLAuditStore.append` | 15 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | PostgreSQLAuditStore |
 | `apps/audit_service/postgres.py` | `PostgreSQLAuditStore.list` | 30 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | PostgreSQLAuditStore |
-| `apps/context_service/__init__.py` | `ContextBuilder` | 19 | class | Build operational context through governed MCP external-tool boundaries. | module |
-| `apps/context_service/__init__.py` | `ContextBuilder.__init__` | 27 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ContextBuilder |
-| `apps/context_service/__init__.py` | `ContextBuilder.build_context` | 41 | async method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | ContextBuilder |
-| `apps/context_service/__init__.py` | `ContextBuilder.build_context.avg` | 64 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ContextBuilder.build_context |
+| `apps/context_service/__init__.py` | `ContextBuilder` | 22 | class | Build knowledge-assisted operational context through governed boundaries. | module |
+| `apps/context_service/__init__.py` | `ContextBuilder.__init__` | 37 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ContextBuilder |
+| `apps/context_service/__init__.py` | `ContextBuilder._known` | 57 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ContextBuilder |
+| `apps/context_service/__init__.py` | `ContextBuilder._knowledge_failure_status` | 64 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ContextBuilder |
+| `apps/context_service/__init__.py` | `ContextBuilder.build_context` | 91 | async method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | ContextBuilder |
+| `apps/context_service/__init__.py` | `ContextBuilder.build_context.avg` | 184 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ContextBuilder.build_context |
 | `apps/context_service/asset_identity.py` | `AssetContext` | 8 | class | کلاس | module |
 | `apps/context_service/asset_identity.py` | `AssetIdentityResolver` | 33 | class | Deterministically derives one asset identity from live-source metadata. | module |
 | `apps/context_service/asset_identity.py` | `AssetIdentityResolver.resolve` | 44 | method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | AssetIdentityResolver |
@@ -278,6 +280,20 @@
 | `apps/context_service/evidence_collector.py` | `EvidenceCollector._alert_evidence` | 84 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | EvidenceCollector |
 | `apps/context_service/evidence_collector.py` | `EvidenceCollector._healthy` | 93 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | EvidenceCollector |
 | `apps/context_service/evidence_collector.py` | `EvidenceCollector._collect` | 104 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | EvidenceCollector |
+| `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver` | 9 | class | Deterministic bridge from Cognia Knowledge chunks to asset-discovery hints. | module |
+| `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver.build_discovery_query` | 71 | method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | KnowledgeTopologyResolver |
+| `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver.extract_fqdns` | 102 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeTopologyResolver |
+| `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver.resolve` | 111 | method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | KnowledgeTopologyResolver |
+| `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver.reconcile` | 172 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeTopologyResolver |
+| `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver._parse_content` | 233 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeTopologyResolver |
+| `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver._parse_json` | 258 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeTopologyResolver |
+| `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver._collect_mapping_fields` | 270 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeTopologyResolver |
+| `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver._canonical_key` | 282 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeTopologyResolver |
+| `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver._normalize_key` | 286 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeTopologyResolver |
+| `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver._clean` | 290 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeTopologyResolver |
+| `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver._normalize_field` | 297 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeTopologyResolver |
+| `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver._normalize_fqdn` | 317 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeTopologyResolver |
+| `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver._same_value` | 329 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeTopologyResolver |
 | `apps/context_service/normalizer.py` | `normalize_evidence` | 4 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
 | `apps/context_service/source_policy.py` | `EvidenceSourcePolicy` | 5 | class | کلاس | module |
 | `apps/context_service/source_policy.py` | `EvidenceSourcePolicy.allows` | 9 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | EvidenceSourcePolicy |
@@ -287,12 +303,12 @@
 | `apps/decision_engine/__init__.py` | `DecisionAction` | 18 | class | کلاس | module |
 | `apps/decision_engine/__init__.py` | `DecisionResult` | 25 | class | کلاس | module |
 | `apps/decision_engine/__init__.py` | `DecisionEngine` | 34 | class | Deterministic policy gate for an RCA plan and the concrete action request. | module |
-| `apps/decision_engine/__init__.py` | `DecisionEngine.evaluate_plan` | 63 | method | کیفیت/confidence یا اولویت را به‌صورت deterministic محاسبه می‌کند | DecisionEngine |
-| `apps/decision_engine/__init__.py` | `DecisionEngine._normalize_risk` | 133 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DecisionEngine |
-| `apps/decision_engine/__init__.py` | `DecisionEngine._max_risk` | 141 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DecisionEngine |
-| `apps/decision_engine/__init__.py` | `DecisionEngine._assess_risk` | 145 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DecisionEngine |
-| `apps/decision_engine/__init__.py` | `DecisionEngine._calculate_avg_confidence` | 159 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DecisionEngine |
-| `apps/decision_engine/__init__.py` | `DecisionEngine._make_decision` | 170 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DecisionEngine |
+| `apps/decision_engine/__init__.py` | `DecisionEngine.evaluate_plan` | 65 | method | کیفیت/confidence یا اولویت را به‌صورت deterministic محاسبه می‌کند | DecisionEngine |
+| `apps/decision_engine/__init__.py` | `DecisionEngine._normalize_risk` | 141 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DecisionEngine |
+| `apps/decision_engine/__init__.py` | `DecisionEngine._max_risk` | 149 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DecisionEngine |
+| `apps/decision_engine/__init__.py` | `DecisionEngine._assess_risk` | 153 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DecisionEngine |
+| `apps/decision_engine/__init__.py` | `DecisionEngine._calculate_avg_confidence` | 167 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DecisionEngine |
+| `apps/decision_engine/__init__.py` | `DecisionEngine._make_decision` | 178 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DecisionEngine |
 | `apps/evaluator/__init__.py` | `EvaluationResult` | 5 | class | کلاس | module |
 | `apps/evaluator/__init__.py` | `PlanEvaluator` | 13 | class | Guardrail between RCA and DecisionEngine. | module |
 | `apps/evaluator/__init__.py` | `PlanEvaluator.evaluate` | 19 | method | کیفیت/confidence یا اولویت را به‌صورت deterministic محاسبه می‌کند | PlanEvaluator |
@@ -440,13 +456,13 @@
 | `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime._assert_binding` | 113 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
 | `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime._issue_capability` | 123 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
 | `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime.resume_after_approval` | 137 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
-| `apps/orchestrator/signal_aware.py` | `SignalAwareE2EOrchestrator` | 15 | class | Collaborative E2E workflow for source-triggered and API-triggered incidents. | module |
-| `apps/orchestrator/signal_aware.py` | `SignalAwareE2EOrchestrator._context_node` | 24 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalAwareE2EOrchestrator |
-| `apps/orchestrator/signal_aware.py` | `SignalAwareE2EOrchestrator._publish_peer_context` | 81 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalAwareE2EOrchestrator |
-| `apps/orchestrator/signal_aware.py` | `SignalAwareE2EOrchestrator._parallel_agents_node` | 103 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalAwareE2EOrchestrator |
-| `apps/orchestrator/signal_aware.py` | `SignalAwareE2EOrchestrator._decision_node` | 171 | async method | Bind deterministic policy to the concrete tool/action/target request. | SignalAwareE2EOrchestrator |
-| `apps/orchestrator/signal_aware.py` | `SignalAwareE2EOrchestrator._execution_node` | 195 | async method | Refresh the verification baseline immediately before a write/read tool call. | SignalAwareE2EOrchestrator |
-| `apps/orchestrator/signal_aware.py` | `SignalAwareE2EOrchestrator._memory_node` | 235 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalAwareE2EOrchestrator |
+| `apps/orchestrator/signal_aware.py` | `SignalAwareE2EOrchestrator` | 16 | class | Collaborative E2E workflow for source-triggered and API-triggered incidents. | module |
+| `apps/orchestrator/signal_aware.py` | `SignalAwareE2EOrchestrator._context_node` | 25 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalAwareE2EOrchestrator |
+| `apps/orchestrator/signal_aware.py` | `SignalAwareE2EOrchestrator._publish_peer_context` | 120 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalAwareE2EOrchestrator |
+| `apps/orchestrator/signal_aware.py` | `SignalAwareE2EOrchestrator._parallel_agents_node` | 142 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalAwareE2EOrchestrator |
+| `apps/orchestrator/signal_aware.py` | `SignalAwareE2EOrchestrator._decision_node` | 210 | async method | Bind deterministic policy to the concrete tool/action/target request. | SignalAwareE2EOrchestrator |
+| `apps/orchestrator/signal_aware.py` | `SignalAwareE2EOrchestrator._execution_node` | 246 | async method | Refresh the verification baseline immediately before a write/read tool call. | SignalAwareE2EOrchestrator |
+| `apps/orchestrator/signal_aware.py` | `SignalAwareE2EOrchestrator._memory_node` | 286 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalAwareE2EOrchestrator |
 | `apps/orchestrator/workflow_store.py` | `WorkflowCheckpointStore` | 18 | class | State قابل resume را با version افزایشی برای هر Incident ذخیره می‌کند. | module |
 | `apps/orchestrator/workflow_store.py` | `WorkflowCheckpointStore.__init__` | 21 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | WorkflowCheckpointStore |
 | `apps/orchestrator/workflow_store.py` | `WorkflowCheckpointStore.save` | 24 | async method | state یا داده را به‌صورت durable ذخیره/به‌روزرسانی می‌کند | WorkflowCheckpointStore |
@@ -489,17 +505,19 @@
 | `apps/security/token_validator.py` | `OIDCTokenValidator.__init__` | 16 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OIDCTokenValidator |
 | `apps/security/token_validator.py` | `OIDCTokenValidator.validate` | 22 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | OIDCTokenValidator |
 | `apps/security/token_validator.py` | `discover_jwks` | 40 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/signal_gateway/__init__.py` | `OperationalSignal` | 21 | class | کلاس | module |
-| `apps/signal_gateway/__init__.py` | `OperationalSignal.normalize_source` | 34 | method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | OperationalSignal |
-| `apps/signal_gateway/__init__.py` | `OperationalSignal.normalize_severity` | 41 | method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | OperationalSignal |
-| `apps/signal_gateway/__init__.py` | `OperationalSignal.to_evidence` | 46 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalSignal |
-| `apps/signal_gateway/__init__.py` | `SignalGateway` | 71 | class | Source-agnostic, race-safe entry point for operational signals. | module |
-| `apps/signal_gateway/__init__.py` | `SignalGateway._append_trigger_to_checkpoint` | 75 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalGateway |
-| `apps/signal_gateway/__init__.py` | `SignalGateway._existing_state` | 87 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalGateway |
-| `apps/signal_gateway/__init__.py` | `SignalGateway.ingest` | 94 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalGateway |
-| `apps/signal_gateway/__init__.py` | `signal_from_elasticsearch` | 227 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/signal_gateway/__init__.py` | `signal_from_prometheus` | 246 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/signal_gateway/__init__.py` | `signal_from_zabbix` | 261 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/__init__.py` | `OperationalSignal` | 24 | class | کلاس | module |
+| `apps/signal_gateway/__init__.py` | `OperationalSignal.normalize_source` | 37 | method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | OperationalSignal |
+| `apps/signal_gateway/__init__.py` | `OperationalSignal.normalize_severity` | 44 | method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | OperationalSignal |
+| `apps/signal_gateway/__init__.py` | `OperationalSignal.to_evidence` | 49 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalSignal |
+| `apps/signal_gateway/__init__.py` | `SignalGateway` | 74 | class | Source-agnostic, race-safe entry point for operational signals. | module |
+| `apps/signal_gateway/__init__.py` | `SignalGateway._append_trigger_to_checkpoint` | 83 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalGateway |
+| `apps/signal_gateway/__init__.py` | `SignalGateway._existing_state` | 95 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalGateway |
+| `apps/signal_gateway/__init__.py` | `SignalGateway._knowledge_assisted_asset` | 102 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalGateway |
+| `apps/signal_gateway/__init__.py` | `SignalGateway.ingest` | 176 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalGateway |
+| `apps/signal_gateway/__init__.py` | `signal_from_elasticsearch` | 320 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/__init__.py` | `signal_from_prometheus` | 339 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/__init__.py` | `_zabbix_service_from_tags` | 354 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/__init__.py` | `signal_from_zabbix` | 373 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/signal_gateway/correlation.py` | `CorrelationIdentity` | 20 | class | خروجی canonical correlation شامل fingerprint و scope قابل audit. | module |
 | `apps/signal_gateway/correlation.py` | `_token` | 30 | function | مقادیر vendor-specific را به token پایدار و قابل hash تبدیل می‌کند. | module |
 | `apps/signal_gateway/correlation.py` | `signal_family` | 36 | function | نام‌های alert مختلف را محافظه‌کارانه به symptom family مشترک نگاشت می‌کند. | module |
@@ -1230,6 +1248,23 @@
 | `tests/unit/test_jsonb_persistence_contract.py` | `FakeSession.commit` | 25 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeSession |
 | `tests/unit/test_jsonb_persistence_contract.py` | `test_approval_metadata_is_serialized_before_jsonb_cast` | 30 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_jsonb_persistence_contract.py` | `test_audit_metadata_is_serialized_before_jsonb_cast` | 52 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_knowledge_topology_execution_gate.py` | `_finding` | 4 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_knowledge_topology_execution_gate.py` | `test_decision_rejects_write_when_target_identity_is_only_knowledge_assisted` | 8 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_knowledge_topology_execution_gate.py` | `test_decision_allows_normal_policy_after_live_target_verification` | 28 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_knowledge_topology_resolution.py` | `FakeRAG` | 32 | class | کلاس | module |
+| `tests/unit/test_knowledge_topology_resolution.py` | `FakeRAG.__init__` | 33 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeRAG |
+| `tests/unit/test_knowledge_topology_resolution.py` | `FakeRAG.search` | 37 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | FakeRAG |
+| `tests/unit/test_knowledge_topology_resolution.py` | `FakeCollector` | 42 | class | کلاس | module |
+| `tests/unit/test_knowledge_topology_resolution.py` | `FakeCollector.__init__` | 43 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeCollector |
+| `tests/unit/test_knowledge_topology_resolution.py` | `FakeCollector.collect` | 47 | async method | Evidence/داده موردنیاز را از منبع مربوط جمع می‌کند | FakeCollector |
+| `tests/unit/test_knowledge_topology_resolution.py` | `test_topology_resolver_normalizes_full_url_and_extracts_deployment_hints` | 64 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_knowledge_topology_resolution.py` | `test_topology_resolver_rejects_a_document_for_another_fqdn` | 77 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_knowledge_topology_resolution.py` | `test_live_topology_wins_and_conflict_is_explicit` | 86 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_knowledge_topology_resolution.py` | `test_unknown_live_placeholders_do_not_override_cognia_identity` | 108 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_knowledge_topology_resolution.py` | `test_context_builder_always_queries_cognia_and_uses_topology_to_seed_live_lookup` | 121 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_knowledge_topology_resolution.py` | `test_context_builder_queries_cognia_even_when_live_asset_is_complete` | 152 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_knowledge_topology_resolution.py` | `test_zabbix_web_scenario_signal_uses_cognia_when_host_is_only_monitoring_container` | 187 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_knowledge_topology_resolution.py` | `test_zabbix_web_scenario_signal_uses_cognia_when_host_is_only_monitoring_container.fake_search` | 188 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_zabbix_web_scenario_signal_uses_cognia_when_host_is_only_monitoring_container |
 | `tests/unit/test_kubernetes_network_policy.py` | `_docs` | 6 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_kubernetes_network_policy.py` | `test_network_policy_defaults_to_deny_and_only_allows_labeled_namespaces` | 10 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_kubernetes_network_policy.py` | `test_production_deployment_uses_stdout_not_ephemeral_log_volume` | 30 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
@@ -1265,13 +1300,14 @@
 | `tests/unit/test_multi_source_signal_reasoning.py` | `test_elk_trigger_can_be_correlated_when_zabbix_has_no_alert` | 59 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_multi_source_signal_reasoning.py` | `test_elasticsearch_anomaly_is_first_class_signal_and_evidence` | 79 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_multi_source_signal_reasoning.py` | `test_prometheus_and_zabbix_can_also_initiate_incidents` | 98 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_multi_source_signal_reasoning.py` | `test_cross_source_error_signals_share_deterministic_fingerprint` | 117 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_multi_source_signal_reasoning.py` | `test_correlation_refuses_unknown_family_or_unknown_service` | 147 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_multi_source_signal_reasoning.py` | `test_explicit_correlation_key_is_stable_and_not_plaintext` | 163 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_multi_source_signal_reasoning.py` | `test_append_trigger_to_checkpoint_is_idempotent` | 180 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_multi_source_signal_reasoning.py` | `test_peer_findings_are_published_as_auxiliary_operational_context` | 193 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_multi_source_signal_reasoning.py` | `test_collaborative_orchestrator_is_durable_runtime_default` | 213 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_multi_source_signal_reasoning.py` | `test_signal_ingestion_is_not_viewer_permission` | 217 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_multi_source_signal_reasoning.py` | `test_zabbix_explicit_service_tag_is_used_but_monitor_host_is_not` | 117 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_multi_source_signal_reasoning.py` | `test_cross_source_error_signals_share_deterministic_fingerprint` | 129 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_multi_source_signal_reasoning.py` | `test_correlation_refuses_unknown_family_or_unknown_service` | 159 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_multi_source_signal_reasoning.py` | `test_explicit_correlation_key_is_stable_and_not_plaintext` | 175 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_multi_source_signal_reasoning.py` | `test_append_trigger_to_checkpoint_is_idempotent` | 192 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_multi_source_signal_reasoning.py` | `test_peer_findings_are_published_as_auxiliary_operational_context` | 205 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_multi_source_signal_reasoning.py` | `test_collaborative_orchestrator_is_durable_runtime_default` | 225 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_multi_source_signal_reasoning.py` | `test_signal_ingestion_is_not_viewer_permission` | 229 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_oidc_auth.py` | `test_oidc_claims_map_to_identity` | 6 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_oidc_auth.py` | `test_oidc_rejects_wrong_issuer` | 18 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_operational_agents.py` | `StaticLLM` | 15 | class | کلاس | module |
