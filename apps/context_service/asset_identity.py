@@ -261,6 +261,8 @@ class AssetIdentityResolver:
             return "vm"
         if any(x in value for x in ("database", "postgres", "oracle", "sql server")):
             return "database"
+        if any(x in value for x in ("network device", "network devices", "router", "switch", "load balancer", "loadbalancer")):
+            return "network"
         return "unknown"
 
     @staticmethod
