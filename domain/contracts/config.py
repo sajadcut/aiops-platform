@@ -1,6 +1,7 @@
 from typing import Dict, List, Optional
+from urllib.parse import urlparse
 
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -40,8 +41,16 @@ class Settings(BaseSettings):
     PGVECTOR_EXPECTED_DIMENSION: Optional[int] = Field(...)
     PGVECTOR_VALIDATE_ON_STARTUP: bool = Field(...)
 
+    KNOWLEDGE_PROVIDER: str = Field(...)
     KNOWLEDGE_ALLOWED_SOURCE_TYPES: List[str] = Field(...)
     KNOWLEDGE_REQUIRE_GOVERNANCE_PRODUCTION: bool = Field(...)
+    COGNIA_BASE_URL: Optional[str] = Field(...)
+    COGNIA_CLIENT_ID: Optional[str] = Field(...)
+    COGNIA_CLIENT_SECRET: Optional[str] = Field(...)
+    COGNIA_KNOWLEDGE_BASE_IDS: List[int] = Field(...)
+    COGNIA_CONTEXT_PROFILE_ID: Optional[int] = Field(...)
+    COGNIA_TIMEOUT_SECONDS: int = Field(...)
+    COGNIA_TLS_VERIFY: bool = Field(...)
 
     AGENT_LLM_TEMPERATURE: float = Field(...)
     AGENT_MAX_TOKENS: int = Field(...)
@@ -172,6 +181,26 @@ class Settings(BaseSettings):
             raise ValueError("APP_ENV must be development, test, or production")
         return normalized
 
+    @field_validator("KNOWLEDGE_PROVIDER")
+    @classmethod
+    def validate_knowledge_provider(cls, value: str) -> str:
+        normalized = str(value).strip().lower()
+        if normalized not in {"local_pgvector", "cognia"}:
+            raise ValueError("KNOWLEDGE_PROVIDER must be local_pgvector or cognia")
+        return normalized
+
+    @field_validator("COGNIA_KNOWLEDGE_BASE_IDS")
+    @classmethod
+    def validate_cognia_knowledge_base_ids(cls, value: List[int]) -> List[int]:
+        normalized: List[int] = []
+        for raw in value:
+            item = int(raw)
+            if item <= 0:
+                raise ValueError("COGNIA_KNOWLEDGE_BASE_IDS must contain positive IDs")
+            if item not in normalized:
+                normalized.append(item)
+        return normalized
+
     @field_validator("LOG_ROTATION_MODE")
     @classmethod
     def validate_log_rotation_mode(cls, value: str) -> str:
@@ -216,6 +245,37 @@ class Settings(BaseSettings):
         if "platform.core" not in normalized:
             raise ValueError("Elastic MCP namespaces must include platform.core for deterministic ES|QL Evidence")
         return normalized
+
+    @model_validator(mode="after")
+    def validate_cognia_contract(self) -> "Settings":
+        if self.COGNIA_TIMEOUT_SECONDS <= 0:
+            raise ValueError("COGNIA_TIMEOUT_SECONDS must be positive")
+        if self.COGNIA_CONTEXT_PROFILE_ID is not None and self.COGNIA_CONTEXT_PROFILE_ID <= 0:
+            raise ValueError("COGNIA_CONTEXT_PROFILE_ID must be positive when configured")
+
+        if self.KNOWLEDGE_PROVIDER == "cognia":
+            missing = [
+                name
+                for name, value in {
+                    "COGNIA_BASE_URL": self.COGNIA_BASE_URL,
+                    "COGNIA_CLIENT_ID": self.COGNIA_CLIENT_ID,
+                    "COGNIA_CLIENT_SECRET": self.COGNIA_CLIENT_SECRET,
+                }.items()
+                if not str(value or "").strip()
+            ]
+            if not self.COGNIA_KNOWLEDGE_BASE_IDS:
+                missing.append("COGNIA_KNOWLEDGE_BASE_IDS")
+            if missing:
+                raise ValueError("Cognia provider requires: " + ", ".join(missing))
+
+        if self.APP_ENV == "production" and self.KNOWLEDGE_REQUIRE_GOVERNANCE_PRODUCTION:
+            if self.KNOWLEDGE_PROVIDER != "cognia":
+                raise ValueError("production governed knowledge requires KNOWLEDGE_PROVIDER=cognia")
+            if urlparse(str(self.COGNIA_BASE_URL or "")).scheme != "https":
+                raise ValueError("COGNIA_BASE_URL must use HTTPS in production")
+            if not self.COGNIA_TLS_VERIFY:
+                raise ValueError("COGNIA_TLS_VERIFY must be enabled in production")
+        return self
 
     model_config = SettingsConfigDict(
         env_file=(".env.example", ".env"),
