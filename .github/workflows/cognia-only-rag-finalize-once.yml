@@ -5,6 +5,7 @@ on:
     branches: [ fix/cognia-only-rag ]
     paths:
       - '.github/workflows/cognia-only-rag-finalize-once.yml'
+      - 'scripts/cognia_only_rag_finalize_retry.py'
 
 permissions:
   contents: write
@@ -20,7 +21,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: Apply Cognia-only RAG architecture patch
-        run: python scripts/cognia_only_rag_finalize.py
+        run: python scripts/cognia_only_rag_finalize_retry.py
       - name: Syntax-check patched Python
         run: python -m compileall -q agents apps database domain integrations knowledge memory scripts tests
       - name: Commit product changes
