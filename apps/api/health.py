@@ -99,14 +99,23 @@ async def _probe_external() -> dict:
         "elasticsearch_mcp": ElasticsearchMCPClient(),
         "prometheus_mcp": PrometheusMCPClient(),
     }
+    static: dict = {}
     if settings.KUBERNETES_MCP_URL:
         connectors["kubernetes_mcp"] = KubernetesMCPClient()
     if settings.VM_MCP_URL:
         connectors["vm_mcp"] = VMEdgeMCPClient()
     if settings.KNOWLEDGE_PROVIDER == "cognia":
-        connectors["cognia"] = CogniaClient()
+        if settings.COGNIA_BASE_URL:
+            try:
+                connectors["cognia"] = CogniaClient()
+            except Exception as exc:
+                static["cognia"] = {"healthy": False, "configured": False, "error": type(exc).__name__}
+                DEPENDENCY_UP.labels(dependency="cognia").set(0)
+        else:
+            static["cognia"] = {"healthy": False, "configured": False, "error": "not_configured"}
+            DEPENDENCY_UP.labels(dependency="cognia").set(0)
     pairs = await asyncio.gather(*(_probe_one(name, client) for name, client in connectors.items()))
-    return dict(pairs)
+    return {**dict(pairs), **static}
 
 
 def _external_required_ready(external: dict) -> bool:

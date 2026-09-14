@@ -124,3 +124,11 @@ def test_rate_limits_are_not_hardcoded_in_runtime_module():
     assert "settings.RATE_LIMIT_STRICT_REQUESTS" in source
     assert "settings.RATE_LIMIT_LOOSE_REQUESTS" in source
     assert "settings.RATE_LIMIT_WINDOW_SECONDS" in source
+
+
+
+def test_cognia_client_application_id_is_distinct_and_dev_template_stays_non_secret():
+    values = _template_values()
+    assert values["KNOWLEDGE_PROVIDER"] == "local_pgvector"
+    assert "COGNIA_CLIENT_APPLICATION_ID" in values
+    assert values["COGNIA_CLIENT_APPLICATION_ID"] == ""

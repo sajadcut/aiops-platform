@@ -16,8 +16,8 @@ This file is traceability evidence, not a replacement for `MASTER.md`. It distin
 - Governed Linux VM execution boundary exists: read-only VM telemetry plus high-risk governed VM actions through the MCP/Edge trust boundary.
 - Incident remediation supports request → durable approval → governed execution → fresh post-action verification.
 - Remediation dry-run and action allow-listing are enforced at the API/execution boundary.
-- Governed Knowledge RAG now has a provider boundary: local PostgreSQL/pgvector remains for development/test compatibility while Cognia is the required production provider when `KNOWLEDGE_REQUIRE_GOVERNANCE_PRODUCTION=true`.
-- Cognia integration implements Application Client machine authentication, opaque access-token lifecycle, explicit KB IDs, Search Chunk traceability, optional Context Generation, typed upstream failures and no hidden fallback to local Knowledge.
+- Cognia is now the canonical Governed Knowledge RAG. local PostgreSQL/pgvector Knowledge remains only for deterministic development/test compatibility; Operational Memory remains PostgreSQL/pgvector.
+- Cognia integration implements Application Client machine authentication, separate numeric Client Application Scope identity, opaque access-token lifecycle, explicit KB IDs, registration/idempotency, candidate Revision concurrency, Search Chunk traceability, optional Context Generation, typed upstream failures and no hidden fallback to local Knowledge.
 - Operational Memory remains independent in PostgreSQL/pgvector and is not moved into Cognia.
 
 ## Current implementation evidence
@@ -29,7 +29,7 @@ This file is traceability evidence, not a replacement for `MASTER.md`. It distin
 | PostgreSQL persistence | SQLAlchemy + governance/workflow/incident migrations | PASS (repository); target HA/DR acceptance pending |
 | pgvector | vector model + extension/type/dimension validation; retained for Operational Memory/local development RAG | PASS (repository); target DB validation pending |
 | Knowledge RAG abstraction | `KnowledgeRAGService` provider boundary + provider-aware traceability contract | PASS (repository) |
-| Cognia governed Knowledge | Application Client auth + Search + optional Context + readiness + fail-closed configuration | PASS (repository contract); **REAL ENV REQUIRED** for target Cognia acceptance |
+| Cognia governed Knowledge | Canonical RAG: Application Client auth + authoring/Revision + Search + optional Context + readiness + fail-closed/no-fallback | PASS (repository contract); **REAL ENV REQUIRED** for target Cognia acceptance |
 | Operational Memory | service + namespace + E2E write-back, separate from Knowledge RAG | PASS (repository) |
 | Context Builder | IncidentContext + normalization + MCP-backed EvidenceCollector | PASS |
 | Evidence | Zabbix + Elastic Agent Builder MCP + Prometheus + optional K8s/VM MCP aggregation | PASS (repository); target endpoint acceptance pending |

@@ -47,6 +47,7 @@ class Settings(BaseSettings):
     COGNIA_BASE_URL: Optional[str] = Field(...)
     COGNIA_CLIENT_ID: Optional[str] = Field(...)
     COGNIA_CLIENT_SECRET: Optional[str] = Field(...)
+    COGNIA_CLIENT_APPLICATION_ID: Optional[int] = Field(...)
     COGNIA_KNOWLEDGE_BASE_IDS: List[int] = Field(...)
     COGNIA_CONTEXT_PROFILE_ID: Optional[int] = Field(...)
     COGNIA_TIMEOUT_SECONDS: int = Field(...)
@@ -259,8 +260,14 @@ class Settings(BaseSettings):
             raise ValueError("COGNIA_TIMEOUT_SECONDS must be positive")
         if self.COGNIA_CONTEXT_PROFILE_ID is not None and self.COGNIA_CONTEXT_PROFILE_ID <= 0:
             raise ValueError("COGNIA_CONTEXT_PROFILE_ID must be positive when configured")
+        if self.COGNIA_CLIENT_APPLICATION_ID is not None and self.COGNIA_CLIENT_APPLICATION_ID <= 0:
+            raise ValueError("COGNIA_CLIENT_APPLICATION_ID must be positive when configured")
 
-        if self.KNOWLEDGE_PROVIDER == "cognia":
+        # Cognia is the canonical Knowledge provider. Development/test may load
+        # the non-secret template without real Cognia credentials; invoking the
+        # provider while unconfigured still fails in CogniaClient. Production is
+        # strictly fail-closed and requires the complete machine identity/KB set.
+        if self.KNOWLEDGE_PROVIDER == "cognia" and self.APP_ENV == "production":
             missing = [
                 name
                 for name, value in {

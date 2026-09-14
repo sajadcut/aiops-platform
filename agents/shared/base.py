@@ -360,6 +360,10 @@ class BaseAgent(ABC):
     def auxiliary_context(cls, input_data: AgentInput) -> Dict[str, Any]:
         return {
             "knowledge_rag": cls.knowledge_items(input_data),
+            "knowledge_status": (
+                input_data.context.get("knowledge_status", {"status": "unknown"})
+                if input_data.context else {"status": "unknown"}
+            ),
             "operational_memory": cls.memory_items(input_data),
             "policy": "auxiliary_only_not_live_evidence",
         }

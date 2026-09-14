@@ -29,6 +29,7 @@ from apps.rag_service import KnowledgeRAGService
 from apps.verification_service import VerificationEngine
 from domain.contracts.config import settings
 from domain.contracts.logging import logger
+from integrations.cognia import CogniaAPIError, CogniaConfigurationError, CogniaContractError
 from integrations.elasticsearch.mcp_client import ElasticsearchMCPClient
 from integrations.llm.base import LLMAdapter
 from integrations.llm.openai_compatible import configured_llm_adapter
@@ -55,6 +56,7 @@ class E2EState(TypedDict, total=False):
     final_plan: str
     confidence: float
     knowledge_results: List[Dict[str, Any]]
+    knowledge_status: Dict[str, Any]
     memory_results: List[Dict[str, Any]]
     live_evidence: Dict[str, Any]
     evaluation: Dict[str, Any]
@@ -135,22 +137,110 @@ class E2EOrchestrator:
             metadata=metadata,
         )
 
+    @staticmethod
+    def _knowledge_failure_status(exc: Exception) -> Dict[str, Any]:
+        if isinstance(exc, CogniaConfigurationError):
+            return {"provider": "cognia", "status": "misconfigured", "code": str(exc)}
+        if isinstance(exc, CogniaContractError):
+            return {"provider": "cognia", "status": "invalid_contract", "code": str(exc)}
+        if isinstance(exc, CogniaAPIError):
+            if exc.status_code == 401:
+                status = "authentication_failed"
+            elif exc.status_code == 403:
+                status = "forbidden"
+            elif exc.status_code == 404:
+                # Cognia intentionally does not distinguish a hidden KB from a
+                # genuinely missing KB for the consumer.
+                status = "not_accessible"
+            elif exc.status_code in {429, 502, 503, 504}:
+                status = "unavailable"
+            else:
+                status = "error"
+            result: Dict[str, Any] = {
+                "provider": "cognia",
+                "status": status,
+                "code": exc.code,
+                "http_status": exc.status_code,
+            }
+            if exc.trace_id:
+                result["trace_id"] = exc.trace_id
+            return result
+        return {"provider": settings.KNOWLEDGE_PROVIDER, "status": "error", "code": type(exc).__name__}
+
     async def _context_node(self, state: E2EState) -> E2EState:
         state["current_node"] = "context"
         context = dict(state.get("context", {}))
         service = state.get("service_name") or context.get("service") or "unknown"
+        query = str(context.get("incident", {}).get("summary") or state.get("evidence_summary") or service)
         state["knowledge_results"] = []
+        state["knowledge_status"] = {
+            "provider": settings.KNOWLEDGE_PROVIDER,
+            "status": "not_queried",
+            "count": 0,
+        }
         state["memory_results"] = []
-        if self.db is not None:
-            query = str(context.get("incident", {}).get("summary") or state.get("evidence_summary") or service)
+
+        scope_context: Optional[Dict[str, Any]] = None
+        subject = context.get("knowledge_subject")
+        subject_error: Optional[str] = None
+        if subject is not None:
+            if not isinstance(subject, dict):
+                subject_error = "knowledge_subject_must_be_object"
+            else:
+                namespace = str(subject.get("namespace") or "").strip()
+                external_subject_id = str(
+                    subject.get("externalSubjectId") or subject.get("external_subject_id") or ""
+                ).strip()
+                if not namespace or not external_subject_id:
+                    subject_error = "knowledge_subject_requires_namespace_and_externalSubjectId"
+                elif settings.COGNIA_CLIENT_APPLICATION_ID is None:
+                    subject_error = "cognia_client_application_id_required_for_subject_scope"
+                else:
+                    scope_context = {
+                        "clientApplicationId": settings.COGNIA_CLIENT_APPLICATION_ID,
+                        "subjectNamespace": namespace,
+                        "externalSubjectId": external_subject_id,
+                    }
+
+        can_query_knowledge = settings.KNOWLEDGE_PROVIDER == "cognia" or self.db is not None
+        if subject_error:
+            state["knowledge_status"] = {
+                "provider": settings.KNOWLEDGE_PROVIDER,
+                "status": "invalid_scope",
+                "code": subject_error,
+                "count": 0,
+            }
+        elif can_query_knowledge:
             try:
                 state["knowledge_results"] = await KnowledgeRAGService(self.db).search(
                     query,
                     limit=settings.AGENT_MAX_AUXILIARY_CONTEXT_ITEMS,
                     min_similarity=0.5,
+                    scope_context=scope_context,
                 )
+                state["knowledge_status"] = {
+                    "provider": settings.KNOWLEDGE_PROVIDER,
+                    "status": "available" if state["knowledge_results"] else "empty",
+                    "count": len(state["knowledge_results"]),
+                }
             except Exception as exc:
-                logger.warning(f"RAG retrieval failed: {exc}")
+                state["knowledge_status"] = self._knowledge_failure_status(exc)
+                state["knowledge_status"]["count"] = 0
+                logger.warning(
+                    "knowledge_rag_retrieval_failed",
+                    provider=state["knowledge_status"].get("provider"),
+                    status=state["knowledge_status"].get("status"),
+                    code=state["knowledge_status"].get("code"),
+                )
+        else:
+            state["knowledge_status"] = {
+                "provider": settings.KNOWLEDGE_PROVIDER,
+                "status": "misconfigured",
+                "code": "local_pgvector_database_session_required",
+                "count": 0,
+            }
+
+        if self.db is not None:
             try:
                 state["memory_results"] = await OperationalMemoryService(self.db).search_similar(
                     query,
@@ -159,14 +249,17 @@ class E2EOrchestrator:
                     min_similarity=0.5,
                 )
             except Exception as exc:
-                logger.warning(f"Memory retrieval failed: {exc}")
+                logger.warning("operational_memory_retrieval_failed", error_type=type(exc).__name__)
+
         try:
             since = datetime.now(timezone.utc) - timedelta(seconds=settings.AGENT_INITIAL_EVIDENCE_WINDOW_SECONDS)
             state["live_evidence"] = await self.evidence_collector.collect(service, since)
         except Exception as exc:
-            logger.warning(f"Live evidence collection failed: {exc}")
-            state["live_evidence"] = {"service": service, "evidence": [], "error": str(exc)}
+            logger.warning("live_evidence_collection_failed", error_type=type(exc).__name__)
+            state["live_evidence"] = {"service": service, "evidence": [], "error": type(exc).__name__}
+
         context["knowledge_results"] = state["knowledge_results"]
+        context["knowledge_status"] = state["knowledge_status"]
         context["memory_results"] = state["memory_results"]
         context["live_evidence"] = state["live_evidence"]
         context["evidence"] = state["live_evidence"].get("evidence", [])
@@ -178,6 +271,7 @@ class E2EOrchestrator:
             "context_loaded",
             state,
             knowledge_count=len(state["knowledge_results"]),
+            knowledge_status=state["knowledge_status"],
             memory_count=len(state["memory_results"]),
             evidence_count=len(state["live_evidence"].get("evidence", [])),
         )

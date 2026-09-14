@@ -145,3 +145,11 @@ The repository history previously contained credential-like values. Removing `.e
 4. Add production validation when a dangerous value could become active.
 5. Update this inventory and tests.
 6. Do not introduce direct `os.getenv()` configuration paths or shell-only mandatory setup.
+
+## Cognia canonical Knowledge RAG
+
+Cognia is the canonical Governed Knowledge RAG. `KNOWLEDGE_PROVIDER=cognia` is mandatory for governed Production. The tracked non-secret development template uses `local_pgvector` only so a clean checkout does not require real Cognia credentials. Production requires HTTPS, TLS verification, machine `COGNIA_CLIENT_ID`/`COGNIA_CLIENT_SECRET` and explicit `COGNIA_KNOWLEDGE_BASE_IDS`.
+
+`COGNIA_CLIENT_APPLICATION_ID` is a numeric Cognia Scope identity and is **not** the same value as the machine-auth `COGNIA_CLIENT_ID`. External Subject must come from an explicit upstream contract and is never inferred from a service/customer name. `COGNIA_CONTEXT_PROFILE_ID` is optional until a profile is provisioned.
+
+If Cognia is outside the Kubernetes cluster, default-deny networking requires an infrastructure-managed allowlisted HTTPS/FQDN/proxy egress path. Do not widen the application NetworkPolicy to unrestricted Internet egress.

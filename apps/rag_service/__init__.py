@@ -16,9 +16,9 @@ from integrations.cognia import CogniaClient, CogniaContractError
 class KnowledgeRAGService:
     """Provider-neutral governed Knowledge RAG boundary.
 
-    ``local_pgvector`` remains available for development/test fixtures. Cognia is
-    the production governed provider when production knowledge governance is
-    enabled. Operational Memory remains a separate local concern.
+    Cognia is the canonical Governed Knowledge provider. ``local_pgvector`` is
+    retained only for deterministic development/test and historical compatibility.
+    Operational Memory remains an independent PostgreSQL + pgvector concern.
     """
 
     def __init__(self, db: Optional[AsyncSession]):
@@ -261,6 +261,76 @@ class KnowledgeRAGService:
 
         logger.info(f"Governed local RAG search returned {len(documents)} documents")
         return documents
+
+    async def register_knowledge(
+        self,
+        *,
+        knowledge_base_id: int,
+        title: str,
+        content: str,
+        scope: Dict[str, Any],
+        knowledge_type: str = "text",
+        tag_ids: Optional[List[int]] = None,
+        category_ids: Optional[List[int]] = None,
+        metadata: Optional[Dict[str, str]] = None,
+        idempotency_key: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        if self.provider != "cognia":
+            raise RuntimeError("governed_knowledge_authoring_requires_cognia")
+        if int(knowledge_base_id) not in settings.COGNIA_KNOWLEDGE_BASE_IDS:
+            raise ValueError("cognia_knowledge_base_not_configured_for_aiops")
+        async with CogniaClient() as client:
+            return await client.register_knowledge(
+                knowledge_base_id=knowledge_base_id,
+                title=title,
+                content=content,
+                scope=scope,
+                knowledge_type=knowledge_type,
+                tag_ids=tag_ids,
+                category_ids=category_ids,
+                metadata=metadata,
+                idempotency_key=idempotency_key,
+            )
+
+    async def create_revision(
+        self,
+        *,
+        knowledge_base_id: int,
+        knowledge_id: int,
+        expected_current_candidate_revision_id: Optional[int],
+        title: str,
+        content: str,
+        tag_ids: Optional[List[int]] = None,
+        category_ids: Optional[List[int]] = None,
+        metadata: Optional[Dict[str, str]] = None,
+    ) -> Dict[str, Any]:
+        if self.provider != "cognia":
+            raise RuntimeError("governed_knowledge_revision_requires_cognia")
+        if int(knowledge_base_id) not in settings.COGNIA_KNOWLEDGE_BASE_IDS:
+            raise ValueError("cognia_knowledge_base_not_configured_for_aiops")
+        async with CogniaClient() as client:
+            return await client.create_revision(
+                knowledge_base_id=knowledge_base_id,
+                knowledge_id=knowledge_id,
+                expected_current_candidate_revision_id=expected_current_candidate_revision_id,
+                title=title,
+                content=content,
+                tag_ids=tag_ids,
+                category_ids=category_ids,
+                metadata=metadata,
+            )
+
+    async def get_processing_status(
+        self, *, knowledge_base_id: int, knowledge_id: int, revision_id: int
+    ) -> Dict[str, Any]:
+        if self.provider != "cognia":
+            raise RuntimeError("governed_knowledge_processing_status_requires_cognia")
+        async with CogniaClient() as client:
+            return await client.get_processing_status(
+                knowledge_base_id=knowledge_base_id,
+                knowledge_id=knowledge_id,
+                revision_id=revision_id,
+            )
 
     async def generate_context(
         self,

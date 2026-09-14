@@ -1,46 +1,39 @@
-# ADR-018 — Cognia as the Governed Production Knowledge RAG Provider
+# ADR-018 — Cognia as the Canonical Governed Knowledge RAG
 
-**Status:** ACCEPTED FOR INTEGRATION / REQUIRES REAL ENV ACCEPTANCE
+**Status:** ACCEPTED / CANONICAL; REAL ENV ACCEPTANCE REQUIRED
 
 ## Context
 
-The original MVP Knowledge RAG implementation stores governed documents and embeddings in PostgreSQL + pgvector. The project also deliberately keeps Operational Memory separate from Knowledge RAG and treats live operational Evidence as the source of truth.
-
-The organization-provided Cognia v1 consumer contract introduces an external governed Knowledge platform with Application Client identity, explicit Knowledge Base permissions, immutable Revisions, Active/Candidate lifecycle, Search over active Chunk results, Scope/External Subject isolation and Context Generation.
+Cognia v1 provides the organization-managed Knowledge boundary: Application Client machine identity, Knowledge Base grants, immutable Knowledge/Revision lifecycle, processing/activation, Scope/External Subject isolation, Search over Current Active Revision chunks and Context Generation. Live operational Evidence remains the AIOps truth source and Operational Memory remains separate.
 
 ## Decision
 
-1. `KnowledgeRAGService` remains the AIOps abstraction. Callers do not depend directly on Cognia HTTP shapes.
-2. `local_pgvector` remains the development/test and historical MVP Knowledge provider.
-3. When production Knowledge governance is required, `KNOWLEDGE_PROVIDER=cognia` is mandatory. There is no hidden fallback from Cognia to local pgvector.
-4. Operational Memory remains PostgreSQL + pgvector. Cognia does not replace incident-memory persistence.
-5. Cognia access uses Application Client Machine Authentication only. Human username/password credentials are forbidden in the AIOps service.
-6. Cognia access tokens are opaque. The integration caches them only according to the returned `expiresIn`; it never decodes or assumes JWT semantics.
-7. Search always supplies an explicit configured Knowledge Base ID list. Cognia remains authoritative for effective `kb.read`, Scope and Client Application isolation.
-8. A Cognia Search result is modeled as a traceable Chunk reference: Knowledge Base, Knowledge, Revision, Revision Number and Chunk ID are preserved. `relevanceScore` is retrieval relevance only and must not be used as factual confidence or operational Evidence confidence.
-9. Search dependency/index failures remain explicit provider failures. AIOps does not convert them into an empty successful Knowledge result and does not query local Knowledge as a fallback.
-10. Cognia Context Generation is exposed as an optional provider capability. Its Context Package is auxiliary material for a downstream Agent/LLM; it is not itself the final answer and `HTTP 200` with `isSufficient=false` remains an insufficient Context result.
-11. The legacy `add_document()` path is not reused for Cognia authoring because it lacks mandatory governed inputs such as explicit Knowledge Base, Scope and Idempotency semantics. Any future Cognia authoring integration must implement the Cognia registration/revision contract explicitly rather than infer these values.
-12. Cognia consumer V1 does not expose Knowledge delete; the AIOps Cognia provider therefore must not emulate delete through another channel.
+1. Cognia is the canonical and primary Governed Knowledge RAG for AIOps Production. `local_pgvector` Knowledge is development/test and historical compatibility only.
+2. `KnowledgeRAGService` remains the internal AIOps abstraction so agents/workflows do not depend on raw Cognia HTTP shapes.
+3. Backend integration uses Cognia Client Application Machine Authentication only. Human username/password credentials are forbidden in AIOps runtime.
+4. Machine access tokens are opaque, cached only within returned `expiresIn`, and never decoded as JWTs. Machine auth has no refresh-token flow; expiry causes re-authentication with client credentials.
+5. `clientId/clientSecret` are machine credentials. Numeric `clientApplicationId` is the Cognia Scope identity. They are separate values and must not be inferred from one another.
+6. Search supplies explicit configured KB IDs and Cognia owns effective `kb.read`. Authorization is all-or-nothing; AIOps never silently removes an unauthorized KB.
+7. Search consumes only Current Active Revision chunks. AIOps preserves KB/Knowledge/Revision/Chunk traceability. `relevanceScore` is retrieval relevance, not factual or operational confidence.
+8. There is no hidden fallback from Cognia to local pgvector. Successful zero results are `empty`; provider/auth/index/dependency failures are separate typed states and are audit-visible.
+9. Cognia outage does not make RAG an authority over Incident handling: reasoning may continue on fresh Live Evidence, but it must carry explicit Knowledge-provider degradation and may require human review according to downstream policy.
+10. External Subject is accepted only from an explicit stable contract. AIOps does not infer Namespace/ExternalSubjectId from a service/customer display name. Machine scoped requests must match the configured numeric Client Application ID.
+11. Context Generation is an auxiliary governed package, not a final LLM answer. `HTTP 200` with `isSufficient=false` remains insufficient context; `CONTEXT_INSUFFICIENT_KNOWLEDGE` remains an explicit provider error where the profile uses failGeneration.
+12. Cognia authoring is explicit: registration uses a configured KB, explicit Scope and optional Idempotency-Key. Automatic transient retry is permitted only when Idempotency-Key makes registration replay-safe.
+13. Candidate Revision always sends `expectedCurrentCandidateRevisionId`. A 409 concurrency conflict is not blindly retried; caller must re-read current state and make a new decision.
+14. Machine Client does not automate human Approve/Reject decisions. AIOps does not emulate Cognia Knowledge delete because the consumer v1 contract does not expose it.
+15. PostgreSQL remains AIOps platform persistence. pgvector remains the Operational Memory semantic retrieval layer.
 
-## Production security boundary
+## Security and deployment
 
-- Environment-specific Cognia base URL must use HTTPS.
-- TLS verification must remain enabled.
-- `clientSecret` and access tokens are secrets and must not enter source, logs, audit metadata, prompts or committed manifests.
-- Explicit Cognia KB IDs are configuration, not model-generated values.
-- Cognia RAG remains auxiliary. It cannot authorize remediation, override Policy/Approval, or replace fresh operational Evidence.
-- Cognia is not routed through the operational MCP boundary: it is a governed Knowledge service, not an operational tool/control-plane actuator. Its own Machine Authentication and KB/Scope authorization remain authoritative.
+- Production Cognia endpoint must be HTTPS and certificate verification stays enabled.
+- `COGNIA_CLIENT_SECRET` and access tokens are secrets and must be redacted from logs/audit/prompts and injected from the deployment secret store.
+- KB IDs, Client Application ID and Context Profile ID are explicit configuration, never model-generated authority.
+- Default-deny Kubernetes networking remains in force. If Cognia is external to the cluster, platform infrastructure must provide a narrowly allowlisted HTTPS/FQDN/proxy egress path; the application must not open broad `0.0.0.0/0` egress.
+- Production readiness treats Cognia as required because it is the canonical Knowledge dependency.
 
-## Failure semantics
+## Acceptance
 
-- Cognia transport or documented Search availability failures are surfaced as Knowledge-provider unavailability.
-- Invalid upstream response shapes are surfaced as provider contract errors.
-- Authentication/authorization failures of the AIOps Application Client are treated as integration/provider failures, not as the end user's AIOps authentication result.
-- Incident analysis may continue using live Evidence when auxiliary Knowledge is unavailable, but it must not silently substitute a different Knowledge provider.
+Repository tests must cover opaque-token lifecycle, re-auth, Search traceability, all-or-nothing request construction, no fallback, problem+json status/code handling, authoring idempotency, Scope anti-spoof, optimistic concurrency/no blind retry, Context sufficiency and secret/config fail-closed behavior.
 
-## Acceptance required before Production PASS
-
-Repository tests can prove request/response mapping, opaque token behavior, typed failures, no-fallback behavior and traceability mapping. Production acceptance still requires a real non-production Cognia Application Client, real KB grants, HTTPS endpoint, Search against assigned KBs, Scope/External Subject tests, unavailable-index/dependency behavior, Context Generation (if used), credential rotation and observability evidence.
-
-Until that real integration evidence exists, Cognia integration is **implemented but not production-proven**.
+Production PASS still requires real non-production Cognia evidence: approved HTTPS endpoint, Application Client credential rotation, exact KB grants, positive/negative Search authorization, General/ClientApplication/ExternalSubject scope tests where used, registration → processing → Activated → Search, index/dependency outage behavior, and Context Profile/sufficiency tests if Context Generation is enabled.

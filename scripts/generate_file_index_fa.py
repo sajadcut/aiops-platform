@@ -59,7 +59,7 @@ def classify(path: str) -> tuple[str, str, str, str, str, str]:
         "apps/mcp_server/": ("MCP", "MCP server داخلی برای expose ابزارهای کنترل‌شده", "MCP clients", "provider adapters/security", "capability boundary"),
         "apps/memory_service/": ("Memory", "Operational Memory retrieval/write-back", "Workflow/agents/API", "pgvector/embeddings", "جای live evidence را نمی‌گیرد"),
         "apps/orchestrator/": ("Workflow", "LangGraph orchestration، routing، resume و collaboration", "API/signal gateway", "agents/context/decision/approval", "مسیر E2E durable"),
-        "apps/rag_service/": ("RAG", "Knowledge RAG با governance و vector retrieval", "Workflow/agents/API", "pgvector/embedding", "دانش رسمی، جدا از memory"),
+        "apps/rag_service/": ("RAG", "Knowledge RAG canonical با Cognia Search/Context/authoring contract", "Workflow/agents/API", "Cognia + provider contract", "دانش رسمی، جدا از memory و live Evidence"),
         "apps/runbook_service/": ("Runbook", "Registry/Executor runbookهای allow-listed", "API/execution workflow", "domain/runbooks/execution", "اجرای کنترل‌شده"),
         "apps/security/": ("Security", "Authentication، OIDC/JWT و RBAC", "FastAPI dependencies", "OIDC/config", "security boundary"),
         "apps/signal_gateway/": ("Signal", "ورود، normalization، correlation و dedupe سیگنال", "API/webhooks", "incident repository/context", "ابتدای Incident flow"),
@@ -108,6 +108,8 @@ def classify(path: str) -> tuple[str, str, str, str, str, str]:
         return ("Python", "مدل/Schema/قواعد دامنه AIOps", "apps/*", "Pydantic/SQLAlchemy", "Runtime", "مدل مشترک لایه‌ها")
 
     if path.startswith("integrations/"):
+        if path.startswith("integrations/cognia/"):
+            return ("Python", "Cognia canonical Governed Knowledge client: machine auth/Search/Context/authoring", "RAG service/readiness", "Cognia HTTP/.env", "Runtime", "opaque token، explicit KB/Scope، no hidden fallback")
         if "mcp_client" in path:
             return ("Python", "MCP client برای ارتباط governed با ابزار بیرونی", "Evidence/Tool layer", "MCP transport/.env", "Runtime", "canonical external-tool path")
         if "/llm/" in path:

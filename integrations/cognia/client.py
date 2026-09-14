@@ -51,6 +51,7 @@ class CogniaClient:
         base_url: Optional[str] = None,
         client_id: Optional[str] = None,
         client_secret: Optional[str] = None,
+        client_application_id: Optional[int] = None,
         timeout_seconds: Optional[float] = None,
         tls_verify: Optional[bool] = None,
         transport: Optional[httpx.AsyncBaseTransport] = None,
@@ -58,6 +59,10 @@ class CogniaClient:
         self.base_url = str(base_url or settings.COGNIA_BASE_URL or "").strip().rstrip("/")
         self.client_id = str(client_id or settings.COGNIA_CLIENT_ID or "").strip()
         self.client_secret = str(client_secret or settings.COGNIA_CLIENT_SECRET or "").strip()
+        configured_app_id = settings.COGNIA_CLIENT_APPLICATION_ID if client_application_id is None else client_application_id
+        self.client_application_id = int(configured_app_id) if configured_app_id is not None else None
+        if self.client_application_id is not None and self.client_application_id <= 0:
+            raise CogniaConfigurationError("cognia_client_application_id_must_be_positive")
         self.timeout_seconds = float(timeout_seconds or settings.COGNIA_TIMEOUT_SECONDS)
         self.tls_verify = settings.COGNIA_TLS_VERIFY if tls_verify is None else bool(tls_verify)
         if not self.base_url:
@@ -115,8 +120,9 @@ class CogniaClient:
         *,
         headers: Optional[Dict[str, str]] = None,
         json_body: Optional[Dict[str, Any]] = None,
+        retry_transient: bool = True,
     ) -> Dict[str, Any]:
-        attempts = max(1, int(settings.RETRY_MAX_ATTEMPTS))
+        attempts = max(1, int(settings.RETRY_MAX_ATTEMPTS)) if retry_transient else 1
         delay = max(0.0, float(settings.RETRY_DELAY_SECONDS))
         backoff = max(1.0, float(settings.RETRY_BACKOFF_FACTOR))
         last_transport_error: Optional[Exception] = None
@@ -190,16 +196,22 @@ class CogniaClient:
         method: str,
         path: str,
         *,
+        headers: Optional[Dict[str, str]] = None,
         json_body: Optional[Dict[str, Any]] = None,
+        retry_transient: bool = True,
     ) -> Dict[str, Any]:
         for auth_attempt in range(2):
             token = await self._machine_access_token(force_refresh=auth_attempt == 1)
+            request_headers = {"Authorization": f"Bearer {token}"}
+            if headers:
+                request_headers.update(headers)
             try:
                 return await self._request_json(
                     method,
                     path,
-                    headers={"Authorization": f"Bearer {token}"},
+                    headers=request_headers,
                     json_body=json_body,
+                    retry_transient=retry_transient,
                 )
             except CogniaAPIError as exc:
                 if exc.status_code == 401 and auth_attempt == 0:
@@ -226,6 +238,179 @@ class CogniaClient:
         if isinstance(payload.get("data"), list):
             return [item for item in payload["data"] if isinstance(item, dict)]
         raise CogniaContractError("cognia_knowledge_base_list_shape_unknown")
+
+    def _assert_own_client_application(self, client_application_id: int) -> int:
+        value = int(client_application_id)
+        if value <= 0:
+            raise ValueError("cognia_client_application_id_must_be_positive")
+        if self.client_application_id is None:
+            raise CogniaConfigurationError("cognia_client_application_id_required_for_scoped_request")
+        if value != self.client_application_id:
+            raise CogniaConfigurationError("cognia_client_application_scope_spoof_rejected")
+        return value
+
+    def _normalize_scope_context(self, scope_context: Dict[str, Any]) -> Dict[str, Any]:
+        client_application_id = self._assert_own_client_application(
+            int(scope_context.get("clientApplicationId") or 0)
+        )
+        result: Dict[str, Any] = {"clientApplicationId": client_application_id}
+        namespace = str(scope_context.get("subjectNamespace") or "").strip()
+        external_subject_id = str(scope_context.get("externalSubjectId") or "").strip()
+        if bool(namespace) != bool(external_subject_id):
+            raise ValueError("cognia_scope_context_subject_requires_namespace_and_externalSubjectId")
+        if namespace:
+            result["subjectNamespace"] = namespace
+            result["externalSubjectId"] = external_subject_id
+        return result
+
+    def _normalize_knowledge_scope(self, scope: Dict[str, Any]) -> Dict[str, Any]:
+        scope_type = str(scope.get("type") or "").strip()
+        if scope_type == "general":
+            return {"type": "general"}
+        if scope_type == "clientApplication":
+            app_id = self._assert_own_client_application(int(scope.get("clientApplicationId") or 0))
+            return {"type": scope_type, "clientApplicationId": app_id}
+        if scope_type == "externalSubject":
+            app_id = self._assert_own_client_application(int(scope.get("clientApplicationId") or 0))
+            namespace = str(scope.get("subjectNamespace") or "").strip()
+            external_subject_id = str(scope.get("externalSubjectId") or "").strip()
+            if not namespace or not external_subject_id:
+                raise ValueError("cognia_external_subject_requires_namespace_and_externalSubjectId")
+            return {
+                "type": scope_type,
+                "clientApplicationId": app_id,
+                "subjectNamespace": namespace,
+                "externalSubjectId": external_subject_id,
+            }
+        raise ValueError("cognia_scope_type_must_be_general_clientApplication_or_externalSubject")
+
+    @staticmethod
+    def _validate_revision_payload(
+        title: str,
+        content: str,
+        tag_ids: Optional[List[int]],
+        category_ids: Optional[List[int]],
+        metadata: Optional[Dict[str, str]],
+    ) -> tuple[str, str, List[int], List[int], Dict[str, str]]:
+        normalized_title = str(title or "").strip()
+        normalized_content = str(content or "")
+        if not normalized_title or len(normalized_title) > 500:
+            raise ValueError("cognia_title_required_and_max_500_codepoints")
+        if not normalized_content or len(normalized_content.encode("utf-8")) > 1024 * 1024:
+            raise ValueError("cognia_content_required_and_max_1mib_utf8")
+        tags = [int(value) for value in (tag_ids or [])]
+        categories = [int(value) for value in (category_ids or [])]
+        if len(tags) > 64 or len(categories) > 64:
+            raise ValueError("cognia_tag_category_limit_64")
+        if any(value <= 0 for value in tags + categories):
+            raise ValueError("cognia_taxonomy_ids_must_be_positive")
+        normalized_metadata = {str(key): str(value) for key, value in (metadata or {}).items()}
+        if len(normalized_metadata) > 64:
+            raise ValueError("cognia_metadata_limit_64")
+        return normalized_title, normalized_content, tags, categories, normalized_metadata
+
+    async def register_knowledge(
+        self,
+        *,
+        knowledge_base_id: int,
+        title: str,
+        content: str,
+        scope: Dict[str, Any],
+        knowledge_type: str = "text",
+        tag_ids: Optional[List[int]] = None,
+        category_ids: Optional[List[int]] = None,
+        metadata: Optional[Dict[str, str]] = None,
+        idempotency_key: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        kb_id = int(knowledge_base_id)
+        if kb_id <= 0:
+            raise ValueError("cognia_knowledge_base_id_must_be_positive")
+        title, content, tags, categories, normalized_metadata = self._validate_revision_payload(
+            title, content, tag_ids, category_ids, metadata
+        )
+        body: Dict[str, Any] = {
+            "knowledgeType": str(knowledge_type or "text"),
+            "title": title,
+            "content": content,
+            "scope": self._normalize_knowledge_scope(scope),
+        }
+        if tags:
+            body["tagIds"] = tags
+        if categories:
+            body["categoryIds"] = categories
+        if normalized_metadata:
+            body["metadata"] = normalized_metadata
+        key = str(idempotency_key or "").strip()
+        headers = {"Idempotency-Key": key} if key else None
+        # Registration is safe to retry only when Cognia's Idempotency-Key
+        # contract is in use. Without it, a transport retry could duplicate data.
+        return await self._authorized_json(
+            "POST",
+            f"/api/engine/knowledge-bases/{kb_id}/knowledge",
+            headers=headers,
+            json_body=body,
+            retry_transient=bool(key),
+        )
+
+    async def get_knowledge_detail(self, *, knowledge_base_id: int, knowledge_id: int) -> Dict[str, Any]:
+        return await self._authorized_json(
+            "GET",
+            f"/api/engine/knowledge-bases/{int(knowledge_base_id)}/knowledge/{int(knowledge_id)}",
+        )
+
+    async def create_revision(
+        self,
+        *,
+        knowledge_base_id: int,
+        knowledge_id: int,
+        expected_current_candidate_revision_id: Optional[int],
+        title: str,
+        content: str,
+        tag_ids: Optional[List[int]] = None,
+        category_ids: Optional[List[int]] = None,
+        metadata: Optional[Dict[str, str]] = None,
+    ) -> Dict[str, Any]:
+        kb_id = int(knowledge_base_id)
+        knowledge = int(knowledge_id)
+        if kb_id <= 0 or knowledge <= 0:
+            raise ValueError("cognia_knowledge_identifiers_must_be_positive")
+        title, content, tags, categories, normalized_metadata = self._validate_revision_payload(
+            title, content, tag_ids, category_ids, metadata
+        )
+        expected = (
+            int(expected_current_candidate_revision_id)
+            if expected_current_candidate_revision_id is not None
+            else None
+        )
+        if expected is not None and expected <= 0:
+            raise ValueError("cognia_expected_candidate_revision_id_must_be_positive_or_null")
+        body: Dict[str, Any] = {
+            "expectedCurrentCandidateRevisionId": expected,
+            "title": title,
+            "content": content,
+        }
+        if tags:
+            body["tagIds"] = tags
+        if categories:
+            body["categoryIds"] = categories
+        if normalized_metadata:
+            body["metadata"] = normalized_metadata
+        # Cognia documents optimistic concurrency for candidate creation. A 409
+        # requires re-reading current state; blind/transient retry is forbidden.
+        return await self._authorized_json(
+            "POST",
+            f"/api/engine/knowledge-bases/{kb_id}/knowledge/{knowledge}/revisions",
+            json_body=body,
+            retry_transient=False,
+        )
+
+    async def get_processing_status(
+        self, *, knowledge_base_id: int, knowledge_id: int, revision_id: int
+    ) -> Dict[str, Any]:
+        return await self._authorized_json(
+            "GET",
+            f"/api/engine/knowledge-bases/{int(knowledge_base_id)}/knowledge/{int(knowledge_id)}/revisions/{int(revision_id)}/processing",
+        )
 
     async def search(
         self,
@@ -257,7 +442,7 @@ class CogniaClient:
         if continuation_token:
             request["continuationToken"] = continuation_token
         if scope_context:
-            request["scopeContext"] = dict(scope_context)
+            request["scopeContext"] = self._normalize_scope_context(scope_context)
         if knowledge_type:
             request["knowledgeType"] = str(knowledge_type)
         if tag_ids:

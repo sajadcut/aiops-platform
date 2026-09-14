@@ -1,6 +1,6 @@
 # Production Acceptance Matrix
 
-Baseline: `MASTER.md 2.3`
+Baseline: `MASTER.md 2.4`
 Branch: `main` plus the candidate change under review
 
 ## Repository-level acceptance
@@ -18,8 +18,8 @@ Branch: `main` plus the candidate change under review
 | Runbook governance/dry-run/rollback contracts | PASS | Registry, validator, executor and repository tests; real target execution remains external |
 | Verification | PASS | Independent VerificationEngine + post-execution live evidence collection path |
 | Operational Memory write-back | PASS | E2E write-back after conclusive verification; remains separate from governed Knowledge RAG |
-| Knowledge RAG abstraction | PASS (repo) | Provider-neutral `KnowledgeRAGService`; Cognia mapping preserves KB/Knowledge/Revision/Chunk traceability and local pgvector remains development/test compatibility |
-| Cognia governed Knowledge RAG | REAL ENV REQUIRED | Machine auth, opaque-token lifecycle, explicit KB IDs, typed Search/Context errors and no-fallback behavior are covered in repository tests; real Cognia endpoint/Application Client/KB grants/Scope/Context acceptance is still required |
+| Knowledge RAG abstraction | PASS (repo) | `KnowledgeRAGService` fronts canonical Cognia; KB/Knowledge/Revision/Chunk traceability is preserved and local pgvector is development/test compatibility only |
+| Cognia canonical Governed Knowledge RAG | REAL ENV REQUIRED | Repository covers machine auth, separate Client Application scope ID, opaque-token lifecycle, explicit KBs, authoring idempotency, Revision concurrency, Search/Context errors and no-fallback; real endpoint/Application Client/KB grants/Scope/lifecycle/Context acceptance is still required |
 | PostgreSQL + pgvector migration lifecycle | PASS (CI) | Dedicated CI acceptance validates migrations/pgvector; pgvector remains required for Operational Memory even when Cognia serves governed Knowledge |
 | OIDC/JWT/RBAC | PASS (repo) | Signed JWT/OIDC validation + permission guards; enterprise issuer remains external validation |
 | Rate limiting / API guardrails | PASS | Permission guards + strict rate limiting |

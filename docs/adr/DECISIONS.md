@@ -38,9 +38,9 @@
 
 **Status:** ACCEPTED
 
-**Decision:** pgvector به‌عنوان Vector Search Layer اصلی و یکپارچه با PostgreSQL انتخاب می‌شود.
+**Decision:** pgvector Vector Search Layer اصلی Operational Memory و fixtureهای local development/test است. Governed Knowledge Production از Cognia استفاده می‌کند.
 
-**Rationale:** کاهش پیچیدگی زیرساخت، نگهداری relational + vector data در یک سیستم، مناسب برای MVP و Offline Production.
+**Rationale:** PostgreSQL/pgvector تجربه Incident را نزدیک persistence پلتفرم نگه می‌دارد، در حالی‌که Knowledge governance/lifecycle/authorization به Cognia واگذار می‌شود.
 
 **Constraint:** اضافه‌کردن Vector DB مستقل مانند Qdrant/Weaviate/Milvus نیازمند نیاز عملیاتی اثبات‌شده یا ADR جدید است.
 
@@ -48,11 +48,9 @@
 
 ## ADR-005 — RAG Architecture
 
-**Status:** ACCEPTED
+**Status:** SUPERSEDED BY ADR-018
 
-**Decision:** Knowledge RAG از PostgreSQL + pgvector و یک abstraction لایه بازیابی استفاده می‌کند.
-
-**Purpose:** بازیابی Runbook، Architecture Docs، Procedures و Knowledge تأییدشده.
+**Decision:** Historical MVP used PostgreSQL + pgvector behind a retrieval abstraction. Production Governed Knowledge is now Cognia; local pgvector Knowledge remains dev/test compatibility only.
 
 **Critical Rule:** RAG منبع حقیقت برای Live Production Evidence نیست.
 
@@ -189,6 +187,22 @@
 **Kubernetes:** AI Agent per Pod ممنوع/غیرضروری است. Kubernetes MCP Server می‌تواند کنار control-plane integration service یا Edge DaemonSet مستقر شود؛ reasoning مرکزی باقی می‌ماند.
 
 **Identity target:** Edge/Control-Plane communication باید با bearer/workload identity و ترجیحاً short-lived mTLS محافظت شود؛ provider نهایی با PKI سازمان انتخاب می‌شود.
+
+---
+
+## ADR-018 — Cognia Governed Knowledge RAG
+
+**Status:** ACCEPTED / CANONICAL KNOWLEDGE PROVIDER
+
+**Decision:** Cognia مرجع اصلی Governed Knowledge RAG است. AIOps با Client Application ماشینی به Cognia متصل می‌شود و KB Permission، Knowledge/Revision lifecycle، Scope، Search و Context را از Cognia می‌پذیرد.
+
+**No fallback:** خطای Cognia نباید به Search موفق خالی یا fallback پنهان local pgvector تبدیل شود. Incident reasoning می‌تواند با Live Evidence ادامه یابد، اما وضعیت Knowledge provider باید صریح و audit شود.
+
+**Memory boundary:** Operational Memory همچنان PostgreSQL + pgvector است.
+
+**Authoring:** Registration باید KB/Scope صریح و Idempotency-Key داشته باشد؛ Candidate Revision از optimistic concurrency استفاده می‌کند و 409 blind retry نمی‌شود. Machine Client حق Approve/Reject انسانی ندارد.
+
+**Acceptance:** قرارداد repository قابل تست است؛ endpoint/Client/Grant/Scope/Search/Context واقعی Cognia همچنان REAL ENV REQUIRED است.
 
 ---
 

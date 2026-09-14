@@ -42,7 +42,7 @@ See `docs/BENCHMARK_2026.md` for the benchmark control matrix and `PRODUCTION_AC
 | Execution boundary | allowlisted tools + durable approval where required + signed execution capability bound to complete execution intent | PASS (repo) |
 | Verification | fresh pre-execution baseline + metric-direction-aware before/after | PASS (repo) / PARTIAL per-action SLO coverage |
 | Memory | conclusive outcome gating + successful-pattern retrieval | PASS (repo); false-reuse/scale acceptance pending |
-| Knowledge RAG | governed PostgreSQL+pgvector retrieval with metadata/ACL | PASS (repo); corpus relevance acceptance pending |
+| Knowledge RAG | canonical Cognia machine-auth/Search/Context/authoring contract with full chunk traceability and no hidden fallback | PASS (repo contract); REAL ENV REQUIRED for Cognia endpoint/grants/scope/lifecycle/context acceptance |
 | PostgreSQL persistence | Incident/Evidence/Finding/Approval/Audit/checkpoint/runbook models | PASS |
 | pgvector | schema + migration/database acceptance | PASS in current CI |
 | Workflow durability | application-level PostgreSQL checkpoint/resume | PASS (repo); distributed failover semantics remain |
@@ -104,6 +104,7 @@ For eligible service-error/resource/Kubernetes/availability/security families, s
 
 ## Remaining production blockers / external acceptance
 
+1. Real Cognia Application Client/HTTPS/KB grants plus Search Scope, authoring→Activated lifecycle, outage/no-fallback and optional Context Profile acceptance.
 1. Real Zabbix, Elastic Agent Builder and Prometheus MCP acceptance with representative schemas, metadata, authentication and outage behavior.
 2. Real Kubernetes/VM Edge MCP write acceptance with least privilege, capability replay rejection, rollback and independent verification.
 3. CMDB/service-catalog authoritative identity plus correlation-quality corpus and service-dependency truth.

@@ -5,7 +5,7 @@
 
 | مشخصه | مقدار |
 |---|---|
-| نسخه | **2.3 - Benchmark-driven Production Hardening** |
+| نسخه | **2.4 - Cognia Governed Knowledge RAG** |
 | وضعیت | **Master / Single Source of Truth** |
 | هدف | مرجع واحد برای فهم پروژه، طراحی، پیاده‌سازی، تست و ادامه توسعه |
 | هسته AI | **Python + LangGraph** |
@@ -54,6 +54,7 @@
 - کمینه‌سازی Scope برای MVP از اضافه‌کردن قابلیت‌های نمایشی مهم‌تر است.
 - **Evidence زنده Production مرجع حقیقت است؛ RAG و Memory نمی‌توانند جای آن را بگیرند.**
 - **Operational Memory با Knowledge RAG یکی نیست و باید در مدل، Retrieval و Policy از هم جدا بمانند.**
+- **Cognia مرجع اصلی و canonical برای Governed Knowledge RAG است؛ local PostgreSQL/pgvector مسیر Production Knowledge نیست.**
 
 # 3. معماری مرجع
 
@@ -104,7 +105,7 @@ Verification Engine
 | 4. Operational Context | ساخت Context یک Incident | Context Builder + Service Metadata | Incident Context |
 | 5. AI Brain | Reasoning, Planning, Routing | Python + LangGraph + LLM Gateway | Hypothesis / Plan |
 | 6. Specialized Agents | تحلیل حوزه‌ای | Triage, App, K8s, Infra, Security | Structured Findings |
-| 7. Knowledge RAG | بازیابی دانش ایستا/نیمه‌پویا | **PostgreSQL + pgvector + Retriever + LLM Adapter** | Relevant Knowledge |
+| 7. Knowledge RAG | بازیابی دانش governed و Context | **Cognia Search + Context Generation via Application Client** | Traceable Knowledge Chunks / Context Package |
 | 8. Operational Memory | بازیابی تجربه Incidentهای قبلی | **PostgreSQL + pgvector**؛ Memory Framework مانند Mem0 فقط از طریق Adapter | Reusable Patterns |
 | 9. Decision & Execution | Policy، Approval و Action | Decision Engine + Execution Tools | Action / Result |
 | 10. Verification & Learning | تأیید نتیجه و یادگیری | Verification Engine + Operational Memory | Verified Outcome / Reusable Pattern |
@@ -126,16 +127,21 @@ Verification Engine
 - Operational Memory برای تجربه عملیاتی ثبت‌شده استفاده می‌شود.
 - Memory یا RAG نباید به‌تنهایی مبنای Write Action در Production قرار گیرد.
 - اگر Memory با Evidence فعلی تعارض داشته باشد، **Evidence فعلی اولویت دارد**.
-- برای MVP، **PostgreSQL + pgvector** لایه پایه Vector Search برای Knowledge RAG و Operational Memory است. Mem0 اختیاری است و فقط از طریق Adapter قابل استفاده خواهد بود.
+- **Cognia** مرز canonical ثبت، Revision، Approval/Processing lifecycle، Permission، Search و Context برای Governed Knowledge است.
+- **PostgreSQL + pgvector** لایه Semantic Retrieval برای Operational Memory است؛ local Knowledge pgvector فقط fixture توسعه/تست و سازگاری تاریخی است.
+- در خطای Cognia، سیستم حق fallback پنهان به local Knowledge ندارد؛ وضعیت unavailable/forbidden/not-accessible باید از Search موفق با zero result متمایز بماند.
 
-## 5.2 قرارداد Storage و Vector Layer
+## 5.2 قرارداد Storage و Knowledge Layer
 
-- **PostgreSQL** تنها Persistence اصلی پروژه است و داده‌های Relational، Audit، Incident، Runbook، Knowledge و Memory را نگهداری می‌کند.
-- **pgvector** به‌عنوان extension PostgreSQL، Vector Search مشترک Knowledge RAG و Operational Memory را فراهم می‌کند.
-- Embeddingها در PostgreSQL نگهداری می‌شوند و Metadata/ACL/Source Reference کنار آن‌ها باقی می‌ماند تا Retrieval قابل Audit باشد.
-- RAG و Memory باید Namespace/Collection منطقی جدا داشته باشند و Policy دسترسی مستقل داشته باشند، حتی اگر Storage فیزیکی مشترک باشد.
-- **Mem0 در معماری Core اجباری نیست**؛ در صورت انتخاب، از طریق `mem0_adapter` به Operational Memory متصل می‌شود و Domain Contract داخلی پروژه نباید به API اختصاصی Mem0 وابسته شود.
-- Qdrant، Milvus و سایر Vector DBهای مستقل در MVP خارج از Scope هستند؛ فقط با ADR جدید و در صورت اثبات نیاز Scale/Performance اضافه می‌شوند.
+- **PostgreSQL** Persistence اصلی خود پلتفرم برای Incident، Evidence، Finding، Approval، Audit، Workflow Checkpoint، Runbook و Operational Memory است.
+- **pgvector** Vector Search لایه Operational Memory را فراهم می‌کند. جدول/مدل local Knowledge موجود فقط برای fixtureهای توسعه/تست و migration compatibility نگه داشته می‌شود و System of Record دانش Production نیست.
+- **Cognia** System of Record و retrieval boundary دانش governed است: Knowledge Base، Permission، Knowledge/Revision، Processing/Activation، Scope، Search Chunk و Context Profile/Package در Cognia authoritative هستند.
+- AIOps نباید Permission/Activation Cognia را با ACL محلی شبیه‌سازی یا دور بزند و نباید Knowledge Cognia را به‌عنوان fallback خاموش در pgvector mirror کند.
+- Machine integration فقط با Client Application انجام می‌شود؛ `clientId/clientSecret` credential احراز هویت است و `clientApplicationId` شناسه عددی Scope است و این دو نباید با هم یکی فرض شوند.
+- External Subject فقط از contract صریح و پایدار `ClientApplication + Namespace + ExternalSubjectId` ساخته می‌شود؛ AIOps حق حدس‌زدن Subject از نام service/customer را ندارد.
+- Search فقط روی KBهای صریح و با authorization all-or-nothing انجام می‌شود؛ Result واحد Chunk از Active Revision است و `relevanceScore` فقط relevance retrieval است، نه احتمال صحت Fact.
+- Context Package پاسخ نهایی LLM نیست و `HTTP 200 + isSufficient=false` باید به‌عنوان Context ناکافی حفظ شود.
+- **Mem0** در صورت انتخاب فقط Adapter اختیاری Operational Memory است و به Knowledge RAG Cognia مربوط نیست.
 
 # 6. هسته نرم‌افزار و Stack قطعی
 
@@ -152,7 +158,7 @@ Verification Engine
 | .NET | Integration/API در صورت نیاز | اختیاری؛ هسته AI نیست |
 | Container | Docker | قطعی |
 | Target Orchestration | Kubernetes/OpenShift | بعد از MVP یا در صورت نیاز محیط |
-| Knowledge RAG | **PostgreSQL + pgvector + Retriever** | **قطعی برای MVP** |
+| Knowledge RAG | **Cognia Search + Context Generation** | **قطعی / canonical** |
 | Operational Memory | **PostgreSQL + pgvector** | **قطعی برای MVP؛ Memory Framework مانند Mem0 اختیاری** |
 
 # 7. چرا Python + LangGraph؟
@@ -267,7 +273,7 @@ MVP نباید کل دیاگرام را پیاده کند. هدف MVP اثبات
 | Runbooks | حداکثر 3 Runbook کم‌ریسک |
 | Verification | چند Health/Metric/Log Check ثابت |
 | Persistence | **PostgreSQL** |
-| Knowledge RAG | **Runbook/Knowledge محدود و کنترل‌شده؛ PostgreSQL + pgvector** |
+| Knowledge RAG | **Runbook/Knowledge governed در Cognia؛ Search روی Active Revision و Context Profile در صورت provision** |
 | Operational Memory | **PostgreSQL + pgvector؛ Semantic Similarity در MVP** |
 | UI | Dashboard اولیه Incident / Status / Automation Success |
 | Security | RBAC پایه + Audit + Approval |
@@ -316,9 +322,9 @@ MVP نباید کل دیاگرام را پیاده کند. هدف MVP اثبات
 
 ## Phase 3 - Knowledge RAG & Operational Memory
 
-هدف: افزودن دانش و تجربه قابل بازیابی با **PostgreSQL + pgvector** به‌عنوان Vector Layer مشترک.
+هدف: اتصال Governed Knowledge به **Cognia** و نگه‌داشتن تجربه Incident در **PostgreSQL + pgvector Operational Memory**.
 
-**خروجی‌ها:** Knowledge Document model؛ document ingestion؛ chunking؛ embedding generation؛ pgvector extension/schema؛ metadata/filter retrieval؛ Runbook/Architecture retrieval؛ Operational Memory model؛ ثبت Outcome؛ semantic similarity/reuse اولیه.
+**خروجی‌ها:** Cognia Application Client machine auth؛ KB grant/config contract؛ Knowledge registration با Scope/Idempotency؛ immutable Revision و Processing status؛ Search روی Active Chunk با traceability؛ Context Generation در صورت provision Profile؛ Operational Memory model؛ ثبت Outcome؛ pgvector similarity/reuse برای Memory.
 
 **Guardrail:** RAG و Memory فقط Context کمکی هستند؛ Evidence زنده Production مرجع حقیقت باقی می‌ماند.
 
@@ -409,6 +415,7 @@ aiops-platform/
 │   ├── zabbix/
 │   ├── elasticsearch/
 │   ├── prometheus/
+│   ├── cognia/                     # canonical Governed Knowledge RAG client
 │   ├── jenkins/
 │   ├── kubernetes/
 │   ├── vmware/
@@ -499,7 +506,8 @@ aiops-platform/
 | مدل LLM نهایی | باز | از Adapter استفاده شود؛ هیچ Agent نباید مستقیم به یک SDK مدل وابسته باشد. |
 | محل LLM | باز | اولویت با مدل/سرویس قابل دسترس در شبکه داخلی. |
 | Auth/SSO Provider | باز | OIDC/RBAC در کد وجود دارد؛ provider/role mapping نهایی با محیط سازمانی validate شود. |
-| **Vector Store / pgvector** | **قطعی** | **PostgreSQL + pgvector لایه Vector مشترک RAG و Memory در MVP است.** |
+| **Governed Knowledge RAG** | **قطعی** | **Cognia مرجع canonical برای Knowledge/Revision/Permission/Search/Context است.** |
+| **Vector Store / pgvector** | **قطعی برای Memory** | **PostgreSQL + pgvector لایه Semantic Retrieval برای Operational Memory است؛ local Knowledge فقط dev/test compatibility است.** |
 | **Memory framework مانند Mem0** | **اختیاری** | **فقط از طریق Adapter؛ Mem0 نباید dependency اجباری یا API داخلی اصلی پروژه باشد.** |
 | Message Broker / Distributed Worker Queue | باز | در MVP hard-code نشود؛ انتخاب Redis/RabbitMQ/Kafka/Temporal یا گزینه دیگر فقط پس از load/soak evidence و ADR. |
 | MCP | **Selected / Governed only** | MCP transport عمومی Core نیست؛ legacy client non-production است؛ remote MCP نیازمند OAuth 2.1/resource binding/capability policy/Audit و workload identity مناسب است. |
@@ -514,7 +522,8 @@ aiops-platform/
 ADRهای رسمی و شماره‌گذاری جاری در `docs/adr/DECISIONS.md` نگهداری می‌شوند. حداقل تصمیم‌های زیر باید معتبر بمانند:
 
 - Python + LangGraph به‌عنوان AI Core.
-- PostgreSQL + pgvector به‌عنوان Persistence/Vector baseline.
+- PostgreSQL به‌عنوان Persistence پلتفرم و pgvector به‌عنوان Vector baseline Operational Memory.
+- Cognia به‌عنوان canonical Governed Knowledge RAG با no-hidden-fallback semantics.
 - Evidence First و جدایی RAG/Memory از Live Evidence.
 - Execution Boundary و منع write مستقیم توسط Agent/LLM.
 - Approval/Risk/Verification مستقل.
@@ -522,7 +531,7 @@ ADRهای رسمی و شماره‌گذاری جاری در `docs/adr/DECISIONS.
 - MCP فقط selected capability transport و نه جایگزین Tool Registry/Policy/Approval.
 - Hybrid deployment target: reasoning مرکزی + Edge Runtime اختیاری و constrained؛ بدون per-host/per-Pod LLM authority.
 
-# 24. وضعیت فعلی پروژه — 2026-08-26
+# 24. وضعیت فعلی پروژه — 2026-09-14
 
 پیاده‌سازی repository از وضعیت تاریخی Phase 0 عبور کرده است. پروژه اکنون یک **advanced governed AIOps implementation** است، اما هنوز strict Production Accepted نیست. وضعیت عملی فعلی عمدتاً **Phase 6 - Production Hardening** با gapهای باقی‌مانده در Phase 4/5/7 است.
 
@@ -543,7 +552,7 @@ ADRهای رسمی و شماره‌گذاری جاری در `docs/adr/DECISIONS.
 | Decision / Policy / Approval | Implemented with concrete tool/action/target risk binding |
 | Execution | Governed Tool Registry; Linux strongest; adapter breadth partial |
 | Verification | Fresh before/after + metric semantics implemented; per-action SLO objectives partial |
-| Knowledge RAG | Implemented on PostgreSQL + pgvector with governance/ACL metadata |
+| Knowledge RAG | Cognia canonical integration implemented (machine auth/Search/Context/authoring contract/no fallback); real Cognia env acceptance pending |
 | Operational Memory | Implemented separately from RAG; verified-outcome reuse contract |
 | Persistence / Audit | PostgreSQL models/migrations/checkpoints/approval/audit implemented |
 | OIDC / RBAC | Repository implementation exists; enterprise issuer/role acceptance pending |
@@ -564,13 +573,14 @@ ADRهای رسمی و شماره‌گذاری جاری در `docs/adr/DECISIONS.
 - Triage + specialist multi-agent collaboration, RCA and Evaluator gate.
 - Policy/Approval/Execution separation with write authority outside LLM Agents.
 - Governed Linux VM remediation, fresh Verification baseline and verified Memory learning.
-- PostgreSQL + pgvector persistence for Incident/RAG/Memory/governance.
+- PostgreSQL persistence for Incident/governance plus pgvector Operational Memory; Cognia is the canonical Governed Knowledge RAG boundary.
 - OIDC/RBAC repository contract, Audit, CI, offline container and Kubernetes hardening.
 - 2026 benchmark review against NIST/OWASP/MCP/OTel/OPA/SPIFFE/Sigstore and mature operations automation patterns; matrix in `docs/BENCHMARK_2026.md`.
 
 ### 24.2 Next Steps
 
-1. Real Zabbix/Elasticsearch/Prometheus acceptance + CMDB/service catalog mapping.
+1. Real Cognia HTTPS/Application Client/KB grant/Search/Scope acceptance, including outage/no-fallback evidence.
+2. Real Zabbix/Elasticsearch/Prometheus acceptance + CMDB/service catalog mapping.
 2. Correlation corpus benchmark with false-merge/false-split targets and late-signal re-analysis semantics.
 3. Windows constrained Edge/WinRM/JEA telemetry and remediation; no arbitrary PowerShell.
 4. Per-runbook verification objectives/SLOs.
@@ -585,6 +595,7 @@ ADRهای رسمی و شماره‌گذاری جاری در `docs/adr/DECISIONS.
 
 ### 24.3 Open Issues / Production Blockers
 
+- Real Cognia HTTPS endpoint, Application Client identity, KB grants, Scope/Search and optional Context Profile have not yet been externally accepted.
 - Real observability, LLM and remediation endpoints have not been externally accepted in the target restricted network.
 - CMDB/service catalog is not yet authoritative identity source.
 - Windows native execution/telemetry is incomplete.
@@ -619,6 +630,7 @@ ADRهای رسمی و شماره‌گذاری جاری در `docs/adr/DECISIONS.
 | **2.1** | **اصلاح Persistence از SQL Server به PostgreSQL؛ اضافه‌شدن مرزبندی رسمی Evidence / Knowledge RAG / Operational Memory؛ افزودن RAG و Memory به معماری، فازها، API و Repository** | **شفاف‌سازی معماری دانش و حافظه** |
 | **2.2** | **تثبیت PostgreSQL + pgvector به‌عنوان Persistence و Vector Layer مشترک برای RAG و Operational Memory؛ تعریف Mem0 به‌عنوان Adapter اختیاری؛ انتقال Semantic Retrieval به MVP** | **هم‌راستا کردن معماری با الگوی عملیاتی مناسب برای RAG/Memory و حذف ابهام بین Storage، Vector Search و Memory Framework** |
 | **2.3** | **Sync وضعیت واقعی implementation؛ deterministic cross-source correlation؛ MCP governance؛ hybrid central/edge target؛ benchmark 2026؛ production gaps و Next Steps واقعی** | **حذف drift بین SSoT و repository و هم‌راستایی با الگوهای امن Agentic/AIOps 2026 بدون ادعای Production Ready زودهنگام** |
+| **2.4** | **تثبیت Cognia به‌عنوان canonical Governed Knowledge RAG؛ محدودکردن pgvector به Operational Memory/dev-test Knowledge؛ تعریف Machine Auth، Scope، Search/Context، authoring lifecycle و no-hidden-fallback** | **هم‌راستا کردن SSoT با قرارداد رسمی Cognia و تصمیم قطعی پروژه** |
 
 # 27. Definition of Done پروژه
 
@@ -656,7 +668,9 @@ RAG در حالت پیش‌فرض فقط از منابعی استفاده می�
 
 ### A.3 قرارداد Retrieval
 
-هر نتیجه RAG باید حداقل شامل `source_id`، `title`، `version`، `relevance` و `retrieved_at` باشد.
+برای Cognia Search هر نتیجه داخلی باید traceability حداقلی زیر را حفظ کند: `provider`، `source_id`، `knowledge_base_id`، `knowledge_id`، `revision_id`، `revision_number`، `chunk_id`، `content`، `relevance` و `retrieved_at`. `title` فقط وقتی مجاز است که از API Detail معتبر دریافت شده باشد؛ Search Chunk عنوان را تضمین نمی‌کند و AIOps نباید آن را اختراع کند.
+
+`relevance` فقط Retrieval Relevance است و به‌تنهایی confidence صحت Fact یا Evidence نیست.
 
 ### A.4 Rule
 
@@ -684,16 +698,20 @@ Memory Entry بدون Outcome معتبر نباید به‌عنوان Pattern م
 
 > **Observe with Evidence. Reason with LangGraph. Consult Knowledge with RAG. Reuse experience with Operational Memory. Decide with Policy. Change only through Execution Boundary. Trust success only after independent Verification.**
 
-## ضمیمه D - قرارداد pgvector و Mem0
+## ضمیمه D - قرارداد Cognia، pgvector و Mem0
 
-### D.1 pgvector
+### D.1 Cognia
 
-`pgvector` بخشی از Persistence Architecture است، نه یک سرویس AI مستقل. Embeddingهای Knowledge و Memory در PostgreSQL ذخیره می‌شوند و Retrieval با Semantic Similarity و فیلترهای Metadata انجام می‌شود.
+Cognia canonical System of Record برای Governed Knowledge، Revision lifecycle، KB Permission، Scope، Search و Context Generation است. AIOps مصرف‌کننده Cognia است و Permission یا lifecycle آن را locally بازسازی نمی‌کند.
 
-### D.2 Mem0
+### D.2 pgvector
+
+`pgvector` بخشی از Persistence Architecture Operational Memory است. Embeddingهای Memory در PostgreSQL نگهداری می‌شوند و Similarity برای reuse Incident pattern استفاده می‌شود. local Knowledge pgvector فقط fixture/compatibility غیرProduction است.
+
+### D.3 Mem0
 
 Mem0 در صورت استفاده، فقط یک Memory Management Layer/Adapter است. انتخاب یا حذف آن نباید Schema، Domain Contract یا LangGraph State را بشکند.
 
-### D.3 Rule
+### D.4 Rule
 
-**PostgreSQL = System of Record؛ pgvector = Semantic Retrieval؛ RAG = Knowledge Retrieval؛ Operational Memory = تجربه عملیاتی؛ Mem0 = گزینه Framework برای مدیریت Memory، نه منبع حقیقت و نه وابستگی اجباری پروژه.**
+**Cognia = Governed Knowledge RAG؛ PostgreSQL = Platform System of Record؛ pgvector = Operational Memory Semantic Retrieval؛ Operational Memory = تجربه عملیاتی؛ Live Evidence = حقیقت Incident جاری.**
