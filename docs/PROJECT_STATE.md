@@ -6,15 +6,17 @@
 
 ## Executive status
 
-The repository is substantially implemented and CI-tested, but it is not yet fully production-accepted for a bank/enterprise environment. Cognia is now the only Governed Knowledge RAG; Operational Memory remains PostgreSQL + pgvector. External acceptance is still required for the real Cognia environment, MCP-backed observability/remediation, enterprise identity, PostgreSQL HA/DR, signed offline promotion and sustained load/failure behavior.
+The repository is substantially implemented and CI-tested, but it is not yet fully production-accepted for a bank/enterprise environment. Cognia is the only Governed Knowledge RAG in every environment; Operational Memory remains PostgreSQL + pgvector. External acceptance is still required for the real Cognia environment, MCP-backed observability/remediation, enterprise identity, PostgreSQL HA/DR, signed offline promotion and sustained load/failure behavior.
 
 This file intentionally avoids a synthetic readiness percentage. Repository implementation evidence and real-environment acceptance are tracked separately.
 
 ## Implemented and strong
 
 - Python + LangGraph governed workflow.
-- PostgreSQL persistence with pgvector and migration acceptance in CI.
-- Cognia provider boundary for Governed Knowledge RAG with Application Client machine authentication, opaque-token lifecycle, explicit KB selection, Search chunk traceability, authoring/revision contracts, optional Context Generation and no hidden local fallback.
+- PostgreSQL persistence with pgvector for Operational Memory and migration acceptance in CI.
+- Cognia-only Governed Knowledge RAG boundary with Application Client machine authentication, opaque-token lifecycle, explicit KB selection, Search chunk traceability, authoring/revision contracts, optional Context Generation and no alternate-RAG fallback.
+- No runtime Knowledge provider selector and no PostgreSQL/pgvector Knowledge retrieval path.
+- Historical pre-Cognia Knowledge content is retained only as a non-RAG archive without embedding/retrieval capability.
 - Operational Memory remains PostgreSQL + pgvector and is separate from Cognia Knowledge.
 - Source-agnostic Signal Gateway and deterministic bounded cross-source correlation.
 - Cross-source Evidence Collector with explicit `queried`, `unavailable`, `error` and `skipped` source observations.
@@ -26,11 +28,11 @@ This file intentionally avoids a synthetic readiness percentage. Repository impl
 - Repository-wide Python import/dependency integrity validation.
 - Operator-grade AIOps Control Center backed by durable state rather than fabricated telemetry.
 
-## Canonical Knowledge boundary — Cognia
+## Sole Knowledge RAG boundary — Cognia
 
-Cognia is the canonical Production RAG for governed organizational knowledge. The AIOps runtime is a Cognia consumer; it does not reimplement Cognia KB permissions, Revision lifecycle or activation state locally.
+Cognia is the only RAG for governed organizational knowledge in development, test and production. The AIOps runtime is a Cognia consumer; it does not reimplement Cognia KB permissions, Revision lifecycle or activation state locally, and it has no second Knowledge retriever to use as fallback.
 
-Repository contract now enforces these rules:
+Repository contract enforces these rules:
 
 - Backend integration uses Cognia Client Application machine identity, not a human username/password.
 - `clientId/clientSecret` are authentication credentials; numeric `clientApplicationId` is the Scope identity and is configured separately.
@@ -38,13 +40,13 @@ Repository contract now enforces these rules:
 - Search sends explicit configured Knowledge Base IDs. Authorization is all-or-nothing and unauthorized KBs are not silently removed.
 - Search consumes Current Active Revision chunks and preserves KB/Knowledge/Revision/Chunk traceability. `relevanceScore` is retrieval relevance only, not factual confidence.
 - External Subject is accepted only from an explicit stable upstream contract. AIOps does not infer Subject identity from a service/customer display name and rejects Client Application scope spoofing.
-- Cognia dependency/index/auth/permission failures remain typed provider states and are never converted to a successful empty result or hidden local-pgvector fallback.
+- Cognia dependency/index/auth/permission failures remain typed states and are never converted to a successful empty result. No alternate RAG exists to mask a Cognia failure.
 - Knowledge registration supports Cognia idempotency semantics; automatic transient retry is only permitted when an `Idempotency-Key` is present.
 - Candidate Revision uses `expectedCurrentCandidateRevisionId`; concurrency conflicts require a fresh read/decision and are not blindly retried.
 - Machine integration does not perform human Approve/Reject decisions.
 - Context Generation is optional until a Context Profile is provisioned. A Context Package is auxiliary input rather than an LLM answer, and `isSufficient=false` remains explicit.
 
-The local `knowledge_documents`/pgvector model remains for migration compatibility and deterministic development/test fixtures. It is **not** the Production Governed Knowledge system of record.
+PostgreSQL/pgvector is not a Knowledge RAG. It serves Operational Memory only. The historical `legacy_knowledge_documents_archive` is migration/audit storage only and has no embedding/retrieval path.
 
 ## Canonical MCP external-tool boundary
 
@@ -66,7 +68,7 @@ Elastic integration uses Elastic Agent Builder MCP rather than the deprecated st
 
 ### Cognia real environment
 
-Repository behavior is implemented and tested, but strict Production acceptance requires the real approved Cognia environment. Required evidence includes HTTPS/TLS, Client Application credential issuance/rotation, exact KB grants, positive and negative authorization, Scope isolation, registration → Processing/Approval when applicable → `Activated` → Search, Search dependency/index outage with no fallback, and Context Profile/sufficiency behavior if Context Generation is enabled.
+Repository behavior is implemented and tested, but strict Production acceptance requires the real approved Cognia environment. Required evidence includes HTTPS/TLS, Client Application credential issuance/rotation, exact KB grants, positive and negative authorization, Scope isolation, registration → Approval when applicable → Processing → `Activated` → Search, Search dependency/index outage with explicit degradation, and Context Profile/sufficiency behavior if Context Generation is enabled.
 
 The supplied sandpod documentation currently names an HTTP endpoint. That endpoint is suitable only for controlled non-Production acceptance; Production startup requires an approved HTTPS Cognia URL with TLS verification enabled.
 
@@ -94,14 +96,14 @@ OIDC/RBAC exists at repository level. MCP supports provider-specific authorizati
 
 The repository container gate proves isolated multi-stage runtime construction, vulnerability scanning, SBOM, a signing verification path and immutable release rendering. Real internal wheelhouse/base-image mirroring and OCI registry signing/promotion remain external acceptance items.
 
-## Phase assessment against MASTER 2.4
+## Phase assessment against MASTER 2.5
 
 | Phase | Current evidence |
 |---|---|
 | Phase 0 — Foundation & Contracts | Repository implementation strong; external governance controls remain |
 | Phase 1 — Observability & Context | MCP-backed source contracts implemented; real endpoints pending |
 | Phase 2 — LangGraph Intelligence | Triage/specialists/RCA/Evaluator implemented; production-quality/scale acceptance pending |
-| Phase 3 — RAG & Operational Memory | Cognia-only RAG contract + PostgreSQL/pgvector Memory implemented; real Cognia acceptance pending |
+| Phase 3 — RAG & Operational Memory | Cognia-only RAG contract + PostgreSQL/pgvector Operational Memory implemented; real Cognia acceptance pending |
 | Phase 4 — Controlled Automation | Policy/approval/execution strong; real target and adapter breadth pending |
 | Phase 5 — Verification & Learning | Fresh verification and governed Memory exist; per-action objectives pending |
 | Phase 6 — Production Hardening | CI/container/security controls strong; HA/DR/identity/OTel/external acceptance pending |
@@ -111,7 +113,7 @@ The repository container gate proves isolated multi-stage runtime construction, 
 
 1. Live Production Evidence is authoritative for the current Incident.
 2. Cognia Governed Knowledge and Operational Memory are auxiliary, separate domains.
-3. Cognia is the canonical Production Knowledge RAG; legacy pre-Cognia Knowledge archive is not a Production fallback.
+3. Cognia is the only Knowledge RAG; PostgreSQL/pgvector is Operational Memory only and the historical pre-Cognia archive is not retrievable as RAG.
 4. Agent/LLM output cannot authorize a write.
 5. Asset identity, event idempotency and Incident correlation are deterministic.
 6. Every external operational tool connection from the Control Plane uses MCP.
@@ -123,7 +125,7 @@ The repository container gate proves isolated multi-stage runtime construction, 
 
 ## Next engineering priorities
 
-1. Acceptance-test Cognia against the real non-Production endpoint with an Application Client, exact KB grants and representative knowledge/scope lifecycle; provision an HTTPS Production endpoint/route before promotion.
+1. Acceptance-test Cognia against the real non-Production endpoint with an Application Client, exact KB grants and representative Knowledge/Scope lifecycle; provision an HTTPS Production endpoint/route before promotion.
 2. Deploy and acceptance-test Elastic Agent Builder, Zabbix and Prometheus MCP endpoints with pinned upstream versions.
 3. Integrate enterprise workload identity/mTLS certificate issuance/rotation for MCP.
 4. Complete constrained Windows and Kubernetes write capabilities behind Execution/Approval.
