@@ -3,7 +3,7 @@
 > این فایل فهرست فایل‌به‌فایل repository است. توضیح معماری و flow در `CODEBASE_GUIDE_FA.md` آمده است.
 > این فایل با `scripts/generate_file_index_fa.py` ساخته و در CI کنترل می‌شود.
 
-**تعداد فایل‌های track‌شده و پوشش‌داده‌شده: 296**
+**تعداد فایل‌های track‌شده و پوشش‌داده‌شده: 299**
 
 | Path | Type | Purpose | Called By | Calls/Depends On | Runtime/Test/Docs | Notes |
 |---|---|---|---|---|---|---|
@@ -50,6 +50,7 @@
 | `apps/api/a2a.py` | Python | Route/API سطح کنترل پلتفرم | FastAPI / Dashboard / clients | services, security, database | Runtime | مرز HTTP و RBAC |
 | `apps/api/agents.py` | Python | Route/API سطح کنترل پلتفرم | FastAPI / Dashboard / clients | services, security, database | Runtime | مرز HTTP و RBAC |
 | `apps/api/audit.py` | Python | Route/API سطح کنترل پلتفرم | FastAPI / Dashboard / clients | services, security, database | Runtime | مرز HTTP و RBAC |
+| `apps/api/cognia_scope.py` | Python | Route/API سطح کنترل پلتفرم | FastAPI / Dashboard / clients | services, security, database | Runtime | مرز HTTP و RBAC |
 | `apps/api/dashboard.py` | Python | Route/API سطح کنترل پلتفرم | FastAPI / Dashboard / clients | services, security, database | Runtime | مرز HTTP و RBAC |
 | `apps/api/dashboard_incidents.py` | Python | Route/API سطح کنترل پلتفرم | FastAPI / Dashboard / clients | services, security, database | Runtime | مرز HTTP و RBAC |
 | `apps/api/e2e_workflow.py` | Python | Route/API سطح کنترل پلتفرم | FastAPI / Dashboard / clients | services, security, database | Runtime | مرز HTTP و RBAC |
@@ -188,6 +189,7 @@
 | `integrations/elasticsearch/__init__.py` | Python | Adapter provider/read-only integration | MCP server/test helper | external API/.env | Runtime/Helper | Control Plane production ترجیحاً MCP |
 | `integrations/elasticsearch/client.py` | Python | Adapter provider/read-only integration | MCP server/test helper | external API/.env | Runtime/Helper | Control Plane production ترجیحاً MCP |
 | `integrations/elasticsearch/mcp_client.py` | Python | MCP client برای ارتباط governed با ابزار بیرونی | Evidence/Tool layer | MCP transport/.env | Runtime | canonical external-tool path |
+| `integrations/http_transport.py` | Python | Adapter provider/read-only integration | MCP server/test helper | external API/.env | Runtime/Helper | Control Plane production ترجیحاً MCP |
 | `integrations/kubernetes/__init__.py` | Python | Adapter provider/read-only integration | MCP server/test helper | external API/.env | Runtime/Helper | Control Plane production ترجیحاً MCP |
 | `integrations/kubernetes/client.py` | Python | Adapter provider/read-only integration | MCP server/test helper | external API/.env | Runtime/Helper | Control Plane production ترجیحاً MCP |
 | `integrations/kubernetes/mcp_client.py` | Python | MCP client برای ارتباط governed با ابزار بیرونی | Evidence/Tool layer | MCP transport/.env | Runtime | canonical external-tool path |
@@ -204,7 +206,6 @@
 | `integrations/vm/ssh_connector.py` | Python | Adapter provider/read-only integration | MCP server/test helper | external API/.env | Runtime/Helper | Control Plane production ترجیحاً MCP |
 | `integrations/zabbix/__init__.py` | Python | Adapter provider/read-only integration | MCP server/test helper | external API/.env | Runtime/Helper | Control Plane production ترجیحاً MCP |
 | `integrations/zabbix/client.py` | Python | Adapter provider/read-only integration | MCP server/test helper | external API/.env | Runtime/Helper | Control Plane production ترجیحاً MCP |
-| `integrations/zabbix/connector.py` | Python | Adapter provider/read-only integration | MCP server/test helper | external API/.env | Runtime/Helper | Control Plane production ترجیحاً MCP |
 | `integrations/zabbix/evidence.py` | Python | Adapter provider/read-only integration | MCP server/test helper | external API/.env | Runtime/Helper | Control Plane production ترجیحاً MCP |
 | `integrations/zabbix/mcp_client.py` | Python | MCP client برای ارتباط governed با ابزار بیرونی | Evidence/Tool layer | MCP transport/.env | Runtime | canonical external-tool path |
 | `knowledge/__init__.py` | Python | Contract/helper لایه Cognia-only Knowledge RAG | RAG service | Cognia retrieval contract | Runtime | دانش رسمی governed فقط از Cognia |
@@ -268,6 +269,7 @@
 | `tests/unit/test_cognia_only_rag_architecture.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_cognia_orchestrator_status.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_cognia_rag_service.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
+| `tests/unit/test_cognia_scope_guard.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_container_image_contract.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_context_policy.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_dashboard_approval_actions.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
@@ -279,6 +281,7 @@
 | `tests/unit/test_execution_approval_propagation.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_execution_policy.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_health_readiness_mcp.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
+| `tests/unit/test_http_transport_policy.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_idempotency.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_internal_api_key_role.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_jsonb_persistence_contract.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
