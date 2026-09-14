@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 244 | Dashboard JS files scanned: 2 | Symbols indexed: 1412**
+**Python files scanned: 245 | Dashboard JS files scanned: 2 | Symbols indexed: 1417**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -950,6 +950,11 @@
 | `tests/scenarios/test_agent_operational_scenarios.py` | `ScenarioLLM.generate_with_messages` | 27 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ScenarioLLM |
 | `tests/scenarios/test_agent_operational_scenarios.py` | `inp` | 31 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/scenarios/test_agent_operational_scenarios.py` | `test_reference_operational_scenarios_are_evidence_grounded` | 67 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/scenarios/test_database_asset_routing_acceptance.py` | `DatabaseTriageScenarioLLM` | 11 | class | کلاس | module |
+| `tests/scenarios/test_database_asset_routing_acceptance.py` | `DatabaseTriageScenarioLLM.provider_name` | 13 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DatabaseTriageScenarioLLM |
+| `tests/scenarios/test_database_asset_routing_acceptance.py` | `DatabaseTriageScenarioLLM.generate` | 16 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DatabaseTriageScenarioLLM |
+| `tests/scenarios/test_database_asset_routing_acceptance.py` | `DatabaseTriageScenarioLLM.generate_with_messages` | 46 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DatabaseTriageScenarioLLM |
+| `tests/scenarios/test_database_asset_routing_acceptance.py` | `test_database_asset_routes_cross_layer_specialists_early` | 51 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/scenarios/test_failure_injection.py` | `test_missing_evidence_blocks_evaluation` | 7 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/scenarios/test_failure_injection.py` | `test_execution_fingerprint_is_stable` | 12 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/scenarios/test_failure_injection.py` | `test_failure_modes_are_explicit` | 19 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
