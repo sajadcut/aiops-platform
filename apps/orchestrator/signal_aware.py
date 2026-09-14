@@ -5,6 +5,7 @@ from typing import Any, Dict
 
 from agents.shared.telemetry import AgentTelemetry
 from apps.context_service.asset_identity import AssetIdentityResolver
+from apps.context_service.knowledge_topology import KnowledgeTopologyResolver
 from apps.decision_engine import DecisionEngine
 from apps.execution_service.tools.registry import tool_registry
 from apps.orchestrator.e2e_graph import E2EOrchestrator, E2EState
@@ -48,7 +49,37 @@ class SignalAwareE2EOrchestrator(E2EOrchestrator):
 
         merged_evidence = list(merged.values())
         service_hint = state.get("service_name") or context.get("service")
-        asset_context = AssetIdentityResolver.resolve(merged_evidence, service_hint)
+        live_asset_context = AssetIdentityResolver.resolve(merged_evidence, service_hint)
+
+        discovery_knowledge = [
+            item for item in initial_context.get("knowledge_results", [])
+            if isinstance(item, dict)
+        ]
+        analysis_knowledge = [
+            item for item in context.get("knowledge_results", [])
+            if isinstance(item, dict)
+        ]
+        knowledge_by_id: Dict[str, Dict[str, Any]] = {}
+        for item in discovery_knowledge + analysis_knowledge:
+            key = str(item.get("source_id") or item.get("id") or len(knowledge_by_id))
+            knowledge_by_id[key] = item
+
+        trigger_text = ""
+        if isinstance(trigger_signal, dict):
+            trigger_text = str(trigger_signal.get("summary") or "")
+        expected_fqdns = KnowledgeTopologyResolver.extract_fqdns(
+            f"{trigger_text} {state.get('evidence_summary') or ''}"
+        )
+        knowledge_topology = KnowledgeTopologyResolver.resolve(
+            knowledge_by_id.values(),
+            expected_fqdns=expected_fqdns,
+        )
+        topology_context = KnowledgeTopologyResolver.reconcile(
+            live_asset_context,
+            knowledge_topology,
+        )
+        asset_context = dict(topology_context.get("effective_asset") or live_asset_context)
+
         resolved_service = asset_context.get("service") or service_hint
         if resolved_service:
             state["service_name"] = str(resolved_service)
@@ -57,9 +88,14 @@ class SignalAwareE2EOrchestrator(E2EOrchestrator):
         live = dict(state.get("live_evidence") or {})
         live["evidence"] = merged_evidence
         live["asset_context"] = asset_context
+        live["live_asset_context"] = live_asset_context
+        live["knowledge_topology"] = knowledge_topology
+        live["topology_context"] = topology_context
         context["evidence"] = merged_evidence
         context["live_evidence"] = live
         context["asset_context"] = asset_context
+        context["live_asset_context"] = live_asset_context
+        context["topology_context"] = topology_context
         if trigger_signal is not None:
             context["trigger_signal"] = trigger_signal
         context["trigger_evidence"] = trigger_evidence
@@ -74,6 +110,9 @@ class SignalAwareE2EOrchestrator(E2EOrchestrator):
             trigger_source=(trigger_signal or {}).get("source") if isinstance(trigger_signal, dict) else None,
             asset_type=asset_context.get("asset_type"),
             platform=asset_context.get("platform"),
+            knowledge_assisted=bool(asset_context.get("knowledge_assisted")),
+            topology_conflict_count=len(topology_context.get("conflicts") or []),
+            requires_live_verification=bool(topology_context.get("requires_live_verification")),
         )
         return state
 
