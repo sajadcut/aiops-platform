@@ -207,13 +207,13 @@
 | `apps/api/workflow.py` | `WorkflowRequest` | 18 | class | کلاس | module |
 | `apps/api/workflow.py` | `WorkflowResponse` | 25 | class | کلاس | module |
 | `apps/api/workflow.py` | `run_workflow` | 39 | async function | Compatibility analysis endpoint backed by the canonical durable E2E runtime. | module |
-| `apps/approval_service/__init__.py` | `ApprovalService` | 10 | class | Human-in-the-loop approval service. | module |
-| `apps/approval_service/__init__.py` | `ApprovalService.create_request` | 21 | method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | ApprovalService |
-| `apps/approval_service/__init__.py` | `ApprovalService.get` | 52 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ApprovalService |
-| `apps/approval_service/__init__.py` | `ApprovalService.approve` | 62 | method | transition مربوط به Approval/Governance را اعمال می‌کند | ApprovalService |
-| `apps/approval_service/__init__.py` | `ApprovalService.reject` | 83 | method | transition مربوط به Approval/Governance را اعمال می‌کند | ApprovalService |
-| `apps/approval_service/__init__.py` | `ApprovalService.is_approved` | 104 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ApprovalService |
-| `apps/approval_service/__init__.py` | `ApprovalService.clear` | 117 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ApprovalService |
+| `apps/approval_service/__init__.py` | `ApprovalService` | 12 | class | Human-in-the-loop approval service. | module |
+| `apps/approval_service/__init__.py` | `ApprovalService.create_request` | 23 | method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | ApprovalService |
+| `apps/approval_service/__init__.py` | `ApprovalService.get` | 67 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ApprovalService |
+| `apps/approval_service/__init__.py` | `ApprovalService.approve` | 77 | method | transition مربوط به Approval/Governance را اعمال می‌کند | ApprovalService |
+| `apps/approval_service/__init__.py` | `ApprovalService.reject` | 111 | method | transition مربوط به Approval/Governance را اعمال می‌کند | ApprovalService |
+| `apps/approval_service/__init__.py` | `ApprovalService.is_approved` | 146 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ApprovalService |
+| `apps/approval_service/__init__.py` | `ApprovalService.clear` | 159 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ApprovalService |
 | `apps/approval_service/binding.py` | `_canonical_parameters` | 12 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/approval_service/binding.py` | `execution_intent` | 16 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/approval_service/binding.py` | `intent_digest` | 43 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
