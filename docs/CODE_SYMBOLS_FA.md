@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 261 | Dashboard JS files scanned: 2 | Symbols indexed: 1654**
+**Python files scanned: 262 | Dashboard JS files scanned: 2 | Symbols indexed: 1660**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1477,6 +1477,12 @@
 | `tests/unit/test_operational_agents.py` | `test_security_write_recommendation_is_never_direct_execution` | 75 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_operational_agents.py` | `test_triage_routes_specialists_and_exposes_evidence_gaps` | 90 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_operational_agents.py` | `test_agent_source_does_not_hardcode_mock_provider_or_fake_vm_os` | 106 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_operational_resilience_regressions.py` | `test_zabbix_problem_get_semantic_error_falls_back_to_active_view` | 13 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_operational_resilience_regressions.py` | `test_zabbix_problem_get_semantic_error_falls_back_to_active_view.call_tool` | 17 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_zabbix_problem_get_semantic_error_falls_back_to_active_view |
+| `tests/unit/test_operational_resilience_regressions.py` | `test_zabbix_problem_get_semantic_error_falls_back_to_active_view.json_content` | 23 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_zabbix_problem_get_semantic_error_falls_back_to_active_view |
+| `tests/unit/test_operational_resilience_regressions.py` | `test_focused_routing_uses_three_specialists_but_low_confidence_can_expand` | 45 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_operational_resilience_regressions.py` | `test_prompt_compaction_bounds_logs_processes_and_strings` | 65 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_operational_resilience_regressions.py` | `test_reload_remediation_is_explicitly_supported_but_arbitrary_actions_are_rejected` | 80 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_production_fail_closed.py` | `test_deterministic_embedding_is_forbidden_in_production` | 9 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_production_fail_closed.py` | `test_production_orchestrator_forbids_mock_llm_provider` | 16 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_production_hardening_batch.py` | `_finding` | 15 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
