@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 263 | Dashboard JS files scanned: 2 | Symbols indexed: 1672**
+**Python files scanned: 264 | Dashboard JS files scanned: 2 | Symbols indexed: 1683**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1521,6 +1521,17 @@
 | `tests/unit/test_release_rendering.py` | `test_release_renderer_rejects_tags_and_zero_digest` | 11 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_release_rendering.py` | `test_release_renderer_uses_same_immutable_artifact_for_api_and_migration` | 18 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_release_rendering.py` | `test_raw_templates_are_fail_closed_and_never_mutable` | 29 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_remediation_planner.py` | `_evidence` | 8 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_remediation_planner.py` | `_state` | 17 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_remediation_planner.py` | `_healthy_config` | 41 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_remediation_planner.py` | `test_planner_builds_only_typed_request_from_live_vm_evidence` | 52 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_remediation_planner.py` | `test_planner_never_turns_llm_recommendation_into_write_without_live_binding` | 94 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_remediation_planner.py` | `test_planner_blocks_invalid_configuration` | 102 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_remediation_planner.py` | `test_planner_blocks_ambiguous_live_service_bindings` | 127 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_remediation_planner.py` | `test_manual_trigger_is_not_eligible_for_automatic_remediation` | 141 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_remediation_planner.py` | `test_pre_execution_revalidation_blocks_restart_after_service_self_recovers` | 153 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_remediation_planner.py` | `test_pre_execution_revalidation_fails_closed_without_fresh_config_check` | 178 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_remediation_planner.py` | `test_durable_resume_restores_persisted_vm_target_and_port_context` | 202 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_runbook_executor.py` | `Registry` | 6 | class | کلاس | module |
 | `tests/unit/test_runbook_executor.py` | `Registry.__init__` | 7 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | Registry |
 | `tests/unit/test_runbook_executor.py` | `Registry.get` | 10 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | Registry |
