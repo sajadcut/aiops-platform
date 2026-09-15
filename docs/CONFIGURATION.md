@@ -131,6 +131,7 @@ The repository history previously contained credential-like values. Removing `.e
 - `aiops-platform-secrets`: credentials/tokens/secret paths, including `COGNIA_CLIENT_SECRET` (and `COGNIA_CLIENT_ID` if your organization classifies it as secret integration metadata).
 - `deployment/kubernetes/migrate-job.yaml`: run the exact promoted image and `alembic upgrade head` before Deployment rollout.
 - `deployment/kubernetes/aiops-platform.yaml`: forces `APP_ENV=production`, migration validation, writable `/var/log/aiops`, readiness/liveness and metrics scraping. It imports the environment-specific ConfigMap/Secret via `envFrom`, so Cognia values are injected without being committed to the manifest.
+- The repository intentionally ships no Kubernetes `NetworkPolicy`; it applies no project-level IP, CIDR, destination-host or port allow/deny rules. Cluster/infrastructure networking can still impose controls independently.
 
 ## Adding a setting
 
@@ -147,4 +148,4 @@ Cognia is the only Governed Knowledge RAG in every environment. There is no runt
 
 `COGNIA_CLIENT_APPLICATION_ID` is a numeric Cognia Scope identity and is **not** the same value as the machine-auth `COGNIA_CLIENT_ID`. External Subject must come from an explicit upstream contract and is never inferred from a service/customer name. `COGNIA_CONTEXT_PROFILE_ID` is optional until a profile is provisioned.
 
-If Cognia is outside the Kubernetes cluster, default-deny networking requires an infrastructure-managed allowlisted HTTP/HTTPS egress path. The application NetworkPolicy permits TCP/80 and TCP/443 only to namespaces explicitly labeled for AIOps egress; do not widen it to unrestricted Internet egress.
+The repository does not impose project-level Kubernetes NetworkPolicy IP/CIDR/host/port restrictions on Cognia or other integrations. Any network filtering that remains in a deployed environment is owned by cluster or infrastructure policy outside this repository.
