@@ -44,6 +44,13 @@ class ZabbixMCPClient(MCPClient):
         mapping = {"0": "not_classified", "1": "information", "2": "warning", "3": "average", "4": "high", "5": "disaster"}
         return mapping.get(str(value), str(value or "unknown").lower())
 
+    @staticmethod
+    def _tool_error_text(result: dict[str, Any]) -> str:
+        for part in result.get("content", []) or []:
+            if isinstance(part, dict) and part.get("type") == "text" and part.get("text"):
+                return str(part["text"]).strip()
+        return "unknown MCP tool error"
+
     async def get_alerts(self, since: Optional[datetime] = None, service: Optional[str] = None, limit: int = 100) -> List[Alert]:
         args: dict[str, Any] = {
             "output": "extend",
@@ -62,6 +69,10 @@ class ZabbixMCPClient(MCPClient):
             args["server"] = server_name
 
         result = await self.call_tool("problem_get", args)
+        if result.get("isError") is True:
+            detail = self._tool_error_text(result)
+            raise RuntimeError(f"zabbix_mcp_tool_error:problem_get:{detail}")
+
         alerts: List[Alert] = []
         for payload in self.json_content(result):
             candidates = payload if isinstance(payload, list) else [payload]

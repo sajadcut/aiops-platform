@@ -10,7 +10,7 @@ class LLMResponse(BaseModel):
     content: str
     raw_response: Optional[Dict[str, Any]] = None
     model: str
-    usage: Optional[Dict[str, int]] = None  # token usage
+    usage: Optional[Dict[str, Any]] = None  # token usage may include nested detail objects
     tool_calls: Optional[List[Dict[str, Any]]] = None
     finish_reason: Optional[str] = None
 
