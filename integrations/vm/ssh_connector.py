@@ -402,6 +402,13 @@ class SSHVMConnector:
         detail = "\n".join(part for part in (str(result.get("stdout") or "").strip(), str(result.get("stderr") or "").strip()) if part)
         return {"success": True, "supported": True, "target": target, "service": service, "adapter": adapter.canonical_name, "valid": bool(result.get("success")), "exit_code": result.get("exit_code"), "detail": detail[:4000]}
 
+    async def start_service(self, target: str, service: str) -> Dict[str, Any]:
+        self._validate_service(service)
+        result = await self._run(target, f"sudo -n systemctl start {service}")
+        if not result.get("success"):
+            logger.warning("vm_service_start_failed", target=target, service=service)
+        return {"success": result.get("success", False), "service": service, "target": target, "error": None if result.get("success") else "service_start_failed"}
+
     async def restart_service(self, target: str, service: str) -> Dict[str, Any]:
         self._validate_service(service)
         result = await self._run(target, f"sudo -n systemctl restart {service}")
