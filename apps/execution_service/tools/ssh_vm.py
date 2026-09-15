@@ -5,7 +5,7 @@ from integrations.vm.mcp_client import VMEdgeMCPClient
 
 
 class SSHVMTool(BaseTool):
-    """Governed VM tool backed exclusively by the VM MCP edge boundary."""
+    """Governed VM write tool backed exclusively by the VM MCP edge boundary."""
 
     def __init__(self, connector: VMEdgeMCPClient | None = None):
         self.connector = connector
@@ -28,11 +28,11 @@ class SSHVMTool(BaseTool):
         return True
 
     async def validate(self, input_data: ToolInput) -> bool:
-        if not input_data.target or input_data.action not in {"collect_vm_metrics", "service_status", "restart_service", "process_snapshot"}:
+        if not input_data.target or input_data.action not in {"collect_vm_metrics", "service_status", "restart_service", "reload_service", "process_snapshot"}:
             return False
-        if input_data.action in {"service_status", "restart_service"} and not str((input_data.parameters or {}).get("service", "")):
+        if input_data.action in {"service_status", "restart_service", "reload_service"} and not str((input_data.parameters or {}).get("service", "")):
             return False
-        if input_data.action == "restart_service" and (
+        if input_data.action in {"restart_service", "reload_service"} and (
             not input_data.approval_id or not input_data.incident_id or not input_data.execution_capability
         ):
             return False
@@ -47,11 +47,13 @@ class SSHVMTool(BaseTool):
             result = await connector.service_status(input_data.target, str(params["service"]))
         elif input_data.action == "restart_service":
             result = await connector.restart_service(
-                input_data.target,
-                str(params["service"]),
-                str(input_data.approval_id or ""),
-                str(input_data.incident_id or ""),
-                str(input_data.execution_capability or ""),
+                input_data.target, str(params["service"]), str(input_data.approval_id or ""),
+                str(input_data.incident_id or ""), str(input_data.execution_capability or ""),
+            )
+        elif input_data.action == "reload_service":
+            result = await connector.reload_service(
+                input_data.target, str(params["service"]), str(input_data.approval_id or ""),
+                str(input_data.incident_id or ""), str(input_data.execution_capability or ""),
             )
         elif input_data.action == "process_snapshot":
             result = await connector.process_snapshot(input_data.target)
