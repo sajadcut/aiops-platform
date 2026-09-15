@@ -1651,7 +1651,7 @@
 | `tests/unit/test_vm_symptom_verification.py` | `test_invalid_config_blocks_successful_verification` | 64 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_vm_target_resolution.py` | `_RecordingVM` | 13 | class | کلاس | module |
 | `tests/unit/test_vm_target_resolution.py` | `_RecordingVM.__init__` | 14 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _RecordingVM |
-| `tests/unit/test_vm_target_resolution.py` | `_RecordingVM.collect_metrics` | 17 | async method | Evidence/داده موردنیاز را از منبع مربوط جمع می‌کند | _RecordingVM |
+| `tests/unit/test_vm_target_resolution.py` | `_RecordingVM.collect_vm_metrics` | 17 | async method | Evidence/داده موردنیاز را از منبع مربوط جمع می‌کند | _RecordingVM |
 | `tests/unit/test_vm_target_resolution.py` | `test_zabbix_vm_target_resolution_prefers_target_ip_and_never_service` | 28 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_vm_target_resolution.py` | `test_asset_vm_target_resolution_does_not_fall_back_to_service` | 39 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_vm_target_resolution.py` | `test_vm_telemetry_uses_request_target_not_service_name` | 53 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
