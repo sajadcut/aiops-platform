@@ -1329,8 +1329,8 @@
 | `tests/unit/test_knowledge_topology_url_normalization.py` | `test_expected_full_url_is_normalized_before_matching_cognia_topology` | 17 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_knowledge_topology_url_normalization.py` | `test_normalized_expected_url_still_rejects_other_cognia_fqdn` | 29 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_kubernetes_network_policy.py` | `_docs` | 6 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `tests/unit/test_kubernetes_network_policy.py` | `test_network_policy_defaults_to_deny_and_only_allows_labeled_namespaces` | 10 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_kubernetes_network_policy.py` | `test_production_deployment_uses_stdout_not_ephemeral_log_volume` | 30 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_kubernetes_network_policy.py` | `test_project_does_not_ship_network_policy_ip_or_port_restrictions` | 10 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_kubernetes_network_policy.py` | `test_production_deployment_uses_stdout_not_ephemeral_log_volume` | 21 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_kubernetes_readonly_evidence.py` | `test_kubernetes_connector_source_has_no_write_http_verbs` | 6 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_kubernetes_readonly_evidence.py` | `test_kubernetes_connector_can_be_disabled_without_network` | 15 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_kubernetes_readonly_evidence.py` | `test_kubernetes_env_contract_is_centralized` | 22 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
