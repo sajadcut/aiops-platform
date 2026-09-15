@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 250 | Dashboard JS files scanned: 2 | Symbols indexed: 1479**
+**Python files scanned: 250 | Dashboard JS files scanned: 2 | Symbols indexed: 1478**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -529,14 +529,13 @@
 | `apps/signal_gateway/correlation.py` | `_token` | 30 | function | مقادیر vendor-specific را به token پایدار و قابل hash تبدیل می‌کند. | module |
 | `apps/signal_gateway/correlation.py` | `signal_family` | 36 | function | نام‌های alert مختلف را محافظه‌کارانه به symptom family مشترک نگاشت می‌کند. | module |
 | `apps/signal_gateway/correlation.py` | `build_correlation_identity` | 53 | function | Fingerprint ثابت می‌سازد تا Zabbix/Elastic/Prometheus یک failure را duplicate نکنند. | module |
-| `apps/signal_gateway/zabbix_lifecycle.py` | `_text_value` | 21 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/signal_gateway/zabbix_lifecycle.py` | `classify_zabbix_lifecycle` | 32 | function | Return deterministic Problem/Recovery identity from the webhook payload. | module |
-| `apps/signal_gateway/zabbix_lifecycle.py` | `_recovery_timestamp` | 77 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/signal_gateway/zabbix_lifecycle.py` | `_recovery_evidence` | 87 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/signal_gateway/zabbix_lifecycle.py` | `_cancel_unconsumed_approvals` | 102 | async function | Cancel stale write authority when the source reports recovery before execution. | module |
-| `apps/signal_gateway/zabbix_lifecycle.py` | `_record_source_recovery` | 129 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/signal_gateway/zabbix_lifecycle.py` | `_audit_recovery` | 183 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/signal_gateway/zabbix_lifecycle.py` | `ingest_zabbix_payload` | 220 | async function | Ingest a Zabbix Problem or Recovery without turning Recovery into a new Incident. | module |
+| `apps/signal_gateway/zabbix_lifecycle.py` | `_text_value` | 19 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/zabbix_lifecycle.py` | `classify_zabbix_lifecycle` | 30 | function | Return deterministic Problem/Recovery identity from the webhook payload. | module |
+| `apps/signal_gateway/zabbix_lifecycle.py` | `_recovery_timestamp` | 75 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/zabbix_lifecycle.py` | `_recovery_evidence` | 85 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/zabbix_lifecycle.py` | `_record_source_recovery` | 100 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/zabbix_lifecycle.py` | `_audit_recovery` | 154 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/zabbix_lifecycle.py` | `ingest_zabbix_payload` | 191 | async function | Ingest a Zabbix Problem or Recovery without turning Recovery into a new Incident. | module |
 | `apps/verification_service/__init__.py` | `VerificationStatus` | 11 | class | کلاس | module |
 | `apps/verification_service/__init__.py` | `VerificationResult` | 18 | class | کلاس | module |
 | `apps/verification_service/__init__.py` | `VerificationEngine` | 30 | class | Deterministic before/after verification over fresh operational Evidence. | module |
