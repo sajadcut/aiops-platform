@@ -270,6 +270,13 @@ class AssetIdentityResolver:
         if labels.get("pod") or labels.get("namespace") or labels.get("deployment") or labels.get("kubernetes_io_hostname"):
             return "kubernetes_workload" if labels.get("pod") or labels.get("deployment") else "kubernetes_node"
         job = str(labels.get("job") or "").lower()
+        # Exporter targets often carry an `instance` label. Classify known
+        # domain exporters before the generic instance/node-exporter VM fallback;
+        # otherwise PostgreSQL or SNMP incidents can be routed as VM incidents.
+        if any(token in job for token in ("postgres_exporter", "postgresql_exporter", "postgres-exporter", "postgresql-exporter", "oracle_exporter", "oracledb_exporter", "sqlserver_exporter", "mssql_exporter")):
+            return "database"
+        if any(token in job for token in ("snmp_exporter", "snmp-exporter", "blackbox_snmp", "network_exporter", "network-exporter")):
+            return "network"
         if "node_exporter" in job or labels.get("instance"):
             return "vm"
         return "unknown"
