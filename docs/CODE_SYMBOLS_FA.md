@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 249 | Dashboard JS files scanned: 2 | Symbols indexed: 1464**
+**Python files scanned: 249 | Dashboard JS files scanned: 2 | Symbols indexed: 1465**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -811,15 +811,16 @@
 | `integrations/mcp_client.py` | `MCPClient._headers` | 77 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MCPClient |
 | `integrations/mcp_client.py` | `MCPClient._decode_response` | 89 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MCPClient |
 | `integrations/mcp_client.py` | `MCPClient._bounded_for_log` | 114 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MCPClient |
-| `integrations/mcp_client.py` | `MCPClient._post` | 124 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MCPClient |
-| `integrations/mcp_client.py` | `MCPClient.initialize` | 211 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MCPClient |
-| `integrations/mcp_client.py` | `MCPClient._request` | 238 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MCPClient |
-| `integrations/mcp_client.py` | `MCPClient.call_tool` | 250 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MCPClient |
-| `integrations/mcp_client.py` | `MCPClient._call_tool` | 255 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MCPClient |
-| `integrations/mcp_client.py` | `MCPClient.list_tools` | 258 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | MCPClient |
-| `integrations/mcp_client.py` | `MCPClient.json_content` | 264 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MCPClient |
-| `integrations/mcp_client.py` | `MCPClient.health_check` | 291 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MCPClient |
-| `integrations/mcp_client.py` | `MCPClient.close` | 298 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MCPClient |
+| `integrations/mcp_client.py` | `MCPClient._incident_id_from_payload` | 125 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MCPClient |
+| `integrations/mcp_client.py` | `MCPClient._post` | 140 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MCPClient |
+| `integrations/mcp_client.py` | `MCPClient.initialize` | 312 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MCPClient |
+| `integrations/mcp_client.py` | `MCPClient._request` | 339 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MCPClient |
+| `integrations/mcp_client.py` | `MCPClient.call_tool` | 351 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MCPClient |
+| `integrations/mcp_client.py` | `MCPClient._call_tool` | 356 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MCPClient |
+| `integrations/mcp_client.py` | `MCPClient.list_tools` | 359 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | MCPClient |
+| `integrations/mcp_client.py` | `MCPClient.json_content` | 365 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MCPClient |
+| `integrations/mcp_client.py` | `MCPClient.health_check` | 392 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MCPClient |
+| `integrations/mcp_client.py` | `MCPClient.close` | 399 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MCPClient |
 | `integrations/prometheus/client.py` | `PrometheusClient` | 10 | class | Prometheus client preserving labels needed for deterministic asset identity. | module |
 | `integrations/prometheus/client.py` | `PrometheusClient.__init__` | 20 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | PrometheusClient |
 | `integrations/prometheus/client.py` | `PrometheusClient.source_name` | 25 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | PrometheusClient |
