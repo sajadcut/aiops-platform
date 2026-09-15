@@ -1,4 +1,6 @@
+from datetime import datetime
 import json
+
 import pytest
 
 from apps.approval_service.postgres import PostgreSQLApprovalStore
@@ -27,7 +29,7 @@ class FakeSession:
 
 
 @pytest.mark.asyncio
-async def test_approval_metadata_is_serialized_before_jsonb_cast():
+async def test_approval_metadata_and_timestamps_are_normalized_before_postgres_bind():
     session = FakeSession()
     store = PostgreSQLApprovalStore(session)
     record = {
@@ -47,10 +49,15 @@ async def test_approval_metadata_is_serialized_before_jsonb_cast():
     params = insert_call[1]
     assert isinstance(params["metadata"], str)
     assert json.loads(params["metadata"]) == {"target": "vm01"}
+    assert isinstance(params["created_at"], datetime)
+    assert params["created_at"].tzinfo is not None
+    assert params["created_at"].utcoffset().total_seconds() == 0
+    assert params["approved_at"] is None
+    assert params["rejected_at"] is None
 
 
 @pytest.mark.asyncio
-async def test_audit_metadata_is_serialized_before_jsonb_cast():
+async def test_audit_metadata_and_timestamp_are_normalized_before_postgres_bind():
     session = FakeSession()
     store = PostgreSQLAuditStore(session)
     event = {
@@ -67,3 +74,6 @@ async def test_audit_metadata_is_serialized_before_jsonb_cast():
     params = session.calls[0][1]
     assert isinstance(params["metadata"], str)
     assert json.loads(params["metadata"]) == {"approval_id": "a1"}
+    assert isinstance(params["created_at"], datetime)
+    assert params["created_at"].tzinfo is not None
+    assert params["created_at"].utcoffset().total_seconds() == 0

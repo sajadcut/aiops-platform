@@ -1,9 +1,30 @@
 from __future__ import annotations
 
 import json
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
+
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
+
+
+def _db_timestamp(value: Any) -> Any:
+    """Normalize ISO-8601 application timestamps for asyncpg TIMESTAMPTZ binds."""
+    if value is None or isinstance(value, datetime):
+        parsed = value
+    elif isinstance(value, str):
+        raw = value.strip()
+        if not raw:
+            return None
+        try:
+            parsed = datetime.fromisoformat(raw.replace("Z", "+00:00"))
+        except ValueError as exc:
+            raise ValueError("invalid_audit_timestamp") from exc
+    else:
+        return value
+    if parsed is not None and parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed
 
 
 class PostgreSQLAuditStore:
@@ -15,6 +36,10 @@ class PostgreSQLAuditStore:
     async def append(self, event: Dict[str, Any]) -> Dict[str, Any]:
         params = dict(event)
         params["metadata"] = json.dumps(event.get("metadata") or {}, default=str)
+        # AuditService keeps its public/domain events JSON-friendly by storing
+        # created_at as an ISO string. PostgreSQL uses TIMESTAMPTZ, and asyncpg
+        # requires a native datetime for that bind parameter.
+        params["created_at"] = _db_timestamp(params.get("created_at"))
         await self.session.execute(
             text(
                 """INSERT INTO audit_events

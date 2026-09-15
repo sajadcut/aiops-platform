@@ -17,6 +17,25 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from domain.contracts.config import settings
 
 
+def _db_timestamp(value: Any) -> Any:
+    """Normalize ISO-8601 application timestamps for asyncpg TIMESTAMPTZ binds."""
+    if value is None or isinstance(value, datetime):
+        parsed = value
+    elif isinstance(value, str):
+        raw = value.strip()
+        if not raw:
+            return None
+        try:
+            parsed = datetime.fromisoformat(raw.replace("Z", "+00:00"))
+        except ValueError as exc:
+            raise ValueError("invalid_approval_timestamp") from exc
+    else:
+        return value
+    if parsed is not None and parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed
+
+
 class PostgreSQLApprovalStore:
     """Approval durable با expiry، transition اتمیک و consume یک‌باره قبل از execution."""
 
@@ -52,11 +71,17 @@ class PostgreSQLApprovalStore:
             # A Recovery can race a slow RCA/Decision path. Persist the late
             # approval as rejected so no worker can later consume stale authority.
             record_to_save["status"] = "rejected"
-            record_to_save["rejected_at"] = datetime.now(timezone.utc).isoformat()
+            record_to_save["rejected_at"] = datetime.now(timezone.utc)
             metadata["cancelled_due_to_source_recovery"] = True
 
         params = dict(record_to_save)
         params["metadata"] = json.dumps(metadata, default=str)
+        # ApprovalService intentionally exposes JSON-friendly ISO strings. asyncpg,
+        # however, requires native datetime objects for TIMESTAMPTZ bind values.
+        # Normalize exactly at the PostgreSQL adapter boundary so the domain/API
+        # contract can remain serializable while persistence remains type-safe.
+        for field in ("created_at", "approved_at", "rejected_at"):
+            params[field] = _db_timestamp(params.get(field))
         await self.session.execute(
             text(
                 """
