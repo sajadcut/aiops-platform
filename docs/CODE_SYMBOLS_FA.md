@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 265 | Dashboard JS files scanned: 2 | Symbols indexed: 1686**
+**Python files scanned: 265 | Dashboard JS files scanned: 2 | Symbols indexed: 1687**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -335,7 +335,8 @@
 | `apps/evaluator/__init__.py` | `PlanEvaluator` | 13 | class | Guardrail between RCA and DecisionEngine. | module |
 | `apps/evaluator/__init__.py` | `PlanEvaluator.evaluate` | 19 | method | کیفیت/confidence یا اولویت را به‌صورت deterministic محاسبه می‌کند | PlanEvaluator |
 | `apps/evaluator/gate.py` | `EvaluationGate` | 14 | class | کیفیت RCA را از روی Evidence/Consensus/Safety به‌صورت fail-closed ارزیابی می‌کند. | module |
-| `apps/evaluator/gate.py` | `EvaluationGate.evaluate` | 18 | method | کیفیت/confidence یا اولویت را به‌صورت deterministic محاسبه می‌کند | EvaluationGate |
+| `apps/evaluator/gate.py` | `EvaluationGate._specialist_failed` | 18 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | EvaluationGate |
+| `apps/evaluator/gate.py` | `EvaluationGate.evaluate` | 28 | method | کیفیت/confidence یا اولویت را به‌صورت deterministic محاسبه می‌کند | EvaluationGate |
 | `apps/evaluator/thresholds.py` | `EvaluationThresholds` | 4 | class | کلاس | module |
 | `apps/execution_service/__init__.py` | `ExecutionRequest` | 11 | class | کلاس | module |
 | `apps/execution_service/__init__.py` | `ExecutionResult` | 27 | class | کلاس | module |
