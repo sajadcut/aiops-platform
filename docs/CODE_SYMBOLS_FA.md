@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 259 | Dashboard JS files scanned: 2 | Symbols indexed: 1622**
+**Python files scanned: 260 | Dashboard JS files scanned: 2 | Symbols indexed: 1644**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1586,6 +1586,28 @@
 | `tests/unit/test_upstream_mcp_contracts.py` | `test_upstream_provider_settings_are_explicit` | 60 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_verification_gate.py` | `test_verification_success_requires_confidence` | 3 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_verification_gate.py` | `test_partial_verification_does_not_pass` | 6 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_diagnostic_evidence.py` | `_DiagnosticVM` | 17 | class | کلاس | module |
+| `tests/unit/test_vm_diagnostic_evidence.py` | `_DiagnosticVM.__init__` | 18 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _DiagnosticVM |
+| `tests/unit/test_vm_diagnostic_evidence.py` | `_DiagnosticVM.collect_vm_metrics` | 21 | async method | Evidence/داده موردنیاز را از منبع مربوط جمع می‌کند | _DiagnosticVM |
+| `tests/unit/test_vm_diagnostic_evidence.py` | `_DiagnosticVM.collect_metrics` | 25 | async method | Evidence/داده موردنیاز را از منبع مربوط جمع می‌کند | _DiagnosticVM |
+| `tests/unit/test_vm_diagnostic_evidence.py` | `_DiagnosticVM.host_info` | 29 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _DiagnosticVM |
+| `tests/unit/test_vm_diagnostic_evidence.py` | `_DiagnosticVM.disk_status` | 33 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _DiagnosticVM |
+| `tests/unit/test_vm_diagnostic_evidence.py` | `_DiagnosticVM.service_status` | 37 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _DiagnosticVM |
+| `tests/unit/test_vm_diagnostic_evidence.py` | `_DiagnosticVM.process_status` | 41 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _DiagnosticVM |
+| `tests/unit/test_vm_diagnostic_evidence.py` | `_DiagnosticVM.port_listener_status` | 45 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _DiagnosticVM |
+| `tests/unit/test_vm_diagnostic_evidence.py` | `_DiagnosticVM.tcp_check` | 49 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _DiagnosticVM |
+| `tests/unit/test_vm_diagnostic_evidence.py` | `_DiagnosticVM.service_logs` | 53 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _DiagnosticVM |
+| `tests/unit/test_vm_diagnostic_evidence.py` | `_DiagnosticVM.config_validate` | 57 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _DiagnosticVM |
+| `tests/unit/test_vm_diagnostic_evidence.py` | `_UnavailableElastic` | 62 | class | کلاس | module |
+| `tests/unit/test_vm_diagnostic_evidence.py` | `_UnavailableElastic.health_check` | 63 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _UnavailableElastic |
+| `tests/unit/test_vm_diagnostic_evidence.py` | `test_semantic_vm_evidence_requests_use_diagnostic_tools_not_generic_metrics` | 68 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_diagnostic_evidence.py` | `test_initial_vm_collection_proactively_checks_service_config_and_trigger_port` | 103 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_diagnostic_evidence.py` | `test_target_port_resolution_accepts_only_explicit_valid_port` | 121 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_diagnostic_evidence.py` | `test_service_adapter_uses_fixed_haproxy_validation_command` | 129 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_diagnostic_evidence.py` | `test_structured_service_status_parses_systemd_properties` | 137 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_diagnostic_evidence.py` | `test_structured_service_status_parses_systemd_properties.fake_run` | 140 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_structured_service_status_parses_systemd_properties |
+| `tests/unit/test_vm_diagnostic_evidence.py` | `test_reload_is_fixed_governed_service_command` | 161 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_diagnostic_evidence.py` | `test_reload_is_fixed_governed_service_command.fake_run` | 165 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_reload_is_fixed_governed_service_command |
 | `tests/unit/test_vm_execution_boundary.py` | `test_ssh_vm_tool_allows_only_governed_actions` | 9 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_vm_execution_boundary.py` | `test_telemetry_tool_is_read_only` | 27 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_vm_target_resolution.py` | `_RecordingVM` | 13 | class | کلاس | module |
