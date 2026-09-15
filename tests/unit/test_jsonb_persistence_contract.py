@@ -43,7 +43,8 @@ async def test_approval_metadata_is_serialized_before_jsonb_cast():
         "rejected_at": None,
     }
     await store.save(record)
-    params = session.calls[0][1]
+    insert_call = next(call for call in session.calls if "INSERT INTO approvals" in call[0])
+    params = insert_call[1]
     assert isinstance(params["metadata"], str)
     assert json.loads(params["metadata"]) == {"target": "vm01"}
 
