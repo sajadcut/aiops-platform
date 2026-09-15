@@ -23,10 +23,40 @@ class PostgreSQLApprovalStore:
     def __init__(self, session: AsyncSession):
         self.session = session
 
+    async def _incident_source_recovered(self, incident_id: str) -> bool:
+        row = (
+            await self.session.execute(
+                text("SELECT status, context FROM incidents WHERE id=:id"),
+                {"id": incident_id},
+            )
+        ).mappings().first()
+        if not row:
+            return False
+        context = row.get("context") or {}
+        if isinstance(context, str):
+            try:
+                context = json.loads(context)
+            except json.JSONDecodeError:
+                context = {}
+        marker = dict(context.get("source_recovery") or {}) if isinstance(context, dict) else {}
+        return bool(str(row.get("status") or "").lower() == "resolved" and marker.get("incident_resolved"))
+
     async def save(self, record: Dict[str, Any]) -> Dict[str, Any]:
         """Approval request و metadata binding آن را durable می‌کند."""
-        params = dict(record)
-        params["metadata"] = json.dumps(record.get("metadata") or {}, default=str)
+        record_to_save = dict(record)
+        metadata = dict(record.get("metadata") or {})
+        if (
+            str(record_to_save.get("status") or "pending") in {"pending", "approved"}
+            and await self._incident_source_recovered(str(record_to_save.get("incident_id") or ""))
+        ):
+            # A Recovery can race a slow RCA/Decision path. Persist the late
+            # approval as rejected so no worker can later consume stale authority.
+            record_to_save["status"] = "rejected"
+            record_to_save["rejected_at"] = datetime.now(timezone.utc).isoformat()
+            metadata["cancelled_due_to_source_recovery"] = True
+
+        params = dict(record_to_save)
+        params["metadata"] = json.dumps(metadata, default=str)
         await self.session.execute(
             text(
                 """
@@ -42,7 +72,7 @@ class PostgreSQLApprovalStore:
             params,
         )
         await self.session.commit()
-        return await self.get(str(record["approval_id"])) or record
+        return await self.get(str(record_to_save["approval_id"])) or record_to_save
 
     async def _get_raw(self, approval_id: str) -> Optional[Dict[str, Any]]:
         """رکورد را بدون اعمال expiry می‌خواند؛ helper داخلی برای جلوگیری از recursion است."""
@@ -123,6 +153,37 @@ class PostgreSQLApprovalStore:
         # شرط status='pending' خود PostgreSQL race دو approver همزمان را حل می‌کند؛
         # loser فقط وضعیت نهایی را می‌خواند و caller باید conflict را گزارش کند.
         return dict(row) if row else await self._get_raw(approval_id)
+
+    async def cancel_unconsumed_for_incident(
+        self,
+        incident_id: str,
+        *,
+        reason: str,
+        metadata_patch: Optional[Dict[str, Any]] = None,
+    ) -> list[str]:
+        """Invalidate pending/approved authority after recovery or another terminal fact."""
+        patch = {"cancellation_reason": reason, **dict(metadata_patch or {})}
+        rows = (
+            await self.session.execute(
+                text(
+                    """
+                    UPDATE approvals
+                    SET status='rejected',
+                        rejected_at=CURRENT_TIMESTAMP,
+                        metadata=COALESCE(metadata, '{}'::jsonb) || CAST(:metadata_patch AS jsonb)
+                    WHERE incident_id=:incident_id
+                      AND status IN ('pending', 'approved')
+                    RETURNING approval_id
+                    """
+                ),
+                {
+                    "incident_id": incident_id,
+                    "metadata_patch": json.dumps(patch, default=str),
+                },
+            )
+        ).scalars().all()
+        await self.session.commit()
+        return [str(value) for value in rows]
 
     async def consume(self, approval_id: str) -> Optional[Dict[str, Any]]:
         """Approval approved را دقیقاً یک بار درست قبل از عبور از execution boundary مصرف می‌کند."""
