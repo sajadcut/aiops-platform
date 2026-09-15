@@ -1,12 +1,10 @@
 from __future__ import annotations
 
-import json
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 from uuid import UUID
 
-from sqlalchemy import text
-
+from apps.approval_service.postgres import PostgreSQLApprovalStore
 from apps.audit_service import AuditService
 from apps.audit_service.postgres import PostgreSQLAuditStore
 from apps.incident_service.repository import IncidentRepository
@@ -97,33 +95,6 @@ def _recovery_evidence(payload: Dict[str, Any], identity: Dict[str, Optional[str
         "confidence": 1.0,
         "raw_data": raw,
     }
-
-
-async def _cancel_unconsumed_approvals(session, incident_id: str, recovery_event_id: str) -> list[str]:
-    """Cancel stale write authority when the source reports recovery before execution."""
-    patch = json.dumps(
-        {
-            "cancelled_due_to_source_recovery": True,
-            "recovery_event_id": recovery_event_id,
-        }
-    )
-    rows = (
-        await session.execute(
-            text(
-                """
-                UPDATE approvals
-                SET status='rejected',
-                    rejected_at=CURRENT_TIMESTAMP,
-                    metadata=COALESCE(metadata, '{}'::jsonb) || CAST(:patch AS jsonb)
-                WHERE incident_id=:incident_id
-                  AND status IN ('pending', 'approved')
-                RETURNING approval_id
-                """
-            ),
-            {"incident_id": incident_id, "patch": patch},
-        )
-    ).scalars().all()
-    return [str(value) for value in rows]
 
 
 async def _record_source_recovery(
@@ -326,8 +297,13 @@ async def ingest_zabbix_payload(session, payload: Dict[str, Any]) -> Dict[str, A
         recovery_event_id=recovery_event_id,
         payload=payload,
     )
-    cancelled_approvals = await _cancel_unconsumed_approvals(
-        session, incident_id, recovery_event_id
+    cancelled_approvals = await PostgreSQLApprovalStore(session).cancel_unconsumed_for_incident(
+        incident_id,
+        reason="zabbix_source_recovery",
+        metadata_patch={
+            "cancelled_due_to_source_recovery": True,
+            "recovery_event_id": recovery_event_id,
+        },
     )
 
     checkpoint = await checkpoints.load(incident_id)
