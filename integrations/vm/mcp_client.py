@@ -15,7 +15,7 @@ class VMEdgeMCPClient(MCPClient):
         "process_status", "tcp_check", "port_listener_status", "dns_check",
         "route_check", "firewall_status", "config_validate",
     }
-    WRITE_TOOLS = {"restart_service", "reload_service"}
+    WRITE_TOOLS = {"restart_service", "reload_service", "start_service"}
 
     def __init__(self, server_url: Optional[str] = None):
         url = server_url or settings.VM_MCP_URL
@@ -44,8 +44,8 @@ class VMEdgeMCPClient(MCPClient):
     async def disk_status(self, target: str) -> Dict[str, Any]: return await self._invoke("disk_status", target)
     async def network_status(self, target: str) -> Dict[str, Any]: return await self._invoke("network_status", target)
     async def service_status(self, target: str, service: str) -> Dict[str, Any]: return await self._invoke("service_status", target, service=service)
-    async def service_logs(self, target: str, service: str, limit: int = 100) -> Dict[str, Any]: return await self._invoke("service_logs", target, service=service, limit=limit)
-    async def system_logs(self, target: str, limit: int = 100) -> Dict[str, Any]: return await self._invoke("system_logs", target, limit=limit)
+    async def service_logs(self, target: str, service: str, limit: int = 30) -> Dict[str, Any]: return await self._invoke("service_logs", target, service=service, limit=limit)
+    async def system_logs(self, target: str, limit: int = 50) -> Dict[str, Any]: return await self._invoke("system_logs", target, limit=limit)
     async def process_snapshot(self, target: str) -> Dict[str, Any]: return await self._invoke("process_snapshot", target)
     async def process_status(self, target: str, process: str) -> Dict[str, Any]: return await self._invoke("process_status", target, process=process)
     async def tcp_check(self, target: str, host: str, port: int) -> Dict[str, Any]: return await self._invoke("tcp_check", target, host=host, port=port)
@@ -67,3 +67,6 @@ class VMEdgeMCPClient(MCPClient):
 
     async def reload_service(self, target: str, service: str, approval_id: str, incident_id: str, execution_capability: str) -> Dict[str, Any]:
         return await self._invoke("reload_service", target, service=service, **self._write_context(approval_id, incident_id, execution_capability))
+
+    async def start_service(self, target: str, service: str, approval_id: str, incident_id: str, execution_capability: str) -> Dict[str, Any]:
+        return await self._invoke("start_service", target, service=service, **self._write_context(approval_id, incident_id, execution_capability))
