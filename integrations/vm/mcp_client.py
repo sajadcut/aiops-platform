@@ -38,7 +38,8 @@ class VMEdgeMCPClient(MCPClient):
                 return first
         return result
 
-    async def collect_metrics(self, target: str) -> Dict[str, Any]: return await self._invoke("collect_vm_metrics", target)
+    async def collect_vm_metrics(self, target: str) -> Dict[str, Any]: return await self._invoke("collect_vm_metrics", target)
+    async def collect_metrics(self, target: str) -> Dict[str, Any]: return await self.collect_vm_metrics(target)
     async def host_info(self, target: str) -> Dict[str, Any]: return await self._invoke("host_info", target)
     async def disk_status(self, target: str) -> Dict[str, Any]: return await self._invoke("disk_status", target)
     async def network_status(self, target: str) -> Dict[str, Any]: return await self._invoke("network_status", target)
