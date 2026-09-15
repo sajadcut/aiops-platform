@@ -46,20 +46,24 @@ class IncidentCoordinator:
             for name in cls.DOMAIN_EXPANSION.get(primary, [primary]):
                 add(name)
 
-        fallback = not ordered or float(triage.get("confidence", 0) or 0) < settings.AGENT_LOW_CONFIDENCE_THRESHOLD
+        confidence = float(triage.get("confidence", 0) or 0)
+        fallback = not ordered or confidence < settings.AGENT_LOW_CONFIDENCE_THRESHOLD
         if fallback:
             for name in sorted(enabled_set):
                 add(name)
 
-        selected = ordered[: max(1, settings.AGENT_MAX_PARALLELISM)]
+        configured_max = max(1, settings.AGENT_MAX_PARALLELISM)
+        # High/normal-confidence incidents start with a focused set. Additional
+        # specialists are added through audited handoffs after evidence review.
+        # Low-confidence incidents preserve the broader safety-net behavior.
+        budget = configured_max if fallback else min(configured_max, 3)
+        selected = ordered[:budget]
         skipped = sorted(enabled_set.difference(selected))
         reason = "fallback_broad_analysis" if fallback else "triage_specialist_routing"
         return {
-            "selected": selected,
-            "skipped": skipped,
-            "reason": reason,
-            "primary_domain": primary or "unknown",
-            "requested_handoffs": requested,
+            "selected": selected, "skipped": skipped, "reason": reason,
+            "primary_domain": primary or "unknown", "requested_handoffs": requested,
+            "routing_budget": budget, "adaptive_routing": True,
         }
 
     @staticmethod
@@ -109,8 +113,16 @@ class IncidentCoordinator:
             for request in finding.get("evidence_requests") or []:
                 if not isinstance(request, dict) or not request.get("evidence_type"):
                     continue
-                key = (str(request.get("evidence_type")), str(request.get("preferred_source") or ""))
-                if not any((str(r.get("evidence_type")), str(r.get("preferred_source") or "")) == key for r in evidence_requests):
+                key = (
+                    str(request.get("evidence_type") or "").strip().lower(),
+                    str(request.get("preferred_source") or "").strip().lower(),
+                    " ".join(str(request.get("reason") or "").strip().lower().split()),
+                )
+                if not any((
+                    str(r.get("evidence_type") or "").strip().lower(),
+                    str(r.get("preferred_source") or "").strip().lower(),
+                    " ".join(str(r.get("reason") or "").strip().lower().split()),
+                ) == key for r in evidence_requests):
                     evidence_requests.append(request)
                 if len(evidence_requests) >= settings.AGENT_MAX_DYNAMIC_EVIDENCE_TYPES:
                     break
@@ -124,11 +136,7 @@ class IncidentCoordinator:
                 supporting = [str(x) for x in (hyp.get("evidence_ids") or [])]
                 conflicting = [str(x) for x in (hyp.get("conflicting_evidence_ids") or [])]
                 if conflicting:
-                    explicit_conflicts.append({
-                        "agent": agent_name,
-                        "hypothesis": str(hyp.get("hypothesis", "")),
-                        "conflicting_evidence_ids": conflicting,
-                    })
+                    explicit_conflicts.append({"agent": agent_name, "hypothesis": str(hyp.get("hypothesis", "")), "conflicting_evidence_ids": conflicting})
                 for ref in supporting:
                     evidence_usage.setdefault(ref, {"support": [], "conflict": []})["support"].append(agent_name)
                 for ref in conflicting:
@@ -138,11 +146,6 @@ class IncidentCoordinator:
         health_non_unknown = {k: v for k, v in health_votes.items() if k != "unknown"}
         vote_disagreement = len(severity_non_unknown) > 1 or len(health_non_unknown) > 1
 
-        # An evidence reference is a genuine cross-agent disagreement only when
-        # at least one agent supports it without also marking it conflicting and
-        # another agent conflicts with it without also supporting it. If the same
-        # agents appear on both sides (for example across different hypotheses),
-        # that is ambiguity/counterevidence, not cross-agent disagreement.
         cross_agent_evidence_conflicts: List[Dict[str, Any]] = []
         for ref, usage in evidence_usage.items():
             supporting = set(usage["support"])
@@ -152,16 +155,13 @@ class IncidentCoordinator:
             if not support_only or not conflict_only:
                 continue
             cross_agent_evidence_conflicts.append({
-                "evidence_id": ref,
-                "supporting_agents": sorted(supporting),
-                "conflicting_agents": sorted(conflicting),
-                "support_only_agents": support_only,
+                "evidence_id": ref, "supporting_agents": sorted(supporting),
+                "conflicting_agents": sorted(conflicting), "support_only_agents": support_only,
                 "conflict_only_agents": conflict_only,
             })
 
         contradictions = explicit_conflicts + cross_agent_evidence_conflicts
         disagreement = vote_disagreement or bool(cross_agent_evidence_conflicts)
-
         shared_hypotheses = {k: v for k, v in hypothesis_map.items() if len(set(v)) > 1}
         consensus = sorted(shared_hypotheses, key=lambda key: len(set(shared_hypotheses[key])), reverse=True)
 
@@ -186,37 +186,20 @@ class IncidentCoordinator:
         confidence = round(max(0.0, min(1.0, confidence)), 4)
         agreement_score = round(max(0.0, min(1.0, agreement_score)), 4)
 
-        peer_review_targets = sorted({
-            str(item.get("agent"))
-            for item in explicit_conflicts
-            if item.get("agent")
-        })
+        peer_review_targets = sorted({str(item.get("agent")) for item in explicit_conflicts if item.get("agent")})
         requires_human_review = disagreement or bool(contradictions) or bool(missing)
-        second_opinion_required = (
-            disagreement
-            or bool(contradictions)
-            or confidence < settings.AGENT_LOW_CONFIDENCE_THRESHOLD
-        )
+        second_opinion_required = disagreement or bool(contradictions) or confidence < settings.AGENT_LOW_CONFIDENCE_THRESHOLD
 
         return {
-            "agents": [f.get("agent_name") for f in valid],
-            "confidence": confidence,
-            "agreement_score": agreement_score,
-            "evidence_count": len(evidence_ids),
+            "agents": [f.get("agent_name") for f in valid], "confidence": confidence,
+            "agreement_score": agreement_score, "evidence_count": len(evidence_ids),
             "missing_evidence": missing,
             "evidence_requests": evidence_requests[: settings.AGENT_MAX_DYNAMIC_EVIDENCE_TYPES],
-            "auxiliary_conflicts": auxiliary_conflicts,
-            "handoff_agents": handoffs,
-            "disagreement": disagreement,
-            "contradictions": contradictions,
-            "peer_review_targets": peer_review_targets,
-            "second_opinion_required": second_opinion_required,
-            "severity_votes": severity_votes,
-            "health_votes": health_votes,
+            "auxiliary_conflicts": auxiliary_conflicts, "handoff_agents": handoffs,
+            "disagreement": disagreement, "contradictions": contradictions,
+            "peer_review_targets": peer_review_targets, "second_opinion_required": second_opinion_required,
+            "severity_votes": severity_votes, "health_votes": health_votes,
             "consensus_hypotheses": consensus[: settings.AGENT_MAX_HYPOTHESES],
-            "consensus_support": {
-                hypothesis: sorted(set(shared_hypotheses[hypothesis]))
-                for hypothesis in consensus[: settings.AGENT_MAX_HYPOTHESES]
-            },
+            "consensus_support": {hypothesis: sorted(set(shared_hypotheses[hypothesis])) for hypothesis in consensus[: settings.AGENT_MAX_HYPOTHESES]},
             "requires_human_review": requires_human_review,
         }
