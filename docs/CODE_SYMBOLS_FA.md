@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 261 | Dashboard JS files scanned: 2 | Symbols indexed: 1652**
+**Python files scanned: 261 | Dashboard JS files scanned: 2 | Symbols indexed: 1654**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -94,8 +94,10 @@
 | `agents/shared/domain_agent.py` | `DomainDiagnosticAgent.name` | 32 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DomainDiagnosticAgent |
 | `agents/shared/domain_agent.py` | `DomainDiagnosticAgent.description` | 36 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DomainDiagnosticAgent |
 | `agents/shared/domain_agent.py` | `DomainDiagnosticAgent.allowed_tools` | 40 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DomainDiagnosticAgent |
-| `agents/shared/domain_agent.py` | `DomainDiagnosticAgent._peer_context` | 44 | method | Return bounded peer-analysis context published by the coordinator. | DomainDiagnosticAgent |
-| `agents/shared/domain_agent.py` | `DomainDiagnosticAgent.analyze` | 86 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DomainDiagnosticAgent |
+| `agents/shared/domain_agent.py` | `DomainDiagnosticAgent._bounded_prompt_value` | 44 | method | Compact prompt-only context without mutating stored/audited Evidence. | DomainDiagnosticAgent |
+| `agents/shared/domain_agent.py` | `DomainDiagnosticAgent._prompt_evidence` | 75 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DomainDiagnosticAgent |
+| `agents/shared/domain_agent.py` | `DomainDiagnosticAgent._peer_context` | 89 | method | Return bounded peer-analysis context published by the coordinator. | DomainDiagnosticAgent |
+| `agents/shared/domain_agent.py` | `DomainDiagnosticAgent.analyze` | 124 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DomainDiagnosticAgent |
 | `agents/shared/registry.py` | `AgentManifest` | 33 | class | Metadata قابل مشاهده برای routing/UI: domain، evidence نیازمند و handoffهای مجاز. | module |
 | `agents/shared/registry.py` | `AgentRegistry` | 101 | class | Agentهای analysis-only فعال را بر اساس `.env` instantiate و manifest آنها را ارائه می‌کند. | module |
 | `agents/shared/registry.py` | `AgentRegistry.__init__` | 104 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | AgentRegistry |
