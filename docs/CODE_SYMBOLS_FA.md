@@ -1432,9 +1432,9 @@
 | `tests/unit/test_mcp_external_boundary.py` | `test_mcp_client_rejects_non_allowlisted_tool` | 83 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_mcp_external_boundary.py` | `test_mcp_client_supports_http_and_https` | 96 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_mcp_server_contract.py` | `test_provider_tool_names_match_control_plane_clients` | 6 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_mcp_server_contract.py` | `test_internal_mcp_server_has_no_native_zabbix_provider` | 14 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_mcp_server_contract.py` | `test_mcp_server_is_the_only_place_remaining_native_provider_connectors_are_composed` | 21 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_mcp_server_contract.py` | `test_mcp_server_does_not_expose_arbitrary_execution_tools` | 35 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_mcp_server_contract.py` | `test_internal_mcp_server_has_no_native_zabbix_provider` | 21 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_mcp_server_contract.py` | `test_mcp_server_is_the_only_place_remaining_native_provider_connectors_are_composed` | 28 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_mcp_server_contract.py` | `test_mcp_server_does_not_expose_arbitrary_execution_tools` | 42 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_migration_contract.py` | `read` | 4 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_migration_contract.py` | `test_base_migration_creates_canonical_incident_tables` | 8 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_migration_contract.py` | `test_operational_migration_references_incidents_id_and_does_not_create_shadow_incident_tables` | 16 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
