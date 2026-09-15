@@ -86,7 +86,7 @@
 | `agents/shared/coordinator.py` | `IncidentCoordinator` | 8 | class | Deterministic coordinator for routing and multi-agent synthesis. | module |
 | `agents/shared/coordinator.py` | `IncidentCoordinator.select_agents` | 33 | method | بر اساس state/capability مسیر یا handler مناسب را انتخاب می‌کند | IncidentCoordinator |
 | `agents/shared/coordinator.py` | `IncidentCoordinator.select_agents.add` | 39 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentCoordinator.select_agents |
-| `agents/shared/coordinator.py` | `IncidentCoordinator.synthesize` | 66 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentCoordinator |
+| `agents/shared/coordinator.py` | `IncidentCoordinator.synthesize` | 70 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentCoordinator |
 | `agents/shared/coordinator.py` | `IncidentCoordinator.synthesize.vote_agreement` | 168 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentCoordinator.synthesize |
 | `agents/shared/domain_agent.py` | `DomainSpec` | 14 | class | کلاس | module |
 | `agents/shared/domain_agent.py` | `DomainDiagnosticAgent` | 23 | class | Reusable specialist implementation for evidence-grounded operational domains. | module |
