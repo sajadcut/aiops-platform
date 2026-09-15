@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 249 | Dashboard JS files scanned: 2 | Symbols indexed: 1461**
+**Python files scanned: 249 | Dashboard JS files scanned: 2 | Symbols indexed: 1464**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -238,13 +238,16 @@
 | `apps/approval_service/store.py` | `InMemoryApprovalStore.get` | 36 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | InMemoryApprovalStore |
 | `apps/approval_service/store.py` | `InMemoryApprovalStore.update` | 40 | method | state یا داده را به‌صورت durable ذخیره/به‌روزرسانی می‌کند | InMemoryApprovalStore |
 | `apps/approval_service/store.py` | `InMemoryApprovalStore.clear` | 47 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | InMemoryApprovalStore |
-| `apps/audit_service/__init__.py` | `AuditEvent` | 14 | class | کلاس | module |
-| `apps/audit_service/__init__.py` | `AuditService` | 25 | class | کلاس | module |
-| `apps/audit_service/__init__.py` | `AuditService._redact` | 29 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | AuditService |
-| `apps/audit_service/__init__.py` | `AuditService.record` | 33 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | AuditService |
-| `apps/audit_service/__init__.py` | `AuditService.list_events` | 56 | method | داده را بدون تغییر state بازیابی/فهرست می‌کند | AuditService |
-| `apps/audit_service/__init__.py` | `AuditService.flush_to_store` | 63 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | AuditService |
-| `apps/audit_service/__init__.py` | `AuditService.clear` | 74 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | AuditService |
+| `apps/audit_service/__init__.py` | `AuditEvent` | 15 | class | کلاس | module |
+| `apps/audit_service/__init__.py` | `AuditService` | 26 | class | کلاس | module |
+| `apps/audit_service/__init__.py` | `AuditService._redact` | 30 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | AuditService |
+| `apps/audit_service/__init__.py` | `AuditService._timeline_stage` | 34 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | AuditService |
+| `apps/audit_service/__init__.py` | `AuditService._timeline_component` | 59 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | AuditService |
+| `apps/audit_service/__init__.py` | `AuditService._timeline_status` | 75 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | AuditService |
+| `apps/audit_service/__init__.py` | `AuditService.record` | 89 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | AuditService |
+| `apps/audit_service/__init__.py` | `AuditService.list_events` | 131 | method | داده را بدون تغییر state بازیابی/فهرست می‌کند | AuditService |
+| `apps/audit_service/__init__.py` | `AuditService.flush_to_store` | 138 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | AuditService |
+| `apps/audit_service/__init__.py` | `AuditService.clear` | 149 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | AuditService |
 | `apps/audit_service/postgres.py` | `PostgreSQLAuditStore` | 9 | class | Durable audit persistence adapter for the MASTER audit contract. | module |
 | `apps/audit_service/postgres.py` | `PostgreSQLAuditStore.__init__` | 12 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | PostgreSQLAuditStore |
 | `apps/audit_service/postgres.py` | `PostgreSQLAuditStore.append` | 15 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | PostgreSQLAuditStore |
