@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import asyncio
 import json
-import os
 import re
 import time
 from typing import Any, Dict, Optional
@@ -20,10 +19,10 @@ class SSHVMConnector:
     """Controlled Linux VM adapter used only behind the VM MCP server.
 
     No arbitrary shell command is accepted. SSH authentication supports either
-    the existing key mode or an explicit password mode. Passwords are read only
-    by the isolated VM MCP edge process and are never placed in command-line
-    arguments or logs. Production still requires a non-root identity, pinned
-    host keys, and explicit target/service allowlists.
+    the existing key mode or an explicit password mode. Passwords are supplied
+    only to AsyncSSH and are never placed in command-line arguments or logs.
+    Production still requires a non-root identity, pinned host keys, and explicit
+    target/service allowlists.
     """
 
     source_name = "vm_ssh"
@@ -34,14 +33,11 @@ class SSHVMConnector:
 
     @staticmethod
     def _auth_mode() -> str:
-        mode = str(os.environ.get("SSH_AUTH_MODE", "key") or "key").strip().lower()
-        if mode not in {"key", "password"}:
-            raise RuntimeError("vm_ssh_configuration_invalid:SSH_AUTH_MODE must be key or password")
-        return mode
+        return str(settings.SSH_AUTH_MODE or "").strip().lower()
 
     @staticmethod
     def _password() -> str:
-        return str(os.environ.get("SSH_PASSWORD", "") or "")
+        return str(settings.SSH_PASSWORD or "")
 
     @classmethod
     def _validate_runtime_security(cls) -> None:
