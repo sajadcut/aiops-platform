@@ -994,14 +994,14 @@
 | `scripts/generate_file_index_fa.py` | `classify` | 22 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `scripts/generate_file_index_fa.py` | `render` | 140 | function | خروجی UI/نمایشی را می‌سازد | module |
 | `scripts/generate_file_index_fa.py` | `main` | 159 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `scripts/reconcile_legacy_database.py` | `_sync_database_url` | 49 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `scripts/reconcile_legacy_database.py` | `_alembic_config` | 58 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `scripts/reconcile_legacy_database.py` | `_table_exists` | 63 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `scripts/reconcile_legacy_database.py` | `_column_type` | 71 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `scripts/reconcile_legacy_database.py` | `inspect_database` | 90 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `scripts/reconcile_legacy_database.py` | `_print_report` | 124 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `scripts/reconcile_legacy_database.py` | `reconcile` | 128 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `scripts/reconcile_legacy_database.py` | `main` | 184 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `scripts/reconcile_legacy_database.py` | `_sync_database_url` | 54 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `scripts/reconcile_legacy_database.py` | `_alembic_config` | 63 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `scripts/reconcile_legacy_database.py` | `_table_exists` | 68 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `scripts/reconcile_legacy_database.py` | `_column_type` | 76 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `scripts/reconcile_legacy_database.py` | `inspect_database` | 95 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `scripts/reconcile_legacy_database.py` | `_print_report` | 129 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `scripts/reconcile_legacy_database.py` | `reconcile` | 133 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `scripts/reconcile_legacy_database.py` | `main` | 189 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `scripts/render_k8s_release.py` | `validate_image_ref` | 11 | function | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | module |
 | `scripts/render_k8s_release.py` | `render` | 21 | function | خروجی UI/نمایشی را می‌سازد | module |
 | `scripts/render_k8s_release.py` | `main` | 41 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
