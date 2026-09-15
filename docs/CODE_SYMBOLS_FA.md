@@ -118,12 +118,12 @@
 | `agents/triage/__init__.py` | `TriageAgent.description` | 19 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | TriageAgent |
 | `agents/triage/__init__.py` | `TriageAgent.allowed_tools` | 23 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | TriageAgent |
 | `agents/triage/__init__.py` | `TriageAgent.analyze` | 26 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | TriageAgent |
-| `agents/vm/__init__.py` | `VMAgent` | 10 | class | کلاس | module |
-| `agents/vm/__init__.py` | `VMAgent.__init__` | 11 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMAgent |
-| `agents/vm/__init__.py` | `VMAgent.name` | 15 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMAgent |
-| `agents/vm/__init__.py` | `VMAgent.description` | 19 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMAgent |
-| `agents/vm/__init__.py` | `VMAgent.allowed_tools` | 23 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMAgent |
-| `agents/vm/__init__.py` | `VMAgent.analyze` | 26 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMAgent |
+| `agents/vm/__init__.py` | `VMAgent` | 12 | class | کلاس | module |
+| `agents/vm/__init__.py` | `VMAgent.__init__` | 13 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMAgent |
+| `agents/vm/__init__.py` | `VMAgent.name` | 17 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMAgent |
+| `agents/vm/__init__.py` | `VMAgent.description` | 21 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMAgent |
+| `agents/vm/__init__.py` | `VMAgent.allowed_tools` | 25 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMAgent |
+| `agents/vm/__init__.py` | `VMAgent.analyze` | 28 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMAgent |
 | `agents/vm/deterministic.py` | `_evidence_ref` | 6 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/vm/deterministic.py` | `classify_vm_service_fault` | 16 | function | Classify high-signal VM service faults from normalized live evidence. | module |
 | `apps/api/a2a.py` | `a2a_request` | 13 | async function | Governed in-process A2A analysis endpoint. | module |
