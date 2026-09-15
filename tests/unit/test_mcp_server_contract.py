@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from apps.mcp_server.main import _TOOL_SCHEMAS
+from apps.mcp_server.main import _TOOL_SCHEMAS, _WRITE_TOOLS
 
 
 def test_provider_tool_names_match_control_plane_clients():
@@ -8,7 +8,14 @@ def test_provider_tool_names_match_control_plane_clients():
     assert set(_TOOL_SCHEMAS["elasticsearch"]) == {"search_logs"}
     assert set(_TOOL_SCHEMAS["prometheus"]) == {"query_metrics", "get_prometheus_alerts"}
     assert set(_TOOL_SCHEMAS["kubernetes"]) == {"collect_kubernetes_evidence"}
-    assert set(_TOOL_SCHEMAS["vm"]) == {"collect_vm_metrics", "service_status", "process_snapshot", "restart_service"}
+    assert set(_TOOL_SCHEMAS["vm"]) == {
+        "collect_vm_metrics", "host_info", "disk_status", "network_status",
+        "service_status", "service_logs", "system_logs", "process_snapshot",
+        "process_status", "tcp_check", "port_listener_status", "dns_check",
+        "route_check", "firewall_status", "config_validate",
+        "restart_service", "reload_service",
+    }
+    assert _WRITE_TOOLS == {"restart_service", "reload_service"}
 
 
 def test_internal_mcp_server_has_no_native_zabbix_provider():
