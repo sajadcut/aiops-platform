@@ -7,24 +7,15 @@ def _docs(path: str):
     return [doc for doc in yaml.safe_load_all(Path(path).read_text(encoding="utf-8")) if doc]
 
 
-def test_network_policy_defaults_to_deny_and_only_allows_labeled_namespaces():
-    policies = _docs("deployment/kubernetes/network-policy.yaml")
-    assert len(policies) == 2
-    deny, allow = policies
-    assert deny["kind"] == "NetworkPolicy"
-    assert set(deny["spec"]["policyTypes"]) == {"Ingress", "Egress"}
-    assert "ingress" not in deny["spec"]
-    assert "egress" not in deny["spec"]
-
-    ingress = allow["spec"]["ingress"][0]
-    assert ingress["ports"] == [{"protocol": "TCP", "port": 8000}]
-    assert ingress["from"][0]["namespaceSelector"]["matchLabels"]["aiops.network/ingress"] == "allowed"
-
-    egress = allow["spec"]["egress"]
-    assert {item["port"] for rule in egress for item in rule["ports"]} == {53, 80, 443, 5432}
-    allowed_labels = [rule["to"][0]["namespaceSelector"]["matchLabels"] for rule in egress]
-    assert {"kubernetes.io/metadata.name": "kube-system"} in allowed_labels
-    assert {"aiops.network/egress": "allowed"} in allowed_labels
+def test_project_does_not_ship_network_policy_ip_or_port_restrictions():
+    manifests = Path("deployment/kubernetes").glob("*.yaml")
+    network_policies = []
+    for manifest in manifests:
+        for doc in _docs(str(manifest)):
+            if doc.get("kind") == "NetworkPolicy":
+                network_policies.append(str(manifest))
+    assert network_policies == []
+    assert not Path("deployment/kubernetes/network-policy.yaml").exists()
 
 
 def test_production_deployment_uses_stdout_not_ephemeral_log_volume():
