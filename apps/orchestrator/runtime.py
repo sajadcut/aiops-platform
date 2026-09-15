@@ -11,6 +11,7 @@ from apps.incident_service.repository import IncidentRepository
 from apps.orchestrator.e2e_graph import E2EOrchestrator
 from apps.orchestrator.signal_aware import SignalAwareE2EOrchestrator
 from apps.orchestrator.workflow_store import WorkflowCheckpointStore
+from integrations.vm.target_context import bind_vm_port, bind_vm_target, reset_vm_port, reset_vm_target
 
 
 class DurableWorkflowRuntime:
@@ -134,6 +135,40 @@ class DurableWorkflowRuntime:
             rollback=bool(execution_request.get("rollback", False)),
         )
 
+    @staticmethod
+    def _bind_execution_context(execution_request: Dict[str, Any]):
+        """Restore request-scoped VM identity after a durable approval pause.
+
+        Signal ingestion contextvars intentionally expire with the webhook request.
+        The persisted execution request is approval-bound and capability-bound, so
+        it is the correct source for re-establishing the exact VM target/port while
+        refreshing pre/post execution evidence after a later approval request.
+        """
+        if str(execution_request.get("tool_name") or "") != "ssh_vm":
+            return None
+        target = str(execution_request.get("target") or "").strip()
+        parameters = dict(execution_request.get("parameters") or {})
+        raw_port = parameters.get("target_port")
+        port = None
+        if raw_port not in (None, ""):
+            try:
+                candidate = int(raw_port)
+                if 1 <= candidate <= 65535:
+                    port = candidate
+            except (TypeError, ValueError):
+                port = None
+        target_token = bind_vm_target(target)
+        port_token = bind_vm_port(port)
+        return target_token, port_token
+
+    @staticmethod
+    def _reset_execution_context(tokens) -> None:
+        if tokens is None:
+            return
+        target_token, port_token = tokens
+        reset_vm_port(port_token)
+        reset_vm_target(target_token)
+
     async def resume_after_approval(self, incident_id: str) -> Dict[str, Any]:
         checkpoint = await self.checkpoints.load(incident_id)
         if not checkpoint:
@@ -172,7 +207,11 @@ class DurableWorkflowRuntime:
         state["current_node"] = "execution"
 
         orchestrator = self._orchestrator_type()(db=self.session)
-        result = await orchestrator._execution_node(state)
+        execution_tokens = self._bind_execution_context(execution_request)
+        try:
+            result = await orchestrator._execution_node(state)
+        finally:
+            self._reset_execution_context(execution_tokens)
         execution_result = result.get("execution_result") or {}
         if not execution_result.get("success"):
             result["terminal_reason"] = execution_result.get("reason") or "execution_failed"
@@ -182,7 +221,11 @@ class DurableWorkflowRuntime:
             await self.incidents.commit()
             return result
 
-        result = await orchestrator._verification_node(result)
+        verification_tokens = self._bind_execution_context(execution_request)
+        try:
+            result = await orchestrator._verification_node(result)
+        finally:
+            self._reset_execution_context(verification_tokens)
         verification = result.get("verification_result") or {}
         verification_status = str(verification.get("status") or "inconclusive").lower()
         if verification_status != "success":
