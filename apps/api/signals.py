@@ -6,21 +6,11 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
 
 from apps.security.auth import require_permission
-from apps.signal_gateway import (
-    OperationalSignal,
-    SignalGateway,
-    signal_from_elasticsearch,
-    signal_from_prometheus,
-)
+from apps.signal_gateway import OperationalSignal, SignalGateway, signal_from_elasticsearch, signal_from_prometheus
 from apps.signal_gateway.zabbix_lifecycle import ingest_zabbix_payload
 from database import AsyncSessionLocal
 from domain.contracts.rate_limit import rate_limiter_strict
-from integrations.vm.target_context import (
-    bind_vm_target,
-    reset_vm_target,
-    target_from_zabbix_payload,
-)
-
+from integrations.vm.target_context import bind_vm_port, bind_vm_target, reset_vm_port, reset_vm_target, target_from_zabbix_payload, target_port_from_zabbix_payload
 
 router = APIRouter()
 
@@ -30,28 +20,7 @@ class RawSignalPayload(BaseModel):
 
 
 def _response_from_result(result: Dict[str, Any]) -> Dict[str, Any]:
-    return {
-        "status": "accepted",
-        "incident_id": result.get("incident_id"),
-        "trigger_source": result.get("trigger_source"),
-        "trigger_signal_type": result.get("trigger_signal_type"),
-        "correlation_key": result.get("correlation_key"),
-        "deduplicated": bool(result.get("deduplicated", False)),
-        "deduplication_reason": result.get("deduplication_reason"),
-        "signal_state": result.get("signal_state"),
-        "recovered": result.get("recovered"),
-        "recovery_unmatched": result.get("recovery_unmatched"),
-        "recovery_of_source_id": result.get("recovery_of_source_id"),
-        "incident_status": result.get("incident_status"),
-        "approval_cancellations": result.get("approval_cancellations"),
-        "asset_context": (result.get("context") or {}).get("asset_context"),
-        "routing": result.get("routing"),
-        "coordination": result.get("coordination"),
-        "evaluation": result.get("evaluation"),
-        "decision": result.get("decision"),
-        "verification_result": result.get("verification_result"),
-        "terminal_reason": result.get("terminal_reason"),
-    }
+    return {"status": "accepted", "incident_id": result.get("incident_id"), "trigger_source": result.get("trigger_source"), "trigger_signal_type": result.get("trigger_signal_type"), "correlation_key": result.get("correlation_key"), "deduplicated": bool(result.get("deduplicated", False)), "deduplication_reason": result.get("deduplication_reason"), "signal_state": result.get("signal_state"), "recovered": result.get("recovered"), "recovery_unmatched": result.get("recovery_unmatched"), "recovery_of_source_id": result.get("recovery_of_source_id"), "incident_status": result.get("incident_status"), "approval_cancellations": result.get("approval_cancellations"), "asset_context": (result.get("context") or {}).get("asset_context"), "routing": result.get("routing"), "coordination": result.get("coordination"), "evaluation": result.get("evaluation"), "decision": result.get("decision"), "verification_result": result.get("verification_result"), "terminal_reason": result.get("terminal_reason")}
 
 
 async def _ingest(signal: OperationalSignal) -> Dict[str, Any]:
@@ -65,6 +34,7 @@ async def _ingest(signal: OperationalSignal) -> Dict[str, Any]:
 
 async def _ingest_zabbix(payload: Dict[str, Any]) -> Dict[str, Any]:
     target_token = bind_vm_target(target_from_zabbix_payload(payload))
+    port_token = bind_vm_port(target_port_from_zabbix_payload(payload))
     try:
         async with AsyncSessionLocal() as db:
             result = await ingest_zabbix_payload(db, payload)
@@ -72,53 +42,31 @@ async def _ingest_zabbix(payload: Dict[str, Any]) -> Dict[str, Any]:
     except Exception as exc:
         raise HTTPException(status_code=500, detail="signal_ingestion_failed") from exc
     finally:
+        reset_vm_port(port_token)
         reset_vm_target(target_token)
 
 
 @router.post("/signals/ingest", dependencies=[Depends(rate_limiter_strict)])
-async def ingest_signal(
-    request: Request,
-    signal: OperationalSignal,
-    _user=Depends(require_permission("ingest:signal")),
-):
+async def ingest_signal(request: Request, signal: OperationalSignal, _user=Depends(require_permission("ingest:signal"))):
     return await _ingest(signal)
 
 
 @router.post("/signals/elasticsearch", dependencies=[Depends(rate_limiter_strict)])
-async def ingest_elasticsearch_signal(
-    request: Request,
-    body: RawSignalPayload,
-    _user=Depends(require_permission("ingest:signal")),
-):
+async def ingest_elasticsearch_signal(request: Request, body: RawSignalPayload, _user=Depends(require_permission("ingest:signal"))):
     return await _ingest(signal_from_elasticsearch(body.payload))
 
 
 @router.post("/signals/prometheus", dependencies=[Depends(rate_limiter_strict)])
-async def ingest_prometheus_signal(
-    request: Request,
-    body: RawSignalPayload,
-    _user=Depends(require_permission("ingest:signal")),
-):
+async def ingest_prometheus_signal(request: Request, body: RawSignalPayload, _user=Depends(require_permission("ingest:signal"))):
     payload = body.payload
     alerts: List[Dict[str, Any]] = payload.get("alerts", []) if isinstance(payload.get("alerts"), list) else []
-    if not alerts:
-        return await _ingest(signal_from_prometheus(payload))
+    if not alerts: return await _ingest(signal_from_prometheus(payload))
     results = []
     for alert in alerts:
-        if isinstance(alert, dict):
-            results.append(await _ingest(signal_from_prometheus(alert)))
-    return {
-        "status": "accepted",
-        "count": len(results),
-        "deduplicated_count": sum(1 for item in results if item.get("deduplicated")),
-        "results": results,
-    }
+        if isinstance(alert, dict): results.append(await _ingest(signal_from_prometheus(alert)))
+    return {"status": "accepted", "count": len(results), "deduplicated_count": sum(1 for item in results if item.get("deduplicated")), "results": results}
 
 
 @router.post("/signals/zabbix", dependencies=[Depends(rate_limiter_strict)])
-async def ingest_zabbix_signal(
-    request: Request,
-    body: RawSignalPayload,
-    _user=Depends(require_permission("ingest:signal")),
-):
+async def ingest_zabbix_signal(request: Request, body: RawSignalPayload, _user=Depends(require_permission("ingest:signal"))):
     return await _ingest_zabbix(body.payload)
