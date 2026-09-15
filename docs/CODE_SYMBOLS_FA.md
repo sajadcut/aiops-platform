@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 262 | Dashboard JS files scanned: 2 | Symbols indexed: 1660**
+**Python files scanned: 263 | Dashboard JS files scanned: 2 | Symbols indexed: 1668**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -497,6 +497,14 @@
 | `apps/rag_service/__init__.py` | `KnowledgeRAGService.create_revision` | 234 | async method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | KnowledgeRAGService |
 | `apps/rag_service/__init__.py` | `KnowledgeRAGService.get_processing_status` | 259 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | KnowledgeRAGService |
 | `apps/rag_service/__init__.py` | `KnowledgeRAGService.generate_context` | 270 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeRAGService |
+| `apps/remediation_planner/__init__.py` | `RemediationPlanner` | 8 | class | Deterministically bind live operational Evidence to a governed write request. | module |
+| `apps/remediation_planner/__init__.py` | `RemediationPlanner.plan` | 25 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
+| `apps/remediation_planner/__init__.py` | `RemediationPlanner._load_vm_service_policy` | 129 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
+| `apps/remediation_planner/__init__.py` | `RemediationPlanner._evidence_items` | 141 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
+| `apps/remediation_planner/__init__.py` | `RemediationPlanner._unhealthy_service_bindings` | 150 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
+| `apps/remediation_planner/__init__.py` | `RemediationPlanner._configuration_precondition` | 180 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
+| `apps/remediation_planner/__init__.py` | `RemediationPlanner._target_port` | 207 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
+| `apps/remediation_planner/__init__.py` | `RemediationPlanner._dedupe` | 241 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
 | `apps/runbook_service/executor.py` | `RunbookExecution` | 12 | class | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | module |
 | `apps/runbook_service/executor.py` | `RunbookExecutor` | 19 | class | Safe runtime boundary for registered runbooks. | module |
 | `apps/runbook_service/executor.py` | `RunbookExecutor.__init__` | 27 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RunbookExecutor |

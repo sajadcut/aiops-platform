@@ -3,7 +3,7 @@
 > این فایل فهرست فایل‌به‌فایل repository است. توضیح معماری و flow در `CODEBASE_GUIDE_FA.md` آمده است.
 > این فایل با `scripts/generate_file_index_fa.py` ساخته و در CI کنترل می‌شود.
 
-**تعداد فایل‌های track‌شده و پوشش‌داده‌شده: 328**
+**تعداد فایل‌های track‌شده و پوشش‌داده‌شده: 330**
 
 | Path | Type | Purpose | Called By | Calls/Depends On | Runtime/Test/Docs | Notes |
 |---|---|---|---|---|---|---|
@@ -107,6 +107,7 @@
 | `apps/orchestrator/signal_aware.py` | Python | Workflow: LangGraph orchestration، routing، resume و collaboration | API/signal gateway | agents/context/decision/approval | Runtime | مسیر E2E durable |
 | `apps/orchestrator/workflow_store.py` | Python | Workflow: LangGraph orchestration، routing، resume و collaboration | API/signal gateway | agents/context/decision/approval | Runtime | مسیر E2E durable |
 | `apps/rag_service/__init__.py` | Python | RAG: Knowledge RAG canonical با Cognia Search/Context/authoring contract | Workflow/agents/API | Cognia + provider contract | Runtime | دانش رسمی، جدا از memory و live Evidence |
+| `apps/remediation_planner/__init__.py` | Python | ماژول service لایه application | Runtime | domain/integrations | Runtime | جزء Control Plane |
 | `apps/runbook_service/executor.py` | Python | Runbook: Registry/Executor runbookهای allow-listed | API/execution workflow | domain/runbooks/execution | Runtime | اجرای کنترل‌شده |
 | `apps/runbook_service/registry.py` | Python | Runbook: Registry/Executor runbookهای allow-listed | API/execution workflow | domain/runbooks/execution | Runtime | اجرای کنترل‌شده |
 | `apps/security/auth.py` | Python | Security: Authentication، OIDC/JWT و RBAC | FastAPI dependencies | OIDC/config | Runtime | security boundary |
@@ -229,6 +230,7 @@
 | `runbooks/app_error_rollback.yml` | Runbook | تعریف عملیات allow-listed و verification/rollback | Runbook registry | execution policy | Runtime data | نباید arbitrary command باشد |
 | `runbooks/infrastructure_observation.yml` | Runbook | تعریف عملیات allow-listed و verification/rollback | Runbook registry | execution policy | Runtime data | نباید arbitrary command باشد |
 | `runbooks/kubernetes_health.yml` | Runbook | تعریف عملیات allow-listed و verification/rollback | Runbook registry | execution policy | Runtime data | نباید arbitrary command باشد |
+| `runbooks/vm_service_recovery.yml` | Runbook | تعریف عملیات allow-listed و verification/rollback | Runbook registry | execution policy | Runtime data | نباید arbitrary command باشد |
 | `scripts/__init__.py` | Python | ابزار maintenance/validation/seed/build | Developer/CI | repo/database | Tooling | مسیر اپراتوری کمکی |
 | `scripts/add_memory.py` | Python | ابزار maintenance/validation/seed/build | Developer/CI | repo/database | Tooling | مسیر اپراتوری کمکی |
 | `scripts/check_python_integrity.py` | Python | ابزار maintenance/validation/seed/build | Developer/CI | repo/database | Tooling | مسیر اپراتوری کمکی |
