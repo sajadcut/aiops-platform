@@ -14,6 +14,16 @@ from domain.contracts.config import settings
 class EvaluationGate:
     """کیفیت RCA را از روی Evidence/Consensus/Safety به‌صورت fail-closed ارزیابی می‌کند."""
 
+    @staticmethod
+    def _specialist_failed(finding: Dict[str, Any]) -> bool:
+        if str(finding.get("finding_type", "")).endswith("_error"):
+            return True
+        for missing in finding.get("missing_evidence") or []:
+            text = " ".join(str(missing).strip().lower().split())
+            if text == "successful specialist analysis" or text.startswith("successful structured"):
+                return True
+        return False
+
     @classmethod
     def evaluate(
         cls,
@@ -25,7 +35,19 @@ class EvaluationGate:
 
         # Triage فقط routing اولیه است و نباید به‌عنوان specialist evidence باعث بالا رفتن
         # confidence یا coverage ارزیابی نهایی شود.
-        specialist_findings = [f for f in findings if isinstance(f, dict) and f.get("agent_name") != "triage"]
+        all_specialists = [
+            f for f in findings
+            if isinstance(f, dict) and f.get("agent_name") != "triage"
+        ]
+        failed_findings = [f for f in all_specialists if cls._specialist_failed(f)]
+        grounded_findings = [f for f in all_specialists if not cls._specialist_failed(f)]
+        # Partial LLM/specialist failure is a degraded condition, not a reason to
+        # discard authoritative evidence from another grounded specialist. If all
+        # specialists fail, we still evaluate the failed rows and fail closed.
+        specialist_findings = grounded_findings or all_specialists
+        specialist_failures = [str(f.get("agent_name")) for f in failed_findings]
+        degraded_specialist_analysis = bool(grounded_findings and failed_findings)
+
         confidences = [float(f.get("confidence", 0) or 0) for f in specialist_findings]
         max_confidence = max(confidences, default=0.0)
         evidence_ids = {str(e) for f in specialist_findings for e in (f.get("evidence_ids") or [])}
@@ -39,12 +61,6 @@ class EvaluationGate:
         human_review = bool(coordination.get("requires_human_review")) or any(
             bool(f.get("requires_human_review")) for f in specialist_findings
         )
-        specialist_failures = [
-            str(f.get("agent_name"))
-            for f in specialist_findings
-            if str(f.get("finding_type", "")).endswith("_error")
-            or "successful specialist analysis" in (f.get("missing_evidence") or [])
-        ]
 
         # Agent فقط می‌تواند action پیشنهاد کند. اگر write recommendation بدون approval
         # requirement ظاهر شود، evaluator آن را unsafe می‌داند و flow را متوقف می‌کند.
@@ -66,11 +82,13 @@ class EvaluationGate:
                         hypothesis_without_evidence = True
 
         blockers = []
-        if not specialist_findings:
+        if not all_specialists:
             blockers.append("no_specialist_analysis")
         if not plan.strip():
             blockers.append("empty_plan")
-        if specialist_failures:
+        # A failed specialist blocks only when there is no grounded specialist to
+        # carry the RCA. This keeps fail-closed behavior for total analysis loss.
+        if failed_findings and not grounded_findings:
             blockers.append("specialist_failure")
         if max_confidence < DEFAULT_THRESHOLDS.minimum_confidence:
             blockers.append("low_confidence")
@@ -107,6 +125,8 @@ class EvaluationGate:
             "disagreement": unresolved_disagreement,
             "contradictions": contradictions,
             "specialist_failures": specialist_failures,
+            "degraded_specialist_analysis": degraded_specialist_analysis,
+            "grounded_specialists": [str(f.get("agent_name")) for f in grounded_findings],
             "human_review_required": human_review,
             "unsafe_recommendations": unsafe_recommendations,
             "blockers": blockers,
