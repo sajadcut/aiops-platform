@@ -12,7 +12,7 @@ import httpx
 from integrations.http_transport import insecure_async_client
 
 from domain.contracts.config import settings
-from domain.contracts.logging import logger
+from domain.contracts.logging import log_workflow_step, logger
 from domain.contracts.redaction import redact
 
 
@@ -121,6 +121,22 @@ class MCPClient:
             return {"omitted": "payload_too_large", "size_bytes": len(encoded)}
         return safe
 
+    @staticmethod
+    def _incident_id_from_payload(payload: Dict[str, Any]) -> Optional[str]:
+        params = payload.get("params")
+        if not isinstance(params, dict):
+            return None
+        arguments = params.get("arguments")
+        candidates = [params]
+        if isinstance(arguments, dict):
+            candidates.insert(0, arguments)
+        for candidate in candidates:
+            for key in ("incident_id", "incidentId"):
+                value = candidate.get(key)
+                if value:
+                    return str(value)
+        return None
+
     async def _post(self, payload: Dict[str, Any], *, tool_name: Optional[str] = None, include_protocol: bool = True) -> Dict[str, Any]:
         # Writes are intentionally never retried: a lost response after a remote
         # side effect is ambiguous until the remote protocol supports a durable
@@ -128,6 +144,9 @@ class MCPClient:
         attempts = 1 if tool_name in self.write_tools else max(1, int(settings.RETRY_MAX_ATTEMPTS))
         delay = max(0.0, float(settings.RETRY_DELAY_SECONDS))
         method = str(payload.get("method") or "unknown")
+        incident_id = self._incident_id_from_payload(payload)
+        timeline_stage = "execution" if tool_name in self.write_tools else "live_evidence"
+        timeline_action = str(tool_name or method)
         for attempt in range(1, attempts + 1):
             started = time.perf_counter()
             logger.info(
@@ -138,6 +157,15 @@ class MCPClient:
                 attempt=attempt,
                 request=self._bounded_for_log(payload),
             )
+            log_workflow_step(
+                incident_id=incident_id,
+                stage=timeline_stage,
+                component=f"mcp:{self.server_name}",
+                action=timeline_action,
+                status="started",
+                summary=f"MCP {self.server_name} call started: {timeline_action}",
+                details={"method": method, "tool": tool_name, "attempt": attempt},
+            )
             try:
                 response = await self._client.post(
                     self.server_url,
@@ -145,13 +173,24 @@ class MCPClient:
                     headers=self._headers(tool_name=tool_name, include_protocol=include_protocol),
                 )
                 if response.status_code >= 500 and attempt < attempts:
+                    duration_ms = round((time.perf_counter() - started) * 1000, 3)
                     logger.warning(
                         "mcp_response_retryable",
                         server=self.server_name,
                         method=method,
                         tool=tool_name,
                         status=response.status_code,
-                        duration_ms=round((time.perf_counter() - started) * 1000, 3),
+                        duration_ms=duration_ms,
+                    )
+                    log_workflow_step(
+                        incident_id=incident_id,
+                        stage=timeline_stage,
+                        component=f"mcp:{self.server_name}",
+                        action=timeline_action,
+                        status="retrying",
+                        summary=f"MCP {self.server_name} call will retry",
+                        details={"http_status": response.status_code, "attempt": attempt, "duration_ms": duration_ms},
+                        level="warning",
                     )
                     await asyncio.sleep(delay)
                     delay *= max(1.0, float(settings.RETRY_BACKOFF_FACTOR))
@@ -160,19 +199,40 @@ class MCPClient:
                 if response.headers.get("Mcp-Session-Id"):
                     self.session_id = response.headers["Mcp-Session-Id"]
                 decoded = self._decode_response(response)
+                duration_ms = round((time.perf_counter() - started) * 1000, 3)
                 logger.info(
                     "mcp_response",
                     server=self.server_name,
                     method=method,
                     tool=tool_name,
                     status=response.status_code,
-                    duration_ms=round((time.perf_counter() - started) * 1000, 3),
+                    duration_ms=duration_ms,
                     response=self._bounded_for_log(decoded),
+                )
+                log_workflow_step(
+                    incident_id=incident_id,
+                    stage=timeline_stage,
+                    component=f"mcp:{self.server_name}",
+                    action=timeline_action,
+                    status="completed",
+                    summary=f"MCP {self.server_name} call completed: {timeline_action}",
+                    details={"http_status": response.status_code, "attempt": attempt, "duration_ms": duration_ms},
                 )
                 return decoded
             except PermissionError:
+                log_workflow_step(
+                    incident_id=incident_id,
+                    stage=timeline_stage,
+                    component=f"mcp:{self.server_name}",
+                    action=timeline_action,
+                    status="blocked",
+                    summary=f"MCP {self.server_name} call blocked by authorization policy",
+                    details={"attempt": attempt},
+                    level="warning",
+                )
                 raise
             except (httpx.TimeoutException, httpx.TransportError) as exc:
+                duration_ms = round((time.perf_counter() - started) * 1000, 3)
                 logger.warning(
                     "mcp_transport_failure",
                     server=self.server_name,
@@ -180,21 +240,52 @@ class MCPClient:
                     tool=tool_name,
                     attempt=attempt,
                     error_type=type(exc).__name__,
-                    duration_ms=round((time.perf_counter() - started) * 1000, 3),
+                    duration_ms=duration_ms,
                 )
                 if attempt < attempts:
+                    log_workflow_step(
+                        incident_id=incident_id,
+                        stage=timeline_stage,
+                        component=f"mcp:{self.server_name}",
+                        action=timeline_action,
+                        status="retrying",
+                        summary=f"MCP {self.server_name} transport failure; retrying",
+                        details={"error_type": type(exc).__name__, "attempt": attempt, "duration_ms": duration_ms},
+                        level="warning",
+                    )
                     await asyncio.sleep(delay)
                     delay *= max(1.0, float(settings.RETRY_BACKOFF_FACTOR))
                     continue
+                log_workflow_step(
+                    incident_id=incident_id,
+                    stage=timeline_stage,
+                    component=f"mcp:{self.server_name}",
+                    action=timeline_action,
+                    status="failed",
+                    summary=f"MCP {self.server_name} transport call failed",
+                    details={"error_type": type(exc).__name__, "attempt": attempt, "duration_ms": duration_ms},
+                    level="warning",
+                )
                 raise RuntimeError(f"mcp_transport_error:{self.server_name}") from exc
             except httpx.HTTPStatusError as exc:
+                duration_ms = round((time.perf_counter() - started) * 1000, 3)
                 logger.warning(
                     "mcp_http_error",
                     server=self.server_name,
                     method=method,
                     tool=tool_name,
                     status=exc.response.status_code,
-                    duration_ms=round((time.perf_counter() - started) * 1000, 3),
+                    duration_ms=duration_ms,
+                )
+                log_workflow_step(
+                    incident_id=incident_id,
+                    stage=timeline_stage,
+                    component=f"mcp:{self.server_name}",
+                    action=timeline_action,
+                    status="failed",
+                    summary=f"MCP {self.server_name} returned an HTTP error",
+                    details={"http_status": exc.response.status_code, "duration_ms": duration_ms},
+                    level="warning",
                 )
                 raise RuntimeError(f"mcp_http_error:{self.server_name}") from exc
             except Exception as exc:
@@ -204,6 +295,16 @@ class MCPClient:
                     method=method,
                     tool=tool_name,
                     error_type=type(exc).__name__,
+                )
+                log_workflow_step(
+                    incident_id=incident_id,
+                    stage=timeline_stage,
+                    component=f"mcp:{self.server_name}",
+                    action=timeline_action,
+                    status="failed",
+                    summary=f"MCP {self.server_name} call failed",
+                    details={"error_type": type(exc).__name__, "attempt": attempt},
+                    level="warning",
                 )
                 raise RuntimeError(f"mcp_transport_error:{self.server_name}") from exc
         raise RuntimeError(f"mcp_transport_error:{self.server_name}")
