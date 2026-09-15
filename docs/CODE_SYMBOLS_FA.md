@@ -383,7 +383,7 @@
 | `apps/execution_service/tools/registry.py` | `ToolRegistry._verify_authorization` | 50 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ToolRegistry |
 | `apps/execution_service/tools/registry.py` | `ToolRegistry.execute_tool` | 74 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | ToolRegistry |
 | `apps/execution_service/tools/registry.py` | `ToolRegistry.clear` | 125 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ToolRegistry |
-| `apps/execution_service/tools/ssh_vm.py` | `SSHVMTool` | 7 | class | Governed VM tool backed exclusively by the VM MCP edge boundary. | module |
+| `apps/execution_service/tools/ssh_vm.py` | `SSHVMTool` | 7 | class | Governed VM write tool backed exclusively by the VM MCP edge boundary. | module |
 | `apps/execution_service/tools/ssh_vm.py` | `SSHVMTool.__init__` | 10 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMTool |
 | `apps/execution_service/tools/ssh_vm.py` | `SSHVMTool._connector` | 13 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMTool |
 | `apps/execution_service/tools/ssh_vm.py` | `SSHVMTool.name` | 19 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMTool |
