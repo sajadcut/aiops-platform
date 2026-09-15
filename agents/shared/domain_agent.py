@@ -42,15 +42,20 @@ class DomainDiagnosticAgent(BaseAgent):
 
     @staticmethod
     def _bounded_prompt_value(value: Any, depth: int = 0) -> Any:
-        """Compact prompt-only context without mutating stored/audited Evidence."""
+        """Compact prompt-only context without mutating stored/audited Evidence.
+
+        Operational logs and process/network snapshots can be very large. Keep a
+        deliberately small prompt projection while the original Evidence remains
+        untouched in orchestration/audit storage.
+        """
         if depth >= 4:
             return "[bounded]"
         if isinstance(value, str):
-            return value if len(value) <= 800 else value[:800] + "...[truncated]"
+            return value if len(value) <= 480 else value[:480] + "...[truncated]"
         if isinstance(value, list):
-            return [DomainDiagnosticAgent._bounded_prompt_value(item, depth + 1) for item in value[:12]]
+            return [DomainDiagnosticAgent._bounded_prompt_value(item, depth + 1) for item in value[:8]]
         if isinstance(value, tuple):
-            return [DomainDiagnosticAgent._bounded_prompt_value(item, depth + 1) for item in list(value)[:12]]
+            return [DomainDiagnosticAgent._bounded_prompt_value(item, depth + 1) for item in list(value)[:8]]
         if isinstance(value, dict):
             preferred = [
                 "diagnostic", "name", "value", "target", "target_port", "service", "status",
@@ -66,7 +71,7 @@ class DomainDiagnosticAgent(BaseAgent):
             for key in keys[:30]:
                 current = value[key]
                 if key in {"logs", "entries", "rules", "listeners", "processes", "routes", "interfaces"} and isinstance(current, list):
-                    current = current[:12]
+                    current = current[:8]
                 result[str(key)] = DomainDiagnosticAgent._bounded_prompt_value(current, depth + 1)
             return result
         return value
