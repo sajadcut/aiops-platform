@@ -57,7 +57,7 @@ Promotion sequence:
 - External Subject scope must be supplied explicitly and uses a configured Client Application identity; service/customer display names are not guessed into Subject identities.
 - Agents cannot directly register arbitrary write tools. Writes cross `ExecutionService` and the Tool Registry.
 - Durable approvals expire, are bound to the execution intent, and are atomically consumed before approval-gated writes.
-- Governed writes require a short-lived signed execution capability bound to the concrete incident/approval/tool/action/target/parameters/timeout/runbook/rollback intent; caller-provided `approval_granted` is not authorization.
+- Governed writes require durable approval validation, exact execution binding and one-time approval consumption; caller-provided approval context is accepted only after the trusted Control-Plane approval path validates it.
 - MCP is the canonical Control-Plane boundary for external **operational tools**. Cognia is a separate governed Knowledge API boundary.
 - VM writes go through the VM MCP edge. The Control Plane does not open SSH sessions.
 - Production VM MCP requires a non-root key-only SSH identity, strict known-host verification, and target/service allowlists.
