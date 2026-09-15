@@ -119,6 +119,7 @@ class Settings(BaseSettings):
     ZABBIX_MCP_URL: str = Field(...)
     ZABBIX_MCP_SERVER_NAME: Optional[str] = Field(...)
     ZABBIX_MCP_AUTH_HEADER: Optional[str] = Field(...)
+    ZABBIX_MCP_HOST_HEADER: Optional[str] = None
 
     JENKINS_MCP_URL: Optional[str] = Field(...)
     JENKINS_MCP_PROTOCOL_VERSION: str = Field(...)

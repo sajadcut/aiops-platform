@@ -23,6 +23,9 @@ class ZabbixMCPClient(MCPClient):
             client_cert_path=settings.MCP_CLIENT_CERT_PATH,
             client_key_path=settings.MCP_CLIENT_KEY_PATH,
         )
+        host_header = str(settings.ZABBIX_MCP_HOST_HEADER or "").strip()
+        if host_header:
+            self._client.headers["Host"] = host_header
 
     @staticmethod
     def _dt(value: object) -> datetime:
