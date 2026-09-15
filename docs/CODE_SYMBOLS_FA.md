@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 265 | Dashboard JS files scanned: 2 | Symbols indexed: 1693**
+**Python files scanned: 265 | Dashboard JS files scanned: 2 | Symbols indexed: 1704**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -336,7 +336,8 @@
 | `apps/evaluator/__init__.py` | `PlanEvaluator.evaluate` | 19 | method | کیفیت/confidence یا اولویت را به‌صورت deterministic محاسبه می‌کند | PlanEvaluator |
 | `apps/evaluator/gate.py` | `EvaluationGate` | 14 | class | کیفیت RCA را از روی Evidence/Consensus/Safety به‌صورت fail-closed ارزیابی می‌کند. | module |
 | `apps/evaluator/gate.py` | `EvaluationGate._specialist_failed` | 18 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | EvaluationGate |
-| `apps/evaluator/gate.py` | `EvaluationGate.evaluate` | 28 | method | کیفیت/confidence یا اولویت را به‌صورت deterministic محاسبه می‌کند | EvaluationGate |
+| `apps/evaluator/gate.py` | `EvaluationGate._governed_deterministic_recovery` | 28 | method | Return true only for an evidence-grounded, approval-bound stopped-service recovery. | EvaluationGate |
+| `apps/evaluator/gate.py` | `EvaluationGate.evaluate` | 56 | method | کیفیت/confidence یا اولویت را به‌صورت deterministic محاسبه می‌کند | EvaluationGate |
 | `apps/evaluator/thresholds.py` | `EvaluationThresholds` | 4 | class | کلاس | module |
 | `apps/execution_service/__init__.py` | `ExecutionRequest` | 11 | class | کلاس | module |
 | `apps/execution_service/__init__.py` | `ExecutionResult` | 27 | class | کلاس | module |
@@ -481,13 +482,15 @@
 | `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime._bind_execution_context` | 139 | method | Restore request-scoped VM identity after a durable approval pause. | DurableWorkflowRuntime |
 | `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime._reset_execution_context` | 165 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
 | `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime.resume_after_approval` | 172 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
-| `apps/orchestrator/signal_aware.py` | `SignalAwareE2EOrchestrator` | 17 | class | Collaborative E2E workflow for source-triggered and API-triggered incidents. | module |
-| `apps/orchestrator/signal_aware.py` | `SignalAwareE2EOrchestrator._context_node` | 26 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalAwareE2EOrchestrator |
-| `apps/orchestrator/signal_aware.py` | `SignalAwareE2EOrchestrator._publish_peer_context` | 121 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalAwareE2EOrchestrator |
-| `apps/orchestrator/signal_aware.py` | `SignalAwareE2EOrchestrator._parallel_agents_node` | 143 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalAwareE2EOrchestrator |
-| `apps/orchestrator/signal_aware.py` | `SignalAwareE2EOrchestrator._decision_node` | 211 | async method | Bind deterministic policy to the concrete tool/action/target request. | SignalAwareE2EOrchestrator |
-| `apps/orchestrator/signal_aware.py` | `SignalAwareE2EOrchestrator._execution_node` | 281 | async method | Refresh and revalidate live preconditions immediately before execution. | SignalAwareE2EOrchestrator |
-| `apps/orchestrator/signal_aware.py` | `SignalAwareE2EOrchestrator._memory_node` | 366 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalAwareE2EOrchestrator |
+| `apps/orchestrator/signal_aware.py` | `SignalAwareE2EOrchestrator` | 21 | class | Collaborative E2E workflow for source-triggered and API-triggered incidents. | module |
+| `apps/orchestrator/signal_aware.py` | `SignalAwareE2EOrchestrator._context_node` | 30 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalAwareE2EOrchestrator |
+| `apps/orchestrator/signal_aware.py` | `SignalAwareE2EOrchestrator._publish_peer_context` | 125 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalAwareE2EOrchestrator |
+| `apps/orchestrator/signal_aware.py` | `SignalAwareE2EOrchestrator._parallel_agents_node` | 147 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalAwareE2EOrchestrator |
+| `apps/orchestrator/signal_aware.py` | `SignalAwareE2EOrchestrator._deterministic_rca_fallback` | 216 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalAwareE2EOrchestrator |
+| `apps/orchestrator/signal_aware.py` | `SignalAwareE2EOrchestrator._rca_node` | 231 | async method | Bound RCA context so provider token limits cannot erase deterministic recovery. | SignalAwareE2EOrchestrator |
+| `apps/orchestrator/signal_aware.py` | `SignalAwareE2EOrchestrator._decision_node` | 290 | async method | Bind deterministic policy to the concrete tool/action/target request. | SignalAwareE2EOrchestrator |
+| `apps/orchestrator/signal_aware.py` | `SignalAwareE2EOrchestrator._execution_node` | 360 | async method | Refresh and revalidate live preconditions immediately before execution. | SignalAwareE2EOrchestrator |
+| `apps/orchestrator/signal_aware.py` | `SignalAwareE2EOrchestrator._memory_node` | 445 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalAwareE2EOrchestrator |
 | `apps/orchestrator/workflow_store.py` | `WorkflowCheckpointStore` | 18 | class | State قابل resume را با version افزایشی برای هر Incident ذخیره می‌کند. | module |
 | `apps/orchestrator/workflow_store.py` | `WorkflowCheckpointStore.__init__` | 21 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | WorkflowCheckpointStore |
 | `apps/orchestrator/workflow_store.py` | `WorkflowCheckpointStore.save` | 24 | async method | state یا داده را به‌صورت durable ذخیره/به‌روزرسانی می‌کند | WorkflowCheckpointStore |
@@ -504,15 +507,16 @@
 | `apps/rag_service/__init__.py` | `KnowledgeRAGService.get_processing_status` | 259 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | KnowledgeRAGService |
 | `apps/rag_service/__init__.py` | `KnowledgeRAGService.generate_context` | 270 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeRAGService |
 | `apps/remediation_planner/__init__.py` | `RemediationPlanner` | 9 | class | Deterministically bind live operational Evidence to a governed write request. | module |
-| `apps/remediation_planner/__init__.py` | `RemediationPlanner.plan` | 27 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
-| `apps/remediation_planner/__init__.py` | `RemediationPlanner.revalidate_execution` | 131 | method | Fail closed if the approved write is stale immediately before execution. | RemediationPlanner |
-| `apps/remediation_planner/__init__.py` | `RemediationPlanner._load_vm_service_policy` | 169 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
-| `apps/remediation_planner/__init__.py` | `RemediationPlanner._evidence_items` | 182 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
-| `apps/remediation_planner/__init__.py` | `RemediationPlanner._service_states` | 191 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
-| `apps/remediation_planner/__init__.py` | `RemediationPlanner._unhealthy_service_bindings` | 219 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
-| `apps/remediation_planner/__init__.py` | `RemediationPlanner._configuration_precondition` | 249 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
-| `apps/remediation_planner/__init__.py` | `RemediationPlanner._target_port` | 276 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
-| `apps/remediation_planner/__init__.py` | `RemediationPlanner._dedupe` | 310 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
+| `apps/remediation_planner/__init__.py` | `RemediationPlanner.plan` | 29 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
+| `apps/remediation_planner/__init__.py` | `RemediationPlanner.revalidate_execution` | 149 | method | Fail closed if the approved write is stale immediately before execution. | RemediationPlanner |
+| `apps/remediation_planner/__init__.py` | `RemediationPlanner._recovery_action` | 192 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
+| `apps/remediation_planner/__init__.py` | `RemediationPlanner._load_vm_service_policy` | 207 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
+| `apps/remediation_planner/__init__.py` | `RemediationPlanner._evidence_items` | 220 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
+| `apps/remediation_planner/__init__.py` | `RemediationPlanner._service_states` | 229 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
+| `apps/remediation_planner/__init__.py` | `RemediationPlanner._unhealthy_service_bindings` | 257 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
+| `apps/remediation_planner/__init__.py` | `RemediationPlanner._configuration_precondition` | 287 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
+| `apps/remediation_planner/__init__.py` | `RemediationPlanner._target_port` | 314 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
+| `apps/remediation_planner/__init__.py` | `RemediationPlanner._dedupe` | 348 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
 | `apps/runbook_service/executor.py` | `RunbookExecution` | 12 | class | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | module |
 | `apps/runbook_service/executor.py` | `RunbookExecutor` | 19 | class | Safe runtime boundary for registered runbooks. | module |
 | `apps/runbook_service/executor.py` | `RunbookExecutor.__init__` | 27 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RunbookExecutor |
@@ -1495,16 +1499,21 @@
 | `tests/unit/test_operational_agents.py` | `test_security_write_recommendation_is_never_direct_execution` | 75 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_operational_agents.py` | `test_triage_routes_specialists_and_exposes_evidence_gaps` | 90 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_operational_agents.py` | `test_agent_source_does_not_hardcode_mock_provider_or_fake_vm_os` | 106 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_operational_resilience_regressions.py` | `test_zabbix_problem_get_semantic_error_falls_back_to_active_view` | 15 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_operational_resilience_regressions.py` | `test_zabbix_problem_get_semantic_error_falls_back_to_active_view.call_tool` | 19 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_zabbix_problem_get_semantic_error_falls_back_to_active_view |
-| `tests/unit/test_operational_resilience_regressions.py` | `test_zabbix_problem_get_semantic_error_falls_back_to_active_view.json_content` | 25 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_zabbix_problem_get_semantic_error_falls_back_to_active_view |
-| `tests/unit/test_operational_resilience_regressions.py` | `test_focused_routing_uses_three_specialists_but_low_confidence_can_expand` | 47 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_operational_resilience_regressions.py` | `test_prompt_compaction_bounds_logs_processes_and_strings` | 67 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_operational_resilience_regressions.py` | `test_start_reload_remediation_are_supported_but_arbitrary_actions_are_rejected` | 82 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_operational_resilience_regressions.py` | `test_deterministic_vm_classifier_confirms_stopped_haproxy_from_live_evidence` | 92 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_operational_resilience_regressions.py` | `test_deterministic_vm_classifier_confirms_stopped_haproxy_from_live_evidence.evidence` | 93 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_deterministic_vm_classifier_confirms_stopped_haproxy_from_live_evidence |
-| `tests/unit/test_operational_resilience_regressions.py` | `test_partial_specialist_failure_keeps_grounded_vm_evidence_and_evaluator_can_pass` | 116 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_operational_resilience_regressions.py` | `test_total_specialist_failure_still_fails_closed` | 158 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_operational_resilience_regressions.py` | `test_zabbix_problem_get_semantic_error_falls_back_to_active_view` | 17 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_operational_resilience_regressions.py` | `test_zabbix_problem_get_semantic_error_falls_back_to_active_view.call_tool` | 21 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_zabbix_problem_get_semantic_error_falls_back_to_active_view |
+| `tests/unit/test_operational_resilience_regressions.py` | `test_zabbix_problem_get_semantic_error_falls_back_to_active_view.json_content` | 27 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_zabbix_problem_get_semantic_error_falls_back_to_active_view |
+| `tests/unit/test_operational_resilience_regressions.py` | `test_focused_routing_uses_three_specialists_but_low_confidence_can_expand` | 49 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_operational_resilience_regressions.py` | `test_prompt_compaction_bounds_logs_processes_and_strings` | 69 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_operational_resilience_regressions.py` | `test_start_reload_remediation_are_supported_but_arbitrary_actions_are_rejected` | 84 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_operational_resilience_regressions.py` | `test_deterministic_vm_classifier_confirms_stopped_haproxy_from_live_evidence` | 94 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_operational_resilience_regressions.py` | `test_deterministic_vm_classifier_confirms_stopped_haproxy_from_live_evidence.evidence` | 95 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_deterministic_vm_classifier_confirms_stopped_haproxy_from_live_evidence |
+| `tests/unit/test_operational_resilience_regressions.py` | `_FailingLLM` | 118 | class | کلاس | module |
+| `tests/unit/test_operational_resilience_regressions.py` | `_FailingLLM.generate` | 121 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _FailingLLM |
+| `tests/unit/test_operational_resilience_regressions.py` | `test_vm_deterministic_classifier_is_not_lost_when_prompt_evidence_is_capped` | 126 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_operational_resilience_regressions.py` | `test_partial_specialist_failure_keeps_grounded_vm_evidence_and_evaluator_can_pass` | 156 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_operational_resilience_regressions.py` | `test_deterministic_stopped_service_reaches_decision_despite_root_cause_disagreement` | 198 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_operational_resilience_regressions.py` | `test_deterministic_recovery_does_not_bypass_unsafe_write_recommendation` | 251 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_operational_resilience_regressions.py` | `test_total_specialist_failure_still_fails_closed` | 272 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_production_fail_closed.py` | `test_deterministic_embedding_is_forbidden_in_production` | 9 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_production_fail_closed.py` | `test_production_orchestrator_forbids_mock_llm_provider` | 16 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_production_hardening_batch.py` | `_finding` | 15 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
@@ -1534,14 +1543,16 @@
 | `tests/unit/test_remediation_planner.py` | `_evidence` | 8 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_remediation_planner.py` | `_state` | 17 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_remediation_planner.py` | `_healthy_config` | 41 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `tests/unit/test_remediation_planner.py` | `test_planner_builds_only_typed_request_from_live_vm_evidence` | 52 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_remediation_planner.py` | `test_planner_never_turns_llm_recommendation_into_write_without_live_binding` | 94 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_remediation_planner.py` | `test_planner_blocks_invalid_configuration` | 102 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_remediation_planner.py` | `test_planner_blocks_ambiguous_live_service_bindings` | 127 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_remediation_planner.py` | `test_manual_trigger_is_not_eligible_for_automatic_remediation` | 141 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_remediation_planner.py` | `test_pre_execution_revalidation_blocks_restart_after_service_self_recovers` | 153 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_remediation_planner.py` | `test_pre_execution_revalidation_fails_closed_without_fresh_config_check` | 178 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_remediation_planner.py` | `test_durable_resume_restores_persisted_vm_target_and_port_context` | 202 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_remediation_planner.py` | `test_planner_builds_restart_for_failed_service_only_from_live_vm_evidence` | 52 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_remediation_planner.py` | `test_planner_uses_start_for_inactive_dead_service` | 94 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_remediation_planner.py` | `test_planner_never_turns_llm_recommendation_into_write_without_live_binding` | 132 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_remediation_planner.py` | `test_planner_blocks_invalid_configuration` | 140 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_remediation_planner.py` | `test_planner_blocks_ambiguous_live_service_bindings` | 165 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_remediation_planner.py` | `test_manual_trigger_is_not_eligible_for_automatic_remediation` | 179 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_remediation_planner.py` | `test_pre_execution_revalidation_blocks_restart_after_service_self_recovers` | 191 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_remediation_planner.py` | `test_pre_execution_revalidation_allows_start_only_while_service_remains_inactive` | 216 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_remediation_planner.py` | `test_pre_execution_revalidation_fails_closed_without_fresh_config_check` | 242 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_remediation_planner.py` | `test_durable_resume_restores_persisted_vm_target_and_port_context` | 266 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_runbook_executor.py` | `Registry` | 6 | class | کلاس | module |
 | `tests/unit/test_runbook_executor.py` | `Registry.__init__` | 7 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | Registry |
 | `tests/unit/test_runbook_executor.py` | `Registry.get` | 10 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | Registry |
