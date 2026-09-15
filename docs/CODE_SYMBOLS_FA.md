@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 263 | Dashboard JS files scanned: 2 | Symbols indexed: 1668**
+**Python files scanned: 263 | Dashboard JS files scanned: 2 | Symbols indexed: 1670**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -464,17 +464,19 @@
 | `apps/orchestrator/guardrails.py` | `OrchestrationGuardrails` | 5 | class | Reusable evaluator gate for any orchestrator implementation. | module |
 | `apps/orchestrator/guardrails.py` | `OrchestrationGuardrails.evaluate` | 9 | method | کیفیت/confidence یا اولویت را به‌صورت deterministic محاسبه می‌کند | OrchestrationGuardrails |
 | `apps/orchestrator/guardrails.py` | `OrchestrationGuardrails.can_enter_decision` | 13 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OrchestrationGuardrails |
-| `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime` | 16 | class | PostgreSQL-backed runtime around the governed collaborative LangGraph workflow. | module |
-| `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime.__init__` | 19 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
-| `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime._orchestrator_type` | 27 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
-| `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime._flush_audit` | 30 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
-| `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime._set_incident_status` | 33 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
-| `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime._incident_fields` | 39 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
-| `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime._final_incident_status` | 51 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
-| `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime.start` | 64 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
-| `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime._assert_binding` | 113 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
-| `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime._issue_capability` | 123 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
-| `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime.resume_after_approval` | 137 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
+| `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime` | 17 | class | PostgreSQL-backed runtime around the governed collaborative LangGraph workflow. | module |
+| `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime.__init__` | 20 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
+| `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime._orchestrator_type` | 28 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
+| `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime._flush_audit` | 31 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
+| `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime._set_incident_status` | 34 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
+| `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime._incident_fields` | 40 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
+| `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime._final_incident_status` | 52 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
+| `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime.start` | 65 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
+| `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime._assert_binding` | 114 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
+| `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime._issue_capability` | 124 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
+| `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime._bind_execution_context` | 139 | method | Restore request-scoped VM identity after a durable approval pause. | DurableWorkflowRuntime |
+| `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime._reset_execution_context` | 165 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
+| `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime.resume_after_approval` | 172 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
 | `apps/orchestrator/signal_aware.py` | `SignalAwareE2EOrchestrator` | 17 | class | Collaborative E2E workflow for source-triggered and API-triggered incidents. | module |
 | `apps/orchestrator/signal_aware.py` | `SignalAwareE2EOrchestrator._context_node` | 26 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalAwareE2EOrchestrator |
 | `apps/orchestrator/signal_aware.py` | `SignalAwareE2EOrchestrator._publish_peer_context` | 121 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalAwareE2EOrchestrator |
