@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 251 | Dashboard JS files scanned: 2 | Symbols indexed: 1511**
+**Python files scanned: 252 | Dashboard JS files scanned: 2 | Symbols indexed: 1512**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -614,18 +614,18 @@
 | `domain/action_plan.py` | `ActionPlan` | 5 | class | کلاس | module |
 | `domain/audit_event.py` | `AuditEvent` | 6 | class | کلاس | module |
 | `domain/contracts/config.py` | `Settings` | 8 | class | Typed loader for the centralized runtime environment contract. | module |
-| `domain/contracts/config.py` | `Settings.validate_app_env` | 175 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.parse_optional_cognia_ids` | 183 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | Settings |
-| `domain/contracts/config.py` | `Settings.validate_cognia_knowledge_base_ids` | 190 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_log_rotation_mode` | 202 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_log_level` | 210 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_elastic_agent_builder_version` | 218 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_elastic_agent_builder_endpoint` | 231 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_elastic_namespaces` | 239 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_jenkins_mcp_protocol_version` | 247 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_jenkins_basic_auth_header` | 255 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_external_contracts` | 262 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_cognia_contract` | 286 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_app_env` | 176 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.parse_optional_cognia_ids` | 184 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | Settings |
+| `domain/contracts/config.py` | `Settings.validate_cognia_knowledge_base_ids` | 191 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_log_rotation_mode` | 203 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_log_level` | 211 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_elastic_agent_builder_version` | 219 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_elastic_agent_builder_endpoint` | 232 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_elastic_namespaces` | 240 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_jenkins_mcp_protocol_version` | 248 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_jenkins_basic_auth_header` | 256 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_external_contracts` | 263 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_cognia_contract` | 287 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
 | `domain/contracts/context.py` | `set_trace_id` | 7 | function | تنظیم trace_id برای درخواست جاری | module |
 | `domain/contracts/context.py` | `get_trace_id` | 11 | function | دریافت trace_id درخواست جاری | module |
 | `domain/contracts/context.py` | `generate_trace_id` | 15 | function | تولید یک trace_id جدید | module |
@@ -881,9 +881,9 @@
 | `integrations/zabbix/evidence.py` | `ZabbixEvidenceAdapter.normalize` | 6 | method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | ZabbixEvidenceAdapter |
 | `integrations/zabbix/mcp_client.py` | `ZabbixMCPClient` | 11 | class | Read-only adapter for initMAX/zabbix-mcp-server monitoring tools. | module |
 | `integrations/zabbix/mcp_client.py` | `ZabbixMCPClient.__init__` | 14 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ZabbixMCPClient |
-| `integrations/zabbix/mcp_client.py` | `ZabbixMCPClient._dt` | 28 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ZabbixMCPClient |
-| `integrations/zabbix/mcp_client.py` | `ZabbixMCPClient._severity` | 40 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ZabbixMCPClient |
-| `integrations/zabbix/mcp_client.py` | `ZabbixMCPClient.get_alerts` | 44 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | ZabbixMCPClient |
+| `integrations/zabbix/mcp_client.py` | `ZabbixMCPClient._dt` | 31 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ZabbixMCPClient |
+| `integrations/zabbix/mcp_client.py` | `ZabbixMCPClient._severity` | 43 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ZabbixMCPClient |
+| `integrations/zabbix/mcp_client.py` | `ZabbixMCPClient.get_alerts` | 47 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | ZabbixMCPClient |
 | `knowledge/__init__.py` | `EmbeddingService` | 15 | class | Provider-neutral embedding service for Operational Memory only. | module |
 | `knowledge/__init__.py` | `EmbeddingService._deterministic_embedding` | 25 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | EmbeddingService |
 | `knowledge/__init__.py` | `EmbeddingService.generate_embedding` | 35 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | EmbeddingService |
@@ -1485,6 +1485,7 @@
 | `tests/unit/test_vm_execution_boundary.py` | `test_ssh_vm_tool_allows_only_governed_actions` | 9 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_vm_execution_boundary.py` | `test_telemetry_tool_is_read_only` | 27 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_workflow_checkpoint.py` | `test_checkpoint_store_contract_methods_exist` | 7 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_zabbix_mcp_host_header.py` | `test_zabbix_mcp_client_applies_configured_host_header` | 7 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_zabbix_recovery_lifecycle.py` | `test_zabbix_operational_value_zero_is_not_misclassified_as_recovery` | 21 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_zabbix_recovery_lifecycle.py` | `test_zabbix_recovery_event_binds_recovery_id_to_original_problem_id` | 37 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_zabbix_recovery_lifecycle.py` | `test_explicit_recovery_without_recovery_macro_requires_problem_event_id` | 52 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
