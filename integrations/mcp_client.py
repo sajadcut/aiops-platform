@@ -209,15 +209,40 @@ class MCPClient:
                     duration_ms=duration_ms,
                     response=self._bounded_for_log(decoded),
                 )
-                log_workflow_step(
-                    incident_id=incident_id,
-                    stage=timeline_stage,
-                    component=f"mcp:{self.server_name}",
-                    action=timeline_action,
-                    status="completed",
-                    summary=f"MCP {self.server_name} call completed: {timeline_action}",
-                    details={"http_status": response.status_code, "attempt": attempt, "duration_ms": duration_ms},
+                tool_result = decoded.get("result")
+                tool_failed = (
+                    method == "tools/call"
+                    and isinstance(tool_result, dict)
+                    and tool_result.get("isError") is True
                 )
+                if tool_failed:
+                    logger.warning(
+                        "mcp_tool_error_response",
+                        server=self.server_name,
+                        tool=tool_name,
+                        status=response.status_code,
+                        response=self._bounded_for_log(tool_result),
+                    )
+                    log_workflow_step(
+                        incident_id=incident_id,
+                        stage=timeline_stage,
+                        component=f"mcp:{self.server_name}",
+                        action=timeline_action,
+                        status="failed",
+                        summary=f"MCP {self.server_name} tool failed: {timeline_action}",
+                        details={"http_status": response.status_code, "attempt": attempt, "duration_ms": duration_ms},
+                        level="warning",
+                    )
+                else:
+                    log_workflow_step(
+                        incident_id=incident_id,
+                        stage=timeline_stage,
+                        component=f"mcp:{self.server_name}",
+                        action=timeline_action,
+                        status="completed",
+                        summary=f"MCP {self.server_name} call completed: {timeline_action}",
+                        details={"http_status": response.status_code, "attempt": attempt, "duration_ms": duration_ms},
+                    )
                 return decoded
             except PermissionError:
                 log_workflow_step(
@@ -346,6 +371,14 @@ class MCPClient:
             logger.warning("mcp_remote_error", server=self.server_name, method=method, tool=tool_name, response=self._bounded_for_log(result))
             raise RuntimeError(f"mcp_remote_error:{self.server_name}")
         payload = result.get("result", {})
+        if method == "tools/call" and isinstance(payload, dict) and payload.get("isError") is True:
+            logger.warning(
+                "mcp_tool_error",
+                server=self.server_name,
+                tool=tool_name,
+                response=self._bounded_for_log(payload),
+            )
+            raise RuntimeError(f"mcp_tool_error:{self.server_name}:{tool_name or 'unknown'}")
         return payload if isinstance(payload, dict) else {}
 
     async def call_tool(self, tool_name: str, arguments: Dict[str, Any]) -> Dict[str, Any]:

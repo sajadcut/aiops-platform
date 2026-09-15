@@ -9,7 +9,7 @@ from contextvars import ContextVar
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from agents.shared.telemetry import AgentTelemetry
 from domain.contracts.config import settings
@@ -24,6 +24,22 @@ UNTRUSTED_INPUT_POLICY = (
     "If auxiliary Knowledge/Memory conflicts with live evidence, include auxiliary_conflicts as a JSON list of concise descriptions; otherwise return an empty list."
 )
 
+STRUCTURED_OUTPUT_POLICY = (
+    "Return exactly one compact valid JSON object and no markdown or commentary. "
+    "Keep text fields concise and do not repeat the prompt or evidence. "
+    "confidence and every hypotheses[].probability must be numeric values from 0.0 to 1.0; "
+    "do not use labels such as low, medium, or high."
+)
+
+_QUALITATIVE_SCORE_MAP = {
+    "very low": 0.10,
+    "low": 0.25,
+    "medium": 0.50,
+    "moderate": 0.50,
+    "high": 0.75,
+    "very high": 0.90,
+}
+
 _WRITE_ACTION_PATTERN = re.compile(
     r"\b(restart|reboot|stop|start|kill|terminate|delete|remove|drop|truncate|write|modify|change|"
     r"patch|apply|deploy|rollback|scale|drain|cordon|uncordon|rotate|revoke|disable|enable|"
@@ -33,6 +49,24 @@ _WRITE_ACTION_PATTERN = re.compile(
 
 _CURRENT_EVIDENCE_QUALITY: ContextVar[float] = ContextVar("agent_evidence_quality", default=1.0)
 _CURRENT_AUXILIARY_CONFLICTS: ContextVar[Tuple[str, ...]] = ContextVar("agent_auxiliary_conflicts", default=())
+
+
+def _coerce_unit_interval_score(value: Any, field_name: str) -> float:
+    if isinstance(value, bool):
+        raise ValueError(f"{field_name} must be numeric between 0 and 1")
+    if isinstance(value, str):
+        normalized = " ".join(value.strip().lower().replace("_", " ").replace("-", " ").split())
+        if normalized in _QUALITATIVE_SCORE_MAP:
+            score = _QUALITATIVE_SCORE_MAP[normalized]
+        elif normalized.endswith("%"):
+            score = float(normalized[:-1].strip()) / 100.0
+        else:
+            score = float(normalized)
+    else:
+        score = float(value)
+    if not 0 <= score <= 1:
+        raise ValueError(f"{field_name} must be between 0 and 1")
+    return score
 
 
 class AgentInput(BaseModel):
@@ -51,6 +85,11 @@ class OperationalHypothesis(BaseModel):
     falsification_checks: List[str] = Field(default_factory=list)
     impacted_components: List[str] = Field(default_factory=list)
     recommended_next_evidence: List[str] = Field(default_factory=list)
+
+    @field_validator("probability", mode="before")
+    @classmethod
+    def normalize_probability(cls, value: Any) -> float:
+        return _coerce_unit_interval_score(value, "probability")
 
 
 class RecommendedAction(BaseModel):
@@ -108,6 +147,11 @@ class AgentOutput(BaseModel):
     analysis_details: Dict[str, Any] = Field(default_factory=dict)
     model_metadata: Dict[str, Any] = Field(default_factory=dict)
     timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+    @field_validator("confidence", mode="before")
+    @classmethod
+    def normalize_confidence(cls, value: Any) -> float:
+        return _coerce_unit_interval_score(value, "confidence")
 
     @model_validator(mode="after")
     def derive_operational_fields(self) -> "AgentOutput":
@@ -199,21 +243,32 @@ class BaseAgent(ABC):
 
     async def generate_structured(self, prompt: str) -> Dict[str, Any]:
         _CURRENT_AUXILIARY_CONFLICTS.set(())
-        full_prompt = f"{UNTRUSTED_INPUT_POLICY}\n\n{prompt}"
+        full_prompt = f"{UNTRUSTED_INPUT_POLICY}\n\n{STRUCTURED_OUTPUT_POLICY}\n\n{prompt}"
         last_error: Optional[Exception] = None
         attempts = 1 + max(0, settings.AGENT_STRUCTURED_REPAIR_ATTEMPTS)
         started = time.monotonic()
         parse_failure = False
+        base_max_tokens = max(1, int(settings.AGENT_MAX_TOKENS))
+
         for attempt in range(attempts):
-            current = full_prompt if attempt == 0 else (
-                full_prompt + "\n\nYour previous response was invalid. Return exactly one valid JSON object, no markdown."
-            )
+            token_multiplier = min(2 ** attempt, 4)
+            max_tokens = base_max_tokens * token_multiplier
+            if attempt == 0:
+                current = full_prompt
+            else:
+                current = (
+                    full_prompt
+                    + "\n\nREPAIR REQUIRED: the previous response was invalid or truncated. "
+                    + "Return a fresh, shorter JSON object that satisfies the contract. "
+                    + "Do not use markdown. Do not repeat evidence. "
+                    + "confidence and hypotheses[].probability must be numeric 0.0-1.0."
+                )
             try:
                 response = await asyncio.wait_for(
                     self.llm.generate(
                         current,
                         temperature=settings.AGENT_LLM_TEMPERATURE,
-                        max_tokens=settings.AGENT_MAX_TOKENS,
+                        max_tokens=max_tokens,
                     ),
                     timeout=settings.AGENT_TIMEOUT_SECONDS,
                 )
@@ -221,7 +276,15 @@ class BaseAgent(ABC):
                     "provider": self.llm.provider_name,
                     "model": response.model,
                     "usage": response.usage or {},
+                    "finish_reason": response.finish_reason,
+                    "max_tokens": max_tokens,
                 }
+                finish_reason = str(response.finish_reason or "").strip().lower()
+                if finish_reason in {"length", "max_tokens"}:
+                    last_error = StructuredAgentResponseError("agent_response_truncated")
+                    parse_failure = True
+                    continue
+
                 result = self._parse_json_object(response.content)
                 self._validate_structured_shape(result)
                 auxiliary_conflicts = tuple(self.normalize_list(result.get("auxiliary_conflicts"), 8))
@@ -265,15 +328,20 @@ class BaseAgent(ABC):
             if key in obj and not isinstance(obj[key], list):
                 raise StructuredAgentResponseError(f"agent_response_{key}_must_be_list")
         if "confidence" in obj:
-            confidence = float(obj["confidence"])
-            if not 0 <= confidence <= 1:
-                raise StructuredAgentResponseError("agent_response_confidence_out_of_range")
+            try:
+                obj["confidence"] = _coerce_unit_interval_score(obj["confidence"], "confidence")
+            except (TypeError, ValueError) as exc:
+                raise StructuredAgentResponseError("agent_response_confidence_invalid") from exc
         for hypothesis in obj.get("hypotheses", []):
             if not isinstance(hypothesis, dict) or not str(hypothesis.get("hypothesis", "")).strip():
                 raise StructuredAgentResponseError("invalid_hypothesis_shape")
-            probability = float(hypothesis.get("probability", 0))
-            if not 0 <= probability <= 1:
-                raise StructuredAgentResponseError("hypothesis_probability_out_of_range")
+            try:
+                hypothesis["probability"] = _coerce_unit_interval_score(
+                    hypothesis.get("probability", 0),
+                    "hypothesis probability",
+                )
+            except (TypeError, ValueError) as exc:
+                raise StructuredAgentResponseError("hypothesis_probability_invalid") from exc
             for key in ("evidence_ids", "conflicting_evidence_ids", "falsification_checks", "impacted_components", "recommended_next_evidence"):
                 if key in hypothesis and not isinstance(hypothesis[key], list):
                     raise StructuredAgentResponseError(f"hypothesis_{key}_must_be_list")
@@ -385,7 +453,7 @@ class BaseAgent(ABC):
     @staticmethod
     def safe_confidence(value: Any, evidence_count: int, missing_evidence: Optional[List[str]] = None, conflict_count: int = 0) -> float:
         try:
-            confidence = max(0.0, min(1.0, float(value)))
+            confidence = _coerce_unit_interval_score(value, "confidence")
         except (TypeError, ValueError):
             confidence = 0.0
         missing = missing_evidence or []
