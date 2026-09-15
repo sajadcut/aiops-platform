@@ -252,9 +252,6 @@ class SignalAwareE2EOrchestrator(E2EOrchestrator):
             and str(request.get("agent_name") or "") == "remediation_planner"
             and remediation_plan.get("live_identity_verified") is True
         )
-        # A planner-created write binding is considered identity-verified only
-        # when its exact VM target+service came from successful VM MCP Evidence.
-        # Explicit caller requests keep the stricter topology-level guard.
         target_identity_verified = planner_live_verified or not bool(
             request
             and tool is not None
@@ -282,15 +279,12 @@ class SignalAwareE2EOrchestrator(E2EOrchestrator):
         return state
 
     async def _execution_node(self, state: E2EState) -> E2EState:
-        """Refresh the verification baseline immediately before a write/read tool call.
-
-        Approval may be granted minutes after initial analysis, so the initial
-        Incident context is not a trustworthy before-state for verification.
-        A failed refresh is explicit and the older context is retained only as a
-        degraded fallback; it is never silently presented as fresh.
-        """
+        """Refresh and revalidate live preconditions immediately before execution."""
         service = state.get("service_name") or "unknown"
+        request = dict(state.get("execution_request") or {})
+        planner_write = str(request.get("agent_name") or "") == "remediation_planner"
         baseline_degraded = False
+        fresh_before: Dict[str, Any] = {}
         try:
             since = datetime.now(timezone.utc) - timedelta(
                 seconds=settings.AGENT_REFRESH_EVIDENCE_WINDOW_SECONDS
@@ -312,6 +306,54 @@ class SignalAwareE2EOrchestrator(E2EOrchestrator):
             logger.warning("Pre-execution evidence refresh failed: %s", exc)
             state.setdefault("context", {})["verification_precondition_degraded"] = True
             self._audit("pre_execution_evidence_refresh_failed", state, error=str(exc))
+            if planner_write:
+                state["execution_result"] = {
+                    "success": False,
+                    "tool_name": request.get("tool_name"),
+                    "action": request.get("action"),
+                    "target": request.get("target"),
+                    "execution_blocked": True,
+                    "reason": "fresh_execution_precondition_unavailable",
+                    "verification_baseline_degraded": True,
+                }
+                state["terminal_reason"] = "fresh_execution_precondition_unavailable"
+                self._audit(
+                    "remediation_execution_precondition_blocked",
+                    state,
+                    reason="fresh_execution_precondition_unavailable",
+                )
+                return state
+
+        if planner_write:
+            precondition = RemediationPlanner.revalidate_execution(
+                request, fresh_before.get("evidence", [])
+            )
+            state["remediation_precondition"] = precondition
+            if not precondition.get("safe_to_execute"):
+                state["execution_result"] = {
+                    "success": False,
+                    "tool_name": request.get("tool_name"),
+                    "action": request.get("action"),
+                    "target": request.get("target"),
+                    "execution_blocked": True,
+                    "reason": str(precondition.get("reason") or "execution_precondition_failed"),
+                    "verification_baseline_degraded": baseline_degraded,
+                }
+                state["terminal_reason"] = "execution_precondition_failed"
+                self._audit(
+                    "remediation_execution_precondition_blocked",
+                    state,
+                    reason=precondition.get("reason"),
+                    evidence_refs=precondition.get("evidence_refs", []),
+                )
+                return state
+            self._audit(
+                "remediation_execution_precondition_verified",
+                state,
+                target=precondition.get("target"),
+                service=precondition.get("service"),
+                evidence_refs=precondition.get("evidence_refs", []),
+            )
 
         result_state = await super()._execution_node(state)
         execution_result = result_state.get("execution_result") or {}
