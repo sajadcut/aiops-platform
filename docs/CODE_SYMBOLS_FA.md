@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 266 | Dashboard JS files scanned: 2 | Symbols indexed: 1718**
+**Python files scanned: 267 | Dashboard JS files scanned: 2 | Symbols indexed: 1723**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1010,6 +1010,11 @@
 | `scripts/render_k8s_release.py` | `validate_image_ref` | 11 | function | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | module |
 | `scripts/render_k8s_release.py` | `render` | 21 | function | خروجی UI/نمایشی را می‌سازد | module |
 | `scripts/render_k8s_release.py` | `main` | 41 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `scripts/repair_legacy_audit_timestamp.py` | `_timestamp_profile` | 47 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `scripts/repair_legacy_audit_timestamp.py` | `_safe_to_repair` | 97 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `scripts/repair_legacy_audit_timestamp.py` | `_print` | 114 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `scripts/repair_legacy_audit_timestamp.py` | `repair` | 118 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `scripts/repair_legacy_audit_timestamp.py` | `main` | 207 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/integration/test_controlled_connectors.py` | `test_native_edge_observability_connectors_health_harness` | 8 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/integration/test_controlled_connectors.py` | `test_native_edge_observability_connectors_health_harness.healthy` | 9 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_native_edge_observability_connectors_health_harness |
 | `tests/integration/test_controlled_connectors.py` | `test_native_edge_observability_failure_harness` | 20 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
