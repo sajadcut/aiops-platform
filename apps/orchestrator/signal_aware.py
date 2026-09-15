@@ -9,6 +9,7 @@ from apps.context_service.knowledge_topology import KnowledgeTopologyResolver
 from apps.decision_engine import DecisionEngine
 from apps.execution_service.tools.registry import tool_registry
 from apps.orchestrator.e2e_graph import E2EOrchestrator, E2EState
+from apps.remediation_planner import RemediationPlanner
 from domain.contracts.config import settings
 from domain.contracts.logging import logger
 
@@ -211,13 +212,50 @@ class SignalAwareE2EOrchestrator(E2EOrchestrator):
         """Bind deterministic policy to the concrete tool/action/target request."""
         state["current_node"] = "decision"
         request = dict(state.get("execution_request") or {})
+        remediation_plan: Dict[str, Any] = dict(state.get("remediation_plan") or {})
+        if not request:
+            remediation_plan = RemediationPlanner.plan(state)
+            state["remediation_plan"] = remediation_plan
+            planned_request = remediation_plan.get("execution_request")
+            if remediation_plan.get("status") == "planned" and isinstance(planned_request, dict):
+                request = dict(planned_request)
+                state["execution_request"] = request
+                service = str(remediation_plan.get("service") or "").strip()
+                if service:
+                    state["service_name"] = service
+                    state.setdefault("context", {})["service"] = service
+                self._audit(
+                    "remediation_plan_generated",
+                    state,
+                    runbook_id=remediation_plan.get("runbook_id"),
+                    runbook_version=remediation_plan.get("runbook_version"),
+                    tool=request.get("tool_name"),
+                    action=request.get("action"),
+                    target=request.get("target"),
+                    service=service or None,
+                    target_port=remediation_plan.get("target_port"),
+                    evidence_refs=remediation_plan.get("evidence_refs", []),
+                )
+            else:
+                self._audit(
+                    "remediation_plan_not_generated",
+                    state,
+                    reason=remediation_plan.get("reason"),
+                    evidence_refs=remediation_plan.get("evidence_refs", []),
+                )
+
         tool = tool_registry.get_tool(str(request.get("tool_name") or "")) if request else None
         topology_context = dict((state.get("context") or {}).get("topology_context") or {})
         knowledge_identity_unverified = bool(topology_context.get("requires_live_verification"))
-        # Read-only tools may continue to gather evidence from a Cognia hint. A
-        # governed/mutating tool must wait until MCP/live metadata independently
-        # establishes the target identity.
-        target_identity_verified = not bool(
+        planner_live_verified = bool(
+            request
+            and str(request.get("agent_name") or "") == "remediation_planner"
+            and remediation_plan.get("live_identity_verified") is True
+        )
+        # A planner-created write binding is considered identity-verified only
+        # when its exact VM target+service came from successful VM MCP Evidence.
+        # Explicit caller requests keep the stricter topology-level guard.
+        target_identity_verified = planner_live_verified or not bool(
             request
             and tool is not None
             and tool.requires_approval
