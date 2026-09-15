@@ -18,7 +18,7 @@ async def test_ssh_vm_tool_allows_only_governed_actions():
         parameters={"service": "nginx"},
         incident_id="incident-1",
         approval_id="approval-123",
-        execution_capability="signed-capability-placeholder",
+        approval_granted=True,
     ))
     assert not await tool.validate(ToolInput(action="shell", target="vm01", parameters={"command": "rm -rf /"}))
 

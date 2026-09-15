@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import hmac
-import time
 from datetime import datetime
 from typing import Any, Dict
 
@@ -9,7 +8,6 @@ from fastapi import FastAPI, Header, HTTPException, Request
 from pydantic import BaseModel, Field
 
 from apps.api.http_logging import HTTPTransactionLoggingMiddleware
-from apps.execution_service.capability import ExecutionCapabilityError, capability_secret_configured, verify_execution_capability
 from domain.contracts.config import settings
 from domain.contracts.logging import configure_logging, logger
 from integrations.elasticsearch.client import ElasticsearchClient
@@ -29,11 +27,13 @@ configure_logging()
 app = FastAPI(title=f"AIOps MCP Server ({settings.MCP_SERVER_PROVIDER})", docs_url=None, redoc_url=None)
 app.add_middleware(HTTPTransactionLoggingMiddleware)
 _WRITE_TOOLS = {"restart_service", "reload_service", "start_service"}
-_CONSUMED_CAPABILITIES: Dict[str, int] = {}
-_MAX_REPLAY_CACHE_ITEMS = 10000
 _TARGET = {"target": {"type": "string"}}
 _SERVICE = {"service": {"type": "string"}}
 _PORT = {"port": {"type": "integer", "minimum": 1, "maximum": 65535}}
+_APPROVAL_CONTEXT = {
+    "approval_id": {"type": "string", "minLength": 1},
+    "incident_id": {"type": "string", "minLength": 1},
+}
 
 _TOOL_SCHEMAS: Dict[str, Dict[str, Dict[str, Any]]] = {
     "elasticsearch": {
@@ -62,9 +62,9 @@ _TOOL_SCHEMAS: Dict[str, Dict[str, Dict[str, Any]]] = {
         "route_check": {"description": "Read the route selected for a validated destination", "inputSchema": {"type": "object", "required": ["target", "destination"], "properties": {**_TARGET, "destination": {"type": "string"}}}},
         "firewall_status": {"description": "Read bounded local nftables/firewalld/iptables state", "inputSchema": {"type": "object", "required": ["target"], "properties": dict(_TARGET)}},
         "config_validate": {"description": "Validate configuration through a fixed service diagnostic adapter", "inputSchema": {"type": "object", "required": ["target", "service"], "properties": {**_TARGET, **_SERVICE}}},
-        "start_service": {"description": "Start one validated service through approved Execution Service", "inputSchema": {"type": "object", "required": ["target", "service", "approval_id", "incident_id", "execution_capability"], "properties": {**_TARGET, **_SERVICE, "approval_id": {"type": "string", "minLength": 1}, "incident_id": {"type": "string", "minLength": 1}, "execution_capability": {"type": "string", "minLength": 32}}}},
-        "restart_service": {"description": "Restart one validated service through approved Execution Service", "inputSchema": {"type": "object", "required": ["target", "service", "approval_id", "incident_id", "execution_capability"], "properties": {**_TARGET, **_SERVICE, "approval_id": {"type": "string", "minLength": 1}, "incident_id": {"type": "string", "minLength": 1}, "execution_capability": {"type": "string", "minLength": 32}}}},
-        "reload_service": {"description": "Reload one validated service through approved Execution Service", "inputSchema": {"type": "object", "required": ["target", "service", "approval_id", "incident_id", "execution_capability"], "properties": {**_TARGET, **_SERVICE, "approval_id": {"type": "string", "minLength": 1}, "incident_id": {"type": "string", "minLength": 1}, "execution_capability": {"type": "string", "minLength": 32}}}},
+        "start_service": {"description": "Start one validated service through approved Execution Service", "inputSchema": {"type": "object", "required": ["target", "service", "approval_id", "incident_id"], "properties": {**_TARGET, **_SERVICE, **_APPROVAL_CONTEXT}}},
+        "restart_service": {"description": "Restart one validated service through approved Execution Service", "inputSchema": {"type": "object", "required": ["target", "service", "approval_id", "incident_id"], "properties": {**_TARGET, **_SERVICE, **_APPROVAL_CONTEXT}}},
+        "reload_service": {"description": "Reload one validated service through approved Execution Service", "inputSchema": {"type": "object", "required": ["target", "service", "approval_id", "incident_id"], "properties": {**_TARGET, **_SERVICE, **_APPROVAL_CONTEXT}}},
     },
 }
 
@@ -98,21 +98,6 @@ def _authorize(authorization: str | None, tool: str | None = None) -> str:
     if not authorization or not hmac.compare_digest(authorization, f"Bearer {token}"):
         raise HTTPException(status_code=401, detail="invalid_mcp_identity")
     return "mcp-write" if write else "mcp-read"
-
-
-def _consume_capability_jti(claims: Dict[str, Any]) -> None:
-    now = int(time.time())
-    for jti in [key for key, exp in _CONSUMED_CAPABILITIES.items() if exp <= now]:
-        _CONSUMED_CAPABILITIES.pop(jti, None)
-    jti = str(claims.get("jti") or "")
-    if not jti:
-        raise PermissionError("execution_capability_jti_missing")
-    if jti in _CONSUMED_CAPABILITIES:
-        raise PermissionError("execution_capability_replayed")
-    if len(_CONSUMED_CAPABILITIES) >= _MAX_REPLAY_CACHE_ITEMS:
-        oldest = min(_CONSUMED_CAPABILITIES, key=_CONSUMED_CAPABILITIES.get)
-        _CONSUMED_CAPABILITIES.pop(oldest, None)
-    _CONSUMED_CAPABILITIES[jti] = int(claims.get("exp") or now)
 
 
 async def _call(provider: str, tool: str, args: Dict[str, Any]) -> Any:
@@ -161,7 +146,8 @@ async def _call(provider: str, tool: str, args: Dict[str, Any]) -> Any:
     if tool == "firewall_status": return await connector.firewall_status(target)
     if tool == "process_status":
         process = str(args.get("process") or "").strip()
-        if not process: raise ValueError("process_required")
+        if not process:
+            raise ValueError("process_required")
         return await connector.process_status(target, process)
 
     service = str(args.get("service") or "").strip()
@@ -173,15 +159,10 @@ async def _call(provider: str, tool: str, args: Dict[str, Any]) -> Any:
 
     approval_id = str(args.get("approval_id") or "").strip()
     incident_id = str(args.get("incident_id") or "").strip()
-    capability = str(args.get("execution_capability") or "").strip()
-    if not approval_id: raise PermissionError("approval_id_required")
-    if not incident_id: raise PermissionError("incident_id_required")
-    if not capability: raise PermissionError("execution_capability_required")
-    try:
-        claims = verify_execution_capability(capability, incident_id=incident_id, approval_id=approval_id, tool_name="ssh_vm", action=tool, target=target, parameters={"service": service})
-    except ExecutionCapabilityError as exc:
-        raise PermissionError(str(exc)) from exc
-    _consume_capability_jti(claims)
+    if not approval_id:
+        raise PermissionError("approval_id_required")
+    if not incident_id:
+        raise PermissionError("incident_id_required")
     if tool == "start_service": return await connector.start_service(target, service)
     if tool == "restart_service": return await connector.restart_service(target, service)
     if tool == "reload_service": return await connector.reload_service(target, service)
@@ -189,18 +170,25 @@ async def _call(provider: str, tool: str, args: Dict[str, Any]) -> Any:
 
 
 def _validate_production_server() -> None:
-    if settings.APP_ENV != "production": return
+    if settings.APP_ENV != "production":
+        return
     errors: list[str] = []
     provider = _provider()
-    if not settings.MCP_SERVER_REQUIRE_AUTH: errors.append("MCP_SERVER_REQUIRE_AUTH must be true")
-    if not settings.MCP_BEARER_TOKEN: errors.append("MCP_BEARER_TOKEN is required")
+    if not settings.MCP_SERVER_REQUIRE_AUTH:
+        errors.append("MCP_SERVER_REQUIRE_AUTH must be true")
+    if not settings.MCP_BEARER_TOKEN:
+        errors.append("MCP_BEARER_TOKEN is required")
     if provider == "vm":
-        if not settings.MCP_WRITE_BEARER_TOKEN: errors.append("MCP_WRITE_BEARER_TOKEN is required for VM writes")
-        elif settings.MCP_WRITE_BEARER_TOKEN == settings.MCP_BEARER_TOKEN: errors.append("VM read and write identities must be distinct")
-        if not capability_secret_configured(): errors.append("EXECUTION_CAPABILITY_SECRET >=32 bytes is required for VM writes")
-        try: SSHVMConnector()
-        except Exception as exc: errors.append(str(exc))
-    if errors: raise RuntimeError("mcp_server_configuration_invalid:" + ";".join(errors))
+        if not settings.MCP_WRITE_BEARER_TOKEN:
+            errors.append("MCP_WRITE_BEARER_TOKEN is required for VM writes")
+        elif settings.MCP_WRITE_BEARER_TOKEN == settings.MCP_BEARER_TOKEN:
+            errors.append("VM read and write identities must be distinct")
+        try:
+            SSHVMConnector()
+        except Exception as exc:
+            errors.append(str(exc))
+    if errors:
+        raise RuntimeError("mcp_server_configuration_invalid:" + ";".join(errors))
 
 
 @app.on_event("startup")
@@ -216,7 +204,13 @@ async def health() -> Dict[str, Any]:
 
 
 @app.post("/mcp")
-async def mcp(rpc: JsonRpcRequest, http_request: Request, authorization: str | None = Header(default=None), mcp_protocol_version: str | None = Header(default=None, alias="Mcp-Protocol-Version"), mcp_name: str | None = Header(default=None, alias="Mcp-Name")) -> Dict[str, Any]:
+async def mcp(
+    rpc: JsonRpcRequest,
+    http_request: Request,
+    authorization: str | None = Header(default=None),
+    mcp_protocol_version: str | None = Header(default=None, alias="Mcp-Protocol-Version"),
+    mcp_name: str | None = Header(default=None, alias="Mcp-Name"),
+) -> Dict[str, Any]:
     if mcp_protocol_version and mcp_protocol_version != settings.MCP_PROTOCOL_VERSION:
         raise HTTPException(status_code=400, detail="unsupported_mcp_protocol_version")
     provider = _provider()
@@ -236,7 +230,8 @@ async def mcp(rpc: JsonRpcRequest, http_request: Request, authorization: str | N
     if mcp_name and mcp_name != tool:
         raise HTTPException(status_code=400, detail="mcp_name_mismatch")
     args = rpc.params.get("arguments") or {}
-    if not isinstance(args, dict): raise HTTPException(status_code=400, detail="invalid_tool_arguments")
+    if not isinstance(args, dict):
+        raise HTTPException(status_code=400, detail="invalid_tool_arguments")
     try:
         content = await _call(provider, tool, args)
     except PermissionError as exc:
@@ -245,5 +240,6 @@ async def mcp(rpc: JsonRpcRequest, http_request: Request, authorization: str | N
     except Exception as exc:
         logger.exception("mcp_tool_call_failed", provider=provider, tool=tool, error_type=type(exc).__name__)
         return {"jsonrpc": "2.0", "id": rpc.id, "error": {"code": -32000, "message": "tool_call_failed"}}
-    if not isinstance(content, list): content = [content]
+    if not isinstance(content, list):
+        content = [content]
     return {"jsonrpc": "2.0", "id": rpc.id, "result": {"content": content}}

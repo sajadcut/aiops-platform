@@ -6,7 +6,6 @@ from apps.approval_service.binding import assert_bound, bind_metadata
 from apps.approval_service.postgres import PostgreSQLApprovalStore
 from apps.audit_service import AuditService
 from apps.audit_service.postgres import PostgreSQLAuditStore
-from apps.execution_service.capability import issue_execution_capability
 from apps.incident_service.repository import IncidentRepository
 from apps.orchestrator.e2e_graph import E2EOrchestrator
 from apps.orchestrator.signal_aware import SignalAwareE2EOrchestrator
@@ -121,28 +120,13 @@ class DurableWorkflowRuntime:
         )
 
     @staticmethod
-    def _issue_capability(incident_id: str, approval_id: str, execution_request: Dict[str, Any]) -> str:
-        return issue_execution_capability(
-            incident_id=incident_id,
-            approval_id=approval_id,
-            tool_name=str(execution_request.get("tool_name") or ""),
-            action=str(execution_request.get("action") or ""),
-            target=str(execution_request.get("target") or ""),
-            parameters=dict(execution_request.get("parameters") or {}),
-            timeout=int(execution_request.get("timeout", 30)),
-            runbook_id=execution_request.get("runbook_id"),
-            runbook_version=execution_request.get("runbook_version"),
-            rollback=bool(execution_request.get("rollback", False)),
-        )
-
-    @staticmethod
     def _bind_execution_context(execution_request: Dict[str, Any]):
         """Restore request-scoped VM identity after a durable approval pause.
 
         Signal ingestion contextvars intentionally expire with the webhook request.
-        The persisted execution request is approval-bound and capability-bound, so
-        it is the correct source for re-establishing the exact VM target/port while
-        refreshing pre/post execution evidence after a later approval request.
+        The persisted execution request is approval-bound, so it is the correct
+        source for re-establishing the exact VM target/port while refreshing
+        pre/post execution evidence after a later approval request.
         """
         if str(execution_request.get("tool_name") or "") != "ssh_vm":
             return None
@@ -190,11 +174,6 @@ class DurableWorkflowRuntime:
             raise ValueError("execution_request_not_found_in_checkpoint")
         self._assert_binding(durable, execution_request)
 
-        # Build and validate all pre-execution authorization material before the
-        # one-time approval transition. Configuration/capability failures must not
-        # burn an approved request before any execution attempt has started.
-        execution_capability = self._issue_capability(incident_id, str(approval_id), execution_request)
-
         consumed = await self.approvals.consume(str(approval_id))
         if not consumed or consumed.get("status") != "consumed":
             raise ValueError("approval_already_consumed")
@@ -204,10 +183,9 @@ class DurableWorkflowRuntime:
         )
 
         state["approval"] = consumed
-        execution_request["approval_granted"] = True  # compatibility signal only; service ignores it for authorization
+        execution_request["approval_granted"] = True
         execution_request["approval_id"] = str(approval_id)
         execution_request["incident_id"] = incident_id
-        execution_request["execution_capability"] = execution_capability
         state["execution_request"] = execution_request
         state["current_node"] = "execution"
 

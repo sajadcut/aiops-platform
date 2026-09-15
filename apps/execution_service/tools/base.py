@@ -11,7 +11,7 @@ class ToolInput(BaseModel):
     timeout: Optional[int] = 30
     incident_id: Optional[str] = None
     approval_id: Optional[str] = None
-    execution_capability: Optional[str] = None
+    approval_granted: bool = False
     runbook_id: Optional[str] = None
     runbook_version: Optional[str] = None
     rollback: bool = False

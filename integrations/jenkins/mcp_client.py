@@ -16,10 +16,9 @@ class JenkinsMCPClient(MCPClient):
 
     Read tools are available through the normal MCP identity. Mutating Jenkins
     tools are disabled by default and, when explicitly enabled, require a
-    separate write identity plus local Approval/incident/execution-capability
-    context. Those governance values are deliberately not forwarded to Jenkins
-    because they are AIOps Control-Plane evidence, not parameters in the
-    upstream Jenkins MCP tool schema.
+    separate write identity plus local durable Approval/incident context. Those
+    governance values are deliberately not forwarded to Jenkins because they are
+    AIOps Control-Plane evidence, not upstream Jenkins MCP tool parameters.
     """
 
     READ_TOOLS = frozenset(
@@ -123,13 +122,11 @@ class JenkinsMCPClient(MCPClient):
         return arguments
 
     @staticmethod
-    def _require_write_context(approval_id: str, incident_id: str, execution_capability: str) -> None:
+    def _require_write_context(approval_id: str, incident_id: str) -> None:
         if not str(approval_id or "").strip():
             raise PermissionError("jenkins_write_approval_id_required")
         if not str(incident_id or "").strip():
             raise PermissionError("jenkins_write_incident_id_required")
-        if not str(execution_capability or "").strip():
-            raise PermissionError("jenkins_write_execution_capability_required")
 
     async def call_tool(self, tool_name: str, arguments: Dict[str, Any]) -> Dict[str, Any]:
         if tool_name in self.WRITE_TOOLS:
@@ -146,11 +143,10 @@ class JenkinsMCPClient(MCPClient):
         *,
         approval_id: str,
         incident_id: str,
-        execution_capability: str,
     ) -> Any:
         if not self.enable_writes:
             raise PermissionError("jenkins_mcp_writes_disabled")
-        self._require_write_context(approval_id, incident_id, execution_capability)
+        self._require_write_context(approval_id, incident_id)
         return self._decoded(await super().call_tool(name, arguments))
 
     async def mcp_health(self) -> Dict[str, Any]:
@@ -322,14 +318,12 @@ class JenkinsMCPClient(MCPClient):
         parameters: Optional[Mapping[str, Any]] = None,
         approval_id: str,
         incident_id: str,
-        execution_capability: str,
     ) -> Any:
         return await self._write_tool(
             "triggerBuild",
             {"jobFullName": job_full_name, "parameters": dict(parameters or {})},
             approval_id=approval_id,
             incident_id=incident_id,
-            execution_capability=execution_capability,
         )
 
     async def update_build(
@@ -341,7 +335,6 @@ class JenkinsMCPClient(MCPClient):
         description: Optional[str] = None,
         approval_id: str,
         incident_id: str,
-        execution_capability: str,
     ) -> Any:
         if not display_name and not description:
             raise ValueError("jenkins_update_build_change_required")
@@ -356,7 +349,6 @@ class JenkinsMCPClient(MCPClient):
             arguments,
             approval_id=approval_id,
             incident_id=incident_id,
-            execution_capability=execution_capability,
         )
 
     async def rebuild_build(
@@ -366,14 +358,12 @@ class JenkinsMCPClient(MCPClient):
         build_number: Optional[int] = None,
         approval_id: str,
         incident_id: str,
-        execution_capability: str,
     ) -> Any:
         return await self._write_tool(
             "rebuildBuild",
             self._with_optional({"jobFullName": job_full_name}, buildNumber=build_number),
             approval_id=approval_id,
             incident_id=incident_id,
-            execution_capability=execution_capability,
         )
 
     async def replay_build(
@@ -385,7 +375,6 @@ class JenkinsMCPClient(MCPClient):
         loaded_scripts: Optional[Mapping[str, str]] = None,
         approval_id: str,
         incident_id: str,
-        execution_capability: str,
     ) -> Any:
         if not str(main_script or "").strip():
             raise ValueError("jenkins_replay_main_script_required")
@@ -399,5 +388,4 @@ class JenkinsMCPClient(MCPClient):
             arguments,
             approval_id=approval_id,
             incident_id=incident_id,
-            execution_capability=execution_capability,
         )

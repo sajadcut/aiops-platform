@@ -19,9 +19,9 @@ class RunbookExecution:
 class RunbookExecutor:
     """Safe runtime boundary for registered runbooks.
 
-    Approval booleans are compatibility metadata only. Approval-required tools
-    must carry a signed execution capability issued after durable approval
-    validation and consume. Unvalidated approval identifiers are not propagated.
+    Approval-required tools accept only approval context that an upstream durable
+    approval path has validated, bound to the requested operation, and consumed.
+    Plain approval identifiers are not propagated unless approval_granted is true.
     """
 
     def __init__(self, registry: RunbookRegistry):
@@ -46,7 +46,6 @@ class RunbookExecutor:
         incident_id: Optional[str] = None,
         approval_id: Optional[str] = None,
         approval_granted: bool = False,
-        execution_capability: Optional[str] = None,
         rollback_requested: bool = False,
     ) -> Dict[str, Any]:
         runbook = self.registry.get(runbook_id)
@@ -66,12 +65,12 @@ class RunbookExecutor:
             }
 
         action = "rollback" if rollback_requested else runbook.get("action", runbook_id)
-        authorized_approval_id = approval_id if execution_capability else None
+        authorized_approval_id = approval_id if approval_granted else None
+        authorized_incident_id = incident_id if approval_granted else None
         request = ExecutionRequest(
             tool_name=tool_name, action=action, target=target, parameters=parameters, timeout=timeout,
-            agent_name="runbook_executor", incident_id=incident_id if execution_capability else None,
-            approval_granted=bool(approval_granted and execution_capability), approval_id=authorized_approval_id,
-            execution_capability=execution_capability,
+            agent_name="runbook_executor", incident_id=authorized_incident_id,
+            approval_granted=bool(approval_granted), approval_id=authorized_approval_id,
             runbook_id=runbook_id, runbook_version=str(runbook.get("version") or ""), rollback=rollback_requested,
         )
         result = await ExecutionService.execute(request)

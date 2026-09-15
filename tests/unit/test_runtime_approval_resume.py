@@ -2,7 +2,6 @@ import pytest
 
 import apps.orchestrator.runtime as runtime_module
 from apps.approval_service.binding import bind_metadata
-from apps.execution_service.capability import ExecutionCapabilityError, verify_execution_capability
 from apps.orchestrator.runtime import DurableWorkflowRuntime
 
 
@@ -125,13 +124,8 @@ def _runtime(state):
     return runtime
 
 
-def _capability_secret(monkeypatch):
-    monkeypatch.setenv("EXECUTION_CAPABILITY_SECRET", "test-execution-capability-secret-32-bytes-minimum")
-
-
 @pytest.mark.asyncio
-async def test_resume_injects_persisted_approval_into_execution_request(monkeypatch):
-    _capability_secret(monkeypatch)
+async def test_resume_injects_consumed_approval_context_into_execution_request(monkeypatch):
     runtime = _runtime(_paused_state())
     FakeOrchestrator.verification_calls = 0
     monkeypatch.setattr(runtime_module, "E2EOrchestrator", FakeOrchestrator)
@@ -146,31 +140,12 @@ async def test_resume_injects_persisted_approval_into_execution_request(monkeypa
     assert request["approval_granted"] is True
     assert request["approval_id"] == "approval-123"
     assert request["incident_id"] == "incident-1"
-    claims = verify_execution_capability(
-        request["execution_capability"], incident_id="incident-1", approval_id="approval-123",
-        tool_name="ssh_vm", action="restart_service", target="vm01", parameters={}, timeout=30,
-    )
-    assert claims["jti"]
     assert FakeOrchestrator.verification_calls == 1
     assert runtime.incidents.statuses[-1] == ("incident-1", "resolved")
 
 
 @pytest.mark.asyncio
-async def test_capability_failure_does_not_consume_approval(monkeypatch):
-    monkeypatch.delenv("EXECUTION_CAPABILITY_SECRET", raising=False)
-    runtime = _runtime(_paused_state())
-
-    with pytest.raises(ExecutionCapabilityError, match="execution_capability_secret_not_configured"):
-        await runtime.resume_after_approval("incident-1")
-
-    assert runtime.approvals.consume_calls == []
-    assert runtime.checkpoints.completed is None
-    assert runtime.checkpoints.failed is None
-
-
-@pytest.mark.asyncio
 async def test_failed_execution_never_runs_verification_or_resolves_incident(monkeypatch):
-    _capability_secret(monkeypatch)
     runtime = _runtime(_paused_state())
     ExecutionFailsOrchestrator.verification_calls = 0
     monkeypatch.setattr(runtime_module, "E2EOrchestrator", ExecutionFailsOrchestrator)
@@ -184,7 +159,6 @@ async def test_failed_execution_never_runs_verification_or_resolves_incident(mon
 
 @pytest.mark.asyncio
 async def test_failed_verification_never_resolves_incident(monkeypatch):
-    _capability_secret(monkeypatch)
     runtime = _runtime(_paused_state())
     monkeypatch.setattr(runtime_module, "E2EOrchestrator", VerificationFailsOrchestrator)
     result = await runtime.resume_after_approval("incident-1")

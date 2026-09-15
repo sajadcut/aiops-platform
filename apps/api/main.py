@@ -11,7 +11,6 @@ from domain.contracts.rate_limit import rate_limiter_strict
 
 from apps.api import health, workflow, incidents, a2a, execution, e2e_workflow, audit, runbooks, incident_resources, dashboard, runbook_execution, dashboard_incidents, remediation, agents, signals
 from apps.api.http_logging import HTTPTransactionLoggingMiddleware
-from apps.execution_service.capability import capability_secret_configured, capability_ttl_seconds, ExecutionCapabilityError
 from apps.execution_service.tools.registry import tool_registry
 from apps.execution_service.tools.mock_executor import MockExecutorTool
 from apps.execution_service.tools.ssh_vm import SSHVMTool
@@ -160,17 +159,11 @@ def _validate_production_configuration() -> None:
         errors.append("MCP client certificate and key must be configured together")
 
     if settings.VM_MCP_URL or settings.KUBERNETES_MCP_URL:
-        boundary = "VM/Kubernetes MCP write capability"
+        boundary = "VM/Kubernetes MCP write path"
         if not settings.MCP_WRITE_BEARER_TOKEN:
             errors.append(f"{boundary} requires MCP_WRITE_BEARER_TOKEN")
         elif settings.MCP_BEARER_TOKEN and settings.MCP_WRITE_BEARER_TOKEN == settings.MCP_BEARER_TOKEN:
             errors.append("MCP write identity must be distinct from read identity")
-        if not capability_secret_configured():
-            errors.append("EXECUTION_CAPABILITY_SECRET must be configured with at least 32 bytes for governed writes")
-        try:
-            capability_ttl_seconds()
-        except ExecutionCapabilityError as exc:
-            errors.append(str(exc))
 
     if settings.SSH_ENABLED:
         errors.append("direct Control-Plane SSH is forbidden; configure VM_MCP_URL instead")

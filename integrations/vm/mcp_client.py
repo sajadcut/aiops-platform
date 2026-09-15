@@ -56,17 +56,18 @@ class VMEdgeMCPClient(MCPClient):
     async def config_validate(self, target: str, service: str) -> Dict[str, Any]: return await self._invoke("config_validate", target, service=service)
 
     @staticmethod
-    def _write_context(approval_id: str, incident_id: str, execution_capability: str) -> Dict[str, str]:
-        if not approval_id: raise PermissionError("mcp_write_approval_id_required")
-        if not incident_id: raise PermissionError("mcp_write_incident_id_required")
-        if not execution_capability: raise PermissionError("mcp_write_execution_capability_required")
-        return {"approval_id": approval_id, "incident_id": incident_id, "execution_capability": execution_capability}
+    def _write_context(approval_id: str, incident_id: str) -> Dict[str, str]:
+        if not approval_id:
+            raise PermissionError("mcp_write_approval_id_required")
+        if not incident_id:
+            raise PermissionError("mcp_write_incident_id_required")
+        return {"approval_id": approval_id, "incident_id": incident_id}
 
-    async def restart_service(self, target: str, service: str, approval_id: str, incident_id: str, execution_capability: str) -> Dict[str, Any]:
-        return await self._invoke("restart_service", target, service=service, **self._write_context(approval_id, incident_id, execution_capability))
+    async def restart_service(self, target: str, service: str, approval_id: str, incident_id: str) -> Dict[str, Any]:
+        return await self._invoke("restart_service", target, service=service, **self._write_context(approval_id, incident_id))
 
-    async def reload_service(self, target: str, service: str, approval_id: str, incident_id: str, execution_capability: str) -> Dict[str, Any]:
-        return await self._invoke("reload_service", target, service=service, **self._write_context(approval_id, incident_id, execution_capability))
+    async def reload_service(self, target: str, service: str, approval_id: str, incident_id: str) -> Dict[str, Any]:
+        return await self._invoke("reload_service", target, service=service, **self._write_context(approval_id, incident_id))
 
-    async def start_service(self, target: str, service: str, approval_id: str, incident_id: str, execution_capability: str) -> Dict[str, Any]:
-        return await self._invoke("start_service", target, service=service, **self._write_context(approval_id, incident_id, execution_capability))
+    async def start_service(self, target: str, service: str, approval_id: str, incident_id: str) -> Dict[str, Any]:
+        return await self._invoke("start_service", target, service=service, **self._write_context(approval_id, incident_id))

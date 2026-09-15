@@ -3,7 +3,6 @@ from typing import Dict, Any, Optional
 from pydantic import BaseModel, Field
 
 from domain.contracts.logging import logger
-from apps.execution_service.capability import ExecutionCapabilityError, verify_execution_capability
 from apps.execution_service.tools.base import ToolInput
 from apps.execution_service.tools.registry import tool_registry
 
@@ -16,9 +15,8 @@ class ExecutionRequest(BaseModel):
     timeout: int = 30
     agent_name: str = "execution_service"
     incident_id: Optional[str] = None
-    approval_granted: bool = False  # compatibility only; never trusted as authorization
+    approval_granted: bool = False
     approval_id: Optional[str] = None
-    execution_capability: Optional[str] = None
     runbook_id: Optional[str] = None
     runbook_version: Optional[str] = None
     rollback: bool = False
@@ -70,32 +68,11 @@ class ExecutionService:
                     execution_blocked=True, reason="incident_id_required",
                     error="Approved execution requires incident binding", approval_id=request.approval_id,
                 )
-            if not request.execution_capability:
+            if not request.approval_granted:
                 return ExecutionResult(
                     success=False, tool_name=request.tool_name, action=request.action, target=request.target,
-                    execution_blocked=True, reason="execution_capability_required",
-                    error="Approved execution requires a signed execution capability", approval_id=request.approval_id,
-                )
-            try:
-                verify_execution_capability(
-                    request.execution_capability,
-                    incident_id=request.incident_id,
-                    approval_id=request.approval_id,
-                    tool_name=request.tool_name,
-                    action=request.action,
-                    target=request.target,
-                    parameters=request.parameters,
-                    timeout=request.timeout,
-                    runbook_id=request.runbook_id,
-                    runbook_version=request.runbook_version,
-                    rollback=request.rollback,
-                )
-            except ExecutionCapabilityError as exc:
-                logger.warning("execution_capability_rejected", reason=str(exc), approval_id=request.approval_id)
-                return ExecutionResult(
-                    success=False, tool_name=request.tool_name, action=request.action, target=request.target,
-                    execution_blocked=True, reason="execution_capability_invalid", error=str(exc),
-                    approval_id=request.approval_id,
+                    execution_blocked=True, reason="approval_not_granted",
+                    error="Approved execution requires durable approval validation", approval_id=request.approval_id,
                 )
 
         tool_input = ToolInput(
@@ -105,7 +82,7 @@ class ExecutionService:
             timeout=request.timeout,
             incident_id=request.incident_id,
             approval_id=request.approval_id,
-            execution_capability=request.execution_capability,
+            approval_granted=request.approval_granted,
             runbook_id=request.runbook_id,
             runbook_version=request.runbook_version,
             rollback=request.rollback,

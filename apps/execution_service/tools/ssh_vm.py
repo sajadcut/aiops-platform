@@ -37,7 +37,7 @@ class SSHVMTool(BaseTool):
         if input_data.action in {"service_status", "restart_service", "reload_service", "start_service"} and not str((input_data.parameters or {}).get("service", "")):
             return False
         if input_data.action in {"restart_service", "reload_service", "start_service"} and (
-            not input_data.approval_id or not input_data.incident_id or not input_data.execution_capability
+            not input_data.approval_id or not input_data.incident_id or not input_data.approval_granted
         ):
             return False
         return True
@@ -52,17 +52,17 @@ class SSHVMTool(BaseTool):
         elif input_data.action == "restart_service":
             result = await connector.restart_service(
                 input_data.target, str(params["service"]), str(input_data.approval_id or ""),
-                str(input_data.incident_id or ""), str(input_data.execution_capability or ""),
+                str(input_data.incident_id or ""),
             )
         elif input_data.action == "reload_service":
             result = await connector.reload_service(
                 input_data.target, str(params["service"]), str(input_data.approval_id or ""),
-                str(input_data.incident_id or ""), str(input_data.execution_capability or ""),
+                str(input_data.incident_id or ""),
             )
         elif input_data.action == "start_service":
             result = await connector.start_service(
                 input_data.target, str(params["service"]), str(input_data.approval_id or ""),
-                str(input_data.incident_id or ""), str(input_data.execution_capability or ""),
+                str(input_data.incident_id or ""),
             )
         elif input_data.action == "process_snapshot":
             result = await connector.process_snapshot(input_data.target)

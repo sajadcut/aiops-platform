@@ -35,7 +35,7 @@ class KubernetesMCPTool(BaseTool):
             return False
         if not str(params.get("namespace") or ""):
             return False
-        if not input_data.approval_id or not input_data.incident_id or not input_data.execution_capability:
+        if not input_data.approval_id or not input_data.incident_id or not input_data.approval_granted:
             return False
         if input_data.action == "scale_workload":
             replicas = params.get("replicas")
@@ -51,15 +51,14 @@ class KubernetesMCPTool(BaseTool):
         namespace = str(params["namespace"])
         approval_id = str(input_data.approval_id or "")
         incident_id = str(input_data.incident_id or "")
-        capability = str(input_data.execution_capability or "")
         try:
             if input_data.action == "restart_workload":
-                result = await connector.restart_workload(input_data.target, namespace, approval_id, incident_id, capability)
+                result = await connector.restart_workload(input_data.target, namespace, approval_id, incident_id)
             elif input_data.action == "rollback_workload":
                 revision = str(params["revision"]) if params.get("revision") is not None else None
-                result = await connector.rollback_workload(input_data.target, namespace, approval_id, incident_id, capability, revision)
+                result = await connector.rollback_workload(input_data.target, namespace, approval_id, incident_id, revision)
             elif input_data.action == "scale_workload":
-                result = await connector.scale_workload(input_data.target, namespace, int(params["replicas"]), approval_id, incident_id, capability)
+                result = await connector.scale_workload(input_data.target, namespace, int(params["replicas"]), approval_id, incident_id)
             else:
                 result = {"success": False, "error": "unsupported_action"}
         except (RuntimeError, PermissionError, ValueError) as exc:

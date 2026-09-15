@@ -31,7 +31,7 @@ async def test_non_empty_approval_id_does_not_grant_execution(monkeypatch):
     async def fake_execute(request):
         captured["approval_granted"] = request.approval_granted
         captured["approval_id"] = request.approval_id
-        captured["execution_capability"] = request.execution_capability
+        captured["incident_id"] = request.incident_id
         return _result(success=False, blocked=True)
 
     monkeypatch.setattr(ExecutionService, "execute", fake_execute)
@@ -45,17 +45,18 @@ async def test_non_empty_approval_id_does_not_grant_execution(monkeypatch):
     )
     assert captured["approval_granted"] is False
     assert captured["approval_id"] is None
-    assert captured["execution_capability"] is None
+    assert captured["incident_id"] is None
 
 
 @pytest.mark.asyncio
-async def test_approval_boolean_without_capability_is_not_propagated(monkeypatch):
+async def test_validated_upstream_approval_context_is_propagated(monkeypatch):
     captured = {}
 
     async def fake_execute(request):
         captured["approval_granted"] = request.approval_granted
         captured["approval_id"] = request.approval_id
-        return _result(success=False, blocked=True)
+        captured["incident_id"] = request.incident_id
+        return _result(success=True, blocked=False)
 
     monkeypatch.setattr(ExecutionService, "execute", fake_execute)
     executor = RunbookExecutor(_Registry())
@@ -68,5 +69,6 @@ async def test_approval_boolean_without_capability_is_not_propagated(monkeypatch
         approval_id="validated-id",
         approval_granted=True,
     )
-    assert captured["approval_granted"] is False
-    assert captured["approval_id"] is None
+    assert captured["approval_granted"] is True
+    assert captured["approval_id"] == "validated-id"
+    assert captured["incident_id"] == "incident-1"

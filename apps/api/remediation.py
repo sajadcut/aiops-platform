@@ -13,7 +13,6 @@ from apps.approval_service.postgres import PostgreSQLApprovalStore
 from apps.audit_service import AuditService
 from apps.audit_service.postgres import PostgreSQLAuditStore
 from apps.execution_service import ExecutionRequest, ExecutionService
-from apps.execution_service.capability import ExecutionCapabilityError, issue_execution_capability
 from apps.security.auth import require_permission
 from database import AsyncSessionLocal
 from domain.models import Finding, Incident
@@ -130,13 +129,6 @@ async def execute_approved_remediation(approval_id: str, identity=Depends(requir
         consumed = await store.consume(approval_id)
         if not consumed or consumed.get("status") != "consumed":
             raise HTTPException(status_code=409, detail="approval_already_consumed_or_unavailable")
-        try:
-            capability = issue_execution_capability(
-                incident_id=incident_id, approval_id=approval_id, tool_name="ssh_vm",
-                action=action, target=target, parameters={"service": service}, timeout=30,
-            )
-        except ExecutionCapabilityError as exc:
-            raise HTTPException(status_code=503, detail=str(exc)) from exc
         await _audit_durable(db, "approval_consumed", identity.subject, incident_id, action, "recorded", {
             "approval_id": approval_id, "tool_name": "ssh_vm", "target": target,
         })
@@ -144,7 +136,7 @@ async def execute_approved_remediation(approval_id: str, identity=Depends(requir
         request = ExecutionRequest(
             tool_name="ssh_vm", action=action, target=target, parameters={"service": service}, timeout=30,
             agent_name="remediation_workflow", incident_id=incident_id, approval_granted=True,
-            approval_id=approval_id, execution_capability=capability,
+            approval_id=approval_id,
         )
         result = await ExecutionService.execute(request)
         await _audit_durable(db, "remediation_executed", identity.subject, incident_id, action,

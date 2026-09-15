@@ -10,8 +10,8 @@ class KubernetesMCPClient(MCPClient):
     """Kubernetes evidence + explicitly governed write connector through MCP.
 
     Read evidence uses the normal MCP identity. Mutating tools use the separate
-    write identity and are never retried by MCPClient. The remote Kubernetes MCP
-    must independently validate the signed execution capability it receives.
+    write identity and require durable approval/incident context from the AIOps
+    control plane. The remote MCP receives that context for audit correlation.
     """
 
     READ_TOOL = "collect_kubernetes_evidence"
@@ -58,47 +58,45 @@ class KubernetesMCPClient(MCPClient):
     @staticmethod
     def _write_args(
         *, target: str, namespace: str, approval_id: str, incident_id: str,
-        execution_capability: str, extra: Dict[str, Any] | None = None,
+        extra: Dict[str, Any] | None = None,
     ) -> Dict[str, Any]:
-        if not all((target, namespace, approval_id, incident_id, execution_capability)):
+        if not all((target, namespace, approval_id, incident_id)):
             raise ValueError("kubernetes_write_binding_incomplete")
         return {
             "target": target,
             "namespace": namespace,
             "approval_id": approval_id,
             "incident_id": incident_id,
-            "execution_capability": execution_capability,
             **(extra or {}),
         }
 
     async def restart_workload(
-        self, target: str, namespace: str, approval_id: str,
-        incident_id: str, execution_capability: str,
+        self, target: str, namespace: str, approval_id: str, incident_id: str,
     ) -> Dict[str, Any]:
         return await self.call_tool(
             "restart_kubernetes_workload",
             self._write_args(
                 target=target, namespace=namespace, approval_id=approval_id,
-                incident_id=incident_id, execution_capability=execution_capability,
+                incident_id=incident_id,
             ),
         )
 
     async def rollback_workload(
         self, target: str, namespace: str, approval_id: str, incident_id: str,
-        execution_capability: str, revision: str | None = None,
+        revision: str | None = None,
     ) -> Dict[str, Any]:
         return await self.call_tool(
             "rollback_kubernetes_workload",
             self._write_args(
                 target=target, namespace=namespace, approval_id=approval_id,
-                incident_id=incident_id, execution_capability=execution_capability,
+                incident_id=incident_id,
                 extra={"revision": revision} if revision else {},
             ),
         )
 
     async def scale_workload(
         self, target: str, namespace: str, replicas: int, approval_id: str,
-        incident_id: str, execution_capability: str,
+        incident_id: str,
     ) -> Dict[str, Any]:
         if replicas < 0 or replicas > 100:
             raise ValueError("kubernetes_scale_replicas_out_of_bounds")
@@ -106,7 +104,6 @@ class KubernetesMCPClient(MCPClient):
             "scale_kubernetes_workload",
             self._write_args(
                 target=target, namespace=namespace, approval_id=approval_id,
-                incident_id=incident_id, execution_capability=execution_capability,
-                extra={"replicas": replicas},
+                incident_id=incident_id, extra={"replicas": replicas},
             ),
         )

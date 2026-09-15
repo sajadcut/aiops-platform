@@ -1,7 +1,6 @@
 """Allowlisted execution-tool registry and second authorization boundary."""
 from typing import Any, Dict, List, Optional
 
-from apps.execution_service.capability import ExecutionCapabilityError, verify_execution_capability
 from apps.execution_service.tools.base import BaseTool, ToolInput
 from domain.contracts.logging import logger
 
@@ -50,25 +49,10 @@ class ToolRegistry:
     def _verify_authorization(tool_name: str, tool: BaseTool, input_data: ToolInput) -> Optional[str]:
         if not tool.requires_approval:
             return None
-        if not input_data.approval_id or not input_data.incident_id or not input_data.execution_capability:
-            return "execution_capability_required"
-        try:
-            verify_execution_capability(
-                input_data.execution_capability,
-                incident_id=input_data.incident_id,
-                approval_id=input_data.approval_id,
-                tool_name=tool_name,
-                action=input_data.action,
-                target=input_data.target,
-                parameters=input_data.parameters,
-                timeout=input_data.timeout,
-                runbook_id=input_data.runbook_id,
-                runbook_version=input_data.runbook_version,
-                rollback=input_data.rollback,
-            )
-        except ExecutionCapabilityError as exc:
-            logger.warning("execution_registry_capability_rejected", tool=tool_name, approval_id=input_data.approval_id, reason=str(exc))
-            return "execution_capability_invalid"
+        if not input_data.approval_id or not input_data.incident_id:
+            return "approval_context_required"
+        if not input_data.approval_granted:
+            return "approval_not_granted"
         return None
 
     async def execute_tool(self, tool_name: str, input_data: ToolInput, agent_name: str) -> Dict[str, Any]:

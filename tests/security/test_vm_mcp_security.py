@@ -1,7 +1,6 @@
 import pytest
 
 import apps.mcp_server.main as mcp_server
-from apps.execution_service.capability import issue_execution_capability
 from domain.contracts.config import settings
 from integrations.vm.ssh_connector import SSHVMConnector
 
@@ -45,58 +44,23 @@ class _FakeVMConnector:
 
 
 @pytest.mark.asyncio
-async def test_vm_mcp_requires_bound_capability_and_rejects_replay(monkeypatch):
+async def test_vm_mcp_write_requires_approval_and_incident_context(monkeypatch):
     monkeypatch.setattr(settings, "APP_ENV", "test")
-    monkeypatch.setenv("EXECUTION_CAPABILITY_SECRET", "test-execution-capability-secret-32-bytes-minimum")
     monkeypatch.setattr(mcp_server, "SSHVMConnector", _FakeVMConnector)
-    mcp_server._CONSUMED_CAPABILITIES.clear()
     _FakeVMConnector.calls = 0
 
-    capability = issue_execution_capability(
-        incident_id="incident-1",
-        approval_id="approval-1",
-        tool_name="ssh_vm",
-        action="restart_service",
-        target="vm01",
-        parameters={"service": "nginx"},
-        timeout=30,
-    )
     args = {
         "target": "vm01",
         "service": "nginx",
         "approval_id": "approval-1",
         "incident_id": "incident-1",
-        "execution_capability": capability,
     }
     result = await mcp_server._call("vm", "restart_service", args)
     assert result["success"] is True
     assert _FakeVMConnector.calls == 1
 
-    with pytest.raises(PermissionError, match="execution_capability_replayed"):
-        await mcp_server._call("vm", "restart_service", args)
+    with pytest.raises(PermissionError, match="approval_id_required"):
+        await mcp_server._call("vm", "restart_service", {"target": "vm01", "service": "nginx", "incident_id": "incident-1"})
+    with pytest.raises(PermissionError, match="incident_id_required"):
+        await mcp_server._call("vm", "restart_service", {"target": "vm01", "service": "nginx", "approval_id": "approval-1"})
     assert _FakeVMConnector.calls == 1
-
-
-@pytest.mark.asyncio
-async def test_vm_mcp_rejects_capability_bound_to_different_target(monkeypatch):
-    monkeypatch.setattr(settings, "APP_ENV", "test")
-    monkeypatch.setenv("EXECUTION_CAPABILITY_SECRET", "test-execution-capability-secret-32-bytes-minimum")
-    monkeypatch.setattr(mcp_server, "SSHVMConnector", _FakeVMConnector)
-    mcp_server._CONSUMED_CAPABILITIES.clear()
-    capability = issue_execution_capability(
-        incident_id="incident-1",
-        approval_id="approval-1",
-        tool_name="ssh_vm",
-        action="restart_service",
-        target="vm01",
-        parameters={"service": "nginx"},
-        timeout=30,
-    )
-    with pytest.raises(PermissionError, match="execution_capability_target_mismatch"):
-        await mcp_server._call("vm", "restart_service", {
-            "target": "vm02",
-            "service": "nginx",
-            "approval_id": "approval-1",
-            "incident_id": "incident-1",
-            "execution_capability": capability,
-        })

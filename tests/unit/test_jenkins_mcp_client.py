@@ -61,7 +61,6 @@ def test_write_tools_are_disabled_by_default_and_direct_write_call_is_forbidden(
                     "payments/build",
                     approval_id="approval-1",
                     incident_id="incident-1",
-                    execution_capability="capability-1",
                 )
             )
     finally:
@@ -89,7 +88,6 @@ def test_governed_trigger_build_uses_official_tool_shape_and_write_identity(monk
                 parameters={"BRANCH": "main", "DEBUG_MODE": False},
                 approval_id="approval-1",
                 incident_id="incident-1",
-                execution_capability="capability-1",
             )
         )
         assert result == {"id": 42}
@@ -117,7 +115,6 @@ def test_write_wrapper_requires_governance_context(monkeypatch):
                     "payments/build",
                     approval_id="",
                     incident_id="incident-1",
-                    execution_capability="capability-1",
                 )
             )
     finally:

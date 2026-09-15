@@ -9,7 +9,6 @@ from apps.approval_service.postgres import PostgreSQLApprovalStore
 from apps.audit_service import AuditService
 from apps.audit_service.postgres import PostgreSQLAuditStore
 from apps.execution_service import ExecutionRequest, ExecutionService
-from apps.execution_service.capability import ExecutionCapabilityError, issue_execution_capability
 from apps.execution_service.tools.registry import tool_registry
 from apps.security.auth import require_permission
 from apps.security.rbac import allowed
@@ -165,7 +164,7 @@ async def execute(payload: Dict[str, Any], identity=Depends(require_permission("
         raise HTTPException(status_code=400, detail="tool_not_registered")
     approval_id = payload.get("approval_id")
     incident_id = str(payload.get("incident_id") or "")
-    capability = None
+    approval_granted = False
 
     async with AsyncSessionLocal() as db:
         if tool.requires_approval:
@@ -181,16 +180,7 @@ async def execute(payload: Dict[str, Any], identity=Depends(require_permission("
             consumed = await store.consume(str(approval_id))
             if not consumed or consumed.get("status") != "consumed":
                 raise HTTPException(status_code=409, detail="approval_already_consumed_or_unavailable")
-            try:
-                capability = issue_execution_capability(
-                    incident_id=incident_id, approval_id=str(approval_id), tool_name=tool_name,
-                    action=str(payload["action"]), target=str(payload["target"]),
-                    parameters=dict(payload.get("parameters") or {}), timeout=int(payload.get("timeout", 30)),
-                    runbook_id=payload.get("runbook_id"), runbook_version=payload.get("runbook_version"),
-                    rollback=bool(payload.get("rollback", False)),
-                )
-            except ExecutionCapabilityError as exc:
-                raise HTTPException(status_code=503, detail=str(exc)) from exc
+            approval_granted = True
             await _audit_durable(db, "approval_consumed", identity.subject, incident_id, str(payload["action"]), {
                 "approval_id": approval_id, "tool_name": tool_name, "target": payload["target"],
             })
@@ -201,7 +191,8 @@ async def execute(payload: Dict[str, Any], identity=Depends(require_permission("
             tool_name=tool_name, action=str(payload["action"]), target=str(payload["target"]),
             parameters=payload.get("parameters", {}), timeout=int(payload.get("timeout", 30)),
             agent_name=str(payload.get("agent_name", "api")), incident_id=incident_id or None,
-            approval_id=str(approval_id) if approval_id else None, execution_capability=capability,
+            approval_granted=approval_granted,
+            approval_id=str(approval_id) if approval_id else None,
             runbook_id=payload.get("runbook_id"), runbook_version=payload.get("runbook_version"),
             rollback=bool(payload.get("rollback", False)),
         )
