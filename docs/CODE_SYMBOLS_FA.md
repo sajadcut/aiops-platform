@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 256 | Dashboard JS files scanned: 2 | Symbols indexed: 1569**
+**Python files scanned: 256 | Dashboard JS files scanned: 2 | Symbols indexed: 1570**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -618,18 +618,19 @@
 | `domain/action_plan.py` | `ActionPlan` | 5 | class | کلاس | module |
 | `domain/audit_event.py` | `AuditEvent` | 6 | class | کلاس | module |
 | `domain/contracts/config.py` | `Settings` | 8 | class | Typed loader for the centralized runtime environment contract. | module |
-| `domain/contracts/config.py` | `Settings.validate_app_env` | 176 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.parse_optional_cognia_ids` | 184 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | Settings |
-| `domain/contracts/config.py` | `Settings.validate_cognia_knowledge_base_ids` | 191 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_log_rotation_mode` | 203 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_log_level` | 211 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_elastic_agent_builder_version` | 219 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_elastic_agent_builder_endpoint` | 232 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_elastic_namespaces` | 240 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_jenkins_mcp_protocol_version` | 248 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_jenkins_basic_auth_header` | 256 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_external_contracts` | 263 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_cognia_contract` | 287 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_app_env` | 178 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_ssh_auth_mode` | 186 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.parse_optional_cognia_ids` | 194 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | Settings |
+| `domain/contracts/config.py` | `Settings.validate_cognia_knowledge_base_ids` | 201 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_log_rotation_mode` | 213 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_log_level` | 221 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_elastic_agent_builder_version` | 229 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_elastic_agent_builder_endpoint` | 242 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_elastic_namespaces` | 250 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_jenkins_mcp_protocol_version` | 258 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_jenkins_basic_auth_header` | 266 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_external_contracts` | 273 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_cognia_contract` | 297 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
 | `domain/contracts/context.py` | `set_trace_id` | 7 | function | تنظیم trace_id برای درخواست جاری | module |
 | `domain/contracts/context.py` | `get_trace_id` | 11 | function | دریافت trace_id درخواست جاری | module |
 | `domain/contracts/context.py` | `generate_trace_id` | 15 | function | تولید یک trace_id جدید | module |
