@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 from domain.contracts.config import settings
-from domain.contracts.logging import logger
+from domain.contracts.logging import log_workflow_step, logger
 from integrations.cognia import CogniaClient, CogniaContractError
 from knowledge.retrieval_contract import validate_retrieval
 
@@ -23,11 +23,23 @@ class KnowledgeRAGService:
         min_similarity: Optional[float] = None,
         access_scopes: Optional[List[str]] = None,
         scope_context: Optional[Dict[str, Any]] = None,
+        *,
+        incident_id: Optional[str] = None,
+        phase: str = "knowledge_rag",
     ) -> List[Dict[str, Any]]:
         # access_scopes is retained only for call compatibility during migration;
         # Cognia is authoritative for KB grants and Scope authorization.
         del access_scopes
         if not query.strip():
+            log_workflow_step(
+                incident_id=incident_id,
+                stage=phase,
+                component="cognia_rag",
+                action="search_skipped",
+                status="skipped",
+                summary="Cognia RAG search skipped because the query was empty",
+                details={"query_chars": 0, "limit": limit},
+            )
             return []
         if limit <= 0:
             raise ValueError("knowledge_search_limit_must_be_positive")
@@ -36,12 +48,56 @@ class KnowledgeRAGService:
             min_relevance = float(min_similarity)
             if not math.isfinite(min_relevance):
                 raise ValueError("knowledge_min_relevance_must_be_finite")
-        return await self._search_cognia(
-            query,
-            limit=limit,
-            min_relevance=min_relevance,
-            scope_context=scope_context,
+
+        log_workflow_step(
+            incident_id=incident_id,
+            stage=phase,
+            component="cognia_rag",
+            action="search_started",
+            status="started",
+            summary="Cognia Knowledge RAG search started",
+            details={
+                "query_chars": len(query),
+                "limit": limit,
+                "min_relevance": min_relevance,
+                "knowledge_base_count": len(settings.COGNIA_KNOWLEDGE_BASE_IDS),
+                "subject_scoped": bool(scope_context),
+            },
         )
+        try:
+            documents = await self._search_cognia(
+                query,
+                limit=limit,
+                min_relevance=min_relevance,
+                scope_context=scope_context,
+            )
+        except Exception as exc:
+            log_workflow_step(
+                incident_id=incident_id,
+                stage=phase,
+                component="cognia_rag",
+                action="search_failed",
+                status="failed",
+                summary="Cognia Knowledge RAG search failed",
+                details={"error_type": type(exc).__name__, "query_chars": len(query)},
+                level="warning",
+            )
+            raise
+
+        log_workflow_step(
+            incident_id=incident_id,
+            stage=phase,
+            component="cognia_rag",
+            action="search_completed",
+            status="completed",
+            summary=f"Cognia Knowledge RAG returned {len(documents)} result(s)",
+            details={
+                "result_count": len(documents),
+                "source_ids": [str(item.get("source_id")) for item in documents[:10]],
+                "max_relevance": max((float(item.get("relevance", 0.0)) for item in documents), default=None),
+            },
+        )
+        return documents
 
     async def _search_cognia(
         self,
@@ -217,13 +273,46 @@ class KnowledgeRAGService:
         *,
         subject: Optional[Dict[str, str]] = None,
         context_profile_id: Optional[int] = None,
+        incident_id: Optional[str] = None,
     ) -> Dict[str, Any]:
         profile_id = context_profile_id or settings.COGNIA_CONTEXT_PROFILE_ID
         if profile_id is None:
             raise RuntimeError("cognia_context_profile_id_not_configured")
-        async with CogniaClient() as client:
-            return await client.generate_context(
-                task,
-                context_profile_id=profile_id,
-                subject=subject,
+        log_workflow_step(
+            incident_id=incident_id,
+            stage="knowledge_rag",
+            component="cognia_context",
+            action="context_generation_started",
+            status="started",
+            summary="Cognia context generation started",
+            details={"task_chars": len(task), "subject_scoped": bool(subject), "context_profile_id": profile_id},
+        )
+        try:
+            async with CogniaClient() as client:
+                result = await client.generate_context(
+                    task,
+                    context_profile_id=profile_id,
+                    subject=subject,
+                )
+        except Exception as exc:
+            log_workflow_step(
+                incident_id=incident_id,
+                stage="knowledge_rag",
+                component="cognia_context",
+                action="context_generation_failed",
+                status="failed",
+                summary="Cognia context generation failed",
+                details={"error_type": type(exc).__name__},
+                level="warning",
             )
+            raise
+        log_workflow_step(
+            incident_id=incident_id,
+            stage="knowledge_rag",
+            component="cognia_context",
+            action="context_generation_completed",
+            status="completed",
+            summary="Cognia context generation completed",
+            details={"is_sufficient": result.get("isSufficient") if isinstance(result, dict) else None},
+        )
+        return result
