@@ -3,7 +3,7 @@
 > این فایل فهرست فایل‌به‌فایل repository است. توضیح معماری و flow در `CODEBASE_GUIDE_FA.md` آمده است.
 > این فایل با `scripts/generate_file_index_fa.py` ساخته و در CI کنترل می‌شود.
 
-**تعداد فایل‌های track‌شده و پوشش‌داده‌شده: 311**
+**تعداد فایل‌های track‌شده و پوشش‌داده‌شده: 312**
 
 | Path | Type | Purpose | Called By | Calls/Depends On | Runtime/Test/Docs | Notes |
 |---|---|---|---|---|---|---|
@@ -249,6 +249,7 @@
 | `tests/scenarios/kubernetes_health.json` | Fixture | داده سناریوی تست | scenario tests | Agent/workflow contracts | Test | production path نیست |
 | `tests/scenarios/test_agent_operational_scenarios.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/scenarios/test_database_asset_routing_acceptance.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
+| `tests/scenarios/test_disk_inode_exhaustion_acceptance.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/scenarios/test_failure_injection.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/scenarios/test_kubernetes_oom_acceptance.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/scenarios/test_network_asset_routing_acceptance.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
