@@ -21,17 +21,29 @@ def test_llm_response_accepts_nested_usage_details():
 
 
 @pytest.mark.asyncio
-async def test_zabbix_problem_get_is_error_raises_instead_of_empty_success():
+async def test_zabbix_primary_and_fallback_errors_raise_instead_of_empty_success():
     client = object.__new__(ZabbixMCPClient)
+    calls = []
 
     async def fake_call_tool(tool_name, arguments):
-        assert tool_name == "problem_get"
-        assert arguments["search"] == {"name": "NeoBanking-6.199"}
+        calls.append((tool_name, arguments))
+        if tool_name == "problem_get":
+            assert arguments["search"] == {"name": "NeoBanking-6.199"}
+            return {
+                "content": [
+                    {
+                        "type": "text",
+                        "text": "Error executing tool problem_get: API call failed for problem.get.",
+                    }
+                ],
+                "isError": True,
+            }
+        assert tool_name == "problem_active_get"
         return {
             "content": [
                 {
                     "type": "text",
-                    "text": "Error executing tool problem_get: API call failed for problem.get.",
+                    "text": "Error executing tool problem_active_get: fallback unavailable.",
                 }
             ],
             "isError": True,
@@ -39,5 +51,7 @@ async def test_zabbix_problem_get_is_error_raises_instead_of_empty_success():
 
     client.call_tool = fake_call_tool
 
-    with pytest.raises(RuntimeError, match=r"zabbix_mcp_tool_error:problem_get"):
+    with pytest.raises(RuntimeError, match=r"zabbix_mcp_tool_error:problem_active_get"):
         await client.get_alerts(service="NeoBanking-6.199")
+
+    assert [name for name, _ in calls] == ["problem_get", "problem_active_get"]
