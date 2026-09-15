@@ -15,6 +15,7 @@ def test_repository_runbooks_load_with_governance_and_verification():
         "app-error-rollback",
         "infrastructure-observation",
         "kubernetes-health",
+        "vm-service-recovery",
     }
     for item in items:
         assert item["name"] == item["id"]
