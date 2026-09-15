@@ -474,13 +474,13 @@
 | `apps/orchestrator/workflow_store.py` | `WorkflowCheckpointStore.mark_failed` | 67 | async method | Terminal failure را نگه می‌دارد تا علت شکست بعد از restart قابل audit باشد. | WorkflowCheckpointStore |
 | `apps/rag_service/__init__.py` | `KnowledgeRAGService` | 11 | class | Cognia-only governed Knowledge RAG boundary. | module |
 | `apps/rag_service/__init__.py` | `KnowledgeRAGService.search` | 19 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | KnowledgeRAGService |
-| `apps/rag_service/__init__.py` | `KnowledgeRAGService._search_cognia` | 46 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeRAGService |
-| `apps/rag_service/__init__.py` | `KnowledgeRAGService._ensure_configured_kb` | 130 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeRAGService |
-| `apps/rag_service/__init__.py` | `KnowledgeRAGService.register_knowledge` | 138 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeRAGService |
-| `apps/rag_service/__init__.py` | `KnowledgeRAGService.get_knowledge_detail` | 165 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | KnowledgeRAGService |
-| `apps/rag_service/__init__.py` | `KnowledgeRAGService.create_revision` | 178 | async method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | KnowledgeRAGService |
-| `apps/rag_service/__init__.py` | `KnowledgeRAGService.get_processing_status` | 203 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | KnowledgeRAGService |
-| `apps/rag_service/__init__.py` | `KnowledgeRAGService.generate_context` | 214 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeRAGService |
+| `apps/rag_service/__init__.py` | `KnowledgeRAGService._search_cognia` | 102 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeRAGService |
+| `apps/rag_service/__init__.py` | `KnowledgeRAGService._ensure_configured_kb` | 186 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeRAGService |
+| `apps/rag_service/__init__.py` | `KnowledgeRAGService.register_knowledge` | 194 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeRAGService |
+| `apps/rag_service/__init__.py` | `KnowledgeRAGService.get_knowledge_detail` | 221 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | KnowledgeRAGService |
+| `apps/rag_service/__init__.py` | `KnowledgeRAGService.create_revision` | 234 | async method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | KnowledgeRAGService |
+| `apps/rag_service/__init__.py` | `KnowledgeRAGService.get_processing_status` | 259 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | KnowledgeRAGService |
+| `apps/rag_service/__init__.py` | `KnowledgeRAGService.generate_context` | 270 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeRAGService |
 | `apps/runbook_service/executor.py` | `RunbookExecution` | 12 | class | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | module |
 | `apps/runbook_service/executor.py` | `RunbookExecutor` | 19 | class | Safe runtime boundary for registered runbooks. | module |
 | `apps/runbook_service/executor.py` | `RunbookExecutor.__init__` | 27 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RunbookExecutor |
