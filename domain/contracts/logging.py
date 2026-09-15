@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 from logging.handlers import RotatingFileHandler, TimedRotatingFileHandler
 from pathlib import Path
+from typing import Any, Dict, Optional
 
 import structlog
 
@@ -111,3 +112,44 @@ def configure_logging() -> None:
 
 
 logger = structlog.get_logger("aiops")
+
+
+def log_workflow_step(
+    *,
+    incident_id: Optional[str],
+    stage: str,
+    component: str,
+    action: str,
+    status: str = "completed",
+    summary: Optional[str] = None,
+    details: Optional[Dict[str, Any]] = None,
+    level: str = "info",
+) -> None:
+    """Emit one canonical incident-timeline event to both text and JSON logs.
+
+    The same structured event is rendered by the configured human-readable file
+    handler and the JSON-lines file handler. Callers should log operational
+    metadata, counts, decisions and provider/model names, but not raw prompts,
+    credentials, bearer tokens or full external payloads. The shared recursive
+    redaction processor remains the final fail-safe for every field.
+    """
+    stage_name = str(stage or "unknown").strip() or "unknown"
+    component_name = str(component or "unknown").strip() or "unknown"
+    action_name = str(action or "unknown").strip() or "unknown"
+    status_name = str(status or "unknown").strip().lower() or "unknown"
+    payload: Dict[str, Any] = {
+        "log_type": "incident_timeline",
+        "incident_id": str(incident_id) if incident_id else None,
+        "stage": stage_name,
+        "component": component_name,
+        "action": action_name,
+        "status": status_name,
+    }
+    if summary:
+        payload["summary"] = str(summary)[:1000]
+    if details:
+        payload["details"] = details
+
+    level_name = str(level or "info").strip().lower()
+    log_method = getattr(logger, level_name, logger.info)
+    log_method("workflow_step", **payload)
