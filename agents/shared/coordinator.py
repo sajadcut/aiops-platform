@@ -67,8 +67,24 @@ class IncidentCoordinator:
         }
 
     @staticmethod
+    def _specialist_failed(finding: Dict[str, Any]) -> bool:
+        if str(finding.get("finding_type", "")).endswith("_error"):
+            return True
+        for missing in finding.get("missing_evidence") or []:
+            text = " ".join(str(missing).strip().lower().split())
+            if text == "successful specialist analysis" or text.startswith("successful structured"):
+                return True
+        return False
+
+    @staticmethod
     def synthesize(findings: List[Dict[str, Any]]) -> Dict[str, Any]:
-        valid = [f for f in findings if isinstance(f, dict) and f.get("agent_name")]
+        all_valid = [f for f in findings if isinstance(f, dict) and f.get("agent_name")]
+        failed_findings = [f for f in all_valid if IncidentCoordinator._specialist_failed(f)]
+        successful_findings = [f for f in all_valid if not IncidentCoordinator._specialist_failed(f)]
+        # A broken specialist must not erase live evidence produced by a grounded
+        # specialist. If every specialist fails, keep the failed rows so the
+        # downstream evaluator still fails closed.
+        valid = successful_findings or all_valid
         severity_votes: Dict[str, int] = {}
         health_votes: Dict[str, int] = {}
         missing: List[str] = []
@@ -191,7 +207,11 @@ class IncidentCoordinator:
         second_opinion_required = disagreement or bool(contradictions) or confidence < settings.AGENT_LOW_CONFIDENCE_THRESHOLD
 
         return {
-            "agents": [f.get("agent_name") for f in valid], "confidence": confidence,
+            "agents": [f.get("agent_name") for f in all_valid],
+            "grounded_agents": [f.get("agent_name") for f in successful_findings],
+            "failed_agents": [f.get("agent_name") for f in failed_findings],
+            "degraded_specialist_analysis": bool(successful_findings and failed_findings),
+            "confidence": confidence,
             "agreement_score": agreement_score, "evidence_count": len(evidence_ids),
             "missing_evidence": missing,
             "evidence_requests": evidence_requests[: settings.AGENT_MAX_DYNAMIC_EVIDENCE_TYPES],
