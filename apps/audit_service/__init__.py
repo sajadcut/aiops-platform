@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
+from domain.contracts.logging import log_workflow_step
 from domain.contracts.redaction import redact
 
 
@@ -29,6 +30,61 @@ class AuditService:
     def _redact(cls, value: Any, key: Optional[str] = None) -> Any:
         return redact(value, key)
 
+    @staticmethod
+    def _timeline_stage(event_type: str) -> str:
+        event = str(event_type or "").lower()
+        if event.startswith(("context", "trigger", "signal", "asset_", "pre_execution_evidence", "agent_evidence")):
+            return "context_evidence"
+        if event.startswith("triage"):
+            return "triage"
+        if event.startswith(("specialist", "agent_handoff")):
+            return "specialist_agents"
+        if event.startswith("rca"):
+            return "rca"
+        if event.startswith(("evaluation", "decision_blocked_by_evaluator")):
+            return "evaluator"
+        if event.startswith("decision"):
+            return "decision"
+        if event.startswith("approval"):
+            return "approval"
+        if event.startswith(("execution", "runbook_execution", "remediation")):
+            return "execution"
+        if event.startswith("verification"):
+            return "verification"
+        if event.startswith("memory"):
+            return "memory"
+        return "governance"
+
+    @staticmethod
+    def _timeline_component(event_type: str, actor: str) -> str:
+        stage = AuditService._timeline_stage(event_type)
+        return {
+            "context_evidence": "context_evidence_layer",
+            "triage": "triage_agent",
+            "specialist_agents": "specialist_agents",
+            "rca": "llm_rca",
+            "evaluator": "evaluation_gate",
+            "decision": "decision_engine",
+            "approval": "approval_service",
+            "execution": "execution_service",
+            "verification": "verification_service",
+            "memory": "operational_memory",
+        }.get(stage, str(actor or "audit_service"))
+
+    @staticmethod
+    def _timeline_status(event_type: str, status: str) -> str:
+        explicit = str(status or "recorded").strip().lower()
+        event = str(event_type or "").lower()
+        if explicit not in {"recorded", ""}:
+            return explicit
+        if "failed" in event or "error" in event:
+            return "failed"
+        if "blocked" in event or "rejected" in event:
+            return "blocked"
+        if "required" in event or "pending" in event:
+            return "waiting"
+        return "completed"
+
     @classmethod
     def record(
         cls,
@@ -39,6 +95,7 @@ class AuditService:
         status: str = "recorded",
         metadata: Optional[Dict[str, Any]] = None,
     ) -> AuditEvent:
+        safe_metadata = cls._redact(metadata or {})
         event = AuditEvent(
             event_id=str(uuid4()),
             event_type=event_type,
@@ -46,10 +103,28 @@ class AuditService:
             incident_id=incident_id,
             action=action,
             status=status,
-            metadata=cls._redact(metadata or {}),
+            metadata=safe_metadata,
             created_at=datetime.now(timezone.utc).isoformat(),
         )
         cls._events.append(event)
+
+        # Audit is the common cross-cutting path for the governed workflow. Mirror
+        # each audit event into the dual text/JSON operational timeline so an
+        # operator can reconstruct what happened without querying the audit DB.
+        log_workflow_step(
+            incident_id=incident_id,
+            stage=cls._timeline_stage(event_type),
+            component=cls._timeline_component(event_type, actor),
+            action=event_type,
+            status=cls._timeline_status(event_type, status),
+            summary=str(event_type).replace("_", " "),
+            details={
+                "audit_event_id": event.event_id,
+                "actor": actor,
+                "requested_action": action,
+                **safe_metadata,
+            },
+        )
         return event
 
     @classmethod
