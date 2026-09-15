@@ -28,7 +28,7 @@ class JsonRpcRequest(BaseModel):
 configure_logging()
 app = FastAPI(title=f"AIOps MCP Server ({settings.MCP_SERVER_PROVIDER})", docs_url=None, redoc_url=None)
 app.add_middleware(HTTPTransactionLoggingMiddleware)
-_WRITE_TOOLS = {"restart_service", "reload_service"}
+_WRITE_TOOLS = {"restart_service", "reload_service", "start_service"}
 _CONSUMED_CAPABILITIES: Dict[str, int] = {}
 _MAX_REPLAY_CACHE_ITEMS = 10000
 _TARGET = {"target": {"type": "string"}}
@@ -62,6 +62,7 @@ _TOOL_SCHEMAS: Dict[str, Dict[str, Dict[str, Any]]] = {
         "route_check": {"description": "Read the route selected for a validated destination", "inputSchema": {"type": "object", "required": ["target", "destination"], "properties": {**_TARGET, "destination": {"type": "string"}}}},
         "firewall_status": {"description": "Read bounded local nftables/firewalld/iptables state", "inputSchema": {"type": "object", "required": ["target"], "properties": dict(_TARGET)}},
         "config_validate": {"description": "Validate configuration through a fixed service diagnostic adapter", "inputSchema": {"type": "object", "required": ["target", "service"], "properties": {**_TARGET, **_SERVICE}}},
+        "start_service": {"description": "Start one validated service through approved Execution Service", "inputSchema": {"type": "object", "required": ["target", "service", "approval_id", "incident_id", "execution_capability"], "properties": {**_TARGET, **_SERVICE, "approval_id": {"type": "string", "minLength": 1}, "incident_id": {"type": "string", "minLength": 1}, "execution_capability": {"type": "string", "minLength": 32}}}},
         "restart_service": {"description": "Restart one validated service through approved Execution Service", "inputSchema": {"type": "object", "required": ["target", "service", "approval_id", "incident_id", "execution_capability"], "properties": {**_TARGET, **_SERVICE, "approval_id": {"type": "string", "minLength": 1}, "incident_id": {"type": "string", "minLength": 1}, "execution_capability": {"type": "string", "minLength": 32}}}},
         "reload_service": {"description": "Reload one validated service through approved Execution Service", "inputSchema": {"type": "object", "required": ["target", "service", "approval_id", "incident_id", "execution_capability"], "properties": {**_TARGET, **_SERVICE, "approval_id": {"type": "string", "minLength": 1}, "incident_id": {"type": "string", "minLength": 1}, "execution_capability": {"type": "string", "minLength": 32}}}},
     },
@@ -164,7 +165,7 @@ async def _call(provider: str, tool: str, args: Dict[str, Any]) -> Any:
         return await connector.process_status(target, process)
 
     service = str(args.get("service") or "").strip()
-    if tool in {"service_status", "service_logs", "config_validate", "restart_service", "reload_service"} and not service:
+    if tool in {"service_status", "service_logs", "config_validate", "start_service", "restart_service", "reload_service"} and not service:
         raise ValueError("service_required")
     if tool == "service_status": return await connector.service_status(target, service)
     if tool == "service_logs": return await connector.service_logs(target, service, _limit(args.get("limit"), 100, 200))
@@ -181,6 +182,7 @@ async def _call(provider: str, tool: str, args: Dict[str, Any]) -> Any:
     except ExecutionCapabilityError as exc:
         raise PermissionError(str(exc)) from exc
     _consume_capability_jti(claims)
+    if tool == "start_service": return await connector.start_service(target, service)
     if tool == "restart_service": return await connector.restart_service(target, service)
     if tool == "reload_service": return await connector.reload_service(target, service)
     raise PermissionError("tool_not_allowed")
