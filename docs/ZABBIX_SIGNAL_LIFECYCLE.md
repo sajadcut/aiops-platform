@@ -70,11 +70,11 @@ A source-triggered Incident can reach remediation without a caller manually cons
 4. Fresh `config_validate` evidence must be valid, or explicitly report that validation is unsupported.
 5. Optional port identity comes only from matching live VM MCP port/TCP evidence.
 6. The planner emits a typed `ssh_vm/restart_service` request bound to the runbook; Agent/LLM free text is never converted to a command.
-7. Decision Engine still evaluates tool existence, risk, target verification and policy. VM restart remains high-risk and requires durable approval plus a signed execution capability.
+7. Decision Engine still evaluates tool existence, risk, target verification and policy. VM restart remains high-risk and requires durable approval bound to the exact execution intent.
 8. Immediately before execution, the same target/service/config preconditions are refreshed. If the service already recovered, evidence is unavailable, or configuration became unsafe, the write is blocked fail-closed.
 9. After execution, success of the restart command is not sufficient. Fresh verification must demonstrate service health and, when the original port is known, listener/TCP recovery. Otherwise the Incident remains unresolved/escalated.
 
-The runbook implementing this contract is `vm-service-recovery`. It does not make arbitrary service names or targets executable; those values must come from matching live evidence and are cryptographically bound to the durable approval/execution capability.
+The runbook implementing this contract is `vm-service-recovery`. It does not make arbitrary service names or targets executable; those values must come from matching live evidence and are bound to the durable approval record before it is consumed once for execution.
 
 ## Recovery behavior
 
