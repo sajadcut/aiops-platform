@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 249 | Dashboard JS files scanned: 2 | Symbols indexed: 1460**
+**Python files scanned: 249 | Dashboard JS files scanned: 2 | Symbols indexed: 1461**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -634,9 +634,10 @@
 | `domain/contracts/exceptions.py` | `register_exception_handlers.validation_exception_handler` | 73 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | register_exception_handlers |
 | `domain/contracts/exceptions.py` | `register_exception_handlers.http_exception_handler` | 99 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | register_exception_handlers |
 | `domain/contracts/exceptions.py` | `register_exception_handlers.generic_exception_handler` | 116 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | register_exception_handlers |
-| `domain/contracts/logging.py` | `_processor_formatter` | 13 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `domain/contracts/logging.py` | `_file_handler` | 29 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `domain/contracts/logging.py` | `configure_logging` | 48 | function | Configure human console/text logs and JSON-line file logs. | module |
+| `domain/contracts/logging.py` | `_processor_formatter` | 14 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `domain/contracts/logging.py` | `_file_handler` | 30 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `domain/contracts/logging.py` | `configure_logging` | 49 | function | Configure human console/text logs and JSON-line file logs. | module |
+| `domain/contracts/logging.py` | `log_workflow_step` | 117 | function | Emit one canonical incident-timeline event to both text and JSON logs. | module |
 | `domain/contracts/rate_limit.py` | `RateLimiter` | 14 | class | In-process rate limiter using centrally configured limits. | module |
 | `domain/contracts/rate_limit.py` | `RateLimiter.__init__` | 22 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RateLimiter |
 | `domain/contracts/rate_limit.py` | `RateLimiter.__call__` | 26 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RateLimiter |
