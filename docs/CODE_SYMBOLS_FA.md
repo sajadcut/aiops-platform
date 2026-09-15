@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 248 | Dashboard JS files scanned: 2 | Symbols indexed: 1434**
+**Python files scanned: 249 | Dashboard JS files scanned: 2 | Symbols indexed: 1460**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -774,11 +774,11 @@
 | `integrations/kubernetes/mcp_client.py` | `KubernetesMCPClient.restart_workload` | 74 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KubernetesMCPClient |
 | `integrations/kubernetes/mcp_client.py` | `KubernetesMCPClient.rollback_workload` | 86 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KubernetesMCPClient |
 | `integrations/kubernetes/mcp_client.py` | `KubernetesMCPClient.scale_workload` | 99 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KubernetesMCPClient |
-| `integrations/llm/base.py` | `LLMResponse` | 5 | class | نتیجه استاندارد از هر LLM Provider | module |
-| `integrations/llm/base.py` | `LLMAdapter` | 12 | class | اینترفیس انتزاعی برای همه‌ی Providerهای LLM | module |
-| `integrations/llm/base.py` | `LLMAdapter.generate` | 16 | async method | تولید متن بر اساس prompt | LLMAdapter |
-| `integrations/llm/base.py` | `LLMAdapter.generate_with_messages` | 28 | async method | تولید متن بر اساس لیست پیام‌ها (قالب OpenAI) | LLMAdapter |
-| `integrations/llm/base.py` | `LLMAdapter.provider_name` | 40 | method | نام Provider (مثلاً 'mock', 'openai', 'azure') | LLMAdapter |
+| `integrations/llm/base.py` | `LLMResponse` | 7 | class | نتیجه استاندارد از هر LLM Provider | module |
+| `integrations/llm/base.py` | `LLMAdapter` | 18 | class | اینترفیس انتزاعی برای همه‌ی Providerهای LLM | module |
+| `integrations/llm/base.py` | `LLMAdapter.generate` | 22 | async method | تولید متن بر اساس prompt | LLMAdapter |
+| `integrations/llm/base.py` | `LLMAdapter.generate_with_messages` | 34 | async method | تولید متن بر اساس لیست پیام‌ها (قالب OpenAI) | LLMAdapter |
+| `integrations/llm/base.py` | `LLMAdapter.provider_name` | 46 | method | نام Provider (مثلاً 'mock', 'openai', 'azure') | LLMAdapter |
 | `integrations/llm/mock_provider.py` | `MockLLMProvider` | 10 | class | Deterministic development/test provider. Construction is forbidden in production. | module |
 | `integrations/llm/mock_provider.py` | `MockLLMProvider.__init__` | 13 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MockLLMProvider |
 | `integrations/llm/mock_provider.py` | `MockLLMProvider.provider_name` | 18 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MockLLMProvider |
@@ -787,9 +787,20 @@
 | `integrations/llm/openai_compatible.py` | `OpenAICompatibleLLMProvider` | 12 | class | Adapter for an internal/offline OpenAI-compatible chat gateway. | module |
 | `integrations/llm/openai_compatible.py` | `OpenAICompatibleLLMProvider.__init__` | 15 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OpenAICompatibleLLMProvider |
 | `integrations/llm/openai_compatible.py` | `OpenAICompatibleLLMProvider.provider_name` | 23 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OpenAICompatibleLLMProvider |
-| `integrations/llm/openai_compatible.py` | `OpenAICompatibleLLMProvider.generate` | 26 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OpenAICompatibleLLMProvider |
-| `integrations/llm/openai_compatible.py` | `OpenAICompatibleLLMProvider.generate_with_messages` | 40 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OpenAICompatibleLLMProvider |
-| `integrations/llm/openai_compatible.py` | `configured_llm_adapter` | 75 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `integrations/llm/openai_compatible.py` | `OpenAICompatibleLLMProvider.chat_endpoint` | 27 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OpenAICompatibleLLMProvider |
+| `integrations/llm/openai_compatible.py` | `OpenAICompatibleLLMProvider._request_headers` | 30 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OpenAICompatibleLLMProvider |
+| `integrations/llm/openai_compatible.py` | `OpenAICompatibleLLMProvider._request_payload` | 36 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OpenAICompatibleLLMProvider |
+| `integrations/llm/openai_compatible.py` | `OpenAICompatibleLLMProvider._response_from_payload` | 51 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OpenAICompatibleLLMProvider |
+| `integrations/llm/openai_compatible.py` | `OpenAICompatibleLLMProvider.generate` | 75 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OpenAICompatibleLLMProvider |
+| `integrations/llm/openai_compatible.py` | `OpenAICompatibleLLMProvider.generate_with_messages` | 89 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OpenAICompatibleLLMProvider |
+| `integrations/llm/openai_compatible.py` | `DotinGeneralChatbotLLMProvider` | 111 | class | Dotin General Chatbot adapter based on the documented OpenAI-compatible API. | module |
+| `integrations/llm/openai_compatible.py` | `DotinGeneralChatbotLLMProvider.__init__` | 122 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DotinGeneralChatbotLLMProvider |
+| `integrations/llm/openai_compatible.py` | `DotinGeneralChatbotLLMProvider.provider_name` | 130 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DotinGeneralChatbotLLMProvider |
+| `integrations/llm/openai_compatible.py` | `DotinGeneralChatbotLLMProvider.chat_endpoint` | 134 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DotinGeneralChatbotLLMProvider |
+| `integrations/llm/openai_compatible.py` | `DotinGeneralChatbotLLMProvider._safe_header_value` | 145 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DotinGeneralChatbotLLMProvider |
+| `integrations/llm/openai_compatible.py` | `DotinGeneralChatbotLLMProvider._request_headers` | 151 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DotinGeneralChatbotLLMProvider |
+| `integrations/llm/openai_compatible.py` | `DotinGeneralChatbotLLMProvider._request_payload` | 163 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DotinGeneralChatbotLLMProvider |
+| `integrations/llm/openai_compatible.py` | `configured_llm_adapter` | 208 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `integrations/mcp_client.py` | `MCPClient` | 19 | class | کلاس | module |
 | `integrations/mcp_client.py` | `MCPClient.__init__` | 23 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MCPClient |
 | `integrations/mcp_client.py` | `MCPClient._authorization` | 64 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MCPClient |
@@ -1226,6 +1237,21 @@
 | `tests/unit/test_dashboard_control_center.py` | `test_dashboard_assets_and_agent_route_are_served_by_fastapi` | 34 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_dashboard_control_center.py` | `test_legacy_agent_url_has_compatibility_redirect_only` | 41 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_dashboard_javascript_syntax.py` | `test_dashboard_javascript_syntax` | 11 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_dotin_general_chatbot_llm.py` | `FakeResponse` | 13 | class | کلاس | module |
+| `tests/unit/test_dotin_general_chatbot_llm.py` | `FakeResponse.__init__` | 14 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeResponse |
+| `tests/unit/test_dotin_general_chatbot_llm.py` | `FakeResponse.raise_for_status` | 17 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeResponse |
+| `tests/unit/test_dotin_general_chatbot_llm.py` | `FakeResponse.json` | 20 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeResponse |
+| `tests/unit/test_dotin_general_chatbot_llm.py` | `FakeClient` | 24 | class | کلاس | module |
+| `tests/unit/test_dotin_general_chatbot_llm.py` | `FakeClient.__init__` | 25 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeClient |
+| `tests/unit/test_dotin_general_chatbot_llm.py` | `FakeClient.__aenter__` | 29 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeClient |
+| `tests/unit/test_dotin_general_chatbot_llm.py` | `FakeClient.__aexit__` | 32 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeClient |
+| `tests/unit/test_dotin_general_chatbot_llm.py` | `FakeClient.post` | 35 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeClient |
+| `tests/unit/test_dotin_general_chatbot_llm.py` | `_install_fake_client` | 42 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_dotin_general_chatbot_llm.py` | `_install_fake_client.factory` | 43 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _install_fake_client |
+| `tests/unit/test_dotin_general_chatbot_llm.py` | `test_dotin_provider_uses_documented_endpoint_headers_and_defaults` | 51 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_dotin_general_chatbot_llm.py` | `test_dotin_provider_preserves_documented_tool_call_response` | 102 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_dotin_general_chatbot_llm.py` | `test_dotin_provider_validates_documented_model_and_request_options` | 163 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_dotin_general_chatbot_llm.py` | `test_configured_llm_adapter_selects_dotin_provider` | 183 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_dual_logging.py` | `_flush_root_handlers` | 10 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_dual_logging.py` | `test_dual_format_logging_writes_human_and_json_files` | 15 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_dual_logging.py` | `test_time_rotation_uses_timed_handlers` | 50 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
