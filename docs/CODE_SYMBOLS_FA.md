@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 267 | Dashboard JS files scanned: 2 | Symbols indexed: 1723**
+**Python files scanned: 267 | Dashboard JS files scanned: 2 | Symbols indexed: 1725**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -231,17 +231,18 @@
 | `apps/approval_service/binding.py` | `intent_digest` | 43 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/approval_service/binding.py` | `bind_metadata` | 48 | function | Store a non-secret readable summary plus a digest of the complete intent. | module |
 | `apps/approval_service/binding.py` | `assert_bound` | 76 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/approval_service/postgres.py` | `PostgreSQLApprovalStore` | 20 | class | Approval durable با expiry، transition اتمیک و consume یک‌باره قبل از execution. | module |
-| `apps/approval_service/postgres.py` | `PostgreSQLApprovalStore.__init__` | 23 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | PostgreSQLApprovalStore |
-| `apps/approval_service/postgres.py` | `PostgreSQLApprovalStore._incident_source_recovered` | 26 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | PostgreSQLApprovalStore |
-| `apps/approval_service/postgres.py` | `PostgreSQLApprovalStore.save` | 44 | async method | Approval request و metadata binding آن را durable می‌کند. | PostgreSQLApprovalStore |
-| `apps/approval_service/postgres.py` | `PostgreSQLApprovalStore._get_raw` | 77 | async method | رکورد را بدون اعمال expiry می‌خواند؛ helper داخلی برای جلوگیری از recursion است. | PostgreSQLApprovalStore |
-| `apps/approval_service/postgres.py` | `PostgreSQLApprovalStore._expired` | 91 | method | TTL را با زمان UTC محاسبه می‌کند تا timezone محلی روی مجوز اثر نگذارد. | PostgreSQLApprovalStore |
-| `apps/approval_service/postgres.py` | `PostgreSQLApprovalStore.get` | 102 | async method | رکورد را می‌خواند و Approval منقضی را قبل از استفاده به expired تبدیل می‌کند. | PostgreSQLApprovalStore |
-| `apps/approval_service/postgres.py` | `PostgreSQLApprovalStore.set_status` | 116 | async method | فقط یک Approval هنوز-pending را اتمیک به approved یا rejected transition می‌دهد. | PostgreSQLApprovalStore |
-| `apps/approval_service/postgres.py` | `PostgreSQLApprovalStore.cancel_unconsumed_for_incident` | 157 | async method | Invalidate pending/approved authority after recovery or another terminal fact. | PostgreSQLApprovalStore |
-| `apps/approval_service/postgres.py` | `PostgreSQLApprovalStore.consume` | 188 | async method | Approval approved را دقیقاً یک بار درست قبل از عبور از execution boundary مصرف می‌کند. | PostgreSQLApprovalStore |
-| `apps/approval_service/postgres.py` | `PostgreSQLApprovalStore.is_approved` | 207 | async method | برای read-only check؛ execution واقعی همچنان باید consume اتمیک انجام دهد. | PostgreSQLApprovalStore |
+| `apps/approval_service/postgres.py` | `_db_timestamp` | 20 | function | Normalize ISO-8601 application timestamps for asyncpg TIMESTAMPTZ binds. | module |
+| `apps/approval_service/postgres.py` | `PostgreSQLApprovalStore` | 39 | class | Approval durable با expiry، transition اتمیک و consume یک‌باره قبل از execution. | module |
+| `apps/approval_service/postgres.py` | `PostgreSQLApprovalStore.__init__` | 42 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | PostgreSQLApprovalStore |
+| `apps/approval_service/postgres.py` | `PostgreSQLApprovalStore._incident_source_recovered` | 45 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | PostgreSQLApprovalStore |
+| `apps/approval_service/postgres.py` | `PostgreSQLApprovalStore.save` | 63 | async method | Approval request و metadata binding آن را durable می‌کند. | PostgreSQLApprovalStore |
+| `apps/approval_service/postgres.py` | `PostgreSQLApprovalStore._get_raw` | 102 | async method | رکورد را بدون اعمال expiry می‌خواند؛ helper داخلی برای جلوگیری از recursion است. | PostgreSQLApprovalStore |
+| `apps/approval_service/postgres.py` | `PostgreSQLApprovalStore._expired` | 116 | method | TTL را با زمان UTC محاسبه می‌کند تا timezone محلی روی مجوز اثر نگذارد. | PostgreSQLApprovalStore |
+| `apps/approval_service/postgres.py` | `PostgreSQLApprovalStore.get` | 127 | async method | رکورد را می‌خواند و Approval منقضی را قبل از استفاده به expired تبدیل می‌کند. | PostgreSQLApprovalStore |
+| `apps/approval_service/postgres.py` | `PostgreSQLApprovalStore.set_status` | 141 | async method | فقط یک Approval هنوز-pending را اتمیک به approved یا rejected transition می‌دهد. | PostgreSQLApprovalStore |
+| `apps/approval_service/postgres.py` | `PostgreSQLApprovalStore.cancel_unconsumed_for_incident` | 182 | async method | Invalidate pending/approved authority after recovery or another terminal fact. | PostgreSQLApprovalStore |
+| `apps/approval_service/postgres.py` | `PostgreSQLApprovalStore.consume` | 213 | async method | Approval approved را دقیقاً یک بار درست قبل از عبور از execution boundary مصرف می‌کند. | PostgreSQLApprovalStore |
+| `apps/approval_service/postgres.py` | `PostgreSQLApprovalStore.is_approved` | 232 | async method | برای read-only check؛ execution واقعی همچنان باید consume اتمیک انجام دهد. | PostgreSQLApprovalStore |
 | `apps/approval_service/store.py` | `ApprovalStore` | 14 | class | کلاس | module |
 | `apps/approval_service/store.py` | `ApprovalStore.create` | 16 | method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | ApprovalStore |
 | `apps/approval_service/store.py` | `ApprovalStore.get` | 20 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ApprovalStore |
@@ -262,10 +263,11 @@
 | `apps/audit_service/__init__.py` | `AuditService.list_events` | 131 | method | داده را بدون تغییر state بازیابی/فهرست می‌کند | AuditService |
 | `apps/audit_service/__init__.py` | `AuditService.flush_to_store` | 138 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | AuditService |
 | `apps/audit_service/__init__.py` | `AuditService.clear` | 149 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | AuditService |
-| `apps/audit_service/postgres.py` | `PostgreSQLAuditStore` | 9 | class | Durable audit persistence adapter for the MASTER audit contract. | module |
-| `apps/audit_service/postgres.py` | `PostgreSQLAuditStore.__init__` | 12 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | PostgreSQLAuditStore |
-| `apps/audit_service/postgres.py` | `PostgreSQLAuditStore.append` | 15 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | PostgreSQLAuditStore |
-| `apps/audit_service/postgres.py` | `PostgreSQLAuditStore.list` | 30 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | PostgreSQLAuditStore |
+| `apps/audit_service/postgres.py` | `_db_timestamp` | 11 | function | Normalize ISO-8601 application timestamps for asyncpg TIMESTAMPTZ binds. | module |
+| `apps/audit_service/postgres.py` | `PostgreSQLAuditStore` | 30 | class | Durable audit persistence adapter for the MASTER audit contract. | module |
+| `apps/audit_service/postgres.py` | `PostgreSQLAuditStore.__init__` | 33 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | PostgreSQLAuditStore |
+| `apps/audit_service/postgres.py` | `PostgreSQLAuditStore.append` | 36 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | PostgreSQLAuditStore |
+| `apps/audit_service/postgres.py` | `PostgreSQLAuditStore.list` | 55 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | PostgreSQLAuditStore |
 | `apps/context_service/__init__.py` | `ContextBuilder` | 22 | class | Build knowledge-assisted operational context through governed boundaries. | module |
 | `apps/context_service/__init__.py` | `ContextBuilder.__init__` | 37 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ContextBuilder |
 | `apps/context_service/__init__.py` | `ContextBuilder._known` | 57 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ContextBuilder |
@@ -1434,15 +1436,15 @@
 | `tests/unit/test_jenkins_mcp_client.py` | `test_health_check_fails_closed_on_anonymous_or_identity_mismatch.anonymous` | 172 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_health_check_fails_closed_on_anonymous_or_identity_mismatch |
 | `tests/unit/test_jenkins_mcp_client.py` | `test_health_check_fails_closed_on_anonymous_or_identity_mismatch.wrong_identity` | 175 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_health_check_fails_closed_on_anonymous_or_identity_mismatch |
 | `tests/unit/test_jenkins_mcp_client.py` | `test_health_check_fails_closed_on_anonymous_or_identity_mismatch.expected_identity` | 178 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_health_check_fails_closed_on_anonymous_or_identity_mismatch |
-| `tests/unit/test_jsonb_persistence_contract.py` | `FakeResult` | 8 | class | کلاس | module |
-| `tests/unit/test_jsonb_persistence_contract.py` | `FakeResult.mappings` | 9 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeResult |
-| `tests/unit/test_jsonb_persistence_contract.py` | `FakeResult.first` | 12 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeResult |
-| `tests/unit/test_jsonb_persistence_contract.py` | `FakeSession` | 16 | class | کلاس | module |
-| `tests/unit/test_jsonb_persistence_contract.py` | `FakeSession.__init__` | 17 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeSession |
-| `tests/unit/test_jsonb_persistence_contract.py` | `FakeSession.execute` | 21 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | FakeSession |
-| `tests/unit/test_jsonb_persistence_contract.py` | `FakeSession.commit` | 25 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeSession |
-| `tests/unit/test_jsonb_persistence_contract.py` | `test_approval_metadata_is_serialized_before_jsonb_cast` | 30 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_jsonb_persistence_contract.py` | `test_audit_metadata_is_serialized_before_jsonb_cast` | 53 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_jsonb_persistence_contract.py` | `FakeResult` | 10 | class | کلاس | module |
+| `tests/unit/test_jsonb_persistence_contract.py` | `FakeResult.mappings` | 11 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeResult |
+| `tests/unit/test_jsonb_persistence_contract.py` | `FakeResult.first` | 14 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeResult |
+| `tests/unit/test_jsonb_persistence_contract.py` | `FakeSession` | 18 | class | کلاس | module |
+| `tests/unit/test_jsonb_persistence_contract.py` | `FakeSession.__init__` | 19 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeSession |
+| `tests/unit/test_jsonb_persistence_contract.py` | `FakeSession.execute` | 23 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | FakeSession |
+| `tests/unit/test_jsonb_persistence_contract.py` | `FakeSession.commit` | 27 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeSession |
+| `tests/unit/test_jsonb_persistence_contract.py` | `test_approval_metadata_and_timestamps_are_normalized_before_postgres_bind` | 32 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_jsonb_persistence_contract.py` | `test_audit_metadata_and_timestamp_are_normalized_before_postgres_bind` | 60 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_knowledge_topology_execution_gate.py` | `_finding` | 4 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_knowledge_topology_execution_gate.py` | `test_decision_rejects_write_when_target_identity_is_only_knowledge_assisted` | 8 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_knowledge_topology_execution_gate.py` | `test_decision_allows_normal_policy_after_live_target_verification` | 28 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
