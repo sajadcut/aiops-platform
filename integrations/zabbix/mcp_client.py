@@ -84,14 +84,18 @@ class ZabbixMCPClient(MCPClient):
         fallback_used = False
         try:
             result = await self.call_tool("problem_get", args)
+        except Exception as exc:
+            # Only failures from the primary call are caught here. A failure from
+            # the fallback itself must propagate instead of triggering the same
+            # fallback a second time.
+            logger.warning("zabbix_problem_get_exception_using_active_fallback", error_type=type(exc).__name__)
+            result = await self._active_problem_fallback()
+            fallback_used = True
+        else:
             if result.get("isError") is True:
                 logger.warning("zabbix_problem_get_failed_using_active_fallback", detail=self._tool_error_text(result))
                 result = await self._active_problem_fallback()
                 fallback_used = True
-        except Exception as exc:
-            logger.warning("zabbix_problem_get_exception_using_active_fallback", error_type=type(exc).__name__)
-            result = await self._active_problem_fallback()
-            fallback_used = True
 
         alerts: List[Alert] = []
         wanted_service = str(service or "").strip().lower()
