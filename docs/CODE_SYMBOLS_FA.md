@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 252 | Dashboard JS files scanned: 2 | Symbols indexed: 1512**
+**Python files scanned: 253 | Dashboard JS files scanned: 2 | Symbols indexed: 1516**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -883,7 +883,8 @@
 | `integrations/zabbix/mcp_client.py` | `ZabbixMCPClient.__init__` | 14 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ZabbixMCPClient |
 | `integrations/zabbix/mcp_client.py` | `ZabbixMCPClient._dt` | 31 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ZabbixMCPClient |
 | `integrations/zabbix/mcp_client.py` | `ZabbixMCPClient._severity` | 43 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ZabbixMCPClient |
-| `integrations/zabbix/mcp_client.py` | `ZabbixMCPClient.get_alerts` | 47 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | ZabbixMCPClient |
+| `integrations/zabbix/mcp_client.py` | `ZabbixMCPClient._tool_error_text` | 48 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ZabbixMCPClient |
+| `integrations/zabbix/mcp_client.py` | `ZabbixMCPClient.get_alerts` | 54 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | ZabbixMCPClient |
 | `knowledge/__init__.py` | `EmbeddingService` | 15 | class | Provider-neutral embedding service for Operational Memory only. | module |
 | `knowledge/__init__.py` | `EmbeddingService._deterministic_embedding` | 25 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | EmbeddingService |
 | `knowledge/__init__.py` | `EmbeddingService.generate_embedding` | 35 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | EmbeddingService |
@@ -1473,6 +1474,9 @@
 | `tests/unit/test_runtime_approval_resume.py` | `test_resume_injects_persisted_approval_into_execution_request` | 129 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_runtime_approval_resume.py` | `test_failed_execution_never_runs_verification_or_resolves_incident` | 154 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_runtime_approval_resume.py` | `test_failed_verification_never_resolves_incident` | 168 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_runtime_error_contracts.py` | `test_llm_response_accepts_nested_usage_details` | 7 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_runtime_error_contracts.py` | `test_zabbix_problem_get_is_error_raises_instead_of_empty_success` | 24 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_runtime_error_contracts.py` | `test_zabbix_problem_get_is_error_raises_instead_of_empty_success.fake_call_tool` | 27 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_zabbix_problem_get_is_error_raises_instead_of_empty_success |
 | `tests/unit/test_upstream_mcp_contracts.py` | `test_prometheus_adapter_uses_upstream_tool_names` | 8 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_upstream_mcp_contracts.py` | `test_elastic_adapter_uses_agent_builder_only` | 16 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_upstream_mcp_contracts.py` | `test_elastic_agent_builder_config_is_canonical` | 27 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
