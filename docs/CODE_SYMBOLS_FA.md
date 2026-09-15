@@ -1579,8 +1579,8 @@
 | `tests/unit/test_runtime_approval_resume.py` | `test_failed_execution_never_runs_verification_or_resolves_incident` | 154 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_runtime_approval_resume.py` | `test_failed_verification_never_resolves_incident` | 168 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_runtime_error_contracts.py` | `test_llm_response_accepts_nested_usage_details` | 7 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_runtime_error_contracts.py` | `test_zabbix_problem_get_is_error_raises_instead_of_empty_success` | 24 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_runtime_error_contracts.py` | `test_zabbix_problem_get_is_error_raises_instead_of_empty_success.fake_call_tool` | 27 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_zabbix_problem_get_is_error_raises_instead_of_empty_success |
+| `tests/unit/test_runtime_error_contracts.py` | `test_zabbix_primary_and_fallback_errors_raise_instead_of_empty_success` | 24 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_runtime_error_contracts.py` | `test_zabbix_primary_and_fallback_errors_raise_instead_of_empty_success.fake_call_tool` | 28 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_zabbix_primary_and_fallback_errors_raise_instead_of_empty_success |
 | `tests/unit/test_runtime_log_regressions.py` | `SequenceProvider` | 15 | class | کلاس | module |
 | `tests/unit/test_runtime_log_regressions.py` | `SequenceProvider.__init__` | 16 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SequenceProvider |
 | `tests/unit/test_runtime_log_regressions.py` | `SequenceProvider.generate_with_messages` | 21 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SequenceProvider |
