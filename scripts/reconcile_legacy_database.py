@@ -20,7 +20,12 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
+import sys
 from typing import Any
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
 from alembic import command
 from alembic.config import Config
@@ -56,7 +61,7 @@ def _sync_database_url() -> str:
 
 
 def _alembic_config() -> Config:
-    ini = Path(__file__).resolve().parents[1] / "database" / "migrations" / "alembic.ini"
+    ini = PROJECT_ROOT / "database" / "migrations" / "alembic.ini"
     return Config(str(ini))
 
 
