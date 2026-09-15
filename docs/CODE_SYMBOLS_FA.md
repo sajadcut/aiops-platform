@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 247 | Dashboard JS files scanned: 2 | Symbols indexed: 1427**
+**Python files scanned: 247 | Dashboard JS files scanned: 2 | Symbols indexed: 1429**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1132,8 +1132,10 @@
 | `tests/unit/test_asset_identity_routing.py` | `StaticLLM.generate_with_messages` | 23 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | StaticLLM |
 | `tests/unit/test_asset_identity_routing.py` | `test_zabbix_inventory_identifies_windows_vm` | 27 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_asset_identity_routing.py` | `test_prometheus_labels_identify_kubernetes_workload` | 51 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_asset_identity_routing.py` | `test_elastic_ecs_identifies_linux_vm` | 67 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_asset_identity_routing.py` | `test_triage_asset_identity_overrides_wrong_model_route` | 86 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_asset_identity_routing.py` | `test_prometheus_postgres_exporter_is_not_misclassified_as_vm` | 67 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_asset_identity_routing.py` | `test_prometheus_snmp_exporter_is_not_misclassified_as_vm` | 79 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_asset_identity_routing.py` | `test_elastic_ecs_identifies_linux_vm` | 91 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_asset_identity_routing.py` | `test_triage_asset_identity_overrides_wrong_model_route` | 110 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_audit_flush.py` | `FakeAuditStore` | 6 | class | کلاس | module |
 | `tests/unit/test_audit_flush.py` | `FakeAuditStore.__init__` | 7 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeAuditStore |
 | `tests/unit/test_audit_flush.py` | `FakeAuditStore.append` | 10 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeAuditStore |
