@@ -15,6 +15,11 @@ from apps.signal_gateway import (
 from apps.signal_gateway.zabbix_lifecycle import ingest_zabbix_payload
 from database import AsyncSessionLocal
 from domain.contracts.rate_limit import rate_limiter_strict
+from integrations.vm.target_context import (
+    bind_vm_target,
+    reset_vm_target,
+    target_from_zabbix_payload,
+)
 
 
 router = APIRouter()
@@ -59,12 +64,15 @@ async def _ingest(signal: OperationalSignal) -> Dict[str, Any]:
 
 
 async def _ingest_zabbix(payload: Dict[str, Any]) -> Dict[str, Any]:
+    target_token = bind_vm_target(target_from_zabbix_payload(payload))
     try:
         async with AsyncSessionLocal() as db:
             result = await ingest_zabbix_payload(db, payload)
         return _response_from_result(result)
     except Exception as exc:
         raise HTTPException(status_code=500, detail="signal_ingestion_failed") from exc
+    finally:
+        reset_vm_target(target_token)
 
 
 @router.post("/signals/ingest", dependencies=[Depends(rate_limiter_strict)])
