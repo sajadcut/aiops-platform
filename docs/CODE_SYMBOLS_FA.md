@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 261 | Dashboard JS files scanned: 2 | Symbols indexed: 1650**
+**Python files scanned: 261 | Dashboard JS files scanned: 2 | Symbols indexed: 1651**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -189,11 +189,12 @@
 | `apps/api/main.py` | `startup_event` | 211 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/main.py` | `shutdown_event` | 264 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/remediation.py` | `_audit_durable` | 24 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/remediation.py` | `RemediationRequest` | 30 | class | کلاس | module |
-| `apps/api/remediation.py` | `create_remediation_request` | 39 | async function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
-| `apps/api/remediation.py` | `execute_approved_remediation` | 71 | async function | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | module |
-| `apps/api/remediation.py` | `VMVerificationRequest` | 125 | class | کلاس | module |
-| `apps/api/remediation.py` | `verify_remediation` | 131 | async function | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | module |
+| `apps/api/remediation.py` | `_read_vm` | 30 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/remediation.py` | `RemediationRequest` | 37 | class | کلاس | module |
+| `apps/api/remediation.py` | `create_remediation_request` | 47 | async function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
+| `apps/api/remediation.py` | `execute_approved_remediation` | 85 | async function | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | module |
+| `apps/api/remediation.py` | `VMVerificationRequest` | 155 | class | کلاس | module |
+| `apps/api/remediation.py` | `verify_remediation` | 161 | async function | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | module |
 | `apps/api/runbook_execution.py` | `_audit_durable` | 22 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/runbook_execution.py` | `_runbook_contract` | 28 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/runbook_execution.py` | `execute_runbook` | 46 | async function | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | module |
