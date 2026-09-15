@@ -14,7 +14,7 @@ class _RecordingVM:
     def __init__(self):
         self.targets = []
 
-    async def collect_metrics(self, target):
+    async def collect_vm_metrics(self, target):
         self.targets.append(target)
         return {
             "success": True,
