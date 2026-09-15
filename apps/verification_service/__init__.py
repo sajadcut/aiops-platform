@@ -30,70 +30,35 @@ class VerificationResult(BaseModel):
 class VerificationEngine:
     """Deterministic before/after verification over fresh operational Evidence.
 
-    Metrics are not assumed to share the same direction. Error/latency/pressure
-    metrics are better when lower, while availability/success/up/throughput are
-    better when higher. Unknown metrics are not used to claim success.
+    Verification includes both directional metrics and structured operational
+    conditions such as systemd state and the original TCP listener/reachability
+    symptom. A successful write command is never sufficient by itself.
     """
 
-    LOWER_IS_BETTER = {
-        "error_rate",
-        "cpu_usage",
-        "memory_usage",
-        "latency",
-        "packet_loss",
-        "queue_depth",
-    }
+    LOWER_IS_BETTER = {"error_rate", "cpu_usage", "memory_usage", "latency", "packet_loss", "queue_depth"}
     HIGHER_IS_BETTER = {
-        "availability",
-        "success_rate",
-        "up",
-        "throughput",
+        "availability", "success_rate", "up", "throughput",
+        "service_active", "port_listening", "tcp_reachable", "config_valid",
     }
+    CRITICAL_OPERATIONAL_CONDITIONS = {"service_active", "port_listening", "tcp_reachable", "config_valid"}
 
     @classmethod
-    async def verify_action(
-        cls,
-        action_plan: str,
-        service: str,
-        before_context: Dict[str, Any],
-        after_context: Optional[Dict[str, Any]] = None,
-    ) -> VerificationResult:
+    async def verify_action(cls, action_plan: str, service: str, before_context: Dict[str, Any], after_context: Optional[Dict[str, Any]] = None) -> VerificationResult:
         logger.info("Verification started: service=%s", service)
         before_metrics = cls._extract_metrics(before_context)
-
         if after_context is None:
-            return cls._inconclusive(
-                before_metrics,
-                {},
-                cls._evidence_refs(before_context),
-                "No post-execution context was supplied.",
-            )
+            return cls._inconclusive(before_metrics, {}, cls._evidence_refs(before_context), "No post-execution context was supplied.")
 
         after_metrics = cls._extract_metrics(after_context)
         if not before_metrics:
-            return cls._inconclusive(
-                {},
-                after_metrics,
-                cls._evidence_refs(after_context),
-                "No pre-execution metrics were available.",
-            )
+            return cls._inconclusive({}, after_metrics, cls._evidence_refs(after_context), "No pre-execution metrics or operational conditions were available.")
         if not after_metrics:
-            return cls._inconclusive(
-                before_metrics,
-                {},
-                cls._evidence_refs(before_context),
-                "No post-execution metrics were available.",
-            )
+            return cls._inconclusive(before_metrics, {}, cls._evidence_refs(before_context), "No post-execution metrics or operational conditions were available.")
 
         comparable_keys = sorted(set(before_metrics) & set(after_metrics))
         comparable_keys = [key for key in comparable_keys if cls._direction(key) is not None]
         if not comparable_keys:
-            return cls._inconclusive(
-                before_metrics,
-                after_metrics,
-                cls._evidence_refs(before_context) + cls._evidence_refs(after_context),
-                "No comparable metrics with defined verification semantics were found.",
-            )
+            return cls._inconclusive(before_metrics, after_metrics, cls._evidence_refs(before_context) + cls._evidence_refs(after_context), "No comparable evidence with defined verification semantics was found.")
 
         changes: List[str] = []
         improvements = 0
@@ -113,27 +78,31 @@ class VerificationEngine:
                 unchanged += 1
                 changes.append(f"{key}: {before_value:.4f} -> {after_value:.4f} (unchanged)")
                 continue
-
             improved = delta < 0 if direction == "lower_is_better" else delta > 0
             if improved:
                 improvements += 1
-                changes.append(
-                    f"{key}: {before_value:.4f} -> {after_value:.4f} (improved; {direction})"
-                )
+                changes.append(f"{key}: {before_value:.4f} -> {after_value:.4f} (improved; {direction})")
             else:
                 regressions += 1
-                changes.append(
-                    f"{key}: {before_value:.4f} -> {after_value:.4f} (worsened; {direction})"
-                )
+                changes.append(f"{key}: {before_value:.4f} -> {after_value:.4f} (worsened; {direction})")
 
+        operational = [key for key in comparable_keys if key in cls.CRITICAL_OPERATIONAL_CONDITIONS]
+        unhealthy_after = [key for key in operational if after_metrics.get(key, 0.0) < 1.0]
+        recovered_conditions = [key for key in operational if before_metrics.get(key, 1.0) < 1.0 and after_metrics.get(key, 0.0) >= 1.0]
         comparable = len(comparable_keys)
-        if regressions == 0 and improvements > 0:
+
+        if unhealthy_after:
+            status = VerificationStatus.FAILED
+            confidence = 0.90 if any(key in {"port_listening", "tcp_reachable"} for key in unhealthy_after) else 0.80
+            message = "Post-execution operational symptom remains unhealthy: " + ", ".join(sorted(unhealthy_after)) + "."
+        elif recovered_conditions and regressions == 0:
+            status = VerificationStatus.SUCCESS
+            confidence = min(0.98, 0.88 + 0.02 * len(recovered_conditions))
+            message = "Operational recovery demonstrated for: " + ", ".join(sorted(recovered_conditions)) + "."
+        elif regressions == 0 and improvements > 0:
             status = VerificationStatus.SUCCESS
             confidence = min(0.95, 0.75 + 0.05 * improvements + 0.02 * unchanged)
-            message = (
-                f"{improvements} comparable metrics improved, {unchanged} remained stable, "
-                "and none regressed."
-            )
+            message = f"{improvements} comparable metrics improved, {unchanged} remained stable, and none regressed."
         elif regressions > improvements:
             status = VerificationStatus.FAILED
             confidence = max(0.2, 0.55 - 0.08 * regressions)
@@ -141,52 +110,29 @@ class VerificationEngine:
         elif improvements > regressions:
             status = VerificationStatus.PARTIAL
             confidence = 0.65
-            message = (
-                f"{improvements} comparable metrics improved, {regressions} regressed, "
-                f"and {unchanged} remained stable."
-            )
+            message = f"{improvements} comparable metrics improved, {regressions} regressed, and {unchanged} remained stable."
         elif improvements == 0 and regressions == 0:
             status = VerificationStatus.INCONCLUSIVE
             confidence = 0.35
-            message = "Comparable metrics did not change; recovery could not be demonstrated."
+            message = "Comparable evidence did not change; recovery could not be demonstrated."
         else:
             status = VerificationStatus.PARTIAL
             confidence = 0.50
             message = "The result is mixed and requires further observation."
 
-        refs = cls._dedupe_refs(
-            cls._evidence_refs(before_context) + cls._evidence_refs(after_context)
-        )
+        refs = cls._dedupe_refs(cls._evidence_refs(before_context) + cls._evidence_refs(after_context))
         return VerificationResult(
-            status=status,
-            before_state=before_metrics,
-            after_state=after_metrics,
-            changes=changes,
-            confidence=round(confidence, 4),
-            evidence_refs=refs,
-            message=message,
-            metric_directions=directions,
-            comparable_metrics=comparable,
+            status=status, before_state=before_metrics, after_state=after_metrics,
+            changes=changes, confidence=round(confidence, 4), evidence_refs=refs,
+            message=message, metric_directions=directions, comparable_metrics=comparable,
         )
 
     @classmethod
-    def _inconclusive(
-        cls,
-        before: Dict[str, float],
-        after: Dict[str, float],
-        refs: List[str],
-        message: str,
-    ) -> VerificationResult:
+    def _inconclusive(cls, before: Dict[str, float], after: Dict[str, float], refs: List[str], message: str) -> VerificationResult:
         return VerificationResult(
-            status=VerificationStatus.INCONCLUSIVE,
-            before_state=before,
-            after_state=after,
-            changes=[],
-            confidence=0.0,
-            evidence_refs=cls._dedupe_refs(refs),
-            message=message,
-            metric_directions={},
-            comparable_metrics=0,
+            status=VerificationStatus.INCONCLUSIVE, before_state=before, after_state=after,
+            changes=[], confidence=0.0, evidence_refs=cls._dedupe_refs(refs), message=message,
+            metric_directions={}, comparable_metrics=0,
         )
 
     @classmethod
@@ -206,10 +152,13 @@ class VerificationEngine:
         def add(name: str, value: Any) -> None:
             if value is None:
                 return
-            try:
-                numeric = float(value)
-            except (TypeError, ValueError):
-                return
+            if isinstance(value, bool):
+                numeric = 1.0 if value else 0.0
+            else:
+                try:
+                    numeric = float(value)
+                except (TypeError, ValueError):
+                    return
             samples.setdefault(name, []).append(numeric)
 
         summary = context.get("summary", {})
@@ -229,16 +178,25 @@ class VerificationEngine:
             if not isinstance(raw, dict):
                 continue
             name = str(raw.get("name") or "").lower()
-            value = raw.get("value")
             canonical = cls._canonical_metric_name(name)
             if canonical:
-                add(canonical, value)
+                add(canonical, raw.get("value"))
 
-        return {
-            name: sum(values) / len(values)
-            for name, values in samples.items()
-            if values
-        }
+            diagnostic = str(raw.get("diagnostic") or "").strip().lower()
+            if diagnostic == "service_status":
+                active = raw.get("active_state") or raw.get("status")
+                if active is not None:
+                    add("service_active", str(active).lower() == "active")
+                elif raw.get("healthy") is not None:
+                    add("service_active", raw.get("healthy"))
+            elif diagnostic == "port_listener_status" and raw.get("listening") is not None:
+                add("port_listening", raw.get("listening"))
+            elif diagnostic == "tcp_check" and raw.get("reachable") is not None:
+                add("tcp_reachable", raw.get("reachable"))
+            elif diagnostic == "config_validate" and raw.get("valid") is not None:
+                add("config_valid", raw.get("valid"))
+
+        return {name: sum(values) / len(values) for name, values in samples.items() if values}
 
     @staticmethod
     def _canonical_metric_name(name: str) -> Optional[str]:
