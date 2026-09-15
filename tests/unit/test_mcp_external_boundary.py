@@ -33,8 +33,9 @@ def test_zabbix_is_mcp_only_and_has_no_direct_runtime_config():
     for obsolete in ("ZABBIX_URL", "ZABBIX_USERNAME", "ZABBIX_PASSWORD", "ZABBIX_TIMEOUT_SECONDS"):
         assert obsolete not in config
         assert obsolete not in template
-    assert "ZABBIX_MCP_URL" in config
-    assert "ZABBIX_MCP_AUTH_HEADER" in config
+    for key in ("ZABBIX_MCP_URL", "ZABBIX_MCP_AUTH_HEADER", "ZABBIX_MCP_HOST_HEADER"):
+        assert key in config
+        assert f"{key}=" in template
     assert "ZabbixMCPClient" not in server
     assert "ZabbixConnector" not in server
     assert '"zabbix": {' not in server
