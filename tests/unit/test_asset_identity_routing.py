@@ -64,6 +64,30 @@ def test_prometheus_labels_identify_kubernetes_workload():
     assert asset["pod"] == "payment-api-abc"
 
 
+def test_prometheus_postgres_exporter_is_not_misclassified_as_vm():
+    evidence = [{
+        "type": "metric", "source": "prometheus", "reference": "pg1",
+        "raw_data": {"name": "pg_stat_activity_count", "value": 97, "labels": {
+            "job": "postgres_exporter", "instance": "db-prod-01:9187", "service": "orders-db",
+        }},
+    }]
+    asset = AssetIdentityResolver.resolve(evidence)
+    assert asset["asset_type"] == "database"
+    assert asset["hostname"] == "db-prod-01"
+
+
+def test_prometheus_snmp_exporter_is_not_misclassified_as_vm():
+    evidence = [{
+        "type": "metric", "source": "prometheus", "reference": "net1",
+        "raw_data": {"name": "ifOperStatus", "value": 2, "labels": {
+            "job": "snmp_exporter", "instance": "edge-router-01:9116", "service": "wan-edge",
+        }},
+    }]
+    asset = AssetIdentityResolver.resolve(evidence)
+    assert asset["asset_type"] == "network"
+    assert asset["hostname"] == "edge-router-01"
+
+
 def test_elastic_ecs_identifies_linux_vm():
     evidence = [{
         "type": "log", "source": "elasticsearch", "reference": "l1",
