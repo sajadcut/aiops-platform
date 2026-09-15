@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 265 | Dashboard JS files scanned: 2 | Symbols indexed: 1687**
+**Python files scanned: 265 | Dashboard JS files scanned: 2 | Symbols indexed: 1688**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -906,6 +906,7 @@
 | `integrations/vm/mcp_client.py` | `VMEdgeMCPClient._write_context` | 59 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
 | `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.restart_service` | 65 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
 | `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.reload_service` | 68 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.start_service` | 71 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
 | `integrations/vm/service_adapters.py` | `ServiceDiagnosticAdapter` | 8 | class | Fixed, allowlisted service-specific diagnostic commands. | module |
 | `integrations/vm/service_adapters.py` | `get_service_adapter` | 43 | function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
 | `integrations/vm/ssh_connector.py` | `SSHVMConnector` | 19 | class | Controlled Linux VM adapter used only behind the VM MCP server. | module |
