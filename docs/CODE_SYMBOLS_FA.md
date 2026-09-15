@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 249 | Dashboard JS files scanned: 2 | Symbols indexed: 1465**
+**Python files scanned: 250 | Dashboard JS files scanned: 2 | Symbols indexed: 1475**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -525,6 +525,14 @@
 | `apps/signal_gateway/correlation.py` | `_token` | 30 | function | مقادیر vendor-specific را به token پایدار و قابل hash تبدیل می‌کند. | module |
 | `apps/signal_gateway/correlation.py` | `signal_family` | 36 | function | نام‌های alert مختلف را محافظه‌کارانه به symptom family مشترک نگاشت می‌کند. | module |
 | `apps/signal_gateway/correlation.py` | `build_correlation_identity` | 53 | function | Fingerprint ثابت می‌سازد تا Zabbix/Elastic/Prometheus یک failure را duplicate نکنند. | module |
+| `apps/signal_gateway/zabbix_lifecycle.py` | `_text_value` | 21 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/zabbix_lifecycle.py` | `classify_zabbix_lifecycle` | 32 | function | Return deterministic Problem/Recovery identity from the webhook payload. | module |
+| `apps/signal_gateway/zabbix_lifecycle.py` | `_recovery_timestamp` | 77 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/zabbix_lifecycle.py` | `_recovery_evidence` | 87 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/zabbix_lifecycle.py` | `_cancel_unconsumed_approvals` | 102 | async function | Cancel stale write authority when the source reports recovery before execution. | module |
+| `apps/signal_gateway/zabbix_lifecycle.py` | `_record_source_recovery` | 129 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/zabbix_lifecycle.py` | `_audit_recovery` | 183 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/zabbix_lifecycle.py` | `ingest_zabbix_payload` | 220 | async function | Ingest a Zabbix Problem or Recovery without turning Recovery into a new Incident. | module |
 | `apps/verification_service/__init__.py` | `VerificationStatus` | 11 | class | کلاس | module |
 | `apps/verification_service/__init__.py` | `VerificationResult` | 18 | class | کلاس | module |
 | `apps/verification_service/__init__.py` | `VerificationEngine` | 30 | class | Deterministic before/after verification over fresh operational Evidence. | module |
@@ -1258,8 +1266,10 @@
 | `tests/unit/test_dotin_general_chatbot_llm.py` | `test_dotin_provider_validates_documented_model_and_request_options` | 163 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_dotin_general_chatbot_llm.py` | `test_configured_llm_adapter_selects_dotin_provider` | 183 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_dual_logging.py` | `_flush_root_handlers` | 10 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `tests/unit/test_dual_logging.py` | `test_dual_format_logging_writes_human_and_json_files` | 15 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_dual_logging.py` | `test_time_rotation_uses_timed_handlers` | 50 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_dual_logging.py` | `_configure_file_logging` | 15 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_dual_logging.py` | `test_dual_format_logging_writes_human_and_json_files` | 32 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_dual_logging.py` | `test_workflow_step_is_written_to_both_files_and_redacts_secrets` | 53 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_dual_logging.py` | `test_time_rotation_uses_timed_handlers` | 89 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_evaluator.py` | `test_rejects_empty_plan` | 4 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_evaluator.py` | `test_accepts_evidence_backed_plan` | 10 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_execution_approval_propagation.py` | `ApprovalRequiredTool` | 9 | class | کلاس | module |
