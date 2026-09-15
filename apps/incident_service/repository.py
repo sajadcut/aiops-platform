@@ -41,13 +41,29 @@ class IncidentRepository:
             )
             self.session.add(incident)
         else:
+            # A source Recovery can race a long-running analysis. Never let a
+            # stale workflow result overwrite an already-recorded authoritative
+            # recovery and move the incident back to analyzing/open.
+            existing_context = dict(incident.context or {})
+            recovery_marker = dict(existing_context.get("source_recovery") or {})
+            incoming_context = dict(context or {}) if context is not None else None
+            if recovery_marker:
+                if incoming_context is None:
+                    incoming_context = existing_context
+                else:
+                    incoming_context["source_recovery"] = recovery_marker
+                    if existing_context.get("source_recoveries"):
+                        incoming_context["source_recoveries"] = existing_context.get("source_recoveries")
+                if bool(recovery_marker.get("incident_resolved")) and incident.status != IncidentStatus.CLOSED:
+                    normalized_status = IncidentStatus.RESOLVED
+
             incident.source = source
             incident.severity = severity or incident.severity or "unknown"
             incident.service = service
             incident.status = normalized_status
             incident.summary = summary
-            if context is not None:
-                incident.context = context
+            if incoming_context is not None:
+                incident.context = incoming_context
 
     async def set_status(self, incident_id: str, status: str) -> None:
         incident = await self.session.get(Incident, UUID(str(incident_id)))
