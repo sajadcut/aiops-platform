@@ -391,14 +391,14 @@
 | `apps/execution_service/tools/ssh_vm.py` | `SSHVMTool.requires_approval` | 27 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMTool |
 | `apps/execution_service/tools/ssh_vm.py` | `SSHVMTool.validate` | 30 | async method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | SSHVMTool |
 | `apps/execution_service/tools/ssh_vm.py` | `SSHVMTool.execute` | 41 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | SSHVMTool |
-| `apps/execution_service/tools/vm_telemetry.py` | `VMTelemetryTool` | 7 | class | Read-only VM telemetry tool backed by MCP Edge transport. | module |
-| `apps/execution_service/tools/vm_telemetry.py` | `VMTelemetryTool.__init__` | 10 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMTelemetryTool |
-| `apps/execution_service/tools/vm_telemetry.py` | `VMTelemetryTool._connector` | 13 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMTelemetryTool |
-| `apps/execution_service/tools/vm_telemetry.py` | `VMTelemetryTool.name` | 19 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMTelemetryTool |
-| `apps/execution_service/tools/vm_telemetry.py` | `VMTelemetryTool.risk_level` | 23 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMTelemetryTool |
-| `apps/execution_service/tools/vm_telemetry.py` | `VMTelemetryTool.requires_approval` | 27 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMTelemetryTool |
-| `apps/execution_service/tools/vm_telemetry.py` | `VMTelemetryTool.validate` | 30 | async method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | VMTelemetryTool |
-| `apps/execution_service/tools/vm_telemetry.py` | `VMTelemetryTool.execute` | 33 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | VMTelemetryTool |
+| `apps/execution_service/tools/vm_telemetry.py` | `VMTelemetryTool` | 7 | class | Read-only VM diagnostic tool backed by the governed MCP edge transport. | module |
+| `apps/execution_service/tools/vm_telemetry.py` | `VMTelemetryTool.__init__` | 12 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMTelemetryTool |
+| `apps/execution_service/tools/vm_telemetry.py` | `VMTelemetryTool._connector` | 15 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMTelemetryTool |
+| `apps/execution_service/tools/vm_telemetry.py` | `VMTelemetryTool.name` | 21 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMTelemetryTool |
+| `apps/execution_service/tools/vm_telemetry.py` | `VMTelemetryTool.risk_level` | 25 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMTelemetryTool |
+| `apps/execution_service/tools/vm_telemetry.py` | `VMTelemetryTool.requires_approval` | 29 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMTelemetryTool |
+| `apps/execution_service/tools/vm_telemetry.py` | `VMTelemetryTool.validate` | 32 | async method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | VMTelemetryTool |
+| `apps/execution_service/tools/vm_telemetry.py` | `VMTelemetryTool.execute` | 50 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | VMTelemetryTool |
 | `apps/incident_service/repository.py` | `IncidentRepository` | 13 | class | Canonical PostgreSQL repository for Incident, Evidence and Finding. | module |
 | `apps/incident_service/repository.py` | `IncidentRepository.__init__` | 16 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentRepository |
 | `apps/incident_service/repository.py` | `IncidentRepository.upsert_incident` | 19 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentRepository |
