@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 from apps.runbook_service.registry import RunbookRegistry
@@ -20,6 +21,7 @@ class RemediationPlanner:
     UNHEALTHY_SERVICE_STATES = {
         "inactive", "failed", "dead", "stopped", "down", "not-running", "not_running",
     }
+    HEALTHY_SERVICE_STATES = {"active", "running", "up"}
 
     @classmethod
     def plan(cls, state: Dict[str, Any]) -> Dict[str, Any]:
@@ -126,9 +128,48 @@ class RemediationPlanner:
         }
 
     @classmethod
+    def revalidate_execution(
+        cls, execution_request: Dict[str, Any], evidence: Iterable[Dict[str, Any]]
+    ) -> Dict[str, Any]:
+        """Fail closed if the approved write is stale immediately before execution."""
+        if str(execution_request.get("tool_name") or "") != "ssh_vm" or str(execution_request.get("action") or "") != "restart_service":
+            return {"safe_to_execute": False, "reason": "unsupported_execution_binding", "evidence_refs": []}
+        if str(execution_request.get("runbook_id") or "") != cls.VM_SERVICE_RUNBOOK:
+            return {"safe_to_execute": False, "reason": "unrecognized_remediation_runbook", "evidence_refs": []}
+
+        target = str(execution_request.get("target") or "").strip()
+        parameters = dict(execution_request.get("parameters") or {})
+        service = str(parameters.get("service") or "").strip()
+        if not target or not service:
+            return {"safe_to_execute": False, "reason": "execution_binding_incomplete", "evidence_refs": []}
+
+        states, status_refs = cls._service_states(evidence, target=target, service=service)
+        if not states:
+            return {"safe_to_execute": False, "reason": "fresh_service_status_missing", "evidence_refs": status_refs}
+        if states & cls.HEALTHY_SERVICE_STATES:
+            return {"safe_to_execute": False, "reason": "service_no_longer_unhealthy", "evidence_refs": status_refs}
+        if not states.issubset(cls.UNHEALTHY_SERVICE_STATES):
+            return {"safe_to_execute": False, "reason": "fresh_service_status_inconclusive", "evidence_refs": status_refs}
+
+        config_ok, config_refs, config_reason = cls._configuration_precondition(
+            evidence, target=target, service=service
+        )
+        refs = cls._dedupe(status_refs + config_refs)
+        if not config_ok:
+            return {"safe_to_execute": False, "reason": config_reason, "evidence_refs": refs}
+        return {
+            "safe_to_execute": True,
+            "reason": "fresh_execution_preconditions_satisfied",
+            "target": target,
+            "service": service,
+            "evidence_refs": refs,
+        }
+
+    @classmethod
     def _load_vm_service_policy(cls) -> Optional[Dict[str, Any]]:
         try:
-            registry = RunbookRegistry()
+            root = Path(__file__).resolve().parents[2] / "runbooks"
+            registry = RunbookRegistry(str(root))
             runbook = registry.get(cls.VM_SERVICE_RUNBOOK)
             validation = registry.validate(cls.VM_SERVICE_RUNBOOK, {})
         except (KeyError, OSError, TypeError, ValueError):
@@ -145,6 +186,34 @@ class RemediationPlanner:
             live = state.get("live_evidence") or context.get("live_evidence") or {}
             candidates = live.get("evidence", []) if isinstance(live, dict) else []
         return [item for item in candidates if isinstance(item, dict)]
+
+    @classmethod
+    def _service_states(
+        cls, evidence: Iterable[Dict[str, Any]], *, target: str, service: str
+    ) -> Tuple[set[str], List[str]]:
+        states: set[str] = set()
+        refs: List[str] = []
+        for item in evidence:
+            if str(item.get("source") or "").strip().lower() != "vm_mcp":
+                continue
+            raw = item.get("raw_data") or {}
+            if not isinstance(raw, dict) or str(raw.get("diagnostic") or "").strip().lower() != "service_status":
+                continue
+            if str(raw.get("target") or "").strip() != target or str(raw.get("service") or "").strip() != service:
+                continue
+            value = str(
+                raw.get("active_state")
+                or raw.get("status")
+                or raw.get("state")
+                or raw.get("sub_state")
+                or ""
+            ).strip().lower()
+            if value:
+                states.add(value)
+            ref = str(item.get("reference") or "").strip()
+            if ref:
+                refs.append(ref)
+        return states, cls._dedupe(refs)
 
     @classmethod
     def _unhealthy_service_bindings(
