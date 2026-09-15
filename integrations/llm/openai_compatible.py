@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+import time
 from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
 from integrations.http_transport import insecure_async_client
 
 from domain.contracts.config import settings
+from domain.contracts.logging import log_workflow_step
 from integrations.llm.base import LLMAdapter, LLMResponse
 
 
@@ -95,17 +97,82 @@ class OpenAICompatibleLLMProvider(LLMAdapter):
     ) -> LLMResponse:
         headers = self._request_headers(**kwargs)
         request_payload = self._request_payload(messages, temperature, max_tokens, **kwargs)
-        async with insecure_async_client(timeout=settings.LLM_TIMEOUT_SECONDS) as client:
-            response = await client.post(
-                self.chat_endpoint,
-                headers=headers,
-                json=request_payload,
+        request_id = str(headers.get("x-request-id") or kwargs.get("request_id") or uuid4())
+        incident_id_value = kwargs.get("incident_id") or kwargs.get("session_id")
+        incident_id = str(incident_id_value) if incident_id_value else None
+        stage = str(kwargs.get("stage") or kwargs.get("purpose") or "llm")
+        input_chars = sum(len(str(message.get("content") or "")) for message in messages if isinstance(message, dict))
+        started = time.perf_counter()
+
+        log_workflow_step(
+            incident_id=incident_id,
+            stage=stage,
+            component=self.provider_name,
+            action="chat_completion_started",
+            status="started",
+            summary=f"LLM request started with model {self.model}",
+            details={
+                "request_id": request_id,
+                "model": self.model,
+                "message_count": len(messages),
+                "input_chars": input_chars,
+                "max_tokens": max_tokens,
+                "temperature": temperature,
+                "enable_thinking": request_payload.get("enable_thinking"),
+                "reasoning_effort": request_payload.get("reasoning_effort"),
+                "tool_count": len(request_payload.get("tools") or []),
+                "tool_choice": request_payload.get("tool_choice"),
+            },
+        )
+
+        try:
+            async with insecure_async_client(timeout=settings.LLM_TIMEOUT_SECONDS) as client:
+                response = await client.post(
+                    self.chat_endpoint,
+                    headers=headers,
+                    json=request_payload,
+                )
+                response.raise_for_status()
+                payload = response.json()
+            if not isinstance(payload, dict):
+                raise RuntimeError("invalid_llm_gateway_response")
+            result = self._response_from_payload(payload, self.model)
+        except Exception as exc:
+            log_workflow_step(
+                incident_id=incident_id,
+                stage=stage,
+                component=self.provider_name,
+                action="chat_completion_failed",
+                status="failed",
+                summary="LLM request failed",
+                details={
+                    "request_id": request_id,
+                    "model": self.model,
+                    "error_type": type(exc).__name__,
+                    "duration_ms": round((time.perf_counter() - started) * 1000, 3),
+                },
+                level="warning",
             )
-            response.raise_for_status()
-            payload = response.json()
-        if not isinstance(payload, dict):
-            raise RuntimeError("invalid_llm_gateway_response")
-        return self._response_from_payload(payload, self.model)
+            raise
+
+        log_workflow_step(
+            incident_id=incident_id,
+            stage=stage,
+            component=self.provider_name,
+            action="chat_completion_completed",
+            status="completed",
+            summary=f"LLM request completed with model {result.model}",
+            details={
+                "request_id": request_id,
+                "model": result.model,
+                "finish_reason": result.finish_reason,
+                "usage": result.usage or {},
+                "output_chars": len(result.content),
+                "tool_call_count": len(result.tool_calls or []),
+                "duration_ms": round((time.perf_counter() - started) * 1000, 3),
+            },
+        )
+        return result
 
 
 class DotinGeneralChatbotLLMProvider(OpenAICompatibleLLMProvider):
