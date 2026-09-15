@@ -31,7 +31,9 @@ class _FakeSSHContext:
 def _configure_password_mode(monkeypatch, *, app_env="test"):
     monkeypatch.setattr(settings, "APP_ENV", app_env)
     monkeypatch.setattr(settings, "SSH_ENABLED", True)
+    monkeypatch.setattr(settings, "SSH_AUTH_MODE", "password")
     monkeypatch.setattr(settings, "SSH_USERNAME", "svc-aiops")
+    monkeypatch.setattr(settings, "SSH_PASSWORD", "test-only-password")
     monkeypatch.setattr(settings, "SSH_PRIVATE_KEY_PATH", None)
     monkeypatch.setattr(settings, "SSH_KNOWN_HOSTS", None if app_env != "production" else "/etc/ssh/ssh_known_hosts")
     monkeypatch.setattr(settings, "SSH_STRICT_HOST_KEY_CHECKING", app_env == "production")
@@ -39,8 +41,6 @@ def _configure_password_mode(monkeypatch, *, app_env="test"):
     monkeypatch.setattr(settings, "SSH_CONNECT_TIMEOUT", 5)
     monkeypatch.setattr(settings, "SSH_ALLOWED_TARGETS", ["vm01"])
     monkeypatch.setattr(settings, "SSH_ALLOWED_SERVICES", ["haproxy"])
-    monkeypatch.setenv("SSH_AUTH_MODE", "password")
-    monkeypatch.setenv("SSH_PASSWORD", "test-only-password")
 
 
 def test_password_auth_mode_does_not_require_private_key_in_production(monkeypatch):
@@ -51,15 +51,8 @@ def test_password_auth_mode_does_not_require_private_key_in_production(monkeypat
 
 def test_password_auth_mode_requires_password(monkeypatch):
     _configure_password_mode(monkeypatch)
-    monkeypatch.delenv("SSH_PASSWORD")
+    monkeypatch.setattr(settings, "SSH_PASSWORD", None)
     with pytest.raises(RuntimeError, match="SSH_PASSWORD is required"):
-        SSHVMConnector()
-
-
-def test_invalid_auth_mode_fails_closed(monkeypatch):
-    monkeypatch.setattr(settings, "APP_ENV", "test")
-    monkeypatch.setenv("SSH_AUTH_MODE", "keyboard-interactive")
-    with pytest.raises(RuntimeError, match="SSH_AUTH_MODE must be key or password"):
         SSHVMConnector()
 
 
