@@ -11,8 +11,8 @@ from apps.signal_gateway import (
     SignalGateway,
     signal_from_elasticsearch,
     signal_from_prometheus,
-    signal_from_zabbix,
 )
+from apps.signal_gateway.zabbix_lifecycle import ingest_zabbix_payload
 from database import AsyncSessionLocal
 from domain.contracts.rate_limit import rate_limiter_strict
 
@@ -24,25 +24,45 @@ class RawSignalPayload(BaseModel):
     payload: Dict[str, Any] = Field(default_factory=dict)
 
 
+def _response_from_result(result: Dict[str, Any]) -> Dict[str, Any]:
+    return {
+        "status": "accepted",
+        "incident_id": result.get("incident_id"),
+        "trigger_source": result.get("trigger_source"),
+        "trigger_signal_type": result.get("trigger_signal_type"),
+        "correlation_key": result.get("correlation_key"),
+        "deduplicated": bool(result.get("deduplicated", False)),
+        "deduplication_reason": result.get("deduplication_reason"),
+        "signal_state": result.get("signal_state"),
+        "recovered": result.get("recovered"),
+        "recovery_unmatched": result.get("recovery_unmatched"),
+        "recovery_of_source_id": result.get("recovery_of_source_id"),
+        "incident_status": result.get("incident_status"),
+        "approval_cancellations": result.get("approval_cancellations"),
+        "asset_context": (result.get("context") or {}).get("asset_context"),
+        "routing": result.get("routing"),
+        "coordination": result.get("coordination"),
+        "evaluation": result.get("evaluation"),
+        "decision": result.get("decision"),
+        "verification_result": result.get("verification_result"),
+        "terminal_reason": result.get("terminal_reason"),
+    }
+
+
 async def _ingest(signal: OperationalSignal) -> Dict[str, Any]:
     try:
         async with AsyncSessionLocal() as db:
             result = await SignalGateway.ingest(db, signal)
-        return {
-            "status": "accepted",
-            "incident_id": result.get("incident_id"),
-            "trigger_source": result.get("trigger_source"),
-            "trigger_signal_type": result.get("trigger_signal_type"),
-            "correlation_key": result.get("correlation_key"),
-            "deduplicated": bool(result.get("deduplicated", False)),
-            "deduplication_reason": result.get("deduplication_reason"),
-            "asset_context": (result.get("context") or {}).get("asset_context"),
-            "routing": result.get("routing"),
-            "coordination": result.get("coordination"),
-            "evaluation": result.get("evaluation"),
-            "decision": result.get("decision"),
-            "terminal_reason": result.get("terminal_reason"),
-        }
+        return _response_from_result(result)
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail="signal_ingestion_failed") from exc
+
+
+async def _ingest_zabbix(payload: Dict[str, Any]) -> Dict[str, Any]:
+    try:
+        async with AsyncSessionLocal() as db:
+            result = await ingest_zabbix_payload(db, payload)
+        return _response_from_result(result)
     except Exception as exc:
         raise HTTPException(status_code=500, detail="signal_ingestion_failed") from exc
 
@@ -93,4 +113,4 @@ async def ingest_zabbix_signal(
     body: RawSignalPayload,
     _user=Depends(require_permission("ingest:signal")),
 ):
-    return await _ingest(signal_from_zabbix(body.payload))
+    return await _ingest_zabbix(body.payload)
