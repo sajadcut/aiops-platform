@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 255 | Dashboard JS files scanned: 2 | Symbols indexed: 1556**
+**Python files scanned: 256 | Dashboard JS files scanned: 2 | Symbols indexed: 1569**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1067,6 +1067,19 @@
 | `tests/security/test_vm_mcp_security.py` | `_FakeVMConnector.restart_service` | 42 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _FakeVMConnector |
 | `tests/security/test_vm_mcp_security.py` | `test_vm_mcp_requires_bound_capability_and_rejects_replay` | 48 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/security/test_vm_mcp_security.py` | `test_vm_mcp_rejects_capability_bound_to_different_target` | 81 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/security/test_vm_ssh_password_auth.py` | `_FakeSSHResult` | 10 | class | کلاس | module |
+| `tests/security/test_vm_ssh_password_auth.py` | `_FakeSSHConnection` | 16 | class | کلاس | module |
+| `tests/security/test_vm_ssh_password_auth.py` | `_FakeSSHConnection.run` | 17 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | _FakeSSHConnection |
+| `tests/security/test_vm_ssh_password_auth.py` | `_FakeSSHContext` | 23 | class | کلاس | module |
+| `tests/security/test_vm_ssh_password_auth.py` | `_FakeSSHContext.__aenter__` | 24 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _FakeSSHContext |
+| `tests/security/test_vm_ssh_password_auth.py` | `_FakeSSHContext.__aexit__` | 27 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _FakeSSHContext |
+| `tests/security/test_vm_ssh_password_auth.py` | `_configure_password_mode` | 31 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/security/test_vm_ssh_password_auth.py` | `test_password_auth_mode_does_not_require_private_key_in_production` | 46 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/security/test_vm_ssh_password_auth.py` | `test_password_auth_mode_requires_password` | 52 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/security/test_vm_ssh_password_auth.py` | `test_invalid_auth_mode_fails_closed` | 59 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/security/test_vm_ssh_password_auth.py` | `test_password_auth_uses_asyncssh_and_not_subprocess` | 67 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/security/test_vm_ssh_password_auth.py` | `test_password_auth_uses_asyncssh_and_not_subprocess.fake_connect` | 71 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_password_auth_uses_asyncssh_and_not_subprocess |
+| `tests/security/test_vm_ssh_password_auth.py` | `test_password_auth_uses_asyncssh_and_not_subprocess.subprocess_must_not_run` | 76 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_password_auth_uses_asyncssh_and_not_subprocess |
 | `tests/unit/test_agent_architecture_advanced.py` | `SequenceLLM` | 20 | class | کلاس | module |
 | `tests/unit/test_agent_architecture_advanced.py` | `SequenceLLM.__init__` | 21 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SequenceLLM |
 | `tests/unit/test_agent_architecture_advanced.py` | `SequenceLLM.provider_name` | 26 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SequenceLLM |
