@@ -18,9 +18,11 @@ class RemediationPlanner:
 
     VM_SERVICE_RUNBOOK = "vm-service-recovery"
     SIGNAL_SOURCES = {"zabbix", "prometheus", "elasticsearch", "kubernetes"}
-    UNHEALTHY_SERVICE_STATES = {
-        "inactive", "failed", "dead", "stopped", "down", "not-running", "not_running",
+    START_SERVICE_STATES = {
+        "inactive", "dead", "stopped", "down", "not-running", "not_running",
     }
+    RESTART_SERVICE_STATES = {"failed"}
+    UNHEALTHY_SERVICE_STATES = START_SERVICE_STATES | RESTART_SERVICE_STATES
     HEALTHY_SERVICE_STATES = {"active", "running", "up"}
 
     @classmethod
@@ -56,7 +58,19 @@ class RemediationPlanner:
         if len(service_bindings) != 1:
             return {**base, "reason": "ambiguous_live_service_binding"}
 
-        (target, service), status_refs = next(iter(service_bindings.items()))
+        (target, service), binding_refs = next(iter(service_bindings.items()))
+        states, status_refs = cls._service_states(evidence, target=target, service=service)
+        action, action_reason = cls._recovery_action(states)
+        status_refs = cls._dedupe(binding_refs + status_refs)
+        if action is None:
+            return {
+                **base,
+                "reason": action_reason,
+                "target": target,
+                "service": service,
+                "evidence_refs": status_refs,
+            }
+
         config_ok, config_refs, config_reason = cls._configuration_precondition(
             evidence, target=target, service=service
         )
@@ -79,7 +93,6 @@ class RemediationPlanner:
                 "evidence_refs": cls._dedupe(status_refs + config_refs + port_refs),
             }
 
-        action = "restart_service"
         tool_name = str((policy.get("execution") or {}).get("tool") or "")
         allowed_actions = {
             str(value).strip()
@@ -115,11 +128,16 @@ class RemediationPlanner:
         refs = cls._dedupe(status_refs + config_refs + port_refs)
         return {
             "status": "planned",
-            "reason": "live_vm_service_inactive_matches_governed_runbook",
+            "reason": (
+                "live_vm_service_stopped_matches_governed_start"
+                if action == "start_service"
+                else "live_vm_service_failed_matches_governed_restart"
+            ),
             "live_identity_verified": True,
             "source": source,
             "target": target,
             "service": service,
+            "service_states": sorted(states),
             "target_port": port,
             "runbook_id": request["runbook_id"],
             "runbook_version": request["runbook_version"],
@@ -132,7 +150,8 @@ class RemediationPlanner:
         cls, execution_request: Dict[str, Any], evidence: Iterable[Dict[str, Any]]
     ) -> Dict[str, Any]:
         """Fail closed if the approved write is stale immediately before execution."""
-        if str(execution_request.get("tool_name") or "") != "ssh_vm" or str(execution_request.get("action") or "") != "restart_service":
+        action = str(execution_request.get("action") or "")
+        if str(execution_request.get("tool_name") or "") != "ssh_vm" or action not in {"start_service", "restart_service"}:
             return {"safe_to_execute": False, "reason": "unsupported_execution_binding", "evidence_refs": []}
         if str(execution_request.get("runbook_id") or "") != cls.VM_SERVICE_RUNBOOK:
             return {"safe_to_execute": False, "reason": "unrecognized_remediation_runbook", "evidence_refs": []}
@@ -148,8 +167,11 @@ class RemediationPlanner:
             return {"safe_to_execute": False, "reason": "fresh_service_status_missing", "evidence_refs": status_refs}
         if states & cls.HEALTHY_SERVICE_STATES:
             return {"safe_to_execute": False, "reason": "service_no_longer_unhealthy", "evidence_refs": status_refs}
-        if not states.issubset(cls.UNHEALTHY_SERVICE_STATES):
-            return {"safe_to_execute": False, "reason": "fresh_service_status_inconclusive", "evidence_refs": status_refs}
+        fresh_action, action_reason = cls._recovery_action(states)
+        if fresh_action is None:
+            return {"safe_to_execute": False, "reason": action_reason, "evidence_refs": status_refs}
+        if fresh_action != action:
+            return {"safe_to_execute": False, "reason": "fresh_service_recovery_action_changed", "evidence_refs": status_refs}
 
         config_ok, config_refs, config_reason = cls._configuration_precondition(
             evidence, target=target, service=service
@@ -160,10 +182,26 @@ class RemediationPlanner:
         return {
             "safe_to_execute": True,
             "reason": "fresh_execution_preconditions_satisfied",
+            "action": action,
             "target": target,
             "service": service,
             "evidence_refs": refs,
         }
+
+    @classmethod
+    def _recovery_action(cls, states: set[str]) -> Tuple[Optional[str], str]:
+        normalized = {str(state).strip().lower() for state in states if str(state).strip()}
+        if not normalized:
+            return None, "service_state_missing"
+        if normalized & cls.HEALTHY_SERVICE_STATES:
+            return None, "service_state_conflict_or_recovered"
+        if normalized & cls.RESTART_SERVICE_STATES:
+            if not normalized.issubset(cls.RESTART_SERVICE_STATES):
+                return None, "ambiguous_live_service_state"
+            return "restart_service", "service_failed"
+        if normalized.issubset(cls.START_SERVICE_STATES):
+            return "start_service", "service_stopped"
+        return None, "fresh_service_status_inconclusive"
 
     @classmethod
     def _load_vm_service_policy(cls) -> Optional[Dict[str, Any]]:

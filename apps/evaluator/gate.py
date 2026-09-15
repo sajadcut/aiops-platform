@@ -24,6 +24,34 @@ class EvaluationGate:
                 return True
         return False
 
+    @staticmethod
+    def _governed_deterministic_recovery(finding: Dict[str, Any]) -> bool:
+        """Return true only for an evidence-grounded, approval-bound stopped-service recovery.
+
+        This narrow escape hatch separates uncertainty about *why* a service stopped
+        from certainty about its current operational state. It never authorizes a
+        write: Decision, Approval, Capability, fresh precondition validation and
+        post-action verification remain mandatory downstream.
+        """
+        details = finding.get("analysis_details") or {}
+        if not isinstance(details, dict) or details.get("deterministic_fault") != "service_stopped":
+            return False
+        if float(finding.get("confidence", 0) or 0) < DEFAULT_THRESHOLDS.minimum_confidence:
+            return False
+        if len(finding.get("evidence_ids") or []) < 3:
+            return False
+        for action in finding.get("recommended_actions") or []:
+            if not isinstance(action, dict):
+                continue
+            if (
+                str(action.get("action") or "") == "start_service"
+                and action.get("read_only") is False
+                and action.get("requires_approval") is True
+                and str(action.get("suggested_tool") or "") == "ssh_vm"
+            ):
+                return True
+        return False
+
     @classmethod
     def evaluate(
         cls,
@@ -47,6 +75,10 @@ class EvaluationGate:
         specialist_findings = grounded_findings or all_specialists
         specialist_failures = [str(f.get("agent_name")) for f in failed_findings]
         degraded_specialist_analysis = bool(grounded_findings and failed_findings)
+        deterministic_recoveries = [
+            f for f in grounded_findings if cls._governed_deterministic_recovery(f)
+        ]
+        operational_state_resolved = bool(deterministic_recoveries)
 
         confidences = [float(f.get("confidence", 0) or 0) for f in specialist_findings]
         max_confidence = max(confidences, default=0.0)
@@ -72,8 +104,7 @@ class EvaluationGate:
                 if not action.get("read_only", True) and not action.get("requires_approval", False):
                     unsafe_recommendations.append(action.get("action", "unknown"))
 
-        # hypothesis با probability بالا ولی بدون Evidence ID یک ادعای ungrounded است؛
-        # این check جلوی تبدیل حدس LLM به RCA قطعی را می‌گیرد.
+        # hypothesis با probability بالا ولی بدون Evidence ID یک ادعای ungrounded است.
         hypothesis_without_evidence = False
         for finding in specialist_findings:
             for hypothesis in finding.get("hypotheses") or []:
@@ -82,6 +113,7 @@ class EvaluationGate:
                         hypothesis_without_evidence = True
 
         blockers = []
+        advisories = []
         if not all_specialists:
             blockers.append("no_specialist_analysis")
         if not plan.strip():
@@ -97,23 +129,27 @@ class EvaluationGate:
         if mean_coverage < settings.AGENT_MIN_EVIDENCE_COVERAGE:
             blockers.append("low_evidence_coverage")
         if hypothesis_without_evidence:
-            blockers.append("ungrounded_hypothesis")
+            (advisories if operational_state_resolved else blockers).append("ungrounded_hypothesis")
         if unsafe_recommendations:
             blockers.append("unsafe_agent_recommendation")
-        if unresolved_disagreement:
-            blockers.append("unresolved_agent_disagreement")
-        if contradictions:
-            blockers.append("unresolved_evidence_conflict")
-        if len(specialist_findings) > 1 and agreement_score < settings.AGENT_MIN_CONSENSUS_SCORE:
-            blockers.append("low_agent_consensus")
-        if missing:
-            blockers.append("critical_missing_evidence")
-        if human_review:
-            blockers.append("human_review_required")
 
-        # ترتیب blockerها deterministic نگه داشته می‌شود تا test/audit و تصمیم downstream
-        # برای input یکسان خروجی قابل تکرار داشته باشند.
+        # If a VM specialist has deterministically proven the current stopped-service
+        # state and the only proposed write is approval-bound start_service, disputes
+        # about historical/root cause remain visible but no longer prevent reaching
+        # the Decision/Approval gate. Fresh execution preconditions still fail closed.
+        if unresolved_disagreement:
+            (advisories if operational_state_resolved else blockers).append("unresolved_agent_disagreement")
+        if contradictions:
+            (advisories if operational_state_resolved else blockers).append("unresolved_evidence_conflict")
+        if len(specialist_findings) > 1 and agreement_score < settings.AGENT_MIN_CONSENSUS_SCORE:
+            (advisories if operational_state_resolved else blockers).append("low_agent_consensus")
+        if missing:
+            (advisories if operational_state_resolved else blockers).append("critical_missing_evidence")
+        if human_review:
+            (advisories if operational_state_resolved else blockers).append("human_review_required")
+
         blockers = list(dict.fromkeys(blockers))
+        advisories = list(dict.fromkeys(advisories))
         approved = not blockers
         return {
             "approved_for_decision": approved,
@@ -127,8 +163,11 @@ class EvaluationGate:
             "specialist_failures": specialist_failures,
             "degraded_specialist_analysis": degraded_specialist_analysis,
             "grounded_specialists": [str(f.get("agent_name")) for f in grounded_findings],
+            "operational_state_resolved": operational_state_resolved,
+            "deterministic_recovery_agents": [str(f.get("agent_name")) for f in deterministic_recoveries],
             "human_review_required": human_review,
             "unsafe_recommendations": unsafe_recommendations,
+            "non_blocking_advisories": advisories,
             "blockers": blockers,
             "reason": "evaluation_passed" if approved else blockers[0],
         }

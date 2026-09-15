@@ -1,8 +1,12 @@
 from __future__ import annotations
 
+import asyncio
+import json
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict
 
+from agents.shared.base import UNTRUSTED_INPUT_POLICY
+from agents.shared.domain_agent import DomainDiagnosticAgent
 from agents.shared.telemetry import AgentTelemetry
 from apps.context_service.asset_identity import AssetIdentityResolver
 from apps.context_service.knowledge_topology import KnowledgeTopologyResolver
@@ -205,6 +209,81 @@ class SignalAwareE2EOrchestrator(E2EOrchestrator):
             evidence_requests=coordination.get("evidence_requests", []),
             evidence_rounds=state.get("evidence_rounds", 1),
             peer_context_shared=True,
+        )
+        return state
+
+    @staticmethod
+    def _deterministic_rca_fallback(state: E2EState) -> str:
+        for finding in state.get("analysis_results", []) or []:
+            if not isinstance(finding, dict):
+                continue
+            details = finding.get("analysis_details") or {}
+            if isinstance(details, dict) and details.get("deterministic_fault") == "service_stopped":
+                service = str(state.get("service_name") or "service")
+                return (
+                    f"Live Evidence confirms {service} is stopped while configuration validation is acceptable. "
+                    "Use the governed start_service recovery path only after Decision/Approval, refresh execution "
+                    "preconditions immediately before the write, and verify service state plus the original listener/TCP symptom afterward. "
+                    "Historical root cause remains under investigation and is not required to authorize the current-state recovery proposal."
+                )
+        return "Manual investigation required: RCA generation failed."
+
+    async def _rca_node(self, state: E2EState) -> E2EState:
+        """Bound RCA context so provider token limits cannot erase deterministic recovery."""
+        state["current_node"] = "rca"
+        raw_evidence = state.get("context", {}).get("evidence", [])
+        compact_evidence = DomainDiagnosticAgent._prompt_evidence(
+            raw_evidence if isinstance(raw_evidence, list) else []
+        )
+        compact_findings = DomainDiagnosticAgent._bounded_prompt_value(
+            list(state.get("analysis_results", []) or [])[: settings.AGENT_MAX_PARALLELISM]
+        )
+        compact_coordination = DomainDiagnosticAgent._bounded_prompt_value(
+            state.get("coordination", {})
+        )
+        compact_triage = DomainDiagnosticAgent._bounded_prompt_value(
+            state.get("triage_result", {})
+        )
+        prompt = (
+            f"{UNTRUSTED_INPUT_POLICY}\n\n"
+            "You are the RCA synthesis stage. LIVE EVIDENCE is authoritative. "
+            "Separate the currently proven operational state from uncertain historical root cause. "
+            "Preserve meaningful disagreements and falsification checks, but do not let speculative historical-cause hypotheses override direct current-state telemetry. "
+            "RAG/Memory are auxiliary. Never claim execution or approval. Return a concise assessment and action plan.\n"
+            f"Triage={json.dumps(compact_triage, default=str)}\n"
+            f"SpecialistFindings={json.dumps(compact_findings, default=str)}\n"
+            f"Coordination={json.dumps(compact_coordination, default=str)}\n"
+            f"LiveEvidence={json.dumps(compact_evidence, default=str)}"
+        )
+        max_tokens = min(max(int(settings.AGENT_MAX_TOKENS) * 2, 1600), 4096)
+        try:
+            response = await asyncio.wait_for(
+                self.llm.generate(
+                    prompt,
+                    temperature=settings.AGENT_LLM_TEMPERATURE,
+                    max_tokens=max_tokens,
+                ),
+                timeout=settings.AGENT_TIMEOUT_SECONDS,
+            )
+            finish_reason = str(response.finish_reason or "").strip().lower()
+            if finish_reason in {"length", "max_tokens"}:
+                raise RuntimeError("rca_response_truncated")
+            state["final_plan"] = response.content
+        except Exception as exc:
+            state["final_plan"] = self._deterministic_rca_fallback(state)
+            logger.error("RCA generation failed: %s", exc)
+        state["confidence"] = float(
+            state.get("coordination", {}).get(
+                "confidence", self._average_confidence(state.get("findings", []))
+            )
+        )
+        self._audit(
+            "rca_completed",
+            state,
+            confidence=state["confidence"],
+            coordination=state.get("coordination", {}),
+            prompt_evidence_count=len(compact_evidence),
+            bounded_context=True,
         )
         return state
 

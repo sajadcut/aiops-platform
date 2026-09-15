@@ -1,13 +1,15 @@
 id: vm-service-recovery
 name: vm-service-recovery
 owner: sre
-version: "1.0"
+version: "1.1"
 timeout: 30
 preconditions:
   - live_vm_identity_verified: true
   - service_state: inactive_or_failed
   - configuration: valid_or_validation_unsupported
 steps:
+  - action: start_service
+    tool: ssh_vm
   - action: restart_service
     tool: ssh_vm
 rollback:
@@ -26,4 +28,5 @@ execution:
   auto_plan_from_signals: true
   tool: ssh_vm
   allowed_actions:
+    - start_service
     - restart_service

@@ -27,13 +27,24 @@ class VMAgent(BaseAgent):
 
     async def analyze(self, input_data: AgentInput) -> AgentOutput:
         logger.info(f"VMAgent analyzing: {input_data.incident_id}")
+        # Prompt evidence stays bounded, but deterministic operational checks must
+        # inspect every fresh live-evidence item. Otherwise a high-volume incident
+        # can push the decisive service/process/config/port rows beyond
+        # AGENT_MAX_EVIDENCE_ITEMS and silently disable deterministic recovery.
         evidence = self.evidence_items(input_data)
+        raw_evidence = input_data.context.get("evidence", []) if input_data.context else []
+        deterministic_evidence = [
+            item for item in raw_evidence
+            if isinstance(item, dict) and not self.evidence_is_stale(item)
+        ] if isinstance(raw_evidence, list) else []
         prompt_evidence = DomainDiagnosticAgent._prompt_evidence(evidence)
+        deterministic = classify_vm_service_fault(deterministic_evidence, input_data.service_name)
         evidence_ids = self.evidence_ids(input_data)
+        if deterministic:
+            evidence_ids = list(dict.fromkeys(evidence_ids + list(deterministic.get("evidence_ids") or [])))
         auxiliary_full = self.auxiliary_context(input_data)
         auxiliary = DomainDiagnosticAgent._bounded_prompt_value(auxiliary_full)
         context_summary = DomainDiagnosticAgent._bounded_prompt_value(input_data.context.get("summary", {}))
-        deterministic = classify_vm_service_fault(evidence, input_data.service_name)
         metrics = [item for item in evidence if str(item.get("type", "")).lower() == "metric"]
         logs = [item for item in evidence if str(item.get("type", "")).lower() == "log"]
         alerts = [item for item in evidence if str(item.get("type", "")).lower() in {"alert", "event"}]
@@ -178,6 +189,7 @@ Incident={input_data.incident_id}\nVM/Service={input_data.service_name}\nSummary
                 "memory_context_count": len(auxiliary_full["operational_memory"]),
                 "conflicting_evidence_count": conflict_count,
                 "prompt_evidence_count": len(prompt_evidence),
+                "deterministic_evidence_count": len(deterministic_evidence),
                 "deterministic_fault": deterministic.get("fault_code") if deterministic else None,
                 "structured_analysis_failed": structured_failed,
             },

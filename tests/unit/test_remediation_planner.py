@@ -49,7 +49,7 @@ def _healthy_config(target="10.100.6.199", service="haproxy.service"):
     )
 
 
-def test_planner_builds_only_typed_request_from_live_vm_evidence():
+def test_planner_builds_restart_for_failed_service_only_from_live_vm_evidence():
     evidence = [
         _evidence(
             "service_status",
@@ -89,6 +89,44 @@ def test_planner_builds_only_typed_request_from_live_vm_evidence():
     assert request["runbook_id"] == "vm-service-recovery"
     assert request["agent_name"] == "remediation_planner"
     assert "restart anything the model wants" not in str(request)
+
+
+def test_planner_uses_start_for_inactive_dead_service():
+    evidence = [
+        _evidence(
+            "service_status",
+            "vm-service",
+            target="10.100.6.199",
+            service="haproxy.service",
+            active_state="inactive",
+            sub_state="dead",
+        ),
+        _healthy_config(),
+        _evidence(
+            "port_listener_status",
+            "vm-port",
+            target="10.100.6.199",
+            service="haproxy.service",
+            target_port=8800,
+            listening=False,
+        ),
+        _evidence(
+            "tcp_check",
+            "vm-tcp",
+            target="10.100.6.199",
+            service="haproxy.service",
+            target_port=8800,
+            reachable=False,
+        ),
+    ]
+
+    result = RemediationPlanner.plan(_state(evidence))
+
+    assert result["status"] == "planned"
+    assert result["reason"] == "live_vm_service_stopped_matches_governed_start"
+    assert result["execution_request"]["action"] == "start_service"
+    assert result["execution_request"]["target"] == "10.100.6.199"
+    assert result["execution_request"]["parameters"] == {"service": "haproxy.service", "target_port": 8800}
 
 
 def test_planner_never_turns_llm_recommendation_into_write_without_live_binding():
@@ -173,6 +211,32 @@ def test_pre_execution_revalidation_blocks_restart_after_service_self_recovers()
 
     assert result["safe_to_execute"] is False
     assert result["reason"] == "service_no_longer_unhealthy"
+
+
+def test_pre_execution_revalidation_allows_start_only_while_service_remains_inactive():
+    request = {
+        "tool_name": "ssh_vm",
+        "action": "start_service",
+        "target": "10.100.6.199",
+        "parameters": {"service": "haproxy.service", "target_port": 8800},
+        "runbook_id": "vm-service-recovery",
+    }
+    fresh = [
+        _evidence(
+            "service_status",
+            "fresh-service",
+            target="10.100.6.199",
+            service="haproxy.service",
+            active_state="inactive",
+            sub_state="dead",
+        ),
+        _healthy_config(),
+    ]
+
+    result = RemediationPlanner.revalidate_execution(request, fresh)
+
+    assert result["safe_to_execute"] is True
+    assert result["action"] == "start_service"
 
 
 def test_pre_execution_revalidation_fails_closed_without_fresh_config_check():
