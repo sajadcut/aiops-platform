@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 261 | Dashboard JS files scanned: 2 | Symbols indexed: 1651**
+**Python files scanned: 261 | Dashboard JS files scanned: 2 | Symbols indexed: 1652**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -939,12 +939,13 @@
 | `integrations/zabbix/client.py` | `MockZabbixClient.get_alert` | 9 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | MockZabbixClient |
 | `integrations/zabbix/evidence.py` | `ZabbixEvidenceAdapter` | 4 | class | کلاس | module |
 | `integrations/zabbix/evidence.py` | `ZabbixEvidenceAdapter.normalize` | 6 | method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | ZabbixEvidenceAdapter |
-| `integrations/zabbix/mcp_client.py` | `ZabbixMCPClient` | 11 | class | Read-only adapter for initMAX/zabbix-mcp-server monitoring tools. | module |
-| `integrations/zabbix/mcp_client.py` | `ZabbixMCPClient.__init__` | 14 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ZabbixMCPClient |
-| `integrations/zabbix/mcp_client.py` | `ZabbixMCPClient._dt` | 31 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ZabbixMCPClient |
-| `integrations/zabbix/mcp_client.py` | `ZabbixMCPClient._severity` | 43 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ZabbixMCPClient |
-| `integrations/zabbix/mcp_client.py` | `ZabbixMCPClient._tool_error_text` | 48 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ZabbixMCPClient |
-| `integrations/zabbix/mcp_client.py` | `ZabbixMCPClient.get_alerts` | 54 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | ZabbixMCPClient |
+| `integrations/zabbix/mcp_client.py` | `ZabbixMCPClient` | 12 | class | Read-only adapter for initMAX/zabbix-mcp-server monitoring tools. | module |
+| `integrations/zabbix/mcp_client.py` | `ZabbixMCPClient.__init__` | 15 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ZabbixMCPClient |
+| `integrations/zabbix/mcp_client.py` | `ZabbixMCPClient._dt` | 32 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ZabbixMCPClient |
+| `integrations/zabbix/mcp_client.py` | `ZabbixMCPClient._severity` | 50 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ZabbixMCPClient |
+| `integrations/zabbix/mcp_client.py` | `ZabbixMCPClient._tool_error_text` | 55 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ZabbixMCPClient |
+| `integrations/zabbix/mcp_client.py` | `ZabbixMCPClient._active_problem_fallback` | 61 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ZabbixMCPClient |
+| `integrations/zabbix/mcp_client.py` | `ZabbixMCPClient.get_alerts` | 71 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | ZabbixMCPClient |
 | `knowledge/__init__.py` | `EmbeddingService` | 15 | class | Provider-neutral embedding service for Operational Memory only. | module |
 | `knowledge/__init__.py` | `EmbeddingService._deterministic_embedding` | 25 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | EmbeddingService |
 | `knowledge/__init__.py` | `EmbeddingService.generate_embedding` | 35 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | EmbeddingService |
