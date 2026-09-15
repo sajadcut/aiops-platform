@@ -397,7 +397,7 @@
 | `apps/execution_service/tools/ssh_vm.py` | `SSHVMTool.risk_level` | 23 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMTool |
 | `apps/execution_service/tools/ssh_vm.py` | `SSHVMTool.requires_approval` | 27 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMTool |
 | `apps/execution_service/tools/ssh_vm.py` | `SSHVMTool.validate` | 30 | async method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | SSHVMTool |
-| `apps/execution_service/tools/ssh_vm.py` | `SSHVMTool.execute` | 41 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | SSHVMTool |
+| `apps/execution_service/tools/ssh_vm.py` | `SSHVMTool.execute` | 45 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | SSHVMTool |
 | `apps/execution_service/tools/vm_telemetry.py` | `VMTelemetryTool` | 7 | class | Read-only VM diagnostic tool backed by the governed MCP edge transport. | module |
 | `apps/execution_service/tools/vm_telemetry.py` | `VMTelemetryTool.__init__` | 12 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMTelemetryTool |
 | `apps/execution_service/tools/vm_telemetry.py` | `VMTelemetryTool._connector` | 15 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMTelemetryTool |
