@@ -5,6 +5,7 @@ from typing import Any, Dict, Iterable, List, Optional, Set
 
 from apps.context_service.asset_identity import AssetIdentityResolver
 from domain.contracts.config import settings
+from integrations.vm.target_context import current_vm_target
 
 
 class EvidenceCollector:
@@ -39,6 +40,16 @@ class EvidenceCollector:
     def _known_service(cls, value: Optional[str]) -> Optional[str]:
         text = str(value or "").strip()
         return None if text.lower() in cls._UNKNOWN_SERVICE_VALUES else text
+
+    @staticmethod
+    def _vm_target_from_asset(asset: Dict[str, Any]) -> Optional[str]:
+        """Resolve a VM endpoint without ever falling back to the service name."""
+        for value in asset.get("ip_addresses") or []:
+            target = str(value or "").strip()
+            if target:
+                return target
+        hostname = str(asset.get("hostname") or "").strip()
+        return hostname or None
 
     @staticmethod
     def _observation(source: str, reference: str, *, status: str, result_count: int = 0, service: Optional[str] = None, detail: Optional[str] = None) -> Dict[str, Any]:
@@ -222,30 +233,56 @@ class EvidenceCollector:
                 except Exception as exc:
                     evidence.append(self._observation("kubernetes_api", f"k8s-error:{since.isoformat()}", status="error", service=effective_service, detail=str(exc)))
 
-        should_query_vm = bool(self.vm and effective_service and (wants_all or "telemetry" in wants or "metric" in wants))
+        vm_target = current_vm_target() or self._vm_target_from_asset(asset)
+        should_query_vm = bool(self.vm and vm_target and (wants_all or "telemetry" in wants or "metric" in wants))
         if should_query_vm and str(asset.get("os_family") or "unknown").lower() != "windows" and str(asset.get("platform") or "unknown").lower() != "kubernetes":
             try:
-                vm_result = await self.vm.collect_metrics(effective_service)
+                vm_result = await self.vm.collect_metrics(vm_target)
                 if vm_result.get("success"):
                     vm_metrics = vm_result.get("metrics") or {}
                     for name, value in vm_metrics.items():
                         if isinstance(value, (int, float)):
                             evidence.append({
                                 "type": "metric", "source": "vm_mcp",
-                                "reference": f"vm:{effective_service}:{name}:{since.isoformat()}",
+                                "reference": f"vm:{vm_target}:{name}:{since.isoformat()}",
                                 "timestamp": datetime.now(timezone.utc).isoformat(),
-                                "raw_data": {"name": name, "value": value, "target": effective_service},
+                                "raw_data": {
+                                    "name": name,
+                                    "value": value,
+                                    "target": vm_target,
+                                    "service": effective_service,
+                                },
                             })
-                    evidence.append(self._observation("vm_mcp", f"vm-observation:{effective_service}:{since.isoformat()}", status="queried", result_count=len(vm_metrics), service=effective_service))
+                    evidence.append(self._observation(
+                        "vm_mcp",
+                        f"vm-observation:{vm_target}:{since.isoformat()}",
+                        status="queried",
+                        result_count=len(vm_metrics),
+                        service=effective_service,
+                        detail=f"target={vm_target}",
+                    ))
                 else:
-                    evidence.append(self._observation("vm_mcp", f"vm-error:{effective_service}:{since.isoformat()}", status="error", service=effective_service, detail=str(vm_result.get("error"))))
+                    evidence.append(self._observation(
+                        "vm_mcp",
+                        f"vm-error:{vm_target}:{since.isoformat()}",
+                        status="error",
+                        service=effective_service,
+                        detail=str(vm_result.get("error")),
+                    ))
             except Exception as exc:
-                evidence.append(self._observation("vm_mcp", f"vm-error:{effective_service}:{since.isoformat()}", status="error", service=effective_service, detail=str(exc)))
+                evidence.append(self._observation(
+                    "vm_mcp",
+                    f"vm-error:{vm_target}:{since.isoformat()}",
+                    status="error",
+                    service=effective_service,
+                    detail=str(exc),
+                ))
 
         final_asset = AssetIdentityResolver.resolve(evidence, effective_service)
         return {
             "service": effective_service or query_service,
             "requested_service": service,
+            "vm_target": vm_target,
             "since": since.isoformat(),
             "until": until.isoformat() if until else None,
             "evidence": evidence,
