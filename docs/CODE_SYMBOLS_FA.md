@@ -206,12 +206,12 @@
 | `apps/api/runbooks.py` | `dry_run` | 24 | async function | Validate a runbook without crossing the real execution boundary. | module |
 | `apps/api/signals.py` | `RawSignalPayload` | 18 | class | کلاس | module |
 | `apps/api/signals.py` | `_response_from_result` | 22 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/signals.py` | `_ingest` | 26 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/signals.py` | `_ingest_zabbix` | 35 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/signals.py` | `ingest_signal` | 50 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/signals.py` | `ingest_elasticsearch_signal` | 55 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/signals.py` | `ingest_prometheus_signal` | 60 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/signals.py` | `ingest_zabbix_signal` | 71 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/signals.py` | `_ingest` | 50 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/signals.py` | `_ingest_zabbix` | 59 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/signals.py` | `ingest_signal` | 74 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/signals.py` | `ingest_elasticsearch_signal` | 79 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/signals.py` | `ingest_prometheus_signal` | 84 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/signals.py` | `ingest_zabbix_signal` | 102 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/workflow.py` | `WorkflowRequest` | 18 | class | کلاس | module |
 | `apps/api/workflow.py` | `WorkflowResponse` | 25 | class | کلاس | module |
 | `apps/api/workflow.py` | `run_workflow` | 39 | async function | Compatibility analysis endpoint backed by the canonical durable E2E runtime. | module |
