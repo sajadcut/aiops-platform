@@ -20,7 +20,31 @@ class RawSignalPayload(BaseModel):
 
 
 def _response_from_result(result: Dict[str, Any]) -> Dict[str, Any]:
-    return {"status": "accepted", "incident_id": result.get("incident_id"), "trigger_source": result.get("trigger_source"), "trigger_signal_type": result.get("trigger_signal_type"), "correlation_key": result.get("correlation_key"), "deduplicated": bool(result.get("deduplicated", False)), "deduplication_reason": result.get("deduplication_reason"), "signal_state": result.get("signal_state"), "recovered": result.get("recovered"), "recovery_unmatched": result.get("recovery_unmatched"), "recovery_of_source_id": result.get("recovery_of_source_id"), "incident_status": result.get("incident_status"), "approval_cancellations": result.get("approval_cancellations"), "asset_context": (result.get("context") or {}).get("asset_context"), "routing": result.get("routing"), "coordination": result.get("coordination"), "evaluation": result.get("evaluation"), "decision": result.get("decision"), "verification_result": result.get("verification_result"), "terminal_reason": result.get("terminal_reason")}
+    return {
+        "status": "accepted",
+        "incident_id": result.get("incident_id"),
+        "trigger_source": result.get("trigger_source"),
+        "trigger_signal_type": result.get("trigger_signal_type"),
+        "correlation_key": result.get("correlation_key"),
+        "deduplicated": bool(result.get("deduplicated", False)),
+        "deduplication_reason": result.get("deduplication_reason"),
+        "signal_state": result.get("signal_state"),
+        "recovered": result.get("recovered"),
+        "recovery_unmatched": result.get("recovery_unmatched"),
+        "recovery_of_source_id": result.get("recovery_of_source_id"),
+        "incident_status": result.get("incident_status"),
+        "approval_cancellations": result.get("approval_cancellations"),
+        "asset_context": (result.get("context") or {}).get("asset_context"),
+        "routing": result.get("routing"),
+        "coordination": result.get("coordination"),
+        "evaluation": result.get("evaluation"),
+        "remediation_plan": result.get("remediation_plan"),
+        "decision": result.get("decision"),
+        "approval": result.get("approval"),
+        "execution_result": result.get("execution_result"),
+        "verification_result": result.get("verification_result"),
+        "terminal_reason": result.get("terminal_reason"),
+    }
 
 
 async def _ingest(signal: OperationalSignal) -> Dict[str, Any]:
@@ -60,11 +84,18 @@ async def ingest_elasticsearch_signal(request: Request, body: RawSignalPayload, 
 async def ingest_prometheus_signal(request: Request, body: RawSignalPayload, _user=Depends(require_permission("ingest:signal"))):
     payload = body.payload
     alerts: List[Dict[str, Any]] = payload.get("alerts", []) if isinstance(payload.get("alerts"), list) else []
-    if not alerts: return await _ingest(signal_from_prometheus(payload))
+    if not alerts:
+        return await _ingest(signal_from_prometheus(payload))
     results = []
     for alert in alerts:
-        if isinstance(alert, dict): results.append(await _ingest(signal_from_prometheus(alert)))
-    return {"status": "accepted", "count": len(results), "deduplicated_count": sum(1 for item in results if item.get("deduplicated")), "results": results}
+        if isinstance(alert, dict):
+            results.append(await _ingest(signal_from_prometheus(alert)))
+    return {
+        "status": "accepted",
+        "count": len(results),
+        "deduplicated_count": sum(1 for item in results if item.get("deduplicated")),
+        "results": results,
+    }
 
 
 @router.post("/signals/zabbix", dependencies=[Depends(rate_limiter_strict)])
