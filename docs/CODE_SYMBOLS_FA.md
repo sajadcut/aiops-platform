@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 257 | Dashboard JS files scanned: 2 | Symbols indexed: 1575**
+**Python files scanned: 258 | Dashboard JS files scanned: 2 | Symbols indexed: 1581**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1547,6 +1547,12 @@
 | `tests/unit/test_verification_gate.py` | `test_partial_verification_does_not_pass` | 6 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_vm_execution_boundary.py` | `test_ssh_vm_tool_allows_only_governed_actions` | 9 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_vm_execution_boundary.py` | `test_telemetry_tool_is_read_only` | 27 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_target_resolution.py` | `_RecordingVM` | 13 | class | کلاس | module |
+| `tests/unit/test_vm_target_resolution.py` | `_RecordingVM.__init__` | 14 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _RecordingVM |
+| `tests/unit/test_vm_target_resolution.py` | `_RecordingVM.collect_metrics` | 17 | async method | Evidence/داده موردنیاز را از منبع مربوط جمع می‌کند | _RecordingVM |
+| `tests/unit/test_vm_target_resolution.py` | `test_zabbix_vm_target_resolution_prefers_target_ip_and_never_service` | 28 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_target_resolution.py` | `test_asset_vm_target_resolution_does_not_fall_back_to_service` | 39 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_target_resolution.py` | `test_vm_telemetry_uses_request_target_not_service_name` | 53 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_workflow_checkpoint.py` | `test_checkpoint_store_contract_methods_exist` | 7 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_zabbix_mcp_host_header.py` | `test_zabbix_mcp_client_applies_configured_host_header` | 7 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_zabbix_recovery_lifecycle.py` | `test_zabbix_operational_value_zero_is_not_misclassified_as_recovery` | 21 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
