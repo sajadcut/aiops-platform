@@ -28,11 +28,15 @@ class SSHVMTool(BaseTool):
         return True
 
     async def validate(self, input_data: ToolInput) -> bool:
-        if not input_data.target or input_data.action not in {"collect_vm_metrics", "service_status", "restart_service", "reload_service", "process_snapshot"}:
+        allowed_actions = {
+            "collect_vm_metrics", "service_status", "restart_service",
+            "reload_service", "start_service", "process_snapshot",
+        }
+        if not input_data.target or input_data.action not in allowed_actions:
             return False
-        if input_data.action in {"service_status", "restart_service", "reload_service"} and not str((input_data.parameters or {}).get("service", "")):
+        if input_data.action in {"service_status", "restart_service", "reload_service", "start_service"} and not str((input_data.parameters or {}).get("service", "")):
             return False
-        if input_data.action in {"restart_service", "reload_service"} and (
+        if input_data.action in {"restart_service", "reload_service", "start_service"} and (
             not input_data.approval_id or not input_data.incident_id or not input_data.execution_capability
         ):
             return False
@@ -52,6 +56,11 @@ class SSHVMTool(BaseTool):
             )
         elif input_data.action == "reload_service":
             result = await connector.reload_service(
+                input_data.target, str(params["service"]), str(input_data.approval_id or ""),
+                str(input_data.incident_id or ""), str(input_data.execution_capability or ""),
+            )
+        elif input_data.action == "start_service":
+            result = await connector.start_service(
                 input_data.target, str(params["service"]), str(input_data.approval_id or ""),
                 str(input_data.incident_id or ""), str(input_data.execution_capability or ""),
             )
