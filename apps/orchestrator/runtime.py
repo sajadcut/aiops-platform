@@ -190,6 +190,11 @@ class DurableWorkflowRuntime:
             raise ValueError("execution_request_not_found_in_checkpoint")
         self._assert_binding(durable, execution_request)
 
+        # Build and validate all pre-execution authorization material before the
+        # one-time approval transition. Configuration/capability failures must not
+        # burn an approved request before any execution attempt has started.
+        execution_capability = self._issue_capability(incident_id, str(approval_id), execution_request)
+
         consumed = await self.approvals.consume(str(approval_id))
         if not consumed or consumed.get("status") != "consumed":
             raise ValueError("approval_already_consumed")
@@ -202,7 +207,7 @@ class DurableWorkflowRuntime:
         execution_request["approval_granted"] = True  # compatibility signal only; service ignores it for authorization
         execution_request["approval_id"] = str(approval_id)
         execution_request["incident_id"] = incident_id
-        execution_request["execution_capability"] = self._issue_capability(incident_id, str(approval_id), execution_request)
+        execution_request["execution_capability"] = execution_capability
         state["execution_request"] = execution_request
         state["current_node"] = "execution"
 
