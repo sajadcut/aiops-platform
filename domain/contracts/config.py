@@ -154,7 +154,9 @@ class Settings(BaseSettings):
     KUBERNETES_TIMEOUT_SECONDS: int = Field(...)
     KUBERNETES_LOG_TAIL_LINES: int = Field(...)
     SSH_ENABLED: bool = Field(...)
+    SSH_AUTH_MODE: str = Field(...)
     SSH_USERNAME: str = Field(...)
+    SSH_PASSWORD: Optional[str] = Field(...)
     SSH_PRIVATE_KEY_PATH: Optional[str] = Field(...)
     SSH_KNOWN_HOSTS: Optional[str] = Field(...)
     SSH_STRICT_HOST_KEY_CHECKING: bool = Field(...)
@@ -177,6 +179,14 @@ class Settings(BaseSettings):
         normalized = str(value).strip().lower()
         if normalized not in {"development", "test", "production"}:
             raise ValueError("APP_ENV must be development, test, or production")
+        return normalized
+
+    @field_validator("SSH_AUTH_MODE")
+    @classmethod
+    def validate_ssh_auth_mode(cls, value: str) -> str:
+        normalized = str(value or "").strip().lower()
+        if normalized not in {"key", "password"}:
+            raise ValueError("SSH_AUTH_MODE must be key or password")
         return normalized
 
     @field_validator("COGNIA_CONTEXT_PROFILE_ID", "COGNIA_CLIENT_APPLICATION_ID", mode="before")
