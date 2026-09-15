@@ -6,6 +6,8 @@ from datetime import datetime, timezone
 from typing import Dict, Optional
 from uuid import uuid4
 
+from domain.contracts.logging import log_workflow_step
+
 
 class ApprovalService:
     """
@@ -45,6 +47,19 @@ class ApprovalService:
         }
 
         cls._approvals[approval_id] = record
+        log_workflow_step(
+            incident_id=incident_id,
+            stage="approval",
+            component="approval_service",
+            action="approval_requested",
+            status="waiting",
+            summary=f"Approval requested for action {action}",
+            details={
+                "approval_id": approval_id,
+                "risk_level": risk_level,
+                "approver": approver,
+            },
+        )
 
         return record
 
@@ -76,6 +91,19 @@ class ApprovalService:
         record["approved_at"] = datetime.now(
             timezone.utc
         ).isoformat()
+        log_workflow_step(
+            incident_id=str(record.get("incident_id") or "") or None,
+            stage="approval",
+            component="approval_service",
+            action="approval_approved",
+            status="completed",
+            summary=f"Approval granted for action {record.get('action')}",
+            details={
+                "approval_id": approval_id,
+                "risk_level": record.get("risk_level"),
+                "approver": record.get("approver"),
+            },
+        )
 
         return record
 
@@ -97,6 +125,20 @@ class ApprovalService:
         record["rejected_at"] = datetime.now(
             timezone.utc
         ).isoformat()
+        log_workflow_step(
+            incident_id=str(record.get("incident_id") or "") or None,
+            stage="approval",
+            component="approval_service",
+            action="approval_rejected",
+            status="blocked",
+            summary=f"Approval rejected for action {record.get('action')}",
+            details={
+                "approval_id": approval_id,
+                "risk_level": record.get("risk_level"),
+                "approver": record.get("approver"),
+            },
+            level="warning",
+        )
 
         return record
 
