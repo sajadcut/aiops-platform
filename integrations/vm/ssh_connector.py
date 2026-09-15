@@ -2,9 +2,12 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
 import re
 import time
 from typing import Any, Dict, Optional
+
+import asyncssh
 
 from domain.contracts.config import settings
 from domain.contracts.logging import logger
@@ -16,9 +19,11 @@ _SAFE_SERVICE = re.compile(r"^[A-Za-z0-9@_.:-]+$")
 class SSHVMConnector:
     """Controlled Linux VM adapter used only behind the VM MCP server.
 
-    No arbitrary shell command is accepted. Production additionally requires a
-    non-root identity, pinned host keys, key-only authentication, and explicit
-    target/service allowlists.
+    No arbitrary shell command is accepted. SSH authentication supports either
+    the existing key mode or an explicit password mode. Passwords are read only
+    by the isolated VM MCP edge process and are never placed in command-line
+    arguments or logs. Production still requires a non-root identity, pinned
+    host keys, and explicit target/service allowlists.
     """
 
     source_name = "vm_ssh"
@@ -28,18 +33,40 @@ class SSHVMConnector:
         self._validate_runtime_security()
 
     @staticmethod
-    def _validate_runtime_security() -> None:
-        if settings.APP_ENV != "production":
-            return
+    def _auth_mode() -> str:
+        mode = str(os.environ.get("SSH_AUTH_MODE", "key") or "key").strip().lower()
+        if mode not in {"key", "password"}:
+            raise RuntimeError("vm_ssh_configuration_invalid:SSH_AUTH_MODE must be key or password")
+        return mode
+
+    @staticmethod
+    def _password() -> str:
+        return str(os.environ.get("SSH_PASSWORD", "") or "")
+
+    @classmethod
+    def _validate_runtime_security(cls) -> None:
+        auth_mode = cls._auth_mode()
         errors: list[str] = []
+
+        if auth_mode == "password":
+            if not settings.SSH_USERNAME.strip():
+                errors.append("SSH_USERNAME is required for password authentication")
+            if not cls._password():
+                errors.append("SSH_PASSWORD is required for password authentication")
+
+        if settings.APP_ENV != "production":
+            if errors:
+                raise RuntimeError("vm_ssh_configuration_invalid:" + ";".join(errors))
+            return
+
         if not settings.SSH_ENABLED:
             errors.append("SSH_ENABLED must be true on the isolated VM MCP server")
         if not settings.SSH_STRICT_HOST_KEY_CHECKING:
             errors.append("SSH_STRICT_HOST_KEY_CHECKING must be true")
         if not settings.SSH_KNOWN_HOSTS:
             errors.append("SSH_KNOWN_HOSTS is required")
-        if not settings.SSH_PRIVATE_KEY_PATH:
-            errors.append("SSH_PRIVATE_KEY_PATH is required")
+        if auth_mode == "key" and not settings.SSH_PRIVATE_KEY_PATH:
+            errors.append("SSH_PRIVATE_KEY_PATH is required for key authentication")
         username = settings.SSH_USERNAME.strip().lower()
         if not username:
             errors.append("SSH_USERNAME is required")
@@ -92,7 +119,7 @@ class SSHVMConnector:
         args.append(destination)
         return args
 
-    async def _run(self, target: str, command: str) -> Dict[str, Any]:
+    async def _run_key(self, target: str, command: str) -> Dict[str, Any]:
         args = self._base_ssh_args(target) + ["--", command]
         started = time.perf_counter()
         process = await asyncio.create_subprocess_exec(
@@ -105,21 +132,82 @@ class SSHVMConnector:
         except asyncio.TimeoutError:
             process.kill()
             await process.wait()
-            logger.warning("vm_ssh_command_timeout", target=target)
+            logger.warning("vm_ssh_command_timeout", target=target, auth_mode="key")
             return {"success": False, "error": "ssh_command_timeout"}
         elapsed = time.perf_counter() - started
         success = process.returncode == 0
         if not success:
-            logger.warning("vm_ssh_command_failed", target=target, exit_code=process.returncode)
+            logger.warning("vm_ssh_command_failed", target=target, exit_code=process.returncode, auth_mode="key")
         return {
             "success": success,
             "exit_code": process.returncode,
             "stdout": stdout.decode(errors="replace").strip(),
-            # stderr is retained at the edge for diagnosis but the Control Plane
-            # execution boundary maps unexpected failures to bounded error codes.
             "stderr": stderr.decode(errors="replace").strip(),
             "execution_time": elapsed,
         }
+
+    async def _run_password(self, target: str, command: str) -> Dict[str, Any]:
+        self._validate_target(target)
+        username = settings.SSH_USERNAME.strip()
+        password = self._password()
+        if not username or not password:
+            raise RuntimeError("vm_ssh_password_credentials_required")
+
+        known_hosts: str | None
+        if settings.SSH_STRICT_HOST_KEY_CHECKING:
+            if not settings.SSH_KNOWN_HOSTS:
+                raise RuntimeError("vm_ssh_known_hosts_required")
+            known_hosts = settings.SSH_KNOWN_HOSTS
+        else:
+            known_hosts = None
+
+        started = time.perf_counter()
+
+        async def execute() -> Dict[str, Any]:
+            async with asyncssh.connect(
+                target,
+                port=settings.SSH_PORT,
+                username=username,
+                password=password,
+                client_keys=[],
+                known_hosts=known_hosts,
+            ) as connection:
+                result = await connection.run(command, check=False)
+                return {
+                    "success": result.exit_status == 0,
+                    "exit_code": result.exit_status,
+                    "stdout": str(result.stdout or "").strip(),
+                    "stderr": str(result.stderr or "").strip(),
+                }
+
+        try:
+            result = await asyncio.wait_for(execute(), timeout=self.timeout + 5)
+        except asyncio.TimeoutError:
+            logger.warning("vm_ssh_command_timeout", target=target, auth_mode="password")
+            return {"success": False, "error": "ssh_command_timeout"}
+        except (asyncssh.Error, OSError) as exc:
+            logger.warning(
+                "vm_ssh_command_failed",
+                target=target,
+                auth_mode="password",
+                error_type=type(exc).__name__,
+            )
+            return {"success": False, "error": "ssh_command_failed"}
+
+        result["execution_time"] = time.perf_counter() - started
+        if not result.get("success"):
+            logger.warning(
+                "vm_ssh_command_failed",
+                target=target,
+                exit_code=result.get("exit_code"),
+                auth_mode="password",
+            )
+        return result
+
+    async def _run(self, target: str, command: str) -> Dict[str, Any]:
+        if self._auth_mode() == "password":
+            return await self._run_password(target, command)
+        return await self._run_key(target, command)
 
     async def health_check(self, target: str) -> bool:
         result = await self._run(target, "printf connected")
