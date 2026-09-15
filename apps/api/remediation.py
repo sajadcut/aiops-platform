@@ -37,7 +37,7 @@ async def _read_vm(action: str, target: str, parameters: Dict[str, Any]) -> Any:
 class RemediationRequest(BaseModel):
     target: str = Field(min_length=1)
     service: str = Field(min_length=1)
-    action: str = Field(default="restart_service", pattern="^(restart_service|reload_service)$")
+    action: str = Field(default="restart_service", pattern="^(restart_service|reload_service|start_service)$")
     target_port: int | None = Field(default=None, ge=1, le=65535)
     dry_run: bool = False
     reason: str | None = None
@@ -113,7 +113,7 @@ async def execute_approved_remediation(approval_id: str, identity=Depends(requir
             return result
 
         # Fixed precondition: if this service has a configuration validator,
-        # a known-invalid configuration blocks restart/reload before approval is consumed.
+        # a known-invalid configuration blocks start/restart/reload before approval is consumed.
         config_check = await _read_vm("config_validate", target, {"service": service})
         config_result = config_check.result or {}
         if not config_check.success:
