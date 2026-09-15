@@ -42,7 +42,7 @@ See `MASTER.md`, `docs/COGNIA_INTEGRATION.md`, `docs/PRODUCTION_ACCEPTANCE_MATRI
 | RCA + Evaluator | RCA followed by mandatory evaluation gate | PASS |
 | Decision / Policy | plan + concrete action + registered-tool risk binding | PASS (repo) |
 | Approval binding | persisted approval bound to incident/action/tool/target and consumed once | PASS |
-| Execution boundary | allowlisted tools + durable approval where required + signed execution capability bound to complete execution intent | PASS (repo) |
+| Execution boundary | allowlisted tools + durable bound approval context + one-time consumption + separate MCP write identity | PASS (repo) |
 | Verification | fresh pre-execution baseline + metric-direction-aware before/after | PASS (repo) / PARTIAL per-action SLO coverage |
 | Operational Memory | conclusive outcome gating + PostgreSQL/pgvector successful-pattern retrieval | PASS (repo); false-reuse/scale acceptance pending |
 | Cognia-only Governed Knowledge RAG | sole RAG provider; Application Client machine auth; opaque token lifecycle; explicit KBs; separate numeric Scope identity; Active-Revision Chunk traceability; typed status/errors; no alternate-RAG fallback; authoring idempotency; Revision concurrency; no machine approval; optional Context Generation | PASS (repo contract); **REAL ENV REQUIRED** for target HTTP/HTTP/HTTPS endpoint/grants/scope/lifecycle/index/context acceptance |
@@ -92,14 +92,14 @@ See `MASTER.md`, `docs/COGNIA_INTEGRATION.md`, `docs/PRODUCTION_ACCEPTANCE_MATRI
 - Deterministic cross-source correlation with PostgreSQL advisory locking.
 - MCP as the canonical external **operational-tool** boundary for Zabbix, Prometheus, Elastic Agent Builder and optional Kubernetes/VM Edge paths.
 - Elastic evidence on the Agent Builder MCP architecture rather than deprecated standalone Elastic MCP.
-- Durable approval plus short-lived signed execution capability bound to concrete execution intent.
+- Durable approval bound to concrete execution intent and atomically consumed once before approval-gated execution.
 - Production startup fail-closed for unsafe authentication, insecure MCP, migration drift and direct Control-Plane SSH/Kubernetes access.
 - True multi-stage production image with builder artifacts excluded from the runtime filesystem.
 - Repository container acceptance for non-root runtime behavior, smoke, rootfs isolation, vulnerability policy, SBOM, signing-path verification and immutable Kubernetes rendering.
 
 ## Reference incident flow with Cognia
 
-`Signal → deterministic correlation/idempotency → Live Evidence collection → Asset/Operational Context → Cognia Search (governed auxiliary Knowledge, explicit status) + Operational Memory → Triage → Specialists → coordination/RCA → Evaluator → Policy → Approval when required → signed execution capability → Execution Service → governed MCP write → fresh Verification → Audit/Memory`
+`Signal → deterministic correlation/idempotency → Live Evidence collection → Asset/Operational Context → Cognia Search (governed auxiliary Knowledge, explicit status) + Operational Memory → Triage → Specialists → coordination/RCA → Evaluator → Policy → Approval when required → durable approval consume → Execution Service → governed MCP write → fresh Verification → Audit/Memory`
 
 **Authority rule:** Live Evidence is authoritative for the current Incident. Cognia Knowledge and Operational Memory can inform reasoning but cannot authorize a Production write or override contradictory live Evidence.
 
@@ -109,7 +109,7 @@ If Cognia is unavailable, the Incident workflow may continue on Live Evidence wi
 
 1. Real Cognia Application Client/target HTTP-or-HTTP/HTTPS endpoint/KB grants plus positive/negative Search authorization, Scope isolation, registration → Approval where required → Processing → Activated → Search, index/dependency outage/no-fallback and optional Context Profile/sufficiency acceptance.
 2. Real Zabbix, Elastic Agent Builder and Prometheus MCP acceptance with representative schemas, metadata, authentication and outage behavior.
-3. Real Kubernetes/VM Edge MCP write acceptance with least privilege, capability replay rejection, rollback and independent verification.
+3. Real Kubernetes/VM Edge MCP write acceptance with least privilege, durable approval context, rollback and independent verification.
 4. CMDB/service-catalog authoritative identity plus correlation-quality corpus and service-dependency truth.
 5. Real LLM endpoint/model quality, latency, timeout and restricted-network behavior.
 6. Native constrained Windows telemetry/execution and broader governed action adapters where required.
