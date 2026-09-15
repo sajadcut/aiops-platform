@@ -548,14 +548,14 @@
 | `apps/verification_service/__init__.py` | `VerificationStatus` | 11 | class | کلاس | module |
 | `apps/verification_service/__init__.py` | `VerificationResult` | 18 | class | کلاس | module |
 | `apps/verification_service/__init__.py` | `VerificationEngine` | 30 | class | Deterministic before/after verification over fresh operational Evidence. | module |
-| `apps/verification_service/__init__.py` | `VerificationEngine.verify_action` | 54 | async method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | VerificationEngine |
-| `apps/verification_service/__init__.py` | `VerificationEngine._inconclusive` | 173 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VerificationEngine |
-| `apps/verification_service/__init__.py` | `VerificationEngine._direction` | 193 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VerificationEngine |
-| `apps/verification_service/__init__.py` | `VerificationEngine._extract_metrics` | 201 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VerificationEngine |
-| `apps/verification_service/__init__.py` | `VerificationEngine._extract_metrics.add` | 206 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VerificationEngine._extract_metrics |
-| `apps/verification_service/__init__.py` | `VerificationEngine._canonical_metric_name` | 244 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VerificationEngine |
-| `apps/verification_service/__init__.py` | `VerificationEngine._evidence_refs` | 271 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VerificationEngine |
-| `apps/verification_service/__init__.py` | `VerificationEngine._dedupe_refs` | 283 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VerificationEngine |
+| `apps/verification_service/__init__.py` | `VerificationEngine.verify_action` | 46 | async method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | VerificationEngine |
+| `apps/verification_service/__init__.py` | `VerificationEngine._inconclusive` | 131 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VerificationEngine |
+| `apps/verification_service/__init__.py` | `VerificationEngine._direction` | 139 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VerificationEngine |
+| `apps/verification_service/__init__.py` | `VerificationEngine._extract_metrics` | 147 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VerificationEngine |
+| `apps/verification_service/__init__.py` | `VerificationEngine._extract_metrics.add` | 152 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VerificationEngine._extract_metrics |
+| `apps/verification_service/__init__.py` | `VerificationEngine._canonical_metric_name` | 202 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VerificationEngine |
+| `apps/verification_service/__init__.py` | `VerificationEngine._evidence_refs` | 229 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VerificationEngine |
+| `apps/verification_service/__init__.py` | `VerificationEngine._dedupe_refs` | 241 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VerificationEngine |
 | `dashboards/approval-actions.js` | `approvalPanel` | 4 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
 | `dashboards/approval-actions.js` | `refreshApprovalDecision` | 49 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
 | `dashboards/approval-actions.js` | `approveCurrentApproval` | 58 | JavaScript function | transition مربوط به Approval/Governance را اعمال می‌کند | browser module |
