@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 265 | Dashboard JS files scanned: 2 | Symbols indexed: 1705**
+**Python files scanned: 266 | Dashboard JS files scanned: 2 | Symbols indexed: 1713**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -994,6 +994,14 @@
 | `scripts/generate_file_index_fa.py` | `classify` | 22 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `scripts/generate_file_index_fa.py` | `render` | 140 | function | خروجی UI/نمایشی را می‌سازد | module |
 | `scripts/generate_file_index_fa.py` | `main` | 159 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `scripts/reconcile_legacy_database.py` | `_sync_database_url` | 49 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `scripts/reconcile_legacy_database.py` | `_alembic_config` | 58 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `scripts/reconcile_legacy_database.py` | `_table_exists` | 63 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `scripts/reconcile_legacy_database.py` | `_column_type` | 71 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `scripts/reconcile_legacy_database.py` | `inspect_database` | 90 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `scripts/reconcile_legacy_database.py` | `_print_report` | 124 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `scripts/reconcile_legacy_database.py` | `reconcile` | 128 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `scripts/reconcile_legacy_database.py` | `main` | 184 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `scripts/render_k8s_release.py` | `validate_image_ref` | 11 | function | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | module |
 | `scripts/render_k8s_release.py` | `render` | 21 | function | خروجی UI/نمایشی را می‌سازد | module |
 | `scripts/render_k8s_release.py` | `main` | 41 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
