@@ -92,7 +92,10 @@ def classify_vm_service_fault(
     return {
         "fault_code": "service_stopped",
         "confidence": confidence,
-        "severity": "high" if symptom_down else "medium",
+        # Operational severity is intentionally kept separate from write risk.
+        # The start action is still high-risk/governed, while this confirmed
+        # classification can proceed to the Decision/Approval layer.
+        "severity": "medium",
         "health_status": "unhealthy",
         "findings": findings,
         "evidence_ids": used,
