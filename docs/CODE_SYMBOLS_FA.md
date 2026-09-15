@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 267 | Dashboard JS files scanned: 2 | Symbols indexed: 1727**
+**Python files scanned: 266 | Dashboard JS files scanned: 2 | Symbols indexed: 1713**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -141,17 +141,17 @@
 | `apps/api/e2e_workflow.py` | `_response_from_result` | 50 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/e2e_workflow.py` | `run_e2e_workflow` | 66 | async function | Run the guarded durable incident lifecycle without bypassing Decision/Approval. | module |
 | `apps/api/e2e_workflow.py` | `resume_e2e_workflow` | 106 | async function | Resume a paused workflow only after its durable approval is granted. | module |
-| `apps/api/execution.py` | `_normalize_risk_level` | 22 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/execution.py` | `_approval_record` | 29 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/execution.py` | `_require_risk_permission` | 53 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/execution.py` | `_audit_durable` | 60 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/execution.py` | `_require_pending` | 65 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/execution.py` | `create_approval` | 74 | async function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
-| `apps/api/execution.py` | `get_approval` | 91 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
-| `apps/api/execution.py` | `approve` | 100 | async function | transition مربوط به Approval/Governance را اعمال می‌کند | module |
-| `apps/api/execution.py` | `reject` | 118 | async function | transition مربوط به Approval/Governance را اعمال می‌کند | module |
-| `apps/api/execution.py` | `_validate_approval_binding` | 140 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/execution.py` | `execute` | 156 | async function | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | module |
+| `apps/api/execution.py` | `_normalize_risk_level` | 21 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/execution.py` | `_approval_record` | 28 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/execution.py` | `_require_risk_permission` | 52 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/execution.py` | `_audit_durable` | 59 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/execution.py` | `_require_pending` | 64 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/execution.py` | `create_approval` | 73 | async function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
+| `apps/api/execution.py` | `get_approval` | 90 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
+| `apps/api/execution.py` | `approve` | 99 | async function | transition مربوط به Approval/Governance را اعمال می‌کند | module |
+| `apps/api/execution.py` | `reject` | 117 | async function | transition مربوط به Approval/Governance را اعمال می‌کند | module |
+| `apps/api/execution.py` | `_validate_approval_binding` | 139 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/execution.py` | `execute` | 155 | async function | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | module |
 | `apps/api/health.py` | `_pool_status` | 28 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/health.py` | `_probe_database` | 51 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/health.py` | `_probe_one` | 78 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
@@ -181,29 +181,29 @@
 | `apps/api/incidents.py` | `analyze_incident` | 46 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/incidents.py` | `RemediationRequest` | 107 | class | کلاس | module |
 | `apps/api/incidents.py` | `request_remediation` | 114 | async function | Create a durable approval request; this endpoint never executes a tool. | module |
-| `apps/api/main.py` | `root` | 74 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/main.py` | `dashboard_page` | 79 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/main.py` | `dashboard_page_slash` | 84 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/main.py` | `agent_dashboard_page` | 89 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/main.py` | `dashboard_stylesheet` | 94 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/main.py` | `dashboard_script` | 99 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/main.py` | `dashboard_approval_stylesheet` | 104 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/main.py` | `dashboard_approval_script` | 109 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/main.py` | `_is_http_or_https` | 113 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/main.py` | `_validate_production_configuration` | 120 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/main.py` | `startup_event` | 211 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/main.py` | `shutdown_event` | 264 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/remediation.py` | `_audit_durable` | 24 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/remediation.py` | `_read_vm` | 30 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/remediation.py` | `RemediationRequest` | 37 | class | کلاس | module |
-| `apps/api/remediation.py` | `create_remediation_request` | 47 | async function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
-| `apps/api/remediation.py` | `execute_approved_remediation` | 85 | async function | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | module |
-| `apps/api/remediation.py` | `VMVerificationRequest` | 155 | class | کلاس | module |
-| `apps/api/remediation.py` | `verify_remediation` | 161 | async function | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | module |
-| `apps/api/runbook_execution.py` | `_audit_durable` | 22 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/runbook_execution.py` | `_runbook_contract` | 28 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/runbook_execution.py` | `execute_runbook` | 46 | async function | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | module |
-| `apps/api/runbook_execution.py` | `dry_run` | 133 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/main.py` | `root` | 73 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/main.py` | `dashboard_page` | 78 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/main.py` | `dashboard_page_slash` | 83 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/main.py` | `agent_dashboard_page` | 88 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/main.py` | `dashboard_stylesheet` | 93 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/main.py` | `dashboard_script` | 98 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/main.py` | `dashboard_approval_stylesheet` | 103 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/main.py` | `dashboard_approval_script` | 108 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/main.py` | `_is_http_or_https` | 112 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/main.py` | `_validate_production_configuration` | 119 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/main.py` | `startup_event` | 204 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/main.py` | `shutdown_event` | 257 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/remediation.py` | `_audit_durable` | 23 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/remediation.py` | `_read_vm` | 29 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/remediation.py` | `RemediationRequest` | 36 | class | کلاس | module |
+| `apps/api/remediation.py` | `create_remediation_request` | 46 | async function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
+| `apps/api/remediation.py` | `execute_approved_remediation` | 84 | async function | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | module |
+| `apps/api/remediation.py` | `VMVerificationRequest` | 147 | class | کلاس | module |
+| `apps/api/remediation.py` | `verify_remediation` | 153 | async function | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | module |
+| `apps/api/runbook_execution.py` | `_audit_durable` | 21 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/runbook_execution.py` | `_runbook_contract` | 27 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/runbook_execution.py` | `execute_runbook` | 45 | async function | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | module |
+| `apps/api/runbook_execution.py` | `dry_run` | 116 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/runbooks.py` | `list_runbooks` | 11 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
 | `apps/api/runbooks.py` | `get_runbook` | 16 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
 | `apps/api/runbooks.py` | `dry_run` | 24 | async function | Validate a runbook without crossing the real execution boundary. | module |
@@ -342,19 +342,10 @@
 | `apps/evaluator/gate.py` | `EvaluationGate._governed_deterministic_recovery` | 28 | method | Return true only for an evidence-grounded, approval-bound stopped-service recovery. | EvaluationGate |
 | `apps/evaluator/gate.py` | `EvaluationGate.evaluate` | 56 | method | کیفیت/confidence یا اولویت را به‌صورت deterministic محاسبه می‌کند | EvaluationGate |
 | `apps/evaluator/thresholds.py` | `EvaluationThresholds` | 4 | class | کلاس | module |
-| `apps/execution_service/__init__.py` | `ExecutionRequest` | 11 | class | کلاس | module |
-| `apps/execution_service/__init__.py` | `ExecutionResult` | 27 | class | کلاس | module |
-| `apps/execution_service/__init__.py` | `ExecutionService` | 40 | class | کلاس | module |
-| `apps/execution_service/__init__.py` | `ExecutionService.execute` | 42 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | ExecutionService |
-| `apps/execution_service/capability.py` | `ExecutionCapabilityError` | 15 | class | کلاس | module |
-| `apps/execution_service/capability.py` | `_b64encode` | 19 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/execution_service/capability.py` | `_b64decode` | 23 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/execution_service/capability.py` | `parameters_digest` | 28 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/execution_service/capability.py` | `capability_ttl_seconds` | 33 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/execution_service/capability.py` | `capability_secret_configured` | 44 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/execution_service/capability.py` | `_secret` | 49 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/execution_service/capability.py` | `issue_execution_capability` | 58 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/execution_service/capability.py` | `verify_execution_capability` | 98 | function | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | module |
+| `apps/execution_service/__init__.py` | `ExecutionRequest` | 10 | class | کلاس | module |
+| `apps/execution_service/__init__.py` | `ExecutionResult` | 25 | class | کلاس | module |
+| `apps/execution_service/__init__.py` | `ExecutionService` | 38 | class | کلاس | module |
+| `apps/execution_service/__init__.py` | `ExecutionService.execute` | 40 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | ExecutionService |
 | `apps/execution_service/idempotency.py` | `ExecutionIdempotency` | 13 | class | Registry درون-process از fingerprintهای دیده‌شده برای جلوگیری از duplicate سریع. | module |
 | `apps/execution_service/idempotency.py` | `ExecutionIdempotency.key` | 19 | method | Request را با canonical hashing دامنه به یک کلید deterministic تبدیل می‌کند. | ExecutionIdempotency |
 | `apps/execution_service/idempotency.py` | `ExecutionIdempotency.already_seen` | 24 | method | بررسی می‌کند همین request در عمر process فعلی قبلاً علامت‌گذاری شده یا نه. | ExecutionIdempotency |
@@ -384,16 +375,16 @@
 | `apps/execution_service/tools/mock_executor.py` | `MockExecutorTool.requires_approval` | 31 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MockExecutorTool |
 | `apps/execution_service/tools/mock_executor.py` | `MockExecutorTool.validate` | 34 | async method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | MockExecutorTool |
 | `apps/execution_service/tools/mock_executor.py` | `MockExecutorTool.execute` | 47 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | MockExecutorTool |
-| `apps/execution_service/tools/registry.py` | `ToolRegistry` | 9 | class | کلاس | module |
-| `apps/execution_service/tools/registry.py` | `ToolRegistry.__new__` | 13 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ToolRegistry |
-| `apps/execution_service/tools/registry.py` | `ToolRegistry.register` | 20 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ToolRegistry |
-| `apps/execution_service/tools/registry.py` | `ToolRegistry.get_tool` | 26 | method | داده را بدون تغییر state بازیابی/فهرست می‌کند | ToolRegistry |
-| `apps/execution_service/tools/registry.py` | `ToolRegistry.list_tools` | 29 | method | داده را بدون تغییر state بازیابی/فهرست می‌کند | ToolRegistry |
-| `apps/execution_service/tools/registry.py` | `ToolRegistry.get_allowed_tools` | 35 | method | داده را بدون تغییر state بازیابی/فهرست می‌کند | ToolRegistry |
-| `apps/execution_service/tools/registry.py` | `ToolRegistry.validate_tool` | 38 | async method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | ToolRegistry |
-| `apps/execution_service/tools/registry.py` | `ToolRegistry._verify_authorization` | 50 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ToolRegistry |
-| `apps/execution_service/tools/registry.py` | `ToolRegistry.execute_tool` | 74 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | ToolRegistry |
-| `apps/execution_service/tools/registry.py` | `ToolRegistry.clear` | 125 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ToolRegistry |
+| `apps/execution_service/tools/registry.py` | `ToolRegistry` | 8 | class | کلاس | module |
+| `apps/execution_service/tools/registry.py` | `ToolRegistry.__new__` | 12 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ToolRegistry |
+| `apps/execution_service/tools/registry.py` | `ToolRegistry.register` | 19 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ToolRegistry |
+| `apps/execution_service/tools/registry.py` | `ToolRegistry.get_tool` | 25 | method | داده را بدون تغییر state بازیابی/فهرست می‌کند | ToolRegistry |
+| `apps/execution_service/tools/registry.py` | `ToolRegistry.list_tools` | 28 | method | داده را بدون تغییر state بازیابی/فهرست می‌کند | ToolRegistry |
+| `apps/execution_service/tools/registry.py` | `ToolRegistry.get_allowed_tools` | 34 | method | داده را بدون تغییر state بازیابی/فهرست می‌کند | ToolRegistry |
+| `apps/execution_service/tools/registry.py` | `ToolRegistry.validate_tool` | 37 | async method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | ToolRegistry |
+| `apps/execution_service/tools/registry.py` | `ToolRegistry._verify_authorization` | 49 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ToolRegistry |
+| `apps/execution_service/tools/registry.py` | `ToolRegistry.execute_tool` | 58 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | ToolRegistry |
+| `apps/execution_service/tools/registry.py` | `ToolRegistry.clear` | 109 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ToolRegistry |
 | `apps/execution_service/tools/ssh_vm.py` | `SSHVMTool` | 7 | class | Governed VM write tool backed exclusively by the VM MCP edge boundary. | module |
 | `apps/execution_service/tools/ssh_vm.py` | `SSHVMTool.__init__` | 10 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMTool |
 | `apps/execution_service/tools/ssh_vm.py` | `SSHVMTool._connector` | 13 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMTool |
@@ -422,17 +413,16 @@
 | `apps/incident_service/repository.py` | `IncidentRepository._evidence_type` | 189 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentRepository |
 | `apps/incident_service/repository.py` | `IncidentRepository.add_evidence` | 196 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentRepository |
 | `apps/incident_service/repository.py` | `IncidentRepository.commit` | 227 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentRepository |
-| `apps/mcp_server/main.py` | `JsonRpcRequest` | 21 | class | کلاس | module |
+| `apps/mcp_server/main.py` | `JsonRpcRequest` | 19 | class | کلاس | module |
 | `apps/mcp_server/main.py` | `_provider` | 72 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/mcp_server/main.py` | `_parse_dt` | 79 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/mcp_server/main.py` | `_limit` | 85 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/mcp_server/main.py` | `_authorize` | 89 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/mcp_server/main.py` | `_consume_capability_jti` | 103 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/mcp_server/main.py` | `_call` | 118 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/mcp_server/main.py` | `_validate_production_server` | 191 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/mcp_server/main.py` | `startup_event` | 207 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/mcp_server/main.py` | `health` | 213 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/mcp_server/main.py` | `mcp` | 219 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/mcp_server/main.py` | `_call` | 103 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/mcp_server/main.py` | `_validate_production_server` | 172 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/mcp_server/main.py` | `startup_event` | 195 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/mcp_server/main.py` | `health` | 201 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/mcp_server/main.py` | `mcp` | 207 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/memory_service/__init__.py` | `OperationalMemoryService` | 12 | class | PostgreSQL + pgvector operational experience store, separate from Knowledge RAG. | module |
 | `apps/memory_service/__init__.py` | `OperationalMemoryService.__init__` | 18 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryService |
 | `apps/memory_service/__init__.py` | `OperationalMemoryService.add_entry` | 21 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryService |
@@ -472,19 +462,18 @@
 | `apps/orchestrator/guardrails.py` | `OrchestrationGuardrails` | 5 | class | Reusable evaluator gate for any orchestrator implementation. | module |
 | `apps/orchestrator/guardrails.py` | `OrchestrationGuardrails.evaluate` | 9 | method | کیفیت/confidence یا اولویت را به‌صورت deterministic محاسبه می‌کند | OrchestrationGuardrails |
 | `apps/orchestrator/guardrails.py` | `OrchestrationGuardrails.can_enter_decision` | 13 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OrchestrationGuardrails |
-| `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime` | 17 | class | PostgreSQL-backed runtime around the governed collaborative LangGraph workflow. | module |
-| `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime.__init__` | 20 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
-| `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime._orchestrator_type` | 28 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
-| `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime._flush_audit` | 31 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
-| `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime._set_incident_status` | 34 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
-| `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime._incident_fields` | 40 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
-| `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime._final_incident_status` | 52 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
-| `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime.start` | 65 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
-| `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime._assert_binding` | 114 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
-| `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime._issue_capability` | 124 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
-| `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime._bind_execution_context` | 139 | method | Restore request-scoped VM identity after a durable approval pause. | DurableWorkflowRuntime |
-| `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime._reset_execution_context` | 165 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
-| `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime.resume_after_approval` | 172 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
+| `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime` | 16 | class | PostgreSQL-backed runtime around the governed collaborative LangGraph workflow. | module |
+| `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime.__init__` | 19 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
+| `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime._orchestrator_type` | 27 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
+| `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime._flush_audit` | 30 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
+| `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime._set_incident_status` | 33 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
+| `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime._incident_fields` | 39 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
+| `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime._final_incident_status` | 51 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
+| `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime.start` | 64 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
+| `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime._assert_binding` | 113 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
+| `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime._bind_execution_context` | 123 | method | Restore request-scoped VM identity after a durable approval pause. | DurableWorkflowRuntime |
+| `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime._reset_execution_context` | 149 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
+| `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime.resume_after_approval` | 156 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
 | `apps/orchestrator/signal_aware.py` | `SignalAwareE2EOrchestrator` | 21 | class | Collaborative E2E workflow for source-triggered and API-triggered incidents. | module |
 | `apps/orchestrator/signal_aware.py` | `SignalAwareE2EOrchestrator._context_node` | 30 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalAwareE2EOrchestrator |
 | `apps/orchestrator/signal_aware.py` | `SignalAwareE2EOrchestrator._publish_peer_context` | 125 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalAwareE2EOrchestrator |
@@ -780,35 +769,35 @@
 | `integrations/http_transport.py` | `insecure_async_client` | 17 | function | Create an outbound HTTP(S) client with TLS certificate validation disabled. | module |
 | `integrations/http_transport.py` | `insecure_sync_client` | 23 | function | Create a synchronous outbound HTTP(S) client with TLS validation disabled. | module |
 | `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient` | 10 | class | Governed client for the official Jenkins ``mcp-server`` plugin. | module |
-| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient.__init__` | 45 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | JenkinsMCPClient |
-| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient._headers` | 95 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | JenkinsMCPClient |
-| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient.health_url` | 102 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | JenkinsMCPClient |
-| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient._decoded` | 110 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | JenkinsMCPClient |
-| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient._with_optional` | 119 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | JenkinsMCPClient |
-| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient._require_write_context` | 126 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | JenkinsMCPClient |
-| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient.call_tool` | 134 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | JenkinsMCPClient |
-| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient._read_tool` | 139 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | JenkinsMCPClient |
-| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient._write_tool` | 142 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | JenkinsMCPClient |
-| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient.mcp_health` | 156 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | JenkinsMCPClient |
-| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient.who_am_i` | 172 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | JenkinsMCPClient |
-| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient.get_status` | 176 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | JenkinsMCPClient |
-| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient.health_check` | 180 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | JenkinsMCPClient |
-| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient.get_job` | 206 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | JenkinsMCPClient |
-| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient.get_jobs` | 209 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | JenkinsMCPClient |
-| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient.get_queue_item` | 218 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | JenkinsMCPClient |
-| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient.get_build` | 221 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | JenkinsMCPClient |
-| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient.get_build_log` | 227 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | JenkinsMCPClient |
-| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient.search_build_log` | 247 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | JenkinsMCPClient |
-| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient.get_replay_scripts` | 273 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | JenkinsMCPClient |
-| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient.get_test_results` | 279 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | JenkinsMCPClient |
-| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient.get_job_scm` | 285 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | JenkinsMCPClient |
-| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient.get_build_scm` | 288 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | JenkinsMCPClient |
-| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient.get_build_change_sets` | 294 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | JenkinsMCPClient |
-| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient.find_jobs_with_scm_url` | 300 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | JenkinsMCPClient |
-| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient.trigger_build` | 318 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | JenkinsMCPClient |
-| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient.update_build` | 335 | async method | state یا داده را به‌صورت durable ذخیره/به‌روزرسانی می‌کند | JenkinsMCPClient |
-| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient.rebuild_build` | 362 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | JenkinsMCPClient |
-| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient.replay_build` | 379 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | JenkinsMCPClient |
+| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient.__init__` | 44 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | JenkinsMCPClient |
+| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient._headers` | 94 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | JenkinsMCPClient |
+| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient.health_url` | 101 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | JenkinsMCPClient |
+| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient._decoded` | 109 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | JenkinsMCPClient |
+| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient._with_optional` | 118 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | JenkinsMCPClient |
+| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient._require_write_context` | 125 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | JenkinsMCPClient |
+| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient.call_tool` | 131 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | JenkinsMCPClient |
+| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient._read_tool` | 136 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | JenkinsMCPClient |
+| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient._write_tool` | 139 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | JenkinsMCPClient |
+| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient.mcp_health` | 152 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | JenkinsMCPClient |
+| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient.who_am_i` | 168 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | JenkinsMCPClient |
+| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient.get_status` | 172 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | JenkinsMCPClient |
+| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient.health_check` | 176 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | JenkinsMCPClient |
+| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient.get_job` | 202 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | JenkinsMCPClient |
+| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient.get_jobs` | 205 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | JenkinsMCPClient |
+| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient.get_queue_item` | 214 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | JenkinsMCPClient |
+| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient.get_build` | 217 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | JenkinsMCPClient |
+| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient.get_build_log` | 223 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | JenkinsMCPClient |
+| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient.search_build_log` | 243 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | JenkinsMCPClient |
+| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient.get_replay_scripts` | 269 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | JenkinsMCPClient |
+| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient.get_test_results` | 275 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | JenkinsMCPClient |
+| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient.get_job_scm` | 281 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | JenkinsMCPClient |
+| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient.get_build_scm` | 284 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | JenkinsMCPClient |
+| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient.get_build_change_sets` | 290 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | JenkinsMCPClient |
+| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient.find_jobs_with_scm_url` | 296 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | JenkinsMCPClient |
+| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient.trigger_build` | 314 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | JenkinsMCPClient |
+| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient.update_build` | 329 | async method | state یا داده را به‌صورت durable ذخیره/به‌روزرسانی می‌کند | JenkinsMCPClient |
+| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient.rebuild_build` | 354 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | JenkinsMCPClient |
+| `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient.replay_build` | 369 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | JenkinsMCPClient |
 | `integrations/kubernetes/client.py` | `KubernetesEvidenceClient` | 13 | class | Strictly read-only Kubernetes API evidence client. | module |
 | `integrations/kubernetes/client.py` | `KubernetesEvidenceClient.__init__` | 20 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KubernetesEvidenceClient |
 | `integrations/kubernetes/client.py` | `KubernetesEvidenceClient.enabled` | 35 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KubernetesEvidenceClient |
@@ -822,9 +811,9 @@
 | `integrations/kubernetes/mcp_client.py` | `KubernetesMCPClient.__init__` | 24 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KubernetesMCPClient |
 | `integrations/kubernetes/mcp_client.py` | `KubernetesMCPClient.collect_evidence` | 42 | async method | Evidence/داده موردنیاز را از منبع مربوط جمع می‌کند | KubernetesMCPClient |
 | `integrations/kubernetes/mcp_client.py` | `KubernetesMCPClient._write_args` | 59 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KubernetesMCPClient |
-| `integrations/kubernetes/mcp_client.py` | `KubernetesMCPClient.restart_workload` | 74 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KubernetesMCPClient |
-| `integrations/kubernetes/mcp_client.py` | `KubernetesMCPClient.rollback_workload` | 86 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KubernetesMCPClient |
-| `integrations/kubernetes/mcp_client.py` | `KubernetesMCPClient.scale_workload` | 99 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KubernetesMCPClient |
+| `integrations/kubernetes/mcp_client.py` | `KubernetesMCPClient.restart_workload` | 73 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KubernetesMCPClient |
+| `integrations/kubernetes/mcp_client.py` | `KubernetesMCPClient.rollback_workload` | 84 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KubernetesMCPClient |
+| `integrations/kubernetes/mcp_client.py` | `KubernetesMCPClient.scale_workload` | 97 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KubernetesMCPClient |
 | `integrations/llm/base.py` | `LLMResponse` | 7 | class | نتیجه استاندارد از هر LLM Provider | module |
 | `integrations/llm/base.py` | `LLMAdapter` | 18 | class | اینترفیس انتزاعی برای همه‌ی Providerهای LLM | module |
 | `integrations/llm/base.py` | `LLMAdapter.generate` | 22 | async method | تولید متن بر اساس prompt | LLMAdapter |
@@ -911,9 +900,9 @@
 | `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.firewall_status` | 55 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
 | `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.config_validate` | 56 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
 | `integrations/vm/mcp_client.py` | `VMEdgeMCPClient._write_context` | 59 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.restart_service` | 65 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.reload_service` | 68 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.start_service` | 71 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.restart_service` | 66 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.reload_service` | 69 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.start_service` | 72 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
 | `integrations/vm/service_adapters.py` | `ServiceDiagnosticAdapter` | 8 | class | Fixed, allowlisted service-specific diagnostic commands. | module |
 | `integrations/vm/service_adapters.py` | `get_service_adapter` | 43 | function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
 | `integrations/vm/ssh_connector.py` | `SSHVMConnector` | 19 | class | Controlled Linux VM adapter used only behind the VM MCP server. | module |
@@ -1141,7 +1130,7 @@
 | `tests/security/test_kubernetes_execution_tool.py` | `FakeKubernetesConnector.rollback_workload` | 17 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeKubernetesConnector |
 | `tests/security/test_kubernetes_execution_tool.py` | `FakeKubernetesConnector.scale_workload` | 21 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeKubernetesConnector |
 | `tests/security/test_kubernetes_execution_tool.py` | `test_kubernetes_write_requires_complete_approval_binding` | 27 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/security/test_kubernetes_execution_tool.py` | `test_kubernetes_scale_is_bounded_and_capability_is_forwarded` | 36 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/security/test_kubernetes_execution_tool.py` | `test_kubernetes_scale_is_bounded_and_approval_context_is_forwarded` | 36 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/security/test_kubernetes_execution_tool.py` | `test_kubernetes_tool_rejects_unknown_actions` | 54 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/security/test_logging_redaction.py` | `test_recursive_redaction_covers_required_auth_and_credentials` | 7 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/security/test_logging_redaction.py` | `test_free_form_redaction_covers_bearer_dsn_and_private_key` | 24 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
@@ -1155,14 +1144,13 @@
 | `tests/security/test_runbook_approval_boundary.py` | `_result` | 15 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/security/test_runbook_approval_boundary.py` | `test_non_empty_approval_id_does_not_grant_execution` | 28 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/security/test_runbook_approval_boundary.py` | `test_non_empty_approval_id_does_not_grant_execution.fake_execute` | 31 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_non_empty_approval_id_does_not_grant_execution |
-| `tests/security/test_runbook_approval_boundary.py` | `test_approval_boolean_without_capability_is_not_propagated` | 52 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/security/test_runbook_approval_boundary.py` | `test_approval_boolean_without_capability_is_not_propagated.fake_execute` | 55 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_approval_boolean_without_capability_is_not_propagated |
-| `tests/security/test_vm_mcp_security.py` | `test_vm_target_and_service_allowlists` | 9 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/security/test_vm_mcp_security.py` | `test_production_vm_edge_rejects_root_and_missing_host_pinning` | 22 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/security/test_vm_mcp_security.py` | `_FakeVMConnector` | 39 | class | کلاس | module |
-| `tests/security/test_vm_mcp_security.py` | `_FakeVMConnector.restart_service` | 42 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _FakeVMConnector |
-| `tests/security/test_vm_mcp_security.py` | `test_vm_mcp_requires_bound_capability_and_rejects_replay` | 48 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/security/test_vm_mcp_security.py` | `test_vm_mcp_rejects_capability_bound_to_different_target` | 81 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/security/test_runbook_approval_boundary.py` | `test_validated_upstream_approval_context_is_propagated` | 52 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/security/test_runbook_approval_boundary.py` | `test_validated_upstream_approval_context_is_propagated.fake_execute` | 55 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_validated_upstream_approval_context_is_propagated |
+| `tests/security/test_vm_mcp_security.py` | `test_vm_target_and_service_allowlists` | 8 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/security/test_vm_mcp_security.py` | `test_production_vm_edge_rejects_root_and_missing_host_pinning` | 21 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/security/test_vm_mcp_security.py` | `_FakeVMConnector` | 38 | class | کلاس | module |
+| `tests/security/test_vm_mcp_security.py` | `_FakeVMConnector.restart_service` | 41 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _FakeVMConnector |
+| `tests/security/test_vm_mcp_security.py` | `test_vm_mcp_write_requires_approval_and_incident_context` | 47 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/security/test_vm_ssh_password_auth.py` | `_FakeSSHResult` | 10 | class | کلاس | module |
 | `tests/security/test_vm_ssh_password_auth.py` | `_FakeSSHConnection` | 16 | class | کلاس | module |
 | `tests/security/test_vm_ssh_password_auth.py` | `_FakeSSHConnection.run` | 17 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | _FakeSSHConnection |
@@ -1394,14 +1382,14 @@
 | `tests/unit/test_dual_logging.py` | `test_time_rotation_uses_timed_handlers` | 89 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_evaluator.py` | `test_rejects_empty_plan` | 4 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_evaluator.py` | `test_accepts_evidence_backed_plan` | 10 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_execution_approval_propagation.py` | `ApprovalRequiredTool` | 9 | class | کلاس | module |
-| `tests/unit/test_execution_approval_propagation.py` | `ApprovalRequiredTool.name` | 11 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ApprovalRequiredTool |
-| `tests/unit/test_execution_approval_propagation.py` | `ApprovalRequiredTool.risk_level` | 15 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ApprovalRequiredTool |
-| `tests/unit/test_execution_approval_propagation.py` | `ApprovalRequiredTool.validate` | 18 | async method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | ApprovalRequiredTool |
-| `tests/unit/test_execution_approval_propagation.py` | `ApprovalRequiredTool.execute` | 21 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | ApprovalRequiredTool |
-| `tests/unit/test_execution_approval_propagation.py` | `test_signed_capability_reaches_tool_registry` | 26 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_execution_approval_propagation.py` | `test_forged_approval_boolean_without_capability_is_blocked` | 58 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_execution_approval_propagation.py` | `test_capability_is_bound_to_target_and_parameters` | 79 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_execution_approval_propagation.py` | `ApprovalRequiredTool` | 8 | class | کلاس | module |
+| `tests/unit/test_execution_approval_propagation.py` | `ApprovalRequiredTool.name` | 10 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ApprovalRequiredTool |
+| `tests/unit/test_execution_approval_propagation.py` | `ApprovalRequiredTool.risk_level` | 14 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ApprovalRequiredTool |
+| `tests/unit/test_execution_approval_propagation.py` | `ApprovalRequiredTool.validate` | 17 | async method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | ApprovalRequiredTool |
+| `tests/unit/test_execution_approval_propagation.py` | `ApprovalRequiredTool.execute` | 20 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | ApprovalRequiredTool |
+| `tests/unit/test_execution_approval_propagation.py` | `test_validated_approval_context_reaches_tool_registry` | 25 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_execution_approval_propagation.py` | `test_approval_ids_without_granted_marker_are_blocked` | 46 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_execution_approval_propagation.py` | `test_granted_marker_without_bound_ids_is_blocked` | 67 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_execution_policy.py` | `test_production_high_risk_requires_approval` | 4 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_execution_policy.py` | `test_allowlisted_low_risk_can_run_without_approval_requirement` | 8 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_execution_policy.py` | `test_non_allowlisted_tool_is_denied` | 12 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
@@ -1424,18 +1412,18 @@
 | `tests/unit/test_jenkins_mcp_client.py` | `test_official_jenkins_mcp_contract_uses_streamable_http_and_2025_06_18` | 26 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_jenkins_mcp_client.py` | `test_jenkins_headers_use_basic_auth_and_optional_origin` | 42 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_jenkins_mcp_client.py` | `test_write_tools_are_disabled_by_default_and_direct_write_call_is_forbidden` | 53 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_jenkins_mcp_client.py` | `test_enabling_writes_requires_separate_write_identity` | 71 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_jenkins_mcp_client.py` | `test_governed_trigger_build_uses_official_tool_shape_and_write_identity` | 76 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_jenkins_mcp_client.py` | `test_governed_trigger_build_uses_official_tool_shape_and_write_identity.fake_call_tool` | 79 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_governed_trigger_build_uses_official_tool_shape_and_write_identity |
-| `tests/unit/test_jenkins_mcp_client.py` | `test_write_wrapper_requires_governance_context` | 107 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_jenkins_mcp_client.py` | `test_write_wrapper_requires_governance_context.fake_call_tool` | 108 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_write_wrapper_requires_governance_context |
-| `tests/unit/test_jenkins_mcp_client.py` | `test_read_wrappers_bound_upstream_pagination_and_log_search` | 127 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_jenkins_mcp_client.py` | `test_read_wrappers_bound_upstream_pagination_and_log_search.fake_call_tool` | 130 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_read_wrappers_bound_upstream_pagination_and_log_search |
-| `tests/unit/test_jenkins_mcp_client.py` | `test_health_check_fails_closed_on_anonymous_or_identity_mismatch` | 166 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_jenkins_mcp_client.py` | `test_health_check_fails_closed_on_anonymous_or_identity_mismatch.healthy` | 169 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_health_check_fails_closed_on_anonymous_or_identity_mismatch |
-| `tests/unit/test_jenkins_mcp_client.py` | `test_health_check_fails_closed_on_anonymous_or_identity_mismatch.anonymous` | 172 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_health_check_fails_closed_on_anonymous_or_identity_mismatch |
-| `tests/unit/test_jenkins_mcp_client.py` | `test_health_check_fails_closed_on_anonymous_or_identity_mismatch.wrong_identity` | 175 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_health_check_fails_closed_on_anonymous_or_identity_mismatch |
-| `tests/unit/test_jenkins_mcp_client.py` | `test_health_check_fails_closed_on_anonymous_or_identity_mismatch.expected_identity` | 178 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_health_check_fails_closed_on_anonymous_or_identity_mismatch |
+| `tests/unit/test_jenkins_mcp_client.py` | `test_enabling_writes_requires_separate_write_identity` | 70 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_jenkins_mcp_client.py` | `test_governed_trigger_build_uses_official_tool_shape_and_write_identity` | 75 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_jenkins_mcp_client.py` | `test_governed_trigger_build_uses_official_tool_shape_and_write_identity.fake_call_tool` | 78 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_governed_trigger_build_uses_official_tool_shape_and_write_identity |
+| `tests/unit/test_jenkins_mcp_client.py` | `test_write_wrapper_requires_governance_context` | 105 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_jenkins_mcp_client.py` | `test_write_wrapper_requires_governance_context.fake_call_tool` | 106 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_write_wrapper_requires_governance_context |
+| `tests/unit/test_jenkins_mcp_client.py` | `test_read_wrappers_bound_upstream_pagination_and_log_search` | 124 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_jenkins_mcp_client.py` | `test_read_wrappers_bound_upstream_pagination_and_log_search.fake_call_tool` | 127 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_read_wrappers_bound_upstream_pagination_and_log_search |
+| `tests/unit/test_jenkins_mcp_client.py` | `test_health_check_fails_closed_on_anonymous_or_identity_mismatch` | 163 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_jenkins_mcp_client.py` | `test_health_check_fails_closed_on_anonymous_or_identity_mismatch.healthy` | 166 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_health_check_fails_closed_on_anonymous_or_identity_mismatch |
+| `tests/unit/test_jenkins_mcp_client.py` | `test_health_check_fails_closed_on_anonymous_or_identity_mismatch.anonymous` | 169 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_health_check_fails_closed_on_anonymous_or_identity_mismatch |
+| `tests/unit/test_jenkins_mcp_client.py` | `test_health_check_fails_closed_on_anonymous_or_identity_mismatch.wrong_identity` | 172 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_health_check_fails_closed_on_anonymous_or_identity_mismatch |
+| `tests/unit/test_jenkins_mcp_client.py` | `test_health_check_fails_closed_on_anonymous_or_identity_mismatch.expected_identity` | 175 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_health_check_fails_closed_on_anonymous_or_identity_mismatch |
 | `tests/unit/test_jsonb_persistence_contract.py` | `FakeResult` | 10 | class | کلاس | module |
 | `tests/unit/test_jsonb_persistence_contract.py` | `FakeResult.mappings` | 11 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeResult |
 | `tests/unit/test_jsonb_persistence_contract.py` | `FakeResult.first` | 14 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeResult |
@@ -1587,41 +1575,39 @@
 | `tests/unit/test_runbook_registry_governance.py` | `test_registry_rejects_invalid_runbook_file` | 65 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_runbook_validation.py` | `test_runbook_requires_governance_fields` | 3 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_runbook_validation.py` | `test_runbook_valid_shape` | 8 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_runtime_approval_resume.py` | `FakeCheckpointStore` | 9 | class | کلاس | module |
-| `tests/unit/test_runtime_approval_resume.py` | `FakeCheckpointStore.__init__` | 10 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeCheckpointStore |
-| `tests/unit/test_runtime_approval_resume.py` | `FakeCheckpointStore.load` | 15 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | FakeCheckpointStore |
-| `tests/unit/test_runtime_approval_resume.py` | `FakeCheckpointStore.mark_completed` | 18 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeCheckpointStore |
-| `tests/unit/test_runtime_approval_resume.py` | `FakeCheckpointStore.mark_failed` | 21 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeCheckpointStore |
-| `tests/unit/test_runtime_approval_resume.py` | `FakeApprovalStore` | 25 | class | کلاس | module |
-| `tests/unit/test_runtime_approval_resume.py` | `FakeApprovalStore.__init__` | 26 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeApprovalStore |
-| `tests/unit/test_runtime_approval_resume.py` | `FakeApprovalStore._metadata` | 30 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeApprovalStore |
-| `tests/unit/test_runtime_approval_resume.py` | `FakeApprovalStore.get` | 36 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeApprovalStore |
-| `tests/unit/test_runtime_approval_resume.py` | `FakeApprovalStore.consume` | 39 | async method | transition مربوط به Approval/Governance را اعمال می‌کند | FakeApprovalStore |
-| `tests/unit/test_runtime_approval_resume.py` | `FakeIncidentRepository` | 44 | class | کلاس | module |
-| `tests/unit/test_runtime_approval_resume.py` | `FakeIncidentRepository.__init__` | 45 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeIncidentRepository |
-| `tests/unit/test_runtime_approval_resume.py` | `FakeIncidentRepository.add_findings` | 48 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeIncidentRepository |
-| `tests/unit/test_runtime_approval_resume.py` | `FakeIncidentRepository.set_status` | 51 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeIncidentRepository |
-| `tests/unit/test_runtime_approval_resume.py` | `FakeIncidentRepository.commit` | 54 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeIncidentRepository |
-| `tests/unit/test_runtime_approval_resume.py` | `FakeAuditStore` | 58 | class | کلاس | module |
-| `tests/unit/test_runtime_approval_resume.py` | `FakeOrchestrator` | 62 | class | کلاس | module |
-| `tests/unit/test_runtime_approval_resume.py` | `FakeOrchestrator.__init__` | 66 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeOrchestrator |
-| `tests/unit/test_runtime_approval_resume.py` | `FakeOrchestrator._execution_node` | 69 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeOrchestrator |
-| `tests/unit/test_runtime_approval_resume.py` | `FakeOrchestrator._verification_node` | 74 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeOrchestrator |
-| `tests/unit/test_runtime_approval_resume.py` | `FakeOrchestrator._memory_node` | 79 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeOrchestrator |
-| `tests/unit/test_runtime_approval_resume.py` | `FakeOrchestrator._end_node` | 82 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeOrchestrator |
-| `tests/unit/test_runtime_approval_resume.py` | `ExecutionFailsOrchestrator` | 87 | class | کلاس | module |
-| `tests/unit/test_runtime_approval_resume.py` | `ExecutionFailsOrchestrator._execution_node` | 90 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ExecutionFailsOrchestrator |
-| `tests/unit/test_runtime_approval_resume.py` | `ExecutionFailsOrchestrator._verification_node` | 94 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ExecutionFailsOrchestrator |
-| `tests/unit/test_runtime_approval_resume.py` | `VerificationFailsOrchestrator` | 99 | class | کلاس | module |
-| `tests/unit/test_runtime_approval_resume.py` | `VerificationFailsOrchestrator._verification_node` | 100 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VerificationFailsOrchestrator |
-| `tests/unit/test_runtime_approval_resume.py` | `_paused_state` | 105 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `tests/unit/test_runtime_approval_resume.py` | `_runtime` | 113 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `tests/unit/test_runtime_approval_resume.py` | `_runtime.no_audit` | 121 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _runtime |
-| `tests/unit/test_runtime_approval_resume.py` | `_capability_secret` | 128 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `tests/unit/test_runtime_approval_resume.py` | `test_resume_injects_persisted_approval_into_execution_request` | 133 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_runtime_approval_resume.py` | `test_capability_failure_does_not_consume_approval` | 159 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_runtime_approval_resume.py` | `test_failed_execution_never_runs_verification_or_resolves_incident` | 172 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_runtime_approval_resume.py` | `test_failed_verification_never_resolves_incident` | 186 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_runtime_approval_resume.py` | `FakeCheckpointStore` | 8 | class | کلاس | module |
+| `tests/unit/test_runtime_approval_resume.py` | `FakeCheckpointStore.__init__` | 9 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeCheckpointStore |
+| `tests/unit/test_runtime_approval_resume.py` | `FakeCheckpointStore.load` | 14 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | FakeCheckpointStore |
+| `tests/unit/test_runtime_approval_resume.py` | `FakeCheckpointStore.mark_completed` | 17 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeCheckpointStore |
+| `tests/unit/test_runtime_approval_resume.py` | `FakeCheckpointStore.mark_failed` | 20 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeCheckpointStore |
+| `tests/unit/test_runtime_approval_resume.py` | `FakeApprovalStore` | 24 | class | کلاس | module |
+| `tests/unit/test_runtime_approval_resume.py` | `FakeApprovalStore.__init__` | 25 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeApprovalStore |
+| `tests/unit/test_runtime_approval_resume.py` | `FakeApprovalStore._metadata` | 29 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeApprovalStore |
+| `tests/unit/test_runtime_approval_resume.py` | `FakeApprovalStore.get` | 35 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeApprovalStore |
+| `tests/unit/test_runtime_approval_resume.py` | `FakeApprovalStore.consume` | 38 | async method | transition مربوط به Approval/Governance را اعمال می‌کند | FakeApprovalStore |
+| `tests/unit/test_runtime_approval_resume.py` | `FakeIncidentRepository` | 43 | class | کلاس | module |
+| `tests/unit/test_runtime_approval_resume.py` | `FakeIncidentRepository.__init__` | 44 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeIncidentRepository |
+| `tests/unit/test_runtime_approval_resume.py` | `FakeIncidentRepository.add_findings` | 47 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeIncidentRepository |
+| `tests/unit/test_runtime_approval_resume.py` | `FakeIncidentRepository.set_status` | 50 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeIncidentRepository |
+| `tests/unit/test_runtime_approval_resume.py` | `FakeIncidentRepository.commit` | 53 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeIncidentRepository |
+| `tests/unit/test_runtime_approval_resume.py` | `FakeAuditStore` | 57 | class | کلاس | module |
+| `tests/unit/test_runtime_approval_resume.py` | `FakeOrchestrator` | 61 | class | کلاس | module |
+| `tests/unit/test_runtime_approval_resume.py` | `FakeOrchestrator.__init__` | 65 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeOrchestrator |
+| `tests/unit/test_runtime_approval_resume.py` | `FakeOrchestrator._execution_node` | 68 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeOrchestrator |
+| `tests/unit/test_runtime_approval_resume.py` | `FakeOrchestrator._verification_node` | 73 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeOrchestrator |
+| `tests/unit/test_runtime_approval_resume.py` | `FakeOrchestrator._memory_node` | 78 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeOrchestrator |
+| `tests/unit/test_runtime_approval_resume.py` | `FakeOrchestrator._end_node` | 81 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeOrchestrator |
+| `tests/unit/test_runtime_approval_resume.py` | `ExecutionFailsOrchestrator` | 86 | class | کلاس | module |
+| `tests/unit/test_runtime_approval_resume.py` | `ExecutionFailsOrchestrator._execution_node` | 89 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ExecutionFailsOrchestrator |
+| `tests/unit/test_runtime_approval_resume.py` | `ExecutionFailsOrchestrator._verification_node` | 93 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ExecutionFailsOrchestrator |
+| `tests/unit/test_runtime_approval_resume.py` | `VerificationFailsOrchestrator` | 98 | class | کلاس | module |
+| `tests/unit/test_runtime_approval_resume.py` | `VerificationFailsOrchestrator._verification_node` | 99 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VerificationFailsOrchestrator |
+| `tests/unit/test_runtime_approval_resume.py` | `_paused_state` | 104 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_runtime_approval_resume.py` | `_runtime` | 112 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_runtime_approval_resume.py` | `_runtime.no_audit` | 120 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _runtime |
+| `tests/unit/test_runtime_approval_resume.py` | `test_resume_injects_consumed_approval_context_into_execution_request` | 128 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_runtime_approval_resume.py` | `test_failed_execution_never_runs_verification_or_resolves_incident` | 148 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_runtime_approval_resume.py` | `test_failed_verification_never_resolves_incident` | 161 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_runtime_error_contracts.py` | `test_llm_response_accepts_nested_usage_details` | 7 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_runtime_error_contracts.py` | `test_zabbix_primary_and_fallback_errors_raise_instead_of_empty_success` | 24 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_runtime_error_contracts.py` | `test_zabbix_primary_and_fallback_errors_raise_instead_of_empty_success.fake_call_tool` | 28 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_zabbix_primary_and_fallback_errors_raise_instead_of_empty_success |
