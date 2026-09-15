@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 253 | Dashboard JS files scanned: 2 | Symbols indexed: 1516**
+**Python files scanned: 254 | Dashboard JS files scanned: 2 | Symbols indexed: 1538**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -46,40 +46,43 @@
 | `agents/shared/a2a_agent.py` | `A2AAgent._validate_target` | 46 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | A2AAgent |
 | `agents/shared/a2a_agent.py` | `A2AAgent.send_request` | 53 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | A2AAgent |
 | `agents/shared/a2a_agent.py` | `A2AAgent.close` | 73 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | A2AAgent |
-| `agents/shared/base.py` | `AgentInput` | 38 | class | کلاس | module |
-| `agents/shared/base.py` | `OperationalHypothesis` | 46 | class | کلاس | module |
-| `agents/shared/base.py` | `RecommendedAction` | 56 | class | کلاس | module |
-| `agents/shared/base.py` | `EvidenceRequest` | 66 | class | Bounded read-only request for the Context/Evidence layer. | module |
-| `agents/shared/base.py` | `AgentOutput` | 78 | class | کلاس | module |
-| `agents/shared/base.py` | `AgentOutput.derive_operational_fields` | 113 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | AgentOutput |
-| `agents/shared/base.py` | `StructuredAgentResponseError` | 144 | class | کلاس | module |
-| `agents/shared/base.py` | `_unique` | 148 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `agents/shared/base.py` | `_canonical_evidence_request` | 157 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `agents/shared/base.py` | `BaseAgent` | 172 | class | Evidence-first, analysis-only base contract for operational specialists. | module |
-| `agents/shared/base.py` | `BaseAgent.__init__` | 175 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
-| `agents/shared/base.py` | `BaseAgent.name` | 181 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
-| `agents/shared/base.py` | `BaseAgent.description` | 186 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
-| `agents/shared/base.py` | `BaseAgent.allowed_tools` | 190 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
-| `agents/shared/base.py` | `BaseAgent.analyze` | 194 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
-| `agents/shared/base.py` | `BaseAgent.validate_input` | 197 | async method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | BaseAgent |
-| `agents/shared/base.py` | `BaseAgent.generate_structured` | 200 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
-| `agents/shared/base.py` | `BaseAgent._parse_json_object` | 249 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
-| `agents/shared/base.py` | `BaseAgent._validate_structured_shape` | 259 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
-| `agents/shared/base.py` | `BaseAgent._parse_evidence_timestamp` | 282 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
-| `agents/shared/base.py` | `BaseAgent.evidence_is_stale` | 297 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
-| `agents/shared/base.py` | `BaseAgent.evidence_items` | 305 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
-| `agents/shared/base.py` | `BaseAgent.stale_evidence_ids` | 332 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
-| `agents/shared/base.py` | `BaseAgent.knowledge_items` | 346 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
-| `agents/shared/base.py` | `BaseAgent.memory_items` | 353 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
-| `agents/shared/base.py` | `BaseAgent.auxiliary_context` | 360 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
-| `agents/shared/base.py` | `BaseAgent.evidence_ids` | 372 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
-| `agents/shared/base.py` | `BaseAgent.evidence_coverage` | 381 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
-| `agents/shared/base.py` | `BaseAgent.safe_confidence` | 386 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
-| `agents/shared/base.py` | `BaseAgent.normalize_list` | 402 | method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | BaseAgent |
-| `agents/shared/base.py` | `BaseAgent.missing_evidence_for` | 419 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
-| `agents/shared/base.py` | `BaseAgent.human_review_required` | 427 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
-| `agents/shared/base.py` | `BaseAgent.action_appears_mutating` | 431 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
-| `agents/shared/base.py` | `BaseAgent.analysis_only_actions` | 435 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
+| `agents/shared/base.py` | `_coerce_unit_interval_score` | 54 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/shared/base.py` | `AgentInput` | 72 | class | کلاس | module |
+| `agents/shared/base.py` | `OperationalHypothesis` | 80 | class | کلاس | module |
+| `agents/shared/base.py` | `OperationalHypothesis.normalize_probability` | 91 | method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | OperationalHypothesis |
+| `agents/shared/base.py` | `RecommendedAction` | 95 | class | کلاس | module |
+| `agents/shared/base.py` | `EvidenceRequest` | 105 | class | Bounded read-only request for the Context/Evidence layer. | module |
+| `agents/shared/base.py` | `AgentOutput` | 117 | class | کلاس | module |
+| `agents/shared/base.py` | `AgentOutput.normalize_confidence` | 153 | method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | AgentOutput |
+| `agents/shared/base.py` | `AgentOutput.derive_operational_fields` | 157 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | AgentOutput |
+| `agents/shared/base.py` | `StructuredAgentResponseError` | 188 | class | کلاس | module |
+| `agents/shared/base.py` | `_unique` | 192 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/shared/base.py` | `_canonical_evidence_request` | 201 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/shared/base.py` | `BaseAgent` | 216 | class | Evidence-first, analysis-only base contract for operational specialists. | module |
+| `agents/shared/base.py` | `BaseAgent.__init__` | 219 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
+| `agents/shared/base.py` | `BaseAgent.name` | 225 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
+| `agents/shared/base.py` | `BaseAgent.description` | 230 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
+| `agents/shared/base.py` | `BaseAgent.allowed_tools` | 234 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
+| `agents/shared/base.py` | `BaseAgent.analyze` | 238 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
+| `agents/shared/base.py` | `BaseAgent.validate_input` | 241 | async method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | BaseAgent |
+| `agents/shared/base.py` | `BaseAgent.generate_structured` | 244 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
+| `agents/shared/base.py` | `BaseAgent._parse_json_object` | 312 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
+| `agents/shared/base.py` | `BaseAgent._validate_structured_shape` | 322 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
+| `agents/shared/base.py` | `BaseAgent._parse_evidence_timestamp` | 350 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
+| `agents/shared/base.py` | `BaseAgent.evidence_is_stale` | 365 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
+| `agents/shared/base.py` | `BaseAgent.evidence_items` | 373 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
+| `agents/shared/base.py` | `BaseAgent.stale_evidence_ids` | 400 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
+| `agents/shared/base.py` | `BaseAgent.knowledge_items` | 414 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
+| `agents/shared/base.py` | `BaseAgent.memory_items` | 421 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
+| `agents/shared/base.py` | `BaseAgent.auxiliary_context` | 428 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
+| `agents/shared/base.py` | `BaseAgent.evidence_ids` | 440 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
+| `agents/shared/base.py` | `BaseAgent.evidence_coverage` | 449 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
+| `agents/shared/base.py` | `BaseAgent.safe_confidence` | 454 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
+| `agents/shared/base.py` | `BaseAgent.normalize_list` | 470 | method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | BaseAgent |
+| `agents/shared/base.py` | `BaseAgent.missing_evidence_for` | 487 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
+| `agents/shared/base.py` | `BaseAgent.human_review_required` | 495 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
+| `agents/shared/base.py` | `BaseAgent.action_appears_mutating` | 499 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
+| `agents/shared/base.py` | `BaseAgent.analysis_only_actions` | 503 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
 | `agents/shared/coordinator.py` | `IncidentCoordinator` | 8 | class | Deterministic coordinator for routing and multi-agent synthesis. | module |
 | `agents/shared/coordinator.py` | `IncidentCoordinator.select_agents` | 33 | method | بر اساس state/capability مسیر یا handler مناسب را انتخاب می‌کند | IncidentCoordinator |
 | `agents/shared/coordinator.py` | `IncidentCoordinator.select_agents.add` | 39 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentCoordinator.select_agents |
@@ -824,14 +827,14 @@
 | `integrations/mcp_client.py` | `MCPClient._bounded_for_log` | 114 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MCPClient |
 | `integrations/mcp_client.py` | `MCPClient._incident_id_from_payload` | 125 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MCPClient |
 | `integrations/mcp_client.py` | `MCPClient._post` | 140 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MCPClient |
-| `integrations/mcp_client.py` | `MCPClient.initialize` | 312 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MCPClient |
-| `integrations/mcp_client.py` | `MCPClient._request` | 339 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MCPClient |
-| `integrations/mcp_client.py` | `MCPClient.call_tool` | 351 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MCPClient |
-| `integrations/mcp_client.py` | `MCPClient._call_tool` | 356 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MCPClient |
-| `integrations/mcp_client.py` | `MCPClient.list_tools` | 359 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | MCPClient |
-| `integrations/mcp_client.py` | `MCPClient.json_content` | 365 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MCPClient |
-| `integrations/mcp_client.py` | `MCPClient.health_check` | 392 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MCPClient |
-| `integrations/mcp_client.py` | `MCPClient.close` | 399 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MCPClient |
+| `integrations/mcp_client.py` | `MCPClient.initialize` | 337 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MCPClient |
+| `integrations/mcp_client.py` | `MCPClient._request` | 364 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MCPClient |
+| `integrations/mcp_client.py` | `MCPClient.call_tool` | 384 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MCPClient |
+| `integrations/mcp_client.py` | `MCPClient._call_tool` | 389 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MCPClient |
+| `integrations/mcp_client.py` | `MCPClient.list_tools` | 392 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | MCPClient |
+| `integrations/mcp_client.py` | `MCPClient.json_content` | 398 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MCPClient |
+| `integrations/mcp_client.py` | `MCPClient.health_check` | 425 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MCPClient |
+| `integrations/mcp_client.py` | `MCPClient.close` | 432 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MCPClient |
 | `integrations/prometheus/client.py` | `PrometheusClient` | 10 | class | Prometheus client preserving labels needed for deterministic asset identity. | module |
 | `integrations/prometheus/client.py` | `PrometheusClient.__init__` | 20 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | PrometheusClient |
 | `integrations/prometheus/client.py` | `PrometheusClient.source_name` | 25 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | PrometheusClient |
@@ -1477,6 +1480,25 @@
 | `tests/unit/test_runtime_error_contracts.py` | `test_llm_response_accepts_nested_usage_details` | 7 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_runtime_error_contracts.py` | `test_zabbix_problem_get_is_error_raises_instead_of_empty_success` | 24 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_runtime_error_contracts.py` | `test_zabbix_problem_get_is_error_raises_instead_of_empty_success.fake_call_tool` | 27 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_zabbix_problem_get_is_error_raises_instead_of_empty_success |
+| `tests/unit/test_structured_agent_resilience.py` | `FakeLLM` | 12 | class | کلاس | module |
+| `tests/unit/test_structured_agent_resilience.py` | `FakeLLM.__init__` | 13 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeLLM |
+| `tests/unit/test_structured_agent_resilience.py` | `FakeLLM.provider_name` | 18 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeLLM |
+| `tests/unit/test_structured_agent_resilience.py` | `FakeLLM.generate` | 21 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeLLM |
+| `tests/unit/test_structured_agent_resilience.py` | `FakeLLM.generate_with_messages` | 32 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeLLM |
+| `tests/unit/test_structured_agent_resilience.py` | `DummyAgent` | 42 | class | کلاس | module |
+| `tests/unit/test_structured_agent_resilience.py` | `DummyAgent.name` | 44 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DummyAgent |
+| `tests/unit/test_structured_agent_resilience.py` | `DummyAgent.description` | 48 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DummyAgent |
+| `tests/unit/test_structured_agent_resilience.py` | `DummyAgent.analyze` | 51 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DummyAgent |
+| `tests/unit/test_structured_agent_resilience.py` | `_disable_agent_telemetry` | 55 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_structured_agent_resilience.py` | `test_agent_models_normalize_qualitative_scores` | 59 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_structured_agent_resilience.py` | `test_structured_shape_normalizes_percent_and_label_scores` | 72 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_structured_agent_resilience.py` | `test_generate_structured_repairs_truncated_response_with_larger_budget` | 91 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_structured_agent_resilience.py` | `test_generate_structured_reports_persistent_truncation` | 127 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_structured_agent_resilience.py` | `FakeMCPHTTPClient` | 147 | class | کلاس | module |
+| `tests/unit/test_structured_agent_resilience.py` | `FakeMCPHTTPClient.post` | 148 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeMCPHTTPClient |
+| `tests/unit/test_structured_agent_resilience.py` | `FakeMCPHTTPClient.delete` | 163 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeMCPHTTPClient |
+| `tests/unit/test_structured_agent_resilience.py` | `FakeMCPHTTPClient.aclose` | 167 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeMCPHTTPClient |
+| `tests/unit/test_structured_agent_resilience.py` | `test_generic_mcp_tool_is_error_is_failed_not_completed` | 172 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_upstream_mcp_contracts.py` | `test_prometheus_adapter_uses_upstream_tool_names` | 8 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_upstream_mcp_contracts.py` | `test_elastic_adapter_uses_agent_builder_only` | 16 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_upstream_mcp_contracts.py` | `test_elastic_agent_builder_config_is_canonical` | 27 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
