@@ -1539,10 +1539,10 @@
 | `tests/unit/test_runbook_executor.py` | `test_dry_run_is_side_effect_free` | 20 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_runbook_executor.py` | `test_runbook_registry_validation` | 31 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_runbook_registry_governance.py` | `test_repository_runbooks_load_with_governance_and_verification` | 11 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_runbook_registry_governance.py` | `test_registry_dry_run_exposes_preconditions_rollback_and_verification` | 27 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_runbook_registry_governance.py` | `test_strict_validator_rejects_missing_verification` | 36 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_runbook_registry_governance.py` | `test_legacy_validator_contract_remains_backward_compatible` | 51 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_runbook_registry_governance.py` | `test_registry_rejects_invalid_runbook_file` | 64 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_runbook_registry_governance.py` | `test_registry_dry_run_exposes_preconditions_rollback_and_verification` | 28 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_runbook_registry_governance.py` | `test_strict_validator_rejects_missing_verification` | 37 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_runbook_registry_governance.py` | `test_legacy_validator_contract_remains_backward_compatible` | 52 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_runbook_registry_governance.py` | `test_registry_rejects_invalid_runbook_file` | 65 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_runbook_validation.py` | `test_runbook_requires_governance_fields` | 3 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_runbook_validation.py` | `test_runbook_valid_shape` | 8 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_runtime_approval_resume.py` | `FakeCheckpointStore` | 9 | class | کلاس | module |
