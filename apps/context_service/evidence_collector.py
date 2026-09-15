@@ -26,6 +26,7 @@ class EvidenceCollector:
 
     _KNOWN_TYPES = {"alert", "log", "metric", "event", "telemetry"}
     _UNKNOWN_SERVICE_VALUES = {"", "unknown", "unknown-service", "none", "null"}
+    _NON_MATERIAL_OBSERVATION_STATUSES = {"unavailable", "error", "skipped"}
 
     def __init__(self, zabbix=None, elasticsearch=None, prometheus=None, vm=None, kubernetes=None):
         self.zabbix = zabbix
@@ -55,6 +56,14 @@ class EvidenceCollector:
             },
         }
 
+    @classmethod
+    def _is_non_material_observation(cls, item: Dict[str, Any]) -> bool:
+        if str(item.get("type") or "").strip().lower() != "source_observation":
+            return False
+        raw = item.get("raw_data") or {}
+        status = str(raw.get("status") or "").strip().lower() if isinstance(raw, dict) else ""
+        return status in cls._NON_MATERIAL_OBSERVATION_STATUSES
+
     async def collect(self, service: str, since: datetime, until: datetime | None = None) -> Dict[str, Any]:
         return await self._collect(service, since, until, requested_types=None)
 
@@ -74,10 +83,23 @@ class EvidenceCollector:
                 "until": until.isoformat() if until else None,
                 "requested_types": [],
                 "evidence": [],
+                "source_observations": [],
                 "asset_context": AssetIdentityResolver.resolve([], self._known_service(service)),
             }
         result = await self._collect(service, since, until, requested_types=types)
         result["requested_types"] = sorted(types)
+
+        # Keep unavailable/error/skipped outcomes for audit and status reporting,
+        # but do not return them as newly acquired Evidence. The orchestrator uses
+        # truthiness of ``evidence`` to decide whether another expensive specialist
+        # analysis pass is justified; a failed source query is not new RCA evidence.
+        all_evidence = list(result.get("evidence") or [])
+        non_material = [item for item in all_evidence if isinstance(item, dict) and self._is_non_material_observation(item)]
+        if non_material:
+            result["source_observations"] = non_material
+            result["evidence"] = [item for item in all_evidence if item not in non_material]
+        else:
+            result["source_observations"] = []
         return result
 
     @staticmethod

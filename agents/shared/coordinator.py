@@ -137,15 +137,28 @@ class IncidentCoordinator:
         severity_non_unknown = {k: v for k, v in severity_votes.items() if k != "unknown"}
         health_non_unknown = {k: v for k, v in health_votes.items() if k != "unknown"}
         vote_disagreement = len(severity_non_unknown) > 1 or len(health_non_unknown) > 1
-        cross_agent_evidence_conflicts = [
-            {
+
+        # An evidence reference is a genuine cross-agent disagreement only when
+        # at least one agent supports it without also marking it conflicting and
+        # another agent conflicts with it without also supporting it. If the same
+        # agents appear on both sides (for example across different hypotheses),
+        # that is ambiguity/counterevidence, not cross-agent disagreement.
+        cross_agent_evidence_conflicts: List[Dict[str, Any]] = []
+        for ref, usage in evidence_usage.items():
+            supporting = set(usage["support"])
+            conflicting = set(usage["conflict"])
+            support_only = sorted(supporting - conflicting)
+            conflict_only = sorted(conflicting - supporting)
+            if not support_only or not conflict_only:
+                continue
+            cross_agent_evidence_conflicts.append({
                 "evidence_id": ref,
-                "supporting_agents": sorted(set(usage["support"])),
-                "conflicting_agents": sorted(set(usage["conflict"])),
-            }
-            for ref, usage in evidence_usage.items()
-            if usage["support"] and usage["conflict"]
-        ]
+                "supporting_agents": sorted(supporting),
+                "conflicting_agents": sorted(conflicting),
+                "support_only_agents": support_only,
+                "conflict_only_agents": conflict_only,
+            })
+
         contradictions = explicit_conflicts + cross_agent_evidence_conflicts
         disagreement = vote_disagreement or bool(cross_agent_evidence_conflicts)
 

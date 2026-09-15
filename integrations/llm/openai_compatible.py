@@ -74,6 +74,10 @@ class OpenAICompatibleLLMProvider(LLMAdapter):
             finish_reason=str(finish_reason) if finish_reason is not None else None,
         )
 
+    @staticmethod
+    def _is_truncated(response: LLMResponse) -> bool:
+        return str(response.finish_reason or "").strip().lower() in {"length", "max_tokens"}
+
     async def generate(
         self,
         prompt: str,
@@ -86,7 +90,47 @@ class OpenAICompatibleLLMProvider(LLMAdapter):
         if system_prompt:
             messages.append({"role": "system", "content": system_prompt})
         messages.append({"role": "user", "content": prompt})
-        return await self.generate_with_messages(messages, temperature, max_tokens, **kwargs)
+
+        # ``generate`` is the shared path used by Triage, specialists and RCA.
+        # A transport-level HTTP 200 with finish_reason=length is not a complete
+        # model result and must never be silently accepted by a caller. Regenerate
+        # from the original prompt with a larger budget and an explicit concise
+        # completion instruction. Tool-enabled chat remains single-shot because
+        # replaying a model tool decision can change call semantics.
+        repair_attempts = max(0, int(kwargs.pop("completion_repair_attempts", settings.AGENT_STRUCTURED_REPAIR_ATTEMPTS)))
+        attempts = 1 if kwargs.get("tools") else 1 + repair_attempts
+        base_max_tokens = max(1, int(max_tokens))
+        last_response: Optional[LLMResponse] = None
+
+        for attempt in range(attempts):
+            current_messages = list(messages)
+            if attempt:
+                current_messages.append({
+                    "role": "user",
+                    "content": (
+                        "RETRY REQUIRED: the previous response was truncated by the output limit. "
+                        "Return a fresh complete and shorter response. Preserve the requested format, "
+                        "prioritize essential conclusions and do not continue the partial text."
+                    ),
+                })
+            budget = base_max_tokens * min(2 ** attempt, 4)
+            response = await self.generate_with_messages(
+                current_messages,
+                temperature,
+                budget,
+                **kwargs,
+            )
+            last_response = response
+            if not self._is_truncated(response):
+                return response
+
+        # Fail closed after the bounded repair budget. Structured Agents catch
+        # ValueError and may apply their own format-specific repair; RCA and other
+        # callers fall back instead of treating a partial plan as complete.
+        raise ValueError(
+            "llm_completion_truncated_after_retries:"
+            f"{getattr(last_response, 'finish_reason', None)}"
+        )
 
     async def generate_with_messages(
         self,

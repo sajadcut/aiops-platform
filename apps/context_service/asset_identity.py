@@ -48,6 +48,12 @@ class AssetIdentityResolver:
         for item in evidence:
             if not isinstance(item, dict):
                 continue
+            # Source observations describe query outcome/availability. They are
+            # authoritative reasoning facts but never asset-identity evidence.
+            # Promoting an unavailable/error observation would falsely make that
+            # source look like it independently identified the asset.
+            if str(item.get("type") or "").strip().lower() == "source_observation":
+                continue
             source = str(item.get("source") or "unknown").lower()
             raw = item.get("raw_data") or {}
             if not isinstance(raw, dict):
