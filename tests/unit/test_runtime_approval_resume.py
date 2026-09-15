@@ -2,7 +2,7 @@ import pytest
 
 import apps.orchestrator.runtime as runtime_module
 from apps.approval_service.binding import bind_metadata
-from apps.execution_service.capability import verify_execution_capability
+from apps.execution_service.capability import ExecutionCapabilityError, verify_execution_capability
 from apps.orchestrator.runtime import DurableWorkflowRuntime
 
 
@@ -23,6 +23,9 @@ class FakeCheckpointStore:
 
 
 class FakeApprovalStore:
+    def __init__(self):
+        self.consume_calls = []
+
     @staticmethod
     def _metadata():
         return bind_metadata(
@@ -34,6 +37,7 @@ class FakeApprovalStore:
         return {"approval_id": approval_id, "incident_id": "incident-1", "action": "restart_service", "status": "approved", "metadata": self._metadata()}
 
     async def consume(self, approval_id):
+        self.consume_calls.append(approval_id)
         return {"approval_id": approval_id, "incident_id": "incident-1", "action": "restart_service", "status": "consumed", "metadata": self._metadata()}
 
 
@@ -137,6 +141,7 @@ async def test_resume_injects_persisted_approval_into_execution_request(monkeypa
     assert result["current_node"] == "end"
     assert runtime.checkpoints.completed is not None
     assert runtime.checkpoints.failed is None
+    assert runtime.approvals.consume_calls == ["approval-123"]
     request = FakeOrchestrator.captured_execution_request
     assert request["approval_granted"] is True
     assert request["approval_id"] == "approval-123"
@@ -148,6 +153,19 @@ async def test_resume_injects_persisted_approval_into_execution_request(monkeypa
     assert claims["jti"]
     assert FakeOrchestrator.verification_calls == 1
     assert runtime.incidents.statuses[-1] == ("incident-1", "resolved")
+
+
+@pytest.mark.asyncio
+async def test_capability_failure_does_not_consume_approval(monkeypatch):
+    monkeypatch.delenv("EXECUTION_CAPABILITY_SECRET", raising=False)
+    runtime = _runtime(_paused_state())
+
+    with pytest.raises(ExecutionCapabilityError, match="execution_capability_secret_not_configured"):
+        await runtime.resume_after_approval("incident-1")
+
+    assert runtime.approvals.consume_calls == []
+    assert runtime.checkpoints.completed is None
+    assert runtime.checkpoints.failed is None
 
 
 @pytest.mark.asyncio
