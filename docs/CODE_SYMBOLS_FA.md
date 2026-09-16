@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 272 | Dashboard JS files scanned: 2 | Symbols indexed: 1821**
+**Python files scanned: 272 | Dashboard JS files scanned: 2 | Symbols indexed: 1823**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -31,7 +31,9 @@
 | `agents/kubernetes/__init__.py` | `KubernetesAgent.analyze` | 27 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KubernetesAgent |
 | `agents/messaging/__init__.py` | `MessagingAgent` | 4 | class | کلاس | module |
 | `agents/network/__init__.py` | `NetworkAgent` | 4 | class | کلاس | module |
-| `agents/recovery/__init__.py` | `RecoveryAgent` | 4 | class | کلاس | module |
+| `agents/recovery/__init__.py` | `_parse_time` | 8 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/recovery/__init__.py` | `RecoveryAgent` | 20 | class | کلاس | module |
+| `agents/recovery/__init__.py` | `RecoveryAgent.analyze` | 40 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RecoveryAgent |
 | `agents/security/__init__.py` | `SecurityAgent` | 11 | class | کلاس | module |
 | `agents/security/__init__.py` | `SecurityAgent.__init__` | 12 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SecurityAgent |
 | `agents/security/__init__.py` | `SecurityAgent.name` | 16 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SecurityAgent |
