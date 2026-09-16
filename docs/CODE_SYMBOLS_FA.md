@@ -133,12 +133,12 @@
 | `agents/shared/telemetry.py` | `AgentTelemetry.snapshot` | 97 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | AgentTelemetry |
 | `agents/shared/telemetry.py` | `AgentTelemetry.clear` | 122 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | AgentTelemetry |
 | `agents/storage/__init__.py` | `StorageAgent` | 4 | class | کلاس | module |
-| `agents/triage/__init__.py` | `TriageAgent` | 10 | class | کلاس | module |
-| `agents/triage/__init__.py` | `TriageAgent.__init__` | 11 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | TriageAgent |
-| `agents/triage/__init__.py` | `TriageAgent.name` | 15 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | TriageAgent |
-| `agents/triage/__init__.py` | `TriageAgent.description` | 19 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | TriageAgent |
-| `agents/triage/__init__.py` | `TriageAgent.allowed_tools` | 23 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | TriageAgent |
-| `agents/triage/__init__.py` | `TriageAgent.analyze` | 26 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | TriageAgent |
+| `agents/triage/__init__.py` | `TriageAgent` | 11 | class | کلاس | module |
+| `agents/triage/__init__.py` | `TriageAgent.__init__` | 12 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | TriageAgent |
+| `agents/triage/__init__.py` | `TriageAgent.name` | 16 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | TriageAgent |
+| `agents/triage/__init__.py` | `TriageAgent.description` | 20 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | TriageAgent |
+| `agents/triage/__init__.py` | `TriageAgent.allowed_tools` | 24 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | TriageAgent |
+| `agents/triage/__init__.py` | `TriageAgent.analyze` | 27 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | TriageAgent |
 | `agents/vm/__init__.py` | `VMAgent` | 13 | class | کلاس | module |
 | `agents/vm/__init__.py` | `VMAgent.__init__` | 14 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMAgent |
 | `agents/vm/__init__.py` | `VMAgent.name` | 18 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMAgent |
