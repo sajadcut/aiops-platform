@@ -4,7 +4,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 
 
-def test_dashboard_exposes_real_approval_actions_without_direct_execution():
+def test_dashboard_exposes_governed_approval_and_resume_actions():
     html = (ROOT / "dashboards/index.html").read_text(encoding="utf-8")
     js = (ROOT / "dashboards/approval-actions.js").read_text(encoding="utf-8")
     css = (ROOT / "dashboards/approval-actions.css").read_text(encoding="utf-8")
@@ -17,10 +17,18 @@ def test_dashboard_exposes_real_approval_actions_without_direct_execution():
     assert 'rejection reason' in js.lower()
     assert 'JSON.stringify({reason})' in js
     assert 'HIGH-RISK approval' in js
-    assert 'This does NOT execute it yet.' in js
-    assert '/api/v1/execute' not in js
+    assert 'does NOT execute it yet' in js
+    assert 'Resume & Execute' in js
+    assert '/api/v1/workflow/e2e/' in js
+    assert '/resume' in js
+    assert 'binding_complete' in js
+    assert 'consumed exactly once' in js
+    assert 'signed capability' in js
+    assert '/api/v1/execute' not in js  # Dashboard cannot bypass the durable workflow runtime.
     assert '.approval-btn.approve' in css
     assert '.approval-btn.reject' in css
+    assert '.approval-btn.execute' in css
+    assert '.execution-consumed' in css
 
 
 def test_fastapi_serves_approval_assets():
