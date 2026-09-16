@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 307 | Dashboard JS files scanned: 2 | Symbols indexed: 2458**
+**Python files scanned: 307 | Dashboard JS files scanned: 2 | Symbols indexed: 2460**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -49,7 +49,9 @@
 | `agents/application/investigation.py` | `_span_identity` | 23 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/application/investigation.py` | `build_trace_path_analysis` | 30 | function | Build bounded parent/child trace paths from the engine's normalized spans. | module |
 | `agents/application/investigation.py` | `build_application_peer_context` | 157 | function | Extract Dependency/Change peer findings without promoting them to evidence. | module |
-| `agents/change/__init__.py` | `ChangeAgent` | 4 | class | کلاس | module |
+| `agents/change/__init__.py` | `ChangeAgent` | 15 | class | کلاس | module |
+| `agents/change/__init__.py` | `ChangeAgent.__init__` | 35 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChangeAgent |
+| `agents/change/__init__.py` | `ChangeAgent.analyze` | 38 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChangeAgent |
 | `agents/change/engine.py` | `_raw` | 37 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/change/engine.py` | `_lookup` | 42 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/change/engine.py` | `_eid` | 53 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
