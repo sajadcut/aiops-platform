@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 281 | Dashboard JS files scanned: 2 | Symbols indexed: 1972**
+**Python files scanned: 282 | Dashboard JS files scanned: 2 | Symbols indexed: 2018**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -94,6 +94,52 @@
 | `agents/kubernetes/__init__.py` | `KubernetesAgent.description` | 20 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KubernetesAgent |
 | `agents/kubernetes/__init__.py` | `KubernetesAgent.allowed_tools` | 24 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KubernetesAgent |
 | `agents/kubernetes/__init__.py` | `KubernetesAgent.analyze` | 27 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KubernetesAgent |
+| `agents/kubernetes/engine.py` | `_raw` | 18 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/engine.py` | `_resource` | 23 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/engine.py` | `_metadata` | 36 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/engine.py` | `_spec` | 41 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/engine.py` | `_status` | 46 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/engine.py` | `_eid` | 51 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/engine.py` | `_parse_time` | 58 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/engine.py` | `_timestamp` | 72 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/engine.py` | `_text` | 85 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/engine.py` | `_kind` | 107 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/engine.py` | `_name_namespace` | 142 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/engine.py` | `_condition_map` | 150 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/engine.py` | `_owner` | 163 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/engine.py` | `_labels` | 172 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/engine.py` | `_selector` | 179 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/engine.py` | `_selector_matches` | 188 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/engine.py` | `_safe_metadata` | 192 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/engine.py` | `_numeric` | 203 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/engine.py` | `_cpu_quantity` | 214 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/engine.py` | `_bytes_quantity` | 230 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/engine.py` | `_finding` | 247 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/engine.py` | `_row_base` | 258 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/engine.py` | `_pod_analyzer` | 269 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/engine.py` | `_controller_analyzer` | 364 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/engine.py` | `_node_analyzer` | 404 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/engine.py` | `_service_analyzer` | 428 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/engine.py` | `_endpoint_analyzer` | 433 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/engine.py` | `_ingress_analyzer` | 469 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/engine.py` | `_storage_analyzer` | 486 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/engine.py` | `_hpa_analyzer` | 499 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/engine.py` | `_pdb_analyzer` | 517 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/engine.py` | `_networkpolicy_analyzer` | 527 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/engine.py` | `_metadata_analyzer` | 533 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/engine.py` | `_webhook_analyzer` | 537 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/engine.py` | `_event_analyzer` | 542 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/engine.py` | `_analyze_row` | 563 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/engine.py` | `_metric_features` | 581 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/engine.py` | `_resource_config` | 607 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/engine.py` | `_resource_usage_comparison` | 621 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/engine.py` | `_timeline` | 649 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/engine.py` | `_timeline_correlations` | 662 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/engine.py` | `_causal_chains` | 677 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/engine.py` | `_cross_resource_findings` | 726 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/engine.py` | `_classify_cause` | 750 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/engine.py` | `_gaps` | 764 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/engine.py` | `build_kubernetes_analysis` | 776 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
 | `agents/messaging/__init__.py` | `MessagingAgent` | 4 | class | کلاس | module |
 | `agents/network/__init__.py` | `NetworkAgent` | 4 | class | کلاس | module |
 | `agents/recovery/__init__.py` | `_parse_time` | 8 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
