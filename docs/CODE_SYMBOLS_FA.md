@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 288 | Dashboard JS files scanned: 2 | Symbols indexed: 2106**
+**Python files scanned: 289 | Dashboard JS files scanned: 2 | Symbols indexed: 2137**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -207,6 +207,37 @@
 | `agents/security/__init__.py` | `SecurityAgent.description` | 20 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SecurityAgent |
 | `agents/security/__init__.py` | `SecurityAgent.allowed_tools` | 24 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SecurityAgent |
 | `agents/security/__init__.py` | `SecurityAgent.analyze` | 27 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SecurityAgent |
+| `agents/security/engine.py` | `_parse_time` | 40 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/security/engine.py` | `_raw` | 54 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/security/engine.py` | `_eid` | 59 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/security/engine.py` | `_timestamp` | 66 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/security/engine.py` | `_safe_text` | 75 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/security/engine.py` | `_text` | 98 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/security/engine.py` | `_first` | 102 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/security/engine.py` | `_identity` | 112 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/security/engine.py` | `_asset` | 116 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/security/engine.py` | `_service` | 120 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/security/engine.py` | `_source_ip` | 124 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/security/engine.py` | `_destination_ip` | 128 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/security/engine.py` | `_port` | 132 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/security/engine.py` | `_is_public_ip` | 136 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/security/engine.py` | `_normalize` | 145 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/security/engine.py` | `_event` | 168 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/security/engine.py` | `_signal_events` | 185 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/security/engine.py` | `_trend` | 214 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/security/engine.py` | `_network_aggregation` | 232 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/security/engine.py` | `_false_positive_analysis` | 261 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/security/engine.py` | `_timeline` | 295 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/security/engine.py` | `_blast_radius` | 320 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/security/engine.py` | `_direct_confirmation_score` | 346 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/security/engine.py` | `_classification` | 361 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/security/engine.py` | `_mitre_mapping` | 399 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/security/engine.py` | `_next_best_evidence` | 411 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/security/engine.py` | `_next_best_evidence.add` | 414 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _next_best_evidence |
+| `agents/security/engine.py` | `_deterministic_hypotheses` | 438 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/security/engine.py` | `_deterministic_hypotheses.add` | 445 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _deterministic_hypotheses |
+| `agents/security/engine.py` | `_peer_context` | 470 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/security/engine.py` | `build_security_analysis` | 501 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
 | `agents/shared/a2a_agent.py` | `A2AAgentCard` | 12 | class | کلاس | module |
 | `agents/shared/a2a_agent.py` | `A2AAgent` | 20 | class | Authenticated, bounded transport for optional agent-to-agent RPC. | module |
 | `agents/shared/a2a_agent.py` | `A2AAgent.__init__` | 28 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | A2AAgent |
