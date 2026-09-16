@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 311 | Dashboard JS files scanned: 2 | Symbols indexed: 2539**
+**Python files scanned: 315 | Dashboard JS files scanned: 2 | Symbols indexed: 2615**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -333,7 +333,32 @@
 | `agents/kubernetes/safety.py` | `_resource_kind` | 10 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/kubernetes/safety.py` | `_redact_payload` | 18 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/kubernetes/safety.py` | `safe_evidence_for_prompt` | 34 | function | Return a bounded-copy-friendly evidence set with Secret/ConfigMap payload values removed. | module |
-| `agents/messaging/__init__.py` | `MessagingAgent` | 4 | class | کلاس | module |
+| `agents/messaging/__init__.py` | `MessagingAgent` | 16 | class | کلاس | module |
+| `agents/messaging/__init__.py` | `MessagingAgent.__init__` | 33 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MessagingAgent |
+| `agents/messaging/__init__.py` | `MessagingAgent.analyze` | 36 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MessagingAgent |
+| `agents/messaging/engine.py` | `_raw` | 8 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/messaging/engine.py` | `_field` | 13 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/messaging/engine.py` | `_eid` | 24 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/messaging/engine.py` | `_parse_ts` | 29 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/messaging/engine.py` | `_timestamp` | 43 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/messaging/engine.py` | `_iso` | 52 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/messaging/engine.py` | `_numeric` | 56 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/messaging/engine.py` | `_bool` | 74 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/messaging/engine.py` | `_unique` | 88 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/messaging/engine.py` | `_text` | 101 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/messaging/engine.py` | `_metric_name` | 115 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/messaging/engine.py` | `_metric_value` | 126 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/messaging/engine.py` | `_baseline` | 132 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/messaging/engine.py` | `_kind` | 141 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/messaging/engine.py` | `_dim` | 178 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/messaging/engine.py` | `_row` | 183 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/messaging/engine.py` | `_latest` | 215 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/messaging/engine.py` | `_series` | 223 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/messaging/engine.py` | `_broker` | 255 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/messaging/engine.py` | `_partitions` | 276 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/messaging/engine.py` | `_candidate` | 311 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/messaging/engine.py` | `_candidates` | 323 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/messaging/engine.py` | `build_messaging_reliability_analysis` | 414 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
 | `agents/network/__init__.py` | `NetworkAgent` | 15 | class | کلاس | module |
 | `agents/network/__init__.py` | `NetworkAgent.__init__` | 34 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | NetworkAgent |
 | `agents/network/__init__.py` | `NetworkAgent._network_hypothesis_context` | 38 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | NetworkAgent |
@@ -363,9 +388,28 @@
 | `agents/network/engine.py` | `_cause_candidates` | 466 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/network/engine.py` | `_cause_candidates.add` | 477 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _cause_candidates |
 | `agents/network/engine.py` | `build_network_reliability_analysis` | 614 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
-| `agents/recovery/__init__.py` | `_parse_time` | 8 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `agents/recovery/__init__.py` | `RecoveryAgent` | 20 | class | کلاس | module |
-| `agents/recovery/__init__.py` | `RecoveryAgent.analyze` | 40 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RecoveryAgent |
+| `agents/recovery/__init__.py` | `RecoveryAgent` | 16 | class | کلاس | module |
+| `agents/recovery/__init__.py` | `RecoveryAgent.__init__` | 35 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RecoveryAgent |
+| `agents/recovery/__init__.py` | `RecoveryAgent.analyze` | 38 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RecoveryAgent |
+| `agents/recovery/engine.py` | `_raw` | 7 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/recovery/engine.py` | `_field` | 12 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/recovery/engine.py` | `_eid` | 21 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/recovery/engine.py` | `_parse_time` | 26 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/recovery/engine.py` | `_timestamp` | 40 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/recovery/engine.py` | `_iso` | 49 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/recovery/engine.py` | `_numeric` | 53 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/recovery/engine.py` | `_bool` | 67 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/recovery/engine.py` | `_unique` | 81 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/recovery/engine.py` | `_text` | 94 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/recovery/engine.py` | `_incident_time` | 108 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/recovery/engine.py` | `_backup_rows` | 122 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/recovery/engine.py` | `_restore_rows` | 175 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/recovery/engine.py` | `_replication` | 197 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/recovery/engine.py` | `_kubernetes` | 232 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/recovery/engine.py` | `_encryption` | 264 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/recovery/engine.py` | `_schedule` | 288 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/recovery/engine.py` | `_verified_point` | 324 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/recovery/engine.py` | `build_recovery_readiness_analysis` | 344 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
 | `agents/security/__init__.py` | `_guard_security_claim` | 19 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/security/__init__.py` | `_as_list` | 28 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/security/__init__.py` | `_rich_hypothesis` | 38 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
@@ -2169,6 +2213,23 @@
 | `tests/unit/test_mcp_server_contract.py` | `test_internal_mcp_server_has_no_native_zabbix_provider` | 21 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_mcp_server_contract.py` | `test_mcp_server_is_the_only_place_remaining_native_provider_connectors_are_composed` | 28 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_mcp_server_contract.py` | `test_mcp_server_does_not_expose_arbitrary_execution_tools` | 42 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_messaging_reliability_engine.py` | `metric` | 11 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_messaging_reliability_engine.py` | `log` | 22 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_messaging_reliability_engine.py` | `analyze` | 32 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_messaging_reliability_engine.py` | `causes` | 36 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_messaging_reliability_engine.py` | `test_consumer_lag_uses_growth_trend_and_separates_slow_consumer` | 40 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_messaging_reliability_engine.py` | `test_producer_spike_is_not_misclassified_as_broker_failure` | 55 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_messaging_reliability_engine.py` | `test_broker_unavailable_is_distinct_broker_failure` | 67 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_messaging_reliability_engine.py` | `test_dlq_storm_with_retry_loop_is_poison_message_candidate` | 77 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_messaging_reliability_engine.py` | `test_hot_partition_detects_throughput_skew` | 88 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_messaging_reliability_engine.py` | `test_disk_induced_broker_latency_handoffs_to_infrastructure` | 99 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_messaging_reliability_engine.py` | `test_healthy_backlog_transient_is_not_broker_failure` | 109 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_messaging_reliability_engine.py` | `CapturingMessagingLLM` | 121 | class | کلاس | module |
+| `tests/unit/test_messaging_reliability_engine.py` | `CapturingMessagingLLM.__init__` | 122 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CapturingMessagingLLM |
+| `tests/unit/test_messaging_reliability_engine.py` | `CapturingMessagingLLM.provider_name` | 126 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CapturingMessagingLLM |
+| `tests/unit/test_messaging_reliability_engine.py` | `CapturingMessagingLLM.generate` | 129 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CapturingMessagingLLM |
+| `tests/unit/test_messaging_reliability_engine.py` | `CapturingMessagingLLM.generate_with_messages` | 154 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CapturingMessagingLLM |
+| `tests/unit/test_messaging_reliability_engine.py` | `test_messaging_agent_runs_deterministic_analysis_before_llm_and_remains_analysis_only` | 159 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_migration_contract.py` | `read` | 4 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_migration_contract.py` | `test_base_migration_creates_canonical_incident_tables` | 8 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_migration_contract.py` | `test_operational_migration_references_incidents_id_and_does_not_create_shadow_incident_tables` | 16 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
@@ -2282,6 +2343,21 @@
 | `tests/unit/test_recovery_readiness_details.py` | `StaticLLM.generate_with_messages` | 30 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | StaticLLM |
 | `tests/unit/test_recovery_readiness_details.py` | `test_recovery_exposes_verified_restore_point_and_data_loss_window` | 35 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_recovery_readiness_details.py` | `test_recovery_marks_successful_unverified_backup_as_coverage_gap` | 74 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_recovery_readiness_engine.py` | `log` | 11 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_recovery_readiness_engine.py` | `metric` | 15 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_recovery_readiness_engine.py` | `analyze` | 19 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_recovery_readiness_engine.py` | `test_backup_success_but_restore_untested_caps_recoverability_confidence` | 23 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_recovery_readiness_engine.py` | `test_stale_backup_detects_missed_schedule_and_rpo_not_demonstrated` | 34 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_recovery_readiness_engine.py` | `test_broken_replication_is_separate_recovery_risk` | 43 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_recovery_readiness_engine.py` | `test_partial_kubernetes_velero_backup_exposes_pv_gap` | 53 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_recovery_readiness_engine.py` | `test_healthy_dr_has_verified_point_rpo_and_rto_readiness` | 71 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_recovery_readiness_engine.py` | `test_missing_encryption_key_evidence_is_explicit_gap_without_key_material` | 109 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_recovery_readiness_engine.py` | `CapturingRecoveryLLM` | 125 | class | کلاس | module |
+| `tests/unit/test_recovery_readiness_engine.py` | `CapturingRecoveryLLM.__init__` | 126 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CapturingRecoveryLLM |
+| `tests/unit/test_recovery_readiness_engine.py` | `CapturingRecoveryLLM.provider_name` | 130 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CapturingRecoveryLLM |
+| `tests/unit/test_recovery_readiness_engine.py` | `CapturingRecoveryLLM.generate` | 133 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CapturingRecoveryLLM |
+| `tests/unit/test_recovery_readiness_engine.py` | `CapturingRecoveryLLM.generate_with_messages` | 157 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CapturingRecoveryLLM |
+| `tests/unit/test_recovery_readiness_engine.py` | `test_recovery_agent_runs_readiness_analyzer_before_llm_and_never_executes_restore` | 162 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_release_rendering.py` | `test_release_renderer_rejects_tags_and_zero_digest` | 11 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_release_rendering.py` | `test_release_renderer_uses_same_immutable_artifact_for_api_and_migration` | 18 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_release_rendering.py` | `test_raw_templates_are_fail_closed_and_never_mutable` | 29 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |

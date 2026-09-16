@@ -3,7 +3,7 @@
 > این فایل فهرست فایل‌به‌فایل repository است. توضیح معماری و flow در `CODEBASE_GUIDE_FA.md` آمده است.
 > این فایل با `scripts/generate_file_index_fa.py` ساخته و در CI کنترل می‌شود.
 
-**تعداد فایل‌های track‌شده و پوشش‌داده‌شده: 378**
+**تعداد فایل‌های track‌شده و پوشش‌داده‌شده: 382**
 
 | Path | Type | Purpose | Called By | Calls/Depends On | Runtime/Test/Docs | Notes |
 |---|---|---|---|---|---|---|
@@ -47,9 +47,11 @@
 | `agents/kubernetes/resource_analyzers.py` | Python | تعریف package لایه Agent | Python imports | agents/* | Runtime | package marker |
 | `agents/kubernetes/safety.py` | Python | تعریف package لایه Agent | Python imports | agents/* | Runtime | package marker |
 | `agents/messaging/__init__.py` | Python | Agent تخصصی messaging برای تحلیل و تولید Finding/Evidence request | Agent registry/orchestrator | agents.shared + evidence | Runtime | تحلیل/پیشنهاد؛ بدون اجرای مستقیم |
+| `agents/messaging/engine.py` | Python | تعریف package لایه Agent | Python imports | agents/* | Runtime | package marker |
 | `agents/network/__init__.py` | Python | Agent تخصصی network برای تحلیل و تولید Finding/Evidence request | Agent registry/orchestrator | agents.shared + evidence | Runtime | تحلیل/پیشنهاد؛ بدون اجرای مستقیم |
 | `agents/network/engine.py` | Python | تعریف package لایه Agent | Python imports | agents/* | Runtime | package marker |
 | `agents/recovery/__init__.py` | Python | Agent تخصصی recovery برای تحلیل و تولید Finding/Evidence request | Agent registry/orchestrator | agents.shared + evidence | Runtime | تحلیل/پیشنهاد؛ بدون اجرای مستقیم |
+| `agents/recovery/engine.py` | Python | تعریف package لایه Agent | Python imports | agents/* | Runtime | package marker |
 | `agents/security/__init__.py` | Python | Agent تخصصی security برای تحلیل و تولید Finding/Evidence request | Agent registry/orchestrator | agents.shared + evidence | Runtime | تحلیل/پیشنهاد؛ بدون اجرای مستقیم |
 | `agents/security/engine.py` | Python | تعریف package لایه Agent | Python imports | agents/* | Runtime | package marker |
 | `agents/security/enrichment.py` | Python | تعریف package لایه Agent | Python imports | agents/* | Runtime | package marker |
@@ -350,6 +352,7 @@
 | `tests/unit/test_kubernetes_resource_analyzers.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_mcp_external_boundary.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_mcp_server_contract.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
+| `tests/unit/test_messaging_reliability_engine.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_migration_contract.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_multi_source_signal_reasoning.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_network_reliability_engine.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
@@ -362,6 +365,7 @@
 | `tests/unit/test_rag_memory_governance.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_rbac.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_recovery_readiness_details.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
+| `tests/unit/test_recovery_readiness_engine.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_release_rendering.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_remediation_planner.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_runbook_executor.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
