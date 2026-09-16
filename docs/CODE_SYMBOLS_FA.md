@@ -2158,12 +2158,12 @@
 | `tests/unit/test_vm_guest_engine.py` | `analyze` | 12 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_vm_guest_engine.py` | `test_linux_host_uses_use_saturation_signals_not_cpu_percentage_only` | 20 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_vm_guest_engine.py` | `test_iowait_with_disk_latency_is_storage_causal_candidate` | 41 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_vm_guest_engine.py` | `test_memory_swap_and_psi_pressure_is_guest_host_pressure` | 53 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_vm_guest_engine.py` | `test_process_snapshot_builds_parent_child_and_resource_state` | 66 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_vm_guest_engine.py` | `test_systemd_service_state_is_structured_without_manual_stop_inference` | 81 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_vm_guest_engine.py` | `test_systemd_failed_dependencies_are_causal_and_handoff_to_dependency` | 99 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_vm_guest_engine.py` | `test_boot_and_reboot_history_correlates_with_incident_start` | 112 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_vm_guest_engine.py` | `test_missing_layers_are_exposed_as_next_best_evidence` | 123 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_guest_engine.py` | `test_memory_swap_and_psi_pressure_is_guest_host_pressure` | 55 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_guest_engine.py` | `test_process_snapshot_builds_parent_child_and_resource_state` | 68 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_guest_engine.py` | `test_systemd_service_state_is_structured_without_manual_stop_inference` | 83 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_guest_engine.py` | `test_systemd_failed_dependencies_are_causal_and_handoff_to_dependency` | 101 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_guest_engine.py` | `test_boot_and_reboot_history_correlates_with_incident_start` | 114 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_guest_engine.py` | `test_missing_layers_are_exposed_as_next_best_evidence` | 125 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_vm_symptom_verification.py` | `_context` | 6 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_vm_symptom_verification.py` | `_telemetry` | 10 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_vm_symptom_verification.py` | `test_port_recovery_is_verified_from_fresh_operational_evidence` | 20 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
