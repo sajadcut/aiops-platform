@@ -86,7 +86,8 @@ def test_unrelated_deployment_is_not_promoted_by_temporal_fact_alone():
     candidate = top(result)
     assert candidate["change_correlation_score"] < 0.35
     assert candidate["causal_role"] == "weak_or_unrelated_change"
-    assert "affected_scope_does_not_overlap_change_scope" in candidate["conflicting_evidence"]
+    assert "no_measured_before_after_delta" in candidate["conflicting_evidence"]
+    assert candidate["score_factors"]["temporal_proximity"] <= 0.2
     assert not result["rollback_candidate_evidence"]
 
 
@@ -174,10 +175,25 @@ class CapturingChangeLLM(LLMAdapter):
 async def test_change_agent_exposes_required_outputs_and_never_executes_rollback():
     adapter = CapturingChangeLLM()
     evidence = [
-        change("canary-v3", "2026-09-16T10:00:00Z", "kubernetes_rollout", version="v3", service="payments", rollout_status="progressing"),
-        metric("before", "2026-09-16T09:59:00Z", "http_error_rate", 0.01, service="payments", version="v2"),
-        metric("canary", "2026-09-16T10:03:00Z", "http_error_rate", 0.30, service="payments", version="v3", role="canary"),
-        metric("stable", "2026-09-16T10:03:00Z", "http_error_rate", 0.01, service="payments", version="v2", role="stable"),
+        {
+            "id": "canary-v3", "type": "change", "source": "change-control",
+            "raw_data": {
+                "change_type": "kubernetes_rollout", "version": "v3", "service": "payments",
+                "rollout_status": "progressing", "deployed_at": "2026-09-16T10:00:00Z",
+            },
+        },
+        {
+            "id": "before", "type": "metric", "source": "prometheus", "name": "http_error_rate", "value": 0.01,
+            "raw_data": {"service": "payments", "version": "v2", "window": "before"},
+        },
+        {
+            "id": "canary", "type": "metric", "source": "prometheus", "name": "http_error_rate", "value": 0.30,
+            "raw_data": {"service": "payments", "version": "v3", "role": "canary", "window": "after"},
+        },
+        {
+            "id": "stable", "type": "metric", "source": "prometheus", "name": "http_error_rate", "value": 0.01,
+            "raw_data": {"service": "payments", "version": "v2", "role": "stable", "window": "after"},
+        },
     ]
     incident = AgentInput(
         incident_id="inc-change",
