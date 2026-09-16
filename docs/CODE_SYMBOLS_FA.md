@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 266 | Dashboard JS files scanned: 2 | Symbols indexed: 1726**
+**Python files scanned: 266 | Dashboard JS files scanned: 2 | Symbols indexed: 1727**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -572,10 +572,11 @@
 | `apps/verification_service/__init__.py` | `VerificationEngine._evidence_refs` | 256 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VerificationEngine |
 | `apps/verification_service/__init__.py` | `VerificationEngine._dedupe_refs` | 268 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VerificationEngine |
 | `dashboards/approval-actions.js` | `approvalPanel` | 4 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `refreshApprovalDecision` | 49 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `approveCurrentApproval` | 58 | JavaScript function | transition مربوط به Approval/Governance را اعمال می‌کند | browser module |
-| `dashboards/approval-actions.js` | `rejectCurrentApproval` | 75 | JavaScript function | transition مربوط به Approval/Governance را اعمال می‌کند | browser module |
-| `dashboards/approval-actions.js` | `enhancedRenderDetail` | 100 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `refreshIncidentDecision` | 70 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `approveCurrentApproval` | 77 | JavaScript function | transition مربوط به Approval/Governance را اعمال می‌کند | browser module |
+| `dashboards/approval-actions.js` | `rejectCurrentApproval` | 94 | JavaScript function | transition مربوط به Approval/Governance را اعمال می‌کند | browser module |
+| `dashboards/approval-actions.js` | `resumeCurrentWorkflow` | 119 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `enhancedRenderDetail` | 153 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
 | `dashboards/control-center.js` | `$` | 14 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
 | `dashboards/control-center.js` | `$$` | 15 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
 | `dashboards/control-center.js` | `esc` | 16 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
