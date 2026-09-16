@@ -1,5 +1,6 @@
 import json
 import logging
+import re
 from pathlib import Path
 from uuid import uuid4
 
@@ -8,6 +9,7 @@ from domain.contracts.config import settings
 from domain.contracts.context import (
     clear_incident_context,
     incident_rid,
+    set_trace_id,
 )
 
 
@@ -70,6 +72,55 @@ def test_workflow_event_binds_rid_for_follow_up_logs(tmp_path, monkeypatch):
     assert items[0]["rid"] == rid
     assert items[1]["incident_id"] == incident_id
     assert items[1]["rid"] == rid
+
+
+def test_correlation_identifiers_follow_level_in_text_and_json_logs(tmp_path, monkeypatch):
+    monkeypatch.setattr(settings, "LOG_LEVEL", "INFO")
+    monkeypatch.setattr(settings, "LOG_CONSOLE_ENABLED", False)
+    monkeypatch.setattr(settings, "LOG_TEXT_FILE_ENABLED", True)
+    monkeypatch.setattr(settings, "LOG_JSON_FILE_ENABLED", True)
+    monkeypatch.setattr(settings, "LOG_DIR", str(tmp_path))
+    monkeypatch.setattr(settings, "LOG_TEXT_FILE", "ordered.log")
+    monkeypatch.setattr(settings, "LOG_JSON_FILE", "ordered.json.log")
+    monkeypatch.setattr(settings, "LOG_ROTATION_MODE", "size")
+    monkeypatch.setattr(settings, "LOG_MAX_BYTES", 10_000_000)
+    monkeypatch.setattr(settings, "LOG_BACKUP_COUNT", 2)
+    monkeypatch.setattr(settings, "LOG_UTC", True)
+    logging_contract.configure_logging()
+
+    clear_incident_context()
+    incident_id = str(uuid4())
+    rid = incident_rid(incident_id)
+    set_trace_id("trc-order-test")
+    logging_contract.logger.info(
+        "ordered_fields",
+        incident_id=incident_id,
+        correlation_id="corr-order-test",
+    )
+
+    for handler in logging.getLogger().handlers:
+        handler.flush()
+
+    text_line = (tmp_path / "ordered.log").read_text(encoding="utf-8").strip()
+    level_match = re.search(r"\[info\s*\]", text_line)
+    assert level_match is not None
+    rid_pos = text_line.index(f"rid={rid}")
+    correlation_pos = text_line.index("correlation_id=corr-order-test")
+    trace_pos = text_line.index("trace_id=trc-order-test")
+    event_pos = text_line.index("ordered_fields")
+    assert level_match.end() < rid_pos < correlation_pos < trace_pos < event_pos
+
+    json_line = (tmp_path / "ordered.json.log").read_text(encoding="utf-8").strip()
+    assert json_line.index('"level"') < json_line.index('"rid"')
+    assert json_line.index('"rid"') < json_line.index('"correlation_id"')
+    assert json_line.index('"correlation_id"') < json_line.index('"trace_id"')
+    assert json_line.index('"trace_id"') < json_line.index('"event"')
+    item = json.loads(json_line)
+    assert item["rid"] == rid
+    assert item["correlation_id"] == "corr-order-test"
+    assert item["trace_id"] == "trc-order-test"
+    set_trace_id("")
+    clear_incident_context()
 
 
 def test_hourly_logrotate_policy_and_timer_are_tracked():

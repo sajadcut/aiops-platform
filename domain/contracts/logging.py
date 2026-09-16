@@ -17,6 +17,8 @@ from domain.contracts.context import (
 )
 from domain.contracts.redaction import redact_event_dict
 
+_CORRELATION_KEYS = ("rid", "correlation_id", "trace_id")
+
 
 def _correlation_context_processor(_logger, _method_name: str, event_dict: Dict[str, Any]) -> Dict[str, Any]:
     """Attach request trace + stable Incident RID to every log event.
@@ -44,6 +46,42 @@ def _correlation_context_processor(_logger, _method_name: str, event_dict: Dict[
     return event_dict
 
 
+def _correlation_first_fields(_logger, _method_name: str, event_dict: Dict[str, Any]) -> Dict[str, Any]:
+    """Keep correlation identifiers immediately after log level in serialized logs."""
+    ordered: Dict[str, Any] = {}
+    for key in ("timestamp", "level", *_CORRELATION_KEYS, "event", "logger"):
+        if key in event_dict:
+            ordered[key] = event_dict[key]
+    for key, value in event_dict.items():
+        if key not in ordered:
+            ordered[key] = value
+    return ordered
+
+
+def _inline_correlation_value(value: Any) -> str:
+    """Render one correlation value without allowing it to break the log line."""
+    return str(value).replace("\r", "\\r").replace("\n", "\\n").replace("\t", "\\t")
+
+
+def _human_console_renderer():
+    """Render correlation identifiers directly after ``[level]`` in text logs."""
+    base_renderer = structlog.dev.ConsoleRenderer(colors=False, sort_keys=False)
+
+    def render(logger, method_name: str, event_dict: Dict[str, Any]) -> str:
+        payload = dict(event_dict)
+        correlation_parts = []
+        for key in _CORRELATION_KEYS:
+            value = payload.pop(key, None)
+            if value not in (None, ""):
+                correlation_parts.append(f"{key}={_inline_correlation_value(value)}")
+        if correlation_parts:
+            event = str(payload.get("event") or "")
+            payload["event"] = f"{' '.join(correlation_parts)} {event}".strip()
+        return base_renderer(logger, method_name, payload)
+
+    return render
+
+
 def _processor_formatter(renderer):
     foreign_pre_chain = [
         structlog.stdlib.add_log_level,
@@ -54,6 +92,7 @@ def _processor_formatter(renderer):
         structlog.processors.StackInfoRenderer(),
         structlog.processors.format_exc_info,
         redact_event_dict,
+        _correlation_first_fields,
     ]
     return structlog.stdlib.ProcessorFormatter(
         processor=renderer,
@@ -87,7 +126,8 @@ def configure_logging() -> None:
     processors, including traceback text from stdlib/FastAPI/Uvicorn loggers.
     Canonical Incident events carry a stable ``rid`` so one Incident can be
     traced across request, agent, MCP, approval, execution and verification
-    logs without adding a database column.
+    logs without adding a database column. Correlation identifiers are rendered
+    immediately after the log level for fast operator scanning.
     """
     log_level = getattr(logging, settings.LOG_LEVEL.upper(), logging.INFO)
 
@@ -102,6 +142,7 @@ def configure_logging() -> None:
             structlog.processors.format_exc_info,
             redact_event_dict,
             structlog.processors.UnicodeDecoder(),
+            _correlation_first_fields,
             structlog.stdlib.ProcessorFormatter.wrap_for_formatter,
         ],
         context_class=dict,
@@ -110,8 +151,8 @@ def configure_logging() -> None:
         cache_logger_on_first_use=True,
     )
 
-    human_formatter = _processor_formatter(structlog.dev.ConsoleRenderer(colors=False))
-    json_formatter = _processor_formatter(structlog.processors.JSONRenderer(sort_keys=True))
+    human_formatter = _processor_formatter(_human_console_renderer())
+    json_formatter = _processor_formatter(structlog.processors.JSONRenderer(sort_keys=False))
 
     handlers: list[logging.Handler] = []
     if settings.LOG_CONSOLE_ENABLED:
