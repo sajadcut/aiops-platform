@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 278 | Dashboard JS files scanned: 2 | Symbols indexed: 1918**
+**Python files scanned: 279 | Dashboard JS files scanned: 2 | Symbols indexed: 1928**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1387,6 +1387,16 @@
 | `tests/unit/test_application_reliability_engine.py` | `test_conflicting_metrics_and_logs_are_exposed_instead_of_hidden` | 219 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_application_reliability_engine.py` | `test_agent_preserves_expected_observation_and_auto_handoffs_on_stronger_downstream_evidence` | 244 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_application_reliability_engine.py` | `test_mutating_application_recommendation_remains_approval_required` | 273 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_application_trace_peer_context.py` | `ApplicationContextLLM` | 11 | class | کلاس | module |
+| `tests/unit/test_application_trace_peer_context.py` | `ApplicationContextLLM.__init__` | 12 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ApplicationContextLLM |
+| `tests/unit/test_application_trace_peer_context.py` | `ApplicationContextLLM.provider_name` | 16 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ApplicationContextLLM |
+| `tests/unit/test_application_trace_peer_context.py` | `ApplicationContextLLM.generate` | 19 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ApplicationContextLLM |
+| `tests/unit/test_application_trace_peer_context.py` | `ApplicationContextLLM.generate_with_messages` | 49 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ApplicationContextLLM |
+| `tests/unit/test_application_trace_peer_context.py` | `test_trace_path_analysis_reconstructs_parent_child_chain_instead_of_longest_span_only` | 53 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_application_trace_peer_context.py` | `test_trace_path_analysis_marks_missing_parent_as_incomplete` | 102 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_application_trace_peer_context.py` | `test_unverified_dependency_peer_finding_cannot_create_handoff` | 122 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_application_trace_peer_context.py` | `test_dependency_peer_finding_with_live_reference_can_request_independent_handoff` | 143 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_application_trace_peer_context.py` | `test_application_agent_consumes_linked_change_peer_context_without_promoting_peer_to_evidence` | 168 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_approval_api_transitions.py` | `Identity` | 7 | class | کلاس | module |
 | `tests/unit/test_approval_api_transitions.py` | `Identity.__init__` | 8 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | Identity |
 | `tests/unit/test_approval_api_transitions.py` | `FakeDB` | 13 | class | کلاس | module |
