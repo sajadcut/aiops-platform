@@ -53,12 +53,12 @@
 | `agents/database/__init__.py` | `DatabaseAgent` | 4 | class | کلاس | module |
 | `agents/dependency/__init__.py` | `DependencyAgent` | 4 | class | کلاس | module |
 | `agents/identity/__init__.py` | `IdentityAgent` | 4 | class | کلاس | module |
-| `agents/infrastructure/__init__.py` | `InfrastructureAgent` | 11 | class | کلاس | module |
-| `agents/infrastructure/__init__.py` | `InfrastructureAgent.__init__` | 12 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | InfrastructureAgent |
-| `agents/infrastructure/__init__.py` | `InfrastructureAgent.name` | 16 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | InfrastructureAgent |
-| `agents/infrastructure/__init__.py` | `InfrastructureAgent.description` | 20 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | InfrastructureAgent |
-| `agents/infrastructure/__init__.py` | `InfrastructureAgent.allowed_tools` | 24 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | InfrastructureAgent |
-| `agents/infrastructure/__init__.py` | `InfrastructureAgent.analyze` | 27 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | InfrastructureAgent |
+| `agents/infrastructure/__init__.py` | `InfrastructureAgent` | 12 | class | کلاس | module |
+| `agents/infrastructure/__init__.py` | `InfrastructureAgent.__init__` | 13 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | InfrastructureAgent |
+| `agents/infrastructure/__init__.py` | `InfrastructureAgent.name` | 17 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | InfrastructureAgent |
+| `agents/infrastructure/__init__.py` | `InfrastructureAgent.description` | 21 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | InfrastructureAgent |
+| `agents/infrastructure/__init__.py` | `InfrastructureAgent.allowed_tools` | 25 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | InfrastructureAgent |
+| `agents/infrastructure/__init__.py` | `InfrastructureAgent.analyze` | 28 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | InfrastructureAgent |
 | `agents/infrastructure/engine.py` | `_raw` | 15 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/infrastructure/engine.py` | `_labels` | 20 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/infrastructure/engine.py` | `_first` | 26 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
