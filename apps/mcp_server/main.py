@@ -91,13 +91,12 @@ def _authorize(authorization: str | None, tool: str | None = None) -> str:
         raise HTTPException(status_code=503, detail="mcp_server_auth_required_in_production")
     if not settings.MCP_SERVER_REQUIRE_AUTH:
         return "mcp-anonymous-development"
-    write = tool in _WRITE_TOOLS
-    token = settings.MCP_WRITE_BEARER_TOKEN if write else settings.MCP_BEARER_TOKEN
+    token = settings.MCP_BEARER_TOKEN
     if not token:
-        raise HTTPException(status_code=503, detail="mcp_write_identity_not_configured" if write else "mcp_server_identity_not_configured")
+        raise HTTPException(status_code=503, detail="mcp_control_plane_identity_not_configured")
     if not authorization or not hmac.compare_digest(authorization, f"Bearer {token}"):
-        raise HTTPException(status_code=401, detail="invalid_mcp_identity")
-    return "mcp-write" if write else "mcp-read"
+        raise HTTPException(status_code=401, detail="invalid_mcp_control_plane_identity")
+    return "mcp-control-plane"
 
 
 async def _call(provider: str, tool: str, args: Dict[str, Any]) -> Any:
@@ -177,12 +176,8 @@ def _validate_production_server() -> None:
     if not settings.MCP_SERVER_REQUIRE_AUTH:
         errors.append("MCP_SERVER_REQUIRE_AUTH must be true")
     if not settings.MCP_BEARER_TOKEN:
-        errors.append("MCP_BEARER_TOKEN is required")
+        errors.append("MCP_BEARER_TOKEN is required as the fixed Control-Plane MCP API key")
     if provider == "vm":
-        if not settings.MCP_WRITE_BEARER_TOKEN:
-            errors.append("MCP_WRITE_BEARER_TOKEN is required for VM writes")
-        elif settings.MCP_WRITE_BEARER_TOKEN == settings.MCP_BEARER_TOKEN:
-            errors.append("VM read and write identities must be distinct")
         try:
             SSHVMConnector()
         except Exception as exc:
