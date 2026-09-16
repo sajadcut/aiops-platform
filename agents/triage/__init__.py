@@ -139,14 +139,25 @@ Incident={input_data.incident_id}\nService={input_data.service_name}\nSummary={i
             route for route in self.normalize_list(result.get("specialist_routes"), settings.AGENT_MAX_PARALLELISM)
             if route in valid_routes
         ]
-        # handoff_agents remains backward compatible for external clients. Runtime
-        # coordinator consumes analysis_details.specialist_routes for adaptive fan-out.
+        # handoff_agents is a public/backward-compatible surface. Runtime fan-out
+        # consumes analysis_details.specialist_routes. Under low-confidence ambiguity
+        # without a deterministic cross-layer causal match, keep explicit model routes
+        # stable for older clients while the coordinator still performs bounded broad
+        # investigation from specialist_routes.
         handoff_routes: List[str] = []
-        for route in legacy_asset_routes + focused_routes + model_routes + ([primary] if primary in valid_routes else []) + secondary:
-            if route in valid_routes and route not in handoff_routes:
-                handoff_routes.append(route)
-            if len(handoff_routes) >= settings.AGENT_MAX_PARALLELISM:
-                break
+        if band == "low" and model_routes and not decision.get("causal_matches"):
+            compatibility_routes = ([model_primary] if model_primary in valid_routes else []) + model_routes + model_secondary
+            for route in compatibility_routes:
+                if route in valid_routes and route not in handoff_routes:
+                    handoff_routes.append(route)
+                if len(handoff_routes) >= settings.AGENT_MAX_PARALLELISM:
+                    break
+        else:
+            for route in legacy_asset_routes + focused_routes + model_routes + ([primary] if primary in valid_routes else []) + secondary:
+                if route in valid_routes and route not in handoff_routes:
+                    handoff_routes.append(route)
+                if len(handoff_routes) >= settings.AGENT_MAX_PARALLELISM:
+                    break
 
         missing = self.normalize_list(result.get("missing_evidence"), 8)
         for gap in decision.get("evidence_gap_matrix", []):
