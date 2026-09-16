@@ -212,7 +212,7 @@
     const approval = S.detail?.lifecycle?.approval;
     if (!approval?.approval_id || lower(approval.status) !== 'pending') return;
     const risk = lower(approval.risk_level);
-    const first = window.confirm(`Approve governed action "${approval.action}"?\n\nThis grants authorization but does NOT execute it yet.`);
+    const first = window.confirm(`Approve governed action \"${approval.action}\"?\n\nThis grants authorization but does NOT execute it yet.`);
     if (!first) return;
     if (risk === 'high' && !window.confirm('HIGH-RISK approval: confirm that you reviewed target, tool, evidence, runbook and blast radius.')) return;
     try {
@@ -235,7 +235,7 @@
       input?.focus();
       return;
     }
-    if (!window.confirm(`Reject governed action "${approval.action}"?`)) return;
+    if (!window.confirm(`Reject governed action \"${approval.action}\"?`)) return;
     try {
       await api(`/api/v1/approvals/${encodeURIComponent(approval.approval_id)}/reject`, {
         method: 'POST',
@@ -322,4 +322,115 @@
   window.selectIncident = selectIncident;
   window.renderDetail = renderDetail;
   window.loadAll = loadAll;
+})();
+
+(() => {
+  const baseRenderDetailForAgentAnalysis = window.renderDetail;
+  const baseLoadAgentsForCompatibility = typeof loadAgents === 'function' ? loadAgents : window.loadAgents;
+
+  const list = value => Array.isArray(value) ? value : value == null ? [] : [value];
+  const uniqueText = values => [...new Set(values.flatMap(list).map(value => String(value ?? '').trim()).filter(Boolean))];
+
+  function safeJson(value, limit = 18000) {
+    try {
+      const raw = JSON.stringify(value ?? {}, null, 2);
+      return raw.length > limit ? `${raw.slice(0, limit)}\n… dashboard preview truncated; full payload remains durable in the API.` : raw;
+    } catch {
+      return '{"error":"unserializable dashboard payload"}';
+    }
+  }
+
+  function detailsFor(agent) {
+    return agent?.analysis_details && typeof agent.analysis_details === 'object' && !Array.isArray(agent.analysis_details)
+      ? agent.analysis_details
+      : {};
+  }
+
+  function analyzerKeys(details) {
+    return Object.keys(details)
+      .filter(key => key.endsWith('_analysis') && !['deterministic_analysis', 'shared_deterministic_analysis'].includes(key))
+      .slice(0, 8);
+  }
+
+  function candidateCount(details) {
+    return Object.entries(details).reduce((total, [key, value]) => {
+      if (!Array.isArray(value)) return total;
+      return /(candidate|hypoth|contributor|cause)/i.test(key) ? total + value.length : total;
+    }, 0);
+  }
+
+  function agentAnalysisCard(agent) {
+    const details = detailsFor(agent);
+    const telemetry = details.analyzer_telemetry && typeof details.analyzer_telemetry === 'object'
+      ? details.analyzer_telemetry
+      : {};
+    const analyzers = analyzerKeys(details);
+    const missing = uniqueText([
+      ...(agent.missing_evidence || []),
+      ...(details.missing_evidence || []),
+      ...(details.evidence_gaps || []),
+    ]).slice(0, 10);
+    const stale = uniqueText(details.stale_evidence_ids || []).slice(0, 10);
+    const nextBest = uniqueText(details.next_best_evidence || []).slice(0, 8);
+    const handoffs = uniqueText([
+      ...(agent.handoff_agents || []),
+      ...(details.handoff_agents || []),
+    ]).slice(0, 8);
+    const candidates = candidateCount(details);
+    const executionBoundary = details.execution_boundary || details.policy?.execution_boundary || 'analysis_only';
+    const analyzerDuration = telemetry.duration_ms != null ? `${Number(telemetry.duration_ms).toFixed(1)} ms` : '—';
+
+    return `<article class="agent-card">
+      <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start">
+        <div><span class="section-kicker">Specialist analysis</span><h4>${esc(agent.agent_name || agent.agent || 'agent')}</h4></div>
+        ${pill(agent.health_status || agent.severity || 'analyzed')}
+      </div>
+      <p>${esc(agent.statement || agent.finding_type || 'Structured specialist analysis')}</p>
+      <div class="fact-grid">
+        <div class="fact"><label>Confidence</label><strong>${pct(agent.confidence)}</strong></div>
+        <div class="fact"><label>Evidence coverage</label><strong>${pct(agent.evidence_coverage)}</strong></div>
+        <div class="fact"><label>Candidates</label><strong>${candidates}</strong></div>
+        <div class="fact"><label>Analyzer time</label><strong>${esc(analyzerDuration)}</strong></div>
+        <div class="fact"><label>Missing evidence</label><strong>${missing.length}</strong></div>
+        <div class="fact"><label>Stale evidence</label><strong>${stale.length}</strong></div>
+      </div>
+      <div class="tags">${analyzers.map(key => `<span>${esc(key.replace(/_analysis$/, ''))}</span>`).join('')}${handoffs.map(name => `<span>handoff:${esc(name)}</span>`).join('')}<span>${esc(executionBoundary)}</span></div>
+      ${missing.length ? `<div class="insight-card"><h4>Missing evidence</h4><p>${esc(missing.join(' · '))}</p></div>` : ''}
+      ${nextBest.length ? `<div class="insight-card"><h4>Next best evidence</h4><p>${esc(nextBest.join(' · '))}</p></div>` : ''}
+      ${stale.length ? `<div class="insight-card"><h4>Stale evidence excluded / penalized</h4><p>${esc(stale.join(' · '))}</p></div>` : ''}
+      <details class="insight-card"><summary>Full structured analysis</summary><div class="json">${esc(safeJson(agent))}</div></details>
+    </article>`;
+  }
+
+  renderDetail = function renderDetailWithAgentAnalysis(tab = 'overview') {
+    baseRenderDetailForAgentAnalysis(tab);
+    if (tab !== 'agents') return;
+    const pane = document.querySelector('#detailPane');
+    if (!pane) return;
+    const lifecycle = S.detail?.lifecycle || {};
+    const agents = Array.isArray(lifecycle.agents) ? lifecycle.agents : [];
+    const coordination = lifecycle.coordination || {};
+    const routing = lifecycle.routing || {};
+    pane.innerHTML = `<div class="insight-card"><h4>Specialist routing & coordination</h4><p>${esc(coordination.summary || coordination.statement || 'Deterministic routing, peer coordination and evidence requests are preserved below.')}</p><div class="json">${esc(safeJson({routing, coordination}, 10000))}</div></div>`
+      + (agents.map(agentAnalysisCard).join('') || '<div class="empty-state">No specialist findings recorded.</div>');
+  };
+  window.renderDetail = renderDetail;
+
+  if (typeof baseLoadAgentsForCompatibility === 'function') {
+    loadAgents = async function loadAgentsWithReliabilityContract() {
+      await baseLoadAgentsForCompatibility();
+      const metricByAgent = {};
+      (S.agentMetrics || []).forEach(metric => {
+        metricByAgent[metric.agent_name || metric.agent] = metric;
+      });
+      document.querySelectorAll('#agentsGrid .agent-manifest').forEach((card, index) => {
+        const agent = (S.agents || [])[index] || {};
+        const metric = metricByAgent[agent.name] || {};
+        const requirements = uniqueText(agent.evidence_requirements || []).slice(0, 6);
+        const handoffs = uniqueText(agent.handoff_targets || []).slice(0, 6);
+        card.insertAdjacentHTML('beforeend', `<div class="tags"><span>${esc(agent.production_status || 'analysis_only')}</span>${requirements.map(item => `<span>evidence:${esc(item)}</span>`).join('')}${handoffs.map(item => `<span>handoff:${esc(item)}</span>`).join('')}</div><div class="mini-metrics"><div><label>Evidence coverage</label><strong>${pct(metric.average_evidence_coverage || 0)}</strong></div><div><label>Failures</label><strong>${metric.failures ?? 0}</strong></div><div><label>Handoffs</label><strong>${metric.handoffs ?? 0}</strong></div><div><label>Conflicts</label><strong>${metric.conflicts ?? 0}</strong></div></div>`);
+      });
+    };
+    window.loadAgents = loadAgents;
+  }
 })();
