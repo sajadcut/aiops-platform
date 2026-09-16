@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 270 | Dashboard JS files scanned: 2 | Symbols indexed: 1786**
+**Python files scanned: 270 | Dashboard JS files scanned: 2 | Symbols indexed: 1787**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -133,7 +133,8 @@
 | `apps/api/agents.py` | `_CatalogOnlyLLMAdapter.generate` | 25 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _CatalogOnlyLLMAdapter |
 | `apps/api/agents.py` | `_CatalogOnlyLLMAdapter.generate_with_messages` | 35 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _CatalogOnlyLLMAdapter |
 | `apps/api/agents.py` | `agent_catalog` | 46 | async function | Return the specialist catalog without requiring an operational LLM runtime. | module |
-| `apps/api/agents.py` | `agent_metrics` | 65 | async function | Return process-local Agent observability counters. | module |
+| `apps/api/agents.py` | `_agent_metric_items` | 64 | function | Normalize process-local telemetry into the dashboard/API list contract. | module |
+| `apps/api/agents.py` | `agent_metrics` | 77 | async function | Return process-local Agent observability counters. | module |
 | `apps/api/audit.py` | `list_audit_events` | 15 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
 | `apps/api/cognia_scope.py` | `reject_untrusted_knowledge_subject` | 8 | function | Reject caller-supplied Cognia ExternalSubject scope on public workflow APIs. | module |
 | `apps/api/dashboard.py` | `dashboard_summary` | 15 | async function | Return live PostgreSQL-backed KPIs. Database failures are never converted to fake zeroes. | module |
