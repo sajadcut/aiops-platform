@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 302 | Dashboard JS files scanned: 2 | Symbols indexed: 2362**
+**Python files scanned: 303 | Dashboard JS files scanned: 2 | Symbols indexed: 2384**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -2223,6 +2223,28 @@
 | `tests/unit/test_security_incident_engine.py` | `StaticSecurityLLM.generate_with_messages` | 204 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | StaticSecurityLLM |
 | `tests/unit/test_security_incident_engine.py` | `test_agent_blocks_llm_compromise_upgrade_and_keeps_containment_approval_required` | 209 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_security_incident_engine.py` | `test_identity_network_application_peer_findings_are_auxiliary_and_require_live_link` | 241 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_storage_reliability_engine.py` | `metric` | 11 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_storage_reliability_engine.py` | `telemetry` | 25 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_storage_reliability_engine.py` | `analyze` | 37 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_storage_reliability_engine.py` | `codes` | 45 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_storage_reliability_engine.py` | `candidate` | 49 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_storage_reliability_engine.py` | `test_capacity_exhaustion_is_distinct_from_inode_exhaustion` | 53 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_storage_reliability_engine.py` | `test_inode_exhaustion_is_independent_of_capacity` | 64 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_storage_reliability_engine.py` | `test_high_await_queue_and_utilization_create_io_saturation_candidate` | 74 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_storage_reliability_engine.py` | `test_device_io_error_is_stronger_than_smart_warning_alone` | 87 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_storage_reliability_engine.py` | `test_smart_warning_alone_is_probabilistic_not_certain_failure` | 98 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_storage_reliability_engine.py` | `test_slow_distributed_storage_surfaces_ceph_health_and_remote_latency` | 108 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_storage_reliability_engine.py` | `test_healthy_busy_disk_is_not_labeled_io_saturation` | 130 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_storage_reliability_engine.py` | `test_database_driven_io_pressure_is_workload_candidate_and_temporally_correlated` | 144 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_storage_reliability_engine.py` | `test_application_write_burst_is_separate_from_storage_origin` | 159 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_storage_reliability_engine.py` | `test_persistent_volume_attach_mount_and_multipath_failure_are_structured` | 170 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_storage_reliability_engine.py` | `test_read_only_filesystem_is_corruption_symptom_not_automatic_physical_failure` | 180 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_storage_reliability_engine.py` | `CapturingStorageLLM` | 188 | class | کلاس | module |
+| `tests/unit/test_storage_reliability_engine.py` | `CapturingStorageLLM.__init__` | 189 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CapturingStorageLLM |
+| `tests/unit/test_storage_reliability_engine.py` | `CapturingStorageLLM.provider_name` | 193 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CapturingStorageLLM |
+| `tests/unit/test_storage_reliability_engine.py` | `CapturingStorageLLM.generate` | 196 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CapturingStorageLLM |
+| `tests/unit/test_storage_reliability_engine.py` | `CapturingStorageLLM.generate_with_messages` | 221 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CapturingStorageLLM |
+| `tests/unit/test_storage_reliability_engine.py` | `test_storage_agent_exposes_deterministic_layers_before_llm_synthesis` | 226 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_structured_agent_resilience.py` | `FakeLLM` | 12 | class | کلاس | module |
 | `tests/unit/test_structured_agent_resilience.py` | `FakeLLM.__init__` | 13 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeLLM |
 | `tests/unit/test_structured_agent_resilience.py` | `FakeLLM.provider_name` | 18 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeLLM |
