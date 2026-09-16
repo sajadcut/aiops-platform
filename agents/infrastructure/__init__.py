@@ -83,12 +83,11 @@ Incident={input_data.incident_id}\nService={input_data.service_name}\nSummary={i
             }
             missing = sorted(set(missing + ["successful structured infrastructure analysis"]))
 
-        deterministic_gap_reasons = [
-            str(row.get("reason"))
-            for row in infrastructure_analysis.get("evidence_gaps", [])
-            if isinstance(row, dict) and row.get("reason")
-        ]
-        all_missing = sorted(set(missing + self.normalize_list(result.get("missing_evidence"), 8) + deterministic_gap_reasons[:4]))
+        # Keep missing_evidence backward-compatible: deterministic evidence gaps are
+        # advisory investigation targets and remain in analysis_details/next_best_evidence.
+        # They must not convert an otherwise complete historical scenario into a
+        # missing-evidence result merely because richer USE telemetry could exist.
+        all_missing = sorted(set(missing + self.normalize_list(result.get("missing_evidence"), 8)))
         hypotheses = []
         conflict_count = 0
         for item in result.get("hypotheses", [])[: settings.AGENT_MAX_HYPOTHESES]:
