@@ -32,12 +32,12 @@
 | `agents/messaging/__init__.py` | `MessagingAgent` | 4 | class | کلاس | module |
 | `agents/network/__init__.py` | `NetworkAgent` | 4 | class | کلاس | module |
 | `agents/recovery/__init__.py` | `RecoveryAgent` | 4 | class | کلاس | module |
-| `agents/security/__init__.py` | `SecurityAgent` | 10 | class | کلاس | module |
-| `agents/security/__init__.py` | `SecurityAgent.__init__` | 11 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SecurityAgent |
-| `agents/security/__init__.py` | `SecurityAgent.name` | 15 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SecurityAgent |
-| `agents/security/__init__.py` | `SecurityAgent.description` | 19 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SecurityAgent |
-| `agents/security/__init__.py` | `SecurityAgent.allowed_tools` | 23 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SecurityAgent |
-| `agents/security/__init__.py` | `SecurityAgent.analyze` | 26 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SecurityAgent |
+| `agents/security/__init__.py` | `SecurityAgent` | 11 | class | کلاس | module |
+| `agents/security/__init__.py` | `SecurityAgent.__init__` | 12 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SecurityAgent |
+| `agents/security/__init__.py` | `SecurityAgent.name` | 16 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SecurityAgent |
+| `agents/security/__init__.py` | `SecurityAgent.description` | 20 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SecurityAgent |
+| `agents/security/__init__.py` | `SecurityAgent.allowed_tools` | 24 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SecurityAgent |
+| `agents/security/__init__.py` | `SecurityAgent.analyze` | 27 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SecurityAgent |
 | `agents/shared/a2a_agent.py` | `A2AAgentCard` | 12 | class | کلاس | module |
 | `agents/shared/a2a_agent.py` | `A2AAgent` | 20 | class | Authenticated, bounded transport for optional agent-to-agent RPC. | module |
 | `agents/shared/a2a_agent.py` | `A2AAgent.__init__` | 28 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | A2AAgent |
