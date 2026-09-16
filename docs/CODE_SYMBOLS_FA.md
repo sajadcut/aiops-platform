@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 292 | Dashboard JS files scanned: 2 | Symbols indexed: 2173**
+**Python files scanned: 292 | Dashboard JS files scanned: 2 | Symbols indexed: 2176**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -2048,22 +2048,25 @@
 | `tests/unit/test_runtime_log_regressions.py` | `test_identical_support_and_conflict_agent_sets_do_not_create_false_disagreement` | 96 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_runtime_log_regressions.py` | `test_requested_round_keeps_unavailable_status_but_returns_no_new_evidence` | 134 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_security_incident_engine.py` | `log` | 12 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `tests/unit/test_security_incident_engine.py` | `test_failed_login_storm_is_observed_not_confirmed_compromise` | 25 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_security_incident_engine.py` | `test_expired_token_is_false_positive_candidate_not_credential_theft` | 46 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_security_incident_engine.py` | `test_misconfigured_rbac_stays_policy_violation_without_attack_claim` | 57 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_security_incident_engine.py` | `test_suspicious_process_and_privilege_signals_build_structured_hypothesis` | 68 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_security_incident_engine.py` | `test_network_scan_like_activity_is_aggregated_across_destinations` | 90 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_security_incident_engine.py` | `test_duplicate_noisy_logs_are_false_positive_signal_not_independent_events` | 113 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_security_incident_engine.py` | `test_insufficient_evidence_requests_verification_instead_of_attack_label` | 122 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_security_incident_engine.py` | `test_single_alert_text_never_establishes_confirmed_compromise` | 135 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_security_incident_engine.py` | `test_confirmed_compromise_requires_independent_high_specificity_sources` | 144 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_security_incident_engine.py` | `test_security_prompt_projection_redacts_secret_token_values_in_keys_and_free_text` | 155 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_security_incident_engine.py` | `StaticSecurityLLM` | 172 | class | کلاس | module |
-| `tests/unit/test_security_incident_engine.py` | `StaticSecurityLLM.__init__` | 173 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | StaticSecurityLLM |
-| `tests/unit/test_security_incident_engine.py` | `StaticSecurityLLM.provider_name` | 177 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | StaticSecurityLLM |
-| `tests/unit/test_security_incident_engine.py` | `StaticSecurityLLM.generate` | 180 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | StaticSecurityLLM |
-| `tests/unit/test_security_incident_engine.py` | `test_agent_blocks_llm_compromise_upgrade_and_keeps_containment_approval_required` | 185 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_security_incident_engine.py` | `test_identity_network_application_peer_findings_are_auxiliary_and_require_live_link` | 232 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_security_incident_engine.py` | `test_failed_login_storm_is_observed_not_confirmed_compromise` | 19 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_security_incident_engine.py` | `test_expired_token_is_false_positive_candidate_not_credential_theft` | 36 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_security_incident_engine.py` | `test_misconfigured_rbac_stays_policy_violation_without_attack_claim` | 46 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_security_incident_engine.py` | `test_suspicious_process_and_privilege_signals_build_structured_hypothesis` | 56 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_security_incident_engine.py` | `test_process_tree_uses_pid_parent_relationship_without_inventing_maliciousness` | 73 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_security_incident_engine.py` | `test_network_scan_like_activity_is_aggregated_across_destinations` | 98 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_security_incident_engine.py` | `test_duplicate_noisy_logs_are_false_positive_signal_not_independent_events` | 115 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_security_incident_engine.py` | `test_identity_network_application_timeline_correlation_is_scope_overlap_not_causation` | 126 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_security_incident_engine.py` | `test_insufficient_evidence_requests_verification_instead_of_attack_label` | 152 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_security_incident_engine.py` | `test_single_alert_text_never_establishes_confirmed_compromise` | 162 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_security_incident_engine.py` | `test_confirmed_compromise_requires_independent_high_specificity_sources` | 170 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_security_incident_engine.py` | `test_security_prompt_projection_redacts_secret_token_values_in_keys_and_free_text` | 180 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_security_incident_engine.py` | `StaticSecurityLLM` | 193 | class | کلاس | module |
+| `tests/unit/test_security_incident_engine.py` | `StaticSecurityLLM.__init__` | 194 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | StaticSecurityLLM |
+| `tests/unit/test_security_incident_engine.py` | `StaticSecurityLLM.provider_name` | 198 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | StaticSecurityLLM |
+| `tests/unit/test_security_incident_engine.py` | `StaticSecurityLLM.generate` | 201 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | StaticSecurityLLM |
+| `tests/unit/test_security_incident_engine.py` | `StaticSecurityLLM.generate_with_messages` | 204 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | StaticSecurityLLM |
+| `tests/unit/test_security_incident_engine.py` | `test_agent_blocks_llm_compromise_upgrade_and_keeps_containment_approval_required` | 209 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_security_incident_engine.py` | `test_identity_network_application_peer_findings_are_auxiliary_and_require_live_link` | 241 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_structured_agent_resilience.py` | `FakeLLM` | 12 | class | کلاس | module |
 | `tests/unit/test_structured_agent_resilience.py` | `FakeLLM.__init__` | 13 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeLLM |
 | `tests/unit/test_structured_agent_resilience.py` | `FakeLLM.provider_name` | 18 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeLLM |
