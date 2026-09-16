@@ -23,12 +23,12 @@
 | `agents/infrastructure/__init__.py` | `InfrastructureAgent.description` | 20 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | InfrastructureAgent |
 | `agents/infrastructure/__init__.py` | `InfrastructureAgent.allowed_tools` | 24 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | InfrastructureAgent |
 | `agents/infrastructure/__init__.py` | `InfrastructureAgent.analyze` | 27 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | InfrastructureAgent |
-| `agents/kubernetes/__init__.py` | `KubernetesAgent` | 10 | class | کلاس | module |
-| `agents/kubernetes/__init__.py` | `KubernetesAgent.__init__` | 11 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KubernetesAgent |
-| `agents/kubernetes/__init__.py` | `KubernetesAgent.name` | 15 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KubernetesAgent |
-| `agents/kubernetes/__init__.py` | `KubernetesAgent.description` | 19 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KubernetesAgent |
-| `agents/kubernetes/__init__.py` | `KubernetesAgent.allowed_tools` | 23 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KubernetesAgent |
-| `agents/kubernetes/__init__.py` | `KubernetesAgent.analyze` | 26 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KubernetesAgent |
+| `agents/kubernetes/__init__.py` | `KubernetesAgent` | 11 | class | کلاس | module |
+| `agents/kubernetes/__init__.py` | `KubernetesAgent.__init__` | 12 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KubernetesAgent |
+| `agents/kubernetes/__init__.py` | `KubernetesAgent.name` | 16 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KubernetesAgent |
+| `agents/kubernetes/__init__.py` | `KubernetesAgent.description` | 20 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KubernetesAgent |
+| `agents/kubernetes/__init__.py` | `KubernetesAgent.allowed_tools` | 24 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KubernetesAgent |
+| `agents/kubernetes/__init__.py` | `KubernetesAgent.analyze` | 27 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KubernetesAgent |
 | `agents/messaging/__init__.py` | `MessagingAgent` | 4 | class | کلاس | module |
 | `agents/network/__init__.py` | `NetworkAgent` | 4 | class | کلاس | module |
 | `agents/recovery/__init__.py` | `RecoveryAgent` | 4 | class | کلاس | module |
