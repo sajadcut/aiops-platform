@@ -61,11 +61,30 @@ async def agent_catalog():
     }
 
 
+def _agent_metric_items(snapshot: Dict[str, Dict[str, object]]) -> List[Dict[str, object]]:
+    """Normalize process-local telemetry into the dashboard/API list contract."""
+    items: List[Dict[str, object]] = []
+    for agent_name, raw in snapshot.items():
+        row: Dict[str, object] = {"agent_name": agent_name, **raw}
+        # Stable dashboard aliases while retaining the canonical telemetry fields.
+        row["average_confidence"] = raw.get("avg_confidence", 0.0)
+        row["average_evidence_coverage"] = raw.get("avg_evidence_coverage", 0.0)
+        items.append(row)
+    return items
+
+
 @router.get("/agents/metrics")
 async def agent_metrics():
     """Return process-local Agent observability counters.
 
     Durable per-incident decisions remain in Audit/Workflow state; these counters
-    are runtime health signals suitable for dashboards/exporters.
+    are runtime health signals suitable for dashboards/exporters. ``items`` is a
+    stable array for UI consumers; ``by_agent`` preserves the keyed snapshot for
+    programmatic consumers and diagnostics.
     """
-    return {"items": AgentTelemetry.snapshot(), "scope": "process_local_runtime"}
+    snapshot = AgentTelemetry.snapshot()
+    return {
+        "items": _agent_metric_items(snapshot),
+        "by_agent": snapshot,
+        "scope": "process_local_runtime",
+    }
