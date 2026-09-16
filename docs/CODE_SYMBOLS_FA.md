@@ -17,12 +17,12 @@
 | `agents/database/__init__.py` | `DatabaseAgent` | 4 | class | کلاس | module |
 | `agents/dependency/__init__.py` | `DependencyAgent` | 4 | class | کلاس | module |
 | `agents/identity/__init__.py` | `IdentityAgent` | 4 | class | کلاس | module |
-| `agents/infrastructure/__init__.py` | `InfrastructureAgent` | 10 | class | کلاس | module |
-| `agents/infrastructure/__init__.py` | `InfrastructureAgent.__init__` | 11 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | InfrastructureAgent |
-| `agents/infrastructure/__init__.py` | `InfrastructureAgent.name` | 15 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | InfrastructureAgent |
-| `agents/infrastructure/__init__.py` | `InfrastructureAgent.description` | 19 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | InfrastructureAgent |
-| `agents/infrastructure/__init__.py` | `InfrastructureAgent.allowed_tools` | 23 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | InfrastructureAgent |
-| `agents/infrastructure/__init__.py` | `InfrastructureAgent.analyze` | 26 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | InfrastructureAgent |
+| `agents/infrastructure/__init__.py` | `InfrastructureAgent` | 11 | class | کلاس | module |
+| `agents/infrastructure/__init__.py` | `InfrastructureAgent.__init__` | 12 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | InfrastructureAgent |
+| `agents/infrastructure/__init__.py` | `InfrastructureAgent.name` | 16 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | InfrastructureAgent |
+| `agents/infrastructure/__init__.py` | `InfrastructureAgent.description` | 20 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | InfrastructureAgent |
+| `agents/infrastructure/__init__.py` | `InfrastructureAgent.allowed_tools` | 24 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | InfrastructureAgent |
+| `agents/infrastructure/__init__.py` | `InfrastructureAgent.analyze` | 27 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | InfrastructureAgent |
 | `agents/kubernetes/__init__.py` | `KubernetesAgent` | 10 | class | کلاس | module |
 | `agents/kubernetes/__init__.py` | `KubernetesAgent.__init__` | 11 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KubernetesAgent |
 | `agents/kubernetes/__init__.py` | `KubernetesAgent.name` | 15 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KubernetesAgent |
