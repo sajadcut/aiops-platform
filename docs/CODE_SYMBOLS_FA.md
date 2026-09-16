@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 292 | Dashboard JS files scanned: 2 | Symbols indexed: 2176**
+**Python files scanned: 293 | Dashboard JS files scanned: 2 | Symbols indexed: 2194**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -387,6 +387,24 @@
 | `agents/vm/__init__.py` | `VMAgent.analyze` | 29 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMAgent |
 | `agents/vm/deterministic.py` | `_evidence_ref` | 6 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/vm/deterministic.py` | `classify_vm_service_fault` | 16 | function | Classify high-signal VM service faults from normalized live evidence. | module |
+| `agents/vm/engine.py` | `_raw` | 10 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/vm/engine.py` | `_eid` | 15 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/vm/engine.py` | `_parse_time` | 20 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/vm/engine.py` | `_timestamp` | 34 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/vm/engine.py` | `_scalar` | 43 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/vm/engine.py` | `_numeric` | 53 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/vm/engine.py` | `_bool` | 69 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/vm/engine.py` | `_diagnostic` | 85 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/vm/engine.py` | `_incident_start` | 89 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/vm/engine.py` | `_platform` | 102 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/vm/engine.py` | `_process_row` | 128 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/vm/engine.py` | `_process_analysis` | 160 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/vm/engine.py` | `_failed_dependencies` | 195 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/vm/engine.py` | `_service_row` | 204 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/vm/engine.py` | `_service_analysis` | 229 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/vm/engine.py` | `_boot_analysis` | 249 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/vm/engine.py` | `_causal_findings` | 273 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/vm/engine.py` | `build_vm_guest_analysis` | 299 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
 | `apps/api/a2a.py` | `a2a_request` | 13 | async function | Governed in-process A2A analysis endpoint. | module |
 | `apps/api/agents.py` | `_CatalogOnlyLLMAdapter` | 13 | class | Non-executable adapter used only to construct analysis metadata safely. | module |
 | `apps/api/agents.py` | `_CatalogOnlyLLMAdapter.provider_name` | 22 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _CatalogOnlyLLMAdapter |
