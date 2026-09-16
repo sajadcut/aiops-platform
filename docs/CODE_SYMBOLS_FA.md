@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 283 | Dashboard JS files scanned: 2 | Symbols indexed: 2039**
+**Python files scanned: 284 | Dashboard JS files scanned: 2 | Symbols indexed: 2042**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -140,6 +140,9 @@
 | `agents/kubernetes/engine.py` | `_classify_cause` | 750 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/kubernetes/engine.py` | `_gaps` | 764 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/kubernetes/engine.py` | `build_kubernetes_analysis` | 776 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
+| `agents/kubernetes/safety.py` | `_resource_kind` | 10 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/safety.py` | `_redact_payload` | 18 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/safety.py` | `safe_evidence_for_prompt` | 34 | function | Return a bounded-copy-friendly evidence set with Secret/ConfigMap payload values removed. | module |
 | `agents/messaging/__init__.py` | `MessagingAgent` | 4 | class | کلاس | module |
 | `agents/network/__init__.py` | `NetworkAgent` | 4 | class | کلاس | module |
 | `agents/recovery/__init__.py` | `_parse_time` | 8 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
