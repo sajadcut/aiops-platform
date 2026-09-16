@@ -2,6 +2,7 @@ import json
 from typing import List, Optional
 
 from agents.shared.base import AgentInput, AgentOutput, BaseAgent, OperationalHypothesis
+from agents.shared.intelligence import build_deterministic_analysis, prompt_evidence_projection, sanitize_prompt_value
 from domain.contracts.config import settings
 from domain.contracts.logging import logger
 from integrations.llm.base import LLMAdapter
@@ -26,15 +27,19 @@ class InfrastructureAgent(BaseAgent):
     async def analyze(self, input_data: AgentInput) -> AgentOutput:
         logger.info(f"InfrastructureAgent analyzing: {input_data.incident_id}")
         evidence = self.evidence_items(input_data)
+        prompt_evidence = prompt_evidence_projection(evidence, settings.AGENT_MAX_EVIDENCE_ITEMS)
+        deterministic = build_deterministic_analysis("infrastructure", evidence, ["metric"], input_data.service_name)
         evidence_ids = self.evidence_ids(input_data)
         auxiliary = self.auxiliary_context(input_data)
         metrics = [item for item in evidence if str(item.get("type", "")).lower() == "metric"]
         alerts = [item for item in evidence if str(item.get("type", "")).lower() == "alert"]
         missing = self.missing_evidence_for(input_data, ["metric"])
-        prompt = f"""You are a senior infrastructure/SRE analyst. LIVE EVIDENCE is authoritative. Knowledge RAG and Operational Memory are auxiliary only and cannot prove current host state. Do not infer saturation, capacity exhaustion, node failure or network faults without live evidence.
+        prompt = f"""You are a senior infrastructure/SRE reliability investigator. LIVE EVIDENCE is authoritative. Knowledge RAG and Operational Memory are auxiliary only and cannot prove current host state. Do not infer saturation, capacity exhaustion, node failure or network faults without live evidence.
+Use the USE model: utilization, saturation and errors. Distinguish high utilization that remains healthy from real saturation. Inspect any available CPU utilization/load versus cores/run queue/iowait/steal/throttling/softirq; memory available/working set/cache/swap/page faults/reclaim/OOM/PSI; disk utilization/await/queue depth/throughput/IOPS/device errors/capacity/inodes; kernel/system PSI, file descriptors, process count, conntrack, hung tasks and hardware telemetry; capacity baseline, percentile, growth and sudden contention. Separate application-driven host pressure, storage bottlenecks expressed as iowait, network interrupt pressure, VM steal and resource leaks.
+DETERMINISTIC_ANALYSIS contains bounded timeline, metric baseline deltas, evidence gaps and direct signals. It is observation-only. Every finding should state or imply when the anomaly appeared relative to the incident when timestamps exist. Prefer causal alternatives and falsification over threshold-only conclusions.
 Return JSON keys: severity, health_status, findings, saturation_signals, capacity_risks, network_signals, node_signals, probable_dependencies, affected_components, blast_radius, hypotheses, missing_evidence, handoff_agents, immediate_checks, escalation_target, risk_level, uncertainty_reason, confidence.
 Hypotheses entries: hypothesis, probability, evidence_ids, conflicting_evidence_ids, falsification_checks, impacted_components, recommended_next_evidence. Only live evidence IDs may be cited. Immediate checks are read-only.
-Incident={input_data.incident_id}\nService={input_data.service_name}\nSummary={input_data.evidence_summary}\nLIVE_EVIDENCE={json.dumps(evidence, default=str)}\nAUXILIARY_CONTEXT={json.dumps(auxiliary, default=str)}\nContextSummary={json.dumps(input_data.context.get('summary', {}), default=str)}"""
+Incident={input_data.incident_id}\nService={input_data.service_name}\nSummary={input_data.evidence_summary}\nDETERMINISTIC_ANALYSIS={json.dumps(deterministic, default=str)}\nLIVE_EVIDENCE={json.dumps(prompt_evidence, default=str)}\nAUXILIARY_CONTEXT={json.dumps(sanitize_prompt_value(auxiliary), default=str)}\nContextSummary={json.dumps(sanitize_prompt_value(input_data.context.get('summary', {})), default=str)}"""
         try:
             result = await self.generate_structured(prompt)
         except Exception as exc:
@@ -62,6 +67,11 @@ Incident={input_data.incident_id}\nService={input_data.service_name}\nSummary={i
         actions = self.normalize_list(result.get("immediate_checks"), settings.AGENT_MAX_RECOMMENDATIONS)
         saturation = self.normalize_list(result.get("saturation_signals"), 6)
         findings = self.normalize_list(result.get("findings"), 10) or saturation
+        handoffs = self.normalize_list(result.get("handoff_agents"), 6)
+        for hint in deterministic.get("suggested_handoffs", []):
+            target = str(hint.get("agent", "")) if isinstance(hint, dict) else ""
+            if target and target != self.name and target not in handoffs and len(handoffs) < 6:
+                handoffs.append(target)
         statement = "Infrastructure evidence indicates " + ("; ".join(findings) if findings else "no confirmed saturation or host fault yet")
         return AgentOutput(
             agent_name=self.name,
@@ -78,7 +88,7 @@ Incident={input_data.incident_id}\nService={input_data.service_name}\nSummary={i
             recommended_actions=self.analysis_only_actions(actions),
             hypotheses=hypotheses,
             missing_evidence=all_missing,
-            handoff_agents=self.normalize_list(result.get("handoff_agents"), 6),
+            handoff_agents=handoffs,
             probable_dependencies=self.normalize_list(result.get("probable_dependencies"), 8),
             affected_components=self.normalize_list(result.get("affected_components"), 8),
             blast_radius=str(result.get("blast_radius", "unknown")),
@@ -91,6 +101,13 @@ Incident={input_data.incident_id}\nService={input_data.service_name}\nSummary={i
                 "capacity_risks": result.get("capacity_risks", []),
                 "network_signals": result.get("network_signals", []),
                 "node_signals": result.get("node_signals", []),
+                "infrastructure_health_matrix": {
+                    "cpu_memory_disk_kernel_checks": deterministic.get("playbook_checks", []),
+                    "metric_series": deterministic.get("metric_features", {}).get("series", {}),
+                    "baseline_deltas": deterministic.get("metric_features", {}).get("largest_baseline_deltas", []),
+                },
+                "deterministic_analysis": deterministic,
+                "next_best_evidence": deterministic.get("next_best_evidence", []),
                 "metric_evidence_count": len(metrics),
                 "alert_evidence_count": len(alerts),
                 "knowledge_context_count": len(auxiliary["knowledge_rag"]),
