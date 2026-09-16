@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 266 | Dashboard JS files scanned: 2 | Symbols indexed: 1727**
+**Python files scanned: 266 | Dashboard JS files scanned: 2 | Symbols indexed: 1728**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1366,8 +1366,9 @@
 | `tests/unit/test_dashboard_approval_actions.py` | `test_dashboard_exposes_real_approval_actions_without_direct_execution` | 7 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_dashboard_approval_actions.py` | `test_fastapi_serves_approval_assets` | 26 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_dashboard_contract.py` | `test_dashboard_contains_required_operational_capabilities` | 4 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_dashboard_contract.py` | `test_dashboard_does_not_embed_demo_or_synthetic_operational_data` | 39 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_dashboard_contract.py` | `test_service_health_is_durable_not_static_topology` | 48 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_dashboard_contract.py` | `test_dashboard_does_not_embed_demo_or_synthetic_operational_data` | 54 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_dashboard_contract.py` | `test_service_health_is_durable_not_static_topology` | 63 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_dashboard_contract.py` | `test_dashboard_summary_tracks_full_governed_lifecycle` | 76 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_dashboard_control_center.py` | `test_dashboard_is_single_live_control_center` | 7 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_dashboard_control_center.py` | `test_dashboard_assets_and_agent_route_are_served_by_fastapi` | 34 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_dashboard_control_center.py` | `test_legacy_agent_url_has_compatibility_redirect_only` | 41 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
