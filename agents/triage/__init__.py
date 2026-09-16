@@ -2,6 +2,7 @@ import json
 from typing import List, Optional
 
 from agents.shared.base import AgentInput, AgentOutput, BaseAgent, OperationalHypothesis
+from agents.shared.intelligence import build_deterministic_analysis, prompt_evidence_projection, sanitize_prompt_value
 from domain.contracts.config import settings
 from domain.contracts.logging import logger
 from integrations.llm.base import LLMAdapter
@@ -26,6 +27,8 @@ class TriageAgent(BaseAgent):
     async def analyze(self, input_data: AgentInput) -> AgentOutput:
         logger.info(f"TriageAgent analyzing: {input_data.incident_id}")
         evidence = self.evidence_items(input_data)
+        prompt_evidence = prompt_evidence_projection(evidence, settings.AGENT_MAX_EVIDENCE_ITEMS)
+        deterministic = build_deterministic_analysis("triage", evidence, service_name=input_data.service_name)
         evidence_ids = self.evidence_ids(input_data)
         auxiliary = self.auxiliary_context(input_data)
         live = input_data.context.get("live_evidence", {}) if input_data.context else {}
@@ -45,11 +48,13 @@ class TriageAgent(BaseAgent):
             "dependency", "messaging", "recovery", "unknown",
         ]
         prompt = f"""You are the incident triage coordinator for a production AIOps platform. LIVE EVIDENCE is authoritative. RAG/Memory are auxiliary only. ASSET_CONTEXT may contain Cognia-assisted topology hints when live metadata was incomplete. Inspect field_provenance and requires_live_verification: knowledge-sourced fields may guide read-only specialist routing and evidence collection, but they are not live proof and must not authorize a write. Live fields win over Cognia on conflict.
+Do not merely classify the alert text. Separate observed symptom, affected layer and probable causal layer. Normalize/correlate duplicate signals, reason about first anomaly and propagation order when timestamps exist, distinguish an alert storm from multiple independent incidents, and use topology to identify cross-layer cases such as application->database, database->storage, Kubernetes->node, or authentication->DNS/JWKS. Severity must consider available customer/service impact, duration, redundancy, SLO/blast-radius evidence instead of blindly copying an alert label.
+DETERMINISTIC_ANALYSIS provides bounded chronology, source/type counts, topology edges and next-evidence hints. It is not a root-cause verdict. Route selection should be as deterministic and narrow as evidence allows: high confidence -> focused specialists; ambiguity/contradiction -> bounded fan-out. Record why each route was selected and why plausible routes were rejected. Prefer the evidence request with the highest information gain.
 Classify primary_domain from {domains}. Return secondary_domains for cross-layer incidents.
-Return JSON keys: primary_domain, secondary_domains, severity, health_status, urgency_reason, findings, affected_components, probable_dependencies, blast_radius, hypotheses, missing_evidence, specialist_routes, immediate_checks, escalation_target, risk_level, uncertainty_reason, confidence.
+Return JSON keys: primary_domain, secondary_domains, severity, health_status, urgency_reason, findings, affected_components, probable_dependencies, blast_radius, hypotheses, missing_evidence, evidence_gaps, next_best_evidence, specialist_routes, route_reasons, rejected_routes, immediate_checks, escalation_target, risk_level, uncertainty_reason, confidence.
 Hypotheses: hypothesis, probability, evidence_ids, conflicting_evidence_ids, falsification_checks, impacted_components, recommended_next_evidence. Only live evidence IDs may be cited.
 Never invent a VM, OS, Kubernetes workload, deployment, compromise, outage, DB failure, packet loss, queue backlog, recovery failure or metric. immediate_checks are read-only evidence collection.
-Incident={input_data.incident_id}\nService={input_data.service_name}\nSummary={input_data.evidence_summary}\nASSET_CONTEXT={json.dumps(asset, default=str)}\nTOPOLOGY_CONTEXT={json.dumps(topology_context, default=str)}\nLIVE_EVIDENCE={json.dumps(evidence, default=str)}\nAUXILIARY_CONTEXT={json.dumps(auxiliary, default=str)}\nContextSummary={json.dumps(input_data.context.get('summary', {}), default=str)}"""
+Incident={input_data.incident_id}\nService={input_data.service_name}\nSummary={input_data.evidence_summary}\nDETERMINISTIC_ANALYSIS={json.dumps(deterministic, default=str)}\nASSET_CONTEXT={json.dumps(sanitize_prompt_value(asset), default=str)}\nTOPOLOGY_CONTEXT={json.dumps(sanitize_prompt_value(topology_context), default=str)}\nLIVE_EVIDENCE={json.dumps(prompt_evidence, default=str)}\nAUXILIARY_CONTEXT={json.dumps(sanitize_prompt_value(auxiliary), default=str)}\nContextSummary={json.dumps(sanitize_prompt_value(input_data.context.get('summary', {})), default=str)}"""
         try:
             result = await self.generate_structured(prompt)
         except Exception as exc:
@@ -58,7 +63,8 @@ Incident={input_data.incident_id}\nService={input_data.service_name}\nSummary={i
                 "primary_domain":"unknown","secondary_domains":[],"severity":"unknown","health_status":"unknown",
                 "urgency_reason":"Structured triage unavailable","findings":[],"affected_components":[],
                 "probable_dependencies":[],"blast_radius":"unknown","hypotheses":[],
-                "missing_evidence":["specialist triage result"],"specialist_routes":[],
+                "missing_evidence":["specialist triage result"],"evidence_gaps":[],"next_best_evidence":[],
+                "specialist_routes":[],"route_reasons":[],"rejected_routes":[],
                 "immediate_checks":["Collect live alerts, logs and metrics"],"escalation_target":"incident-commander",
                 "risk_level":"low","uncertainty_reason":"structured_analysis_failed","confidence":0.0,
             }
@@ -75,30 +81,24 @@ Incident={input_data.incident_id}\nService={input_data.service_name}\nSummary={i
         asset_type = str(asset.get("asset_type") or "unknown").lower()
         platform = str(asset.get("platform") or "unknown").lower()
         deterministic_routes: List[str] = []
+        deterministic_route_reasons: List[dict] = []
         if platform == "kubernetes" or "kubernetes" in asset_type:
             deterministic_routes = ["kubernetes", "infrastructure"]
             primary = "kubernetes"
+            deterministic_route_reasons.append({"route": "kubernetes", "reason": "live/asset metadata identifies Kubernetes workload"})
         elif asset_type == "database":
-            # Database incidents are commonly cross-layer: connection exhaustion,
-            # lock storms and latency may originate in the application or an
-            # upstream/downstream dependency. Route those specialists early so
-            # production triage does not default to a database-only diagnosis.
             deterministic_routes = ["database", "application", "dependency", "infrastructure"]
             primary = "database"
+            deterministic_route_reasons.append({"route": "database", "reason": "asset metadata identifies database; cross-layer client/dependency checks retained"})
         elif asset_type == "network":
-            # Network-device incidents can present as generic application timeouts.
-            # Keep Infrastructure and Dependency in the first deterministic wave
-            # so DNS/path/reachability faults are checked before symptom-only RCA.
             deterministic_routes = ["network", "infrastructure", "dependency"]
             primary = "network"
+            deterministic_route_reasons.append({"route": "network", "reason": "asset metadata identifies network domain; path/dependency checks retained"})
         elif asset_type == "vm" or platform == "vm" or str(asset.get("os_family") or "unknown").lower() in {"linux", "windows"}:
-            # A guest service outage can be caused by the process itself, host
-            # pressure or a reachability/path fault. Keep Network in the first
-            # deterministic wave so an unreachable service is not diagnosed as
-            # a guest-only failure before path/DNS/connectivity evidence exists.
             deterministic_routes = ["vm", "infrastructure", "network"]
             if primary == "unknown":
                 primary = "vm"
+            deterministic_route_reasons.append({"route": "vm", "reason": "guest identity requires service/process plus host/path investigation"})
         for route in reversed(deterministic_routes):
             if route in valid_routes and route not in routes:
                 routes.insert(0, route)
@@ -139,6 +139,11 @@ Incident={input_data.incident_id}\nService={input_data.service_name}\nSummary={i
         actions = self.normalize_list(result.get("immediate_checks"), settings.AGENT_MAX_RECOMMENDATIONS)
         severity = str(result.get("severity", "unknown")).lower()
         findings = self.normalize_list(result.get("findings"), 8)
+        route_reasons = self.normalize_list(result.get("route_reasons"), 12)
+        route_reasons.extend(str(item) for item in deterministic_route_reasons if str(item) not in route_reasons)
+        rejected_routes = self.normalize_list(result.get("rejected_routes"), 12)
+        evidence_gaps = self.normalize_list(result.get("evidence_gaps"), 12) or list(missing)
+        next_best = self.normalize_list(result.get("next_best_evidence"), 8) or list(deterministic.get("next_best_evidence", []))
         statement = f"Incident triaged to {primary}; asset={asset_type}/{asset.get('os_family','unknown')}; severity={severity}; reason={str(result.get('urgency_reason', 'not established'))}"
         return AgentOutput(
             agent_name=self.name,
@@ -157,6 +162,11 @@ Incident={input_data.incident_id}\nService={input_data.service_name}\nSummary={i
             analysis_details={
                 "primary_domain": primary, "secondary_domains": secondary, "urgency_reason": result.get("urgency_reason"),
                 "asset_context": asset, "asset_routing": deterministic_routes,
+                "route_reasons": route_reasons,
+                "rejected_routes": rejected_routes,
+                "evidence_gaps": evidence_gaps,
+                "next_best_evidence": next_best,
+                "deterministic_analysis": deterministic,
                 "evidence_type_counts": type_counts, "evidence_source_counts": source_counts,
                 "knowledge_context_count": len(auxiliary["knowledge_rag"]), "memory_context_count": len(auxiliary["operational_memory"]),
                 "knowledge_assisted_asset": bool(asset.get("knowledge_assisted")),
