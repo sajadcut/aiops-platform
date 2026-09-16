@@ -26,9 +26,18 @@ async def dashboard_summary(_identity=Depends(require_permission("read:incident"
                           (SELECT COUNT(*) FROM incidents WHERE LOWER(severity)='critical' AND LOWER(status::text) NOT IN ('closed','resolved')) AS incidents_critical,
                           (SELECT COUNT(*) FROM approvals WHERE status='pending') AS approvals_pending,
                           (SELECT COUNT(*) FROM approvals WHERE status='approved') AS approvals_approved,
+                          (SELECT COUNT(*) FROM approvals WHERE status='consumed') AS approvals_consumed,
+                          (SELECT COUNT(*) FROM approvals WHERE status='rejected') AS approvals_rejected,
                           (SELECT COUNT(*) FROM audit_events) AS audit_events,
+                          (SELECT COUNT(*) FROM audit_events WHERE event_type='execution_completed' AND LOWER(COALESCE(metadata->>'success',''))='true') AS execution_success,
+                          (SELECT COUNT(*) FROM audit_events WHERE event_type='execution_completed' AND LOWER(COALESCE(metadata->>'success',''))<>'true' AND LOWER(COALESCE(metadata->>'blocked',''))<>'true') AS execution_failed,
+                          (SELECT COUNT(*) FROM audit_events WHERE event_type='execution_completed' AND LOWER(COALESCE(metadata->>'blocked',''))='true') AS execution_blocked,
                           (SELECT COUNT(*) FROM audit_events WHERE event_type='verification_completed' AND LOWER(COALESCE(metadata->>'status','')) IN ('success','succeeded','verified')) AS verification_success,
                           (SELECT COUNT(*) FROM audit_events WHERE event_type='verification_completed' AND LOWER(COALESCE(metadata->>'status','')) IN ('failed','failure')) AS verification_failed,
+                          (SELECT COUNT(*) FROM audit_events WHERE event_type='verification_completed' AND LOWER(COALESCE(metadata->>'status',''))='partial') AS verification_partial,
+                          (SELECT COUNT(*) FROM audit_events WHERE event_type='verification_completed' AND LOWER(COALESCE(metadata->>'status',''))='inconclusive') AS verification_inconclusive,
+                          (SELECT COUNT(*) FROM audit_events WHERE event_type='memory_writeback' AND LOWER(COALESCE(metadata->>'persisted',''))='true') AS memory_persisted,
+                          (SELECT COUNT(*) FROM audit_events WHERE event_type='memory_writeback' AND LOWER(COALESCE(metadata->>'persisted',''))='false') AS memory_not_persisted,
                           (SELECT AVG(confidence) FROM findings WHERE confidence IS NOT NULL) AS mean_confidence
                         """
                     )
@@ -38,20 +47,60 @@ async def dashboard_summary(_identity=Depends(require_permission("read:incident"
             recent = (
                 await db.execute(
                     text(
-                        "SELECT event_id,event_type,incident_id,action,status,metadata,created_at "
-                        "FROM audit_events ORDER BY created_at DESC LIMIT 30"
+                        "SELECT event_id,event_type,incident_id,actor,action,status,metadata,created_at "
+                        "FROM audit_events ORDER BY created_at DESC LIMIT 50"
                     )
                 )
             ).mappings().all()
 
         result = dict(row)
-        result["incidents_open"] = int(result["incidents_active"] or 0)
-        result["successful_remediations"] = int(result["verification_success"] or 0)
-        result["failed_verifications"] = int(result["verification_failed"] or 0)
+        for key in (
+            "incidents_total",
+            "incidents_active",
+            "incidents_critical",
+            "approvals_pending",
+            "approvals_approved",
+            "approvals_consumed",
+            "approvals_rejected",
+            "audit_events",
+            "execution_success",
+            "execution_failed",
+            "execution_blocked",
+            "verification_success",
+            "verification_failed",
+            "verification_partial",
+            "verification_inconclusive",
+            "memory_persisted",
+            "memory_not_persisted",
+        ):
+            result[key] = int(result[key] or 0)
+
+        result["incidents_open"] = result["incidents_active"]
+        result["successful_remediations"] = result["verification_success"]
+        result["failed_verifications"] = result["verification_failed"]
         result["mean_confidence"] = float(result["mean_confidence"] or 0.0)
-        verified_total = int(result["verification_success"] or 0) + int(result["verification_failed"] or 0)
+
+        verification_conclusive = result["verification_success"] + result["verification_failed"]
+        verification_total = (
+            verification_conclusive
+            + result["verification_partial"]
+            + result["verification_inconclusive"]
+        )
+        execution_total = (
+            result["execution_success"]
+            + result["execution_failed"]
+            + result["execution_blocked"]
+        )
         result["automation_success_rate"] = (
-            int(result["verification_success"] or 0) / verified_total if verified_total else 0.0
+            result["verification_success"] / verification_conclusive
+            if verification_conclusive
+            else 0.0
+        )
+        result["verification_conclusive_rate"] = (
+            verification_conclusive / verification_total if verification_total else 0.0
+        )
+        result["execution_success_rate"] = (
+            result["execution_success"] / execution_total if execution_total else 0.0
         )
         result["recent_audit"] = [dict(item) for item in recent]
         result["data_status"] = "live"
