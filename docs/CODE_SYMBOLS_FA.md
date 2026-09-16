@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 280 | Dashboard JS files scanned: 2 | Symbols indexed: 1957**
+**Python files scanned: 281 | Dashboard JS files scanned: 2 | Symbols indexed: 1972**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1614,6 +1614,21 @@
 | `tests/unit/test_http_transport_policy.py` | `test_no_https_enforcement_or_server_ca_config_remains_in_runtime_contract` | 44 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_http_transport_policy.py` | `test_outbound_runtime_httpx_clients_use_central_insecure_transport_factory` | 65 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_idempotency.py` | `test_fingerprint_is_stable` | 3 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_infrastructure_use_engine.py` | `StaticInfrastructureLLM` | 11 | class | کلاس | module |
+| `tests/unit/test_infrastructure_use_engine.py` | `StaticInfrastructureLLM.provider_name` | 13 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | StaticInfrastructureLLM |
+| `tests/unit/test_infrastructure_use_engine.py` | `StaticInfrastructureLLM.generate` | 16 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | StaticInfrastructureLLM |
+| `tests/unit/test_infrastructure_use_engine.py` | `StaticInfrastructureLLM.generate_with_messages` | 47 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | StaticInfrastructureLLM |
+| `tests/unit/test_infrastructure_use_engine.py` | `metric` | 51 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_infrastructure_use_engine.py` | `analyze` | 63 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_infrastructure_use_engine.py` | `test_cpu_saturation_requires_scheduling_pressure_not_utilization_alone` | 71 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_infrastructure_use_engine.py` | `test_memory_pressure_uses_available_memory_page_faults_and_psi` | 88 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_infrastructure_use_engine.py` | `test_swap_storm_is_distinct_from_generic_high_memory_usage` | 103 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_infrastructure_use_engine.py` | `test_oom_event_has_stronger_semantics_than_memory_percentage` | 118 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_infrastructure_use_engine.py` | `test_disk_io_bottleneck_and_cpu_iowait_create_storage_handoff` | 136 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_infrastructure_use_engine.py` | `test_inode_exhaustion_is_not_hidden_by_filesystem_byte_capacity` | 152 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_infrastructure_use_engine.py` | `test_healthy_high_cpu_utilization_is_not_mislabeled_as_saturation` | 164 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_infrastructure_use_engine.py` | `test_capacity_analysis_tracks_multiday_percentiles_growth_and_sudden_delta` | 182 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_infrastructure_use_engine.py` | `test_infrastructure_agent_exposes_health_matrix_and_remains_analysis_only` | 205 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_internal_api_key_role.py` | `test_internal_api_key_uses_server_configured_role` | 7 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_internal_api_key_role.py` | `test_invalid_internal_api_role_fails_closed` | 15 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_internal_api_key_role.py` | `test_wrong_internal_api_key_is_rejected` | 22 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
