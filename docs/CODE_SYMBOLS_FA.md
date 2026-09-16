@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 279 | Dashboard JS files scanned: 2 | Symbols indexed: 1928**
+**Python files scanned: 280 | Dashboard JS files scanned: 2 | Symbols indexed: 1957**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -59,6 +59,35 @@
 | `agents/infrastructure/__init__.py` | `InfrastructureAgent.description` | 20 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | InfrastructureAgent |
 | `agents/infrastructure/__init__.py` | `InfrastructureAgent.allowed_tools` | 24 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | InfrastructureAgent |
 | `agents/infrastructure/__init__.py` | `InfrastructureAgent.analyze` | 27 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | InfrastructureAgent |
+| `agents/infrastructure/engine.py` | `_raw` | 15 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/infrastructure/engine.py` | `_labels` | 20 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/infrastructure/engine.py` | `_first` | 26 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/infrastructure/engine.py` | `_field` | 34 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/infrastructure/engine.py` | `_evidence_id` | 45 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/infrastructure/engine.py` | `_parse_timestamp` | 50 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/infrastructure/engine.py` | `_numeric` | 64 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/infrastructure/engine.py` | `_flatten_text` | 87 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/infrastructure/engine.py` | `_text` | 110 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/infrastructure/engine.py` | `_metric_name` | 114 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/infrastructure/engine.py` | `_metric_value` | 120 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/infrastructure/engine.py` | `_baseline` | 126 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/infrastructure/engine.py` | `_incident_start` | 139 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/infrastructure/engine.py` | `_metric_kind` | 150 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/infrastructure/engine.py` | `_observation` | 194 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/infrastructure/engine.py` | `_rows_by_kind` | 223 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/infrastructure/engine.py` | `_max_value` | 236 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/infrastructure/engine.py` | `_latest_value` | 241 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/infrastructure/engine.py` | `_first_timestamp` | 248 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/infrastructure/engine.py` | `_ids` | 253 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/infrastructure/engine.py` | `_event_signals` | 264 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/infrastructure/engine.py` | `_status_row` | 285 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/infrastructure/engine.py` | `_cpu_health` | 303 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/infrastructure/engine.py` | `_memory_health` | 348 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/infrastructure/engine.py` | `_disk_health` | 382 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/infrastructure/engine.py` | `_kernel_health` | 420 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/infrastructure/engine.py` | `_capacity` | 451 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/infrastructure/engine.py` | `_causal_patterns` | 487 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/infrastructure/engine.py` | `build_infrastructure_analysis` | 524 | function | Build bounded deterministic USE/saturation evidence before LLM synthesis. | module |
 | `agents/kubernetes/__init__.py` | `KubernetesAgent` | 11 | class | کلاس | module |
 | `agents/kubernetes/__init__.py` | `KubernetesAgent.__init__` | 12 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KubernetesAgent |
 | `agents/kubernetes/__init__.py` | `KubernetesAgent.name` | 16 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KubernetesAgent |
