@@ -2,6 +2,7 @@ import json
 from typing import List, Optional
 
 from agents.kubernetes.engine import build_kubernetes_analysis
+from agents.kubernetes.safety import safe_evidence_for_prompt
 from agents.shared.base import AgentInput, AgentOutput, BaseAgent, OperationalHypothesis
 from agents.shared.intelligence import build_deterministic_analysis, prompt_evidence_projection, sanitize_prompt_value
 from domain.contracts.config import settings
@@ -28,7 +29,7 @@ class KubernetesAgent(BaseAgent):
     async def analyze(self, input_data: AgentInput) -> AgentOutput:
         logger.info(f"KubernetesAgent analyzing: {input_data.incident_id}")
         evidence = self.evidence_items(input_data)
-        prompt_evidence = prompt_evidence_projection(evidence, settings.AGENT_MAX_EVIDENCE_ITEMS)
+        prompt_evidence = prompt_evidence_projection(safe_evidence_for_prompt(evidence), settings.AGENT_MAX_EVIDENCE_ITEMS)
         deterministic = build_deterministic_analysis("kubernetes", evidence, ["log", "metric"], input_data.service_name)
         kubernetes_analysis = build_kubernetes_analysis(
             evidence,
