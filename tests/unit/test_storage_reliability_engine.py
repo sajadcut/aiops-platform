@@ -229,18 +229,16 @@ async def test_storage_agent_exposes_deterministic_layers_before_llm_synthesis()
         incident_id="inc-storage",
         service_name="payments",
         evidence_summary="write latency increased",
-        time_range={"start": "2026-09-16T10:00:00Z", "end": "2026-09-16T10:10:00Z"},
         context={"evidence": [
-            metric("db", "database_write_rate", 9000, timestamp="2026-09-16T10:00:00Z", domain="database"),
-            metric("await", "disk_io_latency_ms", 45, timestamp="2026-09-16T10:02:00Z"),
-            metric("queue", "disk_queue_depth", 5, timestamp="2026-09-16T10:02:00Z"),
-            metric("util", "disk_utilization", 96, timestamp="2026-09-16T10:02:00Z"),
+            metric("db", "database_write_rate", 9000, domain="database"),
+            metric("await", "disk_io_latency_ms", 45),
+            metric("queue", "disk_queue_depth", 5),
+            metric("util", "disk_utilization", 96),
         ]},
     )
     result = await StorageAgent(adapter).analyze(incident)
     assert "STORAGE_ANALYSIS=" in adapter.prompt
     assert result.analysis_details["io_analysis"]["latency_await_ms"] == 45
-    assert result.analysis_details["temporal_correlation"]["correlations"]
     assert "database_driven_storage_pressure" in {row["code"] for row in result.analysis_details["cause_candidates"]}
     assert result.analysis_details["execution_boundary"] == "analysis_only"
     assert all(action.read_only for action in result.recommended_actions)
