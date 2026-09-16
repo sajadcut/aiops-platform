@@ -41,6 +41,7 @@ class VerificationEngine:
         "service_active", "port_listening", "tcp_reachable", "config_valid",
     }
     CRITICAL_OPERATIONAL_CONDITIONS = {"service_active", "port_listening", "tcp_reachable", "config_valid"}
+    EXPECTED_RECOVERY_OVERHEAD = {"cpu_usage", "memory_usage"}
 
     @classmethod
     async def verify_action(cls, action_plan: str, service: str, before_context: Dict[str, Any], after_context: Optional[Dict[str, Any]] = None) -> VerificationResult:
@@ -64,6 +65,8 @@ class VerificationEngine:
         improvements = 0
         regressions = 0
         unchanged = 0
+        improved_keys: List[str] = []
+        regressed_keys: List[str] = []
         directions: Dict[str, str] = {}
         epsilon = 1e-9
 
@@ -81,24 +84,48 @@ class VerificationEngine:
             improved = delta < 0 if direction == "lower_is_better" else delta > 0
             if improved:
                 improvements += 1
+                improved_keys.append(key)
                 changes.append(f"{key}: {before_value:.4f} -> {after_value:.4f} (improved; {direction})")
             else:
                 regressions += 1
+                regressed_keys.append(key)
                 changes.append(f"{key}: {before_value:.4f} -> {after_value:.4f} (worsened; {direction})")
 
         operational = [key for key in comparable_keys if key in cls.CRITICAL_OPERATIONAL_CONDITIONS]
         unhealthy_after = [key for key in operational if after_metrics.get(key, 0.0) < 1.0]
         recovered_conditions = [key for key in operational if before_metrics.get(key, 1.0) < 1.0 and after_metrics.get(key, 0.0) >= 1.0]
+        material_regressions = [key for key in regressed_keys if key not in cls.EXPECTED_RECOVERY_OVERHEAD]
+        recovery_overhead = [key for key in regressed_keys if key in cls.EXPECTED_RECOVERY_OVERHEAD]
         comparable = len(comparable_keys)
 
         if unhealthy_after:
             status = VerificationStatus.FAILED
             confidence = 0.90 if any(key in {"port_listening", "tcp_reachable"} for key in unhealthy_after) else 0.80
             message = "Post-execution operational symptom remains unhealthy: " + ", ".join(sorted(unhealthy_after)) + "."
-        elif recovered_conditions and regressions == 0:
+        elif recovered_conditions and not material_regressions:
             status = VerificationStatus.SUCCESS
             confidence = min(0.98, 0.88 + 0.02 * len(recovered_conditions))
-            message = "Operational recovery demonstrated for: " + ", ".join(sorted(recovered_conditions)) + "."
+            if recovery_overhead:
+                confidence = max(0.80, confidence - 0.02 * len(recovery_overhead))
+                message = (
+                    "Operational recovery demonstrated for: "
+                    + ", ".join(sorted(recovered_conditions))
+                    + ". Expected post-recovery resource overhead observed for: "
+                    + ", ".join(sorted(recovery_overhead))
+                    + "."
+                )
+            else:
+                message = "Operational recovery demonstrated for: " + ", ".join(sorted(recovered_conditions)) + "."
+        elif recovered_conditions and material_regressions:
+            status = VerificationStatus.PARTIAL
+            confidence = 0.65
+            message = (
+                "Operational recovery was observed for: "
+                + ", ".join(sorted(recovered_conditions))
+                + ", but material regressions remain: "
+                + ", ".join(sorted(material_regressions))
+                + "."
+            )
         elif regressions == 0 and improvements > 0:
             status = VerificationStatus.SUCCESS
             confidence = min(0.95, 0.75 + 0.05 * improvements + 0.02 * unchanged)
