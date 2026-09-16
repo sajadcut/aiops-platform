@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 282 | Dashboard JS files scanned: 2 | Symbols indexed: 2018**
+**Python files scanned: 283 | Dashboard JS files scanned: 2 | Symbols indexed: 2039**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1723,6 +1723,27 @@
 | `tests/unit/test_knowledge_topology_url_normalization.py` | `_doc` | 4 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_knowledge_topology_url_normalization.py` | `test_expected_full_url_is_normalized_before_matching_cognia_topology` | 17 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_knowledge_topology_url_normalization.py` | `test_normalized_expected_url_still_rejects_other_cognia_fqdn` | 29 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_kubernetes_diagnostic_engine.py` | `obj` | 11 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_kubernetes_diagnostic_engine.py` | `event` | 26 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_kubernetes_diagnostic_engine.py` | `metric` | 41 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_kubernetes_diagnostic_engine.py` | `codes` | 53 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_kubernetes_diagnostic_engine.py` | `test_crashloopbackoff_analyzer_uses_container_state_and_restart_trend` | 57 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_kubernetes_diagnostic_engine.py` | `test_oomkill_analyzer_preserves_exit_code_and_memory_limit_comparison` | 75 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_kubernetes_diagnostic_engine.py` | `test_bad_probe_event_is_correlated_with_following_metric` | 101 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_kubernetes_diagnostic_engine.py` | `test_pending_pvc_routes_to_storage_and_does_not_call_it_workload_root_cause` | 113 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_kubernetes_diagnostic_engine.py` | `test_failed_scheduling_detects_insufficient_resources_affinity_and_taint_context` | 125 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_kubernetes_diagnostic_engine.py` | `test_rollout_regression_detects_generation_lag_unavailable_replicas_and_progress_deadline` | 135 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_kubernetes_diagnostic_engine.py` | `test_service_without_endpoint_is_explicit_cross_resource_finding` | 152 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_kubernetes_diagnostic_engine.py` | `test_node_pressure_is_underlying_infrastructure_not_kubernetes_workload_cause` | 163 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_kubernetes_diagnostic_engine.py` | `test_dns_failure_routes_to_network_and_requests_coredns_evidence` | 176 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_kubernetes_diagnostic_engine.py` | `test_healthy_deployment_remains_healthy_without_invented_failure` | 188 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_kubernetes_diagnostic_engine.py` | `test_causal_chain_links_service_endpoint_pod_controller_node_and_storage` | 204 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_kubernetes_diagnostic_engine.py` | `test_secret_and_configmap_analyzers_never_return_payload_values` | 225 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_kubernetes_diagnostic_engine.py` | `StaticKubernetesLLM` | 239 | class | کلاس | module |
+| `tests/unit/test_kubernetes_diagnostic_engine.py` | `StaticKubernetesLLM.provider_name` | 241 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | StaticKubernetesLLM |
+| `tests/unit/test_kubernetes_diagnostic_engine.py` | `StaticKubernetesLLM.generate` | 244 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | StaticKubernetesLLM |
+| `tests/unit/test_kubernetes_diagnostic_engine.py` | `StaticKubernetesLLM.generate_with_messages` | 272 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | StaticKubernetesLLM |
+| `tests/unit/test_kubernetes_diagnostic_engine.py` | `test_agent_exposes_structured_diagnostics_and_cannot_execute_rollout_restart` | 277 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_kubernetes_network_policy.py` | `_docs` | 6 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_kubernetes_network_policy.py` | `test_project_does_not_ship_network_policy_ip_or_port_restrictions` | 10 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_kubernetes_network_policy.py` | `test_production_deployment_uses_stdout_not_ephemeral_log_volume` | 21 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
