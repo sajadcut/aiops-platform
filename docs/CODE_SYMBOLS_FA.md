@@ -807,7 +807,7 @@
 | `integrations/kubernetes/client.py` | `KubernetesEvidenceClient.list_events` | 63 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | KubernetesEvidenceClient |
 | `integrations/kubernetes/client.py` | `KubernetesEvidenceClient.pod_logs` | 78 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KubernetesEvidenceClient |
 | `integrations/kubernetes/client.py` | `KubernetesEvidenceClient.collect_evidence` | 85 | async method | Evidence/داده موردنیاز را از منبع مربوط جمع می‌کند | KubernetesEvidenceClient |
-| `integrations/kubernetes/mcp_client.py` | `KubernetesMCPClient` | 9 | class | Kubernetes evidence + explicitly governed write connector through MCP. | module |
+| `integrations/kubernetes/mcp_client.py` | `KubernetesMCPClient` | 9 | class | Kubernetes evidence + governed write connector through MCP. | module |
 | `integrations/kubernetes/mcp_client.py` | `KubernetesMCPClient.__init__` | 24 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KubernetesMCPClient |
 | `integrations/kubernetes/mcp_client.py` | `KubernetesMCPClient.collect_evidence` | 42 | async method | Evidence/داده موردنیاز را از منبع مربوط جمع می‌کند | KubernetesMCPClient |
 | `integrations/kubernetes/mcp_client.py` | `KubernetesMCPClient._write_args` | 59 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KubernetesMCPClient |
