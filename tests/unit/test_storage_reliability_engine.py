@@ -213,7 +213,7 @@ class CapturingStorageLLM(LLMAdapter):
             }],
             "missing_evidence": [],
             "handoff_agents": ["database"],
-            "immediate_checks": ["Inspect storage await, queue and database write rate"],
+            "immediate_checks": ["Inspect storage await, queue and database I/O rate"],
             "confidence": 0.78,
         }
         return LLMResponse(content=json.dumps(payload), model="scenario")
