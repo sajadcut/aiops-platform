@@ -62,7 +62,7 @@ class ApplicationAgent(BaseAgent):
         traces = [item for item in evidence if str(item.get("type", "")).lower() == "trace"]
         missing = self.missing_evidence_for(input_data, ["log", "metric"])
 
-        prompt = f"""You are a senior production Application Reliability Investigator. LIVE EVIDENCE is authoritative. Auxiliary Knowledge RAG and Operational Memory may suggest checks or historical patterns but are never proof of current state. Never invent deployments, dependencies, traces, versions, configuration changes, exceptions, metrics or executed actions.
+        prompt = f"""You are a senior SRE application analyst and production Application Reliability Investigator. LIVE EVIDENCE is authoritative. Auxiliary Knowledge RAG and Operational Memory may suggest checks or historical patterns but are never proof of current state. Never invent deployments, dependencies, traces, versions, configuration changes, exceptions, metrics or executed actions.
 
 APPLICATION_ANALYSIS is a deterministic feature extraction layer and must be used before free-form reasoning. It contains RED observations, p50/p90/p95/p99 latency evidence, endpoint/status-family impact, error signature clusters, exception/stack timing, resource pressure, trace critical-path candidates, dependency signals, before-vs-incident baselines, change proximity, scope analysis and traffic-vs-regression classification. These are observations, not automatic root-cause verdicts.
 
