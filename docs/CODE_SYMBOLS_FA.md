@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 270 | Dashboard JS files scanned: 2 | Symbols indexed: 1785**
+**Python files scanned: 270 | Dashboard JS files scanned: 2 | Symbols indexed: 1786**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1232,8 +1232,9 @@
 | `tests/unit/test_agent_architecture_advanced.py` | `test_new_specialists_are_evidence_grounded` | 110 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_agent_architecture_advanced.py` | `test_evaluator_blocks_unresolved_disagreement_and_unsafe_write` | 126 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_agent_architecture_advanced.py` | `test_agent_dashboard_and_lifecycle_contract_are_present` | 139 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_agent_catalog_api.py` | `test_agent_catalog_does_not_require_llm_runtime_configuration` | 11 | function | Dashboard metadata must stay readable when the execution LLM is unavailable. | module |
-| `tests/unit/test_agent_catalog_api.py` | `test_agent_catalog_route_has_no_llm_adapter_dependency` | 30 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_agent_catalog_api.py` | `test_agent_catalog_does_not_require_llm_runtime_configuration` | 13 | function | Dashboard metadata must stay readable when the execution LLM is unavailable. | module |
+| `tests/unit/test_agent_catalog_api.py` | `test_catalog_only_adapter_cannot_execute_inference` | 32 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_agent_catalog_api.py` | `test_agent_catalog_route_has_no_operational_llm_dependency` | 39 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_agent_completion_contract.py` | `StaticLLM` | 19 | class | کلاس | module |
 | `tests/unit/test_agent_completion_contract.py` | `StaticLLM.__init__` | 20 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | StaticLLM |
 | `tests/unit/test_agent_completion_contract.py` | `StaticLLM.provider_name` | 24 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | StaticLLM |
