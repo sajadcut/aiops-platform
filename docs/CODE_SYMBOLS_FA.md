@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 295 | Dashboard JS files scanned: 2 | Symbols indexed: 2232**
+**Python files scanned: 299 | Dashboard JS files scanned: 2 | Symbols indexed: 2287**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -50,7 +50,43 @@
 | `agents/application/investigation.py` | `build_trace_path_analysis` | 30 | function | Build bounded parent/child trace paths from the engine's normalized spans. | module |
 | `agents/application/investigation.py` | `build_application_peer_context` | 157 | function | Extract Dependency/Change peer findings without promoting them to evidence. | module |
 | `agents/change/__init__.py` | `ChangeAgent` | 4 | class | کلاس | module |
-| `agents/database/__init__.py` | `DatabaseAgent` | 4 | class | کلاس | module |
+| `agents/database/__init__.py` | `DatabaseAgent` | 15 | class | کلاس | module |
+| `agents/database/__init__.py` | `DatabaseAgent.__init__` | 34 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DatabaseAgent |
+| `agents/database/__init__.py` | `DatabaseAgent._prompt_evidence` | 38 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DatabaseAgent |
+| `agents/database/__init__.py` | `DatabaseAgent.analyze` | 41 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DatabaseAgent |
+| `agents/database/adapters/postgresql.py` | `_raw` | 20 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/database/adapters/postgresql.py` | `_eid` | 25 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/database/adapters/postgresql.py` | `_number` | 30 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/database/adapters/postgresql.py` | `_pick_number` | 41 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/database/adapters/postgresql.py` | `_pick_text` | 51 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/database/adapters/postgresql.py` | `normalize_query_fingerprint` | 61 | function | Return a bounded SQL fingerprint without literal values. | module |
+| `agents/database/adapters/postgresql.py` | `_looks_postgresql` | 73 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/database/adapters/postgresql.py` | `_query_row` | 85 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/database/adapters/postgresql.py` | `build_postgresql_analysis` | 123 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
+| `agents/database/engine.py` | `_raw` | 20 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/database/engine.py` | `_eid` | 25 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/database/engine.py` | `_parse_time` | 30 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/database/engine.py` | `_timestamp` | 44 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/database/engine.py` | `_number` | 56 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/database/engine.py` | `_metric` | 67 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/database/engine.py` | `_pick_number` | 74 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/database/engine.py` | `_incident_start` | 84 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/database/engine.py` | `_baseline_delta` | 97 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/database/engine.py` | `_metric_matches` | 125 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/database/engine.py` | `_feature_rows` | 155 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/database/engine.py` | `_latest` | 175 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/database/engine.py` | `_connection_analysis` | 182 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/database/engine.py` | `_common_query_rows` | 217 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/database/engine.py` | `_wait_rows` | 253 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/database/engine.py` | `_temporal_deltas` | 282 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/database/engine.py` | `_event_analysis` | 305 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/database/engine.py` | `_resource_analysis` | 335 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/database/engine.py` | `_replication_analysis` | 358 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/database/engine.py` | `_cause_candidates` | 376 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/database/engine.py` | `_cause_candidates.add` | 389 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _cause_candidates |
+| `agents/database/engine.py` | `build_database_reliability_analysis` | 482 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
+| `agents/database/engine.py` | `_sanitize_db_mapping` | 575 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/database/engine.py` | `database_prompt_evidence_projection` | 601 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/dependency/__init__.py` | `DependencyAgent` | 4 | class | کلاس | module |
 | `agents/identity/__init__.py` | `IdentityAgent` | 4 | class | کلاس | module |
 | `agents/infrastructure/__init__.py` | `InfrastructureAgent` | 12 | class | کلاس | module |
@@ -1747,6 +1783,25 @@
 | `tests/unit/test_dashboard_control_center.py` | `test_legacy_agent_url_has_compatibility_redirect_only` | 55 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_dashboard_javascript_syntax.py` | `_check_javascript` | 12 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_dashboard_javascript_syntax.py` | `test_dashboard_javascript_syntax` | 19 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_database_reliability_engine.py` | `metric` | 11 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_database_reliability_engine.py` | `db_evidence` | 18 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_database_reliability_engine.py` | `analyze` | 22 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_database_reliability_engine.py` | `codes` | 26 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_database_reliability_engine.py` | `test_connection_exhaustion_and_pool_pressure_are_explicit_candidates` | 30 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_database_reliability_engine.py` | `test_deadlock_and_lock_waits_are_distinguished` | 45 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_database_reliability_engine.py` | `test_slow_query_uses_normalized_fingerprint_and_historical_delta` | 57 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_database_reliability_engine.py` | `test_replication_lag_is_a_separate_reliability_candidate` | 70 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_database_reliability_engine.py` | `test_storage_induced_latency_handoffs_to_storage_not_automatic_database_root_cause` | 81 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_database_reliability_engine.py` | `test_application_connection_storm_requires_connection_delta_plus_client_evidence` | 93 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_database_reliability_engine.py` | `test_healthy_busy_database_is_not_mislabeled_as_fault` | 104 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_database_reliability_engine.py` | `test_postgresql_adapter_surfaces_activity_vacuum_wal_and_restart_chronology` | 118 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_database_reliability_engine.py` | `test_database_prompt_projection_redacts_sql_literals_and_bind_parameters` | 132 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_database_reliability_engine.py` | `CapturingDatabaseLLM` | 145 | class | کلاس | module |
+| `tests/unit/test_database_reliability_engine.py` | `CapturingDatabaseLLM.__init__` | 146 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CapturingDatabaseLLM |
+| `tests/unit/test_database_reliability_engine.py` | `CapturingDatabaseLLM.provider_name` | 150 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CapturingDatabaseLLM |
+| `tests/unit/test_database_reliability_engine.py` | `CapturingDatabaseLLM.generate` | 153 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CapturingDatabaseLLM |
+| `tests/unit/test_database_reliability_engine.py` | `CapturingDatabaseLLM.generate_with_messages` | 163 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CapturingDatabaseLLM |
+| `tests/unit/test_database_reliability_engine.py` | `test_database_agent_computes_features_before_llm_and_never_prompts_raw_sql_literals` | 168 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_dotin_general_chatbot_llm.py` | `FakeResponse` | 13 | class | کلاس | module |
 | `tests/unit/test_dotin_general_chatbot_llm.py` | `FakeResponse.__init__` | 14 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeResponse |
 | `tests/unit/test_dotin_general_chatbot_llm.py` | `FakeResponse.raise_for_status` | 17 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeResponse |
