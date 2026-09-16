@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 306 | Dashboard JS files scanned: 2 | Symbols indexed: 2433**
+**Python files scanned: 307 | Dashboard JS files scanned: 2 | Symbols indexed: 2458**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -50,6 +50,31 @@
 | `agents/application/investigation.py` | `build_trace_path_analysis` | 30 | function | Build bounded parent/child trace paths from the engine's normalized spans. | module |
 | `agents/application/investigation.py` | `build_application_peer_context` | 157 | function | Extract Dependency/Change peer findings without promoting them to evidence. | module |
 | `agents/change/__init__.py` | `ChangeAgent` | 4 | class | کلاس | module |
+| `agents/change/engine.py` | `_raw` | 37 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/change/engine.py` | `_lookup` | 42 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/change/engine.py` | `_eid` | 53 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/change/engine.py` | `_parse_time` | 58 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/change/engine.py` | `_timestamp` | 72 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/change/engine.py` | `_number` | 83 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/change/engine.py` | `_text` | 94 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/change/engine.py` | `_norm` | 100 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/change/engine.py` | `_metric_group` | 104 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/change/engine.py` | `_metric_value` | 113 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/change/engine.py` | `_change_type` | 118 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/change/engine.py` | `_change_record` | 129 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/change/engine.py` | `_as_list` | 156 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/change/engine.py` | `_incident_start` | 167 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/change/engine.py` | `_temporal_score` | 171 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/change/engine.py` | `_scope_values` | 191 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/change/engine.py` | `_change_scope` | 199 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/change/engine.py` | `_window_label` | 208 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/change/engine.py` | `_before_after` | 225 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/change/engine.py` | `_scope_overlap_score` | 269 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/change/engine.py` | `_comparison_score` | 285 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/change/engine.py` | `_alternatives` | 331 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/change/engine.py` | `_change_quality` | 348 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/change/engine.py` | `_simultaneous` | 361 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/change/engine.py` | `build_change_correlation_analysis` | 385 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
 | `agents/database/__init__.py` | `DatabaseAgent` | 15 | class | کلاس | module |
 | `agents/database/__init__.py` | `DatabaseAgent.__init__` | 34 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DatabaseAgent |
 | `agents/database/__init__.py` | `DatabaseAgent._prompt_evidence` | 38 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DatabaseAgent |
