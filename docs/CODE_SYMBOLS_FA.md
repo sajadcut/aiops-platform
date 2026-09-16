@@ -404,7 +404,7 @@
 | `agents/vm/engine.py` | `_service_analysis` | 229 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/vm/engine.py` | `_boot_analysis` | 249 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/vm/engine.py` | `_causal_findings` | 273 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `agents/vm/engine.py` | `build_vm_guest_analysis` | 299 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
+| `agents/vm/engine.py` | `build_vm_guest_analysis` | 331 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
 | `apps/api/a2a.py` | `a2a_request` | 13 | async function | Governed in-process A2A analysis endpoint. | module |
 | `apps/api/agents.py` | `_CatalogOnlyLLMAdapter` | 13 | class | Non-executable adapter used only to construct analysis metadata safely. | module |
 | `apps/api/agents.py` | `_CatalogOnlyLLMAdapter.provider_name` | 22 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _CatalogOnlyLLMAdapter |
