@@ -159,11 +159,9 @@ def _validate_production_configuration() -> None:
         errors.append("MCP client certificate and key must be configured together")
 
     if settings.VM_MCP_URL or settings.KUBERNETES_MCP_URL:
-        boundary = "VM/Kubernetes MCP write path"
-        if not settings.MCP_WRITE_BEARER_TOKEN:
-            errors.append(f"{boundary} requires MCP_WRITE_BEARER_TOKEN")
-        elif settings.MCP_BEARER_TOKEN and settings.MCP_WRITE_BEARER_TOKEN == settings.MCP_BEARER_TOKEN:
-            errors.append("MCP write identity must be distinct from read identity")
+        boundary = "VM/Kubernetes MCP Control-Plane identity"
+        if not settings.MCP_BEARER_TOKEN:
+            errors.append(f"{boundary} requires MCP_BEARER_TOKEN as the fixed API key")
 
     if settings.SSH_ENABLED:
         errors.append("direct Control-Plane SSH is forbidden; configure VM_MCP_URL instead")
