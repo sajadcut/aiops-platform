@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 289 | Dashboard JS files scanned: 2 | Symbols indexed: 2137**
+**Python files scanned: 289 | Dashboard JS files scanned: 2 | Symbols indexed: 2139**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -201,12 +201,14 @@
 | `agents/recovery/__init__.py` | `_parse_time` | 8 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/recovery/__init__.py` | `RecoveryAgent` | 20 | class | کلاس | module |
 | `agents/recovery/__init__.py` | `RecoveryAgent.analyze` | 40 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RecoveryAgent |
-| `agents/security/__init__.py` | `SecurityAgent` | 11 | class | کلاس | module |
-| `agents/security/__init__.py` | `SecurityAgent.__init__` | 12 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SecurityAgent |
-| `agents/security/__init__.py` | `SecurityAgent.name` | 16 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SecurityAgent |
-| `agents/security/__init__.py` | `SecurityAgent.description` | 20 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SecurityAgent |
-| `agents/security/__init__.py` | `SecurityAgent.allowed_tools` | 24 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SecurityAgent |
-| `agents/security/__init__.py` | `SecurityAgent.analyze` | 27 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SecurityAgent |
+| `agents/security/__init__.py` | `_guard_security_claim` | 22 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/security/__init__.py` | `_rich_hypothesis` | 32 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/security/__init__.py` | `SecurityAgent` | 62 | class | کلاس | module |
+| `agents/security/__init__.py` | `SecurityAgent.__init__` | 63 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SecurityAgent |
+| `agents/security/__init__.py` | `SecurityAgent.name` | 67 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SecurityAgent |
+| `agents/security/__init__.py` | `SecurityAgent.description` | 71 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SecurityAgent |
+| `agents/security/__init__.py` | `SecurityAgent.allowed_tools` | 75 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SecurityAgent |
+| `agents/security/__init__.py` | `SecurityAgent.analyze` | 78 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SecurityAgent |
 | `agents/security/engine.py` | `_parse_time` | 40 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/security/engine.py` | `_raw` | 54 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/security/engine.py` | `_eid` | 59 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
