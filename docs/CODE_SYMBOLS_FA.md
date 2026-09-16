@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 272 | Dashboard JS files scanned: 2 | Symbols indexed: 1820**
+**Python files scanned: 272 | Dashboard JS files scanned: 2 | Symbols indexed: 1821**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -96,9 +96,10 @@
 | `agents/shared/domain_agent.py` | `DomainDiagnosticAgent.description` | 37 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DomainDiagnosticAgent |
 | `agents/shared/domain_agent.py` | `DomainDiagnosticAgent.allowed_tools` | 41 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DomainDiagnosticAgent |
 | `agents/shared/domain_agent.py` | `DomainDiagnosticAgent._bounded_prompt_value` | 45 | method | Compact and redact prompt-only context without mutating audited Evidence. | DomainDiagnosticAgent |
-| `agents/shared/domain_agent.py` | `DomainDiagnosticAgent._prompt_evidence` | 50 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DomainDiagnosticAgent |
-| `agents/shared/domain_agent.py` | `DomainDiagnosticAgent._peer_context` | 54 | method | Return bounded peer-analysis context published by the coordinator. | DomainDiagnosticAgent |
-| `agents/shared/domain_agent.py` | `DomainDiagnosticAgent.analyze` | 89 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DomainDiagnosticAgent |
+| `agents/shared/domain_agent.py` | `DomainDiagnosticAgent._bounded_prompt_value.compact` | 63 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DomainDiagnosticAgent._bounded_prompt_value |
+| `agents/shared/domain_agent.py` | `DomainDiagnosticAgent._prompt_evidence` | 84 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DomainDiagnosticAgent |
+| `agents/shared/domain_agent.py` | `DomainDiagnosticAgent._peer_context` | 88 | method | Return bounded peer-analysis context published by the coordinator. | DomainDiagnosticAgent |
+| `agents/shared/domain_agent.py` | `DomainDiagnosticAgent.analyze` | 123 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DomainDiagnosticAgent |
 | `agents/shared/intelligence.py` | `_is_sensitive_key` | 107 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/shared/intelligence.py` | `sanitize_prompt_value` | 112 | function | Bound and redact untrusted operational data before it reaches an LLM prompt. | module |
 | `agents/shared/intelligence.py` | `prompt_evidence_projection` | 131 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
