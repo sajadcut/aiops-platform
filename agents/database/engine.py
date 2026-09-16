@@ -411,7 +411,10 @@ def _cause_candidates(
             item.get("name"), item.get("message"), raw.get("application_name"), raw.get("client_application"),
             raw.get("diagnostic"), raw.get("source_component"),
         )).lower()
-        if any(token in text for token in ("pool_wait", "pool waiter", "connection storm", "client connections", "app connection")):
+        if any(token in text for token in (
+            "pool_wait", "pool waiter", "connection storm", "connection_storm",
+            "application_connection", "client connections", "app connection",
+        )):
             app_ids.append(_eid(item, index))
     if storm_ids and app_ids:
         add("application_connection_storm", storm_ids + app_ids, handoff="application", basis="connection delta plus client/application evidence")
