@@ -3,7 +3,8 @@ import json
 import pytest
 
 from agents.kubernetes import KubernetesAgent
-from agents.kubernetes.engine import build_kubernetes_analysis
+from agents.kubernetes.pipeline import build_kubernetes_analysis
+from agents.kubernetes.safety import safe_evidence_for_prompt
 from agents.shared.base import AgentInput
 from integrations.llm.base import LLMAdapter, LLMResponse
 
@@ -127,8 +128,9 @@ def test_failed_scheduling_detects_insufficient_resources_affinity_and_taint_con
         event("schedule", "FailedScheduling: 0/3 nodes are available: 2 Insufficient cpu, 1 node(s) had untolerated taint and node affinity conflict", reason="FailedScheduling"),
     ], service_name="payments")
 
-    assert "failed_scheduling" in codes(result)
-    # Event-only scheduling still requests node evidence instead of claiming a node failure.
+    found = codes(result)
+    assert {"failed_scheduling", "insufficient_resources", "affinity_constraint", "taint_toleration_mismatch"}.issubset(found)
+    assert "infrastructure" in result["handoff_candidates"]
     assert any("node infrastructure" in row["evidence"] for row in result["evidence_gaps"])
 
 
@@ -147,6 +149,8 @@ def test_rollout_regression_detects_generation_lag_unavailable_replicas_and_prog
     found = codes(result)
     assert {"generation_mismatch", "unavailable_replicas", "replica_shortfall", "rollout_stalled"}.issubset(found)
     assert "change" in result["handoff_candidates"]
+    deployment = next(row for row in result["resource_analyses"] if row["kind"] == "deployment")
+    assert any(row["code"] == "rollout_stalled" for row in deployment["findings"])
 
 
 def test_service_without_endpoint_is_explicit_cross_resource_finding():
@@ -183,6 +187,17 @@ def test_dns_failure_routes_to_network_and_requests_coredns_evidence():
     assert "dns_service_discovery_symptom" in codes(result)
     assert "network" in result["handoff_candidates"]
     assert any("CoreDNS" in row["evidence"] for row in result["next_best_evidence"])
+
+
+def test_non_resource_metric_is_not_misclassified_as_pod_object():
+    result = build_kubernetes_analysis([
+        metric("mem", "container_memory_working_set_bytes", 123456, pod="payments-abc", container="payments"),
+        {"id": "log", "type": "log", "source": "kubernetes", "message": "container payments logged request complete"},
+    ], service_name="payments")
+
+    assert result["resource_analyses"] == []
+    assert result["resource_counts"] == {}
+    assert result["pipeline_enrichment"]["non_resource_metric_log_classification_guard"] is True
 
 
 def test_healthy_deployment_remains_healthy_without_invented_failure():
@@ -234,6 +249,19 @@ def test_secret_and_configmap_analyzers_never_return_payload_values():
     assert "ALSO-SENSITIVE" not in rendered
     assert result["secret_metadata_safety"]["secret_payload_exposed"] is False
     assert all(row.get("data_redacted") for row in result["resource_analyses"])
+
+
+def test_prompt_safety_redacts_secret_and_configmap_payload_values_before_llm_projection():
+    safe = safe_evidence_for_prompt([
+        obj("secret", "Secret", "db-secret", data={"password": "TOP-SECRET-VALUE"}, stringData={"token": "TOKEN-VALUE"}),
+        obj("cm", "ConfigMap", "app-config", data={"mode": "PRIVATE-CONFIG-VALUE"}),
+    ])
+
+    rendered = json.dumps(safe)
+    assert "TOP-SECRET-VALUE" not in rendered
+    assert "TOKEN-VALUE" not in rendered
+    assert "PRIVATE-CONFIG-VALUE" not in rendered
+    assert "REDACTED_KUBERNETES_PAYLOAD" in rendered
 
 
 class StaticKubernetesLLM(LLMAdapter):
