@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 304 | Dashboard JS files scanned: 2 | Symbols indexed: 2387**
+**Python files scanned: 305 | Dashboard JS files scanned: 2 | Symbols indexed: 2409**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -89,6 +89,28 @@
 | `agents/database/engine.py` | `database_prompt_evidence_projection` | 604 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/dependency/__init__.py` | `DependencyAgent` | 4 | class | کلاس | module |
 | `agents/identity/__init__.py` | `IdentityAgent` | 4 | class | کلاس | module |
+| `agents/identity/engine.py` | `_raw` | 9 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/identity/engine.py` | `_lookup` | 14 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/identity/engine.py` | `_eid` | 25 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/identity/engine.py` | `_text` | 30 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/identity/engine.py` | `_number` | 40 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/identity/engine.py` | `_bool` | 51 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/identity/engine.py` | `_parse_time` | 64 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/identity/engine.py` | `_timestamp` | 78 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/identity/engine.py` | `_time_window` | 89 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/identity/engine.py` | `_metric_name` | 104 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/identity/engine.py` | `_metric_value` | 108 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/identity/engine.py` | `_status_code` | 113 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/identity/engine.py` | `_matches` | 127 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/identity/engine.py` | `_collect_metrics` | 132 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/identity/engine.py` | `_last` | 157 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/identity/engine.py` | `_stage` | 162 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/identity/engine.py` | `_build_observations` | 171 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/identity/engine.py` | `_cause_candidates` | 314 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/identity/engine.py` | `_cause_candidates.add` | 317 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _cause_candidates |
+| `agents/identity/engine.py` | `_authentication_chain` | 396 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/identity/engine.py` | `_rotation_timeline` | 419 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/identity/engine.py` | `build_identity_reliability_analysis` | 446 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
 | `agents/identity/safety.py` | `_sensitive_key` | 24 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/identity/safety.py` | `redact_identity_value` | 29 | function | Remove credential material while preserving IAM diagnostic metadata. | module |
 | `agents/identity/safety.py` | `identity_prompt_evidence` | 52 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
