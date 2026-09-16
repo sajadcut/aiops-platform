@@ -1,5 +1,7 @@
 (() => {
+  const baseSelectIncident = selectIncident;
   const baseRenderDetail = renderDetail;
+  const baseLoadAll = loadAll;
 
   function approvalPanel() {
     const lifecycle = S.detail?.lifecycle || {};
@@ -65,6 +67,138 @@
         ${reason ? `<div class="approval-reason"><label>Rejection reason</label><p>${esc(reason)}</p></div>` : ''}
       </div>` : ''}
     </div>`;
+  }
+
+  function summaryBadge(label, state = 'unknown') {
+    return `<span class="operator-summary-badge ${esc(state)}">${esc(label)}</span>`;
+  }
+
+  function causeBadge(summary) {
+    return summaryBadge(summary.cause_confidence_fa || 'نامشخص', lower(summary.cause_confidence || 'unknown'));
+  }
+
+  function approvalBadge(status) {
+    const value = lower(status);
+    if (value === 'pending') return summaryBadge('نیازمند Approval', 'probable');
+    if (value === 'approved') return summaryBadge('Approval تأیید شده', 'confirmed');
+    if (value === 'consumed') return summaryBadge('Approval مصرف شده', 'confirmed');
+    if (value === 'rejected') return summaryBadge('Approval رد شده', 'failed');
+    return summaryBadge('Approval ثبت نشده', 'unknown');
+  }
+
+  function executionBadge(status) {
+    const value = lower(status);
+    if (value === 'success') return summaryBadge('اجرا موفق', 'confirmed');
+    if (value === 'failed' || value === 'blocked') return summaryBadge('اجرا ناموفق', 'failed');
+    return summaryBadge('اجرا نشده', 'unknown');
+  }
+
+  function verificationBadge(status) {
+    const value = lower(status);
+    if (['success', 'succeeded', 'verified'].includes(value)) return summaryBadge('Verification موفق', 'confirmed');
+    if (['failed', 'failure'].includes(value)) return summaryBadge('Verification ناموفق', 'failed');
+    return summaryBadge('Verification ناقص', value === 'partial' || value === 'inconclusive' ? 'probable' : 'unknown');
+  }
+
+  function memoryBadge(status) {
+    const value = lower(status);
+    if (value === 'persisted') return summaryBadge('در Operational Memory ذخیره شد', 'confirmed');
+    if (value === 'not_persisted') return summaryBadge('در Memory ذخیره نشد', 'probable');
+    return summaryBadge('Memory ثبت نشده', 'unknown');
+  }
+
+  function observedStateRows(observed = {}) {
+    const rows = [];
+    const svc = observed.service_status || {};
+    if (observed.service) rows.push(['Service', observed.service]);
+    if (observed.target) rows.push(['Host / IP', observed.target]);
+    if (observed.port) rows.push(['Port', observed.port]);
+    if (svc.active_state || svc.sub_state) rows.push(['Service status', [svc.active_state, svc.sub_state].filter(Boolean).join('/')]);
+    if (observed.process_status?.running != null) rows.push(['Process', observed.process_status.running ? `running (${observed.process_status.count ?? '—'})` : 'not running']);
+    if (observed.port_listener_status?.listening != null) rows.push(['Port listener', observed.port_listener_status.listening ? 'listening' : 'not listening']);
+    if (observed.tcp_check?.reachable != null) rows.push(['TCP', observed.tcp_check.reachable ? 'reachable' : 'unreachable']);
+    if (observed.config_validate?.valid != null) rows.push(['Config', observed.config_validate.valid ? 'valid' : 'invalid']);
+    return rows.map(([label, value]) => `<div class="operator-summary-fact"><span>${esc(label)}</span><strong>${esc(value)}</strong></div>`).join('') || '<p class="operator-summary-muted">Evidence ساختاریافته کافی برای وضعیت دقیق سرویس/Process/Port موجود نیست.</p>';
+  }
+
+  function evidenceRows(items = []) {
+    return items.slice(0, 8).map(item => `<div class="operator-summary-evidence"><div><b>${esc(item.diagnostic || item.type || item.source || 'evidence')}</b><span>${esc(item.source || 'unknown')}</span></div><p>${esc(item.summary || 'Evidence ثبت شده')}</p><code>${esc(item.evidence_id || item.reference || 'بدون شناسه')}</code></div>`).join('') || '<p class="operator-summary-muted">Evidence کلیدی قابل نمایش ثبت نشده است.</p>';
+  }
+
+  function actionText(action) {
+    if (!action) return 'پیشنهاد عملیاتی ساختاریافته ثبت نشده است.';
+    const pieces = [action.action, action.tool ? `از طریق ${action.tool}` : '', action.target ? `روی ${action.target}` : ''].filter(Boolean);
+    return action.text_fa || pieces.join(' ') || 'پیشنهاد عملیاتی ساختاریافته ثبت نشده است.';
+  }
+
+  function controlRows(summary) {
+    const decision = summary.decision || {};
+    const approval = summary.approval || {};
+    return `<div class="operator-summary-control-grid">
+      <div><span>Risk</span><strong>${esc(summary.risk_level || 'unknown')}</strong></div>
+      <div><span>Decision</span><strong>${esc(decision.action || decision.decision || '—')}</strong></div>
+      <div><span>Approval</span><strong>${esc(summary.approval_status || 'not_requested')}</strong></div>
+      <div><span>Approver</span><strong>${esc(summary.approver || '—')}</strong></div>
+      <div><span>Binding</span><strong>${approval.binding_complete ? 'complete' : 'not complete / not recorded'}</strong></div>
+    </div>`;
+  }
+
+  function executionText(summary) {
+    const execution = summary.execution;
+    if (!execution) return 'عملیاتی اجرا نشده است.';
+    const parts = [execution.tool, execution.action, execution.target].filter(Boolean).join(' → ');
+    const result = execution.reason || execution.error || (execution.result ? JSON.stringify(execution.result) : '');
+    return `${parts || 'Execution ثبت شده'}${result ? ` · ${result}` : ''}`;
+  }
+
+  function verificationText(summary) {
+    const verification = summary.verification;
+    if (!verification) return 'Verification هنوز ثبت نشده است.';
+    const details = [];
+    if (verification.message) details.push(verification.message);
+    if (verification.confidence != null) details.push(`confidence=${pct(verification.confidence)}`);
+    if (verification.evidence_refs?.length) details.push(`evidence=${verification.evidence_refs.length}`);
+    return details.join(' · ') || `status=${verification.status || summary.verification_status}`;
+  }
+
+  function operatorSummaryCard(summary) {
+    const human = summary.human_action_indicator || {};
+    return `<section class="operator-summary-card" dir="rtl" lang="fa">
+      <div class="operator-summary-head">
+        <div><span class="section-kicker">Decision support · durable evidence</span><h3>خلاصه فارسی رخداد</h3></div>
+        <div class="operator-summary-badges">${causeBadge(summary)}${approvalBadge(summary.approval_status)}${executionBadge(summary.execution_status)}${verificationBadge(summary.verification_status)}</div>
+      </div>
+      <p class="operator-summary-lead">${esc(summary.summary_fa || 'خلاصه فارسی از داده‌های فعلی قابل تولید نیست.')}</p>
+      <div class="operator-summary-sections">
+        <article><h4>چه چیزی مشاهده شد؟</h4><div class="operator-summary-facts">${observedStateRows(summary.observed_state)}</div></article>
+        <article><h4>علت محتمل ${causeBadge(summary)}</h4><p>${esc(summary.likely_cause || 'نامشخص')}</p></article>
+        <article><h4>نشانه‌های اقدام انسانی ${summaryBadge(human.status_fa || 'نامشخص', lower(human.status || 'unknown'))}</h4><p>${esc(human.text_fa || 'شواهد کافی موجود نیست.')}</p></article>
+        <article><h4>پیشنهاد AIOps</h4><p>${esc(actionText(summary.recommended_action))}</p></article>
+        <article><h4>وضعیت کنترل ${approvalBadge(summary.approval_status)}</h4>${controlRows(summary)}</article>
+        <article><h4>اجرای عملیات ${executionBadge(summary.execution_status)}</h4><p>${esc(executionText(summary))}</p></article>
+        <article><h4>Verification ${verificationBadge(summary.verification_status)}</h4><p>${esc(verificationText(summary))}</p></article>
+        <article><h4>Operational Memory ${memoryBadge(summary.memory_status)}</h4><p>${summary.memory_status === 'persisted' ? 'نتیجه تأییدشده در Operational Memory ثبت شده است.' : summary.memory_status === 'not_persisted' ? 'Write-back ثبت شده اما نتیجه persist نشده است.' : 'Write-back یا Memory Entry برای این چرخه ثبت نشده است.'}</p></article>
+        <article class="operator-summary-wide"><h4>شواهد کلیدی</h4><div class="operator-summary-evidence-list">${evidenceRows(summary.key_evidence || [])}</div></article>
+        <article class="operator-summary-wide next-step"><h4>پیشنهاد به اپراتور</h4><p>${esc(summary.operator_next_step || 'Evidence و Governance state را بازبینی کنید.')}</p></article>
+      </div>
+      <div class="operator-summary-policy">این Summary فقط Decision Support است؛ Approval یا Execution Authority ایجاد نمی‌کند و از Evidence جدیدی خارج از داده‌های Incident استفاده نمی‌کند.</div>
+    </section>`;
+  }
+
+  function injectOperatorSummary() {
+    const detail = document.querySelector('#detail');
+    const head = detail?.querySelector('.detail-head');
+    if (!detail || !head) return;
+    detail.querySelector('.operator-summary-card')?.remove();
+    if (S.operatorSummaryPending) {
+      head.insertAdjacentHTML('afterend', '<section class="operator-summary-card loading" dir="rtl" lang="fa"><h3>خلاصه فارسی رخداد</h3><p>در حال خواندن وضعیت پایدار فعلی Incident…</p></section>');
+      return;
+    }
+    if (S.operatorSummaryError) {
+      head.insertAdjacentHTML('afterend', `<section class="operator-summary-card unavailable" dir="rtl" lang="fa"><h3>خلاصه فارسی رخداد</h3><p>${esc(S.operatorSummaryError)}</p><small>داده‌های ساختاریافته Incident در بخش‌های زیر همچنان قابل مشاهده هستند.</small></section>`);
+      return;
+    }
+    if (S.operatorSummary) head.insertAdjacentHTML('afterend', operatorSummaryCard(S.operatorSummary));
   }
 
   async function refreshIncidentDecision() {
@@ -150,12 +284,42 @@
     }
   };
 
+  selectIncident = async function selectIncidentWithOperatorSummary(id) {
+    S.operatorSummary = null;
+    S.operatorSummaryError = null;
+    S.operatorSummaryPending = true;
+    S.detail = null;
+    const summaryRequest = api(`/api/v1/incidents/${encodeURIComponent(id)}/operator-summary`)
+      .then(value => ({value, error: null}))
+      .catch(error => ({value: null, error: error.message}));
+    await baseSelectIncident(id);
+    if (S.selected !== id) return;
+    const result = await summaryRequest;
+    S.operatorSummary = result.value;
+    S.operatorSummaryError = result.error;
+    S.operatorSummaryPending = false;
+    if (S.detail?.context?.incident_id === id) renderDetail('overview');
+  };
+
   renderDetail = function enhancedRenderDetail(tab = 'overview') {
     baseRenderDetail(tab);
+    injectOperatorSummary();
     if (tab !== 'decision') return;
     const pane = document.querySelector('#detailPane');
     if (!pane) return;
     const existing = pane.innerHTML;
     pane.innerHTML = `${approvalPanel()}${existing}`;
   };
+
+  loadAll = async function loadAllWithCurrentIncidentSummary() {
+    const selectedBeforeRefresh = S.selected;
+    await baseLoadAll();
+    if (selectedBeforeRefresh && S.selected === selectedBeforeRefresh && S.view === 'incidents') {
+      await selectIncident(selectedBeforeRefresh);
+    }
+  };
+
+  window.selectIncident = selectIncident;
+  window.renderDetail = renderDetail;
+  window.loadAll = loadAll;
 })();

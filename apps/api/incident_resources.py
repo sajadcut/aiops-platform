@@ -5,12 +5,13 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import desc, select, text
 
 from database import AsyncSessionLocal
-from domain.models import Incident, Evidence, Finding
+from domain.models import Incident, Evidence, Finding, MemoryEntry
 from domain.contracts.exceptions import AppException
 from apps.rag_service import KnowledgeRAGService
 from apps.memory_service import OperationalMemoryService
 from apps.audit_service.postgres import PostgreSQLAuditStore
 from apps.orchestrator.workflow_store import WorkflowCheckpointStore
+from apps.operator_summary import build_operator_summary
 from apps.security.auth import require_permission
 from integrations.cognia import CogniaAPIError, CogniaConfigurationError, CogniaContractError
 
@@ -181,3 +182,100 @@ async def get_incident_lifecycle(incident_id: UUID):
         "terminal_reason": state.get("terminal_reason"),
         "audit": audits,
     }
+
+
+@router.get("/incidents/{incident_id}/operator-summary")
+async def get_operator_summary(incident_id: UUID):
+    """Return a read-only Persian operator summary derived from current durable Incident state."""
+    async with AsyncSessionLocal() as db:
+        incident = await db.get(Incident, incident_id)
+        if incident is None:
+            raise HTTPException(status_code=404, detail="Incident not found")
+
+        evidence_rows = (
+            await db.execute(
+                select(Evidence)
+                .where(Evidence.incident_id == incident_id)
+                .order_by(desc(Evidence.created_at))
+                .limit(500)
+            )
+        ).scalars().all()
+        finding_rows = (
+            await db.execute(
+                select(Finding)
+                .where(Finding.incident_id == incident_id)
+                .order_by(desc(Finding.created_at))
+                .limit(100)
+            )
+        ).scalars().all()
+        checkpoint = await WorkflowCheckpointStore(db).load(str(incident_id)) or {}
+        approval = (
+            await db.execute(
+                text(
+                    "SELECT approval_id,action,risk_level,approver,status,metadata,created_at,approved_at,rejected_at "
+                    "FROM approvals WHERE incident_id=:id ORDER BY created_at DESC LIMIT 1"
+                ),
+                {"id": str(incident_id)},
+            )
+        ).mappings().first()
+        audits = await PostgreSQLAuditStore(db).list(str(incident_id), 200)
+        memory_row = (
+            await db.execute(
+                select(MemoryEntry)
+                .where(MemoryEntry.incident_id == incident_id)
+                .order_by(desc(MemoryEntry.created_at))
+                .limit(1)
+            )
+        ).scalars().first()
+
+    durable_evidence = [
+        {
+            "id": str(row.id),
+            "type": row.type.value if hasattr(row.type, "value") else str(row.type),
+            "source": row.source,
+            "query": row.query,
+            "reference": row.reference,
+            "raw_data": row.raw_data or {},
+            "confidence": row.confidence,
+            "created_at": row.created_at.isoformat() if row.created_at else None,
+        }
+        for row in evidence_rows
+    ]
+    findings = [
+        {
+            "id": str(row.id),
+            "agent": row.agent,
+            "finding_type": row.finding_type,
+            "statement": row.statement,
+            "evidence_ids": row.evidence_ids or [],
+            "confidence": row.confidence,
+            "created_at": row.created_at.isoformat() if row.created_at else None,
+        }
+        for row in finding_rows
+    ]
+    memory_entry = None
+    if memory_row is not None:
+        memory_entry = {
+            "id": str(memory_row.id),
+            "verification_result": memory_row.verification_result,
+            "outcome": memory_row.outcome,
+            "root_cause": memory_row.root_cause,
+            "action": memory_row.action,
+        }
+
+    return build_operator_summary(
+        incident={
+            "id": str(incident.id),
+            "service": incident.service,
+            "severity": incident.severity,
+            "status": incident.status.value if hasattr(incident.status, "value") else str(incident.status),
+            "summary": incident.summary,
+            "context": incident.context or {},
+        },
+        durable_evidence=durable_evidence,
+        findings=findings,
+        checkpoint=checkpoint,
+        approval=dict(approval) if approval else None,
+        audit_events=audits,
+        memory_entry=memory_entry,
+    )
