@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 305 | Dashboard JS files scanned: 2 | Symbols indexed: 2411**
+**Python files scanned: 306 | Dashboard JS files scanned: 2 | Symbols indexed: 2433**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1928,6 +1928,28 @@
 | `tests/unit/test_http_transport_policy.py` | `test_no_https_enforcement_or_server_ca_config_remains_in_runtime_contract` | 44 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_http_transport_policy.py` | `test_outbound_runtime_httpx_clients_use_central_insecure_transport_factory` | 65 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_idempotency.py` | `test_fingerprint_is_stable` | 3 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_identity_reliability_engine.py` | `event` | 12 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_identity_reliability_engine.py` | `metric` | 22 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_identity_reliability_engine.py` | `analyze` | 33 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_identity_reliability_engine.py` | `codes` | 41 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_identity_reliability_engine.py` | `candidate` | 45 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_identity_reliability_engine.py` | `stage` | 49 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_identity_reliability_engine.py` | `test_expired_token_is_distinct_claim_time_failure` | 53 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_identity_reliability_engine.py` | `test_wrong_audience_is_separate_from_signature_failure` | 67 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_identity_reliability_engine.py` | `test_missing_signing_key_is_not_jwks_outage` | 77 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_identity_reliability_engine.py` | `test_jwks_outage_is_dependency_reachability_failure` | 86 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_identity_reliability_engine.py` | `test_certificate_expiry_is_tls_failure_not_token_failure` | 94 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_identity_reliability_engine.py` | `test_clock_skew_is_distinct_from_expired_token` | 109 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_identity_reliability_engine.py` | `test_rbac_denial_after_valid_signature_routes_to_security_and_application_context` | 119 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_identity_reliability_engine.py` | `test_healthy_auth_chain_has_no_fault_candidate` | 133 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_identity_reliability_engine.py` | `test_jwks_rotation_timeline_is_correlation_not_causal_proof` | 154 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_identity_reliability_engine.py` | `test_identity_redaction_removes_credentials_jwt_and_private_material` | 163 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_identity_reliability_engine.py` | `CapturingIdentityLLM` | 186 | class | کلاس | module |
+| `tests/unit/test_identity_reliability_engine.py` | `CapturingIdentityLLM.__init__` | 187 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CapturingIdentityLLM |
+| `tests/unit/test_identity_reliability_engine.py` | `CapturingIdentityLLM.provider_name` | 191 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CapturingIdentityLLM |
+| `tests/unit/test_identity_reliability_engine.py` | `CapturingIdentityLLM.generate` | 194 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CapturingIdentityLLM |
+| `tests/unit/test_identity_reliability_engine.py` | `CapturingIdentityLLM.generate_with_messages` | 219 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CapturingIdentityLLM |
+| `tests/unit/test_identity_reliability_engine.py` | `test_identity_agent_exposes_chain_and_never_prompts_full_credentials` | 224 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_infrastructure_use_engine.py` | `StaticInfrastructureLLM` | 11 | class | کلاس | module |
 | `tests/unit/test_infrastructure_use_engine.py` | `StaticInfrastructureLLM.provider_name` | 13 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | StaticInfrastructureLLM |
 | `tests/unit/test_infrastructure_use_engine.py` | `StaticInfrastructureLLM.generate` | 16 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | StaticInfrastructureLLM |
