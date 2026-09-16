@@ -3,7 +3,7 @@
 > این فایل فهرست فایل‌به‌فایل repository است. توضیح معماری و flow در `CODEBASE_GUIDE_FA.md` آمده است.
 > این فایل با `scripts/generate_file_index_fa.py` ساخته و در CI کنترل می‌شود.
 
-**تعداد فایل‌های track‌شده و پوشش‌داده‌شده: 353**
+**تعداد فایل‌های track‌شده و پوشش‌داده‌شده: 354**
 
 | Path | Type | Purpose | Called By | Calls/Depends On | Runtime/Test/Docs | Notes |
 |---|---|---|---|---|---|---|
@@ -33,6 +33,7 @@
 | `agents/infrastructure/__init__.py` | Python | Agent تخصصی infrastructure برای تحلیل و تولید Finding/Evidence request | Agent registry/orchestrator | agents.shared + evidence | Runtime | تحلیل/پیشنهاد؛ بدون اجرای مستقیم |
 | `agents/infrastructure/engine.py` | Python | تعریف package لایه Agent | Python imports | agents/* | Runtime | package marker |
 | `agents/kubernetes/__init__.py` | Python | Agent تخصصی kubernetes برای تحلیل و تولید Finding/Evidence request | Agent registry/orchestrator | agents.shared + evidence | Runtime | تحلیل/پیشنهاد؛ بدون اجرای مستقیم |
+| `agents/kubernetes/diagnostics.py` | Python | تعریف package لایه Agent | Python imports | agents/* | Runtime | package marker |
 | `agents/kubernetes/engine.py` | Python | تعریف package لایه Agent | Python imports | agents/* | Runtime | package marker |
 | `agents/kubernetes/pipeline.py` | Python | تعریف package لایه Agent | Python imports | agents/* | Runtime | package marker |
 | `agents/kubernetes/resource_analyzers.py` | Python | تعریف package لایه Agent | Python imports | agents/* | Runtime | package marker |

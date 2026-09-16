@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 286 | Dashboard JS files scanned: 2 | Symbols indexed: 2094**
+**Python files scanned: 287 | Dashboard JS files scanned: 2 | Symbols indexed: 2097**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -94,6 +94,9 @@
 | `agents/kubernetes/__init__.py` | `KubernetesAgent.description` | 22 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KubernetesAgent |
 | `agents/kubernetes/__init__.py` | `KubernetesAgent.allowed_tools` | 26 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KubernetesAgent |
 | `agents/kubernetes/__init__.py` | `KubernetesAgent.analyze` | 29 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KubernetesAgent |
+| `agents/kubernetes/diagnostics.py` | `_merge_findings` | 9 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/diagnostics.py` | `_update_handoffs` | 34 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/diagnostics.py` | `build_kubernetes_analysis` | 46 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
 | `agents/kubernetes/engine.py` | `_raw` | 18 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/kubernetes/engine.py` | `_resource` | 23 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/kubernetes/engine.py` | `_metadata` | 36 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
