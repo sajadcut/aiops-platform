@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 266 | Dashboard JS files scanned: 2 | Symbols indexed: 1713**
+**Python files scanned: 266 | Dashboard JS files scanned: 2 | Symbols indexed: 1715**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1677,8 +1677,10 @@
 | `tests/unit/test_vm_symptom_verification.py` | `_context` | 6 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_vm_symptom_verification.py` | `_telemetry` | 10 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_vm_symptom_verification.py` | `test_port_recovery_is_verified_from_fresh_operational_evidence` | 20 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_vm_symptom_verification.py` | `test_successful_command_cannot_mask_port_still_down` | 44 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_vm_symptom_verification.py` | `test_invalid_config_blocks_successful_verification` | 64 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_symptom_verification.py` | `test_service_recovery_is_success_despite_expected_resource_overhead` | 44 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_symptom_verification.py` | `test_material_regression_keeps_recovery_partial` | 70 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_symptom_verification.py` | `test_successful_command_cannot_mask_port_still_down` | 89 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_symptom_verification.py` | `test_invalid_config_blocks_successful_verification` | 109 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_vm_target_resolution.py` | `_RecordingVM` | 13 | class | کلاس | module |
 | `tests/unit/test_vm_target_resolution.py` | `_RecordingVM.__init__` | 14 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _RecordingVM |
 | `tests/unit/test_vm_target_resolution.py` | `_RecordingVM.collect_vm_metrics` | 17 | async method | Evidence/داده موردنیاز را از منبع مربوط جمع می‌کند | _RecordingVM |
