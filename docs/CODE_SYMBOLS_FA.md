@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 318 | Dashboard JS files scanned: 2 | Symbols indexed: 2647**
+**Python files scanned: 318 | Dashboard JS files scanned: 2 | Symbols indexed: 2652**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1261,11 +1261,15 @@
 | `domain/contracts/exceptions.py` | `register_exception_handlers.validation_exception_handler` | 73 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | register_exception_handlers |
 | `domain/contracts/exceptions.py` | `register_exception_handlers.http_exception_handler` | 99 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | register_exception_handlers |
 | `domain/contracts/exceptions.py` | `register_exception_handlers.generic_exception_handler` | 116 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | register_exception_handlers |
-| `domain/contracts/logging.py` | `_correlation_context_processor` | 21 | function | Attach request trace + stable Incident RID to every log event. | module |
-| `domain/contracts/logging.py` | `_processor_formatter` | 47 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `domain/contracts/logging.py` | `_file_handler` | 64 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `domain/contracts/logging.py` | `configure_logging` | 83 | function | Configure human console/text logs and JSON-line file logs. | module |
-| `domain/contracts/logging.py` | `log_workflow_step` | 154 | function | Emit one canonical Incident timeline event to text and JSON logs. | module |
+| `domain/contracts/logging.py` | `_correlation_context_processor` | 23 | function | Attach request trace + stable Incident RID to every log event. | module |
+| `domain/contracts/logging.py` | `_correlation_first_fields` | 49 | function | Keep correlation identifiers immediately after log level in serialized logs. | module |
+| `domain/contracts/logging.py` | `_inline_correlation_value` | 61 | function | Render one correlation value without allowing it to break the log line. | module |
+| `domain/contracts/logging.py` | `_human_console_renderer` | 66 | function | Render correlation identifiers directly after ``[level]`` in text logs. | module |
+| `domain/contracts/logging.py` | `_human_console_renderer.render` | 70 | method | خروجی UI/نمایشی را می‌سازد | _human_console_renderer |
+| `domain/contracts/logging.py` | `_processor_formatter` | 85 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `domain/contracts/logging.py` | `_file_handler` | 103 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `domain/contracts/logging.py` | `configure_logging` | 122 | function | Configure human console/text logs and JSON-line file logs. | module |
+| `domain/contracts/logging.py` | `log_workflow_step` | 195 | function | Emit one canonical Incident timeline event to text and JSON logs. | module |
 | `domain/contracts/rate_limit.py` | `RateLimiter` | 14 | class | In-process rate limiter using centrally configured limits. | module |
 | `domain/contracts/rate_limit.py` | `RateLimiter.__init__` | 22 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RateLimiter |
 | `domain/contracts/rate_limit.py` | `RateLimiter.__call__` | 26 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RateLimiter |
@@ -2126,12 +2130,13 @@
 | `tests/unit/test_identity_reliability_engine.py` | `CapturingIdentityLLM.generate` | 194 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CapturingIdentityLLM |
 | `tests/unit/test_identity_reliability_engine.py` | `CapturingIdentityLLM.generate_with_messages` | 219 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CapturingIdentityLLM |
 | `tests/unit/test_identity_reliability_engine.py` | `test_identity_agent_exposes_chain_and_never_prompts_full_credentials` | 224 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_incident_rid_logging.py` | `_configure_json_logging` | 14 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `tests/unit/test_incident_rid_logging.py` | `test_incident_rid_is_stable_and_uuid_derived` | 29 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_incident_rid_logging.py` | `test_non_uuid_legacy_incident_ids_are_stable_and_not_copied_verbatim` | 37 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_incident_rid_logging.py` | `test_workflow_event_binds_rid_for_follow_up_logs` | 46 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_incident_rid_logging.py` | `test_hourly_logrotate_policy_and_timer_are_tracked` | 75 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_incident_rid_logging.py` | `test_trace_script_accepts_incident_uuid_or_rid_contract` | 92 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_rid_logging.py` | `_configure_json_logging` | 16 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_incident_rid_logging.py` | `test_incident_rid_is_stable_and_uuid_derived` | 31 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_rid_logging.py` | `test_non_uuid_legacy_incident_ids_are_stable_and_not_copied_verbatim` | 39 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_rid_logging.py` | `test_workflow_event_binds_rid_for_follow_up_logs` | 48 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_rid_logging.py` | `test_correlation_identifiers_follow_level_in_text_and_json_logs` | 77 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_rid_logging.py` | `test_hourly_logrotate_policy_and_timer_are_tracked` | 126 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_rid_logging.py` | `test_trace_script_accepts_incident_uuid_or_rid_contract` | 143 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_infrastructure_use_engine.py` | `StaticInfrastructureLLM` | 11 | class | کلاس | module |
 | `tests/unit/test_infrastructure_use_engine.py` | `StaticInfrastructureLLM.provider_name` | 13 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | StaticInfrastructureLLM |
 | `tests/unit/test_infrastructure_use_engine.py` | `StaticInfrastructureLLM.generate` | 16 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | StaticInfrastructureLLM |
