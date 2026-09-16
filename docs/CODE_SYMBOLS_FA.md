@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 274 | Dashboard JS files scanned: 2 | Symbols indexed: 1848**
+**Python files scanned: 274 | Dashboard JS files scanned: 2 | Symbols indexed: 1849**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -136,12 +136,13 @@
 | `agents/shared/telemetry.py` | `AgentTelemetry.snapshot` | 97 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | AgentTelemetry |
 | `agents/shared/telemetry.py` | `AgentTelemetry.clear` | 122 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | AgentTelemetry |
 | `agents/storage/__init__.py` | `StorageAgent` | 4 | class | کلاس | module |
-| `agents/triage/__init__.py` | `TriageAgent` | 11 | class | کلاس | module |
-| `agents/triage/__init__.py` | `TriageAgent.__init__` | 12 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | TriageAgent |
-| `agents/triage/__init__.py` | `TriageAgent.name` | 16 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | TriageAgent |
-| `agents/triage/__init__.py` | `TriageAgent.description` | 20 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | TriageAgent |
-| `agents/triage/__init__.py` | `TriageAgent.allowed_tools` | 24 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | TriageAgent |
-| `agents/triage/__init__.py` | `TriageAgent.analyze` | 27 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | TriageAgent |
+| `agents/triage/__init__.py` | `TriageAgent` | 12 | class | کلاس | module |
+| `agents/triage/__init__.py` | `TriageAgent.__init__` | 13 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | TriageAgent |
+| `agents/triage/__init__.py` | `TriageAgent.name` | 17 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | TriageAgent |
+| `agents/triage/__init__.py` | `TriageAgent.description` | 21 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | TriageAgent |
+| `agents/triage/__init__.py` | `TriageAgent.allowed_tools` | 25 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | TriageAgent |
+| `agents/triage/__init__.py` | `TriageAgent._legacy_asset_routes` | 29 | method | Preserve the historical handoff contract while runtime uses focused specialist_routes. | TriageAgent |
+| `agents/triage/__init__.py` | `TriageAgent.analyze` | 43 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | TriageAgent |
 | `agents/triage/engine.py` | `_parse_timestamp` | 51 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/triage/engine.py` | `_evidence_id` | 65 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/triage/engine.py` | `_raw` | 70 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
