@@ -2,6 +2,7 @@ import json
 from typing import List, Optional
 
 from agents.shared.base import AgentInput, AgentOutput, BaseAgent, OperationalHypothesis, RecommendedAction
+from agents.shared.intelligence import build_deterministic_analysis, prompt_evidence_projection, sanitize_prompt_value
 from domain.contracts.config import settings
 from domain.contracts.logging import logger
 from integrations.llm.base import LLMAdapter
@@ -26,15 +27,19 @@ class SecurityAgent(BaseAgent):
     async def analyze(self, input_data: AgentInput) -> AgentOutput:
         logger.info(f"SecurityAgent analyzing: {input_data.incident_id}")
         evidence = self.evidence_items(input_data)
+        prompt_evidence = prompt_evidence_projection(evidence, settings.AGENT_MAX_EVIDENCE_ITEMS)
+        deterministic = build_deterministic_analysis("security", evidence, ["log"], input_data.service_name)
         evidence_ids = self.evidence_ids(input_data)
         auxiliary = self.auxiliary_context(input_data)
         logs = [item for item in evidence if str(item.get("type", "")).lower() == "log"]
         alerts = [item for item in evidence if str(item.get("type", "")).lower() in {"alert", "event"}]
         missing = self.missing_evidence_for(input_data, ["log"])
-        prompt = f"""You are a senior SOC analyst. LIVE EVIDENCE is authoritative. RAG/Memory are auxiliary only. Never assert compromise, exfiltration, brute force, credential theft, lateral movement or policy violation without direct live evidence. Distinguish observations from hypotheses.
+        prompt = f"""You are a senior evidence-driven SOC incident analyst. LIVE EVIDENCE is authoritative. RAG/Memory are auxiliary only. Never assert compromise, exfiltration, brute force, credential theft, lateral movement or policy violation without direct live evidence. Distinguish observation, policy/authorization event, probable attack hypothesis and confirmed compromise.
+Investigate auth/authz trends, suspicious process/runtime execution when telemetry exists, privilege-escalation indicators, anomalous user/service-account behavior, unusual source/destination or outbound connections, unexpected listeners, container/runtime security events, repeated denials and identity/network/application timeline correlation. For every suspicious interpretation actively produce a plausible benign alternative and the evidence required to separate them. MITRE-style staging is a hypothesis unless live evidence directly establishes it.
+DETERMINISTIC_ANALYSIS includes a conservative security_evidence_level, timeline, gaps and handoff hints. It must never upgrade a weak alert into confirmed compromise. Sensitive credentials/tokens are redacted before prompting.
 Return JSON keys: severity, health_status, findings, authentication_signals, authorization_signals, suspicious_signals, exposure_signals, policy_signals, probable_dependencies, affected_components, blast_radius, hypotheses, missing_evidence, handoff_agents, immediate_checks, containment_recommendations, escalation_target, risk_level, uncertainty_reason, confidence.
-Hypotheses entries: hypothesis, probability, evidence_ids, conflicting_evidence_ids, falsification_checks, impacted_components, recommended_next_evidence. Only live evidence IDs may be cited. immediate_checks are read-only. containment_recommendations are write recommendations and MUST remain approval-gated.
-Incident={input_data.incident_id}\nService={input_data.service_name}\nSummary={input_data.evidence_summary}\nLIVE_EVIDENCE={json.dumps(evidence, default=str)}\nAUXILIARY_CONTEXT={json.dumps(auxiliary, default=str)}\nContextSummary={json.dumps(input_data.context.get('summary', {}), default=str)}"""
+Hypotheses entries: hypothesis, probability, evidence_ids, conflicting_evidence_ids, falsification_checks, impacted_components, recommended_next_evidence. Only live evidence IDs may be cited. immediate_checks are read-only. containment_recommendations such as revoke/block/isolate are write recommendations and MUST remain approval-gated.
+Incident={input_data.incident_id}\nService={input_data.service_name}\nSummary={input_data.evidence_summary}\nDETERMINISTIC_ANALYSIS={json.dumps(deterministic, default=str)}\nLIVE_EVIDENCE={json.dumps(prompt_evidence, default=str)}\nAUXILIARY_CONTEXT={json.dumps(sanitize_prompt_value(auxiliary), default=str)}\nContextSummary={json.dumps(sanitize_prompt_value(input_data.context.get('summary', {})), default=str)}"""
         try:
             result = await self.generate_structured(prompt)
         except Exception as exc:
@@ -70,6 +75,11 @@ Incident={input_data.incident_id}\nService={input_data.service_name}\nSummary={i
         ])
         suspicious = self.normalize_list(result.get("suspicious_signals"), 6)
         findings = self.normalize_list(result.get("findings"), 10) or suspicious
+        handoffs = self.normalize_list(result.get("handoff_agents"), 6)
+        for hint in deterministic.get("suggested_handoffs", []):
+            target = str(hint.get("agent", "")) if isinstance(hint, dict) else ""
+            if target and target != self.name and target not in handoffs and len(handoffs) < 6:
+                handoffs.append(target)
         statement = "Security evidence indicates " + ("; ".join(findings) if findings else "no confirmed malicious pattern yet")
         return AgentOutput(
             agent_name=self.name,
@@ -86,7 +96,7 @@ Incident={input_data.incident_id}\nService={input_data.service_name}\nSummary={i
             recommended_actions=recommended_actions,
             hypotheses=hypotheses,
             missing_evidence=all_missing,
-            handoff_agents=self.normalize_list(result.get("handoff_agents"), 6),
+            handoff_agents=handoffs,
             probable_dependencies=self.normalize_list(result.get("probable_dependencies"), 8),
             affected_components=self.normalize_list(result.get("affected_components"), 8),
             blast_radius=str(result.get("blast_radius", "unknown")),
@@ -101,6 +111,9 @@ Incident={input_data.incident_id}\nService={input_data.service_name}\nSummary={i
                 "suspicious_signals": suspicious,
                 "exposure_signals": result.get("exposure_signals", []),
                 "policy_signals": result.get("policy_signals", []),
+                "security_evidence_level": deterministic.get("security_evidence_level"),
+                "deterministic_analysis": deterministic,
+                "next_best_evidence": deterministic.get("next_best_evidence", []),
                 "log_evidence_count": len(logs),
                 "alert_evidence_count": len(alerts),
                 "knowledge_context_count": len(auxiliary["knowledge_rag"]),
