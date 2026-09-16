@@ -89,16 +89,16 @@
 | `agents/shared/coordinator.py` | `IncidentCoordinator._specialist_failed` | 70 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentCoordinator |
 | `agents/shared/coordinator.py` | `IncidentCoordinator.synthesize` | 80 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentCoordinator |
 | `agents/shared/coordinator.py` | `IncidentCoordinator.synthesize.vote_agreement` | 184 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentCoordinator.synthesize |
-| `agents/shared/domain_agent.py` | `DomainSpec` | 14 | class | کلاس | module |
-| `agents/shared/domain_agent.py` | `DomainDiagnosticAgent` | 23 | class | Reusable specialist implementation for evidence-grounded operational domains. | module |
-| `agents/shared/domain_agent.py` | `DomainDiagnosticAgent.__init__` | 28 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DomainDiagnosticAgent |
-| `agents/shared/domain_agent.py` | `DomainDiagnosticAgent.name` | 32 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DomainDiagnosticAgent |
-| `agents/shared/domain_agent.py` | `DomainDiagnosticAgent.description` | 36 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DomainDiagnosticAgent |
-| `agents/shared/domain_agent.py` | `DomainDiagnosticAgent.allowed_tools` | 40 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DomainDiagnosticAgent |
-| `agents/shared/domain_agent.py` | `DomainDiagnosticAgent._bounded_prompt_value` | 44 | method | Compact prompt-only context without mutating stored/audited Evidence. | DomainDiagnosticAgent |
-| `agents/shared/domain_agent.py` | `DomainDiagnosticAgent._prompt_evidence` | 80 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DomainDiagnosticAgent |
-| `agents/shared/domain_agent.py` | `DomainDiagnosticAgent._peer_context` | 94 | method | Return bounded peer-analysis context published by the coordinator. | DomainDiagnosticAgent |
-| `agents/shared/domain_agent.py` | `DomainDiagnosticAgent.analyze` | 129 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DomainDiagnosticAgent |
+| `agents/shared/domain_agent.py` | `DomainSpec` | 15 | class | کلاس | module |
+| `agents/shared/domain_agent.py` | `DomainDiagnosticAgent` | 24 | class | Reusable specialist implementation for evidence-grounded operational domains. | module |
+| `agents/shared/domain_agent.py` | `DomainDiagnosticAgent.__init__` | 29 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DomainDiagnosticAgent |
+| `agents/shared/domain_agent.py` | `DomainDiagnosticAgent.name` | 33 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DomainDiagnosticAgent |
+| `agents/shared/domain_agent.py` | `DomainDiagnosticAgent.description` | 37 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DomainDiagnosticAgent |
+| `agents/shared/domain_agent.py` | `DomainDiagnosticAgent.allowed_tools` | 41 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DomainDiagnosticAgent |
+| `agents/shared/domain_agent.py` | `DomainDiagnosticAgent._bounded_prompt_value` | 45 | method | Compact and redact prompt-only context without mutating audited Evidence. | DomainDiagnosticAgent |
+| `agents/shared/domain_agent.py` | `DomainDiagnosticAgent._prompt_evidence` | 50 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DomainDiagnosticAgent |
+| `agents/shared/domain_agent.py` | `DomainDiagnosticAgent._peer_context` | 54 | method | Return bounded peer-analysis context published by the coordinator. | DomainDiagnosticAgent |
+| `agents/shared/domain_agent.py` | `DomainDiagnosticAgent.analyze` | 89 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DomainDiagnosticAgent |
 | `agents/shared/intelligence.py` | `_is_sensitive_key` | 107 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/shared/intelligence.py` | `sanitize_prompt_value` | 112 | function | Bound and redact untrusted operational data before it reaches an LLM prompt. | module |
 | `agents/shared/intelligence.py` | `prompt_evidence_projection` | 131 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
