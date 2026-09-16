@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 300 | Dashboard JS files scanned: 2 | Symbols indexed: 2315**
+**Python files scanned: 301 | Dashboard JS files scanned: 2 | Symbols indexed: 2336**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -2013,6 +2013,27 @@
 | `tests/unit/test_multi_source_signal_reasoning.py` | `test_peer_findings_are_published_as_auxiliary_operational_context` | 205 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_multi_source_signal_reasoning.py` | `test_collaborative_orchestrator_is_durable_runtime_default` | 225 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_multi_source_signal_reasoning.py` | `test_signal_ingestion_is_not_viewer_permission` | 229 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_network_reliability_engine.py` | `metric` | 11 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_network_reliability_engine.py` | `telemetry` | 28 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_network_reliability_engine.py` | `analyze` | 44 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_network_reliability_engine.py` | `codes` | 52 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_network_reliability_engine.py` | `candidate` | 56 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_network_reliability_engine.py` | `test_dns_nxdomain_is_localized_to_source_destination_and_not_generic_timeout` | 60 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_network_reliability_engine.py` | `test_packet_loss_and_retransmission_create_path_level_packet_loss_candidate` | 82 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_network_reliability_engine.py` | `test_closed_port_is_listener_service_not_routing` | 94 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_network_reliability_engine.py` | `test_listener_healthy_but_denied_flow_is_firewall_policy_path_break` | 105 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_network_reliability_engine.py` | `test_route_issue_is_distinct_from_destination_listener` | 128 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_network_reliability_engine.py` | `test_tls_identity_issue_requires_tls_evidence_not_tcp_timeout_only` | 139 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_network_reliability_engine.py` | `test_application_slow_response_is_not_mislabeled_as_network_fault` | 157 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_network_reliability_engine.py` | `test_network_healthy_when_path_dns_tcp_and_loss_are_explicitly_healthy` | 174 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_network_reliability_engine.py` | `test_connection_timeout_alone_is_uncertain_observation_not_network_root_cause` | 189 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_network_reliability_engine.py` | `test_dns_resolver_divergence_is_detected_from_same_source_and_query` | 198 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_network_reliability_engine.py` | `CapturingNetworkLLM` | 208 | class | کلاس | module |
+| `tests/unit/test_network_reliability_engine.py` | `CapturingNetworkLLM.__init__` | 209 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CapturingNetworkLLM |
+| `tests/unit/test_network_reliability_engine.py` | `CapturingNetworkLLM.provider_name` | 213 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CapturingNetworkLLM |
+| `tests/unit/test_network_reliability_engine.py` | `CapturingNetworkLLM.generate` | 216 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CapturingNetworkLLM |
+| `tests/unit/test_network_reliability_engine.py` | `CapturingNetworkLLM.generate_with_messages` | 247 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CapturingNetworkLLM |
+| `tests/unit/test_network_reliability_engine.py` | `test_network_agent_exposes_layered_path_analysis_and_hypothesis_context` | 252 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_oidc_auth.py` | `test_oidc_claims_map_to_identity` | 6 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_oidc_auth.py` | `test_oidc_rejects_wrong_issuer` | 18 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_operational_agents.py` | `StaticLLM` | 15 | class | کلاس | module |
