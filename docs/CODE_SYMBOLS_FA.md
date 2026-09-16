@@ -7,12 +7,12 @@
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
-| `agents/application/__init__.py` | `ApplicationAgent` | 10 | class | کلاس | module |
-| `agents/application/__init__.py` | `ApplicationAgent.__init__` | 11 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ApplicationAgent |
-| `agents/application/__init__.py` | `ApplicationAgent.name` | 15 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ApplicationAgent |
-| `agents/application/__init__.py` | `ApplicationAgent.description` | 19 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ApplicationAgent |
-| `agents/application/__init__.py` | `ApplicationAgent.allowed_tools` | 23 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ApplicationAgent |
-| `agents/application/__init__.py` | `ApplicationAgent.analyze` | 26 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ApplicationAgent |
+| `agents/application/__init__.py` | `ApplicationAgent` | 11 | class | کلاس | module |
+| `agents/application/__init__.py` | `ApplicationAgent.__init__` | 12 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ApplicationAgent |
+| `agents/application/__init__.py` | `ApplicationAgent.name` | 16 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ApplicationAgent |
+| `agents/application/__init__.py` | `ApplicationAgent.description` | 20 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ApplicationAgent |
+| `agents/application/__init__.py` | `ApplicationAgent.allowed_tools` | 24 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ApplicationAgent |
+| `agents/application/__init__.py` | `ApplicationAgent.analyze` | 27 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ApplicationAgent |
 | `agents/change/__init__.py` | `ChangeAgent` | 4 | class | کلاس | module |
 | `agents/database/__init__.py` | `DatabaseAgent` | 4 | class | کلاس | module |
 | `agents/dependency/__init__.py` | `DependencyAgent` | 4 | class | کلاس | module |
