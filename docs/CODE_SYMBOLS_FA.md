@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 301 | Dashboard JS files scanned: 2 | Symbols indexed: 2336**
+**Python files scanned: 302 | Dashboard JS files scanned: 2 | Symbols indexed: 2360**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -417,6 +417,30 @@
 | `agents/shared/telemetry.py` | `AgentTelemetry.snapshot` | 97 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | AgentTelemetry |
 | `agents/shared/telemetry.py` | `AgentTelemetry.clear` | 122 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | AgentTelemetry |
 | `agents/storage/__init__.py` | `StorageAgent` | 4 | class | کلاس | module |
+| `agents/storage/engine.py` | `_raw` | 7 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/storage/engine.py` | `_labels` | 12 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/storage/engine.py` | `_eid` | 19 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/storage/engine.py` | `_lookup` | 24 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/storage/engine.py` | `_text` | 35 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/storage/engine.py` | `_number` | 45 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/storage/engine.py` | `_bool` | 56 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/storage/engine.py` | `_ratio` | 69 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/storage/engine.py` | `_parse_time` | 75 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/storage/engine.py` | `_timestamp` | 89 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/storage/engine.py` | `_metric` | 100 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/storage/engine.py` | `_resource` | 106 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/storage/engine.py` | `_window` | 116 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/storage/engine.py` | `_metric_rows` | 152 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/storage/engine.py` | `_last` | 171 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/storage/engine.py` | `_explicit_state` | 176 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/storage/engine.py` | `_capacity_analysis` | 262 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/storage/engine.py` | `_io_analysis` | 279 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/storage/engine.py` | `_first_anomaly_time` | 291 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/storage/engine.py` | `_domain_incident_times` | 309 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/storage/engine.py` | `_temporal_correlation` | 329 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/storage/engine.py` | `_cause_candidates` | 367 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/storage/engine.py` | `_cause_candidates.add` | 376 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _cause_candidates |
+| `agents/storage/engine.py` | `build_storage_reliability_analysis` | 482 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
 | `agents/triage/__init__.py` | `TriageAgent` | 12 | class | کلاس | module |
 | `agents/triage/__init__.py` | `TriageAgent.__init__` | 13 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | TriageAgent |
 | `agents/triage/__init__.py` | `TriageAgent.name` | 17 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | TriageAgent |

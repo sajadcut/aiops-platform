@@ -3,7 +3,7 @@
 > این فایل فهرست فایل‌به‌فایل repository است. توضیح معماری و flow در `CODEBASE_GUIDE_FA.md` آمده است.
 > این فایل با `scripts/generate_file_index_fa.py` ساخته و در CI کنترل می‌شود.
 
-**تعداد فایل‌های track‌شده و پوشش‌داده‌شده: 368**
+**تعداد فایل‌های track‌شده و پوشش‌داده‌شده: 369**
 
 | Path | Type | Purpose | Called By | Calls/Depends On | Runtime/Test/Docs | Notes |
 |---|---|---|---|---|---|---|
@@ -57,6 +57,7 @@
 | `agents/shared/registry.py` | Python | زیرساخت مشترک Agentها: contract، coordination، registry یا telemetry | Orchestrator/Agentها | domain, LLM, evidence | Runtime | Agent write authority ندارد |
 | `agents/shared/telemetry.py` | Python | زیرساخت مشترک Agentها: contract، coordination، registry یا telemetry | Orchestrator/Agentها | domain, LLM, evidence | Runtime | Agent write authority ندارد |
 | `agents/storage/__init__.py` | Python | Agent تخصصی storage برای تحلیل و تولید Finding/Evidence request | Agent registry/orchestrator | agents.shared + evidence | Runtime | تحلیل/پیشنهاد؛ بدون اجرای مستقیم |
+| `agents/storage/engine.py` | Python | تعریف package لایه Agent | Python imports | agents/* | Runtime | package marker |
 | `agents/triage/__init__.py` | Python | Agent تخصصی triage برای تحلیل و تولید Finding/Evidence request | Agent registry/orchestrator | agents.shared + evidence | Runtime | تحلیل/پیشنهاد؛ بدون اجرای مستقیم |
 | `agents/triage/engine.py` | Python | تعریف package لایه Agent | Python imports | agents/* | Runtime | package marker |
 | `agents/vm/__init__.py` | Python | Agent تخصصی vm برای تحلیل و تولید Finding/Evidence request | Agent registry/orchestrator | agents.shared + evidence | Runtime | تحلیل/پیشنهاد؛ بدون اجرای مستقیم |
