@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 300 | Dashboard JS files scanned: 2 | Symbols indexed: 2311**
+**Python files scanned: 300 | Dashboard JS files scanned: 2 | Symbols indexed: 2315**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -233,7 +233,11 @@
 | `agents/kubernetes/safety.py` | `_redact_payload` | 18 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/kubernetes/safety.py` | `safe_evidence_for_prompt` | 34 | function | Return a bounded-copy-friendly evidence set with Secret/ConfigMap payload values removed. | module |
 | `agents/messaging/__init__.py` | `MessagingAgent` | 4 | class | کلاس | module |
-| `agents/network/__init__.py` | `NetworkAgent` | 4 | class | کلاس | module |
+| `agents/network/__init__.py` | `NetworkAgent` | 15 | class | کلاس | module |
+| `agents/network/__init__.py` | `NetworkAgent.__init__` | 34 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | NetworkAgent |
+| `agents/network/__init__.py` | `NetworkAgent._network_hypothesis_context` | 38 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | NetworkAgent |
+| `agents/network/__init__.py` | `NetworkAgent._network_hypothesis_context.inferred` | 46 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | NetworkAgent._network_hypothesis_context |
+| `agents/network/__init__.py` | `NetworkAgent.analyze` | 80 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | NetworkAgent |
 | `agents/network/engine.py` | `_raw` | 7 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/network/engine.py` | `_labels` | 12 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/network/engine.py` | `_eid` | 20 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
