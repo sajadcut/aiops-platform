@@ -87,10 +87,10 @@
 | `agents/shared/base.py` | `BaseAgent.analysis_only_actions` | 503 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
 | `agents/shared/coordinator.py` | `IncidentCoordinator` | 8 | class | Deterministic coordinator for routing and multi-agent synthesis. | module |
 | `agents/shared/coordinator.py` | `IncidentCoordinator.select_agents` | 33 | method | بر اساس state/capability مسیر یا handler مناسب را انتخاب می‌کند | IncidentCoordinator |
-| `agents/shared/coordinator.py` | `IncidentCoordinator.select_agents.add` | 39 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentCoordinator.select_agents |
-| `agents/shared/coordinator.py` | `IncidentCoordinator._specialist_failed` | 70 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentCoordinator |
-| `agents/shared/coordinator.py` | `IncidentCoordinator.synthesize` | 80 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentCoordinator |
-| `agents/shared/coordinator.py` | `IncidentCoordinator.synthesize.vote_agreement` | 184 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentCoordinator.synthesize |
+| `agents/shared/coordinator.py` | `IncidentCoordinator.select_agents.add` | 43 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentCoordinator.select_agents |
+| `agents/shared/coordinator.py` | `IncidentCoordinator._specialist_failed` | 117 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentCoordinator |
+| `agents/shared/coordinator.py` | `IncidentCoordinator.synthesize` | 127 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentCoordinator |
+| `agents/shared/coordinator.py` | `IncidentCoordinator.synthesize.vote_agreement` | 231 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentCoordinator.synthesize |
 | `agents/shared/domain_agent.py` | `DomainSpec` | 15 | class | کلاس | module |
 | `agents/shared/domain_agent.py` | `DomainDiagnosticAgent` | 24 | class | Reusable specialist implementation for evidence-grounded operational domains. | module |
 | `agents/shared/domain_agent.py` | `DomainDiagnosticAgent.__init__` | 29 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DomainDiagnosticAgent |
