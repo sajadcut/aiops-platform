@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 303 | Dashboard JS files scanned: 2 | Symbols indexed: 2384**
+**Python files scanned: 304 | Dashboard JS files scanned: 2 | Symbols indexed: 2387**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -89,6 +89,9 @@
 | `agents/database/engine.py` | `database_prompt_evidence_projection` | 604 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/dependency/__init__.py` | `DependencyAgent` | 4 | class | کلاس | module |
 | `agents/identity/__init__.py` | `IdentityAgent` | 4 | class | کلاس | module |
+| `agents/identity/safety.py` | `_sensitive_key` | 24 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/identity/safety.py` | `redact_identity_value` | 29 | function | Remove credential material while preserving IAM diagnostic metadata. | module |
+| `agents/identity/safety.py` | `identity_prompt_evidence` | 52 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/infrastructure/__init__.py` | `InfrastructureAgent` | 12 | class | کلاس | module |
 | `agents/infrastructure/__init__.py` | `InfrastructureAgent.__init__` | 13 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | InfrastructureAgent |
 | `agents/infrastructure/__init__.py` | `InfrastructureAgent.name` | 17 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | InfrastructureAgent |
