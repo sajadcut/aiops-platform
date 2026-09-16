@@ -57,6 +57,7 @@ for router, tags in [
 _MASTER_API_ROUTES = {
     "/api/v1/health": (health.health_check, ["GET"], []),
     "/api/v1/incidents/analyze": (incidents.analyze_incident, ["POST"], [Depends(rate_limiter_strict), Depends(require_permission("read:incident"))]),
+    "/api/v1/incidents/{incident_id}/operator-summary": (incident_resources.get_operator_summary, ["GET"], [Depends(require_permission("read:incident"))]),
     "/api/v1/dashboard/summary": (dashboard.dashboard_summary, ["GET"], [Depends(require_permission("read:incident"))]),
     "/api/v1/approvals": (execution.create_approval, ["POST"], [Depends(require_permission("approve:low_risk"))]),
     "/api/v1/runbooks/{runbook_id}/execute": (runbook_execution.execute_runbook, ["POST"], [Depends(require_permission("execute:approved"))]),
