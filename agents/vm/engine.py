@@ -276,19 +276,51 @@ def _causal_findings(host: Mapping[str, Any], process: Mapping[str, Any], servic
     cpu = matrix.get("cpu") if isinstance(matrix.get("cpu"), Mapping) else {}
     disk = matrix.get("disk") if isinstance(matrix.get("disk"), Mapping) else {}
     memory = matrix.get("memory") if isinstance(matrix.get("memory"), Mapping) else {}
+
+    if cpu.get("status") == "saturated":
+        findings.append({"code": "guest_cpu_saturation", "evidence_ids": cpu.get("evidence_ids") or [], "handoff": "infrastructure"})
+    elif cpu.get("status") == "virtualization_contention":
+        findings.append({"code": "guest_virtualization_contention", "evidence_ids": cpu.get("evidence_ids") or [], "handoff": "infrastructure"})
+
     if cpu.get("status") == "waiting_on_io" and disk.get("status") in {"io_bottleneck", "device_error"}:
         findings.append({"code": "storage_pressure_visible_as_guest_cpu_wait", "evidence_ids": list(dict.fromkeys((disk.get("evidence_ids") or []) + (cpu.get("evidence_ids") or []))), "handoff": "storage"})
+
+    disk_codes = {
+        "io_bottleneck": "guest_disk_io_bottleneck",
+        "device_error": "guest_disk_device_error",
+        "inode_pressure": "guest_inode_pressure",
+        "capacity_pressure": "guest_filesystem_capacity_pressure",
+    }
+    disk_code = disk_codes.get(str(disk.get("status") or ""))
+    if disk_code:
+        findings.append({"code": disk_code, "evidence_ids": disk.get("evidence_ids") or [], "handoff": "storage"})
+
     if memory.get("status") in {"oom_pressure", "swap_storm", "pressured"}:
         findings.append({"code": "guest_memory_pressure", "evidence_ids": memory.get("evidence_ids") or [], "handoff": "infrastructure"})
+
+    if process.get("absent_processes"):
+        ids = [str(row.get("evidence_id")) for row in process["absent_processes"] if row.get("evidence_id")]
+        findings.append({"code": "process_not_running_observed", "evidence_ids": ids})
+    if process.get("restart_behavior_candidates"):
+        ids = [str(row.get("evidence_id")) for row in process["restart_behavior_candidates"] if row.get("evidence_id")]
+        findings.append({"code": "process_restart_churn", "evidence_ids": ids})
+    if process.get("fd_pressure_candidates"):
+        ids = [str(row.get("evidence_id")) for row in process["fd_pressure_candidates"] if row.get("evidence_id")]
+        findings.append({"code": "process_fd_pressure", "evidence_ids": ids})
+
+    if service.get("failed_states"):
+        ids = [str(row.get("evidence_id")) for row in service["failed_states"] if row.get("evidence_id")]
+        findings.append({"code": "systemd_failed_state", "evidence_ids": ids})
+    elif service.get("inactive_states"):
+        ids = [str(row.get("evidence_id")) for row in service["inactive_states"] if row.get("evidence_id")]
+        findings.append({"code": "systemd_inactive_observed", "evidence_ids": ids})
     if service.get("failed_dependency_states"):
-        ids = [str(row.get("evidence_id")) for row in service["failed_dependency_states"]]
+        ids = [str(row.get("evidence_id")) for row in service["failed_dependency_states"] if row.get("evidence_id")]
         findings.append({"code": "systemd_failed_dependency", "evidence_ids": ids, "handoff": "dependency"})
     if service.get("restart_loop_candidates"):
-        ids = [str(row.get("evidence_id")) for row in service["restart_loop_candidates"]]
+        ids = [str(row.get("evidence_id")) for row in service["restart_loop_candidates"] if row.get("evidence_id")]
         findings.append({"code": "service_restart_loop", "evidence_ids": ids})
-    if process.get("fd_pressure_candidates"):
-        ids = [str(row.get("evidence_id")) for row in process["fd_pressure_candidates"]]
-        findings.append({"code": "process_fd_pressure", "evidence_ids": ids})
+
     if boot.get("reboot_events"):
         near = [row for row in boot["reboot_events"] if row.get("incident_offset_seconds") is not None and abs(float(row["incident_offset_seconds"])) <= 900]
         if near:
@@ -314,7 +346,7 @@ def build_vm_guest_analysis(
             handoffs.append(target)
     gaps: List[Dict[str, Any]] = []
     if not host.get("metric_kinds"):
-        gaps.append({"evidence": "guest host metrics: CPU/load/iowait/steal, memory/swap/PSI, disk/inode/I/O", "information_gain": 0.97})
+        gaps.append({"evidence": "guest host metrics: CPU/load/iowait/steal, memory/swap/PSI, disk/inode/I/O/filesystem", "information_gain": 0.97})
     if process.get("process_count") == 0:
         gaps.append({"evidence": "process snapshot with PID/PPID CPU memory FD sockets and restart state", "information_gain": 0.94})
     if not service.get("service_states"):
