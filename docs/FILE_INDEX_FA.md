@@ -3,7 +3,7 @@
 > این فایل فهرست فایل‌به‌فایل repository است. توضیح معماری و flow در `CODEBASE_GUIDE_FA.md` آمده است.
 > این فایل با `scripts/generate_file_index_fa.py` ساخته و در CI کنترل می‌شود.
 
-**تعداد فایل‌های track‌شده و پوشش‌داده‌شده: 342**
+**تعداد فایل‌های track‌شده و پوشش‌داده‌شده: 343**
 
 | Path | Type | Purpose | Called By | Calls/Depends On | Runtime/Test/Docs | Notes |
 |---|---|---|---|---|---|---|
@@ -24,6 +24,7 @@
 | `agents/README.md` | Docs | راهنمای Agent layer و نقش Agentها | توسعه‌دهنده | agents/* | Docs | مرجع لایه Agent |
 | `agents/__init__.py` | Python | تعریف package لایه Agent | Python imports | agents/* | Runtime | package marker |
 | `agents/application/__init__.py` | Python | Agent تخصصی application برای تحلیل و تولید Finding/Evidence request | Agent registry/orchestrator | agents.shared + evidence | Runtime | تحلیل/پیشنهاد؛ بدون اجرای مستقیم |
+| `agents/application/engine.py` | Python | تعریف package لایه Agent | Python imports | agents/* | Runtime | package marker |
 | `agents/change/__init__.py` | Python | Agent تخصصی change برای تحلیل و تولید Finding/Evidence request | Agent registry/orchestrator | agents.shared + evidence | Runtime | تحلیل/پیشنهاد؛ بدون اجرای مستقیم |
 | `agents/database/__init__.py` | Python | Agent تخصصی database برای تحلیل و تولید Finding/Evidence request | Agent registry/orchestrator | agents.shared + evidence | Runtime | تحلیل/پیشنهاد؛ بدون اجرای مستقیم |
 | `agents/dependency/__init__.py` | Python | Agent تخصصی dependency برای تحلیل و تولید Finding/Evidence request | Agent registry/orchestrator | agents.shared + evidence | Runtime | تحلیل/پیشنهاد؛ بدون اجرای مستقیم |

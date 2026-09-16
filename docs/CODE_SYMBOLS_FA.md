@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 275 | Dashboard JS files scanned: 2 | Symbols indexed: 1865**
+**Python files scanned: 276 | Dashboard JS files scanned: 2 | Symbols indexed: 1896**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -13,6 +13,37 @@
 | `agents/application/__init__.py` | `ApplicationAgent.description` | 20 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ApplicationAgent |
 | `agents/application/__init__.py` | `ApplicationAgent.allowed_tools` | 24 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ApplicationAgent |
 | `agents/application/__init__.py` | `ApplicationAgent.analyze` | 27 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ApplicationAgent |
+| `agents/application/engine.py` | `_raw` | 19 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/application/engine.py` | `_evidence_id` | 24 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/application/engine.py` | `_parse_timestamp` | 29 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/application/engine.py` | `_numeric` | 43 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/application/engine.py` | `_flatten_text` | 65 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/application/engine.py` | `_text` | 88 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/application/engine.py` | `_first` | 92 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/application/engine.py` | `_labels` | 100 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/application/engine.py` | `_field` | 106 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/application/engine.py` | `_metric_name` | 118 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/application/engine.py` | `_metric_value` | 124 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/application/engine.py` | `_baseline` | 130 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/application/engine.py` | `_delta` | 142 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/application/engine.py` | `_classify_metric` | 153 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/application/engine.py` | `_percentile` | 180 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/application/engine.py` | `_metric_features` | 194 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/application/engine.py` | `_status_family` | 255 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/application/engine.py` | `_http_features` | 265 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/application/engine.py` | `_normalize_signature` | 321 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/application/engine.py` | `_exception_type` | 331 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/application/engine.py` | `_error_clusters` | 336 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/application/engine.py` | `_keyword_evidence` | 375 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/application/engine.py` | `_trace_features` | 386 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/application/engine.py` | `_dependency_features` | 436 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/application/engine.py` | `_change_features` | 471 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/application/engine.py` | `_scope_features` | 501 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/application/engine.py` | `_conflicts` | 532 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/application/engine.py` | `_first_anomaly` | 553 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/application/engine.py` | `_traffic_vs_regression` | 565 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/application/engine.py` | `_traffic_vs_regression.max_relative` | 570 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _traffic_vs_regression |
+| `agents/application/engine.py` | `build_application_analysis` | 603 | function | Build bounded, explainable application reliability features before LLM synthesis. | module |
 | `agents/change/__init__.py` | `ChangeAgent` | 4 | class | کلاس | module |
 | `agents/database/__init__.py` | `DatabaseAgent` | 4 | class | کلاس | module |
 | `agents/dependency/__init__.py` | `DependencyAgent` | 4 | class | کلاس | module |
