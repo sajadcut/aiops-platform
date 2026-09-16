@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 285 | Dashboard JS files scanned: 2 | Symbols indexed: 2058**
+**Python files scanned: 286 | Dashboard JS files scanned: 2 | Symbols indexed: 2094**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -154,6 +154,42 @@
 | `agents/kubernetes/pipeline.py` | `_merge_findings` | 193 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/kubernetes/pipeline.py` | `_attach_findings_to_resources` | 218 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/kubernetes/pipeline.py` | `build_kubernetes_analysis` | 239 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
+| `agents/kubernetes/resource_analyzers.py` | `_raw` | 9 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/resource_analyzers.py` | `_resource` | 14 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/resource_analyzers.py` | `_kind` | 22 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/resource_analyzers.py` | `_metadata` | 33 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/resource_analyzers.py` | `_spec` | 38 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/resource_analyzers.py` | `_status` | 43 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/resource_analyzers.py` | `_conditions` | 48 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/resource_analyzers.py` | `_base` | 66 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/resource_analyzers.py` | `_finding` | 77 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/resource_analyzers.py` | `_replica_state` | 88 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/resource_analyzers.py` | `analyze_pod` | 100 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/resource_analyzers.py` | `analyze_replicaset` | 114 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/resource_analyzers.py` | `analyze_deployment` | 121 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/resource_analyzers.py` | `analyze_statefulset` | 129 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/resource_analyzers.py` | `analyze_daemonset` | 139 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/resource_analyzers.py` | `analyze_job` | 163 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/resource_analyzers.py` | `analyze_cronjob` | 175 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/resource_analyzers.py` | `analyze_node` | 190 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/resource_analyzers.py` | `analyze_service` | 196 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/resource_analyzers.py` | `_endpoint_counts` | 204 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/resource_analyzers.py` | `analyze_endpoint` | 225 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/resource_analyzers.py` | `analyze_endpointslice` | 232 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/resource_analyzers.py` | `analyze_ingress` | 236 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/resource_analyzers.py` | `analyze_pvc` | 255 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/resource_analyzers.py` | `analyze_pv` | 262 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/resource_analyzers.py` | `analyze_hpa` | 270 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/resource_analyzers.py` | `analyze_pdb` | 280 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/resource_analyzers.py` | `analyze_networkpolicy` | 289 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/resource_analyzers.py` | `_metadata_only` | 296 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/resource_analyzers.py` | `analyze_configmap` | 304 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/resource_analyzers.py` | `analyze_secret` | 308 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/resource_analyzers.py` | `_webhook` | 312 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/resource_analyzers.py` | `analyze_validatingwebhook` | 319 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/resource_analyzers.py` | `analyze_mutatingwebhook` | 323 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/resource_analyzers.py` | `analyze_event` | 327 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/resource_analyzers.py` | `analyze_resource_evidence` | 360 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/kubernetes/safety.py` | `_resource_kind` | 10 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/kubernetes/safety.py` | `_redact_payload` | 18 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/kubernetes/safety.py` | `safe_evidence_for_prompt` | 34 | function | Return a bounded-copy-friendly evidence set with Secret/ConfigMap payload values removed. | module |
