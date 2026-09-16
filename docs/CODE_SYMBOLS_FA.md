@@ -379,12 +379,12 @@
 | `agents/triage/engine.py` | `_timeline` | 313 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/triage/engine.py` | `_impact_severity` | 351 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/triage/engine.py` | `build_triage_decision_support` | 443 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
-| `agents/vm/__init__.py` | `VMAgent` | 13 | class | کلاس | module |
-| `agents/vm/__init__.py` | `VMAgent.__init__` | 14 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMAgent |
-| `agents/vm/__init__.py` | `VMAgent.name` | 18 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMAgent |
-| `agents/vm/__init__.py` | `VMAgent.description` | 22 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMAgent |
-| `agents/vm/__init__.py` | `VMAgent.allowed_tools` | 26 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMAgent |
-| `agents/vm/__init__.py` | `VMAgent.analyze` | 29 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMAgent |
+| `agents/vm/__init__.py` | `VMAgent` | 14 | class | کلاس | module |
+| `agents/vm/__init__.py` | `VMAgent.__init__` | 15 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMAgent |
+| `agents/vm/__init__.py` | `VMAgent.name` | 19 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMAgent |
+| `agents/vm/__init__.py` | `VMAgent.description` | 23 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMAgent |
+| `agents/vm/__init__.py` | `VMAgent.allowed_tools` | 27 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMAgent |
+| `agents/vm/__init__.py` | `VMAgent.analyze` | 30 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMAgent |
 | `agents/vm/deterministic.py` | `_evidence_ref` | 6 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/vm/deterministic.py` | `classify_vm_service_fault` | 16 | function | Classify high-signal VM service faults from normalized live evidence. | module |
 | `agents/vm/engine.py` | `_raw` | 10 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
