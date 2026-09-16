@@ -6,6 +6,7 @@ from typing import Any, Dict, Iterable, List, Optional
 CONFIDENCE_FA = {"confirmed": "تأیید شده", "probable": "محتمل", "unknown": "نامشخص"}
 AUTOMATION = re.compile(r"\b(aiops|execution_service|e2e_orchestrator|mcp|automation|bot)\b", re.I)
 HUMAN = re.compile(r"\bsudo:\s*[^:]+:.*\bcommand=|\bauid=\d+\b|\b(actor|user|username|initiated_by|requested_by)\s*[=:]\s*[\w.@-]+", re.I)
+DIRECT_LOG_DIAGNOSTICS = {"service_logs", "system_logs", "journalctl", "journal", "journald", "audit_log", "auditd"}
 ACTIONS = (
     ("manual_stop", "Manual Stop", re.compile(r"\bsystemctl\s+stop\s+[\w@.:-]+|\bservice\s+[\w@.:-]+\s+stop\b|\bstop_service\b|\bmanual[_ -]stop\b", re.I)),
     ("restart", "Restart", re.compile(r"\bsystemctl\s+restart\s+[\w@.:-]+|\bservice\s+[\w@.:-]+\s+restart\b|\brestart_service\b", re.I)),
@@ -34,6 +35,25 @@ def _l(value: Any) -> List[Any]:
 
 def _true(value: Any) -> bool:
     return value is True or _low(value) == "true"
+
+
+def _context_value(context: Dict[str, Any], keys: Iterable[str]) -> Any:
+    """Read a scalar fallback from durable Incident Context without turning context into Evidence."""
+    for wanted in keys:
+        queue: List[Any] = [context]
+        scanned = 0
+        while queue and scanned < 100:
+            node = queue.pop(0)
+            scanned += 1
+            if isinstance(node, dict):
+                for key, value in node.items():
+                    if _low(key) == wanted and not isinstance(value, (dict, list, tuple, set)) and _t(value):
+                        return value
+                    if isinstance(value, (dict, list, tuple)):
+                        queue.append(value)
+            elif isinstance(node, (list, tuple)):
+                queue.extend(value for value in node if isinstance(value, (dict, list, tuple)))
+    return None
 
 
 def _norm(item: Dict[str, Any]) -> Dict[str, Any]:
@@ -96,7 +116,7 @@ def _human_action(rows: List[Dict[str, Any]]) -> Dict[str, Any]:
     for item in rows:
         raw, source = _d(item.get("raw_data")), _low(item.get("source"))
         diagnostic = _low(raw.get("diagnostic"))
-        if source not in {"audit", "vm_mcp", "systemd", "journal", "journald", "linux_audit", "auditd"} and diagnostic not in {"service_logs", "system_logs"}:
+        if source not in {"audit", "vm_mcp", "systemd", "journal", "journald", "linux_audit", "auditd"} and diagnostic not in DIRECT_LOG_DIAGNOSTICS:
             continue
         if source == "audit" and any(x in _low(raw.get("event_type")) for x in ("approval", "decision")):
             continue
@@ -124,13 +144,47 @@ def _human_action(rows: List[Dict[str, Any]]) -> Dict[str, Any]:
 def _observed(incident: Dict[str, Any], state: Dict[str, Any], rows: List[Dict[str, Any]]) -> Dict[str, Any]:
     items = {name: _diag(rows, name) for name in ("service_status", "process_status", "port_listener_status", "tcp_check", "config_validate")}
     raw = {name: _d((item or {}).get("raw_data")) for name, item in items.items()}
-    request, live, context = _d(state.get("execution_request")), _d(state.get("live_evidence")), _d(state.get("context"))
-    target = next((_t(x) for x in (raw["service_status"].get("target"), raw["process_status"].get("target"), raw["port_listener_status"].get("target"), raw["tcp_check"].get("target"), live.get("vm_target"), request.get("target"), _d(context.get("live_evidence")).get("vm_target")) if _t(x)), "")
-    port = raw["port_listener_status"].get("port") or raw["port_listener_status"].get("target_port") or raw["tcp_check"].get("port") or live.get("vm_port") or _d(request.get("parameters")).get("target_port")
+    request, live, state_context = _d(state.get("execution_request")), _d(state.get("live_evidence")), _d(state.get("context"))
+    incident_context = _d(incident.get("context"))
+    context_target = _context_value(incident_context, ("vm_target", "target_ip", "ip_address", "ip", "hostname", "host", "target", "address"))
+    context_port = _context_value(incident_context, ("target_port", "service_port", "port"))
+    context_service = _context_value(incident_context, ("service_name", "service"))
+
+    target_candidates = (
+        (raw["service_status"].get("target"), "service_status"),
+        (raw["process_status"].get("target"), "process_status"),
+        (raw["port_listener_status"].get("target"), "port_listener_status"),
+        (raw["tcp_check"].get("target"), "tcp_check"),
+        (live.get("vm_target"), "live_evidence"),
+        (request.get("target"), "execution_request"),
+        (_d(state_context.get("live_evidence")).get("vm_target"), "workflow_context"),
+        (context_target, "incident_context"),
+    )
+    target, target_source = next(((_t(value), source) for value, source in target_candidates if _t(value)), ("", None))
+
+    port_candidates = (
+        (raw["port_listener_status"].get("port") or raw["port_listener_status"].get("target_port"), "port_listener_status"),
+        (raw["tcp_check"].get("port") or raw["tcp_check"].get("target_port"), "tcp_check"),
+        (live.get("vm_port"), "live_evidence"),
+        (_d(request.get("parameters")).get("target_port"), "execution_request"),
+        (context_port, "incident_context"),
+    )
+    port_value, port_source = next(((value, source) for value, source in port_candidates if value not in (None, "")), (None, None))
     try:
-        port = int(port) if port not in (None, "") else None
+        port = int(port_value) if port_value not in (None, "") else None
+        if port is not None and not 0 < port <= 65535:
+            port, port_source = None, None
     except (TypeError, ValueError):
-        port = None
+        port, port_source = None, None
+
+    service_candidates = (
+        (incident.get("service"), "incident"),
+        (state.get("service_name"), "workflow_state"),
+        (raw["service_status"].get("service"), "service_status"),
+        (context_service, "incident_context"),
+    )
+    service, service_source = next(((_t(value), source) for value, source in service_candidates if _t(value)), ("unknown", None))
+
     metrics = {}
     for item in rows:
         value = _d(item.get("raw_data"))
@@ -144,8 +198,10 @@ def _observed(incident: Dict[str, Any], state: Dict[str, Any], rows: List[Dict[s
         result["evidence_id"] = _ref(items[name])
         return result
     return {
-        "service": _t(incident.get("service") or state.get("service_name") or raw["service_status"].get("service")) or "unknown",
+        "service": service,
         "target": target or None, "port": port,
+        "field_sources": {"service": service_source, "target": target_source, "port": port_source},
+        "incident_context": {"service": _t(context_service) or None, "target": _t(context_target) or None, "port": context_port},
         "service_status": view("service_status", ["active_state", "sub_state", "result", "exec_main_status", "main_pid", "restart_count"]),
         "process_status": view("process_status", ["running", "count"]),
         "port_listener_status": view("port_listener_status", ["supported", "listening"]),
@@ -194,7 +250,7 @@ def _evidence_summary(item: Dict[str, Any]) -> str:
     if diag == "process_status": return f"process_status: running={raw.get('running')}, count={raw.get('count')}"
     if diag == "port_listener_status": return f"port_listener_status: port={raw.get('port') or raw.get('target_port')}, listening={raw.get('listening')}"
     if diag == "tcp_check": return f"tcp_check: host={raw.get('host') or raw.get('target')}, port={raw.get('port') or raw.get('target_port')}, reachable={raw.get('reachable')}"
-    if diag in {"service_logs", "system_logs"}:
+    if diag in DIRECT_LOG_DIAGNOSTICS:
         entries = _l(raw.get("entries") or raw.get("logs")); tail = _t(entries[-1])[:220] if entries else ""
         return f"{diag}: count={raw.get('count', len(entries))}" + (f", latest={tail}" if tail else "")
     if diag == "config_validate": return f"config_validate: supported={raw.get('supported')}, valid={raw.get('valid')}"
@@ -237,7 +293,7 @@ def build_operator_summary(*, incident: Dict[str, Any], durable_evidence: Iterab
             persisted = _true(_d(event.get("metadata")).get("persisted")); memory_status = "persisted" if persisted else "not_persisted"; memory = {"persisted": persisted, "verification_status": _d(event.get("metadata")).get("verification_status"), "memory_entry_id": _t(_d(memory_entry).get("id")) or None}; break
     if memory_entry and memory_status == "not_recorded": memory_status, memory = "persisted", {"persisted": True, "verification_status": memory_entry.get("verification_result"), "memory_entry_id": _t(memory_entry.get("id")) or None}
     risk = _low(decision.get("risk_level") or decision.get("risk") or durable_approval.get("risk_level")) or "unknown"
-    preferred = set(cause_refs + list(human.get("evidence_ids") or [])); ranked = sorted(enumerate(rows), key=lambda x: (0 if _ref(x[1]) in preferred else 1, 0 if _low(_d(x[1].get("raw_data")).get("diagnostic")) in {"service_status", "process_status", "port_listener_status", "tcp_check", "service_logs", "system_logs", "config_validate"} else 1, x[0]))
+    preferred = set(cause_refs + list(human.get("evidence_ids") or [])); ranked = sorted(enumerate(rows), key=lambda x: (0 if _ref(x[1]) in preferred else 1, 0 if _low(_d(x[1].get("raw_data")).get("diagnostic")) in ({"service_status", "process_status", "port_listener_status", "tcp_check", "config_validate"} | DIRECT_LOG_DIAGNOSTICS) else 1, x[0]))
     key_evidence = [{"evidence_id": _ref(item), "source": item.get("source"), "type": item.get("type"), "diagnostic": _d(item.get("raw_data")).get("diagnostic"), "summary": _evidence_summary(item), "confidence": item.get("confidence")} for _, item in ranked[:12]]
     if approval_view["status"] == "pending": next_step = "شواهد و Execution Binding را بررسی کنید و درباره Approval تصمیم بگیرید؛ تا قبل از تأیید، عملیاتی اجرا نمی‌شود."
     elif approval_view["status"] == "approved" and execution_status == "not_executed": next_step = "در صورت تأیید نهایی هدف و Binding، workflow تأییدشده را Resume کنید؛ Approval هنگام شروع اجرا یک‌بار مصرف می‌شود."
@@ -259,5 +315,5 @@ def build_operator_summary(*, incident: Dict[str, Any], durable_evidence: Iterab
         "decision": decision or None, "approval_status": approval_view["status"], "approver": approval_view.get("approver"), "approval": approval_view,
         "execution_status": execution_status, "execution": execution_view, "verification_status": verification_status, "verification": verification_view,
         "memory_status": memory_status, "memory": memory, "operator_next_step": next_step,
-        "source_policy": {"live_evidence_authoritative": True, "durable_state_only": True, "summary_is_decision_support": True, "execution_authority": False},
+        "source_policy": {"live_evidence_authoritative": True, "durable_state_only": True, "incident_context_is_fallback_only": True, "summary_is_decision_support": True, "execution_authority": False},
     }

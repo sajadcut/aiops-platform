@@ -20,9 +20,14 @@ def _service_status(*, active="inactive", sub="dead", result="success", exec_sta
     }
 
 
-def _base_summary(evidence, *, state=None, approval=None, audit=None, memory=None, findings=None):
+def _base_summary(evidence, *, state=None, approval=None, audit=None, memory=None, findings=None, incident_context=None):
     return build_operator_summary(
-        incident={"id": "11111111-1111-1111-1111-111111111111", "service": "nginx", "severity": "high"},
+        incident={
+            "id": "11111111-1111-1111-1111-111111111111",
+            "service": "nginx",
+            "severity": "high",
+            "context": incident_context or {},
+        },
         durable_evidence=evidence,
         findings=findings or [],
         checkpoint={"state": state or {}},
@@ -71,6 +76,26 @@ def test_direct_sudo_journal_evidence_can_confirm_manual_stop():
     assert {item["evidence_id"] for item in summary["key_evidence"]} >= {"ev-service", "ev-journal"}
 
 
+def test_direct_journalctl_evidence_from_log_backend_can_confirm_manual_stop():
+    journal = {
+        "id": "ev-elastic-journal",
+        "type": "log",
+        "source": "elasticsearch",
+        "reference": "ev-elastic-journal",
+        "raw_data": {
+            "diagnostic": "journalctl",
+            "entries": [
+                "sudo: alice : TTY=pts/1 ; PWD=/home/alice ; COMMAND=/usr/bin/systemctl stop nginx"
+            ],
+        },
+    }
+    summary = _base_summary([_service_status(), journal])
+
+    assert summary["cause_confidence"] == "confirmed"
+    assert summary["likely_cause"] == "توقف دستی سرویس — تأیید شده"
+    assert "ev-elastic-journal" in summary["human_action_indicator"]["evidence_ids"]
+
+
 def test_agent_manual_stop_claim_is_downgraded_without_direct_evidence():
     finding = {
         "finding_type": "root_cause",
@@ -83,6 +108,38 @@ def test_agent_manual_stop_claim_is_downgraded_without_direct_evidence():
     assert summary["cause_confidence"] == "unknown"
     assert summary["human_action_indicator"]["status"] == "unknown"
     assert summary["likely_cause"] == "عامل توقف از شواهد مستقیم فعلی قابل تأیید نیست."
+
+
+def test_incident_context_is_used_only_as_structured_target_and_port_fallback():
+    summary = _base_summary(
+        [],
+        incident_context={
+            "asset": {"hostname": "web-01", "ip_address": "10.100.6.199"},
+            "service": {"port": 8080},
+        },
+    )
+
+    assert summary["observed_state"]["target"] == "10.100.6.199"
+    assert summary["observed_state"]["port"] == 8080
+    assert summary["observed_state"]["field_sources"]["target"] == "incident_context"
+    assert summary["observed_state"]["field_sources"]["port"] == "incident_context"
+    assert "10.100.6.199" in summary["summary_fa"]
+    assert "8080" in summary["summary_fa"]
+    assert summary["source_policy"]["incident_context_is_fallback_only"] is True
+
+
+def test_incident_context_does_not_confirm_manual_action_without_direct_evidence():
+    summary = _base_summary(
+        [_service_status()],
+        incident_context={
+            "operator": "alice",
+            "last_command": "systemctl stop nginx",
+        },
+    )
+
+    assert summary["cause_confidence"] == "probable"
+    assert summary["human_action_indicator"]["status"] == "probable"
+    assert summary["likely_cause"] != "توقف دستی سرویس — تأیید شده"
 
 
 def test_lifecycle_fields_are_recomputed_from_current_checkpoint_and_durable_governance():
