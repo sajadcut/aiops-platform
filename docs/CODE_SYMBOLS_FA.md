@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 293 | Dashboard JS files scanned: 2 | Symbols indexed: 2194**
+**Python files scanned: 294 | Dashboard JS files scanned: 2 | Symbols indexed: 2205**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -2153,6 +2153,17 @@
 | `tests/unit/test_vm_diagnostic_evidence.py` | `test_reload_is_fixed_governed_service_command.fake_run` | 165 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_reload_is_fixed_governed_service_command |
 | `tests/unit/test_vm_execution_boundary.py` | `test_ssh_vm_tool_allows_only_governed_actions` | 9 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_vm_execution_boundary.py` | `test_telemetry_tool_is_read_only` | 27 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_guest_engine.py` | `metric` | 4 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_vm_guest_engine.py` | `telemetry` | 8 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_vm_guest_engine.py` | `analyze` | 12 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_vm_guest_engine.py` | `test_linux_host_uses_use_saturation_signals_not_cpu_percentage_only` | 20 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_guest_engine.py` | `test_iowait_with_disk_latency_is_storage_causal_candidate` | 41 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_guest_engine.py` | `test_memory_swap_and_psi_pressure_is_guest_host_pressure` | 53 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_guest_engine.py` | `test_process_snapshot_builds_parent_child_and_resource_state` | 66 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_guest_engine.py` | `test_systemd_service_state_is_structured_without_manual_stop_inference` | 81 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_guest_engine.py` | `test_systemd_failed_dependencies_are_causal_and_handoff_to_dependency` | 99 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_guest_engine.py` | `test_boot_and_reboot_history_correlates_with_incident_start` | 112 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_guest_engine.py` | `test_missing_layers_are_exposed_as_next_best_evidence` | 123 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_vm_symptom_verification.py` | `_context` | 6 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_vm_symptom_verification.py` | `_telemetry` | 10 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_vm_symptom_verification.py` | `test_port_recovery_is_verified_from_fresh_operational_evidence` | 20 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
