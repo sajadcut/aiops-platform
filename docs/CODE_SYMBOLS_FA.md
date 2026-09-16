@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 270 | Dashboard JS files scanned: 2 | Symbols indexed: 1788**
+**Python files scanned: 271 | Dashboard JS files scanned: 2 | Symbols indexed: 1808**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -99,6 +99,26 @@
 | `agents/shared/domain_agent.py` | `DomainDiagnosticAgent._prompt_evidence` | 80 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DomainDiagnosticAgent |
 | `agents/shared/domain_agent.py` | `DomainDiagnosticAgent._peer_context` | 94 | method | Return bounded peer-analysis context published by the coordinator. | DomainDiagnosticAgent |
 | `agents/shared/domain_agent.py` | `DomainDiagnosticAgent.analyze` | 129 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DomainDiagnosticAgent |
+| `agents/shared/intelligence.py` | `_is_sensitive_key` | 107 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/shared/intelligence.py` | `sanitize_prompt_value` | 112 | function | Bound and redact untrusted operational data before it reaches an LLM prompt. | module |
+| `agents/shared/intelligence.py` | `prompt_evidence_projection` | 131 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/shared/intelligence.py` | `_parse_timestamp` | 150 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/shared/intelligence.py` | `_evidence_id` | 164 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/shared/intelligence.py` | `_flatten_text` | 169 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/shared/intelligence.py` | `_item_text` | 191 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/shared/intelligence.py` | `_numeric` | 196 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/shared/intelligence.py` | `_metric_name_value` | 210 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/shared/intelligence.py` | `_baseline_delta` | 217 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/shared/intelligence.py` | `_domain_signals` | 232 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/shared/intelligence.py` | `_metric_features` | 245 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/shared/intelligence.py` | `_timeline` | 265 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/shared/intelligence.py` | `_suggested_handoffs` | 281 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/shared/intelligence.py` | `_network_paths` | 293 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/shared/intelligence.py` | `_topology_edges` | 306 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/shared/intelligence.py` | `_kubernetes_objects` | 321 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/shared/intelligence.py` | `_security_evidence_level` | 332 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/shared/intelligence.py` | `_recovery_points` | 346 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/shared/intelligence.py` | `build_deterministic_analysis` | 369 | function | Extract bounded, explainable features before LLM synthesis. | module |
 | `agents/shared/registry.py` | `AgentManifest` | 33 | class | Metadata قابل مشاهده برای routing/UI: domain، evidence نیازمند و handoffهای مجاز. | module |
 | `agents/shared/registry.py` | `AgentRegistry` | 101 | class | Agentهای analysis-only فعال را بر اساس `.env` instantiate و manifest آنها را ارائه می‌کند. | module |
 | `agents/shared/registry.py` | `AgentRegistry.__init__` | 104 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | AgentRegistry |

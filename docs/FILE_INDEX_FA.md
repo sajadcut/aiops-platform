@@ -3,7 +3,7 @@
 > این فایل فهرست فایل‌به‌فایل repository است. توضیح معماری و flow در `CODEBASE_GUIDE_FA.md` آمده است.
 > این فایل با `scripts/generate_file_index_fa.py` ساخته و در CI کنترل می‌شود.
 
-**تعداد فایل‌های track‌شده و پوشش‌داده‌شده: 337**
+**تعداد فایل‌های track‌شده و پوشش‌داده‌شده: 338**
 
 | Path | Type | Purpose | Called By | Calls/Depends On | Runtime/Test/Docs | Notes |
 |---|---|---|---|---|---|---|
@@ -38,6 +38,7 @@
 | `agents/shared/base.py` | Python | زیرساخت مشترک Agentها: contract، coordination، registry یا telemetry | Orchestrator/Agentها | domain, LLM, evidence | Runtime | Agent write authority ندارد |
 | `agents/shared/coordinator.py` | Python | زیرساخت مشترک Agentها: contract، coordination، registry یا telemetry | Orchestrator/Agentها | domain, LLM, evidence | Runtime | Agent write authority ندارد |
 | `agents/shared/domain_agent.py` | Python | زیرساخت مشترک Agentها: contract، coordination، registry یا telemetry | Orchestrator/Agentها | domain, LLM, evidence | Runtime | Agent write authority ندارد |
+| `agents/shared/intelligence.py` | Python | زیرساخت مشترک Agentها: contract، coordination، registry یا telemetry | Orchestrator/Agentها | domain, LLM, evidence | Runtime | Agent write authority ندارد |
 | `agents/shared/registry.py` | Python | زیرساخت مشترک Agentها: contract، coordination، registry یا telemetry | Orchestrator/Agentها | domain, LLM, evidence | Runtime | Agent write authority ندارد |
 | `agents/shared/telemetry.py` | Python | زیرساخت مشترک Agentها: contract، coordination، registry یا telemetry | Orchestrator/Agentها | domain, LLM, evidence | Runtime | Agent write authority ندارد |
 | `agents/storage/__init__.py` | Python | Agent تخصصی storage برای تحلیل و تولید Finding/Evidence request | Agent registry/orchestrator | agents.shared + evidence | Runtime | تحلیل/پیشنهاد؛ بدون اجرای مستقیم |
