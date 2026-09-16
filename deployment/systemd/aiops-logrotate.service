@@ -1,0 +1,11 @@
+[Unit]
+Description=Rotate AIOps platform logs
+Documentation=file:/etc/logrotate.d/aiops-platform
+ConditionPathExists=/etc/logrotate.d/aiops-platform
+
+[Service]
+Type=oneshot
+ExecStart=/usr/sbin/logrotate --state /var/lib/logrotate/aiops-platform.status /etc/logrotate.d/aiops-platform
+Nice=19
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7

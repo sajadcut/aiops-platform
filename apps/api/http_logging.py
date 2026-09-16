@@ -1,17 +1,36 @@
 from __future__ import annotations
 
 import json
+import re
 import time
 from typing import Any, Awaitable, Callable
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 from domain.contracts.config import settings
-from domain.contracts.context import set_trace_id
+from domain.contracts.context import (
+    bind_incident_context,
+    clear_incident_context,
+    incident_rid,
+    set_trace_id,
+)
 from domain.contracts.logging import logger
 from domain.contracts.redaction import redact
 from domain.observability import HTTP_REQUESTS_IN_PROGRESS, observe_http
 
-ASGIApp = Callable[[dict[str, Any], Callable[[], Awaitable[dict[str, Any]]], Callable[[dict[str, Any]], Awaitable[None]]], Awaitable[None]]
+ASGIApp = Callable[
+    [
+        dict[str, Any],
+        Callable[[], Awaitable[dict[str, Any]]],
+        Callable[[dict[str, Any]], Awaitable[None]],
+    ],
+    Awaitable[None],
+]
+
+_INCIDENT_PATH_RE = re.compile(
+    r"/(?:incidents|workflow/e2e)/"
+    r"(?P<incident_id>[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-"
+    r"[0-9a-fA-F]{4}-[0-9a-fA-F]{12})(?:/|$)"
+)
 
 
 def _headers(scope: dict[str, Any]) -> dict[str, str]:
@@ -45,8 +64,19 @@ def _value(body: Any, *names: str) -> Any:
     return None
 
 
+def _incident_id_from_path(path: str) -> str | None:
+    match = _INCIDENT_PATH_RE.search(str(path or ""))
+    if not match:
+        return None
+    candidate = match.group("incident_id")
+    try:
+        return str(UUID(candidate))
+    except ValueError:
+        return None
+
+
 class HTTPTransactionLoggingMiddleware:
-    """Persist one redacted, correlated event for every HTTP transaction."""
+    """Persist one redacted, request/Incident-correlated event per transaction."""
 
     def __init__(self, app: ASGIApp):
         self.app = app
@@ -56,10 +86,22 @@ class HTTPTransactionLoggingMiddleware:
             await self.app(scope, receive, send)
             return
 
+        # ASGI servers may reuse execution contexts. Always start HTTP handling
+        # without stale Incident correlation inherited from earlier work.
+        clear_incident_context()
+
         incoming_headers = _headers(scope)
         request_id = incoming_headers.get("x-request-id") or str(uuid4())
-        correlation_id = incoming_headers.get("x-correlation-id") or incoming_headers.get("x-trace-id") or request_id
+        correlation_id = (
+            incoming_headers.get("x-correlation-id")
+            or incoming_headers.get("x-trace-id")
+            or request_id
+        )
         path = str(scope.get("path") or "")
+        path_incident_id = _incident_id_from_path(path)
+        if path_incident_id:
+            bind_incident_context(path_incident_id)
+
         execution_id = incoming_headers.get("x-execution-id")
         if not execution_id and (path.endswith("/execute") or "/execute/" in path):
             execution_id = str(uuid4())
@@ -67,6 +109,9 @@ class HTTPTransactionLoggingMiddleware:
         state = scope.setdefault("state", {})
         state["request_id"] = request_id
         state["correlation_id"] = correlation_id
+        if path_incident_id:
+            state["incident_id"] = path_incident_id
+            state["rid"] = incident_rid(path_incident_id)
         if execution_id:
             state["execution_id"] = execution_id
         set_trace_id(correlation_id)
@@ -83,7 +128,13 @@ class HTTPTransactionLoggingMiddleware:
             if message.get("type") == "http.request":
                 chunk = message.get("body", b"") or b""
                 if len(request_body) <= settings.LOG_HTTP_BODY_MAX_BYTES:
-                    request_body.extend(chunk[: settings.LOG_HTTP_BODY_MAX_BYTES + 1 - len(request_body)])
+                    request_body.extend(
+                        chunk[
+                            : settings.LOG_HTTP_BODY_MAX_BYTES
+                            + 1
+                            - len(request_body)
+                        ]
+                    )
             return message
 
         async def logging_send(message: dict[str, Any]) -> None:
@@ -94,15 +145,42 @@ class HTTPTransactionLoggingMiddleware:
                 for key, value in headers:
                     if key.lower() == b"content-type":
                         response_content_type = value.decode("latin1")
-                headers.append((b"x-request-id", request_id.encode("ascii", errors="ignore")))
-                headers.append((b"x-correlation-id", correlation_id.encode("ascii", errors="ignore")))
+                headers.append(
+                    (b"x-request-id", request_id.encode("ascii", errors="ignore"))
+                )
+                headers.append(
+                    (
+                        b"x-correlation-id",
+                        correlation_id.encode("ascii", errors="ignore"),
+                    )
+                )
+                if path_incident_id:
+                    headers.append(
+                        (
+                            b"x-rid",
+                            incident_rid(path_incident_id).encode(
+                                "ascii", errors="ignore"
+                            ),
+                        )
+                    )
                 if execution_id:
-                    headers.append((b"x-execution-id", execution_id.encode("ascii", errors="ignore")))
+                    headers.append(
+                        (
+                            b"x-execution-id",
+                            execution_id.encode("ascii", errors="ignore"),
+                        )
+                    )
                 message = {**message, "headers": headers}
             elif message.get("type") == "http.response.body":
                 chunk = message.get("body", b"") or b""
                 if len(response_body) <= settings.LOG_HTTP_BODY_MAX_BYTES:
-                    response_body.extend(chunk[: settings.LOG_HTTP_BODY_MAX_BYTES + 1 - len(response_body)])
+                    response_body.extend(
+                        chunk[
+                            : settings.LOG_HTTP_BODY_MAX_BYTES
+                            + 1
+                            - len(response_body)
+                        ]
+                    )
             await send(message)
 
         raised: BaseException | None = None
@@ -115,14 +193,38 @@ class HTTPTransactionLoggingMiddleware:
             HTTP_REQUESTS_IN_PROGRESS.dec()
             duration_seconds = time.perf_counter() - started
             duration_ms = round(duration_seconds * 1000, 3)
-            request_payload = _safe_json_body(bytes(request_body), incoming_headers.get("content-type", ""), enabled=settings.LOG_HTTP_BODY_ENABLED)
-            response_payload = _safe_json_body(bytes(response_body), response_content_type, enabled=settings.LOG_HTTP_BODY_ENABLED)
+            request_payload = _safe_json_body(
+                bytes(request_body),
+                incoming_headers.get("content-type", ""),
+                enabled=settings.LOG_HTTP_BODY_ENABLED,
+            )
+            response_payload = _safe_json_body(
+                bytes(response_body),
+                response_content_type,
+                enabled=settings.LOG_HTTP_BODY_ENABLED,
+            )
             route = getattr(scope.get("route"), "path", None) or path
             path_params = scope.get("path_params") or {}
             identity = state.get("identity_subject")
 
-            incident_id = path_params.get("incident_id") or _value(request_payload, "incident_id")
-            approval_id = path_params.get("approval_id") or _value(request_payload, "approval_id")
+            incident_id = (
+                path_params.get("incident_id")
+                or path_incident_id
+                or _value(request_payload, "incident_id")
+                or _value(response_payload, "incident_id")
+            )
+            if incident_id:
+                incident_id = str(incident_id)
+                rid = bind_incident_context(incident_id)
+                state["incident_id"] = incident_id
+                state["rid"] = rid
+            else:
+                rid = None
+
+            approval_id = (
+                path_params.get("approval_id")
+                or _value(request_payload, "approval_id")
+            )
             tool = _value(request_payload, "tool_name", "tool")
             action = _value(request_payload, "action")
             target = _value(request_payload, "target")
@@ -139,6 +241,7 @@ class HTTPTransactionLoggingMiddleware:
                 "identity": identity,
                 "roles": state.get("identity_roles"),
                 "incident_id": incident_id,
+                "rid": rid,
                 "approval_id": approval_id,
                 "tool": tool,
                 "action": action,
@@ -149,4 +252,9 @@ class HTTPTransactionLoggingMiddleware:
             if raised is not None:
                 event["error_type"] = type(raised).__name__
             logger.info("http_transaction", **redact(event))
-            observe_http(str(scope.get("method") or "UNKNOWN"), str(route), status_code, duration_seconds)
+            observe_http(
+                str(scope.get("method") or "UNKNOWN"),
+                str(route),
+                status_code,
+                duration_seconds,
+            )

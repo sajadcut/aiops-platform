@@ -8,7 +8,40 @@ from typing import Any, Dict, Optional
 import structlog
 
 from domain.contracts.config import settings
+from domain.contracts.context import (
+    bind_incident_context,
+    get_incident_id,
+    get_rid,
+    get_trace_id,
+    incident_rid,
+)
 from domain.contracts.redaction import redact_event_dict
+
+
+def _correlation_context_processor(_logger, _method_name: str, event_dict: Dict[str, Any]) -> Dict[str, Any]:
+    """Attach request trace + stable Incident RID to every log event.
+
+    Explicit ``incident_id`` values become the current async task's Incident
+    context. This makes later stdlib/structlog events automatically traceable
+    even when individual log calls do not repeat the Incident id.
+    """
+    explicit_incident = event_dict.get("incident_id")
+    if explicit_incident not in (None, ""):
+        incident_id = str(explicit_incident)
+        event_dict["incident_id"] = incident_id
+        event_dict.setdefault("rid", bind_incident_context(incident_id))
+    else:
+        incident_id = get_incident_id()
+        if incident_id:
+            event_dict.setdefault("incident_id", incident_id)
+        rid = get_rid()
+        if rid:
+            event_dict.setdefault("rid", rid)
+
+    trace_id = get_trace_id()
+    if trace_id:
+        event_dict.setdefault("trace_id", trace_id)
+    return event_dict
 
 
 def _processor_formatter(renderer):
@@ -16,6 +49,7 @@ def _processor_formatter(renderer):
         structlog.stdlib.add_log_level,
         structlog.stdlib.add_logger_name,
         structlog.stdlib.PositionalArgumentsFormatter(),
+        _correlation_context_processor,
         structlog.processors.TimeStamper(fmt="iso", utc=settings.LOG_UTC),
         structlog.processors.StackInfoRenderer(),
         structlog.processors.format_exc_info,
@@ -49,9 +83,11 @@ def _file_handler(path: Path) -> logging.Handler:
 def configure_logging() -> None:
     """Configure human console/text logs and JSON-line file logs.
 
-    Every event passes through the same recursive redaction processor, including
-    traceback text from stdlib/FastAPI/Uvicorn loggers. This keeps file logging
-    useful for incident reconstruction without persisting credentials.
+    Every event passes through the same recursive redaction and correlation
+    processors, including traceback text from stdlib/FastAPI/Uvicorn loggers.
+    Canonical Incident events carry a stable ``rid`` so one Incident can be
+    traced across request, agent, MCP, approval, execution and verification
+    logs without adding a database column.
     """
     log_level = getattr(logging, settings.LOG_LEVEL.upper(), logging.INFO)
 
@@ -60,6 +96,7 @@ def configure_logging() -> None:
             structlog.stdlib.add_log_level,
             structlog.stdlib.add_logger_name,
             structlog.stdlib.PositionalArgumentsFormatter(),
+            _correlation_context_processor,
             structlog.processors.TimeStamper(fmt="iso", utc=settings.LOG_UTC),
             structlog.processors.StackInfoRenderer(),
             structlog.processors.format_exc_info,
@@ -125,21 +162,22 @@ def log_workflow_step(
     details: Optional[Dict[str, Any]] = None,
     level: str = "info",
 ) -> None:
-    """Emit one canonical incident-timeline event to both text and JSON logs.
+    """Emit one canonical Incident timeline event to text and JSON logs.
 
-    The same structured event is rendered by the configured human-readable file
-    handler and the JSON-lines file handler. Callers should log operational
-    metadata, counts, decisions and provider/model names, but not raw prompts,
-    credentials, bearer tokens or full external payloads. The shared recursive
-    redaction processor remains the final fail-safe for every field.
+    Supplying ``incident_id`` also binds that Incident to the current asyncio
+    context. Subsequent log calls in the same task inherit ``incident_id`` and
+    ``rid`` automatically until another Incident is bound or the request
+    middleware clears the context.
     """
     stage_name = str(stage or "unknown").strip() or "unknown"
     component_name = str(component or "unknown").strip() or "unknown"
     action_name = str(action or "unknown").strip() or "unknown"
     status_name = str(status or "unknown").strip().lower() or "unknown"
+    normalized_incident_id = str(incident_id) if incident_id else None
     payload: Dict[str, Any] = {
         "log_type": "incident_timeline",
-        "incident_id": str(incident_id) if incident_id else None,
+        "incident_id": normalized_incident_id,
+        "rid": incident_rid(normalized_incident_id) if normalized_incident_id else None,
         "stage": stage_name,
         "component": component_name,
         "action": action_name,

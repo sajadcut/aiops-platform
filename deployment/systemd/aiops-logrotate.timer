@@ -1,0 +1,11 @@
+[Unit]
+Description=Rotate AIOps platform logs every hour
+
+[Timer]
+OnCalendar=hourly
+Persistent=true
+AccuracySec=1min
+Unit=aiops-logrotate.service
+
+[Install]
+WantedBy=timers.target
