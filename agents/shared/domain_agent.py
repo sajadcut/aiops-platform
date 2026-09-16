@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
 from agents.shared.base import AgentInput, AgentOutput, BaseAgent, OperationalHypothesis
+from agents.shared.intelligence import build_deterministic_analysis, prompt_evidence_projection, sanitize_prompt_value
 from domain.contracts.config import settings
 from domain.contracts.logging import logger
 from integrations.llm.base import LLMAdapter
@@ -42,53 +43,12 @@ class DomainDiagnosticAgent(BaseAgent):
 
     @staticmethod
     def _bounded_prompt_value(value: Any, depth: int = 0) -> Any:
-        """Compact prompt-only context without mutating stored/audited Evidence.
-
-        Operational logs and process/network snapshots can be very large. Keep a
-        deliberately small prompt projection while the original Evidence remains
-        untouched in orchestration/audit storage.
-        """
-        if depth >= 4:
-            return "[bounded]"
-        if isinstance(value, str):
-            return value if len(value) <= 480 else value[:480] + "...[truncated]"
-        if isinstance(value, list):
-            return [DomainDiagnosticAgent._bounded_prompt_value(item, depth + 1) for item in value[:8]]
-        if isinstance(value, tuple):
-            return [DomainDiagnosticAgent._bounded_prompt_value(item, depth + 1) for item in list(value)[:8]]
-        if isinstance(value, dict):
-            preferred = [
-                "diagnostic", "name", "value", "target", "target_port", "service", "status",
-                "active_state", "sub_state", "unit_file_state", "main_pid", "exec_main_status",
-                "restart_count", "healthy", "running", "count", "listening", "reachable", "valid",
-                "supported", "provider", "error", "detail", "host", "port", "hostname", "addresses",
-                "route_found", "load_state", "result", "severity", "event_state", "event_status",
-                "trigger", "problem_expression", "item_key", "asset_type", "platform",
-            ]
-            keys = [key for key in preferred if key in value]
-            keys.extend(key for key in value if key not in keys)
-            result: Dict[str, Any] = {}
-            for key in keys[:30]:
-                current = value[key]
-                if key in {"logs", "entries", "rules", "listeners", "processes", "routes", "interfaces"} and isinstance(current, list):
-                    current = current[:8]
-                result[str(key)] = DomainDiagnosticAgent._bounded_prompt_value(current, depth + 1)
-            return result
-        return value
+        """Compact and redact prompt-only context without mutating audited Evidence."""
+        return sanitize_prompt_value(value, depth)
 
     @classmethod
     def _prompt_evidence(cls, evidence: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-        compact: List[Dict[str, Any]] = []
-        for item in evidence[: settings.AGENT_MAX_EVIDENCE_ITEMS]:
-            if not isinstance(item, dict):
-                continue
-            compact.append({
-                "id": item.get("evidence_id") or item.get("id") or item.get("reference"),
-                "type": item.get("type"), "source": item.get("source"),
-                "timestamp": item.get("timestamp"), "confidence": item.get("confidence"),
-                "raw_data": cls._bounded_prompt_value(item.get("raw_data") or {}),
-            })
-        return compact
+        return prompt_evidence_projection(evidence, settings.AGENT_MAX_EVIDENCE_ITEMS)
 
     @staticmethod
     def _peer_context(input_data: AgentInput) -> Dict[str, Any]:
@@ -129,13 +89,21 @@ class DomainDiagnosticAgent(BaseAgent):
     async def analyze(self, input_data: AgentInput) -> AgentOutput:
         evidence = self.evidence_items(input_data)
         prompt_evidence = self._prompt_evidence(evidence)
+        deterministic = build_deterministic_analysis(
+            self.name,
+            evidence,
+            required_types=self.spec.required_evidence_types,
+            service_name=input_data.service_name,
+        )
         evidence_ids = self.evidence_ids(input_data)
         auxiliary = self._bounded_prompt_value(self.auxiliary_context(input_data))
         peer_context = self._bounded_prompt_value(self._peer_context(input_data))
         missing = self.missing_evidence_for(input_data, self.spec.required_evidence_types)
         prompt = f"""You are the {self.name} specialist in a production AIOps platform.
-LIVE EVIDENCE is authoritative. RAG and Memory are auxiliary only. PEER OPERATIONAL CONTEXT is also auxiliary analysis only: never treat another agent's statement as evidence, never inherit its confidence, and only accept a peer claim when its cited LIVE EVIDENCE IDs support it. Never invent current state.
+LIVE EVIDENCE is authoritative. RAG and Memory are auxiliary only. PEER OPERATIONAL CONTEXT is auxiliary analysis only: never treat another agent's statement as evidence, never inherit its confidence, and only accept a peer claim when its cited LIVE EVIDENCE IDs support it. Never invent current state.
+A deterministic pre-analysis has already extracted chronology, evidence gaps, metric deltas, direct domain signals and bounded handoff hints. Treat it as an index of LIVE EVIDENCE observations, not as a root-cause verdict. Re-check every causal hypothesis against the cited LIVE EVIDENCE, distinguish correlation from causation, and actively look for conflicting evidence and cheaper falsification checks.
 Focus areas: {json.dumps(self.spec.focus)}
+Run the domain playbook in DETERMINISTIC_ANALYSIS.playbook_checks. Compare incident-window signals with any available baseline deltas. Prefer the next evidence with the highest information value when state is missing. Do not declare a domain root cause merely because this specialist received the incident.
 Return one JSON object with keys: severity, health_status, findings, affected_components,
 probable_dependencies, blast_radius, hypotheses, missing_evidence, handoff_agents,
 immediate_checks, escalation_target, risk_level, uncertainty_reason, confidence.
@@ -143,6 +111,7 @@ Each hypothesis: hypothesis, probability, evidence_ids, conflicting_evidence_ids
 falsification_checks, impacted_components, recommended_next_evidence.
 Only cite LIVE EVIDENCE IDs. immediate_checks are read-only. Request missing factual state instead of guessing it.
 Incident={input_data.incident_id}\nService={input_data.service_name}\nSummary={input_data.evidence_summary}
+DETERMINISTIC_ANALYSIS={json.dumps(deterministic, default=str)}
 LIVE_EVIDENCE={json.dumps(prompt_evidence, default=str)}
 AUXILIARY_CONTEXT={json.dumps(auxiliary, default=str)}
 PEER_OPERATIONAL_CONTEXT={json.dumps(peer_context, default=str)}"""
@@ -181,6 +150,13 @@ PEER_OPERATIONAL_CONTEXT={json.dumps(peer_context, default=str)}"""
         coverage = self.evidence_coverage(len(evidence), all_missing)
         auxiliary_counts = self.auxiliary_context(input_data)
         peer_counts = self._peer_context(input_data)
+        handoffs = self.normalize_list(result.get("handoff_agents"), 6)
+        for hint in deterministic.get("suggested_handoffs", []):
+            target = str(hint.get("agent", "")) if isinstance(hint, dict) else ""
+            if target and target != self.name and target not in handoffs and len(handoffs) < 6:
+                handoffs.append(target)
+        if not handoffs:
+            handoffs = list(self.spec.default_handoffs)
         return AgentOutput(
             agent_name=self.name, finding_type=f"{self.name}_analysis",
             statement=(f"{self.name.title()} evidence: " + ("; ".join(findings) if findings else "no confirmed domain fault yet"))[:600],
@@ -189,7 +165,7 @@ PEER_OPERATIONAL_CONTEXT={json.dumps(peer_context, default=str)}"""
             findings=findings, recommendations=actions,
             recommended_actions=self.analysis_only_actions(actions, self.spec.read_tools[0] if self.spec.read_tools else None),
             hypotheses=hypotheses, missing_evidence=all_missing,
-            handoff_agents=self.normalize_list(result.get("handoff_agents"), 6) or self.spec.default_handoffs,
+            handoff_agents=handoffs,
             probable_dependencies=self.normalize_list(result.get("probable_dependencies"), 8),
             affected_components=self.normalize_list(result.get("affected_components"), 8),
             blast_radius=str(result.get("blast_radius", "unknown")),
@@ -199,6 +175,10 @@ PEER_OPERATIONAL_CONTEXT={json.dumps(peer_context, default=str)}"""
             requires_human_review=self.human_review_required(confidence, all_missing),
             analysis_details={
                 "focus": self.spec.focus,
+                "deterministic_analysis": deterministic,
+                "evidence_gap_matrix": deterministic.get("evidence_gap_matrix", {}),
+                "next_best_evidence": deterministic.get("next_best_evidence", []),
+                "baseline_deltas": deterministic.get("metric_features", {}).get("largest_baseline_deltas", []),
                 "knowledge_context_count": len(auxiliary_counts["knowledge_rag"]),
                 "memory_context_count": len(auxiliary_counts["operational_memory"]),
                 "peer_finding_count": len(peer_counts["findings"]),
