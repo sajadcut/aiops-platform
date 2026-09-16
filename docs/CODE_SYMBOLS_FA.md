@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 269 | Dashboard JS files scanned: 2 | Symbols indexed: 1778**
+**Python files scanned: 269 | Dashboard JS files scanned: 2 | Symbols indexed: 1779**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1411,7 +1411,8 @@
 | `tests/unit/test_dashboard_control_center.py` | `test_incident_workbench_defaults_to_active_and_shows_unambiguous_local_time` | 34 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_dashboard_control_center.py` | `test_dashboard_assets_and_agent_route_are_served_by_fastapi` | 48 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_dashboard_control_center.py` | `test_legacy_agent_url_has_compatibility_redirect_only` | 55 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_dashboard_javascript_syntax.py` | `test_dashboard_javascript_syntax` | 11 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_dashboard_javascript_syntax.py` | `_check_javascript` | 12 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_dashboard_javascript_syntax.py` | `test_dashboard_javascript_syntax` | 19 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_dotin_general_chatbot_llm.py` | `FakeResponse` | 13 | class | کلاس | module |
 | `tests/unit/test_dotin_general_chatbot_llm.py` | `FakeResponse.__init__` | 14 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeResponse |
 | `tests/unit/test_dotin_general_chatbot_llm.py` | `FakeResponse.raise_for_status` | 17 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeResponse |
