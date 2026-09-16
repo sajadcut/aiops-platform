@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 294 | Dashboard JS files scanned: 2 | Symbols indexed: 2208**
+**Python files scanned: 295 | Dashboard JS files scanned: 2 | Symbols indexed: 2232**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -387,24 +387,32 @@
 | `agents/vm/__init__.py` | `VMAgent.analyze` | 30 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMAgent |
 | `agents/vm/deterministic.py` | `_evidence_ref` | 6 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/vm/deterministic.py` | `classify_vm_service_fault` | 16 | function | Classify high-signal VM service faults from normalized live evidence. | module |
-| `agents/vm/engine.py` | `_raw` | 10 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `agents/vm/engine.py` | `_eid` | 15 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `agents/vm/engine.py` | `_parse_time` | 20 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `agents/vm/engine.py` | `_timestamp` | 34 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `agents/vm/engine.py` | `_scalar` | 43 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `agents/vm/engine.py` | `_numeric` | 53 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `agents/vm/engine.py` | `_bool` | 69 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `agents/vm/engine.py` | `_diagnostic` | 85 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `agents/vm/engine.py` | `_incident_start` | 89 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `agents/vm/engine.py` | `_platform` | 102 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `agents/vm/engine.py` | `_process_row` | 128 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `agents/vm/engine.py` | `_process_analysis` | 160 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `agents/vm/engine.py` | `_failed_dependencies` | 195 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `agents/vm/engine.py` | `_service_row` | 204 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `agents/vm/engine.py` | `_service_analysis` | 229 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `agents/vm/engine.py` | `_boot_analysis` | 249 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `agents/vm/engine.py` | `_causal_findings` | 273 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `agents/vm/engine.py` | `build_vm_guest_analysis` | 331 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
+| `agents/vm/engine.py` | `_raw` | 24 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/vm/engine.py` | `_eid` | 29 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/vm/engine.py` | `_parse_time` | 34 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/vm/engine.py` | `_timestamp` | 48 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/vm/engine.py` | `_scalar` | 60 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/vm/engine.py` | `_numeric` | 70 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/vm/engine.py` | `_bool` | 86 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/vm/engine.py` | `_diagnostic` | 104 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/vm/engine.py` | `_incident_start` | 108 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/vm/engine.py` | `_platform` | 121 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/vm/engine.py` | `_process_row` | 147 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/vm/engine.py` | `_process_analysis` | 179 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/vm/engine.py` | `_failed_dependencies` | 214 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/vm/engine.py` | `_service_row` | 223 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/vm/engine.py` | `_service_analysis` | 261 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/vm/engine.py` | `_boot_analysis` | 281 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/vm/engine.py` | `_message` | 305 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/vm/engine.py` | `_log_analysis` | 311 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/vm/engine.py` | `_network_analysis` | 372 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/vm/engine.py` | `_os_analysis` | 434 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/vm/engine.py` | `_status` | 467 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/vm/engine.py` | `_chain` | 473 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/vm/engine.py` | `_fault_classification` | 536 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/vm/engine.py` | `_fault_classification.add` | 548 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _fault_classification |
+| `agents/vm/engine.py` | `_causal_findings` | 607 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/vm/engine.py` | `build_vm_guest_analysis` | 665 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
 | `apps/api/a2a.py` | `a2a_request` | 13 | async function | Governed in-process A2A analysis endpoint. | module |
 | `apps/api/agents.py` | `_CatalogOnlyLLMAdapter` | 13 | class | Non-executable adapter used only to construct analysis metadata safely. | module |
 | `apps/api/agents.py` | `_CatalogOnlyLLMAdapter.provider_name` | 22 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _CatalogOnlyLLMAdapter |
@@ -2129,6 +2137,22 @@
 | `tests/unit/test_upstream_mcp_contracts.py` | `test_upstream_provider_settings_are_explicit` | 60 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_verification_gate.py` | `test_verification_success_requires_confidence` | 3 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_verification_gate.py` | `test_partial_verification_does_not_pass` | 6 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_deep_diagnostics.py` | `telemetry` | 4 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_vm_deep_diagnostics.py` | `log` | 14 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_vm_deep_diagnostics.py` | `analyze` | 24 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_vm_deep_diagnostics.py` | `codes` | 32 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_vm_deep_diagnostics.py` | `cause_codes` | 36 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_vm_deep_diagnostics.py` | `test_service_inactive_is_state_not_manual_stop` | 40 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_deep_diagnostics.py` | `test_process_missing_is_observation_not_cause` | 54 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_deep_diagnostics.py` | `test_process_running_but_expected_listener_missing` | 63 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_deep_diagnostics.py` | `test_listener_local_only_is_distinct_from_remote_network_failure` | 73 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_deep_diagnostics.py` | `test_remote_network_failure_after_local_tcp_success` | 82 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_deep_diagnostics.py` | `test_oom_kill_is_os_fault_with_log_chronology` | 96 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_deep_diagnostics.py` | `test_restart_loop_remains_separate_fault_class` | 108 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_deep_diagnostics.py` | `test_manual_stop_requires_explicit_audit_actor_and_action` | 121 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_deep_diagnostics.py` | `test_stopped_word_without_actor_action_does_not_prove_manual_stop` | 139 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_deep_diagnostics.py` | `test_config_error_port_conflict_dependency_and_crash_remain_separate` | 152 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_deep_diagnostics.py` | `test_windows_extension_normalizes_scm_and_event_log_evidence` | 162 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_vm_diagnostic_evidence.py` | `_DiagnosticVM` | 17 | class | کلاس | module |
 | `tests/unit/test_vm_diagnostic_evidence.py` | `_DiagnosticVM.__init__` | 18 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _DiagnosticVM |
 | `tests/unit/test_vm_diagnostic_evidence.py` | `_DiagnosticVM.collect_vm_metrics` | 21 | async method | Evidence/داده موردنیاز را از منبع مربوط جمع می‌کند | _DiagnosticVM |
