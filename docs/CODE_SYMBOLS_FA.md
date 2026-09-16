@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 278 | Dashboard JS files scanned: 2 | Symbols indexed: 1915**
+**Python files scanned: 278 | Dashboard JS files scanned: 2 | Symbols indexed: 1918**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -45,7 +45,10 @@
 | `agents/application/engine.py` | `_traffic_vs_regression` | 565 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/application/engine.py` | `_traffic_vs_regression.max_relative` | 570 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _traffic_vs_regression |
 | `agents/application/engine.py` | `build_application_analysis` | 603 | function | Build bounded, explainable application reliability features before LLM synthesis. | module |
-| `agents/application/investigation.py` | `<syntax-error>` | 0 | parse-error | فایل Python قابل parse نیست | — |
+| `agents/application/investigation.py` | `_bounded_unique` | 12 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/application/investigation.py` | `_span_identity` | 23 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/application/investigation.py` | `build_trace_path_analysis` | 30 | function | Build bounded parent/child trace paths from the engine's normalized spans. | module |
+| `agents/application/investigation.py` | `build_application_peer_context` | 157 | function | Extract Dependency/Change peer findings without promoting them to evidence. | module |
 | `agents/change/__init__.py` | `ChangeAgent` | 4 | class | کلاس | module |
 | `agents/database/__init__.py` | `DatabaseAgent` | 4 | class | کلاس | module |
 | `agents/dependency/__init__.py` | `DependencyAgent` | 4 | class | کلاس | module |
