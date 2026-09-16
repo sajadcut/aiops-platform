@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 284 | Dashboard JS files scanned: 2 | Symbols indexed: 2042**
+**Python files scanned: 285 | Dashboard JS files scanned: 2 | Symbols indexed: 2056**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -140,6 +140,20 @@
 | `agents/kubernetes/engine.py` | `_classify_cause` | 750 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/kubernetes/engine.py` | `_gaps` | 764 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/kubernetes/engine.py` | `build_kubernetes_analysis` | 776 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
+| `agents/kubernetes/pipeline.py` | `_raw` | 12 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/pipeline.py` | `_resource` | 17 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/pipeline.py` | `_kind` | 25 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/pipeline.py` | `_eid` | 29 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/pipeline.py` | `_metadata` | 34 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/pipeline.py` | `_status` | 39 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/pipeline.py` | `_event_text` | 44 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/pipeline.py` | `_object_safe_evidence` | 52 | function | Prevent non-object logs/metrics from being misclassified as Kubernetes resources. | module |
+| `agents/kubernetes/pipeline.py` | `_finding` | 73 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/pipeline.py` | `_structured_controller_findings` | 97 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/pipeline.py` | `_structured_scheduling_findings` | 148 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/pipeline.py` | `_merge_findings` | 193 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/pipeline.py` | `_attach_findings_to_resources` | 218 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/kubernetes/pipeline.py` | `build_kubernetes_analysis` | 239 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
 | `agents/kubernetes/safety.py` | `_resource_kind` | 10 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/kubernetes/safety.py` | `_redact_payload` | 18 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/kubernetes/safety.py` | `safe_evidence_for_prompt` | 34 | function | Return a bounded-copy-friendly evidence set with Secret/ConfigMap payload values removed. | module |
