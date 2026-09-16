@@ -185,6 +185,7 @@ PEER_OPERATIONAL_CONTEXT={json.dumps(peer_context, default=str)}"""
                 "postgresql_analysis": database_analysis.get("postgresql", {}),
                 "evidence_gap_matrix": deterministic.get("evidence_gap_matrix", {}),
                 "next_best_evidence": database_analysis.get("next_best_evidence", []),
+                "deterministic_analysis": deterministic,
                 "shared_deterministic_analysis": deterministic,
                 "knowledge_context_count": len(auxiliary_full["knowledge_rag"]),
                 "memory_context_count": len(auxiliary_full["operational_memory"]),
