@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 277 | Dashboard JS files scanned: 2 | Symbols indexed: 1914**
+**Python files scanned: 278 | Dashboard JS files scanned: 2 | Symbols indexed: 1915**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -45,6 +45,7 @@
 | `agents/application/engine.py` | `_traffic_vs_regression` | 565 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/application/engine.py` | `_traffic_vs_regression.max_relative` | 570 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _traffic_vs_regression |
 | `agents/application/engine.py` | `build_application_analysis` | 603 | function | Build bounded, explainable application reliability features before LLM synthesis. | module |
+| `agents/application/investigation.py` | `<syntax-error>` | 0 | parse-error | فایل Python قابل parse نیست | — |
 | `agents/change/__init__.py` | `ChangeAgent` | 4 | class | کلاس | module |
 | `agents/database/__init__.py` | `DatabaseAgent` | 4 | class | کلاس | module |
 | `agents/dependency/__init__.py` | `DependencyAgent` | 4 | class | کلاس | module |
