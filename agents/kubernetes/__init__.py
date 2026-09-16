@@ -1,7 +1,7 @@
 import json
 from typing import List, Optional
 
-from agents.kubernetes.pipeline import build_kubernetes_analysis
+from agents.kubernetes.diagnostics import build_kubernetes_analysis
 from agents.kubernetes.safety import safe_evidence_for_prompt
 from agents.shared.base import AgentInput, AgentOutput, BaseAgent, OperationalHypothesis
 from agents.shared.intelligence import build_deterministic_analysis, prompt_evidence_projection, sanitize_prompt_value
@@ -46,11 +46,11 @@ class KubernetesAgent(BaseAgent):
 
         prompt = f"""You are a Kubernetes SRE and senior production reliability investigator. LIVE EVIDENCE is authoritative. Knowledge RAG and Operational Memory are auxiliary only. Do not claim pod states, rollout failures, OOMKills, scheduling failures, probe failures, storage failures or network faults unless evidenced.
 
-KUBERNETES_ANALYSIS is a deterministic multi-stage diagnostic layer executed before LLM synthesis. It has independent analyzers for Pod, ReplicaSet, Deployment, StatefulSet, DaemonSet, Job, CronJob, Node, Service, Endpoint/EndpointSlice, Ingress, PVC/PV, HPA, PDB, NetworkPolicy, ConfigMap/Secret metadata, admission webhooks and Kubernetes Events. Treat analyzer findings as structured observations, not automatic root-cause verdicts.
+KUBERNETES_ANALYSIS is a deterministic multi-stage diagnostic layer executed before LLM synthesis. It contains independent structured analyzers for Pod, ReplicaSet, Deployment, StatefulSet, DaemonSet, Job, CronJob, Node, Service, Endpoint/EndpointSlice, Ingress, PVC/PV, HPA, PDB, NetworkPolicy, ConfigMap/Secret metadata, admission webhooks and Kubernetes Events. Treat analyzer findings as observations, not automatic root-cause verdicts.
 
 Investigate causal chains as Service/Ingress -> Endpoint/EndpointSlice -> Pod -> Controller -> Node -> Storage/Network. Use event_timeline and timeline_correlations to connect Kubernetes Events to metric/log timing. Distinguish Kubernetes workload symptoms from infrastructure, storage, network, change or dependency causes. If underlying-domain evidence is stronger, prefer handoff rather than attributing the cause to Kubernetes itself.
 
-Inspect scheduling reason/resource insufficiency, affinity/anti-affinity, taints/tolerations, image pulls, CrashLoopBackOff/restart trend/exit code/OOMKilled, readiness/liveness/startup probes, rollout/generation/unavailable replicas, admission webhook failures, PVC/PV attach/mount, node pressure/eviction, HPA, requests/limits, throttling, memory-limit pressure, PDB constraints, Service endpoints, Ingress backends, DNS/service discovery, NetworkPolicy and event chronology. KUBERNETES_ANALYSIS.resource_usage_comparison compares historical Prometheus p95/current usage with requests/limits when both are available; explain recommendations from those ratios and never invent missing historical data. Secret and ConfigMap payload values are not available to you: only safe metadata may be used.
+Inspect scheduling reason/resource insufficiency, affinity/anti-affinity, taints/tolerations, image pulls, CrashLoopBackOff/restart trend/exit code/OOMKilled, readiness/liveness/startup probes, rollout/generation/unavailable replicas, admission webhook failures, PVC/PV attach/mount, node pressure/eviction, HPA, requests/limits, throttling, memory-limit pressure, PDB constraints, Service endpoints, Ingress backends, DNS/service discovery, NetworkPolicy and event chronology. KUBERNETES_ANALYSIS.resource_usage_comparison compares historical Prometheus p95/current usage with requests/limits only when both are available; explain recommendations from those ratios and never invent missing historical data. Secret and ConfigMap payload values are not available to you: only safe metadata may be used.
 
 For each hypothesis state supporting live Evidence IDs, conflicting Evidence IDs, cheapest read-only falsification checks, impacted components and next evidence. Never treat prior incidents or auxiliary context as proof of the current incident.
 Return JSON keys: severity, health_status, findings, workload_signals, rollout_signals, scheduling_signals, network_signals, resource_signals, probable_dependencies, affected_components, blast_radius, hypotheses, missing_evidence, handoff_agents, immediate_checks, escalation_target, risk_level, uncertainty_reason, confidence.
@@ -153,6 +153,9 @@ Incident={input_data.incident_id}\nService={input_data.service_name}\nSummary={i
                 "resource_evidence_counts": deterministic.get("resource_evidence_counts", {}),
                 "resource_analyzer_counts": kubernetes_analysis.get("resource_counts", {}),
                 "resource_analyses": kubernetes_analysis.get("resource_analyses", []),
+                "resource_stage_outputs": kubernetes_analysis.get("resource_stage_outputs", []),
+                "resource_analyzer_registry": kubernetes_analysis.get("resource_analyzer_registry", []),
+                "diagnostic_stages": kubernetes_analysis.get("diagnostic_stages", []),
                 "causal_chains": kubernetes_analysis.get("causal_chains", []),
                 "event_timeline": kubernetes_analysis.get("event_timeline", []),
                 "timeline_correlations": kubernetes_analysis.get("timeline_correlations", []),
