@@ -84,11 +84,11 @@
 
     <section class="view" data-view="incidents">
       <div class="view-toolbar">
-        <div class="filter-group"><input id="incidentSearch" placeholder="Search incidents, services or targets" oninput="renderIncidents()"><select id="severityFilter" onchange="renderIncidents()"><option value="">All severities</option><option value="critical">Critical</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select><select id="statusFilter" onchange="renderIncidents()"><option value="">All statuses</option><option value="open">Open</option><option value="analyzing">Analyzing</option><option value="escalated">Escalated</option><option value="resolved">Resolved</option><option value="closed">Closed</option></select></div>
+        <div class="filter-group"><input id="incidentSearch" placeholder="Search incidents, services or targets" oninput="renderIncidents()"><select id="severityFilter" onchange="renderIncidents()"><option value="">All severities</option><option value="critical">Critical</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select><select id="statusFilter" onchange="renderIncidents()"><option value="__active__" selected>Active only</option><option value="">All history</option><option value="open">Open</option><option value="analyzing">Analyzing</option><option value="escalated">Escalated</option><option value="resolved">Resolved</option><option value="closed">Closed</option></select></div>
         <span id="incidentCount" class="badge neutral">0 incidents</span>
       </div>
       <div class="incident-layout">
-        <section class="panel incident-table-panel"><div class="panel-head"><div><span class="section-kicker">Live queue</span><h2>Incident Workbench</h2></div><span class="muted">PostgreSQL durable state</span></div><div class="table-wrap"><table><thead><tr><th>Incident</th><th>Service</th><th>Severity</th><th>Status</th><th>Confidence</th><th>Risk</th><th>Approval</th><th>Execution</th><th>Verification</th><th>Memory</th><th>Created</th></tr></thead><tbody id="incidentRows"></tbody></table></div></section>
+        <section class="panel incident-table-panel"><div class="panel-head"><div><span class="section-kicker">Live queue</span><h2>Incident Workbench</h2></div><span class="muted">PostgreSQL durable state</span></div><div class="table-wrap"><table><thead><tr><th>Incident</th><th>Service</th><th>Severity</th><th>Status</th><th>Confidence</th><th>Risk</th><th>Approval</th><th>Execution</th><th>Verification</th><th>Memory</th><th>Started (local)</th></tr></thead><tbody id="incidentRows"></tbody></table></div></section>
         <aside class="panel detail-panel"><div class="panel-head"><div><span class="section-kicker">Investigation</span><h2>Incident Intelligence</h2></div><span class="badge neutral">durable + live evidence</span></div><div id="detail"><div class="empty-state tall">Select an incident to inspect evidence, routing, RCA, evaluator decision, approval binding, execution, verification and learning.</div></div></aside>
       </div>
     </section>
@@ -124,5 +124,90 @@
 <div id="toast" class="toast"></div>
 <script src="control-center.js"></script>
 <script src="approval-actions.js"></script>
+<script>
+(() => {
+  const baseRenderOverviewForIncidentTime = window.renderOverview;
+  const incidentTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'local';
+  const padIncidentTime = value => String(value).padStart(2, '0');
+
+  function incidentRelativeAge(value) {
+    const date = new Date(value);
+    if (!value || Number.isNaN(date.getTime())) return 'unknown age';
+    const deltaSeconds = Math.round((date.getTime() - Date.now()) / 1000);
+    const future = deltaSeconds > 0;
+    const absolute = Math.abs(deltaSeconds);
+    if (absolute < 30) return 'just now';
+    let amount;
+    let unit;
+    if (absolute < 3600) {
+      amount = Math.floor(absolute / 60);
+      unit = 'min';
+    } else if (absolute < 86400) {
+      amount = Math.floor(absolute / 3600);
+      unit = 'h';
+    } else {
+      amount = Math.floor(absolute / 86400);
+      unit = 'd';
+    }
+    return future ? `in ${amount}${unit}` : `${amount}${unit} ago`;
+  }
+
+  function incidentTimeInfo(value) {
+    const date = new Date(value);
+    if (!value || Number.isNaN(date.getTime())) return {exact: '—', relative: 'unknown age', zone: incidentTimeZone};
+    const exact = `${date.getFullYear()}-${padIncidentTime(date.getMonth() + 1)}-${padIncidentTime(date.getDate())} ${padIncidentTime(date.getHours())}:${padIncidentTime(date.getMinutes())}:${padIncidentTime(date.getSeconds())}`;
+    return {exact, relative: incidentRelativeAge(value), zone: incidentTimeZone};
+  }
+
+  function matchesIncidentStatusScope(incident, scope) {
+    if (scope === '__active__') return isOpen(incident);
+    return !scope || lower(incident.status) === scope;
+  }
+
+  function renderIncidentsWithClearTime() {
+    const q = lower($('#incidentSearch')?.value);
+    const sev = $('#severityFilter')?.value || '';
+    const status = $('#statusFilter')?.value || '__active__';
+    const rows = S.incidents.filter(i =>
+      (!q || lower([i.id, i.service, i.summary, i.execution_target, i.execution_tool, i.runbook_id].join(' ')).includes(q)) &&
+      (!sev || lower(i.severity) === sev) &&
+      matchesIncidentStatusScope(i, status)
+    );
+    if ($('#incidentCount')) $('#incidentCount').textContent = `${rows.length} shown · ${S.incidents.length} loaded`;
+    if (!$('#incidentRows')) return;
+    $('#incidentRows').innerHTML = rows.map(i => {
+      const started = incidentTimeInfo(i.started_at || i.created_at);
+      const created = incidentTimeInfo(i.created_at);
+      return `<tr class="${S.selected === i.id ? 'selected' : ''}" onclick="selectIncident('${esc(i.id)}')"><td><div class="incident-main">${esc(String(i.id).slice(0, 8))}</div><div class="incident-sub">${esc(i.summary || '')}</div></td><td>${esc(i.service || '—')}</td><td>${pill(i.severity)}</td><td>${pill(i.status)}</td><td>${pct(i.confidence)}</td><td>${pill(i.risk_level || '—')}</td><td>${pill(i.approval_status || '—')}</td><td>${pill(i.execution_status || '—')}</td><td>${pill(i.verification_status || '—')}</td><td>${pill(i.memory_status || '—')}</td><td title="DB record created ${esc(created.exact)} ${esc(created.zone)}"><div class="incident-main">${esc(started.exact)}</div><div class="incident-sub">${esc(started.zone)} · ${esc(started.relative)}</div></td></tr>`;
+    }).join('') || '<tr><td colspan="11"><div class="empty-state">No active incidents match the current filters. Switch to All history to inspect resolved or closed incidents.</div></td></tr>';
+  }
+
+  function patchAttentionIncidentTimes() {
+    const incidents = S.incidents
+      .filter(i => isOpen(i) && attentionReason(i).length)
+      .sort((a, b) => attentionRank(b) - attentionRank(a))
+      .slice(0, 7);
+    document.querySelectorAll('#attentionQueue .attention-item').forEach((row, index) => {
+      const incident = incidents[index];
+      const meta = row.querySelector('.attention-meta');
+      if (!incident || !meta) return;
+      const started = incidentTimeInfo(incident.started_at || incident.created_at);
+      meta.textContent = `${attentionReason(incident).join(' · ')} · ${started.exact} ${started.zone} · ${started.relative}`;
+    });
+  }
+
+  const enhancedRenderOverviewForIncidentTime = function enhancedRenderOverviewForIncidentTime() {
+    baseRenderOverviewForIncidentTime();
+    patchAttentionIncidentTimes();
+  };
+
+  renderIncidents = renderIncidentsWithClearTime;
+  window.renderIncidents = renderIncidentsWithClearTime;
+  if (typeof baseRenderOverviewForIncidentTime === 'function') {
+    renderOverview = enhancedRenderOverviewForIncidentTime;
+    window.renderOverview = enhancedRenderOverviewForIncidentTime;
+  }
+})();
+</script>
 </body>
 </html>
