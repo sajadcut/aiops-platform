@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 309 | Dashboard JS files scanned: 2 | Symbols indexed: 2477**
+**Python files scanned: 309 | Dashboard JS files scanned: 2 | Symbols indexed: 2476**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -115,7 +115,6 @@
 | `agents/database/engine.py` | `_sanitize_db_mapping` | 578 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/database/engine.py` | `database_prompt_evidence_projection` | 604 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/dependency/__init__.py` | `DependencyAgent` | 4 | class | کلاس | module |
-| `agents/dependency/engine.py` | `<syntax-error>` | 0 | parse-error | فایل Python قابل parse نیست | — |
 | `agents/identity/__init__.py` | `IdentityAgent` | 16 | class | کلاس | module |
 | `agents/identity/__init__.py` | `IdentityAgent.__init__` | 36 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IdentityAgent |
 | `agents/identity/__init__.py` | `IdentityAgent.analyze` | 39 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IdentityAgent |
