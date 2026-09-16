@@ -84,9 +84,9 @@
 | `agents/database/engine.py` | `_replication_analysis` | 358 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/database/engine.py` | `_cause_candidates` | 376 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/database/engine.py` | `_cause_candidates.add` | 389 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _cause_candidates |
-| `agents/database/engine.py` | `build_database_reliability_analysis` | 482 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
-| `agents/database/engine.py` | `_sanitize_db_mapping` | 575 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `agents/database/engine.py` | `database_prompt_evidence_projection` | 601 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/database/engine.py` | `build_database_reliability_analysis` | 485 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
+| `agents/database/engine.py` | `_sanitize_db_mapping` | 578 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/database/engine.py` | `database_prompt_evidence_projection` | 604 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/dependency/__init__.py` | `DependencyAgent` | 4 | class | کلاس | module |
 | `agents/identity/__init__.py` | `IdentityAgent` | 4 | class | کلاس | module |
 | `agents/infrastructure/__init__.py` | `InfrastructureAgent` | 12 | class | کلاس | module |
