@@ -32,30 +32,77 @@ class IncidentCoordinator:
     @classmethod
     def select_agents(cls, triage: Dict[str, Any], enabled: Iterable[str]) -> Dict[str, Any]:
         enabled_set = {str(name).lower() for name in enabled}
+        details = triage.get("analysis_details", {}) if isinstance(triage.get("analysis_details", {}), dict) else {}
         requested = [str(x).lower() for x in (triage.get("handoff_agents") or [])]
-        primary = str(triage.get("analysis_details", {}).get("primary_domain") or "").lower()
+        focused = [str(x).lower() for x in (details.get("specialist_routes") or [])]
+        primary = str(details.get("primary_domain") or "").lower()
+        band = str(details.get("routing_confidence_band") or "").lower()
+        conflict_count = int(details.get("topology_conflict_count", 0) or 0) + int(details.get("conflicting_evidence_count", 0) or 0)
         ordered: List[str] = []
 
         def add(name: str) -> None:
             if name in enabled_set and name not in ordered:
                 ordered.append(name)
 
+        configured_max = max(1, settings.AGENT_MAX_PARALLELISM)
+        confidence = float(triage.get("confidence", 0) or 0)
+
+        # New production triage explicitly publishes focused specialist routes.
+        # The legacy handoff list remains backward compatible but no longer forces
+        # broad execution when the deterministic triage engine has a stronger plan.
+        if focused:
+            for name in focused:
+                add(name)
+            if primary:
+                add(primary)
+
+            contradiction = conflict_count > 0
+            if band == "high" and not contradiction:
+                budget = min(configured_max, max(1, len(ordered)))
+                reason = "triage_focused_routing"
+            elif band == "medium" and not contradiction:
+                for name in requested:
+                    add(name)
+                budget = min(configured_max, max(2, min(3, len(ordered))))
+                reason = "triage_primary_secondary_routing"
+            else:
+                if primary:
+                    for name in cls.DOMAIN_EXPANSION.get(primary, [primary]):
+                        add(name)
+                for name in requested:
+                    add(name)
+                for name in sorted(enabled_set):
+                    add(name)
+                budget = configured_max
+                reason = "fallback_broad_analysis"
+
+            selected = ordered[:budget]
+            skipped = sorted(enabled_set.difference(selected))
+            return {
+                "selected": selected,
+                "skipped": skipped,
+                "reason": reason,
+                "primary_domain": primary or "unknown",
+                "requested_handoffs": requested,
+                "focused_routes": focused,
+                "routing_confidence_band": band or "unknown",
+                "routing_budget": budget,
+                "adaptive_routing": True,
+                "conflict_count": conflict_count,
+            }
+
+        # Legacy contract for callers that do not yet emit specialist_routes.
         for name in requested:
             add(name)
         if primary:
             for name in cls.DOMAIN_EXPANSION.get(primary, [primary]):
                 add(name)
 
-        confidence = float(triage.get("confidence", 0) or 0)
         fallback = not ordered or confidence < settings.AGENT_LOW_CONFIDENCE_THRESHOLD
         if fallback:
             for name in sorted(enabled_set):
                 add(name)
 
-        configured_max = max(1, settings.AGENT_MAX_PARALLELISM)
-        # High/normal-confidence incidents start with a focused set. Additional
-        # specialists are added through audited handoffs after evidence review.
-        # Low-confidence incidents preserve the broader safety-net behavior.
         budget = configured_max if fallback else min(configured_max, 3)
         selected = ordered[:budget]
         skipped = sorted(enabled_set.difference(selected))
