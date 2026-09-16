@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 309 | Dashboard JS files scanned: 2 | Symbols indexed: 2476**
+**Python files scanned: 310 | Dashboard JS files scanned: 2 | Symbols indexed: 2521**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -115,6 +115,51 @@
 | `agents/database/engine.py` | `_sanitize_db_mapping` | 578 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/database/engine.py` | `database_prompt_evidence_projection` | 604 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/dependency/__init__.py` | `DependencyAgent` | 4 | class | کلاس | module |
+| `agents/dependency/core.py` | `_raw` | 20 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/dependency/core.py` | `_labels` | 25 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/dependency/core.py` | `_first` | 31 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/dependency/core.py` | `_field` | 39 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/dependency/core.py` | `_evidence_id` | 49 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/dependency/core.py` | `_parse_ts` | 54 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/dependency/core.py` | `_timestamp` | 68 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/dependency/core.py` | `_iso` | 77 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/dependency/core.py` | `_numeric` | 81 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/dependency/core.py` | `_rate` | 103 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/dependency/core.py` | `_flatten_text` | 111 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/dependency/core.py` | `_text` | 134 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/dependency/core.py` | `_unique` | 138 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/dependency/core.py` | `_service` | 151 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/dependency/core.py` | `_virtual` | 158 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/dependency/core.py` | `_service_name` | 163 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/dependency/core.py` | `_peer_name` | 167 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/dependency/core.py` | `_dependency_kind` | 171 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/dependency/core.py` | `_metric_name` | 186 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/dependency/core.py` | `_metric_kind` | 191 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/dependency/core.py` | `_metric_value` | 207 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/dependency/core.py` | `_baseline` | 213 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/dependency/core.py` | `_dependency_semantic` | 222 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/dependency/core.py` | `_direct_endpoints` | 238 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/dependency/core.py` | `_status_code` | 258 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/dependency/core.py` | `_observation` | 267 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/dependency/core.py` | `_expand_topology` | 354 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/dependency/core.py` | `_collect_observations` | 376 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/dependency/core.py` | `_latest` | 442 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/dependency/core.py` | `_metric_summary` | 453 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/dependency/core.py` | `_aggregate_edges` | 471 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/dependency/core.py` | `_nodes` | 535 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/dependency/core.py` | `_nodes.ensure` | 538 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _nodes |
+| `agents/dependency/core.py` | `_fanout` | 603 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/dependency/core.py` | `_shared` | 620 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/dependency/core.py` | `_retry` | 646 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/dependency/core.py` | `_timeout_propagation` | 669 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/dependency/core.py` | `_cascades` | 700 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/dependency/core.py` | `_critical_paths` | 741 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/dependency/core.py` | `_critical_paths.record` | 757 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _critical_paths |
+| `agents/dependency/core.py` | `_critical_paths.walk` | 771 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _critical_paths |
+| `agents/dependency/core.py` | `_root_contributors` | 793 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/dependency/core.py` | `_trace_quality` | 928 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/dependency/core.py` | `_inventory` | 959 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/dependency/core.py` | `build_dependency_causal_analysis` | 978 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
 | `agents/identity/__init__.py` | `IdentityAgent` | 16 | class | کلاس | module |
 | `agents/identity/__init__.py` | `IdentityAgent.__init__` | 36 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IdentityAgent |
 | `agents/identity/__init__.py` | `IdentityAgent.analyze` | 39 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IdentityAgent |
