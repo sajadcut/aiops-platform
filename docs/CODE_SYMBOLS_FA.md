@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 287 | Dashboard JS files scanned: 2 | Symbols indexed: 2097**
+**Python files scanned: 288 | Dashboard JS files scanned: 2 | Symbols indexed: 2106**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1808,6 +1808,15 @@
 | `tests/unit/test_kubernetes_readonly_evidence.py` | `test_kubernetes_connector_source_has_no_write_http_verbs` | 6 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_kubernetes_readonly_evidence.py` | `test_kubernetes_connector_can_be_disabled_without_network` | 15 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_kubernetes_readonly_evidence.py` | `test_kubernetes_env_contract_is_centralized` | 22 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_kubernetes_resource_analyzers.py` | `obj` | 7 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_kubernetes_resource_analyzers.py` | `output_for` | 19 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_kubernetes_resource_analyzers.py` | `test_registry_contains_every_requested_resource_analyzer` | 23 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_kubernetes_resource_analyzers.py` | `test_daemonset_analyzer_has_daemonset_specific_health_signals` | 34 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_kubernetes_resource_analyzers.py` | `test_job_and_cronjob_analyzers_are_structured_independently` | 52 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_kubernetes_resource_analyzers.py` | `test_statefulset_hpa_and_pdb_have_resource_specific_semantics` | 78 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_kubernetes_resource_analyzers.py` | `test_admission_webhook_analyzers_expose_metadata_not_client_credentials` | 104 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_kubernetes_resource_analyzers.py` | `test_secret_and_configmap_outputs_are_metadata_only` | 130 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_kubernetes_resource_analyzers.py` | `test_diagnostics_builder_exposes_independent_stage_outputs_and_registry` | 142 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_mcp_external_boundary.py` | `test_context_builder_uses_mcp_clients_not_native_external_connectors` | 18 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_mcp_external_boundary.py` | `test_zabbix_is_mcp_only_and_has_no_direct_runtime_config` | 28 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_mcp_external_boundary.py` | `test_evidence_collector_has_no_native_external_fallbacks` | 44 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
