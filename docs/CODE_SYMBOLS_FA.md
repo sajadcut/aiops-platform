@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 305 | Dashboard JS files scanned: 2 | Symbols indexed: 2409**
+**Python files scanned: 305 | Dashboard JS files scanned: 2 | Symbols indexed: 2411**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -88,7 +88,9 @@
 | `agents/database/engine.py` | `_sanitize_db_mapping` | 578 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/database/engine.py` | `database_prompt_evidence_projection` | 604 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/dependency/__init__.py` | `DependencyAgent` | 4 | class | کلاس | module |
-| `agents/identity/__init__.py` | `IdentityAgent` | 4 | class | کلاس | module |
+| `agents/identity/__init__.py` | `IdentityAgent` | 16 | class | کلاس | module |
+| `agents/identity/__init__.py` | `IdentityAgent.__init__` | 36 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IdentityAgent |
+| `agents/identity/__init__.py` | `IdentityAgent.analyze` | 39 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IdentityAgent |
 | `agents/identity/engine.py` | `_raw` | 9 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/identity/engine.py` | `_lookup` | 14 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/identity/engine.py` | `_eid` | 25 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
