@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 289 | Dashboard JS files scanned: 2 | Symbols indexed: 2139**
+**Python files scanned: 290 | Dashboard JS files scanned: 2 | Symbols indexed: 2142**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -240,6 +240,9 @@
 | `agents/security/engine.py` | `_deterministic_hypotheses.add` | 445 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _deterministic_hypotheses |
 | `agents/security/engine.py` | `_peer_context` | 470 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/security/engine.py` | `build_security_analysis` | 501 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
+| `agents/security/safety.py` | `_sensitive_key` | 20 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/security/safety.py` | `redact_security_value` | 25 | function | Bound operational security context and remove credential material. | module |
+| `agents/security/safety.py` | `security_prompt_evidence` | 50 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/shared/a2a_agent.py` | `A2AAgentCard` | 12 | class | کلاس | module |
 | `agents/shared/a2a_agent.py` | `A2AAgent` | 20 | class | Authenticated, bounded transport for optional agent-to-agent RPC. | module |
 | `agents/shared/a2a_agent.py` | `A2AAgent.__init__` | 28 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | A2AAgent |
