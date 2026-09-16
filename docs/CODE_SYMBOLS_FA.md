@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 269 | Dashboard JS files scanned: 2 | Symbols indexed: 1773**
+**Python files scanned: 269 | Dashboard JS files scanned: 2 | Symbols indexed: 1777**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -429,23 +429,24 @@
 | `apps/memory_service/__init__.py` | `OperationalMemoryService.add_entry` | 21 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryService |
 | `apps/memory_service/__init__.py` | `OperationalMemoryService.search_similar` | 62 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | OperationalMemoryService |
 | `apps/memory_service/__init__.py` | `OperationalMemoryService.update_reuse_count` | 114 | async method | state یا داده را به‌صورت durable ذخیره/به‌روزرسانی می‌کند | OperationalMemoryService |
-| `apps/operator_summary.py` | `_t` | 17 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/operator_summary.py` | `_low` | 23 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/operator_summary.py` | `_d` | 27 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/operator_summary.py` | `_l` | 31 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/operator_summary.py` | `_true` | 35 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/operator_summary.py` | `_norm` | 39 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/operator_summary.py` | `_key` | 53 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/operator_summary.py` | `_ref` | 60 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/operator_summary.py` | `_merge_evidence` | 64 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/operator_summary.py` | `_diag` | 91 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/operator_summary.py` | `_human_action` | 95 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/operator_summary.py` | `_observed` | 124 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/operator_summary.py` | `_observed.view` | 140 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _observed |
-| `apps/operator_summary.py` | `_cause` | 158 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/operator_summary.py` | `_evidence_summary` | 190 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/operator_summary.py` | `_observed_text` | 205 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/operator_summary.py` | `build_operator_summary` | 219 | function | Deterministic, read-only operator Decision Support; never an execution authority. | module |
+| `apps/operator_summary.py` | `_t` | 18 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/operator_summary.py` | `_low` | 24 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/operator_summary.py` | `_d` | 28 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/operator_summary.py` | `_l` | 32 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/operator_summary.py` | `_true` | 36 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/operator_summary.py` | `_context_value` | 40 | function | Read a scalar fallback from durable Incident Context without turning context into Evidence. | module |
+| `apps/operator_summary.py` | `_norm` | 59 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/operator_summary.py` | `_key` | 73 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/operator_summary.py` | `_ref` | 80 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/operator_summary.py` | `_merge_evidence` | 84 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/operator_summary.py` | `_diag` | 111 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/operator_summary.py` | `_human_action` | 115 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/operator_summary.py` | `_observed` | 144 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/operator_summary.py` | `_observed.view` | 194 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _observed |
+| `apps/operator_summary.py` | `_cause` | 214 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/operator_summary.py` | `_evidence_summary` | 246 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/operator_summary.py` | `_observed_text` | 261 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/operator_summary.py` | `build_operator_summary` | 275 | function | Deterministic, read-only operator Decision Support; never an execution authority. | module |
 | `apps/orchestrator/a2a_gateway.py` | `A2AGateway` | 11 | class | Compatibility gateway for structured multi-agent analysis. | module |
 | `apps/orchestrator/a2a_gateway.py` | `A2AGateway.__init__` | 18 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | A2AGateway |
 | `apps/orchestrator/a2a_gateway.py` | `A2AGateway.process_incident` | 24 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | A2AGateway |
@@ -1575,12 +1576,15 @@
 | `tests/unit/test_operational_resilience_regressions.py` | `test_total_specialist_failure_still_fails_closed` | 272 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_operator_summary.py` | `_service_status` | 4 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_operator_summary.py` | `_base_summary` | 23 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `tests/unit/test_operator_summary.py` | `test_clean_systemd_stop_never_claims_manual_stop_without_direct_evidence` | 35 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_operator_summary.py` | `test_direct_sudo_journal_evidence_can_confirm_manual_stop` | 49 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_operator_summary.py` | `test_agent_manual_stop_claim_is_downgraded_without_direct_evidence` | 74 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_operator_summary.py` | `test_lifecycle_fields_are_recomputed_from_current_checkpoint_and_durable_governance` | 88 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_operator_summary.py` | `test_pending_approval_next_step_does_not_imply_execution_authority` | 165 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_operator_summary.py` | `test_explicit_human_audit_command_can_confirm_manual_stop` | 187 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_operator_summary.py` | `test_clean_systemd_stop_never_claims_manual_stop_without_direct_evidence` | 40 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_operator_summary.py` | `test_direct_sudo_journal_evidence_can_confirm_manual_stop` | 54 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_operator_summary.py` | `test_direct_journalctl_evidence_from_log_backend_can_confirm_manual_stop` | 79 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_operator_summary.py` | `test_agent_manual_stop_claim_is_downgraded_without_direct_evidence` | 99 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_operator_summary.py` | `test_incident_context_is_used_only_as_structured_target_and_port_fallback` | 113 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_operator_summary.py` | `test_incident_context_does_not_confirm_manual_action_without_direct_evidence` | 131 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_operator_summary.py` | `test_lifecycle_fields_are_recomputed_from_current_checkpoint_and_durable_governance` | 145 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_operator_summary.py` | `test_pending_approval_next_step_does_not_imply_execution_authority` | 222 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_operator_summary.py` | `test_explicit_human_audit_command_can_confirm_manual_stop` | 244 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_production_fail_closed.py` | `test_deterministic_embedding_is_forbidden_in_production` | 9 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_production_fail_closed.py` | `test_production_orchestrator_forbids_mock_llm_provider` | 16 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_production_hardening_batch.py` | `_finding` | 15 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
