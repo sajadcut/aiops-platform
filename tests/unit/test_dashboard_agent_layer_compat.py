@@ -124,9 +124,11 @@ def test_dashboard_api_calls_match_registered_backend_surfaces():
     assert "/operator-summary" in actions
     assert '@router.get("/incidents/{incident_id}/operator-summary")' in incident_resources
     assert "/workflow/e2e/" in actions
-    assert '@router.post("/workflow/e2e/{incident_id}/resume")' in e2e_api
+    assert '@router.post("/workflow/e2e/{incident_id}/resume",' in e2e_api
+    assert "/api/v1/approvals/" in actions
     assert "/approve" in actions and "/reject" in actions
-    assert "approve_approval" in execution_api and "reject_approval" in execution_api
+    assert '@router.post("/approvals/{approval_id}/approve")' in execution_api
+    assert '@router.post("/approvals/{approval_id}/reject")' in execution_api
 
 
 def test_dashboard_javascript_and_inline_scripts_parse_when_node_is_available():
