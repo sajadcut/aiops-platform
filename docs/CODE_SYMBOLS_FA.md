@@ -7,13 +7,13 @@
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
-| `agents/application/__init__.py` | `ApplicationAgent` | 12 | class | کلاس | module |
-| `agents/application/__init__.py` | `ApplicationAgent.__init__` | 13 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ApplicationAgent |
-| `agents/application/__init__.py` | `ApplicationAgent.name` | 17 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ApplicationAgent |
-| `agents/application/__init__.py` | `ApplicationAgent.description` | 21 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ApplicationAgent |
-| `agents/application/__init__.py` | `ApplicationAgent.allowed_tools` | 25 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ApplicationAgent |
-| `agents/application/__init__.py` | `ApplicationAgent._expected_observations` | 29 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ApplicationAgent |
-| `agents/application/__init__.py` | `ApplicationAgent.analyze` | 45 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ApplicationAgent |
+| `agents/application/__init__.py` | `ApplicationAgent` | 13 | class | کلاس | module |
+| `agents/application/__init__.py` | `ApplicationAgent.__init__` | 14 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ApplicationAgent |
+| `agents/application/__init__.py` | `ApplicationAgent.name` | 18 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ApplicationAgent |
+| `agents/application/__init__.py` | `ApplicationAgent.description` | 22 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ApplicationAgent |
+| `agents/application/__init__.py` | `ApplicationAgent.allowed_tools` | 26 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ApplicationAgent |
+| `agents/application/__init__.py` | `ApplicationAgent._expected_observations` | 30 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ApplicationAgent |
+| `agents/application/__init__.py` | `ApplicationAgent.analyze` | 46 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ApplicationAgent |
 | `agents/application/engine.py` | `_raw` | 19 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/application/engine.py` | `_evidence_id` | 24 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/application/engine.py` | `_parse_timestamp` | 29 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
