@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 316 | Dashboard JS files scanned: 2 | Symbols indexed: 2630**
+**Python files scanned: 318 | Dashboard JS files scanned: 2 | Symbols indexed: 2647**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -687,14 +687,15 @@
 | `apps/api/health.py` | `liveness` | 155 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/health.py` | `readiness` | 160 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/health.py` | `metrics` | 170 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/http_logging.py` | `_headers` | 17 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/http_logging.py` | `_safe_json_body` | 24 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/http_logging.py` | `_value` | 38 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/http_logging.py` | `HTTPTransactionLoggingMiddleware` | 48 | class | Persist one redacted, correlated event for every HTTP transaction. | module |
-| `apps/api/http_logging.py` | `HTTPTransactionLoggingMiddleware.__init__` | 51 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | HTTPTransactionLoggingMiddleware |
-| `apps/api/http_logging.py` | `HTTPTransactionLoggingMiddleware.__call__` | 54 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | HTTPTransactionLoggingMiddleware |
-| `apps/api/http_logging.py` | `HTTPTransactionLoggingMiddleware.__call__.logging_receive` | 81 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | HTTPTransactionLoggingMiddleware.__call__ |
-| `apps/api/http_logging.py` | `HTTPTransactionLoggingMiddleware.__call__.logging_send` | 89 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | HTTPTransactionLoggingMiddleware.__call__ |
+| `apps/api/http_logging.py` | `_headers` | 36 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/http_logging.py` | `_safe_json_body` | 43 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/http_logging.py` | `_value` | 57 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/http_logging.py` | `_incident_id_from_path` | 67 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/http_logging.py` | `HTTPTransactionLoggingMiddleware` | 78 | class | Persist one redacted, request/Incident-correlated event per transaction. | module |
+| `apps/api/http_logging.py` | `HTTPTransactionLoggingMiddleware.__init__` | 81 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | HTTPTransactionLoggingMiddleware |
+| `apps/api/http_logging.py` | `HTTPTransactionLoggingMiddleware.__call__` | 84 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | HTTPTransactionLoggingMiddleware |
+| `apps/api/http_logging.py` | `HTTPTransactionLoggingMiddleware.__call__.logging_receive` | 126 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | HTTPTransactionLoggingMiddleware.__call__ |
+| `apps/api/http_logging.py` | `HTTPTransactionLoggingMiddleware.__call__.logging_send` | 140 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | HTTPTransactionLoggingMiddleware.__call__ |
 | `apps/api/incident_resources.py` | `get_context` | 22 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
 | `apps/api/incident_resources.py` | `get_evidence` | 39 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
 | `apps/api/incident_resources.py` | `get_knowledge` | 65 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
@@ -1233,9 +1234,14 @@
 | `domain/contracts/config.py` | `Settings.validate_jenkins_basic_auth_header` | 266 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
 | `domain/contracts/config.py` | `Settings.validate_external_contracts` | 273 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
 | `domain/contracts/config.py` | `Settings.validate_cognia_contract` | 297 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/context.py` | `set_trace_id` | 7 | function | تنظیم trace_id برای درخواست جاری | module |
-| `domain/contracts/context.py` | `get_trace_id` | 11 | function | دریافت trace_id درخواست جاری | module |
-| `domain/contracts/context.py` | `generate_trace_id` | 15 | function | تولید یک trace_id جدید | module |
+| `domain/contracts/context.py` | `set_trace_id` | 15 | function | Set the request/correlation trace id for the current execution context. | module |
+| `domain/contracts/context.py` | `get_trace_id` | 20 | function | Return the request/correlation trace id for the current context. | module |
+| `domain/contracts/context.py` | `generate_trace_id` | 25 | function | Generate a compact request trace id. | module |
+| `domain/contracts/context.py` | `incident_rid` | 30 | function | Return a stable RID for an Incident without requiring a database column. | module |
+| `domain/contracts/context.py` | `bind_incident_context` | 48 | function | Bind Incident identity and its stable RID to the current async context. | module |
+| `domain/contracts/context.py` | `clear_incident_context` | 60 | function | Clear Incident correlation fields from the current execution context. | module |
+| `domain/contracts/context.py` | `get_incident_id` | 66 | function | Return the bound Incident id, if any. | module |
+| `domain/contracts/context.py` | `get_rid` | 71 | function | Return the bound Incident RID, if any. | module |
 | `domain/contracts/exceptions.py` | `AppException` | 9 | class | کلاس پایه برای همه خطاهای سفارشی برنامه | module |
 | `domain/contracts/exceptions.py` | `AppException.__init__` | 11 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | AppException |
 | `domain/contracts/exceptions.py` | `NotFoundException` | 22 | class | کلاس | module |
@@ -1255,10 +1261,11 @@
 | `domain/contracts/exceptions.py` | `register_exception_handlers.validation_exception_handler` | 73 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | register_exception_handlers |
 | `domain/contracts/exceptions.py` | `register_exception_handlers.http_exception_handler` | 99 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | register_exception_handlers |
 | `domain/contracts/exceptions.py` | `register_exception_handlers.generic_exception_handler` | 116 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | register_exception_handlers |
-| `domain/contracts/logging.py` | `_processor_formatter` | 14 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `domain/contracts/logging.py` | `_file_handler` | 30 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `domain/contracts/logging.py` | `configure_logging` | 49 | function | Configure human console/text logs and JSON-line file logs. | module |
-| `domain/contracts/logging.py` | `log_workflow_step` | 117 | function | Emit one canonical incident-timeline event to both text and JSON logs. | module |
+| `domain/contracts/logging.py` | `_correlation_context_processor` | 21 | function | Attach request trace + stable Incident RID to every log event. | module |
+| `domain/contracts/logging.py` | `_processor_formatter` | 47 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `domain/contracts/logging.py` | `_file_handler` | 64 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `domain/contracts/logging.py` | `configure_logging` | 83 | function | Configure human console/text logs and JSON-line file logs. | module |
+| `domain/contracts/logging.py` | `log_workflow_step` | 154 | function | Emit one canonical Incident timeline event to text and JSON logs. | module |
 | `domain/contracts/rate_limit.py` | `RateLimiter` | 14 | class | In-process rate limiter using centrally configured limits. | module |
 | `domain/contracts/rate_limit.py` | `RateLimiter.__init__` | 22 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RateLimiter |
 | `domain/contracts/rate_limit.py` | `RateLimiter.__call__` | 26 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RateLimiter |
@@ -1588,6 +1595,10 @@
 | `scripts/repair_legacy_audit_timestamp.py` | `_print` | 114 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `scripts/repair_legacy_audit_timestamp.py` | `repair` | 118 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `scripts/repair_legacy_audit_timestamp.py` | `main` | 207 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `scripts/trace_incident_logs.py` | `_rid` | 12 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `scripts/trace_incident_logs.py` | `_open` | 17 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `scripts/trace_incident_logs.py` | `_files` | 23 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `scripts/trace_incident_logs.py` | `main` | 36 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/integration/test_controlled_connectors.py` | `test_native_edge_observability_connectors_health_harness` | 8 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/integration/test_controlled_connectors.py` | `test_native_edge_observability_connectors_health_harness.healthy` | 9 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_native_edge_observability_connectors_health_harness |
 | `tests/integration/test_controlled_connectors.py` | `test_native_edge_observability_failure_harness` | 20 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
@@ -2115,6 +2126,12 @@
 | `tests/unit/test_identity_reliability_engine.py` | `CapturingIdentityLLM.generate` | 194 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CapturingIdentityLLM |
 | `tests/unit/test_identity_reliability_engine.py` | `CapturingIdentityLLM.generate_with_messages` | 219 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CapturingIdentityLLM |
 | `tests/unit/test_identity_reliability_engine.py` | `test_identity_agent_exposes_chain_and_never_prompts_full_credentials` | 224 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_rid_logging.py` | `_configure_json_logging` | 14 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_incident_rid_logging.py` | `test_incident_rid_is_stable_and_uuid_derived` | 29 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_rid_logging.py` | `test_non_uuid_legacy_incident_ids_are_stable_and_not_copied_verbatim` | 37 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_rid_logging.py` | `test_workflow_event_binds_rid_for_follow_up_logs` | 46 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_rid_logging.py` | `test_hourly_logrotate_policy_and_timer_are_tracked` | 75 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_rid_logging.py` | `test_trace_script_accepts_incident_uuid_or_rid_contract` | 92 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_infrastructure_use_engine.py` | `StaticInfrastructureLLM` | 11 | class | کلاس | module |
 | `tests/unit/test_infrastructure_use_engine.py` | `StaticInfrastructureLLM.provider_name` | 13 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | StaticInfrastructureLLM |
 | `tests/unit/test_infrastructure_use_engine.py` | `StaticInfrastructureLLM.generate` | 16 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | StaticInfrastructureLLM |
