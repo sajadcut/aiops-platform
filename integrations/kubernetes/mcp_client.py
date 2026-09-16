@@ -7,11 +7,11 @@ from integrations.mcp_client import MCPClient
 
 
 class KubernetesMCPClient(MCPClient):
-    """Kubernetes evidence + explicitly governed write connector through MCP.
+    """Kubernetes evidence + governed write connector through MCP.
 
-    Read evidence uses the normal MCP identity. Mutating tools use the separate
-    write identity and require durable approval/incident context from the AIOps
-    control plane. The remote MCP receives that context for audit correlation.
+    Read and write calls use the same fixed Control-Plane MCP identity. Mutating
+    tools still require durable approval/incident context from the AIOps control
+    plane, and the remote MCP receives that context for audit correlation.
     """
 
     READ_TOOL = "collect_kubernetes_evidence"
@@ -33,7 +33,7 @@ class KubernetesMCPClient(MCPClient):
             protocol_version=settings.MCP_PROTOCOL_VERSION,
             timeout=settings.MCP_TIMEOUT_SECONDS,
             bearer_token=settings.MCP_BEARER_TOKEN,
-            write_bearer_token=settings.MCP_WRITE_BEARER_TOKEN,
+            write_bearer_token=settings.MCP_BEARER_TOKEN,
             client_cert_path=settings.MCP_CLIENT_CERT_PATH,
             client_key_path=settings.MCP_CLIENT_KEY_PATH,
         )
