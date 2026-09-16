@@ -108,11 +108,14 @@ def build_trace_path_analysis(trace_analysis: Mapping[str, Any]) -> Dict[str, An
                 except (TypeError, ValueError):
                     continue
             services = _bounded_unique(
-                value
-                for span in chain
-                for value in (span.get("caller"), span.get("callee"))
-                if value not in (None, "")
-            , 12)
+                [
+                    value
+                    for span in chain
+                    for value in (span.get("caller"), span.get("callee"))
+                    if value not in (None, "")
+                ],
+                12,
+            )
             evidence_ids = _bounded_unique((span.get("evidence_id") for span in chain), 16)
             span_ids = _bounded_unique((span.get("span_id") for span in chain), 16)
             error_span_ids = _bounded_unique(
