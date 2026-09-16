@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 272 | Dashboard JS files scanned: 2 | Symbols indexed: 1823**
+**Python files scanned: 273 | Dashboard JS files scanned: 2 | Symbols indexed: 1829**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1654,6 +1654,12 @@
 | `tests/unit/test_rag_memory_governance.py` | `test_memory_rejects_inconclusive_or_missing_outcome` | 31 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_rbac.py` | `test_viewer_cannot_approve` | 3 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_rbac.py` | `test_sre_can_approve_high_risk` | 6 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_recovery_readiness_details.py` | `StaticLLM` | 10 | class | کلاس | module |
+| `tests/unit/test_recovery_readiness_details.py` | `StaticLLM.provider_name` | 12 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | StaticLLM |
+| `tests/unit/test_recovery_readiness_details.py` | `StaticLLM.generate` | 15 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | StaticLLM |
+| `tests/unit/test_recovery_readiness_details.py` | `StaticLLM.generate_with_messages` | 30 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | StaticLLM |
+| `tests/unit/test_recovery_readiness_details.py` | `test_recovery_exposes_verified_restore_point_and_data_loss_window` | 35 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_recovery_readiness_details.py` | `test_recovery_marks_successful_unverified_backup_as_coverage_gap` | 74 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_release_rendering.py` | `test_release_renderer_rejects_tags_and_zero_digest` | 11 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_release_rendering.py` | `test_release_renderer_uses_same_immutable_artifact_for_api_and_migration` | 18 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_release_rendering.py` | `test_raw_templates_are_fail_closed_and_never_mutable` | 29 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
