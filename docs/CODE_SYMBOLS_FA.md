@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 291 | Dashboard JS files scanned: 2 | Symbols indexed: 2160**
+**Python files scanned: 292 | Dashboard JS files scanned: 2 | Symbols indexed: 2173**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -241,6 +241,19 @@
 | `agents/security/engine.py` | `_deterministic_hypotheses.add` | 445 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _deterministic_hypotheses |
 | `agents/security/engine.py` | `_peer_context` | 470 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/security/engine.py` | `build_security_analysis` | 501 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
+| `agents/security/enrichment.py` | `_raw` | 11 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/security/enrichment.py` | `_eid` | 16 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/security/enrichment.py` | `_parse_time` | 23 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/security/enrichment.py` | `_timestamp` | 37 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/security/enrichment.py` | `_scalar` | 46 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/security/enrichment.py` | `_message` | 56 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/security/enrichment.py` | `_stable_noise_analysis` | 66 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/security/enrichment.py` | `_process_row` | 91 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/security/enrichment.py` | `build_process_tree_analysis` | 130 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
+| `agents/security/enrichment.py` | `_domain_tags` | 169 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/security/enrichment.py` | `build_cross_domain_timeline_correlations` | 182 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
+| `agents/security/enrichment.py` | `_identity_behavior` | 240 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/security/enrichment.py` | `build_security_incident_analysis` | 271 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
 | `agents/security/safety.py` | `_sensitive_key` | 20 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/security/safety.py` | `redact_security_value` | 25 | function | Bound operational security context and remove credential material. | module |
 | `agents/security/safety.py` | `security_prompt_evidence` | 50 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
