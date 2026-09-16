@@ -41,6 +41,51 @@ async def test_port_recovery_is_verified_from_fresh_operational_evidence():
 
 
 @pytest.mark.asyncio
+async def test_service_recovery_is_success_despite_expected_resource_overhead():
+    before = _context(
+        _telemetry("before-service", "service_status", active_state="inactive"),
+        _telemetry("before-listener", "port_listener_status", listening=False),
+        _telemetry("before-tcp", "tcp_check", reachable=False),
+        _telemetry("before-config", "config_validate", valid=True),
+    )
+    before["summary"] = {"avg_cpu": 0.05, "avg_memory": 7.95}
+    after = _context(
+        _telemetry("after-service", "service_status", active_state="active"),
+        _telemetry("after-listener", "port_listener_status", listening=True),
+        _telemetry("after-tcp", "tcp_check", reachable=True),
+        _telemetry("after-config", "config_validate", valid=True),
+    )
+    after["summary"] = {"avg_cpu": 0.07, "avg_memory": 8.71}
+
+    result = await VerificationEngine.verify_action("start haproxy", "haproxy", before, after)
+
+    assert result.status == VerificationStatus.SUCCESS
+    assert result.after_state["service_active"] == 1.0
+    assert result.after_state["port_listening"] == 1.0
+    assert result.after_state["tcp_reachable"] == 1.0
+    assert "resource overhead" in result.message.lower()
+
+
+@pytest.mark.asyncio
+async def test_material_regression_keeps_recovery_partial():
+    before = _context(
+        _telemetry("before-listener", "port_listener_status", listening=False),
+        _telemetry("before-tcp", "tcp_check", reachable=False),
+    )
+    before["summary"] = {"error_rate": 0.01}
+    after = _context(
+        _telemetry("after-listener", "port_listener_status", listening=True),
+        _telemetry("after-tcp", "tcp_check", reachable=True),
+    )
+    after["summary"] = {"error_rate": 0.20}
+
+    result = await VerificationEngine.verify_action("start haproxy", "haproxy", before, after)
+
+    assert result.status == VerificationStatus.PARTIAL
+    assert "error_rate" in result.message
+
+
+@pytest.mark.asyncio
 async def test_successful_command_cannot_mask_port_still_down():
     before = _context(
         _telemetry("before-service", "service_status", active_state="active"),
