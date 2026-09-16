@@ -276,9 +276,9 @@ def _causal_findings(host: Mapping[str, Any], process: Mapping[str, Any], servic
     cpu = matrix.get("cpu") if isinstance(matrix.get("cpu"), Mapping) else {}
     disk = matrix.get("disk") if isinstance(matrix.get("disk"), Mapping) else {}
     memory = matrix.get("memory") if isinstance(matrix.get("memory"), Mapping) else {}
-    if disk.get("status") in {"saturated", "pressure"} and cpu.get("status") in {"iowait_pressure", "saturated"}:
+    if cpu.get("status") == "waiting_on_io" and disk.get("status") in {"io_bottleneck", "device_error"}:
         findings.append({"code": "storage_pressure_visible_as_guest_cpu_wait", "evidence_ids": list(dict.fromkeys((disk.get("evidence_ids") or []) + (cpu.get("evidence_ids") or []))), "handoff": "storage"})
-    if memory.get("status") in {"saturated", "pressure", "oom"}:
+    if memory.get("status") in {"oom_pressure", "swap_storm", "pressured"}:
         findings.append({"code": "guest_memory_pressure", "evidence_ids": memory.get("evidence_ids") or [], "handoff": "infrastructure"})
     if service.get("failed_dependency_states"):
         ids = [str(row.get("evidence_id")) for row in service["failed_dependency_states"]]
