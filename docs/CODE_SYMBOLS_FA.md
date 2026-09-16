@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 310 | Dashboard JS files scanned: 2 | Symbols indexed: 2521**
+**Python files scanned: 310 | Dashboard JS files scanned: 2 | Symbols indexed: 2523**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -114,7 +114,9 @@
 | `agents/database/engine.py` | `build_database_reliability_analysis` | 485 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
 | `agents/database/engine.py` | `_sanitize_db_mapping` | 578 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/database/engine.py` | `database_prompt_evidence_projection` | 604 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `agents/dependency/__init__.py` | `DependencyAgent` | 4 | class | کلاس | module |
+| `agents/dependency/__init__.py` | `DependencyAgent` | 15 | class | کلاس | module |
+| `agents/dependency/__init__.py` | `DependencyAgent.__init__` | 35 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DependencyAgent |
+| `agents/dependency/__init__.py` | `DependencyAgent.analyze` | 38 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DependencyAgent |
 | `agents/dependency/core.py` | `_raw` | 20 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/dependency/core.py` | `_labels` | 25 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/dependency/core.py` | `_first` | 31 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
