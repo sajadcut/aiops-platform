@@ -134,7 +134,7 @@
 | `apps/api/cognia_scope.py` | `reject_untrusted_knowledge_subject` | 8 | function | Reject caller-supplied Cognia ExternalSubject scope on public workflow APIs. | module |
 | `apps/api/dashboard.py` | `dashboard_summary` | 15 | async function | Return live PostgreSQL-backed KPIs. Database failures are never converted to fake zeroes. | module |
 | `apps/api/dashboard_incidents.py` | `dashboard_incidents` | 13 | async function | Operational incident list enriched from durable governance/audit state. | module |
-| `apps/api/dashboard_incidents.py` | `dashboard_services` | 59 | async function | Service-centric operational health derived only from durable incident/governance state. | module |
+| `apps/api/dashboard_incidents.py` | `dashboard_services` | 91 | async function | Service-centric operational health derived only from durable incident/governance state. | module |
 | `apps/api/e2e_workflow.py` | `ExecutionRequestModel` | 19 | class | کلاس | module |
 | `apps/api/e2e_workflow.py` | `E2EWorkflowRequest` | 27 | class | کلاس | module |
 | `apps/api/e2e_workflow.py` | `E2EWorkflowResponse` | 37 | class | کلاس | module |
