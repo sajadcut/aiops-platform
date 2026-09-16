@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 270 | Dashboard JS files scanned: 2 | Symbols indexed: 1781**
+**Python files scanned: 270 | Dashboard JS files scanned: 2 | Symbols indexed: 1785**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -128,8 +128,12 @@
 | `agents/vm/deterministic.py` | `_evidence_ref` | 6 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/vm/deterministic.py` | `classify_vm_service_fault` | 16 | function | Classify high-signal VM service faults from normalized live evidence. | module |
 | `apps/api/a2a.py` | `a2a_request` | 13 | async function | Governed in-process A2A analysis endpoint. | module |
-| `apps/api/agents.py` | `agent_catalog` | 11 | async function | Return the specialist catalog without requiring an operational LLM adapter. | module |
-| `apps/api/agents.py` | `agent_metrics` | 30 | async function | Return process-local Agent observability counters. | module |
+| `apps/api/agents.py` | `_CatalogOnlyLLMAdapter` | 13 | class | Non-executable adapter used only to construct analysis metadata safely. | module |
+| `apps/api/agents.py` | `_CatalogOnlyLLMAdapter.provider_name` | 22 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _CatalogOnlyLLMAdapter |
+| `apps/api/agents.py` | `_CatalogOnlyLLMAdapter.generate` | 25 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _CatalogOnlyLLMAdapter |
+| `apps/api/agents.py` | `_CatalogOnlyLLMAdapter.generate_with_messages` | 35 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _CatalogOnlyLLMAdapter |
+| `apps/api/agents.py` | `agent_catalog` | 46 | async function | Return the specialist catalog without requiring an operational LLM runtime. | module |
+| `apps/api/agents.py` | `agent_metrics` | 65 | async function | Return process-local Agent observability counters. | module |
 | `apps/api/audit.py` | `list_audit_events` | 15 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
 | `apps/api/cognia_scope.py` | `reject_untrusted_knowledge_subject` | 8 | function | Reject caller-supplied Cognia ExternalSubject scope on public workflow APIs. | module |
 | `apps/api/dashboard.py` | `dashboard_summary` | 15 | async function | Return live PostgreSQL-backed KPIs. Database failures are never converted to fake zeroes. | module |
