@@ -88,12 +88,12 @@
 | `agents/infrastructure/engine.py` | `_capacity` | 451 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/infrastructure/engine.py` | `_causal_patterns` | 487 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/infrastructure/engine.py` | `build_infrastructure_analysis` | 524 | function | Build bounded deterministic USE/saturation evidence before LLM synthesis. | module |
-| `agents/kubernetes/__init__.py` | `KubernetesAgent` | 12 | class | کلاس | module |
-| `agents/kubernetes/__init__.py` | `KubernetesAgent.__init__` | 13 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KubernetesAgent |
-| `agents/kubernetes/__init__.py` | `KubernetesAgent.name` | 17 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KubernetesAgent |
-| `agents/kubernetes/__init__.py` | `KubernetesAgent.description` | 21 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KubernetesAgent |
-| `agents/kubernetes/__init__.py` | `KubernetesAgent.allowed_tools` | 25 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KubernetesAgent |
-| `agents/kubernetes/__init__.py` | `KubernetesAgent.analyze` | 28 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KubernetesAgent |
+| `agents/kubernetes/__init__.py` | `KubernetesAgent` | 13 | class | کلاس | module |
+| `agents/kubernetes/__init__.py` | `KubernetesAgent.__init__` | 14 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KubernetesAgent |
+| `agents/kubernetes/__init__.py` | `KubernetesAgent.name` | 18 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KubernetesAgent |
+| `agents/kubernetes/__init__.py` | `KubernetesAgent.description` | 22 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KubernetesAgent |
+| `agents/kubernetes/__init__.py` | `KubernetesAgent.allowed_tools` | 26 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KubernetesAgent |
+| `agents/kubernetes/__init__.py` | `KubernetesAgent.analyze` | 29 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KubernetesAgent |
 | `agents/kubernetes/engine.py` | `_raw` | 18 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/kubernetes/engine.py` | `_resource` | 23 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/kubernetes/engine.py` | `_metadata` | 36 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
