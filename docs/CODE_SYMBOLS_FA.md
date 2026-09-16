@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 271 | Dashboard JS files scanned: 2 | Symbols indexed: 1808**
+**Python files scanned: 272 | Dashboard JS files scanned: 2 | Symbols indexed: 1820**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1289,6 +1289,18 @@
 | `tests/unit/test_agent_confidence_sources.py` | `agent_input` | 31 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_agent_confidence_sources.py` | `test_unknown_source_cannot_receive_trusted_source_confidence` | 47 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_agent_confidence_sources.py` | `test_auxiliary_conflict_is_recorded_but_not_promoted_to_live_evidence` | 57 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_agent_deterministic_intelligence.py` | `StaticLLM` | 16 | class | کلاس | module |
+| `tests/unit/test_agent_deterministic_intelligence.py` | `StaticLLM.__init__` | 17 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | StaticLLM |
+| `tests/unit/test_agent_deterministic_intelligence.py` | `StaticLLM.provider_name` | 22 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | StaticLLM |
+| `tests/unit/test_agent_deterministic_intelligence.py` | `StaticLLM.generate` | 25 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | StaticLLM |
+| `tests/unit/test_agent_deterministic_intelligence.py` | `StaticLLM.generate_with_messages` | 29 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | StaticLLM |
+| `tests/unit/test_agent_deterministic_intelligence.py` | `test_prompt_sanitization_redacts_credentials_and_bearer_tokens` | 33 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_agent_deterministic_intelligence.py` | `test_application_intelligence_extracts_timeline_baseline_and_database_handoff` | 48 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_agent_deterministic_intelligence.py` | `test_kubernetes_intelligence_indexes_resource_evidence_without_declaring_root_cause` | 67 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_agent_deterministic_intelligence.py` | `test_recovery_intelligence_distinguishes_latest_from_verified_restore_point` | 79 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_agent_deterministic_intelligence.py` | `test_prompt_projection_does_not_leak_identity_tokens` | 97 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_agent_deterministic_intelligence.py` | `test_generic_database_agent_exposes_deterministic_analysis_and_handoff` | 111 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_agent_deterministic_intelligence.py` | `test_identity_agent_redacts_sensitive_evidence_before_llm` | 135 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_agent_failure_safety.py` | `StaticLLM` | 13 | class | کلاس | module |
 | `tests/unit/test_agent_failure_safety.py` | `StaticLLM.__init__` | 14 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | StaticLLM |
 | `tests/unit/test_agent_failure_safety.py` | `StaticLLM.provider_name` | 18 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | StaticLLM |
