@@ -45,6 +45,8 @@ def test_iowait_with_disk_latency_is_storage_causal_candidate():
         metric("queue", "disk_queue_depth", 12),
         metric("psi-io", "psi_io", 30),
     ])
+    assert result["host_analysis"]["health_matrix"]["cpu"]["status"] == "waiting_on_io"
+    assert result["host_analysis"]["health_matrix"]["disk"]["status"] == "io_bottleneck"
     codes = {row["code"] for row in result["causal_findings"]}
     assert "storage_pressure_visible_as_guest_cpu_wait" in codes
     assert "storage" in result["handoff_candidates"]
@@ -59,7 +61,7 @@ def test_memory_swap_and_psi_pressure_is_guest_host_pressure():
         metric("psi-mem", "psi_memory", 35),
     ])
     memory = result["host_analysis"]["health_matrix"]["memory"]
-    assert memory["status"] in {"pressure", "saturated", "oom"}
+    assert memory["status"] == "swap_storm"
     assert any(row["code"] == "guest_memory_pressure" for row in result["causal_findings"])
 
 
