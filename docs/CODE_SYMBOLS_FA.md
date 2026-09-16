@@ -3,16 +3,17 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 276 | Dashboard JS files scanned: 2 | Symbols indexed: 1896**
+**Python files scanned: 277 | Dashboard JS files scanned: 2 | Symbols indexed: 1914**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
-| `agents/application/__init__.py` | `ApplicationAgent` | 11 | class | کلاس | module |
-| `agents/application/__init__.py` | `ApplicationAgent.__init__` | 12 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ApplicationAgent |
-| `agents/application/__init__.py` | `ApplicationAgent.name` | 16 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ApplicationAgent |
-| `agents/application/__init__.py` | `ApplicationAgent.description` | 20 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ApplicationAgent |
-| `agents/application/__init__.py` | `ApplicationAgent.allowed_tools` | 24 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ApplicationAgent |
-| `agents/application/__init__.py` | `ApplicationAgent.analyze` | 27 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ApplicationAgent |
+| `agents/application/__init__.py` | `ApplicationAgent` | 12 | class | کلاس | module |
+| `agents/application/__init__.py` | `ApplicationAgent.__init__` | 13 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ApplicationAgent |
+| `agents/application/__init__.py` | `ApplicationAgent.name` | 17 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ApplicationAgent |
+| `agents/application/__init__.py` | `ApplicationAgent.description` | 21 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ApplicationAgent |
+| `agents/application/__init__.py` | `ApplicationAgent.allowed_tools` | 25 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ApplicationAgent |
+| `agents/application/__init__.py` | `ApplicationAgent._expected_observations` | 29 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ApplicationAgent |
+| `agents/application/__init__.py` | `ApplicationAgent.analyze` | 45 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ApplicationAgent |
 | `agents/application/engine.py` | `_raw` | 19 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/application/engine.py` | `_evidence_id` | 24 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/application/engine.py` | `_parse_timestamp` | 29 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
@@ -1365,6 +1366,23 @@
 | `tests/unit/test_agent_failure_safety.py` | `test_parser_failure_is_counted_and_returns_low_confidence` | 66 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_agent_orchestrator_single_path.py` | `test_legacy_workflow_orchestrator_is_only_a_governed_facade` | 4 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_agent_orchestrator_single_path.py` | `test_agent_layer_has_no_hardcoded_legacy_a2a_endpoints` | 12 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_application_reliability_engine.py` | `StaticApplicationLLM` | 11 | class | کلاس | module |
+| `tests/unit/test_application_reliability_engine.py` | `StaticApplicationLLM.__init__` | 12 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | StaticApplicationLLM |
+| `tests/unit/test_application_reliability_engine.py` | `StaticApplicationLLM.provider_name` | 41 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | StaticApplicationLLM |
+| `tests/unit/test_application_reliability_engine.py` | `StaticApplicationLLM.generate` | 44 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | StaticApplicationLLM |
+| `tests/unit/test_application_reliability_engine.py` | `StaticApplicationLLM.generate_with_messages` | 47 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | StaticApplicationLLM |
+| `tests/unit/test_application_reliability_engine.py` | `analyze` | 51 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_application_reliability_engine.py` | `metric` | 55 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_application_reliability_engine.py` | `test_code_regression_uses_red_baseline_and_nearby_change_without_traffic_spike` | 67 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_application_reliability_engine.py` | `test_http_500_with_database_timeout_prefers_database_handoff_candidate` | 100 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_application_reliability_engine.py` | `test_downstream_api_latency_is_visible_in_trace_critical_path_and_dependency_handoff` | 117 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_application_reliability_engine.py` | `test_traffic_spike_without_saturation_or_error_growth_is_not_regression` | 159 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_application_reliability_engine.py` | `test_memory_leak_pressure_is_extracted_from_metrics_and_logs` | 170 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_application_reliability_engine.py` | `test_thread_pool_exhaustion_and_backpressure_are_explicit` | 182 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_application_reliability_engine.py` | `test_nearby_deploy_without_error_or_latency_delta_is_only_correlation` | 193 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_application_reliability_engine.py` | `test_conflicting_metrics_and_logs_are_exposed_instead_of_hidden` | 219 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_application_reliability_engine.py` | `test_agent_preserves_expected_observation_and_auto_handoffs_on_stronger_downstream_evidence` | 244 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_application_reliability_engine.py` | `test_mutating_application_recommendation_remains_approval_required` | 273 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_approval_api_transitions.py` | `Identity` | 7 | class | کلاس | module |
 | `tests/unit/test_approval_api_transitions.py` | `Identity.__init__` | 8 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | Identity |
 | `tests/unit/test_approval_api_transitions.py` | `FakeDB` | 13 | class | کلاس | module |
