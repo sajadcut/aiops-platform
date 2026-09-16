@@ -32,17 +32,33 @@ def test_default_agent_configuration_and_dashboard_catalog_stay_in_sync():
 
     api_source = _text("apps/api/agents.py")
     dashboard_js = _text("dashboards/control-center.js")
+    actions_js = _text("dashboards/approval-actions.js")
     assert '"items": [manifest.__dict__ for manifest in manifests]' in api_source
     assert "S.agents = c.items || []" in dashboard_js
     assert "S.agents.map" in dashboard_js
     assert "/api/v1/agents/catalog" in dashboard_js
     assert "/api/v1/agents/metrics" in dashboard_js
 
+    # The catalog page consumes the complete manifest contract dynamically. New
+    # registered agents therefore inherit the same evidence/handoff/telemetry UI
+    # without a dashboard-side allow-list.
+    for token in [
+        "evidence_requirements",
+        "handoff_targets",
+        "production_status",
+        "average_evidence_coverage",
+        "metric.failures",
+        "metric.handoffs",
+        "metric.conflicts",
+    ]:
+        assert token in actions_js
+
 
 def test_agent_analysis_details_reach_incident_dashboard_without_domain_whitelist():
     orchestrator = _text("apps/orchestrator/e2e_graph.py")
     lifecycle_api = _text("apps/api/incident_resources.py")
     dashboard_js = _text("dashboards/control-center.js")
+    actions_js = _text("dashboards/approval-actions.js")
 
     # Specialist outputs are serialized as the full AgentOutput contract, which
     # includes analysis_details. The lifecycle endpoint forwards those results
@@ -51,12 +67,19 @@ def test_agent_analysis_details_reach_incident_dashboard_without_domain_whitelis
     assert 'state["analysis_results"] = findings' in orchestrator
     assert '"agents": state.get("analysis_results") or []' in lifecycle_api
 
-    # The incident workbench deliberately has a schema-tolerant fallback. New
-    # deterministic analyzer fields therefore remain visible and cannot break
-    # the page merely because a new domain key was added.
+    # Keep the legacy raw fallback, then enhance it with a schema-tolerant
+    # structured view. No network/storage/database/etc. allow-list is required.
     assert "(l.agents || []).map" in dashboard_js
     assert "JSON.stringify(a, null, 2)" in dashboard_js
     assert "a.agent_name || a.agent || 'agent'" in dashboard_js
+    assert "key.endsWith('_analysis')" in actions_js
+    assert "analyzer_telemetry" in actions_js
+    assert "missing_evidence" in actions_js
+    assert "stale_evidence_ids" in actions_js
+    assert "next_best_evidence" in actions_js
+    assert "handoff_agents" in actions_js
+    assert "Full structured analysis" in actions_js
+    assert "dashboard preview truncated" in actions_js
 
 
 def test_dashboard_static_id_references_have_a_rendered_target():
