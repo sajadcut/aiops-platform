@@ -5,6 +5,7 @@ from agents.shared.base import AgentInput, AgentOutput, BaseAgent, OperationalHy
 from agents.shared.domain_agent import DomainDiagnosticAgent
 from agents.shared.intelligence import build_deterministic_analysis, sanitize_prompt_value
 from agents.vm.deterministic import classify_vm_service_fault
+from agents.vm.engine import build_vm_guest_analysis
 from domain.contracts.config import settings
 from domain.contracts.logging import logger
 from integrations.llm.base import LLMAdapter
@@ -20,7 +21,7 @@ class VMAgent(BaseAgent):
 
     @property
     def description(self) -> str:
-        return "Guest OS diagnostics: reachability, CPU, memory, disk, network, processes, services and system logs"
+        return "Linux/Windows guest diagnostic specialist with deterministic host USE, process topology, service-manager and boot/reboot analysis"
 
     @property
     def allowed_tools(self) -> List[str]:
@@ -28,10 +29,6 @@ class VMAgent(BaseAgent):
 
     async def analyze(self, input_data: AgentInput) -> AgentOutput:
         logger.info(f"VMAgent analyzing: {input_data.incident_id}")
-        # Prompt evidence stays bounded, but deterministic operational checks must
-        # inspect every fresh live-evidence item. Otherwise a high-volume incident
-        # can push the decisive service/process/config/port rows beyond
-        # AGENT_MAX_EVIDENCE_ITEMS and silently disable deterministic recovery.
         evidence = self.evidence_items(input_data)
         raw_evidence = input_data.context.get("evidence", []) if input_data.context else []
         deterministic_evidence = [
@@ -40,7 +37,14 @@ class VMAgent(BaseAgent):
         ] if isinstance(raw_evidence, list) else []
         prompt_evidence = DomainDiagnosticAgent._prompt_evidence(evidence)
         deterministic_fault = classify_vm_service_fault(deterministic_evidence, input_data.service_name)
-        deterministic_analysis = build_deterministic_analysis("vm", deterministic_evidence, ["metric", "log"], input_data.service_name)
+        deterministic_analysis = build_deterministic_analysis(
+            "vm", deterministic_evidence, ["metric", "log"], input_data.service_name
+        )
+        guest_analysis = build_vm_guest_analysis(
+            deterministic_evidence,
+            service_name=input_data.service_name,
+            context=input_data.context or {},
+        )
         evidence_ids = self.evidence_ids(input_data)
         if deterministic_fault:
             evidence_ids = list(dict.fromkeys(evidence_ids + list(deterministic_fault.get("evidence_ids") or [])))
@@ -52,12 +56,13 @@ class VMAgent(BaseAgent):
         alerts = [item for item in evidence if str(item.get("type", "")).lower() in {"alert", "event"}]
         missing = self.missing_evidence_for(input_data, ["metric", "log"])
         prompt = f"""You are a senior Linux/Windows guest-OS reliability investigator. LIVE EVIDENCE is authoritative. RAG/Memory are auxiliary only. Never invent OS/version, process state, CPU/memory/disk numbers, service status, reachability, human action or log content.
-Follow this diagnostic chain whenever evidence permits: host reachable -> OS healthy -> service state -> process alive -> expected port listening/bind address -> local TCP -> remote TCP -> DNS/route/path. Also inspect CPU/load/iowait/steal, memory/swap/PSI/OOM, disk/inode/I/O/filesystem, boot/reboot chronology, process parent/child/resource/FD/socket state, systemd load/active/sub/result/main PID/exit/restart/failed dependencies, journal/kernel errors, clock skew and ulimit pressure. Keep Windows Service Control Manager/Event Log equivalents as a supported evidence model when Windows telemetry is present.
-Critical rule: inactive/dead service or zero/success exit status NEVER proves a human manually stopped it. Human action may be asserted only when explicit journal/audit/system evidence identifies the actor/action. Distinguish crash, dependency failure, boot-time non-start, config error, port conflict and network-path failure.
-DETERMINISTIC_ANALYSIS is an observation index and gap planner; DETERMINISTIC_SERVICE_FAULT is a bounded rule-based service diagnosis when direct evidence satisfies it. Neither grants write authority. remediation_candidates are suggestions only.
+Follow this diagnostic chain whenever evidence permits: host reachable -> OS healthy -> service state -> process alive -> expected port listening/bind address -> local TCP -> remote TCP -> DNS/route/path.
+For Linux, use GUEST_ANALYSIS before free-form reasoning. Host analysis must use USE/saturation signals, not CPU/RAM/disk percentage alone: CPU utilization/load-per-core/run queue/iowait/steal/throttling/interrupt pressure; memory available/working set/cache/swap/page faults/reclaim/OOM/PSI; disk utilization/await/queue/throughput/IOPS/errors/filesystem/inodes; boot/reboot chronology. Process analysis must preserve PID/PPID topology, running state, CPU, memory/RSS, restart behavior, FD and sockets. systemd analysis must preserve load state, active state, sub state, result, main PID, exit status, restart count, start timestamp and failed dependencies.
+Critical rule: inactive/dead service or zero/success exit status NEVER proves a human manually stopped it. Human action may be asserted only when explicit journal/audit/system evidence identifies the actor/action. Distinguish crash, dependency failure, boot-time non-start, config error, host pressure, storage bottleneck and network-path failure.
+GUEST_ANALYSIS, DETERMINISTIC_ANALYSIS and DETERMINISTIC_SERVICE_FAULT are deterministic observations/gap planners. They do not grant write authority. remediation_candidates are suggestions only and require Decision/Approval/Execution.
 Return JSON keys: severity, health_status, findings, reachability, cpu_signals, memory_signals, disk_signals, inode_signals, io_signals, network_signals, process_signals, service_signals, boot_signals, log_signals, probable_dependencies, affected_components, blast_radius, hypotheses, missing_evidence, handoff_agents, immediate_checks, remediation_candidates, escalation_target, risk_level, uncertainty_reason, confidence.
 Hypotheses: hypothesis, probability, evidence_ids, conflicting_evidence_ids, falsification_checks, impacted_components, recommended_next_evidence. Only live evidence IDs may be cited. immediate_checks are read-only. remediation_candidates require Decision/Approval/Execution.
-Incident={input_data.incident_id}\nVM/Service={input_data.service_name}\nSummary={input_data.evidence_summary}\nDETERMINISTIC_ANALYSIS={json.dumps(deterministic_analysis, default=str)}\nDETERMINISTIC_SERVICE_FAULT={json.dumps(sanitize_prompt_value(deterministic_fault or {}), default=str)}\nLIVE_EVIDENCE={json.dumps(prompt_evidence, default=str)}\nAUXILIARY_CONTEXT={json.dumps(auxiliary, default=str)}\nContextSummary={json.dumps(context_summary, default=str)}"""
+Incident={input_data.incident_id}\nVM/Service={input_data.service_name}\nSummary={input_data.evidence_summary}\nGUEST_ANALYSIS={json.dumps(sanitize_prompt_value(guest_analysis), default=str)}\nDETERMINISTIC_ANALYSIS={json.dumps(sanitize_prompt_value(deterministic_analysis), default=str)}\nDETERMINISTIC_SERVICE_FAULT={json.dumps(sanitize_prompt_value(deterministic_fault or {}), default=str)}\nLIVE_EVIDENCE={json.dumps(prompt_evidence, default=str)}\nAUXILIARY_CONTEXT={json.dumps(auxiliary, default=str)}\nContextSummary={json.dumps(context_summary, default=str)}"""
         structured_failed = False
         try:
             result = await self.generate_structured(prompt)
@@ -80,7 +85,24 @@ Incident={input_data.incident_id}\nVM/Service={input_data.service_name}\nSummary
                     "confidence": deterministic_fault["confidence"],
                 }
             else:
-                result = {"severity":"unknown","health_status":"unknown","findings":[],"reachability":"unknown","affected_components":[],"blast_radius":"unknown","hypotheses":[],"handoff_agents":["infrastructure"],"immediate_checks":["Collect VM telemetry and system logs"],"remediation_candidates":[],"uncertainty_reason":"structured_analysis_failed","confidence":0.0}
+                causal_codes = [
+                    str(row.get("code")) for row in guest_analysis.get("causal_findings", [])
+                    if isinstance(row, dict) and row.get("code")
+                ]
+                result = {
+                    "severity": "unknown",
+                    "health_status": "unknown",
+                    "findings": causal_codes[:8],
+                    "reachability": "unknown",
+                    "affected_components": [],
+                    "blast_radius": "unknown",
+                    "hypotheses": [],
+                    "handoff_agents": list(guest_analysis.get("handoff_candidates") or ["infrastructure"]),
+                    "immediate_checks": ["Collect VM telemetry and system logs"],
+                    "remediation_candidates": [],
+                    "uncertainty_reason": "structured_analysis_failed",
+                    "confidence": 0.0,
+                }
                 missing = sorted(set(missing + ["successful structured VM analysis"]))
 
         if deterministic_fault and not structured_failed:
@@ -133,7 +155,14 @@ Incident={input_data.incident_id}\nVM/Service={input_data.service_name}\nSummary
         write_risk = "high" if reachability in {"unreachable", "stopped"} or severity in {"critical", "high"} else "medium"
         recommended_actions = self.analysis_only_actions(immediate, suggested_tool="vm_telemetry")
         recommended_actions.extend([
-            RecommendedAction(action=action, purpose="remediation_candidate", risk_level="high", requires_approval=True, read_only=False, suggested_tool="ssh_vm")
+            RecommendedAction(
+                action=action,
+                purpose="remediation_candidate",
+                risk_level="high",
+                requires_approval=True,
+                read_only=False,
+                suggested_tool="ssh_vm",
+            )
             for action in remediation
         ])
         if deterministic_fault and not any(action.action == deterministic_fault["suggested_action"] for action in recommended_actions):
@@ -147,10 +176,17 @@ Incident={input_data.incident_id}\nVM/Service={input_data.service_name}\nSummary
                 expected_evidence=["service active", "expected port listening", "original TCP symptom recovered"],
             ))
         confirmed = []
-        for key in ("cpu_signals", "memory_signals", "disk_signals", "inode_signals", "io_signals", "network_signals", "service_signals", "boot_signals", "log_signals"):
+        for key in (
+            "cpu_signals", "memory_signals", "disk_signals", "inode_signals", "io_signals",
+            "network_signals", "service_signals", "boot_signals", "log_signals",
+        ):
             confirmed.extend(self.normalize_list(result.get(key), 2))
         findings = self.normalize_list(result.get("findings"), 10) or confirmed[:10]
         handoffs = self.normalize_list(result.get("handoff_agents"), 6)
+        for target in guest_analysis.get("handoff_candidates", []):
+            target = str(target)
+            if target and target != self.name and target not in handoffs and len(handoffs) < 6:
+                handoffs.append(target)
         for hint in deterministic_analysis.get("suggested_handoffs", []):
             target = str(hint.get("agent", "")) if isinstance(hint, dict) else ""
             if target and target != self.name and target not in handoffs and len(handoffs) < 6:
@@ -192,6 +228,15 @@ Incident={input_data.incident_id}\nVM/Service={input_data.service_name}\nSummary
                 "service_signals": result.get("service_signals", []),
                 "boot_signals": result.get("boot_signals", []),
                 "log_signals": result.get("log_signals", []),
+                "platform_detection": guest_analysis.get("platform_detection", {}),
+                "guest_host_analysis": guest_analysis.get("host_analysis", {}),
+                "guest_process_analysis": guest_analysis.get("process_analysis", {}),
+                "guest_service_analysis": guest_analysis.get("service_analysis", {}),
+                "boot_reboot_analysis": guest_analysis.get("boot_reboot_analysis", {}),
+                "guest_causal_findings": guest_analysis.get("causal_findings", []),
+                "guest_evidence_gaps": guest_analysis.get("evidence_gaps", []),
+                "guest_next_best_evidence": guest_analysis.get("next_best_evidence", []),
+                "guest_analysis_stages": guest_analysis.get("analysis_stages", []),
                 "deterministic_analysis": deterministic_analysis,
                 "diagnostic_chain": deterministic_analysis.get("playbook_checks", []),
                 "network_paths": deterministic_analysis.get("network_paths", []),
@@ -206,6 +251,7 @@ Incident={input_data.incident_id}\nVM/Service={input_data.service_name}\nSummary
                 "deterministic_evidence_count": len(deterministic_evidence),
                 "deterministic_fault": deterministic_fault.get("fault_code") if deterministic_fault else None,
                 "structured_analysis_failed": structured_failed,
+                "execution_boundary": "analysis_only",
             },
             model_metadata=self._last_model_metadata,
         )
