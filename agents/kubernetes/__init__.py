@@ -1,6 +1,7 @@
 import json
 from typing import List, Optional
 
+from agents.kubernetes.engine import build_kubernetes_analysis
 from agents.shared.base import AgentInput, AgentOutput, BaseAgent, OperationalHypothesis
 from agents.shared.intelligence import build_deterministic_analysis, prompt_evidence_projection, sanitize_prompt_value
 from domain.contracts.config import settings
@@ -18,7 +19,7 @@ class KubernetesAgent(BaseAgent):
 
     @property
     def description(self) -> str:
-        return "Kubernetes diagnostics: workload health, rollout, scheduling, networking, resources and events"
+        return "Kubernetes multi-stage diagnostic engine with deterministic per-resource analyzers and evidence-grounded synthesis"
 
     @property
     def allowed_tools(self) -> List[str]:
@@ -29,23 +30,48 @@ class KubernetesAgent(BaseAgent):
         evidence = self.evidence_items(input_data)
         prompt_evidence = prompt_evidence_projection(evidence, settings.AGENT_MAX_EVIDENCE_ITEMS)
         deterministic = build_deterministic_analysis("kubernetes", evidence, ["log", "metric"], input_data.service_name)
+        kubernetes_analysis = build_kubernetes_analysis(
+            evidence,
+            service_name=input_data.service_name,
+            context=input_data.context,
+        )
         evidence_ids = self.evidence_ids(input_data)
         auxiliary = self.auxiliary_context(input_data)
         logs = [item for item in evidence if str(item.get("type", "")).lower() == "log"]
         metrics = [item for item in evidence if str(item.get("type", "")).lower() == "metric"]
         events = [item for item in evidence if str(item.get("type", "")).lower() in {"event", "alert"}]
         missing = self.missing_evidence_for(input_data, ["log", "metric"])
+
         prompt = f"""You are a Kubernetes SRE and senior production reliability investigator. LIVE EVIDENCE is authoritative. Knowledge RAG and Operational Memory are auxiliary only. Do not claim pod states, rollout failures, OOMKills, scheduling failures, probe failures, storage failures or network faults unless evidenced.
-Investigate the workload as a causal chain: Service/Ingress -> Endpoint/EndpointSlice -> Pod -> ReplicaSet/Deployment/StatefulSet/DaemonSet/Job -> Node -> Storage/Network. Inspect any available Pod/controller generation and availability, scheduling reasons and resource insufficiency, affinity/taints, image pulls, CrashLoopBackOff/restart trend/exit code/OOMKilled, readiness/liveness/startup probes, rollout state, admission webhooks, PVC/PV attach/mount, node pressure/eviction, HPA behavior, requests/limits/throttling, PDB constraints, Service endpoints, Ingress backends, DNS/service discovery, NetworkPolicy and event chronology. Compare resource configuration to historical metrics when the evidence provides both.
-DETERMINISTIC_ANALYSIS provides bounded resource-evidence counts, timeline, metric deltas, gaps and handoff hints. It is not a diagnosis. Correlate Kubernetes events with log/metric time ordering and distinguish workload symptoms from node, storage, network, change or dependency causes.
+
+KUBERNETES_ANALYSIS is a deterministic multi-stage diagnostic layer executed before LLM synthesis. It has independent analyzers for Pod, ReplicaSet, Deployment, StatefulSet, DaemonSet, Job, CronJob, Node, Service, Endpoint/EndpointSlice, Ingress, PVC/PV, HPA, PDB, NetworkPolicy, ConfigMap/Secret metadata, admission webhooks and Kubernetes Events. Treat analyzer findings as structured observations, not automatic root-cause verdicts.
+
+Investigate causal chains as Service/Ingress -> Endpoint/EndpointSlice -> Pod -> Controller -> Node -> Storage/Network. Use event_timeline and timeline_correlations to connect Kubernetes Events to metric/log timing. Distinguish Kubernetes workload symptoms from infrastructure, storage, network, change or dependency causes. If underlying-domain evidence is stronger, prefer handoff rather than attributing the cause to Kubernetes itself.
+
+Inspect scheduling reason/resource insufficiency, affinity/anti-affinity, taints/tolerations, image pulls, CrashLoopBackOff/restart trend/exit code/OOMKilled, readiness/liveness/startup probes, rollout/generation/unavailable replicas, admission webhook failures, PVC/PV attach/mount, node pressure/eviction, HPA, requests/limits, throttling, memory-limit pressure, PDB constraints, Service endpoints, Ingress backends, DNS/service discovery, NetworkPolicy and event chronology. KUBERNETES_ANALYSIS.resource_usage_comparison compares historical Prometheus p95/current usage with requests/limits when both are available; explain recommendations from those ratios and never invent missing historical data. Secret and ConfigMap payload values are not available to you: only safe metadata may be used.
+
+For each hypothesis state supporting live Evidence IDs, conflicting Evidence IDs, cheapest read-only falsification checks, impacted components and next evidence. Never treat prior incidents or auxiliary context as proof of the current incident.
 Return JSON keys: severity, health_status, findings, workload_signals, rollout_signals, scheduling_signals, network_signals, resource_signals, probable_dependencies, affected_components, blast_radius, hypotheses, missing_evidence, handoff_agents, immediate_checks, escalation_target, risk_level, uncertainty_reason, confidence.
-Hypotheses: hypothesis, probability, evidence_ids, conflicting_evidence_ids, falsification_checks, impacted_components, recommended_next_evidence. Only live evidence IDs may be cited. immediate_checks must be read-only kubectl/metrics/log inspection. Never execute apply/delete/rollout restart/scale.
-Incident={input_data.incident_id}\nService={input_data.service_name}\nSummary={input_data.evidence_summary}\nDETERMINISTIC_ANALYSIS={json.dumps(deterministic, default=str)}\nLIVE_EVIDENCE={json.dumps(prompt_evidence, default=str)}\nAUXILIARY_CONTEXT={json.dumps(sanitize_prompt_value(auxiliary), default=str)}\nContextSummary={json.dumps(sanitize_prompt_value(input_data.context.get('summary', {})), default=str)}"""
+Hypotheses: hypothesis, probability, evidence_ids, conflicting_evidence_ids, falsification_checks, impacted_components, recommended_next_evidence. Only live evidence IDs may be cited. immediate_checks must be read-only kubectl/metrics/log inspection. Never execute kubectl apply/delete/rollout restart/scale/patch/edit.
+
+Incident={input_data.incident_id}\nService={input_data.service_name}\nSummary={input_data.evidence_summary}\nKUBERNETES_ANALYSIS={json.dumps(sanitize_prompt_value(kubernetes_analysis), default=str)}\nSHARED_DETERMINISTIC_ANALYSIS={json.dumps(deterministic, default=str)}\nLIVE_EVIDENCE={json.dumps(prompt_evidence, default=str)}\nAUXILIARY_CONTEXT={json.dumps(sanitize_prompt_value(auxiliary), default=str)}\nContextSummary={json.dumps(sanitize_prompt_value(input_data.context.get('summary', {})), default=str)}"""
         try:
             result = await self.generate_structured(prompt)
         except Exception as exc:
             logger.error(f"KubernetesAgent analysis failed: {exc}")
-            result = {"severity":"unknown","health_status":"unknown","findings":[],"workload_signals":[],"affected_components":[],"blast_radius":"unknown","hypotheses":[],"handoff_agents":["infrastructure"],"immediate_checks":["Inspect workload status, events and recent logs"],"uncertainty_reason":"structured_analysis_failed","confidence":0.0}
+            result = {
+                "severity": "unknown",
+                "health_status": "unknown",
+                "findings": [],
+                "workload_signals": [],
+                "affected_components": [],
+                "blast_radius": "unknown",
+                "hypotheses": [],
+                "handoff_agents": ["infrastructure"],
+                "immediate_checks": ["Inspect workload status, events and recent logs"],
+                "uncertainty_reason": "structured_analysis_failed",
+                "confidence": 0.0,
+            }
             missing = sorted(set(missing + ["successful structured kubernetes analysis"]))
 
         all_missing = sorted(set(missing + self.normalize_list(result.get("missing_evidence"), 8)))
@@ -64,15 +90,34 @@ Incident={input_data.incident_id}\nService={input_data.service_name}\nSummary={i
                     impacted_components=self.normalize_list(item.get("impacted_components"), 6),
                     recommended_next_evidence=self.normalize_list(item.get("recommended_next_evidence"), 6),
                 ))
+
         confidence = self.safe_confidence(result.get("confidence"), len(evidence), all_missing, conflict_count)
         actions = self.normalize_list(result.get("immediate_checks"), settings.AGENT_MAX_RECOMMENDATIONS)
         workload = self.normalize_list(result.get("workload_signals"), 6)
         findings = self.normalize_list(result.get("findings"), 10) or workload
         handoffs = self.normalize_list(result.get("handoff_agents"), 6)
+
+        for row in kubernetes_analysis.get("findings", []):
+            if not isinstance(row, dict) or not row.get("message"):
+                continue
+            message = f"Deterministic Kubernetes finding: {row['message']}"
+            if message not in findings and len(findings) < 10:
+                findings.append(message)
+        for target in kubernetes_analysis.get("handoff_candidates", []):
+            value = str(target or "")
+            if value and value != self.name and value not in handoffs and len(handoffs) < 6:
+                handoffs.append(value)
         for hint in deterministic.get("suggested_handoffs", []):
             target = str(hint.get("agent", "")) if isinstance(hint, dict) else ""
             if target and target != self.name and target not in handoffs and len(handoffs) < 6:
                 handoffs.append(target)
+        if not actions:
+            actions = [
+                f"Collect {row.get('evidence')} because {row.get('reason')}"
+                for row in kubernetes_analysis.get("next_best_evidence", [])
+                if isinstance(row, dict) and row.get("evidence")
+            ][: settings.AGENT_MAX_RECOMMENDATIONS]
+
         statement = "Kubernetes evidence indicates " + ("; ".join(findings) if findings else "no confirmed workload failure yet")
         return AgentOutput(
             agent_name=self.name,
@@ -104,14 +149,25 @@ Incident={input_data.incident_id}\nService={input_data.service_name}\nSummary={i
                 "network_signals": result.get("network_signals", []),
                 "resource_signals": result.get("resource_signals", []),
                 "resource_evidence_counts": deterministic.get("resource_evidence_counts", {}),
+                "resource_analyzer_counts": kubernetes_analysis.get("resource_counts", {}),
+                "resource_analyses": kubernetes_analysis.get("resource_analyses", []),
+                "causal_chains": kubernetes_analysis.get("causal_chains", []),
+                "event_timeline": kubernetes_analysis.get("event_timeline", []),
+                "timeline_correlations": kubernetes_analysis.get("timeline_correlations", []),
+                "resource_usage_comparison": kubernetes_analysis.get("resource_usage_comparison", []),
+                "kubernetes_vs_infrastructure": kubernetes_analysis.get("kubernetes_vs_infrastructure", {}),
+                "secret_metadata_safety": kubernetes_analysis.get("secret_metadata_safety", {}),
+                "evidence_gaps": kubernetes_analysis.get("evidence_gaps", []),
+                "next_best_evidence": kubernetes_analysis.get("next_best_evidence", []),
                 "deterministic_analysis": deterministic,
-                "next_best_evidence": deterministic.get("next_best_evidence", []),
+                "kubernetes_deterministic_analysis": kubernetes_analysis,
                 "log_evidence_count": len(logs),
                 "metric_evidence_count": len(metrics),
                 "event_evidence_count": len(events),
                 "knowledge_context_count": len(auxiliary["knowledge_rag"]),
                 "memory_context_count": len(auxiliary["operational_memory"]),
                 "conflicting_evidence_count": conflict_count,
+                "execution_boundary": "analysis_only",
             },
             model_metadata=self._last_model_metadata,
         )
