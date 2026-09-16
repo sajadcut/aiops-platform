@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 274 | Dashboard JS files scanned: 2 | Symbols indexed: 1849**
+**Python files scanned: 275 | Dashboard JS files scanned: 2 | Symbols indexed: 1865**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1775,6 +1775,22 @@
 | `tests/unit/test_structured_agent_resilience.py` | `FakeMCPHTTPClient.delete` | 163 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeMCPHTTPClient |
 | `tests/unit/test_structured_agent_resilience.py` | `FakeMCPHTTPClient.aclose` | 167 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeMCPHTTPClient |
 | `tests/unit/test_structured_agent_resilience.py` | `test_generic_mcp_tool_is_error_is_failed_not_completed` | 172 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_triage_production_engine.py` | `StaticTriageLLM` | 13 | class | کلاس | module |
+| `tests/unit/test_triage_production_engine.py` | `StaticTriageLLM.__init__` | 14 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | StaticTriageLLM |
+| `tests/unit/test_triage_production_engine.py` | `StaticTriageLLM.provider_name` | 19 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | StaticTriageLLM |
+| `tests/unit/test_triage_production_engine.py` | `StaticTriageLLM.generate` | 22 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | StaticTriageLLM |
+| `tests/unit/test_triage_production_engine.py` | `StaticTriageLLM.generate_with_messages` | 48 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | StaticTriageLLM |
+| `tests/unit/test_triage_production_engine.py` | `decision` | 52 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_triage_production_engine.py` | `test_500_symptom_routes_to_database_when_connection_exhaustion_is_evidenced` | 69 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_triage_production_engine.py` | `test_vm_service_down_routes_to_network_when_path_failure_is_evidenced` | 82 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_triage_production_engine.py` | `test_kubernetes_pod_failure_routes_to_storage_when_pvc_is_causal_signal` | 93 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_triage_production_engine.py` | `test_duplicate_alerts_across_hosts_form_one_correlation_group_without_losing_evidence` | 104 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_triage_production_engine.py` | `test_critical_alert_is_not_critical_without_customer_impact_and_with_healthy_redundancy` | 120 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_triage_production_engine.py` | `test_topology_conflict_is_explicit_and_reduces_routing_confidence` | 130 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_triage_production_engine.py` | `test_unknown_asset_requests_identity_verification_before_confident_routing` | 145 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_triage_production_engine.py` | `test_insufficient_evidence_produces_low_confidence_bounded_investigation` | 156 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_triage_production_engine.py` | `test_stale_alert_is_explicit_and_fresh_replacement_is_requested` | 166 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_triage_production_engine.py` | `test_coordinator_uses_new_confidence_band_for_adaptive_fanout` | 189 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_upstream_mcp_contracts.py` | `test_prometheus_adapter_uses_upstream_tool_names` | 8 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_upstream_mcp_contracts.py` | `test_elastic_adapter_uses_agent_builder_only` | 16 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_upstream_mcp_contracts.py` | `test_elastic_agent_builder_config_is_canonical` | 27 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
