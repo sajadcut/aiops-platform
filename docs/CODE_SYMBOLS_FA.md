@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 307 | Dashboard JS files scanned: 2 | Symbols indexed: 2460**
+**Python files scanned: 308 | Dashboard JS files scanned: 2 | Symbols indexed: 2476**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1829,6 +1829,22 @@
 | `tests/unit/test_centralized_config.py` | `test_jenkins_mcp_writes_require_separate_basic_identity` | 181 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_centralized_config.py` | `test_alembic_does_not_bypass_centralized_settings` | 197 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_centralized_config.py` | `test_rate_limits_are_not_hardcoded_in_runtime_module` | 203 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_change_correlation_engine.py` | `change` | 11 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_change_correlation_engine.py` | `metric` | 21 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_change_correlation_engine.py` | `log` | 33 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_change_correlation_engine.py` | `analyze` | 44 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_change_correlation_engine.py` | `top` | 56 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_change_correlation_engine.py` | `test_bad_deployment_gets_high_score_from_delta_scope_and_stable_comparison` | 60 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_change_correlation_engine.py` | `test_unrelated_deployment_is_not_promoted_by_temporal_fact_alone` | 80 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_change_correlation_engine.py` | `test_config_drift_on_affected_subset_is_a_change_candidate` | 93 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_change_correlation_engine.py` | `test_dependency_outage_simultaneous_with_deploy_weakens_change_causality` | 107 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_change_correlation_engine.py` | `test_partial_canary_regression_increases_confidence_over_stable_replicas` | 122 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_change_correlation_engine.py` | `CapturingChangeLLM` | 136 | class | کلاس | module |
+| `tests/unit/test_change_correlation_engine.py` | `CapturingChangeLLM.__init__` | 137 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CapturingChangeLLM |
+| `tests/unit/test_change_correlation_engine.py` | `CapturingChangeLLM.provider_name` | 141 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CapturingChangeLLM |
+| `tests/unit/test_change_correlation_engine.py` | `CapturingChangeLLM.generate` | 144 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CapturingChangeLLM |
+| `tests/unit/test_change_correlation_engine.py` | `CapturingChangeLLM.generate_with_messages` | 169 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CapturingChangeLLM |
+| `tests/unit/test_change_correlation_engine.py` | `test_change_agent_exposes_required_outputs_and_never_executes_rollback` | 174 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_cognia_client.py` | `_search_response` | 10 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_cognia_client.py` | `test_machine_token_is_opaque_cached_and_search_contract_is_exact` | 35 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_cognia_client.py` | `test_machine_token_is_opaque_cached_and_search_contract_is_exact.handler` | 39 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_machine_token_is_opaque_cached_and_search_contract_is_exact |
