@@ -2,6 +2,7 @@ import json
 from typing import Any, Dict, List, Optional
 
 from agents.application.engine import build_application_analysis
+from agents.application.investigation import build_application_peer_context, build_trace_path_analysis
 from agents.shared.base import AgentInput, AgentOutput, BaseAgent, OperationalHypothesis
 from agents.shared.intelligence import build_deterministic_analysis, prompt_evidence_projection, sanitize_prompt_value
 from domain.contracts.config import settings
@@ -55,8 +56,12 @@ class ApplicationAgent(BaseAgent):
             context=(input_data.context.get("summary", {}) if isinstance(input_data.context.get("summary", {}), dict) else {}),
         )
         evidence_ids = self.evidence_ids(input_data)
+        trace_path_analysis = build_trace_path_analysis(application_analysis.get("trace_analysis", {}))
+        peer_application_context = build_application_peer_context(input_data.context or {}, evidence_ids)
+        application_analysis["trace_path_analysis"] = trace_path_analysis
         auxiliary = self.auxiliary_context(input_data)
         prompt_auxiliary = sanitize_prompt_value(auxiliary)
+        prompt_peer_context = sanitize_prompt_value(peer_application_context)
         logs = [item for item in evidence if str(item.get("type", "")).lower() == "log"]
         metrics = [item for item in evidence if str(item.get("type", "")).lower() == "metric"]
         traces = [item for item in evidence if str(item.get("type", "")).lower() == "trace"]
@@ -64,7 +69,9 @@ class ApplicationAgent(BaseAgent):
 
         prompt = f"""You are a senior SRE application analyst and production Application Reliability Investigator. LIVE EVIDENCE is authoritative. Auxiliary Knowledge RAG and Operational Memory may suggest checks or historical patterns but are never proof of current state. Never invent deployments, dependencies, traces, versions, configuration changes, exceptions, metrics or executed actions.
 
-APPLICATION_ANALYSIS is a deterministic feature extraction layer and must be used before free-form reasoning. It contains RED observations, p50/p90/p95/p99 latency evidence, endpoint/status-family impact, error signature clusters, exception/stack timing, resource pressure, trace critical-path candidates, dependency signals, before-vs-incident baselines, change proximity, scope analysis and traffic-vs-regression classification. These are observations, not automatic root-cause verdicts.
+APPLICATION_ANALYSIS is a deterministic feature extraction layer and must be used before free-form reasoning. It contains RED observations, p50/p90/p95/p99 latency evidence, endpoint/status-family impact, error signature clusters, exception/stack timing, resource pressure, parent/child trace path candidates, dependency signals, before-vs-incident baselines, change proximity, scope analysis and traffic-vs-regression classification. These are observations, not automatic root-cause verdicts.
+
+PEER_APPLICATION_CONTEXT contains bounded Dependency/Database/Network/Change agent analysis published by orchestration. It is auxiliary analysis only. Never inherit a peer agent's confidence or causal conclusion. A peer Evidence ID overlap only confirms that the cited LIVE EVIDENCE item is visible here; independently verify what that evidence actually proves. Unverified peer findings may suggest checks but must not increase causal confidence or authorize an action.
 
 Use RED and causal investigation:
 - Request rate: identify spike/drop and compare against baseline when available.
@@ -72,18 +79,19 @@ Use RED and causal investigation:
 - Duration: inspect p50/p90/p95/p99 and tail-latency divergence, not average latency alone.
 - Distinguish timeout/reset/retry/retry-amplification, thread/worker saturation, connection-pool exhaustion, GC/memory/CPU pressure, FD/socket exhaustion and queue/backpressure.
 - Separate health/readiness failures from business-endpoint failures.
-- Use traces when available for slow spans, error spans, critical-path candidates and downstream contributors.
+- Use traces when available for slow spans, error spans, parent/child critical-path candidates and downstream contributors. Do not treat a single longest span as a complete critical path when parent/child structure disagrees or is incomplete.
 - Assess SLO/error-budget burn, release/config/feature-flag timing, region/instance scope and partial-vs-broad outage.
 - A deployment preceding an incident is correlation only. Require before/after delta, scope overlap or instance/canary contrast before raising regression confidence.
 - A traffic spike is not a software regression unless error/latency/resource evidence supports it.
 - Do not attribute a database/network/dependency-caused symptom to the application when stronger downstream evidence exists. In that case emit the appropriate handoff agent and explain the causal boundary.
+- Use Dependency/Change peer findings to target investigation only after checking their cited LIVE EVIDENCE. Peer agreement is not a substitute for evidence.
 
 For EVERY hypothesis return: supporting live evidence IDs, conflicting live evidence IDs, cheapest read-only falsification checks, expected_observations if the hypothesis is true, impacted components and recommended next evidence. A hypothesis without a falsification path should remain low confidence.
 
 Return JSON keys: severity, health_status, findings, error_patterns, http_status_patterns, latency_signals, exception_clusters, endpoint_impacts, deployment_correlation, config_drift_signals, dependency_signals, probable_dependencies, affected_components, blast_radius, hypotheses, missing_evidence, handoff_agents, immediate_checks, escalation_target, risk_level, uncertainty_reason, confidence.
 Each hypothesis: hypothesis, probability, evidence_ids, conflicting_evidence_ids, falsification_checks, expected_observations, impacted_components, recommended_next_evidence. Only LIVE EVIDENCE IDs may appear in evidence fields. Immediate checks are read-only. deploy/restart/rollback/scale/modify actions are recommendations only and must never be represented as read-only investigation.
 
-Incident={input_data.incident_id}\nService={input_data.service_name}\nSummary={input_data.evidence_summary}\nAPPLICATION_ANALYSIS={json.dumps(sanitize_prompt_value(application_analysis), default=str)}\nSHARED_DETERMINISTIC_ANALYSIS={json.dumps(shared_deterministic, default=str)}\nLIVE_EVIDENCE={json.dumps(prompt_evidence, default=str)}\nAUXILIARY_CONTEXT={json.dumps(prompt_auxiliary, default=str)}\nContextSummary={json.dumps(sanitize_prompt_value(input_data.context.get('summary', {})), default=str)}"""
+Incident={input_data.incident_id}\nService={input_data.service_name}\nSummary={input_data.evidence_summary}\nAPPLICATION_ANALYSIS={json.dumps(sanitize_prompt_value(application_analysis), default=str)}\nSHARED_DETERMINISTIC_ANALYSIS={json.dumps(shared_deterministic, default=str)}\nLIVE_EVIDENCE={json.dumps(prompt_evidence, default=str)}\nAUXILIARY_CONTEXT={json.dumps(prompt_auxiliary, default=str)}\nPEER_APPLICATION_CONTEXT={json.dumps(prompt_peer_context, default=str)}\nContextSummary={json.dumps(sanitize_prompt_value(input_data.context.get('summary', {})), default=str)}"""
         try:
             result = await self.generate_structured(prompt)
         except Exception as exc:
@@ -136,6 +144,12 @@ Incident={input_data.incident_id}\nService={input_data.service_name}\nSummary={i
             target = str(candidate.get("agent") or "")
             if target and target != self.name and target not in handoffs and len(handoffs) < 6:
                 handoffs.append(target)
+        for candidate in peer_application_context.get("linked_handoff_candidates", []):
+            if not isinstance(candidate, dict):
+                continue
+            target = str(candidate.get("agent") or "")
+            if target and target != self.name and target not in handoffs and len(handoffs) < 6:
+                handoffs.append(target)
         for hint in shared_deterministic.get("suggested_handoffs", []):
             target = str(hint.get("agent", "")) if isinstance(hint, dict) else ""
             if target and target != self.name and target not in handoffs and len(handoffs) < 6:
@@ -145,8 +159,12 @@ Incident={input_data.incident_id}\nService={input_data.service_name}\nSummary={i
             row for row in application_analysis.get("dependency_analysis", {}).get("handoff_candidates", [])
             if isinstance(row, dict) and row.get("agent") in {"database", "network", "dependency"}
         ]
-        if downstream_handoffs:
-            findings.append("Stronger downstream evidence exists; application symptoms must not be treated as application root cause without falsifying the downstream path")
+        peer_downstream_handoffs = [
+            row for row in peer_application_context.get("linked_handoff_candidates", [])
+            if isinstance(row, dict) and row.get("agent") in {"database", "network", "dependency"}
+        ]
+        if downstream_handoffs or peer_downstream_handoffs:
+            findings.append("Stronger or independently corroborated downstream evidence exists; application symptoms must not be treated as application root cause without falsifying the downstream path")
 
         if not actions:
             actions = [
@@ -196,7 +214,11 @@ Incident={input_data.incident_id}\nService={input_data.service_name}\nSummary={i
                 "retry_metrics": application_analysis.get("retry_metrics", []),
                 "slo_signals": application_analysis.get("slo_signals", []),
                 "trace_analysis": application_analysis.get("trace_analysis", {}),
+                "trace_path_analysis": trace_path_analysis,
                 "dependency_analysis": application_analysis.get("dependency_analysis", {}),
+                "peer_application_context": peer_application_context,
+                "peer_dependency_finding_count": len(peer_application_context.get("dependency_findings", [])),
+                "peer_change_finding_count": len(peer_application_context.get("change_findings", [])),
                 "deployment_correlation": result.get("deployment_correlation") or application_analysis.get("change_analysis", {}),
                 "config_drift_signals": result.get("config_drift_signals", []),
                 "traffic_vs_regression": application_analysis.get("traffic_vs_regression", {}),
