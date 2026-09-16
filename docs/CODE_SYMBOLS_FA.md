@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 273 | Dashboard JS files scanned: 2 | Symbols indexed: 1829**
+**Python files scanned: 274 | Dashboard JS files scanned: 2 | Symbols indexed: 1848**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -142,6 +142,25 @@
 | `agents/triage/__init__.py` | `TriageAgent.description` | 20 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | TriageAgent |
 | `agents/triage/__init__.py` | `TriageAgent.allowed_tools` | 24 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | TriageAgent |
 | `agents/triage/__init__.py` | `TriageAgent.analyze` | 27 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | TriageAgent |
+| `agents/triage/engine.py` | `_parse_timestamp` | 51 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/triage/engine.py` | `_evidence_id` | 65 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/triage/engine.py` | `_raw` | 70 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/triage/engine.py` | `_flatten_text` | 75 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/triage/engine.py` | `_item_text` | 98 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/triage/engine.py` | `_first_value` | 102 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/triage/engine.py` | `_signal_asset` | 115 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/triage/engine.py` | `_message` | 131 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/triage/engine.py` | `_severity` | 142 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/triage/engine.py` | `_fingerprint` | 148 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/triage/engine.py` | `normalize_signals` | 156 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
+| `agents/triage/engine.py` | `correlate_signals` | 187 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/triage/engine.py` | `_context_values` | 213 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/triage/engine.py` | `_affected_layer` | 229 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/triage/engine.py` | `_domain_scores` | 243 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/triage/engine.py` | `_domain_coverage` | 296 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/triage/engine.py` | `_timeline` | 313 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/triage/engine.py` | `_impact_severity` | 351 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/triage/engine.py` | `build_triage_decision_support` | 443 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
 | `agents/vm/__init__.py` | `VMAgent` | 13 | class | کلاس | module |
 | `agents/vm/__init__.py` | `VMAgent.__init__` | 14 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMAgent |
 | `agents/vm/__init__.py` | `VMAgent.name` | 18 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMAgent |
