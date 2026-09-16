@@ -1997,10 +1997,10 @@
 | `tests/unit/test_context_policy.py` | `test_untrusted_source_is_rejected` | 6 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_dashboard_agent_layer_compat.py` | `_text` | 17 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_dashboard_agent_layer_compat.py` | `test_default_agent_configuration_and_dashboard_catalog_stay_in_sync` | 21 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_dashboard_agent_layer_compat.py` | `test_agent_analysis_details_reach_incident_dashboard_without_domain_whitelist` | 42 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_dashboard_agent_layer_compat.py` | `test_dashboard_static_id_references_have_a_rendered_target` | 62 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_dashboard_agent_layer_compat.py` | `test_dashboard_api_calls_match_registered_backend_surfaces` | 78 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_dashboard_agent_layer_compat.py` | `test_dashboard_javascript_and_inline_scripts_parse_when_node_is_available` | 109 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_dashboard_agent_layer_compat.py` | `test_agent_analysis_details_reach_incident_dashboard_without_domain_whitelist` | 57 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_dashboard_agent_layer_compat.py` | `test_dashboard_static_id_references_have_a_rendered_target` | 85 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_dashboard_agent_layer_compat.py` | `test_dashboard_api_calls_match_registered_backend_surfaces` | 101 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_dashboard_agent_layer_compat.py` | `test_dashboard_javascript_and_inline_scripts_parse_when_node_is_available` | 132 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_dashboard_approval_actions.py` | `test_dashboard_exposes_governed_approval_and_resume_actions` | 7 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_dashboard_approval_actions.py` | `test_fastapi_serves_approval_assets` | 34 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_dashboard_contract.py` | `test_dashboard_contains_required_operational_capabilities` | 4 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
