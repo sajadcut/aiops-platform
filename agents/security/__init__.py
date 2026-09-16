@@ -1,7 +1,7 @@
 import json
 from typing import Any, Dict, List, Mapping, Optional
 
-from agents.security.engine import build_security_analysis
+from agents.security.enrichment import build_security_incident_analysis
 from agents.security.safety import redact_security_value, security_prompt_evidence
 from agents.shared.base import AgentInput, AgentOutput, BaseAgent, OperationalHypothesis, RecommendedAction
 from agents.shared.intelligence import build_deterministic_analysis
@@ -78,7 +78,7 @@ class SecurityAgent(BaseAgent):
         auxiliary = self.auxiliary_context(input_data)
         prompt_evidence = security_prompt_evidence(evidence, settings.AGENT_MAX_EVIDENCE_ITEMS)
         deterministic = build_deterministic_analysis("security", evidence, ["log"], input_data.service_name)
-        security_analysis = build_security_analysis(evidence, service_name=input_data.service_name, context=input_data.context)
+        security_analysis = build_security_incident_analysis(evidence, service_name=input_data.service_name, context=input_data.context)
         classification = dict(security_analysis.get("classification") or {})
         security_state = str(classification.get("level") or "insufficient_evidence")
         confidence_cap = float(classification.get("confidence_cap") or 0.35)
@@ -86,7 +86,7 @@ class SecurityAgent(BaseAgent):
 
         prompt = f"""You are a senior evidence-driven SOC incident analyst. LIVE EVIDENCE is authoritative. RAG/Memory and peer-agent output are auxiliary only. Never assert compromise, exfiltration, brute force, credential theft, lateral movement or malicious intent without direct live evidence.
 SECURITY_ANALYSIS is deterministic and owns the maximum conclusion class. Allowed hierarchy: insufficient_evidence -> observed_suspicious_event -> policy_violation -> probable_attack -> confirmed_compromise. Never upgrade beyond SECURITY_ANALYSIS.classification.level. A single alert never establishes confirmed compromise.
-Investigate auth/authz trends, process trees and unexpected binaries when telemetry exists, privilege escalation, anomalous user/service-account behavior, unusual source/destination/outbound/listeners, container/runtime events, policy violations, repeated denies, secret/token USAGE METADATA only, file/path access only when evidenced, runtime chronology, and identity+network+application correlation.
+Investigate auth/authz trends, deterministic process-tree structure and unexpected binaries when telemetry exists, privilege escalation, anomalous user/service-account behavior, unusual source/destination/outbound/listeners, container/runtime events, policy violations, repeated denies, secret/token USAGE METADATA only, file/path access only when evidenced, runtime chronology, and identity+network+application temporal correlations. Temporal overlap is not causation.
 Actively test benign explanations: expired tokens, RBAC/config drift, approved automation/deployments, scanners and duplicate/noisy logs. MITRE-style stages remain hypotheses unless SECURITY_ANALYSIS says evidence is sufficient. Never reveal credential values.
 Return JSON keys: severity, health_status, findings, authentication_signals, authorization_signals, suspicious_signals, exposure_signals, policy_signals, probable_dependencies, affected_components, hypotheses, missing_evidence, handoff_agents, immediate_checks, containment_recommendations, escalation_target, risk_level, uncertainty_reason, confidence.
 Each hypothesis must include hypothesis, probability, evidence_ids, conflicting_evidence_ids, falsification_checks, recommended_next_evidence, alternative_benign_explanations, required_verification, affected_identities, affected_assets. Only live evidence IDs may be cited. immediate_checks are read-only. revoke/block/isolate/rotate actions are recommendations and require approval.
@@ -205,6 +205,9 @@ Incident={input_data.incident_id}\nService={input_data.service_name}\nSummary={i
                 "authentication_failure_trend": security_analysis.get("authentication_failure_trend", {}),
                 "authorization_denial_trend": security_analysis.get("authorization_denial_trend", {}),
                 "runtime_timeline": security_analysis.get("runtime_timeline", []),
+                "process_tree_analysis": security_analysis.get("process_tree_analysis", {}),
+                "cross_domain_timeline_correlation": security_analysis.get("cross_domain_timeline_correlation", {}),
+                "identity_behavior_scope": security_analysis.get("identity_behavior_scope", []),
                 "network_analysis": security_analysis.get("network_analysis", {}),
                 "mitre_style_mapping": security_analysis.get("mitre_style_mapping", {}),
                 "false_positive_analysis": security_analysis.get("false_positive_analysis", []),
@@ -212,6 +215,7 @@ Incident={input_data.incident_id}\nService={input_data.service_name}\nSummary={i
                 "blast_radius_scope": blast,
                 "peer_security_context": security_analysis.get("peer_security_context", {}),
                 "next_best_evidence": security_analysis.get("next_best_evidence", []),
+                "analysis_stages": security_analysis.get("analysis_stages", []),
                 "security_evidence_level": deterministic.get("security_evidence_level"),
                 "deterministic_analysis": deterministic,
                 "security_analysis": security_analysis,
