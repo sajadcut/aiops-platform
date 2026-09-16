@@ -31,6 +31,20 @@ def test_dashboard_is_single_live_control_center():
     assert ".incident-layout" in css
 
 
+def test_incident_workbench_defaults_to_active_and_shows_unambiguous_local_time():
+    html = (ROOT / "dashboards/index.html").read_text(encoding="utf-8")
+
+    assert 'value="__active__" selected>Active only' in html
+    assert 'value="">All history' in html
+    assert "Started (local)" in html
+    assert "function incidentTimeInfo" in html
+    assert "i.started_at || i.created_at" in html
+    assert "Intl.DateTimeFormat().resolvedOptions().timeZone" in html
+    assert "matchesIncidentStatusScope" in html
+    assert "scope === '__active__'" in html
+    assert "No active incidents match the current filters" in html
+
+
 def test_dashboard_assets_and_agent_route_are_served_by_fastapi():
     source = (ROOT / "apps/api/main.py").read_text(encoding="utf-8")
     assert '@app.get("/dashboard/control-center.css"' in source
