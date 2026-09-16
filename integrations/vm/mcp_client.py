@@ -25,7 +25,7 @@ class VMEdgeMCPClient(MCPClient):
             url, "vm-edge", allowed_tools=self.READ_TOOLS | self.WRITE_TOOLS,
             write_tools=self.WRITE_TOOLS, protocol_version=settings.MCP_PROTOCOL_VERSION,
             timeout=settings.MCP_TIMEOUT_SECONDS, bearer_token=settings.MCP_BEARER_TOKEN,
-            write_bearer_token=settings.MCP_WRITE_BEARER_TOKEN,
+            write_bearer_token=settings.MCP_BEARER_TOKEN,
             client_cert_path=settings.MCP_CLIENT_CERT_PATH,
             client_key_path=settings.MCP_CLIENT_KEY_PATH,
         )
