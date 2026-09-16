@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 266 | Dashboard JS files scanned: 2 | Symbols indexed: 1728**
+**Python files scanned: 269 | Dashboard JS files scanned: 2 | Symbols indexed: 1773**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -169,14 +169,15 @@
 | `apps/api/http_logging.py` | `HTTPTransactionLoggingMiddleware.__call__` | 54 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | HTTPTransactionLoggingMiddleware |
 | `apps/api/http_logging.py` | `HTTPTransactionLoggingMiddleware.__call__.logging_receive` | 81 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | HTTPTransactionLoggingMiddleware.__call__ |
 | `apps/api/http_logging.py` | `HTTPTransactionLoggingMiddleware.__call__.logging_send` | 89 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | HTTPTransactionLoggingMiddleware.__call__ |
-| `apps/api/incident_resources.py` | `get_context` | 21 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
-| `apps/api/incident_resources.py` | `get_evidence` | 38 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
-| `apps/api/incident_resources.py` | `get_knowledge` | 64 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
-| `apps/api/incident_resources.py` | `get_memory` | 96 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
-| `apps/api/incident_resources.py` | `get_plan` | 106 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
-| `apps/api/incident_resources.py` | `get_verification` | 131 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
-| `apps/api/incident_resources.py` | `get_incident_audit` | 139 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
-| `apps/api/incident_resources.py` | `get_incident_lifecycle` | 146 | async function | Return durable governance plus structured agent routing/collaboration state. | module |
+| `apps/api/incident_resources.py` | `get_context` | 22 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
+| `apps/api/incident_resources.py` | `get_evidence` | 39 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
+| `apps/api/incident_resources.py` | `get_knowledge` | 65 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
+| `apps/api/incident_resources.py` | `get_memory` | 97 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
+| `apps/api/incident_resources.py` | `get_plan` | 107 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
+| `apps/api/incident_resources.py` | `get_verification` | 132 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
+| `apps/api/incident_resources.py` | `get_incident_audit` | 140 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
+| `apps/api/incident_resources.py` | `get_incident_lifecycle` | 147 | async function | Return durable governance plus structured agent routing/collaboration state. | module |
+| `apps/api/incident_resources.py` | `get_operator_summary` | 188 | async function | Return a read-only Persian operator summary derived from current durable Incident state. | module |
 | `apps/api/incidents.py` | `simulate_incident` | 22 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/incidents.py` | `analyze_incident` | 46 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/incidents.py` | `RemediationRequest` | 107 | class | کلاس | module |
@@ -428,6 +429,23 @@
 | `apps/memory_service/__init__.py` | `OperationalMemoryService.add_entry` | 21 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryService |
 | `apps/memory_service/__init__.py` | `OperationalMemoryService.search_similar` | 62 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | OperationalMemoryService |
 | `apps/memory_service/__init__.py` | `OperationalMemoryService.update_reuse_count` | 114 | async method | state یا داده را به‌صورت durable ذخیره/به‌روزرسانی می‌کند | OperationalMemoryService |
+| `apps/operator_summary.py` | `_t` | 17 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/operator_summary.py` | `_low` | 23 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/operator_summary.py` | `_d` | 27 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/operator_summary.py` | `_l` | 31 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/operator_summary.py` | `_true` | 35 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/operator_summary.py` | `_norm` | 39 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/operator_summary.py` | `_key` | 53 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/operator_summary.py` | `_ref` | 60 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/operator_summary.py` | `_merge_evidence` | 64 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/operator_summary.py` | `_diag` | 91 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/operator_summary.py` | `_human_action` | 95 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/operator_summary.py` | `_observed` | 124 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/operator_summary.py` | `_observed.view` | 140 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _observed |
+| `apps/operator_summary.py` | `_cause` | 158 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/operator_summary.py` | `_evidence_summary` | 190 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/operator_summary.py` | `_observed_text` | 205 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/operator_summary.py` | `build_operator_summary` | 219 | function | Deterministic, read-only operator Decision Support; never an execution authority. | module |
 | `apps/orchestrator/a2a_gateway.py` | `A2AGateway` | 11 | class | Compatibility gateway for structured multi-agent analysis. | module |
 | `apps/orchestrator/a2a_gateway.py` | `A2AGateway.__init__` | 18 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | A2AGateway |
 | `apps/orchestrator/a2a_gateway.py` | `A2AGateway.process_incident` | 24 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | A2AGateway |
@@ -571,12 +589,28 @@
 | `apps/verification_service/__init__.py` | `VerificationEngine._canonical_metric_name` | 229 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VerificationEngine |
 | `apps/verification_service/__init__.py` | `VerificationEngine._evidence_refs` | 256 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VerificationEngine |
 | `apps/verification_service/__init__.py` | `VerificationEngine._dedupe_refs` | 268 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VerificationEngine |
-| `dashboards/approval-actions.js` | `approvalPanel` | 4 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `refreshIncidentDecision` | 70 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `approveCurrentApproval` | 77 | JavaScript function | transition مربوط به Approval/Governance را اعمال می‌کند | browser module |
-| `dashboards/approval-actions.js` | `rejectCurrentApproval` | 94 | JavaScript function | transition مربوط به Approval/Governance را اعمال می‌کند | browser module |
-| `dashboards/approval-actions.js` | `resumeCurrentWorkflow` | 119 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `enhancedRenderDetail` | 153 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `approvalPanel` | 6 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `summaryBadge` | 72 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `causeBadge` | 76 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `approvalBadge` | 80 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `executionBadge` | 89 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `verificationBadge` | 96 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `memoryBadge` | 103 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `observedStateRows` | 110 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `evidenceRows` | 124 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `actionText` | 128 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `controlRows` | 134 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `executionText` | 146 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `verificationText` | 154 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `operatorSummaryCard` | 164 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `injectOperatorSummary` | 188 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `refreshIncidentDecision` | 204 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `approveCurrentApproval` | 211 | JavaScript function | transition مربوط به Approval/Governance را اعمال می‌کند | browser module |
+| `dashboards/approval-actions.js` | `rejectCurrentApproval` | 228 | JavaScript function | transition مربوط به Approval/Governance را اعمال می‌کند | browser module |
+| `dashboards/approval-actions.js` | `resumeCurrentWorkflow` | 253 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `selectIncidentWithOperatorSummary` | 287 | JavaScript function | بر اساس state/capability مسیر یا handler مناسب را انتخاب می‌کند | browser module |
+| `dashboards/approval-actions.js` | `enhancedRenderDetail` | 304 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `loadAllWithCurrentIncidentSummary` | 314 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
 | `dashboards/control-center.js` | `$` | 14 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
 | `dashboards/control-center.js` | `$$` | 15 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
 | `dashboards/control-center.js` | `esc` | 16 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
@@ -1033,6 +1067,9 @@
 | `tests/integration/test_health_probes.py` | `test_readiness_contract.healthy_db` | 14 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_readiness_contract |
 | `tests/integration/test_health_probes.py` | `test_readiness_contract.healthy_external` | 17 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_readiness_contract |
 | `tests/integration/test_master_api_surface.py` | `test_master_api_surface_is_registered` | 4 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/integration/test_operator_summary_api.py` | `test_operator_summary_api_route_is_registered_read_only` | 8 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/integration/test_operator_summary_api.py` | `test_dashboard_serves_persian_operator_summary_ui_and_structured_api_call` | 14 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/integration/test_operator_summary_api.py` | `test_operator_summary_backend_is_deterministic_and_has_no_execution_path` | 37 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/integration/test_signal_correlation_db.py` | `test_postgresql_correlation_lock_and_bounded_lookup` | 22 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/operational/run_operational_acceptance.py` | `OperationalAcceptanceError` | 35 | class | کلاس | module |
 | `tests/operational/run_operational_acceptance.py` | `BlockedScenario` | 39 | class | کلاس | module |
@@ -1536,6 +1573,14 @@
 | `tests/unit/test_operational_resilience_regressions.py` | `test_deterministic_stopped_service_reaches_decision_despite_root_cause_disagreement` | 198 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_operational_resilience_regressions.py` | `test_deterministic_recovery_does_not_bypass_unsafe_write_recommendation` | 251 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_operational_resilience_regressions.py` | `test_total_specialist_failure_still_fails_closed` | 272 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_operator_summary.py` | `_service_status` | 4 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_operator_summary.py` | `_base_summary` | 23 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_operator_summary.py` | `test_clean_systemd_stop_never_claims_manual_stop_without_direct_evidence` | 35 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_operator_summary.py` | `test_direct_sudo_journal_evidence_can_confirm_manual_stop` | 49 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_operator_summary.py` | `test_agent_manual_stop_claim_is_downgraded_without_direct_evidence` | 74 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_operator_summary.py` | `test_lifecycle_fields_are_recomputed_from_current_checkpoint_and_durable_governance` | 88 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_operator_summary.py` | `test_pending_approval_next_step_does_not_imply_execution_authority` | 165 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_operator_summary.py` | `test_explicit_human_audit_command_can_confirm_manual_stop` | 187 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_production_fail_closed.py` | `test_deterministic_embedding_is_forbidden_in_production` | 9 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_production_fail_closed.py` | `test_production_orchestrator_forbids_mock_llm_provider` | 16 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_production_hardening_batch.py` | `_finding` | 15 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |

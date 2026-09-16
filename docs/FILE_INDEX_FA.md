@@ -3,7 +3,7 @@
 > این فایل فهرست فایل‌به‌فایل repository است. توضیح معماری و flow در `CODEBASE_GUIDE_FA.md` آمده است.
 > این فایل با `scripts/generate_file_index_fa.py` ساخته و در CI کنترل می‌شود.
 
-**تعداد فایل‌های track‌شده و پوشش‌داده‌شده: 333**
+**تعداد فایل‌های track‌شده و پوشش‌داده‌شده: 336**
 
 | Path | Type | Purpose | Called By | Calls/Depends On | Runtime/Test/Docs | Notes |
 |---|---|---|---|---|---|---|
@@ -99,6 +99,7 @@
 | `apps/mcp_server/__init__.py` | Python | MCP: MCP server داخلی برای expose ابزارهای کنترل‌شده | MCP clients | provider adapters/security | Runtime | capability boundary |
 | `apps/mcp_server/main.py` | Python | MCP: MCP server داخلی برای expose ابزارهای کنترل‌شده | MCP clients | provider adapters/security | Runtime | capability boundary |
 | `apps/memory_service/__init__.py` | Python | Memory: Operational Memory retrieval/write-back | Workflow/agents/API | pgvector/embeddings | Runtime | جای live evidence را نمی‌گیرد |
+| `apps/operator_summary.py` | Python | ماژول service لایه application | Runtime | domain/integrations | Runtime | جزء Control Plane |
 | `apps/orchestrator/a2a_gateway.py` | Python | Workflow: LangGraph orchestration، routing، resume و collaboration | API/signal gateway | agents/context/decision/approval | Runtime | مسیر E2E durable |
 | `apps/orchestrator/e2e_graph.py` | Python | Workflow: LangGraph orchestration، routing، resume و collaboration | API/signal gateway | agents/context/decision/approval | Runtime | مسیر E2E durable |
 | `apps/orchestrator/graph.py` | Python | Workflow: LangGraph orchestration، routing، resume و collaboration | API/signal gateway | agents/context/decision/approval | Runtime | مسیر E2E durable |
@@ -247,6 +248,7 @@
 | `tests/integration/test_e2e_safety.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/integration/test_health_probes.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/integration/test_master_api_surface.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
+| `tests/integration/test_operator_summary_api.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/integration/test_signal_correlation_db.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/operational/__init__.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/operational/run_operational_acceptance.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
@@ -318,6 +320,7 @@
 | `tests/unit/test_oidc_auth.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_operational_agents.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_operational_resilience_regressions.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
+| `tests/unit/test_operator_summary.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_production_fail_closed.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_production_hardening_batch.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_rag_memory_governance.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
