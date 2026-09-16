@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 310 | Dashboard JS files scanned: 2 | Symbols indexed: 2523**
+**Python files scanned: 311 | Dashboard JS files scanned: 2 | Symbols indexed: 2539**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1973,6 +1973,22 @@
 | `tests/unit/test_database_reliability_engine.py` | `CapturingDatabaseLLM.generate` | 153 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CapturingDatabaseLLM |
 | `tests/unit/test_database_reliability_engine.py` | `CapturingDatabaseLLM.generate_with_messages` | 163 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CapturingDatabaseLLM |
 | `tests/unit/test_database_reliability_engine.py` | `test_database_agent_computes_features_before_llm_and_never_prompts_raw_sql_literals` | 168 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_dependency_causal_engine.py` | `trace` | 11 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_dependency_causal_engine.py` | `metric` | 25 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_dependency_causal_engine.py` | `service_log` | 36 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_dependency_causal_engine.py` | `analyze` | 46 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_dependency_causal_engine.py` | `test_database_cascade_selects_deeper_first_failing_edge_not_noisy_upstream` | 50 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_dependency_causal_engine.py` | `test_external_api_outage_is_classified_and_circuit_breaker_preserved` | 66 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_dependency_causal_engine.py` | `test_shared_identity_dependency_detects_multi_caller_effect` | 87 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_dependency_causal_engine.py` | `test_retry_storm_and_timeout_propagation_are_directional` | 100 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_dependency_causal_engine.py` | `test_incomplete_trace_keeps_virtual_unknown_nodes_and_raises_uncertainty` | 118 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_dependency_causal_engine.py` | `test_unrelated_downstream_error_volume_does_not_override_edge_causality` | 142 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_dependency_causal_engine.py` | `CapturingDependencyLLM` | 158 | class | کلاس | module |
+| `tests/unit/test_dependency_causal_engine.py` | `CapturingDependencyLLM.__init__` | 159 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CapturingDependencyLLM |
+| `tests/unit/test_dependency_causal_engine.py` | `CapturingDependencyLLM.provider_name` | 163 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CapturingDependencyLLM |
+| `tests/unit/test_dependency_causal_engine.py` | `CapturingDependencyLLM.generate` | 166 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CapturingDependencyLLM |
+| `tests/unit/test_dependency_causal_engine.py` | `CapturingDependencyLLM.generate_with_messages` | 191 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CapturingDependencyLLM |
+| `tests/unit/test_dependency_causal_engine.py` | `test_dependency_agent_exposes_graph_and_caps_confidence_for_incomplete_traces` | 196 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_dotin_general_chatbot_llm.py` | `FakeResponse` | 13 | class | کلاس | module |
 | `tests/unit/test_dotin_general_chatbot_llm.py` | `FakeResponse.__init__` | 14 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeResponse |
 | `tests/unit/test_dotin_general_chatbot_llm.py` | `FakeResponse.raise_for_status` | 17 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeResponse |
