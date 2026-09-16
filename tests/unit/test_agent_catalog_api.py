@@ -1,7 +1,9 @@
 import asyncio
 from pathlib import Path
 
-from apps.api.agents import agent_catalog
+import pytest
+
+from apps.api.agents import _CatalogOnlyLLMAdapter, agent_catalog
 from domain.contracts.config import settings
 
 
@@ -27,9 +29,17 @@ def test_agent_catalog_does_not_require_llm_runtime_configuration(monkeypatch):
     assert manifests["application"]["production_status"] == "analysis_only"
 
 
-def test_agent_catalog_route_has_no_llm_adapter_dependency():
+def test_catalog_only_adapter_cannot_execute_inference():
+    adapter = _CatalogOnlyLLMAdapter()
+
+    with pytest.raises(RuntimeError, match="catalog_only_adapter_cannot_generate"):
+        asyncio.run(adapter.generate("should never execute"))
+
+
+def test_agent_catalog_route_has_no_operational_llm_dependency():
     source = (ROOT / "apps/api/agents.py").read_text(encoding="utf-8")
 
     assert "configured_llm_adapter" not in source
-    assert "registry = AgentRegistry()" in source
+    assert "registry = AgentRegistry(_CatalogOnlyLLMAdapter())" in source
+    assert "catalog_only_adapter_cannot_generate" in source
     assert 'Depends(require_permission("read:incident"))' in source
