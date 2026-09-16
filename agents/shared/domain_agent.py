@@ -43,8 +43,42 @@ class DomainDiagnosticAgent(BaseAgent):
 
     @staticmethod
     def _bounded_prompt_value(value: Any, depth: int = 0) -> Any:
-        """Compact and redact prompt-only context without mutating audited Evidence."""
-        return sanitize_prompt_value(value, depth)
+        """Compact and redact prompt-only context without mutating audited Evidence.
+
+        Keep the historical prompt budget (8 list items, 30 mapping keys and
+        480-character strings) while applying the newer credential redaction.
+        This helper is also consumed by RCA/orchestrator code, so its bounds are
+        a compatibility and safety contract rather than an implementation detail.
+        """
+        safe = sanitize_prompt_value(value)
+        preferred = [
+            "diagnostic", "name", "value", "target", "target_port", "service", "status",
+            "active_state", "sub_state", "unit_file_state", "main_pid", "exec_main_status",
+            "restart_count", "healthy", "running", "count", "listening", "reachable", "valid",
+            "supported", "provider", "error", "detail", "host", "port", "hostname", "addresses",
+            "route_found", "load_state", "result", "severity", "event_state", "event_status",
+            "trigger", "problem_expression", "item_key", "asset_type", "platform",
+        ]
+
+        def compact(current: Any, current_depth: int) -> Any:
+            if current_depth >= 4:
+                return "[bounded]"
+            if isinstance(current, str):
+                return current if len(current) <= 480 else current[:480] + "...[truncated]"
+            if isinstance(current, list):
+                return [compact(item, current_depth + 1) for item in current[:8]]
+            if isinstance(current, tuple):
+                return [compact(item, current_depth + 1) for item in list(current)[:8]]
+            if isinstance(current, dict):
+                keys = [key for key in preferred if key in current]
+                keys.extend(key for key in current if key not in keys)
+                result: Dict[str, Any] = {}
+                for key in keys[:30]:
+                    result[str(key)] = compact(current[key], current_depth + 1)
+                return result
+            return current
+
+        return compact(safe, depth)
 
     @classmethod
     def _prompt_evidence(cls, evidence: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
