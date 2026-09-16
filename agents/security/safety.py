@@ -5,7 +5,7 @@ from typing import Any, Dict, Iterable, List, Mapping
 
 
 _SENSITIVE_KEY_TOKENS = (
-    "authorization", "password", "passwd", "secret", "private_key", "privatekey",
+    "authorization", "password", "passwd", "secret", "token", "private_key", "privatekey",
     "access_token", "refresh_token", "id_token", "client_secret", "api_key", "apikey",
     "credential", "cookie", "set-cookie", "token_value", "secret_value",
 )
