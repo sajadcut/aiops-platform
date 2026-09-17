@@ -23,8 +23,10 @@ def test_llm_and_mcp_timeouts_remain_distinct_and_do_not_expose_raw_details():
 
     assert llm.code == "LLM_TIMEOUT"
     assert llm.component == "llm"
+    assert llm.message == "درخواست به دلیل Timeout در LLM کامل نشد."
     assert mcp.code == "MCP_TIMEOUT"
     assert mcp.component == "mcp"
+    assert "MCP" in mcp.message
     assert unavailable.code == "MCP_UNAVAILABLE"
     assert unavailable.component == "mcp"
     assert "vm_metrics" not in llm.message
@@ -40,6 +42,7 @@ def test_timeout_and_database_errors_do_not_expose_raw_exception_text():
 
     database = classify_chatbot_error(AsyncPGDatabaseError("postgresql://user:password@db/internal"))
     assert timeout.code == "LLM_TIMEOUT"
+    assert timeout.message == "درخواست به دلیل Timeout در LLM کامل نشد."
     assert "secret" not in timeout.message
     assert database.code == "DATABASE_ERROR"
     assert "password" not in database.message
