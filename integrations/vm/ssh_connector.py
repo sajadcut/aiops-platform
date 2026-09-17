@@ -194,21 +194,67 @@ class SSHVMConnector:
         result = await self._run(target, "printf connected")
         return bool(result.get("success")) and result.get("stdout") == "connected"
 
+    @staticmethod
+    def _parse_cpu_counters(value: str) -> tuple[int, ...]:
+        parts = value.split()
+        if len(parts) != 8:
+            raise ValueError("invalid_cpu_counter_sample")
+        counters = tuple(int(part) for part in parts)
+        if any(counter < 0 for counter in counters):
+            raise ValueError("invalid_cpu_counter_sample")
+        return counters
+
+    @classmethod
+    def _cpu_interval_percentages(cls, first: str, second: str) -> tuple[float, float]:
+        start = cls._parse_cpu_counters(first)
+        end = cls._parse_cpu_counters(second)
+        deltas = tuple(after - before for before, after in zip(start, end))
+        if any(delta < 0 for delta in deltas):
+            raise ValueError("cpu_counter_reset")
+        total_delta = sum(deltas)
+        if total_delta <= 0:
+            raise ValueError("cpu_counter_delta_zero")
+        idle_delta = deltas[3] + deltas[4]
+        busy_delta = total_delta - idle_delta
+        if busy_delta < 0:
+            raise ValueError("invalid_cpu_counter_delta")
+        cpu_usage = round((busy_delta * 100.0) / total_delta, 2)
+        io_wait = round((deltas[4] * 100.0) / total_delta, 2)
+        return cpu_usage, io_wait
+
     async def collect_metrics(self, target: str) -> Dict[str, Any]:
         command = (
-            "LC_ALL=C; cpu=$(awk '/^cpu / {usage=($2+$4)*100/($2+$4+$5); printf \"%.2f\", usage}' /proc/stat); "
-            "mem=$(free | awk '/^Mem:/ {printf \"%.2f\", ($3/$2)*100}'); "
-            "swap=$(free | awk '/^Swap:/ {if ($2>0) printf \"%.2f\", ($3/$2)*100; else printf \"0\"}'); "
-            "load=$(awk '{printf \"%s,%s,%s\", $1,$2,$3}' /proc/loadavg); "
-            "iowait=$(awk '/^cpu / {printf \"%.2f\", ($6)*100/($2+$4+$5+$6+$7+$8+$9)}' /proc/stat); "
-            "printf '{\"cpu_usage\":%s,\"memory_usage\":%s,\"swap_usage\":%s,\"load_avg\":\"%s\",\"io_wait\":%s}' \"$cpu\" \"$mem\" \"$swap\" \"$load\" \"$iowait\""
+            "LC_ALL=C; "
+            "printf 'CPU1 '; awk '/^cpu / {print $2,$3,$4,$5,$6,$7,$8,$9; exit}' /proc/stat; "
+            "sleep 1; "
+            "printf 'CPU2 '; awk '/^cpu / {print $2,$3,$4,$5,$6,$7,$8,$9; exit}' /proc/stat; "
+            "free | awk '/^Mem:/ {printf \"MEM %.2f\\n\", ($3/$2)*100} /^Swap:/ {if ($2>0) printf \"SWAP %.2f\\n\", ($3/$2)*100; else printf \"SWAP 0.00\\n\"}'; "
+            "awk '{printf \"LOAD %s,%s,%s\\n\", $1,$2,$3}' /proc/loadavg"
         )
         result = await self._run(target, command)
         if not result.get("success"):
             return {"success": False, "target": target, "error": "ssh_command_failed", "execution_time": result.get("execution_time")}
         try:
-            payload = json.loads(result["stdout"])
-        except json.JSONDecodeError:
+            fields: Dict[str, str] = {}
+            for raw_line in str(result.get("stdout") or "").splitlines():
+                key, separator, value = raw_line.strip().partition(" ")
+                if separator and key in {"CPU1", "CPU2", "MEM", "SWAP", "LOAD"}:
+                    fields[key] = value.strip()
+            if set(fields) != {"CPU1", "CPU2", "MEM", "SWAP", "LOAD"}:
+                raise ValueError("missing_metric_fields")
+            cpu_usage, io_wait = self._cpu_interval_percentages(fields["CPU1"], fields["CPU2"])
+            memory_usage = round(float(fields["MEM"]), 2)
+            swap_usage = round(float(fields["SWAP"]), 2)
+            if not 0.0 <= memory_usage <= 100.0 or not 0.0 <= swap_usage <= 100.0:
+                raise ValueError("invalid_memory_metric")
+            payload = {
+                "cpu_usage": cpu_usage,
+                "memory_usage": memory_usage,
+                "swap_usage": swap_usage,
+                "load_avg": fields["LOAD"],
+                "io_wait": io_wait,
+            }
+        except (TypeError, ValueError):
             return {"success": False, "target": target, "error": "invalid_metric_payload"}
         return {"success": True, "target": target, "metrics": payload, "execution_time": result.get("execution_time")}
 
