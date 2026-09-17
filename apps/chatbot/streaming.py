@@ -105,6 +105,23 @@ async def _persist_terminal_error(
         )
 
 
+async def _persist_interruption(session_id: UUID | str | None) -> None:
+    try:
+        await asyncio.shield(
+            _persist_terminal_error(
+                session_id,
+                message="پاسخ متوقف شد. در صورت نیاز دوباره تلاش کنید.",
+                code="REQUEST_INTERRUPTED",
+                component="chat",
+                retryable=True,
+            )
+        )
+    except Exception:
+        # Stream shutdown must not be converted into a second user-visible
+        # failure if the durability write itself cannot complete.
+        pass
+
+
 async def _event_stream(
     service,
     identity: Identity,
@@ -119,13 +136,16 @@ async def _event_stream(
     heartbeat = 0
     result_ready = False
 
-    yield _sse("session", {"session_id": str(session_id), "request_id": request_id})
-    yield _sse(
-        "status",
-        {"phase": "analysis", "message": "در حال تحلیل درخواست و بررسی ابزارهای مجاز…"},
-    )
-
     try:
+        # Keep the initial frames inside the same protected lifetime as provider
+        # work. A client can disconnect immediately after either yield, and that
+        # early close must still cancel in-flight work and record interruption.
+        yield _sse("session", {"session_id": str(session_id), "request_id": request_id})
+        yield _sse(
+            "status",
+            {"phase": "analysis", "message": "در حال تحلیل درخواست و بررسی ابزارهای مجاز…"},
+        )
+
         while not task.done():
             try:
                 await asyncio.wait_for(asyncio.shield(task), timeout=3.0)
@@ -176,21 +196,17 @@ async def _event_stream(
         CHAT_STREAM_INTERRUPTED.inc()
         CHAT_STREAM_REQUESTS.labels(outcome="interrupted").inc()
         await _cancel_inflight(task)
-        # If the validated response is already durable and only its presentation
-        # was interrupted, do not add a contradictory failure row to history.
         if not result_ready:
-            try:
-                await asyncio.shield(
-                    _persist_terminal_error(
-                        session_id,
-                        message="پاسخ متوقف شد. در صورت نیاز دوباره تلاش کنید.",
-                        code="REQUEST_INTERRUPTED",
-                        component="chat",
-                        retryable=True,
-                    )
-                )
-            except Exception:
-                pass
+            await _persist_interruption(session_id)
+        raise
+    except GeneratorExit:
+        # Async-generator close is how an early HTTP disconnect can surface when
+        # the generator is suspended on a yield. Treat it as an interruption too.
+        CHAT_STREAM_INTERRUPTED.inc()
+        CHAT_STREAM_REQUESTS.labels(outcome="interrupted").inc()
+        await _cancel_inflight(task)
+        if not result_ready:
+            await _persist_interruption(session_id)
         raise
     except Exception as exc:
         descriptor = classify_chatbot_error(exc)
