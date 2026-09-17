@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 346 | Dashboard JS files scanned: 3 | Symbols indexed: 2986**
+**Python files scanned: 347 | Dashboard JS files scanned: 3 | Symbols indexed: 2987**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -2288,6 +2288,7 @@
 | `tests/unit/test_chatbot_tools.py` | `test_kubernetes_mutation_validates_replicas_and_namespace` | 66 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_chatbot_tools.py` | `test_tool_arguments_reject_command_injection_shapes` | 85 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_chatbot_tools.py` | `test_prompt_injection_text_cannot_create_capability` | 92 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_user_message_copy.py` | `test_operator_messages_expose_copy_action_without_changing_message_text` | 4 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_cognia_client.py` | `_search_response` | 10 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_cognia_client.py` | `test_machine_token_is_opaque_cached_and_search_contract_is_exact` | 35 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_cognia_client.py` | `test_machine_token_is_opaque_cached_and_search_contract_is_exact.handler` | 39 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_machine_token_is_opaque_cached_and_search_contract_is_exact |
