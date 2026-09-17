@@ -8,6 +8,8 @@ from uuid import UUID, uuid4
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from domain.contracts.redaction import redact, redact_text
+
 
 SESSION_TTL_SECONDS = 24 * 60 * 60
 PROPOSAL_TTL_SECONDS = 15 * 60
@@ -19,7 +21,7 @@ def _utcnow() -> datetime:
 
 
 def _json(value: Any) -> str:
-    return json.dumps(value, ensure_ascii=False, default=str, separators=(",", ":"))
+    return json.dumps(redact(value), ensure_ascii=False, default=str, separators=(",", ":"))
 
 
 class ChatStore:
@@ -121,7 +123,9 @@ class ChatStore:
         normalized_role = str(role).strip().lower()
         if normalized_role not in {"user", "assistant", "tool"}:
             raise ValueError("invalid_chat_message_role")
-        bounded = str(content)[:16000]
+        # History becomes LLM context on later turns, so redact before durable
+        # persistence rather than only at log/response time.
+        bounded = redact_text(str(content))[:16000]
         row = (
             await self.session.execute(
                 text(
