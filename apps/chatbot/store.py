@@ -24,6 +24,10 @@ def _json(value: Any) -> str:
     return json.dumps(redact(value), ensure_ascii=False, default=str, separators=(",", ":"))
 
 
+def _title(value: Any) -> str:
+    return " ".join(redact_text(str(value or "")).split()).strip()[:160]
+
+
 class ChatStore:
     """Durable PostgreSQL store for chat ownership, history and action proposals."""
 
@@ -41,7 +45,7 @@ class ChatStore:
                     INSERT INTO chat_sessions
                     (session_id, owner_subject, owner_roles, created_at, updated_at, expires_at)
                     VALUES (:session_id, :owner_subject, CAST(:owner_roles AS jsonb), :now, :now, :expires_at)
-                    RETURNING session_id, owner_subject, owner_roles, created_at, updated_at, expires_at
+                    RETURNING session_id, owner_subject, owner_roles, title, created_at, updated_at, expires_at
                     """
                 ),
                 {
@@ -61,9 +65,11 @@ class ChatStore:
             await self.session.execute(
                 text(
                     """
-                    SELECT session_id, owner_subject, owner_roles, created_at, updated_at, expires_at
+                    SELECT session_id, owner_subject, owner_roles, title, created_at, updated_at, expires_at
                     FROM chat_sessions
-                    WHERE session_id=:session_id AND owner_subject=:owner_subject
+                    WHERE session_id=:session_id
+                      AND owner_subject=:owner_subject
+                      AND archived_at IS NULL
                     """
                 ),
                 {"session_id": str(session_id), "owner_subject": owner_subject},
@@ -75,7 +81,10 @@ class ChatStore:
         expires_at = record.get("expires_at")
         if expires_at is not None and expires_at <= _utcnow():
             await self.session.execute(
-                text("DELETE FROM chat_sessions WHERE session_id=:session_id"),
+                text(
+                    "UPDATE chat_sessions SET archived_at=CURRENT_TIMESTAMP "
+                    "WHERE session_id=:session_id AND archived_at IS NULL"
+                ),
                 {"session_id": str(session_id)},
             )
             await self.session.commit()
@@ -87,7 +96,7 @@ class ChatStore:
         await self.session.execute(
             text(
                 "UPDATE chat_sessions SET updated_at=:now, expires_at=:expires_at "
-                "WHERE session_id=:session_id"
+                "WHERE session_id=:session_id AND archived_at IS NULL"
             ),
             {
                 "session_id": str(session_id),
@@ -97,14 +106,16 @@ class ChatStore:
         )
         await self.session.commit()
 
-    async def list_sessions(self, owner_subject: str, limit: int = 20) -> list[dict[str, Any]]:
+    async def list_sessions(self, owner_subject: str, limit: int = 50) -> list[dict[str, Any]]:
         rows = (
             await self.session.execute(
                 text(
                     """
-                    SELECT session_id, owner_subject, owner_roles, created_at, updated_at, expires_at
+                    SELECT session_id, owner_subject, owner_roles, title, created_at, updated_at, expires_at
                     FROM chat_sessions
-                    WHERE owner_subject=:owner_subject AND expires_at>CURRENT_TIMESTAMP
+                    WHERE owner_subject=:owner_subject
+                      AND archived_at IS NULL
+                      AND expires_at>CURRENT_TIMESTAMP
                     ORDER BY updated_at DESC LIMIT :limit
                     """
                 ),
@@ -112,6 +123,63 @@ class ChatStore:
             )
         ).mappings().all()
         return [dict(row) for row in rows]
+
+    async def rename_session(
+        self,
+        session_id: UUID | str,
+        owner_subject: str,
+        title: str,
+    ) -> Optional[dict[str, Any]]:
+        normalized = _title(title)
+        if not normalized:
+            raise ValueError("chat_session_title_required")
+        row = (
+            await self.session.execute(
+                text(
+                    """
+                    UPDATE chat_sessions
+                    SET title=:title, updated_at=CURRENT_TIMESTAMP
+                    WHERE session_id=:session_id
+                      AND owner_subject=:owner_subject
+                      AND archived_at IS NULL
+                    RETURNING session_id, owner_subject, owner_roles, title, created_at, updated_at, expires_at
+                    """
+                ),
+                {
+                    "session_id": str(session_id),
+                    "owner_subject": owner_subject,
+                    "title": normalized,
+                },
+            )
+        ).mappings().first()
+        await self.session.commit()
+        return dict(row) if row else None
+
+    async def archive_session(self, session_id: UUID | str, owner_subject: str) -> bool:
+        """Erase chat content and hide the session without deleting governance records."""
+
+        row = (
+            await self.session.execute(
+                text(
+                    """
+                    UPDATE chat_sessions
+                    SET archived_at=CURRENT_TIMESTAMP, updated_at=CURRENT_TIMESTAMP
+                    WHERE session_id=:session_id
+                      AND owner_subject=:owner_subject
+                      AND archived_at IS NULL
+                    RETURNING session_id
+                    """
+                ),
+                {"session_id": str(session_id), "owner_subject": owner_subject},
+            )
+        ).mappings().first()
+        if row:
+            await self.session.execute(
+                text("DELETE FROM chat_messages WHERE session_id=:session_id"),
+                {"session_id": str(session_id)},
+            )
+        await self.session.commit()
+        return bool(row)
 
     async def add_message(
         self,
@@ -123,8 +191,6 @@ class ChatStore:
         normalized_role = str(role).strip().lower()
         if normalized_role not in {"user", "assistant", "tool"}:
             raise ValueError("invalid_chat_message_role")
-        # History becomes LLM context on later turns, so redact before durable
-        # persistence rather than only at log/response time.
         bounded = redact_text(str(content))[:16000]
         row = (
             await self.session.execute(
@@ -145,6 +211,19 @@ class ChatStore:
                 },
             )
         ).mappings().one()
+        if normalized_role == "user":
+            generated_title = _title(bounded)
+            if generated_title:
+                await self.session.execute(
+                    text(
+                        """
+                        UPDATE chat_sessions
+                        SET title=COALESCE(NULLIF(title, ''), :title)
+                        WHERE session_id=:session_id AND archived_at IS NULL
+                        """
+                    ),
+                    {"session_id": str(session_id), "title": generated_title},
+                )
         await self.session.commit()
         return dict(row)
 
