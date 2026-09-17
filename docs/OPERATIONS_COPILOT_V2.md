@@ -33,11 +33,12 @@ The direct chatbot LLM stage receives one bounded repair attempt for an obviousl
 
 ## Operator-safe errors
 
-Raw exceptions and tracebacks never render in the conversation. Representative messages are intentionally short:
+Raw exceptions and tracebacks never render in the conversation. Representative messages are intentionally short while identifying the failing component when it is known:
 
 - `LLM پاسخ نداد. دوباره تلاش کنید.`
 - `MCP پاسخ نداد. دوباره تلاش کنید.`
-- `درخواست به دلیل Timeout کامل نشد.`
+- `درخواست به دلیل Timeout در LLM کامل نشد.`
+- `ارتباط با MCP به دلیل Timeout کامل نشد.`
 - `دسترسی کافی ندارید.`
 - `خطای موقت در دیتابیس.`
 
