@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 337 | Dashboard JS files scanned: 3 | Symbols indexed: 2856**
+**Python files scanned: 345 | Dashboard JS files scanned: 3 | Symbols indexed: 2971**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -657,12 +657,16 @@
 | `apps/api/agents.py` | `_agent_metric_items` | 64 | function | Normalize process-local telemetry into the dashboard/API list contract. | module |
 | `apps/api/agents.py` | `agent_metrics` | 77 | async function | Return process-local Agent observability counters. | module |
 | `apps/api/audit.py` | `list_audit_events` | 15 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
-| `apps/api/chatbot.py` | `_iso` | 28 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/chatbot.py` | `chatbot_me` | 33 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/chatbot.py` | `chatbot_message` | 50 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/chatbot.py` | `chatbot_sessions` | 58 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/chatbot.py` | `chatbot_history` | 73 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/chatbot.py` | `chatbot_action_decision` | 102 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/chatbot.py` | `_iso` | 30 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/chatbot.py` | `_session_summary` | 34 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/chatbot.py` | `chatbot_me` | 45 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/chatbot.py` | `chatbot_message` | 62 | async function | Backward-compatible request/response Chatbot API. | module |
+| `apps/api/chatbot.py` | `chatbot_message_stream` | 74 | async function | SSE transport with heartbeat and a typed terminal outcome. | module |
+| `apps/api/chatbot.py` | `chatbot_sessions` | 89 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/chatbot.py` | `chatbot_rename_session` | 96 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/chatbot.py` | `chatbot_delete_session` | 109 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/chatbot.py` | `chatbot_history` | 121 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/chatbot.py` | `chatbot_action_decision` | 150 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/cognia_scope.py` | `reject_untrusted_knowledge_subject` | 8 | function | Reject caller-supplied Cognia ExternalSubject scope on public workflow APIs. | module |
 | `apps/api/dashboard.py` | `dashboard_summary` | 15 | async function | Return live PostgreSQL-backed KPIs. Database failures are never converted to fake zeroes. | module |
 | `apps/api/dashboard_incidents.py` | `dashboard_incidents` | 13 | async function | Operational incident list enriched from durable governance/audit state. | module |
@@ -806,19 +810,39 @@
 | `apps/audit_service/postgres.py` | `PostgreSQLAuditStore.__init__` | 33 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | PostgreSQLAuditStore |
 | `apps/audit_service/postgres.py` | `PostgreSQLAuditStore.append` | 36 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | PostgreSQLAuditStore |
 | `apps/audit_service/postgres.py` | `PostgreSQLAuditStore.list` | 55 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | PostgreSQLAuditStore |
+| `apps/chatbot/errors.py` | `ChatErrorDescriptor` | 11 | class | کلاس | module |
+| `apps/chatbot/errors.py` | `ChatErrorDescriptor.public_payload` | 18 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatErrorDescriptor |
+| `apps/chatbot/errors.py` | `classify_chatbot_error` | 64 | function | Convert internal failures into short operator-safe terminal errors. | module |
 | `apps/chatbot/models.py` | `ChatMessageRequest` | 11 | class | کلاس | module |
 | `apps/chatbot/models.py` | `ChatActionDecisionRequest` | 16 | class | کلاس | module |
-| `apps/chatbot/models.py` | `ActionProposalView` | 20 | class | کلاس | module |
-| `apps/chatbot/models.py` | `ActionProposalView.redact_parameters` | 32 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ActionProposalView |
-| `apps/chatbot/models.py` | `ChatMessageResponse` | 36 | class | کلاس | module |
-| `apps/chatbot/models.py` | `ChatMessageResponse.redact_message` | 47 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatMessageResponse |
-| `apps/chatbot/models.py` | `ChatMessageResponse.redact_data` | 52 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatMessageResponse |
-| `apps/chatbot/models.py` | `ChatSessionSummary` | 56 | class | کلاس | module |
-| `apps/chatbot/models.py` | `ChatHistoryMessage` | 63 | class | کلاس | module |
-| `apps/chatbot/models.py` | `ChatHistoryMessage.redact_content` | 71 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatHistoryMessage |
-| `apps/chatbot/models.py` | `ChatHistoryMessage.redact_metadata` | 76 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatHistoryMessage |
-| `apps/chatbot/models.py` | `ChatHistoryResponse` | 80 | class | کلاس | module |
-| `apps/chatbot/models.py` | `ChatIdentityResponse` | 85 | class | کلاس | module |
+| `apps/chatbot/models.py` | `ChatSessionRenameRequest` | 20 | class | کلاس | module |
+| `apps/chatbot/models.py` | `ChatSessionRenameRequest.normalize_title` | 25 | method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | ChatSessionRenameRequest |
+| `apps/chatbot/models.py` | `ActionProposalView` | 29 | class | کلاس | module |
+| `apps/chatbot/models.py` | `ActionProposalView.redact_parameters` | 41 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ActionProposalView |
+| `apps/chatbot/models.py` | `ChatMessageResponse` | 45 | class | کلاس | module |
+| `apps/chatbot/models.py` | `ChatMessageResponse.redact_message` | 56 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatMessageResponse |
+| `apps/chatbot/models.py` | `ChatMessageResponse.redact_data` | 61 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatMessageResponse |
+| `apps/chatbot/models.py` | `ChatSessionSummary` | 65 | class | کلاس | module |
+| `apps/chatbot/models.py` | `ChatSessionSummary.redact_title` | 74 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatSessionSummary |
+| `apps/chatbot/models.py` | `ChatHistoryMessage` | 80 | class | کلاس | module |
+| `apps/chatbot/models.py` | `ChatHistoryMessage.redact_content` | 88 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatHistoryMessage |
+| `apps/chatbot/models.py` | `ChatHistoryMessage.redact_metadata` | 93 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatHistoryMessage |
+| `apps/chatbot/models.py` | `ChatHistoryResponse` | 97 | class | کلاس | module |
+| `apps/chatbot/models.py` | `ChatIdentityResponse` | 102 | class | کلاس | module |
+| `apps/chatbot/reliable_service.py` | `_looks_obviously_incomplete` | 42 | function | Reject only strong incomplete-prefix signals for direct chatbot answers. | module |
+| `apps/chatbot/reliable_service.py` | `_is_timeout_error` | 57 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/chatbot/reliable_service.py` | `_is_connection_error` | 63 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/chatbot/reliable_service.py` | `ReliableChatLLMAdapter` | 70 | class | Chat-stage reliability wrapper around the configured LLM adapter. | module |
+| `apps/chatbot/reliable_service.py` | `ReliableChatLLMAdapter.__init__` | 73 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ReliableChatLLMAdapter |
+| `apps/chatbot/reliable_service.py` | `ReliableChatLLMAdapter.provider_name` | 77 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ReliableChatLLMAdapter |
+| `apps/chatbot/reliable_service.py` | `ReliableChatLLMAdapter.generate` | 80 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ReliableChatLLMAdapter |
+| `apps/chatbot/reliable_service.py` | `ReliableChatLLMAdapter.generate_with_messages` | 101 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ReliableChatLLMAdapter |
+| `apps/chatbot/reliable_service.py` | `OperationsCopilotService` | 154 | class | ChatbotService reliability/UI adapter without changing governance boundaries. | module |
+| `apps/chatbot/reliable_service.py` | `OperationsCopilotService.__init__` | 157 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationsCopilotService |
+| `apps/chatbot/reliable_service.py` | `OperationsCopilotService._llm` | 161 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationsCopilotService |
+| `apps/chatbot/reliable_service.py` | `OperationsCopilotService.message` | 169 | async method | Preserve safe cause categories after the base service fail-closed wrapper. | OperationsCopilotService |
+| `apps/chatbot/reliable_service.py` | `OperationsCopilotService._execute_read` | 196 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationsCopilotService |
+| `apps/chatbot/reliable_service.py` | `OperationsCopilotService._summarize` | 208 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationsCopilotService |
 | `apps/chatbot/service.py` | `_iso` | 73 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/chatbot/service.py` | `_has_permission` | 79 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/chatbot/service.py` | `ChatbotService` | 83 | class | LLM-assisted, policy-enforced operations copilot. | module |
@@ -837,17 +861,28 @@
 | `apps/chatbot/service.py` | `ChatbotService.decide` | 550 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
 | `apps/chatbot/store.py` | `_utcnow` | 19 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/chatbot/store.py` | `_json` | 23 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/chatbot/store.py` | `ChatStore` | 27 | class | Durable PostgreSQL store for chat ownership, history and action proposals. | module |
-| `apps/chatbot/store.py` | `ChatStore.__init__` | 30 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatStore |
-| `apps/chatbot/store.py` | `ChatStore.create_session` | 33 | async method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | ChatStore |
-| `apps/chatbot/store.py` | `ChatStore.get_session` | 59 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | ChatStore |
-| `apps/chatbot/store.py` | `ChatStore.touch_session` | 85 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatStore |
-| `apps/chatbot/store.py` | `ChatStore.list_sessions` | 100 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | ChatStore |
-| `apps/chatbot/store.py` | `ChatStore.add_message` | 116 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatStore |
-| `apps/chatbot/store.py` | `ChatStore.history` | 151 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatStore |
-| `apps/chatbot/store.py` | `ChatStore.create_proposal` | 170 | async method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | ChatStore |
-| `apps/chatbot/store.py` | `ChatStore.get_proposal` | 220 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | ChatStore |
-| `apps/chatbot/store.py` | `ChatStore.transition_proposal` | 250 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatStore |
+| `apps/chatbot/store.py` | `_title` | 27 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/chatbot/store.py` | `ChatStore` | 31 | class | Durable PostgreSQL store for chat ownership, history and action proposals. | module |
+| `apps/chatbot/store.py` | `ChatStore.__init__` | 34 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatStore |
+| `apps/chatbot/store.py` | `ChatStore.create_session` | 37 | async method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | ChatStore |
+| `apps/chatbot/store.py` | `ChatStore.get_session` | 63 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | ChatStore |
+| `apps/chatbot/store.py` | `ChatStore.touch_session` | 94 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatStore |
+| `apps/chatbot/store.py` | `ChatStore.list_sessions` | 109 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | ChatStore |
+| `apps/chatbot/store.py` | `ChatStore.rename_session` | 127 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatStore |
+| `apps/chatbot/store.py` | `ChatStore.archive_session` | 158 | async method | Erase chat content and hide the session without deleting governance records. | ChatStore |
+| `apps/chatbot/store.py` | `ChatStore.add_message` | 184 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatStore |
+| `apps/chatbot/store.py` | `ChatStore.history` | 230 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatStore |
+| `apps/chatbot/store.py` | `ChatStore.create_proposal` | 249 | async method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | ChatStore |
+| `apps/chatbot/store.py` | `ChatStore.get_proposal` | 299 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | ChatStore |
+| `apps/chatbot/store.py` | `ChatStore.transition_proposal` | 329 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatStore |
+| `apps/chatbot/streaming.py` | `_sse` | 36 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/chatbot/streaming.py` | `_chunks` | 41 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/chatbot/streaming.py` | `_cancel_inflight` | 48 | async function | Request cancellation and give the child coroutine a scheduling turn to clean up. | module |
+| `apps/chatbot/streaming.py` | `_ensure_session` | 69 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/chatbot/streaming.py` | `_persist_terminal_error` | 77 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/chatbot/streaming.py` | `_persist_interruption` | 108 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/chatbot/streaming.py` | `_event_stream` | 125 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/chatbot/streaming.py` | `chatbot_streaming_response` | 241 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/chatbot/tools.py` | `ToolIntent` | 15 | class | کلاس | module |
 | `apps/chatbot/tools.py` | `max_tool_calls` | 164 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/chatbot/tools.py` | `_safe_name` | 168 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
@@ -1207,28 +1242,60 @@
 | `dashboards/approval-actions.js` | `agentAnalysisCard` | 362 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
 | `dashboards/approval-actions.js` | `renderDetailWithAgentAnalysis` | 405 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
 | `dashboards/approval-actions.js` | `loadAgentsWithReliabilityContract` | 420 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
-| `dashboards/chatbot.js` | `apiKey` | 25 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/chatbot.js` | `sessionId` | 29 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/chatbot.js` | `setBusy` | 33 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/chatbot.js` | `authHeaders` | 39 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/chatbot.js` | `api` | 45 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/chatbot.js` | `friendlyError` | 62 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/chatbot.js` | `renderEmptyState` | 69 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/chatbot.js` | `clearConversation` | 82 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/chatbot.js` | `removeEmptyState` | 88 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/chatbot.js` | `addMessage` | 93 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/chatbot.js` | `addProposalControls` | 117 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/chatbot.js` | `decide` | 130 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/chatbot.js` | `shortTitle` | 154 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/chatbot.js` | `historyTitle` | 160 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/chatbot.js` | `firstUser` | 161 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/chatbot.js` | `formatSessionTime` | 165 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/chatbot.js` | `renderSessionList` | 175 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/chatbot.js` | `loadSessions` | 209 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
-| `dashboards/chatbot.js` | `renderResponse` | 221 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/chatbot.js` | `loadHistory` | 230 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
-| `dashboards/chatbot.js` | `selectSession` | 265 | JavaScript function | بر اساس state/capability مسیر یا handler مناسب را انتخاب می‌کند | browser module |
-| `dashboards/chatbot.js` | `validateLogin` | 278 | JavaScript function | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | browser module |
+| `dashboards/chatbot.js` | `$` | 9 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `apiKey` | 54 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `sessionId` | 55 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `authHeaders` | 57 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `api` | 63 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `friendlyHttpError` | 86 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `toast` | 96 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `copyText` | 104 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `appendInline` | 113 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `tableCells` | 141 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `isTableSeparator` | 148 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `renderSafeMarkdown` | 153 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/chatbot.js` | `isNearBottom` | 296 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `updateScrollAffordance` | 300 | JavaScript function | state یا داده را به‌صورت durable ذخیره/به‌روزرسانی می‌کند | browser module |
+| `dashboards/chatbot.js` | `messagesInner` | 305 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `renderEmptyState` | 315 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/chatbot.js` | `clearConversation` | 346 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `removeEmptyState` | 352 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `scrollToLatest` | 357 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `badge` | 364 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `addDetails` | 372 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `operationalEntries` | 391 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `first` | 395 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `addOperationalFacts` | 414 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `addMessage` | 436 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `addProposalControls` | 512 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `decide` | 570 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `renderResponse` | 595 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/chatbot.js` | `renderTerminalError` | 602 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/chatbot.js` | `showStatus` | 611 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/chatbot.js` | `hideStatus` | 617 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `activeSession` | 623 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `formatSessionTime` | 627 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `renderSessionSkeleton` | 640 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/chatbot.js` | `renderSessionList` | 651 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/chatbot.js` | `rows` | 654 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `loadSessions` | 724 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
+| `dashboards/chatbot.js` | `draftKey` | 737 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `saveDraft` | 741 | JavaScript function | state یا داده را به‌صورت durable ذخیره/به‌روزرسانی می‌کند | browser module |
+| `dashboards/chatbot.js` | `restoreDraft` | 745 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `loadHistory` | 750 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
+| `dashboards/chatbot.js` | `selectSession` | 803 | JavaScript function | بر اساس state/capability مسیر یا handler مناسب را انتخاب می‌کند | browser module |
+| `dashboards/chatbot.js` | `parseSseBlock` | 821 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `streamMessage` | 839 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `setStreaming` | 879 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `stopGeneration` | 887 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `createStreamView` | 893 | JavaScript function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | browser module |
+| `dashboards/chatbot.js` | `finishStream` | 909 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `sendMessage` | 928 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `validateLogin` | 1023 | JavaScript function | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | browser module |
+| `dashboards/chatbot.js` | `updateComposerMetrics` | 1035 | JavaScript function | state یا داده را به‌صورت durable ذخیره/به‌روزرسانی می‌کند | browser module |
+| `dashboards/chatbot.js` | `openSidebar` | 1041 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `closeSidebar` | 1048 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `applyTheme` | 1054 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
 | `dashboards/control-center.js` | `$` | 14 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
 | `dashboards/control-center.js` | `$$` | 15 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
 | `dashboards/control-center.js` | `esc` | 16 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
@@ -1301,6 +1368,8 @@
 | `database/migrations/versions/f2b3c4d5e6f7_approval_consumed_state.py` | `downgrade` | 24 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `database/migrations/versions/f3c4d5e6f7a8_add_chatbot_persistence.py` | `upgrade` | 16 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `database/migrations/versions/f3c4d5e6f7a8_add_chatbot_persistence.py` | `downgrade` | 69 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `database/migrations/versions/g4d5e6f7a8b9_chatbot_operations_copilot_v2.py` | `upgrade` | 16 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `database/migrations/versions/g4d5e6f7a8b9_chatbot_operations_copilot_v2.py` | `downgrade` | 25 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `domain/action_plan.py` | `ActionPlan` | 5 | class | کلاس | module |
 | `domain/audit_event.py` | `AuditEvent` | 6 | class | کلاس | module |
 | `domain/contracts/config.py` | `Settings` | 8 | class | Typed loader for the centralized runtime environment contract. | module |
@@ -1726,6 +1795,7 @@
 | `tests/integration/test_chatbot_llm_acceptance.py` | `test_mutation_message_creates_pending_proposal_without_execution.forbidden_execute` | 159 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_mutation_message_creates_pending_proposal_without_execution |
 | `tests/integration/test_chatbot_llm_acceptance.py` | `test_viewer_mutation_is_policy_blocked_without_proposal_or_execution` | 183 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/integration/test_chatbot_llm_acceptance.py` | `test_viewer_mutation_is_policy_blocked_without_proposal_or_execution.forbidden_execute` | 199 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_viewer_mutation_is_policy_blocked_without_proposal_or_execution |
+| `tests/integration/test_chatbot_session_management_acceptance.py` | `test_chat_session_auto_title_rename_and_delete_preserve_governance_boundary` | 17 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/integration/test_chatbot_tool_acceptance.py` | `ToolSelectingLLM` | 22 | class | کلاس | module |
 | `tests/integration/test_chatbot_tool_acceptance.py` | `ToolSelectingLLM.__init__` | 23 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ToolSelectingLLM |
 | `tests/integration/test_chatbot_tool_acceptance.py` | `ToolSelectingLLM.provider_name` | 30 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ToolSelectingLLM |
@@ -2115,7 +2185,7 @@
 | `tests/unit/test_chatbot_auth_api.py` | `test_viewer_can_login_but_only_has_read_permissions` | 28 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_chatbot_auth_api.py` | `test_operator_can_login_without_high_risk_execution` | 40 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_chatbot_auth_api.py` | `test_sre_can_login_with_existing_high_risk_approval_and_execution_permissions` | 51 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_chatbot_auth_api.py` | `test_chatbot_message_and_action_decision_use_strict_rate_limiter` | 59 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_auth_api.py` | `test_chatbot_message_stream_and_action_decision_use_strict_rate_limiter` | 59 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_chatbot_conversation_policy.py` | `RecordingSummaryLLM` | 9 | class | کلاس | module |
 | `tests/unit/test_chatbot_conversation_policy.py` | `RecordingSummaryLLM.__init__` | 10 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RecordingSummaryLLM |
 | `tests/unit/test_chatbot_conversation_policy.py` | `RecordingSummaryLLM.provider_name` | 15 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RecordingSummaryLLM |
@@ -2126,21 +2196,66 @@
 | `tests/unit/test_chatbot_conversation_policy.py` | `test_recent_operator_context_keeps_substantive_persian_turns_for_short_followups` | 49 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_chatbot_conversation_policy.py` | `test_vm_disk_tool_contract_exposes_exact_mount_available_bytes_without_confirmation` | 64 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_chatbot_conversation_policy.py` | `test_summary_receives_persian_context_and_exact_mount_payload` | 73 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_ui_uses_session_storage_not_persistent_local_storage` | 4 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_ui_renders_server_text_without_inner_html` | 12 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_api_key_is_not_placed_in_message_payload` | 22 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_ui_has_conversation_history_sidebar_without_quick_action_buttons` | 31 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_ui_preserves_natural_persian_input_and_bidi_rendering` | 45 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_document_cache_busts_frontend_assets` | 60 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_safe_markdown_renderer_supports_common_llm_formatting_without_html_injection` | 67 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_error_taxonomy.py` | `test_llm_and_mcp_errors_are_short_operator_safe_messages` | 8 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_error_taxonomy.py` | `test_llm_and_mcp_timeouts_remain_distinct_and_do_not_expose_raw_details` | 19 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_error_taxonomy.py` | `test_timeout_and_database_errors_do_not_expose_raw_exception_text` | 35 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_error_taxonomy.py` | `test_timeout_and_database_errors_do_not_expose_raw_exception_text.AsyncPGDatabaseError` | 38 | class | کلاس | test_timeout_and_database_errors_do_not_expose_raw_exception_text |
+| `tests/unit/test_chatbot_error_taxonomy.py` | `test_permission_and_validation_errors_are_not_retryable` | 48 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_frontend_security.py` | `_script` | 4 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_chatbot_frontend_security.py` | `_html` | 8 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_chatbot_frontend_security.py` | `_css` | 12 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_ui_uses_session_storage_not_persistent_local_storage` | 16 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_ui_renders_server_text_without_unsafe_html_injection` | 24 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_api_key_is_not_placed_in_message_payload` | 35 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_ui_has_modern_history_controls_without_quick_action_buttons` | 42 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_ui_preserves_natural_persian_input_and_bidi_rendering` | 61 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_ui_supports_english_and_mixed_rtl_ltr_without_client_rewriting` | 73 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_document_cache_busts_frontend_assets` | 85 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_safe_markdown_renderer_supports_headings_code_tables_and_lists_without_html_injection` | 92 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_frontend_uses_stream_transport_stop_and_terminal_error_states` | 105 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_stream_has_no_infinite_spinner_timeout` | 118 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_product_identity_is_visible_in_login_and_primary_header` | 127 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_theme_contract_is_tokenized_and_light_mode_is_neutral` | 135 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_theme_switch_is_session_scoped_and_accessible` | 152 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_composer_and_scroll_behavior_match_operations_chat_contract` | 162 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_tool_proposal_and_error_states_remain_governed_and_compact` | 177 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_accessibility_and_responsive_contracts_are_present` | 191 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_chatbot_kubernetes_contract.py` | `test_kubernetes_chatbot_reads_extend_existing_mcp_tool_not_tool_names` | 10 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_chatbot_kubernetes_contract.py` | `test_kubernetes_native_evidence_client_remains_get_only` | 20 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_chatbot_kubernetes_contract.py` | `test_kubernetes_read_operations_are_normalized_without_direct_api_mutation` | 32 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_chatbot_kubernetes_contract.py` | `test_kubernetes_read_operations_are_normalized_without_direct_api_mutation.fake_get` | 35 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_kubernetes_read_operations_are_normalized_without_direct_api_mutation |
 | `tests/unit/test_chatbot_kubernetes_contract.py` | `test_kubernetes_mcp_client_sends_only_allowlisted_read_tool` | 63 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_chatbot_kubernetes_contract.py` | `test_kubernetes_mcp_client_sends_only_allowlisted_read_tool.fake_call_tool` | 67 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_kubernetes_mcp_client_sends_only_allowlisted_read_tool |
+| `tests/unit/test_chatbot_reliable_service.py` | `SequencedLLM` | 15 | class | کلاس | module |
+| `tests/unit/test_chatbot_reliable_service.py` | `SequencedLLM.__init__` | 16 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SequencedLLM |
+| `tests/unit/test_chatbot_reliable_service.py` | `SequencedLLM.provider_name` | 21 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SequencedLLM |
+| `tests/unit/test_chatbot_reliable_service.py` | `SequencedLLM.generate` | 24 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SequencedLLM |
+| `tests/unit/test_chatbot_reliable_service.py` | `SequencedLLM.generate_with_messages` | 31 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SequencedLLM |
+| `tests/unit/test_chatbot_reliable_service.py` | `response` | 39 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_chatbot_reliable_service.py` | `test_direct_chat_incomplete_detector_is_conservative` | 43 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_reliable_service.py` | `test_chatbot_intent_retries_one_incomplete_direct_answer_before_persistence` | 53 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_reliable_service.py` | `test_chatbot_intent_fails_closed_after_bounded_incomplete_retry` | 74 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_reliable_service.py` | `test_non_chatbot_stage_does_not_add_chat_repair_semantics` | 87 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_reliable_service.py` | `test_operations_copilot_preserves_safe_failure_cause_taxonomy` | 118 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_reliable_service.py` | `test_operations_copilot_preserves_safe_failure_cause_taxonomy.fail_closed_base_message` | 125 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_operations_copilot_preserves_safe_failure_cause_taxonomy |
 | `tests/unit/test_chatbot_response_redaction.py` | `test_chatbot_response_redacts_inline_secrets_before_ui_serialization` | 7 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_chatbot_response_redaction.py` | `test_chat_history_response_applies_same_redaction_defense_in_depth` | 22 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_stream_contract.py` | `_parse_event` | 12 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_chatbot_stream_contract.py` | `test_sse_encoder_is_utf8_json_and_chunks_preserve_text` | 19 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_stream_contract.py` | `SuccessfulService` | 28 | class | کلاس | module |
+| `tests/unit/test_chatbot_stream_contract.py` | `SuccessfulService.message` | 29 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SuccessfulService |
+| `tests/unit/test_chatbot_stream_contract.py` | `FailedService` | 40 | class | کلاس | module |
+| `tests/unit/test_chatbot_stream_contract.py` | `FailedService.message` | 41 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FailedService |
+| `tests/unit/test_chatbot_stream_contract.py` | `BlockingService` | 46 | class | کلاس | module |
+| `tests/unit/test_chatbot_stream_contract.py` | `BlockingService.__init__` | 47 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BlockingService |
+| `tests/unit/test_chatbot_stream_contract.py` | `BlockingService.message` | 51 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BlockingService |
+| `tests/unit/test_chatbot_stream_contract.py` | `test_every_successful_stream_has_terminal_complete_event` | 60 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_stream_contract.py` | `test_failed_stream_emits_short_terminal_error_instead_of_ending_silently` | 79 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_stream_contract.py` | `test_failed_stream_emits_short_terminal_error_instead_of_ending_silently.no_persist` | 80 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_failed_stream_emits_short_terminal_error_instead_of_ending_silently |
+| `tests/unit/test_chatbot_stream_contract.py` | `test_early_stream_close_cancels_inflight_work_and_persists_terminal_state` | 100 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_stream_contract.py` | `test_early_stream_close_cancels_inflight_work_and_persists_terminal_state.record_persist` | 103 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_early_stream_close_cancels_inflight_work_and_persists_terminal_state |
+| `tests/unit/test_chatbot_stream_contract.py` | `test_close_after_complete_does_not_persist_contradictory_interruption` | 135 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_stream_contract.py` | `test_close_after_complete_does_not_persist_contradictory_interruption.record_persist` | 138 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_close_after_complete_does_not_persist_contradictory_interruption |
 | `tests/unit/test_chatbot_summary_completion_repair.py` | `SequencedProvider` | 9 | class | کلاس | module |
 | `tests/unit/test_chatbot_summary_completion_repair.py` | `SequencedProvider.__init__` | 10 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SequencedProvider |
 | `tests/unit/test_chatbot_summary_completion_repair.py` | `SequencedProvider.generate_with_messages` | 15 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SequencedProvider |
