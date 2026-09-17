@@ -61,7 +61,7 @@ async def _seed_proposal(owner: str = "chatbot-db-sre"):
     return session_uuid, incident_id, proposal
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio(loop_scope="session")
 async def test_chat_session_and_proposal_are_owner_scoped():
     session_id, incident_id, proposal = await _seed_proposal("chatbot-owner-a")
     async with AsyncSessionLocal() as db:
@@ -75,7 +75,7 @@ async def test_chat_session_and_proposal_are_owner_scoped():
         await db.commit()
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio(loop_scope="session")
 async def test_confirmed_vm_action_uses_durable_approval_consumption_and_is_not_replayable(monkeypatch):
     session_id, incident_id, proposal = await _seed_proposal("chatbot-exec-sre")
     identity = Identity(subject="chatbot-exec-sre", roles=("sre",))
@@ -124,7 +124,7 @@ async def test_confirmed_vm_action_uses_durable_approval_consumption_and_is_not_
         await db.commit()
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio(loop_scope="session")
 async def test_action_parameter_tampering_after_proposal_is_blocked_before_approval(monkeypatch):
     session_id, incident_id, proposal = await _seed_proposal("chatbot-tamper-sre")
     identity = Identity(subject="chatbot-tamper-sre", roles=("sre",))
