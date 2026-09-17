@@ -17,6 +17,15 @@ class ChatActionDecisionRequest(BaseModel):
     confirm: bool
 
 
+class ChatSessionRenameRequest(BaseModel):
+    title: str = Field(..., min_length=1, max_length=160)
+
+    @field_validator("title", mode="before")
+    @classmethod
+    def normalize_title(cls, value: Any) -> str:
+        return " ".join(redact_text(str(value or "")).split()).strip()
+
+
 class ActionProposalView(BaseModel):
     proposal_id: UUID
     incident_id: UUID
@@ -55,9 +64,17 @@ class ChatMessageResponse(BaseModel):
 
 class ChatSessionSummary(BaseModel):
     session_id: UUID
+    title: Optional[str] = None
     created_at: str
     updated_at: str
     expires_at: str
+
+    @field_validator("title", mode="before")
+    @classmethod
+    def redact_title(cls, value: Any) -> Optional[str]:
+        if value in (None, ""):
+            return None
+        return redact_text(str(value))[:160]
 
 
 class ChatHistoryMessage(BaseModel):

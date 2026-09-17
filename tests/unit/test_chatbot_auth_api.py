@@ -56,9 +56,14 @@ def test_sre_can_login_with_existing_high_risk_approval_and_execution_permission
     assert {"read:incident", "approve:high_risk", "execute:approved"} <= permissions
 
 
-def test_chatbot_message_and_action_decision_use_strict_rate_limiter():
-    message_route = next(route for route in router.routes if route.path == "/chatbot/message")
-    decision_route = next(route for route in router.routes if route.path == "/chatbot/actions/{proposal_id}/decision")
-    for route in (message_route, decision_route):
+def test_chatbot_message_stream_and_action_decision_use_strict_rate_limiter():
+    protected_paths = {
+        "/chatbot/message",
+        "/chatbot/message/stream",
+        "/chatbot/actions/{proposal_id}/decision",
+    }
+    routes = [route for route in router.routes if route.path in protected_paths]
+    assert {route.path for route in routes} == protected_paths
+    for route in routes:
         dependency_calls = {dependency.call for dependency in route.dependant.dependencies}
         assert rate_limiter_strict in dependency_calls

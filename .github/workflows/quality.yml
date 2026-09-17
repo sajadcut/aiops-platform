@@ -291,7 +291,7 @@ jobs:
                   cur.execute("SELECT to_regclass('public.chat_sessions'), to_regclass('public.chat_messages'), to_regclass('public.chat_action_proposals')")
                   assert cur.fetchone() == ('chat_sessions', 'chat_messages', 'chat_action_proposals'), 'chatbot persistence was not created during forward migration'
                   cur.execute("SELECT version_num FROM alembic_version")
-                  assert cur.fetchone()[0] == 'f3c4d5e6f7a8'
+                  assert cur.fetchone()[0] == 'g4d5e6f7a8b9'
           PY
       - name: Migration downgrade and clean rebuild
         run: |
