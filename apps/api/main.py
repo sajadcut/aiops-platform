@@ -9,7 +9,7 @@ from domain.contracts.logging import configure_logging, logger
 from domain.contracts.exceptions import register_exception_handlers
 from domain.contracts.rate_limit import rate_limiter_strict
 
-from apps.api import health, workflow, incidents, a2a, execution, e2e_workflow, audit, runbooks, incident_resources, dashboard, runbook_execution, dashboard_incidents, remediation, agents, signals
+from apps.api import health, workflow, incidents, a2a, execution, e2e_workflow, audit, runbooks, incident_resources, dashboard, runbook_execution, dashboard_incidents, remediation, agents, signals, chatbot
 from apps.api.http_logging import HTTPTransactionLoggingMiddleware
 from apps.execution_service.tools.registry import tool_registry
 from apps.execution_service.tools.mock_executor import MockExecutorTool
@@ -51,6 +51,7 @@ for router, tags in [
     (dashboard.router, ["Dashboard"]),
     (dashboard_incidents.router, ["Dashboard Incidents"]),
     (agents.router, ["Agents"]),
+    (chatbot.router, ["Chatbot"]),
 ]:
     app.include_router(router, prefix="/api/v1", tags=tags)
 
@@ -72,7 +73,14 @@ _DASHBOARD_DIR = Path(__file__).resolve().parents[2] / "dashboards"
 
 @app.get("/")
 async def root():
-    return {"message": f"Welcome to {settings.APP_NAME}", "version": settings.APP_VERSION, "docs": "/docs", "dashboard": "/dashboard", "agent_dashboard": "/dashboard/agents"}
+    return {
+        "message": f"Welcome to {settings.APP_NAME}",
+        "version": settings.APP_VERSION,
+        "docs": "/docs",
+        "dashboard": "/dashboard",
+        "agent_dashboard": "/dashboard/agents",
+        "chatbot": "/chatbot",
+    }
 
 
 @app.get("/dashboard", include_in_schema=False)
@@ -108,6 +116,26 @@ async def dashboard_approval_stylesheet():
 @app.get("/dashboard/approval-actions.js", include_in_schema=False)
 async def dashboard_approval_script():
     return FileResponse(_DASHBOARD_DIR / "approval-actions.js", media_type="application/javascript")
+
+
+@app.get("/chatbot", include_in_schema=False)
+async def chatbot_page():
+    return FileResponse(_DASHBOARD_DIR / "chatbot.html")
+
+
+@app.get("/chatbot/", include_in_schema=False)
+async def chatbot_page_slash():
+    return FileResponse(_DASHBOARD_DIR / "chatbot.html")
+
+
+@app.get("/chatbot/chatbot.css", include_in_schema=False)
+async def chatbot_stylesheet():
+    return FileResponse(_DASHBOARD_DIR / "chatbot.css", media_type="text/css")
+
+
+@app.get("/chatbot/chatbot.js", include_in_schema=False)
+async def chatbot_script():
+    return FileResponse(_DASHBOARD_DIR / "chatbot.js", media_type="application/javascript")
 
 
 def _is_http_or_https(value: str | None) -> bool:
