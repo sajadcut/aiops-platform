@@ -45,6 +45,27 @@ def _chunks(text: str, size: int = 28) -> list[str]:
     return [value[index:index + size] for index in range(0, len(value), size)]
 
 
+async def _cancel_inflight(task: asyncio.Task[Any]) -> None:
+    """Request cancellation and give the child coroutine a scheduling turn to clean up."""
+
+    if task.done():
+        return
+    task.cancel()
+    # Merely calling Task.cancel() does not run provider/MCP cleanup immediately.
+    # Yield once so finally blocks can release sockets/resources before the SSE
+    # generator itself exits. Never wait indefinitely on cancellation cleanup.
+    await asyncio.sleep(0)
+    if task.done():
+        try:
+            task.result()
+        except asyncio.CancelledError:
+            pass
+        except Exception:
+            # The terminal stream state is already determined by the parent;
+            # consuming a late child failure prevents an unhandled-task warning.
+            pass
+
+
 async def _ensure_session(identity: Identity, request: ChatMessageRequest) -> ChatMessageRequest:
     if request.session_id is not None:
         return request
@@ -154,8 +175,7 @@ async def _event_stream(
     except asyncio.CancelledError:
         CHAT_STREAM_INTERRUPTED.inc()
         CHAT_STREAM_REQUESTS.labels(outcome="interrupted").inc()
-        if not task.done():
-            task.cancel()
+        await _cancel_inflight(task)
         # If the validated response is already durable and only its presentation
         # was interrupted, do not add a contradictory failure row to history.
         if not result_ready:
@@ -192,8 +212,7 @@ async def _event_stream(
         )
         yield _sse("error", descriptor.public_payload(request_id=request_id))
     finally:
-        if not task.done():
-            task.cancel()
+        await _cancel_inflight(task)
 
 
 async def chatbot_streaming_response(
