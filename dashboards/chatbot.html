@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="fa">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -10,43 +10,49 @@
   <main class="shell">
     <section id="loginView" class="card login-card">
       <div class="brand">AIOps Operations Copilot</div>
-      <h1>Operator sign in</h1>
-      <p>Enter the AIOps API key. The browser keeps it only for this tab session.</p>
+      <h1>ورود اپراتور</h1>
+      <p>کلید API را وارد کنید. مرورگر آن را فقط در همین تب و داخل sessionStorage نگه می‌دارد.</p>
       <form id="loginForm" autocomplete="off">
         <label for="apiKey">API key</label>
         <input id="apiKey" name="apiKey" type="password" autocomplete="off" required maxlength="4096" placeholder="X-API-Key">
-        <button type="submit">Sign in</button>
+        <button type="submit">ورود</button>
       </form>
       <div id="loginError" class="error" role="alert"></div>
     </section>
 
-    <section id="chatView" class="chat-layout hidden" aria-live="polite">
-      <header class="topbar">
-        <div>
-          <div class="brand">AIOps Operations Copilot</div>
-          <div id="identity" class="muted"></div>
+    <section id="chatView" class="chat-app hidden" aria-live="polite">
+      <aside class="sidebar" aria-label="تاریخچه گفت‌وگوها">
+        <div class="sidebar-head">
+          <div class="brand">AIOps Copilot</div>
+          <button id="newChat" class="new-chat" type="button">+ گفت‌وگوی جدید</button>
         </div>
-        <div class="top-actions">
+
+        <div class="history-label">تاریخچه</div>
+        <nav id="sessionList" class="session-list" aria-label="Conversation history"></nav>
+
+        <div class="sidebar-footer">
+          <div id="identity" class="identity muted" dir="auto"></div>
           <a href="/dashboard">Dashboard</a>
-          <button id="newChat" class="secondary" type="button">New chat</button>
-          <button id="logout" class="danger" type="button">Logout</button>
+          <button id="logout" class="danger" type="button">خروج</button>
         </div>
-      </header>
+      </aside>
 
-      <section class="quick-actions" aria-label="Quick actions">
-        <button type="button" data-prompt="CPU vm01 چقدره؟">Check VM CPU</button>
-        <button type="button" data-prompt="لیست podهای namespace payments رو بده">List Namespace Pods</button>
-        <button type="button" data-prompt="وضعیت سرویس nginx روی vm01 رو بررسی کن">Check Service Status</button>
-        <button type="button" data-prompt="مشکل سرویس payment-api رو بررسی کن و راهکار پیشنهاد بده">Analyze Service</button>
+      <section class="conversation-panel">
+        <header class="topbar">
+          <div>
+            <div class="conversation-title">Operations Copilot</div>
+            <div class="muted">فارسی، English و متن ترکیبی را طبیعی بنویسید</div>
+          </div>
+        </header>
+
+        <section id="messages" class="messages" aria-label="Conversation"></section>
+        <div id="status" class="status muted" dir="auto"></div>
+
+        <form id="chatForm" class="composer">
+          <textarea id="messageInput" rows="2" maxlength="4000" dir="auto" placeholder="مثلاً: CPU سرور 10.100.6.199 چقدره؟ یا وضعیت سرویس haproxy را بررسی کن…" required></textarea>
+          <button id="sendButton" type="submit">ارسال</button>
+        </form>
       </section>
-
-      <section id="messages" class="messages" aria-label="Conversation"></section>
-      <div id="status" class="status muted"></div>
-
-      <form id="chatForm" class="composer">
-        <textarea id="messageInput" rows="3" maxlength="4000" placeholder="Ask about VM, Kubernetes, Zabbix, or request a governed action…" required></textarea>
-        <button id="sendButton" type="submit">Send</button>
-      </form>
     </section>
   </main>
   <script src="/chatbot/chatbot.js" defer></script>
