@@ -129,3 +129,30 @@ async def test_early_stream_close_cancels_inflight_work_and_persists_terminal_st
     assert terminal["component"] == "chat"
     assert terminal["retryable"] is True
     assert "متوقف شد" in terminal["message"]
+
+
+@pytest.mark.asyncio
+async def test_close_after_complete_does_not_persist_contradictory_interruption(monkeypatch):
+    persisted = []
+
+    async def record_persist(session_id, **kwargs):
+        persisted.append((str(session_id), kwargs))
+
+    monkeypatch.setattr("apps.chatbot.streaming._persist_terminal_error", record_persist)
+    request = ChatMessageRequest(session_id=uuid4(), message="nginx بالاست؟")
+    stream = _event_stream(
+        SuccessfulService(),
+        Identity(subject="test", roles=("viewer",)),
+        request,
+        request_id="req-complete-close",
+    )
+
+    while True:
+        event, _payload = _parse_event(await anext(stream))
+        if event == "complete":
+            break
+
+    # ASGI/client teardown immediately after the terminal frame must not append
+    # an interruption error to a response that is already complete and durable.
+    await stream.aclose()
+    assert persisted == []
