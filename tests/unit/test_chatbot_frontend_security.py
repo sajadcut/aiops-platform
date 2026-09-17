@@ -57,14 +57,18 @@ def test_chatbot_ui_preserves_natural_persian_input_and_bidi_rendering():
     assert "data-prompt" not in script
 
 
-def test_chatbot_ui_cache_busts_assets_and_renders_limited_markdown_safely():
+def test_chatbot_document_cache_busts_frontend_assets():
     html = Path("dashboards/chatbot.html").read_text(encoding="utf-8")
+    assert 'http-equiv="Cache-Control"' in html
+    assert 'chatbot.css?v=' in html
+    assert 'chatbot.js?v=' in html
 
-    assert "/chatbot/chatbot.css?v=" in html
-    assert "/chatbot/chatbot.js?v=" in html
-    assert "MutationObserver" in html
-    assert "renderSafeMarkdown" in html
-    assert "document.createElement(\"strong\")" in html
-    assert "document.createElement(\"code\")" in html
-    assert "document.createElement(\"ul\")" in html
-    assert "replaceChildren" in html
+
+def test_chatbot_safe_markdown_renderer_supports_common_llm_formatting_without_html_injection():
+    html = Path("dashboards/chatbot.html").read_text(encoding="utf-8")
+    assert "function renderInlineMarkdown" in html
+    assert 'document.createElement("strong")' in html
+    assert 'document.createElement("code")' in html
+    assert 'document.createElement("ul")' in html
+    assert "innerHTML" not in html
+    assert "insertAdjacentHTML" not in html
