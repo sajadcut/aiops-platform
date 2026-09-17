@@ -3,7 +3,9 @@ from __future__ import annotations
 from typing import Any, Literal, Optional
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
+
+from domain.contracts.redaction import redact, redact_text
 
 
 class ChatMessageRequest(BaseModel):
@@ -25,6 +27,11 @@ class ActionProposalView(BaseModel):
     requires_approval: bool = True
     expires_at: str
 
+    @field_validator("parameters", mode="before")
+    @classmethod
+    def redact_parameters(cls, value: Any) -> Any:
+        return redact(value or {})
+
 
 class ChatMessageResponse(BaseModel):
     session_id: UUID
@@ -34,6 +41,16 @@ class ChatMessageResponse(BaseModel):
     source: Optional[str] = None
     proposal: Optional[ActionProposalView] = None
     data: Optional[Any] = None
+
+    @field_validator("message", mode="before")
+    @classmethod
+    def redact_message(cls, value: Any) -> str:
+        return redact_text(str(value or ""))
+
+    @field_validator("data", mode="before")
+    @classmethod
+    def redact_data(cls, value: Any) -> Any:
+        return redact(value)
 
 
 class ChatSessionSummary(BaseModel):
@@ -48,6 +65,16 @@ class ChatHistoryMessage(BaseModel):
     content: str
     created_at: str
     metadata: dict[str, Any] = Field(default_factory=dict)
+
+    @field_validator("content", mode="before")
+    @classmethod
+    def redact_content(cls, value: Any) -> str:
+        return redact_text(str(value or ""))
+
+    @field_validator("metadata", mode="before")
+    @classmethod
+    def redact_metadata(cls, value: Any) -> Any:
+        return redact(value or {})
 
 
 class ChatHistoryResponse(BaseModel):
