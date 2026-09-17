@@ -97,7 +97,7 @@ async def test_failed_stream_emits_short_terminal_error_instead_of_ending_silent
 
 
 @pytest.mark.asyncio
-async def test_stream_interruption_cancels_inflight_work_and_persists_terminal_state(monkeypatch):
+async def test_early_stream_close_cancels_inflight_work_and_persists_terminal_state(monkeypatch):
     persisted = []
 
     async def record_persist(session_id, **kwargs):
@@ -106,21 +106,20 @@ async def test_stream_interruption_cancels_inflight_work_and_persists_terminal_s
     monkeypatch.setattr("apps.chatbot.streaming._persist_terminal_error", record_persist)
     service = BlockingService()
     request = ChatMessageRequest(session_id=uuid4(), message="وضعیت nginx را بررسی کن")
+    stream = _event_stream(
+        service,
+        Identity(subject="test", roles=("viewer",)),
+        request,
+        request_id="req-interrupted",
+    )
 
-    async def consume_stream():
-        async for _frame in _event_stream(
-            service,
-            Identity(subject="test", roles=("viewer",)),
-            request,
-            request_id="req-interrupted",
-        ):
-            await asyncio.sleep(0)
-
-    consumer = asyncio.create_task(consume_stream())
+    first_event = _parse_event(await anext(stream))
+    assert first_event[0] == "session"
     await asyncio.wait_for(service.started.wait(), timeout=1.0)
-    consumer.cancel()
-    with pytest.raises(asyncio.CancelledError):
-        await consumer
+
+    # Simulate the HTTP client disappearing while the generator is suspended on
+    # the very first SSE frame. This used to bypass the interruption handler.
+    await stream.aclose()
     await asyncio.wait_for(service.cancelled.wait(), timeout=1.0)
 
     assert len(persisted) == 1
