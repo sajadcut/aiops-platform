@@ -15,6 +15,15 @@ class KubernetesMCPClient(MCPClient):
     """
 
     READ_TOOL = "collect_kubernetes_evidence"
+    READ_OPERATIONS = {
+        "list_pods",
+        "pod_status",
+        "deployment_status",
+        "events",
+        "resource_usage",
+        "rollout_state",
+        "service_evidence",
+    }
     WRITE_TOOLS = {
         "restart_kubernetes_workload",
         "rollback_kubernetes_workload",
@@ -39,9 +48,45 @@ class KubernetesMCPClient(MCPClient):
         )
         self.enabled = True
 
+    async def collect_query(
+        self,
+        *,
+        operation: str,
+        namespace: str,
+        service: str | None = None,
+        resource: str | None = None,
+    ) -> Any:
+        op = str(operation or "").strip()
+        if op not in self.READ_OPERATIONS:
+            raise ValueError("unsupported_kubernetes_read_operation")
+        ns = str(namespace or "").strip()
+        if not ns:
+            raise ValueError("namespace_required")
+        args: Dict[str, Any] = {"operation": op, "namespace": ns}
+        if service:
+            args["service"] = str(service)
+        if resource:
+            args["resource"] = str(resource)
+        if op == "service_evidence" and not service:
+            raise ValueError("service_required")
+        if op in {"pod_status", "deployment_status", "rollout_state"} and not resource:
+            raise ValueError("resource_required")
+        result = await self.call_tool(self.READ_TOOL, args)
+        rows = self.json_content(result)
+        if not rows:
+            return []
+        return rows[0] if len(rows) == 1 else rows
+
     async def collect_evidence(self, service: str) -> List[Dict[str, Any]]:
-        result = await self.call_tool(self.READ_TOOL, {"service": service})
-        rows = result.get("content", [])
+        result = await self.call_tool(
+            self.READ_TOOL,
+            {
+                "operation": "service_evidence",
+                "namespace": settings.KUBERNETES_NAMESPACE,
+                "service": service,
+            },
+        )
+        rows = self.json_content(result)
         evidence: List[Dict[str, Any]] = []
         for item in rows:
             if not isinstance(item, dict):
