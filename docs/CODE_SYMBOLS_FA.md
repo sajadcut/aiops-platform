@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 335 | Dashboard JS files scanned: 3 | Symbols indexed: 2821**
+**Python files scanned: 335 | Dashboard JS files scanned: 3 | Symbols indexed: 2833**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1206,18 +1206,28 @@
 | `dashboards/approval-actions.js` | `agentAnalysisCard` | 362 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
 | `dashboards/approval-actions.js` | `renderDetailWithAgentAnalysis` | 405 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
 | `dashboards/approval-actions.js` | `loadAgentsWithReliabilityContract` | 420 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
-| `dashboards/chatbot.js` | `apiKey` | 21 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/chatbot.js` | `sessionId` | 25 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/chatbot.js` | `setBusy` | 29 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/chatbot.js` | `authHeaders` | 35 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/chatbot.js` | `api` | 41 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/chatbot.js` | `clearConversation` | 58 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/chatbot.js` | `addMessage` | 63 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/chatbot.js` | `addProposalControls` | 84 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/chatbot.js` | `decide` | 97 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/chatbot.js` | `renderResponse` | 120 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/chatbot.js` | `loadHistory` | 128 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
-| `dashboards/chatbot.js` | `validateLogin` | 152 | JavaScript function | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | browser module |
+| `dashboards/chatbot.js` | `apiKey` | 25 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `sessionId` | 29 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `setBusy` | 33 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `authHeaders` | 39 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `api` | 45 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `friendlyError` | 62 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `renderEmptyState` | 69 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/chatbot.js` | `clearConversation` | 82 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `removeEmptyState` | 88 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `addMessage` | 93 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `addProposalControls` | 117 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `decide` | 130 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `shortTitle` | 154 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `historyTitle` | 160 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `firstUser` | 161 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `formatSessionTime` | 165 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `renderSessionList` | 175 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/chatbot.js` | `loadSessions` | 209 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
+| `dashboards/chatbot.js` | `renderResponse` | 221 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/chatbot.js` | `loadHistory` | 230 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
+| `dashboards/chatbot.js` | `selectSession` | 265 | JavaScript function | بر اساس state/capability مسیر یا handler مناسب را انتخاب می‌کند | browser module |
+| `dashboards/chatbot.js` | `validateLogin` | 278 | JavaScript function | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | browser module |
 | `dashboards/control-center.js` | `$` | 14 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
 | `dashboards/control-center.js` | `$$` | 15 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
 | `dashboards/control-center.js` | `esc` | 16 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
@@ -2106,6 +2116,8 @@
 | `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_ui_uses_session_storage_not_persistent_local_storage` | 4 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_ui_renders_server_text_without_inner_html` | 12 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_api_key_is_not_placed_in_message_payload` | 19 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_ui_has_conversation_history_sidebar_without_quick_action_buttons` | 28 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_ui_preserves_natural_persian_input_and_bidi_rendering` | 42 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_chatbot_kubernetes_contract.py` | `test_kubernetes_chatbot_reads_extend_existing_mcp_tool_not_tool_names` | 10 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_chatbot_kubernetes_contract.py` | `test_kubernetes_native_evidence_client_remains_get_only` | 20 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_chatbot_kubernetes_contract.py` | `test_kubernetes_read_operations_are_normalized_without_direct_api_mutation` | 32 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
