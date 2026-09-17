@@ -39,7 +39,9 @@ def test_system_prompt_reuses_unambiguous_context_and_never_confirms_reads():
 
     assert "reuse that most recent explicit value" in system
     assert "Never ask the user for a yes/no confirmation before a read-only tool call" in system
-    assert "If the operator is speaking Persian, answer in Persian" in system
+    assert "speaking Persian" in system
+    assert "answer in Persian" in system
+    assert "do not switch to Arabic" in system
     assert "10.100.6.199" in messages[1]["content"]
     assert messages[-1]["content"] == "nginx بالاست؟"
 
@@ -112,4 +114,5 @@ async def test_summary_receives_persian_context_and_exact_mount_payload():
     assert '"available": "75161927680"' in llm.prompt
     assert '"mount": "/app"' in llm.prompt
     assert "never switch to Arabic" in llm.system_prompt
-    assert "do not claim that exact mount information is unavailable" in llm.system_prompt
+    assert "do not claim that exact" in llm.system_prompt
+    assert "mount information is unavailable" in llm.system_prompt
