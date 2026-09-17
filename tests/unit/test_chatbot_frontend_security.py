@@ -23,3 +23,32 @@ def test_chatbot_api_key_is_not_placed_in_message_payload():
     assert 'const payload = {message};' in script
     assert 'JSON.stringify({confirm: value})' in script
     assert "api_key" not in script.lower()
+
+
+def test_chatbot_ui_has_conversation_history_sidebar_without_quick_action_buttons():
+    html = Path("dashboards/chatbot.html").read_text(encoding="utf-8")
+    script = Path("dashboards/chatbot.js").read_text(encoding="utf-8")
+
+    assert 'id="sessionList"' in html
+    assert 'id="newChat"' in html
+    assert 'class="quick-actions"' not in html
+    assert "Check VM CPU" not in html
+    assert "Check Service Status" not in html
+    assert "data-prompt" not in html
+    assert 'api("/api/v1/chatbot/sessions"' in script
+    assert "selectSession" in script
+
+
+def test_chatbot_ui_preserves_natural_persian_input_and_bidi_rendering():
+    html = Path("dashboards/chatbot.html").read_text(encoding="utf-8")
+    script = Path("dashboards/chatbot.js").read_text(encoding="utf-8")
+
+    assert '<html lang="fa">' in html
+    assert "CPU سرور 10.100.6.199 چقدره؟" in html
+    assert 'dir="auto"' in html
+    assert 'body.setAttribute("dir", "auto")' in script
+    assert "فارسی" in script
+    # Natural-language input is sent unchanged to the backend/LLM path; there is
+    # no client-side keyword router that could make Persian depend on fixed buttons.
+    assert 'const payload = {message};' in script
+    assert "data-prompt" not in script
