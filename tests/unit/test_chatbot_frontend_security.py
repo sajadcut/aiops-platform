@@ -73,8 +73,8 @@ def test_chatbot_ui_supports_english_and_mixed_rtl_ltr_without_client_rewriting(
     assert 'id="messageInput"' in html
     assert 'dir="auto"' in html
     assert 'body.setAttribute("dir", "auto")' in script
+    assert 'const message = String(rawMessage || "").trim()' in script
     assert 'const payload = {message};' in script
-    assert "message.trim()" in script
     assert "data-prompt" not in script
     assert "10.100.6.199" in html
 
