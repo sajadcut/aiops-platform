@@ -65,6 +65,20 @@ def test_chatbot_ui_preserves_natural_persian_input_and_bidi_rendering():
     assert "data-prompt" not in script
 
 
+def test_chatbot_ui_supports_english_and_mixed_rtl_ltr_without_client_rewriting():
+    html = _html()
+    script = _script()
+    # Conversation/message bodies and the composer use browser bidi isolation so
+    # English, Persian, IPs and commands can coexist without a keyword router.
+    assert 'id="messageInput"' in html
+    assert 'dir="auto"' in html
+    assert 'body.setAttribute("dir", "auto")' in script
+    assert 'const payload = {message};' in script
+    assert "message.trim()" in script
+    assert "data-prompt" not in script
+    assert "10.100.6.199" in html
+
+
 def test_chatbot_document_cache_busts_frontend_assets():
     html = _html()
     assert 'http-equiv="Cache-Control"' in html
