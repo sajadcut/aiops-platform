@@ -41,206 +41,112 @@
           <div class="sidebar-brand">
             <div class="product-mark compact" aria-hidden="true">N</div>
             <div class="sidebar-brand-copy">
-              <strong>NeoBanking Ops</strong>
-              <span>Enterprise Copilot</span>
+              <strong>NeoBanking Ops</strong><span>Enterprise Copilot</span>
             </div>
           </div>
           <div class="sidebar-top-actions">
-            <button id="sidebarCollapse" class="icon-button desktop-only" type="button" aria-label="جمع کردن نوار کناری" title="جمع کردن نوار کناری">
-              <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 6 8.5 12l6 6"/></svg>
-            </button>
-            <button id="sidebarClose" class="icon-button mobile-only" type="button" aria-label="بستن تاریخچه">
-              <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
-            </button>
+            <button id="sidebarCollapse" class="icon-button desktop-only" type="button" aria-label="جمع کردن نوار کناری" title="جمع کردن نوار کناری"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 6 8.5 12l6 6"/></svg></button>
+            <button id="sidebarClose" class="icon-button mobile-only" type="button" aria-label="بستن تاریخچه"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
           </div>
         </div>
-
-        <button id="newChat" class="button new-chat-button" type="button">
-          <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
-          <span class="sidebar-label">گفت‌وگوی جدید</span>
-          <kbd class="sidebar-shortcut">N</kbd>
-        </button>
-
-        <label class="history-search" for="sessionSearch">
-          <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
-          <input id="sessionSearch" type="search" autocomplete="off" placeholder="جست‌وجوی گفت‌وگوها" aria-label="جست‌وجوی گفت‌وگوها">
-          <kbd>/</kbd>
-        </label>
-
-        <div class="history-heading sidebar-label">
-          <span>گفت‌وگوها</span>
-          <span id="sessionCount" class="count-badge" aria-label="تعداد گفت‌وگوها">0</span>
-        </div>
-
+        <button id="newChat" class="button new-chat-button" type="button"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span class="sidebar-label">گفت‌وگوی جدید</span><kbd class="sidebar-shortcut">N</kbd></button>
+        <label class="history-search" for="sessionSearch"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg><input id="sessionSearch" type="search" autocomplete="off" placeholder="جست‌وجوی گفت‌وگوها" aria-label="جست‌وجوی گفت‌وگوها"><kbd>/</kbd></label>
+        <div class="history-heading sidebar-label"><span>گفت‌وگوها</span><span id="sessionCount" class="count-badge" aria-label="تعداد گفت‌وگوها">0</span></div>
         <nav id="sessionList" class="session-list" aria-label="Conversation history"></nav>
-
         <div class="sidebar-footer">
-          <button id="openCommandPaletteSidebar" class="button sidebar-utility" type="button">
-            <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7h10M7 12h10M7 17h6"/></svg>
-            <span class="sidebar-label">Command palette</span>
-            <kbd class="sidebar-label">Ctrl K</kbd>
-          </button>
-          <a href="/dashboard" class="button sidebar-utility">
-            <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"/></svg>
-            <span class="sidebar-label">Dashboard</span>
-          </a>
+          <button id="openCommandPaletteSidebar" class="button sidebar-utility" type="button"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7h10M7 12h10M7 17h6"/></svg><span class="sidebar-label">Command palette</span><kbd class="sidebar-label">Ctrl K</kbd></button>
+          <a href="/dashboard" class="button sidebar-utility"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"/></svg><span class="sidebar-label">Dashboard</span></a>
           <p class="sidebar-governance sidebar-label">عملیات تغییردهنده فقط از مسیر Approval و ابزارهای مجاز اجرا می‌شوند.</p>
         </div>
       </aside>
-
       <div id="sidebarBackdrop" class="drawer-backdrop hidden" aria-hidden="true"></div>
 
       <section class="conversation-panel">
         <header class="topbar">
           <div class="topbar-leading">
-            <button id="sidebarOpen" class="icon-button" type="button" aria-label="باز کردن تاریخچه" aria-expanded="false" aria-controls="sidebar">
-              <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
-            </button>
-            <div class="topbar-copy">
-              <div class="conversation-title-row">
-                <span id="conversationTitle" class="conversation-title" dir="auto">گفت‌وگوی جدید</span>
-              </div>
-              <div class="product-context">
-                <span>NeoBanking Chatbot Operation Platform</span>
-                <span class="context-separator" aria-hidden="true">/</span>
-                <span>Enterprise Operations Copilot</span>
-              </div>
-            </div>
+            <button id="sidebarOpen" class="icon-button" type="button" aria-label="باز کردن تاریخچه" aria-expanded="false" aria-controls="sidebar"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+            <div class="topbar-copy"><div class="conversation-title-row"><span id="conversationTitle" class="conversation-title" dir="auto">گفت‌وگوی جدید</span></div><div class="product-context"><span>NeoBanking Chatbot Operation Platform</span><span class="context-separator" aria-hidden="true">/</span><span>Enterprise Operations Copilot</span></div></div>
           </div>
-
           <div class="topbar-actions">
-            <div id="apiStatus" class="status-chip hidden" role="status" aria-live="polite">
-              <span class="status-dot" aria-hidden="true"></span>
-              <span>API Connected</span>
-            </div>
+            <div id="apiStatus" class="status-chip hidden" role="status" aria-live="polite"><span class="status-dot" aria-hidden="true"></span><span>API Connected</span></div>
             <div id="identity" class="identity" dir="auto" aria-label="کاربر فعلی"></div>
-            <button id="openCommandPalette" class="icon-button desktop-only" type="button" aria-label="باز کردن Command palette" title="Command palette (Ctrl/Cmd + K)">
-              <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h8"/></svg>
-            </button>
-            <button id="contextToggle" class="icon-button" type="button" aria-label="باز کردن پنل Context" aria-expanded="false" aria-controls="contextPanel" title="Context">
-              <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 10v6M12 7.2h.01"/></svg>
-            </button>
-            <button id="themeToggle" class="icon-button" type="button" aria-label="تغییر پوسته" title="تغییر پوسته">
-              <svg class="theme-moon ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 15.2A8.5 8.5 0 0 1 8.8 4a8.5 8.5 0 1 0 11.2 11.2Z"/></svg>
-              <svg class="theme-sun ui-icon hidden" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
-            </button>
-            <button id="logout" class="icon-button danger-control" type="button" aria-label="خروج" title="خروج">
-              <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 5H5v14h5M14 8l4 4-4 4M18 12H9"/></svg>
-            </button>
+            <button id="openCommandPalette" class="icon-button desktop-only" type="button" aria-label="باز کردن Command palette" title="Command palette (Ctrl/Cmd + K)"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h8"/></svg></button>
+            <button id="contextToggle" class="icon-button" type="button" aria-label="باز کردن پنل Context" aria-expanded="false" aria-controls="contextPanel" title="Context"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 10v6M12 7.2h.01"/></svg></button>
+            <button id="themeToggle" class="icon-button" type="button" aria-label="تغییر پوسته" title="تغییر پوسته"><svg class="theme-moon ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 15.2A8.5 8.5 0 0 1 8.8 4a8.5 8.5 0 1 0 11.2 11.2Z"/></svg><svg class="theme-sun ui-icon hidden" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button>
+            <button id="logout" class="icon-button danger-control" type="button" aria-label="خروج" title="خروج"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 5H5v14h5M14 8l4 4-4 4M18 12H9"/></svg></button>
           </div>
         </header>
-
         <section id="messages" class="messages" aria-label="Conversation" aria-live="polite" aria-relevant="additions text"></section>
-        <button id="scrollToBottom" class="scroll-latest hidden" type="button" aria-label="رفتن به آخر گفت‌وگو">
-          <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
-          <span>آخرین پیام</span>
-        </button>
-
+        <button id="scrollToBottom" class="scroll-latest hidden" type="button" aria-label="رفتن به آخر گفت‌وگو"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg><span>آخرین پیام</span></button>
         <div class="composer-zone">
           <div id="slashMenu" class="slash-menu hidden" role="listbox" aria-label="دستورهای سریع"></div>
-          <div id="runtimeStatus" class="runtime-status hidden" role="status" aria-live="polite">
-            <span class="status-spinner" aria-hidden="true"></span>
-            <span id="statusText"></span>
-            <span id="statusMeta" class="status-meta" dir="auto"></span>
-          </div>
-
+          <div id="runtimeStatus" class="runtime-status hidden" role="status" aria-live="polite"><span class="status-spinner" aria-hidden="true"></span><span id="statusText"></span><span id="statusMeta" class="status-meta" dir="auto"></span></div>
           <form id="chatForm" class="composer">
             <label class="sr-only" for="messageInput">پیام برای Operations Copilot</label>
             <textarea id="messageInput" rows="1" maxlength="4000" dir="auto" placeholder="از Operations Copilot بپرسید… مثلاً: CPU سرور 10.100.6.199 چقدره؟" required></textarea>
-            <div class="composer-toolbar">
-              <div class="composer-leading">
-                <button id="slashButton" class="composer-action" type="button" aria-label="باز کردن دستورهای سریع" title="Slash commands">
-                  <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4 9 20"/></svg>
-                </button>
-                <span class="composer-hint">Enter ارسال · Shift+Enter خط جدید</span>
-              </div>
-              <div class="composer-actions">
-                <span id="charCount" class="char-count">0 / 4000</span>
-                <button id="sendButton" class="send-button" type="submit" aria-label="ارسال پیام">
-                  <svg class="send-icon ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 7-7 7 7M12 5v14"/></svg>
-                  <svg class="stop-icon ui-icon hidden" viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="7" width="10" height="10" rx="1"/></svg>
-                </button>
-              </div>
-            </div>
+            <div class="composer-toolbar"><div class="composer-leading"><button id="slashButton" class="composer-action" type="button" aria-label="باز کردن دستورهای سریع" title="Slash commands"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4 9 20"/></svg></button><span class="composer-hint">Enter ارسال · Shift+Enter خط جدید</span></div><div class="composer-actions"><span id="charCount" class="char-count">0 / 4000</span><button id="sendButton" class="send-button" type="submit" aria-label="ارسال پیام"><svg class="send-icon ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 7-7 7 7M12 5v14"/></svg><svg class="stop-icon ui-icon hidden" viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="7" width="10" height="10" rx="1"/></svg></button></div></div>
           </form>
           <div class="composer-disclaimer">Operations can require approval before execution.</div>
         </div>
       </section>
 
       <aside id="contextPanel" class="context-panel" aria-label="Context and activity" aria-hidden="true">
-        <div class="context-header">
-          <div>
-            <strong>Context</strong>
-            <span>Live session details</span>
-          </div>
-          <button id="contextClose" class="icon-button" type="button" aria-label="بستن پنل Context">
-            <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
-          </button>
-        </div>
-        <div class="context-body">
-          <section class="context-section" aria-labelledby="contextSessionHeading">
-            <h2 id="contextSessionHeading">Current session</h2>
-            <dl id="contextFacts" class="context-facts"></dl>
-          </section>
-          <section class="context-section" aria-labelledby="activityHeading">
-            <div class="context-section-heading">
-              <h2 id="activityHeading">Recent activity</h2>
-              <button id="clearActivity" class="text-button" type="button">Clear</button>
-            </div>
-            <div id="activityList" class="activity-list" aria-live="polite"></div>
-          </section>
-        </div>
+        <div class="context-header"><div><strong>Context</strong><span>Live session details</span></div><button id="contextClose" class="icon-button" type="button" aria-label="بستن پنل Context"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div>
+        <div class="context-body"><section class="context-section" aria-labelledby="contextSessionHeading"><h2 id="contextSessionHeading">Current session</h2><dl id="contextFacts" class="context-facts"></dl></section><section class="context-section" aria-labelledby="activityHeading"><div class="context-section-heading"><h2 id="activityHeading">Recent activity</h2><button id="clearActivity" class="text-button" type="button">Clear</button></div><div id="activityList" class="activity-list" aria-live="polite"></div></section></div>
       </aside>
       <div id="contextBackdrop" class="drawer-backdrop context-backdrop hidden" aria-hidden="true"></div>
     </section>
   </main>
 
-  <dialog id="renameDialog" class="modal" aria-labelledby="renameTitle">
-    <form id="renameForm" method="dialog" class="modal-card">
-      <div class="modal-heading">
-        <h2 id="renameTitle">تغییر نام گفت‌وگو</h2>
-        <button type="button" class="icon-button" data-close-dialog="renameDialog" aria-label="بستن">
-          <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
-        </button>
-      </div>
-      <label for="renameInput">عنوان</label>
-      <input id="renameInput" type="text" maxlength="160" required dir="auto" autocomplete="off">
-      <div class="modal-actions">
-        <button type="button" class="button button-secondary" data-close-dialog="renameDialog">انصراف</button>
-        <button type="submit" class="button button-primary">ذخیره</button>
-      </div>
-    </form>
-  </dialog>
-
-  <dialog id="deleteDialog" class="modal" aria-labelledby="deleteTitle">
-    <form id="deleteForm" method="dialog" class="modal-card">
-      <div class="modal-heading">
-        <h2 id="deleteTitle">حذف گفت‌وگو</h2>
-        <button type="button" class="icon-button" data-close-dialog="deleteDialog" aria-label="بستن">
-          <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
-        </button>
-      </div>
-      <p>پیام‌های این گفت‌وگو از تاریخچه عادی حذف می‌شوند؛ رکوردهای Audit و governance مرتبط با عملیات طبق سیاست backend حفظ می‌شوند.</p>
-      <div class="modal-actions">
-        <button type="button" class="button button-secondary" data-close-dialog="deleteDialog">انصراف</button>
-        <button type="submit" class="button button-danger">حذف</button>
-      </div>
-    </form>
-  </dialog>
-
-  <dialog id="commandPaletteDialog" class="command-palette" aria-labelledby="commandPaletteTitle">
-    <div class="command-palette-card">
-      <div class="command-palette-search">
-        <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
-        <label class="sr-only" for="commandPaletteInput" id="commandPaletteTitle">Command palette</label>
-        <input id="commandPaletteInput" type="search" autocomplete="off" placeholder="Search commands…" aria-label="Search commands">
-        <kbd>Esc</kbd>
-      </div>
-      <div id="commandPaletteList" class="command-palette-list" role="listbox" aria-label="Available commands"></div>
-    </div>
-  </dialog>
-
+  <dialog id="renameDialog" class="modal" aria-labelledby="renameTitle"><form id="renameForm" method="dialog" class="modal-card"><div class="modal-heading"><h2 id="renameTitle">تغییر نام گفت‌وگو</h2><button type="button" class="icon-button" data-close-dialog="renameDialog" aria-label="بستن"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div><label for="renameInput">عنوان</label><input id="renameInput" type="text" maxlength="160" required dir="auto" autocomplete="off"><div class="modal-actions"><button type="button" class="button button-secondary" data-close-dialog="renameDialog">انصراف</button><button type="submit" class="button button-primary">ذخیره</button></div></form></dialog>
+  <dialog id="deleteDialog" class="modal" aria-labelledby="deleteTitle"><form id="deleteForm" method="dialog" class="modal-card"><div class="modal-heading"><h2 id="deleteTitle">حذف گفت‌وگو</h2><button type="button" class="icon-button" data-close-dialog="deleteDialog" aria-label="بستن"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div><p>پیام‌های این گفت‌وگو از تاریخچه عادی حذف می‌شوند؛ رکوردهای Audit و governance مرتبط با عملیات طبق سیاست backend حفظ می‌شوند.</p><div class="modal-actions"><button type="button" class="button button-secondary" data-close-dialog="deleteDialog">انصراف</button><button type="submit" class="button button-danger">حذف</button></div></form></dialog>
+  <dialog id="commandPaletteDialog" class="command-palette" aria-labelledby="commandPaletteTitle"><div class="command-palette-card"><div class="command-palette-search"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg><label class="sr-only" for="commandPaletteInput" id="commandPaletteTitle">Command palette</label><input id="commandPaletteInput" type="search" autocomplete="off" placeholder="Search commands…" aria-label="Search commands"><kbd>Esc</kbd></div><div id="commandPaletteList" class="command-palette-list" role="listbox" aria-label="Available commands"></div></div></dialog>
   <div id="toastRegion" class="toast-region" aria-live="polite" aria-atomic="true"></div>
   <script src="/chatbot/chatbot.js?v=6" defer></script>
+  <script>
+(() => {
+  "use strict";
+  const $ = (id) => document.getElementById(id);
+  const KEY = "aiops.chatbot.apiKey", SID = "aiops.chatbot.sessionId", PINS = "aiops.chatbot.pins", COLLAPSED = "aiops.chatbot.sidebarCollapsed";
+  const ui = {pins:new Set(),activity:[],slashIndex:0,paletteIndex:0,decorating:false};
+  const quick = [
+    ["Check VM CPU","CPU یک VM","CPU سرور 10.100.6.199 چقدره؟",false],
+    ["Check memory usage","مصرف حافظه","مصرف memory سرور 10.100.6.199 را بررسی کن.",false],
+    ["List Kubernetes pods","Podهای namespace","لیست podهای namespace موردنظر را نمایش بده.",false],
+    ["Inspect pod health","سلامت Pod","وضعیت سلامت pod موردنظر را بررسی کن.",false],
+    ["View recent incidents","رخدادهای اخیر","incidentهای اخیر را خلاصه کن.",false],
+    ["Check service status","وضعیت سرویس","وضعیت سرویس موردنظر را بررسی کن.",false],
+    ["Restart service","نیازمند Approval","برای restart سرویس موردنظر یک Action Proposal آماده کن و قبل از اجرا Approval بگیر.",true],
+    ["Analyze an alert","تحلیل Alert","این alert را تحلیل کن و شواهد و next stepهای امن را توضیح بده: ",false]
+  ];
+  const slash = [["/vm","VM metrics / status","وضعیت VM موردنظر را بررسی کن: "],["/k8s","Kubernetes context","وضعیت Kubernetes در namespace موردنظر را بررسی کن: "],["/pods","List / inspect pods","Podهای namespace موردنظر را بررسی کن: "],["/service","Service status / action","وضعیت سرویس موردنظر را بررسی کن: "],["/health","Operational health","health وضعیت موردنظر را بررسی کن: "],["/incident","Incident analysis","incident زیر را تحلیل کن: "],["/help","Safe examples","چه درخواست‌های عملیاتی امنی می‌توانم از تو بپرسم؟ چند مثال کوتاه بده."]];
+  function button(label,className,fn){const b=document.createElement("button");b.type="button";b.className=className;b.textContent=label;b.addEventListener("click",fn);return b}
+  function toast(message,type="info"){const r=$("toastRegion");if(!r)return;const n=document.createElement("div");n.className=`toast ${type}`;n.textContent=String(message||"");r.appendChild(n);setTimeout(()=>n.remove(),2600)}
+  function prompt(value){const i=$("messageInput");if(!i)return;i.value=String(value||"");i.dispatchEvent(new Event("input",{bubbles:true}));i.focus();i.setSelectionRange(i.value.length,i.value.length);closeSlash()}
+  function safeLinks(root){if(!root)return;const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT),nodes=[];for(let n=w.nextNode();n;n=w.nextNode())if(!n.parentElement?.closest("code, pre, a")&&/https?:\/\/[^\s<>()]+/i.test(n.nodeValue||""))nodes.push(n);nodes.forEach(n=>{const text=n.nodeValue||"",re=/https?:\/\/[^\s<>()]+/gi,f=document.createDocumentFragment();let at=0;for(let m=re.exec(text);m;m=re.exec(text)){if(m.index>at)f.appendChild(document.createTextNode(text.slice(at,m.index)));const a=document.createElement("a");a.href=m[0];a.textContent=m[0];a.target="_blank";a.rel="noopener noreferrer";a.className="safe-link";f.appendChild(a);at=re.lastIndex}if(at<text.length)f.appendChild(document.createTextNode(text.slice(at)));n.replaceWith(f)})}
+  function renderQuickActions(root){if(!root||root.querySelector(".quick-actions"))return;root.querySelector(".capability-row")?.remove();const h=root.querySelector("h1");if(h)h.textContent="What can I help you operate?";const p=root.querySelector("p");if(p)p.textContent="VM، سرویس‌ها و Kubernetes را بررسی کنید یا یک عملیات governed را برای Approval آماده کنید.";const grid=document.createElement("div");grid.className="quick-actions";quick.forEach(([name,hint,value,danger])=>{const b=button("",`quick-action${danger?" dangerous":""}`,()=>prompt(value));b.setAttribute("aria-label",name);const mark=document.createElement("span"),copy=document.createElement("span"),strong=document.createElement("strong"),small=document.createElement("span");mark.className="quick-action-mark";mark.textContent=name.split(" ")[0].slice(0,3).toUpperCase();copy.className="quick-action-copy";strong.textContent=name;small.textContent=hint;copy.append(strong,small);b.replaceChildren(mark,copy);grid.appendChild(b)});const note=document.createElement("div");note.className="empty-footnote";note.textContent="Quick actions فقط prompt را آماده می‌کنند؛ governance backend تغییر نمی‌کند.";root.append(grid,note)}
+  function previousUser(message){for(let n=message.previousElementSibling;n;n=n.previousElementSibling)if(n.classList.contains("user"))return(n.querySelector(".message-body")?.textContent||"").trim();return""}
+  function enhanceMessage(message){const body=message.querySelector(".message-body"),actions=message.querySelector(".message-actions");if(!body||!actions)return;safeLinks(body);if(message.classList.contains("user")){if(!actions.querySelector(".ui-edit"))actions.appendChild(button("ویرایش","message-action ui-edit",()=>prompt((body.textContent||"").trim())));return}const retryText=previousUser(message);if(retryText&&!message.classList.contains("proposal")&&!actions.querySelector(".ui-regenerate")){const label=message.classList.contains("error-message")?"تلاش مجدد":"Regenerate";actions.appendChild(button(label,"message-action ui-regenerate",()=>{prompt(retryText);$("chatForm")?.requestSubmit()}))}const details=message.querySelector("details");if(details&&!actions.querySelector(".ui-details"))actions.appendChild(button("Details","message-action ui-details",()=>{details.open=!details.open}));if((body.textContent||"").length>900&&!actions.querySelector(".ui-collapse")){let b;b=button("جمع","message-action ui-collapse",()=>{const c=message.classList.toggle("message-collapsed");b.textContent=c?"باز کردن":"جمع"});actions.appendChild(b)}if(message.classList.contains("error-message")&&!message.querySelector(".error-title")){const t=document.createElement("div");t.className="error-title";t.textContent="Unable to complete the request";message.querySelector(".message-card")?.prepend(t)}if((message.classList.contains("tool-result")||message.classList.contains("execution"))&&!message.querySelector(".tool-timeline")&&ui.activity.length){const tl=document.createElement("div");tl.className="tool-timeline";ui.activity.slice(0,3).reverse().forEach((a,index,arr)=>{const row=document.createElement("div"),dot=document.createElement("span"),text=document.createElement("span"),meta=document.createElement("span");row.className=`tool-step ${index===arr.length-1?"running":"completed"}`;dot.className="tool-step-dot";text.className="tool-step-message";meta.className="tool-step-meta";text.textContent=a.message;text.setAttribute("dir","auto");meta.textContent=a.meta;row.append(dot,text,meta);tl.appendChild(row)});message.querySelector(".message-card")?.appendChild(tl)}}
+  function enhanceMessages(){renderQuickActions($("emptyState"));document.querySelectorAll("#messages .message").forEach(enhanceMessage)}
+  function recordActivity(){const r=$("runtimeStatus");if(!r||r.classList.contains("hidden"))return;const message=($("statusText")?.textContent||"").trim(),meta=($("statusMeta")?.textContent||"").trim();if(!message||ui.activity[0]?.message===message&&ui.activity[0]?.meta===meta)return;ui.activity.unshift({message,meta,at:new Date()});ui.activity=ui.activity.slice(0,12);renderActivity()}
+  function renderActivity(){const list=$("activityList");if(!list)return;list.replaceChildren();if(!ui.activity.length){const e=document.createElement("div");e.className="context-empty";e.textContent="هنوز activity قابل نمایش ثبت نشده است.";list.appendChild(e);return}ui.activity.forEach((a,index)=>{const row=document.createElement("div"),dot=document.createElement("span"),copy=document.createElement("div"),strong=document.createElement("strong"),meta=document.createElement("span");row.className=`activity-item ${index?"completed":"running"}`;dot.className="activity-dot";copy.className="activity-copy";strong.textContent=a.message;strong.setAttribute("dir","auto");meta.textContent=[a.meta,a.at.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})].filter(Boolean).join(" · ");copy.append(strong,meta);row.append(dot,copy);list.appendChild(row)})}
+  function renderContext(){const list=$("contextFacts");if(!list)return;list.replaceChildren();const facts=[],identity=($("identity")?.textContent||"").trim(),session=sessionStorage.getItem(SID),title=($("conversationTitle")?.textContent||"").trim();if(identity)facts.push(["Identity",identity]);if(session)facts.push(["Session",session]);if(title&&title!=="گفت‌وگوی جدید")facts.push(["Conversation",title]);if(!facts.length){const e=document.createElement("div");e.className="context-empty";e.textContent="Context واقعی هنوز از backend دریافت نشده است.";list.appendChild(e);return}facts.forEach(([name,value])=>{const wrap=document.createElement("div"),dt=document.createElement("dt"),dd=document.createElement("dd");wrap.className="context-fact";dt.textContent=name;dd.textContent=value;dd.setAttribute("dir","auto");wrap.append(dt,dd);list.appendChild(wrap)})}
+  function loadPins(){try{ui.pins=new Set(JSON.parse(sessionStorage.getItem(PINS)||"[]").map(String))}catch(_){ui.pins=new Set()}}
+  function savePins(){sessionStorage.setItem(PINS,JSON.stringify([...ui.pins]))}
+  function groupDate(value){const d=new Date(value);if(Number.isNaN(d.getTime()))return"Older";const n=new Date(),today=new Date(n.getFullYear(),n.getMonth(),n.getDate()),date=new Date(d.getFullYear(),d.getMonth(),d.getDate()),days=Math.floor((today-date)/86400000);return days<=0?"Today":days===1?"Yesterday":days<=7?"Previous 7 days":"Older"}
+  async function fetchSessions(){const key=sessionStorage.getItem(KEY);if(!key)return[];try{const r=await fetch("/api/v1/chatbot/sessions",{headers:{"X-API-Key":key},cache:"no-store"});if(!r.ok)return[];const data=await r.json();return Array.isArray(data)?data:[]}catch(_){return[]}}
+  async function decorateSessions(){const list=$("sessionList");if(!list||ui.decorating||list.querySelector(".session-group-v3"))return;const rows=[...list.children].filter(n=>n.classList?.contains("session-row"));if(!rows.length)return;ui.decorating=true;try{const sessions=await fetchSessions(),map=new Map();sessions.forEach(s=>{const title=String(s.title||"گفت‌وگو");if(!map.has(title))map.set(title,[]);map.get(title).push(s)});const groups=new Map();rows.forEach(row=>{const title=row.querySelector(".session-title")?.textContent||"گفت‌وگو",s=map.get(title)?.shift(),id=s?String(s.session_id):title;row.dataset.sessionId=id;const actions=row.querySelector(".session-actions");if(actions&&!row.querySelector(".session-more-v3")){const original=[...actions.querySelectorAll("button")],menu=document.createElement("div");menu.className="session-menu-v3 hidden";const pin=button("Pin / Unpin","",()=>{ui.pins.has(id)?ui.pins.delete(id):ui.pins.add(id);savePins();toast(ui.pins.has(id)?"Conversation pinned":"Conversation unpinned");window.location.reload()});menu.append(pin,...original);actions.replaceChildren(menu);const more=button("···","session-more-v3",event=>{event.stopPropagation();menu.classList.toggle("hidden")});more.setAttribute("aria-label",`گزینه‌های ${title}`);more.setAttribute("aria-haspopup","menu");row.appendChild(more)}const group=ui.pins.has(id)?"Pinned":groupDate(s?.updated_at);if(!groups.has(group))groups.set(group,[]);groups.get(group).push(row)});list.replaceChildren();["Pinned","Today","Yesterday","Previous 7 days","Older"].forEach(name=>{const items=groups.get(name);if(!items?.length)return;const section=document.createElement("section"),h=document.createElement("div");section.className="session-group-v3";h.className="session-group-title";h.textContent=name;section.append(h,...items);list.appendChild(section)});[...list.querySelectorAll(".session-main")].forEach(main=>main.addEventListener("keydown",event=>{if(!["ArrowDown","ArrowUp"].includes(event.key))return;event.preventDefault();const all=[...list.querySelectorAll(".session-main")],i=all.indexOf(main),n=event.key==="ArrowDown"?Math.min(all.length-1,i+1):Math.max(0,i-1);all[n]?.focus()}))}finally{ui.decorating=false}}
+  function slashMatches(){const value=$("messageInput")?.value.trimStart()||"";if(!value.startsWith("/"))return[];const token=value.split(/\s/,1)[0].toLowerCase();return slash.filter(x=>x[0].startsWith(token))}
+  function renderSlash(){const menu=$("slashMenu"),matches=slashMatches();if(!menu)return;menu.replaceChildren();if(!matches.length){menu.classList.add("hidden");return}ui.slashIndex=Math.min(ui.slashIndex,matches.length-1);const head=document.createElement("div");head.className="slash-menu-header";head.textContent="Slash commands · governance unchanged";menu.appendChild(head);matches.forEach((item,index)=>{const b=button("",`slash-option${index===ui.slashIndex?" active":""}`,()=>prompt(item[2]));b.setAttribute("role","option");const cmd=document.createElement("span"),desc=document.createElement("span");cmd.className="slash-command";desc.className="slash-description";cmd.textContent=item[0];desc.textContent=item[1];b.append(cmd,desc);menu.appendChild(b)});menu.classList.remove("hidden")}
+  function closeSlash(){$("slashMenu")?.classList.add("hidden");$("slashMenu")?.replaceChildren()}
+  function toggleSidebar(){const view=$("chatView");if(!view)return;const on=view.classList.toggle("sidebar-collapsed");sessionStorage.setItem(COLLAPSED,on?"1":"0")}
+  function paletteCommands(){return [["New chat","شروع گفت‌وگوی جدید",()=>$("newChat")?.click()],["Search chats","جست‌وجوی تاریخچه",()=>$("sessionSearch")?.focus()],["Toggle theme","Dark / Light",()=>$("themeToggle")?.click()],["Toggle sidebar","Collapse / expand",toggleSidebar],["Clear conversation view","backend history حفظ می‌شود",()=>{$("messages")?.replaceChildren();toast("Conversation view cleared")}],["Focus composer","رفتن به ورودی پیام",()=>$("messageInput")?.focus()],...quick.map(q=>[q[0],q[1],()=>prompt(q[2])])]}
+  function renderPalette(){const list=$("commandPaletteList"),query=($("commandPaletteInput")?.value||"").trim().toLowerCase();if(!list)return;const items=paletteCommands().filter(x=>!query||`${x[0]} ${x[1]}`.toLowerCase().includes(query));list.replaceChildren();ui.paletteIndex=Math.min(ui.paletteIndex,Math.max(0,items.length-1));items.forEach((item,index)=>{const b=button("",`command-item${index===ui.paletteIndex?" active":""}`,()=>{$("commandPaletteDialog")?.close();item[2]()});const copy=document.createElement("span"),strong=document.createElement("strong"),small=document.createElement("span");copy.className="command-item-copy";strong.textContent=item[0];small.textContent=item[1];copy.append(strong,small);b.appendChild(copy);list.appendChild(b)})}
+  function openPalette(){const d=$("commandPaletteDialog");if(!d)return;if(!d.open)d.showModal();$("commandPaletteInput").value="";ui.paletteIndex=0;renderPalette();setTimeout(()=>$("commandPaletteInput")?.focus(),0)}
+  function openContext(){const view=$("chatView");view?.classList.add("context-open");$("contextPanel")?.setAttribute("aria-hidden","false");$("contextToggle")?.setAttribute("aria-expanded","true");renderContext();renderActivity()}
+  function closeContext(){const view=$("chatView");view?.classList.remove("context-open");$("contextPanel")?.setAttribute("aria-hidden","true");$("contextToggle")?.setAttribute("aria-expanded","false")}
+  window.addEventListener("DOMContentLoaded",()=>{loadPins();const view=$("chatView");if(view&&sessionStorage.getItem(COLLAPSED)==="1")view.classList.add("sidebar-collapsed");enhanceMessages();decorateSessions();renderContext();renderActivity();if((($("identity")?.textContent)||"").trim())$("apiStatus")?.classList.remove("hidden");new MutationObserver(enhanceMessages).observe($("messages"),{childList:true,subtree:true});new MutationObserver(()=>{if(!ui.decorating)setTimeout(decorateSessions,0)}).observe($("sessionList"),{childList:true});new MutationObserver(recordActivity).observe($("runtimeStatus"),{childList:true,subtree:true,attributes:true,attributeFilter:["class"]});new MutationObserver(()=>{renderContext();if((($("identity")?.textContent)||"").trim())$("apiStatus")?.classList.remove("hidden")}).observe($("identity"),{childList:true,subtree:true,characterData:true});$("slashButton")?.addEventListener("click",()=>{const input=$("messageInput");if(input&&!input.value.trim()){input.value="/";input.dispatchEvent(new Event("input",{bubbles:true}))}renderSlash();input?.focus()});$("messageInput")?.addEventListener("input",()=>{ui.slashIndex=0;renderSlash()});$("messageInput")?.addEventListener("keydown",event=>{const matches=slashMatches(),open=!$("slashMenu")?.classList.contains("hidden")&&matches.length;if(!open)return;if(["ArrowDown","ArrowUp"].includes(event.key)){event.preventDefault();event.stopImmediatePropagation();ui.slashIndex=event.key==="ArrowDown"?Math.min(matches.length-1,ui.slashIndex+1):Math.max(0,ui.slashIndex-1);renderSlash()}else if(event.key==="Enter"&&!event.shiftKey&&!event.isComposing){event.preventDefault();event.stopImmediatePropagation();prompt(matches[ui.slashIndex][2])}else if(event.key==="Escape"){event.preventDefault();event.stopImmediatePropagation();closeSlash()}},true);$("openCommandPalette")?.addEventListener("click",openPalette);$("openCommandPaletteSidebar")?.addEventListener("click",openPalette);$("commandPaletteInput")?.addEventListener("input",()=>{ui.paletteIndex=0;renderPalette()});$("contextToggle")?.addEventListener("click",()=>view?.classList.contains("context-open")?closeContext():openContext());$("contextClose")?.addEventListener("click",closeContext);$("contextBackdrop")?.addEventListener("click",closeContext);$("clearActivity")?.addEventListener("click",()=>{ui.activity=[];renderActivity()});$("sidebarCollapse")?.addEventListener("click",toggleSidebar);$("sidebarOpen")?.addEventListener("click",event=>{if(innerWidth>880){event.preventDefault();event.stopImmediatePropagation();toggleSidebar()}},true);document.addEventListener("keydown",event=>{if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==="k"){event.preventDefault();openPalette()}if(event.key==="Escape"){closeSlash();closeContext()}},true)});
+})();
+  </script>
 </body>
 </html>
