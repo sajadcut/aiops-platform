@@ -11,9 +11,12 @@ def test_chatbot_ui_uses_session_storage_not_persistent_local_storage():
 
 def test_chatbot_ui_renders_server_text_without_inner_html():
     script = Path("dashboards/chatbot.js").read_text(encoding="utf-8")
+    html = Path("dashboards/chatbot.html").read_text(encoding="utf-8")
     assert "textContent" in script
     assert "innerHTML" not in script
     assert "insertAdjacentHTML" not in script
+    assert "innerHTML" not in html
+    assert "insertAdjacentHTML" not in html
 
 
 def test_chatbot_api_key_is_not_placed_in_message_payload():
@@ -52,3 +55,21 @@ def test_chatbot_ui_preserves_natural_persian_input_and_bidi_rendering():
     # no client-side keyword router that could make Persian depend on fixed buttons.
     assert 'const payload = {message};' in script
     assert "data-prompt" not in script
+
+
+def test_chatbot_document_cache_busts_frontend_assets():
+    html = Path("dashboards/chatbot.html").read_text(encoding="utf-8")
+    assert 'http-equiv="Cache-Control"' in html
+    assert 'chatbot.css?v=' in html
+    assert 'chatbot.js?v=' in html
+
+
+def test_chatbot_safe_markdown_renderer_supports_common_llm_formatting_without_html_injection():
+    html = Path("dashboards/chatbot.html").read_text(encoding="utf-8")
+    assert "function appendInline" in html
+    assert "function renderSafeMarkdown" in html
+    assert 'document.createElement("strong")' in html
+    assert 'document.createElement("code")' in html
+    assert 'document.createElement("ul")' in html
+    assert "innerHTML" not in html
+    assert "insertAdjacentHTML" not in html

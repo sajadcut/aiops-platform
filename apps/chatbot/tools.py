@@ -27,7 +27,7 @@ CHAT_TOOL_SCHEMAS = [
         "type": "function",
         "function": {
             "name": "vm_metrics",
-            "description": "Read CPU, memory, swap, load and IO metrics for one VM through the governed VM MCP.",
+            "description": "Read live CPU, memory, swap, load and IO metrics for one VM through the governed VM MCP. This is a read-only operation and never requires user confirmation.",
             "parameters": {
                 "type": "object",
                 "required": ["target"],
@@ -40,7 +40,7 @@ CHAT_TOOL_SCHEMAS = [
         "type": "function",
         "function": {
             "name": "vm_diagnostics",
-            "description": "Read one allowlisted VM diagnostic: host_info, disk_status, network_status, process_snapshot or system_logs.",
+            "description": "Read one allowlisted VM diagnostic through the governed VM MCP: host_info, disk_status, network_status, process_snapshot or system_logs. disk_status returns every filesystem/mount with blocks, used bytes, available bytes, use_percent and mount path, so use disk_status to answer exact mount questions such as how much free space /app has. This is read-only and never requires user confirmation.",
             "parameters": {
                 "type": "object",
                 "required": ["target", "diagnostic"],
@@ -57,7 +57,7 @@ CHAT_TOOL_SCHEMAS = [
         "type": "function",
         "function": {
             "name": "vm_service_status",
-            "description": "Read systemd service state for an allowlisted service on one VM.",
+            "description": "Read the live systemd service state for an allowlisted service on one VM. This is read-only and never requires user confirmation.",
             "parameters": {
                 "type": "object",
                 "required": ["target", "service"],
@@ -70,7 +70,7 @@ CHAT_TOOL_SCHEMAS = [
         "type": "function",
         "function": {
             "name": "vm_service_logs",
-            "description": "Read bounded logs for an allowlisted service on one VM.",
+            "description": "Read bounded logs for an allowlisted service on one VM. This is read-only and never requires user confirmation.",
             "parameters": {
                 "type": "object",
                 "required": ["target", "service"],
@@ -87,7 +87,7 @@ CHAT_TOOL_SCHEMAS = [
         "type": "function",
         "function": {
             "name": "zabbix_problems",
-            "description": "Read current/recent Zabbix problems through the allowlisted Zabbix MCP adapter.",
+            "description": "Read current/recent Zabbix problems through the allowlisted Zabbix MCP adapter. This is read-only and never requires user confirmation.",
             "parameters": {
                 "type": "object",
                 "additionalProperties": False,
@@ -102,7 +102,7 @@ CHAT_TOOL_SCHEMAS = [
         "type": "function",
         "function": {
             "name": "kubernetes_read",
-            "description": "Read Kubernetes data through the governed Kubernetes MCP. Never use kubectl directly.",
+            "description": "Read Kubernetes data through the governed Kubernetes MCP. Never use kubectl directly. This is read-only and never requires user confirmation.",
             "parameters": {
                 "type": "object",
                 "required": ["operation", "namespace"],
