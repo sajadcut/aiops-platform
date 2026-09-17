@@ -198,7 +198,8 @@ jobs:
                   required = {
                       'incidents','evidences','findings','memory_entries','approvals',
                       'audit_events','workflow_checkpoints','runbooks',
-                      'legacy_knowledge_documents_archive'
+                      'legacy_knowledge_documents_archive','chat_sessions','chat_messages',
+                      'chat_action_proposals'
                   }
                   assert required <= tables, required - tables
                   assert 'knowledge_documents' not in tables, 'active local Knowledge RAG table must be retired'
@@ -287,8 +288,10 @@ jobs:
                   assert cur.fetchone()[0] is None, 'active local Knowledge table still exists'
                   cur.execute("SELECT column_name FROM information_schema.columns WHERE table_name='legacy_knowledge_documents_archive'")
                   assert 'embedding' not in {row[0] for row in cur.fetchall()}, 'archive still has vector retrieval capability'
+                  cur.execute("SELECT to_regclass('public.chat_sessions'), to_regclass('public.chat_messages'), to_regclass('public.chat_action_proposals')")
+                  assert cur.fetchone() == ('chat_sessions', 'chat_messages', 'chat_action_proposals'), 'chatbot persistence was not created during forward migration'
                   cur.execute("SELECT version_num FROM alembic_version")
-                  assert cur.fetchone()[0] == 'c3d4e5f6a7b8'
+                  assert cur.fetchone()[0] == 'f3c4d5e6f7a8'
           PY
       - name: Migration downgrade and clean rebuild
         run: |
