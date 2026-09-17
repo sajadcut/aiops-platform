@@ -135,6 +135,7 @@ async def _event_stream(
     first_chunk_observed = False
     heartbeat = 0
     result_ready = False
+    terminal_emitted = False
 
     try:
         # Keep the initial frames inside the same protected lifetime as provider
@@ -190,22 +191,28 @@ async def _event_stream(
 
         complete = result.model_dump(mode="json")
         complete["request_id"] = request_id
-        yield _sse("complete", complete)
+        # Mark the terminal outcome before yielding it. If the ASGI consumer
+        # closes immediately after receiving this frame, generator shutdown must
+        # not also count the request as interrupted.
+        terminal_emitted = True
         CHAT_STREAM_REQUESTS.labels(outcome="completed").inc()
+        yield _sse("complete", complete)
     except asyncio.CancelledError:
-        CHAT_STREAM_INTERRUPTED.inc()
-        CHAT_STREAM_REQUESTS.labels(outcome="interrupted").inc()
+        if not terminal_emitted:
+            CHAT_STREAM_INTERRUPTED.inc()
+            CHAT_STREAM_REQUESTS.labels(outcome="interrupted").inc()
         await _cancel_inflight(task)
-        if not result_ready:
+        if not result_ready and not terminal_emitted:
             await _persist_interruption(session_id)
         raise
     except GeneratorExit:
         # Async-generator close is how an early HTTP disconnect can surface when
         # the generator is suspended on a yield. Treat it as an interruption too.
-        CHAT_STREAM_INTERRUPTED.inc()
-        CHAT_STREAM_REQUESTS.labels(outcome="interrupted").inc()
+        if not terminal_emitted:
+            CHAT_STREAM_INTERRUPTED.inc()
+            CHAT_STREAM_REQUESTS.labels(outcome="interrupted").inc()
         await _cancel_inflight(task)
-        if not result_ready:
+        if not result_ready and not terminal_emitted:
             await _persist_interruption(session_id)
         raise
     except Exception as exc:
