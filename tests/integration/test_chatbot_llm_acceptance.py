@@ -66,7 +66,7 @@ async def _cleanup(owner: str):
         await db.commit()
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio(loop_scope="session")
 async def test_general_chat_answer_is_persisted_without_tool_execution():
     owner = "chat-general-viewer"
     identity = Identity(subject=owner, roles=("viewer",))
@@ -82,7 +82,7 @@ async def test_general_chat_answer_is_persisted_without_tool_execution():
     await _cleanup(owner)
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio(loop_scope="session")
 async def test_llm_failure_returns_503_and_does_not_execute_infrastructure():
     owner = "chat-llm-failure"
     identity = Identity(subject=owner, roles=("sre",))
@@ -93,7 +93,7 @@ async def test_llm_failure_returns_503_and_does_not_execute_infrastructure():
     await _cleanup(owner)
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio(loop_scope="session")
 async def test_invalid_model_tool_call_is_blocked_fail_closed():
     owner = "chat-invalid-tool"
     identity = Identity(subject=owner, roles=("sre",))
@@ -111,7 +111,7 @@ async def test_invalid_model_tool_call_is_blocked_fail_closed():
     await _cleanup(owner)
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio(loop_scope="session")
 async def test_read_tool_selection_executes_only_validated_backend_intent(monkeypatch):
     owner = "chat-read-viewer"
     identity = Identity(subject=owner, roles=("viewer",))
@@ -139,7 +139,7 @@ async def test_read_tool_selection_executes_only_validated_backend_intent(monkey
     await _cleanup(owner)
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio(loop_scope="session")
 async def test_mutation_message_creates_pending_proposal_without_execution(monkeypatch):
     owner = "chat-proposal-sre"
     identity = Identity(subject=owner, roles=("sre",))
@@ -179,7 +179,7 @@ async def test_mutation_message_creates_pending_proposal_without_execution(monke
     await _cleanup(owner)
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio(loop_scope="session")
 async def test_viewer_mutation_is_policy_blocked_without_proposal_or_execution(monkeypatch):
     owner = "chat-mutation-viewer"
     identity = Identity(subject=owner, roles=("viewer",))
