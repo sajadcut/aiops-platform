@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+import asyncio
 import re
 import time
 from typing import Any, Dict, List, Optional
 
+from fastapi import HTTPException
 from prometheus_client import Counter, Histogram
 
+from apps.chatbot.models import ChatMessageRequest, ChatMessageResponse
 from apps.chatbot.service import ChatbotService
 from apps.chatbot.tools import ToolIntent
 from apps.security.oidc import Identity
@@ -51,6 +54,19 @@ def _looks_obviously_incomplete(response: LLMResponse) -> bool:
     return False
 
 
+def _is_timeout_error(exc: BaseException | None) -> bool:
+    if exc is None:
+        return False
+    return isinstance(exc, (asyncio.TimeoutError, TimeoutError)) or "timeout" in type(exc).__name__.lower()
+
+
+def _is_connection_error(exc: BaseException | None) -> bool:
+    if exc is None:
+        return False
+    name = type(exc).__name__.lower()
+    return isinstance(exc, ConnectionError) or "connect" in name or "network" in name
+
+
 class ReliableChatLLMAdapter(LLMAdapter):
     """Chat-stage reliability wrapper around the configured LLM adapter."""
 
@@ -78,7 +94,7 @@ class ReliableChatLLMAdapter(LLMAdapter):
                 **kwargs,
             )
         except Exception as exc:
-            if "timeout" in type(exc).__name__.lower():
+            if _is_timeout_error(exc):
                 CHAT_LLM_TIMEOUTS.inc()
             raise
 
@@ -97,7 +113,7 @@ class ReliableChatLLMAdapter(LLMAdapter):
                 **kwargs,
             )
         except Exception as exc:
-            if "timeout" in type(exc).__name__.lower():
+            if _is_timeout_error(exc):
                 CHAT_LLM_TIMEOUTS.inc()
             raise
 
@@ -126,7 +142,7 @@ class ReliableChatLLMAdapter(LLMAdapter):
                 **kwargs,
             )
         except Exception as exc:
-            if "timeout" in type(exc).__name__.lower():
+            if _is_timeout_error(exc):
                 CHAT_LLM_TIMEOUTS.inc()
             raise
         if _looks_obviously_incomplete(repaired):
@@ -149,6 +165,33 @@ class OperationsCopilotService(ChatbotService):
                 delegate if isinstance(delegate, ReliableChatLLMAdapter) else ReliableChatLLMAdapter(delegate)
             )
         return self._reliable_adapter
+
+    async def message(self, identity: Identity, request: ChatMessageRequest) -> ChatMessageResponse:
+        """Preserve safe cause categories after the base service fail-closed wrapper.
+
+        The base service intentionally converts provider/tool exceptions into
+        stable HTTP errors. This outer production adapter keeps those internals
+        private while restoring the distinctions the UI needs for actionable,
+        short terminal outcomes.
+        """
+
+        try:
+            return await super().message(identity, request)
+        except HTTPException as exc:
+            detail = str(exc.detail or "")
+            cause = exc.__cause__
+            if detail == "chatbot_llm_unavailable":
+                if isinstance(cause, ValueError) and str(cause) == "chatbot_llm_incomplete_response":
+                    raise HTTPException(status_code=503, detail="chatbot_llm_incomplete_response") from cause
+                if _is_timeout_error(cause):
+                    raise HTTPException(status_code=504, detail="chatbot_llm_timeout") from cause
+            if detail.startswith("chatbot_tool_failed:"):
+                tool = detail.partition(":")[2]
+                if _is_timeout_error(cause):
+                    raise HTTPException(status_code=504, detail=f"chatbot_tool_timeout:{tool}") from cause
+                if _is_connection_error(cause):
+                    raise HTTPException(status_code=502, detail=f"chatbot_tool_unavailable:{tool}") from cause
+            raise
 
     async def _execute_read(self, intent: ToolIntent, session_id: str) -> dict[str, Any]:
         started = time.perf_counter()
