@@ -1,14 +1,14 @@
 """Add durable AIOps chatbot persistence.
 
 Revision ID: f3c4d5e6f7a8
-Revises: f2b3c4d5e6f7
+Revises: c3d4e5f6a7b8
 """
 from typing import Sequence, Union
 
 from alembic import op
 
 revision: str = "f3c4d5e6f7a8"
-down_revision: Union[str, Sequence[str], None] = "f2b3c4d5e6f7"
+down_revision: Union[str, Sequence[str], None] = "c3d4e5f6a7b8"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
