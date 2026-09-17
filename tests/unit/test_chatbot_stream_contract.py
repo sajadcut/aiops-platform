@@ -1,3 +1,4 @@
+import asyncio
 import json
 from uuid import uuid4
 
@@ -42,6 +43,19 @@ class FailedService:
         raise HTTPException(status_code=503, detail="chatbot_llm_unavailable")
 
 
+class BlockingService:
+    def __init__(self):
+        self.started = asyncio.Event()
+        self.cancelled = asyncio.Event()
+
+    async def message(self, identity, request):
+        self.started.set()
+        try:
+            await asyncio.Event().wait()
+        finally:
+            self.cancelled.set()
+
+
 @pytest.mark.asyncio
 async def test_every_successful_stream_has_terminal_complete_event():
     request = ChatMessageRequest(session_id=uuid4(), message="nginx بالاست؟")
@@ -80,3 +94,39 @@ async def test_failed_stream_emits_short_terminal_error_instead_of_ending_silent
     assert events[-1][1]["code"] == "LLM_UNAVAILABLE"
     assert events[-1][1]["message"] == "LLM پاسخ نداد. دوباره تلاش کنید."
     assert "chatbot_llm_unavailable" not in events[-1][1]["message"]
+
+
+@pytest.mark.asyncio
+async def test_stream_interruption_cancels_inflight_work_and_persists_terminal_state(monkeypatch):
+    persisted = []
+
+    async def record_persist(session_id, **kwargs):
+        persisted.append((str(session_id), kwargs))
+
+    monkeypatch.setattr("apps.chatbot.streaming._persist_terminal_error", record_persist)
+    service = BlockingService()
+    request = ChatMessageRequest(session_id=uuid4(), message="وضعیت nginx را بررسی کن")
+
+    async def consume_stream():
+        async for _frame in _event_stream(
+            service,
+            Identity(subject="test", roles=("viewer",)),
+            request,
+            request_id="req-interrupted",
+        ):
+            await asyncio.sleep(0)
+
+    consumer = asyncio.create_task(consume_stream())
+    await asyncio.wait_for(service.started.wait(), timeout=1.0)
+    consumer.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await consumer
+    await asyncio.wait_for(service.cancelled.wait(), timeout=1.0)
+
+    assert len(persisted) == 1
+    session_id, terminal = persisted[0]
+    assert session_id == str(request.session_id)
+    assert terminal["code"] == "REQUEST_INTERRUPTED"
+    assert terminal["component"] == "chat"
+    assert terminal["retryable"] is True
+    assert "متوقف شد" in terminal["message"]
