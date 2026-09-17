@@ -25,7 +25,7 @@ class ChatErrorDescriptor:
 _ERROR_MAP: dict[str, ChatErrorDescriptor] = {
     "chatbot_llm_timeout": ChatErrorDescriptor(
         code="LLM_TIMEOUT",
-        message="درخواست به دلیل Timeout کامل نشد.",
+        message="درخواست به دلیل Timeout در LLM کامل نشد.",
         component="llm",
         retryable=True,
         http_status=504,
@@ -125,7 +125,7 @@ def classify_chatbot_error(exc: BaseException) -> ChatErrorDescriptor:
     if isinstance(exc, (asyncio.TimeoutError, TimeoutError)) or "timeout" in name:
         return ChatErrorDescriptor(
             code="LLM_TIMEOUT",
-            message="درخواست به دلیل Timeout کامل نشد.",
+            message="درخواست به دلیل Timeout در LLM کامل نشد.",
             component="llm",
             retryable=True,
             http_status=504,
