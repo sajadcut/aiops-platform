@@ -1,148 +1,117 @@
 <!doctype html>
-<html lang="fa">
+<html lang="fa" dir="rtl">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
+  <meta name="theme-color" content="#07111f">
   <title>AIOps Operations Copilot</title>
-  <link rel="stylesheet" href="/chatbot/chatbot.css?v=3">
+  <link rel="stylesheet" href="/chatbot/chatbot.css?v=4">
 </head>
 <body>
-  <main class="shell">
-    <section id="loginView" class="card login-card">
-      <div class="brand">AIOps Operations Copilot</div>
-      <h1>ورود اپراتور</h1>
-      <p>کلید API را وارد کنید. مرورگر آن را فقط در همین تب و داخل sessionStorage نگه می‌دارد.</p>
-      <form id="loginForm" autocomplete="off">
-        <label for="apiKey">API key</label>
-        <input id="apiKey" name="apiKey" type="password" autocomplete="off" required maxlength="4096" placeholder="X-API-Key">
-        <button type="submit">ورود</button>
-      </form>
-      <div id="loginError" class="error" role="alert"></div>
+  <main class="app-shell">
+    <section id="loginView" class="login-view" aria-labelledby="loginTitle">
+      <div class="login-ambient" aria-hidden="true"></div>
+      <div class="login-card">
+        <div class="product-mark" aria-hidden="true"><span></span></div>
+        <div class="eyebrow">AIOps PLATFORM</div>
+        <h1 id="loginTitle">Operations Copilot</h1>
+        <p class="login-lead">دستیار عملیاتی امن برای بررسی زنده زیرساخت، تحلیل رخداد و اجرای کنترل‌شده عملیات.</p>
+        <form id="loginForm" class="login-form" autocomplete="off">
+          <label for="apiKey">کلید دسترسی</label>
+          <div class="field-shell">
+            <span class="field-icon" aria-hidden="true">⌘</span>
+            <input id="apiKey" name="apiKey" type="password" autocomplete="off" required maxlength="4096" placeholder="X-API-Key">
+          </div>
+          <button type="submit" class="primary-button">ورود به Copilot</button>
+        </form>
+        <div class="security-note"><span aria-hidden="true">●</span> کلید فقط در sessionStorage همین تب نگه‌داری می‌شود.</div>
+        <div id="loginError" class="inline-error" role="alert"></div>
+      </div>
     </section>
 
-    <section id="chatView" class="chat-app hidden" aria-live="polite">
-      <aside class="sidebar" aria-label="تاریخچه گفت‌وگوها">
-        <div class="sidebar-head">
-          <div class="brand">AIOps Copilot</div>
-          <button id="newChat" class="new-chat" type="button">+ گفت‌وگوی جدید</button>
+    <section id="chatView" class="workspace hidden">
+      <aside id="sidebar" class="sidebar" aria-label="تاریخچه گفت‌وگوها">
+        <div class="sidebar-brand-row">
+          <div class="sidebar-brand">
+            <div class="product-mark small" aria-hidden="true"><span></span></div>
+            <div><strong>AIOps</strong><span>Operations Copilot</span></div>
+          </div>
+          <button id="sidebarClose" class="icon-button mobile-only" type="button" aria-label="بستن تاریخچه">×</button>
         </div>
 
-        <div class="history-label">تاریخچه</div>
+        <button id="newChat" class="new-chat-button" type="button"><span aria-hidden="true">＋</span><span>گفت‌وگوی جدید</span></button>
+
+        <label class="history-search" for="sessionSearch">
+          <span aria-hidden="true">⌕</span>
+          <input id="sessionSearch" type="search" autocomplete="off" placeholder="جست‌وجوی گفت‌وگوها">
+        </label>
+
+        <div class="history-heading"><span>تاریخچه</span><span id="sessionCount" class="count-badge">0</span></div>
         <nav id="sessionList" class="session-list" aria-label="Conversation history"></nav>
 
         <div class="sidebar-footer">
-          <div id="identity" class="identity muted" dir="auto"></div>
-          <a href="/dashboard">Dashboard</a>
-          <button id="logout" class="danger" type="button">خروج</button>
+          <div id="identity" class="identity" dir="auto"></div>
+          <div class="sidebar-footer-actions">
+            <a href="/dashboard" class="ghost-link">Dashboard</a>
+            <button id="themeToggle" class="icon-button" type="button" aria-label="تغییر پوسته">☾</button>
+            <button id="logout" class="icon-button danger-icon" type="button" aria-label="خروج">↪</button>
+          </div>
         </div>
       </aside>
 
+      <div id="sidebarBackdrop" class="sidebar-backdrop hidden" aria-hidden="true"></div>
+
       <section class="conversation-panel">
         <header class="topbar">
-          <div>
-            <div class="conversation-title">Operations Copilot</div>
-            <div class="muted">فارسی، English و متن ترکیبی را طبیعی بنویسید</div>
+          <div class="topbar-leading">
+            <button id="sidebarOpen" class="icon-button mobile-only" type="button" aria-label="باز کردن تاریخچه">☰</button>
+            <div>
+              <div id="conversationTitle" class="conversation-title">Operations Copilot</div>
+              <div class="conversation-subtitle"><span class="live-dot"></span> Governed · MCP-backed · Persian-first</div>
+            </div>
           </div>
+          <div id="topbarBadges" class="topbar-badges" aria-label="وضعیت"></div>
         </header>
 
-        <section id="messages" class="messages" aria-label="Conversation"></section>
-        <div id="status" class="status muted" dir="auto"></div>
+        <section id="messages" class="messages" aria-label="Conversation" aria-live="polite"></section>
+        <button id="scrollToBottom" class="scroll-bottom hidden" type="button" aria-label="رفتن به آخر گفت‌وگو">↓</button>
 
-        <form id="chatForm" class="composer">
-          <textarea id="messageInput" rows="2" maxlength="4000" dir="auto" placeholder="مثلاً: CPU سرور 10.100.6.199 چقدره؟ یا وضعیت سرویس haproxy را بررسی کن…" required></textarea>
-          <button id="sendButton" type="submit">ارسال</button>
-        </form>
+        <div class="composer-zone">
+          <div id="runtimeStatus" class="runtime-status hidden" role="status" aria-live="polite">
+            <span class="status-spinner" aria-hidden="true"></span><span id="statusText"></span><span id="statusMeta" class="status-meta"></span>
+          </div>
+
+          <form id="chatForm" class="composer">
+            <div class="composer-input-wrap">
+              <textarea id="messageInput" rows="1" maxlength="4000" dir="auto" placeholder="پیام خود را بنویسید… مثلاً: CPU سرور 10.100.6.199 چقدره؟" required></textarea>
+              <div class="composer-footer"><span class="composer-hint">Enter ارسال · Shift+Enter خط جدید</span><span id="charCount" class="char-count">0 / 4000</span></div>
+            </div>
+            <button id="sendButton" class="send-button" type="submit" aria-label="ارسال پیام"><span class="send-icon" aria-hidden="true">↑</span><span class="stop-icon hidden" aria-hidden="true">■</span></button>
+          </form>
+          <div class="composer-disclaimer">Copilot ممکن است خطا کند؛ عملیات تغییردهنده فقط از مسیر Approval و ابزارهای مجاز اجرا می‌شوند.</div>
+        </div>
       </section>
     </section>
   </main>
-  <script src="/chatbot/chatbot.js?v=3" defer></script>
-  <script defer>
-    (() => {
-      "use strict";
 
-      function appendInline(parent, value) {
-        const text = String(value || "");
-        const pattern = /(\*\*[^*\n]+\*\*|`[^`\n]+`)/g;
-        let cursor = 0;
-        let match;
-        while ((match = pattern.exec(text)) !== null) {
-          if (match.index > cursor) {
-            parent.appendChild(document.createTextNode(text.slice(cursor, match.index)));
-          }
-          const token = match[0];
-          if (token.startsWith("**")) {
-            const strong = document.createElement("strong");
-            strong.textContent = token.slice(2, -2);
-            parent.appendChild(strong);
-          } else {
-            const code = document.createElement("code");
-            code.textContent = token.slice(1, -1);
-            parent.appendChild(code);
-          }
-          cursor = pattern.lastIndex;
-        }
-        if (cursor < text.length) {
-          parent.appendChild(document.createTextNode(text.slice(cursor)));
-        }
-      }
+  <dialog id="renameDialog" class="modal">
+    <form id="renameForm" method="dialog" class="modal-card">
+      <h2>تغییر نام گفت‌وگو</h2><label for="renameInput">عنوان</label><input id="renameInput" type="text" maxlength="160" required dir="auto">
+      <div class="modal-actions"><button type="button" class="secondary-button" data-close-dialog="renameDialog">انصراف</button><button type="submit" class="primary-button compact">ذخیره</button></div>
+    </form>
+  </dialog>
 
-      function renderSafeMarkdown(node) {
-        if (!(node instanceof HTMLElement) || node.dataset.markdownRendered === "1") return;
-        const source = node.textContent || "";
-        if (!source.includes("**") && !source.includes("`") && !/^\s*[-*]\s+/m.test(source)) return;
+  <dialog id="deleteDialog" class="modal">
+    <form id="deleteForm" method="dialog" class="modal-card">
+      <h2>حذف گفت‌وگو</h2><p>متن این گفت‌وگو از تاریخچه حذف می‌شود. رکوردهای حاکمیتی و Audit مرتبط با عملیات حفظ خواهند شد.</p>
+      <div class="modal-actions"><button type="button" class="secondary-button" data-close-dialog="deleteDialog">انصراف</button><button type="submit" class="danger-button">حذف</button></div>
+    </form>
+  </dialog>
 
-        const fragment = document.createDocumentFragment();
-        let list = null;
-        for (const line of source.split(/\r?\n/)) {
-          const bullet = line.match(/^\s*[-*]\s+(.*)$/);
-          if (bullet) {
-            if (!list) {
-              list = document.createElement("ul");
-              fragment.appendChild(list);
-            }
-            const item = document.createElement("li");
-            appendInline(item, bullet[1]);
-            list.appendChild(item);
-            continue;
-          }
-
-          list = null;
-          if (!line.trim()) {
-            fragment.appendChild(document.createElement("br"));
-            continue;
-          }
-          const block = document.createElement("div");
-          appendInline(block, line);
-          fragment.appendChild(block);
-        }
-        node.replaceChildren(fragment);
-        node.dataset.markdownRendered = "1";
-      }
-
-      function renderAll(root = document) {
-        if (root instanceof HTMLElement && root.matches(".message-body")) renderSafeMarkdown(root);
-        for (const node of root.querySelectorAll ? root.querySelectorAll(".message-body") : []) {
-          renderSafeMarkdown(node);
-        }
-      }
-
-      const observer = new MutationObserver((records) => {
-        for (const record of records) {
-          for (const node of record.addedNodes) {
-            if (node instanceof HTMLElement) renderAll(node);
-          }
-        }
-      });
-
-      window.addEventListener("DOMContentLoaded", () => {
-        renderAll();
-        const messages = document.getElementById("messages");
-        if (messages) observer.observe(messages, {childList: true, subtree: true});
-      });
-    })();
-  </script>
+  <div id="toastRegion" class="toast-region" aria-live="polite" aria-atomic="true"></div>
+  <script src="/chatbot/chatbot.js?v=4" defer></script>
 </body>
 </html>
