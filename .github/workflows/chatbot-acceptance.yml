@@ -62,5 +62,5 @@ jobs:
           pip check
       - name: Upgrade clean database to migration head
         run: python -m alembic -c database/migrations/alembic.ini upgrade head
-      - name: Run chatbot durable governance acceptance
-        run: python -m pytest -q tests/integration/test_chatbot_db_acceptance.py
+      - name: Run chatbot durable governance and LLM orchestration acceptance
+        run: python -m pytest -q tests/integration/test_chatbot_db_acceptance.py tests/integration/test_chatbot_llm_acceptance.py
