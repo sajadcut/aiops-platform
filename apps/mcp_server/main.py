@@ -44,7 +44,19 @@ _TOOL_SCHEMAS: Dict[str, Dict[str, Dict[str, Any]]] = {
         "get_prometheus_alerts": {"description": "Read Prometheus/Alertmanager alerts", "inputSchema": {"type": "object", "properties": {"service": {"type": ["string", "null"]}, "since": {"type": ["string", "null"]}, "limit": {"type": "integer", "minimum": 1, "maximum": 500}}}},
     },
     "kubernetes": {
-        "collect_kubernetes_evidence": {"description": "Collect read-only pod/event/log Evidence for a service", "inputSchema": {"type": "object", "required": ["service"], "properties": {"service": {"type": "string"}}}},
+        "collect_kubernetes_evidence": {
+            "description": "Read bounded Kubernetes evidence/status using an allowlisted operation",
+            "inputSchema": {
+                "type": "object",
+                "additionalProperties": False,
+                "properties": {
+                    "operation": {"type": "string", "enum": ["list_pods", "pod_status", "deployment_status", "events", "resource_usage", "rollout_state", "service_evidence"]},
+                    "namespace": {"type": "string"},
+                    "service": {"type": ["string", "null"]},
+                    "resource": {"type": ["string", "null"]},
+                },
+            },
+        },
     },
     "vm": {
         "collect_vm_metrics": {"description": "Collect allowlisted Linux VM CPU/memory/swap/load/IO metrics", "inputSchema": {"type": "object", "required": ["target"], "properties": dict(_TARGET)}},
@@ -123,10 +135,16 @@ async def _call(provider: str, tool: str, args: Dict[str, Any]) -> Any:
         items = await connector.get_metrics(service, names, since, _parse_dt(args.get("until")))
         return [item.model_dump(mode="json") for item in items]
     if provider == "kubernetes":
-        service = str(args.get("service") or "").strip()
-        if not service:
-            raise ValueError("service_required")
-        return await KubernetesEvidenceClient().collect_evidence(service)
+        operation = str(args.get("operation") or "service_evidence").strip()
+        namespace = str(args.get("namespace") or settings.KUBERNETES_NAMESPACE or "default").strip()
+        service = str(args.get("service") or "").strip() or None
+        resource = str(args.get("resource") or "").strip() or None
+        return await KubernetesEvidenceClient(namespace=namespace).collect_query(
+            operation=operation,
+            namespace=namespace,
+            service=service,
+            resource=resource,
+        )
 
     connector = SSHVMConnector()
     target = str(args.get("target") or "").strip()
