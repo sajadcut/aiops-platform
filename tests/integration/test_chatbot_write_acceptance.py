@@ -74,7 +74,7 @@ async def _cleanup(owner: str, session_id, incident_id: str) -> None:
         await db.commit()
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio(loop_scope="session")
 async def test_expired_proposal_is_rejected_before_approval_or_execution(monkeypatch):
     owner = "chat-expired-sre"
     session_id, incident_id, proposal = await _seed(
@@ -113,7 +113,7 @@ async def test_expired_proposal_is_rejected_before_approval_or_execution(monkeyp
     await _cleanup(owner, session_id, incident_id)
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio(loop_scope="session")
 async def test_rejecting_pending_proposal_creates_no_approval_and_executes_nothing(monkeypatch):
     owner = "chat-reject-sre"
     session_id, incident_id, proposal = await _seed(
@@ -146,7 +146,7 @@ async def test_rejecting_pending_proposal_creates_no_approval_and_executes_nothi
     await _cleanup(owner, session_id, incident_id)
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio(loop_scope="session")
 async def test_confirmed_kubernetes_restart_uses_bound_execution_and_consumed_approval(monkeypatch):
     owner = "chat-k8s-write-sre"
     session_id, incident_id, proposal = await _seed(
