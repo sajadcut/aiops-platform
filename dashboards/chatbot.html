@@ -3,8 +3,11 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>AIOps Operations Copilot</title>
-  <link rel="stylesheet" href="/chatbot/chatbot.css">
+  <link rel="stylesheet" href="/chatbot/chatbot.css?v=3">
 </head>
 <body>
   <main class="shell">
@@ -55,6 +58,91 @@
       </section>
     </section>
   </main>
-  <script src="/chatbot/chatbot.js" defer></script>
+  <script src="/chatbot/chatbot.js?v=3" defer></script>
+  <script defer>
+    (() => {
+      "use strict";
+
+      function appendInline(parent, value) {
+        const text = String(value || "");
+        const pattern = /(\*\*[^*\n]+\*\*|`[^`\n]+`)/g;
+        let cursor = 0;
+        let match;
+        while ((match = pattern.exec(text)) !== null) {
+          if (match.index > cursor) {
+            parent.appendChild(document.createTextNode(text.slice(cursor, match.index)));
+          }
+          const token = match[0];
+          if (token.startsWith("**")) {
+            const strong = document.createElement("strong");
+            strong.textContent = token.slice(2, -2);
+            parent.appendChild(strong);
+          } else {
+            const code = document.createElement("code");
+            code.textContent = token.slice(1, -1);
+            parent.appendChild(code);
+          }
+          cursor = pattern.lastIndex;
+        }
+        if (cursor < text.length) {
+          parent.appendChild(document.createTextNode(text.slice(cursor)));
+        }
+      }
+
+      function renderSafeMarkdown(node) {
+        if (!(node instanceof HTMLElement) || node.dataset.markdownRendered === "1") return;
+        const source = node.textContent || "";
+        if (!source.includes("**") && !source.includes("`") && !/^\s*[-*]\s+/m.test(source)) return;
+
+        const fragment = document.createDocumentFragment();
+        let list = null;
+        for (const line of source.split(/\r?\n/)) {
+          const bullet = line.match(/^\s*[-*]\s+(.*)$/);
+          if (bullet) {
+            if (!list) {
+              list = document.createElement("ul");
+              fragment.appendChild(list);
+            }
+            const item = document.createElement("li");
+            appendInline(item, bullet[1]);
+            list.appendChild(item);
+            continue;
+          }
+
+          list = null;
+          if (!line.trim()) {
+            fragment.appendChild(document.createElement("br"));
+            continue;
+          }
+          const block = document.createElement("div");
+          appendInline(block, line);
+          fragment.appendChild(block);
+        }
+        node.replaceChildren(fragment);
+        node.dataset.markdownRendered = "1";
+      }
+
+      function renderAll(root = document) {
+        if (root instanceof HTMLElement && root.matches(".message-body")) renderSafeMarkdown(root);
+        for (const node of root.querySelectorAll ? root.querySelectorAll(".message-body") : []) {
+          renderSafeMarkdown(node);
+        }
+      }
+
+      const observer = new MutationObserver((records) => {
+        for (const record of records) {
+          for (const node of record.addedNodes) {
+            if (node instanceof HTMLElement) renderAll(node);
+          }
+        }
+      });
+
+      window.addEventListener("DOMContentLoaded", () => {
+        renderAll();
+        const messages = document.getElementById("messages");
+        if (messages) observer.observe(messages, {childList: true, subtree: true});
+      });
+    })();
+  </script>
 </body>
 </html>
