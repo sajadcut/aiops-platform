@@ -66,7 +66,8 @@ def test_chatbot_document_cache_busts_frontend_assets():
 
 def test_chatbot_safe_markdown_renderer_supports_common_llm_formatting_without_html_injection():
     html = Path("dashboards/chatbot.html").read_text(encoding="utf-8")
-    assert "function renderInlineMarkdown" in html
+    assert "function appendInline" in html
+    assert "function renderSafeMarkdown" in html
     assert 'document.createElement("strong")' in html
     assert 'document.createElement("code")' in html
     assert 'document.createElement("ul")' in html
