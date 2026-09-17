@@ -2,7 +2,7 @@
 
 Governed AIOps control plane for Signal ingestion, durable Incident/Evidence/RCA workflows, Cognia-only governed Knowledge RAG, human approval, allowlisted execution through MCP, verification and audit.
 
-The architecture contract is [`MASTER.md`](MASTER.md). Strict production acceptance criteria are in [`PRODUCTION_ACCEPTANCE.md`](PRODUCTION_ACCEPTANCE.md), the current acceptance report is [`FINAL_ACCEPTANCE_REPORT.md`](FINAL_ACCEPTANCE_REPORT.md), Cognia integration details are in [`docs/COGNIA_INTEGRATION.md`](docs/COGNIA_INTEGRATION.md), production operational guidance is in [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md), and configuration is in [`docs/CONFIGURATION.md`](docs/CONFIGURATION.md).
+The architecture contract is [`MASTER.md`](MASTER.md). Strict production acceptance criteria are in [`PRODUCTION_ACCEPTANCE.md`](PRODUCTION_ACCEPTANCE.md), the current acceptance report is [`FINAL_ACCEPTANCE_REPORT.md`](FINAL_ACCEPTANCE_REPORT.md), Cognia integration details are in [`docs/COGNIA_INTEGRATION.md`](docs/COGNIA_INTEGRATION.md), production operational guidance is in [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md), configuration is in [`docs/CONFIGURATION.md`](docs/CONFIGURATION.md), and the authenticated Operations Copilot is documented in [`docs/CHATBOT.md`](docs/CHATBOT.md).
 
 ## Knowledge architecture
 
@@ -27,6 +27,24 @@ python -m uvicorn apps.api.main:app --host 0.0.0.0 --port 8000
 
 A clean checkout has a complete non-secret development configuration in `.env.example`, so imports do not depend on undocumented shell variables. Cognia connection/credential placeholders may remain empty for local code work that does not perform Knowledge retrieval; any attempted Knowledge RAG call then fails explicitly as Cognia misconfiguration/unavailability rather than switching to another RAG. `.env` is ignored by Git and Docker.
 
+## Operations Copilot (`/chatbot`)
+
+After the API is running, open `http://localhost:8000/chatbot`. The browser validates the existing AIOps API key through `/api/v1/chatbot/me` and keeps the key only in `sessionStorage`; it is never persisted in chat history or sent to the LLM. The chatbot supports multi-turn general guidance plus governed VM, Kubernetes and Zabbix reads. The LLM may select only the bounded semantic tool catalog and never receives a generic shell, SSH, kubectl, SQL or arbitrary HTTP capability.
+
+Read requests stay behind the existing MCP boundaries. VM telemetry uses the registered `vm_telemetry` tool, Zabbix uses the allowlisted `ZabbixMCPClient`, and Kubernetes reads go through `KUBERNETES_MCP_URL`. A requested VM/Kubernetes mutation first creates a durable Action Proposal and ChatOps Incident. Only an authenticated principal with the existing high-risk approval and approved-execution permissions may confirm the exact proposal; confirmation is digest-bound, creates/consumes the durable Approval once, then invokes the existing `ExecutionService` and attempts independent read verification. A text reply such as `yes` is not execution authority.
+
+Example API call:
+
+```bash
+curl -sS \
+  -H 'Content-Type: application/json' \
+  -H 'X-API-Key: <api-key>' \
+  -d '{"message":"cpu vm01 چقدره؟"}' \
+  http://localhost:8000/api/v1/chatbot/message
+```
+
+Apply migration head before using the chatbot because sessions, bounded history and mutation proposals are durable PostgreSQL state. Full API, RBAC, tool, confirmation and production-boundary documentation is in [`docs/CHATBOT.md`](docs/CHATBOT.md).
+
 ## Production contract
 
 Do **not** deploy by copying the development template unchanged. The production image forces `APP_ENV=production`, and startup fails closed for unsafe configuration such as mock providers, wildcard CORS, insecure MCP, direct Control-Plane SSH/Kubernetes access, invalid authentication, migration drift, or missing/unsafe Cognia configuration.
@@ -50,6 +68,8 @@ Promotion sequence:
 ## Safety boundaries
 
 - Operational API routes use explicit RBAC permissions; health/liveness/readiness/metrics and static dashboard assets are intentionally unauthenticated.
+- The `/chatbot` UI is static, but every chatbot API call authenticates through existing API-key/OIDC RBAC; the UI never grants authority by itself.
+- Chatbot model output is untrusted intent data. Backend validation, RBAC, durable approval, MCP allowlists, execution binding and verification remain authoritative.
 - Cognia RAG is auxiliary Knowledge, not Live Evidence, execution authority or an LLM response.
 - Cognia Machine Access Tokens are opaque; the runtime does not decode or assume JWT semantics and does not invent a machine refresh-token flow.
 - Cognia Search uses explicit KB IDs and preserves KB/Knowledge/Revision/Chunk traceability. `relevanceScore` is retrieval relevance, not probability that a fact is true.
@@ -68,8 +88,10 @@ Promotion sequence:
 
 The `quality` workflow runs with Python 3.12 and performs repository/config hygiene checks, dependency and high-severity static security audits, the full unit/integration/scenario/security suite, Cognia contract regression tests, clean PostgreSQL+pgvector migration acceptance, approval/correlation locking checks, forward migration from an older schema and downgrade/rebuild validation. pgvector acceptance is for Operational Memory only; the active PostgreSQL schema has no Knowledge vector retrieval path.
 
+The `chatbot-acceptance` workflow independently provisions PostgreSQL/pgvector, upgrades a clean database to migration head, and runs the durable ChatOps/session/approval plus LLM-orchestration acceptance tests. Repository-level chatbot tests also enforce API-key/RBAC behavior, bounded semantic tools, prompt-injection fail-closed behavior, Kubernetes GET-only evidence access and frontend key handling. Real LLM/MCP targets remain environment acceptance, not CI claims.
+
 Cognia repository tests cover opaque machine-token lifecycle, 401 re-authentication, explicit scoped Search, KB/Revision/Chunk traceability, typed `application/problem+json` failures, no alternate-RAG fallback, registration idempotency, scope anti-spoofing, optimistic Revision concurrency/no blind retry, machine approval boundary and Context sufficiency semantics. They do **not** replace real Cognia environment acceptance.
 
 The `container-acceptance` workflow builds separate hardened runtime and wheelhouse-builder images, then builds the production image as a true multi-stage artifact. Only `/opt/venv` crosses from builder to runtime; `/opt/wheels` and `/build` are rejected from the final filesystem. The gate then runs a container smoke test, exports the exact merged runtime rootfs, blocks fixable HIGH/CRITICAL Trivy findings, emits a CycloneDX SBOM, proves a cosign sign/verify path, validates immutable Kubernetes digest rendering and uploads the supply-chain evidence.
 
-A green repository gate is necessary but not sufficient for production promotion. The target environment must still prove the real Cognia HTTP/HTTPS/Application Client/KB grants/Scope/lifecycle and optional Context Profile, approved internal wheelhouse/base-image supply, real OCI registry signing/verification/promotion, enterprise identity, real MCP endpoints, HA/DR and the production-like acceptance scenarios in `PRODUCTION_ACCEPTANCE.md`.
+A green repository gate is necessary but not sufficient for production promotion. The target environment must still prove the real Cognia HTTP/HTTPS/Application Client/KB grants/Scope/lifecycle and optional Context Profile, approved internal wheelhouse/base-image supply, real OCI registry signing/verification/promotion, enterprise identity, real MCP endpoints including VM/Kubernetes/Zabbix chatbot queries and mutations, HA/DR and the production-like acceptance scenarios in `PRODUCTION_ACCEPTANCE.md`.

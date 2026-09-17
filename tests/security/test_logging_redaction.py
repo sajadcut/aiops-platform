@@ -29,6 +29,16 @@ def test_free_form_redaction_covers_bearer_dsn_and_private_key():
     assert "BEGIN PRIVATE KEY" not in result
 
 
+def test_free_form_redaction_covers_inline_tool_log_credentials():
+    value = "login failed password=hunter2 token:abc123 x-api-key='key-789' service=payments"
+    result = redact_text(value)
+    assert "hunter2" not in result
+    assert "abc123" not in result
+    assert "key-789" not in result
+    assert "service=payments" in result
+    assert result.count(REDACTED) == 3
+
+
 def test_safe_json_body_redacts_nested_values():
     raw = json.dumps({"nested": {"token": "secret", "value": 3}}).encode()
     result = _safe_json_body(raw, "application/json", enabled=True)

@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AIOps Operations Copilot</title>
+  <link rel="stylesheet" href="/chatbot/chatbot.css">
+</head>
+<body>
+  <main class="shell">
+    <section id="loginView" class="card login-card">
+      <div class="brand">AIOps Operations Copilot</div>
+      <h1>Operator sign in</h1>
+      <p>Enter the AIOps API key. The browser keeps it only for this tab session.</p>
+      <form id="loginForm" autocomplete="off">
+        <label for="apiKey">API key</label>
+        <input id="apiKey" name="apiKey" type="password" autocomplete="off" required maxlength="4096" placeholder="X-API-Key">
+        <button type="submit">Sign in</button>
+      </form>
+      <div id="loginError" class="error" role="alert"></div>
+    </section>
+
+    <section id="chatView" class="chat-layout hidden" aria-live="polite">
+      <header class="topbar">
+        <div>
+          <div class="brand">AIOps Operations Copilot</div>
+          <div id="identity" class="muted"></div>
+        </div>
+        <div class="top-actions">
+          <a href="/dashboard">Dashboard</a>
+          <button id="newChat" class="secondary" type="button">New chat</button>
+          <button id="logout" class="danger" type="button">Logout</button>
+        </div>
+      </header>
+
+      <section class="quick-actions" aria-label="Quick actions">
+        <button type="button" data-prompt="CPU vm01 چقدره؟">Check VM CPU</button>
+        <button type="button" data-prompt="لیست podهای namespace payments رو بده">List Namespace Pods</button>
+        <button type="button" data-prompt="وضعیت سرویس nginx روی vm01 رو بررسی کن">Check Service Status</button>
+        <button type="button" data-prompt="مشکل سرویس payment-api رو بررسی کن و راهکار پیشنهاد بده">Analyze Service</button>
+      </section>
+
+      <section id="messages" class="messages" aria-label="Conversation"></section>
+      <div id="status" class="status muted"></div>
+
+      <form id="chatForm" class="composer">
+        <textarea id="messageInput" rows="3" maxlength="4000" placeholder="Ask about VM, Kubernetes, Zabbix, or request a governed action…" required></textarea>
+        <button id="sendButton" type="submit">Send</button>
+      </form>
+    </section>
+  </main>
+  <script src="/chatbot/chatbot.js" defer></script>
+</body>
+</html>
