@@ -482,13 +482,13 @@
     const actions = document.createElement("div");
     actions.className = "message-actions";
 
-    if (role !== "user" && kind !== "action_proposal") {
+    if (kind !== "action_proposal") {
       const copy = document.createElement("button");
       copy.type = "button";
       copy.className = "message-action";
       copy.textContent = "کپی";
-      copy.setAttribute("aria-label", "کپی پاسخ");
-      copy.addEventListener("click", () => copyText(body.textContent || text));
+      copy.setAttribute("aria-label", role === "user" ? "کپی پیام شما" : "کپی پاسخ");
+      copy.addEventListener("click", () => copyText(role === "user" ? text : (body.textContent || text)));
       actions.appendChild(copy);
     }
 
