@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 336 | Dashboard JS files scanned: 3 | Symbols indexed: 2846**
+**Python files scanned: 337 | Dashboard JS files scanned: 3 | Symbols indexed: 2856**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1509,24 +1509,26 @@
 | `integrations/llm/mock_provider.py` | `MockLLMProvider.provider_name` | 18 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MockLLMProvider |
 | `integrations/llm/mock_provider.py` | `MockLLMProvider.generate` | 22 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MockLLMProvider |
 | `integrations/llm/mock_provider.py` | `MockLLMProvider.generate_with_messages` | 72 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MockLLMProvider |
-| `integrations/llm/openai_compatible.py` | `OpenAICompatibleLLMProvider` | 14 | class | Adapter for an internal/offline OpenAI-compatible chat gateway. | module |
-| `integrations/llm/openai_compatible.py` | `OpenAICompatibleLLMProvider.__init__` | 17 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OpenAICompatibleLLMProvider |
-| `integrations/llm/openai_compatible.py` | `OpenAICompatibleLLMProvider.provider_name` | 25 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OpenAICompatibleLLMProvider |
-| `integrations/llm/openai_compatible.py` | `OpenAICompatibleLLMProvider.chat_endpoint` | 29 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OpenAICompatibleLLMProvider |
-| `integrations/llm/openai_compatible.py` | `OpenAICompatibleLLMProvider._request_headers` | 32 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OpenAICompatibleLLMProvider |
-| `integrations/llm/openai_compatible.py` | `OpenAICompatibleLLMProvider._request_payload` | 38 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OpenAICompatibleLLMProvider |
-| `integrations/llm/openai_compatible.py` | `OpenAICompatibleLLMProvider._response_from_payload` | 53 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OpenAICompatibleLLMProvider |
-| `integrations/llm/openai_compatible.py` | `OpenAICompatibleLLMProvider._is_truncated` | 78 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OpenAICompatibleLLMProvider |
-| `integrations/llm/openai_compatible.py` | `OpenAICompatibleLLMProvider.generate` | 81 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OpenAICompatibleLLMProvider |
-| `integrations/llm/openai_compatible.py` | `OpenAICompatibleLLMProvider.generate_with_messages` | 135 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OpenAICompatibleLLMProvider |
-| `integrations/llm/openai_compatible.py` | `DotinGeneralChatbotLLMProvider` | 222 | class | Dotin General Chatbot adapter based on the documented OpenAI-compatible API. | module |
-| `integrations/llm/openai_compatible.py` | `DotinGeneralChatbotLLMProvider.__init__` | 233 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DotinGeneralChatbotLLMProvider |
-| `integrations/llm/openai_compatible.py` | `DotinGeneralChatbotLLMProvider.provider_name` | 241 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DotinGeneralChatbotLLMProvider |
-| `integrations/llm/openai_compatible.py` | `DotinGeneralChatbotLLMProvider.chat_endpoint` | 245 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DotinGeneralChatbotLLMProvider |
-| `integrations/llm/openai_compatible.py` | `DotinGeneralChatbotLLMProvider._safe_header_value` | 256 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DotinGeneralChatbotLLMProvider |
-| `integrations/llm/openai_compatible.py` | `DotinGeneralChatbotLLMProvider._request_headers` | 262 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DotinGeneralChatbotLLMProvider |
-| `integrations/llm/openai_compatible.py` | `DotinGeneralChatbotLLMProvider._request_payload` | 274 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DotinGeneralChatbotLLMProvider |
-| `integrations/llm/openai_compatible.py` | `configured_llm_adapter` | 319 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `integrations/llm/openai_compatible.py` | `OpenAICompatibleLLMProvider` | 15 | class | Adapter for an internal/offline OpenAI-compatible chat gateway. | module |
+| `integrations/llm/openai_compatible.py` | `OpenAICompatibleLLMProvider.__init__` | 18 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OpenAICompatibleLLMProvider |
+| `integrations/llm/openai_compatible.py` | `OpenAICompatibleLLMProvider.provider_name` | 26 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OpenAICompatibleLLMProvider |
+| `integrations/llm/openai_compatible.py` | `OpenAICompatibleLLMProvider.chat_endpoint` | 30 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OpenAICompatibleLLMProvider |
+| `integrations/llm/openai_compatible.py` | `OpenAICompatibleLLMProvider._request_headers` | 33 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OpenAICompatibleLLMProvider |
+| `integrations/llm/openai_compatible.py` | `OpenAICompatibleLLMProvider._request_payload` | 39 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OpenAICompatibleLLMProvider |
+| `integrations/llm/openai_compatible.py` | `OpenAICompatibleLLMProvider._response_from_payload` | 54 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OpenAICompatibleLLMProvider |
+| `integrations/llm/openai_compatible.py` | `OpenAICompatibleLLMProvider._is_truncated` | 79 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OpenAICompatibleLLMProvider |
+| `integrations/llm/openai_compatible.py` | `OpenAICompatibleLLMProvider._chatbot_summary_is_incomplete` | 83 | method | Detect obviously incomplete chatbot summaries even when a gateway says stop. | OpenAICompatibleLLMProvider |
+| `integrations/llm/openai_compatible.py` | `OpenAICompatibleLLMProvider._needs_completion_repair` | 143 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OpenAICompatibleLLMProvider |
+| `integrations/llm/openai_compatible.py` | `OpenAICompatibleLLMProvider.generate` | 150 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OpenAICompatibleLLMProvider |
+| `integrations/llm/openai_compatible.py` | `OpenAICompatibleLLMProvider.generate_with_messages` | 208 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OpenAICompatibleLLMProvider |
+| `integrations/llm/openai_compatible.py` | `DotinGeneralChatbotLLMProvider` | 295 | class | Dotin General Chatbot adapter based on the documented OpenAI-compatible API. | module |
+| `integrations/llm/openai_compatible.py` | `DotinGeneralChatbotLLMProvider.__init__` | 306 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DotinGeneralChatbotLLMProvider |
+| `integrations/llm/openai_compatible.py` | `DotinGeneralChatbotLLMProvider.provider_name` | 314 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DotinGeneralChatbotLLMProvider |
+| `integrations/llm/openai_compatible.py` | `DotinGeneralChatbotLLMProvider.chat_endpoint` | 318 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DotinGeneralChatbotLLMProvider |
+| `integrations/llm/openai_compatible.py` | `DotinGeneralChatbotLLMProvider._safe_header_value` | 329 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DotinGeneralChatbotLLMProvider |
+| `integrations/llm/openai_compatible.py` | `DotinGeneralChatbotLLMProvider._request_headers` | 335 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DotinGeneralChatbotLLMProvider |
+| `integrations/llm/openai_compatible.py` | `DotinGeneralChatbotLLMProvider._request_payload` | 347 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DotinGeneralChatbotLLMProvider |
+| `integrations/llm/openai_compatible.py` | `configured_llm_adapter` | 392 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `integrations/mcp_client.py` | `MCPClient` | 19 | class | کلاس | module |
 | `integrations/mcp_client.py` | `MCPClient.__init__` | 23 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MCPClient |
 | `integrations/mcp_client.py` | `MCPClient._authorization` | 64 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MCPClient |
@@ -2139,6 +2141,14 @@
 | `tests/unit/test_chatbot_kubernetes_contract.py` | `test_kubernetes_mcp_client_sends_only_allowlisted_read_tool.fake_call_tool` | 67 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_kubernetes_mcp_client_sends_only_allowlisted_read_tool |
 | `tests/unit/test_chatbot_response_redaction.py` | `test_chatbot_response_redacts_inline_secrets_before_ui_serialization` | 7 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_chatbot_response_redaction.py` | `test_chat_history_response_applies_same_redaction_defense_in_depth` | 22 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_summary_completion_repair.py` | `SequencedProvider` | 9 | class | کلاس | module |
+| `tests/unit/test_chatbot_summary_completion_repair.py` | `SequencedProvider.__init__` | 10 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SequencedProvider |
+| `tests/unit/test_chatbot_summary_completion_repair.py` | `SequencedProvider.generate_with_messages` | 15 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SequencedProvider |
+| `tests/unit/test_chatbot_summary_completion_repair.py` | `_service_prompt` | 20 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_chatbot_summary_completion_repair.py` | `test_chatbot_summary_retries_incomplete_prefix_even_when_gateway_says_stop` | 44 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_summary_completion_repair.py` | `test_chatbot_summary_accepts_short_complete_sentence_with_target_and_service` | 76 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_summary_completion_repair.py` | `test_incomplete_stop_heuristic_is_scoped_to_chatbot_summary_stage` | 99 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_summary_completion_repair.py` | `test_chatbot_summary_fails_closed_if_repair_is_still_incomplete` | 115 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_chatbot_tools.py` | `_call` | 8 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_chatbot_tools.py` | `test_chatbot_tool_catalog_is_bounded_and_has_no_arbitrary_execution` | 12 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_chatbot_tools.py` | `test_unknown_llm_tool_is_fail_closed` | 28 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
