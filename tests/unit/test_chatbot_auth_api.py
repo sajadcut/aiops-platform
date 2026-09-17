@@ -3,6 +3,7 @@ from fastapi.testclient import TestClient
 
 from apps.api.chatbot import router
 from domain.contracts.config import settings
+from domain.contracts.rate_limit import rate_limiter_strict
 
 
 app = FastAPI()
@@ -53,3 +54,11 @@ def test_sre_can_login_with_existing_high_risk_approval_and_execution_permission
     assert response.status_code == 200
     permissions = set(response.json()["permissions"])
     assert {"read:incident", "approve:high_risk", "execute:approved"} <= permissions
+
+
+def test_chatbot_message_and_action_decision_use_strict_rate_limiter():
+    message_route = next(route for route in router.routes if route.path == "/chatbot/message")
+    decision_route = next(route for route in router.routes if route.path == "/chatbot/actions/{proposal_id}/decision")
+    for route in (message_route, decision_route):
+        dependency_calls = {dependency.call for dependency in route.dependant.dependencies}
+        assert rate_limiter_strict in dependency_calls
