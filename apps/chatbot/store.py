@@ -265,9 +265,8 @@ class ChatStore:
                     """
                     UPDATE chat_action_proposals
                     SET status=:new_status,
-                        approval_id=COALESCE(:approval_id, approval_id),
-                        execution_result=CASE WHEN :execution_result IS NULL THEN execution_result
-                                              ELSE CAST(:execution_result AS jsonb) END,
+                        approval_id=COALESCE(CAST(:approval_id AS uuid), approval_id),
+                        execution_result=COALESCE(CAST(:execution_result AS jsonb), execution_result),
                         updated_at=CURRENT_TIMESTAMP
                     WHERE proposal_id=:proposal_id AND status=:expected_status
                     RETURNING proposal_id, session_id, incident_id, owner_subject, tool_name, action, target,
