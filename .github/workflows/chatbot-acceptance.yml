@@ -68,3 +68,4 @@ jobs:
           tests/integration/test_chatbot_db_acceptance.py
           tests/integration/test_chatbot_llm_acceptance.py
           tests/integration/test_chatbot_tool_acceptance.py
+          tests/integration/test_chatbot_write_acceptance.py
