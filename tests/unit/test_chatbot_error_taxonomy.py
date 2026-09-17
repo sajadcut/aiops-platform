@@ -16,6 +16,22 @@ def test_llm_and_mcp_errors_are_short_operator_safe_messages():
     assert "chatbot_tool_failed" not in mcp.message
 
 
+def test_llm_and_mcp_timeouts_remain_distinct_and_do_not_expose_raw_details():
+    llm = classify_chatbot_error(HTTPException(status_code=504, detail="chatbot_llm_timeout"))
+    mcp = classify_chatbot_error(HTTPException(status_code=504, detail="chatbot_tool_timeout:vm_metrics"))
+    unavailable = classify_chatbot_error(HTTPException(status_code=502, detail="chatbot_tool_unavailable:vm_metrics"))
+
+    assert llm.code == "LLM_TIMEOUT"
+    assert llm.component == "llm"
+    assert mcp.code == "MCP_TIMEOUT"
+    assert mcp.component == "mcp"
+    assert unavailable.code == "MCP_UNAVAILABLE"
+    assert unavailable.component == "mcp"
+    assert "vm_metrics" not in llm.message
+    assert "vm_metrics" not in mcp.message
+    assert "vm_metrics" not in unavailable.message
+
+
 def test_timeout_and_database_errors_do_not_expose_raw_exception_text():
     timeout = classify_chatbot_error(asyncio.TimeoutError("secret upstream diagnostics"))
 
