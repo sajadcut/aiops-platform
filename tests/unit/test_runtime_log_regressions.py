@@ -49,7 +49,7 @@ async def test_shared_llm_generate_repairs_truncated_completion(monkeypatch):
     assert result.content == "complete RCA"
     assert [call["max_tokens"] for call in provider.calls] == [100, 200]
     assert len(provider.calls[1]["messages"]) == 2
-    assert "previous response was truncated" in provider.calls[1]["messages"][-1]["content"]
+    assert "previous response was incomplete or truncated" in provider.calls[1]["messages"][-1]["content"]
 
 
 @pytest.mark.asyncio
@@ -60,7 +60,7 @@ async def test_shared_llm_generate_fails_closed_after_truncation_budget(monkeypa
         _response("partial two", "max_tokens"),
     ])
 
-    with pytest.raises(ValueError, match="llm_completion_truncated_after_retries"):
+    with pytest.raises(ValueError, match="llm_completion_incomplete_after_retries"):
         await provider.generate("analyze incident", max_tokens=100)
 
 

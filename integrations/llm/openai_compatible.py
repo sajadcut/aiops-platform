@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import time
 from typing import Any, Dict, List, Optional
 from uuid import uuid4
@@ -78,6 +79,74 @@ class OpenAICompatibleLLMProvider(LLMAdapter):
     def _is_truncated(response: LLMResponse) -> bool:
         return str(response.finish_reason or "").strip().lower() in {"length", "max_tokens"}
 
+    @staticmethod
+    def _chatbot_summary_is_incomplete(response: LLMResponse, prompt: str) -> bool:
+        """Detect obviously incomplete chatbot summaries even when a gateway says stop.
+
+        Some OpenAI-compatible gateways have returned a short prefix with
+        ``finish_reason=stop``. For governed read results, accepting that prefix
+        pollutes durable chat history and makes the next turn reason over a false
+        impression that the previous request failed. This check is intentionally
+        narrow and applies only to the chatbot summary stage.
+        """
+
+        text = str(response.content or "").strip()
+        if not text:
+            return True
+        if text.count("**") % 2 or text.count("`") % 2:
+            return True
+
+        terminal = text.rstrip()
+        if len(terminal) < 60 and terminal[-1] not in ".!?؟…؛:)]}»\"'":
+            return True
+
+        marker = "Validated source payload:\n"
+        _, found, encoded = str(prompt or "").partition(marker)
+        if not found:
+            return False
+        try:
+            payload = json.loads(encoded)
+        except (TypeError, json.JSONDecodeError):
+            return False
+        result = payload.get("result") if isinstance(payload, dict) else None
+        if not isinstance(result, dict):
+            return False
+
+        tool_name = ""
+        for line in str(prompt or "").splitlines():
+            if line.startswith("Tool: "):
+                tool_name = line.partition(": ")[2].strip()
+                break
+
+        if tool_name.startswith("vm_"):
+            target = str(result.get("target") or "").strip()
+            if target and target not in text:
+                return True
+
+        if tool_name in {"vm_service_status", "vm_service_logs"}:
+            service = str(result.get("service") or "").strip()
+            if service and service.casefold() not in text.casefold():
+                return True
+
+        if tool_name == "vm_diagnostics" and "/app" in str(prompt):
+            filesystems = result.get("filesystems")
+            if isinstance(filesystems, list) and any(
+                isinstance(row, dict) and str(row.get("mount") or "") == "/app"
+                for row in filesystems
+            ):
+                if "/app" not in text:
+                    return True
+
+        return False
+
+    @classmethod
+    def _needs_completion_repair(cls, response: LLMResponse, *, prompt: str, stage: str) -> bool:
+        if cls._is_truncated(response):
+            return True
+        if stage == "chatbot_summary":
+            return cls._chatbot_summary_is_incomplete(response, prompt)
+        return False
+
     async def generate(
         self,
         prompt: str,
@@ -93,14 +162,17 @@ class OpenAICompatibleLLMProvider(LLMAdapter):
 
         # ``generate`` is the shared path used by Triage, specialists and RCA.
         # A transport-level HTTP 200 with finish_reason=length is not a complete
-        # model result and must never be silently accepted by a caller. Regenerate
-        # from the original prompt with a larger budget and an explicit concise
-        # completion instruction. Tool-enabled chat remains single-shot because
-        # replaying a model tool decision can change call semantics.
+        # model result and must never be silently accepted by a caller. Chatbot
+        # summaries additionally reject obvious incomplete prefixes even when a
+        # gateway incorrectly labels them finish_reason=stop. Regenerate from the
+        # original prompt with a larger budget and an explicit concise completion
+        # instruction. Tool-enabled chat remains single-shot because replaying a
+        # model tool decision can change call semantics.
         repair_attempts = max(0, int(kwargs.pop("completion_repair_attempts", settings.AGENT_STRUCTURED_REPAIR_ATTEMPTS)))
         attempts = 1 if kwargs.get("tools") else 1 + repair_attempts
         base_max_tokens = max(1, int(max_tokens))
         last_response: Optional[LLMResponse] = None
+        stage = str(kwargs.get("stage") or kwargs.get("purpose") or "llm")
 
         for attempt in range(attempts):
             current_messages = list(messages)
@@ -108,9 +180,10 @@ class OpenAICompatibleLLMProvider(LLMAdapter):
                 current_messages.append({
                     "role": "user",
                     "content": (
-                        "RETRY REQUIRED: the previous response was truncated by the output limit. "
+                        "RETRY REQUIRED: the previous response was incomplete or truncated. "
                         "Return a fresh complete and shorter response. Preserve the requested format, "
-                        "prioritize essential conclusions and do not continue the partial text."
+                        "include the concrete target/resource when present, prioritize essential conclusions "
+                        "and do not continue the partial text."
                     ),
                 })
             budget = base_max_tokens * min(2 ** attempt, 4)
@@ -121,14 +194,14 @@ class OpenAICompatibleLLMProvider(LLMAdapter):
                 **kwargs,
             )
             last_response = response
-            if not self._is_truncated(response):
+            if not self._needs_completion_repair(response, prompt=prompt, stage=stage):
                 return response
 
         # Fail closed after the bounded repair budget. Structured Agents catch
-        # ValueError and may apply their own format-specific repair; RCA and other
-        # callers fall back instead of treating a partial plan as complete.
+        # ValueError and may apply their own format-specific repair; chatbot and
+        # RCA callers fall back instead of treating a partial result as complete.
         raise ValueError(
-            "llm_completion_truncated_after_retries:"
+            "llm_completion_incomplete_after_retries:"
             f"{getattr(last_response, 'finish_reason', None)}"
         )
 
