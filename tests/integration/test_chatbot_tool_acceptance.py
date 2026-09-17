@@ -72,7 +72,7 @@ class _FakeAlert:
         }
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio(loop_scope="session")
 async def test_zabbix_read_uses_allowlisted_mcp_adapter_and_writes_audit(monkeypatch):
     owner = "chat-zabbix-viewer"
     identity = Identity(subject=owner, roles=("viewer",))
@@ -102,7 +102,7 @@ async def test_zabbix_read_uses_allowlisted_mcp_adapter_and_writes_audit(monkeyp
     await _cleanup(owner)
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio(loop_scope="session")
 async def test_kubernetes_read_stays_behind_mcp_client(monkeypatch):
     owner = "chat-k8s-viewer"
     identity = Identity(subject=owner, roles=("viewer",))
@@ -128,7 +128,7 @@ async def test_kubernetes_read_stays_behind_mcp_client(monkeypatch):
     await _cleanup(owner)
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio(loop_scope="session")
 @pytest.mark.parametrize("failure", [TimeoutError("timeout"), RuntimeError("mcp unavailable")])
 async def test_tool_timeout_or_mcp_failure_returns_502_without_fabricated_answer(monkeypatch, failure):
     owner = f"chat-tool-failure-{type(failure).__name__.lower()}"
@@ -146,7 +146,7 @@ async def test_tool_timeout_or_mcp_failure_returns_502_without_fabricated_answer
     await _cleanup(owner)
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio(loop_scope="session")
 async def test_tool_payload_secrets_are_redacted_before_llm_history_and_ui(monkeypatch):
     owner = "chat-secret-redaction"
     identity = Identity(subject=owner, roles=("viewer",))
