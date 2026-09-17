@@ -23,6 +23,13 @@ class ChatErrorDescriptor:
 
 
 _ERROR_MAP: dict[str, ChatErrorDescriptor] = {
+    "chatbot_llm_timeout": ChatErrorDescriptor(
+        code="LLM_TIMEOUT",
+        message="درخواست به دلیل Timeout کامل نشد.",
+        component="llm",
+        retryable=True,
+        http_status=504,
+    ),
     "chatbot_llm_unavailable": ChatErrorDescriptor(
         code="LLM_UNAVAILABLE",
         message="LLM پاسخ نداد. دوباره تلاش کنید.",
@@ -65,6 +72,22 @@ def classify_chatbot_error(exc: BaseException) -> ChatErrorDescriptor:
         detail = str(exc.detail or "")
         if detail in _ERROR_MAP:
             return _ERROR_MAP[detail]
+        if detail.startswith("chatbot_tool_timeout:"):
+            return ChatErrorDescriptor(
+                code="MCP_TIMEOUT",
+                message="ارتباط با MCP به دلیل Timeout کامل نشد.",
+                component="mcp",
+                retryable=True,
+                http_status=504,
+            )
+        if detail.startswith("chatbot_tool_unavailable:"):
+            return ChatErrorDescriptor(
+                code="MCP_UNAVAILABLE",
+                message="ارتباط با MCP برقرار نشد.",
+                component="mcp",
+                retryable=True,
+                http_status=502,
+            )
         if detail.startswith("chatbot_tool_failed:"):
             return ChatErrorDescriptor(
                 code="MCP_TOOL_ERROR",
