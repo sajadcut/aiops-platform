@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 335 | Dashboard JS files scanned: 3 | Symbols indexed: 2833**
+**Python files scanned: 336 | Dashboard JS files scanned: 3 | Symbols indexed: 2846**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -819,21 +819,22 @@
 | `apps/chatbot/models.py` | `ChatHistoryMessage.redact_metadata` | 76 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatHistoryMessage |
 | `apps/chatbot/models.py` | `ChatHistoryResponse` | 80 | class | کلاس | module |
 | `apps/chatbot/models.py` | `ChatIdentityResponse` | 85 | class | کلاس | module |
-| `apps/chatbot/service.py` | `_iso` | 55 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/chatbot/service.py` | `_has_permission` | 61 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/chatbot/service.py` | `ChatbotService` | 65 | class | LLM-assisted, policy-enforced operations copilot. | module |
-| `apps/chatbot/service.py` | `ChatbotService.__init__` | 73 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
-| `apps/chatbot/service.py` | `ChatbotService._llm` | 76 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
-| `apps/chatbot/service.py` | `ChatbotService._audit` | 80 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
-| `apps/chatbot/service.py` | `ChatbotService._session` | 111 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
-| `apps/chatbot/service.py` | `ChatbotService._history_messages` | 123 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
-| `apps/chatbot/service.py` | `ChatbotService._execute_read` | 135 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
-| `apps/chatbot/service.py` | `ChatbotService._summarize` | 173 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
-| `apps/chatbot/service.py` | `ChatbotService._create_chatops_incident` | 201 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
-| `apps/chatbot/service.py` | `ChatbotService._proposal` | 221 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
-| `apps/chatbot/service.py` | `ChatbotService.message` | 305 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
-| `apps/chatbot/service.py` | `ChatbotService._verify_mutation` | 467 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
-| `apps/chatbot/service.py` | `ChatbotService.decide` | 496 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
+| `apps/chatbot/service.py` | `_iso` | 73 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/chatbot/service.py` | `_has_permission` | 79 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/chatbot/service.py` | `ChatbotService` | 83 | class | LLM-assisted, policy-enforced operations copilot. | module |
+| `apps/chatbot/service.py` | `ChatbotService.__init__` | 91 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
+| `apps/chatbot/service.py` | `ChatbotService._llm` | 94 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
+| `apps/chatbot/service.py` | `ChatbotService._audit` | 98 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
+| `apps/chatbot/service.py` | `ChatbotService._session` | 129 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
+| `apps/chatbot/service.py` | `ChatbotService._history_messages` | 141 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
+| `apps/chatbot/service.py` | `ChatbotService._recent_operator_context` | 154 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
+| `apps/chatbot/service.py` | `ChatbotService._execute_read` | 164 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
+| `apps/chatbot/service.py` | `ChatbotService._summarize` | 202 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
+| `apps/chatbot/service.py` | `ChatbotService._create_chatops_incident` | 240 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
+| `apps/chatbot/service.py` | `ChatbotService._proposal` | 260 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
+| `apps/chatbot/service.py` | `ChatbotService.message` | 344 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
+| `apps/chatbot/service.py` | `ChatbotService._verify_mutation` | 521 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
+| `apps/chatbot/service.py` | `ChatbotService.decide` | 550 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
 | `apps/chatbot/store.py` | `_utcnow` | 19 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/chatbot/store.py` | `_json` | 23 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/chatbot/store.py` | `ChatStore` | 27 | class | Durable PostgreSQL store for chat ownership, history and action proposals. | module |
@@ -2113,11 +2114,23 @@
 | `tests/unit/test_chatbot_auth_api.py` | `test_operator_can_login_without_high_risk_execution` | 40 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_chatbot_auth_api.py` | `test_sre_can_login_with_existing_high_risk_approval_and_execution_permissions` | 51 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_chatbot_auth_api.py` | `test_chatbot_message_and_action_decision_use_strict_rate_limiter` | 59 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_conversation_policy.py` | `RecordingSummaryLLM` | 9 | class | کلاس | module |
+| `tests/unit/test_chatbot_conversation_policy.py` | `RecordingSummaryLLM.__init__` | 10 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RecordingSummaryLLM |
+| `tests/unit/test_chatbot_conversation_policy.py` | `RecordingSummaryLLM.provider_name` | 15 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RecordingSummaryLLM |
+| `tests/unit/test_chatbot_conversation_policy.py` | `RecordingSummaryLLM.generate` | 18 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RecordingSummaryLLM |
+| `tests/unit/test_chatbot_conversation_policy.py` | `RecordingSummaryLLM.generate_with_messages` | 23 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RecordingSummaryLLM |
+| `tests/unit/test_chatbot_conversation_policy.py` | `_tool` | 27 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_chatbot_conversation_policy.py` | `test_system_prompt_reuses_unambiguous_context_and_never_confirms_reads` | 31 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_conversation_policy.py` | `test_recent_operator_context_keeps_substantive_persian_turns_for_short_followups` | 49 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_conversation_policy.py` | `test_vm_disk_tool_contract_exposes_exact_mount_available_bytes_without_confirmation` | 64 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_conversation_policy.py` | `test_summary_receives_persian_context_and_exact_mount_payload` | 73 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_ui_uses_session_storage_not_persistent_local_storage` | 4 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_ui_renders_server_text_without_inner_html` | 12 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_api_key_is_not_placed_in_message_payload` | 19 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_ui_has_conversation_history_sidebar_without_quick_action_buttons` | 28 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_ui_preserves_natural_persian_input_and_bidi_rendering` | 42 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_api_key_is_not_placed_in_message_payload` | 22 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_ui_has_conversation_history_sidebar_without_quick_action_buttons` | 31 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_ui_preserves_natural_persian_input_and_bidi_rendering` | 45 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_document_cache_busts_frontend_assets` | 60 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_safe_markdown_renderer_supports_common_llm_formatting_without_html_injection` | 67 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_chatbot_kubernetes_contract.py` | `test_kubernetes_chatbot_reads_extend_existing_mcp_tool_not_tool_names` | 10 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_chatbot_kubernetes_contract.py` | `test_kubernetes_native_evidence_client_remains_get_only` | 20 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_chatbot_kubernetes_contract.py` | `test_kubernetes_read_operations_are_normalized_without_direct_api_mutation` | 32 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
