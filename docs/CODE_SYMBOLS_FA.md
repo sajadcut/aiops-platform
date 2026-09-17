@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 345 | Dashboard JS files scanned: 3 | Symbols indexed: 2971**
+**Python files scanned: 345 | Dashboard JS files scanned: 3 | Symbols indexed: 2981**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -2204,22 +2204,32 @@
 | `tests/unit/test_chatbot_frontend_security.py` | `_script` | 4 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_chatbot_frontend_security.py` | `_html` | 8 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_chatbot_frontend_security.py` | `_css` | 12 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_ui_uses_session_storage_not_persistent_local_storage` | 16 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_ui_renders_server_text_without_unsafe_html_injection` | 24 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_api_key_is_not_placed_in_message_payload` | 35 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_ui_has_modern_history_controls_without_quick_action_buttons` | 42 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_ui_preserves_natural_persian_input_and_bidi_rendering` | 61 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_ui_supports_english_and_mixed_rtl_ltr_without_client_rewriting` | 73 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_document_cache_busts_frontend_assets` | 85 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_safe_markdown_renderer_supports_headings_code_tables_and_lists_without_html_injection` | 92 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_frontend_uses_stream_transport_stop_and_terminal_error_states` | 105 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_stream_has_no_infinite_spinner_timeout` | 118 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_product_identity_is_visible_in_login_and_primary_header` | 127 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_theme_contract_is_tokenized_and_light_mode_is_neutral` | 135 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_theme_switch_is_session_scoped_and_accessible` | 152 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_composer_and_scroll_behavior_match_operations_chat_contract` | 162 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_tool_proposal_and_error_states_remain_governed_and_compact` | 177 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_accessibility_and_responsive_contracts_are_present` | 191 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_frontend_security.py` | `_frontend` | 16 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_ui_uses_session_storage_not_persistent_local_storage` | 20 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_ui_renders_untrusted_text_without_unsafe_html_injection` | 28 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_api_key_is_not_placed_in_message_payload` | 36 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_product_identity_and_v3_assets_are_visible` | 43 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_sidebar_has_collapse_grouping_pin_menu_and_history_controls` | 52 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_empty_state_has_prompt_only_quick_operations` | 67 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_slash_commands_only_prepare_prompts_and_keep_governance` | 86 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_command_palette_supports_keyboard_and_workspace_actions` | 97 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_context_panel_only_surfaces_real_available_context` | 111 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_api_connection_status_is_not_shown_until_authenticated_identity_exists` | 123 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_ui_preserves_persian_and_mixed_rtl_ltr_content` | 131 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_safe_markdown_keeps_dom_only_headings_code_tables_lists_and_copy` | 143 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_safe_links_are_http_only_and_open_with_no_opener` | 155 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_stream_transport_stop_timeout_and_terminal_outcome_are_preserved` | 164 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_message_toolbar_adds_edit_regenerate_details_and_collapse` | 176 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_tool_results_keep_real_operational_facts_raw_details_and_activity_timeline` | 186 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_action_proposals_remain_backend_governed` | 198 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_error_ux_adds_a_clear_title_but_keeps_backend_message_and_retry` | 210 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_composer_is_autogrowing_sticky_and_has_stop_state` | 221 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_smart_scroll_does_not_force_operator_to_bottom` | 235 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_toasts_cover_modern_workspace_interactions` | 245 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_theme_is_session_scoped_and_neutral_in_dark_and_light_modes` | 255 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_responsive_layout_has_context_drawer_sidebar_drawer_and_mobile_rules` | 269 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_accessibility_contracts_include_live_regions_focus_and_reduced_motion` | 280 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_frontend_security.py` | `test_chatbot_css_avoids_dashboard_style_overdecoration_and_uses_open_assistant_layout` | 292 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_chatbot_kubernetes_contract.py` | `test_kubernetes_chatbot_reads_extend_existing_mcp_tool_not_tool_names` | 10 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_chatbot_kubernetes_contract.py` | `test_kubernetes_native_evidence_client_remains_get_only` | 20 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_chatbot_kubernetes_contract.py` | `test_kubernetes_read_operations_are_normalized_without_direct_api_mutation` | 32 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
