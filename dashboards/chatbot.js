@@ -495,7 +495,7 @@
     if (kind === "error" && options.retryMessage) {
       const retry = document.createElement("button");
       retry.type = "button";
-      retry.className = "retry-button";
+      retry.className = "retry-button ui-regenerate";
       retry.textContent = "تلاش مجدد";
       retry.addEventListener("click", () => sendMessage(options.retryMessage));
       actions.appendChild(retry);
@@ -604,7 +604,10 @@
       "assistant",
       String((data && data.message) || "خطای موقت رخ داد. دوباره تلاش کنید."),
       "error",
-      {retryMessage},
+      {
+        retryMessage,
+        source: data && data.component ? String(data.component).toUpperCase() : "",
+      },
     );
   }
 
@@ -880,6 +883,7 @@
     dom.sendButton.classList.toggle("stop-mode", active);
     dom.sendButton.querySelector(".send-icon").classList.toggle("hidden", active);
     dom.sendButton.querySelector(".stop-icon").classList.toggle("hidden", !active);
+    dom.sendButton.type = active ? "button" : "submit";
     dom.sendButton.setAttribute("aria-label", active ? "توقف پاسخ" : "ارسال پیام");
     dom.messageInput.setAttribute("aria-busy", active ? "true" : "false");
   }
@@ -887,6 +891,7 @@
   function stopGeneration(reason = "user") {
     if (!state.activeController) return;
     state.stopReason = reason;
+    if (reason === "user") showStatus("در حال توقف پاسخ…", "cancel");
     state.activeController.abort();
   }
 
@@ -1082,6 +1087,12 @@
     event.preventDefault();
     if (state.activeController) stopGeneration("user");
     else sendMessage(dom.messageInput.value);
+  });
+
+  dom.sendButton.addEventListener("click", (event) => {
+    if (!state.activeController) return;
+    event.preventDefault();
+    stopGeneration("user");
   });
 
   dom.messageInput.addEventListener("keydown", (event) => {
