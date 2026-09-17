@@ -1,0 +1,118 @@
+name: apply-vm-current-cpu-patch
+
+on:
+  push:
+    branches:
+      - fix/vm-current-cpu-metrics-impl
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/vm-current-cpu-metrics-impl
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Apply deterministic VM CPU delta patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('integrations/vm/ssh_connector.py')
+          text = path.read_text(encoding='utf-8')
+          start = text.index('    async def collect_metrics(self, target: str) -> Dict[str, Any]:')
+          end = text.index('    async def host_info(self, target: str) -> Dict[str, Any]:', start)
+          replacement = '''    @staticmethod
+    def _parse_cpu_counters(value: str) -> tuple[int, ...]:
+        parts = value.split()
+        if len(parts) != 8:
+            raise ValueError("invalid_cpu_counter_sample")
+        counters = tuple(int(part) for part in parts)
+        if any(counter < 0 for counter in counters):
+            raise ValueError("invalid_cpu_counter_sample")
+        return counters
+
+    @classmethod
+    def _cpu_interval_percentages(cls, first: str, second: str) -> tuple[float, float]:
+        start = cls._parse_cpu_counters(first)
+        end = cls._parse_cpu_counters(second)
+        deltas = tuple(after - before for before, after in zip(start, end))
+        if any(delta < 0 for delta in deltas):
+            raise ValueError("cpu_counter_reset")
+        total_delta = sum(deltas)
+        if total_delta <= 0:
+            raise ValueError("cpu_counter_delta_zero")
+        idle_delta = deltas[3] + deltas[4]
+        busy_delta = total_delta - idle_delta
+        if busy_delta < 0:
+            raise ValueError("invalid_cpu_counter_delta")
+        cpu_usage = round((busy_delta * 100.0) / total_delta, 2)
+        io_wait = round((deltas[4] * 100.0) / total_delta, 2)
+        return cpu_usage, io_wait
+
+    async def collect_metrics(self, target: str) -> Dict[str, Any]:
+        command = (
+            "LC_ALL=C; "
+            "printf 'CPU1 '; awk '/^cpu / {print $2,$3,$4,$5,$6,$7,$8,$9; exit}' /proc/stat; "
+            "sleep 1; "
+            "printf 'CPU2 '; awk '/^cpu / {print $2,$3,$4,$5,$6,$7,$8,$9; exit}' /proc/stat; "
+            "free | awk '/^Mem:/ {printf \\\"MEM %.2f\\\\n\\\", ($3/$2)*100} /^Swap:/ {if ($2>0) printf \\\"SWAP %.2f\\\\n\\\", ($3/$2)*100; else printf \\\"SWAP 0.00\\\\n\\\"}'; "
+            "awk '{printf \\\"LOAD %s,%s,%s\\\\n\\\", $1,$2,$3}' /proc/loadavg"
+        )
+        result = await self._run(target, command)
+        if not result.get("success"):
+            return {"success": False, "target": target, "error": "ssh_command_failed", "execution_time": result.get("execution_time")}
+        try:
+            fields: Dict[str, str] = {}
+            for raw_line in str(result.get("stdout") or "").splitlines():
+                key, separator, value = raw_line.strip().partition(" ")
+                if separator and key in {"CPU1", "CPU2", "MEM", "SWAP", "LOAD"}:
+                    fields[key] = value.strip()
+            if set(fields) != {"CPU1", "CPU2", "MEM", "SWAP", "LOAD"}:
+                raise ValueError("missing_metric_fields")
+            cpu_usage, io_wait = self._cpu_interval_percentages(fields["CPU1"], fields["CPU2"])
+            memory_usage = round(float(fields["MEM"]), 2)
+            swap_usage = round(float(fields["SWAP"]), 2)
+            if not 0.0 <= memory_usage <= 100.0 or not 0.0 <= swap_usage <= 100.0:
+                raise ValueError("invalid_memory_metric")
+            payload = {
+                "cpu_usage": cpu_usage,
+                "memory_usage": memory_usage,
+                "swap_usage": swap_usage,
+                "load_avg": fields["LOAD"],
+                "io_wait": io_wait,
+            }
+        except (TypeError, ValueError):
+            return {"success": False, "target": target, "error": "invalid_metric_payload"}
+        return {"success": True, "target": target, "metrics": payload, "execution_time": result.get("execution_time")}
+
+'''
+          path.write_text(text[:start] + replacement + text[end:], encoding='utf-8')
+
+          test_path = Path('tests/unit/test_vm_current_cpu_metrics.py')
+          test_path.write_text('''import pytest\n\nfrom domain.contracts.config import settings\nfrom integrations.vm.ssh_connector import SSHVMConnector\n\n\ndef _connector(monkeypatch):\n    monkeypatch.setattr(settings, "APP_ENV", "test")\n    monkeypatch.setattr(settings, "SSH_AUTH_MODE", "key")\n    return SSHVMConnector(timeout=2)\n\n\ndef test_cpu_interval_percentages_use_delta_not_since_boot():\n    cpu_usage, io_wait = SSHVMConnector._cpu_interval_percentages(\n        "100 0 50 850 10 0 0 0",\n        "120 0 60 920 20 0 0 0",\n    )\n    assert cpu_usage == pytest.approx(27.27, abs=0.01)\n    assert io_wait == pytest.approx(9.09, abs=0.01)\n\n\n@pytest.mark.asyncio\nasync def test_collect_metrics_returns_one_second_current_cpu(monkeypatch):\n    connector = _connector(monkeypatch)\n    captured = {}\n\n    async def fake_run(target, command):\n        captured["target"] = target\n        captured["command"] = command\n        return {\n            "success": True,\n            "stdout": (\n                "CPU1 100 0 50 850 10 0 0 0\\n"\n                "CPU2 120 0 60 920 20 0 0 0\\n"\n                "MEM 62.50\\n"\n                "SWAP 0.00\\n"\n                "LOAD 0.82,0.91,0.76\\n"\n            ),\n            "execution_time": 1.03,\n        }\n\n    monkeypatch.setattr(connector, "_run", fake_run)\n    result = await connector.collect_metrics("10.100.6.199")\n\n    assert result["success"] is True\n    assert result["target"] == "10.100.6.199"\n    assert result["metrics"] == {\n        "cpu_usage": pytest.approx(27.27, abs=0.01),\n        "memory_usage": 62.5,\n        "swap_usage": 0.0,\n        "load_avg": "0.82,0.91,0.76",\n        "io_wait": pytest.approx(9.09, abs=0.01),\n    }\n    assert "sleep 1" in captured["command"]\n    assert captured["target"] == "10.100.6.199"\n\n\n@pytest.mark.asyncio\nasync def test_collect_metrics_fails_closed_on_counter_reset(monkeypatch):\n    connector = _connector(monkeypatch)\n\n    async def fake_run(target, command):\n        return {\n            "success": True,\n            "stdout": (\n                "CPU1 120 0 60 920 20 0 0 0\\n"\n                "CPU2 100 0 50 850 10 0 0 0\\n"\n                "MEM 50.00\\n"\n                "SWAP 0.00\\n"\n                "LOAD 0.10,0.10,0.10\\n"\n            ),\n            "execution_time": 1.01,\n        }\n\n    monkeypatch.setattr(connector, "_run", fake_run)\n    result = await connector.collect_metrics("vm01")\n    assert result == {"success": False, "target": "vm01", "error": "invalid_metric_payload"}\n''', encoding='utf-8')
+          PY
+      - name: Validate targeted tests and syntax
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt -r requirements-dev.txt
+          python -m compileall -q integrations/vm tests/unit/test_vm_current_cpu_metrics.py
+          python -m pytest -q tests/unit/test_vm_current_cpu_metrics.py tests/unit/test_vm_execution_boundary.py tests/security/test_vm_mcp_security.py
+      - name: Commit patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add integrations/vm/ssh_connector.py tests/unit/test_vm_current_cpu_metrics.py
+          git commit -m 'fix(vm): report interval CPU utilization [vm-cpu-patch]'
+          git push origin HEAD:fix/vm-current-cpu-metrics-impl
