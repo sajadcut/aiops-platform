@@ -62,10 +62,19 @@ jobs:
           pip check
       - name: Upgrade clean database to migration head
         run: python -m alembic -c database/migrations/alembic.ini upgrade head
+      - name: Run Operations Copilot v2 UI/reliability contracts
+        run: >-
+          python -m pytest -q
+          tests/unit/test_chatbot_frontend_security.py
+          tests/unit/test_chatbot_auth_api.py
+          tests/unit/test_chatbot_error_taxonomy.py
+          tests/unit/test_chatbot_reliable_service.py
+          tests/unit/test_chatbot_stream_contract.py
       - name: Run chatbot durable governance and LLM/tool orchestration acceptance
         run: >-
           python -m pytest -q
           tests/integration/test_chatbot_db_acceptance.py
+          tests/integration/test_chatbot_session_management_acceptance.py
           tests/integration/test_chatbot_llm_acceptance.py
           tests/integration/test_chatbot_tool_acceptance.py
           tests/integration/test_chatbot_write_acceptance.py
