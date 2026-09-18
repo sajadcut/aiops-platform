@@ -460,7 +460,7 @@
       ? "شما"
       : kind === "action_proposal"
         ? "Action Proposal"
-        : "Operations Copilot";
+        : "NeoBanking Operation Platform";
     heading.appendChild(label);
     badge(heading, options.source);
     if (options.tool && options.tool !== options.source) badge(heading, options.tool);
