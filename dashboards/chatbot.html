@@ -7,8 +7,8 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <meta name="theme-color" content="#0b0d10">
-  <title>NeoBanking Chatbot Operation Platform</title>
-  <link rel="stylesheet" href="/chatbot/chatbot.css?v=6">
+  <title>NeoBanking Operation Platform</title>
+  <link rel="stylesheet" href="/chatbot/chatbot.css?v=7">
 </head>
 <body>
   <main class="app-shell">
@@ -17,8 +17,8 @@
         <div class="login-brand-row">
           <div class="product-mark" aria-hidden="true">N</div>
           <div>
-            <div class="eyebrow">ENTERPRISE OPERATIONS COPILOT</div>
-            <h1 id="loginTitle">NeoBanking Chatbot Operation Platform</h1>
+            <div class="eyebrow">NEOBANKING OPERATION PLATFORM</div>
+            <h1 id="loginTitle">NeoBanking Operation Platform</h1>
           </div>
         </div>
         <p class="login-lead">دستیار عملیاتی امن برای بررسی زیرساخت، تحلیل وضعیت و اجرای عملیات کنترل‌شده.</p>
@@ -35,13 +35,13 @@
       </div>
     </section>
 
-    <section id="chatView" class="workspace hidden" aria-label="NeoBanking Chatbot Operation Platform workspace">
+    <section id="chatView" class="workspace hidden" aria-label="NeoBanking Operation Platform workspace">
       <aside id="sidebar" class="sidebar" aria-label="تاریخچه گفت‌وگوها">
         <div class="sidebar-topline">
           <div class="sidebar-brand">
             <div class="product-mark compact" aria-hidden="true">N</div>
             <div class="sidebar-brand-copy">
-              <strong>NeoBanking Ops</strong><span>Enterprise Copilot</span>
+              <strong>NeoBanking</strong><span>Operation Platform</span>
             </div>
           </div>
           <div class="sidebar-top-actions">
@@ -65,7 +65,7 @@
         <header class="topbar">
           <div class="topbar-leading">
             <button id="sidebarOpen" class="icon-button" type="button" aria-label="باز کردن تاریخچه" aria-expanded="false" aria-controls="sidebar"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
-            <div class="topbar-copy"><div class="conversation-title-row"><span id="conversationTitle" class="conversation-title" dir="auto">گفت‌وگوی جدید</span></div><div class="product-context"><span>NeoBanking Chatbot Operation Platform</span><span class="context-separator" aria-hidden="true">/</span><span>Enterprise Operations Copilot</span></div></div>
+            <div class="topbar-copy"><div class="conversation-title-row"><span id="conversationTitle" class="conversation-title" dir="auto">گفت‌وگوی جدید</span></div><div class="product-context"><span>NeoBanking Operation Platform</span><span class="context-separator" aria-hidden="true">/</span><span>NeoBanking Operation Platform</span></div></div>
           </div>
           <div class="topbar-actions">
             <div id="apiStatus" class="status-chip hidden" role="status" aria-live="polite"><span class="status-dot" aria-hidden="true"></span><span>API Connected</span></div>
@@ -82,8 +82,8 @@
           <div id="slashMenu" class="slash-menu hidden" role="listbox" aria-label="دستورهای سریع"></div>
           <div id="runtimeStatus" class="runtime-status hidden" role="status" aria-live="polite"><span class="status-spinner" aria-hidden="true"></span><span id="statusText"></span><span id="statusMeta" class="status-meta" dir="auto"></span></div>
           <form id="chatForm" class="composer">
-            <label class="sr-only" for="messageInput">پیام برای Operations Copilot</label>
-            <textarea id="messageInput" rows="1" maxlength="4000" dir="auto" placeholder="از Operations Copilot بپرسید… مثلاً: CPU سرور 10.100.6.199 چقدره؟" required></textarea>
+            <label class="sr-only" for="messageInput">پیام برای NeoBanking Operation Platform</label>
+            <textarea id="messageInput" rows="1" maxlength="4000" dir="auto" placeholder="از NeoBanking Operation Platform بپرسید… مثلاً: CPU سرور 10.100.6.199 چقدره؟" required></textarea>
             <div class="composer-toolbar"><div class="composer-leading"><button id="slashButton" class="composer-action" type="button" aria-label="باز کردن دستورهای سریع" title="Slash commands"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4 9 20"/></svg></button><span class="composer-hint">Enter ارسال · Shift+Enter خط جدید</span></div><div class="composer-actions"><span id="charCount" class="char-count">0 / 4000</span><button id="sendButton" class="send-button" type="submit" aria-label="ارسال پیام"><svg class="send-icon ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 7-7 7 7M12 5v14"/></svg><svg class="stop-icon ui-icon hidden" viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="7" width="10" height="10" rx="1"/></svg></button></div></div>
           </form>
           <div class="composer-disclaimer">Operations can require approval before execution.</div>
@@ -102,7 +102,7 @@
   <dialog id="deleteDialog" class="modal" aria-labelledby="deleteTitle"><form id="deleteForm" method="dialog" class="modal-card"><div class="modal-heading"><h2 id="deleteTitle">حذف گفت‌وگو</h2><button type="button" class="icon-button" data-close-dialog="deleteDialog" aria-label="بستن"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div><p>پیام‌های این گفت‌وگو از تاریخچه عادی حذف می‌شوند؛ رکوردهای Audit و governance مرتبط با عملیات طبق سیاست backend حفظ می‌شوند.</p><div class="modal-actions"><button type="button" class="button button-secondary" data-close-dialog="deleteDialog">انصراف</button><button type="submit" class="button button-danger">حذف</button></div></form></dialog>
   <dialog id="commandPaletteDialog" class="command-palette" aria-labelledby="commandPaletteTitle"><div class="command-palette-card"><div class="command-palette-search"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg><label class="sr-only" for="commandPaletteInput" id="commandPaletteTitle">Command palette</label><input id="commandPaletteInput" type="search" autocomplete="off" placeholder="Search commands…" aria-label="Search commands"><kbd>Esc</kbd></div><div id="commandPaletteList" class="command-palette-list" role="listbox" aria-label="Available commands"></div></div></dialog>
   <div id="toastRegion" class="toast-region" aria-live="polite" aria-atomic="true"></div>
-  <script src="/chatbot/chatbot.js?v=6" defer></script>
+  <script src="/chatbot/chatbot.js?v=7" defer></script>
   <script>
 (() => {
   "use strict";
