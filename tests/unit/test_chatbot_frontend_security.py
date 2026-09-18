@@ -42,11 +42,11 @@ def test_chatbot_api_key_is_not_placed_in_message_payload():
 
 def test_chatbot_product_identity_and_v3_assets_are_visible():
     html = _html()
-    assert html.count("NeoBanking Chatbot Operation Platform") >= 3
-    assert "Enterprise Operations Copilot" in html
-    assert "<title>NeoBanking Chatbot Operation Platform</title>" in html
-    assert "chatbot.css?v=6" in html
-    assert "chatbot.js?v=6" in html
+    assert html.count("NeoBanking Operation Platform") >= 3
+    assert "NEOBANKING OPERATION PLATFORM" in html
+    assert "<title>NeoBanking Operation Platform</title>" in html
+    assert "chatbot.css?v=7" in html
+    assert "chatbot.js?v=7" in html
 
 
 def test_chatbot_sidebar_has_collapse_grouping_pin_menu_and_history_controls():
@@ -297,3 +297,11 @@ def test_chatbot_css_avoids_dashboard_style_overdecoration_and_uses_open_assista
     assert ".message.user .message-card" in css
     assert ".messages-inner" in css
     assert "width:min(920px,100%)" in css
+
+
+def test_chatbot_branding_uses_neobanking_operation_platform_everywhere_visible():
+    source = _frontend()
+    assert "NeoBanking Operation Platform" in source
+    assert "NeoBanking Chatbot Operation Platform" not in source
+    assert "Enterprise Operations Copilot" not in source
+    assert "Operations Copilot" not in source
