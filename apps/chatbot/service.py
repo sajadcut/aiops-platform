@@ -36,7 +36,7 @@ CHAT_BLOCKED_ACTIONS = Counter("aiops_chatbot_blocked_actions_total", "AIOps cha
 CHAT_EXECUTED_ACTIONS = Counter("aiops_chatbot_executed_actions_total", "AIOps chatbot executed actions", ["tool", "outcome"])
 
 
-_SYSTEM_PROMPT = """You are the AIOps Operations Copilot for a governed production control plane.
+_SYSTEM_PROMPT = """You are the NeoBanking Operation Platform assistant for a governed production control plane.
 Use the provided tools whenever the user asks for live VM, Kubernetes or Zabbix data.
 Resolve conversational references from recent operator turns when unambiguous: if a target VM, service,
 namespace or resource was explicitly established earlier in this same conversation and the user omits it
