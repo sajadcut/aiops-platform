@@ -27,7 +27,7 @@ class A2AAgent(ABC):
 
     def __init__(self, agent_card: A2AAgentCard):
         self.card = agent_card
-        self._client = insecure_async_client(timeout=settings.A2A_TIMEOUT_SECONDS)
+        self._client = insecure_async_client(timeout=settings.A2A_TIMEOUT_SECONDS, component=f"a2a:{self.card.name}")
 
     @abstractmethod
     async def handle_request(self, request: Dict[str, Any]) -> Dict[str, Any]:
