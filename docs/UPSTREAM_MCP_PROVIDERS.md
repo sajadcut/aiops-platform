@@ -6,9 +6,39 @@ The AIOps Control Plane treats MCP as the canonical external-tool boundary. For 
 
 Upstream: `prometheus/prometheus-mcp`.
 
-Supported read tools include `query`, `range_query`, `list_alerts`, `metric_metadata`, `series`, `label_names`, `label_values`, `healthy`, and `ready`.
+The supported deployment baseline is the upstream `v0.18.x` contract. The Control Plane uses the Streamable HTTP `/mcp` endpoint and pins `PROMETHEUS_MCP_PROTOCOL_VERSION=2025-11-25`, which is the latest MCP version supported by the Go SDK used by the v0.18.0 release.
 
-AIOps metric collection maps canonical metric requests to `range_query` and builds deterministic PromQL from `PROMETHEUS_MCP_SERVICE_LABEL`. Destructive/admin tools remain excluded.
+Supported read tools include `query`, `range_query`, `list_alerts`, `metric_metadata`, `series`, `label_names`, `label_values`, `healthy`, and `ready`. Destructive/admin tools are deliberately excluded.
+
+AIOps metric collection maps canonical metric requests to `range_query` and builds deterministic PromQL from `PROMETHEUS_MCP_SERVICE_LABEL`. The official server serializes query/range-query data as Prometheus model text inside a JSON `result` field; `PrometheusMCPClient` parses that upstream representation into bounded `MetricPoint` evidence while retaining compatibility with older structured payloads.
+
+Readiness is checked with the upstream `ready` MCP tool so the dependency is considered healthy only when the MCP server can reach a Prometheus backend that is ready to serve queries.
+
+### Prometheus MCP deployment
+
+A minimal standalone HTTP deployment for local/integration testing is:
+
+```bash
+docker run --rm -p 9103:8080 \
+  ghcr.io/tjhop/prometheus-mcp-server:v0.18.0 \
+  --prometheus.url "http://PROMETHEUS_HOST:9090" \
+  --mcp.transport "http" \
+  --web.listen-address ":8080" \
+  --mcp.tools=list_alerts \
+  --mcp.tools=healthy \
+  --mcp.tools=ready
+```
+
+Then configure the Control Plane with:
+
+```text
+PROMETHEUS_MCP_URL=http://PROMETHEUS_MCP_HOST:9103/mcp
+PROMETHEUS_MCP_PROTOCOL_VERSION=2025-11-25
+PROMETHEUS_MCP_SERVICE_LABEL=service
+PROMETHEUS_MCP_AUTH_HEADER=
+```
+
+The upstream server forwards an incoming `Authorization` header to Prometheus. For that reason AIOps does **not** reuse the generic `MCP_BEARER_TOKEN` for this provider. `PROMETHEUS_MCP_AUTH_HEADER` is an explicit opt-in passthrough credential and should be left empty unless the exact same credential is intentionally valid for the Prometheus backend. Prefer TLS/mTLS and network controls for protecting the MCP endpoint, and configure backend credentials on the Prometheus MCP process when possible.
 
 ## Zabbix
 
