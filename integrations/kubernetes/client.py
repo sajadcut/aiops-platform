@@ -66,6 +66,7 @@ class KubernetesEvidenceClient:
         async with insecure_async_client(
             timeout=settings.KUBERNETES_TIMEOUT_SECONDS,
             headers=self._headers(),
+            component="kubernetes",
         ) as client:
             response = await client.get(self.api_url.rstrip("/") + path, params=params)
             response.raise_for_status()
