@@ -225,6 +225,37 @@ class EvidenceCollector:
             else:
                 evidence.append(self._observation("zabbix", f"zabbix-unavailable:{since.isoformat()}", status="unavailable", service=requested_service))
 
+        if self.prometheus and (wants_all or "alert" in wants):
+            get_alerts = getattr(self.prometheus, "get_alerts", None)
+            if callable(get_alerts):
+                if await self._healthy(self.prometheus):
+                    try:
+                        prom_alerts = await get_alerts(since=since, service=requested_service)
+                        evidence.extend(self._alert_evidence(prom_alerts))
+                        evidence.append(self._observation(
+                            "prometheus",
+                            f"prom-alert-observation:{since.isoformat()}",
+                            status="queried",
+                            result_count=len(prom_alerts),
+                            service=requested_service,
+                            detail="matching_active_alerts_via_mcp",
+                        ))
+                    except Exception as exc:
+                        evidence.append(self._observation(
+                            "prometheus",
+                            f"prom-alert-error:{since.isoformat()}",
+                            status="error",
+                            service=requested_service,
+                            detail=str(exc),
+                        ))
+                else:
+                    evidence.append(self._observation(
+                        "prometheus",
+                        f"prom-alert-unavailable:{since.isoformat()}",
+                        status="unavailable",
+                        service=requested_service,
+                    ))
+
         partial_asset = AssetIdentityResolver.resolve(evidence, requested_service)
         effective_service = self._known_service(partial_asset.get("service")) or self._known_service(partial_asset.get("hostname")) or requested_service
         query_service = effective_service or service
