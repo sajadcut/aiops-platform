@@ -216,14 +216,14 @@ function addMessage(role, text, kind = "answer", options = {}) {
     copy.className = "message-action";
     copy.textContent = "کپی";
     copy.setAttribute("aria-label", role === "user" ? "کپی پیام شما" : "کپی پاسخ");
-    copy.addEventListener("click", () => copyText(role === "user" ? text : (body.textContent || text), toast));
+    copy.addEventListener("click", () => copyText(role === "user" ? text : (body.textContent || text)));
     actions.appendChild(copy);
   }
 
   if (kind === "error" && options.retryMessage) {
     const retry = document.createElement("button");
     retry.type = "button";
-    retry.className = "retry-button";
+    retry.className = "retry-button ui-regenerate";
     retry.textContent = "تلاش مجدد";
     retry.addEventListener("click", () => sendMessage(options.retryMessage));
     actions.appendChild(retry);
@@ -345,6 +345,7 @@ function renderTerminalError(data = {}, retryMessage = "") {
     "error",
     {
       retryMessage,
+      source: data && data.component ? String(data.component).toUpperCase() : "",
       request_id: data.request_id,
       component: data.component,
       code: data.code,
