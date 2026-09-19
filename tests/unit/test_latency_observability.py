@@ -71,7 +71,7 @@ def test_latency_logging_does_not_log_http_query_headers_or_body():
     source = _read("integrations/http_transport.py")
     assert '"outbound_http_completed"' in source
     assert '"outbound_http_failed"' in source
-    assert '"duration_ms"' in source
+    assert "duration_ms=" in source
     assert '"path": parsed.path or "/"' in source
     assert "parsed.query" not in source
     assert "request.headers" not in source
