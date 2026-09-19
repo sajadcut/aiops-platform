@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hmac
+import time
 from datetime import datetime
 from typing import Any, Dict
 
@@ -245,14 +246,33 @@ async def mcp(
     args = rpc.params.get("arguments") or {}
     if not isinstance(args, dict):
         raise HTTPException(status_code=400, detail="invalid_tool_arguments")
+    tool_started = time.perf_counter()
     try:
         content = await _call(provider, tool, args)
     except PermissionError as exc:
-        logger.warning("mcp_tool_call_denied", provider=provider, tool=tool, error_type=type(exc).__name__)
+        logger.warning(
+            "mcp_tool_call_denied",
+            provider=provider,
+            tool=tool,
+            error_type=type(exc).__name__,
+            duration_ms=round((time.perf_counter() - tool_started) * 1000, 3),
+        )
         return {"jsonrpc": "2.0", "id": rpc.id, "error": {"code": -32602, "message": str(exc)}}
     except Exception as exc:
-        logger.exception("mcp_tool_call_failed", provider=provider, tool=tool, error_type=type(exc).__name__)
+        logger.exception(
+            "mcp_tool_call_failed",
+            provider=provider,
+            tool=tool,
+            error_type=type(exc).__name__,
+            duration_ms=round((time.perf_counter() - tool_started) * 1000, 3),
+        )
         return {"jsonrpc": "2.0", "id": rpc.id, "error": {"code": -32000, "message": "tool_call_failed"}}
+    logger.info(
+        "mcp_tool_call_completed",
+        provider=provider,
+        tool=tool,
+        duration_ms=round((time.perf_counter() - tool_started) * 1000, 3),
+    )
     if not isinstance(content, list):
         content = [content]
     return {"jsonrpc": "2.0", "id": rpc.id, "result": {"content": content}}
