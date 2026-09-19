@@ -38,7 +38,7 @@ class OIDCTokenValidator:
 
 
 async def discover_jwks(url: str) -> Dict[str, Any]:
-    async with insecure_async_client(timeout=5.0) as client:
+    async with insecure_async_client(timeout=5.0, component="oidc_jwks") as client:
         response = await client.get(url)
         response.raise_for_status()
         return response.json()
