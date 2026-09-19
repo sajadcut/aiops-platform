@@ -136,6 +136,7 @@ class Settings(BaseSettings):
     ELASTIC_AGENT_BUILDER_INDEX_PATTERN: str = Field(...)
 
     PROMETHEUS_MCP_URL: str = Field(...)
+    PROMETHEUS_MCP_PROTOCOL_VERSION: str = Field(...)
     PROMETHEUS_MCP_SERVICE_LABEL: str = Field(...)
     PROMETHEUS_MCP_AUTH_HEADER: Optional[str] = Field(...)
     KUBERNETES_MCP_URL: Optional[str] = Field(...)
@@ -268,6 +269,16 @@ class Settings(BaseSettings):
         if normalized and not normalized.startswith("Basic "):
             raise ValueError("Jenkins MCP authentication must use Authorization: Basic <base64(username:api-token)>")
         return normalized or None
+
+    @field_validator("PROMETHEUS_MCP_PROTOCOL_VERSION")
+    @classmethod
+    def validate_prometheus_mcp_protocol_version(cls, value: str) -> str:
+        normalized = str(value).strip()
+        if normalized != "2025-11-25":
+            raise ValueError(
+                "PROMETHEUS_MCP_PROTOCOL_VERSION must be 2025-11-25 for the supported prometheus/prometheus-mcp v0.18.x contract"
+            )
+        return normalized
 
     @model_validator(mode="after")
     def validate_external_contracts(self) -> "Settings":
