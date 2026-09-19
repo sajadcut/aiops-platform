@@ -1,9 +1,20 @@
+import {
+  SIDEBAR_STORAGE,
+  addBadge,
+  addDetails,
+  addErrorMeta,
+  addOperationalFacts,
+  applyTheme as applyThemePreference,
+  copyText,
+  initialTheme,
+  renderSafeMarkdown,
+} from "./chatbot-ui.js?v=6";
+
 (() => {
   "use strict";
 
   const KEY_STORAGE = "aiops.chatbot.apiKey";
   const SESSION_STORAGE = "aiops.chatbot.sessionId";
-  const THEME_STORAGE = "aiops.chatbot.theme";
   const STREAM_TIMEOUT_MS = 180000;
 
   const $ = (id) => document.getElementById(id);
@@ -12,11 +23,13 @@
     chatView: $("chatView"),
     loginForm: $("loginForm"),
     apiKeyInput: $("apiKey"),
+    apiKeyToggle: $("apiKeyToggle"),
     loginError: $("loginError"),
     identity: $("identity"),
     sidebar: $("sidebar"),
     sidebarOpen: $("sidebarOpen"),
     sidebarClose: $("sidebarClose"),
+    sidebarCollapse: $("sidebarCollapse"),
     sidebarBackdrop: $("sidebarBackdrop"),
     sessionList: $("sessionList"),
     sessionSearch: $("sessionSearch"),
@@ -34,6 +47,8 @@
     logout: $("logout"),
     newChat: $("newChat"),
     themeToggle: $("themeToggle"),
+    themeIcon: $("themeIcon"),
+    themeLabel: $("themeLabel"),
     renameDialog: $("renameDialog"),
     renameForm: $("renameForm"),
     renameInput: $("renameInput"),
@@ -101,198 +116,6 @@
     window.setTimeout(() => node.remove(), 2500);
   }
 
-  async function copyText(value) {
-    try {
-      await navigator.clipboard.writeText(String(value || ""));
-      toast("کپی شد");
-    } catch (_) {
-      toast("کپی انجام نشد");
-    }
-  }
-
-  function appendInline(parent, value) {
-    const source = String(value || "");
-    const pattern = /(\*\*[^*\n]+\*\*|`[^`\n]+`)/g;
-    let cursor = 0;
-
-    for (let match = pattern.exec(source); match; match = pattern.exec(source)) {
-      if (match.index > cursor) {
-        parent.appendChild(document.createTextNode(source.slice(cursor, match.index)));
-      }
-
-      const token = match[0];
-      let node;
-      if (token.startsWith("**")) {
-        node = document.createElement("strong");
-        node.textContent = token.slice(2, -2);
-      } else {
-        node = document.createElement("code");
-        node.textContent = token.slice(1, -1);
-      }
-      parent.appendChild(node);
-      cursor = pattern.lastIndex;
-    }
-
-    if (cursor < source.length) {
-      parent.appendChild(document.createTextNode(source.slice(cursor)));
-    }
-  }
-
-  function tableCells(line) {
-    let value = String(line || "").trim();
-    if (value.startsWith("|")) value = value.slice(1);
-    if (value.endsWith("|")) value = value.slice(0, -1);
-    return value.split("|").map((cell) => cell.trim());
-  }
-
-  const isTableSeparator = (line) => {
-    const cells = tableCells(line);
-    return cells.length > 1 && cells.every((cell) => /^:?-{3,}:?$/.test(cell.replace(/\s+/g, "")));
-  };
-
-  function renderSafeMarkdown(node, value) {
-    const lines = String(value || "").replace(/\r\n/g, "\n").split("\n");
-    const fragment = document.createDocumentFragment();
-    let index = 0;
-
-    while (index < lines.length) {
-      const line = lines[index];
-      const fence = line.match(/^\s*```([\w.+#-]*)\s*$/);
-
-      if (fence) {
-        const codeLines = [];
-        index += 1;
-        while (index < lines.length && !/^\s*```\s*$/.test(lines[index])) {
-          codeLines.push(lines[index++]);
-        }
-        if (index < lines.length) index += 1;
-
-        const block = document.createElement("div");
-        block.className = "code-block";
-        const head = document.createElement("div");
-        head.className = "code-head";
-        const label = document.createElement("span");
-        label.textContent = fence[1] || "code";
-        const copy = document.createElement("button");
-        copy.type = "button";
-        copy.className = "copy-code";
-        copy.textContent = "Copy";
-        copy.setAttribute("aria-label", "کپی کد");
-
-        const text = codeLines.join("\n");
-        copy.addEventListener("click", () => copyText(text));
-
-        const pre = document.createElement("pre");
-        const code = document.createElement("code");
-        code.textContent = text;
-        code.setAttribute("dir", "ltr");
-        pre.appendChild(code);
-        head.append(label, copy);
-        block.append(head, pre);
-        fragment.appendChild(block);
-        continue;
-      }
-
-      if (index + 1 < lines.length && line.includes("|") && isTableSeparator(lines[index + 1])) {
-        const table = document.createElement("table");
-        table.className = "message-table";
-        const thead = document.createElement("thead");
-        const headerRow = document.createElement("tr");
-
-        for (const cellValue of tableCells(line)) {
-          const th = document.createElement("th");
-          appendInline(th, cellValue);
-          headerRow.appendChild(th);
-        }
-
-        thead.appendChild(headerRow);
-        table.appendChild(thead);
-        const tbody = document.createElement("tbody");
-        index += 2;
-
-        while (index < lines.length && lines[index].trim() && lines[index].includes("|")) {
-          const tr = document.createElement("tr");
-          for (const cellValue of tableCells(lines[index++])) {
-            const td = document.createElement("td");
-            appendInline(td, cellValue);
-            tr.appendChild(td);
-          }
-          tbody.appendChild(tr);
-        }
-
-        table.appendChild(tbody);
-        const wrap = document.createElement("div");
-        wrap.className = "table-wrap";
-        wrap.appendChild(table);
-        fragment.appendChild(wrap);
-        continue;
-      }
-
-      const heading = line.match(/^\s*(#{1,3})\s+(.+)$/);
-      if (heading) {
-        const headingLevel = heading[1].length + 2;
-        const title = document.createElement(`h${headingLevel}`);
-        appendInline(title, heading[2]);
-        fragment.appendChild(title);
-        index += 1;
-        continue;
-      }
-
-      const bullet = line.match(/^\s*[-*]\s+(.+)$/);
-      const numbered = line.match(/^\s*\d+[.)]\s+(.+)$/);
-      if (bullet || numbered) {
-        const list = document.createElement(numbered ? "ol" : "ul");
-        while (index < lines.length) {
-          const match = numbered
-            ? lines[index].match(/^\s*\d+[.)]\s+(.+)$/)
-            : lines[index].match(/^\s*[-*]\s+(.+)$/);
-          if (!match) break;
-
-          const li = document.createElement("li");
-          appendInline(li, match[1]);
-          list.appendChild(li);
-          index += 1;
-        }
-        fragment.appendChild(list);
-        continue;
-      }
-
-      const quote = line.match(/^\s*>\s?(.*)$/);
-      if (quote) {
-        const block = document.createElement("blockquote");
-        appendInline(block, quote[1]);
-        fragment.appendChild(block);
-        index += 1;
-        continue;
-      }
-
-      if (!line.trim()) {
-        index += 1;
-        continue;
-      }
-
-      const parts = [line];
-      index += 1;
-      while (
-        index < lines.length
-        && lines[index].trim()
-        && !/^\s*```/.test(lines[index])
-        && !/^\s*#{1,3}\s+/.test(lines[index])
-        && !/^\s*[-*]\s+/.test(lines[index])
-        && !/^\s*\d+[.)]\s+/.test(lines[index])
-        && !/^\s*>/.test(lines[index])
-      ) {
-        parts.push(lines[index++]);
-      }
-
-      const p = document.createElement("p");
-      appendInline(p, parts.join("\n"));
-      fragment.appendChild(p);
-    }
-
-    node.replaceChildren(fragment);
-  }
-
   function isNearBottom() {
     return dom.messages.scrollHeight - dom.messages.scrollTop - dom.messages.clientHeight < 120;
   }
@@ -324,10 +147,10 @@
     logo.textContent = "N";
 
     const title = document.createElement("h1");
-    title.textContent = "چه چیزی را بررسی کنیم؟";
+    title.textContent = "NeoBanking Chatbot Operation Platform";
 
     const text = document.createElement("p");
-    text.textContent = "درباره VM، سرویس‌ها، Kubernetes، Zabbix یا وضعیت عملیاتی سؤال کنید.";
+    text.textContent = "از وضعیت سرویس‌ها، VMها، Kubernetes یا رخدادهای عملیاتی سؤال کنید.";
 
     const chips = document.createElement("div");
     chips.className = "capability-row";
@@ -361,78 +184,6 @@
     window.requestAnimationFrame(updateScrollAffordance);
   }
 
-  function badge(parent, value) {
-    if (!value) return;
-    const node = document.createElement("span");
-    node.className = "source-badge";
-    node.textContent = String(value);
-    parent.appendChild(node);
-  }
-
-  function addDetails(card, data) {
-    if (data === undefined || data === null) return;
-
-    const details = document.createElement("details");
-    details.className = "tool-details";
-    const summary = document.createElement("summary");
-    summary.textContent = "جزئیات منبع";
-    const pre = document.createElement("pre");
-
-    try {
-      pre.textContent = JSON.stringify(data, null, 2);
-    } catch (_) {
-      pre.textContent = String(data);
-    }
-
-    details.append(summary, pre);
-    card.appendChild(details);
-  }
-
-  function operationalEntries(data) {
-    if (!data || typeof data !== "object" || Array.isArray(data)) return [];
-
-    const source = data.data && typeof data.data === "object" && !Array.isArray(data.data) ? data.data : data;
-    const first = (...keys) => {
-      for (const key of keys) {
-        if (source[key] !== undefined && source[key] !== null && source[key] !== "") return source[key];
-      }
-      return null;
-    };
-
-    const entries = [
-      ["Status", first("status", "active_state", "active")],
-      ["SubState", first("substate", "sub_state")],
-      ["PID", first("pid", "main_pid")],
-      ["CPU", first("cpu_usage", "cpu_percent")],
-      ["Memory", first("memory_usage", "memory_percent")],
-      ["Available", first("available", "available_bytes")],
-    ];
-
-    return entries.filter(([, value]) => value !== null).slice(0, 4);
-  }
-
-  function addOperationalFacts(card, data) {
-    const entries = operationalEntries(data);
-    if (!entries.length) return;
-
-    const facts = document.createElement("div");
-    facts.className = "operational-facts";
-
-    for (const [name, rawValue] of entries) {
-      const item = document.createElement("div");
-      item.className = "operational-fact";
-      const label = document.createElement("span");
-      label.textContent = name;
-      const value = document.createElement("strong");
-      const shouldAddPercent = ["CPU", "Memory"].includes(name) && typeof rawValue === "number";
-      value.textContent = shouldAddPercent ? `${rawValue}%` : String(rawValue);
-      item.append(label, value);
-      facts.appendChild(item);
-    }
-
-    card.appendChild(facts);
-  }
-
   function addMessage(role, text, kind = "answer", options = {}) {
     const keepPinned = isNearBottom();
     removeEmptyState();
@@ -462,8 +213,8 @@
         ? "Action Proposal"
         : "Operations Copilot";
     heading.appendChild(label);
-    badge(heading, options.source);
-    if (options.tool && options.tool !== options.source) badge(heading, options.tool);
+    addBadge(heading, options.source);
+    if (options.tool && options.tool !== options.source) addBadge(heading, options.tool);
 
     const card = document.createElement("div");
     card.className = "message-card";
@@ -471,12 +222,16 @@
     const body = document.createElement("div");
     body.className = "message-body";
     body.setAttribute("dir", "auto");
-    renderSafeMarkdown(body, text);
+    renderSafeMarkdown(body, text, toast);
     card.appendChild(body);
 
     if (kind === "tool_result") {
       addOperationalFacts(card, options.data);
       addDetails(card, options.data);
+    }
+
+    if (kind === "error") {
+      addErrorMeta(card, options);
     }
 
     const actions = document.createElement("div");
@@ -488,7 +243,7 @@
       copy.className = "message-action";
       copy.textContent = "کپی";
       copy.setAttribute("aria-label", "کپی پاسخ");
-      copy.addEventListener("click", () => copyText(body.textContent || text));
+      copy.addEventListener("click", () => copyText(body.textContent || text, toast));
       actions.appendChild(copy);
     }
 
@@ -604,7 +359,12 @@
       "assistant",
       String((data && data.message) || "خطای موقت رخ داد. دوباره تلاش کنید."),
       "error",
-      {retryMessage},
+      {
+        retryMessage,
+        request_id: data && data.request_id,
+        component: data && data.component,
+        code: data && data.code,
+      },
     );
   }
 
@@ -882,6 +642,8 @@
     dom.sendButton.querySelector(".stop-icon").classList.toggle("hidden", !active);
     dom.sendButton.setAttribute("aria-label", active ? "توقف پاسخ" : "ارسال پیام");
     dom.messageInput.setAttribute("aria-busy", active ? "true" : "false");
+    dom.messages.setAttribute("aria-busy", active ? "true" : "false");
+    updateComposerMetrics();
   }
 
   function stopGeneration(reason = "user") {
@@ -911,7 +673,7 @@
 
     stream.cursor.remove();
     stream.value = String(result.message || stream.value || "");
-    renderSafeMarkdown(stream.view.body, stream.value);
+    renderSafeMarkdown(stream.view.body, stream.value, toast);
 
     if (result.kind === "tool_result") {
       addOperationalFacts(stream.view.card, result.data);
@@ -1036,6 +798,7 @@
     dom.charCount.textContent = `${dom.messageInput.value.length} / 4000`;
     dom.messageInput.style.height = "auto";
     dom.messageInput.style.height = `${Math.min(dom.messageInput.scrollHeight, 190)}px`;
+    dom.sendButton.disabled = state.activeController ? false : !dom.messageInput.value.trim();
   }
 
   function openSidebar() {
@@ -1051,14 +814,35 @@
     dom.sidebarOpen.setAttribute("aria-expanded", "false");
   }
 
-  function applyTheme(value) {
-    const theme = value === "light" ? "light" : "dark";
-    document.documentElement.dataset.theme = theme;
-    sessionStorage.setItem(THEME_STORAGE, theme);
-    const switchTo = theme === "dark" ? "روشن" : "تیره";
-    dom.themeToggle.textContent = theme === "dark" ? "☾" : "☀";
-    dom.themeToggle.setAttribute("aria-label", `تغییر به پوسته ${switchTo}`);
-    dom.themeToggle.title = `تغییر به پوسته ${switchTo}`;
+  function setTheme(value) {
+    return applyThemePreference(value, {
+      toggle: dom.themeToggle,
+      icon: dom.themeIcon,
+      label: dom.themeLabel,
+    });
+  }
+
+  function setSidebarCollapsed(collapsed) {
+    const resolved = Boolean(collapsed);
+    dom.chatView.classList.toggle("sidebar-collapsed", resolved);
+    dom.sidebarCollapse.setAttribute("aria-expanded", resolved ? "false" : "true");
+    dom.sidebarCollapse.setAttribute(
+      "aria-label",
+      resolved ? "باز کردن نوار کناری" : "جمع کردن نوار کناری",
+    );
+    localStorage.setItem(SIDEBAR_STORAGE, resolved ? "1" : "0");
+  }
+
+  function toggleApiKeyVisibility() {
+    const visible = dom.apiKeyInput.type === "text";
+    dom.apiKeyInput.type = visible ? "password" : "text";
+    dom.apiKeyToggle.textContent = visible ? "نمایش" : "پنهان";
+    dom.apiKeyToggle.setAttribute("aria-pressed", visible ? "false" : "true");
+    dom.apiKeyToggle.setAttribute(
+      "aria-label",
+      visible ? "نمایش کلید دسترسی" : "پنهان کردن کلید دسترسی",
+    );
+    dom.apiKeyInput.focus();
   }
 
   dom.loginForm.addEventListener("submit", async (event) => {
@@ -1092,6 +876,7 @@
   });
 
   dom.messageInput.addEventListener("input", updateComposerMetrics);
+  dom.apiKeyToggle.addEventListener("click", toggleApiKeyVisibility);
 
   dom.newChat.addEventListener("click", () => {
     if (state.activeController) return;
@@ -1123,8 +908,11 @@
   dom.sidebarOpen.addEventListener("click", openSidebar);
   dom.sidebarClose.addEventListener("click", closeSidebar);
   dom.sidebarBackdrop.addEventListener("click", closeSidebar);
+  dom.sidebarCollapse.addEventListener("click", () => {
+    setSidebarCollapsed(!dom.chatView.classList.contains("sidebar-collapsed"));
+  });
   dom.themeToggle.addEventListener("click", () => {
-    applyTheme(document.documentElement.dataset.theme === "light" ? "dark" : "light");
+    setTheme(document.documentElement.dataset.theme === "light" ? "dark" : "light");
   });
 
   dom.renameForm.addEventListener("submit", async (event) => {
@@ -1176,7 +964,8 @@
 
   document.body.setAttribute("dir", "auto");
   document.documentElement.setAttribute("dir", "rtl");
-  applyTheme(sessionStorage.getItem(THEME_STORAGE) || "dark");
+  setTheme(initialTheme());
+  setSidebarCollapsed(localStorage.getItem(SIDEBAR_STORAGE) === "1");
   updateComposerMetrics();
   renderSessionList();
   updateScrollAffordance();
