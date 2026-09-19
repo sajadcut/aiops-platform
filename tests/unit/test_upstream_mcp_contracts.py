@@ -9,6 +9,10 @@ def test_prometheus_adapter_uses_upstream_tool_names():
     text = (ROOT / "integrations/prometheus/mcp_client.py").read_text(encoding="utf-8")
     assert '"range_query"' in text
     assert '"list_alerts"' in text
+    assert '"ready"' in text
+    assert "PROMETHEUS_MCP_PROTOCOL_VERSION" in text
+    assert "bearer_token=None" in text
+    assert "bearer_token=settings.MCP_BEARER_TOKEN" not in text
     assert '"query_metrics"' not in text
     assert '"get_prometheus_alerts"' not in text
 
@@ -58,8 +62,9 @@ def test_mcp_client_supports_standard_streamable_http_lifecycle():
 
 
 def test_upstream_provider_settings_are_explicit():
-    text = (ROOT / ".env").read_text(encoding="utf-8")
+    text = (ROOT / ".env.example").read_text(encoding="utf-8")
     assert "ZABBIX_MCP_SERVER_NAME=" in text
     assert "ELASTIC_AGENT_BUILDER_MCP_NAMESPACES=" in text
     assert "PROMETHEUS_MCP_SERVICE_LABEL=" in text
+    assert "PROMETHEUS_MCP_PROTOCOL_VERSION=2025-11-25" in text
     assert "MCP_PROTOCOL_VERSION=2025-03-26" in text
