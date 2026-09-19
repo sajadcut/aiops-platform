@@ -29,7 +29,7 @@ docker run --rm -p 9103:8080 \
   --mcp.tools=ready
 ```
 
-Then configure the Control Plane with:
+For production, replace the mutable Docker tag with an approved immutable image digest after your artifact validation. Then configure the Control Plane with:
 
 ```text
 PROMETHEUS_MCP_URL=http://PROMETHEUS_MCP_HOST:9103/mcp
