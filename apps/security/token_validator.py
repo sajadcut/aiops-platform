@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import time
 from typing import Any, Dict
 
 import httpx
@@ -8,6 +9,7 @@ import jwt
 from jwt import PyJWKClient
 
 from apps.security.oidc import Identity
+from domain.contracts.logging import logger
 
 
 class OIDCTokenValidator:
@@ -20,7 +22,22 @@ class OIDCTokenValidator:
         self._keys = PyJWKClient(jwks_url, ssl_context=insecure_ssl_context())
 
     def validate(self, token: str) -> Identity:
-        signing_key = self._keys.get_signing_key_from_jwt(token).key
+        started = time.perf_counter()
+        try:
+            signing_key = self._keys.get_signing_key_from_jwt(token).key
+        except Exception as exc:
+            logger.warning(
+                "oidc_jwks_key_lookup_failed",
+                component="oidc_jwks",
+                error_type=type(exc).__name__,
+                duration_ms=round((time.perf_counter() - started) * 1000, 3),
+            )
+            raise
+        logger.info(
+            "oidc_jwks_key_lookup_completed",
+            component="oidc_jwks",
+            duration_ms=round((time.perf_counter() - started) * 1000, 3),
+        )
         claims: Dict[str, Any] = jwt.decode(
             token,
             signing_key,
