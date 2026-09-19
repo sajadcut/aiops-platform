@@ -7,6 +7,7 @@ Agents never execute write operations directly.
 from __future__ import annotations
 
 import asyncio
+import time
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional, TypedDict, cast
 from uuid import UUID
@@ -168,6 +169,7 @@ class E2EOrchestrator:
         return {"provider": "cognia", "status": "error", "code": type(exc).__name__}
 
     async def _context_node(self, state: E2EState) -> E2EState:
+        phase_started = time.perf_counter()
         state["current_node"] = "context"
         context = dict(state.get("context", {}))
         service = state.get("service_name") or context.get("service") or "unknown"
@@ -264,10 +266,12 @@ class E2EOrchestrator:
             knowledge_status=state["knowledge_status"],
             memory_count=len(state["memory_results"]),
             evidence_count=len(state["live_evidence"].get("evidence", [])),
+            duration_ms=round((time.perf_counter() - phase_started) * 1000, 3),
         )
         return state
 
     async def _triage_node(self, state: E2EState) -> E2EState:
+        phase_started = time.perf_counter()
         state["current_node"] = "triage"
         result = await self.triage_agent.analyze(self._agent_input(state))
         data = result.model_dump(mode="json")
@@ -291,6 +295,7 @@ class E2EOrchestrator:
             selected_agents=routing["selected"],
             skipped_agents=routing["skipped"],
             routing_reason=routing["reason"],
+            duration_ms=round((time.perf_counter() - phase_started) * 1000, 3),
         )
         return state
 
@@ -385,6 +390,7 @@ class E2EOrchestrator:
         return bool(fresh.get("evidence"))
 
     async def _parallel_agents_node(self, state: E2EState) -> E2EState:
+        phase_started = time.perf_counter()
         state["current_node"] = "parallel_agents"
         routing = state.get("routing") or self.coordinator.select_agents(state.get("triage_result", {}), self.registry.enabled_names())
         selected = list(routing.get("selected", []))
@@ -441,10 +447,12 @@ class E2EOrchestrator:
             consensus_hypotheses=coordination.get("consensus_hypotheses", []),
             evidence_requests=coordination.get("evidence_requests", []),
             evidence_rounds=state.get("evidence_rounds", 1),
+            duration_ms=round((time.perf_counter() - phase_started) * 1000, 3),
         )
         return state
 
     async def _rca_node(self, state: E2EState) -> E2EState:
+        phase_started = time.perf_counter()
         state["current_node"] = "rca"
         prompt = (
             f"{UNTRUSTED_INPUT_POLICY}\n\n"
@@ -468,10 +476,17 @@ class E2EOrchestrator:
             state["final_plan"] = "Manual investigation required: RCA generation failed."
             logger.error(f"RCA generation failed: {exc}")
         state["confidence"] = float(state.get("coordination", {}).get("confidence", self._average_confidence(state.get("findings", []))))
-        self._audit("rca_completed", state, confidence=state["confidence"], coordination=state.get("coordination", {}))
+        self._audit(
+            "rca_completed",
+            state,
+            confidence=state["confidence"],
+            coordination=state.get("coordination", {}),
+            duration_ms=round((time.perf_counter() - phase_started) * 1000, 3),
+        )
         return state
 
     async def _evaluator_node(self, state: E2EState) -> E2EState:
+        phase_started = time.perf_counter()
         state["current_node"] = "evaluator"
         result = EvaluationGate.evaluate(
             state.get("findings", []),
@@ -479,7 +494,12 @@ class E2EOrchestrator:
             coordination=state.get("coordination", {}),
         )
         state["evaluation"] = result
-        self._audit("evaluation_completed", state, **result)
+        self._audit(
+            "evaluation_completed",
+            state,
+            duration_ms=round((time.perf_counter() - phase_started) * 1000, 3),
+            **result,
+        )
         return state
 
     def _route_after_evaluation(self, state: E2EState) -> str:
