@@ -173,33 +173,87 @@ class OpenAICompatibleLLMProvider(LLMAdapter):
         base_max_tokens = max(1, int(max_tokens))
         last_response: Optional[LLMResponse] = None
         stage = str(kwargs.get("stage") or kwargs.get("purpose") or "llm")
+        incident_id_value = kwargs.get("incident_id") or kwargs.get("session_id")
+        incident_id = str(incident_id_value) if incident_id_value else None
+        generation_started = time.perf_counter()
 
-        for attempt in range(attempts):
-            current_messages = list(messages)
-            if attempt:
-                current_messages.append({
-                    "role": "user",
-                    "content": (
-                        "RETRY REQUIRED: the previous response was incomplete or truncated. "
-                        "Return a fresh complete and shorter response. Preserve the requested format, "
-                        "include the concrete target/resource when present, prioritize essential conclusions "
-                        "and do not continue the partial text."
-                    ),
-                })
-            budget = base_max_tokens * min(2 ** attempt, 4)
-            response = await self.generate_with_messages(
-                current_messages,
-                temperature,
-                budget,
-                **kwargs,
+        try:
+            for attempt in range(attempts):
+                current_messages = list(messages)
+                if attempt:
+                    current_messages.append({
+                        "role": "user",
+                        "content": (
+                            "RETRY REQUIRED: the previous response was incomplete or truncated. "
+                            "Return a fresh complete and shorter response. Preserve the requested format, "
+                            "include the concrete target/resource when present, prioritize essential conclusions "
+                            "and do not continue the partial text."
+                        ),
+                    })
+                budget = base_max_tokens * min(2 ** attempt, 4)
+                response = await self.generate_with_messages(
+                    current_messages,
+                    temperature,
+                    budget,
+                    **kwargs,
+                )
+                last_response = response
+                if not self._needs_completion_repair(response, prompt=prompt, stage=stage):
+                    log_workflow_step(
+                        incident_id=incident_id,
+                        stage=stage,
+                        component=self.provider_name,
+                        action="llm_generation_completed",
+                        status="completed",
+                        summary=f"LLM generation cycle completed with model {response.model}",
+                        details={
+                            "model": response.model,
+                            "attempts_used": attempt + 1,
+                            "repair_attempts_used": attempt,
+                            "configured_attempts": attempts,
+                            "finish_reason": response.finish_reason,
+                            "total_duration_ms": round((time.perf_counter() - generation_started) * 1000, 3),
+                        },
+                    )
+                    return response
+        except Exception as exc:
+            log_workflow_step(
+                incident_id=incident_id,
+                stage=stage,
+                component=self.provider_name,
+                action="llm_generation_failed",
+                status="failed",
+                summary="LLM generation cycle failed",
+                details={
+                    "model": self.model,
+                    "error_type": type(exc).__name__,
+                    "configured_attempts": attempts,
+                    "total_duration_ms": round((time.perf_counter() - generation_started) * 1000, 3),
+                },
+                level="warning",
             )
-            last_response = response
-            if not self._needs_completion_repair(response, prompt=prompt, stage=stage):
-                return response
+            raise
 
         # Fail closed after the bounded repair budget. Structured Agents catch
         # ValueError and may apply their own format-specific repair; chatbot and
         # RCA callers fall back instead of treating a partial result as complete.
+        log_workflow_step(
+            incident_id=incident_id,
+            stage=stage,
+            component=self.provider_name,
+            action="llm_generation_failed",
+            status="failed",
+            summary="LLM generation cycle exhausted completion repair attempts",
+            details={
+                "model": self.model,
+                "error_type": "IncompleteResponse",
+                "attempts_used": attempts,
+                "repair_attempts_used": max(0, attempts - 1),
+                "finish_reason": getattr(last_response, "finish_reason", None),
+                "total_duration_ms": round((time.perf_counter() - generation_started) * 1000, 3),
+            },
+            level="warning",
+        )
         raise ValueError(
             "llm_completion_incomplete_after_retries:"
             f"{getattr(last_response, 'finish_reason', None)}"
