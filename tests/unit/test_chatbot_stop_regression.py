@@ -23,12 +23,14 @@ def test_stop_button_bypasses_required_form_validation_and_aborts_stream():
     assert 'showStatus("در حال توقف پاسخ…", "cancel")' in script
 
 
-def test_error_retry_control_is_not_duplicated_by_v3_enhancement():
+def test_error_retry_control_has_exactly_one_implementation_path():
     script = _script()
     html = _html()
 
-    assert 'retry.className = "retry-button ui-regenerate";' in script
-    assert '!actions.querySelector(".ui-regenerate")' in html
+    # The old v3 inline enhancer was removed. Lock the stronger invariant:
+    # retry is created exactly once by the modular application and never by HTML.
+    assert script.count('retry.className = "retry-button ui-regenerate";') == 1
+    assert "ui-regenerate" not in html
 
 
 def test_typed_backend_error_component_is_visible_to_operator():
