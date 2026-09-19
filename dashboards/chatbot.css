@@ -46,10 +46,10 @@
   --text-muted: #7B8794;
   --border-subtle: #DCE2EA;
   --border-strong: #C7D0DB;
-  --accent: #2563EB;
-  --accent-hover: #1D4ED8;
-  --accent-soft: rgba(37, 99, 235, 0.09);
-  --focus-ring: rgba(37, 99, 235, 0.16);
+  --accent: #315FAD;
+  --accent-hover: #244C90;
+  --accent-soft: rgba(49, 95, 173, 0.07);
+  --focus-ring: rgba(49, 95, 173, 0.14);
   --success: #16865B;
   --success-soft: rgba(22, 134, 91, 0.09);
   --warning: #B7791F;
@@ -58,7 +58,7 @@
   --danger-soft: rgba(194, 59, 71, 0.08);
   --tool: #187A78;
   --tool-soft: rgba(24, 122, 120, 0.08);
-  --user-surface: #EDF3FC;
+  --user-surface: #EEF1F4;
   --backdrop: rgba(17, 24, 39, 0.42);
   --shadow-float: 0 18px 45px rgba(31, 42, 55, 0.12);
 }
@@ -424,7 +424,7 @@ summary:focus-visible,
 .session-row:hover { background: var(--bg-surface-secondary); }
 .session-row.active {
   border-color: var(--border-subtle);
-  background: var(--accent-soft);
+  background: var(--bg-surface-secondary);
 }
 .session-row.active::before {
   content: "";
@@ -1308,4 +1308,154 @@ summary:focus-visible,
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
   }
+}
+
+
+/* NeoBanking UI v3 interaction refinements */
+.desktop-only { display: inline-flex !important; }
+
+.field-action {
+  min-width: 54px;
+  min-height: 32px;
+  padding: 5px 8px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 650;
+}
+.field-action:hover {
+  background: var(--bg-surface-secondary);
+  color: var(--text-primary);
+}
+
+.sidebar-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.workspace {
+  transition: grid-template-columns 160ms ease;
+}
+
+@media (min-width: 881px) {
+  .workspace.sidebar-collapsed {
+    grid-template-columns: 76px minmax(0, 1fr);
+  }
+
+  .workspace.sidebar-collapsed .sidebar {
+    padding-inline: 10px;
+  }
+
+  .workspace.sidebar-collapsed .sidebar-brand > div:last-child,
+  .workspace.sidebar-collapsed .history-search,
+  .workspace.sidebar-collapsed .history-heading,
+  .workspace.sidebar-collapsed .session-list,
+  .workspace.sidebar-collapsed .sidebar-footer p,
+  .workspace.sidebar-collapsed .new-chat-button span:last-child {
+    display: none;
+  }
+
+  .workspace.sidebar-collapsed .sidebar-header {
+    justify-content: center;
+    padding-inline: 0;
+  }
+
+  .workspace.sidebar-collapsed .sidebar-brand {
+    width: 36px;
+  }
+
+  .workspace.sidebar-collapsed .sidebar-header-actions {
+    position: absolute;
+    top: 62px;
+  }
+
+  .workspace.sidebar-collapsed #sidebarCollapse {
+    transform: rotate(180deg);
+  }
+
+  .workspace.sidebar-collapsed .new-chat-button {
+    width: 42px;
+    min-width: 42px;
+    margin-inline: auto;
+    padding-inline: 0;
+  }
+
+  .workspace.sidebar-collapsed .sidebar-footer {
+    justify-items: center;
+  }
+
+  .workspace.sidebar-collapsed .dashboard-link {
+    width: 42px;
+    min-width: 42px;
+    padding: 0;
+    font-size: 0;
+  }
+
+  .workspace.sidebar-collapsed .dashboard-link::before {
+    content: "▦";
+    font-size: 16px;
+    line-height: 1;
+  }
+}
+
+.theme-toggle {
+  width: auto;
+  min-width: 72px;
+  height: 38px;
+  padding-inline: 10px;
+  border-color: var(--border-subtle);
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+}
+.theme-toggle:hover:not(:disabled) {
+  border-color: var(--border-strong);
+  background: var(--bg-surface-secondary);
+  color: var(--text-primary);
+}
+.theme-icon {
+  font-size: 14px;
+  line-height: 1;
+}
+.theme-label {
+  font-size: 10.5px;
+  font-weight: 650;
+}
+
+.error-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 10px;
+}
+.error-meta span {
+  padding: 3px 7px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 999px;
+  background: var(--bg-surface-secondary);
+  color: var(--text-muted);
+  font-size: 9.5px;
+  direction: ltr;
+}
+
+:root[data-theme="light"] .message.user .message-card {
+  background: var(--user-surface);
+  color: var(--text-primary);
+  border-color: var(--border-subtle);
+}
+
+:root[data-theme="light"] .session-row.active {
+  background: var(--bg-surface-secondary);
+}
+
+@media (max-width: 880px) {
+  .desktop-only { display: none !important; }
+  .theme-toggle {
+    min-width: 38px;
+    width: 38px;
+    padding: 0;
+  }
+  .theme-label { display: none; }
 }
