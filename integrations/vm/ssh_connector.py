@@ -134,12 +134,28 @@ class SSHVMConnector:
         except asyncio.TimeoutError:
             process.kill()
             await process.wait()
-            logger.warning("vm_ssh_command_timeout", target=target, auth_mode="key")
-            return {"success": False, "error": "ssh_command_timeout"}
+            duration_ms = round((time.perf_counter() - started) * 1000, 3)
+            logger.warning("vm_ssh_command_timeout", target=target, auth_mode="key", duration_ms=duration_ms)
+            return {"success": False, "error": "ssh_command_timeout", "execution_time": duration_ms / 1000.0}
         elapsed = time.perf_counter() - started
+        duration_ms = round(elapsed * 1000, 3)
         success = process.returncode == 0
+        logger.info(
+            "vm_ssh_command_completed",
+            target=target,
+            auth_mode="key",
+            success=success,
+            exit_code=process.returncode,
+            duration_ms=duration_ms,
+        )
         if not success:
-            logger.warning("vm_ssh_command_failed", target=target, exit_code=process.returncode, auth_mode="key")
+            logger.warning(
+                "vm_ssh_command_failed",
+                target=target,
+                exit_code=process.returncode,
+                auth_mode="key",
+                duration_ms=duration_ms,
+            )
         return {
             "success": success, "exit_code": process.returncode,
             "stdout": stdout.decode(errors="replace").strip(),
@@ -175,14 +191,37 @@ class SSHVMConnector:
         try:
             result = await asyncio.wait_for(execute(), timeout=self.timeout + 5)
         except asyncio.TimeoutError:
-            logger.warning("vm_ssh_command_timeout", target=target, auth_mode="password")
-            return {"success": False, "error": "ssh_command_timeout"}
+            duration_ms = round((time.perf_counter() - started) * 1000, 3)
+            logger.warning("vm_ssh_command_timeout", target=target, auth_mode="password", duration_ms=duration_ms)
+            return {"success": False, "error": "ssh_command_timeout", "execution_time": duration_ms / 1000.0}
         except (asyncssh.Error, OSError) as exc:
-            logger.warning("vm_ssh_command_failed", target=target, auth_mode="password", error_type=type(exc).__name__)
-            return {"success": False, "error": "ssh_command_failed"}
+            duration_ms = round((time.perf_counter() - started) * 1000, 3)
+            logger.warning(
+                "vm_ssh_command_failed",
+                target=target,
+                auth_mode="password",
+                error_type=type(exc).__name__,
+                duration_ms=duration_ms,
+            )
+            return {"success": False, "error": "ssh_command_failed", "execution_time": duration_ms / 1000.0}
         result["execution_time"] = time.perf_counter() - started
+        duration_ms = round(float(result["execution_time"]) * 1000, 3)
+        logger.info(
+            "vm_ssh_command_completed",
+            target=target,
+            auth_mode="password",
+            success=bool(result.get("success")),
+            exit_code=result.get("exit_code"),
+            duration_ms=duration_ms,
+        )
         if not result.get("success"):
-            logger.warning("vm_ssh_command_failed", target=target, exit_code=result.get("exit_code"), auth_mode="password")
+            logger.warning(
+                "vm_ssh_command_failed",
+                target=target,
+                exit_code=result.get("exit_code"),
+                auth_mode="password",
+                duration_ms=duration_ms,
+            )
         return result
 
     async def _run(self, target: str, command: str) -> Dict[str, Any]:
