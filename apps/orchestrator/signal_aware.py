@@ -39,6 +39,56 @@ class SignalAwareE2EOrchestrator(E2EOrchestrator):
         state = await super()._context_node(state)
         context = dict(state.get("context") or {})
         collected = list(context.get("evidence") or [])
+        service_hint = state.get("service_name") or context.get("service")
+
+        # Elastic ML rules can fire after the anomalous bucket has passed. Anchor
+        # an additional read-only evidence query to the anomaly timestamp so RCA
+        # does not inspect only "now" and miss the causal log window.
+        if (
+            isinstance(trigger_signal, dict)
+            and str(trigger_signal.get("source") or "").lower() == "elasticsearch"
+            and isinstance(trigger_signal.get("raw_data"), dict)
+            and trigger_signal["raw_data"].get("elastic_alert_kind") == "ml_anomaly"
+        ):
+            try:
+                raw_timestamp = str(trigger_signal.get("timestamp") or "").strip()
+                anomaly_time = datetime.fromisoformat(raw_timestamp.replace("Z", "+00:00"))
+                if anomaly_time.tzinfo is None:
+                    anomaly_time = anomaly_time.replace(tzinfo=timezone.utc)
+                anomaly_time = anomaly_time.astimezone(timezone.utc)
+                window_start = anomaly_time - timedelta(seconds=settings.ELASTIC_ANOMALY_CONTEXT_LOOKBACK_SECONDS)
+                window_end = anomaly_time + timedelta(seconds=settings.ELASTIC_ANOMALY_CONTEXT_LOOKAHEAD_SECONDS)
+                now = datetime.now(timezone.utc)
+                if window_end > now:
+                    window_end = now
+                if window_end < window_start:
+                    window_end = anomaly_time
+                historical = await self.evidence_collector.collect(
+                    str(service_hint or "unknown"),
+                    window_start,
+                    window_end,
+                )
+                historical_items = [
+                    item for item in historical.get("evidence", [])
+                    if isinstance(item, dict)
+                ]
+                collected.extend(historical_items)
+                context["elastic_anomaly_evidence_window"] = {
+                    "anchor": anomaly_time.isoformat(),
+                    "since": window_start.isoformat(),
+                    "until": window_end.isoformat(),
+                    "evidence_count": len(historical_items),
+                    "policy": "trigger_time_anchored_read_only_enrichment",
+                }
+            except Exception as exc:
+                logger.warning(
+                    "elastic_anomaly_context_window_failed",
+                    error_type=type(exc).__name__,
+                )
+                context["elastic_anomaly_evidence_window"] = {
+                    "status": "error",
+                    "error_type": type(exc).__name__,
+                }
 
         merged: Dict[str, Dict[str, Any]] = {}
         for item in trigger_evidence + collected:
@@ -54,7 +104,6 @@ class SignalAwareE2EOrchestrator(E2EOrchestrator):
             merged[key] = item
 
         merged_evidence = list(merged.values())
-        service_hint = state.get("service_name") or context.get("service")
         live_asset_context = AssetIdentityResolver.resolve(merged_evidence, service_hint)
 
         discovery_knowledge = [

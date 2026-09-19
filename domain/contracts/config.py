@@ -134,6 +134,10 @@ class Settings(BaseSettings):
     ELASTICSEARCH_MCP_AUTH_HEADER: Optional[str] = Field(...)
     ELASTIC_AGENT_BUILDER_MCP_NAMESPACES: List[str] = Field(...)
     ELASTIC_AGENT_BUILDER_INDEX_PATTERN: str = Field(...)
+    ELASTIC_ANOMALY_ACCEPT_INTERIM: bool = Field(...)
+    ELASTIC_ANOMALY_CONTEXT_LOOKBACK_SECONDS: int = Field(..., ge=60, le=86400)
+    ELASTIC_ANOMALY_CONTEXT_LOOKAHEAD_SECONDS: int = Field(..., ge=0, le=3600)
+    ELASTIC_ANOMALY_JOB_SERVICE_MAP: Dict[str, str] = Field(...)
 
     PROMETHEUS_MCP_URL: str = Field(...)
     PROMETHEUS_MCP_PROTOCOL_VERSION: str = Field(...)
@@ -252,6 +256,18 @@ class Settings(BaseSettings):
         normalized = [str(item).strip() for item in value if str(item).strip()]
         if "platform.core" not in normalized:
             raise ValueError("Elastic MCP namespaces must include platform.core for deterministic ES|QL Evidence")
+        return normalized
+
+    @field_validator("ELASTIC_ANOMALY_JOB_SERVICE_MAP")
+    @classmethod
+    def validate_elastic_anomaly_job_service_map(cls, value: Dict[str, str]) -> Dict[str, str]:
+        normalized: Dict[str, str] = {}
+        for raw_job_id, raw_service in value.items():
+            job_id = str(raw_job_id or "").strip()
+            service = str(raw_service or "").strip()
+            if not job_id or not service:
+                raise ValueError("ELASTIC_ANOMALY_JOB_SERVICE_MAP keys and values must be non-empty")
+            normalized[job_id] = service
         return normalized
 
     @field_validator("JENKINS_MCP_PROTOCOL_VERSION")
