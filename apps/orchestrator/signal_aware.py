@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import time
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict
 
@@ -145,6 +146,7 @@ class SignalAwareE2EOrchestrator(E2EOrchestrator):
         context["summary"] = summary
 
     async def _parallel_agents_node(self, state: E2EState) -> E2EState:
+        phase_started = time.perf_counter()
         state["current_node"] = "parallel_agents"
         routing = state.get("routing") or self.coordinator.select_agents(
             state.get("triage_result", {}), self.registry.enabled_names()
@@ -209,6 +211,7 @@ class SignalAwareE2EOrchestrator(E2EOrchestrator):
             evidence_requests=coordination.get("evidence_requests", []),
             evidence_rounds=state.get("evidence_rounds", 1),
             peer_context_shared=True,
+            duration_ms=round((time.perf_counter() - phase_started) * 1000, 3),
         )
         return state
 
@@ -230,6 +233,7 @@ class SignalAwareE2EOrchestrator(E2EOrchestrator):
 
     async def _rca_node(self, state: E2EState) -> E2EState:
         """Bound RCA context so provider token limits cannot erase deterministic recovery."""
+        phase_started = time.perf_counter()
         state["current_node"] = "rca"
         raw_evidence = state.get("context", {}).get("evidence", [])
         compact_evidence = DomainDiagnosticAgent._prompt_evidence(
@@ -284,6 +288,7 @@ class SignalAwareE2EOrchestrator(E2EOrchestrator):
             coordination=state.get("coordination", {}),
             prompt_evidence_count=len(compact_evidence),
             bounded_context=True,
+            duration_ms=round((time.perf_counter() - phase_started) * 1000, 3),
         )
         return state
 
