@@ -48,7 +48,7 @@ class EmbeddingService:
             headers = {"Content-Type": "application/json"}
             if settings.EMBEDDING_API_KEY:
                 headers["Authorization"] = f"Bearer {settings.EMBEDDING_API_KEY}"
-            async with insecure_async_client(timeout=settings.EMBEDDING_TIMEOUT_SECONDS) as client:
+            async with insecure_async_client(timeout=settings.EMBEDDING_TIMEOUT_SECONDS, component="embedding") as client:
                 response = await client.post(
                     url,
                     headers=headers,
