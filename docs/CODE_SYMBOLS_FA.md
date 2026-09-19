@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 348 | Dashboard JS files scanned: 3 | Symbols indexed: 3045**
+**Python files scanned: 349 | Dashboard JS files scanned: 3 | Symbols indexed: 3051**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -2617,6 +2617,12 @@
 | `tests/unit/test_kubernetes_resource_analyzers.py` | `test_admission_webhook_analyzers_expose_metadata_not_client_credentials` | 104 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_kubernetes_resource_analyzers.py` | `test_secret_and_configmap_outputs_are_metadata_only` | 130 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_kubernetes_resource_analyzers.py` | `test_diagnostics_builder_exposes_independent_stage_outputs_and_registry` | 142 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_latency_observability.py` | `_read` | 4 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_latency_observability.py` | `test_major_outbound_integrations_have_semantic_latency_components` | 8 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_latency_observability.py` | `test_llm_logs_per_request_and_total_generation_latency` | 28 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_latency_observability.py` | `test_orchestrator_analysis_phases_publish_duration_ms` | 38 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_latency_observability.py` | `test_mcp_server_and_vm_ssh_publish_server_side_latency` | 55 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_latency_observability.py` | `test_latency_logging_does_not_log_http_query_headers_or_body` | 70 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_mcp_external_boundary.py` | `test_context_builder_uses_mcp_clients_not_native_external_connectors` | 18 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_mcp_external_boundary.py` | `test_zabbix_is_mcp_only_and_has_no_direct_runtime_config` | 28 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_mcp_external_boundary.py` | `test_evidence_collector_has_no_native_external_fallbacks` | 44 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
