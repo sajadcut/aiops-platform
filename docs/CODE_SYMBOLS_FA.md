@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 348 | Dashboard JS files scanned: 3 | Symbols indexed: 3033**
+**Python files scanned: 348 | Dashboard JS files scanned: 3 | Symbols indexed: 3045**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1474,27 +1474,27 @@
 | `integrations/cognia/client.py` | `CogniaAPIError.__init__` | 25 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaAPIError |
 | `integrations/cognia/client.py` | `CogniaClient` | 38 | class | Consumer-side Cognia client using Application Client machine authentication. | module |
 | `integrations/cognia/client.py` | `CogniaClient.__init__` | 49 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaClient |
-| `integrations/cognia/client.py` | `CogniaClient.close` | 82 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaClient |
-| `integrations/cognia/client.py` | `CogniaClient.__aenter__` | 85 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaClient |
-| `integrations/cognia/client.py` | `CogniaClient.__aexit__` | 88 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaClient |
-| `integrations/cognia/client.py` | `CogniaClient._problem_from_response` | 92 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaClient |
-| `integrations/cognia/client.py` | `CogniaClient._json_object` | 105 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaClient |
-| `integrations/cognia/client.py` | `CogniaClient._request_json` | 114 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaClient |
-| `integrations/cognia/client.py` | `CogniaClient._invalidate_token` | 157 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaClient |
-| `integrations/cognia/client.py` | `CogniaClient._machine_access_token` | 161 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaClient |
-| `integrations/cognia/client.py` | `CogniaClient._authorized_json` | 192 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaClient |
-| `integrations/cognia/client.py` | `CogniaClient.health_check` | 221 | async method | Probe Cognia's documented readiness endpoint without exposing credentials. | CogniaClient |
-| `integrations/cognia/client.py` | `CogniaClient.list_knowledge_bases` | 229 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | CogniaClient |
-| `integrations/cognia/client.py` | `CogniaClient._assert_own_client_application` | 240 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaClient |
-| `integrations/cognia/client.py` | `CogniaClient._normalize_scope_context` | 250 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaClient |
-| `integrations/cognia/client.py` | `CogniaClient._normalize_knowledge_scope` | 264 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaClient |
-| `integrations/cognia/client.py` | `CogniaClient._validate_revision_payload` | 286 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaClient |
-| `integrations/cognia/client.py` | `CogniaClient.register_knowledge` | 310 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaClient |
-| `integrations/cognia/client.py` | `CogniaClient.get_knowledge_detail` | 353 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | CogniaClient |
-| `integrations/cognia/client.py` | `CogniaClient.create_revision` | 359 | async method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | CogniaClient |
-| `integrations/cognia/client.py` | `CogniaClient.get_processing_status` | 405 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | CogniaClient |
-| `integrations/cognia/client.py` | `CogniaClient.search` | 413 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | CogniaClient |
-| `integrations/cognia/client.py` | `CogniaClient.generate_context` | 458 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaClient |
+| `integrations/cognia/client.py` | `CogniaClient.close` | 83 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaClient |
+| `integrations/cognia/client.py` | `CogniaClient.__aenter__` | 86 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaClient |
+| `integrations/cognia/client.py` | `CogniaClient.__aexit__` | 89 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaClient |
+| `integrations/cognia/client.py` | `CogniaClient._problem_from_response` | 93 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaClient |
+| `integrations/cognia/client.py` | `CogniaClient._json_object` | 106 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaClient |
+| `integrations/cognia/client.py` | `CogniaClient._request_json` | 115 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaClient |
+| `integrations/cognia/client.py` | `CogniaClient._invalidate_token` | 158 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaClient |
+| `integrations/cognia/client.py` | `CogniaClient._machine_access_token` | 162 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaClient |
+| `integrations/cognia/client.py` | `CogniaClient._authorized_json` | 193 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaClient |
+| `integrations/cognia/client.py` | `CogniaClient.health_check` | 222 | async method | Probe Cognia's documented readiness endpoint without exposing credentials. | CogniaClient |
+| `integrations/cognia/client.py` | `CogniaClient.list_knowledge_bases` | 230 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | CogniaClient |
+| `integrations/cognia/client.py` | `CogniaClient._assert_own_client_application` | 241 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaClient |
+| `integrations/cognia/client.py` | `CogniaClient._normalize_scope_context` | 251 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaClient |
+| `integrations/cognia/client.py` | `CogniaClient._normalize_knowledge_scope` | 265 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaClient |
+| `integrations/cognia/client.py` | `CogniaClient._validate_revision_payload` | 287 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaClient |
+| `integrations/cognia/client.py` | `CogniaClient.register_knowledge` | 311 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaClient |
+| `integrations/cognia/client.py` | `CogniaClient.get_knowledge_detail` | 354 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | CogniaClient |
+| `integrations/cognia/client.py` | `CogniaClient.create_revision` | 360 | async method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | CogniaClient |
+| `integrations/cognia/client.py` | `CogniaClient.get_processing_status` | 406 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | CogniaClient |
+| `integrations/cognia/client.py` | `CogniaClient.search` | 414 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | CogniaClient |
+| `integrations/cognia/client.py` | `CogniaClient.generate_context` | 459 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaClient |
 | `integrations/elasticsearch/client.py` | `ElasticsearchClient` | 10 | class | Production connector for operational log evidence and ECS asset metadata. | module |
 | `integrations/elasticsearch/client.py` | `ElasticsearchClient.__init__` | 18 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ElasticsearchClient |
 | `integrations/elasticsearch/client.py` | `ElasticsearchClient.source_name` | 26 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ElasticsearchClient |
@@ -1582,16 +1582,16 @@
 | `integrations/kubernetes/client.py` | `KubernetesEvidenceClient._headers` | 50 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KubernetesEvidenceClient |
 | `integrations/kubernetes/client.py` | `KubernetesEvidenceClient._namespace` | 57 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KubernetesEvidenceClient |
 | `integrations/kubernetes/client.py` | `KubernetesEvidenceClient._get` | 63 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KubernetesEvidenceClient |
-| `integrations/kubernetes/client.py` | `KubernetesEvidenceClient.list_pods` | 75 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | KubernetesEvidenceClient |
-| `integrations/kubernetes/client.py` | `KubernetesEvidenceClient.get_pod` | 87 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | KubernetesEvidenceClient |
-| `integrations/kubernetes/client.py` | `KubernetesEvidenceClient.list_events` | 97 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | KubernetesEvidenceClient |
-| `integrations/kubernetes/client.py` | `KubernetesEvidenceClient.pod_logs` | 116 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KubernetesEvidenceClient |
-| `integrations/kubernetes/client.py` | `KubernetesEvidenceClient.get_deployment` | 124 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | KubernetesEvidenceClient |
-| `integrations/kubernetes/client.py` | `KubernetesEvidenceClient.resource_usage` | 134 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KubernetesEvidenceClient |
-| `integrations/kubernetes/client.py` | `KubernetesEvidenceClient._pod_summary` | 142 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KubernetesEvidenceClient |
-| `integrations/kubernetes/client.py` | `KubernetesEvidenceClient._deployment_summary` | 169 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KubernetesEvidenceClient |
-| `integrations/kubernetes/client.py` | `KubernetesEvidenceClient.collect_query` | 187 | async method | Evidence/داده موردنیاز را از منبع مربوط جمع می‌کند | KubernetesEvidenceClient |
-| `integrations/kubernetes/client.py` | `KubernetesEvidenceClient.collect_evidence` | 223 | async method | Evidence/داده موردنیاز را از منبع مربوط جمع می‌کند | KubernetesEvidenceClient |
+| `integrations/kubernetes/client.py` | `KubernetesEvidenceClient.list_pods` | 76 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | KubernetesEvidenceClient |
+| `integrations/kubernetes/client.py` | `KubernetesEvidenceClient.get_pod` | 88 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | KubernetesEvidenceClient |
+| `integrations/kubernetes/client.py` | `KubernetesEvidenceClient.list_events` | 98 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | KubernetesEvidenceClient |
+| `integrations/kubernetes/client.py` | `KubernetesEvidenceClient.pod_logs` | 117 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KubernetesEvidenceClient |
+| `integrations/kubernetes/client.py` | `KubernetesEvidenceClient.get_deployment` | 125 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | KubernetesEvidenceClient |
+| `integrations/kubernetes/client.py` | `KubernetesEvidenceClient.resource_usage` | 135 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KubernetesEvidenceClient |
+| `integrations/kubernetes/client.py` | `KubernetesEvidenceClient._pod_summary` | 143 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KubernetesEvidenceClient |
+| `integrations/kubernetes/client.py` | `KubernetesEvidenceClient._deployment_summary` | 170 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KubernetesEvidenceClient |
+| `integrations/kubernetes/client.py` | `KubernetesEvidenceClient.collect_query` | 188 | async method | Evidence/داده موردنیاز را از منبع مربوط جمع می‌کند | KubernetesEvidenceClient |
+| `integrations/kubernetes/client.py` | `KubernetesEvidenceClient.collect_evidence` | 224 | async method | Evidence/داده موردنیاز را از منبع مربوط جمع می‌کند | KubernetesEvidenceClient |
 | `integrations/kubernetes/mcp_client.py` | `KubernetesMCPClient` | 9 | class | Kubernetes evidence + governed write connector through MCP. | module |
 | `integrations/kubernetes/mcp_client.py` | `KubernetesMCPClient.__init__` | 33 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KubernetesMCPClient |
 | `integrations/kubernetes/mcp_client.py` | `KubernetesMCPClient.collect_query` | 51 | async method | Evidence/داده موردنیاز را از منبع مربوط جمع می‌کند | KubernetesMCPClient |
@@ -2465,15 +2465,27 @@
 | `tests/unit/test_execution_policy.py` | `test_non_allowlisted_tool_is_denied` | 12 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_health_readiness_mcp.py` | `test_production_readiness_requires_cognia_and_configured_optional_mcps` | 4 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_health_readiness_mcp.py` | `test_non_production_readiness_does_not_gate_on_external_dependencies` | 32 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_http_transport_policy.py` | `test_transport_factories_always_disable_tls_certificate_validation` | 9 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_http_transport_policy.py` | `test_transport_factories_always_disable_tls_certificate_validation.FakeAsync` | 12 | class | کلاس | test_transport_factories_always_disable_tls_certificate_validation |
-| `tests/unit/test_http_transport_policy.py` | `test_transport_factories_always_disable_tls_certificate_validation.FakeAsync.__init__` | 13 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_transport_factories_always_disable_tls_certificate_validation.FakeAsync |
-| `tests/unit/test_http_transport_policy.py` | `test_transport_factories_always_disable_tls_certificate_validation.FakeSync` | 16 | class | کلاس | test_transport_factories_always_disable_tls_certificate_validation |
-| `tests/unit/test_http_transport_policy.py` | `test_transport_factories_always_disable_tls_certificate_validation.FakeSync.__init__` | 17 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_transport_factories_always_disable_tls_certificate_validation.FakeSync |
-| `tests/unit/test_http_transport_policy.py` | `test_insecure_ssl_context_disables_certificate_and_hostname_validation` | 30 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_http_transport_policy.py` | `test_oidc_jwks_client_receives_insecure_ssl_context` | 36 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_http_transport_policy.py` | `test_no_https_enforcement_or_server_ca_config_remains_in_runtime_contract` | 44 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_http_transport_policy.py` | `test_outbound_runtime_httpx_clients_use_central_insecure_transport_factory` | 65 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_http_transport_policy.py` | `test_transport_factories_always_disable_tls_certificate_validation` | 12 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_http_transport_policy.py` | `test_transport_factories_always_disable_tls_certificate_validation.FakeAsync` | 15 | class | کلاس | test_transport_factories_always_disable_tls_certificate_validation |
+| `tests/unit/test_http_transport_policy.py` | `test_transport_factories_always_disable_tls_certificate_validation.FakeAsync.__init__` | 16 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_transport_factories_always_disable_tls_certificate_validation.FakeAsync |
+| `tests/unit/test_http_transport_policy.py` | `test_transport_factories_always_disable_tls_certificate_validation.FakeSync` | 19 | class | کلاس | test_transport_factories_always_disable_tls_certificate_validation |
+| `tests/unit/test_http_transport_policy.py` | `test_transport_factories_always_disable_tls_certificate_validation.FakeSync.__init__` | 20 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_transport_factories_always_disable_tls_certificate_validation.FakeSync |
+| `tests/unit/test_http_transport_policy.py` | `test_insecure_ssl_context_disables_certificate_and_hostname_validation` | 35 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_http_transport_policy.py` | `test_oidc_jwks_client_receives_insecure_ssl_context` | 41 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_http_transport_policy.py` | `test_no_https_enforcement_or_server_ca_config_remains_in_runtime_contract` | 49 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_http_transport_policy.py` | `test_outbound_runtime_httpx_clients_use_central_insecure_transport_factory` | 70 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_http_transport_policy.py` | `_LogRecorder` | 84 | class | کلاس | module |
+| `tests/unit/test_http_transport_policy.py` | `_LogRecorder.__init__` | 85 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _LogRecorder |
+| `tests/unit/test_http_transport_policy.py` | `_LogRecorder.info` | 88 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _LogRecorder |
+| `tests/unit/test_http_transport_policy.py` | `_LogRecorder.warning` | 91 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _LogRecorder |
+| `tests/unit/test_http_transport_policy.py` | `test_async_transport_logs_success_latency_without_query_or_secret` | 95 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_http_transport_policy.py` | `test_async_transport_logs_success_latency_without_query_or_secret.handler` | 99 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_async_transport_logs_success_latency_without_query_or_secret |
+| `tests/unit/test_http_transport_policy.py` | `test_async_transport_logs_success_latency_without_query_or_secret.run` | 102 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | test_async_transport_logs_success_latency_without_query_or_secret |
+| `tests/unit/test_http_transport_policy.py` | `test_async_transport_logs_failure_latency_and_error_type` | 126 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_http_transport_policy.py` | `test_async_transport_logs_failure_latency_and_error_type.handler` | 130 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_async_transport_logs_failure_latency_and_error_type |
+| `tests/unit/test_http_transport_policy.py` | `test_async_transport_logs_failure_latency_and_error_type.run` | 133 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | test_async_transport_logs_failure_latency_and_error_type |
+| `tests/unit/test_http_transport_policy.py` | `test_sync_transport_logs_latency` | 156 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_http_transport_policy.py` | `test_sync_transport_logs_latency.handler` | 160 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_sync_transport_logs_latency |
 | `tests/unit/test_idempotency.py` | `test_fingerprint_is_stable` | 3 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_identity_reliability_engine.py` | `event` | 12 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_identity_reliability_engine.py` | `metric` | 22 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
