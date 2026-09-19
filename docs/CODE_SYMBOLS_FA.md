@@ -1071,31 +1071,31 @@
 | `apps/orchestrator/a2a_gateway.py` | `A2AGateway` | 11 | class | Compatibility gateway for structured multi-agent analysis. | module |
 | `apps/orchestrator/a2a_gateway.py` | `A2AGateway.__init__` | 18 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | A2AGateway |
 | `apps/orchestrator/a2a_gateway.py` | `A2AGateway.process_incident` | 24 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | A2AGateway |
-| `apps/orchestrator/e2e_graph.py` | `E2EState` | 43 | class | کلاس | module |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator` | 73 | class | کلاس | module |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator.__init__` | 74 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._build_graph` | 96 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator.run` | 123 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._audit` | 130 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._knowledge_failure_status` | 141 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._context_node` | 170 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._triage_node` | 270 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._agent_input` | 297 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._run_specialists` | 305 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._additional_evidence_round` | 348 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._parallel_agents_node` | 387 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._rca_node` | 447 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._evaluator_node` | 474 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._route_after_evaluation` | 485 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._decision_node` | 493 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._route_after_decision` | 500 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._approval_node` | 513 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._route_after_approval` | 526 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._execution_node` | 533 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._verification_node` | 542 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._memory_node` | 572 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._end_node` | 610 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._average_confidence` | 617 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EState` | 44 | class | کلاس | module |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator` | 74 | class | کلاس | module |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator.__init__` | 75 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._build_graph` | 97 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator.run` | 124 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._audit` | 131 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._knowledge_failure_status` | 142 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._context_node` | 171 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._triage_node` | 273 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._agent_input` | 302 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._run_specialists` | 310 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._additional_evidence_round` | 353 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._parallel_agents_node` | 392 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._rca_node` | 454 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._evaluator_node` | 488 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._route_after_evaluation` | 505 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._decision_node` | 513 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._route_after_decision` | 520 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._approval_node` | 533 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._route_after_approval` | 546 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._execution_node` | 553 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._verification_node` | 562 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._memory_node` | 592 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._end_node` | 630 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._average_confidence` | 637 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
 | `apps/orchestrator/graph.py` | `WorkflowOrchestrator` | 16 | class | Backward-compatible facade; not a second orchestration implementation. | module |
 | `apps/orchestrator/graph.py` | `WorkflowOrchestrator.__init__` | 19 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | WorkflowOrchestrator |
 | `apps/orchestrator/graph.py` | `WorkflowOrchestrator.run` | 23 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | WorkflowOrchestrator |
