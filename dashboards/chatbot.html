@@ -8,7 +8,7 @@
   <meta http-equiv="Expires" content="0">
   <meta name="theme-color" content="#0B0F14">
   <title>NeoBanking Chatbot Operation Platform</title>
-  <link rel="stylesheet" href="/chatbot/chatbot.css?v=5">
+  <link rel="stylesheet" href="/chatbot/chatbot.css?v=6">
 </head>
 <body>
   <main class="app-shell">
@@ -21,13 +21,14 @@
             <h1 id="loginTitle">NeoBanking Chatbot Operation Platform</h1>
           </div>
         </div>
-        <p class="login-lead">دستیار عملیاتی امن برای بررسی VM، سرویس‌ها، Kubernetes و Zabbix با اجرای کنترل‌شده عملیات.</p>
+        <p class="login-lead">AI-Powered Operations Copilot با پشتیبانی فارسی و English برای بررسی VM، سرویس‌ها، Kubernetes و Zabbix با اجرای کنترل‌شده عملیات.</p>
 
         <form id="loginForm" class="login-form" autocomplete="off">
           <label for="apiKey">API Key</label>
           <div class="field-shell">
             <span class="field-icon" aria-hidden="true">⌁</span>
             <input id="apiKey" name="apiKey" type="password" autocomplete="off" required maxlength="4096" placeholder="X-API-Key" aria-describedby="apiKeyHelp">
+            <button id="apiKeyToggle" class="field-action" type="button" aria-label="نمایش کلید دسترسی" aria-pressed="false">نمایش</button>
           </div>
           <p id="apiKeyHelp" class="field-help">کلید فقط در sessionStorage همین تب نگه‌داری می‌شود و در تاریخچه گفتگو ذخیره نمی‌شود.</p>
           <button type="submit" class="button button-primary login-submit">Connect</button>
@@ -46,7 +47,10 @@
               <span>Operations workspace</span>
             </div>
           </div>
-          <button id="sidebarClose" class="button button-icon mobile-only" type="button" aria-label="بستن تاریخچه">×</button>
+          <div class="sidebar-header-actions">
+            <button id="sidebarCollapse" class="button button-icon desktop-only" type="button" aria-label="جمع کردن نوار کناری" aria-expanded="true">‹</button>
+            <button id="sidebarClose" class="button button-icon mobile-only" type="button" aria-label="بستن تاریخچه">×</button>
+          </div>
         </div>
 
         <button id="newChat" class="button new-chat-button" type="button">
@@ -93,12 +97,15 @@
               <span>API Session</span>
             </div>
             <div id="identity" class="identity" dir="auto" aria-label="کاربر فعلی"></div>
-            <button id="themeToggle" class="button button-icon" type="button" aria-label="تغییر پوسته" title="تغییر پوسته">☾</button>
+            <button id="themeToggle" class="button theme-toggle" type="button" aria-label="تغییر پوسته" title="تغییر پوسته">
+              <span id="themeIcon" class="theme-icon" aria-hidden="true">☾</span>
+              <span id="themeLabel" class="theme-label">تیره</span>
+            </button>
             <button id="logout" class="button button-icon danger-icon" type="button" aria-label="خروج" title="خروج">↪</button>
           </div>
         </header>
 
-        <section id="messages" class="messages" aria-label="Conversation" aria-live="polite" aria-relevant="additions text"></section>
+        <section id="messages" class="messages" aria-label="Conversation" aria-live="polite" aria-relevant="additions text" aria-busy="false"></section>
         <button id="scrollToBottom" class="button scroll-bottom hidden" type="button" aria-label="رفتن به آخر گفت‌وگو">↓</button>
 
         <div class="composer-zone">
@@ -110,13 +117,13 @@
 
           <form id="chatForm" class="composer">
             <label class="sr-only" for="messageInput">پیام برای Operations Copilot</label>
-            <textarea id="messageInput" rows="1" maxlength="4000" dir="auto" placeholder="پیام خود را برای Operations Copilot بنویسید… مثلاً: CPU سرور 10.100.6.199 چقدره؟" required></textarea>
+            <textarea id="messageInput" rows="1" maxlength="4000" dir="auto" placeholder="درباره وضعیت زیرساخت یا سرویس‌ها سؤال کنید…" required></textarea>
             <div class="composer-toolbar">
               <div class="composer-meta">
                 <span class="composer-hint">Enter ارسال · Shift+Enter خط جدید</span>
                 <span id="charCount" class="char-count">0 / 4000</span>
               </div>
-              <button id="sendButton" class="button send-button" type="submit" aria-label="ارسال پیام">
+              <button id="sendButton" class="button send-button" type="submit" aria-label="ارسال پیام" disabled>
                 <span class="send-icon" aria-hidden="true">↑</span>
                 <span class="stop-icon hidden" aria-hidden="true">■</span>
               </button>
@@ -152,6 +159,6 @@
   </dialog>
 
   <div id="toastRegion" class="toast-region" aria-live="polite" aria-atomic="true"></div>
-  <script src="/chatbot/chatbot.js?v=5" defer></script>
+  <script type="module" src="/chatbot/chatbot.js?v=6"></script>
 </body>
 </html>
