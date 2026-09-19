@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field
 from apps.security.auth import require_permission
 from apps.signal_gateway import OperationalSignal, SignalGateway, signal_from_elasticsearch, signal_from_prometheus
 from apps.signal_gateway.elastic_anomaly import ElasticAnomalyWebhookPayload, ingest_elastic_anomaly_payload
+from apps.signal_gateway.prometheus_alertmanager import AlertmanagerWebhookPayload, ingest_alertmanager_payload
 from apps.signal_gateway.zabbix_lifecycle import ingest_zabbix_payload
 from database import AsyncSessionLocal
 from database.migration_validation import validate_migration_head
@@ -106,6 +107,18 @@ async def _ingest_elastic_anomaly(payload: Dict[str, Any]) -> Dict[str, Any]:
         raise HTTPException(status_code=500, detail="signal_ingestion_failed") from exc
 
 
+async def _ingest_prometheus_alertmanager(payload: Dict[str, Any]) -> Dict[str, Any]:
+    try:
+        async with AsyncSessionLocal() as db:
+            await _require_database_ready(db)
+            return await ingest_alertmanager_payload(db, payload)
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.exception("signal_ingestion_failed", source="prometheus", signal_kind="alertmanager", error_type=type(exc).__name__)
+        raise HTTPException(status_code=500, detail="signal_ingestion_failed") from exc
+
+
 async def _ingest_zabbix(payload: Dict[str, Any]) -> Dict[str, Any]:
     target_token = bind_vm_target(target_from_zabbix_payload(payload))
     port_token = bind_vm_port(target_port_from_zabbix_payload(payload))
@@ -141,6 +154,15 @@ async def ingest_elasticsearch_anomaly(
     _user=Depends(require_permission("ingest:signal")),
 ):
     return await _ingest_elastic_anomaly(body.model_dump(mode="json"))
+
+
+@router.post("/signals/prometheus/alertmanager", dependencies=[Depends(rate_limiter_strict)])
+async def ingest_prometheus_alertmanager(
+    request: Request,
+    body: AlertmanagerWebhookPayload,
+    _user=Depends(require_permission("ingest:signal")),
+):
+    return await _ingest_prometheus_alertmanager(body.model_dump(mode="json", by_alias=True))
 
 
 @router.post("/signals/prometheus", dependencies=[Depends(rate_limiter_strict)])

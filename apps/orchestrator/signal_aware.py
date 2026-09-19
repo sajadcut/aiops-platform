@@ -41,28 +41,38 @@ class SignalAwareE2EOrchestrator(E2EOrchestrator):
         collected = list(context.get("evidence") or [])
         service_hint = state.get("service_name") or context.get("service")
 
-        # Elastic ML rules can fire after the anomalous bucket has passed. Anchor
-        # an additional read-only evidence query to the anomaly timestamp so RCA
-        # does not inspect only "now" and miss the causal log window.
-        if (
-            isinstance(trigger_signal, dict)
-            and str(trigger_signal.get("source") or "").lower() == "elasticsearch"
-            and isinstance(trigger_signal.get("raw_data"), dict)
-            and trigger_signal["raw_data"].get("elastic_alert_kind") == "ml_anomaly"
-        ):
+        # Source notifications can arrive after the causal telemetry interval.
+        # Anchor an extra read-only evidence collection window to the original
+        # trigger timestamp instead of relying only on a "now" window.
+        history_key = None
+        lookback_seconds = 0
+        lookahead_seconds = 0
+        if isinstance(trigger_signal, dict) and isinstance(trigger_signal.get("raw_data"), dict):
+            source = str(trigger_signal.get("source") or "").lower()
+            raw_trigger = trigger_signal["raw_data"]
+            if source == "elasticsearch" and raw_trigger.get("elastic_alert_kind") == "ml_anomaly":
+                history_key = "elastic_anomaly_evidence_window"
+                lookback_seconds = settings.ELASTIC_ANOMALY_CONTEXT_LOOKBACK_SECONDS
+                lookahead_seconds = settings.ELASTIC_ANOMALY_CONTEXT_LOOKAHEAD_SECONDS
+            elif source == "prometheus" and raw_trigger.get("prometheus_alert_kind") == "alertmanager":
+                history_key = "prometheus_alert_evidence_window"
+                lookback_seconds = settings.PROMETHEUS_ALERT_CONTEXT_LOOKBACK_SECONDS
+                lookahead_seconds = settings.PROMETHEUS_ALERT_CONTEXT_LOOKAHEAD_SECONDS
+
+        if history_key:
             try:
                 raw_timestamp = str(trigger_signal.get("timestamp") or "").strip()
-                anomaly_time = datetime.fromisoformat(raw_timestamp.replace("Z", "+00:00"))
-                if anomaly_time.tzinfo is None:
-                    anomaly_time = anomaly_time.replace(tzinfo=timezone.utc)
-                anomaly_time = anomaly_time.astimezone(timezone.utc)
-                window_start = anomaly_time - timedelta(seconds=settings.ELASTIC_ANOMALY_CONTEXT_LOOKBACK_SECONDS)
-                window_end = anomaly_time + timedelta(seconds=settings.ELASTIC_ANOMALY_CONTEXT_LOOKAHEAD_SECONDS)
+                trigger_time = datetime.fromisoformat(raw_timestamp.replace("Z", "+00:00"))
+                if trigger_time.tzinfo is None:
+                    trigger_time = trigger_time.replace(tzinfo=timezone.utc)
+                trigger_time = trigger_time.astimezone(timezone.utc)
+                window_start = trigger_time - timedelta(seconds=lookback_seconds)
+                window_end = trigger_time + timedelta(seconds=lookahead_seconds)
                 now = datetime.now(timezone.utc)
                 if window_end > now:
                     window_end = now
                 if window_end < window_start:
-                    window_end = anomaly_time
+                    window_end = trigger_time
                 historical = await self.evidence_collector.collect(
                     str(service_hint or "unknown"),
                     window_start,
@@ -73,8 +83,8 @@ class SignalAwareE2EOrchestrator(E2EOrchestrator):
                     if isinstance(item, dict)
                 ]
                 collected.extend(historical_items)
-                context["elastic_anomaly_evidence_window"] = {
-                    "anchor": anomaly_time.isoformat(),
+                context[history_key] = {
+                    "anchor": trigger_time.isoformat(),
                     "since": window_start.isoformat(),
                     "until": window_end.isoformat(),
                     "evidence_count": len(historical_items),
@@ -82,10 +92,11 @@ class SignalAwareE2EOrchestrator(E2EOrchestrator):
                 }
             except Exception as exc:
                 logger.warning(
-                    "elastic_anomaly_context_window_failed",
+                    "source_trigger_context_window_failed",
+                    source=str((trigger_signal or {}).get("source") or "unknown"),
                     error_type=type(exc).__name__,
                 )
-                context["elastic_anomaly_evidence_window"] = {
+                context[history_key] = {
                     "status": "error",
                     "error_type": type(exc).__name__,
                 }

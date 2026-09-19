@@ -143,6 +143,8 @@ class Settings(BaseSettings):
     PROMETHEUS_MCP_PROTOCOL_VERSION: str = Field(...)
     PROMETHEUS_MCP_SERVICE_LABEL: str = Field(...)
     PROMETHEUS_MCP_AUTH_HEADER: Optional[str] = Field(...)
+    PROMETHEUS_ALERT_CONTEXT_LOOKBACK_SECONDS: int = Field(..., ge=60, le=86400)
+    PROMETHEUS_ALERT_CONTEXT_LOOKAHEAD_SECONDS: int = Field(..., ge=0, le=3600)
     KUBERNETES_MCP_URL: Optional[str] = Field(...)
     VM_MCP_URL: Optional[str] = Field(...)
 

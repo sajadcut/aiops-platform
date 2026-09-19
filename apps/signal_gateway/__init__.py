@@ -51,6 +51,8 @@ class OperationalSignal(BaseModel):
         kind = self.signal_type.lower()
         if self.source == "elasticsearch" and self.raw_data.get("elastic_alert_kind") == "ml_anomaly":
             evidence_type = "alert"
+        elif self.source == "prometheus" and self.raw_data.get("prometheus_alert_kind") == "alertmanager":
+            evidence_type = "alert"
         elif self.source == "elasticsearch" or "log" in kind or "anomaly" in kind:
             evidence_type = "log" if self.source == "elasticsearch" else "event"
         elif self.source == "prometheus" or "metric" in kind:
