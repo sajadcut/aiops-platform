@@ -1172,10 +1172,10 @@
 | `apps/security/oidc.py` | `OIDCIdentityAdapter.validate_claims` | 25 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | OIDCIdentityAdapter |
 | `apps/security/rbac.py` | `RolePolicy` | 13 | class | یک role immutable و مجموعه permissionهای مجاز آن. | module |
 | `apps/security/rbac.py` | `allowed` | 29 | function | بدون fallback یا wildcard بررسی می‌کند که role دقیقاً permission خواسته‌شده را دارد. | module |
-| `apps/security/token_validator.py` | `OIDCTokenValidator` | 13 | class | Validate signed JWTs using configured OIDC issuer/audience/JWKS. | module |
-| `apps/security/token_validator.py` | `OIDCTokenValidator.__init__` | 16 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OIDCTokenValidator |
-| `apps/security/token_validator.py` | `OIDCTokenValidator.validate` | 22 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | OIDCTokenValidator |
-| `apps/security/token_validator.py` | `discover_jwks` | 40 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/security/token_validator.py` | `OIDCTokenValidator` | 15 | class | Validate signed JWTs using configured OIDC issuer/audience/JWKS. | module |
+| `apps/security/token_validator.py` | `OIDCTokenValidator.__init__` | 18 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OIDCTokenValidator |
+| `apps/security/token_validator.py` | `OIDCTokenValidator.validate` | 24 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | OIDCTokenValidator |
+| `apps/security/token_validator.py` | `discover_jwks` | 57 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/signal_gateway/__init__.py` | `OperationalSignal` | 24 | class | کلاس | module |
 | `apps/signal_gateway/__init__.py` | `OperationalSignal.normalize_source` | 37 | method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | OperationalSignal |
 | `apps/signal_gateway/__init__.py` | `OperationalSignal.normalize_severity` | 44 | method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | OperationalSignal |
