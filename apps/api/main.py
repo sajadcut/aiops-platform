@@ -138,6 +138,16 @@ async def chatbot_script():
     return FileResponse(_DASHBOARD_DIR / "chatbot.js", media_type="application/javascript")
 
 
+@app.get("/chatbot/chatbot-ui.js", include_in_schema=False)
+async def chatbot_ui_script():
+    return FileResponse(_DASHBOARD_DIR / "chatbot-ui.js", media_type="application/javascript")
+
+
+@app.get("/chatbot/chatbot-transport.js", include_in_schema=False)
+async def chatbot_transport_script():
+    return FileResponse(_DASHBOARD_DIR / "chatbot-transport.js", media_type="application/javascript")
+
+
 def _is_http_or_https(value: str | None) -> bool:
     if not value:
         return False
