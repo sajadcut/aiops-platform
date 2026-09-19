@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 348 | Dashboard JS files scanned: 3 | Symbols indexed: 3002**
+**Python files scanned: 348 | Dashboard JS files scanned: 3 | Symbols indexed: 3033**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1512,9 +1512,40 @@
 | `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient._esql_string` | 48 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ElasticsearchMCPClient |
 | `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient._rows_from_payload` | 54 | method | Normalize Agent Builder execute_esql output into row dictionaries. | ElasticsearchMCPClient |
 | `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient.get_logs` | 95 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | ElasticsearchMCPClient |
-| `integrations/http_transport.py` | `insecure_ssl_context` | 9 | function | Create a TLS context that does not validate server certificates or hostnames. | module |
-| `integrations/http_transport.py` | `insecure_async_client` | 17 | function | Create an outbound HTTP(S) client with TLS certificate validation disabled. | module |
-| `integrations/http_transport.py` | `insecure_sync_client` | 23 | function | Create a synchronous outbound HTTP(S) client with TLS validation disabled. | module |
+| `integrations/http_transport.py` | `insecure_ssl_context` | 13 | function | Create a TLS context that does not validate server certificates or hostnames. | module |
+| `integrations/http_transport.py` | `_safe_destination` | 21 | function | Return log-safe destination fields without query strings, credentials or bodies. | module |
+| `integrations/http_transport.py` | `_log_completed` | 39 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `integrations/http_transport.py` | `_log_failed` | 50 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `integrations/http_transport.py` | `_TimedAsyncClient` | 61 | class | Transparent proxy that records latency for every outbound HTTP request. | module |
+| `integrations/http_transport.py` | `_TimedAsyncClient.__init__` | 64 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _TimedAsyncClient |
+| `integrations/http_transport.py` | `_TimedAsyncClient.__aenter__` | 68 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _TimedAsyncClient |
+| `integrations/http_transport.py` | `_TimedAsyncClient.__aexit__` | 72 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _TimedAsyncClient |
+| `integrations/http_transport.py` | `_TimedAsyncClient.aclose` | 75 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _TimedAsyncClient |
+| `integrations/http_transport.py` | `_TimedAsyncClient._timed` | 78 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _TimedAsyncClient |
+| `integrations/http_transport.py` | `_TimedAsyncClient.request` | 109 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _TimedAsyncClient |
+| `integrations/http_transport.py` | `_TimedAsyncClient.get` | 133 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _TimedAsyncClient |
+| `integrations/http_transport.py` | `_TimedAsyncClient.post` | 136 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _TimedAsyncClient |
+| `integrations/http_transport.py` | `_TimedAsyncClient.put` | 139 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _TimedAsyncClient |
+| `integrations/http_transport.py` | `_TimedAsyncClient.patch` | 142 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _TimedAsyncClient |
+| `integrations/http_transport.py` | `_TimedAsyncClient.delete` | 145 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _TimedAsyncClient |
+| `integrations/http_transport.py` | `_TimedAsyncClient.head` | 148 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _TimedAsyncClient |
+| `integrations/http_transport.py` | `_TimedAsyncClient.options` | 151 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _TimedAsyncClient |
+| `integrations/http_transport.py` | `_TimedAsyncClient.__getattr__` | 154 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _TimedAsyncClient |
+| `integrations/http_transport.py` | `_TimedSyncClient` | 158 | class | Synchronous equivalent used by operational acceptance tooling. | module |
+| `integrations/http_transport.py` | `_TimedSyncClient.__init__` | 161 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _TimedSyncClient |
+| `integrations/http_transport.py` | `_TimedSyncClient.__enter__` | 165 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _TimedSyncClient |
+| `integrations/http_transport.py` | `_TimedSyncClient.__exit__` | 169 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _TimedSyncClient |
+| `integrations/http_transport.py` | `_TimedSyncClient.close` | 172 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _TimedSyncClient |
+| `integrations/http_transport.py` | `_TimedSyncClient.request` | 175 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _TimedSyncClient |
+| `integrations/http_transport.py` | `_TimedSyncClient._timed` | 199 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _TimedSyncClient |
+| `integrations/http_transport.py` | `_TimedSyncClient.get` | 223 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _TimedSyncClient |
+| `integrations/http_transport.py` | `_TimedSyncClient.post` | 226 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _TimedSyncClient |
+| `integrations/http_transport.py` | `_TimedSyncClient.put` | 229 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _TimedSyncClient |
+| `integrations/http_transport.py` | `_TimedSyncClient.patch` | 232 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _TimedSyncClient |
+| `integrations/http_transport.py` | `_TimedSyncClient.delete` | 235 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _TimedSyncClient |
+| `integrations/http_transport.py` | `_TimedSyncClient.__getattr__` | 238 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _TimedSyncClient |
+| `integrations/http_transport.py` | `insecure_async_client` | 242 | function | Create an instrumented outbound HTTP(S) client with TLS validation disabled. | module |
+| `integrations/http_transport.py` | `insecure_sync_client` | 249 | function | Create an instrumented synchronous outbound HTTP(S) client with TLS validation disabled. | module |
 | `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient` | 10 | class | Governed client for the official Jenkins ``mcp-server`` plugin. | module |
 | `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient.__init__` | 44 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | JenkinsMCPClient |
 | `integrations/jenkins/mcp_client.py` | `JenkinsMCPClient._headers` | 94 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | JenkinsMCPClient |
