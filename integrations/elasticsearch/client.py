@@ -34,7 +34,7 @@ class ElasticsearchClient(BaseConnector):
 
     async def health_check(self) -> bool:
         try:
-            async with insecure_async_client(timeout=self.timeout, auth=self._auth) as client:
+            async with insecure_async_client(timeout=self.timeout, auth=self._auth, component="elasticsearch") as client:
                 response = await client.get(f"{self._base_url}/_cluster/health")
                 return response.status_code == 200
         except Exception as exc:
@@ -51,7 +51,7 @@ class ElasticsearchClient(BaseConnector):
         if start or end:
             filters.append({"range": {"@timestamp": {k: v for k, v in (("gte", start), ("lte", end)) if v}}})
         body = {"query": {"bool": {"must": [{"query_string": {"query": query}}], "filter": filters}}, "size": limit}
-        async with insecure_async_client(timeout=self.timeout, auth=self._auth) as client:
+        async with insecure_async_client(timeout=self.timeout, auth=self._auth, component="elasticsearch") as client:
             response = await client.post(f"{self._base_url}/_search", json=body)
             response.raise_for_status()
             payload = response.json()
