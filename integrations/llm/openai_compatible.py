@@ -243,7 +243,7 @@ class OpenAICompatibleLLMProvider(LLMAdapter):
         )
 
         try:
-            async with insecure_async_client(timeout=settings.LLM_TIMEOUT_SECONDS) as client:
+            async with insecure_async_client(timeout=settings.LLM_TIMEOUT_SECONDS, component=f"llm:{self.provider_name}") as client:
                 response = await client.post(
                     self.chat_endpoint,
                     headers=headers,
