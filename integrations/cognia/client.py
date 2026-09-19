@@ -74,6 +74,7 @@ class CogniaClient:
             timeout=self.timeout_seconds,
             transport=transport,
             headers={"Accept": "application/json"},
+            component="cognia",
         )
         self._token: Optional[str] = None
         self._token_valid_until = 0.0
