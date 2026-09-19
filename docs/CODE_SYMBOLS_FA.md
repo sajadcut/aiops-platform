@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 351 | Dashboard JS files scanned: 3 | Symbols indexed: 3088**
+**Python files scanned: 353 | Dashboard JS files scanned: 3 | Symbols indexed: 3111**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -749,17 +749,19 @@
 | `apps/api/runbooks.py` | `list_runbooks` | 11 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
 | `apps/api/runbooks.py` | `get_runbook` | 16 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
 | `apps/api/runbooks.py` | `dry_run` | 24 | async function | Validate a runbook without crossing the real execution boundary. | module |
-| `apps/api/signals.py` | `RawSignalPayload` | 22 | class | کلاس | module |
-| `apps/api/signals.py` | `_response_from_result` | 26 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/signals.py` | `_require_database_ready` | 57 | async function | Reject new workflows before expensive analysis when DB schema is stale. | module |
-| `apps/api/signals.py` | `_ingest` | 83 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/signals.py` | `_ingest_elastic_anomaly` | 96 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/signals.py` | `_ingest_zabbix` | 109 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/signals.py` | `ingest_signal` | 128 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/signals.py` | `ingest_elasticsearch_signal` | 133 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/signals.py` | `ingest_elasticsearch_anomaly` | 138 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/signals.py` | `ingest_prometheus_signal` | 147 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/signals.py` | `ingest_zabbix_signal` | 165 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/signals.py` | `RawSignalPayload` | 23 | class | کلاس | module |
+| `apps/api/signals.py` | `_response_from_result` | 27 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/signals.py` | `_require_database_ready` | 58 | async function | Reject new workflows before expensive analysis when DB schema is stale. | module |
+| `apps/api/signals.py` | `_ingest` | 84 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/signals.py` | `_ingest_elastic_anomaly` | 97 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/signals.py` | `_ingest_prometheus_alertmanager` | 110 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/signals.py` | `_ingest_zabbix` | 122 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/signals.py` | `ingest_signal` | 141 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/signals.py` | `ingest_elasticsearch_signal` | 146 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/signals.py` | `ingest_elasticsearch_anomaly` | 151 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/signals.py` | `ingest_prometheus_alertmanager` | 160 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/signals.py` | `ingest_prometheus_signal` | 169 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/signals.py` | `ingest_zabbix_signal` | 187 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/workflow.py` | `WorkflowRequest` | 18 | class | کلاس | module |
 | `apps/api/workflow.py` | `WorkflowResponse` | 25 | class | کلاس | module |
 | `apps/api/workflow.py` | `run_workflow` | 39 | async function | Compatibility analysis endpoint backed by the canonical durable E2E runtime. | module |
@@ -1118,13 +1120,13 @@
 | `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime.resume_after_approval` | 156 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
 | `apps/orchestrator/signal_aware.py` | `SignalAwareE2EOrchestrator` | 22 | class | Collaborative E2E workflow for source-triggered and API-triggered incidents. | module |
 | `apps/orchestrator/signal_aware.py` | `SignalAwareE2EOrchestrator._context_node` | 31 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalAwareE2EOrchestrator |
-| `apps/orchestrator/signal_aware.py` | `SignalAwareE2EOrchestrator._publish_peer_context` | 175 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalAwareE2EOrchestrator |
-| `apps/orchestrator/signal_aware.py` | `SignalAwareE2EOrchestrator._parallel_agents_node` | 197 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalAwareE2EOrchestrator |
-| `apps/orchestrator/signal_aware.py` | `SignalAwareE2EOrchestrator._deterministic_rca_fallback` | 268 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalAwareE2EOrchestrator |
-| `apps/orchestrator/signal_aware.py` | `SignalAwareE2EOrchestrator._rca_node` | 283 | async method | Bound RCA context so provider token limits cannot erase deterministic recovery. | SignalAwareE2EOrchestrator |
-| `apps/orchestrator/signal_aware.py` | `SignalAwareE2EOrchestrator._decision_node` | 344 | async method | Bind deterministic policy to the concrete tool/action/target request. | SignalAwareE2EOrchestrator |
-| `apps/orchestrator/signal_aware.py` | `SignalAwareE2EOrchestrator._execution_node` | 414 | async method | Refresh and revalidate live preconditions immediately before execution. | SignalAwareE2EOrchestrator |
-| `apps/orchestrator/signal_aware.py` | `SignalAwareE2EOrchestrator._memory_node` | 499 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalAwareE2EOrchestrator |
+| `apps/orchestrator/signal_aware.py` | `SignalAwareE2EOrchestrator._publish_peer_context` | 186 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalAwareE2EOrchestrator |
+| `apps/orchestrator/signal_aware.py` | `SignalAwareE2EOrchestrator._parallel_agents_node` | 208 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalAwareE2EOrchestrator |
+| `apps/orchestrator/signal_aware.py` | `SignalAwareE2EOrchestrator._deterministic_rca_fallback` | 279 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalAwareE2EOrchestrator |
+| `apps/orchestrator/signal_aware.py` | `SignalAwareE2EOrchestrator._rca_node` | 294 | async method | Bound RCA context so provider token limits cannot erase deterministic recovery. | SignalAwareE2EOrchestrator |
+| `apps/orchestrator/signal_aware.py` | `SignalAwareE2EOrchestrator._decision_node` | 355 | async method | Bind deterministic policy to the concrete tool/action/target request. | SignalAwareE2EOrchestrator |
+| `apps/orchestrator/signal_aware.py` | `SignalAwareE2EOrchestrator._execution_node` | 425 | async method | Refresh and revalidate live preconditions immediately before execution. | SignalAwareE2EOrchestrator |
+| `apps/orchestrator/signal_aware.py` | `SignalAwareE2EOrchestrator._memory_node` | 510 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalAwareE2EOrchestrator |
 | `apps/orchestrator/workflow_store.py` | `WorkflowCheckpointStore` | 18 | class | State قابل resume را با version افزایشی برای هر Incident ذخیره می‌کند. | module |
 | `apps/orchestrator/workflow_store.py` | `WorkflowCheckpointStore.__init__` | 21 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | WorkflowCheckpointStore |
 | `apps/orchestrator/workflow_store.py` | `WorkflowCheckpointStore.save` | 24 | async method | state یا داده را به‌صورت durable ذخیره/به‌روزرسانی می‌کند | WorkflowCheckpointStore |
@@ -1182,15 +1184,15 @@
 | `apps/signal_gateway/__init__.py` | `OperationalSignal.normalize_source` | 37 | method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | OperationalSignal |
 | `apps/signal_gateway/__init__.py` | `OperationalSignal.normalize_severity` | 44 | method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | OperationalSignal |
 | `apps/signal_gateway/__init__.py` | `OperationalSignal.to_evidence` | 49 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalSignal |
-| `apps/signal_gateway/__init__.py` | `SignalGateway` | 76 | class | Source-agnostic, race-safe entry point for operational signals. | module |
-| `apps/signal_gateway/__init__.py` | `SignalGateway._append_trigger_to_checkpoint` | 85 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalGateway |
-| `apps/signal_gateway/__init__.py` | `SignalGateway._existing_state` | 97 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalGateway |
-| `apps/signal_gateway/__init__.py` | `SignalGateway._knowledge_assisted_asset` | 104 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalGateway |
-| `apps/signal_gateway/__init__.py` | `SignalGateway.ingest` | 178 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalGateway |
-| `apps/signal_gateway/__init__.py` | `signal_from_elasticsearch` | 322 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/signal_gateway/__init__.py` | `signal_from_prometheus` | 341 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/signal_gateway/__init__.py` | `_zabbix_service_from_tags` | 356 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/signal_gateway/__init__.py` | `signal_from_zabbix` | 375 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/__init__.py` | `SignalGateway` | 78 | class | Source-agnostic, race-safe entry point for operational signals. | module |
+| `apps/signal_gateway/__init__.py` | `SignalGateway._append_trigger_to_checkpoint` | 87 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalGateway |
+| `apps/signal_gateway/__init__.py` | `SignalGateway._existing_state` | 99 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalGateway |
+| `apps/signal_gateway/__init__.py` | `SignalGateway._knowledge_assisted_asset` | 106 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalGateway |
+| `apps/signal_gateway/__init__.py` | `SignalGateway.ingest` | 180 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalGateway |
+| `apps/signal_gateway/__init__.py` | `signal_from_elasticsearch` | 324 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/__init__.py` | `signal_from_prometheus` | 343 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/__init__.py` | `_zabbix_service_from_tags` | 358 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/__init__.py` | `signal_from_zabbix` | 377 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/signal_gateway/correlation.py` | `CorrelationIdentity` | 20 | class | خروجی canonical correlation شامل fingerprint و scope قابل audit. | module |
 | `apps/signal_gateway/correlation.py` | `_token` | 30 | function | مقادیر vendor-specific را به token پایدار و قابل hash تبدیل می‌کند. | module |
 | `apps/signal_gateway/correlation.py` | `signal_family` | 36 | function | نام‌های alert مختلف را محافظه‌کارانه به symptom family مشترک نگاشت می‌کند. | module |
@@ -1223,6 +1225,21 @@
 | `apps/signal_gateway/elastic_anomaly.py` | `_record_source_recovery` | 455 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/signal_gateway/elastic_anomaly.py` | `_audit_recovery` | 507 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/signal_gateway/elastic_anomaly.py` | `ingest_elastic_anomaly_payload` | 544 | async function | Ingest Elastic ML anomaly active/recovery lifecycle events. | module |
+| `apps/signal_gateway/prometheus_alertmanager.py` | `AlertmanagerAlert` | 21 | class | کلاس | module |
+| `apps/signal_gateway/prometheus_alertmanager.py` | `AlertmanagerWebhookPayload` | 33 | class | Native Alertmanager generic-webhook v4 payload. | module |
+| `apps/signal_gateway/prometheus_alertmanager.py` | `_text` | 51 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/prometheus_alertmanager.py` | `_timestamp` | 56 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/prometheus_alertmanager.py` | `_stable_hash` | 72 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/prometheus_alertmanager.py` | `_alert_source_id` | 77 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/prometheus_alertmanager.py` | `_service` | 87 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/prometheus_alertmanager.py` | `_status` | 96 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/prometheus_alertmanager.py` | `_signal_from_alert` | 100 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/prometheus_alertmanager.py` | `classify_alertmanager_alert` | 144 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/prometheus_alertmanager.py` | `_recovery_evidence` | 167 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/prometheus_alertmanager.py` | `_record_source_recovery` | 201 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/prometheus_alertmanager.py` | `_audit_recovery` | 257 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/prometheus_alertmanager.py` | `_ingest_resolved_alert` | 294 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/prometheus_alertmanager.py` | `ingest_alertmanager_payload` | 457 | async function | Process every native Alertmanager webhook alert independently. | module |
 | `apps/signal_gateway/zabbix_lifecycle.py` | `_text_value` | 19 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/signal_gateway/zabbix_lifecycle.py` | `classify_zabbix_lifecycle` | 30 | function | Return deterministic Problem/Recovery identity from the webhook payload. | module |
 | `apps/signal_gateway/zabbix_lifecycle.py` | `_recovery_timestamp` | 75 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
@@ -1403,21 +1420,21 @@
 | `domain/action_plan.py` | `ActionPlan` | 5 | class | کلاس | module |
 | `domain/audit_event.py` | `AuditEvent` | 6 | class | کلاس | module |
 | `domain/contracts/config.py` | `Settings` | 8 | class | Typed loader for the centralized runtime environment contract. | module |
-| `domain/contracts/config.py` | `Settings.validate_app_env` | 183 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_ssh_auth_mode` | 191 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.parse_optional_cognia_ids` | 199 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | Settings |
-| `domain/contracts/config.py` | `Settings.validate_cognia_knowledge_base_ids` | 206 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_log_rotation_mode` | 218 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_log_level` | 226 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_elastic_agent_builder_version` | 234 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_elastic_agent_builder_endpoint` | 247 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_elastic_namespaces` | 255 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_elastic_anomaly_job_service_map` | 263 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_jenkins_mcp_protocol_version` | 275 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_jenkins_basic_auth_header` | 283 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_prometheus_mcp_protocol_version` | 291 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_external_contracts` | 300 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_cognia_contract` | 324 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_app_env` | 185 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_ssh_auth_mode` | 193 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.parse_optional_cognia_ids` | 201 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | Settings |
+| `domain/contracts/config.py` | `Settings.validate_cognia_knowledge_base_ids` | 208 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_log_rotation_mode` | 220 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_log_level` | 228 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_elastic_agent_builder_version` | 236 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_elastic_agent_builder_endpoint` | 249 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_elastic_namespaces` | 257 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_elastic_anomaly_job_service_map` | 265 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_jenkins_mcp_protocol_version` | 277 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_jenkins_basic_auth_header` | 285 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_prometheus_mcp_protocol_version` | 293 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_external_contracts` | 302 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_cognia_contract` | 326 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
 | `domain/contracts/context.py` | `set_trace_id` | 15 | function | Set the request/correlation trace id for the current execution context. | module |
 | `domain/contracts/context.py` | `get_trace_id` | 20 | function | Return the request/correlation trace id for the current context. | module |
 | `domain/contracts/context.py` | `generate_trace_id` | 25 | function | Generate a compact request trace id. | module |
@@ -2791,6 +2808,12 @@
 | `tests/unit/test_production_hardening_batch.py` | `_yaml_documents` | 155 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_production_hardening_batch.py` | `test_kubernetes_manifest_has_availability_and_security_guards` | 159 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_production_hardening_batch.py` | `test_api_and_migration_manifests_use_same_artifact_and_hardened_runtime` | 175 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_prometheus_alertmanager_ingestion.py` | `_payload` | 10 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_prometheus_alertmanager_ingestion.py` | `test_native_alertmanager_v4_model_accepts_camel_case_contract` | 46 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_prometheus_alertmanager_ingestion.py` | `test_firing_alert_becomes_first_class_alert_evidence` | 54 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_prometheus_alertmanager_ingestion.py` | `test_missing_fingerprint_uses_stable_identity` | 70 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_prometheus_alertmanager_ingestion.py` | `test_resolved_alert_reuses_problem_fingerprint_and_stable_recovery_id` | 81 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_prometheus_alertmanager_ingestion.py` | `test_per_alert_status_wins_over_group_status` | 97 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_prometheus_mcp_client.py` | `_client` | 10 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_prometheus_mcp_client.py` | `test_official_prometheus_contract_uses_provider_protocol_and_no_generic_bearer` | 14 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_prometheus_mcp_client.py` | `test_range_query_parses_official_prometheus_model_text` | 29 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
