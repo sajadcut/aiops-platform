@@ -59,7 +59,7 @@ class MCPClient:
             raise ValueError("mcp_client_cert_and_key_must_be_configured_together")
 
         cert = (client_cert_path, client_key_path) if client_cert_path and client_key_path else None
-        self._client = insecure_async_client(timeout=self.timeout, cert=cert)
+        self._client = insecure_async_client(timeout=self.timeout, cert=cert, component=f"mcp:{self.server_name}")
 
     def _authorization(self, tool_name: Optional[str]) -> Optional[str]:
         if tool_name in self.write_tools:
