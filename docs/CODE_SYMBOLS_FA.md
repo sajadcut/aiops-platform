@@ -1621,15 +1621,15 @@
 | `integrations/llm/openai_compatible.py` | `OpenAICompatibleLLMProvider._chatbot_summary_is_incomplete` | 83 | method | Detect obviously incomplete chatbot summaries even when a gateway says stop. | OpenAICompatibleLLMProvider |
 | `integrations/llm/openai_compatible.py` | `OpenAICompatibleLLMProvider._needs_completion_repair` | 143 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OpenAICompatibleLLMProvider |
 | `integrations/llm/openai_compatible.py` | `OpenAICompatibleLLMProvider.generate` | 150 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OpenAICompatibleLLMProvider |
-| `integrations/llm/openai_compatible.py` | `OpenAICompatibleLLMProvider.generate_with_messages` | 208 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OpenAICompatibleLLMProvider |
-| `integrations/llm/openai_compatible.py` | `DotinGeneralChatbotLLMProvider` | 295 | class | Dotin General Chatbot adapter based on the documented OpenAI-compatible API. | module |
-| `integrations/llm/openai_compatible.py` | `DotinGeneralChatbotLLMProvider.__init__` | 306 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DotinGeneralChatbotLLMProvider |
-| `integrations/llm/openai_compatible.py` | `DotinGeneralChatbotLLMProvider.provider_name` | 314 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DotinGeneralChatbotLLMProvider |
-| `integrations/llm/openai_compatible.py` | `DotinGeneralChatbotLLMProvider.chat_endpoint` | 318 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DotinGeneralChatbotLLMProvider |
-| `integrations/llm/openai_compatible.py` | `DotinGeneralChatbotLLMProvider._safe_header_value` | 329 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DotinGeneralChatbotLLMProvider |
-| `integrations/llm/openai_compatible.py` | `DotinGeneralChatbotLLMProvider._request_headers` | 335 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DotinGeneralChatbotLLMProvider |
-| `integrations/llm/openai_compatible.py` | `DotinGeneralChatbotLLMProvider._request_payload` | 347 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DotinGeneralChatbotLLMProvider |
-| `integrations/llm/openai_compatible.py` | `configured_llm_adapter` | 392 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `integrations/llm/openai_compatible.py` | `OpenAICompatibleLLMProvider.generate_with_messages` | 262 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OpenAICompatibleLLMProvider |
+| `integrations/llm/openai_compatible.py` | `DotinGeneralChatbotLLMProvider` | 349 | class | Dotin General Chatbot adapter based on the documented OpenAI-compatible API. | module |
+| `integrations/llm/openai_compatible.py` | `DotinGeneralChatbotLLMProvider.__init__` | 360 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DotinGeneralChatbotLLMProvider |
+| `integrations/llm/openai_compatible.py` | `DotinGeneralChatbotLLMProvider.provider_name` | 368 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DotinGeneralChatbotLLMProvider |
+| `integrations/llm/openai_compatible.py` | `DotinGeneralChatbotLLMProvider.chat_endpoint` | 372 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DotinGeneralChatbotLLMProvider |
+| `integrations/llm/openai_compatible.py` | `DotinGeneralChatbotLLMProvider._safe_header_value` | 383 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DotinGeneralChatbotLLMProvider |
+| `integrations/llm/openai_compatible.py` | `DotinGeneralChatbotLLMProvider._request_headers` | 389 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DotinGeneralChatbotLLMProvider |
+| `integrations/llm/openai_compatible.py` | `DotinGeneralChatbotLLMProvider._request_payload` | 401 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DotinGeneralChatbotLLMProvider |
+| `integrations/llm/openai_compatible.py` | `configured_llm_adapter` | 446 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `integrations/mcp_client.py` | `MCPClient` | 19 | class | کلاس | module |
 | `integrations/mcp_client.py` | `MCPClient.__init__` | 23 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MCPClient |
 | `integrations/mcp_client.py` | `MCPClient._authorization` | 64 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MCPClient |
