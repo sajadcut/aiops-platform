@@ -37,9 +37,9 @@ Canonical endpoint:
 - default space: `{KIBANA_URL}/api/agent_builder/mcp`
 - custom space: `{KIBANA_URL}/s/{SPACE}/api/agent_builder/mcp`
 
-The adapter scopes discovery with the MCP `namespace` query parameter and requires `platform.core`.
+The adapter scopes discovery with the MCP `namespace` query parameter and requires `platform.core`. The Elastic client pins the documented Agent Builder initialize baseline `2024-11-05` independently from the generic MCP setting.
 
-Canonical log Evidence -> `platform.core.execute_esql`. The adapter constructs bounded deterministic ES|QL from trusted service/time/level fields and a configured `ELASTIC_AGENT_BUILDER_INDEX_PATTERN`. Agents never supply arbitrary ES|QL, Query DSL, tool names or index patterns.
+Canonical log Evidence -> `platform.core.execute_esql`. The adapter constructs bounded deterministic ES|QL from trusted service/time/level fields and a configured `ELASTIC_AGENT_BUILDER_INDEX_PATTERN`. Agents never supply arbitrary ES|QL, Query DSL, tool names or index patterns. Elastic's current guidance favors a custom parameterized ES|QL tool for stable repeatable retrieval patterns; that migration is intentionally treated as a separate provider-provisioning acceptance change rather than silently creating `manageTools` privileges in the runtime.
 
 `platform.core.search` and `platform.core.generate_esql` are intentionally not used by the EvidenceCollector because they introduce an additional AI/query-generation layer inside evidence acquisition. They may be evaluated later only through a separate governed ADR and acceptance process.
 
@@ -59,7 +59,7 @@ Each provider may use a distinct full `Authorization` value:
 - `ELASTICSEARCH_MCP_AUTH_HEADER`
 - `PROMETHEUS_MCP_AUTH_HEADER`
 
-For Elastic unattended Control-Plane use, API key authentication is the default target. OAuth 2.1 may be used only where the deployment type and enterprise identity architecture support it. The generic `MCP_BEARER_TOKEN` remains a fallback for providers that use Bearer authentication. Write identities remain separate from read identities.
+For Elastic unattended Control-Plane use, API key authentication is the default target. OAuth 2.1 may be used only where the deployment type and enterprise identity architecture support it. Elastic uses only `ELASTICSEARCH_MCP_AUTH_HEADER`; the generic/internal `MCP_BEARER_TOKEN` is deliberately not forwarded to Kibana. Other providers may still use the generic Bearer identity when that is part of their explicit contract. Write identities remain separate from read identities.
 
 ## Security constraints
 

@@ -93,3 +93,31 @@ def test_json_encoded_action_variables_are_normalized():
     assert normalized["anomaly"]["job_ids"] == ["payment-latency-job"]
     assert normalized["anomaly"]["is_interim"] is False
     assert normalized["anomaly"]["top_influencers"][0]["influencer_field_name"] == "service.name"
+
+
+def test_native_json_arrays_from_asjson_webhook_are_normalized():
+    payload = _active_payload()
+    payload["rule"]["tags"] = ["team:sre", "service:payment-api"]
+    payload["anomaly"]["job_ids"] = ["payment-latency-job"]
+    payload["anomaly"]["top_influencers"] = [
+        {
+            "influencer_field_name": "service.name",
+            "influencer_field_value": "payment-api",
+            "score": 82.5,
+        }
+    ]
+    payload["anomaly"]["top_records"] = [
+        {
+            "function": "mean",
+            "field_name": "response_time",
+            "actual": [4521],
+            "typical": [320],
+            "score": 82.5,
+        }
+    ]
+
+    normalized = normalize_elastic_anomaly_payload(payload)
+    assert normalized["rule"]["tags"] == ["team:sre", "service:payment-api"]
+    assert normalized["anomaly"]["job_ids"] == ["payment-latency-job"]
+    assert normalized["anomaly"]["top_influencers"][0]["influencer_field_value"] == "payment-api"
+    assert normalized["anomaly"]["top_records"][0]["field_name"] == "response_time"

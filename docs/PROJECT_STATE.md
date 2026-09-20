@@ -61,8 +61,10 @@ Elastic integration uses Elastic Agent Builder MCP rather than the deprecated st
 - Minimum supported Elastic Stack: **9.2**.
 - Recommended Production baseline: **9.3+**, pinned to an approved patched release.
 - Canonical endpoint: Kibana `/api/agent_builder/mcp` or Space-aware `/s/{space}/api/agent_builder/mcp`.
+- Elastic-specific MCP initialize baseline: `2024-11-05`.
 - `platform.core` is mandatory in the configured MCP namespaces.
-- Log Evidence uses only the deterministic read-only ES|QL path.
+- Elastic authentication is provider-specific (`ApiKey` for unattended Stack/Serverless; OAuth Bearer only where documented) and never inherits the internal MCP bearer.
+- Log Evidence uses only the deterministic read-only ES|QL path; the required allowlisted tool is verified by readiness.
 
 ## Partial / not production-accepted
 

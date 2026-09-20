@@ -26,9 +26,11 @@ class ElasticsearchMCPClient(MCPClient):
             self._with_namespace(base_url, settings.ELASTIC_AGENT_BUILDER_MCP_NAMESPACES),
             "elastic-agent-builder",
             allowed_tools={self.TOOL_EXECUTE_ESQL},
-            protocol_version=settings.MCP_PROTOCOL_VERSION,
+            protocol_version=settings.ELASTICSEARCH_MCP_PROTOCOL_VERSION,
             timeout=settings.MCP_TIMEOUT_SECONDS,
-            bearer_token=settings.MCP_BEARER_TOKEN,
+            # Elastic Agent Builder has its own provider credential. Never leak
+            # the generic/internal MCP bearer token to Kibana.
+            bearer_token=None,
             authorization_header=settings.ELASTICSEARCH_MCP_AUTH_HEADER,
             client_cert_path=settings.MCP_CLIENT_CERT_PATH,
             client_key_path=settings.MCP_CLIENT_KEY_PATH,
@@ -91,6 +93,14 @@ class ElasticsearchMCPClient(MCPClient):
                 if isinstance(row, list)
             ]
         return []
+
+    async def health_check(self) -> bool:
+        """Require the exact allowlisted Agent Builder tool, not just a live MCP route."""
+        try:
+            tools = await self.list_tools()
+            return any(tool.get("name") == self.TOOL_EXECUTE_ESQL for tool in tools)
+        except Exception:
+            return False
 
     async def get_logs(
         self,

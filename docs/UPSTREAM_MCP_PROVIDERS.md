@@ -84,6 +84,8 @@ Canonical provider: **Elastic Agent Builder MCP**, served by Kibana.
 
 Minimum supported Elastic Stack: **9.2**. Recommended Production baseline: **9.3+**, pinned to an approved patched release.
 
+The provider-specific initialize baseline is `ELASTICSEARCH_MCP_PROTOCOL_VERSION=2024-11-05`, matching the current documented Kibana Agent Builder MCP request/response example. The generic MCP protocol setting is not reused for this provider.
+
 Endpoints:
 
 - `{KIBANA_URL}/api/agent_builder/mcp`
@@ -91,11 +93,11 @@ Endpoints:
 
 The deprecated standalone `elastic/mcp-server-elasticsearch` is intentionally unsupported and must not be deployed as an AIOps production dependency.
 
-The Control Plane limits discovery to configured Agent Builder namespaces. `platform.core` is mandatory. Canonical log Evidence uses only `platform.core.execute_esql`; the adapter generates deterministic bounded ES|QL from trusted service/time/level inputs and the configured `ELASTIC_AGENT_BUILDER_INDEX_PATTERN`.
+The Control Plane limits discovery to configured Agent Builder namespaces. `platform.core` is mandatory. Canonical log Evidence currently uses only `platform.core.execute_esql`; the adapter generates deterministic bounded ES|QL from trusted service/time/level inputs and the configured `ELASTIC_AGENT_BUILDER_INDEX_PATTERN`. For stable repeatable queries, Elastic recommends custom parameterized ES|QL tools; adopting one is a provisioning change and must be acceptance-tested before replacing this existing arbitrary-query execution path.
 
 The Evidence path intentionally does not use `platform.core.search` or `platform.core.generate_esql`, because those capabilities introduce an additional AI/query-generation step. Agent Builder remains a capability provider, not the reasoning authority for the AIOps incident workflow.
 
-Authentication for unattended AIOps access should use a least-privilege Elastic API key. The API key/Kibana role must have only the Agent Builder route privilege and index privileges required by the allowlisted tool. Space scoping should be used where it improves isolation.
+Authentication for unattended AIOps access should use a least-privilege Elastic API key and the complete `Authorization: ApiKey <...>` value in `ELASTICSEARCH_MCP_AUTH_HEADER`. OAuth Bearer authentication is appropriate only where Elastic documents it (Serverless). The generic/internal `MCP_BEARER_TOKEN` is never forwarded to Kibana. The API key/Kibana role must have only the Agent Builder route privilege and index privileges required by the allowlisted tool. Space scoping should be used where it improves isolation.
 
 ## Transport
 

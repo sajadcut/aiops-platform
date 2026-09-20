@@ -63,7 +63,7 @@ The payload intentionally uses Elastic rule/action variables rather than a custo
     "id": "{{rule.id}}",
     "name": "{{rule.name}}",
     "space_id": "{{rule.spaceId}}",
-    "tags": "{{rule.tags}}",
+    "tags": {{rule.tags.asJSON}},
     "url": "{{rule.url}}"
   },
   "alert": {
@@ -76,16 +76,16 @@ The payload intentionally uses Elastic rule/action variables rather than a custo
     "score": "{{context.score}}",
     "timestamp_iso8601": "{{context.timestampIso8601}}",
     "is_interim": "{{context.isInterim}}",
-    "job_ids": "{{context.jobIds}}",
+    "job_ids": {{context.jobIds.asJSON}},
     "message": "{{context.message}}",
     "anomaly_explorer_url": "{{context.anomalyExplorerUrl}}",
-    "top_influencers": "{{context.topInfluencers}}",
-    "top_records": "{{context.topRecords}}"
+    "top_influencers": {{context.topInfluencers.asJSON}},
+    "top_records": {{context.topRecords.asJSON}}
   }
 }
 ```
 
-The receiver accepts native arrays/objects and JSON-encoded Mustache values.
+Elastic renders array variables as comma-joined text when referenced directly. The webhook templates therefore use the documented `.asJSON` form for `rule.tags`, `context.jobIds`, `context.topInfluencers`, and `context.topRecords`. The receiver still accepts native arrays/objects and JSON-encoded legacy values.
 
 ### Recovery body
 
@@ -103,7 +103,7 @@ Create a recovered action using the same connector and the same alert identity:
     "id": "{{rule.id}}",
     "name": "{{rule.name}}",
     "space_id": "{{rule.spaceId}}",
-    "tags": "{{rule.tags}}",
+    "tags": {{rule.tags.asJSON}},
     "url": "{{rule.url}}"
   },
   "alert": {
@@ -113,7 +113,7 @@ Create a recovered action using the same connector and the same alert identity:
     "action_group_name": "{{alert.actionGroupName}}"
   },
   "anomaly": {
-    "job_ids": "{{context.jobIds}}",
+    "job_ids": {{context.jobIds.asJSON}},
     "message": "{{context.message}}",
     "anomaly_explorer_url": "{{context.anomalyExplorerUrl}}"
   }
@@ -140,7 +140,8 @@ The anomaly score remains preserved separately in `raw_data.anomaly.score`; seve
 ```dotenv
 ELASTIC_STACK_VERSION=9.3.2
 ELASTICSEARCH_MCP_URL=https://<kibana>/api/agent_builder/mcp
-ELASTICSEARCH_MCP_AUTH_HEADER=Bearer <token>
+ELASTICSEARCH_MCP_PROTOCOL_VERSION=2024-11-05
+ELASTICSEARCH_MCP_AUTH_HEADER=ApiKey <elastic-api-key>
 ELASTIC_AGENT_BUILDER_MCP_NAMESPACES=["platform.core"]
 ELASTIC_AGENT_BUILDER_INDEX_PATTERN=logs-*
 

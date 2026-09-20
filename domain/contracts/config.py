@@ -131,6 +131,7 @@ class Settings(BaseSettings):
 
     ELASTIC_STACK_VERSION: str = Field(...)
     ELASTICSEARCH_MCP_URL: str = Field(...)
+    ELASTICSEARCH_MCP_PROTOCOL_VERSION: str = Field(...)
     ELASTICSEARCH_MCP_AUTH_HEADER: Optional[str] = Field(...)
     ELASTIC_AGENT_BUILDER_MCP_NAMESPACES: List[str] = Field(...)
     ELASTIC_AGENT_BUILDER_INDEX_PATTERN: str = Field(...)
@@ -247,10 +248,42 @@ class Settings(BaseSettings):
     @field_validator("ELASTICSEARCH_MCP_URL")
     @classmethod
     def validate_elastic_agent_builder_endpoint(cls, value: str) -> str:
-        path = str(value).strip()
-        if "/api/agent_builder/mcp" not in path:
-            raise ValueError("ELASTICSEARCH_MCP_URL must target Kibana Agent Builder MCP /api/agent_builder/mcp")
-        return path
+        normalized = str(value).strip()
+        parsed = urlparse(normalized)
+        if parsed.scheme.lower() not in {"http", "https"} or not parsed.netloc:
+            raise ValueError("ELASTICSEARCH_MCP_URL must use HTTP or HTTPS")
+        path = parsed.path.rstrip("/")
+        segments = [segment for segment in path.split("/") if segment]
+        default_space = path == "/api/agent_builder/mcp"
+        custom_space = (
+            len(segments) == 5
+            and segments[0] == "s"
+            and bool(segments[1])
+            and segments[2:] == ["api", "agent_builder", "mcp"]
+        )
+        if not (default_space or custom_space):
+            raise ValueError(
+                "ELASTICSEARCH_MCP_URL must target /api/agent_builder/mcp or /s/{space}/api/agent_builder/mcp"
+            )
+        return normalized
+
+    @field_validator("ELASTICSEARCH_MCP_PROTOCOL_VERSION")
+    @classmethod
+    def validate_elastic_mcp_protocol_version(cls, value: str) -> str:
+        normalized = str(value).strip()
+        if normalized != "2024-11-05":
+            raise ValueError(
+                "ELASTICSEARCH_MCP_PROTOCOL_VERSION must be 2024-11-05 for the documented Elastic Agent Builder MCP contract"
+            )
+        return normalized
+
+    @field_validator("ELASTICSEARCH_MCP_AUTH_HEADER")
+    @classmethod
+    def validate_elastic_mcp_auth_header(cls, value: Optional[str]) -> Optional[str]:
+        normalized = str(value or "").strip()
+        if normalized and not (normalized.startswith("ApiKey ") or normalized.startswith("Bearer ")):
+            raise ValueError("Elastic Agent Builder MCP authentication must use ApiKey or Bearer Authorization")
+        return normalized or None
 
     @field_validator("ELASTIC_AGENT_BUILDER_MCP_NAMESPACES")
     @classmethod

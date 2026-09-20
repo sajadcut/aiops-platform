@@ -22,6 +22,10 @@ def test_elastic_adapter_uses_agent_builder_only():
     assert '"platform.core.execute_esql"' in text
     assert "ELASTIC_AGENT_BUILDER_INDEX_PATTERN" in text
     assert "ELASTIC_AGENT_BUILDER_MCP_NAMESPACES" in text
+    assert "ELASTICSEARCH_MCP_PROTOCOL_VERSION" in text
+    assert "bearer_token=None" in text
+    assert "bearer_token=settings.MCP_BEARER_TOKEN" not in text
+    assert "async def health_check" in text
     assert "query_body" not in text
     assert 'call_tool("search"' not in text
     assert '"list_indices"' not in text
@@ -29,9 +33,10 @@ def test_elastic_adapter_uses_agent_builder_only():
 
 
 def test_elastic_agent_builder_config_is_canonical():
-    env = (ROOT / ".env").read_text(encoding="utf-8")
+    env = (ROOT / ".env.example").read_text(encoding="utf-8")
     assert "ELASTIC_STACK_VERSION=9.3.2" in env
     assert "ELASTICSEARCH_MCP_URL=http://localhost:5601/api/agent_builder/mcp" in env
+    assert "ELASTICSEARCH_MCP_PROTOCOL_VERSION=2024-11-05" in env
     assert 'ELASTIC_AGENT_BUILDER_MCP_NAMESPACES=["platform.core"]' in env
     assert "ELASTIC_AGENT_BUILDER_INDEX_PATTERN=logs-*" in env
     assert "ELASTICSEARCH_MCP_INDEX_PATTERN" not in env
@@ -42,6 +47,7 @@ def test_elastic_agent_builder_minimum_version_contract():
     version = tuple(int(part) for part in settings.ELASTIC_STACK_VERSION.split(".")[:2])
     assert version >= (9, 2)
     assert "/api/agent_builder/mcp" in settings.ELASTICSEARCH_MCP_URL
+    assert settings.ELASTICSEARCH_MCP_PROTOCOL_VERSION == "2024-11-05"
     assert "platform.core" in settings.ELASTIC_AGENT_BUILDER_MCP_NAMESPACES
 
 
@@ -67,4 +73,13 @@ def test_upstream_provider_settings_are_explicit():
     assert "ELASTIC_AGENT_BUILDER_MCP_NAMESPACES=" in text
     assert "PROMETHEUS_MCP_SERVICE_LABEL=" in text
     assert "PROMETHEUS_MCP_PROTOCOL_VERSION=2025-11-25" in text
+    assert "ELASTICSEARCH_MCP_PROTOCOL_VERSION=2024-11-05" in text
     assert "MCP_PROTOCOL_VERSION=2025-03-26" in text
+
+
+def test_elastic_anomaly_webhook_uses_json_array_rendering():
+    text = (ROOT / "docs/ELASTIC_ANOMALY_INGESTION.md").read_text(encoding="utf-8")
+    assert "{{rule.tags.asJSON}}" in text
+    assert "{{context.jobIds.asJSON}}" in text
+    assert "{{context.topInfluencers.asJSON}}" in text
+    assert "{{context.topRecords.asJSON}}" in text

@@ -206,3 +206,37 @@ def test_rate_limits_are_not_hardcoded_in_runtime_module():
     assert "settings.RATE_LIMIT_STRICT_REQUESTS" in source
     assert "settings.RATE_LIMIT_LOOSE_REQUESTS" in source
     assert "settings.RATE_LIMIT_WINDOW_SECONDS" in source
+
+
+def test_elastic_agent_builder_provider_contract_is_pinned_and_isolated():
+    values = _template_values()
+    assert values["ELASTICSEARCH_MCP_PROTOCOL_VERSION"] == "2024-11-05"
+    assert values["ELASTICSEARCH_MCP_AUTH_HEADER"] == ""
+
+    configured = Settings(
+        _env_file=None,
+        **_settings_data(
+            ELASTICSEARCH_MCP_URL="https://kibana.test/s/ops/api/agent_builder/mcp",
+            ELASTICSEARCH_MCP_PROTOCOL_VERSION="2024-11-05",
+            ELASTICSEARCH_MCP_AUTH_HEADER="ApiKey test-key",
+        ),
+    )
+    assert configured.ELASTICSEARCH_MCP_AUTH_HEADER == "ApiKey test-key"
+
+    with pytest.raises(ValidationError, match="2024-11-05"):
+        Settings(
+            _env_file=None,
+            **_settings_data(ELASTICSEARCH_MCP_PROTOCOL_VERSION="2025-03-26"),
+        )
+
+    with pytest.raises(ValidationError, match="ApiKey or Bearer"):
+        Settings(
+            _env_file=None,
+            **_settings_data(ELASTICSEARCH_MCP_AUTH_HEADER="Basic dXNlcjpwYXNz"),
+        )
+
+    with pytest.raises(ValidationError, match="must target"):
+        Settings(
+            _env_file=None,
+            **_settings_data(ELASTICSEARCH_MCP_URL="https://kibana.test/not/api/agent_builder/mcp/extra"),
+        )
