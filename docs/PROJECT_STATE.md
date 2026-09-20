@@ -63,7 +63,7 @@ Elastic integration uses Elastic Agent Builder MCP rather than the deprecated st
 - Canonical endpoint: Kibana `/api/agent_builder/mcp` or Space-aware `/s/{space}/api/agent_builder/mcp`.
 - Elastic-specific MCP initialize baseline: `2024-11-05`.
 - `platform.core` is mandatory in the configured MCP namespaces.
-- Elastic authentication is provider-specific (`ApiKey` for unattended Stack/Serverless; OAuth Bearer only where documented) and never inherits the internal MCP bearer.
+- Elastic MCP authentication is provider-specific and never inherits the internal MCP bearer. The Kibana MCP API supports API key and HTTP Basic authentication; AIOps accepts either an explicit Authorization header or a dedicated Kibana username/password pair.
 - Log Evidence uses only the deterministic read-only ES|QL path; the required allowlisted tool is verified by readiness.
 
 ## Partial / not production-accepted
