@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 353 | Dashboard JS files scanned: 3 | Symbols indexed: 3121**
+**Python files scanned: 353 | Dashboard JS files scanned: 3 | Symbols indexed: 3123**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1027,18 +1027,19 @@
 | `apps/execution_service/tools/vm_telemetry.py` | `VMTelemetryTool.requires_approval` | 29 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMTelemetryTool |
 | `apps/execution_service/tools/vm_telemetry.py` | `VMTelemetryTool.validate` | 32 | async method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | VMTelemetryTool |
 | `apps/execution_service/tools/vm_telemetry.py` | `VMTelemetryTool.execute` | 50 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | VMTelemetryTool |
-| `apps/incident_service/repository.py` | `IncidentRepository` | 13 | class | Canonical PostgreSQL repository for Incident, Evidence and Finding. | module |
-| `apps/incident_service/repository.py` | `IncidentRepository.__init__` | 16 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentRepository |
-| `apps/incident_service/repository.py` | `IncidentRepository.upsert_incident` | 19 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentRepository |
-| `apps/incident_service/repository.py` | `IncidentRepository.set_status` | 68 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentRepository |
-| `apps/incident_service/repository.py` | `IncidentRepository.acquire_correlation_lock` | 73 | async method | Serialize creation for a deterministic correlation fingerprint. | IncidentRepository |
-| `apps/incident_service/repository.py` | `IncidentRepository.find_correlated_open_incident` | 80 | async method | Find a bounded open/analyzing incident with the same fingerprint. | IncidentRepository |
-| `apps/incident_service/repository.py` | `IncidentRepository.attach_correlated_signal` | 108 | async method | Attach a related trigger without rewriting the incident's primary source. | IncidentRepository |
-| `apps/incident_service/repository.py` | `IncidentRepository.find_incident_by_evidence_reference` | 131 | async method | Return the incident already owning a source event/reference. | IncidentRepository |
-| `apps/incident_service/repository.py` | `IncidentRepository.add_findings` | 156 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentRepository |
-| `apps/incident_service/repository.py` | `IncidentRepository._evidence_type` | 189 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentRepository |
-| `apps/incident_service/repository.py` | `IncidentRepository.add_evidence` | 196 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentRepository |
-| `apps/incident_service/repository.py` | `IncidentRepository.commit` | 227 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentRepository |
+| `apps/incident_service/repository.py` | `_json_safe` | 15 | function | Convert durable JSON payloads to PostgreSQL/SQLAlchemy-safe primitives. | module |
+| `apps/incident_service/repository.py` | `IncidentRepository` | 43 | class | Canonical PostgreSQL repository for Incident, Evidence and Finding. | module |
+| `apps/incident_service/repository.py` | `IncidentRepository.__init__` | 46 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentRepository |
+| `apps/incident_service/repository.py` | `IncidentRepository.upsert_incident` | 49 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentRepository |
+| `apps/incident_service/repository.py` | `IncidentRepository.set_status` | 99 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentRepository |
+| `apps/incident_service/repository.py` | `IncidentRepository.acquire_correlation_lock` | 104 | async method | Serialize creation for a deterministic correlation fingerprint. | IncidentRepository |
+| `apps/incident_service/repository.py` | `IncidentRepository.find_correlated_open_incident` | 111 | async method | Find a bounded open/analyzing incident with the same fingerprint. | IncidentRepository |
+| `apps/incident_service/repository.py` | `IncidentRepository.attach_correlated_signal` | 139 | async method | Attach a related trigger without rewriting the incident's primary source. | IncidentRepository |
+| `apps/incident_service/repository.py` | `IncidentRepository.find_incident_by_evidence_reference` | 162 | async method | Return the incident already owning a source event/reference. | IncidentRepository |
+| `apps/incident_service/repository.py` | `IncidentRepository.add_findings` | 187 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentRepository |
+| `apps/incident_service/repository.py` | `IncidentRepository._evidence_type` | 220 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentRepository |
+| `apps/incident_service/repository.py` | `IncidentRepository.add_evidence` | 227 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentRepository |
+| `apps/incident_service/repository.py` | `IncidentRepository.commit` | 258 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentRepository |
 | `apps/mcp_server/main.py` | `JsonRpcRequest` | 20 | class | کلاس | module |
 | `apps/mcp_server/main.py` | `_provider` | 85 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/mcp_server/main.py` | `_parse_dt` | 92 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
@@ -1727,28 +1728,29 @@
 | `integrations/prometheus/mcp_client.py` | `PrometheusMCPClient.get_alerts` | 282 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | PrometheusMCPClient |
 | `integrations/prometheus/mcp_client.py` | `PrometheusMCPClient.health_check` | 333 | async method | Check the upstream Prometheus backend readiness through the official tool. | PrometheusMCPClient |
 | `integrations/vm/mcp_client.py` | `VMEdgeMCPClient` | 9 | class | MCP-only connector for VM/Edge diagnostics and governed remediation. | module |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.__init__` | 20 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient._invoke` | 33 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.collect_vm_metrics` | 41 | async method | Evidence/داده موردنیاز را از منبع مربوط جمع می‌کند | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.collect_metrics` | 42 | async method | Evidence/داده موردنیاز را از منبع مربوط جمع می‌کند | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.host_info` | 43 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.disk_status` | 44 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.network_status` | 45 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.service_status` | 46 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.service_logs` | 47 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.system_logs` | 48 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.process_snapshot` | 49 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.process_status` | 50 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.tcp_check` | 51 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.port_listener_status` | 52 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.dns_check` | 53 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.route_check` | 54 | async method | بر اساس state/capability مسیر یا handler مناسب را انتخاب می‌کند | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.firewall_status` | 55 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.config_validate` | 56 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient._write_context` | 59 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.restart_service` | 66 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.reload_service` | 69 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.start_service` | 72 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.__init__` | 22 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.initialize` | 36 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient._invoke` | 50 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.collect_vm_metrics` | 58 | async method | Evidence/داده موردنیاز را از منبع مربوط جمع می‌کند | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.collect_metrics` | 59 | async method | Evidence/داده موردنیاز را از منبع مربوط جمع می‌کند | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.host_info` | 60 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.disk_status` | 61 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.network_status` | 62 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.service_status` | 63 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.service_logs` | 64 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.system_logs` | 65 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.process_snapshot` | 66 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.process_status` | 67 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.tcp_check` | 68 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.port_listener_status` | 69 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.dns_check` | 70 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.route_check` | 71 | async method | بر اساس state/capability مسیر یا handler مناسب را انتخاب می‌کند | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.firewall_status` | 72 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.config_validate` | 73 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient._write_context` | 76 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.restart_service` | 83 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.reload_service` | 86 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.start_service` | 89 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
 | `integrations/vm/service_adapters.py` | `ServiceDiagnosticAdapter` | 8 | class | Fixed, allowlisted service-specific diagnostic commands. | module |
 | `integrations/vm/service_adapters.py` | `get_service_adapter` | 43 | function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
 | `integrations/vm/ssh_connector.py` | `SSHVMConnector` | 19 | class | Controlled Linux VM adapter used only behind the VM MCP server. | module |
