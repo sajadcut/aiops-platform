@@ -1,7 +1,10 @@
+import base64
 from pathlib import Path
 
 import pytest
 
+from domain.contracts.config import settings
+from integrations.elasticsearch.mcp_client import ElasticsearchMCPClient
 from integrations.mcp_client import MCPClient
 
 
@@ -99,3 +102,20 @@ def test_mcp_client_supports_http_and_https():
     https_client = MCPClient("https://mcp.test/mcp", "test-https", allowed_tools={"read_safe"})
     asyncio.run(http_client.close())
     asyncio.run(https_client.close())
+
+
+def test_elastic_mcp_builds_basic_authorization_from_kibana_credentials(monkeypatch):
+    monkeypatch.setattr(settings, "ELASTICSEARCH_MCP_AUTH_HEADER", None)
+    monkeypatch.setattr(settings, "ELASTICSEARCH_MCP_USERNAME", "kibana-reader")
+    monkeypatch.setattr(settings, "ELASTICSEARCH_MCP_PASSWORD", "test-only-password")
+
+    expected = base64.b64encode(b"kibana-reader:test-only-password").decode("ascii")
+    assert ElasticsearchMCPClient._configured_authorization_header() == f"Basic {expected}"
+
+
+def test_elastic_mcp_explicit_authorization_header_takes_precedence(monkeypatch):
+    monkeypatch.setattr(settings, "ELASTICSEARCH_MCP_AUTH_HEADER", "ApiKey explicit-test-key")
+    monkeypatch.setattr(settings, "ELASTICSEARCH_MCP_USERNAME", None)
+    monkeypatch.setattr(settings, "ELASTICSEARCH_MCP_PASSWORD", None)
+
+    assert ElasticsearchMCPClient._configured_authorization_header() == "ApiKey explicit-test-key"
