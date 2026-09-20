@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 353 | Dashboard JS files scanned: 3 | Symbols indexed: 3123**
+**Python files scanned: 353 | Dashboard JS files scanned: 3 | Symbols indexed: 3125**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -2058,11 +2058,13 @@
 | `tests/security/test_runbook_approval_boundary.py` | `test_non_empty_approval_id_does_not_grant_execution.fake_execute` | 31 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_non_empty_approval_id_does_not_grant_execution |
 | `tests/security/test_runbook_approval_boundary.py` | `test_validated_upstream_approval_context_is_propagated` | 52 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/security/test_runbook_approval_boundary.py` | `test_validated_upstream_approval_context_is_propagated.fake_execute` | 55 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_validated_upstream_approval_context_is_propagated |
-| `tests/security/test_vm_mcp_security.py` | `test_vm_target_and_service_allowlists` | 8 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/security/test_vm_mcp_security.py` | `test_production_vm_edge_rejects_root_and_missing_host_pinning` | 21 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/security/test_vm_mcp_security.py` | `_FakeVMConnector` | 38 | class | کلاس | module |
-| `tests/security/test_vm_mcp_security.py` | `_FakeVMConnector.restart_service` | 41 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _FakeVMConnector |
-| `tests/security/test_vm_mcp_security.py` | `test_vm_mcp_write_requires_approval_and_incident_context` | 47 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/security/test_vm_mcp_security.py` | `test_vm_target_and_service_allowlists` | 10 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/security/test_vm_mcp_security.py` | `test_production_vm_edge_rejects_root_and_missing_host_pinning` | 23 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/security/test_vm_mcp_security.py` | `_FakeVMConnector` | 40 | class | کلاس | module |
+| `tests/security/test_vm_mcp_security.py` | `_FakeVMConnector.restart_service` | 43 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _FakeVMConnector |
+| `tests/security/test_vm_mcp_security.py` | `test_vm_mcp_write_requires_approval_and_incident_context` | 49 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/security/test_vm_mcp_security.py` | `test_vm_mcp_rejects_wrong_server_identity` | 72 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/security/test_vm_mcp_security.py` | `test_vm_mcp_rejects_wrong_server_identity.fake_initialize` | 76 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_vm_mcp_rejects_wrong_server_identity |
 | `tests/security/test_vm_ssh_password_auth.py` | `_FakeSSHResult` | 10 | class | کلاس | module |
 | `tests/security/test_vm_ssh_password_auth.py` | `_FakeSSHConnection` | 16 | class | کلاس | module |
 | `tests/security/test_vm_ssh_password_auth.py` | `_FakeSSHConnection.run` | 17 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | _FakeSSHConnection |
