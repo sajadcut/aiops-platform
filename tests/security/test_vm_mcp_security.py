@@ -2,6 +2,8 @@ import pytest
 
 import apps.mcp_server.main as mcp_server
 from domain.contracts.config import settings
+from integrations.mcp_client import MCPClient
+from integrations.vm.mcp_client import VMEdgeMCPClient
 from integrations.vm.ssh_connector import SSHVMConnector
 
 
@@ -64,3 +66,24 @@ async def test_vm_mcp_write_requires_approval_and_incident_context(monkeypatch):
     with pytest.raises(PermissionError, match="incident_id_required"):
         await mcp_server._call("vm", "restart_service", {"target": "vm01", "service": "nginx", "approval_id": "approval-1"})
     assert _FakeVMConnector.calls == 1
+
+
+@pytest.mark.asyncio
+async def test_vm_mcp_rejects_wrong_server_identity(monkeypatch):
+    monkeypatch.setattr(settings, "VM_MCP_URL", "http://127.0.0.1:9104/mcp")
+    monkeypatch.setattr(settings, "MCP_BEARER_TOKEN", "test-control-plane-token")
+
+    async def fake_initialize(self):
+        self._initialized = True
+        return {
+            "protocolVersion": settings.MCP_PROTOCOL_VERSION,
+            "serverInfo": {"name": "aiops-elasticsearch-mcp", "version": settings.APP_VERSION},
+        }
+
+    monkeypatch.setattr(MCPClient, "initialize", fake_initialize)
+    client = VMEdgeMCPClient()
+    try:
+        with pytest.raises(RuntimeError, match="mcp_server_identity_mismatch:vm-edge"):
+            await client.initialize()
+    finally:
+        await client.close()
