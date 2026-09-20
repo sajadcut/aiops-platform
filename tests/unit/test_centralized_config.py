@@ -212,6 +212,8 @@ def test_elastic_agent_builder_provider_contract_is_pinned_and_isolated():
     values = _template_values()
     assert values["ELASTICSEARCH_MCP_PROTOCOL_VERSION"] == "2024-11-05"
     assert values["ELASTICSEARCH_MCP_AUTH_HEADER"] == ""
+    assert values["ELASTICSEARCH_MCP_USERNAME"] == ""
+    assert values["ELASTICSEARCH_MCP_PASSWORD"] == ""
 
     configured = Settings(
         _env_file=None,
@@ -229,10 +231,47 @@ def test_elastic_agent_builder_provider_contract_is_pinned_and_isolated():
             **_settings_data(ELASTICSEARCH_MCP_PROTOCOL_VERSION="2025-03-26"),
         )
 
-    with pytest.raises(ValidationError, match="ApiKey or Bearer"):
+    basic_header = Settings(
+        _env_file=None,
+        **_settings_data(ELASTICSEARCH_MCP_AUTH_HEADER="Basic dXNlcjpwYXNz"),
+    )
+    assert basic_header.ELASTICSEARCH_MCP_AUTH_HEADER == "Basic dXNlcjpwYXNz"
+
+    basic_credentials = Settings(
+        _env_file=None,
+        **_settings_data(
+            ELASTICSEARCH_MCP_AUTH_HEADER="",
+            ELASTICSEARCH_MCP_USERNAME="kibana-reader",
+            ELASTICSEARCH_MCP_PASSWORD="test-only-password",
+        ),
+    )
+    assert basic_credentials.ELASTICSEARCH_MCP_USERNAME == "kibana-reader"
+    assert basic_credentials.ELASTICSEARCH_MCP_PASSWORD == "test-only-password"
+
+    with pytest.raises(ValidationError, match="must be configured together"):
         Settings(
             _env_file=None,
-            **_settings_data(ELASTICSEARCH_MCP_AUTH_HEADER="Basic dXNlcjpwYXNz"),
+            **_settings_data(
+                ELASTICSEARCH_MCP_AUTH_HEADER="",
+                ELASTICSEARCH_MCP_USERNAME="kibana-reader",
+                ELASTICSEARCH_MCP_PASSWORD="",
+            ),
+        )
+
+    with pytest.raises(ValidationError, match="either ELASTICSEARCH_MCP_AUTH_HEADER"):
+        Settings(
+            _env_file=None,
+            **_settings_data(
+                ELASTICSEARCH_MCP_AUTH_HEADER="ApiKey test-key",
+                ELASTICSEARCH_MCP_USERNAME="kibana-reader",
+                ELASTICSEARCH_MCP_PASSWORD="test-only-password",
+            ),
+        )
+
+    with pytest.raises(ValidationError, match="ApiKey, Bearer, or Basic"):
+        Settings(
+            _env_file=None,
+            **_settings_data(ELASTICSEARCH_MCP_AUTH_HEADER="Digest not-supported"),
         )
 
     with pytest.raises(ValidationError, match="must target"):
