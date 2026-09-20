@@ -57,9 +57,11 @@ Each provider may use a distinct full `Authorization` value:
 
 - `ZABBIX_MCP_AUTH_HEADER`
 - `ELASTICSEARCH_MCP_AUTH_HEADER`
+- `ELASTICSEARCH_MCP_USERNAME`
+- `ELASTICSEARCH_MCP_PASSWORD`
 - `PROMETHEUS_MCP_AUTH_HEADER`
 
-For Elastic unattended Control-Plane use, API key authentication is the default target. OAuth 2.1 may be used only where the deployment type and enterprise identity architecture support it. Elastic uses only `ELASTICSEARCH_MCP_AUTH_HEADER`; the generic/internal `MCP_BEARER_TOKEN` is deliberately not forwarded to Kibana. Other providers may still use the generic Bearer identity when that is part of their explicit contract. Write identities remain separate from read identities.
+Elastic Agent Builder MCP uses a provider-specific identity and never inherits the generic/internal `MCP_BEARER_TOKEN`. The Kibana MCP API supports API key and HTTP Basic authentication. API key remains the preferred unattended machine-to-machine target; OAuth 2.1 may be used only where the deployment type and enterprise identity architecture support it. Existing Kibana service credentials are also supported through the dedicated `ELASTICSEARCH_MCP_USERNAME`/`ELASTICSEARCH_MCP_PASSWORD` pair, which the adapter converts to an HTTP Basic Authorization header. Exactly one Elastic authentication path may be active. Other providers may still use the generic Bearer identity when that is part of their explicit contract. Write identities remain separate from read identities.
 
 ## Security constraints
 
