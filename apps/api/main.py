@@ -178,8 +178,14 @@ def _validate_production_configuration() -> None:
             errors.append(f"{name} is required in production")
         elif not _is_http_or_https(str(value)):
             errors.append(f"{name} must use HTTP or HTTPS in production")
-    if not str(settings.ELASTICSEARCH_MCP_AUTH_HEADER or "").strip():
-        errors.append("ELASTICSEARCH_MCP_AUTH_HEADER is required in production for Elastic Agent Builder MCP")
+    elastic_basic_auth = bool(str(settings.ELASTICSEARCH_MCP_USERNAME or "").strip()) and (
+        settings.ELASTICSEARCH_MCP_PASSWORD is not None and settings.ELASTICSEARCH_MCP_PASSWORD != ""
+    )
+    if not str(settings.ELASTICSEARCH_MCP_AUTH_HEADER or "").strip() and not elastic_basic_auth:
+        errors.append(
+            "Elastic Agent Builder MCP requires ELASTICSEARCH_MCP_AUTH_HEADER or "
+            "ELASTICSEARCH_MCP_USERNAME/ELASTICSEARCH_MCP_PASSWORD in production"
+        )
     if settings.KUBERNETES_MCP_URL and not _is_http_or_https(settings.KUBERNETES_MCP_URL):
         errors.append("KUBERNETES_MCP_URL must use HTTP or HTTPS in production")
     if settings.VM_MCP_URL and not _is_http_or_https(settings.VM_MCP_URL):
