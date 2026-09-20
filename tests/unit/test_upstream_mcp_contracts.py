@@ -37,6 +37,9 @@ def test_elastic_agent_builder_config_is_canonical():
     assert "ELASTIC_STACK_VERSION=9.3.2" in env
     assert "ELASTICSEARCH_MCP_URL=http://localhost:5601/api/agent_builder/mcp" in env
     assert "ELASTICSEARCH_MCP_PROTOCOL_VERSION=2024-11-05" in env
+    assert "ELASTICSEARCH_MCP_AUTH_HEADER=" in env
+    assert "ELASTICSEARCH_MCP_USERNAME=" in env
+    assert "ELASTICSEARCH_MCP_PASSWORD=" in env
     assert 'ELASTIC_AGENT_BUILDER_MCP_NAMESPACES=["platform.core"]' in env
     assert "ELASTIC_AGENT_BUILDER_INDEX_PATTERN=logs-*" in env
     assert "ELASTICSEARCH_MCP_INDEX_PATTERN" not in env
@@ -74,6 +77,8 @@ def test_upstream_provider_settings_are_explicit():
     assert "PROMETHEUS_MCP_SERVICE_LABEL=" in text
     assert "PROMETHEUS_MCP_PROTOCOL_VERSION=2025-11-25" in text
     assert "ELASTICSEARCH_MCP_PROTOCOL_VERSION=2024-11-05" in text
+    assert "ELASTICSEARCH_MCP_USERNAME=" in text
+    assert "ELASTICSEARCH_MCP_PASSWORD=" in text
     assert "MCP_PROTOCOL_VERSION=2025-03-26" in text
 
 
