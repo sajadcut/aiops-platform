@@ -485,7 +485,19 @@ class SSHVMConnector:
         if result.get("exit_code") == 127:
             return {"success": True, "supported": False, "target": target, "service": service, "valid": None, "detail": "config_validation_binary_unavailable"}
         detail = "\n".join(part for part in (str(result.get("stdout") or "").strip(), str(result.get("stderr") or "").strip()) if part)
-        return {"success": True, "supported": True, "target": target, "service": service, "adapter": adapter.canonical_name, "valid": bool(result.get("success")), "exit_code": result.get("exit_code"), "detail": detail[:4000]}
+        if not result.get("success"):
+            return {
+                "success": False,
+                "supported": True,
+                "target": target,
+                "service": service,
+                "adapter": adapter.canonical_name,
+                "valid": None,
+                "exit_code": result.get("exit_code"),
+                "error": "config_validation_transport_failed",
+                "detail": detail[:4000],
+            }
+        return {"success": True, "supported": True, "target": target, "service": service, "adapter": adapter.canonical_name, "valid": True, "exit_code": result.get("exit_code"), "detail": detail[:4000]}
 
     async def start_service(self, target: str, service: str) -> Dict[str, Any]:
         self._validate_service(service)
