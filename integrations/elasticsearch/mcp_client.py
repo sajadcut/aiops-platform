@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 from datetime import datetime, timezone
 from typing import Any, List, Optional
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
@@ -31,10 +32,24 @@ class ElasticsearchMCPClient(MCPClient):
             # Elastic Agent Builder has its own provider credential. Never leak
             # the generic/internal MCP bearer token to Kibana.
             bearer_token=None,
-            authorization_header=settings.ELASTICSEARCH_MCP_AUTH_HEADER,
+            authorization_header=self._configured_authorization_header(),
             client_cert_path=settings.MCP_CLIENT_CERT_PATH,
             client_key_path=settings.MCP_CLIENT_KEY_PATH,
         )
+
+    @staticmethod
+    def _configured_authorization_header() -> Optional[str]:
+        """Resolve Elastic MCP auth without exposing raw Basic credentials to the generic client."""
+        explicit = str(settings.ELASTICSEARCH_MCP_AUTH_HEADER or "").strip()
+        if explicit:
+            return explicit
+
+        username = str(settings.ELASTICSEARCH_MCP_USERNAME or "").strip()
+        password = settings.ELASTICSEARCH_MCP_PASSWORD
+        if username and password is not None and password != "":
+            encoded = base64.b64encode(f"{username}:{password}".encode("utf-8")).decode("ascii")
+            return f"Basic {encoded}"
+        return None
 
     @staticmethod
     def _with_namespace(url: str, namespaces: List[str]) -> str:
