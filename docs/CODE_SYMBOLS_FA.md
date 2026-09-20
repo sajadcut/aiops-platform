@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 354 | Dashboard JS files scanned: 3 | Symbols indexed: 3129**
+**Python files scanned: 355 | Dashboard JS files scanned: 3 | Symbols indexed: 3132**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -2576,8 +2576,9 @@
 | `tests/unit/test_identity_reliability_engine.py` | `CapturingIdentityLLM.generate` | 194 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CapturingIdentityLLM |
 | `tests/unit/test_identity_reliability_engine.py` | `CapturingIdentityLLM.generate_with_messages` | 219 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CapturingIdentityLLM |
 | `tests/unit/test_identity_reliability_engine.py` | `test_identity_agent_exposes_chain_and_never_prompts_full_credentials` | 224 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_incident_repository_json.py` | `_SampleState` | 9 | class | کلاس | module |
-| `tests/unit/test_incident_repository_json.py` | `test_json_safe_normalizes_durable_operational_context` | 13 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_repository_json.py` | `_SampleState` | 10 | class | کلاس | module |
+| `tests/unit/test_incident_repository_json.py` | `test_json_safe_normalizes_durable_operational_context` | 14 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_repository_json.py` | `test_database_json_serializer_is_a_final_datetime_safeguard` | 38 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_incident_rid_logging.py` | `_configure_json_logging` | 16 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_incident_rid_logging.py` | `test_incident_rid_is_stable_and_uuid_derived` | 31 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_incident_rid_logging.py` | `test_non_uuid_legacy_incident_ids_are_stable_and_not_copied_verbatim` | 39 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
@@ -3028,6 +3029,8 @@
 | `tests/unit/test_upstream_mcp_contracts.py` | `test_elastic_anomaly_webhook_uses_json_array_rendering` | 85 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_verification_gate.py` | `test_verification_success_requires_confidence` | 3 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_verification_gate.py` | `test_partial_verification_does_not_pass` | 6 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_config_validation.py` | `test_config_validate_propagates_ssh_failure` | 8 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_config_validation.py` | `test_config_validate_propagates_ssh_failure.failed_run` | 14 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_config_validate_propagates_ssh_failure |
 | `tests/unit/test_vm_current_cpu_metrics.py` | `_connector` | 7 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_vm_current_cpu_metrics.py` | `test_cpu_interval_percentages_use_delta_not_since_boot` | 13 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_vm_current_cpu_metrics.py` | `test_collect_metrics_returns_one_second_current_cpu` | 23 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
