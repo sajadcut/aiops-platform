@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 353 | Dashboard JS files scanned: 3 | Symbols indexed: 3117**
+**Python files scanned: 353 | Dashboard JS files scanned: 3 | Symbols indexed: 3121**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -733,8 +733,8 @@
 | `apps/api/main.py` | `chatbot_script` | 137 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/main.py` | `_is_http_or_https` | 141 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/main.py` | `_validate_production_configuration` | 148 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/main.py` | `startup_event` | 233 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/main.py` | `shutdown_event` | 286 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/main.py` | `startup_event` | 239 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/main.py` | `shutdown_event` | 292 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/remediation.py` | `_audit_durable` | 23 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/remediation.py` | `_read_vm` | 29 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/remediation.py` | `RemediationRequest` | 36 | class | کلاس | module |
@@ -1420,23 +1420,24 @@
 | `domain/action_plan.py` | `ActionPlan` | 5 | class | کلاس | module |
 | `domain/audit_event.py` | `AuditEvent` | 6 | class | کلاس | module |
 | `domain/contracts/config.py` | `Settings` | 8 | class | Typed loader for the centralized runtime environment contract. | module |
-| `domain/contracts/config.py` | `Settings.validate_app_env` | 186 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_ssh_auth_mode` | 194 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.parse_optional_cognia_ids` | 202 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | Settings |
-| `domain/contracts/config.py` | `Settings.validate_cognia_knowledge_base_ids` | 209 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_log_rotation_mode` | 221 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_log_level` | 229 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_elastic_agent_builder_version` | 237 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_elastic_agent_builder_endpoint` | 250 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_elastic_mcp_protocol_version` | 272 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_elastic_mcp_auth_header` | 282 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_elastic_namespaces` | 290 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_elastic_anomaly_job_service_map` | 298 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_jenkins_mcp_protocol_version` | 310 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_jenkins_basic_auth_header` | 318 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_prometheus_mcp_protocol_version` | 326 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_external_contracts` | 335 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_cognia_contract` | 359 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_app_env` | 188 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_ssh_auth_mode` | 196 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.parse_optional_cognia_ids` | 204 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | Settings |
+| `domain/contracts/config.py` | `Settings.validate_cognia_knowledge_base_ids` | 211 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_log_rotation_mode` | 223 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_log_level` | 231 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_elastic_agent_builder_version` | 239 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_elastic_agent_builder_endpoint` | 252 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_elastic_mcp_protocol_version` | 274 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_elastic_mcp_auth_header` | 284 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_elastic_mcp_authentication` | 295 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_elastic_namespaces` | 312 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_elastic_anomaly_job_service_map` | 320 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_jenkins_mcp_protocol_version` | 332 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_jenkins_basic_auth_header` | 340 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_prometheus_mcp_protocol_version` | 348 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_external_contracts` | 357 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_cognia_contract` | 381 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
 | `domain/contracts/context.py` | `set_trace_id` | 15 | function | Set the request/correlation trace id for the current execution context. | module |
 | `domain/contracts/context.py` | `get_trace_id` | 20 | function | Return the request/correlation trace id for the current context. | module |
 | `domain/contracts/context.py` | `generate_trace_id` | 25 | function | Generate a compact request trace id. | module |
@@ -1556,13 +1557,14 @@
 | `integrations/elasticsearch/client.py` | `ElasticsearchClient._escape_query_value` | 75 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ElasticsearchClient |
 | `integrations/elasticsearch/client.py` | `ElasticsearchClient.get_logs` | 78 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | ElasticsearchClient |
 | `integrations/elasticsearch/client.py` | `ElasticsearchClient.get_metrics` | 109 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | ElasticsearchClient |
-| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient` | 12 | class | Canonical Elastic Agent Builder MCP adapter for Elastic Stack >= 9.2. | module |
-| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient.__init__` | 23 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ElasticsearchMCPClient |
-| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient._with_namespace` | 40 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ElasticsearchMCPClient |
-| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient._esql_string` | 50 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ElasticsearchMCPClient |
-| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient._rows_from_payload` | 56 | method | Normalize Agent Builder execute_esql output into row dictionaries. | ElasticsearchMCPClient |
-| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient.health_check` | 97 | async method | Require the exact allowlisted Agent Builder tool, not just a live MCP route. | ElasticsearchMCPClient |
-| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient.get_logs` | 105 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | ElasticsearchMCPClient |
+| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient` | 13 | class | Canonical Elastic Agent Builder MCP adapter for Elastic Stack >= 9.2. | module |
+| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient.__init__` | 24 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ElasticsearchMCPClient |
+| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient._configured_authorization_header` | 41 | method | Resolve Elastic MCP auth without exposing raw Basic credentials to the generic client. | ElasticsearchMCPClient |
+| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient._with_namespace` | 55 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ElasticsearchMCPClient |
+| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient._esql_string` | 65 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ElasticsearchMCPClient |
+| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient._rows_from_payload` | 71 | method | Normalize Agent Builder execute_esql output into row dictionaries. | ElasticsearchMCPClient |
+| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient.health_check` | 112 | async method | Require the exact allowlisted Agent Builder tool, not just a live MCP route. | ElasticsearchMCPClient |
+| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient.get_logs` | 120 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | ElasticsearchMCPClient |
 | `integrations/http_transport.py` | `insecure_ssl_context` | 13 | function | Create a TLS context that does not validate server certificates or hostnames. | module |
 | `integrations/http_transport.py` | `_safe_destination` | 21 | function | Return log-safe destination fields without query strings, credentials or bodies. | module |
 | `integrations/http_transport.py` | `_log_completed` | 39 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
@@ -2682,14 +2684,16 @@
 | `tests/unit/test_latency_observability.py` | `test_orchestrator_analysis_phases_publish_duration_ms` | 38 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_latency_observability.py` | `test_mcp_server_and_vm_ssh_publish_server_side_latency` | 55 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_latency_observability.py` | `test_latency_logging_does_not_log_http_query_headers_or_body` | 70 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_mcp_external_boundary.py` | `test_context_builder_uses_mcp_clients_not_native_external_connectors` | 18 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_mcp_external_boundary.py` | `test_zabbix_is_mcp_only_and_has_no_direct_runtime_config` | 28 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_mcp_external_boundary.py` | `test_evidence_collector_has_no_native_external_fallbacks` | 44 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_mcp_external_boundary.py` | `test_control_plane_apps_cannot_import_native_operational_connectors` | 52 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_mcp_external_boundary.py` | `test_orchestrator_and_health_use_mcp_providers` | 64 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_mcp_external_boundary.py` | `test_api_execution_registration_does_not_open_direct_ssh` | 76 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_mcp_external_boundary.py` | `test_mcp_client_rejects_non_allowlisted_tool` | 83 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_mcp_external_boundary.py` | `test_mcp_client_supports_http_and_https` | 96 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_mcp_external_boundary.py` | `test_context_builder_uses_mcp_clients_not_native_external_connectors` | 21 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_mcp_external_boundary.py` | `test_zabbix_is_mcp_only_and_has_no_direct_runtime_config` | 31 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_mcp_external_boundary.py` | `test_evidence_collector_has_no_native_external_fallbacks` | 47 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_mcp_external_boundary.py` | `test_control_plane_apps_cannot_import_native_operational_connectors` | 55 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_mcp_external_boundary.py` | `test_orchestrator_and_health_use_mcp_providers` | 67 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_mcp_external_boundary.py` | `test_api_execution_registration_does_not_open_direct_ssh` | 79 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_mcp_external_boundary.py` | `test_mcp_client_rejects_non_allowlisted_tool` | 86 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_mcp_external_boundary.py` | `test_mcp_client_supports_http_and_https` | 99 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_mcp_external_boundary.py` | `test_elastic_mcp_builds_basic_authorization_from_kibana_credentials` | 107 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_mcp_external_boundary.py` | `test_elastic_mcp_explicit_authorization_header_takes_precedence` | 116 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_mcp_server_contract.py` | `test_provider_tool_names_match_control_plane_clients` | 6 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_mcp_server_contract.py` | `test_internal_mcp_server_has_no_native_zabbix_provider` | 21 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_mcp_server_contract.py` | `test_mcp_server_is_the_only_place_remaining_native_provider_connectors_are_composed` | 28 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
@@ -3009,11 +3013,11 @@
 | `tests/unit/test_upstream_mcp_contracts.py` | `test_prometheus_adapter_uses_upstream_tool_names` | 8 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_upstream_mcp_contracts.py` | `test_elastic_adapter_uses_agent_builder_only` | 20 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_upstream_mcp_contracts.py` | `test_elastic_agent_builder_config_is_canonical` | 35 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_upstream_mcp_contracts.py` | `test_elastic_agent_builder_minimum_version_contract` | 46 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_upstream_mcp_contracts.py` | `test_zabbix_adapter_uses_read_only_initmax_tools` | 54 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_upstream_mcp_contracts.py` | `test_mcp_client_supports_standard_streamable_http_lifecycle` | 62 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_upstream_mcp_contracts.py` | `test_upstream_provider_settings_are_explicit` | 70 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_upstream_mcp_contracts.py` | `test_elastic_anomaly_webhook_uses_json_array_rendering` | 80 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_upstream_mcp_contracts.py` | `test_elastic_agent_builder_minimum_version_contract` | 49 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_upstream_mcp_contracts.py` | `test_zabbix_adapter_uses_read_only_initmax_tools` | 57 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_upstream_mcp_contracts.py` | `test_mcp_client_supports_standard_streamable_http_lifecycle` | 65 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_upstream_mcp_contracts.py` | `test_upstream_provider_settings_are_explicit` | 73 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_upstream_mcp_contracts.py` | `test_elastic_anomaly_webhook_uses_json_array_rendering` | 85 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_verification_gate.py` | `test_verification_success_requires_confidence` | 3 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_verification_gate.py` | `test_partial_verification_does_not_pass` | 6 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_vm_current_cpu_metrics.py` | `_connector` | 7 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
