@@ -141,7 +141,11 @@ The anomaly score remains preserved separately in `raw_data.anomaly.score`; seve
 ELASTIC_STACK_VERSION=9.3.2
 ELASTICSEARCH_MCP_URL=https://<kibana>/api/agent_builder/mcp
 ELASTICSEARCH_MCP_PROTOCOL_VERSION=2024-11-05
-ELASTICSEARCH_MCP_AUTH_HEADER=ApiKey <elastic-api-key>
+# Choose exactly one authentication path:
+# ELASTICSEARCH_MCP_AUTH_HEADER=ApiKey <elastic-api-key>
+ELASTICSEARCH_MCP_AUTH_HEADER=
+ELASTICSEARCH_MCP_USERNAME=<kibana-service-user>
+ELASTICSEARCH_MCP_PASSWORD=<kibana-password>
 ELASTIC_AGENT_BUILDER_MCP_NAMESPACES=["platform.core"]
 ELASTIC_AGENT_BUILDER_INDEX_PATTERN=logs-*
 
