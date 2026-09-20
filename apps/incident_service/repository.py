@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime, time
+from decimal import Decimal
+from enum import Enum
 from typing import Any, Dict, Iterable, Optional
 from uuid import UUID, uuid4
 
@@ -8,6 +10,34 @@ from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from domain.models import Evidence, EvidenceType, Finding, Incident, IncidentStatus
+
+
+def _json_safe(value: Any) -> Any:
+    """Convert durable JSON payloads to PostgreSQL/SQLAlchemy-safe primitives.
+
+    Operational context can legitimately contain datetime/UUID/Enum values from
+    normalized signals and workflow state. Normalize them at the persistence
+    boundary so a successful incident analysis never fails during the final
+    database flush with a JSON serialization error.
+    """
+    if value is None or isinstance(value, (str, int, float, bool)):
+        return value
+    if isinstance(value, (datetime, date, time)):
+        return value.isoformat()
+    if isinstance(value, UUID):
+        return str(value)
+    if isinstance(value, Enum):
+        return _json_safe(value.value)
+    if isinstance(value, Decimal):
+        return float(value)
+    if isinstance(value, dict):
+        return {str(key): _json_safe(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple, set, frozenset)):
+        return [_json_safe(item) for item in value]
+    model_dump = getattr(value, "model_dump", None)
+    if callable(model_dump):
+        return _json_safe(model_dump(mode="json"))
+    raise TypeError(f"unsupported_json_value:{type(value).__name__}")
 
 
 class IncidentRepository:
@@ -29,6 +59,7 @@ class IncidentRepository:
         incident_uuid = UUID(str(incident_id))
         incident = await self.session.get(Incident, incident_uuid)
         normalized_status = IncidentStatus(status.lower())
+        safe_context = _json_safe(context) if context is not None else None
         if incident is None:
             incident = Incident(
                 id=incident_uuid,
@@ -37,7 +68,7 @@ class IncidentRepository:
                 service=service,
                 status=normalized_status,
                 summary=summary,
-                context=context,
+                context=safe_context,
             )
             self.session.add(incident)
         else:
@@ -46,7 +77,7 @@ class IncidentRepository:
             # recovery and move the incident back to analyzing/open.
             existing_context = dict(incident.context or {})
             recovery_marker = dict(existing_context.get("source_recovery") or {})
-            incoming_context = dict(context or {}) if context is not None else None
+            incoming_context = dict(safe_context or {}) if safe_context is not None else None
             if recovery_marker:
                 if incoming_context is None:
                     incoming_context = existing_context
@@ -124,9 +155,9 @@ class IncidentRepository:
             (str(item.get("source") or ""), str(item.get("source_id") or ""))
             for item in related if isinstance(item, dict)
         }:
-            related.append(dict(signal_metadata))
+            related.append(_json_safe(dict(signal_metadata)))
         context["related_signals"] = related[-100:]
-        incident.context = context
+        incident.context = _json_safe(context)
 
     async def find_incident_by_evidence_reference(
         self,
@@ -180,7 +211,7 @@ class IncidentRepository:
                     agent=agent,
                     finding_type=finding_type,
                     statement=str(statement),
-                    evidence_ids=list(finding.get("evidence_ids") or []),
+                    evidence_ids=_json_safe(list(finding.get("evidence_ids") or [])),
                     confidence=float(finding.get("confidence") or 0.0),
                 )
             )
@@ -217,9 +248,9 @@ class IncidentRepository:
                     type=self._evidence_type(item.get("type")),
                     source=str(item.get("source") or "unknown"),
                     query=item.get("query"),
-                    time_range=item.get("time_range"),
+                    time_range=_json_safe(item.get("time_range")),
                     reference=str(reference) if reference else None,
-                    raw_data=item.get("raw_data") or item,
+                    raw_data=_json_safe(item.get("raw_data") or item),
                     confidence=confidence,
                 )
             )
