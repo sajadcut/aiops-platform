@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 354 | Dashboard JS files scanned: 3 | Symbols indexed: 3127**
+**Python files scanned: 354 | Dashboard JS files scanned: 3 | Symbols indexed: 3129**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1396,8 +1396,10 @@
 | `dashboards/control-center.js` | `renderMcp` | 403 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
 | `dashboards/control-center.js` | `renderAudit` | 421 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
 | `dashboards/control-center.js` | `loadAll` | 427 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
-| `database/__init__.py` | `get_db` | 29 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
-| `database/__init__.py` | `check_pgvector_ready` | 34 | async function | Connectivity و وجود extension pgvector را بدون افشای DSN/error text بررسی می‌کند. | module |
+| `database/__init__.py` | `_json_default` | 23 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `database/__init__.py` | `_json_serializer` | 38 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `database/__init__.py` | `get_db` | 56 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
+| `database/__init__.py` | `check_pgvector_ready` | 61 | async function | Connectivity و وجود extension pgvector را بدون افشای DSN/error text بررسی می‌کند. | module |
 | `database/migration_validation.py` | `expected_migration_heads` | 12 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `database/migration_validation.py` | `validate_migration_head` | 19 | async function | Compare the database's applied Alembic revision(s) with repository HEAD(s). | module |
 | `database/migrations/env.py` | `run_migrations_offline` | 29 | function | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | module |
@@ -1787,9 +1789,9 @@
 | `integrations/vm/ssh_connector.py` | `SSHVMConnector.route_check` | 459 | async method | بر اساس state/capability مسیر یا handler مناسب را انتخاب می‌کند | SSHVMConnector |
 | `integrations/vm/ssh_connector.py` | `SSHVMConnector.firewall_status` | 467 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
 | `integrations/vm/ssh_connector.py` | `SSHVMConnector.config_validate` | 479 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.start_service` | 490 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.restart_service` | 497 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.reload_service` | 504 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.start_service` | 502 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.restart_service` | 509 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.reload_service` | 516 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
 | `integrations/vm/target_context.py` | `_clean` | 17 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `integrations/vm/target_context.py` | `target_from_zabbix_payload` | 22 | function | Resolve a VM endpoint without conflating it with the service name. | module |
 | `integrations/vm/target_context.py` | `target_port_from_zabbix_payload` | 51 | function | Return only an explicitly supplied TCP target port. | module |
