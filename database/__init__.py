@@ -5,6 +5,12 @@ health check و تنظیمات DB یک‌جا کنترل شوند. Migrationها
 به همان قرارداد runtime متصل‌اند.
 """
 
+import json
+from datetime import date, datetime, time
+from decimal import Decimal
+from enum import Enum
+from uuid import UUID
+
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from sqlalchemy.orm import declarative_base
 from sqlalchemy import text
@@ -13,12 +19,33 @@ from domain.contracts.logging import logger
 
 Base = declarative_base()
 
+
+def _json_default(value):
+    if isinstance(value, (datetime, date, time)):
+        return value.isoformat()
+    if isinstance(value, UUID):
+        return str(value)
+    if isinstance(value, Enum):
+        return value.value
+    if isinstance(value, Decimal):
+        return float(value)
+    model_dump = getattr(value, "model_dump", None)
+    if callable(model_dump):
+        return model_dump(mode="json")
+    raise TypeError(f"Object of type {type(value).__name__} is not JSON serializable")
+
+
+def _json_serializer(value) -> str:
+    return json.dumps(value, ensure_ascii=False, default=_json_default)
+
+
 engine = create_async_engine(
     settings.DATABASE_URL,
     echo=settings.DEBUG,
     pool_size=settings.DATABASE_POOL_SIZE,
     max_overflow=settings.DATABASE_MAX_OVERFLOW,
     pool_pre_ping=True,
+    json_serializer=_json_serializer,
 )
 
 AsyncSessionLocal = async_sessionmaker(
