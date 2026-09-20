@@ -9,6 +9,8 @@ from integrations.mcp_client import MCPClient
 class VMEdgeMCPClient(MCPClient):
     """MCP-only connector for VM/Edge diagnostics and governed remediation."""
 
+    EXPECTED_SERVER_NAME = "aiops-vm-mcp"
+
     READ_TOOLS = {
         "collect_vm_metrics", "host_info", "disk_status", "network_status",
         "service_status", "service_logs", "system_logs", "process_snapshot",
@@ -21,6 +23,7 @@ class VMEdgeMCPClient(MCPClient):
         url = server_url or settings.VM_MCP_URL
         if not url:
             raise ValueError("vm_mcp_url_not_configured")
+        self._identity_validated = False
         super().__init__(
             url, "vm-edge", allowed_tools=self.READ_TOOLS | self.WRITE_TOOLS,
             write_tools=self.WRITE_TOOLS, protocol_version=settings.MCP_PROTOCOL_VERSION,
@@ -29,6 +32,20 @@ class VMEdgeMCPClient(MCPClient):
             client_cert_path=settings.MCP_CLIENT_CERT_PATH,
             client_key_path=settings.MCP_CLIENT_KEY_PATH,
         )
+
+    async def initialize(self) -> Dict[str, Any]:
+        if self._initialized and self._identity_validated:
+            return {"protocolVersion": self.negotiated_protocol_version}
+        init_result = await super().initialize()
+        server_info = init_result.get("serverInfo") if isinstance(init_result, dict) else None
+        actual_name = str((server_info or {}).get("name") or "").strip()
+        if actual_name != self.EXPECTED_SERVER_NAME:
+            self._initialized = False
+            raise RuntimeError(
+                f"mcp_server_identity_mismatch:vm-edge:expected={self.EXPECTED_SERVER_NAME}:actual={actual_name or 'missing'}"
+            )
+        self._identity_validated = True
+        return init_result
 
     async def _invoke(self, name: str, target: str, **params: Any) -> Dict[str, Any]:
         result = await self.call_tool(name, {"target": target, **params})
