@@ -4,6 +4,7 @@ from enum import Enum
 from uuid import uuid4
 
 from apps.incident_service.repository import _json_safe
+from database import _json_serializer
 
 
 class _SampleState(str, Enum):
@@ -32,3 +33,10 @@ def test_json_safe_normalizes_durable_operational_context():
     assert normalized["state"] == "active"
     assert normalized["score"] == 0.1043
     assert normalized["nested"][0]["seen_at"] == "2026-09-20T09:54:03+00:00"
+
+
+def test_database_json_serializer_is_a_final_datetime_safeguard():
+    timestamp = datetime(2026, 9, 20, 10, 19, 33, tzinfo=timezone.utc)
+    encoded = _json_serializer({"evidence": [{"timestamp": timestamp}]})
+
+    assert '"timestamp": "2026-09-20T10:19:33+00:00"' in encoded
