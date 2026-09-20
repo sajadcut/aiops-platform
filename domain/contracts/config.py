@@ -133,6 +133,8 @@ class Settings(BaseSettings):
     ELASTICSEARCH_MCP_URL: str = Field(...)
     ELASTICSEARCH_MCP_PROTOCOL_VERSION: str = Field(...)
     ELASTICSEARCH_MCP_AUTH_HEADER: Optional[str] = Field(...)
+    ELASTICSEARCH_MCP_USERNAME: Optional[str] = Field(...)
+    ELASTICSEARCH_MCP_PASSWORD: Optional[str] = Field(...)
     ELASTIC_AGENT_BUILDER_MCP_NAMESPACES: List[str] = Field(...)
     ELASTIC_AGENT_BUILDER_INDEX_PATTERN: str = Field(...)
     ELASTIC_ANOMALY_ACCEPT_INTERIM: bool = Field(...)
@@ -281,9 +283,29 @@ class Settings(BaseSettings):
     @classmethod
     def validate_elastic_mcp_auth_header(cls, value: Optional[str]) -> Optional[str]:
         normalized = str(value or "").strip()
-        if normalized and not (normalized.startswith("ApiKey ") or normalized.startswith("Bearer ")):
-            raise ValueError("Elastic Agent Builder MCP authentication must use ApiKey or Bearer Authorization")
+        if normalized and not (
+            normalized.startswith("ApiKey ")
+            or normalized.startswith("Bearer ")
+            or normalized.startswith("Basic ")
+        ):
+            raise ValueError("Elastic Agent Builder MCP authentication must use ApiKey, Bearer, or Basic Authorization")
         return normalized or None
+
+    @model_validator(mode="after")
+    def validate_elastic_mcp_authentication(self) -> "Settings":
+        username = str(self.ELASTICSEARCH_MCP_USERNAME or "").strip()
+        password_configured = self.ELASTICSEARCH_MCP_PASSWORD is not None and self.ELASTICSEARCH_MCP_PASSWORD != ""
+        if bool(username) != bool(password_configured):
+            raise ValueError(
+                "ELASTICSEARCH_MCP_USERNAME and ELASTICSEARCH_MCP_PASSWORD must be configured together"
+            )
+        if ":" in username:
+            raise ValueError("ELASTICSEARCH_MCP_USERNAME must not contain ':' when HTTP Basic authentication is used")
+        if self.ELASTICSEARCH_MCP_AUTH_HEADER and username:
+            raise ValueError(
+                "Configure either ELASTICSEARCH_MCP_AUTH_HEADER or ELASTICSEARCH_MCP_USERNAME/ELASTICSEARCH_MCP_PASSWORD, not both"
+            )
+        return self
 
     @field_validator("ELASTIC_AGENT_BUILDER_MCP_NAMESPACES")
     @classmethod
