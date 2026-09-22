@@ -17,6 +17,8 @@ from apps.chatbot.store import ChatStore, HISTORY_LIMIT
 from apps.chatbot.tools import CHAT_TOOL_SCHEMAS, ToolIntent, max_tool_calls, normalize_tool_intent, parse_tool_call
 from apps.execution_service import ExecutionRequest, ExecutionService
 from apps.incident_service.repository import IncidentRepository
+from apps.memory_service import OperationalMemoryService
+from apps.memory_service.builder import OperationalMemoryBuilder
 from apps.security.oidc import Identity
 from apps.security.rbac import allowed
 from database import AsyncSessionLocal
@@ -547,6 +549,115 @@ class ChatbotService:
             return {"verified": False, "error": "verification_unavailable"}
         return {"verified": False, "error": "verification_not_supported"}
 
+    async def _record_memory_after_mutation(
+        self,
+        db,
+        *,
+        proposal: dict[str, Any],
+        proposal_id: UUID,
+        execution,
+        verification: dict[str, Any],
+        approval_id: str,
+    ) -> None:
+        incident_id = str(proposal["incident_id"])
+        verified = bool(verification.get("verified"))
+        if execution.success and verified:
+            verification_status = "success"
+            incident_status = "resolved"
+        elif execution.success:
+            verification_status = "inconclusive"
+            incident_status = "escalated"
+        else:
+            verification_status = "failed"
+            incident_status = "escalated"
+
+        evidence_ref = f"chatbot-verification:{proposal_id}"
+        source = str(verification.get("source") or "chatbot")
+        state = {
+            "incident_id": incident_id,
+            "service_name": str(
+                (proposal.get("parameters") or {}).get("service")
+                or proposal.get("target")
+                or "unknown"
+            ),
+            "evidence_summary": (
+                f"ChatOps action {proposal.get('action')} on {proposal.get('target')}"
+            ),
+            "context": {
+                "incident": {
+                    "source": "chatbot",
+                    "severity": str(proposal.get("risk_level") or "unknown"),
+                    "summary": (
+                        f"ChatOps request: {proposal.get('action')} "
+                        f"on {proposal.get('target')}"
+                    ),
+                },
+                "trigger_signal": {
+                    "source": "chatbot",
+                    "signal_type": "chatops_action",
+                    "summary": (
+                        f"ChatOps request: {proposal.get('action')} "
+                        f"on {proposal.get('target')}"
+                    ),
+                },
+                "evidence": [
+                    {
+                        "source": source,
+                        "type": "event",
+                        "reference": evidence_ref,
+                        "raw_data": redact(
+                            {
+                                "verified": verified,
+                                "verification_result": verification.get("result"),
+                                "verification_error": verification.get("error"),
+                            }
+                        ),
+                    }
+                ],
+            },
+            "findings": [],
+            "coordination": {},
+            "execution_request": {
+                "tool_name": str(proposal.get("tool_name") or ""),
+                "action": str(proposal.get("action") or ""),
+                "target": str(proposal.get("target") or ""),
+                "parameters": dict(proposal.get("parameters") or {}),
+                "approval_id": approval_id,
+                "incident_id": incident_id,
+            },
+            "execution_result": execution.model_dump(),
+            "verification_result": {
+                "status": verification_status,
+                "confidence": 0.9 if verified else 0.0,
+                "before_state": {},
+                "after_state": {},
+                "changes": [],
+                "evidence_refs": [evidence_ref],
+                "message": (
+                    "Independent ChatOps post-action verification succeeded."
+                    if verified
+                    else str(
+                        verification.get("error")
+                        or execution.error
+                        or execution.reason
+                        or "Independent verification did not confirm recovery."
+                    )
+                ),
+            },
+        }
+
+        await IncidentRepository(db).set_status(incident_id, incident_status)
+        try:
+            episode = OperationalMemoryBuilder.build(state)
+            await OperationalMemoryService(db).add_episode(episode)
+        except Exception as exc:
+            logger.error(
+                "chatbot_operational_memory_writeback_failed",
+                incident_id=incident_id,
+                error_type=type(exc).__name__,
+            )
+        await db.commit()
+
     async def decide(self, identity: Identity, proposal_id: UUID, confirm: bool) -> ChatMessageResponse:
         async with AsyncSessionLocal() as db:
             store = ChatStore(db)
@@ -710,6 +821,15 @@ class ChatbotService:
                     "verified": bool(verification.get("verified")),
                 },
             )
+            await self._record_memory_after_mutation(
+                db,
+                proposal=proposal,
+                proposal_id=proposal_id,
+                execution=execution,
+                verification=verification,
+                approval_id=approval_id,
+            )
+
             if execution.success:
                 message = (
                     f"Action {proposal['action']} completed through the governed execution path. "
