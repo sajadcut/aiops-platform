@@ -745,13 +745,13 @@
 | `apps/api/main.py` | `_validate_production_configuration` | 158 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/main.py` | `startup_event` | 249 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/main.py` | `shutdown_event` | 302 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/remediation.py` | `_audit_durable` | 23 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/remediation.py` | `_read_vm` | 29 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/remediation.py` | `RemediationRequest` | 36 | class | کلاس | module |
-| `apps/api/remediation.py` | `create_remediation_request` | 46 | async function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
-| `apps/api/remediation.py` | `execute_approved_remediation` | 84 | async function | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | module |
-| `apps/api/remediation.py` | `VMVerificationRequest` | 147 | class | کلاس | module |
-| `apps/api/remediation.py` | `verify_remediation` | 153 | async function | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | module |
+| `apps/api/remediation.py` | `_audit_durable` | 25 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/remediation.py` | `_read_vm` | 31 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/remediation.py` | `RemediationRequest` | 38 | class | کلاس | module |
+| `apps/api/remediation.py` | `create_remediation_request` | 48 | async function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
+| `apps/api/remediation.py` | `execute_approved_remediation` | 101 | async function | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | module |
+| `apps/api/remediation.py` | `VMVerificationRequest` | 285 | class | کلاس | module |
+| `apps/api/remediation.py` | `verify_remediation` | 291 | async function | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | module |
 | `apps/api/runbook_execution.py` | `_audit_durable` | 24 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/runbook_execution.py` | `_runbook_contract` | 30 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/runbook_execution.py` | `execute_runbook` | 100 | async function | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | module |
