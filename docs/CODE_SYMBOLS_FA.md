@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 395 | Dashboard JS files scanned: 5 | Symbols indexed: 3522**
+**Python files scanned: 396 | Dashboard JS files scanned: 5 | Symbols indexed: 3529**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -2936,6 +2936,13 @@
 | `tests/unit/test_mcp_server_contract.py` | `test_internal_mcp_server_has_no_native_zabbix_provider` | 21 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_mcp_server_contract.py` | `test_mcp_server_is_the_only_place_remaining_native_provider_connectors_are_composed` | 28 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_mcp_server_contract.py` | `test_mcp_server_does_not_expose_arbitrary_execution_tools` | 42 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_memory_negative_writeback.py` | `_Memory` | 7 | class | کلاس | module |
+| `tests/unit/test_memory_negative_writeback.py` | `_Memory.__init__` | 10 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Memory |
+| `tests/unit/test_memory_negative_writeback.py` | `_Memory.add_episode` | 13 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Memory |
+| `tests/unit/test_memory_negative_writeback.py` | `_Memory.record_feedback` | 17 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Memory |
+| `tests/unit/test_memory_negative_writeback.py` | `_episode` | 21 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_memory_negative_writeback.py` | `test_memory_node_persists_negative_outcome_without_evidence` | 33 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_memory_negative_writeback.py` | `test_memory_node_does_not_promote_evidence_free_success` | 65 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_memory_retrieval_query.py` | `test_operational_memory_query_uses_live_symptoms_but_not_raw_secrets` | 4 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_messaging_reliability_engine.py` | `metric` | 11 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_messaging_reliability_engine.py` | `log` | 22 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
