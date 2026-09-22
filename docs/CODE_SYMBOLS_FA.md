@@ -1229,11 +1229,11 @@
 | `apps/remediation_planner/__init__.py` | `RemediationPlanner._configuration_precondition` | 287 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
 | `apps/remediation_planner/__init__.py` | `RemediationPlanner._target_port` | 314 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
 | `apps/remediation_planner/__init__.py` | `RemediationPlanner._dedupe` | 348 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
-| `apps/runbook_service/executor.py` | `RunbookExecution` | 14 | class | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | module |
-| `apps/runbook_service/executor.py` | `RunbookExecutor` | 21 | class | Safe runtime boundary for registered runbooks. | module |
-| `apps/runbook_service/executor.py` | `RunbookExecutor.__init__` | 30 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RunbookExecutor |
-| `apps/runbook_service/executor.py` | `RunbookExecutor.validate` | 34 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | RunbookExecutor |
-| `apps/runbook_service/executor.py` | `RunbookExecutor.execute` | 40 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | RunbookExecutor |
+| `apps/runbook_service/executor.py` | `RunbookExecution` | 13 | class | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | module |
+| `apps/runbook_service/executor.py` | `RunbookExecutor` | 20 | class | Safe runtime boundary for registered runbooks. | module |
+| `apps/runbook_service/executor.py` | `RunbookExecutor.__init__` | 29 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RunbookExecutor |
+| `apps/runbook_service/executor.py` | `RunbookExecutor.validate` | 33 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | RunbookExecutor |
+| `apps/runbook_service/executor.py` | `RunbookExecutor.execute` | 39 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | RunbookExecutor |
 | `apps/runbook_service/learning.py` | `build_runbook_memory_state` | 9 | function | Build the canonical Memory-builder state for direct runbook execution. | module |
 | `apps/runbook_service/learning.py` | `record_runbook_outcome` | 78 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/runbook_service/registry.py` | `RunbookRegistry` | 11 | class | Loads governed runbooks and rejects malformed definitions fail-closed. | module |
