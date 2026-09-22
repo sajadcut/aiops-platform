@@ -4,14 +4,15 @@ from apps.orchestrator.e2e_graph import E2EOrchestrator
 def test_operational_memory_query_uses_live_symptoms_but_not_raw_secrets():
     query = E2EOrchestrator._operational_memory_query(
         service="nginx",
-        base_query="NeoBanking port 86 is down",
+        base_query="NeoBanking port 86 is down token=base-query-secret",
         context={
             "incident": {
-                "summary": "NeoBanking port 86 is down",
+                "summary": "NeoBanking port 86 is down password=incident-secret",
                 "severity": "Average",
             },
             "trigger_signal": {
                 "signal_type": "problem",
+                "trigger": "Authorization: Bearer trigger-secret",
                 "target_ip": "10.100.6.199",
                 "target_port": 86,
                 "item_key": "net.tcp.port[10.100.6.199,86]",
@@ -59,5 +60,9 @@ def test_operational_memory_query_uses_live_symptoms_but_not_raw_secrets():
     assert "listening=False" in query
     assert "reachable=False" in query
     assert "must-never-enter-query" not in query
-    assert "Authorization" not in query
+    assert "base-query-secret" not in query
+    assert "incident-secret" not in query
+    assert "trigger-secret" not in query
+    assert "Bearer trigger-secret" not in query
+    assert "[REDACTED]" in query
     assert len(query) <= 4000
