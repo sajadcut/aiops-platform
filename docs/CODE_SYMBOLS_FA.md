@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 384 | Dashboard JS files scanned: 5 | Symbols indexed: 3340**
+**Python files scanned: 385 | Dashboard JS files scanned: 5 | Symbols indexed: 3362**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -2618,6 +2618,28 @@
 | `tests/unit/test_dependency_causal_engine.py` | `CapturingDependencyLLM.generate` | 166 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CapturingDependencyLLM |
 | `tests/unit/test_dependency_causal_engine.py` | `CapturingDependencyLLM.generate_with_messages` | 191 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CapturingDependencyLLM |
 | `tests/unit/test_dependency_causal_engine.py` | `test_dependency_agent_exposes_graph_and_caps_confidence_for_incomplete_traces` | 196 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_direct_execution_runtime_guard.py` | `_Session` | 10 | class | کلاس | module |
+| `tests/unit/test_direct_execution_runtime_guard.py` | `_Session.__aenter__` | 11 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Session |
+| `tests/unit/test_direct_execution_runtime_guard.py` | `_Session.__aexit__` | 14 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Session |
+| `tests/unit/test_direct_execution_runtime_guard.py` | `_Store` | 18 | class | کلاس | module |
+| `tests/unit/test_direct_execution_runtime_guard.py` | `_Store.__init__` | 21 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Store |
+| `tests/unit/test_direct_execution_runtime_guard.py` | `_Store.get` | 24 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Store |
+| `tests/unit/test_direct_execution_runtime_guard.py` | `_Store.consume` | 33 | async method | transition مربوط به Approval/Governance را اعمال می‌کند | _Store |
+| `tests/unit/test_direct_execution_runtime_guard.py` | `_Registry` | 44 | class | کلاس | module |
+| `tests/unit/test_direct_execution_runtime_guard.py` | `_Registry.__init__` | 45 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Registry |
+| `tests/unit/test_direct_execution_runtime_guard.py` | `_Registry.get` | 48 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Registry |
+| `tests/unit/test_direct_execution_runtime_guard.py` | `_payload` | 63 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_direct_execution_runtime_guard.py` | `_identity` | 77 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_direct_execution_runtime_guard.py` | `test_direct_runtime_contract_fails_closed_for_unimplemented_write_tool` | 81 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_direct_execution_runtime_guard.py` | `test_direct_execute_blocks_live_precondition_before_consume` | 96 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_direct_execution_runtime_guard.py` | `test_direct_execute_blocks_live_precondition_before_consume.no_audit` | 109 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_direct_execute_blocks_live_precondition_before_consume |
+| `tests/unit/test_direct_execution_runtime_guard.py` | `test_direct_execute_blocks_live_precondition_before_consume.snapshot` | 114 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_direct_execute_blocks_live_precondition_before_consume |
+| `tests/unit/test_direct_execution_runtime_guard.py` | `test_direct_execute_blocks_live_precondition_before_consume.execute` | 138 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | test_direct_execute_blocks_live_precondition_before_consume |
+| `tests/unit/test_direct_execution_runtime_guard.py` | `test_direct_execute_returns_verified_only_after_post_action_verification` | 156 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_direct_execution_runtime_guard.py` | `test_direct_execute_returns_verified_only_after_post_action_verification.no_audit` | 170 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_direct_execute_returns_verified_only_after_post_action_verification |
+| `tests/unit/test_direct_execution_runtime_guard.py` | `test_direct_execute_returns_verified_only_after_post_action_verification.snapshot` | 175 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_direct_execute_returns_verified_only_after_post_action_verification |
+| `tests/unit/test_direct_execution_runtime_guard.py` | `test_direct_execute_returns_verified_only_after_post_action_verification.verify` | 214 | async method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | test_direct_execute_returns_verified_only_after_post_action_verification |
+| `tests/unit/test_direct_execution_runtime_guard.py` | `test_direct_execute_returns_verified_only_after_post_action_verification.execute` | 219 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | test_direct_execute_returns_verified_only_after_post_action_verification |
 | `tests/unit/test_dotin_general_chatbot_llm.py` | `FakeResponse` | 13 | class | کلاس | module |
 | `tests/unit/test_dotin_general_chatbot_llm.py` | `FakeResponse.__init__` | 14 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeResponse |
 | `tests/unit/test_dotin_general_chatbot_llm.py` | `FakeResponse.raise_for_status` | 17 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeResponse |
