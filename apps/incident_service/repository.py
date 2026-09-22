@@ -113,7 +113,7 @@ class IncidentRepository:
         verified: bool,
         verification: Optional[Dict[str, Any]] = None,
         memory_id: Optional[str] = None,
-    ) -> None:
+    ) -> Optional[str]:
         """Persist the governed execution outcome into incident state.
 
         Verified recovery is the only execution-driven path to RESOLVED.
@@ -123,7 +123,7 @@ class IncidentRepository:
         """
         incident = await self.session.get(Incident, UUID(str(incident_id)))
         if incident is None:
-            return
+            return None
 
         context = dict(incident.context or {})
         recovery_marker = dict(context.get("source_recovery") or {})
@@ -183,6 +183,11 @@ class IncidentRepository:
         context["latest_operational_outcome"] = outcome
         incident.context = _json_safe(context)
         incident.status = next_status
+        return str(
+            incident.status.value
+            if isinstance(incident.status, IncidentStatus)
+            else incident.status
+        )
 
     async def acquire_correlation_lock(self, fingerprint: str) -> None:
         """Serialize creation for a deterministic correlation fingerprint."""
