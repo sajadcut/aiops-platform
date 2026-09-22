@@ -111,6 +111,38 @@ def test_builder_preserves_uncertain_root_cause_and_actual_execution():
     assert "must-not-survive" not in episode["search_document"]
 
 
+def test_builder_redacts_compound_secret_keys_before_storage_and_embedding():
+    state = _state()
+    state["execution_request"]["parameters"].update(
+        {
+            "db_password": "db-secret-value",
+            "service_token": "service-token-value",
+            "client_secret": "client-secret-value",
+            "nested": {
+                "redis_password": "redis-secret-value",
+                "safe_label": "payments",
+            },
+        }
+    )
+    episode = OperationalMemoryBuilder.build(state)
+    parameters = episode["actual_remediation"]["parameters"]
+
+    assert parameters["db_password"] == "[REDACTED]"
+    assert parameters["service_token"] == "[REDACTED]"
+    assert parameters["client_secret"] == "[REDACTED]"
+    assert parameters["nested"]["redis_password"] == "[REDACTED]"
+    assert parameters["nested"]["safe_label"] == "payments"
+
+    serialized = str(episode)
+    for secret in (
+        "db-secret-value",
+        "service-token-value",
+        "client-secret-value",
+        "redis-secret-value",
+    ):
+        assert secret not in serialized
+
+
 def test_builder_does_not_convert_recovery_into_confirmed_cause():
     state = _state()
     state["triage_result"] = {
