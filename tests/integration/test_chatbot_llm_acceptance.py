@@ -150,7 +150,7 @@ async def test_mutation_message_creates_pending_proposal_without_execution(monke
             tool_calls=[
                 _tool_call(
                     "vm_service_action",
-                    '{"action":"reload_service","target":"vm01","service":"nginx"}',
+                    '{"action":"restart_service","target":"vm01","service":"nginx"}',
                 )
             ],
         )
@@ -160,10 +160,10 @@ async def test_mutation_message_creates_pending_proposal_without_execution(monke
         raise AssertionError("message phase must not execute mutation")
 
     monkeypatch.setattr(ExecutionService, "execute", staticmethod(forbidden_execute))
-    response = await ChatbotService(llm).message(identity, ChatMessageRequest(message="nginx روی vm01 رو reload کن"))
+    response = await ChatbotService(llm).message(identity, ChatMessageRequest(message="nginx روی vm01 رو restart کن"))
     assert response.kind == "action_proposal"
     assert response.proposal is not None
-    assert response.proposal.action == "reload_service"
+    assert response.proposal.action == "restart_service"
 
     async with AsyncSessionLocal() as db:
         proposal = await ChatStore(db).get_proposal(response.proposal.proposal_id, owner)
