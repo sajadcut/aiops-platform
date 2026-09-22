@@ -3,7 +3,7 @@
 > این فایل فهرست فایل‌به‌فایل repository است. توضیح معماری و flow در `CODEBASE_GUIDE_FA.md` آمده است.
 > این فایل با `scripts/generate_file_index_fa.py` ساخته و در CI کنترل می‌شود.
 
-**تعداد فایل‌های track‌شده و پوشش‌داده‌شده: 481**
+**تعداد فایل‌های track‌شده و پوشش‌داده‌شده: 480**
 
 | Path | Type | Purpose | Called By | Calls/Depends On | Runtime/Test/Docs | Notes |
 |---|---|---|---|---|---|---|
@@ -96,7 +96,6 @@
 | `apps/api/workflow.py` | Python | Route/API سطح کنترل پلتفرم | FastAPI / Dashboard / clients | services, security, database | Runtime | مرز HTTP و RBAC |
 | `apps/approval_service/__init__.py` | Python | Approval: منطق و persistence Approval با expiry و transition | Workflow/API execution | PostgreSQL/audit | Runtime | security gate قبل از execution |
 | `apps/approval_service/binding.py` | Python | Approval: منطق و persistence Approval با expiry و transition | Workflow/API execution | PostgreSQL/audit | Runtime | security gate قبل از execution |
-| `apps/approval_service/execution_claim.py` | Python | Approval: منطق و persistence Approval با expiry و transition | Workflow/API execution | PostgreSQL/audit | Runtime | security gate قبل از execution |
 | `apps/approval_service/postgres.py` | Python | Approval: منطق و persistence Approval با expiry و transition | Workflow/API execution | PostgreSQL/audit | Runtime | security gate قبل از execution |
 | `apps/approval_service/store.py` | Python | Approval: منطق و persistence Approval با expiry و transition | Workflow/API execution | PostgreSQL/audit | Runtime | security gate قبل از execution |
 | `apps/audit_service/__init__.py` | Python | Audit: ثبت، redaction و persistence Audit | boundaryهای حساس | PostgreSQL | Runtime | برای traceability و forensic |

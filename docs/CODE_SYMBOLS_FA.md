@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 395 | Dashboard JS files scanned: 5 | Symbols indexed: 3513**
+**Python files scanned: 394 | Dashboard JS files scanned: 5 | Symbols indexed: 3511**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -756,7 +756,7 @@
 | `apps/api/runbook_execution.py` | `_audit_durable` | 25 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/runbook_execution.py` | `_runbook_contract` | 31 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/runbook_execution.py` | `execute_runbook` | 108 | async function | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | module |
-| `apps/api/runbook_execution.py` | `dry_run` | 368 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/runbook_execution.py` | `dry_run` | 372 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/runbooks.py` | `list_runbooks` | 11 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
 | `apps/api/runbooks.py` | `get_runbook` | 16 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
 | `apps/api/runbooks.py` | `dry_run` | 24 | async function | Validate a runbook without crossing the real execution boundary. | module |
@@ -790,8 +790,6 @@
 | `apps/approval_service/binding.py` | `_assert_binding` | 76 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/approval_service/binding.py` | `assert_bound` | 112 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/approval_service/binding.py` | `assert_consumed_bound` | 121 | function | Validate the one-shot consumed authority handed to an internal executor. | module |
-| `apps/approval_service/execution_claim.py` | `issue_execution_claim` | 11 | function | Mint one process-local single-use execution capability. | module |
-| `apps/approval_service/execution_claim.py` | `redeem_execution_claim` | 25 | function | Atomically redeem a previously issued claim exactly once. | module |
 | `apps/approval_service/postgres.py` | `_db_timestamp` | 21 | function | Normalize ISO-8601 application timestamps for asyncpg TIMESTAMPTZ binds. | module |
 | `apps/approval_service/postgres.py` | `PostgreSQLApprovalStore` | 40 | class | Approval durable با expiry، transition اتمیک و consume یک‌باره قبل از execution. | module |
 | `apps/approval_service/postgres.py` | `PostgreSQLApprovalStore.__init__` | 43 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | PostgreSQLApprovalStore |
@@ -1227,11 +1225,11 @@
 | `apps/remediation_planner/__init__.py` | `RemediationPlanner._configuration_precondition` | 287 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
 | `apps/remediation_planner/__init__.py` | `RemediationPlanner._target_port` | 314 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
 | `apps/remediation_planner/__init__.py` | `RemediationPlanner._dedupe` | 348 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
-| `apps/runbook_service/executor.py` | `RunbookExecution` | 12 | class | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | module |
-| `apps/runbook_service/executor.py` | `RunbookExecutor` | 19 | class | Safe runtime boundary for registered runbooks. | module |
-| `apps/runbook_service/executor.py` | `RunbookExecutor.__init__` | 27 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RunbookExecutor |
-| `apps/runbook_service/executor.py` | `RunbookExecutor.validate` | 31 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | RunbookExecutor |
-| `apps/runbook_service/executor.py` | `RunbookExecutor.execute` | 37 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | RunbookExecutor |
+| `apps/runbook_service/executor.py` | `RunbookExecution` | 14 | class | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | module |
+| `apps/runbook_service/executor.py` | `RunbookExecutor` | 21 | class | Safe runtime boundary for registered runbooks. | module |
+| `apps/runbook_service/executor.py` | `RunbookExecutor.__init__` | 30 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RunbookExecutor |
+| `apps/runbook_service/executor.py` | `RunbookExecutor.validate` | 34 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | RunbookExecutor |
+| `apps/runbook_service/executor.py` | `RunbookExecutor.execute` | 40 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | RunbookExecutor |
 | `apps/runbook_service/learning.py` | `build_runbook_memory_state` | 9 | function | Build the canonical Memory-builder state for direct runbook execution. | module |
 | `apps/runbook_service/learning.py` | `record_runbook_outcome` | 78 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/runbook_service/registry.py` | `RunbookRegistry` | 11 | class | Loads governed runbooks and rejects malformed definitions fail-closed. | module |
