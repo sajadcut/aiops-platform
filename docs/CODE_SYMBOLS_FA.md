@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 361 | Dashboard JS files scanned: 5 | Symbols indexed: 3189**
+**Python files scanned: 362 | Dashboard JS files scanned: 5 | Symbols indexed: 3191**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1144,6 +1144,8 @@
 | `apps/orchestrator/guardrails.py` | `OrchestrationGuardrails` | 5 | class | Reusable evaluator gate for any orchestrator implementation. | module |
 | `apps/orchestrator/guardrails.py` | `OrchestrationGuardrails.evaluate` | 9 | method | کیفیت/confidence یا اولویت را به‌صورت deterministic محاسبه می‌کند | OrchestrationGuardrails |
 | `apps/orchestrator/guardrails.py` | `OrchestrationGuardrails.can_enter_decision` | 13 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OrchestrationGuardrails |
+| `apps/orchestrator/learning_signal_aware.py` | `LearningSignalAwareE2EOrchestrator` | 7 | class | Signal-aware workflow with positive and negative Operational Memory write-back. | module |
+| `apps/orchestrator/learning_signal_aware.py` | `LearningSignalAwareE2EOrchestrator._memory_node` | 10 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | LearningSignalAwareE2EOrchestrator |
 | `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime` | 16 | class | PostgreSQL-backed runtime around the governed collaborative LangGraph workflow. | module |
 | `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime.__init__` | 19 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
 | `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime._orchestrator_type` | 27 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
