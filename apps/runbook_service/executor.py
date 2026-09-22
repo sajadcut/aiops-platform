@@ -3,6 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Dict, Optional
 
+from apps.approval_service.binding import assert_consumed_bound
+from apps.approval_service.execution_claim import redeem_execution_claim
 from apps.execution_service import ExecutionRequest, ExecutionResult, ExecutionService
 from apps.execution_service.idempotency import execution_fingerprint
 from apps.runbook_service.registry import RunbookRegistry
@@ -19,9 +21,10 @@ class RunbookExecution:
 class RunbookExecutor:
     """Safe runtime boundary for registered runbooks.
 
-    Approval-required tools accept only approval context that an upstream durable
-    approval path has validated, bound to the requested operation, and consumed.
-    Plain approval identifiers are not propagated unless approval_granted is true.
+    Executable runbooks accept only a consumed approval context that is bound
+    to the exact execution intent and carries the ephemeral single-use claim
+    minted for the PostgreSQL consume CAS winner. Plain booleans/IDs are never
+    execution authority.
     """
 
     def __init__(self, registry: RunbookRegistry):
@@ -47,6 +50,7 @@ class RunbookExecutor:
         incident_id: Optional[str] = None,
         approval_id: Optional[str] = None,
         approval_granted: bool = False,
+        approval_context: Optional[Dict[str, Any]] = None,
         rollback_requested: bool = False,
     ) -> Dict[str, Any]:
         runbook = self.registry.get(runbook_id)
@@ -88,6 +92,59 @@ class RunbookExecutor:
             elif requested_action not in allowed_actions:
                 raise ValueError("runbook_action_not_allowed")
 
+        if dry_run:
+            fingerprint = execution_fingerprint(
+                {
+                    "tool_name": tool_name,
+                    "runbook_id": runbook_id,
+                    "action": requested_action,
+                    "target": target,
+                    "parameters": parameters,
+                    "incident_id": None,
+                    "approval_id": None,
+                    "rollback": bool(rollback_requested),
+                }
+            )
+            return {
+                "status": "dry_run",
+                "fingerprint": fingerprint,
+                "runbook_id": runbook_id,
+                "tool_name": tool_name,
+                "action": requested_action,
+                "target": target,
+                "parameters": parameters,
+            }
+
+        if approval_context is None:
+            # Backward-compatible arguments remain in the signature only to
+            # fail closed for old internal callers. A bool/ID pair is not a
+            # durable execution capability.
+            raise ValueError("runbook_execution_claim_required")
+
+        context_approval_id = str(
+            approval_context.get("approval_id") or ""
+        ).strip()
+        context_incident_id = str(
+            approval_context.get("incident_id") or ""
+        ).strip()
+        if approval_id and str(approval_id) != context_approval_id:
+            raise ValueError("approval_id_context_mismatch")
+        if incident_id and str(incident_id) != context_incident_id:
+            raise ValueError("approval_incident_context_mismatch")
+
+        assert_consumed_bound(
+            approval_context,
+            incident_id=context_incident_id,
+            tool_name=tool_name,
+            action=requested_action,
+            target=target,
+            parameters=parameters,
+            timeout=timeout,
+            runbook_id=runbook_id,
+            runbook_version=str(runbook.get("version") or ""),
+            rollback=rollback_requested,
+        )
+
         fingerprint = execution_fingerprint(
             {
                 "tool_name": tool_name,
@@ -95,13 +152,13 @@ class RunbookExecutor:
                 "action": requested_action,
                 "target": target,
                 "parameters": parameters,
-                "incident_id": incident_id,
-                "approval_id": approval_id if approval_granted else None,
+                "incident_id": context_incident_id,
+                "approval_id": context_approval_id,
                 "rollback": bool(rollback_requested),
             }
         )
-        replay_scoped = bool(approval_granted and approval_id)
-        if replay_scoped and fingerprint in self._completed and not rollback_requested:
+        replay_scoped = True
+        if fingerprint in self._completed and not rollback_requested:
             previous = self._completed[fingerprint]
             return {
                 "status": "idempotent_replay",
@@ -109,22 +166,27 @@ class RunbookExecutor:
                 "result": previous.model_dump(mode="json"),
             }
 
-        if dry_run:
-            return {
-                "status": "dry_run", "fingerprint": fingerprint, "runbook_id": runbook_id,
-                "tool_name": tool_name, "action": requested_action,
-                "target": target, "parameters": parameters,
-            }
+        claim = str(
+            approval_context.get("_execution_claim") or ""
+        ).strip()
+        if not redeem_execution_claim(claim):
+            raise ValueError("runbook_execution_claim_invalid_or_replayed")
 
-        authorized_approval_id = approval_id if approval_granted else None
-        authorized_incident_id = incident_id if approval_granted else None
         request = ExecutionRequest(
-            tool_name=tool_name, action=requested_action, target=target, parameters=parameters, timeout=timeout,
-            agent_name="runbook_executor", incident_id=authorized_incident_id,
-            approval_granted=bool(approval_granted), approval_id=authorized_approval_id,
-            runbook_id=runbook_id, runbook_version=str(runbook.get("version") or ""), rollback=rollback_requested,
+            tool_name=tool_name,
+            action=requested_action,
+            target=target,
+            parameters=parameters,
+            timeout=timeout,
+            agent_name="runbook_executor",
+            incident_id=context_incident_id,
+            approval_granted=True,
+            approval_id=context_approval_id,
+            runbook_id=runbook_id,
+            runbook_version=str(runbook.get("version") or ""),
+            rollback=rollback_requested,
         )
         result = await ExecutionService.execute(request)
-        if result.success and replay_scoped:
+        if result.success:
             self._completed[fingerprint] = result
         return {"status": "executed", "fingerprint": fingerprint, "result": result.model_dump(mode="json")}
