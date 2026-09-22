@@ -23,7 +23,12 @@ def render(image_ref: str, output_dir: Path) -> list[Path]:
     output_dir.mkdir(parents=True, exist_ok=True)
     source_dir = Path("deployment/kubernetes")
     outputs: list[Path] = []
-    for name in ("aiops-platform.yaml", "migrate-job.yaml"):
+    for name in (
+        "aiops-platform.yaml",
+        "migrate-job.yaml",
+        "memory-embedding-backfill-cronjob.yaml",
+        "memory-stale-cronjob.yaml",
+    ):
         source = source_dir / name
         text = source.read_text(encoding="utf-8")
         count = text.count(_PLACEHOLDER)
