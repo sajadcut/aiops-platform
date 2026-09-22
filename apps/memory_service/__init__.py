@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
+import hashlib
 import time
 from typing import Any, Dict, List, Optional, cast
 from uuid import UUID, uuid4
@@ -14,6 +15,7 @@ from domain.contracts.logging import logger
 from domain.models import MemoryEntry
 from knowledge import EmbeddingService
 
+from .builder import OperationalMemoryBuilder
 from .contracts import EMBEDDING_DOCUMENT_VERSION, MEMORY_SCHEMA_VERSION
 from .feedback import apply_feedback, record_retrieval_events
 from .retrieval import candidates, rrf_score
@@ -424,11 +426,24 @@ class OperationalMemoryService:
         ready = 0
         failed = 0
         for entry in rows:
-            if not entry.embedding_document:
-                entry.embedding_document = self._legacy_embedding_document(
-                    entry
+            if (
+                not entry.embedding_document
+                or entry.embedding_document_version != EMBEDDING_DOCUMENT_VERSION
+            ):
+                episode = self.serialize_entry(entry)
+                episode["normalized_symptoms"] = (
+                    (entry.symptoms or {}).get("normalized")
+                    if isinstance(entry.symptoms, dict)
+                    else []
+                ) or []
+                episode["contributing_factors"] = entry.contributing_factors or []
+                entry.embedding_document = (
+                    OperationalMemoryBuilder.build_embedding_document(episode)
                 )
                 entry.embedding_document_version = EMBEDDING_DOCUMENT_VERSION
+                entry.embedding_text_hash = hashlib.sha256(
+                    entry.embedding_document.encode("utf-8")
+                ).hexdigest()
             if await self._embed_entry(entry):
                 ready += 1
             else:
