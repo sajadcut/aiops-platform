@@ -54,7 +54,7 @@ async def run_workflow(
             "confidence": 0.0,
         }
         async with AsyncSessionLocal() as db:
-            result = await LearningLearningDurableWorkflowRuntime(db).start(initial_state)
+            result = await LearningDurableWorkflowRuntime(db).start(initial_state)
         return WorkflowResponse(
             success=True,
             incident_id=incident_id,
