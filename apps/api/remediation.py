@@ -86,7 +86,6 @@ async def create_remediation_request(
             timeout=30,
             runbook_id=RunbookRuntimeGuard.VM_SERVICE_RUNBOOK,
             runbook_version=runbook_version,
-            execution_claim=consumed.get("_execution_claim"),
         )
         record = {
             "approval_id": approval_id, "incident_id": str(incident_id), "action": payload.action,
@@ -239,6 +238,7 @@ async def execute_approved_remediation(approval_id: str, identity=Depends(requir
             approval_id=approval_id,
             runbook_id=runbook_id,
             runbook_version=runbook_version,
+            execution_claim=consumed.get("_execution_claim"),
         )
         result = await ExecutionService.execute(request)
         response = result.model_dump()
