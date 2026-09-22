@@ -1,4 +1,5 @@
 import os
+from datetime import datetime, timedelta, timezone
 from uuid import uuid4
 
 import pytest
@@ -132,6 +133,31 @@ async def test_duplicate_save_cannot_resurrect_terminal_approval_states():
             _record(expired_id, incident_id, status="approved")
         )
         assert replayed_expired["status"] == "expired"
+
+        # Expiry is enforced from created_at before approval/consume can be used.
+        ttl_id = str(uuid4())
+        ttl_record = _record(ttl_id, incident_id)
+        ttl_record["created_at"] = (
+            datetime.now(timezone.utc)
+            - timedelta(seconds=10_000)
+        ).isoformat()
+        await store.save(ttl_record)
+        ttl_read = await store.get(ttl_id)
+        assert ttl_read["status"] == "expired"
+        ttl_approve = await store.set_status(ttl_id, "approved")
+        assert ttl_approve["status"] == "expired"
+
+        # Approved authority is single-use. A second consume must observe the
+        # already-consumed terminal state and cannot claim execution again.
+        once_id = str(uuid4())
+        await store.save(_record(once_id, incident_id))
+        once_approved = await store.set_status(once_id, "approved")
+        assert once_approved["status"] == "approved"
+        first_consume = await store.consume(once_id)
+        assert first_consume["status"] == "consumed"
+        second_consume = await store.consume(once_id)
+        assert second_consume["status"] == "consumed"
+        assert (await store.get(once_id))["status"] == "consumed"
 
         await db.execute(
             text("DELETE FROM approvals WHERE incident_id=:incident_id"),
