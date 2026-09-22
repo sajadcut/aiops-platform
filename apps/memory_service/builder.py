@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 from typing import Any, Dict, Iterable, List, Optional
 
 from domain.contracts.config import settings
+from .contracts import EMBEDDING_DOCUMENT_VERSION, MEMORY_SCHEMA_VERSION
 
 
 class OperationalMemoryBuilder:
@@ -16,8 +17,8 @@ class OperationalMemoryBuilder:
     never becomes current Evidence or execution authority.
     """
 
-    SCHEMA_VERSION = "2.0"
-    EMBEDDING_DOCUMENT_VERSION = "1"
+    SCHEMA_VERSION = MEMORY_SCHEMA_VERSION
+    EMBEDDING_DOCUMENT_VERSION = EMBEDDING_DOCUMENT_VERSION
     ROOT_CAUSE_STATUSES = {"confirmed", "probable", "possible", "unconfirmed", "unknown"}
     CRITICAL_CONDITIONS = {"service_active", "port_listening", "tcp_reachable", "config_valid"}
     EXPECTED_RECOVERY_OVERHEAD = {"cpu_usage", "memory_usage"}
