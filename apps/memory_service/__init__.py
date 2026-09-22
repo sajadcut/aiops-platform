@@ -298,12 +298,14 @@ class OperationalMemoryService:
         *,
         execution_request: Optional[Dict[str, Any]],
         verification_result: Optional[Dict[str, Any]],
+        cited_memory_ids: Optional[List[str]] = None,
     ) -> int:
         return await apply_feedback(
             self.db,
             target_incident_id,
             execution_request=execution_request,
             verification_result=verification_result,
+            cited_memory_ids=cited_memory_ids,
         )
 
     async def backfill_embeddings(self, limit: int = 100) -> Dict[str, int]:
