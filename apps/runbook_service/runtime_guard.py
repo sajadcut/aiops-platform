@@ -175,6 +175,21 @@ class RunbookRuntimeGuard:
         )
 
     @staticmethod
+    def approval_should_be_revoked(precondition: Dict[str, Any]) -> bool:
+        """Return True only when fresh evidence proves the approved intent is stale.
+
+        Transient evidence/telemetry failures remain retryable until TTL; a
+        recovered service or changed required recovery action invalidates the
+        approved authority itself.
+        """
+        reason = str(precondition.get("reason") or "").strip()
+        return reason in {
+            "service_no_longer_unhealthy",
+            "service_state_conflict_or_recovered",
+            "fresh_service_recovery_action_changed",
+        }
+
+    @staticmethod
     async def verify(
         *,
         runbook: Dict[str, Any],
