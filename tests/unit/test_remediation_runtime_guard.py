@@ -192,6 +192,14 @@ async def test_remediation_success_requires_post_action_verification(monkeypatch
 
     monkeypatch.setattr(api.RunbookRuntimeGuard, "verify", verify)
 
+    memory_calls = []
+
+    async def record_memory(_db, **kwargs):
+        memory_calls.append(kwargs)
+        return "memory-remediation-1"
+
+    monkeypatch.setattr(api, "record_runbook_outcome", record_memory)
+
     async def execute(request):
         return ExecutionResult(
             success=True,
@@ -215,3 +223,7 @@ async def test_remediation_success_requires_post_action_verification(monkeypatch
     assert result["verified"] is True
     assert result["verification"]["status"] == "success"
     assert result["precondition"]["safe_to_execute"] is True
+    assert result["operational_memory_writeback"]["memory_id"] == "memory-remediation-1"
+    assert len(memory_calls) == 1
+    assert memory_calls[0]["incident_id"] == "incident-1"
+    assert memory_calls[0]["action"] == "start_service"
