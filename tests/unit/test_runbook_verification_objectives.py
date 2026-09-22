@@ -157,3 +157,33 @@ async def test_orchestrator_fails_closed_when_runbook_contract_is_unavailable(mo
     assert verification["verification_policy"] == "runbook_contract_unavailable"
     assert verification["required_objectives_met"] is False
     assert verification["verification_contract_error"] is not None
+
+
+@pytest.mark.asyncio
+async def test_baseline_relative_objective_is_inconclusive_without_pre_action_value():
+    objectives = [
+        {
+            "metric": "error_rate",
+            "direction": "lower_is_better",
+            "expected": "below_pre_action_baseline",
+        }
+    ]
+    before = {"live_evidence": {"evidence": []}}
+    after = {
+        "summary": {"error_rate": 0.02},
+        "live_evidence": {"evidence": []},
+    }
+
+    result = await VerificationEngine.verify_action(
+        "rollback",
+        "payments",
+        before,
+        after,
+        verification_objectives=objectives,
+    )
+
+    assert result.status == VerificationStatus.INCONCLUSIVE
+    assert result.required_objectives_met is False
+    assert result.objective_results[0]["reason"] == (
+        "pre_action_objective_evidence_missing"
+    )
