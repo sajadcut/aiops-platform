@@ -24,22 +24,74 @@ async def _audit_durable(db, actor: str, incident_id: str, action: str, metadata
     await db.commit()
 
 
-def _runbook_contract(runbook_id: str, payload: Dict[str, Any]) -> tuple[dict, str, str, dict, int, bool]:
+def _runbook_contract(
+    runbook_id: str,
+    payload: Dict[str, Any],
+) -> tuple[dict, str, str, str, dict, int, bool]:
     try:
         runbook = _registry.get(runbook_id)
-        tool_name = str(payload["tool_name"])
         target = str(payload["target"])
     except KeyError as exc:
         field = exc.args[0]
         if str(field).startswith("Unknown runbook"):
             raise HTTPException(status_code=404, detail="runbook_not_found") from exc
         raise HTTPException(status_code=400, detail=f"missing_field:{field}") from exc
+
     parameters = dict(payload.get("parameters", {}))
-    timeout = int(payload.get("timeout", 30))
+    timeout = int(payload.get("timeout", runbook.get("timeout") or 30))
     rollback = bool(payload.get("rollback", False))
     _registry.validate(runbook_id, parameters)
-    return runbook, tool_name, target, parameters, timeout, rollback
 
+    execution = (
+        dict(runbook.get("execution") or {})
+        if isinstance(runbook.get("execution"), dict)
+        else {}
+    )
+    if execution:
+        tool_name = str(execution.get("tool") or "").strip()
+        if not tool_name:
+            raise HTTPException(status_code=409, detail="runbook_execution_tool_missing")
+        requested_tool = str(payload.get("tool_name") or "").strip()
+        if requested_tool and requested_tool != tool_name:
+            raise HTTPException(status_code=409, detail="runbook_tool_mismatch")
+
+        if rollback:
+            rollback_actions = [
+                str(step.get("action") or "").strip()
+                for step in runbook.get("rollback", [])
+                if isinstance(step, dict)
+                and str(step.get("action") or "").strip() not in {"", "none"}
+            ]
+            requested_action = str(payload.get("action") or "").strip()
+            if requested_action not in set(rollback_actions):
+                raise HTTPException(status_code=409, detail="runbook_rollback_not_allowed")
+            action = requested_action
+        else:
+            allowed_actions = [
+                str(value).strip()
+                for value in execution.get("allowed_actions", [])
+                if str(value).strip()
+            ]
+            requested_action = str(payload.get("action") or "").strip()
+            if not requested_action and len(allowed_actions) == 1:
+                requested_action = allowed_actions[0]
+            if not requested_action:
+                raise HTTPException(status_code=400, detail="runbook_action_required")
+            if requested_action not in set(allowed_actions):
+                raise HTTPException(status_code=409, detail="runbook_action_not_allowed")
+            action = requested_action
+    else:
+        try:
+            tool_name = str(payload["tool_name"])
+        except KeyError as exc:
+            raise HTTPException(status_code=400, detail="missing_field:tool_name") from exc
+        action = (
+            "rollback"
+            if rollback
+            else str(runbook.get("action") or runbook_id)
+        )
+
+    return runbook, tool_name, action, target, parameters, timeout, rollback
 
 @router.post("/runbooks/{runbook_id}/execute")
 async def execute_runbook(
@@ -47,7 +99,7 @@ async def execute_runbook(
     payload: Dict[str, Any],
     identity=Depends(require_permission("execute:approved")),
 ):
-    runbook, tool_name, target, parameters, timeout, rollback = _runbook_contract(runbook_id, payload)
+    runbook, tool_name, action, target, parameters, timeout, rollback = _runbook_contract(runbook_id, payload)
     approval_id = str(payload.get("approval_id") or "").strip()
     incident_id = str(payload.get("incident_id") or "").strip()
     if not approval_id:
@@ -55,7 +107,6 @@ async def execute_runbook(
     if not incident_id:
         raise HTTPException(status_code=400, detail="incident_id_required")
 
-    action = "rollback" if rollback else str(runbook.get("action") or runbook_id)
     version = str(runbook.get("version") or "")
     async with AsyncSessionLocal() as db:
         store = PostgreSQLApprovalStore(db)
@@ -87,6 +138,7 @@ async def execute_runbook(
             tool_name=tool_name,
             target=target,
             parameters=parameters,
+            action=action,
             timeout=timeout,
             dry_run=False,
             incident_id=incident_id,
@@ -118,12 +170,13 @@ async def dry_run(
     payload: Dict[str, Any],
     _identity=Depends(require_permission("read:incident")),
 ):
-    _runbook, tool_name, target, parameters, timeout, rollback = _runbook_contract(runbook_id, payload)
+    _runbook, tool_name, action, target, parameters, timeout, rollback = _runbook_contract(runbook_id, payload)
     return await _executor.execute(
         runbook_id,
         tool_name=tool_name,
         target=target,
         parameters=parameters,
+        action=action,
         timeout=timeout,
         dry_run=True,
         incident_id=None,
