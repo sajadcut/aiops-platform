@@ -86,7 +86,11 @@ class PostgreSQLApprovalStore:
         # however, requires native datetime objects for TIMESTAMPTZ bind values.
         # Normalize exactly at the PostgreSQL adapter boundary so the domain/API
         # contract can remain serializable while persistence remains type-safe.
-        for field in ("created_at", "approved_at", "rejected_at"):
+        params["created_at"] = (
+            _db_timestamp(params.get("created_at"))
+            or datetime.now(timezone.utc)
+        )
+        for field in ("approved_at", "rejected_at"):
             params[field] = _db_timestamp(params.get(field))
         await self.session.execute(
             text(
