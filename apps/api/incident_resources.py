@@ -100,7 +100,32 @@ async def get_memory(incident_id: UUID, limit: int = Query(default=5, le=20)):
         if incident is None:
             raise HTTPException(status_code=404, detail="Incident not found")
         query = f"{incident.service or ''} {incident.summary or ''}".strip()
-        return {"items": await OperationalMemoryService(db).search_similar(query, service_scope=incident.service, limit=limit)}
+        service = OperationalMemoryService(db)
+        items = await service.retrieve(
+            query,
+            service_scope=incident.service,
+            environment=None,
+            retrieval_mode="SIMILAR_INCIDENT",
+            limit=limit,
+            record_retrieval=False,
+        )
+        current = (
+            await db.execute(
+                select(MemoryEntry)
+                .where(MemoryEntry.incident_id == incident_id)
+                .order_by(desc(MemoryEntry.created_at))
+                .limit(1)
+            )
+        ).scalars().first()
+        return {
+            "policy": {
+                "label": "HISTORICAL OPERATIONAL EXPERIENCE",
+                "safe_as_evidence": False,
+                "requires_current_validation": True,
+            },
+            "current_episode": service.serialize_entry(current) if current else None,
+            "items": items,
+        }
 
 
 @router.get("/incidents/{incident_id}/plan")
