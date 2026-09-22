@@ -86,6 +86,7 @@ async def create_remediation_request(
             timeout=30,
             runbook_id=RunbookRuntimeGuard.VM_SERVICE_RUNBOOK,
             runbook_version=runbook_version,
+            execution_claim=consumed.get("_execution_claim"),
         )
         record = {
             "approval_id": approval_id, "incident_id": str(incident_id), "action": payload.action,
@@ -216,7 +217,7 @@ async def execute_approved_remediation(approval_id: str, identity=Depends(requir
             )
             return result
 
-        consumed = await store.consume(approval_id)
+        consumed = await store.consume(approval_id, issue_claim=True)
         if not consumed or consumed.get("status") != "consumed":
             raise HTTPException(status_code=409, detail="approval_already_consumed_or_unavailable")
         await _audit_durable(db, "approval_consumed", identity.subject, incident_id, action, "recorded", {
