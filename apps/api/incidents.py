@@ -10,7 +10,9 @@ from domain.contracts.context import get_trace_id
 from domain.contracts.config import settings
 from database import AsyncSessionLocal
 from domain.models import Incident, Finding
+from apps.approval_service.binding import bind_metadata
 from apps.approval_service.postgres import PostgreSQLApprovalStore
+from apps.orchestrator.workflow_store import WorkflowCheckpointStore
 from apps.security.auth import require_permission
 from uuid import UUID, uuid4
 from datetime import datetime, timezone
@@ -110,47 +112,153 @@ class RemediationRequest(BaseModel):
     approver: str = Field(default="Team-Lead", min_length=2, max_length=255)
 
 
+def _remediation_contract_from_checkpoint(
+    incident_id: UUID,
+    checkpoint: dict,
+    payload: RemediationRequest,
+) -> dict:
+    state = checkpoint.get("state") if isinstance(checkpoint, dict) else None
+    if not isinstance(state, dict):
+        raise HTTPException(
+            status_code=409,
+            detail="remediation_workflow_checkpoint_missing",
+        )
+
+    execution_request = dict(state.get("execution_request") or {})
+    decision = dict(state.get("decision") or {})
+    approval = dict(state.get("approval") or {})
+
+    required = ("tool_name", "action", "target")
+    if any(execution_request.get(name) in (None, "") for name in required):
+        raise HTTPException(
+            status_code=409,
+            detail="remediation_plan_not_ready",
+        )
+
+    decision_action = str(decision.get("action") or "").strip().lower()
+    if decision_action != "require_approval":
+        raise HTTPException(
+            status_code=409,
+            detail="remediation_approval_not_required_by_decision",
+        )
+
+    risk_level = str(decision.get("risk_level") or "").strip().lower()
+    if risk_level not in {"low", "medium", "high", "critical"}:
+        raise HTTPException(
+            status_code=409,
+            detail="remediation_decision_risk_invalid",
+        )
+
+    metadata = bind_metadata(
+        {
+            "source": "dashboard",
+            "reason": payload.reason,
+            "workflow_checkpoint_version": checkpoint.get("version"),
+        },
+        incident_id=str(incident_id),
+        tool_name=execution_request.get("tool_name"),
+        action=execution_request.get("action"),
+        target=execution_request.get("target"),
+        parameters=execution_request.get("parameters", {}),
+        timeout=execution_request.get("timeout", 30),
+        runbook_id=execution_request.get("runbook_id"),
+        runbook_version=execution_request.get("runbook_version"),
+        rollback=execution_request.get("rollback", False),
+    )
+    return {
+        "execution_request": execution_request,
+        "decision": decision,
+        "approval": approval,
+        "risk_level": risk_level,
+        "metadata": metadata,
+    }
+
+
 @router.post("/incidents/{incident_id}/remediate")
 async def request_remediation(
     incident_id: UUID,
     payload: RemediationRequest,
     _user=Depends(require_permission("approve:low_risk")),
 ):
-    """Create a durable approval request; this endpoint never executes a tool."""
+    """Return/create only an approval bound to the durable workflow execution intent."""
     async with AsyncSessionLocal() as db:
         incident = await db.get(Incident, incident_id)
         if incident is None:
             raise HTTPException(status_code=404, detail="Incident not found")
 
-        finding = (
-            await db.execute(
-                select(Finding)
-                .where(Finding.incident_id == incident_id)
-                .order_by(desc(Finding.created_at))
-                .limit(1)
+        checkpoint = await WorkflowCheckpointStore(db).load(str(incident_id))
+        if checkpoint is None:
+            raise HTTPException(
+                status_code=409,
+                detail="remediation_workflow_checkpoint_missing",
             )
-        ).scalars().first()
-        action = finding.statement if finding else f"Remediate incident for service {incident.service or 'unknown'}"
+
+        contract = _remediation_contract_from_checkpoint(
+            incident_id,
+            checkpoint,
+            payload,
+        )
+        state_approval = contract["approval"]
+        existing_approval_id = str(
+            state_approval.get("approval_id") or ""
+        ).strip()
+
+        store = PostgreSQLApprovalStore(db)
+        if existing_approval_id:
+            existing = await store.get(existing_approval_id)
+            if existing is None:
+                raise HTTPException(
+                    status_code=409,
+                    detail="durable_approval_missing_for_checkpoint",
+                )
+            status = str(existing.get("status") or "").lower()
+            if status in {"pending", "approved"}:
+                return {
+                    "status": "approval_required",
+                    "incident_id": str(incident_id),
+                    "approval_id": existing_approval_id,
+                    "action": existing.get("action"),
+                    "risk_level": existing.get("risk_level"),
+                    "approver": existing.get("approver"),
+                    "reused_existing_approval": True,
+                    "message": (
+                        "Existing durable approval returned; no duplicate "
+                        "approval was created."
+                    ),
+                }
+            raise HTTPException(
+                status_code=409,
+                detail=f"approval_terminal_state:{status or 'unknown'}",
+            )
+
+        execution_request = contract["execution_request"]
         approval_id = str(uuid4())
         record = {
             "approval_id": approval_id,
             "incident_id": str(incident_id),
-            "action": action[:1000],
-            "risk_level": payload.risk_level,
-            "approver": payload.approver,
+            "action": str(execution_request["action"]),
+            "risk_level": contract["risk_level"],
+            "approver": str(
+                contract["decision"].get("suggested_approver")
+                or payload.approver
+            ),
             "status": "pending",
-            "metadata": {"source": "dashboard", "reason": payload.reason},
+            "metadata": contract["metadata"],
             "created_at": datetime.now(timezone.utc),
             "approved_at": None,
             "rejected_at": None,
         }
-        await PostgreSQLApprovalStore(db).save(record)
+        saved = await store.save(record)
         return {
             "status": "approval_required",
             "incident_id": str(incident_id),
             "approval_id": approval_id,
-            "action": action,
-            "risk_level": payload.risk_level,
-            "approver": payload.approver,
-            "message": "Remediation request created. Execution remains blocked until approval.",
+            "action": saved.get("action"),
+            "risk_level": saved.get("risk_level"),
+            "approver": saved.get("approver"),
+            "reused_existing_approval": False,
+            "message": (
+                "Approval was created from the durable workflow execution "
+                "binding. Execution remains blocked until approval."
+            ),
         }
