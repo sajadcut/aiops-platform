@@ -73,12 +73,27 @@ def bind_metadata(metadata: Dict[str, Any] | None, **intent_fields: Any) -> Dict
     return result
 
 
-def assert_bound(approval: Dict[str, Any], **intent_fields: Any) -> None:
-    if str(approval.get("status") or "").lower() != "approved":
-        raise ValueError("approval_not_approved")
+def _assert_binding(
+    approval: Dict[str, Any],
+    *,
+    expected_status: str,
+    require_execution_claim: bool,
+    **intent_fields: Any,
+) -> None:
+    status = str(approval.get("status") or "").lower()
+    if status != expected_status:
+        raise ValueError(f"approval_not_{expected_status}")
+    if require_execution_claim and not str(
+        approval.get("_execution_claim") or ""
+    ).strip():
+        raise ValueError("approval_execution_claim_missing")
+
     intent = execution_intent(**intent_fields)
     metadata = dict(approval.get("metadata") or {})
-    if not metadata.get("binding_complete") or int(metadata.get("binding_version") or 0) != BINDING_VERSION:
+    if (
+        not metadata.get("binding_complete")
+        or int(metadata.get("binding_version") or 0) != BINDING_VERSION
+    ):
         raise ValueError("approval_binding_incomplete")
     if str(approval.get("incident_id")) != intent["incident_id"]:
         raise ValueError("approval_incident_mismatch")
@@ -92,3 +107,25 @@ def assert_bound(approval: Dict[str, Any], **intent_fields: Any) -> None:
         raise ValueError("approval_environment_mismatch")
     if str(metadata.get("binding_digest") or "") != intent_digest(intent):
         raise ValueError("approval_execution_intent_mismatch")
+
+
+def assert_bound(approval: Dict[str, Any], **intent_fields: Any) -> None:
+    _assert_binding(
+        approval,
+        expected_status="approved",
+        require_execution_claim=False,
+        **intent_fields,
+    )
+
+
+def assert_consumed_bound(
+    approval: Dict[str, Any],
+    **intent_fields: Any,
+) -> None:
+    """Validate the one-shot consumed authority handed to an internal executor."""
+    _assert_binding(
+        approval,
+        expected_status="consumed",
+        require_execution_claim=True,
+        **intent_fields,
+    )
