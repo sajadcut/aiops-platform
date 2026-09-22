@@ -84,6 +84,26 @@ async def record_runbook_outcome(
     evidence_count = int(
         (episode.get("evidence_provenance") or {}).get("evidence_count") or 0
     )
-    if evidence_count <= 0:
+    verification = dict(verification_result or {})
+    verification_status = str(
+        verification.get("status") or "inconclusive"
+    ).strip().lower()
+    execution_success = bool((execution_result or {}).get("success"))
+
+    # Successful/verified reusable lessons require evidence provenance.
+    # Failed or blocked governed attempts are still durable negative experience:
+    # otherwise the system can repeat an action that failed before post-action
+    # evidence was obtainable.
+    negative_outcome = (
+        not execution_success
+        or verification_status in {
+            "failed",
+            "failure",
+            "blocked",
+            "inconclusive",
+            "partial",
+        }
+    )
+    if evidence_count <= 0 and not negative_outcome:
         return None
     return str(await OperationalMemoryService(db).add_episode(episode))
