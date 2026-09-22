@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 392 | Dashboard JS files scanned: 5 | Symbols indexed: 3472**
+**Python files scanned: 392 | Dashboard JS files scanned: 5 | Symbols indexed: 3473**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -2526,10 +2526,11 @@
 | `tests/unit/test_chatbot_tools.py` | `test_unknown_llm_tool_is_fail_closed` | 28 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_chatbot_tools.py` | `test_vm_metric_tool_normalizes_to_read_only_execution_tool` | 33 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_chatbot_tools.py` | `test_vm_service_mutation_maps_only_to_governed_high_risk_tool` | 43 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_chatbot_tools.py` | `test_kubernetes_read_uses_single_governed_mcp_read_boundary` | 55 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_chatbot_tools.py` | `test_kubernetes_mutation_validates_replicas_and_namespace` | 66 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_chatbot_tools.py` | `test_tool_arguments_reject_command_injection_shapes` | 85 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_chatbot_tools.py` | `test_prompt_injection_text_cannot_create_capability` | 92 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_tools.py` | `test_vm_reload_is_not_exposed_without_runtime_runbook_contract` | 55 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_tools.py` | `test_kubernetes_read_uses_single_governed_mcp_read_boundary` | 63 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_tools.py` | `test_kubernetes_mutation_validates_replicas_and_namespace` | 74 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_tools.py` | `test_tool_arguments_reject_command_injection_shapes` | 93 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_tools.py` | `test_prompt_injection_text_cannot_create_capability` | 100 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_chatbot_user_message_copy.py` | `test_operator_messages_expose_copy_action_without_changing_message_text` | 4 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_cognia_client.py` | `_search_response` | 10 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_cognia_client.py` | `test_machine_token_is_opaque_cached_and_search_contract_is_exact` | 35 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
