@@ -113,6 +113,10 @@ async def dashboard_summary(_identity=Depends(require_permission("read:incident"
         )
         result["memory_embedding_failed"] = int(memory_stats["embedding_failed"])
         result["memory_embedding_pending"] = int(memory_stats["embedding_pending"])
+        result["memory_embedding_contract_mismatch"] = int(
+            memory_stats["embedding_contract_mismatch"]
+        )
+        result["memory_embedding_backlog"] = int(memory_stats["embedding_backlog"])
         result["data_status"] = "live"
         return result
     except Exception as exc:
