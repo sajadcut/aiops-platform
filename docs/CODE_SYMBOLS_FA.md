@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 389 | Dashboard JS files scanned: 5 | Symbols indexed: 3447**
+**Python files scanned: 389 | Dashboard JS files scanned: 5 | Symbols indexed: 3448**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1239,7 +1239,8 @@
 | `apps/runbook_service/runtime_guard.py` | `RunbookRuntimeGuard._vm_read` | 24 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RunbookRuntimeGuard |
 | `apps/runbook_service/runtime_guard.py` | `RunbookRuntimeGuard.collect_snapshot` | 44 | async method | Evidence/داده موردنیاز را از منبع مربوط جمع می‌کند | RunbookRuntimeGuard |
 | `apps/runbook_service/runtime_guard.py` | `RunbookRuntimeGuard.preflight` | 147 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RunbookRuntimeGuard |
-| `apps/runbook_service/runtime_guard.py` | `RunbookRuntimeGuard.verify` | 178 | async method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | RunbookRuntimeGuard |
+| `apps/runbook_service/runtime_guard.py` | `RunbookRuntimeGuard.approval_should_be_revoked` | 178 | method | Return True only when fresh evidence proves the approved intent is stale. | RunbookRuntimeGuard |
+| `apps/runbook_service/runtime_guard.py` | `RunbookRuntimeGuard.verify` | 193 | async method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | RunbookRuntimeGuard |
 | `apps/security/auth.py` | `_identity_from_api_key` | 21 | function | Internal API key را به یک Identity با role محدودشده در runtime تبدیل می‌کند. | module |
 | `apps/security/auth.py` | `_cached_oidc_validator` | 34 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/security/auth.py` | `require_permission` | 40 | function | OIDC/API-key را authenticate و سپس permission مشخص endpoint را enforce می‌کند. | module |
