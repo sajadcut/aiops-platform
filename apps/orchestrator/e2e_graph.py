@@ -30,7 +30,7 @@ from apps.memory_service import OperationalMemoryService
 from apps.memory_service.builder import OperationalMemoryBuilder
 from apps.rag_service import KnowledgeRAGService
 from apps.runbook_service.registry import RunbookRegistry
-from apps.verification_service import VerificationEngine
+from apps.verification_service import VerificationEngine, VerificationStatus
 from domain.contracts.config import settings
 from domain.contracts.logging import logger
 from domain.contracts.redaction import redact_text
