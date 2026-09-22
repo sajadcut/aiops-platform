@@ -17,6 +17,7 @@ class _Session:
 
 class _Store:
     consume_calls = 0
+    cancel_calls = 0
 
     def __init__(self, _db):
         pass
@@ -28,6 +29,17 @@ class _Store:
             "action": "start_service",
             "status": "approved",
             "metadata": {},
+        }
+
+    async def cancel(self, approval_id, *, reason, metadata_patch=None):
+        self.__class__.cancel_calls += 1
+        return {
+            "approval_id": approval_id,
+            "status": "rejected",
+            "metadata": {
+                "cancellation_reason": reason,
+                **dict(metadata_patch or {}),
+            },
         }
 
     async def consume(self, approval_id):
@@ -109,6 +121,7 @@ def test_direct_runtime_contract_fails_closed_for_unimplemented_write_tool():
 @pytest.mark.asyncio
 async def test_direct_execute_blocks_live_precondition_before_consume(monkeypatch):
     _Store.consume_calls = 0
+    _Store.cancel_calls = 0
     execute_calls = []
 
     monkeypatch.setattr(api, "AsyncSessionLocal", lambda: _Session())
@@ -163,6 +176,7 @@ async def test_direct_execute_blocks_live_precondition_before_consume(monkeypatc
         "direct_execution_precondition_failed:service_no_longer_unhealthy"
     )
     assert _Store.consume_calls == 0
+    assert _Store.cancel_calls == 1
     assert execute_calls == []
 
 
