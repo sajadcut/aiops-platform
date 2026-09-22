@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from domain.contracts.config import settings
 from domain.contracts.logging import logger
 from domain.models import MemoryEntry, MemoryReuseEvent
+from .telemetry import MEMORY_FEEDBACK_TOTAL
 
 
 def _uuid(value: Any) -> Optional[UUID]:
@@ -89,6 +90,7 @@ async def apply_feedback(
     status = str((verification_result or {}).get("status") or "inconclusive").lower()
     cited = {str(value) for value in (cited_memory_ids or []) if str(value).strip()}
     now = datetime.now(timezone.utc)
+    rewarded_memory_ids: set[UUID] = set()
 
     for event in events:
         action_matches = bool(current_action and event.suggested_action == current_action)
@@ -110,9 +112,19 @@ async def apply_feedback(
             event.helpful = None
             event.reward_score = 0.0
 
+        MEMORY_FEEDBACK_TOTAL.labels(
+            verification_status=status,
+            attribution="cited_and_matched" if influenced else "not_attributed",
+        ).inc()
+
         entry = await db.get(MemoryEntry, event.memory_id)
-        if entry is None or not influenced:
+        if (
+            entry is None
+            or not influenced
+            or event.memory_id in rewarded_memory_ids
+        ):
             continue
+        rewarded_memory_ids.add(event.memory_id)
         entry.reuse_count = int(entry.reuse_count or 0) + 1
         entry.cited_count = int(entry.cited_count or 0) + 1
         entry.last_reused_at = now
@@ -131,6 +143,7 @@ async def apply_feedback(
         "aiops.memory.feedback.recorded",
         target_incident_id=target_incident_id,
         count=len(events),
+        attributed_memory_count=len(rewarded_memory_ids),
         verification_status=status,
     )
     return len(events)
