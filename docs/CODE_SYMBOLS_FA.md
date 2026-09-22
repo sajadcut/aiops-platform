@@ -474,43 +474,43 @@
 | `agents/shared/a2a_agent.py` | `A2AAgent._validate_target` | 46 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | A2AAgent |
 | `agents/shared/a2a_agent.py` | `A2AAgent.send_request` | 53 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | A2AAgent |
 | `agents/shared/a2a_agent.py` | `A2AAgent.close` | 73 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | A2AAgent |
-| `agents/shared/base.py` | `_coerce_unit_interval_score` | 57 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `agents/shared/base.py` | `AgentInput` | 75 | class | کلاس | module |
-| `agents/shared/base.py` | `OperationalHypothesis` | 83 | class | کلاس | module |
-| `agents/shared/base.py` | `OperationalHypothesis.normalize_probability` | 94 | method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | OperationalHypothesis |
-| `agents/shared/base.py` | `RecommendedAction` | 98 | class | کلاس | module |
-| `agents/shared/base.py` | `EvidenceRequest` | 108 | class | Bounded read-only request for the Context/Evidence layer. | module |
-| `agents/shared/base.py` | `AgentOutput` | 120 | class | کلاس | module |
-| `agents/shared/base.py` | `AgentOutput.normalize_confidence` | 157 | method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | AgentOutput |
-| `agents/shared/base.py` | `AgentOutput.derive_operational_fields` | 161 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | AgentOutput |
-| `agents/shared/base.py` | `StructuredAgentResponseError` | 192 | class | کلاس | module |
-| `agents/shared/base.py` | `_unique` | 196 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `agents/shared/base.py` | `_canonical_evidence_request` | 205 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `agents/shared/base.py` | `BaseAgent` | 220 | class | Evidence-first, analysis-only base contract for operational specialists. | module |
-| `agents/shared/base.py` | `BaseAgent.__init__` | 223 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
-| `agents/shared/base.py` | `BaseAgent.name` | 229 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
-| `agents/shared/base.py` | `BaseAgent.description` | 234 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
-| `agents/shared/base.py` | `BaseAgent.allowed_tools` | 238 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
-| `agents/shared/base.py` | `BaseAgent.analyze` | 242 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
-| `agents/shared/base.py` | `BaseAgent.validate_input` | 245 | async method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | BaseAgent |
-| `agents/shared/base.py` | `BaseAgent.generate_structured` | 248 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
-| `agents/shared/base.py` | `BaseAgent._parse_json_object` | 316 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
-| `agents/shared/base.py` | `BaseAgent._validate_structured_shape` | 326 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
-| `agents/shared/base.py` | `BaseAgent._parse_evidence_timestamp` | 354 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
-| `agents/shared/base.py` | `BaseAgent.evidence_is_stale` | 369 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
-| `agents/shared/base.py` | `BaseAgent.evidence_items` | 377 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
-| `agents/shared/base.py` | `BaseAgent.stale_evidence_ids` | 404 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
-| `agents/shared/base.py` | `BaseAgent.knowledge_items` | 418 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
-| `agents/shared/base.py` | `BaseAgent.memory_items` | 425 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
-| `agents/shared/base.py` | `BaseAgent.auxiliary_context` | 432 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
-| `agents/shared/base.py` | `BaseAgent.evidence_ids` | 444 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
-| `agents/shared/base.py` | `BaseAgent.evidence_coverage` | 453 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
-| `agents/shared/base.py` | `BaseAgent.safe_confidence` | 458 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
-| `agents/shared/base.py` | `BaseAgent.normalize_list` | 474 | method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | BaseAgent |
-| `agents/shared/base.py` | `BaseAgent.missing_evidence_for` | 491 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
-| `agents/shared/base.py` | `BaseAgent.human_review_required` | 499 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
-| `agents/shared/base.py` | `BaseAgent.action_appears_mutating` | 503 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
-| `agents/shared/base.py` | `BaseAgent.analysis_only_actions` | 507 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
+| `agents/shared/base.py` | `_coerce_unit_interval_score` | 65 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/shared/base.py` | `AgentInput` | 83 | class | کلاس | module |
+| `agents/shared/base.py` | `OperationalHypothesis` | 91 | class | کلاس | module |
+| `agents/shared/base.py` | `OperationalHypothesis.normalize_probability` | 102 | method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | OperationalHypothesis |
+| `agents/shared/base.py` | `RecommendedAction` | 106 | class | کلاس | module |
+| `agents/shared/base.py` | `EvidenceRequest` | 116 | class | Bounded read-only request for the Context/Evidence layer. | module |
+| `agents/shared/base.py` | `AgentOutput` | 128 | class | کلاس | module |
+| `agents/shared/base.py` | `AgentOutput.normalize_confidence` | 167 | method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | AgentOutput |
+| `agents/shared/base.py` | `AgentOutput.derive_operational_fields` | 171 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | AgentOutput |
+| `agents/shared/base.py` | `StructuredAgentResponseError` | 202 | class | کلاس | module |
+| `agents/shared/base.py` | `_unique` | 206 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/shared/base.py` | `_canonical_evidence_request` | 215 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/shared/base.py` | `BaseAgent` | 230 | class | Evidence-first, analysis-only base contract for operational specialists. | module |
+| `agents/shared/base.py` | `BaseAgent.__init__` | 233 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
+| `agents/shared/base.py` | `BaseAgent.name` | 239 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
+| `agents/shared/base.py` | `BaseAgent.description` | 244 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
+| `agents/shared/base.py` | `BaseAgent.allowed_tools` | 248 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
+| `agents/shared/base.py` | `BaseAgent.analyze` | 252 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
+| `agents/shared/base.py` | `BaseAgent.validate_input` | 255 | async method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | BaseAgent |
+| `agents/shared/base.py` | `BaseAgent.generate_structured` | 258 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
+| `agents/shared/base.py` | `BaseAgent._parse_json_object` | 339 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
+| `agents/shared/base.py` | `BaseAgent._validate_structured_shape` | 349 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
+| `agents/shared/base.py` | `BaseAgent._parse_evidence_timestamp` | 378 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
+| `agents/shared/base.py` | `BaseAgent.evidence_is_stale` | 393 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
+| `agents/shared/base.py` | `BaseAgent.evidence_items` | 401 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
+| `agents/shared/base.py` | `BaseAgent.stale_evidence_ids` | 428 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
+| `agents/shared/base.py` | `BaseAgent.knowledge_items` | 442 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
+| `agents/shared/base.py` | `BaseAgent.memory_items` | 449 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
+| `agents/shared/base.py` | `BaseAgent.auxiliary_context` | 456 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
+| `agents/shared/base.py` | `BaseAgent.evidence_ids` | 479 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
+| `agents/shared/base.py` | `BaseAgent.evidence_coverage` | 488 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
+| `agents/shared/base.py` | `BaseAgent.safe_confidence` | 493 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
+| `agents/shared/base.py` | `BaseAgent.normalize_list` | 509 | method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | BaseAgent |
+| `agents/shared/base.py` | `BaseAgent.missing_evidence_for` | 526 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
+| `agents/shared/base.py` | `BaseAgent.human_review_required` | 534 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
+| `agents/shared/base.py` | `BaseAgent.action_appears_mutating` | 538 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
+| `agents/shared/base.py` | `BaseAgent.analysis_only_actions` | 542 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
 | `agents/shared/coordinator.py` | `IncidentCoordinator` | 8 | class | Deterministic coordinator for routing and multi-agent synthesis. | module |
 | `agents/shared/coordinator.py` | `IncidentCoordinator.select_agents` | 33 | method | بر اساس state/capability مسیر یا handler مناسب را انتخاب می‌کند | IncidentCoordinator |
 | `agents/shared/coordinator.py` | `IncidentCoordinator.select_agents.add` | 43 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentCoordinator.select_agents |
