@@ -114,6 +114,7 @@ class OperationalMemoryBuilder:
             ),
             "contradictions": cls._sanitize_value(coordination.get("contradictions") or []),
             "evidence_requests": cls._evidence_requests(findings),
+            "historical_memory_ids": cls._historical_memory_ids(findings),
             "contributing_factors": cls._contributing_factors(findings),
             "specialist_agents_used": sorted({
                 str(item.get("agent_name") or item.get("agent") or "")
@@ -496,6 +497,18 @@ class OperationalMemoryBuilder:
                     }
                 )
             )
+        return values
+
+    @staticmethod
+    def _historical_memory_ids(findings: List[Dict[str, Any]]) -> List[str]:
+        values: List[str] = []
+        for finding in findings:
+            for memory_id in finding.get("historical_memory_ids") or []:
+                value = str(memory_id).strip()
+                if value and value not in values:
+                    values.append(value)
+                if len(values) >= 100:
+                    return values
         return values
 
     @classmethod
