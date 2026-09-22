@@ -112,6 +112,7 @@ class MemoryEntry(Base):
 
     # Operational Memory v2 episode.
     memory_schema_version = Column(String(20), nullable=False, default="2.0")
+    episode_fingerprint = Column(String(64), nullable=True)
     asset_type = Column(String(100), nullable=True)
     asset_id = Column(String(255), nullable=True)
     hostname = Column(String(255), nullable=True)
