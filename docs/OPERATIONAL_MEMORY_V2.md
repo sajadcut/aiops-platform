@@ -225,6 +225,41 @@ Current Live Evidence
 
 Operational Memory cannot bypass any of these stages.
 
+## Production maintenance
+
+Kubernetes release rendering includes two digest-pinned CronJobs that use the
+same promoted application image as the API and migration job:
+
+- `aiops-memory-embedding-backfill`: hourly retry/re-embedding for pending,
+  failed or embedding-contract-mismatched episodes.
+- `aiops-memory-mark-stale`: daily lifecycle transition for aged active
+  episodes using `MEMORY_STALE_AFTER_DAYS`.
+
+Both jobs use the same ConfigMap/Secret contract, non-root runtime identity,
+read-only root filesystem and `concurrencyPolicy: Forbid`.
+
+After rollout, verify the live database from the promoted application image:
+
+```bash
+python scripts/verify_operational_memory.py --limit 10
+```
+
+After at least one incident has reached Memory write-back, require a durable
+episode:
+
+```bash
+python scripts/verify_operational_memory.py --require-entry --limit 10
+```
+
+Exit codes:
+
+- `0`: migration head is valid and requested checks passed
+- `2`: Alembic head mismatch
+- `3`: `--require-entry` was requested but `memory_entries` is still empty
+
+The output includes migration status, lifecycle/embedding health and only
+non-secret episode metadata for the latest rows.
+
 ## Configuration
 
 ```env
