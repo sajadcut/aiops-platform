@@ -49,11 +49,12 @@ class _Store:
             },
         }
 
-    async def consume(self, approval_id):
+    async def consume(self, approval_id, *, issue_claim=False):
         self.__class__.consume_calls += 1
         return {
             "approval_id": approval_id,
             "status": "consumed",
+            "_execution_claim": "test-claim" if issue_claim else None,
         }
 
 
