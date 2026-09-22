@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 388 | Dashboard JS files scanned: 5 | Symbols indexed: 3429**
+**Python files scanned: 389 | Dashboard JS files scanned: 5 | Symbols indexed: 3436**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -2743,6 +2743,13 @@
 | `tests/unit/test_identity_reliability_engine.py` | `CapturingIdentityLLM.generate` | 194 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CapturingIdentityLLM |
 | `tests/unit/test_identity_reliability_engine.py` | `CapturingIdentityLLM.generate_with_messages` | 219 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CapturingIdentityLLM |
 | `tests/unit/test_identity_reliability_engine.py` | `test_identity_agent_exposes_chain_and_never_prompts_full_credentials` | 224 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_operational_finalization.py` | `FakeSession` | 9 | class | کلاس | module |
+| `tests/unit/test_incident_operational_finalization.py` | `FakeSession.__init__` | 10 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeSession |
+| `tests/unit/test_incident_operational_finalization.py` | `FakeSession.get` | 13 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeSession |
+| `tests/unit/test_incident_operational_finalization.py` | `test_operational_outcome_resolves_only_verified_recovery` | 18 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_operational_finalization.py` | `test_operational_outcome_escalates_failed_or_inconclusive_recovery` | 51 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_operational_finalization.py` | `test_operational_outcome_preserves_authoritative_source_recovery` | 82 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_operational_finalization.py` | `test_repeated_same_operational_outcome_updates_bounded_identity_not_duplicate` | 112 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_incident_repository_json.py` | `_SampleState` | 10 | class | کلاس | module |
 | `tests/unit/test_incident_repository_json.py` | `test_json_safe_normalizes_durable_operational_context` | 14 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_incident_repository_json.py` | `test_database_json_serializer_is_a_final_datetime_safeguard` | 38 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
