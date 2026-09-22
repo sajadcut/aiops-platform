@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 394 | Dashboard JS files scanned: 5 | Symbols indexed: 3514**
+**Python files scanned: 395 | Dashboard JS files scanned: 5 | Symbols indexed: 3516**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -790,6 +790,8 @@
 | `apps/approval_service/binding.py` | `_assert_binding` | 76 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/approval_service/binding.py` | `assert_bound` | 112 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/approval_service/binding.py` | `assert_consumed_bound` | 121 | function | Validate the one-shot consumed authority handed to an internal executor. | module |
+| `apps/approval_service/execution_claim.py` | `issue_execution_claim` | 11 | function | Mint one process-local, single-use execution capability. | module |
+| `apps/approval_service/execution_claim.py` | `redeem_execution_claim` | 24 | function | Atomically redeem a claim exactly once. | module |
 | `apps/approval_service/postgres.py` | `_db_timestamp` | 21 | function | Normalize ISO-8601 application timestamps for asyncpg TIMESTAMPTZ binds. | module |
 | `apps/approval_service/postgres.py` | `PostgreSQLApprovalStore` | 40 | class | Approval durable با expiry، transition اتمیک و consume یک‌باره قبل از execution. | module |
 | `apps/approval_service/postgres.py` | `PostgreSQLApprovalStore.__init__` | 43 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | PostgreSQLApprovalStore |
