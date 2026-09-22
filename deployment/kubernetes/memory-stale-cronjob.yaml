@@ -40,6 +40,12 @@ spec:
                   value: production
                 - name: TMPDIR
                   value: /tmp
+                - name: LOG_CONSOLE_ENABLED
+                  value: "true"
+                - name: LOG_TEXT_FILE_ENABLED
+                  value: "false"
+                - name: LOG_JSON_FILE_ENABLED
+                  value: "false"
               envFrom:
                 - configMapRef:
                     name: aiops-platform-config
