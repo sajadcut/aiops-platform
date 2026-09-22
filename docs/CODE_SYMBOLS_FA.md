@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 383 | Dashboard JS files scanned: 5 | Symbols indexed: 3335**
+**Python files scanned: 384 | Dashboard JS files scanned: 5 | Symbols indexed: 3339**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -3070,6 +3070,10 @@
 | `tests/unit/test_runbook_executor.py` | `Registry.validate` | 13 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Registry |
 | `tests/unit/test_runbook_executor.py` | `test_dry_run_is_side_effect_free` | 20 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_runbook_executor.py` | `test_runbook_registry_validation` | 31 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_runbook_learning.py` | `_snapshot` | 5 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_runbook_learning.py` | `_runbook` | 35 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_runbook_learning.py` | `test_direct_runbook_success_builds_verified_operational_memory_episode` | 43 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_runbook_learning.py` | `test_direct_runbook_execution_failure_builds_negative_memory_episode` | 92 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_runbook_registry_governance.py` | `test_repository_runbooks_load_with_governance_and_verification` | 11 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_runbook_registry_governance.py` | `test_registry_dry_run_exposes_preconditions_rollback_and_verification` | 28 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_runbook_registry_governance.py` | `test_strict_validator_rejects_missing_verification` | 37 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
