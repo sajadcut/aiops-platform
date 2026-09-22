@@ -550,7 +550,7 @@ class OperationalMemoryBuilder:
             result: Dict[str, Any] = {}
             for key, item in list(value.items())[:100]:
                 normalized_key = str(key)
-                if normalized_key.strip().lower() in cls.SECRET_KEYS:
+                if cls._is_sensitive_key(normalized_key):
                     result[normalized_key] = "[REDACTED]"
                 else:
                     result[normalized_key] = cls._sanitize_value(item, depth=depth + 1)
@@ -561,6 +561,25 @@ class OperationalMemoryBuilder:
                 for item in list(value)[:100]
             ]
         return cls._sanitize_string(str(value))
+
+    @classmethod
+    def _is_sensitive_key(cls, key: str) -> bool:
+        normalized = re.sub(r"[^a-z0-9]+", "_", str(key or "").strip().lower()).strip("_")
+        if normalized in cls.SECRET_KEYS:
+            return True
+        tokens = [token for token in normalized.split("_") if token]
+        sensitive_tokens = {
+            "password", "passwd", "pwd", "secret", "token", "apikey",
+            "authorization", "cookie", "privatekey", "clientsecret",
+        }
+        if any(token in sensitive_tokens for token in tokens):
+            return True
+        suffixes = (
+            "_password", "_passwd", "_pwd", "_secret", "_token", "_api_key",
+            "_apikey", "_authorization", "_cookie", "_private_key",
+            "_client_secret", "_access_token", "_refresh_token", "_id_token",
+        )
+        return normalized.endswith(suffixes)
 
     @classmethod
     def _sanitize_string(cls, value: str) -> str:
