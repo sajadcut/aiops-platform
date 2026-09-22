@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel, Field
 from sqlalchemy import desc, select, text
 
 from database import AsyncSessionLocal
@@ -9,6 +10,7 @@ from domain.models import Incident, Evidence, Finding, MemoryEntry
 from domain.contracts.exceptions import AppException
 from apps.rag_service import KnowledgeRAGService
 from apps.memory_service import OperationalMemoryService
+from apps.memory_service.consolidation import summarize_service
 from apps.audit_service.postgres import PostgreSQLAuditStore
 from apps.orchestrator.workflow_store import WorkflowCheckpointStore
 from apps.operator_summary import build_operator_summary
@@ -16,6 +18,11 @@ from apps.security.auth import require_permission
 from integrations.cognia import CogniaAPIError, CogniaConfigurationError, CogniaContractError
 
 router = APIRouter(dependencies=[Depends(require_permission("read:incident"))])
+
+
+class MemoryLifecycleRequest(BaseModel):
+    reason: str = Field(min_length=3, max_length=2000)
+    superseded_by_memory_id: UUID | None = None
 
 
 @router.get("/incidents/{incident_id}/context")
@@ -125,6 +132,75 @@ async def get_memory(incident_id: UUID, limit: int = Query(default=5, le=20)):
             },
             "current_episode": service.serialize_entry(current) if current else None,
             "items": items,
+        }
+
+
+@router.get("/memory/summary")
+async def get_memory_summary(
+    service_scope: str = Query(min_length=1, max_length=255),
+    limit: int = Query(default=500, ge=1, le=2000),
+):
+    async with AsyncSessionLocal() as db:
+        summary = await summarize_service(
+            db,
+            service_scope,
+            limit=limit,
+        )
+    return {
+        "policy": {
+            "label": "CONSOLIDATED HISTORICAL OPERATIONAL EXPERIENCE",
+            "safe_as_evidence": False,
+            "requires_current_validation": True,
+        },
+        "summary": summary,
+    }
+
+
+@router.post(
+    "/memory/{memory_id}/invalidate",
+    dependencies=[Depends(require_permission("execute:approved"))],
+)
+async def invalidate_memory(memory_id: UUID, request: MemoryLifecycleRequest):
+    async with AsyncSessionLocal() as db:
+        service = OperationalMemoryService(db)
+        changed = await service.invalidate(
+            memory_id,
+            reason=request.reason,
+            superseded_by=request.superseded_by_memory_id,
+        )
+        if not changed:
+            raise HTTPException(status_code=404, detail="Memory entry not found")
+        row = await db.get(MemoryEntry, memory_id)
+        return {
+            "memory_id": str(memory_id),
+            "lifecycle_status": row.lifecycle_status if row else None,
+            "superseded_by_memory_id": (
+                str(row.superseded_by_memory_id)
+                if row and row.superseded_by_memory_id
+                else None
+            ),
+        }
+
+
+@router.post(
+    "/memory/{memory_id}/validate",
+    dependencies=[Depends(require_permission("execute:approved"))],
+)
+async def validate_memory(memory_id: UUID):
+    async with AsyncSessionLocal() as db:
+        service = OperationalMemoryService(db)
+        changed = await service.mark_validated(memory_id)
+        if not changed:
+            raise HTTPException(status_code=404, detail="Memory entry not found")
+        row = await db.get(MemoryEntry, memory_id)
+        return {
+            "memory_id": str(memory_id),
+            "lifecycle_status": row.lifecycle_status if row else None,
+            "last_validated_at": (
+                row.last_validated_at.isoformat()
+                if row and row.last_validated_at
+                else None
+            ),
         }
 
 
