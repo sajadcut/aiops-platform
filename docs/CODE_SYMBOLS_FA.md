@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 371 | Dashboard JS files scanned: 5 | Symbols indexed: 3264**
+**Python files scanned: 371 | Dashboard JS files scanned: 5 | Symbols indexed: 3261**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1165,11 +1165,8 @@
 | `apps/orchestrator/guardrails.py` | `OrchestrationGuardrails` | 5 | class | Reusable evaluator gate for any orchestrator implementation. | module |
 | `apps/orchestrator/guardrails.py` | `OrchestrationGuardrails.evaluate` | 9 | method | کیفیت/confidence یا اولویت را به‌صورت deterministic محاسبه می‌کند | OrchestrationGuardrails |
 | `apps/orchestrator/guardrails.py` | `OrchestrationGuardrails.can_enter_decision` | 13 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OrchestrationGuardrails |
-| `apps/orchestrator/learning_runtime.py` | `LearningDurableWorkflowRuntime` | 10 | class | Durable workflow runtime with Operational Memory v2 outcome learning. | module |
-| `apps/orchestrator/learning_runtime.py` | `LearningDurableWorkflowRuntime.__init__` | 13 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | LearningDurableWorkflowRuntime |
-| `apps/orchestrator/learning_runtime.py` | `LearningDurableWorkflowRuntime.resume_after_approval` | 19 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | LearningDurableWorkflowRuntime |
-| `apps/orchestrator/learning_signal_aware.py` | `LearningSignalAwareE2EOrchestrator` | 7 | class | Signal-aware workflow with positive and negative Operational Memory write-back. | module |
-| `apps/orchestrator/learning_signal_aware.py` | `LearningSignalAwareE2EOrchestrator._memory_node` | 10 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | LearningSignalAwareE2EOrchestrator |
+| `apps/orchestrator/learning_runtime.py` | `LearningDurableWorkflowRuntime` | 6 | class | Backward-compatible alias for the canonical durable Memory-v2 runtime. | module |
+| `apps/orchestrator/learning_signal_aware.py` | `LearningSignalAwareE2EOrchestrator` | 6 | class | Backward-compatible alias for the canonical Memory-v2 signal workflow. | module |
 | `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime` | 16 | class | PostgreSQL-backed runtime around the governed collaborative LangGraph workflow. | module |
 | `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime.__init__` | 19 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
 | `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime._orchestrator_type` | 27 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
