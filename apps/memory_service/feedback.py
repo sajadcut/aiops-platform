@@ -67,6 +67,7 @@ async def apply_feedback(
     *,
     execution_request: Optional[Dict[str, Any]],
     verification_result: Optional[Dict[str, Any]],
+    cited_memory_ids: Optional[Iterable[str]] = None,
 ) -> int:
     if not bool(getattr(settings, "MEMORY_REUSE_FEEDBACK_ENABLED", True)):
         return 0
@@ -86,26 +87,34 @@ async def apply_feedback(
     ).scalars().all()
     current_action = str((execution_request or {}).get("action") or "").strip()
     status = str((verification_result or {}).get("status") or "inconclusive").lower()
+    cited = {str(value) for value in (cited_memory_ids or []) if str(value).strip()}
     now = datetime.now(timezone.utc)
 
     for event in events:
-        reused = bool(current_action and event.suggested_action == current_action)
-        event.action_executed = reused
-        event.influenced_plan = reused
+        action_matches = bool(current_action and event.suggested_action == current_action)
+        explicitly_cited = str(event.memory_id) in cited
+        influenced = bool(action_matches and explicitly_cited)
+        event.action_executed = action_matches
+        event.was_cited_by_agent = explicitly_cited
+        event.influenced_plan = influenced
         event.verification_result = status
-        if reused and status == "success":
+        if influenced and status == "success":
             event.helpful = True
             event.reward_score = 1.0
-        elif reused and status in {"failed", "failure"}:
+        elif influenced and status in {"failed", "failure"}:
             event.helpful = False
             event.reward_score = -1.0
-        elif reused and status == "partial":
+        elif influenced and status == "partial":
             event.reward_score = 0.25
+        else:
+            event.helpful = None
+            event.reward_score = 0.0
 
         entry = await db.get(MemoryEntry, event.memory_id)
-        if entry is None or not reused:
+        if entry is None or not influenced:
             continue
         entry.reuse_count = int(entry.reuse_count or 0) + 1
+        entry.cited_count = int(entry.cited_count or 0) + 1
         entry.last_reused_at = now
         if status == "success":
             entry.successful_reuse_count = int(entry.successful_reuse_count or 0) + 1
