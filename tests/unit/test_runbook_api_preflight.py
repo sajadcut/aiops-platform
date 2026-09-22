@@ -106,3 +106,70 @@ async def test_direct_runbook_preflight_blocks_before_approval_consume(monkeypat
     )
     assert _Store.consume_calls == 0
     assert execute_calls == []
+
+
+def test_non_executable_runbook_cannot_reach_production_execute(monkeypatch):
+    monkeypatch.setattr(
+        api._registry,
+        "get",
+        lambda runbook_id: {
+            "id": runbook_id,
+            "version": "1.0",
+            "timeout": 30,
+            "action": "observe_only",
+        },
+    )
+    monkeypatch.setattr(
+        api._registry,
+        "validate",
+        lambda runbook_id, parameters: {"valid": True},
+    )
+
+    with pytest.raises(HTTPException) as exc:
+        api._runbook_contract(
+            "descriptive-only",
+            {
+                "target": "vm01",
+                "tool_name": "ssh_vm",
+                "parameters": {},
+            },
+            require_executable=True,
+        )
+
+    assert exc.value.status_code == 409
+    assert exc.value.detail == "runbook_not_executable"
+
+
+def test_non_executable_runbook_remains_available_for_dry_run_contract_resolution(monkeypatch):
+    monkeypatch.setattr(
+        api._registry,
+        "get",
+        lambda runbook_id: {
+            "id": runbook_id,
+            "version": "1.0",
+            "timeout": 30,
+            "action": "observe_only",
+        },
+    )
+    monkeypatch.setattr(
+        api._registry,
+        "validate",
+        lambda runbook_id, parameters: {"valid": True},
+    )
+
+    runbook, tool, action, target, parameters, timeout, rollback = api._runbook_contract(
+        "descriptive-only",
+        {
+            "target": "vm01",
+            "tool_name": "mock_executor",
+            "parameters": {},
+        },
+        require_executable=False,
+    )
+
+    assert runbook["id"] == "descriptive-only"
+    assert tool == "mock_executor"
+    assert action == "observe_only"
+    assert target == "vm01"
+    assert timeout == 30
+    assert rollback is False
