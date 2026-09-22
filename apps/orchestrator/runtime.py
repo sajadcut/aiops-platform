@@ -299,7 +299,7 @@ class DurableWorkflowRuntime:
             state,
         )
 
-        consumed = await self.approvals.consume(str(approval_id))
+        consumed = await self.approvals.consume(str(approval_id), issue_claim=True)
         if not consumed or consumed.get("status") != "consumed":
             raise ValueError("approval_already_consumed")
         AuditService.record(
@@ -311,6 +311,7 @@ class DurableWorkflowRuntime:
         execution_request["approval_granted"] = True
         execution_request["approval_id"] = str(approval_id)
         execution_request["incident_id"] = incident_id
+        execution_request["execution_claim"] = consumed.get("_execution_claim")
         state["execution_request"] = execution_request
         state["current_node"] = "execution"
 
