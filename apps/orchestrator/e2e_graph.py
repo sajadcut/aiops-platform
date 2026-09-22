@@ -25,6 +25,7 @@ from apps.context_service.evidence_collector import EvidenceCollector
 from apps.evaluator.gate import EvaluationGate
 from apps.decision_engine import DecisionAction, DecisionEngine
 from apps.execution_service import ExecutionRequest, ExecutionService
+from apps.execution_service.tools.registry import tool_registry
 from apps.memory_service import OperationalMemoryService
 from apps.memory_service.builder import OperationalMemoryBuilder
 from apps.rag_service import KnowledgeRAGService
@@ -594,10 +595,43 @@ class E2EOrchestrator:
         return "stop"
 
     async def _decision_node(self, state: E2EState) -> E2EState:
+        """Evaluate the concrete execution binding, never RCA prose alone."""
         state["current_node"] = "decision"
-        result = DecisionEngine.evaluate_plan(state.get("final_plan", ""), state.get("findings", []))
+        request = dict(state.get("execution_request") or {})
+        tool = (
+            tool_registry.get_tool(str(request.get("tool_name") or ""))
+            if request
+            else None
+        )
+        topology_context = dict(
+            (state.get("context") or {}).get("topology_context") or {}
+        )
+        target_identity_verified = not bool(
+            request
+            and tool is not None
+            and tool.requires_approval
+            and topology_context.get("requires_live_verification")
+        )
+        result = DecisionEngine.evaluate_plan(
+            state.get("final_plan", ""),
+            state.get("findings", []),
+            execution_request=request or None,
+            tool_risk_level=tool.risk_level if tool is not None else None,
+            tool_requires_approval=(
+                bool(tool.requires_approval) if tool is not None else False
+            ),
+            tool_exists=(tool is not None) if request else True,
+            target_identity_verified=target_identity_verified,
+        )
         state["decision"] = result.model_dump(mode="json")
-        self._audit("decision_made", state, decision=result.action.value, risk=result.risk_level.value, reason=result.reason)
+        self._audit(
+            "decision_made",
+            state,
+            decision=result.action.value,
+            risk=result.risk_level.value,
+            reason=result.reason,
+            policy_metadata=result.metadata,
+        )
         return state
 
     def _route_after_decision(self, state: E2EState) -> str:
