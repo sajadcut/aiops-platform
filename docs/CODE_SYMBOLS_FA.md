@@ -1058,21 +1058,21 @@
 | `apps/mcp_server/main.py` | `startup_event` | 209 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/mcp_server/main.py` | `health` | 215 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/mcp_server/main.py` | `mcp` | 221 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/memory_service/__init__.py` | `OperationalMemoryService` | 19 | class | کلاس | module |
-| `apps/memory_service/__init__.py` | `OperationalMemoryService.__init__` | 24 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryService |
-| `apps/memory_service/__init__.py` | `OperationalMemoryService.add_entry` | 27 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryService |
-| `apps/memory_service/__init__.py` | `OperationalMemoryService.add_episode` | 82 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryService |
-| `apps/memory_service/__init__.py` | `OperationalMemoryService._embed_entry` | 170 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryService |
-| `apps/memory_service/__init__.py` | `OperationalMemoryService.retrieve` | 223 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryService |
-| `apps/memory_service/__init__.py` | `OperationalMemoryService.search_similar` | 300 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | OperationalMemoryService |
-| `apps/memory_service/__init__.py` | `OperationalMemoryService.record_feedback` | 316 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryService |
-| `apps/memory_service/__init__.py` | `OperationalMemoryService.backfill_embeddings` | 332 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryService |
-| `apps/memory_service/__init__.py` | `OperationalMemoryService.invalidate` | 366 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryService |
-| `apps/memory_service/__init__.py` | `OperationalMemoryService.mark_validated` | 389 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryService |
-| `apps/memory_service/__init__.py` | `OperationalMemoryService.update_reuse_count` | 399 | async method | state یا داده را به‌صورت durable ذخیره/به‌روزرسانی می‌کند | OperationalMemoryService |
-| `apps/memory_service/__init__.py` | `OperationalMemoryService.serialize_entry` | 407 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryService |
-| `apps/memory_service/__init__.py` | `OperationalMemoryService._legacy_embedding_document` | 466 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryService |
-| `apps/memory_service/__init__.py` | `OperationalMemoryService._uuid_or_none` | 482 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryService |
+| `apps/memory_service/__init__.py` | `OperationalMemoryService` | 27 | class | کلاس | module |
+| `apps/memory_service/__init__.py` | `OperationalMemoryService.__init__` | 32 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryService |
+| `apps/memory_service/__init__.py` | `OperationalMemoryService.add_entry` | 35 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryService |
+| `apps/memory_service/__init__.py` | `OperationalMemoryService.add_episode` | 90 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryService |
+| `apps/memory_service/__init__.py` | `OperationalMemoryService._embed_entry` | 181 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryService |
+| `apps/memory_service/__init__.py` | `OperationalMemoryService.retrieve` | 236 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryService |
+| `apps/memory_service/__init__.py` | `OperationalMemoryService.search_similar` | 322 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | OperationalMemoryService |
+| `apps/memory_service/__init__.py` | `OperationalMemoryService.record_feedback` | 338 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryService |
+| `apps/memory_service/__init__.py` | `OperationalMemoryService.backfill_embeddings` | 354 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryService |
+| `apps/memory_service/__init__.py` | `OperationalMemoryService.invalidate` | 388 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryService |
+| `apps/memory_service/__init__.py` | `OperationalMemoryService.mark_validated` | 412 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryService |
+| `apps/memory_service/__init__.py` | `OperationalMemoryService.update_reuse_count` | 423 | async method | state یا داده را به‌صورت durable ذخیره/به‌روزرسانی می‌کند | OperationalMemoryService |
+| `apps/memory_service/__init__.py` | `OperationalMemoryService.serialize_entry` | 431 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryService |
+| `apps/memory_service/__init__.py` | `OperationalMemoryService._legacy_embedding_document` | 490 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryService |
+| `apps/memory_service/__init__.py` | `OperationalMemoryService._uuid_or_none` | 506 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryService |
 | `apps/memory_service/builder.py` | `OperationalMemoryBuilder` | 12 | class | Build a bounded, sanitized, evidence-linked historical incident episode. | module |
 | `apps/memory_service/builder.py` | `OperationalMemoryBuilder.build` | 35 | method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | OperationalMemoryBuilder |
 | `apps/memory_service/builder.py` | `OperationalMemoryBuilder.build_embedding_document` | 214 | method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | OperationalMemoryBuilder |
