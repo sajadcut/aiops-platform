@@ -138,3 +138,146 @@ async def test_preconfirm_guard_does_not_invent_contract_for_other_tools():
     assert result["applies"] is False
     assert result["safe_to_execute"] is True
     assert result["reason"] == "runtime_guard_not_required"
+
+
+@pytest.mark.asyncio
+async def test_kubernetes_preconfirm_allows_fresh_completed_rollout(monkeypatch):
+    class FakeKubernetesMCPClient:
+        async def collect_query(self, **kwargs):
+            assert kwargs == {
+                "operation": "rollout_state",
+                "namespace": "payments",
+                "resource": "payment-api",
+            }
+            return {
+                "name": "payment-api",
+                "namespace": "payments",
+                "generation": 7,
+                "observed_generation": 7,
+                "desired_replicas": 3,
+                "ready_replicas": 3,
+                "updated_replicas": 3,
+                "rollout_complete": True,
+            }
+
+    monkeypatch.setattr(
+        chatbot_module,
+        "KubernetesMCPClient",
+        FakeKubernetesMCPClient,
+    )
+
+    proposal = {
+        "incident_id": "11111111-1111-1111-1111-111111111111",
+        "tool_name": "kubernetes_mcp",
+        "action": "restart_workload",
+        "target": "payment-api",
+        "parameters": {"namespace": "payments"},
+    }
+
+    result = await ChatbotService()._preconfirm_mutation_guard(proposal)
+
+    assert result["applies"] is True
+    assert result["safe_to_execute"] is True
+    assert result["stale"] is False
+    assert result["reason"] == "fresh_kubernetes_target_verified"
+    assert result["precondition"]["generation"] == 7
+
+
+@pytest.mark.asyncio
+async def test_kubernetes_scale_same_desired_replicas_is_stale(monkeypatch):
+    class FakeKubernetesMCPClient:
+        async def collect_query(self, **_kwargs):
+            return {
+                "name": "payment-api",
+                "namespace": "payments",
+                "generation": 7,
+                "observed_generation": 7,
+                "desired_replicas": 4,
+                "ready_replicas": 4,
+                "updated_replicas": 4,
+                "rollout_complete": True,
+            }
+
+    monkeypatch.setattr(
+        chatbot_module,
+        "KubernetesMCPClient",
+        FakeKubernetesMCPClient,
+    )
+
+    proposal = {
+        "incident_id": "11111111-1111-1111-1111-111111111111",
+        "tool_name": "kubernetes_mcp",
+        "action": "scale_workload",
+        "target": "payment-api",
+        "parameters": {"namespace": "payments", "replicas": 4},
+    }
+
+    result = await ChatbotService()._preconfirm_mutation_guard(proposal)
+
+    assert result["safe_to_execute"] is False
+    assert result["stale"] is True
+    assert result["reason"] == "kubernetes_scale_already_satisfied"
+
+
+@pytest.mark.asyncio
+async def test_kubernetes_rollout_in_progress_is_retryable(monkeypatch):
+    class FakeKubernetesMCPClient:
+        async def collect_query(self, **_kwargs):
+            return {
+                "name": "payment-api",
+                "namespace": "payments",
+                "generation": 8,
+                "observed_generation": 7,
+                "desired_replicas": 3,
+                "ready_replicas": 2,
+                "updated_replicas": 2,
+                "rollout_complete": False,
+            }
+
+    monkeypatch.setattr(
+        chatbot_module,
+        "KubernetesMCPClient",
+        FakeKubernetesMCPClient,
+    )
+
+    proposal = {
+        "incident_id": "11111111-1111-1111-1111-111111111111",
+        "tool_name": "kubernetes_mcp",
+        "action": "rollback_workload",
+        "target": "payment-api",
+        "parameters": {"namespace": "payments", "revision": "6"},
+    }
+
+    result = await ChatbotService()._preconfirm_mutation_guard(proposal)
+
+    assert result["safe_to_execute"] is False
+    assert result["stale"] is False
+    assert result["reason"] == "kubernetes_rollout_in_progress"
+
+
+@pytest.mark.asyncio
+async def test_kubernetes_preconfirm_read_failure_is_retryable(monkeypatch):
+    class FakeKubernetesMCPClient:
+        async def collect_query(self, **_kwargs):
+            raise RuntimeError("kubernetes-mcp-unavailable")
+
+    monkeypatch.setattr(
+        chatbot_module,
+        "KubernetesMCPClient",
+        FakeKubernetesMCPClient,
+    )
+
+    proposal = {
+        "incident_id": "11111111-1111-1111-1111-111111111111",
+        "tool_name": "kubernetes_mcp",
+        "action": "restart_workload",
+        "target": "payment-api",
+        "parameters": {"namespace": "payments"},
+    }
+
+    result = await ChatbotService()._preconfirm_mutation_guard(proposal)
+
+    assert result["safe_to_execute"] is False
+    assert result["stale"] is False
+    assert result["reason"] == "kubernetes_fresh_state_unavailable"
+    assert result["snapshot"]["error"] == "RuntimeError"
