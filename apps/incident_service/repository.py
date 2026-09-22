@@ -101,6 +101,89 @@ class IncidentRepository:
         if incident is not None:
             incident.status = IncidentStatus(str(status).lower())
 
+    async def record_operational_outcome(
+        self,
+        incident_id: str,
+        *,
+        source: str,
+        action: str,
+        target: str,
+        approval_id: Optional[str],
+        execution_success: bool,
+        verified: bool,
+        verification: Optional[Dict[str, Any]] = None,
+        memory_id: Optional[str] = None,
+    ) -> None:
+        """Persist the governed execution outcome into incident state.
+
+        Verified recovery is the only execution-driven path to RESOLVED.
+        Failed/inconclusive outcomes escalate unless an authoritative source
+        recovery has already resolved the incident. The append-only bounded
+        context trail keeps direct/runbook/remediation paths explainable.
+        """
+        incident = await self.session.get(Incident, UUID(str(incident_id)))
+        if incident is None:
+            return
+
+        context = dict(incident.context or {})
+        recovery_marker = dict(context.get("source_recovery") or {})
+        source_resolved = bool(recovery_marker.get("incident_resolved"))
+
+        if source_resolved and incident.status != IncidentStatus.CLOSED:
+            next_status = IncidentStatus.RESOLVED
+        elif verified:
+            next_status = IncidentStatus.RESOLVED
+        else:
+            next_status = IncidentStatus.ESCALATED
+
+        outcomes = list(context.get("operational_outcomes") or [])
+        outcome = _json_safe(
+            {
+                "source": str(source or "governed_execution"),
+                "action": str(action or ""),
+                "target": str(target or ""),
+                "approval_id": str(approval_id) if approval_id else None,
+                "execution_success": bool(execution_success),
+                "verified": bool(verified),
+                "verification": dict(verification or {}),
+                "memory_id": str(memory_id) if memory_id else None,
+                "recorded_at": datetime.now(timezone.utc),
+            }
+        )
+
+        identity = (
+            outcome.get("source"),
+            outcome.get("approval_id"),
+            outcome.get("action"),
+            outcome.get("target"),
+            outcome.get("verified"),
+            str((outcome.get("verification") or {}).get("status") or ""),
+        )
+        existing_index = None
+        for index, item in enumerate(outcomes):
+            if not isinstance(item, dict):
+                continue
+            item_identity = (
+                item.get("source"),
+                item.get("approval_id"),
+                item.get("action"),
+                item.get("target"),
+                item.get("verified"),
+                str((item.get("verification") or {}).get("status") or ""),
+            )
+            if item_identity == identity:
+                existing_index = index
+                break
+        if existing_index is None:
+            outcomes.append(outcome)
+        else:
+            outcomes[existing_index] = outcome
+
+        context["operational_outcomes"] = outcomes[-50:]
+        context["latest_operational_outcome"] = outcome
+        incident.context = _json_safe(context)
+        incident.status = next_status
+
     async def acquire_correlation_lock(self, fingerprint: str) -> None:
         """Serialize creation for a deterministic correlation fingerprint."""
         await self.session.execute(
