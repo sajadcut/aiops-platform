@@ -569,6 +569,30 @@ class E2EOrchestrator:
         )
         return state
 
+    @staticmethod
+    def _live_evidence_ids(state: E2EState) -> List[str]:
+        context = dict(state.get("context") or {})
+        evidence = context.get("evidence")
+        if not isinstance(evidence, list):
+            live = state.get("live_evidence") or context.get("live_evidence") or {}
+            evidence = live.get("evidence", []) if isinstance(live, dict) else []
+        values: List[str] = []
+        for item in evidence:
+            if not isinstance(item, dict):
+                continue
+            value = (
+                item.get("evidence_id")
+                or item.get("id")
+                or item.get("reference")
+                or item.get("source_id")
+            )
+            if value is None:
+                continue
+            text_value = str(value).strip()
+            if text_value and text_value not in values:
+                values.append(text_value)
+        return values
+
     async def _evaluator_node(self, state: E2EState) -> E2EState:
         phase_started = time.perf_counter()
         state["current_node"] = "evaluator"
@@ -576,6 +600,7 @@ class E2EOrchestrator:
             state.get("findings", []),
             state.get("final_plan", ""),
             coordination=state.get("coordination", {}),
+            live_evidence_ids=self._live_evidence_ids(state),
         )
         state["evaluation"] = result
         self._audit(
