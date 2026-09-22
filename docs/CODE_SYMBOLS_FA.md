@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 355 | Dashboard JS files scanned: 5 | Symbols indexed: 3140**
+**Python files scanned: 355 | Dashboard JS files scanned: 5 | Symbols indexed: 3149**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1052,11 +1052,19 @@
 | `apps/mcp_server/main.py` | `startup_event` | 209 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/mcp_server/main.py` | `health` | 215 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/mcp_server/main.py` | `mcp` | 221 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/memory_service/__init__.py` | `OperationalMemoryService` | 12 | class | PostgreSQL + pgvector operational experience store, separate from Knowledge RAG. | module |
-| `apps/memory_service/__init__.py` | `OperationalMemoryService.__init__` | 18 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryService |
-| `apps/memory_service/__init__.py` | `OperationalMemoryService.add_entry` | 21 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryService |
-| `apps/memory_service/__init__.py` | `OperationalMemoryService.search_similar` | 62 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | OperationalMemoryService |
-| `apps/memory_service/__init__.py` | `OperationalMemoryService.update_reuse_count` | 114 | async method | state یا داده را به‌صورت durable ذخیره/به‌روزرسانی می‌کند | OperationalMemoryService |
+| `apps/memory_service/__init__.py` | `OperationalMemoryService` | 19 | class | کلاس | module |
+| `apps/memory_service/__init__.py` | `OperationalMemoryService.__init__` | 24 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryService |
+| `apps/memory_service/__init__.py` | `OperationalMemoryService.add_entry` | 27 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryService |
+| `apps/memory_service/__init__.py` | `OperationalMemoryService.add_episode` | 82 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryService |
+| `apps/memory_service/__init__.py` | `OperationalMemoryService._embed_entry` | 170 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryService |
+| `apps/memory_service/__init__.py` | `OperationalMemoryService.retrieve` | 202 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryService |
+| `apps/memory_service/__init__.py` | `OperationalMemoryService.search_similar` | 279 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | OperationalMemoryService |
+| `apps/memory_service/__init__.py` | `OperationalMemoryService.record_feedback` | 295 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryService |
+| `apps/memory_service/__init__.py` | `OperationalMemoryService.backfill_embeddings` | 309 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryService |
+| `apps/memory_service/__init__.py` | `OperationalMemoryService.update_reuse_count` | 343 | async method | state یا داده را به‌صورت durable ذخیره/به‌روزرسانی می‌کند | OperationalMemoryService |
+| `apps/memory_service/__init__.py` | `OperationalMemoryService.serialize_entry` | 351 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryService |
+| `apps/memory_service/__init__.py` | `OperationalMemoryService._legacy_embedding_document` | 410 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryService |
+| `apps/memory_service/__init__.py` | `OperationalMemoryService._uuid_or_none` | 426 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryService |
 | `apps/operator_summary.py` | `_t` | 18 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/operator_summary.py` | `_low` | 24 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/operator_summary.py` | `_d` | 28 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
@@ -1510,7 +1518,8 @@
 | `domain/models.py` | `Incident` | 37 | class | واحد durable کار عملیاتی که چند signal/evidence می‌توانند به آن correlate شوند. | module |
 | `domain/models.py` | `Evidence` | 57 | class | Evidence خام/normalized با provenance منبع برای یک Incident. | module |
 | `domain/models.py` | `Finding` | 75 | class | نتیجه تحلیل Agent؛ evidence_ids نشان می‌دهد ادعا بر کدام factها تکیه دارد. | module |
-| `domain/models.py` | `MemoryEntry` | 93 | class | تجربه Operational یک Incident و outcome آن برای بازیابی در رخدادهای مشابه. | module |
+| `domain/models.py` | `MemoryEntry` | 93 | class | Immutable-style historical incident episode plus mutable reuse statistics. | module |
+| `domain/models.py` | `MemoryReuseEvent` | 170 | class | Feedback trail showing how a historical episode affected a later incident. | module |
 | `domain/observability.py` | `observe_http` | 29 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `domain/runbook.py` | `Runbook` | 5 | class | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | module |
 | `domain/runbook_validation.py` | `validate_runbook` | 12 | function | Validate a runbook definition. | module |
