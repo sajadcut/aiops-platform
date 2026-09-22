@@ -468,6 +468,21 @@ class BaseAgent(ABC):
                 return None
             return text_value if len(text_value) <= limit else text_value[:limit] + "...[truncated]"
 
+        def bounded_list(
+            value: Any,
+            *,
+            item_limit: int = 10,
+            text_limit: int = 600,
+        ) -> List[str]:
+            if not isinstance(value, (list, tuple)):
+                return []
+            result: List[str] = []
+            for item in list(value)[:item_limit]:
+                text_value = bounded_text(item, text_limit)
+                if text_value:
+                    result.append(text_value)
+            return result
+
         projected: List[Dict[str, Any]] = []
         for item in raw:
             if not isinstance(item, dict):
@@ -505,9 +520,10 @@ class BaseAgent(ABC):
                     "environment": bounded_text(item.get("environment"), 100),
                     "incident_pattern": {
                         "summary": bounded_text(incident_pattern.get("summary"), 800),
-                        "observed_faults": list(
-                            incident_pattern.get("observed_faults") or []
-                        )[:12],
+                        "observed_faults": bounded_list(
+                            incident_pattern.get("observed_faults"),
+                            item_limit=12,
+                        ),
                     },
                     "investigation": {
                         "summary": bounded_text(
@@ -516,15 +532,19 @@ class BaseAgent(ABC):
                         "rca_synthesis": bounded_text(
                             investigation.get("rca_synthesis"), 1800
                         ),
-                        "missing_evidence": list(
-                            investigation.get("missing_evidence") or []
-                        )[:10],
-                        "contradictions": list(
-                            investigation.get("contradictions") or []
-                        )[:10],
-                        "specialist_agents_used": list(
-                            investigation.get("specialist_agents_used") or []
-                        )[:12],
+                        "missing_evidence": bounded_list(
+                            investigation.get("missing_evidence"),
+                            item_limit=10,
+                        ),
+                        "contradictions": bounded_list(
+                            investigation.get("contradictions"),
+                            item_limit=10,
+                        ),
+                        "specialist_agents_used": bounded_list(
+                            investigation.get("specialist_agents_used"),
+                            item_limit=12,
+                            text_limit=128,
+                        ),
                     },
                     "historical_root_cause": {
                         "summary": bounded_text(item.get("root_cause"), 1200),
@@ -545,15 +565,18 @@ class BaseAgent(ABC):
                     },
                     "verification": {
                         "status": bounded_text(verification.get("status"), 50),
-                        "recovered_signals": list(
-                            verification.get("recovered_signals") or []
-                        )[:12],
-                        "remaining_symptoms": list(
-                            verification.get("remaining_symptoms") or []
-                        )[:12],
-                        "unexpected_regressions": list(
-                            verification.get("unexpected_regressions") or []
-                        )[:12],
+                        "recovered_signals": bounded_list(
+                            verification.get("recovered_signals"),
+                            item_limit=12,
+                        ),
+                        "remaining_symptoms": bounded_list(
+                            verification.get("remaining_symptoms"),
+                            item_limit=12,
+                        ),
+                        "unexpected_regressions": bounded_list(
+                            verification.get("unexpected_regressions"),
+                            item_limit=12,
+                        ),
                     },
                     "memory_outcome_class": bounded_text(
                         item.get("memory_outcome_class"), 64
