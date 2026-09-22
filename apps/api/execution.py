@@ -276,7 +276,7 @@ async def execute(payload: Dict[str, Any], identity=Depends(require_permission("
                     ),
                 )
 
-            consumed = await store.consume(str(approval_id))
+            consumed = await store.consume(str(approval_id), issue_claim=True)
             if not consumed or consumed.get("status") != "consumed":
                 raise HTTPException(status_code=409, detail="approval_already_consumed_or_unavailable")
             approval_granted = True
@@ -294,6 +294,7 @@ async def execute(payload: Dict[str, Any], identity=Depends(require_permission("
             approval_id=str(approval_id) if approval_id else None,
             runbook_id=payload.get("runbook_id"), runbook_version=payload.get("runbook_version"),
             rollback=bool(payload.get("rollback", False)),
+            execution_claim=(consumed or {}).get("_execution_claim"),
         )
         result = await ExecutionService.execute(request)
 
