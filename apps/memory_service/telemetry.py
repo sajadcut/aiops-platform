@@ -7,6 +7,12 @@ MEMORY_CREATED_TOTAL = Counter(
     ["outcome_class"],
 )
 
+MEMORY_IDEMPOTENT_TOTAL = Counter(
+    "aiops_operational_memory_idempotent_total",
+    "Operational Memory duplicate write-backs suppressed by episode fingerprint",
+    ["path"],
+)
+
 MEMORY_EMBEDDING_TOTAL = Counter(
     "aiops_operational_memory_embedding_total",
     "Operational Memory embedding attempts",
