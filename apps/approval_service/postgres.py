@@ -69,10 +69,15 @@ class PostgreSQLApprovalStore:
         dedicated compare-and-set transition methods.
         """
         record_to_save = dict(record)
+        # Creation is never an approval transition. New durable authority always
+        # starts pending and may only become approved through set_status(), where
+        # risk permission, expiry and compare-and-set transition rules are enforced.
+        record_to_save["status"] = "pending"
+        record_to_save["approved_at"] = None
+        record_to_save["rejected_at"] = None
         metadata = dict(record.get("metadata") or {})
-        if (
-            str(record_to_save.get("status") or "pending") in {"pending", "approved"}
-            and await self._incident_source_recovered(str(record_to_save.get("incident_id") or ""))
+        if await self._incident_source_recovered(
+            str(record_to_save.get("incident_id") or "")
         ):
             # A Recovery can race a slow RCA/Decision path. Persist the late
             # approval as rejected so no worker can later consume stale authority.
