@@ -95,7 +95,16 @@ async def test_confirmed_vm_action_uses_durable_approval_consumption_and_is_not_
     async def fake_verify(self, proposal_row, before_snapshot=None):
         return {"verified": True, "source": "fake_vm_mcp", "result": {"active": True}}
 
+    async def fake_snapshot(self, proposal_row):
+        return {
+            "source": "fake_vm_mcp",
+            "state": {},
+            "result": {},
+            "context": {"live_evidence": {"evidence": []}},
+        }
+
     monkeypatch.setattr(ExecutionService, "execute", staticmethod(fake_execute))
+    monkeypatch.setattr(ChatbotService, "_collect_mutation_snapshot", fake_snapshot)
     monkeypatch.setattr(ChatbotService, "_verify_mutation", fake_verify)
 
     result = await ChatbotService().decide(identity, proposal["proposal_id"], True)
