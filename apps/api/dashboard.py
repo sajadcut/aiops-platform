@@ -5,6 +5,7 @@ from typing import Any, Dict
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import text
 
+from apps.memory_service import OperationalMemoryService
 from apps.security.auth import require_permission
 from database import AsyncSessionLocal
 
@@ -52,6 +53,7 @@ async def dashboard_summary(_identity=Depends(require_permission("read:incident"
                     )
                 )
             ).mappings().all()
+            memory_stats = await OperationalMemoryService(db).stats()
 
         result = dict(row)
         for key in (
@@ -103,6 +105,14 @@ async def dashboard_summary(_identity=Depends(require_permission("read:incident"
             result["execution_success"] / execution_total if execution_total else 0.0
         )
         result["recent_audit"] = [dict(item) for item in recent]
+        result["operational_memory"] = memory_stats
+        result["memory_entries_total"] = int(memory_stats["entries_total"])
+        result["memory_entries_active"] = int(memory_stats["active"])
+        result["memory_embedding_ready"] = int(
+            memory_stats["embedding_ready_current_contract"]
+        )
+        result["memory_embedding_failed"] = int(memory_stats["embedding_failed"])
+        result["memory_embedding_pending"] = int(memory_stats["embedding_pending"])
         result["data_status"] = "live"
         return result
     except Exception as exc:
