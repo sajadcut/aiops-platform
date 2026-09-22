@@ -8,6 +8,7 @@ from apps.approval_service.binding import assert_bound
 from apps.approval_service.postgres import PostgreSQLApprovalStore
 from apps.audit_service import AuditService
 from apps.audit_service.postgres import PostgreSQLAuditStore
+from apps.incident_service.repository import IncidentRepository
 from apps.runbook_service.executor import RunbookExecutor
 from apps.runbook_service.learning import record_runbook_outcome
 from apps.runbook_service.runtime_guard import RunbookRuntimeGuard
@@ -309,6 +310,23 @@ async def execute_runbook(
                     error_type=memory_error,
                 )
 
+        incident_status = None
+        if verified is not None:
+            incidents = IncidentRepository(db)
+            incident_status = await incidents.record_operational_outcome(
+                incident_id,
+                source="runbook_execution",
+                action=action,
+                target=target,
+                approval_id=approval_id,
+                execution_success=bool(execution_payload.get("success")),
+                verified=bool(verified),
+                verification=dict(verification_payload or {}),
+                memory_id=memory_id,
+            )
+            await incidents.commit()
+            result["incident_status"] = incident_status
+
         await _audit_durable(
             db,
             identity.subject,
@@ -327,6 +345,7 @@ async def execute_runbook(
                 "precondition": precondition,
                 "memory_id": memory_id,
                 "memory_error": memory_error,
+                "incident_status": incident_status,
             },
         )
         return result
