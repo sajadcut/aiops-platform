@@ -138,6 +138,19 @@ async def test_memory_v2_postgres_hybrid_retrieval_and_feedback():
         assert by_id[str(success_id)]["memory_outcome_class"] == "successful_recovery"
         assert by_id[str(failed_id)]["memory_outcome_class"] == "failed_recovery"
 
+        # Retrieve the same episode through a second mode before feedback.
+        # Feedback may annotate both retrieval events, but MemoryEntry reward
+        # counters must advance only once for this target incident.
+        await service.retrieve(
+            "nginx inactive port unavailable start service",
+            service_scope="nginx",
+            retrieval_mode="REMEDIATION_EXPERIENCE",
+            limit=10,
+            successful_only=False,
+            target_incident_id=target_incident,
+            record_retrieval=True,
+        )
+        before_reward = int(success_row.successful_reuse_count or 0)
         updated = await service.record_feedback(
             target_incident,
             execution_request={"action": "start_service"},
@@ -159,7 +172,7 @@ async def test_memory_v2_postgres_hybrid_retrieval_and_feedback():
         assert any(event.influenced_plan for event in events)
         refreshed = await db.get(MemoryEntry, success_id)
         assert refreshed is not None
-        assert refreshed.successful_reuse_count >= 1
+        assert int(refreshed.successful_reuse_count or 0) == before_reward + 1
         assert refreshed.effectiveness_score > 0
 
         # Same action without an explicit historical-memory citation must not
