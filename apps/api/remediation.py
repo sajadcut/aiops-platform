@@ -16,6 +16,7 @@ from apps.execution_service import ExecutionRequest, ExecutionService
 from apps.runbook_service.registry import RunbookRegistry
 from apps.runbook_service.learning import record_runbook_outcome
 from apps.memory_service import OperationalMemoryService
+from apps.incident_service.repository import IncidentRepository
 from apps.runbook_service.runtime_guard import RunbookRuntimeGuard
 from apps.security.auth import require_permission
 from database import AsyncSessionLocal
@@ -302,6 +303,21 @@ async def execute_approved_remediation(approval_id: str, identity=Depends(requir
                 error_type=memory_error,
             )
 
+        incidents = IncidentRepository(db)
+        incident_status = await incidents.record_operational_outcome(
+            incident_id,
+            source="remediation_execution",
+            action=action,
+            target=target,
+            approval_id=approval_id,
+            execution_success=bool(result.success),
+            verified=bool(verified),
+            verification=dict(verification_payload or {}),
+            memory_id=memory_id,
+        )
+        await incidents.commit()
+        response["incident_status"] = incident_status
+
         await _audit_durable(
             db,
             "remediation_executed",
@@ -317,6 +333,7 @@ async def execute_approved_remediation(approval_id: str, identity=Depends(requir
                 "verified": verified,
                 "memory_id": memory_id,
                 "memory_error": memory_error,
+                "incident_status": incident_status,
             },
         )
         return response
@@ -388,6 +405,7 @@ async def verify_remediation(
 
         memory_id = None
         memory_validated = False
+        historical_execution_success = None
         try:
             incident_uuid = UUID(incident_id)
         except ValueError:
@@ -410,11 +428,29 @@ async def verify_remediation(
                 if str(remediation.get("approval_id") or "") != approval_id:
                     continue
                 memory_id = str(row.id)
+                if "execution_success" in remediation:
+                    historical_execution_success = bool(
+                        remediation.get("execution_success")
+                    )
                 if verified:
                     memory_validated = await OperationalMemoryService(
                         db
                     ).mark_validated(row.id)
                 break
+
+        incidents = IncidentRepository(db)
+        incident_status = await incidents.record_operational_outcome(
+            incident_id,
+            source="manual_verification",
+            action=action,
+            target=target,
+            approval_id=approval_id,
+            execution_success=historical_execution_success,
+            verified=bool(verified),
+            verification=verification,
+            memory_id=memory_id,
+        )
+        await incidents.commit()
 
         response = {
             "approval_id": approval_id,
@@ -429,6 +465,7 @@ async def verify_remediation(
             "snapshot_error": snapshot.get("error"),
             "memory_id": memory_id,
             "memory_validated": memory_validated,
+            "incident_status": incident_status,
         }
         await _audit_durable(
             db,
