@@ -214,6 +214,26 @@ def test_builder_preserves_investigation_rca_and_evidence_requests():
     assert "historical stop cause remains unconfirmed" in episode["search_document"]
 
 
+def test_builder_normalizes_failed_execution_without_verification_for_learning():
+    state = _state()
+    state["execution_result"] = {
+        "success": False,
+        "tool_name": "ssh_vm",
+        "action": "start_service",
+        "target": "10.100.6.199",
+        "reason": "mcp_write_failed",
+    }
+    state["verification_result"] = {}
+
+    episode = OperationalMemoryBuilder.build(state)
+
+    assert episode["memory_outcome_class"] == "failed_recovery"
+    assert episode["verification_result"] == "failed"
+    assert episode["verification"]["status"] == "failed"
+    assert episode["actual_remediation"]["execution_success"] is False
+    assert episode["outcome"] == "mcp_write_failed"
+
+
 def test_builder_does_not_convert_recovery_into_confirmed_cause():
     state = _state()
     state["triage_result"] = {
