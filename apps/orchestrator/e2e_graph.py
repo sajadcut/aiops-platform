@@ -31,6 +31,7 @@ from apps.rag_service import KnowledgeRAGService
 from apps.verification_service import VerificationEngine
 from domain.contracts.config import settings
 from domain.contracts.logging import logger
+from domain.contracts.redaction import redact_text
 from integrations.cognia import CogniaAPIError, CogniaConfigurationError, CogniaContractError
 from integrations.elasticsearch.mcp_client import ElasticsearchMCPClient
 from integrations.llm.base import LLMAdapter
@@ -180,7 +181,7 @@ class E2EOrchestrator:
         """Build a bounded symptom query without copying raw logs or credentials."""
         parts: List[str] = []
         for value in (service, base_query):
-            text_value = str(value or "").strip()
+            text_value = redact_text(str(value or "")).strip()
             if text_value and text_value not in parts:
                 parts.append(text_value[:1000])
 
@@ -199,7 +200,8 @@ class E2EOrchestrator:
             for key in allowed_signal_keys:
                 value = source.get(key)
                 if value not in (None, "", [], {}):
-                    parts.append(f"{key}={str(value)[:300]}")
+                    safe_value = redact_text(str(value))
+                    parts.append(f"{key}={safe_value[:300]}")
 
         allowed_raw_keys = (
             "diagnostic", "service", "target", "target_ip", "target_port",
@@ -222,7 +224,8 @@ class E2EOrchestrator:
             for key in allowed_raw_keys:
                 value = raw.get(key)
                 if value not in (None, "", [], {}):
-                    tokens.append(f"{key}={str(value)[:160]}")
+                    safe_value = redact_text(str(value))
+                    tokens.append(f"{key}={safe_value[:160]}")
             if tokens:
                 parts.append(" ".join(tokens))
 
