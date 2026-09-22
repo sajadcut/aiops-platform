@@ -41,6 +41,20 @@ class _Store:
         }
 
 
+class _IncidentRepo:
+    calls = []
+
+    def __init__(self, _db):
+        pass
+
+    async def record_operational_outcome(self, incident_id, **kwargs):
+        self.__class__.calls.append((incident_id, kwargs))
+        return "resolved" if kwargs.get("verified") else "escalated"
+
+    async def commit(self):
+        return None
+
+
 class _Registry:
     def __init__(self, _root):
         pass
@@ -166,6 +180,8 @@ async def test_direct_execute_returns_verified_only_after_post_action_verificati
     )
     monkeypatch.setattr(api, "_validate_approval_binding", lambda *_args: None)
     monkeypatch.setattr(api, "RunbookRegistry", _Registry)
+    _IncidentRepo.calls = []
+    monkeypatch.setattr(api, "IncidentRepository", _IncidentRepo)
 
     async def no_audit(*args, **kwargs):
         return None
@@ -245,6 +261,11 @@ async def test_direct_execute_returns_verified_only_after_post_action_verificati
     assert result["verification"]["status"] == "success"
     assert result["precondition"]["safe_to_execute"] is True
     assert result["operational_memory_writeback"]["memory_id"] == "memory-direct-1"
+    assert result["incident_status"] == "resolved"
+    assert len(_IncidentRepo.calls) == 1
+    assert _IncidentRepo.calls[0][0] == "incident-1"
+    assert _IncidentRepo.calls[0][1]["verified"] is True
+    assert _IncidentRepo.calls[0][1]["memory_id"] == "memory-direct-1"
     assert len(memory_calls) == 1
     assert memory_calls[0]["incident_id"] == "incident-1"
     assert memory_calls[0]["action"] == "start_service"
