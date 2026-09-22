@@ -164,7 +164,7 @@ function renderOverview() {
   $('#kExec').textContent = x.execution_success ?? '—';
   $('#kSuccess').textContent = x.successful_remediations ?? '—';
   $('#kPartial').textContent = Number(x.verification_partial || 0) + Number(x.verification_inconclusive || 0);
-  $('#kMemory').textContent = x.memory_persisted ?? '—';
+  $('#kMemory').textContent = x.memory_entries_total ?? x.memory_persisted ?? '—';
   $('#kRate').textContent = pct(x.automation_success_rate);
   $('#kConfidence').textContent = pct(x.mean_confidence);
 
@@ -209,7 +209,9 @@ function renderLifecycleSummary() {
     ['Consumed', x.approvals_consumed || 0, 'one-time authorization used'],
     ['Execution success', x.execution_success || 0, `${x.execution_failed || 0} failed · ${x.execution_blocked || 0} blocked`],
     ['Verification success', x.verification_success || 0, `${x.verification_partial || 0} partial · ${x.verification_inconclusive || 0} inconclusive`],
-    ['Memory persisted', x.memory_persisted || 0, `${x.memory_not_persisted || 0} not persisted`]
+    ['Memory episodes', x.memory_entries_total || 0, `${x.memory_entries_active || 0} active`],
+    ['Embedding ready', x.memory_embedding_ready || 0, `${x.memory_embedding_failed || 0} failed · ${x.memory_embedding_pending || 0} pending`],
+    ['Memory write-back audit', x.memory_persisted || 0, `${x.memory_not_persisted || 0} not persisted`]
   ];
   $('#automationLifecycle').innerHTML = items.map(([label, value, meta]) => `<div class="lifecycle-node"><span>${esc(label)}</span><strong>${esc(value)}</strong><small>${esc(meta)}</small></div>`).join('');
 }
