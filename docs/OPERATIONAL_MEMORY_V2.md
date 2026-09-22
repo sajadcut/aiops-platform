@@ -225,6 +225,23 @@ Current Live Evidence
 
 Operational Memory cannot bypass any of these stages.
 
+## Governed execution learning
+
+Operational Memory write-back is attached to all governed execution paths:
+durable incident workflow, direct VM remediation/runbook execution and ChatOps.
+Verified successful recovery is promoted only when evidence provenance exists.
+Failed, blocked or inconclusive governed attempts are also persisted as negative
+experience even when post-action evidence could not be collected, so the next
+incident can avoid blindly repeating an unsuccessful action.
+
+Approval authority remains independent of Memory. A durable approval is bound to
+the exact incident/tool/action/target/parameters/runbook intent and is consumed
+with an atomic PostgreSQL compare-and-set. Only the consume winner may receive a
+short-lived process-local execution claim; approval IDs, booleans, Memory entries
+or a previously consumed approval cannot recreate that one-shot capability.
+The claim is redeemed at the central ExecutionService boundary before any
+approval-required tool can execute.
+
 ## Production maintenance
 
 Kubernetes release rendering includes two digest-pinned CronJobs that use the
