@@ -74,7 +74,7 @@ async def analyze_incident(
             "confidence": 0.0,
         }
         async with AsyncSessionLocal() as db:
-            result = await LearningDurableWorkflowRuntime(db).start(initial_state)
+            result = await LearningLearningDurableWorkflowRuntime(db).start(initial_state)
         return {
             "status": "success",
             "incident": incident_data.model_dump(),
