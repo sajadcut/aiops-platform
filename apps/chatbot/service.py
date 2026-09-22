@@ -1220,7 +1220,7 @@ class ChatbotService:
                 CHAT_BLOCKED_ACTIONS.labels(reason="approval_binding").inc()
                 raise HTTPException(status_code=409, detail=str(exc)) from exc
 
-            consumed = await approval_store.consume(approval_id)
+            consumed = await approval_store.consume(approval_id, issue_claim=True)
             if not consumed or consumed.get("status") != "consumed":
                 raise HTTPException(status_code=409, detail="approval_already_consumed_or_unavailable")
 
@@ -1246,6 +1246,7 @@ class ChatbotService:
                     incident_id=str(proposal["incident_id"]),
                     approval_granted=True,
                     approval_id=approval_id,
+                    execution_claim=consumed.get("_execution_claim"),
                 )
             )
             if execution.success:
