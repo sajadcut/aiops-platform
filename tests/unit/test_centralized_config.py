@@ -194,6 +194,63 @@ def test_jenkins_mcp_writes_require_separate_basic_identity():
     assert configured.JENKINS_MCP_ENABLE_WRITES is True
 
 
+def test_embedding_dimension_must_match_pgvector_contract():
+    with pytest.raises(ValidationError, match="PGVECTOR_EXPECTED_DIMENSION"):
+        Settings(
+            _env_file=None,
+            **_settings_data(
+                EMBEDDING_DIMENSION=768,
+                PGVECTOR_EXPECTED_DIMENSION=1536,
+            ),
+        )
+
+
+def test_openai_compatible_embedding_requires_endpoint():
+    with pytest.raises(ValidationError, match="EMBEDDING_BASE_URL"):
+        Settings(
+            _env_file=None,
+            **_settings_data(
+                EMBEDDING_PROVIDER="openai-compatible",
+                EMBEDDING_BASE_URL="",
+                EMBEDDING_MODEL="internal-embedding-model",
+            ),
+        )
+
+
+def test_production_rejects_deterministic_embedding_provider_at_startup():
+    with pytest.raises(ValidationError, match="cannot be deterministic"):
+        Settings(
+            _env_file=None,
+            **_settings_data(
+                APP_ENV="production",
+                COGNIA_BASE_URL="https://cognia.test",
+                COGNIA_CLIENT_ID="app-id",
+                COGNIA_CLIENT_SECRET="test-only-secret",
+                COGNIA_KNOWLEDGE_BASE_IDS=[10],
+                EMBEDDING_PROVIDER="deterministic",
+            ),
+        )
+
+
+def test_production_accepts_real_embedding_contract():
+    configured = Settings(
+        _env_file=None,
+        **_settings_data(
+            APP_ENV="production",
+            COGNIA_BASE_URL="https://cognia.test",
+            COGNIA_CLIENT_ID="app-id",
+            COGNIA_CLIENT_SECRET="test-only-secret",
+            COGNIA_KNOWLEDGE_BASE_IDS=[10],
+            EMBEDDING_PROVIDER="openai-compatible",
+            EMBEDDING_BASE_URL="https://embeddings.internal/v1",
+            EMBEDDING_MODEL="internal-embedding-model",
+            EMBEDDING_DIMENSION=1536,
+            PGVECTOR_EXPECTED_DIMENSION=1536,
+        ),
+    )
+    assert configured.EMBEDDING_PROVIDER == "openai-compatible"
+
+
 def test_alembic_does_not_bypass_centralized_settings():
     source = Path("database/migrations/env.py").read_text(encoding="utf-8")
     assert "os.getenv" not in source
