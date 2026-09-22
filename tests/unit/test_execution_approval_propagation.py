@@ -1,5 +1,6 @@
 import pytest
 
+from apps.approval_service.execution_claim import issue_execution_claim
 from apps.execution_service import ExecutionRequest, ExecutionService
 from apps.execution_service.tools.base import BaseTool, ToolInput, ToolOutput
 from apps.execution_service.tools.registry import tool_registry
@@ -33,6 +34,7 @@ async def test_validated_approval_context_reaches_tool_registry():
                 incident_id="incident-1",
                 approval_granted=True,
                 approval_id="approval-123",
+                execution_claim=issue_execution_claim(),
             )
         )
         assert result.success is True
@@ -78,5 +80,50 @@ async def test_granted_marker_without_bound_ids_is_blocked():
         assert result.success is False
         assert result.execution_blocked is True
         assert result.reason == "approval_id_required"
+    finally:
+        tool_registry.clear()
+
+
+@pytest.mark.asyncio
+async def test_boolean_and_approval_id_cannot_bypass_single_use_execution_claim():
+    tool_registry.register(ApprovalRequiredTool())
+    try:
+        result = await ExecutionService.execute(
+            ExecutionRequest(
+                tool_name="approval_required_test",
+                action="restart_service",
+                target="vm01",
+                incident_id="incident-1",
+                approval_granted=True,
+                approval_id="approval-123",
+            )
+        )
+        assert result.success is False
+        assert result.execution_blocked is True
+        assert result.reason == "approval_execution_claim_invalid_or_replayed"
+    finally:
+        tool_registry.clear()
+
+
+@pytest.mark.asyncio
+async def test_execution_claim_is_redeemed_exactly_once():
+    tool_registry.register(ApprovalRequiredTool())
+    try:
+        claim = issue_execution_claim()
+        request = ExecutionRequest(
+            tool_name="approval_required_test",
+            action="restart_service",
+            target="vm01",
+            incident_id="incident-1",
+            approval_granted=True,
+            approval_id="approval-123",
+            execution_claim=claim,
+        )
+        first = await ExecutionService.execute(request)
+        second = await ExecutionService.execute(request)
+        assert first.success is True
+        assert second.success is False
+        assert second.execution_blocked is True
+        assert second.reason == "approval_execution_claim_invalid_or_replayed"
     finally:
         tool_registry.clear()
