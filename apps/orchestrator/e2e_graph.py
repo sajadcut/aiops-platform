@@ -628,10 +628,20 @@ class E2EOrchestrator:
                     memory = OperationalMemoryService(self.db)
                     memory_id = str(await memory.add_episode(episode))
                     if state.get("incident_id"):
+                        cited_memory_ids = sorted(
+                            {
+                                str(memory_id)
+                                for finding in state.get("findings", [])
+                                if isinstance(finding, dict)
+                                for memory_id in finding.get("historical_memory_ids", [])
+                                if str(memory_id).strip()
+                            }
+                        )
                         await memory.record_feedback(
                             str(state["incident_id"]),
                             execution_request=state.get("execution_request"),
                             verification_result=state.get("verification_result"),
+                            cited_memory_ids=cited_memory_ids,
                         )
                     state["operational_memory_writeback"] = {
                         "memory_id": memory_id,
