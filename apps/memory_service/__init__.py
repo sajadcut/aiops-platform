@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 import time
 from typing import Any, Dict, List, Optional, cast
 from uuid import UUID, uuid4
@@ -384,6 +384,38 @@ class OperationalMemoryService:
             "ready": ready,
             "failed": failed,
         }
+
+    async def mark_stale_entries(self, limit: int = 1000) -> int:
+        cutoff = datetime.now(timezone.utc) - timedelta(
+            days=int(settings.MEMORY_STALE_AFTER_DAYS)
+        )
+        rows = (
+            await self.db.execute(
+                select(MemoryEntry)
+                .where(
+                    MemoryEntry.lifecycle_status == "active",
+                    MemoryEntry.created_at < cutoff,
+                    or_(
+                        MemoryEntry.last_validated_at.is_(None),
+                        MemoryEntry.last_validated_at < cutoff,
+                    ),
+                )
+                .order_by(MemoryEntry.created_at.asc())
+                .limit(max(1, min(int(limit), 10000)))
+            )
+        ).scalars().all()
+        if not rows:
+            return 0
+        for entry in rows:
+            entry.lifecycle_status = "stale"
+        await self.db.commit()
+        MEMORY_LIFECYCLE_TOTAL.labels(status="stale").inc(len(rows))
+        logger.info(
+            "aiops.memory.stale_marked",
+            count=len(rows),
+            stale_after_days=settings.MEMORY_STALE_AFTER_DAYS,
+        )
+        return len(rows)
 
     async def invalidate(
         self,
