@@ -51,10 +51,10 @@ Scoring is repository/code-contract maturity, not external production acceptance
 | 14 | Prompt injection protection | Strong | evidence/RAG/memory treated as untrusted; execution separated. |
 | 15 | Tool discovery | Adequate | governed Tool Registry; dynamic third-party discovery intentionally limited. |
 | 16 | MCP client/server | Weak | legacy clients deprecated; modern governed MCP adapter not implemented. |
-| 17 | Tool capability governance | Strong | allowlists, typed requests, risk/approval binding. |
+| 17 | Tool capability governance | Strong | allowlists, typed requests, concrete request/tool/target binding, and registered runbook tool/action contracts. |
 | 18 | Least privilege | Adequate | read-only collectors and constrained SSH; external account/RBAC acceptance remains. |
 | 19 | Policy engine | Adequate | deterministic internal engine; lacks OPA-grade versioned/signed distributed policy management. |
-| 20 | Approval workflow | Strong | durable binding + one-time consumed state. |
+| 20 | Approval workflow | Strong | create-only pending authority, exact intent binding, CAS transitions, source-recovery recheck, one-time consume and anti-resurrection DB acceptance. |
 | 21 | Execution isolation | Adequate | service boundary strong; runtime sandbox/edge isolation incomplete. |
 | 22 | Linux remediation | Adequate | allowlisted SSH actions; real target acceptance pending. |
 | 23 | Windows remediation | Missing | no mature constrained native WinRM/JEA/Edge implementation. |
@@ -62,14 +62,14 @@ Scoring is repository/code-contract maturity, not external production acceptance
 | 25 | Database remediation | Weak | specialist analysis exists; governed DB action adapter incomplete. |
 | 26 | Network remediation | Weak | specialist analysis exists; governed network action adapter incomplete. |
 | 27 | Rollback | Partial | runbook contract supports rollback; real adapter/rollback drills incomplete. |
-| 28 | Idempotency | Adequate | approval consumption, evidence/finding dedupe, signal event/correlation locks. |
-| 29 | Verification | Adequate | fresh baseline + metric semantics + independent stage. |
-| 30 | Per-action success criteria | Partial | generic verification exists; explicit SLO objective per runbook incomplete. |
+| 28 | Idempotency | Adequate | durable approval consumption, scoped same-authority replay suppression, evidence/finding dedupe and signal event/correlation locks; crash-after-side-effect exactly-once remains unproven. |
+| 29 | Verification | Adequate | fresh before/after evidence, metric semantics, independent stage, and fail-closed registered runbook objectives for executable VM recovery. |
+| 30 | Per-action success criteria | Partial | `vm-service-recovery` now enforces explicit registered objectives in workflow and direct runbook execution; equivalent criteria are not yet implemented across broader remediation adapters. |
 | 31 | RCA quality | Adequate | evidence-linked synthesis + conflicts; real labeled corpus accuracy pending. |
 | 32 | Evaluator/critic | Strong | mandatory gate before Decision. |
 | 33 | RAG governance | Strong | source allowlist/owner/version/ACL + pgvector. |
-| 34 | Operational Memory | Adequate | separate namespace and verified-outcome writeback; scale/false reuse pending. |
-| 35 | Memory poisoning protection | Adequate | memory auxiliary and revalidated against live evidence; provenance/signing can improve. |
+| 34 | Operational Memory | Adequate | separate historical namespace, hybrid retrieval, bounded/cited agent reuse, positive/negative writeback and effectiveness feedback; scale/false-reuse acceptance remains. |
+| 35 | Memory poisoning protection | Adequate | memory is auxiliary, agent citations are allowlisted, Evaluator validates claims against current Live Evidence, and reused actions require fresh preconditions; cryptographic provenance/signing can improve. |
 | 36 | Audit | Strong | PostgreSQL audit and workflow events. |
 | 37 | OIDC/RBAC | Adequate | signed JWT validation and permissions; enterprise acceptance pending. |
 | 38 | Workload identity/mTLS | Weak | HTTP(S)/allowlist exists; SPIFFE-like short-lived identity not implemented. |
@@ -137,7 +137,7 @@ MCP is **selected transport, not universal transport**. Keep native governed con
 1. CMDB/service catalog authoritative identity.
 2. Correlation accuracy corpus + late-signal re-analysis semantics.
 3. Windows constrained Edge/WinRM/JEA implementation.
-4. Per-runbook verification/SLO objectives.
+4. Broaden explicit verification/SLO objectives beyond the current executable VM service-recovery runbook.
 5. Governed Kubernetes/Ansible/Jenkins/DB/network write adapters.
 6. Distributed queue/workers/admission/backpressure.
 7. Distributed rate limiting.
