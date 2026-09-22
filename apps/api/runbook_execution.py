@@ -30,6 +30,8 @@ async def _audit_durable(db, actor: str, incident_id: str, action: str, metadata
 def _runbook_contract(
     runbook_id: str,
     payload: Dict[str, Any],
+    *,
+    require_executable: bool = False,
 ) -> tuple[dict, str, str, str, dict, int, bool]:
     try:
         runbook = _registry.get(runbook_id)
@@ -50,6 +52,11 @@ def _runbook_contract(
         if isinstance(runbook.get("execution"), dict)
         else {}
     )
+    if require_executable and not execution:
+        raise HTTPException(
+            status_code=409,
+            detail="runbook_not_executable",
+        )
     if execution:
         tool_name = str(execution.get("tool") or "").strip()
         if not tool_name:
@@ -102,7 +109,11 @@ async def execute_runbook(
     payload: Dict[str, Any],
     identity=Depends(require_permission("execute:approved")),
 ):
-    runbook, tool_name, action, target, parameters, timeout, rollback = _runbook_contract(runbook_id, payload)
+    runbook, tool_name, action, target, parameters, timeout, rollback = _runbook_contract(
+        runbook_id,
+        payload,
+        require_executable=True,
+    )
     approval_id = str(payload.get("approval_id") or "").strip()
     incident_id = str(payload.get("incident_id") or "").strip()
     if not approval_id:
