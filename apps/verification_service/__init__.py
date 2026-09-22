@@ -25,6 +25,9 @@ class VerificationResult(BaseModel):
     message: str
     metric_directions: Dict[str, str] = Field(default_factory=dict)
     comparable_metrics: int = 0
+    verification_policy: Optional[str] = None
+    objective_results: List[Dict[str, Any]] = Field(default_factory=list)
+    required_objectives_met: Optional[bool] = None
 
 
 class VerificationEngine:
@@ -44,22 +47,30 @@ class VerificationEngine:
     EXPECTED_RECOVERY_OVERHEAD = {"cpu_usage", "memory_usage"}
 
     @classmethod
-    async def verify_action(cls, action_plan: str, service: str, before_context: Dict[str, Any], after_context: Optional[Dict[str, Any]] = None) -> VerificationResult:
+    async def verify_action(
+        cls,
+        action_plan: str,
+        service: str,
+        before_context: Dict[str, Any],
+        after_context: Optional[Dict[str, Any]] = None,
+        verification_objectives: Optional[List[Dict[str, Any]]] = None,
+    ) -> VerificationResult:
         logger.info("Verification started: service=%s", service)
         before_metrics = cls._extract_metrics(before_context)
+        objectives = [item for item in (verification_objectives or []) if isinstance(item, dict)]
         if after_context is None:
-            return cls._inconclusive(before_metrics, {}, cls._evidence_refs(before_context), "No post-execution context was supplied.")
+            return cls._apply_objectives(\n                cls._inconclusive(before_metrics, {}, cls._evidence_refs(before_context), "No post-execution context was supplied."),\n                before_metrics, {}, objectives,\n            )
 
         after_metrics = cls._extract_metrics(after_context)
         if not before_metrics:
-            return cls._inconclusive({}, after_metrics, cls._evidence_refs(after_context), "No pre-execution metrics or operational conditions were available.")
+            return cls._apply_objectives(\n                cls._inconclusive({}, after_metrics, cls._evidence_refs(after_context), "No pre-execution metrics or operational conditions were available."),\n                {}, after_metrics, objectives,\n            )
         if not after_metrics:
-            return cls._inconclusive(before_metrics, {}, cls._evidence_refs(before_context), "No post-execution metrics or operational conditions were available.")
+            return cls._apply_objectives(\n                cls._inconclusive(before_metrics, {}, cls._evidence_refs(before_context), "No post-execution metrics or operational conditions were available."),\n                before_metrics, {}, objectives,\n            )
 
         comparable_keys = sorted(set(before_metrics) & set(after_metrics))
         comparable_keys = [key for key in comparable_keys if cls._direction(key) is not None]
         if not comparable_keys:
-            return cls._inconclusive(before_metrics, after_metrics, cls._evidence_refs(before_context) + cls._evidence_refs(after_context), "No comparable evidence with defined verification semantics was found.")
+            return cls._apply_objectives(\n                cls._inconclusive(before_metrics, after_metrics, cls._evidence_refs(before_context) + cls._evidence_refs(after_context), "No comparable evidence with defined verification semantics was found."),\n                before_metrics, after_metrics, objectives,\n            )
 
         changes: List[str] = []
         improvements = 0
@@ -148,12 +159,160 @@ class VerificationEngine:
             message = "The result is mixed and requires further observation."
 
         refs = cls._dedupe_refs(cls._evidence_refs(before_context) + cls._evidence_refs(after_context))
-        return VerificationResult(
+        base_result = VerificationResult(
             status=status, before_state=before_metrics, after_state=after_metrics,
             changes=changes, confidence=round(confidence, 4), evidence_refs=refs,
             message=message, metric_directions=directions, comparable_metrics=comparable,
         )
+        return cls._apply_objectives(
+            base_result, before_metrics, after_metrics, objectives
+        )
 
+    @staticmethod
+    def _objective_target(check: Dict[str, Any]) -> str:
+        return str(
+            check.get("metric")
+            or check.get("signal")
+            or check.get("state")
+            or ""
+        ).strip()
+
+    @staticmethod
+    def _expected_numeric(value: Any) -> Optional[float]:
+        if isinstance(value, bool):
+            return 1.0 if value else 0.0
+        if isinstance(value, (int, float)) and not isinstance(value, bool):
+            return float(value)
+        try:
+            return float(str(value).strip())
+        except (TypeError, ValueError):
+            return None
+
+    @classmethod
+    def _apply_objectives(
+        cls,
+        result: VerificationResult,
+        before: Dict[str, float],
+        after: Dict[str, float],
+        objectives: List[Dict[str, Any]],
+    ) -> VerificationResult:
+        if not objectives:
+            return result
+
+        rows: List[Dict[str, Any]] = []
+        missing: List[str] = []
+        failed: List[str] = []
+        for check in objectives:
+            target = cls._objective_target(check)
+            direction = str(check.get("direction") or "").strip()
+            expected = check.get("expected")
+            present = target in after
+            passed = False
+            actual = after.get(target)
+            reason = None
+
+            if not target or not present:
+                reason = "post_execution_objective_evidence_missing"
+                if target:
+                    missing.append(target)
+            elif direction == "equals":
+                expected_numeric = cls._expected_numeric(expected)
+                if expected_numeric is None:
+                    reason = "verification_objective_expected_value_invalid"
+                else:
+                    passed = abs(float(actual) - expected_numeric) <= 1e-9
+                    if not passed:
+                        reason = "verification_objective_not_met"
+            elif direction == "absent":
+                passed = abs(float(actual)) <= 1e-9
+                if not passed:
+                    reason = "verification_objective_not_absent"
+            elif direction in {"lower_is_better", "higher_is_better"}:
+                expected_text = str(expected or "").strip()
+                expected_numeric = cls._expected_numeric(expected)
+                if expected_text == "below_pre_action_baseline":
+                    if target not in before:
+                        reason = "pre_action_objective_evidence_missing"
+                    else:
+                        passed = float(actual) < float(before[target])
+                elif expected_text == "above_pre_action_baseline":
+                    if target not in before:
+                        reason = "pre_action_objective_evidence_missing"
+                    else:
+                        passed = float(actual) > float(before[target])
+                elif expected_numeric is not None:
+                    passed = (
+                        float(actual) <= expected_numeric
+                        if direction == "lower_is_better"
+                        else float(actual) >= expected_numeric
+                    )
+                elif target in before:
+                    passed = (
+                        float(actual) < float(before[target])
+                        if direction == "lower_is_better"
+                        else float(actual) > float(before[target])
+                    )
+                else:
+                    reason = "verification_objective_threshold_missing"
+                if not passed and reason is None:
+                    reason = "verification_objective_not_met"
+            else:
+                reason = "verification_objective_direction_invalid"
+
+            if present and not passed and reason not in {
+                "post_execution_objective_evidence_missing",
+                "pre_action_objective_evidence_missing",
+            }:
+                failed.append(target or "unknown")
+            rows.append(
+                {
+                    "target": target or None,
+                    "direction": direction or None,
+                    "expected": expected,
+                    "actual": actual,
+                    "passed": passed,
+                    "reason": reason,
+                }
+            )
+
+        all_met = bool(rows) and all(bool(row.get("passed")) for row in rows)
+        status = result.status
+        confidence = result.confidence
+        message = result.message
+        if failed:
+            status = VerificationStatus.FAILED
+            confidence = max(confidence, 0.9)
+            message = (
+                "Runbook verification objectives failed: "
+                + ", ".join(sorted(set(failed)))
+                + ". "
+                + message
+            )
+        elif missing:
+            if status != VerificationStatus.FAILED:
+                status = VerificationStatus.INCONCLUSIVE
+                confidence = min(confidence, 0.4)
+            message = (
+                "Runbook verification objective evidence missing: "
+                + ", ".join(sorted(set(missing)))
+                + ". "
+                + message
+            )
+        elif all_met and status == VerificationStatus.INCONCLUSIVE:
+            status = VerificationStatus.SUCCESS
+            confidence = max(confidence, 0.9)
+            message = "All required runbook verification objectives were met. " + message
+
+        return result.model_copy(
+            update={
+                "status": status,
+                "confidence": round(float(confidence), 4),
+                "message": message,
+                "verification_policy": "runbook_required_objectives",
+                "objective_results": rows,
+                "required_objectives_met": all_met,
+            }
+        )
     @classmethod
     def _inconclusive(cls, before: Dict[str, float], after: Dict[str, float], refs: List[str], message: str) -> VerificationResult:
         return VerificationResult(
