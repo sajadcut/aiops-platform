@@ -9,6 +9,7 @@ from apps.approval_service.postgres import PostgreSQLApprovalStore
 from apps.audit_service import AuditService
 from apps.audit_service.postgres import PostgreSQLAuditStore
 from apps.runbook_service.executor import RunbookExecutor
+from apps.runbook_service.runtime_guard import RunbookRuntimeGuard
 from apps.runbook_service.registry import RunbookRegistry
 from apps.security.auth import require_permission
 from database import AsyncSessionLocal
@@ -129,6 +130,59 @@ async def execute_runbook(
         except (TypeError, ValueError) as exc:
             raise HTTPException(status_code=409, detail=str(exc)) from exc
 
+        execution_contract = (
+            dict(runbook.get("execution") or {})
+            if isinstance(runbook.get("execution"), dict)
+            else {}
+        )
+        before_snapshot = None
+        precondition = None
+        if execution_contract:
+            before_snapshot = await RunbookRuntimeGuard.collect_snapshot(
+                runbook_id=runbook_id,
+                target=target,
+                parameters=parameters,
+                incident_id=incident_id,
+                phase="pre",
+            )
+            precondition = RunbookRuntimeGuard.preflight(
+                runbook_id=runbook_id,
+                tool_name=tool_name,
+                action=action,
+                target=target,
+                parameters=parameters,
+                incident_id=incident_id,
+                evidence=list(before_snapshot.get("evidence") or []),
+            )
+            if not precondition.get("safe_to_execute"):
+                await _audit_durable(
+                    db,
+                    identity.subject,
+                    incident_id,
+                    action,
+                    {
+                        "approval_id": approval_id,
+                        "runbook_id": runbook_id,
+                        "runbook_version": version,
+                        "tool_name": tool_name,
+                        "target": target,
+                        "phase": "precondition",
+                        "precondition": precondition,
+                        "snapshot_error": before_snapshot.get("error"),
+                        "execution_blocked": True,
+                    },
+                )
+                raise HTTPException(
+                    status_code=409,
+                    detail=(
+                        "runbook_execution_precondition_failed:"
+                        + str(
+                            precondition.get("reason")
+                            or "runtime_precondition_failed"
+                        )
+                    ),
+                )
+
         consumed = await store.consume(approval_id)
         if not consumed or consumed.get("status") != "consumed":
             raise HTTPException(status_code=409, detail="approval_already_consumed_or_unavailable")
@@ -146,6 +200,62 @@ async def execute_runbook(
             approval_granted=True,
             rollback_requested=rollback,
         )
+
+        verification_payload = None
+        verified = None
+        if execution_contract:
+            execution_payload = (
+                dict(result.get("result") or {})
+                if isinstance(result.get("result"), dict)
+                else {}
+            )
+            execution_success = bool(execution_payload.get("success"))
+            if execution_success:
+                after_snapshot = await RunbookRuntimeGuard.collect_snapshot(
+                    runbook_id=runbook_id,
+                    target=target,
+                    parameters=parameters,
+                    incident_id=incident_id,
+                    phase="post",
+                )
+                verification_result = await RunbookRuntimeGuard.verify(
+                    runbook=runbook,
+                    action=action,
+                    service=str(parameters.get("service") or target),
+                    before_context=dict(
+                        (before_snapshot or {}).get("context") or {}
+                    ),
+                    after_context=dict(
+                        after_snapshot.get("context") or {}
+                    ),
+                )
+                verification_payload = verification_result.model_dump(
+                    mode="json"
+                )
+                verification_payload["snapshot_error"] = (
+                    after_snapshot.get("error")
+                )
+                verified = (
+                    verification_result.status.value == "success"
+                    and verification_result.required_objectives_met is True
+                )
+            else:
+                verification_payload = {
+                    "status": "failed",
+                    "verification_policy": "execution_failed_before_verification",
+                    "required_objectives_met": False,
+                    "message": (
+                        execution_payload.get("error")
+                        or execution_payload.get("reason")
+                        or "Runbook execution failed before recovery could be verified."
+                    ),
+                }
+                verified = False
+
+            result["precondition"] = precondition
+            result["verification"] = verification_payload
+            result["verified"] = verified
+
         await _audit_durable(
             db,
             identity.subject,
@@ -159,6 +269,9 @@ async def execute_runbook(
                 "target": target,
                 "rollback": rollback,
                 "result_status": result.get("status"),
+                "verified": verified,
+                "verification": verification_payload,
+                "precondition": precondition,
             },
         )
         return result
