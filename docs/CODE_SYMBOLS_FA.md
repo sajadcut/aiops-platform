@@ -2166,14 +2166,14 @@
 | `tests/security/test_route_auth_surface.py` | `test_every_non_public_api_route_has_explicit_permission_dependency` | 33 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/security/test_runbook_approval_boundary.py` | `_Registry` | 7 | class | کلاس | module |
 | `tests/security/test_runbook_approval_boundary.py` | `_Registry.get` | 8 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Registry |
-| `tests/security/test_runbook_approval_boundary.py` | `_Registry.validate` | 11 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | _Registry |
-| `tests/security/test_runbook_approval_boundary.py` | `_result` | 15 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `tests/security/test_runbook_approval_boundary.py` | `test_non_empty_approval_id_does_not_grant_execution` | 28 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/security/test_runbook_approval_boundary.py` | `test_non_empty_approval_id_does_not_grant_execution.fake_execute` | 31 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_non_empty_approval_id_does_not_grant_execution |
-| `tests/security/test_runbook_approval_boundary.py` | `test_validated_upstream_approval_context_is_propagated` | 52 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/security/test_runbook_approval_boundary.py` | `test_validated_upstream_approval_context_is_propagated.fake_execute` | 55 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_validated_upstream_approval_context_is_propagated |
-| `tests/security/test_runbook_approval_boundary.py` | `test_replay_cache_is_scoped_to_same_consumed_approval` | 78 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/security/test_runbook_approval_boundary.py` | `test_replay_cache_is_scoped_to_same_consumed_approval.fake_execute` | 81 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_replay_cache_is_scoped_to_same_consumed_approval |
+| `tests/security/test_runbook_approval_boundary.py` | `_Registry.validate` | 18 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | _Registry |
+| `tests/security/test_runbook_approval_boundary.py` | `_result` | 22 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/security/test_runbook_approval_boundary.py` | `test_non_empty_approval_id_does_not_grant_execution` | 35 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/security/test_runbook_approval_boundary.py` | `test_non_empty_approval_id_does_not_grant_execution.fake_execute` | 38 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_non_empty_approval_id_does_not_grant_execution |
+| `tests/security/test_runbook_approval_boundary.py` | `test_validated_upstream_approval_context_is_propagated` | 59 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/security/test_runbook_approval_boundary.py` | `test_validated_upstream_approval_context_is_propagated.fake_execute` | 62 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_validated_upstream_approval_context_is_propagated |
+| `tests/security/test_runbook_approval_boundary.py` | `test_replay_cache_is_scoped_to_same_consumed_approval` | 85 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/security/test_runbook_approval_boundary.py` | `test_replay_cache_is_scoped_to_same_consumed_approval.fake_execute` | 88 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_replay_cache_is_scoped_to_same_consumed_approval |
 | `tests/security/test_vm_mcp_security.py` | `test_vm_target_and_service_allowlists` | 10 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/security/test_vm_mcp_security.py` | `test_production_vm_edge_rejects_root_and_missing_host_pinning` | 23 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/security/test_vm_mcp_security.py` | `_FakeVMConnector` | 40 | class | کلاس | module |
