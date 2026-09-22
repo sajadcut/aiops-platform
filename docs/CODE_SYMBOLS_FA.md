@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 389 | Dashboard JS files scanned: 5 | Symbols indexed: 3450**
+**Python files scanned: 389 | Dashboard JS files scanned: 5 | Symbols indexed: 3451**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -3151,25 +3151,26 @@
 | `tests/unit/test_runbook_api_preflight.py` | `_Session.__aenter__` | 10 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Session |
 | `tests/unit/test_runbook_api_preflight.py` | `_Session.__aexit__` | 13 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Session |
 | `tests/unit/test_runbook_api_preflight.py` | `_Store` | 17 | class | کلاس | module |
-| `tests/unit/test_runbook_api_preflight.py` | `_Store.__init__` | 20 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Store |
-| `tests/unit/test_runbook_api_preflight.py` | `_Store.get` | 23 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Store |
-| `tests/unit/test_runbook_api_preflight.py` | `_Store.consume` | 32 | async method | transition مربوط به Approval/Governance را اعمال می‌کند | _Store |
-| `tests/unit/test_runbook_api_preflight.py` | `test_direct_runbook_preflight_blocks_before_approval_consume` | 41 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_runbook_api_preflight.py` | `test_direct_runbook_preflight_blocks_before_approval_consume.no_audit` | 49 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_direct_runbook_preflight_blocks_before_approval_consume |
-| `tests/unit/test_runbook_api_preflight.py` | `test_direct_runbook_preflight_blocks_before_approval_consume.snapshot` | 54 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_direct_runbook_preflight_blocks_before_approval_consume |
-| `tests/unit/test_runbook_api_preflight.py` | `test_direct_runbook_preflight_blocks_before_approval_consume.execute` | 78 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | test_direct_runbook_preflight_blocks_before_approval_consume |
-| `tests/unit/test_runbook_api_preflight.py` | `test_non_executable_runbook_cannot_reach_production_execute` | 111 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_runbook_api_preflight.py` | `test_non_executable_runbook_remains_available_for_dry_run_contract_resolution` | 143 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_runbook_api_preflight.py` | `_IncidentRepo` | 178 | class | کلاس | module |
-| `tests/unit/test_runbook_api_preflight.py` | `_IncidentRepo.__init__` | 181 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _IncidentRepo |
-| `tests/unit/test_runbook_api_preflight.py` | `_IncidentRepo.record_operational_outcome` | 184 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _IncidentRepo |
-| `tests/unit/test_runbook_api_preflight.py` | `_IncidentRepo.commit` | 188 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _IncidentRepo |
-| `tests/unit/test_runbook_api_preflight.py` | `test_runbook_success_verifies_learns_and_finalizes_incident` | 193 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_runbook_api_preflight.py` | `test_runbook_success_verifies_learns_and_finalizes_incident.no_audit` | 204 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_runbook_success_verifies_learns_and_finalizes_incident |
-| `tests/unit/test_runbook_api_preflight.py` | `test_runbook_success_verifies_learns_and_finalizes_incident.snapshot` | 209 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_runbook_success_verifies_learns_and_finalizes_incident |
-| `tests/unit/test_runbook_api_preflight.py` | `test_runbook_success_verifies_learns_and_finalizes_incident.verify` | 244 | async method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | test_runbook_success_verifies_learns_and_finalizes_incident |
-| `tests/unit/test_runbook_api_preflight.py` | `test_runbook_success_verifies_learns_and_finalizes_incident.execute` | 249 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | test_runbook_success_verifies_learns_and_finalizes_incident |
-| `tests/unit/test_runbook_api_preflight.py` | `test_runbook_success_verifies_learns_and_finalizes_incident.record_memory` | 263 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_runbook_success_verifies_learns_and_finalizes_incident |
+| `tests/unit/test_runbook_api_preflight.py` | `_Store.__init__` | 21 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Store |
+| `tests/unit/test_runbook_api_preflight.py` | `_Store.get` | 24 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Store |
+| `tests/unit/test_runbook_api_preflight.py` | `_Store.cancel` | 33 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Store |
+| `tests/unit/test_runbook_api_preflight.py` | `_Store.consume` | 44 | async method | transition مربوط به Approval/Governance را اعمال می‌کند | _Store |
+| `tests/unit/test_runbook_api_preflight.py` | `test_direct_runbook_preflight_blocks_before_approval_consume` | 53 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_runbook_api_preflight.py` | `test_direct_runbook_preflight_blocks_before_approval_consume.no_audit` | 62 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_direct_runbook_preflight_blocks_before_approval_consume |
+| `tests/unit/test_runbook_api_preflight.py` | `test_direct_runbook_preflight_blocks_before_approval_consume.snapshot` | 67 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_direct_runbook_preflight_blocks_before_approval_consume |
+| `tests/unit/test_runbook_api_preflight.py` | `test_direct_runbook_preflight_blocks_before_approval_consume.execute` | 91 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | test_direct_runbook_preflight_blocks_before_approval_consume |
+| `tests/unit/test_runbook_api_preflight.py` | `test_non_executable_runbook_cannot_reach_production_execute` | 125 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_runbook_api_preflight.py` | `test_non_executable_runbook_remains_available_for_dry_run_contract_resolution` | 157 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_runbook_api_preflight.py` | `_IncidentRepo` | 192 | class | کلاس | module |
+| `tests/unit/test_runbook_api_preflight.py` | `_IncidentRepo.__init__` | 195 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _IncidentRepo |
+| `tests/unit/test_runbook_api_preflight.py` | `_IncidentRepo.record_operational_outcome` | 198 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _IncidentRepo |
+| `tests/unit/test_runbook_api_preflight.py` | `_IncidentRepo.commit` | 202 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _IncidentRepo |
+| `tests/unit/test_runbook_api_preflight.py` | `test_runbook_success_verifies_learns_and_finalizes_incident` | 207 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_runbook_api_preflight.py` | `test_runbook_success_verifies_learns_and_finalizes_incident.no_audit` | 218 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_runbook_success_verifies_learns_and_finalizes_incident |
+| `tests/unit/test_runbook_api_preflight.py` | `test_runbook_success_verifies_learns_and_finalizes_incident.snapshot` | 223 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_runbook_success_verifies_learns_and_finalizes_incident |
+| `tests/unit/test_runbook_api_preflight.py` | `test_runbook_success_verifies_learns_and_finalizes_incident.verify` | 258 | async method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | test_runbook_success_verifies_learns_and_finalizes_incident |
+| `tests/unit/test_runbook_api_preflight.py` | `test_runbook_success_verifies_learns_and_finalizes_incident.execute` | 263 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | test_runbook_success_verifies_learns_and_finalizes_incident |
+| `tests/unit/test_runbook_api_preflight.py` | `test_runbook_success_verifies_learns_and_finalizes_incident.record_memory` | 277 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_runbook_success_verifies_learns_and_finalizes_incident |
 | `tests/unit/test_runbook_execution_contract.py` | `test_vm_recovery_contract_derives_tool_and_requires_allowlisted_action` | 9 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_runbook_execution_contract.py` | `test_vm_recovery_contract_rejects_caller_tool_override` | 28 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_runbook_execution_contract.py` | `test_vm_recovery_contract_rejects_action_outside_runbook_allowlist` | 44 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
