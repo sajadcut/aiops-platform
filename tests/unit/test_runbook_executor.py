@@ -31,3 +31,26 @@ async def test_dry_run_is_side_effect_free():
 def test_runbook_registry_validation():
     registry = Registry()
     assert registry.validate("app-error-rollback", {})["valid"] is True
+
+
+@pytest.mark.asyncio
+async def test_non_executable_runbook_is_dry_run_only():
+    executor = RunbookExecutor(Registry())
+
+    dry_run = await executor.execute(
+        "app-error-rollback",
+        tool_name="mock_executor",
+        target="service-a",
+        parameters={"release": "r1"},
+        dry_run=True,
+    )
+    assert dry_run["status"] == "dry_run"
+
+    with pytest.raises(ValueError, match="runbook_not_executable"):
+        await executor.execute(
+            "app-error-rollback",
+            tool_name="mock_executor",
+            target="service-a",
+            parameters={"release": "r1"},
+            dry_run=False,
+        )
