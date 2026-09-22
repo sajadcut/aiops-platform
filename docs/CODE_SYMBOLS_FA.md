@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 391 | Dashboard JS files scanned: 5 | Symbols indexed: 3465**
+**Python files scanned: 391 | Dashboard JS files scanned: 5 | Symbols indexed: 3466**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -723,10 +723,11 @@
 | `apps/api/incident_resources.py` | `get_incident_audit` | 253 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
 | `apps/api/incident_resources.py` | `get_incident_lifecycle` | 260 | async function | Return durable governance plus structured agent routing/collaboration state. | module |
 | `apps/api/incident_resources.py` | `get_operator_summary` | 301 | async function | Return a read-only Persian operator summary derived from current durable Incident state. | module |
-| `apps/api/incidents.py` | `simulate_incident` | 22 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/incidents.py` | `analyze_incident` | 46 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/incidents.py` | `RemediationRequest` | 107 | class | کلاس | module |
-| `apps/api/incidents.py` | `request_remediation` | 114 | async function | Create a durable approval request; this endpoint never executes a tool. | module |
+| `apps/api/incidents.py` | `simulate_incident` | 24 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/incidents.py` | `analyze_incident` | 48 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/incidents.py` | `RemediationRequest` | 109 | class | کلاس | module |
+| `apps/api/incidents.py` | `_remediation_contract_from_checkpoint` | 115 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/incidents.py` | `request_remediation` | 178 | async function | Return/create only an approval bound to the durable workflow execution intent. | module |
 | `apps/api/main.py` | `root` | 75 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/main.py` | `dashboard_page` | 87 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/main.py` | `dashboard_page_slash` | 92 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
