@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 393 | Dashboard JS files scanned: 5 | Symbols indexed: 3489**
+**Python files scanned: 393 | Dashboard JS files scanned: 5 | Symbols indexed: 3490**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -2028,12 +2028,13 @@
 | `tests/integration/test_chatbot_write_acceptance.py` | `test_confirmed_kubernetes_restart_uses_bound_execution_and_consumed_approval.fake_execute` | 162 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_confirmed_kubernetes_restart_uses_bound_execution_and_consumed_approval |
 | `tests/integration/test_chatbot_write_acceptance.py` | `test_confirmed_kubernetes_restart_uses_bound_execution_and_consumed_approval.fake_verify` | 173 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_confirmed_kubernetes_restart_uses_bound_execution_and_consumed_approval |
 | `tests/integration/test_chatbot_write_acceptance.py` | `test_confirmed_kubernetes_restart_uses_bound_execution_and_consumed_approval.fake_snapshot` | 176 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_confirmed_kubernetes_restart_uses_bound_execution_and_consumed_approval |
-| `tests/integration/test_chatbot_write_acceptance.py` | `test_stale_vm_proposal_fails_before_approval_or_execution` | 207 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/integration/test_chatbot_write_acceptance.py` | `test_stale_vm_proposal_fails_before_approval_or_execution.forbidden_execute` | 219 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_stale_vm_proposal_fails_before_approval_or_execution |
-| `tests/integration/test_chatbot_write_acceptance.py` | `test_stale_vm_proposal_fails_before_approval_or_execution.stale_guard` | 223 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_stale_vm_proposal_fails_before_approval_or_execution |
-| `tests/integration/test_chatbot_write_acceptance.py` | `test_retryable_vm_preflight_keeps_pending_without_approval` | 286 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/integration/test_chatbot_write_acceptance.py` | `test_retryable_vm_preflight_keeps_pending_without_approval.forbidden_execute` | 298 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_retryable_vm_preflight_keeps_pending_without_approval |
-| `tests/integration/test_chatbot_write_acceptance.py` | `test_retryable_vm_preflight_keeps_pending_without_approval.retryable_guard` | 302 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_retryable_vm_preflight_keeps_pending_without_approval |
+| `tests/integration/test_chatbot_write_acceptance.py` | `test_confirmed_kubernetes_restart_uses_bound_execution_and_consumed_approval.safe_guard` | 184 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_confirmed_kubernetes_restart_uses_bound_execution_and_consumed_approval |
+| `tests/integration/test_chatbot_write_acceptance.py` | `test_stale_vm_proposal_fails_before_approval_or_execution` | 228 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/integration/test_chatbot_write_acceptance.py` | `test_stale_vm_proposal_fails_before_approval_or_execution.forbidden_execute` | 240 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_stale_vm_proposal_fails_before_approval_or_execution |
+| `tests/integration/test_chatbot_write_acceptance.py` | `test_stale_vm_proposal_fails_before_approval_or_execution.stale_guard` | 244 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_stale_vm_proposal_fails_before_approval_or_execution |
+| `tests/integration/test_chatbot_write_acceptance.py` | `test_retryable_vm_preflight_keeps_pending_without_approval` | 307 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/integration/test_chatbot_write_acceptance.py` | `test_retryable_vm_preflight_keeps_pending_without_approval.forbidden_execute` | 319 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_retryable_vm_preflight_keeps_pending_without_approval |
+| `tests/integration/test_chatbot_write_acceptance.py` | `test_retryable_vm_preflight_keeps_pending_without_approval.retryable_guard` | 323 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_retryable_vm_preflight_keeps_pending_without_approval |
 | `tests/integration/test_controlled_connectors.py` | `test_native_edge_observability_connectors_health_harness` | 8 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/integration/test_controlled_connectors.py` | `test_native_edge_observability_connectors_health_harness.healthy` | 9 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_native_edge_observability_connectors_health_harness |
 | `tests/integration/test_controlled_connectors.py` | `test_native_edge_observability_failure_harness` | 20 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
