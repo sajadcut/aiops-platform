@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 395 | Dashboard JS files scanned: 5 | Symbols indexed: 3520**
+**Python files scanned: 395 | Dashboard JS files scanned: 5 | Symbols indexed: 3521**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -2732,16 +2732,17 @@
 | `tests/unit/test_evaluator.py` | `test_accepts_evidence_backed_plan` | 10 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_evaluator_live_evidence_binding.py` | `test_orchestrator_evaluator_passes_authoritative_live_evidence_ids` | 8 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_evaluator_live_evidence_binding.py` | `test_orchestrator_evaluator_passes_authoritative_live_evidence_ids.fake_evaluate` | 12 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_orchestrator_evaluator_passes_authoritative_live_evidence_ids |
-| `tests/unit/test_execution_approval_propagation.py` | `ApprovalRequiredTool` | 9 | class | کلاس | module |
-| `tests/unit/test_execution_approval_propagation.py` | `ApprovalRequiredTool.name` | 11 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ApprovalRequiredTool |
-| `tests/unit/test_execution_approval_propagation.py` | `ApprovalRequiredTool.risk_level` | 15 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ApprovalRequiredTool |
-| `tests/unit/test_execution_approval_propagation.py` | `ApprovalRequiredTool.validate` | 18 | async method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | ApprovalRequiredTool |
-| `tests/unit/test_execution_approval_propagation.py` | `ApprovalRequiredTool.execute` | 21 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | ApprovalRequiredTool |
-| `tests/unit/test_execution_approval_propagation.py` | `test_validated_approval_context_reaches_tool_registry` | 26 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_execution_approval_propagation.py` | `test_approval_ids_without_granted_marker_are_blocked` | 48 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_execution_approval_propagation.py` | `test_granted_marker_without_bound_ids_is_blocked` | 69 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_execution_approval_propagation.py` | `test_boolean_and_approval_id_cannot_bypass_single_use_execution_claim` | 88 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_execution_approval_propagation.py` | `test_execution_claim_is_redeemed_exactly_once` | 109 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_execution_approval_propagation.py` | `ApprovalRequiredTool` | 10 | class | کلاس | module |
+| `tests/unit/test_execution_approval_propagation.py` | `ApprovalRequiredTool.name` | 12 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ApprovalRequiredTool |
+| `tests/unit/test_execution_approval_propagation.py` | `ApprovalRequiredTool.risk_level` | 16 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ApprovalRequiredTool |
+| `tests/unit/test_execution_approval_propagation.py` | `ApprovalRequiredTool.validate` | 19 | async method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | ApprovalRequiredTool |
+| `tests/unit/test_execution_approval_propagation.py` | `ApprovalRequiredTool.execute` | 22 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | ApprovalRequiredTool |
+| `tests/unit/test_execution_approval_propagation.py` | `test_validated_approval_context_reaches_tool_registry` | 27 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_execution_approval_propagation.py` | `test_approval_ids_without_granted_marker_are_blocked` | 49 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_execution_approval_propagation.py` | `test_granted_marker_without_bound_ids_is_blocked` | 70 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_execution_approval_propagation.py` | `test_boolean_and_approval_id_cannot_bypass_single_use_execution_claim` | 89 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_execution_approval_propagation.py` | `test_execution_claim_is_redeemed_exactly_once` | 110 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_execution_approval_propagation.py` | `test_execution_claim_expires_and_cannot_be_redeemed` | 133 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_execution_policy.py` | `test_production_high_risk_requires_approval` | 4 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_execution_policy.py` | `test_allowlisted_low_risk_can_run_without_approval_requirement` | 8 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_execution_policy.py` | `test_non_allowlisted_tool_is_denied` | 12 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
