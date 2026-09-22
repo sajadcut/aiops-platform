@@ -92,7 +92,7 @@ async def test_confirmed_vm_action_uses_durable_approval_consumption_and_is_not_
             approval_id=request.approval_id,
         )
 
-    async def fake_verify(self, proposal_row):
+    async def fake_verify(self, proposal_row, before_snapshot=None):
         return {"verified": True, "source": "fake_vm_mcp", "result": {"active": True}}
 
     monkeypatch.setattr(ExecutionService, "execute", staticmethod(fake_execute))
