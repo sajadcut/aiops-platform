@@ -84,11 +84,11 @@ async def record_runbook_outcome(
     evidence_count = int(
         (episode.get("evidence_provenance") or {}).get("evidence_count") or 0
     )
-    verification = dict(verification_result or {})
+    verification = dict(kwargs.get("verification_result") or {})
     verification_status = str(
         verification.get("status") or "inconclusive"
     ).strip().lower()
-    execution_success = bool((execution_result or {}).get("success"))
+    execution_success = bool((kwargs.get("execution_result") or {}).get("success"))
 
     # Successful/verified reusable lessons require evidence provenance.
     # Failed or blocked governed attempts are still durable negative experience:
