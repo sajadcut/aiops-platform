@@ -219,10 +219,28 @@ class PostgreSQLApprovalStore:
         return [str(value) for value in rows]
 
     async def consume(self, approval_id: str) -> Optional[Dict[str, Any]]:
-        """Approval approved را دقیقاً یک بار درست قبل از عبور از execution boundary مصرف می‌کند."""
+        """Claim approved authority exactly once at the execution boundary.
+
+        Consumed means execution has claimed the approval and is about to enter
+        the governed tool boundary. Before that claim, re-check source recovery
+        so a missed or late cancellation cannot authorize a stale action.
+        """
         current = await self.get(approval_id)
         if current is None or current.get("status") != "approved":
             return current
+
+        incident_id = str(current.get("incident_id") or "")
+        if incident_id and await self._incident_source_recovered(incident_id):
+            await self.cancel_unconsumed_for_incident(
+                incident_id,
+                reason="source_recovered_before_execution_claim",
+                metadata_patch={
+                    "cancelled_due_to_source_recovery": True,
+                    "consume_blocked": True,
+                },
+            )
+            return await self._get_raw(approval_id)
+
         row = (
             await self.session.execute(
                 text(
