@@ -3,7 +3,7 @@
 > این فایل فهرست فایل‌به‌فایل repository است. توضیح معماری و flow در `CODEBASE_GUIDE_FA.md` آمده است.
 > این فایل با `scripts/generate_file_index_fa.py` ساخته و در CI کنترل می‌شود.
 
-**تعداد فایل‌های track‌شده و پوشش‌داده‌شده: 455**
+**تعداد فایل‌های track‌شده و پوشش‌داده‌شده: 457**
 
 | Path | Type | Purpose | Called By | Calls/Depends On | Runtime/Test/Docs | Notes |
 |---|---|---|---|---|---|---|
@@ -199,6 +199,8 @@
 | `deployment/docker/offline/README.md` | Docs | راهنما یا artifact manifest استقرار | اپراتور | deployment files | Deploy | offline/supply-chain |
 | `deployment/kubernetes/aiops-platform.yaml` | K8s | Manifest/نمونه config استقرار | Kubernetes/OpenShift | image/.env/secrets | Deploy | runtime deployment |
 | `deployment/kubernetes/configuration.example.yaml` | K8s | Manifest/نمونه config استقرار | Kubernetes/OpenShift | image/.env/secrets | Deploy | runtime deployment |
+| `deployment/kubernetes/memory-embedding-backfill-cronjob.yaml` | K8s | Manifest/نمونه config استقرار | Kubernetes/OpenShift | image/.env/secrets | Deploy | runtime deployment |
+| `deployment/kubernetes/memory-stale-cronjob.yaml` | K8s | Manifest/نمونه config استقرار | Kubernetes/OpenShift | image/.env/secrets | Deploy | runtime deployment |
 | `deployment/kubernetes/migrate-job.yaml` | K8s | Manifest/نمونه config استقرار | Kubernetes/OpenShift | image/.env/secrets | Deploy | runtime deployment |
 | `deployment/logrotate/aiops-platform` | Docs | راهنما یا artifact manifest استقرار | اپراتور | deployment files | Deploy | offline/supply-chain |
 | `deployment/systemd/aiops-logrotate.service` | Docs | راهنما یا artifact manifest استقرار | اپراتور | deployment files | Deploy | offline/supply-chain |
