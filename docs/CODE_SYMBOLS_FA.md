@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 385 | Dashboard JS files scanned: 5 | Symbols indexed: 3362**
+**Python files scanned: 386 | Dashboard JS files scanned: 5 | Symbols indexed: 3383**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -3072,6 +3072,27 @@
 | `tests/unit/test_remediation_planner.py` | `test_pre_execution_revalidation_allows_start_only_while_service_remains_inactive` | 216 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_remediation_planner.py` | `test_pre_execution_revalidation_fails_closed_without_fresh_config_check` | 242 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_remediation_planner.py` | `test_durable_resume_restores_persisted_vm_target_and_port_context` | 266 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_remediation_runtime_guard.py` | `_Session` | 11 | class | کلاس | module |
+| `tests/unit/test_remediation_runtime_guard.py` | `_Session.__aenter__` | 12 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Session |
+| `tests/unit/test_remediation_runtime_guard.py` | `_Session.__aexit__` | 15 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Session |
+| `tests/unit/test_remediation_runtime_guard.py` | `_Store` | 19 | class | کلاس | module |
+| `tests/unit/test_remediation_runtime_guard.py` | `_Store.__init__` | 22 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Store |
+| `tests/unit/test_remediation_runtime_guard.py` | `_Store.get` | 25 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Store |
+| `tests/unit/test_remediation_runtime_guard.py` | `_Store.consume` | 40 | async method | transition مربوط به Approval/Governance را اعمال می‌کند | _Store |
+| `tests/unit/test_remediation_runtime_guard.py` | `_Registry` | 48 | class | کلاس | module |
+| `tests/unit/test_remediation_runtime_guard.py` | `_Registry.__init__` | 49 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Registry |
+| `tests/unit/test_remediation_runtime_guard.py` | `_Registry.get` | 52 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Registry |
+| `tests/unit/test_remediation_runtime_guard.py` | `_identity` | 73 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_remediation_runtime_guard.py` | `test_remediation_request_rejects_action_without_executable_runbook_contract` | 77 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_remediation_runtime_guard.py` | `test_remediation_preflight_blocks_before_approval_consume` | 87 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_remediation_runtime_guard.py` | `test_remediation_preflight_blocks_before_approval_consume.no_audit` | 95 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_remediation_preflight_blocks_before_approval_consume |
+| `tests/unit/test_remediation_runtime_guard.py` | `test_remediation_preflight_blocks_before_approval_consume.snapshot` | 100 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_remediation_preflight_blocks_before_approval_consume |
+| `tests/unit/test_remediation_runtime_guard.py` | `test_remediation_preflight_blocks_before_approval_consume.execute` | 120 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | test_remediation_preflight_blocks_before_approval_consume |
+| `tests/unit/test_remediation_runtime_guard.py` | `test_remediation_success_requires_post_action_verification` | 141 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_remediation_runtime_guard.py` | `test_remediation_success_requires_post_action_verification.no_audit` | 150 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_remediation_success_requires_post_action_verification |
+| `tests/unit/test_remediation_runtime_guard.py` | `test_remediation_success_requires_post_action_verification.snapshot` | 155 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_remediation_success_requires_post_action_verification |
+| `tests/unit/test_remediation_runtime_guard.py` | `test_remediation_success_requires_post_action_verification.verify` | 190 | async method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | test_remediation_success_requires_post_action_verification |
+| `tests/unit/test_remediation_runtime_guard.py` | `test_remediation_success_requires_post_action_verification.execute` | 195 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | test_remediation_success_requires_post_action_verification |
 | `tests/unit/test_runbook_api_preflight.py` | `_Session` | 9 | class | کلاس | module |
 | `tests/unit/test_runbook_api_preflight.py` | `_Session.__aenter__` | 10 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Session |
 | `tests/unit/test_runbook_api_preflight.py` | `_Session.__aexit__` | 13 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Session |
