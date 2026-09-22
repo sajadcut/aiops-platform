@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 366 | Dashboard JS files scanned: 5 | Symbols indexed: 3224**
+**Python files scanned: 366 | Dashboard JS files scanned: 5 | Symbols indexed: 3230**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -2414,6 +2414,12 @@
 | `tests/unit/test_chatbot_memory_learning.py` | `FakeMemoryService.add_episode` | 33 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeMemoryService |
 | `tests/unit/test_chatbot_memory_learning.py` | `test_chatbot_verified_execution_writes_resolved_memory` | 39 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_chatbot_memory_learning.py` | `test_chatbot_unverified_execution_escalates` | 94 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_memory_learning.py` | `_baseline_vm_snapshot` | 145 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_chatbot_memory_learning.py` | `_chatbot_vm_proposal` | 187 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_chatbot_memory_learning.py` | `test_chatbot_verification_rejects_active_service_when_port_remains_down` | 199 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_memory_learning.py` | `test_chatbot_verification_rejects_active_service_when_port_remains_down.fake_execute` | 230 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_chatbot_verification_rejects_active_service_when_port_remains_down |
+| `tests/unit/test_chatbot_memory_learning.py` | `test_chatbot_verification_requires_before_after_recovery` | 250 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_memory_learning.py` | `test_chatbot_verification_requires_before_after_recovery.fake_execute` | 281 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_chatbot_verification_requires_before_after_recovery |
 | `tests/unit/test_chatbot_reliable_service.py` | `SequencedLLM` | 15 | class | کلاس | module |
 | `tests/unit/test_chatbot_reliable_service.py` | `SequencedLLM.__init__` | 16 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SequencedLLM |
 | `tests/unit/test_chatbot_reliable_service.py` | `SequencedLLM.provider_name` | 21 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SequencedLLM |
