@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 375 | Dashboard JS files scanned: 5 | Symbols indexed: 3287**
+**Python files scanned: 375 | Dashboard JS files scanned: 5 | Symbols indexed: 3289**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -2934,6 +2934,8 @@
 | `tests/unit/test_operational_resilience_regressions.py` | `test_deterministic_stopped_service_reaches_decision_despite_root_cause_disagreement` | 198 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_operational_resilience_regressions.py` | `test_deterministic_recovery_does_not_bypass_unsafe_write_recommendation` | 251 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_operational_resilience_regressions.py` | `test_total_specialist_failure_still_fails_closed` | 272 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_operational_resilience_regressions.py` | `test_evaluator_rejects_historical_or_unknown_ids_as_live_evidence` | 288 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_operational_resilience_regressions.py` | `test_evaluator_rejects_high_probability_hypothesis_citing_non_live_id` | 329 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_operator_summary.py` | `_service_status` | 4 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_operator_summary.py` | `_base_summary` | 23 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_operator_summary.py` | `test_clean_systemd_stop_never_claims_manual_stop_without_direct_evidence` | 40 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
