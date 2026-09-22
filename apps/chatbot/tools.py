@@ -129,7 +129,7 @@ CHAT_TOOL_SCHEMAS = [
                 "required": ["action", "target", "service"],
                 "additionalProperties": False,
                 "properties": {
-                    "action": {"type": "string", "enum": ["start_service", "restart_service", "reload_service"]},
+                    "action": {"type": "string", "enum": ["start_service", "restart_service"]},
                     "target": {"type": "string"},
                     "service": {"type": "string"},
                 },
@@ -264,7 +264,7 @@ def normalize_tool_intent(name: str, args: dict[str, Any]) -> ToolIntent:
 
     if name == "vm_service_action":
         action = str(args.get("action") or "").strip()
-        if action not in {"start_service", "restart_service", "reload_service"}:
+        if action not in {"start_service", "restart_service"}:
             raise ValueError("invalid_vm_service_action")
         target = _safe_name(args.get("target"), "target")
         service = _safe_name(args.get("service"), "service")
