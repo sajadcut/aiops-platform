@@ -125,6 +125,7 @@ class _FakeDB:
     def __init__(self):
         self.items = []
         self.commits = 0
+        self.rollbacks = 0
 
     def add(self, item):
         self.items.append(item)
@@ -132,7 +133,16 @@ class _FakeDB:
     async def commit(self):
         self.commits += 1
 
+    async def rollback(self):
+        self.rollbacks += 1
+
     async def refresh(self, item):
+        return None
+
+    async def get(self, _model, entry_id):
+        for item in self.items:
+            if item.id == entry_id:
+                return item
         return None
 
 
