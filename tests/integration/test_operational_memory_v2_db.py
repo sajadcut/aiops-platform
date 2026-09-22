@@ -106,9 +106,22 @@ async def test_memory_v2_postgres_hybrid_retrieval_and_feedback():
         )
         success_id = await service.add_episode(success_episode)
         failed_id = await service.add_episode(failed_episode)
+        duplicate_id = await service.add_episode(success_episode)
+        assert duplicate_id == success_id
+
+        duplicate_rows = (
+            await db.execute(
+                select(MemoryEntry).where(
+                    MemoryEntry.episode_fingerprint
+                    == success_episode["episode_fingerprint"]
+                )
+            )
+        ).scalars().all()
+        assert len(duplicate_rows) == 1
 
         success_row = await db.get(MemoryEntry, success_id)
         assert success_row is not None
+        assert success_row.episode_fingerprint == success_episode["episode_fingerprint"]
         assert success_row.embedding is not None
         assert success_row.embedding_status == "ready"
         assert success_row.actual_remediation["action"] == "start_service"
