@@ -92,7 +92,7 @@ async def run_e2e_workflow(
             initial_state["execution_request"] = request.execution_request.model_dump()
 
         async with AsyncSessionLocal() as db:
-            result = await LearningDurableWorkflowRuntime(db).start(initial_state)
+            result = await LearningLearningDurableWorkflowRuntime(db).start(initial_state)
 
         return _response_from_result(result)
     except HTTPException:
@@ -110,7 +110,7 @@ async def resume_e2e_workflow(
     """Resume a paused workflow only after its durable approval is granted."""
     try:
         async with AsyncSessionLocal() as db:
-            result = await LearningDurableWorkflowRuntime(db).resume_after_approval(incident_id)
+            result = await LearningLearningDurableWorkflowRuntime(db).resume_after_approval(incident_id)
         return _response_from_result(result)
     except ValueError as exc:
         # Conflict reasons are deliberately bounded by runtime-defined codes.
