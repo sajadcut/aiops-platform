@@ -283,3 +283,78 @@ def test_total_specialist_failure_still_fails_closed():
     evaluation = EvaluationGate.evaluate([failed], "Manual investigation required.", coordination)
     assert evaluation["approved_for_decision"] is False
     assert "specialist_failure" in evaluation["blockers"]
+
+
+def test_evaluator_rejects_historical_or_unknown_ids_as_live_evidence(monkeypatch):
+    monkeypatch.setattr(settings, "AGENT_MIN_EVIDENCE_COVERAGE", 0.5)
+    vm = {
+        "agent_name": "vm",
+        "finding_type": "vm_analysis",
+        "confidence": 0.95,
+        "evidence_ids": ["svc", "proc", "cfg", "historical-memory-id"],
+        "evidence_coverage": 1.0,
+        "missing_evidence": [],
+        "requires_human_review": False,
+        "analysis_details": {"deterministic_fault": "service_stopped"},
+        "hypotheses": [
+            {
+                "hypothesis": "service is stopped",
+                "probability": 0.95,
+                "evidence_ids": ["svc", "proc", "cfg"],
+            }
+        ],
+        "recommended_actions": [
+            {
+                "action": "start_service",
+                "read_only": False,
+                "requires_approval": True,
+                "suggested_tool": "ssh_vm",
+            }
+        ],
+    }
+
+    evaluation = EvaluationGate.evaluate(
+        [vm],
+        "Use governed start_service after approval.",
+        {"agreement_score": 1.0},
+        live_evidence_ids=["svc", "proc", "cfg", "listen", "tcp"],
+    )
+
+    assert evaluation["approved_for_decision"] is False
+    assert evaluation["operational_state_resolved"] is False
+    assert evaluation["invalid_evidence_ids"] == ["historical-memory-id"]
+    assert "non_live_evidence_reference" in evaluation["blockers"]
+
+
+def test_evaluator_rejects_high_probability_hypothesis_citing_non_live_id(monkeypatch):
+    monkeypatch.setattr(settings, "AGENT_MIN_EVIDENCE_COVERAGE", 0.5)
+    finding = {
+        "agent_name": "application",
+        "finding_type": "application_analysis",
+        "confidence": 0.9,
+        "evidence_ids": ["e1", "e2", "e3"],
+        "evidence_coverage": 1.0,
+        "missing_evidence": [],
+        "requires_human_review": False,
+        "hypotheses": [
+            {
+                "hypothesis": "historical pattern explains current failure",
+                "probability": 0.9,
+                "evidence_ids": ["historical-memory-id"],
+            }
+        ],
+        "recommended_actions": [],
+    }
+
+    evaluation = EvaluationGate.evaluate(
+        [finding],
+        "Continue evidence-grounded investigation.",
+        {"agreement_score": 1.0},
+        live_evidence_ids=["e1", "e2", "e3"],
+    )
+
+    assert evaluation["approved_for_decision"] is False
+    assert evaluation["invalid_hypothesis_evidence_ids"] == [
+        "historical-memory-id"
+    ]
+    assert "hypothesis_non_live_evidence_reference" in evaluation["blockers"]
