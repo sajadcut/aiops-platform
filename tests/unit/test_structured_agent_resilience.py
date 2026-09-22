@@ -2,7 +2,7 @@ import httpx
 import pytest
 
 from agents.shared import base as agent_base
-from agents.shared.base import AgentOutput, BaseAgent, StructuredAgentResponseError
+from agents.shared.base import AgentInput, AgentOutput, BaseAgent, StructuredAgentResponseError
 from domain.contracts.config import settings
 from integrations import mcp_client as mcp_module
 from integrations.llm.base import LLMAdapter, LLMResponse
@@ -121,6 +121,76 @@ async def test_generate_structured_repairs_truncated_response_with_larger_budget
     assert result["hypotheses"][0]["probability"] == 0.75
     assert agent._last_model_metadata["finish_reason"] == "stop"
     assert agent._last_model_metadata["max_tokens"] == 2400
+
+
+@pytest.mark.asyncio
+async def test_historical_memory_citations_are_allowlisted_and_not_evidence(monkeypatch):
+    _disable_agent_telemetry(monkeypatch)
+    monkeypatch.setattr(settings, "AGENT_MAX_TOKENS", 1000)
+    monkeypatch.setattr(settings, "AGENT_STRUCTURED_REPAIR_ATTEMPTS", 0)
+    monkeypatch.setattr(settings, "AGENT_TIMEOUT_SECONDS", 5)
+    monkeypatch.setattr(settings, "AGENT_MAX_AUXILIARY_CONTEXT_ITEMS", 5)
+
+    allowed_id = "11111111-1111-1111-1111-111111111111"
+    spoofed_id = "99999999-9999-9999-9999-999999999999"
+    input_data = AgentInput(
+        incident_id="incident-1",
+        evidence_summary="nginx port down",
+        context={
+            "evidence": [
+                {
+                    "id": "live-evidence-1",
+                    "type": "metric",
+                    "source": "prometheus",
+                }
+            ],
+            "memory_results": [
+                {
+                    "id": allowed_id,
+                    "pattern": "nginx inactive",
+                    "safe_as_evidence": False,
+                    "requires_current_validation": True,
+                }
+            ],
+        },
+    )
+
+    llm = FakeLLM(
+        [
+            LLMResponse(
+                content=(
+                    '{"confidence":0.7,"findings":[],'
+                    '"historical_memory_ids":["'
+                    + allowed_id
+                    + '","'
+                    + spoofed_id
+                    + '"]}'
+                ),
+                model="assistance-model",
+                finish_reason="stop",
+            )
+        ]
+    )
+    agent = DummyAgent(llm)
+
+    auxiliary = agent.auxiliary_context(input_data)
+    assert auxiliary["operational_memory"][0]["id"] == allowed_id
+
+    result = await agent.generate_structured("Return JSON.")
+    assert result["historical_memory_ids"] == [allowed_id]
+
+    output = AgentOutput(
+        agent_name="dummy",
+        finding_type="analysis",
+        statement="historical memory informed investigation",
+        confidence=0.7,
+        evidence_ids=["live-evidence-1"],
+    )
+    assert output.historical_memory_ids == [allowed_id]
+    assert allowed_id not in output.evidence_ids
+    assert spoofed_id not in output.historical_memory_ids
+    assert "historical_memory_ids" in llm.calls[0]["prompt"]
+    assert "never current Evidence" in llm.calls[0]["prompt"]
 
 
 @pytest.mark.asyncio
