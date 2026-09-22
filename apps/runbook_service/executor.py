@@ -4,7 +4,6 @@ from dataclasses import dataclass
 from typing import Any, Dict, Optional
 
 from apps.approval_service.binding import assert_consumed_bound
-from apps.approval_service.execution_claim import redeem_execution_claim
 from apps.execution_service import ExecutionRequest, ExecutionResult, ExecutionService
 from apps.execution_service.idempotency import execution_fingerprint
 from apps.runbook_service.registry import RunbookRegistry
@@ -143,6 +142,7 @@ class RunbookExecutor:
             runbook_id=runbook_id,
             runbook_version=str(runbook.get("version") or ""),
             rollback=rollback_requested,
+            execution_claim=claim,
         )
 
         fingerprint = execution_fingerprint(
@@ -169,8 +169,6 @@ class RunbookExecutor:
         claim = str(
             approval_context.get("_execution_claim") or ""
         ).strip()
-        if not redeem_execution_claim(claim):
-            raise ValueError("runbook_execution_claim_invalid_or_replayed")
 
         request = ExecutionRequest(
             tool_name=tool_name,
