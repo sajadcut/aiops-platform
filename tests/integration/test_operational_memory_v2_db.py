@@ -1,4 +1,5 @@
 import os
+from datetime import datetime, timedelta, timezone
 from uuid import uuid4
 
 import pytest
@@ -7,6 +8,7 @@ from sqlalchemy import select
 from apps.memory_service import OperationalMemoryService
 from apps.memory_service.builder import OperationalMemoryBuilder
 from database import AsyncSessionLocal
+from domain.contracts.config import settings
 from domain.models import MemoryEntry, MemoryReuseEvent
 
 
@@ -205,3 +207,36 @@ async def test_memory_v2_postgres_hybrid_retrieval_and_feedback():
         ).scalars().all()
         assert uncited_events
         assert not any(event.influenced_plan for event in uncited_events)
+
+        stale_incident = str(uuid4())
+        stale_id = await service.add_episode(
+            OperationalMemoryBuilder.build(
+                _state(stale_incident, success=True)
+            )
+        )
+        stale_row = await db.get(MemoryEntry, stale_id)
+        assert stale_row is not None
+        stale_row.created_at = datetime.now(timezone.utc) - timedelta(
+            days=settings.MEMORY_STALE_AFTER_DAYS + 1
+        )
+        stale_row.last_validated_at = None
+        await db.commit()
+
+        stale_count = await service.mark_stale_entries(limit=100)
+        assert stale_count >= 1
+        await db.refresh(stale_row)
+        assert stale_row.lifecycle_status == "stale"
+
+        after_stale = await service.retrieve(
+            "nginx inactive port 86 tcp unreachable",
+            service_scope="nginx",
+            retrieval_mode="SIMILAR_INCIDENT",
+            limit=20,
+            successful_only=False,
+        )
+        assert str(stale_id) not in {item["id"] for item in after_stale}
+
+        assert await service.mark_validated(stale_id) is True
+        await db.refresh(stale_row)
+        assert stale_row.lifecycle_status == "active"
+        assert stale_row.last_validated_at is not None
