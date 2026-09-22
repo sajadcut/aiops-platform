@@ -197,7 +197,7 @@ jobs:
                   cur.execute("SELECT table_name FROM information_schema.tables WHERE table_schema='public'")
                   tables = {row[0] for row in cur.fetchall()}
                   required = {
-                      'incidents','evidences','findings','memory_entries','approvals',
+                      'incidents','evidences','findings','memory_entries','memory_reuse_events','approvals',
                       'audit_events','workflow_checkpoints','runbooks',
                       'legacy_knowledge_documents_archive','chat_sessions','chat_messages',
                       'chat_action_proposals'
@@ -292,7 +292,7 @@ jobs:
                   cur.execute("SELECT to_regclass('public.chat_sessions'), to_regclass('public.chat_messages'), to_regclass('public.chat_action_proposals')")
                   assert cur.fetchone() == ('chat_sessions', 'chat_messages', 'chat_action_proposals'), 'chatbot persistence was not created during forward migration'
                   cur.execute("SELECT version_num FROM alembic_version")
-                  assert cur.fetchone()[0] == 'g4d5e6f7a8b9'
+                  assert cur.fetchone()[0] == 'h5e6f7a8b9c0'
           PY
       - name: Migration downgrade and clean rebuild
         run: |
