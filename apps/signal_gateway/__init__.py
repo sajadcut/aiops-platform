@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field, field_validator
 from apps.context_service.asset_identity import AssetIdentityResolver
 from apps.context_service.knowledge_topology import KnowledgeTopologyResolver
 from apps.incident_service.repository import IncidentRepository
-from apps.orchestrator.runtime import DurableWorkflowRuntime
+from apps.orchestrator.learning_runtime import LearningDurableWorkflowRuntime
 from apps.orchestrator.signal_aware import SignalAwareE2EOrchestrator
 from apps.orchestrator.workflow_store import WorkflowCheckpointStore
 from apps.rag_service import KnowledgeRAGService
@@ -309,7 +309,7 @@ class SignalGateway:
             "findings": [],
             "confidence": 0.0,
         }
-        result = await DurableWorkflowRuntime(session, orchestrator_cls=SignalAwareE2EOrchestrator).start(initial_state)
+        result = await LearningDurableWorkflowRuntime(session).start(initial_state)
         result.update({
             "trigger_source": signal.source,
             "trigger_signal_type": signal.signal_type,
