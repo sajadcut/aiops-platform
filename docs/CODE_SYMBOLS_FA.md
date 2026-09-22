@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 392 | Dashboard JS files scanned: 5 | Symbols indexed: 3474**
+**Python files scanned: 393 | Dashboard JS files scanned: 5 | Symbols indexed: 3483**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -2479,6 +2479,15 @@
 | `tests/unit/test_chatbot_memory_learning.py` | `test_chatbot_verification_rejects_active_service_when_port_remains_down.fake_execute` | 230 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_chatbot_verification_rejects_active_service_when_port_remains_down |
 | `tests/unit/test_chatbot_memory_learning.py` | `test_chatbot_verification_requires_before_after_recovery` | 250 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_chatbot_memory_learning.py` | `test_chatbot_verification_requires_before_after_recovery.fake_execute` | 281 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_chatbot_verification_requires_before_after_recovery |
+| `tests/unit/test_chatbot_preconfirm_guard.py` | `_proposal` | 7 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_chatbot_preconfirm_guard.py` | `test_preconfirm_guard_uses_fresh_vm_runbook_evidence` | 18 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_preconfirm_guard.py` | `test_preconfirm_guard_uses_fresh_vm_runbook_evidence.snapshot` | 21 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_preconfirm_guard_uses_fresh_vm_runbook_evidence |
+| `tests/unit/test_chatbot_preconfirm_guard.py` | `test_preconfirm_guard_uses_fresh_vm_runbook_evidence.preflight` | 30 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_preconfirm_guard_uses_fresh_vm_runbook_evidence |
+| `tests/unit/test_chatbot_preconfirm_guard.py` | `test_preconfirm_guard_marks_recovered_service_as_stale` | 62 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_preconfirm_guard.py` | `test_preconfirm_guard_marks_recovered_service_as_stale.snapshot` | 63 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_preconfirm_guard_marks_recovered_service_as_stale |
+| `tests/unit/test_chatbot_preconfirm_guard.py` | `test_preconfirm_guard_keeps_transient_telemetry_failure_retryable` | 94 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_preconfirm_guard.py` | `test_preconfirm_guard_keeps_transient_telemetry_failure_retryable.snapshot` | 95 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_preconfirm_guard_keeps_transient_telemetry_failure_retryable |
+| `tests/unit/test_chatbot_preconfirm_guard.py` | `test_preconfirm_guard_does_not_invent_contract_for_other_tools` | 127 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_chatbot_reliable_service.py` | `SequencedLLM` | 15 | class | کلاس | module |
 | `tests/unit/test_chatbot_reliable_service.py` | `SequencedLLM.__init__` | 16 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SequencedLLM |
 | `tests/unit/test_chatbot_reliable_service.py` | `SequencedLLM.provider_name` | 21 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SequencedLLM |
