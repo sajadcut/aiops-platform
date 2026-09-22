@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 387 | Dashboard JS files scanned: 5 | Symbols indexed: 3392**
+**Python files scanned: 388 | Dashboard JS files scanned: 5 | Symbols indexed: 3417**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -754,8 +754,8 @@
 | `apps/api/remediation.py` | `verify_remediation` | 331 | async function | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | module |
 | `apps/api/runbook_execution.py` | `_audit_durable` | 24 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/runbook_execution.py` | `_runbook_contract` | 30 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/runbook_execution.py` | `execute_runbook` | 100 | async function | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | module |
-| `apps/api/runbook_execution.py` | `dry_run` | 325 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/runbook_execution.py` | `execute_runbook` | 107 | async function | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | module |
+| `apps/api/runbook_execution.py` | `dry_run` | 336 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/runbooks.py` | `list_runbooks` | 11 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
 | `apps/api/runbooks.py` | `get_runbook` | 16 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
 | `apps/api/runbooks.py` | `dry_run` | 24 | async function | Validate a runbook without crossing the real execution boundary. | module |
@@ -2043,6 +2043,8 @@
 | `tests/integration/test_operator_summary_api.py` | `test_operator_summary_api_route_is_registered_read_only` | 8 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/integration/test_operator_summary_api.py` | `test_dashboard_serves_persian_operator_summary_ui_and_structured_api_call` | 14 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/integration/test_operator_summary_api.py` | `test_operator_summary_backend_is_deterministic_and_has_no_execution_path` | 37 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/integration/test_rate_limit_db.py` | `test_postgres_rate_limit_is_atomic_across_concurrent_callers` | 23 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/integration/test_rate_limit_db.py` | `test_postgres_rate_limit_resets_after_window_expiry` | 59 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/integration/test_signal_correlation_db.py` | `test_postgresql_correlation_lock_and_bounded_lookup` | 22 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/operational/run_operational_acceptance.py` | `OperationalAcceptanceError` | 35 | class | کلاس | module |
 | `tests/operational/run_operational_acceptance.py` | `BlockedScenario` | 39 | class | کلاس | module |
@@ -3102,6 +3104,29 @@
 | `tests/unit/test_remediation_runtime_guard.py` | `test_remediation_success_requires_post_action_verification.verify` | 190 | async method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | test_remediation_success_requires_post_action_verification |
 | `tests/unit/test_remediation_runtime_guard.py` | `test_remediation_success_requires_post_action_verification.record_memory` | 197 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_remediation_success_requires_post_action_verification |
 | `tests/unit/test_remediation_runtime_guard.py` | `test_remediation_success_requires_post_action_verification.execute` | 203 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | test_remediation_success_requires_post_action_verification |
+| `tests/unit/test_remediation_runtime_guard.py` | `_ConsumedStore` | 232 | class | کلاس | module |
+| `tests/unit/test_remediation_runtime_guard.py` | `_ConsumedStore.get` | 235 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _ConsumedStore |
+| `tests/unit/test_remediation_runtime_guard.py` | `_Rows` | 252 | class | کلاس | module |
+| `tests/unit/test_remediation_runtime_guard.py` | `_Rows.__init__` | 253 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Rows |
+| `tests/unit/test_remediation_runtime_guard.py` | `_Rows.scalars` | 256 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Rows |
+| `tests/unit/test_remediation_runtime_guard.py` | `_Rows.all` | 259 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Rows |
+| `tests/unit/test_remediation_runtime_guard.py` | `_VerificationSession` | 263 | class | کلاس | module |
+| `tests/unit/test_remediation_runtime_guard.py` | `_VerificationSession.execute` | 266 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | _VerificationSession |
+| `tests/unit/test_remediation_runtime_guard.py` | `test_manual_verification_rejects_dry_run` | 271 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_remediation_runtime_guard.py` | `test_manual_verification_uses_runbook_objectives_and_validates_matching_memory` | 289 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_remediation_runtime_guard.py` | `test_manual_verification_uses_runbook_objectives_and_validates_matching_memory.no_audit` | 303 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_manual_verification_uses_runbook_objectives_and_validates_matching_memory |
+| `tests/unit/test_remediation_runtime_guard.py` | `test_manual_verification_uses_runbook_objectives_and_validates_matching_memory.snapshot` | 310 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_manual_verification_uses_runbook_objectives_and_validates_matching_memory |
+| `tests/unit/test_remediation_runtime_guard.py` | `test_manual_verification_uses_runbook_objectives_and_validates_matching_memory.verify` | 354 | async method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | test_manual_verification_uses_runbook_objectives_and_validates_matching_memory |
+| `tests/unit/test_remediation_runtime_guard.py` | `test_manual_verification_uses_runbook_objectives_and_validates_matching_memory._Memory` | 363 | class | کلاس | test_manual_verification_uses_runbook_objectives_and_validates_matching_memory |
+| `tests/unit/test_remediation_runtime_guard.py` | `test_manual_verification_uses_runbook_objectives_and_validates_matching_memory._Memory.__init__` | 364 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_manual_verification_uses_runbook_objectives_and_validates_matching_memory._Memory |
+| `tests/unit/test_remediation_runtime_guard.py` | `test_manual_verification_uses_runbook_objectives_and_validates_matching_memory._Memory.mark_validated` | 367 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_manual_verification_uses_runbook_objectives_and_validates_matching_memory._Memory |
+| `tests/unit/test_remediation_runtime_guard.py` | `test_manual_failed_verification_does_not_revalidate_memory` | 393 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_remediation_runtime_guard.py` | `test_manual_failed_verification_does_not_revalidate_memory.no_audit` | 407 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_manual_failed_verification_does_not_revalidate_memory |
+| `tests/unit/test_remediation_runtime_guard.py` | `test_manual_failed_verification_does_not_revalidate_memory.snapshot` | 412 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_manual_failed_verification_does_not_revalidate_memory |
+| `tests/unit/test_remediation_runtime_guard.py` | `test_manual_failed_verification_does_not_revalidate_memory.verify` | 432 | async method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | test_manual_failed_verification_does_not_revalidate_memory |
+| `tests/unit/test_remediation_runtime_guard.py` | `test_manual_failed_verification_does_not_revalidate_memory._Memory` | 439 | class | کلاس | test_manual_failed_verification_does_not_revalidate_memory |
+| `tests/unit/test_remediation_runtime_guard.py` | `test_manual_failed_verification_does_not_revalidate_memory._Memory.__init__` | 440 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_manual_failed_verification_does_not_revalidate_memory._Memory |
+| `tests/unit/test_remediation_runtime_guard.py` | `test_manual_failed_verification_does_not_revalidate_memory._Memory.mark_validated` | 443 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_manual_failed_verification_does_not_revalidate_memory._Memory |
 | `tests/unit/test_runbook_api_preflight.py` | `_Session` | 9 | class | کلاس | module |
 | `tests/unit/test_runbook_api_preflight.py` | `_Session.__aenter__` | 10 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Session |
 | `tests/unit/test_runbook_api_preflight.py` | `_Session.__aexit__` | 13 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Session |
