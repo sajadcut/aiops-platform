@@ -81,14 +81,31 @@ def test_prompt_compaction_bounds_logs_processes_and_strings():
     assert bounded["detail"].endswith("...[truncated]")
 
 
-def test_start_reload_remediation_are_supported_but_arbitrary_actions_are_rejected():
-    reload_request = RemediationRequest(target="10.100.6.199", service="haproxy", action="reload_service", target_port=8800)
-    start_request = RemediationRequest(target="10.100.6.199", service="haproxy", action="start_service", target_port=8800)
-    assert reload_request.action == "reload_service"
+def test_remediation_request_allows_only_actions_in_executable_vm_runbook_contract():
+    start_request = RemediationRequest(
+        target="10.100.6.199",
+        service="haproxy",
+        action="start_service",
+        target_port=8800,
+    )
+    restart_request = RemediationRequest(
+        target="10.100.6.199",
+        service="haproxy",
+        action="restart_service",
+        target_port=8800,
+    )
+
     assert start_request.action == "start_service"
+    assert restart_request.action == "restart_service"
     assert start_request.target_port == 8800
-    with pytest.raises(Exception):
-        RemediationRequest(target="10.100.6.199", service="haproxy", action="shell")
+
+    for unsupported in ("reload_service", "shell"):
+        with pytest.raises(Exception):
+            RemediationRequest(
+                target="10.100.6.199",
+                service="haproxy",
+                action=unsupported,
+            )
 
 
 def test_deterministic_vm_classifier_confirms_stopped_haproxy_from_live_evidence():
