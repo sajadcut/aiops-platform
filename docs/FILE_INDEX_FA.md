@@ -3,7 +3,7 @@
 > این فایل فهرست فایل‌به‌فایل repository است. توضیح معماری و flow در `CODEBASE_GUIDE_FA.md` آمده است.
 > این فایل با `scripts/generate_file_index_fa.py` ساخته و در CI کنترل می‌شود.
 
-**تعداد فایل‌های track‌شده و پوشش‌داده‌شده: 446**
+**تعداد فایل‌های track‌شده و پوشش‌داده‌شده: 447**
 
 | Path | Type | Purpose | Called By | Calls/Depends On | Runtime/Test/Docs | Notes |
 |---|---|---|---|---|---|---|
@@ -215,6 +215,7 @@
 | `docs/LOGGING.md` | Docs | مستند معماری/عملیات/وضعیت پروژه | تیم | کد و MASTER | Docs | SSoT نیست مگر MASTER root |
 | `docs/MULTI_SOURCE_REASONING.md` | Docs | مستند معماری/عملیات/وضعیت پروژه | تیم | کد و MASTER | Docs | SSoT نیست مگر MASTER root |
 | `docs/NEXT_TASK.md` | Docs | مستند معماری/عملیات/وضعیت پروژه | تیم | کد و MASTER | Docs | SSoT نیست مگر MASTER root |
+| `docs/OPERATIONAL_MEMORY_V2.md` | Docs | مستند معماری/عملیات/وضعیت پروژه | تیم | کد و MASTER | Docs | SSoT نیست مگر MASTER root |
 | `docs/OPERATIONS_COPILOT_V2.md` | Docs | مستند معماری/عملیات/وضعیت پروژه | تیم | کد و MASTER | Docs | SSoT نیست مگر MASTER root |
 | `docs/PRODUCTION_ACCEPTANCE_MATRIX.md` | Docs | مستند معماری/عملیات/وضعیت پروژه | تیم | کد و MASTER | Docs | SSoT نیست مگر MASTER root |
 | `docs/PRODUCTION_HARDENING_WIP.md` | Docs | مستند معماری/عملیات/وضعیت پروژه | تیم | کد و MASTER | Docs | SSoT نیست مگر MASTER root |
