@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 380 | Dashboard JS files scanned: 5 | Symbols indexed: 3314**
+**Python files scanned: 382 | Dashboard JS files scanned: 5 | Symbols indexed: 3331**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -3045,6 +3045,17 @@
 | `tests/unit/test_remediation_planner.py` | `test_pre_execution_revalidation_allows_start_only_while_service_remains_inactive` | 216 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_remediation_planner.py` | `test_pre_execution_revalidation_fails_closed_without_fresh_config_check` | 242 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_remediation_planner.py` | `test_durable_resume_restores_persisted_vm_target_and_port_context` | 266 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_runbook_api_preflight.py` | `_Session` | 9 | class | کلاس | module |
+| `tests/unit/test_runbook_api_preflight.py` | `_Session.__aenter__` | 10 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Session |
+| `tests/unit/test_runbook_api_preflight.py` | `_Session.__aexit__` | 13 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Session |
+| `tests/unit/test_runbook_api_preflight.py` | `_Store` | 17 | class | کلاس | module |
+| `tests/unit/test_runbook_api_preflight.py` | `_Store.__init__` | 20 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Store |
+| `tests/unit/test_runbook_api_preflight.py` | `_Store.get` | 23 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Store |
+| `tests/unit/test_runbook_api_preflight.py` | `_Store.consume` | 32 | async method | transition مربوط به Approval/Governance را اعمال می‌کند | _Store |
+| `tests/unit/test_runbook_api_preflight.py` | `test_direct_runbook_preflight_blocks_before_approval_consume` | 41 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_runbook_api_preflight.py` | `test_direct_runbook_preflight_blocks_before_approval_consume.no_audit` | 49 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_direct_runbook_preflight_blocks_before_approval_consume |
+| `tests/unit/test_runbook_api_preflight.py` | `test_direct_runbook_preflight_blocks_before_approval_consume.snapshot` | 54 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_direct_runbook_preflight_blocks_before_approval_consume |
+| `tests/unit/test_runbook_api_preflight.py` | `test_direct_runbook_preflight_blocks_before_approval_consume.execute` | 78 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | test_direct_runbook_preflight_blocks_before_approval_consume |
 | `tests/unit/test_runbook_execution_contract.py` | `test_vm_recovery_contract_derives_tool_and_requires_allowlisted_action` | 9 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_runbook_execution_contract.py` | `test_vm_recovery_contract_rejects_caller_tool_override` | 28 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_runbook_execution_contract.py` | `test_vm_recovery_contract_rejects_action_outside_runbook_allowlist` | 44 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
@@ -3060,6 +3071,12 @@
 | `tests/unit/test_runbook_registry_governance.py` | `test_strict_validator_rejects_missing_verification` | 37 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_runbook_registry_governance.py` | `test_legacy_validator_contract_remains_backward_compatible` | 52 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_runbook_registry_governance.py` | `test_registry_rejects_invalid_runbook_file` | 65 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_runbook_runtime_guard.py` | `_execution_result` | 8 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_runbook_runtime_guard.py` | `test_runtime_guard_collects_canonical_vm_evidence` | 20 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_runbook_runtime_guard.py` | `test_runtime_guard_collects_canonical_vm_evidence.fake_vm_read` | 21 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_runtime_guard_collects_canonical_vm_evidence |
+| `tests/unit/test_runbook_runtime_guard.py` | `test_runtime_guard_preflight_blocks_recovered_service` | 78 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_runbook_runtime_guard.py` | `test_runtime_guard_preflight_allows_live_stopped_service_with_valid_config` | 117 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_runbook_runtime_guard.py` | `test_runtime_guard_verify_uses_registered_runbook_objectives` | 157 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_runbook_validation.py` | `test_runbook_requires_governance_fields` | 3 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_runbook_validation.py` | `test_runbook_valid_shape` | 8 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_runbook_verification_objectives.py` | `_context` | 7 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
