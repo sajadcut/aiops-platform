@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 395 | Dashboard JS files scanned: 5 | Symbols indexed: 3511**
+**Python files scanned: 395 | Dashboard JS files scanned: 5 | Symbols indexed: 3513**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -787,7 +787,9 @@
 | `apps/approval_service/binding.py` | `execution_intent` | 16 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/approval_service/binding.py` | `intent_digest` | 43 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/approval_service/binding.py` | `bind_metadata` | 48 | function | Store a non-secret readable summary plus a digest of the complete intent. | module |
-| `apps/approval_service/binding.py` | `assert_bound` | 76 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/approval_service/binding.py` | `_assert_binding` | 76 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/approval_service/binding.py` | `assert_bound` | 112 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/approval_service/binding.py` | `assert_consumed_bound` | 121 | function | Validate the one-shot consumed authority handed to an internal executor. | module |
 | `apps/approval_service/execution_claim.py` | `issue_execution_claim` | 11 | function | Mint one process-local single-use execution capability. | module |
 | `apps/approval_service/execution_claim.py` | `redeem_execution_claim` | 25 | function | Atomically redeem a previously issued claim exactly once. | module |
 | `apps/approval_service/postgres.py` | `_db_timestamp` | 20 | function | Normalize ISO-8601 application timestamps for asyncpg TIMESTAMPTZ binds. | module |
