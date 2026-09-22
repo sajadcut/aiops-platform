@@ -80,7 +80,7 @@ async def test_expired_proposal_is_rejected_before_approval_or_execution(monkeyp
     session_id, incident_id, proposal = await _seed(
         owner,
         tool_name="ssh_vm",
-        action="reload_service",
+        action="restart_service",
         target="vm01",
         parameters={"service": "nginx"},
     )
