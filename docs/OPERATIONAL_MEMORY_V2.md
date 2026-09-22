@@ -93,6 +93,27 @@ Verification stores the structured before and after states. Examples include:
 Expected post-recovery CPU/memory overhead is distinguished from material
 regression.
 
+## Idempotent write-back
+
+Operational Memory write-back is retry/resume safe.
+
+Each structured episode receives a deterministic `episode_fingerprint` derived
+from incident identity, governed remediation identity, verification before/after
+state, evidence references and outcome class. Secret values are redacted before
+the fingerprint is produced.
+
+The application performs a fast pre-check and PostgreSQL enforces a unique
+partial index on non-null fingerprints. Therefore:
+
+- a repeated workflow resume with the same operational outcome returns the
+  existing Memory ID;
+- concurrent workers cannot create duplicate episodes for the same exact
+  execution/verification result;
+- a materially different execution attempt, approval, target, action or
+  verification outcome may create a new episode.
+
+This prevents retry noise from biasing retrieval and reuse-effectiveness metrics.
+
 ## Embedding resilience
 
 Persistence is core-first:
@@ -180,14 +201,14 @@ MEMORY_REUSE_FEEDBACK_ENABLED=True
 
 ## Migration
 
-Alembic revision:
+Alembic revisions:
 
-`h5e6f7a8b9c0`
+- `h5e6f7a8b9c0` — Operational Memory v2 schema, reuse events, FTS and HNSW.
+- `i6f7a8b9c0d1` — retry/resume-safe episode fingerprint and unique partial index.
 
-The migration is additive and preserves existing `memory_entries`. Legacy
-rows remain readable and their vectors/search metadata are backfilled where
-possible. It also creates `memory_reuse_events`, FTS indexing and an active
-partial HNSW index.
+Both migrations are additive and preserve existing `memory_entries`. Legacy
+rows remain readable; old rows may keep a null episode fingerprint until they
+are rewritten as v2 episodes. Existing vectors/search metadata remain intact.
 
 ## Acceptance criteria
 
