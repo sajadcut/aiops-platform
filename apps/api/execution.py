@@ -10,6 +10,7 @@ from apps.audit_service import AuditService
 from apps.audit_service.postgres import PostgreSQLAuditStore
 from apps.execution_service import ExecutionRequest, ExecutionService
 from apps.execution_service.tools.registry import tool_registry
+from apps.incident_service.repository import IncidentRepository
 from apps.runbook_service.registry import RunbookRegistry
 from apps.runbook_service.learning import record_runbook_outcome
 from apps.runbook_service.runtime_guard import RunbookRuntimeGuard
@@ -371,6 +372,23 @@ async def execute(payload: Dict[str, Any], identity=Depends(require_permission("
                     error_type=memory_error,
                 )
 
+        incident_status = None
+        if incident_id and verified is not None:
+            incidents = IncidentRepository(db)
+            incident_status = await incidents.record_operational_outcome(
+                incident_id,
+                source="direct_execution",
+                action=request.action,
+                target=request.target,
+                approval_id=str(approval_id) if approval_id else None,
+                execution_success=bool(result.success),
+                verified=bool(verified),
+                verification=dict(verification_payload or {}),
+                memory_id=memory_id,
+            )
+            await incidents.commit()
+            response["incident_status"] = incident_status
+
         await _audit_durable(
             db,
             "direct_execution_completed",
@@ -387,6 +405,7 @@ async def execute(payload: Dict[str, Any], identity=Depends(require_permission("
                 "verification": verification_payload,
                 "memory_id": memory_id,
                 "memory_error": memory_error,
+                "incident_status": incident_status,
             },
         )
         return response
