@@ -1045,14 +1045,14 @@
 | `apps/incident_service/repository.py` | `IncidentRepository.upsert_incident` | 49 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentRepository |
 | `apps/incident_service/repository.py` | `IncidentRepository.set_status` | 99 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentRepository |
 | `apps/incident_service/repository.py` | `IncidentRepository.record_operational_outcome` | 104 | async method | Persist the governed execution outcome into incident state. | IncidentRepository |
-| `apps/incident_service/repository.py` | `IncidentRepository.acquire_correlation_lock` | 192 | async method | Serialize creation for a deterministic correlation fingerprint. | IncidentRepository |
-| `apps/incident_service/repository.py` | `IncidentRepository.find_correlated_open_incident` | 199 | async method | Find a bounded open/analyzing incident with the same fingerprint. | IncidentRepository |
-| `apps/incident_service/repository.py` | `IncidentRepository.attach_correlated_signal` | 227 | async method | Attach a related trigger without rewriting the incident's primary source. | IncidentRepository |
-| `apps/incident_service/repository.py` | `IncidentRepository.find_incident_by_evidence_reference` | 250 | async method | Return the incident already owning a source event/reference. | IncidentRepository |
-| `apps/incident_service/repository.py` | `IncidentRepository.add_findings` | 275 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentRepository |
-| `apps/incident_service/repository.py` | `IncidentRepository._evidence_type` | 308 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentRepository |
-| `apps/incident_service/repository.py` | `IncidentRepository.add_evidence` | 315 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentRepository |
-| `apps/incident_service/repository.py` | `IncidentRepository.commit` | 346 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentRepository |
+| `apps/incident_service/repository.py` | `IncidentRepository.acquire_correlation_lock` | 196 | async method | Serialize creation for a deterministic correlation fingerprint. | IncidentRepository |
+| `apps/incident_service/repository.py` | `IncidentRepository.find_correlated_open_incident` | 203 | async method | Find a bounded open/analyzing incident with the same fingerprint. | IncidentRepository |
+| `apps/incident_service/repository.py` | `IncidentRepository.attach_correlated_signal` | 231 | async method | Attach a related trigger without rewriting the incident's primary source. | IncidentRepository |
+| `apps/incident_service/repository.py` | `IncidentRepository.find_incident_by_evidence_reference` | 254 | async method | Return the incident already owning a source event/reference. | IncidentRepository |
+| `apps/incident_service/repository.py` | `IncidentRepository.add_findings` | 279 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentRepository |
+| `apps/incident_service/repository.py` | `IncidentRepository._evidence_type` | 312 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentRepository |
+| `apps/incident_service/repository.py` | `IncidentRepository.add_evidence` | 319 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentRepository |
+| `apps/incident_service/repository.py` | `IncidentRepository.commit` | 350 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentRepository |
 | `apps/mcp_server/main.py` | `JsonRpcRequest` | 20 | class | کلاس | module |
 | `apps/mcp_server/main.py` | `_provider` | 85 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/mcp_server/main.py` | `_parse_dt` | 92 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
