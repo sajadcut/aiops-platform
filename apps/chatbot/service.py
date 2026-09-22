@@ -746,19 +746,41 @@ class ChatbotService:
         approval_id: str,
     ) -> None:
         incident_id = str(proposal["incident_id"])
-        verified = bool(verification.get("verified"))
-        if execution.success and verified:
-            verification_status = "success"
-            incident_status = "resolved"
-        elif execution.success:
-            verification_status = "inconclusive"
-            incident_status = "escalated"
-        else:
-            verification_status = "failed"
-            incident_status = "escalated"
+        verification_status = str(
+            verification.get("status")
+            or ("success" if verification.get("verified") else "inconclusive")
+        ).lower()
+        verified = bool(
+            execution.success
+            and verification_status == VerificationStatus.SUCCESS.value
+        )
+        incident_status = "resolved" if verified else "escalated"
 
-        evidence_ref = f"chatbot-verification:{proposal_id}"
+        refs = [
+            str(ref)
+            for ref in (verification.get("evidence_refs") or [])
+            if str(ref).strip()
+        ]
+        if not refs:
+            refs = [f"chatbot-verification:{proposal_id}"]
         source = str(verification.get("source") or "chatbot")
+        evidence = [
+            {
+                "source": source,
+                "type": "event",
+                "reference": ref,
+                "raw_data": redact(
+                    {
+                        "verification_status": verification_status,
+                        "verified": verified,
+                        "verification_result": verification.get("result"),
+                        "verification_error": verification.get("error"),
+                    }
+                ),
+            }
+            for ref in refs
+        ]
+
         state = {
             "incident_id": incident_id,
             "service_name": str(
@@ -786,20 +808,7 @@ class ChatbotService:
                         f"on {proposal.get('target')}"
                     ),
                 },
-                "evidence": [
-                    {
-                        "source": source,
-                        "type": "event",
-                        "reference": evidence_ref,
-                        "raw_data": redact(
-                            {
-                                "verified": verified,
-                                "verification_result": verification.get("result"),
-                                "verification_error": verification.get("error"),
-                            }
-                        ),
-                    }
-                ],
+                "evidence": evidence,
             },
             "findings": [],
             "coordination": {},
@@ -814,20 +823,17 @@ class ChatbotService:
             "execution_result": execution.model_dump(),
             "verification_result": {
                 "status": verification_status,
-                "confidence": 0.9 if verified else 0.0,
-                "before_state": {},
-                "after_state": {},
-                "changes": [],
-                "evidence_refs": [evidence_ref],
-                "message": (
-                    "Independent ChatOps post-action verification succeeded."
-                    if verified
-                    else str(
-                        verification.get("error")
-                        or execution.error
-                        or execution.reason
-                        or "Independent verification did not confirm recovery."
-                    )
+                "confidence": float(verification.get("confidence") or 0.0),
+                "before_state": dict(verification.get("before_state") or {}),
+                "after_state": dict(verification.get("after_state") or {}),
+                "changes": list(verification.get("changes") or []),
+                "evidence_refs": refs,
+                "message": str(
+                    verification.get("message")
+                    or verification.get("error")
+                    or execution.error
+                    or execution.reason
+                    or "Independent verification did not confirm recovery."
                 ),
             },
         }
@@ -964,6 +970,7 @@ class ChatbotService:
                 metadata={"session_id": session_id, "proposal_id": str(proposal_id), "approval_id": approval_id},
             )
 
+            baseline = await self._collect_mutation_snapshot(proposal)
             execution = await ExecutionService.execute(
                 ExecutionRequest(
                     tool_name=str(proposal["tool_name"]),
@@ -977,7 +984,36 @@ class ChatbotService:
                     approval_id=approval_id,
                 )
             )
-            verification = await self._verify_mutation(proposal) if execution.success else {"verified": False, "error": "execution_failed"}
+            if execution.success:
+                verification = await self._verify_mutation(
+                    proposal,
+                    before_snapshot=baseline,
+                )
+            else:
+                baseline_evidence = (
+                    (baseline.get("context") or {})
+                    .get("live_evidence", {})
+                    .get("evidence", [])
+                )
+                verification = {
+                    "verified": False,
+                    "status": VerificationStatus.FAILED.value,
+                    "confidence": 1.0,
+                    "before_state": dict(baseline.get("state") or {}),
+                    "after_state": {},
+                    "changes": [],
+                    "evidence_refs": [
+                        str(item.get("reference"))
+                        for item in baseline_evidence
+                        if isinstance(item, dict) and item.get("reference")
+                    ],
+                    "message": (
+                        "Governed execution failed before recovery could be verified."
+                    ),
+                    "source": baseline.get("source"),
+                    "result": baseline.get("result"),
+                    "error": execution.error or execution.reason or "execution_failed",
+                }
             outcome = "success" if execution.success else "failed"
             CHAT_EXECUTED_ACTIONS.labels(tool=str(proposal["tool_name"]), outcome=outcome).inc()
             final_payload = {"execution": execution.model_dump(), "verification": verification}
