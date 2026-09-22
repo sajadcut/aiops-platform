@@ -537,11 +537,6 @@ class OperationalMemoryBuilder:
                 "status": verification.get("status"),
                 "before": verification.get("before"),
                 "after": verification.get("after"),
-                "evidence_refs": sorted(
-                    str(ref)
-                    for ref in (verification.get("evidence_refs") or [])
-                    if str(ref).strip()
-                ),
             },
             "memory_outcome_class": episode.get("memory_outcome_class"),
         }
