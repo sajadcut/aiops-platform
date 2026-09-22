@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 374 | Dashboard JS files scanned: 5 | Symbols indexed: 3282**
+**Python files scanned: 375 | Dashboard JS files scanned: 5 | Symbols indexed: 3286**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -2323,6 +2323,10 @@
 | `tests/unit/test_audit_flush.py` | `FakeAuditStore.__init__` | 7 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeAuditStore |
 | `tests/unit/test_audit_flush.py` | `FakeAuditStore.append` | 10 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeAuditStore |
 | `tests/unit/test_audit_flush.py` | `test_audit_flush_persists_and_clears_incident_events` | 15 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_base_orchestrator_decision_binding.py` | `_finding` | 9 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_base_orchestrator_decision_binding.py` | `test_base_decision_rejects_unknown_execution_tool` | 19 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_base_orchestrator_decision_binding.py` | `test_base_decision_rejects_write_target_known_only_from_knowledge` | 46 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_base_orchestrator_decision_binding.py` | `test_base_decision_forces_approval_for_registered_write_tool` | 78 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_benchmark_hardening_2026.py` | `test_signal_correlation_contract_is_bounded` | 7 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_benchmark_hardening_2026.py` | `test_signal_gateway_uses_exact_and_cross_source_transaction_locks` | 13 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_benchmark_hardening_2026.py` | `test_correlation_repository_uses_postgresql_transaction_advisory_lock` | 21 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
