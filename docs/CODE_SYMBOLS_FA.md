@@ -977,7 +977,7 @@
 | `apps/evaluator/gate.py` | `EvaluationGate` | 14 | class | کیفیت RCA را از روی Evidence/Consensus/Safety به‌صورت fail-closed ارزیابی می‌کند. | module |
 | `apps/evaluator/gate.py` | `EvaluationGate._specialist_failed` | 18 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | EvaluationGate |
 | `apps/evaluator/gate.py` | `EvaluationGate._governed_deterministic_recovery` | 28 | method | Return true only for an evidence-grounded, approval-bound stopped-service recovery. | EvaluationGate |
-| `apps/evaluator/gate.py` | `EvaluationGate.evaluate` | 56 | method | کیفیت/confidence یا اولویت را به‌صورت deterministic محاسبه می‌کند | EvaluationGate |
+| `apps/evaluator/gate.py` | `EvaluationGate.evaluate` | 69 | method | کیفیت/confidence یا اولویت را به‌صورت deterministic محاسبه می‌کند | EvaluationGate |
 | `apps/evaluator/thresholds.py` | `EvaluationThresholds` | 4 | class | کلاس | module |
 | `apps/execution_service/__init__.py` | `ExecutionRequest` | 10 | class | کلاس | module |
 | `apps/execution_service/__init__.py` | `ExecutionResult` | 25 | class | کلاس | module |
