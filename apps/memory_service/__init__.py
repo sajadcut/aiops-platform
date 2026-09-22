@@ -14,6 +14,7 @@ from domain.contracts.logging import logger
 from domain.models import MemoryEntry
 from knowledge import EmbeddingService
 
+from .contracts import EMBEDDING_DOCUMENT_VERSION, MEMORY_SCHEMA_VERSION
 from .feedback import apply_feedback, record_retrieval_events
 from .retrieval import candidates, rrf_score
 from .telemetry import (
@@ -125,7 +126,7 @@ class OperationalMemoryService:
             id=uuid4(),
             incident_id=self._uuid_or_none(episode.get("incident_id")),
             memory_schema_version=str(
-                episode.get("memory_schema_version") or "2.0"
+                episode.get("memory_schema_version") or MEMORY_SCHEMA_VERSION
             ),
             episode_fingerprint=fingerprint,
             pattern=pattern,
@@ -172,7 +173,7 @@ class OperationalMemoryService:
             embedding_version="1",
             embedding_document_version=episode.get(
                 "embedding_document_version"
-            ) or "1",
+            ) or EMBEDDING_DOCUMENT_VERSION,
             embedding_text_hash=episode.get("embedding_text_hash"),
             search_document=episode.get("search_document") or pattern,
             reuse_count=0,
@@ -234,6 +235,7 @@ class OperationalMemoryService:
             entry.embedding_provider = settings.EMBEDDING_PROVIDER
             entry.embedding_model = settings.EMBEDDING_MODEL
             entry.embedding_dimension = settings.EMBEDDING_DIMENSION
+            entry.embedding_document_version = EMBEDDING_DOCUMENT_VERSION
             entry.embedded_at = datetime.now(timezone.utc)
             await self.db.commit()
             logger.info(
@@ -405,6 +407,14 @@ class OperationalMemoryService:
                         MemoryEntry.embedding_status.in_(
                             ["pending", "failed", "pending_retry"]
                         ),
+                        MemoryEntry.embedding_provider.is_(None),
+                        MemoryEntry.embedding_provider != settings.EMBEDDING_PROVIDER,
+                        MemoryEntry.embedding_model.is_(None),
+                        MemoryEntry.embedding_model != settings.EMBEDDING_MODEL,
+                        MemoryEntry.embedding_dimension.is_(None),
+                        MemoryEntry.embedding_dimension != settings.EMBEDDING_DIMENSION,
+                        MemoryEntry.embedding_document_version.is_(None),
+                        MemoryEntry.embedding_document_version != EMBEDDING_DOCUMENT_VERSION,
                     )
                 )
                 .order_by(MemoryEntry.created_at.asc())
@@ -418,7 +428,7 @@ class OperationalMemoryService:
                 entry.embedding_document = self._legacy_embedding_document(
                     entry
                 )
-                entry.embedding_document_version = "legacy-backfill"
+                entry.embedding_document_version = EMBEDDING_DOCUMENT_VERSION
             if await self._embed_entry(entry):
                 ready += 1
             else:
