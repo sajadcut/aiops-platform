@@ -198,8 +198,18 @@ class DurableWorkflowRuntime:
         execution_result = result.get("execution_result") or {}
         if not execution_result.get("success"):
             result["terminal_reason"] = execution_result.get("reason") or "execution_failed"
+            # Negative governed outcomes are still durable Operational Memory.
+            # This does not resolve the incident; it records the failed/blocked
+            # attempt and allows cited historical experience to receive negative
+            # reuse feedback.
+            result = await orchestrator._memory_node(result)
+            result = await orchestrator._end_node(result)
             await self.checkpoints.mark_failed(incident_id, result)
             await self._set_incident_status(incident_id, "escalated")
+            await self.incidents.add_findings(
+                incident_id,
+                result.get("findings", []),
+            )
             await self._flush_audit(incident_id)
             await self.incidents.commit()
             return result
