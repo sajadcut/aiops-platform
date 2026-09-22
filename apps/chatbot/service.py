@@ -19,6 +19,7 @@ from apps.execution_service import ExecutionRequest, ExecutionService
 from apps.incident_service.repository import IncidentRepository
 from apps.memory_service import OperationalMemoryService
 from apps.memory_service.builder import OperationalMemoryBuilder
+from apps.verification_service import VerificationEngine, VerificationStatus
 from apps.security.oidc import Identity
 from apps.security.rbac import allowed
 from database import AsyncSessionLocal
@@ -520,34 +521,200 @@ class ChatbotService:
             finally:
                 CHAT_LATENCY.observe(max(0.0, time.perf_counter() - started))
 
-    async def _verify_mutation(self, proposal: dict[str, Any]) -> dict[str, Any]:
+    async def _collect_mutation_snapshot(
+        self,
+        proposal: dict[str, Any],
+    ) -> dict[str, Any]:
+        """Collect read-only operational state for independent before/after verification."""
+        target = str(proposal.get("target") or "")
+        params = dict(proposal.get("parameters") or {})
+        incident_id = str(proposal.get("incident_id") or "")
+        evidence: list[dict[str, Any]] = []
+        summary: dict[str, float] = {}
+        raw_result: dict[str, Any] = {}
+        source = "chatbot"
+        read_success = False
+        error: str | None = None
+
         try:
-            if proposal["tool_name"] == "ssh_vm":
-                service = str((proposal.get("parameters") or {}).get("service") or "")
-                result = await ExecutionService.execute(
+            if proposal.get("tool_name") == "ssh_vm":
+                source = "vm_mcp"
+                service = str(params.get("service") or "").strip()
+                status = await ExecutionService.execute(
                     ExecutionRequest(
                         tool_name="vm_telemetry",
                         action="service_status",
-                        target=str(proposal["target"]),
+                        target=target,
                         parameters={"service": service},
                         timeout=20,
                         agent_name="chatbot-verification",
-                        incident_id=str(proposal["incident_id"]),
+                        incident_id=incident_id,
                     )
                 )
-                return {"verified": result.success, "source": "vm_mcp", "result": redact(result.result or {}), "error": result.error}
-            if proposal["tool_name"] == "kubernetes_mcp":
-                params = dict(proposal.get("parameters") or {})
+                status_payload = dict(status.result or {})
+                evidence.append(
+                    {
+                        "source": source,
+                        "type": "event",
+                        "reference": f"chatbot:vm:service_status:{incident_id}",
+                        "raw_data": {
+                            "diagnostic": "service_status",
+                            **status_payload,
+                        },
+                    }
+                )
+                raw_result["service_status"] = redact(status_payload)
+                read_success = bool(status.success)
+                error = status.error
+
+                raw_port = params.get("target_port")
+                port: int | None = None
+                if raw_port not in (None, ""):
+                    try:
+                        candidate = int(raw_port)
+                        if 1 <= candidate <= 65535:
+                            port = candidate
+                    except (TypeError, ValueError):
+                        port = None
+
+                if port is not None:
+                    listener = await ExecutionService.execute(
+                        ExecutionRequest(
+                            tool_name="vm_telemetry",
+                            action="port_listener_status",
+                            target=target,
+                            parameters={"port": port},
+                            timeout=20,
+                            agent_name="chatbot-verification",
+                            incident_id=incident_id,
+                        )
+                    )
+                    listener_payload = dict(listener.result or {})
+                    evidence.append(
+                        {
+                            "source": source,
+                            "type": "event",
+                            "reference": f"chatbot:vm:listener:{incident_id}:{port}",
+                            "raw_data": {
+                                "diagnostic": "port_listener_status",
+                                **listener_payload,
+                            },
+                        }
+                    )
+                    raw_result["port_listener_status"] = redact(listener_payload)
+
+                    tcp = await ExecutionService.execute(
+                        ExecutionRequest(
+                            tool_name="vm_telemetry",
+                            action="tcp_check",
+                            target=target,
+                            parameters={"host": target, "port": port},
+                            timeout=20,
+                            agent_name="chatbot-verification",
+                            incident_id=incident_id,
+                        )
+                    )
+                    tcp_payload = dict(tcp.result or {})
+                    evidence.append(
+                        {
+                            "source": source,
+                            "type": "event",
+                            "reference": f"chatbot:vm:tcp:{incident_id}:{port}",
+                            "raw_data": {
+                                "diagnostic": "tcp_check",
+                                **tcp_payload,
+                            },
+                        }
+                    )
+                    raw_result["tcp_check"] = redact(tcp_payload)
+                    read_success = bool(
+                        read_success and listener.success and tcp.success
+                    )
+                    error = error or listener.error or tcp.error
+
+            elif proposal.get("tool_name") == "kubernetes_mcp":
+                source = "kubernetes_mcp"
                 result = await KubernetesMCPClient().collect_query(
                     operation="rollout_state",
                     namespace=str(params.get("namespace") or ""),
-                    resource=str(proposal["target"]),
+                    resource=target,
                 )
-                return {"verified": True, "source": "kubernetes_mcp", "result": redact(result)}
+                payload = dict(result) if isinstance(result, dict) else {}
+                rollout_complete = payload.get("rollout_complete")
+                if isinstance(rollout_complete, bool):
+                    summary["availability"] = 1.0 if rollout_complete else 0.0
+                    read_success = True
+                else:
+                    error = "rollout_state_incomplete"
+                raw_result["rollout_state"] = redact(payload)
+                evidence.append(
+                    {
+                        "source": source,
+                        "type": "event",
+                        "reference": f"chatbot:k8s:rollout:{incident_id}:{target}",
+                        "raw_data": {
+                            "diagnostic": "rollout_state",
+                            **payload,
+                        },
+                    }
+                )
+            else:
+                error = "verification_not_supported"
         except Exception as exc:
-            logger.warning("chatbot_post_execution_verification_failed", error_type=type(exc).__name__)
-            return {"verified": False, "error": "verification_unavailable"}
-        return {"verified": False, "error": "verification_not_supported"}
+            logger.warning(
+                "chatbot_verification_snapshot_failed",
+                error_type=type(exc).__name__,
+            )
+            error = "verification_unavailable"
+
+        return {
+            "source": source,
+            "read_success": read_success,
+            "error": error,
+            "result": redact(raw_result),
+            "context": {
+                "summary": summary,
+                "live_evidence": {"evidence": evidence},
+            },
+        }
+
+    async def _verify_mutation(
+        self,
+        proposal: dict[str, Any],
+        before_snapshot: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        after_snapshot = await self._collect_mutation_snapshot(proposal)
+        before_context = dict((before_snapshot or {}).get("context") or {})
+        after_context = dict(after_snapshot.get("context") or {})
+        result = await VerificationEngine.verify_action(
+            action_plan=str(proposal.get("action") or ""),
+            service=str(
+                (proposal.get("parameters") or {}).get("service")
+                or proposal.get("target")
+                or "unknown"
+            ),
+            before_context=before_context,
+            after_context=after_context,
+        )
+        verified = result.status == VerificationStatus.SUCCESS
+        return {
+            "verified": verified,
+            "status": result.status.value,
+            "confidence": result.confidence,
+            "before_state": result.before_state,
+            "after_state": result.after_state,
+            "changes": result.changes,
+            "evidence_refs": result.evidence_refs,
+            "message": result.message,
+            "source": after_snapshot.get("source"),
+            "result": after_snapshot.get("result"),
+            "error": (
+                None
+                if verified
+                else after_snapshot.get("error")
+                or f"verification_{result.status.value}"
+            ),
+        }
 
     async def _record_memory_after_mutation(
         self,
