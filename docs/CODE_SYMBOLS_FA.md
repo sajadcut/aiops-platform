@@ -1318,13 +1318,13 @@
 | `apps/verification_service/__init__.py` | `VerificationEngine._objective_target` | 184 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VerificationEngine |
 | `apps/verification_service/__init__.py` | `VerificationEngine._expected_numeric` | 193 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VerificationEngine |
 | `apps/verification_service/__init__.py` | `VerificationEngine._apply_objectives` | 204 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VerificationEngine |
-| `apps/verification_service/__init__.py` | `VerificationEngine._inconclusive` | 329 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VerificationEngine |
-| `apps/verification_service/__init__.py` | `VerificationEngine._direction` | 337 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VerificationEngine |
-| `apps/verification_service/__init__.py` | `VerificationEngine._extract_metrics` | 345 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VerificationEngine |
-| `apps/verification_service/__init__.py` | `VerificationEngine._extract_metrics.add` | 350 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VerificationEngine._extract_metrics |
-| `apps/verification_service/__init__.py` | `VerificationEngine._canonical_metric_name` | 400 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VerificationEngine |
-| `apps/verification_service/__init__.py` | `VerificationEngine._evidence_refs` | 427 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VerificationEngine |
-| `apps/verification_service/__init__.py` | `VerificationEngine._dedupe_refs` | 439 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VerificationEngine |
+| `apps/verification_service/__init__.py` | `VerificationEngine._inconclusive` | 332 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VerificationEngine |
+| `apps/verification_service/__init__.py` | `VerificationEngine._direction` | 340 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VerificationEngine |
+| `apps/verification_service/__init__.py` | `VerificationEngine._extract_metrics` | 348 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VerificationEngine |
+| `apps/verification_service/__init__.py` | `VerificationEngine._extract_metrics.add` | 353 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VerificationEngine._extract_metrics |
+| `apps/verification_service/__init__.py` | `VerificationEngine._canonical_metric_name` | 403 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VerificationEngine |
+| `apps/verification_service/__init__.py` | `VerificationEngine._evidence_refs` | 430 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VerificationEngine |
+| `apps/verification_service/__init__.py` | `VerificationEngine._dedupe_refs` | 442 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VerificationEngine |
 | `dashboards/approval-actions.js` | `approvalPanel` | 6 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
 | `dashboards/approval-actions.js` | `summaryBadge` | 72 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
 | `dashboards/approval-actions.js` | `causeBadge` | 76 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
