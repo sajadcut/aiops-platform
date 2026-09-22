@@ -41,7 +41,7 @@ async def _seed_proposal(owner: str = "chatbot-db-sre"):
         intent = execution_intent(
             incident_id=incident_id,
             tool_name="ssh_vm",
-            action="reload_service",
+            action="restart_service",
             target="vm01",
             parameters={"service": "nginx"},
             timeout=30,
@@ -52,7 +52,7 @@ async def _seed_proposal(owner: str = "chatbot-db-sre"):
             incident_id=incident_id,
             owner_subject=owner,
             tool_name="ssh_vm",
-            action="reload_service",
+            action="restart_service",
             target="vm01",
             parameters={"service": "nginx"},
             risk_level="high",
@@ -88,7 +88,7 @@ async def test_confirmed_vm_action_uses_durable_approval_consumption_and_is_not_
             tool_name=request.tool_name,
             action=request.action,
             target=request.target,
-            result={"success": True, "reloaded": "nginx"},
+            result={"success": True, "restarted": "nginx"},
             approval_id=request.approval_id,
         )
 
@@ -103,14 +103,25 @@ async def test_confirmed_vm_action_uses_durable_approval_consumption_and_is_not_
             "context": {"live_evidence": {"evidence": []}},
         }
 
+    async def safe_guard(self, proposal_row):
+        return {
+            "applies": True,
+            "safe_to_execute": True,
+            "reason": "fresh_execution_preconditions_satisfied",
+            "snapshot": None,
+            "precondition": {"safe_to_execute": True},
+            "stale": False,
+        }
+
     monkeypatch.setattr(ExecutionService, "execute", staticmethod(fake_execute))
+    monkeypatch.setattr(ChatbotService, "_preconfirm_mutation_guard", safe_guard)
     monkeypatch.setattr(ChatbotService, "_collect_mutation_snapshot", fake_snapshot)
     monkeypatch.setattr(ChatbotService, "_verify_mutation", fake_verify)
 
     result = await ChatbotService().decide(identity, proposal["proposal_id"], True)
     assert result.kind == "execution_result"
     assert calls and calls[0].tool_name == "ssh_vm"
-    assert calls[0].action == "reload_service"
+    assert calls[0].action == "restart_service"
     assert calls[0].incident_id == incident_id
     assert calls[0].approval_granted is True
     assert calls[0].approval_id
