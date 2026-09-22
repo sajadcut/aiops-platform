@@ -1950,9 +1950,9 @@
 | `scripts/trace_incident_logs.py` | `main` | 36 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `scripts/verify_operational_memory.py` | `inspect` | 16 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `scripts/verify_operational_memory.py` | `main` | 51 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `tests/integration/test_approval_store_db.py` | `_seed_incident` | 17 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `tests/integration/test_approval_store_db.py` | `_record` | 33 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `tests/integration/test_approval_store_db.py` | `test_duplicate_save_cannot_resurrect_terminal_approval_states` | 56 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/integration/test_approval_store_db.py` | `_seed_incident` | 18 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/integration/test_approval_store_db.py` | `_record` | 34 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/integration/test_approval_store_db.py` | `test_duplicate_save_cannot_resurrect_terminal_approval_states` | 57 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/integration/test_chatbot_db_acceptance.py` | `_seed_proposal` | 24 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/integration/test_chatbot_db_acceptance.py` | `test_chat_session_and_proposal_are_owner_scoped` | 65 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/integration/test_chatbot_db_acceptance.py` | `test_confirmed_vm_action_uses_durable_approval_consumption_and_is_not_replayable` | 79 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
