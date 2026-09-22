@@ -258,7 +258,16 @@ class BaseAgent(ABC):
     async def generate_structured(self, prompt: str) -> Dict[str, Any]:
         _CURRENT_AUXILIARY_CONFLICTS.set(())
         _CURRENT_HISTORICAL_MEMORY_IDS.set(())
-        full_prompt = f"{UNTRUSTED_INPUT_POLICY}\n\n{STRUCTURED_OUTPUT_POLICY}\n\n{prompt}"
+        full_prompt = (
+            f"{UNTRUSTED_INPUT_POLICY}\n\n"
+            f"{STRUCTURED_OUTPUT_POLICY}\n\n"
+            f"{prompt}\n\n"
+            "FINAL HISTORICAL MEMORY CITATION CONTRACT: Always include "
+            "historical_memory_ids as a JSON list. Include only exact IDs from "
+            "the retrieved Operational Memory items that materially influenced "
+            "your analysis. Do not place those IDs in evidence_ids or "
+            "supporting_evidence_ids. Historical memory is not current Evidence."
+        )
         last_error: Optional[Exception] = None
         attempts = 1 + max(0, settings.AGENT_STRUCTURED_REPAIR_ATTEMPTS)
         started = time.monotonic()
@@ -450,7 +459,118 @@ class BaseAgent(ABC):
         raw = input_data.context.get("memory_results", []) if input_data.context else []
         if not isinstance(raw, list):
             return []
-        return [item for item in raw if isinstance(item, dict)][: settings.AGENT_MAX_AUXILIARY_CONTEXT_ITEMS]
+
+        def bounded_text(value: Any, limit: int = 1600) -> Optional[str]:
+            if value is None:
+                return None
+            text_value = str(value).strip()
+            if not text_value:
+                return None
+            return text_value if len(text_value) <= limit else text_value[:limit] + "...[truncated]"
+
+        projected: List[Dict[str, Any]] = []
+        for item in raw:
+            if not isinstance(item, dict):
+                continue
+            memory_id = bounded_text(item.get("id"), 128)
+            if not memory_id:
+                continue
+            investigation = (
+                item.get("investigation")
+                if isinstance(item.get("investigation"), dict)
+                else {}
+            )
+            remediation = (
+                item.get("actual_remediation")
+                if isinstance(item.get("actual_remediation"), dict)
+                else {}
+            )
+            verification = (
+                item.get("verification")
+                if isinstance(item.get("verification"), dict)
+                else {}
+            )
+            incident_pattern = (
+                item.get("incident_pattern")
+                if isinstance(item.get("incident_pattern"), dict)
+                else {}
+            )
+            projected.append(
+                {
+                    "id": memory_id,
+                    "source_incident_id": bounded_text(
+                        item.get("source_incident_id"), 128
+                    ),
+                    "service_scope": bounded_text(item.get("service_scope"), 255),
+                    "environment": bounded_text(item.get("environment"), 100),
+                    "incident_pattern": {
+                        "summary": bounded_text(incident_pattern.get("summary"), 800),
+                        "observed_faults": list(
+                            incident_pattern.get("observed_faults") or []
+                        )[:12],
+                    },
+                    "investigation": {
+                        "summary": bounded_text(
+                            investigation.get("investigation_summary"), 1400
+                        ),
+                        "rca_synthesis": bounded_text(
+                            investigation.get("rca_synthesis"), 1800
+                        ),
+                        "missing_evidence": list(
+                            investigation.get("missing_evidence") or []
+                        )[:10],
+                        "contradictions": list(
+                            investigation.get("contradictions") or []
+                        )[:10],
+                        "specialist_agents_used": list(
+                            investigation.get("specialist_agents_used") or []
+                        )[:12],
+                    },
+                    "historical_root_cause": {
+                        "summary": bounded_text(item.get("root_cause"), 1200),
+                        "status": bounded_text(item.get("root_cause_status"), 32),
+                        "confidence": item.get("root_cause_confidence"),
+                    },
+                    "actual_remediation": {
+                        "tool_name": bounded_text(remediation.get("tool_name"), 128),
+                        "action": bounded_text(remediation.get("action"), 255),
+                        "target": bounded_text(remediation.get("target"), 255),
+                        "service": bounded_text(remediation.get("service"), 255),
+                        "runbook_id": bounded_text(remediation.get("runbook_id"), 255),
+                        "runbook_version": bounded_text(
+                            remediation.get("runbook_version"), 100
+                        ),
+                        "execution_success": remediation.get("execution_success"),
+                        "execution_blocked": remediation.get("execution_blocked"),
+                    },
+                    "verification": {
+                        "status": bounded_text(verification.get("status"), 50),
+                        "recovered_signals": list(
+                            verification.get("recovered_signals") or []
+                        )[:12],
+                        "remaining_symptoms": list(
+                            verification.get("remaining_symptoms") or []
+                        )[:12],
+                        "unexpected_regressions": list(
+                            verification.get("unexpected_regressions") or []
+                        )[:12],
+                    },
+                    "memory_outcome_class": bounded_text(
+                        item.get("memory_outcome_class"), 64
+                    ),
+                    "reusable_lesson": bounded_text(
+                        item.get("reusable_lesson"), 1600
+                    ),
+                    "effectiveness_score": item.get("effectiveness_score"),
+                    "final_rank_score": item.get("final_rank_score"),
+                    "created_at": bounded_text(item.get("created_at"), 64),
+                    "safe_as_evidence": False,
+                    "requires_current_validation": True,
+                }
+            )
+            if len(projected) >= settings.AGENT_MAX_AUXILIARY_CONTEXT_ITEMS:
+                break
+        return projected
 
     @classmethod
     def auxiliary_context(cls, input_data: AgentInput) -> Dict[str, Any]:
