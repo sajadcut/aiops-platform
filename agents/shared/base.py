@@ -28,7 +28,10 @@ STRUCTURED_OUTPUT_POLICY = (
     "Return exactly one compact valid JSON object and no markdown or commentary. "
     "Keep text fields concise and do not repeat the prompt or evidence. "
     "confidence and every hypotheses[].probability must be numeric values from 0.0 to 1.0; "
-    "do not use labels such as low, medium, or high."
+    "do not use labels such as low, medium, or high. "
+    "If a retrieved historical Operational Memory item materially influenced the analysis, "
+    "include its exact id in historical_memory_ids; otherwise return historical_memory_ids as an empty list. "
+    "Historical memory IDs are citations only and never current Evidence."
 )
 
 _QUALITATIVE_SCORE_MAP = {
@@ -133,6 +136,7 @@ class AgentOutput(BaseModel):
     supporting_evidence_ids: List[str] = Field(default_factory=list)
     conflicting_evidence_ids: List[str] = Field(default_factory=list)
     auxiliary_conflicts: List[str] = Field(default_factory=lambda: list(_CURRENT_AUXILIARY_CONFLICTS.get()))
+    historical_memory_ids: List[str] = Field(default_factory=list)
     missing_evidence: List[str] = Field(default_factory=list)
     evidence_requests: List[EvidenceRequest] = Field(default_factory=list)
     handoff_agents: List[str] = Field(default_factory=list)
