@@ -232,7 +232,9 @@ class PostgreSQLApprovalStore:
         """
         current = await self.get(approval_id)
         if current is None or current.get("status") != "approved":
-            return current
+            # A consumed/rejected/expired approval is terminal authority and
+            # must never be returned as a successful execution claim.
+            return None
 
         incident_id = str(current.get("incident_id") or "")
         if incident_id and await self._incident_source_recovered(incident_id):
@@ -257,8 +259,10 @@ class PostgreSQLApprovalStore:
             )
         ).mappings().first()
         await self.session.commit()
-        # Atomic compare-and-set مانع replay همان approval برای execution دوم می‌شود.
-        return dict(row) if row else await self._get_raw(approval_id)
+        # Only the winner of the approved->consumed compare-and-set receives
+        # execution authority. A concurrent/replayed loser gets no claim even
+        # though the durable row is now terminally consumed.
+        return dict(row) if row else None
 
     async def is_approved(self, approval_id: str) -> bool:
         """برای read-only check؛ execution واقعی همچنان باید consume اتمیک انجام دهد."""
