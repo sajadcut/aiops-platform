@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 382 | Dashboard JS files scanned: 5 | Symbols indexed: 3333**
+**Python files scanned: 383 | Dashboard JS files scanned: 5 | Symbols indexed: 3335**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1222,6 +1222,8 @@
 | `apps/runbook_service/executor.py` | `RunbookExecutor.__init__` | 27 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RunbookExecutor |
 | `apps/runbook_service/executor.py` | `RunbookExecutor.validate` | 31 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | RunbookExecutor |
 | `apps/runbook_service/executor.py` | `RunbookExecutor.execute` | 37 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | RunbookExecutor |
+| `apps/runbook_service/learning.py` | `build_runbook_memory_state` | 9 | function | Build the canonical Memory-builder state for direct runbook execution. | module |
+| `apps/runbook_service/learning.py` | `record_runbook_outcome` | 78 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/runbook_service/registry.py` | `RunbookRegistry` | 11 | class | Loads governed runbooks and rejects malformed definitions fail-closed. | module |
 | `apps/runbook_service/registry.py` | `RunbookRegistry.__init__` | 14 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RunbookRegistry |
 | `apps/runbook_service/registry.py` | `RunbookRegistry._identity` | 19 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RunbookRegistry |
