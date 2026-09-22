@@ -29,6 +29,16 @@ def _template_values() -> dict[str, str]:
 
 def _settings_data(**overrides):
     data = settings.model_dump()
+    if overrides.get("APP_ENV") == "production":
+        data.update(
+            {
+                "EMBEDDING_PROVIDER": "openai-compatible",
+                "EMBEDDING_BASE_URL": "https://embeddings.test/v1",
+                "EMBEDDING_MODEL": "test-embedding-model",
+                "EMBEDDING_DIMENSION": 1536,
+                "PGVECTOR_EXPECTED_DIMENSION": 1536,
+            }
+        )
     data.update(overrides)
     return data
 
