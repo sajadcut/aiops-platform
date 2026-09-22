@@ -201,3 +201,161 @@ async def test_confirmed_kubernetes_restart_uses_bound_execution_and_consumed_ap
         approval = await PostgreSQLApprovalStore(db).get(calls[0].approval_id)
         assert approval["status"] == "consumed"
     await _cleanup(owner, session_id, incident_id)
+
+
+@pytest.mark.asyncio(loop_scope="session")
+async def test_stale_vm_proposal_fails_before_approval_or_execution(monkeypatch):
+    owner = "chat-stale-vm-sre"
+    session_id, incident_id, proposal = await _seed(
+        owner,
+        tool_name="ssh_vm",
+        action="restart_service",
+        target="vm01",
+        parameters={"service": "nginx"},
+    )
+    identity = Identity(subject=owner, roles=("sre",))
+    calls = []
+
+    async def forbidden_execute(request):
+        calls.append(request)
+        raise AssertionError("stale proposal must never execute")
+
+    async def stale_guard(self, proposal_row):
+        return {
+            "applies": True,
+            "safe_to_execute": False,
+            "reason": "service_no_longer_unhealthy",
+            "snapshot": {
+                "read_success": True,
+                "error": None,
+                "evidence": [{"reference": "svc-active"}],
+            },
+            "precondition": {
+                "safe_to_execute": False,
+                "reason": "service_no_longer_unhealthy",
+                "evidence_refs": ["svc-active"],
+            },
+            "stale": True,
+        }
+
+    monkeypatch.setattr(
+        ExecutionService,
+        "execute",
+        staticmethod(forbidden_execute),
+    )
+    monkeypatch.setattr(
+        ChatbotService,
+        "_preconfirm_mutation_guard",
+        stale_guard,
+    )
+
+    with pytest.raises(HTTPException) as blocked:
+        await ChatbotService().decide(
+            identity,
+            proposal["proposal_id"],
+            True,
+        )
+
+    assert blocked.value.status_code == 409
+    assert blocked.value.detail == (
+        "chatbot_precondition_stale:service_no_longer_unhealthy"
+    )
+    assert calls == []
+
+    async with AsyncSessionLocal() as db:
+        saved = await ChatStore(db).get_proposal(
+            proposal["proposal_id"],
+            owner,
+        )
+        assert saved["status"] == "failed"
+        approvals = (
+            await db.execute(
+                text(
+                    "SELECT count(*) FROM approvals "
+                    "WHERE incident_id=:id"
+                ),
+                {"id": incident_id},
+            )
+        ).scalar_one()
+        assert approvals == 0
+
+    await _cleanup(owner, session_id, incident_id)
+
+
+@pytest.mark.asyncio(loop_scope="session")
+async def test_retryable_vm_preflight_keeps_pending_without_approval(monkeypatch):
+    owner = "chat-retryable-vm-sre"
+    session_id, incident_id, proposal = await _seed(
+        owner,
+        tool_name="ssh_vm",
+        action="restart_service",
+        target="vm01",
+        parameters={"service": "nginx"},
+    )
+    identity = Identity(subject=owner, roles=("sre",))
+    calls = []
+
+    async def forbidden_execute(request):
+        calls.append(request)
+        raise AssertionError("retryable preflight must not execute")
+
+    async def retryable_guard(self, proposal_row):
+        return {
+            "applies": True,
+            "safe_to_execute": False,
+            "reason": "fresh_service_status_missing",
+            "snapshot": {
+                "read_success": False,
+                "error": "vm_telemetry_unavailable",
+                "evidence": [],
+            },
+            "precondition": {
+                "safe_to_execute": False,
+                "reason": "fresh_service_status_missing",
+                "evidence_refs": [],
+            },
+            "stale": False,
+        }
+
+    monkeypatch.setattr(
+        ExecutionService,
+        "execute",
+        staticmethod(forbidden_execute),
+    )
+    monkeypatch.setattr(
+        ChatbotService,
+        "_preconfirm_mutation_guard",
+        retryable_guard,
+    )
+
+    with pytest.raises(HTTPException) as blocked:
+        await ChatbotService().decide(
+            identity,
+            proposal["proposal_id"],
+            True,
+        )
+
+    assert blocked.value.status_code == 409
+    assert blocked.value.detail == (
+        "chatbot_precondition_retryable:fresh_service_status_missing"
+    )
+    assert calls == []
+
+    async with AsyncSessionLocal() as db:
+        saved = await ChatStore(db).get_proposal(
+            proposal["proposal_id"],
+            owner,
+        )
+        assert saved["status"] == "pending"
+        approvals = (
+            await db.execute(
+                text(
+                    "SELECT count(*) FROM approvals "
+                    "WHERE incident_id=:id"
+                ),
+                {"id": incident_id},
+            )
+        ).scalar_one()
+        assert approvals == 0
+
+    await _cleanup(owner, session_id, incident_id)
