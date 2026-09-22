@@ -679,18 +679,18 @@
 | `apps/api/e2e_workflow.py` | `_response_from_result` | 50 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/e2e_workflow.py` | `run_e2e_workflow` | 66 | async function | Run the guarded durable incident lifecycle without bypassing Decision/Approval. | module |
 | `apps/api/e2e_workflow.py` | `resume_e2e_workflow` | 106 | async function | Resume a paused workflow only after its durable approval is granted. | module |
-| `apps/api/execution.py` | `_normalize_risk_level` | 25 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/execution.py` | `_approval_record` | 32 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/execution.py` | `_require_risk_permission` | 56 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/execution.py` | `_audit_durable` | 63 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/execution.py` | `_require_pending` | 68 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/execution.py` | `create_approval` | 77 | async function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
-| `apps/api/execution.py` | `get_approval` | 94 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
-| `apps/api/execution.py` | `approve` | 103 | async function | transition مربوط به Approval/Governance را اعمال می‌کند | module |
-| `apps/api/execution.py` | `reject` | 121 | async function | transition مربوط به Approval/Governance را اعمال می‌کند | module |
-| `apps/api/execution.py` | `_direct_runtime_contract` | 143 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/execution.py` | `_validate_approval_binding` | 171 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/execution.py` | `execute` | 187 | async function | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | module |
+| `apps/api/execution.py` | `_normalize_risk_level` | 26 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/execution.py` | `_approval_record` | 33 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/execution.py` | `_require_risk_permission` | 57 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/execution.py` | `_audit_durable` | 64 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/execution.py` | `_require_pending` | 69 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/execution.py` | `create_approval` | 78 | async function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
+| `apps/api/execution.py` | `get_approval` | 95 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
+| `apps/api/execution.py` | `approve` | 104 | async function | transition مربوط به Approval/Governance را اعمال می‌کند | module |
+| `apps/api/execution.py` | `reject` | 122 | async function | transition مربوط به Approval/Governance را اعمال می‌کند | module |
+| `apps/api/execution.py` | `_direct_runtime_contract` | 144 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/execution.py` | `_validate_approval_binding` | 172 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/execution.py` | `execute` | 188 | async function | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | module |
 | `apps/api/health.py` | `_pool_status` | 28 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/health.py` | `_probe_database` | 51 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/health.py` | `_probe_one` | 78 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
