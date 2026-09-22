@@ -57,7 +57,7 @@ def _record(approval_id, incident_id, *, status="pending"):
     }
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio(loop_scope="module")
 async def test_duplicate_save_cannot_resurrect_terminal_approval_states():
     incident_id = uuid4()
     consumed_id = str(uuid4())
@@ -184,7 +184,7 @@ async def test_duplicate_save_cannot_resurrect_terminal_approval_states():
         await db.commit()
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio(loop_scope="module")
 async def test_concurrent_consume_has_exactly_one_execution_authority_winner():
     incident_id = uuid4()
     approval_id = str(uuid4())
