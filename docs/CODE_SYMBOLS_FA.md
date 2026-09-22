@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 368 | Dashboard JS files scanned: 5 | Symbols indexed: 3236**
+**Python files scanned: 368 | Dashboard JS files scanned: 5 | Symbols indexed: 3237**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1076,27 +1076,28 @@
 | `apps/memory_service/__init__.py` | `OperationalMemoryService._uuid_or_none` | 538 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryService |
 | `apps/memory_service/builder.py` | `OperationalMemoryBuilder` | 12 | class | Build a bounded, sanitized, evidence-linked historical incident episode. | module |
 | `apps/memory_service/builder.py` | `OperationalMemoryBuilder.build` | 35 | method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | OperationalMemoryBuilder |
-| `apps/memory_service/builder.py` | `OperationalMemoryBuilder.build_embedding_document` | 214 | method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | OperationalMemoryBuilder |
-| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._root_cause` | 254 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
-| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._numeric_map` | 294 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
-| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._normalized_symptoms` | 306 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
-| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._verification` | 316 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
-| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._actual_remediation` | 358 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
-| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._error_class` | 397 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
-| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._outcome_class` | 402 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
-| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._hypotheses` | 425 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
-| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._causal_factors` | 439 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
-| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._contributing_factors` | 448 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
-| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._evidence_items` | 457 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
-| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._evidence_refs` | 466 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
-| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._reusable_lesson` | 483 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
-| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._search_document` | 517 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
-| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._sanitize_value` | 540 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
-| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._is_sensitive_key` | 566 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
-| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._sanitize_string` | 585 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
-| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._stable_text` | 595 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
-| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._signature` | 607 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
-| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._dedupe_strings` | 612 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
+| `apps/memory_service/builder.py` | `OperationalMemoryBuilder.build_embedding_document` | 215 | method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | OperationalMemoryBuilder |
+| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._root_cause` | 255 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
+| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._numeric_map` | 295 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
+| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._normalized_symptoms` | 307 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
+| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._verification` | 317 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
+| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._actual_remediation` | 359 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
+| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._error_class` | 398 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
+| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._outcome_class` | 403 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
+| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._hypotheses` | 426 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
+| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._causal_factors` | 440 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
+| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._contributing_factors` | 449 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
+| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._evidence_items` | 458 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
+| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._evidence_refs` | 467 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
+| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._reusable_lesson` | 484 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
+| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._episode_fingerprint` | 518 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
+| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._search_document` | 551 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
+| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._sanitize_value` | 574 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
+| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._is_sensitive_key` | 600 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
+| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._sanitize_string` | 619 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
+| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._stable_text` | 629 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
+| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._signature` | 641 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
+| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._dedupe_strings` | 646 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
 | `apps/memory_service/consolidation.py` | `summarize_entries` | 12 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/memory_service/consolidation.py` | `summarize_service` | 39 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/memory_service/feedback.py` | `_uuid` | 16 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
@@ -1566,7 +1567,7 @@
 | `domain/models.py` | `Evidence` | 57 | class | Evidence خام/normalized با provenance منبع برای یک Incident. | module |
 | `domain/models.py` | `Finding` | 75 | class | نتیجه تحلیل Agent؛ evidence_ids نشان می‌دهد ادعا بر کدام factها تکیه دارد. | module |
 | `domain/models.py` | `MemoryEntry` | 93 | class | Immutable-style historical incident episode plus mutable reuse statistics. | module |
-| `domain/models.py` | `MemoryReuseEvent` | 170 | class | Feedback trail showing how a historical episode affected a later incident. | module |
+| `domain/models.py` | `MemoryReuseEvent` | 171 | class | Feedback trail showing how a historical episode affected a later incident. | module |
 | `domain/observability.py` | `observe_http` | 29 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `domain/runbook.py` | `Runbook` | 5 | class | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | module |
 | `domain/runbook_validation.py` | `validate_runbook` | 12 | function | Validate a runbook definition. | module |
