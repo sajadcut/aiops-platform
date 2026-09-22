@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 366 | Dashboard JS files scanned: 5 | Symbols indexed: 3212**
+**Python files scanned: 366 | Dashboard JS files scanned: 5 | Symbols indexed: 3213**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1496,7 +1496,8 @@
 | `domain/contracts/config.py` | `Settings.validate_jenkins_basic_auth_header` | 346 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
 | `domain/contracts/config.py` | `Settings.validate_prometheus_mcp_protocol_version` | 354 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
 | `domain/contracts/config.py` | `Settings.validate_external_contracts` | 363 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_cognia_contract` | 387 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_embedding_contract` | 387 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_cognia_contract` | 417 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
 | `domain/contracts/context.py` | `set_trace_id` | 15 | function | Set the request/correlation trace id for the current execution context. | module |
 | `domain/contracts/context.py` | `get_trace_id` | 20 | function | Return the request/correlation trace id for the current context. | module |
 | `domain/contracts/context.py` | `generate_trace_id` | 25 | function | Generate a compact request trace id. | module |
