@@ -3,7 +3,7 @@
 > این فایل فهرست فایل‌به‌فایل repository است. توضیح معماری و flow در `CODEBASE_GUIDE_FA.md` آمده است.
 > این فایل با `scripts/generate_file_index_fa.py` ساخته و در CI کنترل می‌شود.
 
-**تعداد فایل‌های track‌شده و پوشش‌داده‌شده: 438**
+**تعداد فایل‌های track‌شده و پوشش‌داده‌شده: 444**
 
 | Path | Type | Purpose | Called By | Calls/Depends On | Runtime/Test/Docs | Notes |
 |---|---|---|---|---|---|---|
@@ -135,6 +135,9 @@
 | `apps/mcp_server/__init__.py` | Python | MCP: MCP server داخلی برای expose ابزارهای کنترل‌شده | MCP clients | provider adapters/security | Runtime | capability boundary |
 | `apps/mcp_server/main.py` | Python | MCP: MCP server داخلی برای expose ابزارهای کنترل‌شده | MCP clients | provider adapters/security | Runtime | capability boundary |
 | `apps/memory_service/__init__.py` | Python | Memory: Operational Memory retrieval/write-back | Workflow/agents/API | pgvector/embeddings | Runtime | جای live evidence را نمی‌گیرد |
+| `apps/memory_service/builder.py` | Python | Memory: Operational Memory retrieval/write-back | Workflow/agents/API | pgvector/embeddings | Runtime | جای live evidence را نمی‌گیرد |
+| `apps/memory_service/feedback.py` | Python | Memory: Operational Memory retrieval/write-back | Workflow/agents/API | pgvector/embeddings | Runtime | جای live evidence را نمی‌گیرد |
+| `apps/memory_service/retrieval.py` | Python | Memory: Operational Memory retrieval/write-back | Workflow/agents/API | pgvector/embeddings | Runtime | جای live evidence را نمی‌گیرد |
 | `apps/operator_summary.py` | Python | ماژول service لایه application | Runtime | domain/integrations | Runtime | جزء Control Plane |
 | `apps/orchestrator/a2a_gateway.py` | Python | Workflow: LangGraph orchestration، routing، resume و collaboration | API/signal gateway | agents/context/decision/approval | Runtime | مسیر E2E durable |
 | `apps/orchestrator/e2e_graph.py` | Python | Workflow: LangGraph orchestration، routing، resume و collaboration | API/signal gateway | agents/context/decision/approval | Runtime | مسیر E2E durable |
@@ -183,6 +186,7 @@
 | `database/migrations/versions/f2b3c4d5e6f7_approval_consumed_state.py` | Alembic | Migration نسخه‌دار schema PostgreSQL | Alembic/CI | domain models/pgvector | DB | canonical migration chain |
 | `database/migrations/versions/f3c4d5e6f7a8_add_chatbot_persistence.py` | Alembic | Migration نسخه‌دار schema PostgreSQL | Alembic/CI | domain models/pgvector | DB | canonical migration chain |
 | `database/migrations/versions/g4d5e6f7a8b9_chatbot_operations_copilot_v2.py` | Alembic | Migration نسخه‌دار schema PostgreSQL | Alembic/CI | domain models/pgvector | DB | canonical migration chain |
+| `database/migrations/versions/h5e6f7a8b9c0_operational_memory_v2.py` | Alembic | Migration نسخه‌دار schema PostgreSQL | Alembic/CI | domain models/pgvector | DB | canonical migration chain |
 | `deployment/__init__.py` | Docs | راهنما یا artifact manifest استقرار | اپراتور | deployment files | Deploy | offline/supply-chain |
 | `deployment/docker/offline/ARTIFACT_MANIFEST.md` | Docs | راهنما یا artifact manifest استقرار | اپراتور | deployment files | Deploy | offline/supply-chain |
 | `deployment/docker/offline/Dockerfile` | Docker | ساخت image آفلاین پلتفرم | Docker/CI | requirements/repo | Deploy | برای شبکه محدود |
@@ -289,6 +293,7 @@
 | `runbooks/vm_service_recovery.yml` | Runbook | تعریف عملیات allow-listed و verification/rollback | Runbook registry | execution policy | Runtime data | نباید arbitrary command باشد |
 | `scripts/__init__.py` | Python | ابزار maintenance/validation/seed/build | Developer/CI | repo/database | Tooling | مسیر اپراتوری کمکی |
 | `scripts/add_memory.py` | Python | ابزار maintenance/validation/seed/build | Developer/CI | repo/database | Tooling | مسیر اپراتوری کمکی |
+| `scripts/backfill_memory_embeddings.py` | Python | ابزار maintenance/validation/seed/build | Developer/CI | repo/database | Tooling | مسیر اپراتوری کمکی |
 | `scripts/check_python_integrity.py` | Python | ابزار maintenance/validation/seed/build | Developer/CI | repo/database | Tooling | مسیر اپراتوری کمکی |
 | `scripts/cleanup_repository.py` | Python | ابزار maintenance/validation/seed/build | Developer/CI | repo/database | Tooling | مسیر اپراتوری کمکی |
 | `scripts/generate_code_symbols_fa.py` | Python | ابزار maintenance/validation/seed/build | Developer/CI | repo/database | Tooling | مسیر اپراتوری کمکی |
@@ -410,6 +415,7 @@
 | `tests/unit/test_network_reliability_engine.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_oidc_auth.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_operational_agents.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
+| `tests/unit/test_operational_memory_v2.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_operational_resilience_regressions.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_operator_summary.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_production_fail_closed.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |

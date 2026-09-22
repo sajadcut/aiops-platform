@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 355 | Dashboard JS files scanned: 5 | Symbols indexed: 3149**
+**Python files scanned: 361 | Dashboard JS files scanned: 5 | Symbols indexed: 3188**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1065,6 +1065,32 @@
 | `apps/memory_service/__init__.py` | `OperationalMemoryService.serialize_entry` | 351 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryService |
 | `apps/memory_service/__init__.py` | `OperationalMemoryService._legacy_embedding_document` | 410 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryService |
 | `apps/memory_service/__init__.py` | `OperationalMemoryService._uuid_or_none` | 426 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryService |
+| `apps/memory_service/builder.py` | `OperationalMemoryBuilder` | 12 | class | Build a bounded, sanitized, evidence-linked historical incident episode. | module |
+| `apps/memory_service/builder.py` | `OperationalMemoryBuilder.build` | 35 | method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | OperationalMemoryBuilder |
+| `apps/memory_service/builder.py` | `OperationalMemoryBuilder.build_embedding_document` | 214 | method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | OperationalMemoryBuilder |
+| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._root_cause` | 254 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
+| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._numeric_map` | 294 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
+| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._normalized_symptoms` | 306 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
+| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._verification` | 316 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
+| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._actual_remediation` | 358 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
+| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._error_class` | 397 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
+| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._outcome_class` | 402 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
+| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._hypotheses` | 425 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
+| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._causal_factors` | 439 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
+| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._contributing_factors` | 448 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
+| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._evidence_items` | 457 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
+| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._evidence_refs` | 466 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
+| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._reusable_lesson` | 483 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
+| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._search_document` | 517 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
+| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._sanitize_value` | 540 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
+| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._sanitize_string` | 566 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
+| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._stable_text` | 576 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
+| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._signature` | 588 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
+| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._dedupe_strings` | 593 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
+| `apps/memory_service/feedback.py` | `record_retrieval_events` | 9 | async function | Hook for durable retrieval telemetry; persistence is added by migration-backed deployments. | module |
+| `apps/memory_service/feedback.py` | `apply_feedback` | 20 | async function | Return the number of historical-memory reuse records updated. | module |
+| `apps/memory_service/retrieval.py` | `candidates` | 18 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/memory_service/retrieval.py` | `rrf_score` | 130 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/operator_summary.py` | `_t` | 18 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/operator_summary.py` | `_low` | 24 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/operator_summary.py` | `_d` | 28 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
@@ -1086,31 +1112,31 @@
 | `apps/orchestrator/a2a_gateway.py` | `A2AGateway` | 11 | class | Compatibility gateway for structured multi-agent analysis. | module |
 | `apps/orchestrator/a2a_gateway.py` | `A2AGateway.__init__` | 18 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | A2AGateway |
 | `apps/orchestrator/a2a_gateway.py` | `A2AGateway.process_incident` | 24 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | A2AGateway |
-| `apps/orchestrator/e2e_graph.py` | `E2EState` | 44 | class | کلاس | module |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator` | 74 | class | کلاس | module |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator.__init__` | 75 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._build_graph` | 97 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator.run` | 124 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._audit` | 131 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._knowledge_failure_status` | 142 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._context_node` | 171 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._triage_node` | 273 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._agent_input` | 302 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._run_specialists` | 310 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._additional_evidence_round` | 353 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._parallel_agents_node` | 392 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._rca_node` | 454 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._evaluator_node` | 488 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._route_after_evaluation` | 505 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._decision_node` | 513 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._route_after_decision` | 520 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._approval_node` | 533 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._route_after_approval` | 546 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._execution_node` | 553 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._verification_node` | 562 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._memory_node` | 592 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._end_node` | 630 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._average_confidence` | 637 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EState` | 45 | class | کلاس | module |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator` | 75 | class | کلاس | module |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator.__init__` | 76 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._build_graph` | 98 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator.run` | 125 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._audit` | 132 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._knowledge_failure_status` | 143 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._context_node` | 172 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._triage_node` | 284 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._agent_input` | 313 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._run_specialists` | 321 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._additional_evidence_round` | 364 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._parallel_agents_node` | 403 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._rca_node` | 465 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._evaluator_node` | 499 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._route_after_evaluation` | 516 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._decision_node` | 524 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._route_after_decision` | 531 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._approval_node` | 544 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._route_after_approval` | 557 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._execution_node` | 564 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._verification_node` | 573 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._memory_node` | 603 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._end_node` | 663 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._average_confidence` | 670 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
 | `apps/orchestrator/graph.py` | `WorkflowOrchestrator` | 16 | class | Backward-compatible facade; not a second orchestration implementation. | module |
 | `apps/orchestrator/graph.py` | `WorkflowOrchestrator.__init__` | 19 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | WorkflowOrchestrator |
 | `apps/orchestrator/graph.py` | `WorkflowOrchestrator.run` | 23 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | WorkflowOrchestrator |
@@ -1437,6 +1463,8 @@
 | `database/migrations/versions/f3c4d5e6f7a8_add_chatbot_persistence.py` | `downgrade` | 69 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `database/migrations/versions/g4d5e6f7a8b9_chatbot_operations_copilot_v2.py` | `upgrade` | 16 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `database/migrations/versions/g4d5e6f7a8b9_chatbot_operations_copilot_v2.py` | `downgrade` | 25 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `database/migrations/versions/h5e6f7a8b9c0_operational_memory_v2.py` | `upgrade` | 16 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `database/migrations/versions/h5e6f7a8b9c0_operational_memory_v2.py` | `downgrade` | 133 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `domain/action_plan.py` | `ActionPlan` | 5 | class | کلاس | module |
 | `domain/audit_event.py` | `AuditEvent` | 6 | class | کلاس | module |
 | `domain/contracts/config.py` | `Settings` | 8 | class | Typed loader for the centralized runtime environment contract. | module |
@@ -1839,6 +1867,7 @@
 | `knowledge/retrieval_contract.py` | `validate_retrieval` | 16 | function | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | module |
 | `memory/namespace.py` | `MemoryNamespace` | 4 | class | کلاس | module |
 | `scripts/add_memory.py` | `add_sample_memory` | 12 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `scripts/backfill_memory_embeddings.py` | `main` | 10 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `scripts/check_python_integrity.py` | `_norm` | 16 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `scripts/check_python_integrity.py` | `_requirement_name` | 20 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `scripts/check_python_integrity.py` | `_python_files` | 28 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
@@ -2799,6 +2828,16 @@
 | `tests/unit/test_operational_agents.py` | `test_security_write_recommendation_is_never_direct_execution` | 75 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_operational_agents.py` | `test_triage_routes_specialists_and_exposes_evidence_gaps` | 90 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_operational_agents.py` | `test_agent_source_does_not_hardcode_mock_provider_or_fake_vm_os` | 106 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_operational_memory_v2.py` | `_state` | 8 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_operational_memory_v2.py` | `test_builder_preserves_uncertain_root_cause_and_actual_execution` | 96 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_operational_memory_v2.py` | `test_builder_does_not_convert_recovery_into_confirmed_cause` | 114 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_operational_memory_v2.py` | `_FakeDB` | 124 | class | کلاس | module |
+| `tests/unit/test_operational_memory_v2.py` | `_FakeDB.__init__` | 125 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _FakeDB |
+| `tests/unit/test_operational_memory_v2.py` | `_FakeDB.add` | 129 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _FakeDB |
+| `tests/unit/test_operational_memory_v2.py` | `_FakeDB.commit` | 132 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _FakeDB |
+| `tests/unit/test_operational_memory_v2.py` | `_FakeDB.refresh` | 135 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _FakeDB |
+| `tests/unit/test_operational_memory_v2.py` | `test_embedding_failure_keeps_core_episode` | 140 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_operational_memory_v2.py` | `test_embedding_failure_keeps_core_episode.fail_embedding` | 141 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_embedding_failure_keeps_core_episode |
 | `tests/unit/test_operational_resilience_regressions.py` | `test_zabbix_problem_get_semantic_error_falls_back_to_active_view` | 17 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_operational_resilience_regressions.py` | `test_zabbix_problem_get_semantic_error_falls_back_to_active_view.call_tool` | 21 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_zabbix_problem_get_semantic_error_falls_back_to_active_view |
 | `tests/unit/test_operational_resilience_regressions.py` | `test_zabbix_problem_get_semantic_error_falls_back_to_active_view.json_content` | 27 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_zabbix_problem_get_semantic_error_falls_back_to_active_view |
