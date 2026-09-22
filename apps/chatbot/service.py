@@ -531,6 +531,7 @@ class ChatbotService:
         incident_id = str(proposal.get("incident_id") or "")
         evidence: list[dict[str, Any]] = []
         summary: dict[str, float] = {}
+        state: dict[str, float] = {}
         raw_result: dict[str, Any] = {}
         source = "chatbot"
         read_success = False
@@ -565,6 +566,14 @@ class ChatbotService:
                 )
                 raw_result["service_status"] = redact(status_payload)
                 read_success = bool(status.success)
+                active_value = status_payload.get("active_state") or status_payload.get("status")
+                healthy_value = status_payload.get("healthy")
+                if isinstance(healthy_value, bool):
+                    state["service_active"] = 1.0 if healthy_value else 0.0
+                elif active_value is not None:
+                    state["service_active"] = (
+                        1.0 if str(active_value).strip().lower() == "active" else 0.0
+                    )
                 error = status.error
 
                 raw_port = params.get("target_port")
@@ -602,6 +611,10 @@ class ChatbotService:
                         }
                     )
                     raw_result["port_listener_status"] = redact(listener_payload)
+                    if isinstance(listener_payload.get("listening"), bool):
+                        state["port_listening"] = (
+                            1.0 if listener_payload["listening"] else 0.0
+                        )
 
                     tcp = await ExecutionService.execute(
                         ExecutionRequest(
@@ -627,6 +640,10 @@ class ChatbotService:
                         }
                     )
                     raw_result["tcp_check"] = redact(tcp_payload)
+                    if isinstance(tcp_payload.get("reachable"), bool):
+                        state["tcp_reachable"] = (
+                            1.0 if tcp_payload["reachable"] else 0.0
+                        )
                     read_success = bool(
                         read_success and listener.success and tcp.success
                     )
@@ -643,6 +660,7 @@ class ChatbotService:
                 rollout_complete = payload.get("rollout_complete")
                 if isinstance(rollout_complete, bool):
                     summary["availability"] = 1.0 if rollout_complete else 0.0
+                    state["availability"] = summary["availability"]
                     read_success = True
                 else:
                     error = "rollout_state_incomplete"
@@ -672,6 +690,7 @@ class ChatbotService:
             "read_success": read_success,
             "error": error,
             "result": redact(raw_result),
+            "state": state,
             "context": {
                 "summary": summary,
                 "live_evidence": {"evidence": evidence},
