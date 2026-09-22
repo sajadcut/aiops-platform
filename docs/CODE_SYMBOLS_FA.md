@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 379 | Dashboard JS files scanned: 5 | Symbols indexed: 3295**
+**Python files scanned: 379 | Dashboard JS files scanned: 5 | Symbols indexed: 3308**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1311,7 +1311,20 @@
 | `apps/signal_gateway/zabbix_lifecycle.py` | `_record_source_recovery` | 100 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/signal_gateway/zabbix_lifecycle.py` | `_audit_recovery` | 154 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/signal_gateway/zabbix_lifecycle.py` | `ingest_zabbix_payload` | 191 | async function | Ingest a Zabbix Problem or Recovery without turning Recovery into a new Incident. | module |
-| `apps/verification_service/__init__.py` | `<syntax-error>` | 0 | parse-error | فایل Python قابل parse نیست | — |
+| `apps/verification_service/__init__.py` | `VerificationStatus` | 11 | class | کلاس | module |
+| `apps/verification_service/__init__.py` | `VerificationResult` | 18 | class | کلاس | module |
+| `apps/verification_service/__init__.py` | `VerificationEngine` | 33 | class | Deterministic before/after verification over fresh operational Evidence. | module |
+| `apps/verification_service/__init__.py` | `VerificationEngine.verify_action` | 50 | async method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | VerificationEngine |
+| `apps/verification_service/__init__.py` | `VerificationEngine._objective_target` | 184 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VerificationEngine |
+| `apps/verification_service/__init__.py` | `VerificationEngine._expected_numeric` | 193 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VerificationEngine |
+| `apps/verification_service/__init__.py` | `VerificationEngine._apply_objectives` | 204 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VerificationEngine |
+| `apps/verification_service/__init__.py` | `VerificationEngine._inconclusive` | 329 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VerificationEngine |
+| `apps/verification_service/__init__.py` | `VerificationEngine._direction` | 337 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VerificationEngine |
+| `apps/verification_service/__init__.py` | `VerificationEngine._extract_metrics` | 345 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VerificationEngine |
+| `apps/verification_service/__init__.py` | `VerificationEngine._extract_metrics.add` | 350 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VerificationEngine._extract_metrics |
+| `apps/verification_service/__init__.py` | `VerificationEngine._canonical_metric_name` | 400 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VerificationEngine |
+| `apps/verification_service/__init__.py` | `VerificationEngine._evidence_refs` | 427 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VerificationEngine |
+| `apps/verification_service/__init__.py` | `VerificationEngine._dedupe_refs` | 439 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VerificationEngine |
 | `dashboards/approval-actions.js` | `approvalPanel` | 6 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
 | `dashboards/approval-actions.js` | `summaryBadge` | 72 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
 | `dashboards/approval-actions.js` | `causeBadge` | 76 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
