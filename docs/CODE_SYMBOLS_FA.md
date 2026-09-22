@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 373 | Dashboard JS files scanned: 5 | Symbols indexed: 3272**
+**Python files scanned: 374 | Dashboard JS files scanned: 5 | Symbols indexed: 3280**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -2975,6 +2975,14 @@
 | `tests/unit/test_rag_memory_governance.py` | `test_memory_rejects_inconclusive_or_missing_outcome` | 31 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_rbac.py` | `test_viewer_cannot_approve` | 3 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_rbac.py` | `test_sre_can_approve_high_risk` | 6 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_rca_auxiliary_memory.py` | `CaptureLLM` | 7 | class | کلاس | module |
+| `tests/unit/test_rca_auxiliary_memory.py` | `CaptureLLM.__init__` | 8 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CaptureLLM |
+| `tests/unit/test_rca_auxiliary_memory.py` | `CaptureLLM.provider_name` | 12 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CaptureLLM |
+| `tests/unit/test_rca_auxiliary_memory.py` | `CaptureLLM.generate` | 15 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CaptureLLM |
+| `tests/unit/test_rca_auxiliary_memory.py` | `CaptureLLM.generate_with_messages` | 30 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CaptureLLM |
+| `tests/unit/test_rca_auxiliary_memory.py` | `_state` | 34 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_rca_auxiliary_memory.py` | `test_rca_auxiliary_context_contains_only_agent_cited_memory` | 135 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_rca_auxiliary_memory.py` | `test_rca_prompt_receives_bounded_cited_history_but_not_uncited_memory` | 153 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_recovery_readiness_details.py` | `StaticLLM` | 10 | class | کلاس | module |
 | `tests/unit/test_recovery_readiness_details.py` | `StaticLLM.provider_name` | 12 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | StaticLLM |
 | `tests/unit/test_recovery_readiness_details.py` | `StaticLLM.generate` | 15 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | StaticLLM |
