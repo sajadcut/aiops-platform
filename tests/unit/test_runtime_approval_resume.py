@@ -85,6 +85,8 @@ class FakeOrchestrator:
 
 class ExecutionFailsOrchestrator(FakeOrchestrator):
     verification_calls = 0
+    memory_calls = 0
+    end_calls = 0
 
     async def _execution_node(self, state):
         state["execution_result"] = {"success": False, "execution_blocked": False, "reason": "mcp_write_failed"}
@@ -93,6 +95,19 @@ class ExecutionFailsOrchestrator(FakeOrchestrator):
     async def _verification_node(self, state):
         ExecutionFailsOrchestrator.verification_calls += 1
         raise AssertionError("verification must not run after failed execution")
+
+    async def _memory_node(self, state):
+        ExecutionFailsOrchestrator.memory_calls += 1
+        state["operational_memory_writeback"] = {
+            "memory_id": "failed-memory-1",
+            "outcome_class": "failed_recovery",
+        }
+        return state
+
+    async def _end_node(self, state):
+        ExecutionFailsOrchestrator.end_calls += 1
+        state["current_node"] = "end"
+        return state
 
 
 class VerificationFailsOrchestrator(FakeOrchestrator):
@@ -145,15 +160,22 @@ async def test_resume_injects_consumed_approval_context_into_execution_request(m
 
 
 @pytest.mark.asyncio
-async def test_failed_execution_never_runs_verification_or_resolves_incident(monkeypatch):
+async def test_failed_execution_is_learned_without_verification_or_resolution(monkeypatch):
     runtime = _runtime(_paused_state())
     ExecutionFailsOrchestrator.verification_calls = 0
+    ExecutionFailsOrchestrator.memory_calls = 0
+    ExecutionFailsOrchestrator.end_calls = 0
     monkeypatch.setattr(runtime_module, "E2EOrchestrator", ExecutionFailsOrchestrator)
+
     result = await runtime.resume_after_approval("incident-1")
+
     assert result["terminal_reason"] == "mcp_write_failed"
+    assert result["operational_memory_writeback"]["outcome_class"] == "failed_recovery"
     assert runtime.checkpoints.failed is not None
     assert runtime.checkpoints.completed is None
     assert ExecutionFailsOrchestrator.verification_calls == 0
+    assert ExecutionFailsOrchestrator.memory_calls == 1
+    assert ExecutionFailsOrchestrator.end_calls == 1
     assert runtime.incidents.statuses[-1] == ("incident-1", "escalated")
 
 
