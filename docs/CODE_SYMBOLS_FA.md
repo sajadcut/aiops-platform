@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 379 | Dashboard JS files scanned: 5 | Symbols indexed: 3308**
+**Python files scanned: 379 | Dashboard JS files scanned: 5 | Symbols indexed: 3309**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -3062,6 +3062,7 @@
 | `tests/unit/test_runbook_verification_objectives.py` | `test_runbook_objectives_are_fail_closed_when_required_evidence_is_missing` | 59 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_runbook_verification_objectives.py` | `test_orchestrator_uses_registered_runbook_verification_objectives` | 77 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_runbook_verification_objectives.py` | `test_orchestrator_fails_closed_when_runbook_contract_is_unavailable` | 122 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_runbook_verification_objectives.py` | `test_baseline_relative_objective_is_inconclusive_without_pre_action_value` | 163 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_runtime_approval_resume.py` | `FakeCheckpointStore` | 8 | class | کلاس | module |
 | `tests/unit/test_runtime_approval_resume.py` | `FakeCheckpointStore.__init__` | 9 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeCheckpointStore |
 | `tests/unit/test_runtime_approval_resume.py` | `FakeCheckpointStore.load` | 14 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | FakeCheckpointStore |
