@@ -6,7 +6,7 @@ import time
 from typing import Any, Dict, List, Optional, cast
 from uuid import UUID, uuid4
 
-from sqlalchemy import func, or_, select
+from sqlalchemy import and_, func, or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -495,6 +495,24 @@ class OperationalMemoryService:
                     .label("embedding_pending"),
                     func.count(MemoryEntry.id)
                     .filter(
+                        and_(
+                            MemoryEntry.embedding_status == "ready",
+                            MemoryEntry.embedding.is_not(None),
+                            or_(
+                                MemoryEntry.embedding_provider.is_(None),
+                                MemoryEntry.embedding_provider != settings.EMBEDDING_PROVIDER,
+                                MemoryEntry.embedding_model.is_(None),
+                                MemoryEntry.embedding_model != settings.EMBEDDING_MODEL,
+                                MemoryEntry.embedding_dimension.is_(None),
+                                MemoryEntry.embedding_dimension != settings.EMBEDDING_DIMENSION,
+                                MemoryEntry.embedding_document_version.is_(None),
+                                MemoryEntry.embedding_document_version != EMBEDDING_DOCUMENT_VERSION,
+                            ),
+                        )
+                    )
+                    .label("embedding_contract_mismatch"),
+                    func.count(MemoryEntry.id)
+                    .filter(
                         MemoryEntry.memory_outcome_class
                         == "successful_recovery"
                     )
@@ -545,6 +563,11 @@ class OperationalMemoryService:
                 result[key] = value.isoformat() if value else None
             else:
                 result[key] = int(value or 0)
+        result["embedding_backlog"] = (
+            int(result.get("embedding_failed") or 0)
+            + int(result.get("embedding_pending") or 0)
+            + int(result.get("embedding_contract_mismatch") or 0)
+        )
         result["embedding_contract"] = {
             "provider": settings.EMBEDDING_PROVIDER,
             "model": settings.EMBEDDING_MODEL,
