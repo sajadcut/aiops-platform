@@ -52,6 +52,14 @@ _WRITE_ACTION_PATTERN = re.compile(
 
 _CURRENT_EVIDENCE_QUALITY: ContextVar[float] = ContextVar("agent_evidence_quality", default=1.0)
 _CURRENT_AUXILIARY_CONFLICTS: ContextVar[Tuple[str, ...]] = ContextVar("agent_auxiliary_conflicts", default=())
+_CURRENT_ALLOWED_HISTORICAL_MEMORY_IDS: ContextVar[Tuple[str, ...]] = ContextVar(
+    "agent_allowed_historical_memory_ids",
+    default=(),
+)
+_CURRENT_HISTORICAL_MEMORY_IDS: ContextVar[Tuple[str, ...]] = ContextVar(
+    "agent_historical_memory_ids",
+    default=(),
+)
 
 
 def _coerce_unit_interval_score(value: Any, field_name: str) -> float:
@@ -136,7 +144,9 @@ class AgentOutput(BaseModel):
     supporting_evidence_ids: List[str] = Field(default_factory=list)
     conflicting_evidence_ids: List[str] = Field(default_factory=list)
     auxiliary_conflicts: List[str] = Field(default_factory=lambda: list(_CURRENT_AUXILIARY_CONFLICTS.get()))
-    historical_memory_ids: List[str] = Field(default_factory=list)
+    historical_memory_ids: List[str] = Field(
+        default_factory=lambda: list(_CURRENT_HISTORICAL_MEMORY_IDS.get())
+    )
     missing_evidence: List[str] = Field(default_factory=list)
     evidence_requests: List[EvidenceRequest] = Field(default_factory=list)
     handoff_agents: List[str] = Field(default_factory=list)
@@ -247,6 +257,7 @@ class BaseAgent(ABC):
 
     async def generate_structured(self, prompt: str) -> Dict[str, Any]:
         _CURRENT_AUXILIARY_CONFLICTS.set(())
+        _CURRENT_HISTORICAL_MEMORY_IDS.set(())
         full_prompt = f"{UNTRUSTED_INPUT_POLICY}\n\n{STRUCTURED_OUTPUT_POLICY}\n\n{prompt}"
         last_error: Optional[Exception] = None
         attempts = 1 + max(0, settings.AGENT_STRUCTURED_REPAIR_ATTEMPTS)
@@ -293,6 +304,17 @@ class BaseAgent(ABC):
                 self._validate_structured_shape(result)
                 auxiliary_conflicts = tuple(self.normalize_list(result.get("auxiliary_conflicts"), 8))
                 _CURRENT_AUXILIARY_CONFLICTS.set(auxiliary_conflicts)
+                allowed_memory_ids = set(_CURRENT_ALLOWED_HISTORICAL_MEMORY_IDS.get())
+                selected_memory_ids = tuple(
+                    value
+                    for value in self.normalize_list(
+                        result.get("historical_memory_ids"),
+                        settings.AGENT_MAX_AUXILIARY_CONTEXT_ITEMS,
+                    )
+                    if value in allowed_memory_ids
+                )
+                _CURRENT_HISTORICAL_MEMORY_IDS.set(selected_memory_ids)
+                result["historical_memory_ids"] = list(selected_memory_ids)
                 AgentTelemetry.record(
                     self.name,
                     duration_seconds=time.monotonic() - started,
@@ -304,6 +326,7 @@ class BaseAgent(ABC):
                 last_error = exc
                 parse_failure = True
         _CURRENT_AUXILIARY_CONFLICTS.set(())
+        _CURRENT_HISTORICAL_MEMORY_IDS.set(())
         AgentTelemetry.record(
             self.name,
             duration_seconds=time.monotonic() - started,
@@ -326,7 +349,8 @@ class BaseAgent(ABC):
     def _validate_structured_shape(obj: Dict[str, Any]) -> None:
         list_fields = {
             "findings", "affected_components", "probable_dependencies", "hypotheses",
-            "missing_evidence", "handoff_agents", "immediate_checks", "recommendations", "auxiliary_conflicts",
+            "missing_evidence", "handoff_agents", "immediate_checks", "recommendations",
+            "auxiliary_conflicts", "historical_memory_ids",
         }
         for key in list_fields:
             if key in obj and not isinstance(obj[key], list):
@@ -430,14 +454,25 @@ class BaseAgent(ABC):
 
     @classmethod
     def auxiliary_context(cls, input_data: AgentInput) -> Dict[str, Any]:
+        memory = cls.memory_items(input_data)
+        _CURRENT_ALLOWED_HISTORICAL_MEMORY_IDS.set(
+            tuple(
+                str(item.get("id"))
+                for item in memory
+                if item.get("id") is not None and str(item.get("id")).strip()
+            )
+        )
         return {
             "knowledge_rag": cls.knowledge_items(input_data),
             "knowledge_status": (
                 input_data.context.get("knowledge_status", {"status": "unknown"})
                 if input_data.context else {"status": "unknown"}
             ),
-            "operational_memory": cls.memory_items(input_data),
-            "policy": "auxiliary_only_not_live_evidence",
+            "operational_memory": memory,
+            "policy": (
+                "auxiliary_only_not_live_evidence; historical memory IDs may be "
+                "cited only when materially used and never as evidence_ids"
+            ),
         }
 
     @classmethod
