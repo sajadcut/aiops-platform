@@ -114,6 +114,7 @@ async def get_memory(incident_id: UUID, limit: int = Query(default=5, le=20)):
             environment=None,
             retrieval_mode="SIMILAR_INCIDENT",
             limit=limit,
+            target_incident_id=str(incident_id),
             record_retrieval=False,
         )
         current = (
@@ -133,6 +134,17 @@ async def get_memory(incident_id: UUID, limit: int = Query(default=5, le=20)):
             "current_episode": service.serialize_entry(current) if current else None,
             "items": items,
         }
+
+
+@router.get("/memory/health")
+async def get_memory_health():
+    async with AsyncSessionLocal() as db:
+        stats = await OperationalMemoryService(db).stats()
+    return {
+        "status": "healthy",
+        "source": "postgresql_pgvector",
+        "stats": stats,
+    }
 
 
 @router.get("/memory/summary")
