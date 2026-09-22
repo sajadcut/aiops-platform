@@ -143,6 +143,29 @@ def test_builder_redacts_compound_secret_keys_before_storage_and_embedding():
         assert secret not in serialized
 
 
+def test_episode_fingerprint_is_stable_and_changes_with_real_execution():
+    first = OperationalMemoryBuilder.build(_state())
+    second = OperationalMemoryBuilder.build(_state())
+    assert first["episode_fingerprint"] == second["episode_fingerprint"]
+    assert len(first["episode_fingerprint"]) == 64
+
+    changed_state = _state()
+    changed_state["execution_request"]["action"] = "restart_service"
+    changed_state["execution_result"]["action"] = "restart_service"
+    changed = OperationalMemoryBuilder.build(changed_state)
+    assert changed["episode_fingerprint"] != first["episode_fingerprint"]
+
+
+def test_episode_fingerprint_is_not_changed_by_secret_value_rotation():
+    first_state = _state()
+    second_state = _state()
+    first_state["execution_request"]["parameters"]["password"] = "first-secret"
+    second_state["execution_request"]["parameters"]["password"] = "second-secret"
+    first = OperationalMemoryBuilder.build(first_state)
+    second = OperationalMemoryBuilder.build(second_state)
+    assert first["episode_fingerprint"] == second["episode_fingerprint"]
+
+
 def test_builder_does_not_convert_recovery_into_confirmed_cause():
     state = _state()
     state["triage_result"] = {
@@ -153,6 +176,22 @@ def test_builder_does_not_convert_recovery_into_confirmed_cause():
     assert episode["root_cause_status"] == "unconfirmed"
 
 
+class _FakeScalars:
+    def __init__(self, items):
+        self.items = items
+
+    def first(self):
+        return self.items[0] if self.items else None
+
+
+class _FakeExecuteResult:
+    def __init__(self, items=None):
+        self.items = list(items or [])
+
+    def scalars(self):
+        return _FakeScalars(self.items)
+
+
 class _FakeDB:
     def __init__(self):
         self.items = []
@@ -161,6 +200,9 @@ class _FakeDB:
 
     def add(self, item):
         self.items.append(item)
+
+    async def execute(self, _statement):
+        return _FakeExecuteResult()
 
     async def commit(self):
         self.commits += 1
