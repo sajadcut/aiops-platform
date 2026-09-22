@@ -508,15 +508,9 @@ class SignalAwareE2EOrchestrator(E2EOrchestrator):
         return result_state
 
     async def _memory_node(self, state: E2EState) -> E2EState:
-        execution = state.get("execution_result") or {}
-        if execution and not execution.get("success"):
-            state["current_node"] = "memory"
-            self._audit(
-                "memory_writeback",
-                state,
-                persisted=False,
-                verification_status=(state.get("verification_result") or {}).get("status"),
-                reason="execution_not_successful",
-            )
-            return state
+        # Operational Memory v2 deliberately keeps both positive and negative
+        # governed outcomes. Execution failure or policy blocking is historical
+        # experience, not a reason to suppress write-back. Resolution semantics
+        # remain unchanged: only successful independent verification resolves
+        # the incident.
         return await super()._memory_node(state)
