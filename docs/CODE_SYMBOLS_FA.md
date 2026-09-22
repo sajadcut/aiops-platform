@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 391 | Dashboard JS files scanned: 5 | Symbols indexed: 3466**
+**Python files scanned: 392 | Dashboard JS files scanned: 5 | Symbols indexed: 3471**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -2756,6 +2756,11 @@
 | `tests/unit/test_incident_operational_finalization.py` | `test_operational_outcome_escalates_failed_or_inconclusive_recovery` | 51 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_incident_operational_finalization.py` | `test_operational_outcome_preserves_authoritative_source_recovery` | 82 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_incident_operational_finalization.py` | `test_repeated_same_operational_outcome_updates_bounded_identity_not_duplicate` | 112 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_remediation_binding.py` | `_checkpoint` | 15 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_incident_remediation_binding.py` | `test_remediation_contract_uses_durable_decision_not_requested_risk` | 43 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_remediation_binding.py` | `test_remediation_contract_rejects_incomplete_execution_request` | 71 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_remediation_binding.py` | `test_remediation_contract_rejects_non_approval_decision` | 86 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_remediation_binding.py` | `test_remediation_contract_rejects_missing_checkpoint_state` | 101 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_incident_repository_json.py` | `_SampleState` | 10 | class | کلاس | module |
 | `tests/unit/test_incident_repository_json.py` | `test_json_safe_normalizes_durable_operational_context` | 14 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_incident_repository_json.py` | `test_database_json_serializer_is_a_final_datetime_safeguard` | 38 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
