@@ -51,7 +51,7 @@ async def analyze_incident(
     try:
         trace_id = get_trace_id()
         from apps.context_service import ContextBuilder
-        from apps.orchestrator.runtime import DurableWorkflowRuntime
+        from apps.orchestrator.learning_runtime import LearningDurableWorkflowRuntime
 
         full_context = await ContextBuilder().build_context(incident_data)
         incident_id = str(uuid4())
@@ -74,7 +74,7 @@ async def analyze_incident(
             "confidence": 0.0,
         }
         async with AsyncSessionLocal() as db:
-            result = await DurableWorkflowRuntime(db).start(initial_state)
+            result = await LearningDurableWorkflowRuntime(db).start(initial_state)
         return {
             "status": "success",
             "incident": incident_data.model_dump(),
