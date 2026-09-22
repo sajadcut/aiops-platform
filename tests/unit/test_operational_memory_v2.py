@@ -156,6 +156,18 @@ def test_episode_fingerprint_is_stable_and_changes_with_real_execution():
     assert changed["episode_fingerprint"] != first["episode_fingerprint"]
 
 
+def test_episode_fingerprint_is_stable_across_evidence_reference_refresh():
+    first_state = _state()
+    second_state = _state()
+    second_state["context"]["evidence"][0]["reference"] = "vm:service_status:refresh-2"
+    second_state["findings"][0]["evidence_ids"] = ["vm:service_status:refresh-2"]
+    second_state["verification_result"]["evidence_refs"] = ["vm:service_status:refresh-2"]
+
+    first = OperationalMemoryBuilder.build(first_state)
+    second = OperationalMemoryBuilder.build(second_state)
+    assert first["episode_fingerprint"] == second["episode_fingerprint"]
+
+
 def test_episode_fingerprint_is_not_changed_by_secret_value_rotation():
     first_state = _state()
     second_state = _state()
