@@ -161,3 +161,34 @@ async def test_memory_v2_postgres_hybrid_retrieval_and_feedback():
         assert refreshed is not None
         assert refreshed.successful_reuse_count >= 1
         assert refreshed.effectiveness_score > 0
+
+        # Same action without an explicit historical-memory citation must not
+        # receive a reuse reward merely because the action name matches.
+        uncited_target = str(uuid4())
+        await service.retrieve(
+            "nginx inactive port 86 tcp unreachable",
+            service_scope="nginx",
+            retrieval_mode="SIMILAR_INCIDENT",
+            limit=10,
+            successful_only=False,
+            target_incident_id=uncited_target,
+            record_retrieval=True,
+        )
+        before_success = int(refreshed.successful_reuse_count or 0)
+        await service.record_feedback(
+            uncited_target,
+            execution_request={"action": "start_service"},
+            verification_result={"status": "success"},
+            cited_memory_ids=[],
+        )
+        await db.refresh(refreshed)
+        assert int(refreshed.successful_reuse_count or 0) == before_success
+        uncited_events = (
+            await db.execute(
+                select(MemoryReuseEvent).where(
+                    MemoryReuseEvent.target_incident_id == uncited_target
+                )
+            )
+        ).scalars().all()
+        assert uncited_events
+        assert not any(event.influenced_plan for event in uncited_events)
