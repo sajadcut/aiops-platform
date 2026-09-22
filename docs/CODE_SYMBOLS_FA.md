@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 388 | Dashboard JS files scanned: 5 | Symbols indexed: 3421**
+**Python files scanned: 388 | Dashboard JS files scanned: 5 | Symbols indexed: 3429**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -2635,22 +2635,26 @@
 | `tests/unit/test_direct_execution_runtime_guard.py` | `_Store.__init__` | 21 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Store |
 | `tests/unit/test_direct_execution_runtime_guard.py` | `_Store.get` | 24 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Store |
 | `tests/unit/test_direct_execution_runtime_guard.py` | `_Store.consume` | 33 | async method | transition مربوط به Approval/Governance را اعمال می‌کند | _Store |
-| `tests/unit/test_direct_execution_runtime_guard.py` | `_Registry` | 44 | class | کلاس | module |
-| `tests/unit/test_direct_execution_runtime_guard.py` | `_Registry.__init__` | 45 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Registry |
-| `tests/unit/test_direct_execution_runtime_guard.py` | `_Registry.get` | 48 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Registry |
-| `tests/unit/test_direct_execution_runtime_guard.py` | `_payload` | 63 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `tests/unit/test_direct_execution_runtime_guard.py` | `_identity` | 77 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `tests/unit/test_direct_execution_runtime_guard.py` | `test_direct_runtime_contract_fails_closed_for_unimplemented_write_tool` | 81 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_direct_execution_runtime_guard.py` | `test_direct_execute_blocks_live_precondition_before_consume` | 96 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_direct_execution_runtime_guard.py` | `test_direct_execute_blocks_live_precondition_before_consume.no_audit` | 109 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_direct_execute_blocks_live_precondition_before_consume |
-| `tests/unit/test_direct_execution_runtime_guard.py` | `test_direct_execute_blocks_live_precondition_before_consume.snapshot` | 114 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_direct_execute_blocks_live_precondition_before_consume |
-| `tests/unit/test_direct_execution_runtime_guard.py` | `test_direct_execute_blocks_live_precondition_before_consume.execute` | 138 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | test_direct_execute_blocks_live_precondition_before_consume |
-| `tests/unit/test_direct_execution_runtime_guard.py` | `test_direct_execute_returns_verified_only_after_post_action_verification` | 156 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_direct_execution_runtime_guard.py` | `test_direct_execute_returns_verified_only_after_post_action_verification.no_audit` | 170 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_direct_execute_returns_verified_only_after_post_action_verification |
-| `tests/unit/test_direct_execution_runtime_guard.py` | `test_direct_execute_returns_verified_only_after_post_action_verification.snapshot` | 175 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_direct_execute_returns_verified_only_after_post_action_verification |
-| `tests/unit/test_direct_execution_runtime_guard.py` | `test_direct_execute_returns_verified_only_after_post_action_verification.verify` | 214 | async method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | test_direct_execute_returns_verified_only_after_post_action_verification |
-| `tests/unit/test_direct_execution_runtime_guard.py` | `test_direct_execute_returns_verified_only_after_post_action_verification.record_memory` | 221 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_direct_execute_returns_verified_only_after_post_action_verification |
-| `tests/unit/test_direct_execution_runtime_guard.py` | `test_direct_execute_returns_verified_only_after_post_action_verification.execute` | 227 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | test_direct_execute_returns_verified_only_after_post_action_verification |
+| `tests/unit/test_direct_execution_runtime_guard.py` | `_IncidentRepo` | 44 | class | کلاس | module |
+| `tests/unit/test_direct_execution_runtime_guard.py` | `_IncidentRepo.__init__` | 47 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _IncidentRepo |
+| `tests/unit/test_direct_execution_runtime_guard.py` | `_IncidentRepo.record_operational_outcome` | 50 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _IncidentRepo |
+| `tests/unit/test_direct_execution_runtime_guard.py` | `_IncidentRepo.commit` | 54 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _IncidentRepo |
+| `tests/unit/test_direct_execution_runtime_guard.py` | `_Registry` | 58 | class | کلاس | module |
+| `tests/unit/test_direct_execution_runtime_guard.py` | `_Registry.__init__` | 59 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Registry |
+| `tests/unit/test_direct_execution_runtime_guard.py` | `_Registry.get` | 62 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Registry |
+| `tests/unit/test_direct_execution_runtime_guard.py` | `_payload` | 77 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_direct_execution_runtime_guard.py` | `_identity` | 91 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_direct_execution_runtime_guard.py` | `test_direct_runtime_contract_fails_closed_for_unimplemented_write_tool` | 95 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_direct_execution_runtime_guard.py` | `test_direct_execute_blocks_live_precondition_before_consume` | 110 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_direct_execution_runtime_guard.py` | `test_direct_execute_blocks_live_precondition_before_consume.no_audit` | 123 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_direct_execute_blocks_live_precondition_before_consume |
+| `tests/unit/test_direct_execution_runtime_guard.py` | `test_direct_execute_blocks_live_precondition_before_consume.snapshot` | 128 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_direct_execute_blocks_live_precondition_before_consume |
+| `tests/unit/test_direct_execution_runtime_guard.py` | `test_direct_execute_blocks_live_precondition_before_consume.execute` | 152 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | test_direct_execute_blocks_live_precondition_before_consume |
+| `tests/unit/test_direct_execution_runtime_guard.py` | `test_direct_execute_returns_verified_only_after_post_action_verification` | 170 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_direct_execution_runtime_guard.py` | `test_direct_execute_returns_verified_only_after_post_action_verification.no_audit` | 186 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_direct_execute_returns_verified_only_after_post_action_verification |
+| `tests/unit/test_direct_execution_runtime_guard.py` | `test_direct_execute_returns_verified_only_after_post_action_verification.snapshot` | 191 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_direct_execute_returns_verified_only_after_post_action_verification |
+| `tests/unit/test_direct_execution_runtime_guard.py` | `test_direct_execute_returns_verified_only_after_post_action_verification.verify` | 230 | async method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | test_direct_execute_returns_verified_only_after_post_action_verification |
+| `tests/unit/test_direct_execution_runtime_guard.py` | `test_direct_execute_returns_verified_only_after_post_action_verification.record_memory` | 237 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_direct_execute_returns_verified_only_after_post_action_verification |
+| `tests/unit/test_direct_execution_runtime_guard.py` | `test_direct_execute_returns_verified_only_after_post_action_verification.execute` | 243 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | test_direct_execute_returns_verified_only_after_post_action_verification |
 | `tests/unit/test_dotin_general_chatbot_llm.py` | `FakeResponse` | 13 | class | کلاس | module |
 | `tests/unit/test_dotin_general_chatbot_llm.py` | `FakeResponse.__init__` | 14 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeResponse |
 | `tests/unit/test_dotin_general_chatbot_llm.py` | `FakeResponse.raise_for_status` | 17 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeResponse |
@@ -3090,44 +3094,48 @@
 | `tests/unit/test_remediation_runtime_guard.py` | `_Store.__init__` | 22 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Store |
 | `tests/unit/test_remediation_runtime_guard.py` | `_Store.get` | 25 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Store |
 | `tests/unit/test_remediation_runtime_guard.py` | `_Store.consume` | 40 | async method | transition مربوط به Approval/Governance را اعمال می‌کند | _Store |
-| `tests/unit/test_remediation_runtime_guard.py` | `_Registry` | 48 | class | کلاس | module |
-| `tests/unit/test_remediation_runtime_guard.py` | `_Registry.__init__` | 49 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Registry |
-| `tests/unit/test_remediation_runtime_guard.py` | `_Registry.get` | 52 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Registry |
-| `tests/unit/test_remediation_runtime_guard.py` | `_identity` | 73 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `tests/unit/test_remediation_runtime_guard.py` | `test_remediation_request_rejects_action_without_executable_runbook_contract` | 77 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_remediation_runtime_guard.py` | `test_remediation_preflight_blocks_before_approval_consume` | 87 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_remediation_runtime_guard.py` | `test_remediation_preflight_blocks_before_approval_consume.no_audit` | 95 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_remediation_preflight_blocks_before_approval_consume |
-| `tests/unit/test_remediation_runtime_guard.py` | `test_remediation_preflight_blocks_before_approval_consume.snapshot` | 100 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_remediation_preflight_blocks_before_approval_consume |
-| `tests/unit/test_remediation_runtime_guard.py` | `test_remediation_preflight_blocks_before_approval_consume.execute` | 120 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | test_remediation_preflight_blocks_before_approval_consume |
-| `tests/unit/test_remediation_runtime_guard.py` | `test_remediation_success_requires_post_action_verification` | 141 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_remediation_runtime_guard.py` | `test_remediation_success_requires_post_action_verification.no_audit` | 150 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_remediation_success_requires_post_action_verification |
-| `tests/unit/test_remediation_runtime_guard.py` | `test_remediation_success_requires_post_action_verification.snapshot` | 155 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_remediation_success_requires_post_action_verification |
-| `tests/unit/test_remediation_runtime_guard.py` | `test_remediation_success_requires_post_action_verification.verify` | 190 | async method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | test_remediation_success_requires_post_action_verification |
-| `tests/unit/test_remediation_runtime_guard.py` | `test_remediation_success_requires_post_action_verification.record_memory` | 197 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_remediation_success_requires_post_action_verification |
-| `tests/unit/test_remediation_runtime_guard.py` | `test_remediation_success_requires_post_action_verification.execute` | 203 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | test_remediation_success_requires_post_action_verification |
-| `tests/unit/test_remediation_runtime_guard.py` | `_ConsumedStore` | 232 | class | کلاس | module |
-| `tests/unit/test_remediation_runtime_guard.py` | `_ConsumedStore.get` | 235 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _ConsumedStore |
-| `tests/unit/test_remediation_runtime_guard.py` | `_Rows` | 252 | class | کلاس | module |
-| `tests/unit/test_remediation_runtime_guard.py` | `_Rows.__init__` | 253 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Rows |
-| `tests/unit/test_remediation_runtime_guard.py` | `_Rows.scalars` | 256 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Rows |
-| `tests/unit/test_remediation_runtime_guard.py` | `_Rows.all` | 259 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Rows |
-| `tests/unit/test_remediation_runtime_guard.py` | `_VerificationSession` | 263 | class | کلاس | module |
-| `tests/unit/test_remediation_runtime_guard.py` | `_VerificationSession.execute` | 266 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | _VerificationSession |
-| `tests/unit/test_remediation_runtime_guard.py` | `test_manual_verification_rejects_dry_run` | 271 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_remediation_runtime_guard.py` | `test_manual_verification_uses_runbook_objectives_and_validates_matching_memory` | 289 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_remediation_runtime_guard.py` | `test_manual_verification_uses_runbook_objectives_and_validates_matching_memory.no_audit` | 303 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_manual_verification_uses_runbook_objectives_and_validates_matching_memory |
-| `tests/unit/test_remediation_runtime_guard.py` | `test_manual_verification_uses_runbook_objectives_and_validates_matching_memory.snapshot` | 310 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_manual_verification_uses_runbook_objectives_and_validates_matching_memory |
-| `tests/unit/test_remediation_runtime_guard.py` | `test_manual_verification_uses_runbook_objectives_and_validates_matching_memory.verify` | 354 | async method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | test_manual_verification_uses_runbook_objectives_and_validates_matching_memory |
-| `tests/unit/test_remediation_runtime_guard.py` | `test_manual_verification_uses_runbook_objectives_and_validates_matching_memory._Memory` | 363 | class | کلاس | test_manual_verification_uses_runbook_objectives_and_validates_matching_memory |
-| `tests/unit/test_remediation_runtime_guard.py` | `test_manual_verification_uses_runbook_objectives_and_validates_matching_memory._Memory.__init__` | 364 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_manual_verification_uses_runbook_objectives_and_validates_matching_memory._Memory |
-| `tests/unit/test_remediation_runtime_guard.py` | `test_manual_verification_uses_runbook_objectives_and_validates_matching_memory._Memory.mark_validated` | 367 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_manual_verification_uses_runbook_objectives_and_validates_matching_memory._Memory |
-| `tests/unit/test_remediation_runtime_guard.py` | `test_manual_failed_verification_does_not_revalidate_memory` | 393 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_remediation_runtime_guard.py` | `test_manual_failed_verification_does_not_revalidate_memory.no_audit` | 407 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_manual_failed_verification_does_not_revalidate_memory |
-| `tests/unit/test_remediation_runtime_guard.py` | `test_manual_failed_verification_does_not_revalidate_memory.snapshot` | 412 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_manual_failed_verification_does_not_revalidate_memory |
-| `tests/unit/test_remediation_runtime_guard.py` | `test_manual_failed_verification_does_not_revalidate_memory.verify` | 432 | async method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | test_manual_failed_verification_does_not_revalidate_memory |
-| `tests/unit/test_remediation_runtime_guard.py` | `test_manual_failed_verification_does_not_revalidate_memory._Memory` | 439 | class | کلاس | test_manual_failed_verification_does_not_revalidate_memory |
-| `tests/unit/test_remediation_runtime_guard.py` | `test_manual_failed_verification_does_not_revalidate_memory._Memory.__init__` | 440 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_manual_failed_verification_does_not_revalidate_memory._Memory |
-| `tests/unit/test_remediation_runtime_guard.py` | `test_manual_failed_verification_does_not_revalidate_memory._Memory.mark_validated` | 443 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_manual_failed_verification_does_not_revalidate_memory._Memory |
+| `tests/unit/test_remediation_runtime_guard.py` | `_IncidentRepo` | 48 | class | کلاس | module |
+| `tests/unit/test_remediation_runtime_guard.py` | `_IncidentRepo.__init__` | 51 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _IncidentRepo |
+| `tests/unit/test_remediation_runtime_guard.py` | `_IncidentRepo.record_operational_outcome` | 54 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _IncidentRepo |
+| `tests/unit/test_remediation_runtime_guard.py` | `_IncidentRepo.commit` | 58 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _IncidentRepo |
+| `tests/unit/test_remediation_runtime_guard.py` | `_Registry` | 62 | class | کلاس | module |
+| `tests/unit/test_remediation_runtime_guard.py` | `_Registry.__init__` | 63 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Registry |
+| `tests/unit/test_remediation_runtime_guard.py` | `_Registry.get` | 66 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Registry |
+| `tests/unit/test_remediation_runtime_guard.py` | `_identity` | 87 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_remediation_runtime_guard.py` | `test_remediation_request_rejects_action_without_executable_runbook_contract` | 91 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_remediation_runtime_guard.py` | `test_remediation_preflight_blocks_before_approval_consume` | 101 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_remediation_runtime_guard.py` | `test_remediation_preflight_blocks_before_approval_consume.no_audit` | 109 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_remediation_preflight_blocks_before_approval_consume |
+| `tests/unit/test_remediation_runtime_guard.py` | `test_remediation_preflight_blocks_before_approval_consume.snapshot` | 114 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_remediation_preflight_blocks_before_approval_consume |
+| `tests/unit/test_remediation_runtime_guard.py` | `test_remediation_preflight_blocks_before_approval_consume.execute` | 134 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | test_remediation_preflight_blocks_before_approval_consume |
+| `tests/unit/test_remediation_runtime_guard.py` | `test_remediation_success_requires_post_action_verification` | 155 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_remediation_runtime_guard.py` | `test_remediation_success_requires_post_action_verification.no_audit` | 166 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_remediation_success_requires_post_action_verification |
+| `tests/unit/test_remediation_runtime_guard.py` | `test_remediation_success_requires_post_action_verification.snapshot` | 171 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_remediation_success_requires_post_action_verification |
+| `tests/unit/test_remediation_runtime_guard.py` | `test_remediation_success_requires_post_action_verification.verify` | 206 | async method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | test_remediation_success_requires_post_action_verification |
+| `tests/unit/test_remediation_runtime_guard.py` | `test_remediation_success_requires_post_action_verification.record_memory` | 213 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_remediation_success_requires_post_action_verification |
+| `tests/unit/test_remediation_runtime_guard.py` | `test_remediation_success_requires_post_action_verification.execute` | 219 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | test_remediation_success_requires_post_action_verification |
+| `tests/unit/test_remediation_runtime_guard.py` | `_ConsumedStore` | 252 | class | کلاس | module |
+| `tests/unit/test_remediation_runtime_guard.py` | `_ConsumedStore.get` | 255 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _ConsumedStore |
+| `tests/unit/test_remediation_runtime_guard.py` | `_Rows` | 272 | class | کلاس | module |
+| `tests/unit/test_remediation_runtime_guard.py` | `_Rows.__init__` | 273 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Rows |
+| `tests/unit/test_remediation_runtime_guard.py` | `_Rows.scalars` | 276 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Rows |
+| `tests/unit/test_remediation_runtime_guard.py` | `_Rows.all` | 279 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Rows |
+| `tests/unit/test_remediation_runtime_guard.py` | `_VerificationSession` | 283 | class | کلاس | module |
+| `tests/unit/test_remediation_runtime_guard.py` | `_VerificationSession.execute` | 286 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | _VerificationSession |
+| `tests/unit/test_remediation_runtime_guard.py` | `test_manual_verification_rejects_dry_run` | 291 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_remediation_runtime_guard.py` | `test_manual_verification_uses_runbook_objectives_and_validates_matching_memory` | 309 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_remediation_runtime_guard.py` | `test_manual_verification_uses_runbook_objectives_and_validates_matching_memory.no_audit` | 323 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_manual_verification_uses_runbook_objectives_and_validates_matching_memory |
+| `tests/unit/test_remediation_runtime_guard.py` | `test_manual_verification_uses_runbook_objectives_and_validates_matching_memory.snapshot` | 330 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_manual_verification_uses_runbook_objectives_and_validates_matching_memory |
+| `tests/unit/test_remediation_runtime_guard.py` | `test_manual_verification_uses_runbook_objectives_and_validates_matching_memory.verify` | 374 | async method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | test_manual_verification_uses_runbook_objectives_and_validates_matching_memory |
+| `tests/unit/test_remediation_runtime_guard.py` | `test_manual_verification_uses_runbook_objectives_and_validates_matching_memory._Memory` | 383 | class | کلاس | test_manual_verification_uses_runbook_objectives_and_validates_matching_memory |
+| `tests/unit/test_remediation_runtime_guard.py` | `test_manual_verification_uses_runbook_objectives_and_validates_matching_memory._Memory.__init__` | 384 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_manual_verification_uses_runbook_objectives_and_validates_matching_memory._Memory |
+| `tests/unit/test_remediation_runtime_guard.py` | `test_manual_verification_uses_runbook_objectives_and_validates_matching_memory._Memory.mark_validated` | 387 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_manual_verification_uses_runbook_objectives_and_validates_matching_memory._Memory |
+| `tests/unit/test_remediation_runtime_guard.py` | `test_manual_failed_verification_does_not_revalidate_memory` | 418 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_remediation_runtime_guard.py` | `test_manual_failed_verification_does_not_revalidate_memory.no_audit` | 432 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_manual_failed_verification_does_not_revalidate_memory |
+| `tests/unit/test_remediation_runtime_guard.py` | `test_manual_failed_verification_does_not_revalidate_memory.snapshot` | 437 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_manual_failed_verification_does_not_revalidate_memory |
+| `tests/unit/test_remediation_runtime_guard.py` | `test_manual_failed_verification_does_not_revalidate_memory.verify` | 457 | async method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | test_manual_failed_verification_does_not_revalidate_memory |
+| `tests/unit/test_remediation_runtime_guard.py` | `test_manual_failed_verification_does_not_revalidate_memory._Memory` | 464 | class | کلاس | test_manual_failed_verification_does_not_revalidate_memory |
+| `tests/unit/test_remediation_runtime_guard.py` | `test_manual_failed_verification_does_not_revalidate_memory._Memory.__init__` | 465 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_manual_failed_verification_does_not_revalidate_memory._Memory |
+| `tests/unit/test_remediation_runtime_guard.py` | `test_manual_failed_verification_does_not_revalidate_memory._Memory.mark_validated` | 468 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_manual_failed_verification_does_not_revalidate_memory._Memory |
 | `tests/unit/test_runbook_api_preflight.py` | `_Session` | 9 | class | کلاس | module |
 | `tests/unit/test_runbook_api_preflight.py` | `_Session.__aenter__` | 10 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Session |
 | `tests/unit/test_runbook_api_preflight.py` | `_Session.__aexit__` | 13 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Session |
