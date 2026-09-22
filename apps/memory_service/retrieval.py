@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
+from uuid import UUID
 
 from sqlalchemy import and_, desc, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -26,6 +27,7 @@ async def candidates(
     mode: str,
     limit: int,
     successful_only: bool,
+    exclude_incident_id: Optional[str] = None,
 ) -> List[Dict[str, Any]]:
     mode = str(mode or "SIMILAR_INCIDENT").upper()
     if mode not in MODES:
@@ -48,6 +50,18 @@ async def candidates(
         conditions.append(
             MemoryEntry.verification_result.in_(sorted(SUCCESS_STATUSES))
         )
+    if exclude_incident_id:
+        try:
+            excluded = UUID(str(exclude_incident_id))
+        except (TypeError, ValueError):
+            excluded = None
+        if excluded is not None:
+            conditions.append(
+                or_(
+                    MemoryEntry.incident_id.is_(None),
+                    MemoryEntry.incident_id != excluded,
+                )
+            )
     if mode == "REMEDIATION_EXPERIENCE":
         conditions.append(
             MemoryEntry.memory_outcome_class.in_(
