@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 367 | Dashboard JS files scanned: 5 | Symbols indexed: 3232**
+**Python files scanned: 367 | Dashboard JS files scanned: 5 | Symbols indexed: 3234**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1932,8 +1932,9 @@
 | `tests/integration/test_chatbot_db_acceptance.py` | `test_confirmed_vm_action_uses_durable_approval_consumption_and_is_not_replayable` | 79 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/integration/test_chatbot_db_acceptance.py` | `test_confirmed_vm_action_uses_durable_approval_consumption_and_is_not_replayable.fake_execute` | 84 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_confirmed_vm_action_uses_durable_approval_consumption_and_is_not_replayable |
 | `tests/integration/test_chatbot_db_acceptance.py` | `test_confirmed_vm_action_uses_durable_approval_consumption_and_is_not_replayable.fake_verify` | 95 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_confirmed_vm_action_uses_durable_approval_consumption_and_is_not_replayable |
-| `tests/integration/test_chatbot_db_acceptance.py` | `test_action_parameter_tampering_after_proposal_is_blocked_before_approval` | 128 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/integration/test_chatbot_db_acceptance.py` | `test_action_parameter_tampering_after_proposal_is_blocked_before_approval.fake_execute` | 133 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_action_parameter_tampering_after_proposal_is_blocked_before_approval |
+| `tests/integration/test_chatbot_db_acceptance.py` | `test_confirmed_vm_action_uses_durable_approval_consumption_and_is_not_replayable.fake_snapshot` | 98 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_confirmed_vm_action_uses_durable_approval_consumption_and_is_not_replayable |
+| `tests/integration/test_chatbot_db_acceptance.py` | `test_action_parameter_tampering_after_proposal_is_blocked_before_approval` | 137 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/integration/test_chatbot_db_acceptance.py` | `test_action_parameter_tampering_after_proposal_is_blocked_before_approval.fake_execute` | 142 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_action_parameter_tampering_after_proposal_is_blocked_before_approval |
 | `tests/integration/test_chatbot_llm_acceptance.py` | `StaticChatLLM` | 23 | class | کلاس | module |
 | `tests/integration/test_chatbot_llm_acceptance.py` | `StaticChatLLM.__init__` | 24 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | StaticChatLLM |
 | `tests/integration/test_chatbot_llm_acceptance.py` | `StaticChatLLM.provider_name` | 29 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | StaticChatLLM |
@@ -1981,6 +1982,7 @@
 | `tests/integration/test_chatbot_write_acceptance.py` | `test_confirmed_kubernetes_restart_uses_bound_execution_and_consumed_approval` | 150 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/integration/test_chatbot_write_acceptance.py` | `test_confirmed_kubernetes_restart_uses_bound_execution_and_consumed_approval.fake_execute` | 162 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_confirmed_kubernetes_restart_uses_bound_execution_and_consumed_approval |
 | `tests/integration/test_chatbot_write_acceptance.py` | `test_confirmed_kubernetes_restart_uses_bound_execution_and_consumed_approval.fake_verify` | 173 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_confirmed_kubernetes_restart_uses_bound_execution_and_consumed_approval |
+| `tests/integration/test_chatbot_write_acceptance.py` | `test_confirmed_kubernetes_restart_uses_bound_execution_and_consumed_approval.fake_snapshot` | 176 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_confirmed_kubernetes_restart_uses_bound_execution_and_consumed_approval |
 | `tests/integration/test_controlled_connectors.py` | `test_native_edge_observability_connectors_health_harness` | 8 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/integration/test_controlled_connectors.py` | `test_native_edge_observability_connectors_health_harness.healthy` | 9 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_native_edge_observability_connectors_health_harness |
 | `tests/integration/test_controlled_connectors.py` | `test_native_edge_observability_failure_harness` | 20 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
