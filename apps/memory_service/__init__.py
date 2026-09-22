@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+import time
 from typing import Any, Dict, List, Optional, cast
 from uuid import UUID, uuid4
 
@@ -14,6 +15,13 @@ from knowledge import EmbeddingService
 
 from .feedback import apply_feedback, record_retrieval_events
 from .retrieval import candidates, rrf_score
+from .telemetry import (
+    MEMORY_CREATED_TOTAL,
+    MEMORY_EMBEDDING_TOTAL,
+    MEMORY_LIFECYCLE_TOTAL,
+    MEMORY_RETRIEVAL_LATENCY,
+    MEMORY_RETRIEVAL_TOTAL,
+)
 
 
 class OperationalMemoryService:
@@ -164,6 +172,9 @@ class OperationalMemoryService:
             service=entry.service_scope,
             outcome_class=entry.memory_outcome_class,
         )
+        MEMORY_CREATED_TOTAL.labels(
+            outcome_class=str(entry.memory_outcome_class or "unknown")
+        ).inc()
         await self._embed_entry(entry)
         return cast(UUID, entry.id)
 
@@ -188,6 +199,7 @@ class OperationalMemoryService:
                 model=entry.embedding_model,
                 dimension=entry.embedding_dimension,
             )
+            MEMORY_EMBEDDING_TOTAL.labels(outcome="success").inc()
             return True
         except Exception as exc:
             try:
@@ -218,6 +230,7 @@ class OperationalMemoryService:
                 memory_id=str(entry_id),
                 error_type=type(exc).__name__,
             )
+            MEMORY_EMBEDDING_TOTAL.labels(outcome="failed").inc()
             return False
 
     async def retrieve(
@@ -233,6 +246,7 @@ class OperationalMemoryService:
         target_incident_id: Optional[str] = None,
         record_retrieval: bool = False,
     ) -> List[Dict[str, Any]]:
+        started = time.perf_counter()
         raw = await candidates(
             self.db,
             str(query or "").strip(),
@@ -294,6 +308,14 @@ class OperationalMemoryService:
             retrieval_mode=retrieval_mode,
             service=service_scope,
             target_incident_id=target_incident_id,
+        )
+        mode = str(retrieval_mode or "SIMILAR_INCIDENT").upper()
+        MEMORY_RETRIEVAL_TOTAL.labels(
+            mode=mode,
+            outcome="hit" if ranked else "empty",
+        ).inc()
+        MEMORY_RETRIEVAL_LATENCY.labels(mode=mode).observe(
+            max(0.0, time.perf_counter() - started)
         )
         return ranked
 
@@ -384,6 +406,7 @@ class OperationalMemoryService:
             lifecycle_status=entry.lifecycle_status,
             superseded_by=str(superseded_by) if superseded_by else None,
         )
+        MEMORY_LIFECYCLE_TOTAL.labels(status=entry.lifecycle_status).inc()
         return True
 
     async def mark_validated(self, entry_id: UUID) -> bool:
@@ -394,6 +417,7 @@ class OperationalMemoryService:
         if entry.lifecycle_status == "stale":
             entry.lifecycle_status = "active"
         await self.db.commit()
+        MEMORY_LIFECYCLE_TOTAL.labels(status="validated").inc()
         return True
 
     async def update_reuse_count(self, entry_id: UUID) -> None:
