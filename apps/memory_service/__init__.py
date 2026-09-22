@@ -303,6 +303,7 @@ class OperationalMemoryService:
             mode=retrieval_mode,
             limit=limit,
             successful_only=successful_only,
+            exclude_incident_id=target_incident_id,
         )
         ranked: List[Dict[str, Any]] = []
         for item in raw:
