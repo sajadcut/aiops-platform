@@ -87,11 +87,25 @@ class RunbookExecutor:
                 raise ValueError("runbook_action_not_allowed")
 
         fingerprint = execution_fingerprint(
-            tool_name, runbook_id, target, {**parameters, "__action": requested_action}
+            {
+                "tool_name": tool_name,
+                "runbook_id": runbook_id,
+                "action": requested_action,
+                "target": target,
+                "parameters": parameters,
+                "incident_id": incident_id,
+                "approval_id": approval_id if approval_granted else None,
+                "rollback": bool(rollback_requested),
+            }
         )
-        if fingerprint in self._completed and not rollback_requested:
+        replay_scoped = bool(approval_granted and approval_id)
+        if replay_scoped and fingerprint in self._completed and not rollback_requested:
             previous = self._completed[fingerprint]
-            return {"status": "idempotent_replay", "fingerprint": fingerprint, "result": previous.model_dump(mode="json")}
+            return {
+                "status": "idempotent_replay",
+                "fingerprint": fingerprint,
+                "result": previous.model_dump(mode="json"),
+            }
 
         if dry_run:
             return {
@@ -109,6 +123,6 @@ class RunbookExecutor:
             runbook_id=runbook_id, runbook_version=str(runbook.get("version") or ""), rollback=rollback_requested,
         )
         result = await ExecutionService.execute(request)
-        if result.success:
+        if result.success and replay_scoped:
             self._completed[fingerprint] = result
         return {"status": "executed", "fingerprint": fingerprint, "result": result.model_dump(mode="json")}
