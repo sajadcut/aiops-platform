@@ -181,19 +181,22 @@ async def test_consumed_claim_cannot_be_replayed_through_new_executor(monkeypatc
         approval_context=context,
     )
 
-    with pytest.raises(
-        ValueError,
-        match="runbook_execution_claim_invalid_or_replayed",
-    ):
-        await RunbookExecutor(_Registry()).execute(
-            "restart-service",
-            tool_name="ssh_vm",
-            target="vm01",
-            parameters={"service": "nginx"},
-            incident_id="incident-1",
-            approval_id="approval-1",
-            approval_context=context,
-        )
+    replay = await RunbookExecutor(_Registry()).execute(
+        "restart-service",
+        tool_name="ssh_vm",
+        target="vm01",
+        parameters={"service": "nginx"},
+        incident_id="incident-1",
+        approval_id="approval-1",
+        approval_context=context,
+    )
 
-    assert calls == ["approval-1"]
+    assert replay["status"] == "executed"
+    assert replay["result"]["success"] is False
+    assert replay["result"]["execution_blocked"] is True
+    assert (
+        replay["result"]["reason"]
+        == "approval_execution_claim_invalid_or_replayed"
+    )
+    assert calls == ["approval-1", "approval-1"]
 
