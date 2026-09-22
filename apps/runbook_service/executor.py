@@ -63,6 +63,8 @@ class RunbookExecutor:
             action
             or ("rollback" if rollback_requested else runbook.get("action") or runbook_id)
         )
+        if not execution_contract and not dry_run:
+            raise ValueError("runbook_not_executable")
         if execution_contract:
             contract_tool = str(execution_contract.get("tool") or "").strip()
             allowed_actions = {
