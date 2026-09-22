@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 367 | Dashboard JS files scanned: 5 | Symbols indexed: 3230**
+**Python files scanned: 367 | Dashboard JS files scanned: 5 | Symbols indexed: 3231**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1091,10 +1091,11 @@
 | `apps/memory_service/builder.py` | `OperationalMemoryBuilder._reusable_lesson` | 483 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
 | `apps/memory_service/builder.py` | `OperationalMemoryBuilder._search_document` | 517 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
 | `apps/memory_service/builder.py` | `OperationalMemoryBuilder._sanitize_value` | 540 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
-| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._sanitize_string` | 566 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
-| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._stable_text` | 576 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
-| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._signature` | 588 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
-| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._dedupe_strings` | 593 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
+| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._is_sensitive_key` | 566 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
+| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._sanitize_string` | 585 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
+| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._stable_text` | 595 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
+| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._signature` | 607 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
+| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._dedupe_strings` | 612 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
 | `apps/memory_service/consolidation.py` | `summarize_entries` | 12 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/memory_service/consolidation.py` | `summarize_service` | 39 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/memory_service/feedback.py` | `_uuid` | 16 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
