@@ -198,7 +198,7 @@ jobs:
                   tables = {row[0] for row in cur.fetchall()}
                   required = {
                       'incidents','evidences','findings','memory_entries','memory_reuse_events','approvals',
-                      'audit_events','workflow_checkpoints','runbooks',
+                      'audit_events','workflow_checkpoints','runbooks','api_rate_limits',
                       'legacy_knowledge_documents_archive','chat_sessions','chat_messages',
                       'chat_action_proposals'
                   }
@@ -274,6 +274,10 @@ jobs:
         env:
           RUN_DB_APPROVAL_TEST: '1'
         run: python -m pytest -q tests/integration/test_approval_store_db.py
+      - name: Validate shared PostgreSQL API rate limiting
+        env:
+          RUN_DB_RATE_LIMIT_TEST: '1'
+        run: python -m pytest -q tests/integration/test_rate_limit_db.py
       - name: Validate upgrade from an existing older database
         shell: bash
         run: |
@@ -316,7 +320,7 @@ jobs:
                   cur.execute("SELECT to_regclass('public.chat_sessions'), to_regclass('public.chat_messages'), to_regclass('public.chat_action_proposals')")
                   assert cur.fetchone() == ('chat_sessions', 'chat_messages', 'chat_action_proposals'), 'chatbot persistence was not created during forward migration'
                   cur.execute("SELECT version_num FROM alembic_version")
-                  assert cur.fetchone()[0] == 'i6f7a8b9c0d1'
+                  assert cur.fetchone()[0] == 'j7g8h9i0j1k2'
           PY
       - name: Migration downgrade and clean rebuild
         run: |
