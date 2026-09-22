@@ -16,6 +16,7 @@ class _Session:
 
 class _Store:
     consume_calls = 0
+    cancel_calls = 0
 
     def __init__(self, _db):
         pass
@@ -29,6 +30,17 @@ class _Store:
             "metadata": {},
         }
 
+    async def cancel(self, approval_id, *, reason, metadata_patch=None):
+        _Store.cancel_calls += 1
+        return {
+            "approval_id": approval_id,
+            "status": "rejected",
+            "metadata": {
+                "cancellation_reason": reason,
+                **dict(metadata_patch or {}),
+            },
+        }
+
     async def consume(self, approval_id):
         _Store.consume_calls += 1
         return {
@@ -40,6 +52,7 @@ class _Store:
 @pytest.mark.asyncio
 async def test_direct_runbook_preflight_blocks_before_approval_consume(monkeypatch):
     _Store.consume_calls = 0
+    _Store.cancel_calls = 0
     execute_calls = []
 
     monkeypatch.setattr(api, "AsyncSessionLocal", lambda: _Session())
@@ -105,6 +118,7 @@ async def test_direct_runbook_preflight_blocks_before_approval_consume(monkeypat
         "service_no_longer_unhealthy"
     )
     assert _Store.consume_calls == 0
+    assert _Store.cancel_calls == 1
     assert execute_calls == []
 
 
