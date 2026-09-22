@@ -181,7 +181,28 @@ async def test_confirmed_kubernetes_restart_uses_bound_execution_and_consumed_ap
             "context": {"live_evidence": {"evidence": []}},
         }
 
+    async def safe_guard(self, proposal_row):
+        return {
+            "applies": True,
+            "safe_to_execute": True,
+            "reason": "fresh_kubernetes_target_verified",
+            "snapshot": {
+                "source": "kubernetes_mcp",
+                "result": {
+                    "name": "payment-api",
+                    "namespace": "payments",
+                    "rollout_complete": True,
+                },
+            },
+            "precondition": {
+                "safe_to_execute": True,
+                "reason": "fresh_kubernetes_target_verified",
+            },
+            "stale": False,
+        }
+
     monkeypatch.setattr(ExecutionService, "execute", staticmethod(fake_execute))
+    monkeypatch.setattr(ChatbotService, "_preconfirm_mutation_guard", safe_guard)
     monkeypatch.setattr(ChatbotService, "_collect_mutation_snapshot", fake_snapshot)
     monkeypatch.setattr(ChatbotService, "_verify_mutation", fake_verify)
 
