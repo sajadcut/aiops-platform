@@ -10,6 +10,7 @@ from domain.contracts.config import settings
 from domain.contracts.logging import logger
 from domain.models import MemoryEntry
 from knowledge import EmbeddingService
+from .contracts import EMBEDDING_DOCUMENT_VERSION
 
 
 SUCCESS_STATUSES = {"success", "succeeded", "verified"}
@@ -72,7 +73,17 @@ async def candidates(
         distance = MemoryEntry.embedding.cosine_distance(vector).label("distance")
         stmt = (
             select(MemoryEntry, distance)
-            .where(and_(*conditions, MemoryEntry.embedding.is_not(None)))
+            .where(
+                and_(
+                    *conditions,
+                    MemoryEntry.embedding.is_not(None),
+                    MemoryEntry.embedding_status == "ready",
+                    MemoryEntry.embedding_provider == settings.EMBEDDING_PROVIDER,
+                    MemoryEntry.embedding_model == settings.EMBEDDING_MODEL,
+                    MemoryEntry.embedding_dimension == settings.EMBEDDING_DIMENSION,
+                    MemoryEntry.embedding_document_version == EMBEDDING_DOCUMENT_VERSION,
+                )
+            )
             .order_by(distance)
             .limit(cap)
         )
