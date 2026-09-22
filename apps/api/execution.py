@@ -237,6 +237,16 @@ async def execute(payload: Dict[str, Any], identity=Depends(require_permission("
                 evidence=list(before_snapshot.get("evidence") or []),
             )
             if not precondition.get("safe_to_execute"):
+                revoked = None
+                if RunbookRuntimeGuard.approval_should_be_revoked(precondition):
+                    revoked = await store.cancel(
+                        str(approval_id),
+                        reason="fresh_precondition_invalidated_approved_intent",
+                        metadata_patch={
+                            "precondition_reason": precondition.get("reason"),
+                            "revoked_before_execution": True,
+                        },
+                    )
                 await _audit_durable(
                     db,
                     "direct_execution_precondition_failed",
@@ -250,6 +260,9 @@ async def execute(payload: Dict[str, Any], identity=Depends(require_permission("
                         "runbook_id": runtime_contract["runbook_id"],
                         "precondition": precondition,
                         "snapshot_error": before_snapshot.get("error"),
+                        "approval_revoked": bool(
+                            revoked and revoked.get("status") == "rejected"
+                        ),
                     },
                 )
                 raise HTTPException(
