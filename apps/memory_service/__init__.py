@@ -340,6 +340,39 @@ class OperationalMemoryService:
             "failed": failed,
         }
 
+    async def invalidate(
+        self,
+        entry_id: UUID,
+        *,
+        reason: str,
+        superseded_by: Optional[UUID] = None,
+    ) -> bool:
+        entry = await self.db.get(MemoryEntry, entry_id)
+        if entry is None:
+            return False
+        entry.lifecycle_status = "superseded" if superseded_by else "invalidated"
+        entry.invalidated_at = datetime.now(timezone.utc)
+        entry.invalidation_reason = str(reason or "invalidated")[:2000]
+        entry.superseded_by_memory_id = superseded_by
+        await self.db.commit()
+        logger.info(
+            "aiops.memory.invalidated",
+            memory_id=str(entry.id),
+            lifecycle_status=entry.lifecycle_status,
+            superseded_by=str(superseded_by) if superseded_by else None,
+        )
+        return True
+
+    async def mark_validated(self, entry_id: UUID) -> bool:
+        entry = await self.db.get(MemoryEntry, entry_id)
+        if entry is None:
+            return False
+        entry.last_validated_at = datetime.now(timezone.utc)
+        if entry.lifecycle_status == "stale":
+            entry.lifecycle_status = "active"
+        await self.db.commit()
+        return True
+
     async def update_reuse_count(self, entry_id: UUID) -> None:
         entry = await self.db.get(MemoryEntry, entry_id)
         if entry is not None:
