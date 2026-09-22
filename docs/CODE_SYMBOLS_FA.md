@@ -750,8 +750,8 @@
 | `apps/api/remediation.py` | `RemediationRequest` | 42 | class | کلاس | module |
 | `apps/api/remediation.py` | `create_remediation_request` | 52 | async function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
 | `apps/api/remediation.py` | `execute_approved_remediation` | 105 | async function | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | module |
-| `apps/api/remediation.py` | `VMVerificationRequest` | 342 | class | کلاس | module |
-| `apps/api/remediation.py` | `verify_remediation` | 348 | async function | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | module |
+| `apps/api/remediation.py` | `VMVerificationRequest` | 355 | class | کلاس | module |
+| `apps/api/remediation.py` | `verify_remediation` | 361 | async function | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | module |
 | `apps/api/runbook_execution.py` | `_audit_durable` | 25 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/runbook_execution.py` | `_runbook_contract` | 31 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/runbook_execution.py` | `execute_runbook` | 108 | async function | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | module |
