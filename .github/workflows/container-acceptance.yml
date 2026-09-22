@@ -107,6 +107,8 @@ jobs:
           docker export "$CID" | tar -C runtime-rootfs -xf -
           test -f runtime-rootfs/opt/venv/pyvenv.cfg
           test -f runtime-rootfs/app/apps/api/main.py
+          test -f runtime-rootfs/app/scripts/backfill_memory_embeddings.py
+          test -f runtime-rootfs/app/scripts/mark_stale_memory.py
           test ! -e runtime-rootfs/opt/wheels
           test ! -e runtime-rootfs/build
 
@@ -155,6 +157,10 @@ jobs:
           python scripts/render_k8s_release.py "$IMAGE_REF" /tmp/rendered
           grep -F "$IMAGE_REF" /tmp/rendered/aiops-platform.yaml
           grep -F "$IMAGE_REF" /tmp/rendered/migrate-job.yaml
+          grep -F "$IMAGE_REF" /tmp/rendered/memory-embedding-backfill-cronjob.yaml
+          grep -F "$IMAGE_REF" /tmp/rendered/memory-stale-cronjob.yaml
+          grep -F 'scripts/backfill_memory_embeddings.py' /tmp/rendered/memory-embedding-backfill-cronjob.yaml
+          grep -F 'scripts/mark_stale_memory.py' /tmp/rendered/memory-stale-cronjob.yaml
           ! grep -R 'registry.invalid\|:2.2\|:latest' /tmp/rendered
 
       - name: Upload supply-chain evidence
