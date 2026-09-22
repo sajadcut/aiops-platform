@@ -109,7 +109,7 @@ class IncidentRepository:
         action: str,
         target: str,
         approval_id: Optional[str],
-        execution_success: bool,
+        execution_success: Optional[bool],
         verified: bool,
         verification: Optional[Dict[str, Any]] = None,
         memory_id: Optional[str] = None,
@@ -143,7 +143,11 @@ class IncidentRepository:
                 "action": str(action or ""),
                 "target": str(target or ""),
                 "approval_id": str(approval_id) if approval_id else None,
-                "execution_success": bool(execution_success),
+                "execution_success": (
+                    None
+                    if execution_success is None
+                    else bool(execution_success)
+                ),
                 "verified": bool(verified),
                 "verification": dict(verification or {}),
                 "memory_id": str(memory_id) if memory_id else None,
