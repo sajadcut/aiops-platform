@@ -384,6 +384,36 @@ class Settings(BaseSettings):
         return self
 
     @model_validator(mode="after")
+    def validate_embedding_contract(self) -> "Settings":
+        provider = str(self.EMBEDDING_PROVIDER or "").strip().lower()
+        allowed = {"deterministic", "openai-compatible", "openai_compatible"}
+        if provider not in allowed:
+            raise ValueError("Unsupported EMBEDDING_PROVIDER")
+        if self.EMBEDDING_DIMENSION <= 0:
+            raise ValueError("EMBEDDING_DIMENSION must be positive")
+        if (
+            self.PGVECTOR_EXPECTED_DIMENSION is not None
+            and self.PGVECTOR_EXPECTED_DIMENSION != self.EMBEDDING_DIMENSION
+        ):
+            raise ValueError(
+                "PGVECTOR_EXPECTED_DIMENSION must equal EMBEDDING_DIMENSION"
+            )
+        if self.APP_ENV == "production" and provider == "deterministic":
+            raise ValueError(
+                "Production embedding provider cannot be deterministic"
+            )
+        if provider in {"openai-compatible", "openai_compatible"}:
+            if not str(self.EMBEDDING_BASE_URL or "").strip():
+                raise ValueError(
+                    "OpenAI-compatible embeddings require EMBEDDING_BASE_URL"
+                )
+            if not str(self.EMBEDDING_MODEL or "").strip():
+                raise ValueError(
+                    "OpenAI-compatible embeddings require EMBEDDING_MODEL"
+                )
+        return self
+
+    @model_validator(mode="after")
     def validate_cognia_contract(self) -> "Settings":
         if self.COGNIA_TIMEOUT_SECONDS <= 0:
             raise ValueError("COGNIA_TIMEOUT_SECONDS must be positive")
