@@ -164,11 +164,21 @@ async def test_replay_cache_is_scoped_to_same_consumed_approval(monkeypatch):
 async def test_consumed_claim_cannot_be_replayed_through_new_executor(monkeypatch):
     calls = []
 
-    async def fake_execute(request):
-        calls.append(request.approval_id)
+    real_execute = ExecutionService.execute
+
+    async def fake_tool_execute(_request):
         return _result(success=True, blocked=False)
 
-    monkeypatch.setattr(ExecutionService, "execute", fake_execute)
+    async def execute_through_claim_boundary(request):
+        calls.append(request.approval_id)
+        if not request.execution_claim:
+            return _result(success=False, blocked=True)
+        from apps.approval_service.execution_claim import redeem_execution_claim
+        if not redeem_execution_claim(request.execution_claim):
+            return _result(success=False, blocked=True)
+        return await fake_tool_execute(request)
+
+    monkeypatch.setattr(ExecutionService, "execute", execute_through_claim_boundary)
     context = _consumed_context("approval-1")
 
     await RunbookExecutor(_Registry()).execute(
