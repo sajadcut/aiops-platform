@@ -709,7 +709,12 @@ class E2EOrchestrator:
                         await memory.record_feedback(
                             str(state["incident_id"]),
                             execution_request=state.get("execution_request"),
-                            verification_result=state.get("verification_result"),
+                            # Use the builder's canonical verification status.
+                            # For failed/blocked execution without an independent
+                            # verification payload, the episode normalizes the
+                            # outcome to failed so negative reuse feedback is not
+                            # silently lost.
+                            verification_result=episode.get("verification"),
                             cited_memory_ids=cited_memory_ids,
                         )
                     state["operational_memory_writeback"] = {
