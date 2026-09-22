@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 389 | Dashboard JS files scanned: 5 | Symbols indexed: 3451**
+**Python files scanned: 391 | Dashboard JS files scanned: 5 | Symbols indexed: 3453**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -2268,6 +2268,7 @@
 | `tests/unit/test_agent_failure_safety.py` | `test_parser_failure_is_counted_and_returns_low_confidence` | 66 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_agent_orchestrator_single_path.py` | `test_legacy_workflow_orchestrator_is_only_a_governed_facade` | 4 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_agent_orchestrator_single_path.py` | `test_agent_layer_has_no_hardcoded_legacy_a2a_endpoints` | 12 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_api_workflow_runtime_symbol.py` | `test_workflow_api_modules_reference_the_imported_canonical_runtime_symbol` | 9 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_application_reliability_engine.py` | `StaticApplicationLLM` | 11 | class | کلاس | module |
 | `tests/unit/test_application_reliability_engine.py` | `StaticApplicationLLM.__init__` | 12 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | StaticApplicationLLM |
 | `tests/unit/test_application_reliability_engine.py` | `StaticApplicationLLM.provider_name` | 41 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | StaticApplicationLLM |
@@ -3243,6 +3244,7 @@
 | `tests/unit/test_runtime_error_contracts.py` | `test_llm_response_accepts_nested_usage_details` | 7 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_runtime_error_contracts.py` | `test_zabbix_primary_and_fallback_errors_raise_instead_of_empty_success` | 24 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_runtime_error_contracts.py` | `test_zabbix_primary_and_fallback_errors_raise_instead_of_empty_success.fake_call_tool` | 28 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_zabbix_primary_and_fallback_errors_raise_instead_of_empty_success |
+| `tests/unit/test_runtime_guard_approval_revocation.py` | `test_approval_revocation_only_for_proven_stale_operational_intent` | 4 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_runtime_log_regressions.py` | `SequenceProvider` | 15 | class | کلاس | module |
 | `tests/unit/test_runtime_log_regressions.py` | `SequenceProvider.__init__` | 16 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SequenceProvider |
 | `tests/unit/test_runtime_log_regressions.py` | `SequenceProvider.generate_with_messages` | 21 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SequenceProvider |
