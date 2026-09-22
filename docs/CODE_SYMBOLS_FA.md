@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 361 | Dashboard JS files scanned: 5 | Symbols indexed: 3188**
+**Python files scanned: 361 | Dashboard JS files scanned: 5 | Symbols indexed: 3189**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1087,8 +1087,9 @@
 | `apps/memory_service/builder.py` | `OperationalMemoryBuilder._stable_text` | 576 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
 | `apps/memory_service/builder.py` | `OperationalMemoryBuilder._signature` | 588 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
 | `apps/memory_service/builder.py` | `OperationalMemoryBuilder._dedupe_strings` | 593 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
-| `apps/memory_service/feedback.py` | `record_retrieval_events` | 9 | async function | Hook for durable retrieval telemetry; persistence is added by migration-backed deployments. | module |
-| `apps/memory_service/feedback.py` | `apply_feedback` | 20 | async function | Return the number of historical-memory reuse records updated. | module |
+| `apps/memory_service/feedback.py` | `_uuid` | 15 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/memory_service/feedback.py` | `record_retrieval_events` | 26 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/memory_service/feedback.py` | `apply_feedback` | 64 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/memory_service/retrieval.py` | `candidates` | 18 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/memory_service/retrieval.py` | `rrf_score` | 130 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/operator_summary.py` | `_t` | 18 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
