@@ -19,6 +19,7 @@ from apps.execution_service import ExecutionRequest, ExecutionService
 from apps.incident_service.repository import IncidentRepository
 from apps.memory_service import OperationalMemoryService
 from apps.memory_service.builder import OperationalMemoryBuilder
+from apps.runbook_service.runtime_guard import RunbookRuntimeGuard
 from apps.verification_service import VerificationEngine, VerificationStatus
 from apps.security.oidc import Identity
 from apps.security.rbac import allowed
@@ -850,6 +851,58 @@ class ChatbotService:
             )
         await db.commit()
 
+    async def _preconfirm_mutation_guard(
+        self,
+        proposal: dict[str, Any],
+    ) -> dict[str, Any]:
+        """Freshly revalidate supported VM recovery intent before confirmation."""
+        tool_name = str(proposal.get("tool_name") or "").strip()
+        action = str(proposal.get("action") or "").strip()
+        params = dict(proposal.get("parameters") or {})
+
+        if tool_name != "ssh_vm" or action not in {
+            "start_service",
+            "restart_service",
+        }:
+            return {
+                "applies": False,
+                "safe_to_execute": True,
+                "reason": "runtime_guard_not_required",
+                "snapshot": None,
+                "precondition": None,
+            }
+
+        incident_id = str(proposal.get("incident_id") or "").strip()
+        target = str(proposal.get("target") or "").strip()
+        snapshot = await RunbookRuntimeGuard.collect_snapshot(
+            runbook_id=RunbookRuntimeGuard.VM_SERVICE_RUNBOOK,
+            target=target,
+            parameters=params,
+            incident_id=incident_id,
+            phase="chatbot_preconfirm",
+        )
+        precondition = RunbookRuntimeGuard.preflight(
+            runbook_id=RunbookRuntimeGuard.VM_SERVICE_RUNBOOK,
+            tool_name=tool_name,
+            action=action,
+            target=target,
+            parameters=params,
+            incident_id=incident_id,
+            evidence=list(snapshot.get("evidence") or []),
+        )
+        return {
+            "applies": True,
+            "safe_to_execute": bool(precondition.get("safe_to_execute")),
+            "reason": str(
+                precondition.get("reason") or "runtime_precondition_failed"
+            ),
+            "snapshot": snapshot,
+            "precondition": precondition,
+            "stale": RunbookRuntimeGuard.approval_should_be_revoked(
+                precondition
+            ),
+        }
+
     async def decide(self, identity: Identity, proposal_id: UUID, confirm: bool) -> ChatMessageResponse:
         async with AsyncSessionLocal() as db:
             store = ChatStore(db)
@@ -894,6 +947,75 @@ class ChatbotService:
             if intent_digest(canonical) != str(proposal.get("binding_digest") or ""):
                 CHAT_BLOCKED_ACTIONS.labels(reason="proposal_binding_mismatch").inc()
                 raise HTTPException(status_code=409, detail="chat_action_proposal_binding_mismatch")
+
+            guard = await self._preconfirm_mutation_guard(proposal)
+            if guard.get("applies") and not guard.get("safe_to_execute"):
+                reason = str(guard.get("reason") or "runtime_precondition_failed")
+                if guard.get("stale"):
+                    changed = await store.transition_proposal(
+                        proposal_id,
+                        expected_status="pending",
+                        new_status="failed",
+                        execution_result={
+                            "error": "stale_approved_intent",
+                            "precondition_reason": reason,
+                        },
+                    )
+                    if changed is None:
+                        raise HTTPException(
+                            status_code=409,
+                            detail="chat_action_proposal_transition_conflict",
+                        )
+                    CHAT_BLOCKED_ACTIONS.labels(
+                        reason="stale_precondition"
+                    ).inc()
+                    await self._audit(
+                        db,
+                        event_type="chatbot_precondition_stale",
+                        actor=identity.subject,
+                        status="blocked",
+                        incident_id=str(proposal["incident_id"]),
+                        action=str(proposal["action"]),
+                        metadata={
+                            "session_id": session_id,
+                            "proposal_id": str(proposal_id),
+                            "reason": reason,
+                            "evidence_refs": (
+                                (guard.get("precondition") or {}).get(
+                                    "evidence_refs",
+                                    [],
+                                )
+                            ),
+                        },
+                    )
+                    raise HTTPException(
+                        status_code=409,
+                        detail=f"chatbot_precondition_stale:{reason}",
+                    )
+
+                CHAT_BLOCKED_ACTIONS.labels(
+                    reason="precondition_retryable"
+                ).inc()
+                await self._audit(
+                    db,
+                    event_type="chatbot_precondition_retryable",
+                    actor=identity.subject,
+                    status="blocked",
+                    incident_id=str(proposal["incident_id"]),
+                    action=str(proposal["action"]),
+                    metadata={
+                        "session_id": session_id,
+                        "proposal_id": str(proposal_id),
+                        "reason": reason,
+                        "snapshot_error": (
+                            (guard.get("snapshot") or {}).get("error")
+                        ),
+                    },
+                )
+                raise HTTPException(
+                    status_code=409,
+                    detail=f"chatbot_precondition_retryable:{reason}",
+                )
 
             claimed = await store.transition_proposal(proposal_id, expected_status="pending", new_status="confirmed")
             if claimed is None:
