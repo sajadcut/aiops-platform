@@ -147,6 +147,10 @@ async def test_memory_v2_reembeds_stale_embedding_contract():
         row.embedding_text_hash = "obsolete-hash"
         await db.commit()
 
+        stats_before = await service.stats()
+        assert stats_before["embedding_contract_mismatch"] >= 1
+        backlog_before = int(stats_before["embedding_backlog"])
+
         lexical_only = await service.retrieve(
             "nginx inactive port 86 unavailable",
             service_scope="nginx",
@@ -171,6 +175,9 @@ async def test_memory_v2_reembeds_stale_embedding_contract():
         assert row.embedding_document != "legacy embedding text that must be rebuilt"
         assert row.embedding_text_hash not in {None, "", "obsolete-hash"}
         assert row.embedding is not None
+
+        stats_after = await service.stats()
+        assert int(stats_after["embedding_backlog"]) < backlog_before
 
 
 async def test_memory_v2_postgres_hybrid_retrieval_and_feedback():
