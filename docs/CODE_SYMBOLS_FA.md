@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 377 | Dashboard JS files scanned: 5 | Symbols indexed: 3294**
+**Python files scanned: 378 | Dashboard JS files scanned: 5 | Symbols indexed: 3298**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -3035,6 +3035,10 @@
 | `tests/unit/test_remediation_planner.py` | `test_pre_execution_revalidation_allows_start_only_while_service_remains_inactive` | 216 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_remediation_planner.py` | `test_pre_execution_revalidation_fails_closed_without_fresh_config_check` | 242 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_remediation_planner.py` | `test_durable_resume_restores_persisted_vm_target_and_port_context` | 266 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_runbook_execution_contract.py` | `test_vm_recovery_contract_derives_tool_and_requires_allowlisted_action` | 9 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_runbook_execution_contract.py` | `test_vm_recovery_contract_rejects_caller_tool_override` | 28 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_runbook_execution_contract.py` | `test_vm_recovery_contract_rejects_action_outside_runbook_allowlist` | 44 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_runbook_execution_contract.py` | `test_runbook_executor_enforces_contract_even_when_called_without_api` | 60 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_runbook_executor.py` | `Registry` | 6 | class | کلاس | module |
 | `tests/unit/test_runbook_executor.py` | `Registry.__init__` | 7 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | Registry |
 | `tests/unit/test_runbook_executor.py` | `Registry.get` | 10 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | Registry |
