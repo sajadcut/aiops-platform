@@ -13,6 +13,8 @@ from apps.approval_service.postgres import PostgreSQLApprovalStore
 from apps.audit_service import AuditService
 from apps.audit_service.postgres import PostgreSQLAuditStore
 from apps.execution_service import ExecutionRequest, ExecutionService
+from apps.runbook_service.registry import RunbookRegistry
+from apps.runbook_service.runtime_guard import RunbookRuntimeGuard
 from apps.security.auth import require_permission
 from database import AsyncSessionLocal
 from domain.models import Finding, Incident
@@ -36,7 +38,7 @@ async def _read_vm(action: str, target: str, parameters: Dict[str, Any]) -> Any:
 class RemediationRequest(BaseModel):
     target: str = Field(min_length=1)
     service: str = Field(min_length=1)
-    action: str = Field(default="restart_service", pattern="^(restart_service|reload_service|start_service)$")
+    action: str = Field(default="restart_service", pattern="^(restart_service|start_service)$")
     target_port: int | None = Field(default=None, ge=1, le=65535)
     dry_run: bool = False
     reason: str | None = None
@@ -56,15 +58,30 @@ async def create_remediation_request(
             await db.execute(select(Finding).where(Finding.incident_id == incident_id).order_by(desc(Finding.created_at)).limit(1))
         ).scalars().first()
 
+        runbook = RunbookRegistry("runbooks").get(
+            RunbookRuntimeGuard.VM_SERVICE_RUNBOOK
+        )
+        runbook_version = str(runbook.get("version") or "")
         approval_id = str(uuid4())
+        bound_parameters: Dict[str, Any] = {"service": payload.service}
+        if payload.target_port is not None:
+            bound_parameters["target_port"] = payload.target_port
         metadata = bind_metadata(
             {
-                "service": payload.service, "target_port": payload.target_port,
-                "dry_run": payload.dry_run, "reason": payload.reason,
+                "service": payload.service,
+                "target_port": payload.target_port,
+                "dry_run": payload.dry_run,
+                "reason": payload.reason,
                 "finding": finding.statement if finding else None,
             },
-            incident_id=str(incident_id), tool_name="ssh_vm", action=payload.action,
-            target=payload.target, parameters={"service": payload.service}, timeout=30,
+            incident_id=str(incident_id),
+            tool_name="ssh_vm",
+            action=payload.action,
+            target=payload.target,
+            parameters=bound_parameters,
+            timeout=30,
+            runbook_id=RunbookRuntimeGuard.VM_SERVICE_RUNBOOK,
+            runbook_version=runbook_version,
         )
         record = {
             "approval_id": approval_id, "incident_id": str(incident_id), "action": payload.action,
@@ -95,36 +112,92 @@ async def execute_approved_remediation(approval_id: str, identity=Depends(requir
         action = str(approval.get("action") or "")
         if not service or not target or not incident_id:
             raise HTTPException(status_code=409, detail="approval_binding_incomplete")
+        target_port = metadata.get("target_port")
+        bound_parameters: Dict[str, Any] = {"service": service}
+        if target_port is not None:
+            bound_parameters["target_port"] = int(target_port)
+        runbook_id = str(
+            metadata.get("runbook_id")
+            or RunbookRuntimeGuard.VM_SERVICE_RUNBOOK
+        )
+        runbook_version = str(metadata.get("runbook_version") or "")
         try:
             assert_bound(
-                approval, incident_id=incident_id, tool_name="ssh_vm", action=action,
-                target=target, parameters={"service": service}, timeout=30,
+                approval,
+                incident_id=incident_id,
+                tool_name="ssh_vm",
+                action=action,
+                target=target,
+                parameters=bound_parameters,
+                timeout=30,
+                runbook_id=runbook_id,
+                runbook_version=runbook_version,
             )
         except (TypeError, ValueError) as exc:
             raise HTTPException(status_code=409, detail=str(exc)) from exc
 
+        before_snapshot = await RunbookRuntimeGuard.collect_snapshot(
+            runbook_id=runbook_id,
+            target=target,
+            parameters=bound_parameters,
+            incident_id=incident_id,
+            phase="pre",
+        )
+        precondition = RunbookRuntimeGuard.preflight(
+            runbook_id=runbook_id,
+            tool_name="ssh_vm",
+            action=action,
+            target=target,
+            parameters=bound_parameters,
+            incident_id=incident_id,
+            evidence=list(before_snapshot.get("evidence") or []),
+        )
+        if not precondition.get("safe_to_execute"):
+            await _audit_durable(
+                db,
+                "remediation_precondition_failed",
+                identity.subject,
+                incident_id,
+                action,
+                "blocked",
+                {
+                    "approval_id": approval_id,
+                    "precondition": precondition,
+                    "snapshot_error": before_snapshot.get("error"),
+                },
+            )
+            raise HTTPException(
+                status_code=409,
+                detail=(
+                    "remediation_precondition_failed:"
+                    + str(
+                        precondition.get("reason")
+                        or "runtime_precondition_failed"
+                    )
+                ),
+            )
+
         if bool(metadata.get("dry_run")):
             result = {
-                "success": True, "execution_blocked": True, "reason": "dry_run",
-                "tool_name": "ssh_vm", "action": action, "target": target, "approval_id": approval_id,
+                "success": True,
+                "execution_blocked": True,
+                "reason": "dry_run",
+                "tool_name": "ssh_vm",
+                "action": action,
+                "target": target,
+                "approval_id": approval_id,
+                "precondition": precondition,
             }
-            await _audit_durable(db, "remediation_dry_run", identity.subject, incident_id, action, "simulated", {"approval_id": approval_id})
+            await _audit_durable(
+                db,
+                "remediation_dry_run",
+                identity.subject,
+                incident_id,
+                action,
+                "simulated",
+                {"approval_id": approval_id, "precondition": precondition},
+            )
             return result
-
-        # Fixed precondition: if this service has a configuration validator,
-        # a known-invalid configuration blocks start/restart/reload before approval is consumed.
-        config_check = await _read_vm("config_validate", target, {"service": service})
-        config_result = config_check.result or {}
-        if not config_check.success:
-            await _audit_durable(db, "remediation_precondition_failed", identity.subject, incident_id, action, "blocked", {
-                "approval_id": approval_id, "precondition": "config_validate", "reason": config_check.error,
-            })
-            raise HTTPException(status_code=409, detail="config_validation_unavailable")
-        if config_result.get("supported") is True and config_result.get("valid") is not True:
-            await _audit_durable(db, "remediation_precondition_failed", identity.subject, incident_id, action, "blocked", {
-                "approval_id": approval_id, "precondition": "config_valid", "config": config_result,
-            })
-            raise HTTPException(status_code=409, detail="service_configuration_invalid")
 
         consumed = await store.consume(approval_id)
         if not consumed or consumed.get("status") != "consumed":
@@ -134,14 +207,79 @@ async def execute_approved_remediation(approval_id: str, identity=Depends(requir
         })
 
         request = ExecutionRequest(
-            tool_name="ssh_vm", action=action, target=target, parameters={"service": service}, timeout=30,
-            agent_name="remediation_workflow", incident_id=incident_id, approval_granted=True,
+            tool_name="ssh_vm",
+            action=action,
+            target=target,
+            parameters=bound_parameters,
+            timeout=30,
+            agent_name="remediation_workflow",
+            incident_id=incident_id,
+            approval_granted=True,
             approval_id=approval_id,
+            runbook_id=runbook_id,
+            runbook_version=runbook_version,
         )
         result = await ExecutionService.execute(request)
-        await _audit_durable(db, "remediation_executed", identity.subject, incident_id, action,
-            "success" if result.success else "failed", {"approval_id": approval_id, "result": result.model_dump()})
-        return result.model_dump()
+        response = result.model_dump()
+        verification_payload = None
+        verified = False
+
+        if result.success:
+            after_snapshot = await RunbookRuntimeGuard.collect_snapshot(
+                runbook_id=runbook_id,
+                target=target,
+                parameters=bound_parameters,
+                incident_id=incident_id,
+                phase="post",
+            )
+            runbook = RunbookRegistry("runbooks").get(runbook_id)
+            verification = await RunbookRuntimeGuard.verify(
+                runbook=runbook,
+                action=action,
+                service=service,
+                before_context=dict(
+                    (before_snapshot or {}).get("context") or {}
+                ),
+                after_context=dict(after_snapshot.get("context") or {}),
+            )
+            verification_payload = verification.model_dump(mode="json")
+            verification_payload["snapshot_error"] = after_snapshot.get("error")
+            verified = (
+                verification.status.value == "success"
+                and verification.required_objectives_met is True
+            )
+        else:
+            verification_payload = {
+                "status": "failed",
+                "verification_policy": "execution_failed_before_verification",
+                "required_objectives_met": False,
+                "message": (
+                    result.error
+                    or result.reason
+                    or "Remediation execution failed before verification."
+                ),
+            }
+
+        response["precondition"] = precondition
+        response["verification"] = verification_payload
+        response["verified"] = verified
+
+        await _audit_durable(
+            db,
+            "remediation_executed",
+            identity.subject,
+            incident_id,
+            action,
+            "verified" if verified else "failed",
+            {
+                "approval_id": approval_id,
+                "result": result.model_dump(),
+                "precondition": precondition,
+                "verification": verification_payload,
+                "verified": verified,
+            },
+        )
+        return response
 
 
 class VMVerificationRequest(BaseModel):
