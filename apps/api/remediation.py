@@ -15,11 +15,12 @@ from apps.audit_service.postgres import PostgreSQLAuditStore
 from apps.execution_service import ExecutionRequest, ExecutionService
 from apps.runbook_service.registry import RunbookRegistry
 from apps.runbook_service.learning import record_runbook_outcome
+from apps.memory_service import OperationalMemoryService
 from apps.runbook_service.runtime_guard import RunbookRuntimeGuard
 from apps.security.auth import require_permission
 from database import AsyncSessionLocal
 from domain.contracts.logging import logger
-from domain.models import Finding, Incident
+from domain.models import Finding, Incident, MemoryEntry
 
 router = APIRouter()
 
@@ -336,48 +337,107 @@ async def verify_remediation(
         approval = await PostgreSQLApprovalStore(db).get(approval_id)
         if approval is None:
             raise HTTPException(status_code=404, detail="approval_not_found")
+
         metadata: Dict[str, Any] = dict(approval.get("metadata") or {})
-        expected_status = "approved" if bool(metadata.get("dry_run")) else "consumed"
-        if str(approval.get("status")) != expected_status:
+        if bool(metadata.get("dry_run")):
+            raise HTTPException(
+                status_code=409,
+                detail="dry_run_has_no_executed_recovery_to_verify",
+            )
+        if str(approval.get("status") or "") != "consumed":
             raise HTTPException(status_code=409, detail="approval_not_executed")
+
         target = str(metadata.get("target") or "")
         service = str(metadata.get("service") or "")
+        incident_id = str(approval.get("incident_id") or "")
+        action = str(approval.get("action") or "")
         target_port = metadata.get("target_port")
-        if not target or not service:
+        runbook_id = str(
+            metadata.get("runbook_id")
+            or RunbookRuntimeGuard.VM_SERVICE_RUNBOOK
+        )
+        if not target or not service or not incident_id or not action:
             raise HTTPException(status_code=409, detail="approval_binding_incomplete")
         if payload.target and payload.target != target:
             raise HTTPException(status_code=409, detail="verification_target_mismatch")
 
-        metrics_execution = await _read_vm("collect_vm_metrics", target, {})
-        metrics = (metrics_execution.result or {}).get("metrics", {}) if metrics_execution.success else {}
-        cpu = metrics.get("cpu_usage")
-        service_execution = await _read_vm("service_status", target, {"service": service})
-        service_result = service_execution.result or {}
-        service_active = bool(service_execution.success and str(service_result.get("active_state") or service_result.get("status") or "").lower() == "active")
-
-        listener_result: Dict[str, Any] | None = None
-        tcp_result: Dict[str, Any] | None = None
+        bound_parameters: Dict[str, Any] = {"service": service}
         if target_port is not None:
-            listener_execution = await _read_vm("port_listener_status", target, {"port": int(target_port)})
-            tcp_execution = await _read_vm("tcp_check", target, {"host": target, "port": int(target_port)})
-            listener_result = listener_execution.result or {}
-            tcp_result = tcp_execution.result or {}
-            symptom_recovered = bool(
-                listener_execution.success and listener_result.get("listening") is True
-                and tcp_execution.success and tcp_result.get("reachable") is True
-            )
-        else:
-            symptom_recovered = bool(metrics_execution.success and isinstance(cpu, (int, float)) and float(cpu) <= payload.cpu_threshold)
+            bound_parameters["target_port"] = int(target_port)
 
-        success = bool(service_active and symptom_recovered)
-        status = "verified" if success else "not_recovered"
-        verification = {
-            "approval_id": approval_id, "status": status, "target": target, "service": service,
-            "target_port": target_port, "service_active": service_active,
-            "port_listening": listener_result.get("listening") if listener_result is not None else None,
-            "tcp_reachable": tcp_result.get("reachable") if tcp_result is not None else None,
-            "cpu_usage": cpu, "cpu_threshold": payload.cpu_threshold, "metrics": metrics,
-            "service_status": service_result, "listener_status": listener_result, "tcp_check": tcp_result,
+        runbook = RunbookRegistry("runbooks").get(runbook_id)
+        snapshot = await RunbookRuntimeGuard.collect_snapshot(
+            runbook_id=runbook_id,
+            target=target,
+            parameters=bound_parameters,
+            incident_id=incident_id,
+            phase="manual_verify",
+        )
+        verification_result = await RunbookRuntimeGuard.verify(
+            runbook=runbook,
+            action=action,
+            service=service,
+            before_context={},
+            after_context=dict(snapshot.get("context") or {}),
+        )
+        verification = verification_result.model_dump(mode="json")
+        verified = (
+            verification_result.status.value == "success"
+            and verification_result.required_objectives_met is True
+        )
+
+        memory_id = None
+        memory_validated = False
+        try:
+            incident_uuid = UUID(incident_id)
+        except ValueError:
+            incident_uuid = None
+        if incident_uuid is not None:
+            rows = (
+                await db.execute(
+                    select(MemoryEntry)
+                    .where(MemoryEntry.incident_id == incident_uuid)
+                    .order_by(desc(MemoryEntry.created_at))
+                    .limit(20)
+                )
+            ).scalars().all()
+            for row in rows:
+                remediation = (
+                    row.actual_remediation
+                    if isinstance(row.actual_remediation, dict)
+                    else {}
+                )
+                if str(remediation.get("approval_id") or "") != approval_id:
+                    continue
+                memory_id = str(row.id)
+                if verified:
+                    memory_validated = await OperationalMemoryService(
+                        db
+                    ).mark_validated(row.id)
+                break
+
+        response = {
+            "approval_id": approval_id,
+            "status": "verified" if verified else "not_recovered",
+            "verification_status": verification_result.status.value,
+            "verified": verified,
+            "target": target,
+            "service": service,
+            "target_port": target_port,
+            "runbook_id": runbook_id,
+            "verification": verification,
+            "snapshot_error": snapshot.get("error"),
+            "memory_id": memory_id,
+            "memory_validated": memory_validated,
         }
-        await _audit_durable(db, "verification_completed", identity.subject, str(approval["incident_id"]), str(approval["action"]), status, verification)
-        return verification
+        await _audit_durable(
+            db,
+            "verification_completed",
+            identity.subject,
+            incident_id,
+            action,
+            "verified" if verified else verification_result.status.value,
+            response,
+        )
+        return response
+
