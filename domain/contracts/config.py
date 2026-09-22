@@ -41,11 +41,11 @@ class Settings(BaseSettings):
     PGVECTOR_EXPECTED_DIMENSION: Optional[int] = Field(...)
     PGVECTOR_VALIDATE_ON_STARTUP: bool = Field(...)
 
-    MEMORY_HYBRID_RETRIEVAL_ENABLED: bool = Field(default=True)
-    MEMORY_RETRIEVAL_CANDIDATE_MULTIPLIER: int = Field(default=4, ge=2, le=20)
-    MEMORY_RRF_K: int = Field(default=60, ge=1, le=1000)
-    MEMORY_MAX_EMBEDDING_TEXT_CHARS: int = Field(default=12000, ge=1000, le=100000)
-    MEMORY_REUSE_FEEDBACK_ENABLED: bool = Field(default=True)
+    MEMORY_HYBRID_RETRIEVAL_ENABLED: bool = Field(...)
+    MEMORY_RETRIEVAL_CANDIDATE_MULTIPLIER: int = Field(..., ge=2, le=20)
+    MEMORY_RRF_K: int = Field(..., ge=1, le=1000)
+    MEMORY_MAX_EMBEDDING_TEXT_CHARS: int = Field(..., ge=1000, le=100000)
+    MEMORY_REUSE_FEEDBACK_ENABLED: bool = Field(...)
 
     COGNIA_BASE_URL: Optional[str] = Field(...)
     COGNIA_CLIENT_ID: Optional[str] = Field(...)
