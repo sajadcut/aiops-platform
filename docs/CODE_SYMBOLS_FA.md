@@ -2011,7 +2011,7 @@
 | `tests/integration/test_operational_memory_v2_db.py` | `_state` | 25 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/integration/test_operational_memory_v2_db.py` | `test_memory_v2_lexical_retrieval_survives_embedding_provider_outage` | 96 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/integration/test_operational_memory_v2_db.py` | `test_memory_v2_reembeds_stale_embedding_contract` | 131 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/integration/test_operational_memory_v2_db.py` | `test_memory_v2_postgres_hybrid_retrieval_and_feedback` | 176 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/integration/test_operational_memory_v2_db.py` | `test_memory_v2_postgres_hybrid_retrieval_and_feedback` | 183 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/integration/test_operator_summary_api.py` | `test_operator_summary_api_route_is_registered_read_only` | 8 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/integration/test_operator_summary_api.py` | `test_dashboard_serves_persian_operator_summary_ui_and_structured_api_call` | 14 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/integration/test_operator_summary_api.py` | `test_operator_summary_backend_is_deterministic_and_has_no_execution_path` | 37 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
