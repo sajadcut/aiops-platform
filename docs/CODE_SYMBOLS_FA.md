@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 365 | Dashboard JS files scanned: 5 | Symbols indexed: 3210**
+**Python files scanned: 366 | Dashboard JS files scanned: 5 | Symbols indexed: 3212**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1090,6 +1090,8 @@
 | `apps/memory_service/builder.py` | `OperationalMemoryBuilder._stable_text` | 576 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
 | `apps/memory_service/builder.py` | `OperationalMemoryBuilder._signature` | 588 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
 | `apps/memory_service/builder.py` | `OperationalMemoryBuilder._dedupe_strings` | 593 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
+| `apps/memory_service/consolidation.py` | `summarize_entries` | 12 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/memory_service/consolidation.py` | `summarize_service` | 39 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/memory_service/feedback.py` | `_uuid` | 15 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/memory_service/feedback.py` | `record_retrieval_events` | 26 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/memory_service/feedback.py` | `apply_feedback` | 64 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
