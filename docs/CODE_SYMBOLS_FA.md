@@ -2310,26 +2310,26 @@
 | `tests/unit/test_centralized_config.py` | `_template_keys` | 9 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_centralized_config.py` | `_template_values` | 19 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_centralized_config.py` | `_settings_data` | 30 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `tests/unit/test_centralized_config.py` | `test_canonical_env_template_covers_every_settings_field` | 36 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_centralized_config.py` | `test_populated_env_is_ignored_and_template_is_tracked_contract` | 42 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_centralized_config.py` | `test_settings_contains_no_runtime_defaults` | 49 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_centralized_config.py` | `test_loaded_settings_match_complete_contract` | 58 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_centralized_config.py` | `test_cognia_is_the_only_rag_and_template_has_no_provider_switch` | 63 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_centralized_config.py` | `test_production_cognia_requires_machine_identity_and_explicit_kbs` | 74 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_centralized_config.py` | `test_production_cognia_supports_http_and_https_transport_contract` | 88 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_centralized_config.py` | `test_production_cognia_accepts_machine_identity_and_explicit_kbs` | 103 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_centralized_config.py` | `test_optional_cognia_numeric_ids_parse_empty_template_values_as_none` | 117 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_centralized_config.py` | `test_jenkins_mcp_template_is_off_by_default_and_keeps_credentials_empty` | 124 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_centralized_config.py` | `test_jenkins_mcp_requires_official_streamable_endpoint_and_basic_auth` | 134 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_centralized_config.py` | `test_production_jenkins_mcp_requires_authenticated_expected_identity` | 151 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_centralized_config.py` | `test_jenkins_mcp_writes_require_separate_basic_identity` | 181 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_centralized_config.py` | `test_embedding_dimension_must_match_pgvector_contract` | 197 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_centralized_config.py` | `test_openai_compatible_embedding_requires_endpoint` | 208 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_centralized_config.py` | `test_production_rejects_deterministic_embedding_provider_at_startup` | 220 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_centralized_config.py` | `test_production_accepts_real_embedding_contract` | 235 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_centralized_config.py` | `test_alembic_does_not_bypass_centralized_settings` | 254 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_centralized_config.py` | `test_rate_limits_are_not_hardcoded_in_runtime_module` | 260 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_centralized_config.py` | `test_elastic_agent_builder_provider_contract_is_pinned_and_isolated` | 268 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_centralized_config.py` | `test_canonical_env_template_covers_every_settings_field` | 46 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_centralized_config.py` | `test_populated_env_is_ignored_and_template_is_tracked_contract` | 52 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_centralized_config.py` | `test_settings_contains_no_runtime_defaults` | 59 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_centralized_config.py` | `test_loaded_settings_match_complete_contract` | 68 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_centralized_config.py` | `test_cognia_is_the_only_rag_and_template_has_no_provider_switch` | 73 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_centralized_config.py` | `test_production_cognia_requires_machine_identity_and_explicit_kbs` | 84 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_centralized_config.py` | `test_production_cognia_supports_http_and_https_transport_contract` | 98 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_centralized_config.py` | `test_production_cognia_accepts_machine_identity_and_explicit_kbs` | 113 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_centralized_config.py` | `test_optional_cognia_numeric_ids_parse_empty_template_values_as_none` | 127 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_centralized_config.py` | `test_jenkins_mcp_template_is_off_by_default_and_keeps_credentials_empty` | 134 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_centralized_config.py` | `test_jenkins_mcp_requires_official_streamable_endpoint_and_basic_auth` | 144 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_centralized_config.py` | `test_production_jenkins_mcp_requires_authenticated_expected_identity` | 161 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_centralized_config.py` | `test_jenkins_mcp_writes_require_separate_basic_identity` | 191 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_centralized_config.py` | `test_embedding_dimension_must_match_pgvector_contract` | 207 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_centralized_config.py` | `test_openai_compatible_embedding_requires_endpoint` | 218 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_centralized_config.py` | `test_production_rejects_deterministic_embedding_provider_at_startup` | 230 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_centralized_config.py` | `test_production_accepts_real_embedding_contract` | 245 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_centralized_config.py` | `test_alembic_does_not_bypass_centralized_settings` | 264 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_centralized_config.py` | `test_rate_limits_are_not_hardcoded_in_runtime_module` | 270 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_centralized_config.py` | `test_elastic_agent_builder_provider_contract_is_pinned_and_isolated` | 278 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_change_correlation_engine.py` | `change` | 11 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_change_correlation_engine.py` | `metric` | 21 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_change_correlation_engine.py` | `log` | 33 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
