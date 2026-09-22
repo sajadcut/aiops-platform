@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 393 | Dashboard JS files scanned: 5 | Symbols indexed: 3490**
+**Python files scanned: 393 | Dashboard JS files scanned: 5 | Symbols indexed: 3502**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -2495,6 +2495,18 @@
 | `tests/unit/test_chatbot_preconfirm_guard.py` | `test_preconfirm_guard_keeps_transient_telemetry_failure_retryable` | 94 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_chatbot_preconfirm_guard.py` | `test_preconfirm_guard_keeps_transient_telemetry_failure_retryable.snapshot` | 95 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_preconfirm_guard_keeps_transient_telemetry_failure_retryable |
 | `tests/unit/test_chatbot_preconfirm_guard.py` | `test_preconfirm_guard_does_not_invent_contract_for_other_tools` | 127 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_preconfirm_guard.py` | `test_kubernetes_preconfirm_allows_fresh_completed_rollout` | 144 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_preconfirm_guard.py` | `test_kubernetes_preconfirm_allows_fresh_completed_rollout.FakeKubernetesMCPClient` | 145 | class | کلاس | test_kubernetes_preconfirm_allows_fresh_completed_rollout |
+| `tests/unit/test_chatbot_preconfirm_guard.py` | `test_kubernetes_preconfirm_allows_fresh_completed_rollout.FakeKubernetesMCPClient.collect_query` | 146 | async method | Evidence/داده موردنیاز را از منبع مربوط جمع می‌کند | test_kubernetes_preconfirm_allows_fresh_completed_rollout.FakeKubernetesMCPClient |
+| `tests/unit/test_chatbot_preconfirm_guard.py` | `test_kubernetes_scale_same_desired_replicas_is_stale` | 187 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_preconfirm_guard.py` | `test_kubernetes_scale_same_desired_replicas_is_stale.FakeKubernetesMCPClient` | 188 | class | کلاس | test_kubernetes_scale_same_desired_replicas_is_stale |
+| `tests/unit/test_chatbot_preconfirm_guard.py` | `test_kubernetes_scale_same_desired_replicas_is_stale.FakeKubernetesMCPClient.collect_query` | 189 | async method | Evidence/داده موردنیاز را از منبع مربوط جمع می‌کند | test_kubernetes_scale_same_desired_replicas_is_stale.FakeKubernetesMCPClient |
+| `tests/unit/test_chatbot_preconfirm_guard.py` | `test_kubernetes_rollout_in_progress_is_retryable` | 223 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_preconfirm_guard.py` | `test_kubernetes_rollout_in_progress_is_retryable.FakeKubernetesMCPClient` | 224 | class | کلاس | test_kubernetes_rollout_in_progress_is_retryable |
+| `tests/unit/test_chatbot_preconfirm_guard.py` | `test_kubernetes_rollout_in_progress_is_retryable.FakeKubernetesMCPClient.collect_query` | 225 | async method | Evidence/داده موردنیاز را از منبع مربوط جمع می‌کند | test_kubernetes_rollout_in_progress_is_retryable.FakeKubernetesMCPClient |
+| `tests/unit/test_chatbot_preconfirm_guard.py` | `test_kubernetes_preconfirm_read_failure_is_retryable` | 259 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_preconfirm_guard.py` | `test_kubernetes_preconfirm_read_failure_is_retryable.FakeKubernetesMCPClient` | 260 | class | کلاس | test_kubernetes_preconfirm_read_failure_is_retryable |
+| `tests/unit/test_chatbot_preconfirm_guard.py` | `test_kubernetes_preconfirm_read_failure_is_retryable.FakeKubernetesMCPClient.collect_query` | 261 | async method | Evidence/داده موردنیاز را از منبع مربوط جمع می‌کند | test_kubernetes_preconfirm_read_failure_is_retryable.FakeKubernetesMCPClient |
 | `tests/unit/test_chatbot_reliable_service.py` | `SequencedLLM` | 15 | class | کلاس | module |
 | `tests/unit/test_chatbot_reliable_service.py` | `SequencedLLM.__init__` | 16 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SequencedLLM |
 | `tests/unit/test_chatbot_reliable_service.py` | `SequencedLLM.provider_name` | 21 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SequencedLLM |
