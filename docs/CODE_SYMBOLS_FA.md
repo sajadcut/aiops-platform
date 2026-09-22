@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 372 | Dashboard JS files scanned: 5 | Symbols indexed: 3266**
+**Python files scanned: 373 | Dashboard JS files scanned: 5 | Symbols indexed: 3270**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -3163,6 +3163,10 @@
 | `tests/unit/test_upstream_mcp_contracts.py` | `test_elastic_anomaly_webhook_uses_json_array_rendering` | 85 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_verification_gate.py` | `test_verification_success_requires_confidence` | 3 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_verification_gate.py` | `test_partial_verification_does_not_pass` | 6 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_verify_operational_memory.py` | `test_verify_memory_exit_codes` | 7 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_verify_operational_memory.py` | `test_verify_memory_exit_codes.healthy` | 8 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_verify_memory_exit_codes |
+| `tests/unit/test_verify_operational_memory.py` | `test_verify_memory_exit_codes.empty` | 19 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_verify_memory_exit_codes |
+| `tests/unit/test_verify_operational_memory.py` | `test_verify_memory_exit_codes.drift` | 30 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_verify_memory_exit_codes |
 | `tests/unit/test_vm_config_validation.py` | `test_config_validate_propagates_ssh_failure` | 8 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_vm_config_validation.py` | `test_config_validate_propagates_ssh_failure.failed_run` | 14 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_config_validate_propagates_ssh_failure |
 | `tests/unit/test_vm_current_cpu_metrics.py` | `_connector` | 7 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
