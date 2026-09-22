@@ -169,6 +169,65 @@ class E2EOrchestrator:
             return result
         return {"provider": "cognia", "status": "error", "code": type(exc).__name__}
 
+    @staticmethod
+    def _operational_memory_query(
+        *,
+        service: str,
+        base_query: str,
+        context: Dict[str, Any],
+        live_evidence: Dict[str, Any],
+    ) -> str:
+        """Build a bounded symptom query without copying raw logs or credentials."""
+        parts: List[str] = []
+        for value in (service, base_query):
+            text_value = str(value or "").strip()
+            if text_value and text_value not in parts:
+                parts.append(text_value[:1000])
+
+        trigger = context.get("trigger_signal")
+        if not isinstance(trigger, dict):
+            trigger = {}
+        incident = context.get("incident")
+        if not isinstance(incident, dict):
+            incident = {}
+        allowed_signal_keys = (
+            "summary", "name", "trigger", "signal_type", "severity",
+            "target_ip", "target_port", "item_key", "event_state",
+            "event_status", "asset_type", "host",
+        )
+        for source in (trigger, incident):
+            for key in allowed_signal_keys:
+                value = source.get(key)
+                if value not in (None, "", [], {}):
+                    parts.append(f"{key}={str(value)[:300]}")
+
+        allowed_raw_keys = (
+            "diagnostic", "service", "target", "target_ip", "target_port",
+            "active_state", "sub_state", "status", "healthy", "running",
+            "listening", "reachable", "valid", "supported", "severity",
+            "event_state", "event_status", "host", "port", "error",
+        )
+        evidence = (
+            live_evidence.get("evidence", [])
+            if isinstance(live_evidence, dict)
+            else []
+        )
+        for item in evidence[: min(settings.AGENT_MAX_EVIDENCE_ITEMS, 20)]:
+            if not isinstance(item, dict):
+                continue
+            raw = item.get("raw_data")
+            if not isinstance(raw, dict):
+                raw = {}
+            tokens: List[str] = []
+            for key in allowed_raw_keys:
+                value = raw.get(key)
+                if value not in (None, "", [], {}):
+                    tokens.append(f"{key}={str(value)[:160]}")
+            if tokens:
+                parts.append(" ".join(tokens))
+
+        return " ".join(parts)[:4000]
+
     async def _context_node(self, state: E2EState) -> E2EState:
         phase_started = time.perf_counter()
         state["current_node"] = "context"
@@ -233,10 +292,23 @@ class E2EOrchestrator:
                     status=state["knowledge_status"].get("status"),
                     code=state["knowledge_status"].get("code"),
                 )
+        try:
+            since = datetime.now(timezone.utc) - timedelta(seconds=settings.AGENT_INITIAL_EVIDENCE_WINDOW_SECONDS)
+            state["live_evidence"] = await self.evidence_collector.collect(service, since)
+        except Exception as exc:
+            logger.warning("live_evidence_collection_failed", error_type=type(exc).__name__)
+            state["live_evidence"] = {"service": service, "evidence": [], "error": type(exc).__name__}
+
+        memory_query = self._operational_memory_query(
+            service=service,
+            base_query=query,
+            context=context,
+            live_evidence=state["live_evidence"],
+        )
         if self.db is not None:
             try:
                 state["memory_results"] = await OperationalMemoryService(self.db).retrieve(
-                    query,
+                    memory_query,
                     service_scope=service,
                     environment=settings.APP_ENV,
                     retrieval_mode="SIMILAR_INCIDENT",
@@ -246,14 +318,10 @@ class E2EOrchestrator:
                     record_retrieval=True,
                 )
             except Exception as exc:
-                logger.warning("operational_memory_retrieval_failed", error_type=type(exc).__name__)
-
-        try:
-            since = datetime.now(timezone.utc) - timedelta(seconds=settings.AGENT_INITIAL_EVIDENCE_WINDOW_SECONDS)
-            state["live_evidence"] = await self.evidence_collector.collect(service, since)
-        except Exception as exc:
-            logger.warning("live_evidence_collection_failed", error_type=type(exc).__name__)
-            state["live_evidence"] = {"service": service, "evidence": [], "error": type(exc).__name__}
+                logger.warning(
+                    "operational_memory_retrieval_failed",
+                    error_type=type(exc).__name__,
+                )
 
         context["knowledge_results"] = state["knowledge_results"]
         context["knowledge_status"] = state["knowledge_status"]
@@ -276,6 +344,7 @@ class E2EOrchestrator:
             knowledge_count=len(state["knowledge_results"]),
             knowledge_status=state["knowledge_status"],
             memory_count=len(state["memory_results"]),
+            memory_query_chars=len(memory_query),
             evidence_count=len(state["live_evidence"].get("evidence", [])),
             duration_ms=round((time.perf_counter() - phase_started) * 1000, 3),
         )
