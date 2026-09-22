@@ -21,6 +21,62 @@ class FakeCheckpointStore:
         self.failed = (incident_id, result)
 
 
+class GuardedApprovalStore:
+    def __init__(self):
+        self.consume_calls = []
+        self.cancel_calls = []
+
+    @staticmethod
+    def _metadata():
+        return bind_metadata(
+            {},
+            incident_id="incident-1",
+            tool_name="ssh_vm",
+            action="start_service",
+            target="10.100.6.199",
+            parameters={"service": "nginx", "target_port": 86},
+            timeout=30,
+            runbook_id="vm-service-recovery",
+            runbook_version="1.1",
+            rollback=False,
+        )
+
+    async def get(self, approval_id):
+        return {
+            "approval_id": approval_id,
+            "incident_id": "incident-1",
+            "action": "start_service",
+            "status": "approved",
+            "metadata": self._metadata(),
+        }
+
+    async def consume(self, approval_id):
+        self.consume_calls.append(approval_id)
+        return {
+            "approval_id": approval_id,
+            "incident_id": "incident-1",
+            "action": "start_service",
+            "status": "consumed",
+            "metadata": self._metadata(),
+        }
+
+    async def cancel(self, approval_id, *, reason, metadata_patch=None):
+        self.cancel_calls.append(
+            (approval_id, reason, dict(metadata_patch or {}))
+        )
+        return {
+            "approval_id": approval_id,
+            "incident_id": "incident-1",
+            "action": "start_service",
+            "status": "rejected",
+            "metadata": {
+                **self._metadata(),
+                "cancellation_reason": reason,
+                **dict(metadata_patch or {}),
+            },
+        }
+
+
 class FakeApprovalStore:
     def __init__(self):
         self.consume_calls = []
@@ -124,6 +180,24 @@ def _paused_state():
     }
 
 
+def _guarded_paused_state():
+    return {
+        "approval": {"approval_id": "approval-guarded", "status": "pending"},
+        "execution_request": {
+            "tool_name": "ssh_vm",
+            "action": "start_service",
+            "target": "10.100.6.199",
+            "parameters": {"service": "nginx", "target_port": 86},
+            "timeout": 30,
+            "runbook_id": "vm-service-recovery",
+            "runbook_version": "1.1",
+            "rollback": False,
+        },
+        "context": {},
+        "findings": [],
+    }
+
+
 def _runtime(state):
     runtime = DurableWorkflowRuntime.__new__(DurableWorkflowRuntime)
     runtime.session = object()
@@ -190,3 +264,85 @@ async def test_failed_verification_never_resolves_incident(monkeypatch):
     assert runtime.checkpoints.failed is not None
     assert runtime.checkpoints.completed is None
     assert runtime.incidents.statuses[-1] == ("incident-1", "escalated")
+
+
+@pytest.mark.asyncio
+async def test_durable_runtime_revokes_stale_approval_before_consume(monkeypatch):
+    runtime = _runtime(_guarded_paused_state())
+    runtime.approvals = GuardedApprovalStore()
+
+    async def snapshot(**kwargs):
+        return {
+            "read_success": True,
+            "error": None,
+            "evidence": [{"reference": "svc-active"}],
+            "context": {"live_evidence": {"evidence": [{"reference": "svc-active"}]}},
+        }
+
+    monkeypatch.setattr(
+        runtime_module.RunbookRuntimeGuard,
+        "collect_snapshot",
+        snapshot,
+    )
+    monkeypatch.setattr(
+        runtime_module.RunbookRuntimeGuard,
+        "preflight",
+        lambda **kwargs: {
+            "safe_to_execute": False,
+            "reason": "service_no_longer_unhealthy",
+            "evidence_refs": ["svc-active"],
+        },
+    )
+
+    with pytest.raises(ValueError) as exc:
+        await runtime.resume_after_approval("incident-1")
+
+    assert str(exc.value) == (
+        "approval_preflight_stale:service_no_longer_unhealthy"
+    )
+    assert runtime.approvals.consume_calls == []
+    assert len(runtime.approvals.cancel_calls) == 1
+    assert runtime.approvals.cancel_calls[0][0] == "approval-guarded"
+    assert runtime.checkpoints.failed is not None
+    failed_state = runtime.checkpoints.failed[1]
+    assert failed_state["approval"]["status"] == "rejected"
+    assert failed_state["execution_result"]["execution_blocked"] is True
+
+
+@pytest.mark.asyncio
+async def test_durable_runtime_keeps_retryable_approval_unconsumed(monkeypatch):
+    runtime = _runtime(_guarded_paused_state())
+    runtime.approvals = GuardedApprovalStore()
+
+    async def snapshot(**kwargs):
+        return {
+            "read_success": False,
+            "error": "vm_telemetry_unavailable",
+            "evidence": [],
+            "context": {"live_evidence": {"evidence": []}},
+        }
+
+    monkeypatch.setattr(
+        runtime_module.RunbookRuntimeGuard,
+        "collect_snapshot",
+        snapshot,
+    )
+    monkeypatch.setattr(
+        runtime_module.RunbookRuntimeGuard,
+        "preflight",
+        lambda **kwargs: {
+            "safe_to_execute": False,
+            "reason": "fresh_service_status_missing",
+            "evidence_refs": [],
+        },
+    )
+
+    with pytest.raises(ValueError) as exc:
+        await runtime.resume_after_approval("incident-1")
+
+    assert str(exc.value) == (
+        "approval_preflight_retryable:fresh_service_status_missing"
+    )
+    assert runtime.approvals.consume_calls == []
+    assert runtime.approvals.cancel_calls == []
+    assert runtime.checkpoints.failed is None
