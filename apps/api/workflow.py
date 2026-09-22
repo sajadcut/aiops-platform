@@ -6,7 +6,7 @@ from uuid import uuid4
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
-from apps.orchestrator.runtime import DurableWorkflowRuntime
+from apps.orchestrator.learning_runtime import LearningDurableWorkflowRuntime
 from apps.security.auth import require_permission
 from apps.api.cognia_scope import reject_untrusted_knowledge_subject
 from database import AsyncSessionLocal
@@ -54,7 +54,7 @@ async def run_workflow(
             "confidence": 0.0,
         }
         async with AsyncSessionLocal() as db:
-            result = await DurableWorkflowRuntime(db).start(initial_state)
+            result = await LearningDurableWorkflowRuntime(db).start(initial_state)
         return WorkflowResponse(
             success=True,
             incident_id=incident_id,
