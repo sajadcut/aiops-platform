@@ -3,7 +3,7 @@
 > این فایل فهرست فایل‌به‌فایل repository است. توضیح معماری و flow در `CODEBASE_GUIDE_FA.md` آمده است.
 > این فایل با `scripts/generate_file_index_fa.py` ساخته و در CI کنترل می‌شود.
 
-**تعداد فایل‌های track‌شده و پوشش‌داده‌شده: 465**
+**تعداد فایل‌های track‌شده و پوشش‌داده‌شده: 466**
 
 | Path | Type | Purpose | Called By | Calls/Depends On | Runtime/Test/Docs | Notes |
 |---|---|---|---|---|---|---|
@@ -155,6 +155,7 @@
 | `apps/remediation_planner/__init__.py` | Python | ماژول service لایه application | Runtime | domain/integrations | Runtime | جزء Control Plane |
 | `apps/runbook_service/executor.py` | Python | Runbook: Registry/Executor runbookهای allow-listed | API/execution workflow | domain/runbooks/execution | Runtime | اجرای کنترل‌شده |
 | `apps/runbook_service/registry.py` | Python | Runbook: Registry/Executor runbookهای allow-listed | API/execution workflow | domain/runbooks/execution | Runtime | اجرای کنترل‌شده |
+| `apps/runbook_service/runtime_guard.py` | Python | Runbook: Registry/Executor runbookهای allow-listed | API/execution workflow | domain/runbooks/execution | Runtime | اجرای کنترل‌شده |
 | `apps/security/auth.py` | Python | Security: Authentication، OIDC/JWT و RBAC | FastAPI dependencies | OIDC/config | Runtime | security boundary |
 | `apps/security/oidc.py` | Python | Security: Authentication، OIDC/JWT و RBAC | FastAPI dependencies | OIDC/config | Runtime | security boundary |
 | `apps/security/rbac.py` | Python | Security: Authentication، OIDC/JWT و RBAC | FastAPI dependencies | OIDC/config | Runtime | security boundary |
