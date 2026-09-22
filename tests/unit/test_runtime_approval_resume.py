@@ -50,13 +50,14 @@ class GuardedApprovalStore:
             "metadata": self._metadata(),
         }
 
-    async def consume(self, approval_id):
+    async def consume(self, approval_id, *, issue_claim=False):
         self.consume_calls.append(approval_id)
         return {
             "approval_id": approval_id,
             "incident_id": "incident-1",
             "action": "start_service",
             "status": "consumed",
+            "_execution_claim": "test-claim" if issue_claim else None,
             "metadata": self._metadata(),
         }
 
@@ -91,9 +92,9 @@ class FakeApprovalStore:
     async def get(self, approval_id):
         return {"approval_id": approval_id, "incident_id": "incident-1", "action": "restart_service", "status": "approved", "metadata": self._metadata()}
 
-    async def consume(self, approval_id):
+    async def consume(self, approval_id, *, issue_claim=False):
         self.consume_calls.append(approval_id)
-        return {"approval_id": approval_id, "incident_id": "incident-1", "action": "restart_service", "status": "consumed", "metadata": self._metadata()}
+        return {"approval_id": approval_id, "incident_id": "incident-1", "action": "restart_service", "status": "consumed", "_execution_claim": "test-claim" if issue_claim else None, "metadata": self._metadata()}
 
 
 class FakeIncidentRepository:
