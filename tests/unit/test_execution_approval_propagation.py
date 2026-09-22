@@ -1,5 +1,6 @@
 import pytest
 
+import apps.approval_service.execution_claim as claim_module
 from apps.approval_service.execution_claim import issue_execution_claim
 from apps.execution_service import ExecutionRequest, ExecutionService
 from apps.execution_service.tools.base import BaseTool, ToolInput, ToolOutput
@@ -127,3 +128,16 @@ async def test_execution_claim_is_redeemed_exactly_once():
         assert second.reason == "approval_execution_claim_invalid_or_replayed"
     finally:
         tool_registry.clear()
+
+
+def test_execution_claim_expires_and_cannot_be_redeemed(monkeypatch):
+    claim_module._ISSUED.clear()
+    clock = {"now": 100.0}
+    monkeypatch.setattr(claim_module, "monotonic", lambda: clock["now"])
+    monkeypatch.setattr(claim_module, "_ttl_seconds", lambda: 5.0)
+
+    claim = claim_module.issue_execution_claim()
+    clock["now"] = 106.0
+
+    assert claim_module.redeem_execution_claim(claim) is False
+    assert claim not in claim_module._ISSUED
