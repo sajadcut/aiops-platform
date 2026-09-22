@@ -855,52 +855,194 @@ class ChatbotService:
         self,
         proposal: dict[str, Any],
     ) -> dict[str, Any]:
-        """Freshly revalidate supported VM recovery intent before confirmation."""
+        """Freshly revalidate supported mutation intent before confirmation."""
         tool_name = str(proposal.get("tool_name") or "").strip()
         action = str(proposal.get("action") or "").strip()
         params = dict(proposal.get("parameters") or {})
+        incident_id = str(proposal.get("incident_id") or "").strip()
+        target = str(proposal.get("target") or "").strip()
 
-        if tool_name != "ssh_vm" or action not in {
+        if tool_name == "ssh_vm" and action in {
             "start_service",
             "restart_service",
         }:
+            snapshot = await RunbookRuntimeGuard.collect_snapshot(
+                runbook_id=RunbookRuntimeGuard.VM_SERVICE_RUNBOOK,
+                target=target,
+                parameters=params,
+                incident_id=incident_id,
+                phase="chatbot_preconfirm",
+            )
+            precondition = RunbookRuntimeGuard.preflight(
+                runbook_id=RunbookRuntimeGuard.VM_SERVICE_RUNBOOK,
+                tool_name=tool_name,
+                action=action,
+                target=target,
+                parameters=params,
+                incident_id=incident_id,
+                evidence=list(snapshot.get("evidence") or []),
+            )
             return {
-                "applies": False,
-                "safe_to_execute": True,
-                "reason": "runtime_guard_not_required",
-                "snapshot": None,
-                "precondition": None,
+                "applies": True,
+                "safe_to_execute": bool(
+                    precondition.get("safe_to_execute")
+                ),
+                "reason": str(
+                    precondition.get("reason")
+                    or "runtime_precondition_failed"
+                ),
+                "snapshot": snapshot,
+                "precondition": precondition,
+                "stale": RunbookRuntimeGuard.approval_should_be_revoked(
+                    precondition
+                ),
             }
 
-        incident_id = str(proposal.get("incident_id") or "").strip()
-        target = str(proposal.get("target") or "").strip()
-        snapshot = await RunbookRuntimeGuard.collect_snapshot(
-            runbook_id=RunbookRuntimeGuard.VM_SERVICE_RUNBOOK,
-            target=target,
-            parameters=params,
-            incident_id=incident_id,
-            phase="chatbot_preconfirm",
-        )
-        precondition = RunbookRuntimeGuard.preflight(
-            runbook_id=RunbookRuntimeGuard.VM_SERVICE_RUNBOOK,
-            tool_name=tool_name,
-            action=action,
-            target=target,
-            parameters=params,
-            incident_id=incident_id,
-            evidence=list(snapshot.get("evidence") or []),
-        )
+        if tool_name == "kubernetes_mcp" and action in {
+            "restart_workload",
+            "rollback_workload",
+            "scale_workload",
+        }:
+            namespace = str(params.get("namespace") or "").strip()
+            if not namespace or not target:
+                return {
+                    "applies": True,
+                    "safe_to_execute": False,
+                    "reason": "kubernetes_execution_binding_incomplete",
+                    "snapshot": None,
+                    "precondition": None,
+                    "stale": True,
+                }
+
+            try:
+                rollout = await KubernetesMCPClient().collect_query(
+                    operation="rollout_state",
+                    namespace=namespace,
+                    resource=target,
+                )
+            except Exception as exc:
+                logger.warning(
+                    "chatbot_kubernetes_preconfirm_read_failed",
+                    incident_id=incident_id,
+                    target=target,
+                    namespace=namespace,
+                    error_type=type(exc).__name__,
+                )
+                return {
+                    "applies": True,
+                    "safe_to_execute": False,
+                    "reason": "kubernetes_fresh_state_unavailable",
+                    "snapshot": {
+                        "source": "kubernetes_mcp",
+                        "error": type(exc).__name__,
+                    },
+                    "precondition": None,
+                    "stale": False,
+                }
+
+            if not isinstance(rollout, dict):
+                return {
+                    "applies": True,
+                    "safe_to_execute": False,
+                    "reason": "kubernetes_rollout_state_invalid",
+                    "snapshot": {
+                        "source": "kubernetes_mcp",
+                        "result": redact(rollout),
+                    },
+                    "precondition": None,
+                    "stale": False,
+                }
+
+            observed_target = str(rollout.get("name") or "").strip()
+            observed_namespace = str(
+                rollout.get("namespace") or namespace
+            ).strip()
+            if observed_target != target or observed_namespace != namespace:
+                return {
+                    "applies": True,
+                    "safe_to_execute": False,
+                    "reason": "kubernetes_target_identity_mismatch",
+                    "snapshot": {
+                        "source": "kubernetes_mcp",
+                        "result": redact(rollout),
+                    },
+                    "precondition": None,
+                    "stale": True,
+                }
+
+            desired = rollout.get("desired_replicas")
+            if action == "scale_workload":
+                requested = params.get("replicas")
+                if isinstance(requested, int) and not isinstance(
+                    requested,
+                    bool,
+                ):
+                    try:
+                        current_desired = int(desired)
+                    except (TypeError, ValueError):
+                        current_desired = None
+                    if current_desired == requested:
+                        return {
+                            "applies": True,
+                            "safe_to_execute": False,
+                            "reason": "kubernetes_scale_already_satisfied",
+                            "snapshot": {
+                                "source": "kubernetes_mcp",
+                                "result": redact(rollout),
+                            },
+                            "precondition": {
+                                "safe_to_execute": False,
+                                "reason": "kubernetes_scale_already_satisfied",
+                            },
+                            "stale": True,
+                        }
+
+            rollout_complete = rollout.get("rollout_complete")
+            if rollout_complete is not True:
+                return {
+                    "applies": True,
+                    "safe_to_execute": False,
+                    "reason": "kubernetes_rollout_in_progress",
+                    "snapshot": {
+                        "source": "kubernetes_mcp",
+                        "result": redact(rollout),
+                    },
+                    "precondition": {
+                        "safe_to_execute": False,
+                        "reason": "kubernetes_rollout_in_progress",
+                    },
+                    "stale": False,
+                }
+
+            precondition = {
+                "safe_to_execute": True,
+                "reason": "fresh_kubernetes_target_verified",
+                "target": target,
+                "namespace": namespace,
+                "generation": rollout.get("generation"),
+                "observed_generation": rollout.get(
+                    "observed_generation"
+                ),
+                "desired_replicas": desired,
+            }
+            return {
+                "applies": True,
+                "safe_to_execute": True,
+                "reason": "fresh_kubernetes_target_verified",
+                "snapshot": {
+                    "source": "kubernetes_mcp",
+                    "result": redact(rollout),
+                },
+                "precondition": precondition,
+                "stale": False,
+            }
+
         return {
-            "applies": True,
-            "safe_to_execute": bool(precondition.get("safe_to_execute")),
-            "reason": str(
-                precondition.get("reason") or "runtime_precondition_failed"
-            ),
-            "snapshot": snapshot,
-            "precondition": precondition,
-            "stale": RunbookRuntimeGuard.approval_should_be_revoked(
-                precondition
-            ),
+            "applies": False,
+            "safe_to_execute": True,
+            "reason": "runtime_guard_not_required",
+            "snapshot": None,
+            "precondition": None,
         }
 
     async def decide(self, identity: Identity, proposal_id: UUID, confirm: bool) -> ChatMessageResponse:
