@@ -83,6 +83,42 @@ async def test_duplicate_save_cannot_resurrect_terminal_approval_states():
         )
         assert replayed_rejected["status"] == "rejected"
 
+        # Creation cannot inject already-approved authority. save() is create-only;
+        # the approval transition must still go through set_status().
+        injected_id = str(uuid4())
+        injected = await store.save(
+            _record(injected_id, incident_id, status="approved")
+        )
+        assert injected["status"] == "pending"
+        injected_approved = await store.set_status(injected_id, "approved")
+        assert injected_approved["status"] == "approved"
+
+        # A committed source recovery between approval and consume invalidates the
+        # authority before the execution boundary can be claimed.
+        recovered_id = str(uuid4())
+        await store.save(_record(recovered_id, incident_id))
+        recovered_approved = await store.set_status(recovered_id, "approved")
+        assert recovered_approved["status"] == "approved"
+        await db.execute(
+            text(
+                """
+                UPDATE incidents
+                SET status='RESOLVED',
+                    context=jsonb_build_object(
+                        'source_recovery',
+                        jsonb_build_object('incident_resolved', true)
+                    )
+                WHERE id=:incident_id
+                """
+            ),
+            {"incident_id": incident_id},
+        )
+        await db.commit()
+        blocked = await store.consume(recovered_id)
+        assert blocked["status"] == "rejected"
+        assert blocked["metadata"]["cancelled_due_to_source_recovery"] is True
+        assert blocked["metadata"]["consume_blocked"] is True
+
         await store.save(_record(expired_id, incident_id))
         await db.execute(
             text(
