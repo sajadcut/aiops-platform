@@ -9,10 +9,12 @@ from apps.approval_service.postgres import PostgreSQLApprovalStore
 from apps.audit_service import AuditService
 from apps.audit_service.postgres import PostgreSQLAuditStore
 from apps.runbook_service.executor import RunbookExecutor
+from apps.runbook_service.learning import record_runbook_outcome
 from apps.runbook_service.runtime_guard import RunbookRuntimeGuard
 from apps.runbook_service.registry import RunbookRegistry
 from apps.security.auth import require_permission
 from database import AsyncSessionLocal
+from domain.contracts.logging import logger
 
 router = APIRouter()
 _registry = RunbookRegistry()
@@ -203,6 +205,12 @@ async def execute_runbook(
 
         verification_payload = None
         verified = None
+        execution_payload = (
+            dict(result.get("result") or {})
+            if isinstance(result.get("result"), dict)
+            else {}
+        )
+        after_snapshot = None
         if execution_contract:
             execution_payload = (
                 dict(result.get("result") or {})
@@ -256,6 +264,40 @@ async def execute_runbook(
             result["verification"] = verification_payload
             result["verified"] = verified
 
+        memory_id = None
+        memory_error = None
+        if execution_contract:
+            try:
+                memory_id = await record_runbook_outcome(
+                    db,
+                    incident_id=incident_id,
+                    runbook=runbook,
+                    tool_name=tool_name,
+                    action=action,
+                    target=target,
+                    parameters=parameters,
+                    approval=consumed,
+                    execution_result=execution_payload,
+                    verification_result=dict(verification_payload or {}),
+                    before_snapshot=before_snapshot,
+                    after_snapshot=after_snapshot,
+                )
+                if memory_id:
+                    result["operational_memory_writeback"] = {
+                        "memory_id": memory_id,
+                        "verification_status": (
+                            verification_payload or {}
+                        ).get("status"),
+                    }
+            except Exception as exc:
+                memory_error = type(exc).__name__
+                logger.error(
+                    "runbook_operational_memory_writeback_failed",
+                    incident_id=incident_id,
+                    runbook_id=runbook_id,
+                    error_type=memory_error,
+                )
+
         await _audit_durable(
             db,
             identity.subject,
@@ -272,6 +314,8 @@ async def execute_runbook(
                 "verified": verified,
                 "verification": verification_payload,
                 "precondition": precondition,
+                "memory_id": memory_id,
+                "memory_error": memory_error,
             },
         )
         return result
