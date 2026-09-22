@@ -29,6 +29,7 @@ from apps.execution_service.tools.registry import tool_registry
 from apps.memory_service import OperationalMemoryService
 from apps.memory_service.builder import OperationalMemoryBuilder
 from apps.rag_service import KnowledgeRAGService
+from apps.runbook_service.registry import RunbookRegistry
 from apps.verification_service import VerificationEngine
 from domain.contracts.config import settings
 from domain.contracts.logging import logger
@@ -705,29 +706,106 @@ class E2EOrchestrator:
         state["current_node"] = "verification"
         before = dict(state.get("before_context") or {})
         after = dict(state.get("after_context") or {})
+
+        execution_request = dict(state.get("execution_request") or {})
+        runbook_id = str(execution_request.get("runbook_id") or "").strip()
+        verification_checks: List[Dict[str, Any]] = []
+        verification_window_seconds = int(
+            settings.AGENT_REFRESH_EVIDENCE_WINDOW_SECONDS
+        )
+        verification_contract_error: Optional[str] = None
+
+        if runbook_id:
+            try:
+                registry = RunbookRegistry()
+                runbook = registry.get(runbook_id)
+                validation = registry.validate(
+                    runbook_id,
+                    dict(execution_request.get("parameters") or {}),
+                )
+                verification = dict(runbook.get("verification") or {})
+                verification_checks = [
+                    item
+                    for item in verification.get("checks", [])
+                    if isinstance(item, dict)
+                ]
+                raw_window = verification.get("window_seconds")
+                if raw_window not in (None, ""):
+                    verification_window_seconds = max(
+                        1,
+                        min(int(raw_window), 3600),
+                    )
+                if not validation.get("valid") or not verification_checks:
+                    verification_contract_error = (
+                        "runbook_verification_contract_invalid"
+                    )
+            except (KeyError, OSError, TypeError, ValueError) as exc:
+                verification_contract_error = type(exc).__name__
+
         if not after:
             service = state.get("service_name") or "unknown"
             try:
-                since = datetime.now(timezone.utc) - timedelta(seconds=settings.AGENT_REFRESH_EVIDENCE_WINDOW_SECONDS)
-                after["live_evidence"] = await self.evidence_collector.collect(service, since)
+                since = datetime.now(timezone.utc) - timedelta(
+                    seconds=verification_window_seconds
+                )
+                after["live_evidence"] = await self.evidence_collector.collect(
+                    service, since
+                )
                 state["after_context"] = after
             except Exception as exc:
-                logger.warning(f"Post-execution evidence collection failed: {exc}")
+                logger.warning(
+                    "Post-execution evidence collection failed: %s",
+                    exc,
+                )
                 after = {}
+
         result = await VerificationEngine.verify_action(
             action_plan=state.get("final_plan", ""),
             service=state.get("service_name") or "unknown",
             before_context=before,
             after_context=after,
+            verification_objectives=verification_checks,
         )
-        state["verification_result"] = result.model_dump(mode="json")
-        state.setdefault("context", {})["post_execution_evidence"] = after.get("live_evidence", {})
+
+        if runbook_id and verification_contract_error:
+            result = result.model_copy(
+                update={
+                    "status": VerificationStatus.INCONCLUSIVE,
+                    "confidence": min(float(result.confidence), 0.4),
+                    "verification_policy": "runbook_contract_unavailable",
+                    "required_objectives_met": False,
+                    "message": (
+                        "Runbook verification contract unavailable or invalid: "
+                        f"{verification_contract_error}. "
+                        + result.message
+                    ),
+                }
+            )
+
+        verification_payload = result.model_dump(mode="json")
+        verification_payload.update(
+            {
+                "runbook_id": runbook_id or None,
+                "verification_window_seconds": verification_window_seconds,
+                "verification_contract_error": verification_contract_error,
+            }
+        )
+        state["verification_result"] = verification_payload
+        state.setdefault("context", {})["post_execution_evidence"] = after.get(
+            "live_evidence", {}
+        )
         self._audit(
             "verification_completed",
             state,
             status=result.status.value,
             confidence=result.confidence,
-            evidence_count=len(after.get("live_evidence", {}).get("evidence", [])),
+            evidence_count=len(
+                after.get("live_evidence", {}).get("evidence", [])
+            ),
+            runbook_id=runbook_id or None,
+            verification_objective_count=len(verification_checks),
+            required_objectives_met=result.required_objectives_met,
+            verification_contract_error=verification_contract_error,
         )
         return state
 
