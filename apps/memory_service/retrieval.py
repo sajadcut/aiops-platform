@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
 from sqlalchemy import and_, desc, func, or_, select
@@ -156,4 +157,13 @@ def rrf_score(
         0.02,
         max(0.0, float(entry.effectiveness_score or 0.0)) * 0.02,
     )
+    if entry.created_at is not None:
+        created = entry.created_at
+        if created.tzinfo is None:
+            created = created.replace(tzinfo=timezone.utc)
+        age_days = max(
+            0.0,
+            (datetime.now(timezone.utc) - created).total_seconds() / 86400.0,
+        )
+        score += 0.01 / (1.0 + (age_days / 30.0))
     return score
