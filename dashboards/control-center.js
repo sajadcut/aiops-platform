@@ -210,7 +210,7 @@ function renderLifecycleSummary() {
     ['Execution success', x.execution_success || 0, `${x.execution_failed || 0} failed · ${x.execution_blocked || 0} blocked`],
     ['Verification success', x.verification_success || 0, `${x.verification_partial || 0} partial · ${x.verification_inconclusive || 0} inconclusive`],
     ['Memory episodes', x.memory_entries_total || 0, `${x.memory_entries_active || 0} active`],
-    ['Embedding ready', x.memory_embedding_ready || 0, `${x.memory_embedding_failed || 0} failed · ${x.memory_embedding_pending || 0} pending`],
+    ['Embedding ready', x.memory_embedding_ready || 0, `${x.memory_embedding_backlog || 0} backlog · ${x.memory_embedding_contract_mismatch || 0} contract mismatch · ${x.memory_embedding_failed || 0} failed · ${x.memory_embedding_pending || 0} pending`],
     ['Memory write-back audit', x.memory_persisted || 0, `${x.memory_not_persisted || 0} not persisted`]
   ];
   $('#automationLifecycle').innerHTML = items.map(([label, value, meta]) => `<div class="lifecycle-node"><span>${esc(label)}</span><strong>${esc(value)}</strong><small>${esc(meta)}</small></div>`).join('');
