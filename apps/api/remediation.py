@@ -14,9 +14,11 @@ from apps.audit_service import AuditService
 from apps.audit_service.postgres import PostgreSQLAuditStore
 from apps.execution_service import ExecutionRequest, ExecutionService
 from apps.runbook_service.registry import RunbookRegistry
+from apps.runbook_service.learning import record_runbook_outcome
 from apps.runbook_service.runtime_guard import RunbookRuntimeGuard
 from apps.security.auth import require_permission
 from database import AsyncSessionLocal
+from domain.contracts.logging import logger
 from domain.models import Finding, Incident
 
 router = APIRouter()
@@ -206,6 +208,9 @@ async def execute_approved_remediation(approval_id: str, identity=Depends(requir
             "approval_id": approval_id, "tool_name": "ssh_vm", "target": target,
         })
 
+        runbook = RunbookRegistry("runbooks").get(runbook_id)
+        after_snapshot = None
+
         request = ExecutionRequest(
             tool_name="ssh_vm",
             action=action,
@@ -232,7 +237,6 @@ async def execute_approved_remediation(approval_id: str, identity=Depends(requir
                 incident_id=incident_id,
                 phase="post",
             )
-            runbook = RunbookRegistry("runbooks").get(runbook_id)
             verification = await RunbookRuntimeGuard.verify(
                 runbook=runbook,
                 action=action,
@@ -264,6 +268,39 @@ async def execute_approved_remediation(approval_id: str, identity=Depends(requir
         response["verification"] = verification_payload
         response["verified"] = verified
 
+        memory_id = None
+        memory_error = None
+        try:
+            memory_id = await record_runbook_outcome(
+                db,
+                incident_id=incident_id,
+                runbook=runbook,
+                tool_name=request.tool_name,
+                action=request.action,
+                target=request.target,
+                parameters=dict(request.parameters or {}),
+                approval=consumed,
+                execution_result=result.model_dump(mode="json"),
+                verification_result=dict(verification_payload or {}),
+                before_snapshot=before_snapshot,
+                after_snapshot=after_snapshot,
+            )
+            if memory_id:
+                response["operational_memory_writeback"] = {
+                    "memory_id": memory_id,
+                    "verification_status": (
+                        verification_payload or {}
+                    ).get("status"),
+                }
+        except Exception as exc:
+            memory_error = type(exc).__name__
+            logger.error(
+                "remediation_operational_memory_writeback_failed",
+                incident_id=incident_id,
+                action=action,
+                error_type=memory_error,
+            )
+
         await _audit_durable(
             db,
             "remediation_executed",
@@ -277,6 +314,8 @@ async def execute_approved_remediation(approval_id: str, identity=Depends(requir
                 "precondition": precondition,
                 "verification": verification_payload,
                 "verified": verified,
+                "memory_id": memory_id,
+                "memory_error": memory_error,
             },
         )
         return response
