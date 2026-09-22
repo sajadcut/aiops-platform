@@ -10,6 +10,7 @@ from apps.memory_service.builder import OperationalMemoryBuilder
 from database import AsyncSessionLocal
 from domain.contracts.config import settings
 from domain.models import MemoryEntry, MemoryReuseEvent
+from knowledge import EmbeddingService
 
 
 pytestmark = pytest.mark.skipif(
@@ -87,6 +88,42 @@ def _state(incident_id: str, *, success: bool = True):
             "message": "verified recovery" if success else "recovery failed",
         },
     }
+
+
+@pytest.mark.asyncio
+async def test_memory_v2_lexical_retrieval_survives_embedding_provider_outage(monkeypatch):
+    incident_id = str(uuid4())
+
+    async with AsyncSessionLocal() as db:
+        service = OperationalMemoryService(db)
+        episode = OperationalMemoryBuilder.build(
+            _state(incident_id, success=True)
+        )
+        memory_id = await service.add_episode(episode)
+
+        async def embedding_down(_text):
+            raise RuntimeError("embedding-provider-down")
+
+        monkeypatch.setattr(
+            EmbeddingService,
+            "generate_embedding",
+            embedding_down,
+        )
+
+        results = await service.retrieve(
+            "nginx inactive port 86 unavailable",
+            service_scope="nginx",
+            environment="test",
+            retrieval_mode="SIMILAR_INCIDENT",
+            limit=10,
+            successful_only=False,
+        )
+
+        assert str(memory_id) in {item["id"] for item in results}
+        match = next(item for item in results if item["id"] == str(memory_id))
+        assert match["lexical_score"] > 0
+        assert match["safe_as_evidence"] is False
+        assert match["requires_current_validation"] is True
 
 
 @pytest.mark.asyncio
