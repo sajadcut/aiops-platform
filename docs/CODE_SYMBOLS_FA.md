@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 394 | Dashboard JS files scanned: 5 | Symbols indexed: 3511**
+**Python files scanned: 394 | Dashboard JS files scanned: 5 | Symbols indexed: 3514**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -2179,16 +2179,19 @@
 | `tests/security/test_logging_redaction.py` | `test_safe_json_body_omits_non_json` | 49 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/security/test_route_auth_surface.py` | `_has_permission_dependency` | 15 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/security/test_route_auth_surface.py` | `test_every_non_public_api_route_has_explicit_permission_dependency` | 33 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/security/test_runbook_approval_boundary.py` | `_Registry` | 7 | class | کلاس | module |
-| `tests/security/test_runbook_approval_boundary.py` | `_Registry.get` | 8 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Registry |
-| `tests/security/test_runbook_approval_boundary.py` | `_Registry.validate` | 19 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | _Registry |
-| `tests/security/test_runbook_approval_boundary.py` | `_result` | 23 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `tests/security/test_runbook_approval_boundary.py` | `test_non_empty_approval_id_does_not_grant_execution` | 36 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/security/test_runbook_approval_boundary.py` | `test_non_empty_approval_id_does_not_grant_execution.fake_execute` | 39 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_non_empty_approval_id_does_not_grant_execution |
-| `tests/security/test_runbook_approval_boundary.py` | `test_validated_upstream_approval_context_is_propagated` | 60 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/security/test_runbook_approval_boundary.py` | `test_validated_upstream_approval_context_is_propagated.fake_execute` | 63 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_validated_upstream_approval_context_is_propagated |
-| `tests/security/test_runbook_approval_boundary.py` | `test_replay_cache_is_scoped_to_same_consumed_approval` | 86 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/security/test_runbook_approval_boundary.py` | `test_replay_cache_is_scoped_to_same_consumed_approval.fake_execute` | 89 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_replay_cache_is_scoped_to_same_consumed_approval |
+| `tests/security/test_runbook_approval_boundary.py` | `_Registry` | 9 | class | کلاس | module |
+| `tests/security/test_runbook_approval_boundary.py` | `_Registry.get` | 10 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Registry |
+| `tests/security/test_runbook_approval_boundary.py` | `_Registry.validate` | 21 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | _Registry |
+| `tests/security/test_runbook_approval_boundary.py` | `_result` | 25 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/security/test_runbook_approval_boundary.py` | `_consumed_context` | 37 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/security/test_runbook_approval_boundary.py` | `test_plain_approval_boolean_and_id_do_not_grant_execution` | 62 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/security/test_runbook_approval_boundary.py` | `test_plain_approval_boolean_and_id_do_not_grant_execution.fake_execute` | 65 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_plain_approval_boolean_and_id_do_not_grant_execution |
+| `tests/security/test_runbook_approval_boundary.py` | `test_consumed_bound_execution_claim_is_propagated_once` | 87 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/security/test_runbook_approval_boundary.py` | `test_consumed_bound_execution_claim_is_propagated_once.fake_execute` | 90 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_consumed_bound_execution_claim_is_propagated_once |
+| `tests/security/test_runbook_approval_boundary.py` | `test_replay_cache_is_scoped_to_same_consumed_approval` | 117 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/security/test_runbook_approval_boundary.py` | `test_replay_cache_is_scoped_to_same_consumed_approval.fake_execute` | 120 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_replay_cache_is_scoped_to_same_consumed_approval |
+| `tests/security/test_runbook_approval_boundary.py` | `test_consumed_claim_cannot_be_replayed_through_new_executor` | 164 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/security/test_runbook_approval_boundary.py` | `test_consumed_claim_cannot_be_replayed_through_new_executor.fake_execute` | 167 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_consumed_claim_cannot_be_replayed_through_new_executor |
 | `tests/security/test_vm_mcp_security.py` | `test_vm_target_and_service_allowlists` | 10 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/security/test_vm_mcp_security.py` | `test_production_vm_edge_rejects_root_and_missing_host_pinning` | 23 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/security/test_vm_mcp_security.py` | `_FakeVMConnector` | 40 | class | کلاس | module |
