@@ -178,6 +178,42 @@ def test_episode_fingerprint_is_not_changed_by_secret_value_rotation():
     assert first["episode_fingerprint"] == second["episode_fingerprint"]
 
 
+def test_builder_preserves_investigation_rca_and_evidence_requests():
+    state = _state()
+    state["triage_result"] = {
+        "summary": "Live evidence shows nginx inactive and port 86 unavailable.",
+        "confidence": 0.91,
+    }
+    state["final_plan"] = (
+        "RCA synthesis: current service state is proven unhealthy; "
+        "historical stop cause remains unconfirmed."
+    )
+    state["findings"][0]["recommended_checks"] = [
+        "inspect historical systemd journal"
+    ]
+    state["findings"][0]["evidence_requests"] = [
+        {
+            "evidence_type": "service_logs",
+            "reason": "identify the last transition before nginx became inactive",
+            "preferred_source": "vm_mcp",
+        }
+    ]
+
+    episode = OperationalMemoryBuilder.build(state)
+    investigation = episode["investigation"]
+
+    assert investigation["triage"]["summary"].startswith("Live evidence")
+    assert investigation["rca_synthesis"].startswith("RCA synthesis")
+    assert investigation["specialist_findings"][0]["agent"] == "vm"
+    assert investigation["specialist_findings"][0]["recommended_checks"] == [
+        "inspect historical systemd journal"
+    ]
+    assert investigation["evidence_requests"][0]["evidence_type"] == "service_logs"
+    assert "Live evidence shows nginx inactive" in investigation["investigation_summary"]
+    assert "RCA synthesis" in episode["embedding_document"]
+    assert "historical stop cause remains unconfirmed" in episode["search_document"]
+
+
 def test_builder_does_not_convert_recovery_into_confirmed_cause():
     state = _state()
     state["triage_result"] = {
