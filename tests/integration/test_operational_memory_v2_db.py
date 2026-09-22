@@ -127,6 +127,47 @@ async def test_memory_v2_lexical_retrieval_survives_embedding_provider_outage(mo
 
 
 @pytest.mark.asyncio
+async def test_memory_v2_reembeds_stale_embedding_contract():
+    incident_id = str(uuid4())
+
+    async with AsyncSessionLocal() as db:
+        service = OperationalMemoryService(db)
+        episode = OperationalMemoryBuilder.build(
+            _state(incident_id, success=True)
+        )
+        memory_id = await service.add_episode(episode)
+        row = await db.get(MemoryEntry, memory_id)
+        assert row is not None
+        assert row.embedding is not None
+
+        row.embedding_model = "obsolete-embedding-model"
+        await db.commit()
+
+        lexical_only = await service.retrieve(
+            "nginx inactive port 86 unavailable",
+            service_scope="nginx",
+            environment="test",
+            retrieval_mode="SIMILAR_INCIDENT",
+            limit=10,
+            successful_only=False,
+        )
+        match = next(item for item in lexical_only if item["id"] == str(memory_id))
+        assert match["lexical_score"] > 0
+        assert match["vector_similarity"] == 0.0
+
+        result = await service.backfill_embeddings(limit=100)
+        assert result["selected"] >= 1
+
+        await db.refresh(row)
+        assert row.embedding_status == "ready"
+        assert row.embedding_provider == settings.EMBEDDING_PROVIDER
+        assert row.embedding_model == settings.EMBEDDING_MODEL
+        assert row.embedding_dimension == settings.EMBEDDING_DIMENSION
+        assert row.embedding_document_version == OperationalMemoryBuilder.EMBEDDING_DOCUMENT_VERSION
+        assert row.embedding is not None
+
+
+@pytest.mark.asyncio
 async def test_memory_v2_postgres_hybrid_retrieval_and_feedback():
     successful_incident = str(uuid4())
     failed_incident = str(uuid4())
