@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 393 | Dashboard JS files scanned: 5 | Symbols indexed: 3502**
+**Python files scanned: 395 | Dashboard JS files scanned: 5 | Symbols indexed: 3511**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -788,6 +788,8 @@
 | `apps/approval_service/binding.py` | `intent_digest` | 43 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/approval_service/binding.py` | `bind_metadata` | 48 | function | Store a non-secret readable summary plus a digest of the complete intent. | module |
 | `apps/approval_service/binding.py` | `assert_bound` | 76 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/approval_service/execution_claim.py` | `issue_execution_claim` | 11 | function | Mint one process-local single-use execution capability. | module |
+| `apps/approval_service/execution_claim.py` | `redeem_execution_claim` | 25 | function | Atomically redeem a previously issued claim exactly once. | module |
 | `apps/approval_service/postgres.py` | `_db_timestamp` | 20 | function | Normalize ISO-8601 application timestamps for asyncpg TIMESTAMPTZ binds. | module |
 | `apps/approval_service/postgres.py` | `PostgreSQLApprovalStore` | 39 | class | Approval durable با expiry، transition اتمیک و consume یک‌باره قبل از execution. | module |
 | `apps/approval_service/postgres.py` | `PostgreSQLApprovalStore.__init__` | 42 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | PostgreSQLApprovalStore |
@@ -3225,6 +3227,13 @@
 | `tests/unit/test_runbook_learning.py` | `_runbook` | 35 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_runbook_learning.py` | `test_direct_runbook_success_builds_verified_operational_memory_episode` | 43 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_runbook_learning.py` | `test_direct_runbook_execution_failure_builds_negative_memory_episode` | 92 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_runbook_operational_memory_learning.py` | `_kwargs` | 6 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_runbook_operational_memory_learning.py` | `test_failed_governed_runbook_is_learned_even_without_snapshot_evidence` | 32 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_runbook_operational_memory_learning.py` | `test_failed_governed_runbook_is_learned_even_without_snapshot_evidence.add_episode` | 35 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_failed_governed_runbook_is_learned_even_without_snapshot_evidence |
+| `tests/unit/test_runbook_operational_memory_learning.py` | `test_successful_runbook_without_evidence_is_not_promoted_to_reusable_memory` | 51 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_runbook_operational_memory_learning.py` | `test_successful_runbook_without_evidence_is_not_promoted_to_reusable_memory.add_episode` | 54 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_successful_runbook_without_evidence_is_not_promoted_to_reusable_memory |
+| `tests/unit/test_runbook_operational_memory_learning.py` | `test_successful_runbook_with_evidence_is_persisted` | 71 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_runbook_operational_memory_learning.py` | `test_successful_runbook_with_evidence_is_persisted.add_episode` | 72 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_successful_runbook_with_evidence_is_persisted |
 | `tests/unit/test_runbook_registry_governance.py` | `test_repository_runbooks_load_with_governance_and_verification` | 11 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_runbook_registry_governance.py` | `test_registry_dry_run_exposes_preconditions_rollback_and_verification` | 28 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_runbook_registry_governance.py` | `test_strict_validator_rejects_missing_verification` | 37 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
