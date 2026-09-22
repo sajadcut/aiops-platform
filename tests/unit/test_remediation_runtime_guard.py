@@ -227,3 +227,233 @@ async def test_remediation_success_requires_post_action_verification(monkeypatch
     assert len(memory_calls) == 1
     assert memory_calls[0]["incident_id"] == "incident-1"
     assert memory_calls[0]["action"] == "start_service"
+
+
+class _ConsumedStore(_Store):
+    dry_run = False
+
+    async def get(self, approval_id):
+        return {
+            "approval_id": approval_id,
+            "incident_id": "33333333-3333-3333-3333-333333333333",
+            "action": "start_service",
+            "status": "consumed",
+            "metadata": {
+                "service": "nginx",
+                "target": "10.100.6.199",
+                "target_port": 86,
+                "runbook_id": "vm-service-recovery",
+                "runbook_version": "1.1",
+                "dry_run": self.__class__.dry_run,
+            },
+        }
+
+
+class _Rows:
+    def __init__(self, rows):
+        self._rows = rows
+
+    def scalars(self):
+        return self
+
+    def all(self):
+        return list(self._rows)
+
+
+class _VerificationSession(_Session):
+    rows = []
+
+    async def execute(self, _statement):
+        return _Rows(self.__class__.rows)
+
+
+@pytest.mark.asyncio
+async def test_manual_verification_rejects_dry_run(monkeypatch):
+    _ConsumedStore.dry_run = True
+    monkeypatch.setattr(api, "AsyncSessionLocal", lambda: _VerificationSession())
+    monkeypatch.setattr(api, "PostgreSQLApprovalStore", _ConsumedStore)
+
+    with pytest.raises(HTTPException) as exc:
+        await api.verify_remediation(
+            "approval-1",
+            api.VMVerificationRequest(),
+            identity=_identity(),
+        )
+
+    assert exc.value.status_code == 409
+    assert exc.value.detail == "dry_run_has_no_executed_recovery_to_verify"
+    _ConsumedStore.dry_run = False
+
+
+@pytest.mark.asyncio
+async def test_manual_verification_uses_runbook_objectives_and_validates_matching_memory(monkeypatch):
+    from uuid import UUID
+
+    _ConsumedStore.dry_run = False
+    memory_row = SimpleNamespace(
+        id=UUID("44444444-4444-4444-4444-444444444444"),
+        actual_remediation={"approval_id": "approval-1"},
+    )
+    _VerificationSession.rows = [memory_row]
+
+    monkeypatch.setattr(api, "AsyncSessionLocal", lambda: _VerificationSession())
+    monkeypatch.setattr(api, "PostgreSQLApprovalStore", _ConsumedStore)
+    monkeypatch.setattr(api, "RunbookRegistry", _Registry)
+
+    async def no_audit(*args, **kwargs):
+        return None
+
+    monkeypatch.setattr(api, "_audit_durable", no_audit)
+
+    snapshot_calls = []
+
+    async def snapshot(**kwargs):
+        snapshot_calls.append(kwargs)
+        return {
+            "supported": True,
+            "read_success": True,
+            "error": None,
+            "evidence": [{"reference": "manual-post"}],
+            "context": {
+                "live_evidence": {
+                    "evidence": [
+                        {
+                            "reference": "manual-post-service",
+                            "raw_data": {
+                                "diagnostic": "service_status",
+                                "active_state": "active",
+                            },
+                        },
+                        {
+                            "reference": "manual-post-listener",
+                            "raw_data": {
+                                "diagnostic": "port_listener_status",
+                                "listening": True,
+                            },
+                        },
+                    ]
+                }
+            },
+        }
+
+    monkeypatch.setattr(api.RunbookRuntimeGuard, "collect_snapshot", snapshot)
+
+    verification = SimpleNamespace(
+        status=SimpleNamespace(value="success"),
+        required_objectives_met=True,
+        model_dump=lambda mode=None: {
+            "status": "success",
+            "required_objectives_met": True,
+            "objective_results": [
+                {"target": "service_active", "passed": True},
+                {"target": "port_listening", "passed": True},
+            ],
+        },
+    )
+
+    async def verify(**kwargs):
+        assert kwargs["before_context"] == {}
+        assert kwargs["after_context"]["live_evidence"]["evidence"]
+        return verification
+
+    monkeypatch.setattr(api.RunbookRuntimeGuard, "verify", verify)
+
+    validated = []
+
+    class _Memory:
+        def __init__(self, _db):
+            pass
+
+        async def mark_validated(self, entry_id):
+            validated.append(str(entry_id))
+            return True
+
+    monkeypatch.setattr(api, "OperationalMemoryService", _Memory)
+
+    result = await api.verify_remediation(
+        "approval-1",
+        api.VMVerificationRequest(target="10.100.6.199"),
+        identity=_identity(),
+    )
+
+    assert result["verified"] is True
+    assert result["status"] == "verified"
+    assert result["verification_status"] == "success"
+    assert result["memory_id"] == "44444444-4444-4444-4444-444444444444"
+    assert result["memory_validated"] is True
+    assert validated == ["44444444-4444-4444-4444-444444444444"]
+    assert snapshot_calls[0]["phase"] == "manual_verify"
+    assert snapshot_calls[0]["parameters"] == {
+        "service": "nginx",
+        "target_port": 86,
+    }
+
+
+@pytest.mark.asyncio
+async def test_manual_failed_verification_does_not_revalidate_memory(monkeypatch):
+    from uuid import UUID
+
+    _ConsumedStore.dry_run = False
+    _VerificationSession.rows = [
+        SimpleNamespace(
+            id=UUID("55555555-5555-5555-5555-555555555555"),
+            actual_remediation={"approval_id": "approval-1"},
+        )
+    ]
+    monkeypatch.setattr(api, "AsyncSessionLocal", lambda: _VerificationSession())
+    monkeypatch.setattr(api, "PostgreSQLApprovalStore", _ConsumedStore)
+    monkeypatch.setattr(api, "RunbookRegistry", _Registry)
+
+    async def no_audit(*args, **kwargs):
+        return None
+
+    monkeypatch.setattr(api, "_audit_durable", no_audit)
+
+    async def snapshot(**kwargs):
+        return {
+            "supported": True,
+            "read_success": True,
+            "error": None,
+            "evidence": [],
+            "context": {"live_evidence": {"evidence": []}},
+        }
+
+    monkeypatch.setattr(api.RunbookRuntimeGuard, "collect_snapshot", snapshot)
+
+    verification = SimpleNamespace(
+        status=SimpleNamespace(value="failed"),
+        required_objectives_met=False,
+        model_dump=lambda mode=None: {
+            "status": "failed",
+            "required_objectives_met": False,
+        },
+    )
+
+    async def verify(**kwargs):
+        return verification
+
+    monkeypatch.setattr(api.RunbookRuntimeGuard, "verify", verify)
+
+    validated = []
+
+    class _Memory:
+        def __init__(self, _db):
+            pass
+
+        async def mark_validated(self, entry_id):
+            validated.append(str(entry_id))
+            return True
+
+    monkeypatch.setattr(api, "OperationalMemoryService", _Memory)
+
+    result = await api.verify_remediation(
+        "approval-1",
+        api.VMVerificationRequest(),
+        identity=_identity(),
+    )
+
+    assert result["verified"] is False
+    assert result["status"] == "not_recovered"
+    assert result["memory_id"] == "55555555-5555-5555-5555-555555555555"
+    assert result["memory_validated"] is False
+    assert validated == []
