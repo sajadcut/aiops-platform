@@ -10,6 +10,8 @@ from apps.audit_service import AuditService
 from apps.audit_service.postgres import PostgreSQLAuditStore
 from apps.execution_service import ExecutionRequest, ExecutionService
 from apps.execution_service.tools.registry import tool_registry
+from apps.runbook_service.registry import RunbookRegistry
+from apps.runbook_service.runtime_guard import RunbookRuntimeGuard
 from apps.security.auth import require_permission
 from apps.security.rbac import allowed
 from database import AsyncSessionLocal
@@ -136,6 +138,34 @@ async def reject(approval_id: str, payload: Dict[str, Any], identity=Depends(req
         return approval
 
 
+def _direct_runtime_contract(payload: Dict[str, Any]) -> Dict[str, Any]:
+    tool_name = str(payload.get("tool_name") or "").strip()
+    action = str(payload.get("action") or "").strip()
+    parameters = dict(payload.get("parameters") or {})
+    service = str(parameters.get("service") or "").strip()
+
+    if (
+        tool_name == "ssh_vm"
+        and action in {"start_service", "restart_service"}
+        and service
+    ):
+        requested_runbook = str(payload.get("runbook_id") or "").strip()
+        if requested_runbook and requested_runbook != RunbookRuntimeGuard.VM_SERVICE_RUNBOOK:
+            raise HTTPException(
+                status_code=409,
+                detail="direct_execution_runbook_contract_mismatch",
+            )
+        return {
+            "runbook_id": RunbookRuntimeGuard.VM_SERVICE_RUNBOOK,
+            "service": service,
+        }
+
+    raise HTTPException(
+        status_code=409,
+        detail="direct_execution_runtime_contract_required",
+    )
+
+
 def _validate_approval_binding(approval: Dict[str, Any], payload: Dict[str, Any]) -> None:
     incident_id = payload.get("incident_id")
     if incident_id is None:
@@ -177,6 +207,51 @@ async def execute(payload: Dict[str, Any], identity=Depends(require_permission("
             if approval is None:
                 raise HTTPException(status_code=404, detail="approval_not_found")
             _validate_approval_binding(approval, payload)
+
+            runtime_contract = _direct_runtime_contract(payload)
+            before_snapshot = await RunbookRuntimeGuard.collect_snapshot(
+                runbook_id=runtime_contract["runbook_id"],
+                target=str(payload["target"]),
+                parameters=dict(payload.get("parameters") or {}),
+                incident_id=incident_id,
+                phase="pre",
+            )
+            precondition = RunbookRuntimeGuard.preflight(
+                runbook_id=runtime_contract["runbook_id"],
+                tool_name=tool_name,
+                action=str(payload["action"]),
+                target=str(payload["target"]),
+                parameters=dict(payload.get("parameters") or {}),
+                incident_id=incident_id,
+                evidence=list(before_snapshot.get("evidence") or []),
+            )
+            if not precondition.get("safe_to_execute"):
+                await _audit_durable(
+                    db,
+                    "direct_execution_precondition_failed",
+                    identity.subject,
+                    incident_id,
+                    str(payload["action"]),
+                    {
+                        "approval_id": approval_id,
+                        "tool_name": tool_name,
+                        "target": payload["target"],
+                        "runbook_id": runtime_contract["runbook_id"],
+                        "precondition": precondition,
+                        "snapshot_error": before_snapshot.get("error"),
+                    },
+                )
+                raise HTTPException(
+                    status_code=409,
+                    detail=(
+                        "direct_execution_precondition_failed:"
+                        + str(
+                            precondition.get("reason")
+                            or "runtime_precondition_failed"
+                        )
+                    ),
+                )
+
             consumed = await store.consume(str(approval_id))
             if not consumed or consumed.get("status") != "consumed":
                 raise HTTPException(status_code=409, detail="approval_already_consumed_or_unavailable")
@@ -197,8 +272,72 @@ async def execute(payload: Dict[str, Any], identity=Depends(require_permission("
             rollback=bool(payload.get("rollback", False)),
         )
         result = await ExecutionService.execute(request)
-        await _audit_durable(db, "direct_execution_completed", identity.subject, incident_id or None, request.action, {
-            "tool_name": request.tool_name, "target": request.target, "success": result.success,
-            "blocked": result.execution_blocked, "approval_id": approval_id,
-        })
-        return result.model_dump()
+
+        response = result.model_dump()
+        verification_payload = None
+        verified = None
+        if tool.requires_approval:
+            if result.success:
+                after_snapshot = await RunbookRuntimeGuard.collect_snapshot(
+                    runbook_id=runtime_contract["runbook_id"],
+                    target=request.target,
+                    parameters=dict(request.parameters or {}),
+                    incident_id=incident_id,
+                    phase="post",
+                )
+                runbook = RunbookRegistry("runbooks").get(
+                    runtime_contract["runbook_id"]
+                )
+                verification = await RunbookRuntimeGuard.verify(
+                    runbook=runbook,
+                    action=request.action,
+                    service=runtime_contract["service"],
+                    before_context=dict(
+                        (before_snapshot or {}).get("context") or {}
+                    ),
+                    after_context=dict(
+                        after_snapshot.get("context") or {}
+                    ),
+                )
+                verification_payload = verification.model_dump(mode="json")
+                verification_payload["snapshot_error"] = after_snapshot.get(
+                    "error"
+                )
+                verified = (
+                    verification.status.value == "success"
+                    and verification.required_objectives_met is True
+                )
+            else:
+                verification_payload = {
+                    "status": "failed",
+                    "verification_policy": "execution_failed_before_verification",
+                    "required_objectives_met": False,
+                    "message": (
+                        result.error
+                        or result.reason
+                        or "Direct execution failed before recovery verification."
+                    ),
+                }
+                verified = False
+
+            response["precondition"] = precondition
+            response["verification"] = verification_payload
+            response["verified"] = verified
+
+        await _audit_durable(
+            db,
+            "direct_execution_completed",
+            identity.subject,
+            incident_id or None,
+            request.action,
+            {
+                "tool_name": request.tool_name,
+                "target": request.target,
+                "success": result.success,
+                "blocked": result.execution_blocked,
+                "approval_id": approval_id,
+                "verified": verified,
+                "verification": verification_payload,
+            },
+        )
+        return response
