@@ -38,3 +38,18 @@ def test_raw_templates_are_fail_closed_and_never_mutable():
         assert "registry.invalid/aiops-platform@sha256:" + ("0" * 64) in text
         assert ":latest" not in text
         assert "registry.internal/aiops-platform:2.2" not in text
+
+
+def test_memory_maintenance_cronjobs_are_non_overlapping_and_console_only():
+    for path in (
+        Path("deployment/kubernetes/memory-embedding-backfill-cronjob.yaml"),
+        Path("deployment/kubernetes/memory-stale-cronjob.yaml"),
+    ):
+        text = path.read_text(encoding="utf-8")
+        assert "concurrencyPolicy: Forbid" in text
+        assert 'name: LOG_CONSOLE_ENABLED' in text
+        assert 'name: LOG_TEXT_FILE_ENABLED' in text
+        assert 'name: LOG_JSON_FILE_ENABLED' in text
+        assert 'value: "false"' in text
+        assert "readOnlyRootFilesystem: true" in text
+        assert "automountServiceAccountToken: false" in text
