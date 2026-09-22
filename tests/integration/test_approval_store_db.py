@@ -135,6 +135,16 @@ async def test_duplicate_save_cannot_resurrect_terminal_approval_states():
         )
         assert replayed_expired["status"] == "expired"
 
+        # Isolate TTL semantics from the source-recovery scenario above.
+        await db.execute(
+            text(
+                "UPDATE incidents SET status='OPEN', context='{}'::jsonb "
+                "WHERE id=:incident_id"
+            ),
+            {"incident_id": incident_id},
+        )
+        await db.commit()
+
         # Expiry is enforced from created_at before approval/consume can be used.
         ttl_id = str(uuid4())
         ttl_record = _record(ttl_id, incident_id)
