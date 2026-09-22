@@ -46,6 +46,7 @@ class Settings(BaseSettings):
     MEMORY_RRF_K: int = Field(..., ge=1, le=1000)
     MEMORY_MAX_EMBEDDING_TEXT_CHARS: int = Field(..., ge=1000, le=100000)
     MEMORY_REUSE_FEEDBACK_ENABLED: bool = Field(...)
+    MEMORY_STALE_AFTER_DAYS: int = Field(..., ge=1, le=3650)
 
     COGNIA_BASE_URL: Optional[str] = Field(...)
     COGNIA_CLIENT_ID: Optional[str] = Field(...)
