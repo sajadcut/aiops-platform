@@ -826,12 +826,27 @@ class E2EOrchestrator:
                 evidence_count = int(
                     (episode.get("evidence_provenance") or {}).get("evidence_count") or 0
                 )
-                meaningful = bool(
-                    state.get("execution_result") or state.get("verification_result")
-                )
+                execution_result = dict(state.get("execution_result") or {})
+                verification_result = dict(state.get("verification_result") or {})
+                meaningful = bool(execution_result or verification_result)
+                execution_success = bool(execution_result.get("success"))
+                outcome_status = str(
+                    verification_result.get("status")
+                    or episode.get("verification_result")
+                    or "inconclusive"
+                ).lower()
+                negative_outcome = (
+                    bool(execution_result) and not execution_success
+                ) or outcome_status in {
+                    "failed",
+                    "failure",
+                    "blocked",
+                    "inconclusive",
+                    "partial",
+                }
                 if not meaningful:
                     reason = "no_operational_outcome"
-                elif evidence_count <= 0:
+                elif evidence_count <= 0 and not negative_outcome:
                     reason = "evidence_provenance_required"
                 else:
                     memory = OperationalMemoryService(self.db)
