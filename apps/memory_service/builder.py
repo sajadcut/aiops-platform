@@ -208,6 +208,7 @@ class OperationalMemoryBuilder:
             embedding_document.encode("utf-8")
         ).hexdigest()
         episode["search_document"] = cls._search_document(episode)
+        episode["episode_fingerprint"] = cls._episode_fingerprint(episode)
         return episode
 
     @classmethod
@@ -512,6 +513,39 @@ class OperationalMemoryBuilder:
             f"Historical {service} investigation was recorded as {outcome_class}. "
             "Use it only as auxiliary investigation context and validate all current operational claims from live evidence."
         )
+
+    @classmethod
+    def _episode_fingerprint(cls, episode: Dict[str, Any]) -> str:
+        remediation = dict(episode.get("actual_remediation") or {})
+        verification = dict(episode.get("verification") or {})
+        identity = {
+            "incident_id": str(episode.get("incident_id") or ""),
+            "service_scope": episode.get("service_scope"),
+            "environment": episode.get("environment"),
+            "remediation": {
+                "tool_name": remediation.get("tool_name"),
+                "action": remediation.get("action"),
+                "target": remediation.get("target"),
+                "service": remediation.get("service"),
+                "runbook_id": remediation.get("runbook_id"),
+                "runbook_version": remediation.get("runbook_version"),
+                "approval_id": remediation.get("approval_id"),
+                "execution_success": remediation.get("execution_success"),
+                "execution_blocked": remediation.get("execution_blocked"),
+            },
+            "verification": {
+                "status": verification.get("status"),
+                "before": verification.get("before"),
+                "after": verification.get("after"),
+                "evidence_refs": sorted(
+                    str(ref)
+                    for ref in (verification.get("evidence_refs") or [])
+                    if str(ref).strip()
+                ),
+            },
+            "memory_outcome_class": episode.get("memory_outcome_class"),
+        }
+        return cls._signature(identity)
 
     @classmethod
     def _search_document(cls, episode: Dict[str, Any]) -> str:
