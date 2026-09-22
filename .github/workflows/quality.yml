@@ -250,6 +250,10 @@ jobs:
         env:
           RUN_DB_CORRELATION_TEST: '1'
         run: python -m pytest -q tests/integration/test_signal_correlation_db.py
+      - name: Validate Operational Memory v2 hybrid retrieval and feedback
+        env:
+          RUN_DB_MEMORY_V2_TEST: '1'
+        run: python -m pytest -q tests/integration/test_operational_memory_v2_db.py
       - name: Validate upgrade from an existing older database
         shell: bash
         run: |
