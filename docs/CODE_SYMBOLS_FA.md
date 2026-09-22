@@ -3270,42 +3270,42 @@
 | `tests/unit/test_runtime_approval_resume.py` | `GuardedApprovalStore._metadata` | 30 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | GuardedApprovalStore |
 | `tests/unit/test_runtime_approval_resume.py` | `GuardedApprovalStore.get` | 44 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | GuardedApprovalStore |
 | `tests/unit/test_runtime_approval_resume.py` | `GuardedApprovalStore.consume` | 53 | async method | transition مربوط به Approval/Governance را اعمال می‌کند | GuardedApprovalStore |
-| `tests/unit/test_runtime_approval_resume.py` | `GuardedApprovalStore.cancel` | 63 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | GuardedApprovalStore |
-| `tests/unit/test_runtime_approval_resume.py` | `FakeApprovalStore` | 80 | class | کلاس | module |
-| `tests/unit/test_runtime_approval_resume.py` | `FakeApprovalStore.__init__` | 81 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeApprovalStore |
-| `tests/unit/test_runtime_approval_resume.py` | `FakeApprovalStore._metadata` | 85 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeApprovalStore |
-| `tests/unit/test_runtime_approval_resume.py` | `FakeApprovalStore.get` | 91 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeApprovalStore |
-| `tests/unit/test_runtime_approval_resume.py` | `FakeApprovalStore.consume` | 94 | async method | transition مربوط به Approval/Governance را اعمال می‌کند | FakeApprovalStore |
-| `tests/unit/test_runtime_approval_resume.py` | `FakeIncidentRepository` | 99 | class | کلاس | module |
-| `tests/unit/test_runtime_approval_resume.py` | `FakeIncidentRepository.__init__` | 100 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeIncidentRepository |
-| `tests/unit/test_runtime_approval_resume.py` | `FakeIncidentRepository.add_findings` | 103 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeIncidentRepository |
-| `tests/unit/test_runtime_approval_resume.py` | `FakeIncidentRepository.set_status` | 106 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeIncidentRepository |
-| `tests/unit/test_runtime_approval_resume.py` | `FakeIncidentRepository.commit` | 109 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeIncidentRepository |
-| `tests/unit/test_runtime_approval_resume.py` | `FakeAuditStore` | 113 | class | کلاس | module |
-| `tests/unit/test_runtime_approval_resume.py` | `FakeOrchestrator` | 117 | class | کلاس | module |
-| `tests/unit/test_runtime_approval_resume.py` | `FakeOrchestrator.__init__` | 121 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeOrchestrator |
-| `tests/unit/test_runtime_approval_resume.py` | `FakeOrchestrator._execution_node` | 124 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeOrchestrator |
-| `tests/unit/test_runtime_approval_resume.py` | `FakeOrchestrator._verification_node` | 129 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeOrchestrator |
-| `tests/unit/test_runtime_approval_resume.py` | `FakeOrchestrator._memory_node` | 134 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeOrchestrator |
-| `tests/unit/test_runtime_approval_resume.py` | `FakeOrchestrator._end_node` | 137 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeOrchestrator |
-| `tests/unit/test_runtime_approval_resume.py` | `ExecutionFailsOrchestrator` | 142 | class | کلاس | module |
-| `tests/unit/test_runtime_approval_resume.py` | `ExecutionFailsOrchestrator._execution_node` | 147 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ExecutionFailsOrchestrator |
-| `tests/unit/test_runtime_approval_resume.py` | `ExecutionFailsOrchestrator._verification_node` | 151 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ExecutionFailsOrchestrator |
-| `tests/unit/test_runtime_approval_resume.py` | `ExecutionFailsOrchestrator._memory_node` | 155 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ExecutionFailsOrchestrator |
-| `tests/unit/test_runtime_approval_resume.py` | `ExecutionFailsOrchestrator._end_node` | 163 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ExecutionFailsOrchestrator |
-| `tests/unit/test_runtime_approval_resume.py` | `VerificationFailsOrchestrator` | 169 | class | کلاس | module |
-| `tests/unit/test_runtime_approval_resume.py` | `VerificationFailsOrchestrator._verification_node` | 170 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VerificationFailsOrchestrator |
-| `tests/unit/test_runtime_approval_resume.py` | `_paused_state` | 175 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `tests/unit/test_runtime_approval_resume.py` | `_guarded_paused_state` | 183 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `tests/unit/test_runtime_approval_resume.py` | `_runtime` | 201 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `tests/unit/test_runtime_approval_resume.py` | `_runtime.no_audit` | 209 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _runtime |
-| `tests/unit/test_runtime_approval_resume.py` | `test_resume_injects_consumed_approval_context_into_execution_request` | 217 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_runtime_approval_resume.py` | `test_failed_execution_is_learned_without_verification_or_resolution` | 237 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_runtime_approval_resume.py` | `test_failed_verification_never_resolves_incident` | 257 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_runtime_approval_resume.py` | `test_durable_runtime_revokes_stale_approval_before_consume` | 270 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_runtime_approval_resume.py` | `test_durable_runtime_revokes_stale_approval_before_consume.snapshot` | 274 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_durable_runtime_revokes_stale_approval_before_consume |
-| `tests/unit/test_runtime_approval_resume.py` | `test_durable_runtime_keeps_retryable_approval_unconsumed` | 313 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_runtime_approval_resume.py` | `test_durable_runtime_keeps_retryable_approval_unconsumed.snapshot` | 317 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_durable_runtime_keeps_retryable_approval_unconsumed |
+| `tests/unit/test_runtime_approval_resume.py` | `GuardedApprovalStore.cancel` | 64 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | GuardedApprovalStore |
+| `tests/unit/test_runtime_approval_resume.py` | `FakeApprovalStore` | 81 | class | کلاس | module |
+| `tests/unit/test_runtime_approval_resume.py` | `FakeApprovalStore.__init__` | 82 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeApprovalStore |
+| `tests/unit/test_runtime_approval_resume.py` | `FakeApprovalStore._metadata` | 86 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeApprovalStore |
+| `tests/unit/test_runtime_approval_resume.py` | `FakeApprovalStore.get` | 92 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeApprovalStore |
+| `tests/unit/test_runtime_approval_resume.py` | `FakeApprovalStore.consume` | 95 | async method | transition مربوط به Approval/Governance را اعمال می‌کند | FakeApprovalStore |
+| `tests/unit/test_runtime_approval_resume.py` | `FakeIncidentRepository` | 100 | class | کلاس | module |
+| `tests/unit/test_runtime_approval_resume.py` | `FakeIncidentRepository.__init__` | 101 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeIncidentRepository |
+| `tests/unit/test_runtime_approval_resume.py` | `FakeIncidentRepository.add_findings` | 104 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeIncidentRepository |
+| `tests/unit/test_runtime_approval_resume.py` | `FakeIncidentRepository.set_status` | 107 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeIncidentRepository |
+| `tests/unit/test_runtime_approval_resume.py` | `FakeIncidentRepository.commit` | 110 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeIncidentRepository |
+| `tests/unit/test_runtime_approval_resume.py` | `FakeAuditStore` | 114 | class | کلاس | module |
+| `tests/unit/test_runtime_approval_resume.py` | `FakeOrchestrator` | 118 | class | کلاس | module |
+| `tests/unit/test_runtime_approval_resume.py` | `FakeOrchestrator.__init__` | 122 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeOrchestrator |
+| `tests/unit/test_runtime_approval_resume.py` | `FakeOrchestrator._execution_node` | 125 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeOrchestrator |
+| `tests/unit/test_runtime_approval_resume.py` | `FakeOrchestrator._verification_node` | 130 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeOrchestrator |
+| `tests/unit/test_runtime_approval_resume.py` | `FakeOrchestrator._memory_node` | 135 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeOrchestrator |
+| `tests/unit/test_runtime_approval_resume.py` | `FakeOrchestrator._end_node` | 138 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeOrchestrator |
+| `tests/unit/test_runtime_approval_resume.py` | `ExecutionFailsOrchestrator` | 143 | class | کلاس | module |
+| `tests/unit/test_runtime_approval_resume.py` | `ExecutionFailsOrchestrator._execution_node` | 148 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ExecutionFailsOrchestrator |
+| `tests/unit/test_runtime_approval_resume.py` | `ExecutionFailsOrchestrator._verification_node` | 152 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ExecutionFailsOrchestrator |
+| `tests/unit/test_runtime_approval_resume.py` | `ExecutionFailsOrchestrator._memory_node` | 156 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ExecutionFailsOrchestrator |
+| `tests/unit/test_runtime_approval_resume.py` | `ExecutionFailsOrchestrator._end_node` | 164 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ExecutionFailsOrchestrator |
+| `tests/unit/test_runtime_approval_resume.py` | `VerificationFailsOrchestrator` | 170 | class | کلاس | module |
+| `tests/unit/test_runtime_approval_resume.py` | `VerificationFailsOrchestrator._verification_node` | 171 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VerificationFailsOrchestrator |
+| `tests/unit/test_runtime_approval_resume.py` | `_paused_state` | 176 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_runtime_approval_resume.py` | `_guarded_paused_state` | 184 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_runtime_approval_resume.py` | `_runtime` | 202 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_runtime_approval_resume.py` | `_runtime.no_audit` | 210 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _runtime |
+| `tests/unit/test_runtime_approval_resume.py` | `test_resume_injects_consumed_approval_context_into_execution_request` | 218 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_runtime_approval_resume.py` | `test_failed_execution_is_learned_without_verification_or_resolution` | 238 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_runtime_approval_resume.py` | `test_failed_verification_never_resolves_incident` | 258 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_runtime_approval_resume.py` | `test_durable_runtime_revokes_stale_approval_before_consume` | 271 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_runtime_approval_resume.py` | `test_durable_runtime_revokes_stale_approval_before_consume.snapshot` | 275 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_durable_runtime_revokes_stale_approval_before_consume |
+| `tests/unit/test_runtime_approval_resume.py` | `test_durable_runtime_keeps_retryable_approval_unconsumed` | 314 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_runtime_approval_resume.py` | `test_durable_runtime_keeps_retryable_approval_unconsumed.snapshot` | 318 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_durable_runtime_keeps_retryable_approval_unconsumed |
 | `tests/unit/test_runtime_error_contracts.py` | `test_llm_response_accepts_nested_usage_details` | 7 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_runtime_error_contracts.py` | `test_zabbix_primary_and_fallback_errors_raise_instead_of_empty_success` | 24 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_runtime_error_contracts.py` | `test_zabbix_primary_and_fallback_errors_raise_instead_of_empty_success.fake_call_tool` | 28 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_zabbix_primary_and_fallback_errors_raise_instead_of_empty_success |
