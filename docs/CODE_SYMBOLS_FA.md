@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 388 | Dashboard JS files scanned: 5 | Symbols indexed: 3420**
+**Python files scanned: 388 | Dashboard JS files scanned: 5 | Symbols indexed: 3421**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1044,14 +1044,15 @@
 | `apps/incident_service/repository.py` | `IncidentRepository.__init__` | 46 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentRepository |
 | `apps/incident_service/repository.py` | `IncidentRepository.upsert_incident` | 49 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentRepository |
 | `apps/incident_service/repository.py` | `IncidentRepository.set_status` | 99 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentRepository |
-| `apps/incident_service/repository.py` | `IncidentRepository.acquire_correlation_lock` | 104 | async method | Serialize creation for a deterministic correlation fingerprint. | IncidentRepository |
-| `apps/incident_service/repository.py` | `IncidentRepository.find_correlated_open_incident` | 111 | async method | Find a bounded open/analyzing incident with the same fingerprint. | IncidentRepository |
-| `apps/incident_service/repository.py` | `IncidentRepository.attach_correlated_signal` | 139 | async method | Attach a related trigger without rewriting the incident's primary source. | IncidentRepository |
-| `apps/incident_service/repository.py` | `IncidentRepository.find_incident_by_evidence_reference` | 162 | async method | Return the incident already owning a source event/reference. | IncidentRepository |
-| `apps/incident_service/repository.py` | `IncidentRepository.add_findings` | 187 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentRepository |
-| `apps/incident_service/repository.py` | `IncidentRepository._evidence_type` | 220 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentRepository |
-| `apps/incident_service/repository.py` | `IncidentRepository.add_evidence` | 227 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentRepository |
-| `apps/incident_service/repository.py` | `IncidentRepository.commit` | 258 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentRepository |
+| `apps/incident_service/repository.py` | `IncidentRepository.record_operational_outcome` | 104 | async method | Persist the governed execution outcome into incident state. | IncidentRepository |
+| `apps/incident_service/repository.py` | `IncidentRepository.acquire_correlation_lock` | 187 | async method | Serialize creation for a deterministic correlation fingerprint. | IncidentRepository |
+| `apps/incident_service/repository.py` | `IncidentRepository.find_correlated_open_incident` | 194 | async method | Find a bounded open/analyzing incident with the same fingerprint. | IncidentRepository |
+| `apps/incident_service/repository.py` | `IncidentRepository.attach_correlated_signal` | 222 | async method | Attach a related trigger without rewriting the incident's primary source. | IncidentRepository |
+| `apps/incident_service/repository.py` | `IncidentRepository.find_incident_by_evidence_reference` | 245 | async method | Return the incident already owning a source event/reference. | IncidentRepository |
+| `apps/incident_service/repository.py` | `IncidentRepository.add_findings` | 270 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentRepository |
+| `apps/incident_service/repository.py` | `IncidentRepository._evidence_type` | 303 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentRepository |
+| `apps/incident_service/repository.py` | `IncidentRepository.add_evidence` | 310 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentRepository |
+| `apps/incident_service/repository.py` | `IncidentRepository.commit` | 341 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentRepository |
 | `apps/mcp_server/main.py` | `JsonRpcRequest` | 20 | class | کلاس | module |
 | `apps/mcp_server/main.py` | `_provider` | 85 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/mcp_server/main.py` | `_parse_dt` | 92 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
