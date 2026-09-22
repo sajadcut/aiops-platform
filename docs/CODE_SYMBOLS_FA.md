@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 370 | Dashboard JS files scanned: 5 | Symbols indexed: 3254**
+**Python files scanned: 370 | Dashboard JS files scanned: 5 | Symbols indexed: 3255**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -2887,23 +2887,24 @@
 | `tests/unit/test_operational_memory_v2.py` | `test_episode_fingerprint_is_stable_and_changes_with_real_execution` | 146 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_operational_memory_v2.py` | `test_episode_fingerprint_is_stable_across_evidence_reference_refresh` | 159 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_operational_memory_v2.py` | `test_episode_fingerprint_is_not_changed_by_secret_value_rotation` | 171 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_operational_memory_v2.py` | `test_builder_does_not_convert_recovery_into_confirmed_cause` | 181 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_operational_memory_v2.py` | `_FakeScalars` | 191 | class | کلاس | module |
-| `tests/unit/test_operational_memory_v2.py` | `_FakeScalars.__init__` | 192 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _FakeScalars |
-| `tests/unit/test_operational_memory_v2.py` | `_FakeScalars.first` | 195 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _FakeScalars |
-| `tests/unit/test_operational_memory_v2.py` | `_FakeExecuteResult` | 199 | class | کلاس | module |
-| `tests/unit/test_operational_memory_v2.py` | `_FakeExecuteResult.__init__` | 200 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _FakeExecuteResult |
-| `tests/unit/test_operational_memory_v2.py` | `_FakeExecuteResult.scalars` | 203 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _FakeExecuteResult |
-| `tests/unit/test_operational_memory_v2.py` | `_FakeDB` | 207 | class | کلاس | module |
-| `tests/unit/test_operational_memory_v2.py` | `_FakeDB.__init__` | 208 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _FakeDB |
-| `tests/unit/test_operational_memory_v2.py` | `_FakeDB.add` | 213 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _FakeDB |
-| `tests/unit/test_operational_memory_v2.py` | `_FakeDB.execute` | 216 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | _FakeDB |
-| `tests/unit/test_operational_memory_v2.py` | `_FakeDB.commit` | 219 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _FakeDB |
-| `tests/unit/test_operational_memory_v2.py` | `_FakeDB.rollback` | 222 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _FakeDB |
-| `tests/unit/test_operational_memory_v2.py` | `_FakeDB.refresh` | 225 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _FakeDB |
-| `tests/unit/test_operational_memory_v2.py` | `_FakeDB.get` | 228 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _FakeDB |
-| `tests/unit/test_operational_memory_v2.py` | `test_embedding_failure_keeps_core_episode` | 236 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_operational_memory_v2.py` | `test_embedding_failure_keeps_core_episode.fail_embedding` | 237 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_embedding_failure_keeps_core_episode |
+| `tests/unit/test_operational_memory_v2.py` | `test_builder_preserves_investigation_rca_and_evidence_requests` | 181 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_operational_memory_v2.py` | `test_builder_does_not_convert_recovery_into_confirmed_cause` | 217 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_operational_memory_v2.py` | `_FakeScalars` | 227 | class | کلاس | module |
+| `tests/unit/test_operational_memory_v2.py` | `_FakeScalars.__init__` | 228 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _FakeScalars |
+| `tests/unit/test_operational_memory_v2.py` | `_FakeScalars.first` | 231 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _FakeScalars |
+| `tests/unit/test_operational_memory_v2.py` | `_FakeExecuteResult` | 235 | class | کلاس | module |
+| `tests/unit/test_operational_memory_v2.py` | `_FakeExecuteResult.__init__` | 236 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _FakeExecuteResult |
+| `tests/unit/test_operational_memory_v2.py` | `_FakeExecuteResult.scalars` | 239 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _FakeExecuteResult |
+| `tests/unit/test_operational_memory_v2.py` | `_FakeDB` | 243 | class | کلاس | module |
+| `tests/unit/test_operational_memory_v2.py` | `_FakeDB.__init__` | 244 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _FakeDB |
+| `tests/unit/test_operational_memory_v2.py` | `_FakeDB.add` | 249 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _FakeDB |
+| `tests/unit/test_operational_memory_v2.py` | `_FakeDB.execute` | 252 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | _FakeDB |
+| `tests/unit/test_operational_memory_v2.py` | `_FakeDB.commit` | 255 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _FakeDB |
+| `tests/unit/test_operational_memory_v2.py` | `_FakeDB.rollback` | 258 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _FakeDB |
+| `tests/unit/test_operational_memory_v2.py` | `_FakeDB.refresh` | 261 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _FakeDB |
+| `tests/unit/test_operational_memory_v2.py` | `_FakeDB.get` | 264 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _FakeDB |
+| `tests/unit/test_operational_memory_v2.py` | `test_embedding_failure_keeps_core_episode` | 272 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_operational_memory_v2.py` | `test_embedding_failure_keeps_core_episode.fail_embedding` | 273 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_embedding_failure_keeps_core_episode |
 | `tests/unit/test_operational_resilience_regressions.py` | `test_zabbix_problem_get_semantic_error_falls_back_to_active_view` | 17 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_operational_resilience_regressions.py` | `test_zabbix_problem_get_semantic_error_falls_back_to_active_view.call_tool` | 21 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_zabbix_problem_get_semantic_error_falls_back_to_active_view |
 | `tests/unit/test_operational_resilience_regressions.py` | `test_zabbix_problem_get_semantic_error_falls_back_to_active_view.json_content` | 27 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_zabbix_problem_get_semantic_error_falls_back_to_active_view |
