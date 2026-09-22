@@ -92,8 +92,16 @@ class OperationalMemoryBuilder:
 
         findings = [item for item in state.get("findings", []) if isinstance(item, dict)]
         coordination = dict(state.get("coordination") or {})
+        triage = dict(state.get("triage_result") or {})
         investigation = {
-            "investigation_summary": cls._sanitize_string(str(state.get("final_plan") or "")),
+            "investigation_summary": cls._investigation_summary(
+                triage=triage,
+                coordination=coordination,
+                findings=findings,
+            ),
+            "triage": cls._sanitize_value(triage),
+            "rca_synthesis": cls._sanitize_string(str(state.get("final_plan") or "")),
+            "specialist_findings": cls._specialist_findings(findings),
             "investigated_hypotheses": cls._hypotheses(findings),
             "rejected_hypotheses": cls._sanitize_value(coordination.get("rejected_hypotheses") or []),
             "missing_evidence": cls._dedupe_strings(
@@ -105,6 +113,7 @@ class OperationalMemoryBuilder:
                 ]
             ),
             "contradictions": cls._sanitize_value(coordination.get("contradictions") or []),
+            "evidence_requests": cls._evidence_requests(findings),
             "contributing_factors": cls._contributing_factors(findings),
             "specialist_agents_used": sorted({
                 str(item.get("agent_name") or item.get("agent") or "")
@@ -221,6 +230,13 @@ class OperationalMemoryBuilder:
             ("Environment", episode.get("environment")),
             ("Incident Pattern", episode.get("incident_pattern")),
             ("Observed Symptoms", episode.get("normalized_symptoms")),
+            ("Investigation", {
+                "summary": (episode.get("investigation") or {}).get("investigation_summary"),
+                "triage": (episode.get("investigation") or {}).get("triage"),
+                "hypotheses": (episode.get("investigation") or {}).get("investigated_hypotheses"),
+                "missing_evidence": (episode.get("investigation") or {}).get("missing_evidence"),
+                "contradictions": (episode.get("investigation") or {}).get("contradictions"),
+            }),
             ("Historical Root Cause", {
                 "status": episode.get("root_cause_status"),
                 "summary": episode.get("root_cause"),
@@ -423,6 +439,93 @@ class OperationalMemoryBuilder:
             return "false_positive"
         return "diagnostic_only"
 
+    @classmethod
+    def _investigation_summary(
+        cls,
+        *,
+        triage: Dict[str, Any],
+        coordination: Dict[str, Any],
+        findings: List[Dict[str, Any]],
+    ) -> str:
+        parts: List[str] = []
+        for value in (
+            coordination.get("summary"),
+            coordination.get("statement"),
+            triage.get("summary"),
+            triage.get("likely_cause"),
+        ):
+            text_value = str(value or "").strip()
+            if text_value and text_value not in parts:
+                parts.append(text_value)
+        for finding in sorted(
+            findings,
+            key=lambda item: float(item.get("confidence") or 0.0),
+            reverse=True,
+        )[:5]:
+            statement = str(
+                finding.get("statement") or finding.get("summary") or ""
+            ).strip()
+            if statement and statement not in parts:
+                parts.append(statement)
+        if not parts:
+            return "No durable investigation summary was produced."
+        return cls._sanitize_string(" | ".join(parts))
+
+    @classmethod
+    def _specialist_findings(
+        cls,
+        findings: List[Dict[str, Any]],
+    ) -> List[Dict[str, Any]]:
+        values: List[Dict[str, Any]] = []
+        for finding in findings[:50]:
+            values.append(
+                cls._sanitize_value(
+                    {
+                        "agent": finding.get("agent_name") or finding.get("agent"),
+                        "statement": finding.get("statement") or finding.get("summary"),
+                        "confidence": finding.get("confidence"),
+                        "severity": finding.get("severity"),
+                        "health_status": finding.get("health_status"),
+                        "evidence_ids": finding.get("evidence_ids") or [],
+                        "supporting_evidence_ids": finding.get("supporting_evidence_ids") or [],
+                        "conflicting_evidence_ids": finding.get("conflicting_evidence_ids") or [],
+                        "missing_evidence": finding.get("missing_evidence") or [],
+                        "recommended_checks": finding.get("recommended_checks") or [],
+                        "hypotheses": finding.get("hypotheses") or [],
+                    }
+                )
+            )
+        return values
+
+    @classmethod
+    def _evidence_requests(
+        cls,
+        findings: List[Dict[str, Any]],
+    ) -> List[Dict[str, Any]]:
+        requests: List[Dict[str, Any]] = []
+        seen: set[str] = set()
+        for finding in findings:
+            agent = str(finding.get("agent_name") or finding.get("agent") or "")
+            for request in finding.get("evidence_requests") or []:
+                if not isinstance(request, dict):
+                    continue
+                clean = cls._sanitize_value(
+                    {
+                        "agent": agent,
+                        "evidence_type": request.get("evidence_type"),
+                        "reason": request.get("reason"),
+                        "preferred_source": request.get("preferred_source"),
+                    }
+                )
+                signature = cls._stable_text(clean)
+                if signature in seen:
+                    continue
+                seen.add(signature)
+                requests.append(clean)
+                if len(requests) >= 100:
+                    return requests
+        return requests
+
     @staticmethod
     def _hypotheses(findings: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         values: List[Dict[str, Any]] = []
@@ -554,6 +657,7 @@ class OperationalMemoryBuilder:
             episode.get("platform"),
             episode.get("pattern"),
             episode.get("normalized_symptoms"),
+            episode.get("investigation"),
             episode.get("root_cause"),
             episode.get("root_cause_status"),
             episode.get("actual_remediation"),
