@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 386 | Dashboard JS files scanned: 5 | Symbols indexed: 3383**
+**Python files scanned: 386 | Dashboard JS files scanned: 5 | Symbols indexed: 3385**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -745,13 +745,13 @@
 | `apps/api/main.py` | `_validate_production_configuration` | 158 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/main.py` | `startup_event` | 249 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/main.py` | `shutdown_event` | 302 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/remediation.py` | `_audit_durable` | 25 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/remediation.py` | `_read_vm` | 31 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/remediation.py` | `RemediationRequest` | 38 | class | کلاس | module |
-| `apps/api/remediation.py` | `create_remediation_request` | 48 | async function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
-| `apps/api/remediation.py` | `execute_approved_remediation` | 101 | async function | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | module |
-| `apps/api/remediation.py` | `VMVerificationRequest` | 285 | class | کلاس | module |
-| `apps/api/remediation.py` | `verify_remediation` | 291 | async function | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | module |
+| `apps/api/remediation.py` | `_audit_durable` | 27 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/remediation.py` | `_read_vm` | 33 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/remediation.py` | `RemediationRequest` | 40 | class | کلاس | module |
+| `apps/api/remediation.py` | `create_remediation_request` | 50 | async function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
+| `apps/api/remediation.py` | `execute_approved_remediation` | 103 | async function | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | module |
+| `apps/api/remediation.py` | `VMVerificationRequest` | 324 | class | کلاس | module |
+| `apps/api/remediation.py` | `verify_remediation` | 330 | async function | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | module |
 | `apps/api/runbook_execution.py` | `_audit_durable` | 24 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/runbook_execution.py` | `_runbook_contract` | 30 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/runbook_execution.py` | `execute_runbook` | 100 | async function | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | module |
@@ -2639,7 +2639,8 @@
 | `tests/unit/test_direct_execution_runtime_guard.py` | `test_direct_execute_returns_verified_only_after_post_action_verification.no_audit` | 170 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_direct_execute_returns_verified_only_after_post_action_verification |
 | `tests/unit/test_direct_execution_runtime_guard.py` | `test_direct_execute_returns_verified_only_after_post_action_verification.snapshot` | 175 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_direct_execute_returns_verified_only_after_post_action_verification |
 | `tests/unit/test_direct_execution_runtime_guard.py` | `test_direct_execute_returns_verified_only_after_post_action_verification.verify` | 214 | async method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | test_direct_execute_returns_verified_only_after_post_action_verification |
-| `tests/unit/test_direct_execution_runtime_guard.py` | `test_direct_execute_returns_verified_only_after_post_action_verification.execute` | 219 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | test_direct_execute_returns_verified_only_after_post_action_verification |
+| `tests/unit/test_direct_execution_runtime_guard.py` | `test_direct_execute_returns_verified_only_after_post_action_verification.record_memory` | 221 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_direct_execute_returns_verified_only_after_post_action_verification |
+| `tests/unit/test_direct_execution_runtime_guard.py` | `test_direct_execute_returns_verified_only_after_post_action_verification.execute` | 227 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | test_direct_execute_returns_verified_only_after_post_action_verification |
 | `tests/unit/test_dotin_general_chatbot_llm.py` | `FakeResponse` | 13 | class | کلاس | module |
 | `tests/unit/test_dotin_general_chatbot_llm.py` | `FakeResponse.__init__` | 14 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeResponse |
 | `tests/unit/test_dotin_general_chatbot_llm.py` | `FakeResponse.raise_for_status` | 17 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeResponse |
@@ -3092,7 +3093,8 @@
 | `tests/unit/test_remediation_runtime_guard.py` | `test_remediation_success_requires_post_action_verification.no_audit` | 150 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_remediation_success_requires_post_action_verification |
 | `tests/unit/test_remediation_runtime_guard.py` | `test_remediation_success_requires_post_action_verification.snapshot` | 155 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_remediation_success_requires_post_action_verification |
 | `tests/unit/test_remediation_runtime_guard.py` | `test_remediation_success_requires_post_action_verification.verify` | 190 | async method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | test_remediation_success_requires_post_action_verification |
-| `tests/unit/test_remediation_runtime_guard.py` | `test_remediation_success_requires_post_action_verification.execute` | 195 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | test_remediation_success_requires_post_action_verification |
+| `tests/unit/test_remediation_runtime_guard.py` | `test_remediation_success_requires_post_action_verification.record_memory` | 197 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_remediation_success_requires_post_action_verification |
+| `tests/unit/test_remediation_runtime_guard.py` | `test_remediation_success_requires_post_action_verification.execute` | 203 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | test_remediation_success_requires_post_action_verification |
 | `tests/unit/test_runbook_api_preflight.py` | `_Session` | 9 | class | کلاس | module |
 | `tests/unit/test_runbook_api_preflight.py` | `_Session.__aenter__` | 10 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Session |
 | `tests/unit/test_runbook_api_preflight.py` | `_Session.__aexit__` | 13 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Session |
