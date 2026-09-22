@@ -751,10 +751,10 @@
 | `apps/api/remediation.py` | `execute_approved_remediation` | 84 | async function | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | module |
 | `apps/api/remediation.py` | `VMVerificationRequest` | 147 | class | کلاس | module |
 | `apps/api/remediation.py` | `verify_remediation` | 153 | async function | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | module |
-| `apps/api/runbook_execution.py` | `_audit_durable` | 22 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/runbook_execution.py` | `_runbook_contract` | 28 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/runbook_execution.py` | `execute_runbook` | 98 | async function | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | module |
-| `apps/api/runbook_execution.py` | `dry_run` | 281 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/runbook_execution.py` | `_audit_durable` | 24 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/runbook_execution.py` | `_runbook_contract` | 30 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/runbook_execution.py` | `execute_runbook` | 100 | async function | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | module |
+| `apps/api/runbook_execution.py` | `dry_run` | 325 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/runbooks.py` | `list_runbooks` | 11 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
 | `apps/api/runbooks.py` | `get_runbook` | 16 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
 | `apps/api/runbooks.py` | `dry_run` | 24 | async function | Validate a runbook without crossing the real execution boundary. | module |
@@ -1955,8 +1955,8 @@
 | `tests/integration/test_approval_store_db.py` | `_seed_incident` | 19 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/integration/test_approval_store_db.py` | `_record` | 35 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/integration/test_approval_store_db.py` | `test_duplicate_save_cannot_resurrect_terminal_approval_states` | 58 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/integration/test_approval_store_db.py` | `test_concurrent_consume_has_exactly_one_execution_authority_winner` | 175 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/integration/test_approval_store_db.py` | `test_concurrent_consume_has_exactly_one_execution_authority_winner.claim` | 186 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_concurrent_consume_has_exactly_one_execution_authority_winner |
+| `tests/integration/test_approval_store_db.py` | `test_concurrent_consume_has_exactly_one_execution_authority_winner` | 185 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/integration/test_approval_store_db.py` | `test_concurrent_consume_has_exactly_one_execution_authority_winner.claim` | 196 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_concurrent_consume_has_exactly_one_execution_authority_winner |
 | `tests/integration/test_chatbot_db_acceptance.py` | `_seed_proposal` | 24 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/integration/test_chatbot_db_acceptance.py` | `test_chat_session_and_proposal_are_owner_scoped` | 65 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/integration/test_chatbot_db_acceptance.py` | `test_confirmed_vm_action_uses_durable_approval_consumption_and_is_not_replayable` | 79 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
