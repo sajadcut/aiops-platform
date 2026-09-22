@@ -261,6 +261,8 @@ async def test_memory_v2_postgres_hybrid_retrieval_and_feedback():
             record_retrieval=True,
         )
         before_reward = int(success_row.successful_reuse_count or 0)
+        before_cited = int(success_row.cited_count or 0)
+        before_reuse = int(success_row.reuse_count or 0)
         updated = await service.record_feedback(
             target_incident,
             execution_request={"action": "start_service"},
@@ -283,7 +285,48 @@ async def test_memory_v2_postgres_hybrid_retrieval_and_feedback():
         refreshed = await db.get(MemoryEntry, success_id)
         assert refreshed is not None
         assert int(refreshed.successful_reuse_count or 0) == before_reward + 1
+        assert int(refreshed.cited_count or 0) == before_cited + 1
+        assert int(refreshed.reuse_count or 0) == before_reuse + 1
         assert refreshed.effectiveness_score > 0
+
+        # Citation with a different current action is still a citation, but it
+        # must not be counted as action reuse or change effectiveness.
+        mismatch_target = str(uuid4())
+        await service.retrieve(
+            "nginx inactive port 86 tcp unreachable",
+            service_scope="nginx",
+            retrieval_mode="SIMILAR_INCIDENT",
+            limit=10,
+            successful_only=False,
+            target_incident_id=mismatch_target,
+            record_retrieval=True,
+        )
+        cited_before_mismatch = int(refreshed.cited_count or 0)
+        reuse_before_mismatch = int(refreshed.reuse_count or 0)
+        success_before_mismatch = int(refreshed.successful_reuse_count or 0)
+        effectiveness_before_mismatch = float(refreshed.effectiveness_score or 0.0)
+        await service.record_feedback(
+            mismatch_target,
+            execution_request={"action": "restart_service"},
+            verification_result={"status": "success"},
+            cited_memory_ids=[str(success_id)],
+        )
+        await db.refresh(refreshed)
+        assert int(refreshed.cited_count or 0) == cited_before_mismatch + 1
+        assert int(refreshed.reuse_count or 0) == reuse_before_mismatch
+        assert int(refreshed.successful_reuse_count or 0) == success_before_mismatch
+        assert float(refreshed.effectiveness_score or 0.0) == effectiveness_before_mismatch
+
+        mismatch_events = (
+            await db.execute(
+                select(MemoryReuseEvent).where(
+                    MemoryReuseEvent.target_incident_id == mismatch_target
+                )
+            )
+        ).scalars().all()
+        assert mismatch_events
+        assert any(event.was_cited_by_agent for event in mismatch_events)
+        assert not any(event.influenced_plan for event in mismatch_events)
 
         # Same action without an explicit historical-memory citation must not
         # receive a reuse reward merely because the action name matches.
