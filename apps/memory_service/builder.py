@@ -233,6 +233,7 @@ class OperationalMemoryBuilder:
             ("Investigation", {
                 "summary": (episode.get("investigation") or {}).get("investigation_summary"),
                 "triage": (episode.get("investigation") or {}).get("triage"),
+                "rca_synthesis": (episode.get("investigation") or {}).get("rca_synthesis"),
                 "hypotheses": (episode.get("investigation") or {}).get("investigated_hypotheses"),
                 "missing_evidence": (episode.get("investigation") or {}).get("missing_evidence"),
                 "contradictions": (episode.get("investigation") or {}).get("contradictions"),
