@@ -192,6 +192,40 @@ class PostgreSQLApprovalStore:
         # loser فقط وضعیت نهایی را می‌خواند و caller باید conflict را گزارش کند.
         return dict(row) if row else await self._get_raw(approval_id)
 
+    async def cancel(
+        self,
+        approval_id: str,
+        *,
+        reason: str,
+        metadata_patch: Optional[Dict[str, Any]] = None,
+    ) -> Optional[Dict[str, Any]]:
+        """Revoke one still-unconsumed authority token without touching peers."""
+        patch = {"cancellation_reason": reason, **dict(metadata_patch or {})}
+        row = (
+            await self.session.execute(
+                text(
+                    """
+                    UPDATE approvals
+                    SET status='rejected',
+                        rejected_at=CURRENT_TIMESTAMP,
+                        metadata=COALESCE(metadata, '{}'::jsonb)
+                            || CAST(:metadata_patch AS jsonb)
+                    WHERE approval_id=:approval_id
+                      AND status IN ('pending', 'approved')
+                    RETURNING approval_id, incident_id, action, risk_level,
+                              approver, status, metadata, created_at,
+                              approved_at, rejected_at
+                    """
+                ),
+                {
+                    "approval_id": approval_id,
+                    "metadata_patch": json.dumps(patch, default=str),
+                },
+            )
+        ).mappings().first()
+        await self.session.commit()
+        return dict(row) if row else await self._get_raw(approval_id)
+
     async def cancel_unconsumed_for_incident(
         self,
         incident_id: str,
