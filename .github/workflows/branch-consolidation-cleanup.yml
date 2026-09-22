@@ -1,0 +1,66 @@
+name: branch-consolidation-cleanup
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/branch-consolidation-cleanup.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  delete-non-main-branches:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Delete every remote branch except main
+        shell: bash
+        run: |
+          set -uo pipefail
+
+          mapfile -t branches < <(
+            git ls-remote --heads origin |
+            awk '{sub("refs/heads/","",$2); print $2}' |
+            sort
+          )
+
+          failed=0
+
+          for branch in "${branches[@]}"; do
+            if [[ -z "$branch" || "$branch" == "main" ]]; then
+              continue
+            fi
+
+            echo "Deleting remote branch: $branch"
+            if ! git push origin --delete "$branch"; then
+              echo "::error::Failed to delete branch: $branch"
+              failed=1
+            fi
+          done
+
+          mapfile -t remaining < <(
+            git ls-remote --heads origin |
+            awk '{sub("refs/heads/","",$2); print $2}' |
+            sort
+          )
+
+          echo "Remaining remote branches:"
+          printf '%s\n' "${remaining[@]}"
+
+          extras=0
+          for branch in "${remaining[@]}"; do
+            if [[ "$branch" != "main" ]]; then
+              echo "::error::Unexpected branch remains: $branch"
+              extras=1
+            fi
+          done
+
+          if [[ "$failed" -ne 0 || "$extras" -ne 0 ]]; then
+            exit 1
+          fi
