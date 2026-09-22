@@ -6,7 +6,7 @@ from uuid import uuid4
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
-from apps.orchestrator.runtime import DurableWorkflowRuntime
+from apps.orchestrator.learning_runtime import LearningDurableWorkflowRuntime
 from apps.security.auth import require_permission
 from apps.security.rbac import allowed
 from apps.api.cognia_scope import reject_untrusted_knowledge_subject
@@ -92,7 +92,7 @@ async def run_e2e_workflow(
             initial_state["execution_request"] = request.execution_request.model_dump()
 
         async with AsyncSessionLocal() as db:
-            result = await DurableWorkflowRuntime(db).start(initial_state)
+            result = await LearningDurableWorkflowRuntime(db).start(initial_state)
 
         return _response_from_result(result)
     except HTTPException:
@@ -110,7 +110,7 @@ async def resume_e2e_workflow(
     """Resume a paused workflow only after its durable approval is granted."""
     try:
         async with AsyncSessionLocal() as db:
-            result = await DurableWorkflowRuntime(db).resume_after_approval(incident_id)
+            result = await LearningDurableWorkflowRuntime(db).resume_after_approval(incident_id)
         return _response_from_result(result)
     except ValueError as exc:
         # Conflict reasons are deliberately bounded by runtime-defined codes.
