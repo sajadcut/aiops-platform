@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 369 | Dashboard JS files scanned: 5 | Symbols indexed: 3248**
+**Python files scanned: 369 | Dashboard JS files scanned: 5 | Symbols indexed: 3249**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1091,13 +1091,13 @@
 | `apps/memory_service/builder.py` | `OperationalMemoryBuilder._evidence_refs` | 467 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
 | `apps/memory_service/builder.py` | `OperationalMemoryBuilder._reusable_lesson` | 484 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
 | `apps/memory_service/builder.py` | `OperationalMemoryBuilder._episode_fingerprint` | 518 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
-| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._search_document` | 551 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
-| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._sanitize_value` | 574 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
-| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._is_sensitive_key` | 600 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
-| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._sanitize_string` | 619 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
-| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._stable_text` | 629 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
-| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._signature` | 641 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
-| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._dedupe_strings` | 646 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
+| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._search_document` | 546 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
+| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._sanitize_value` | 569 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
+| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._is_sensitive_key` | 595 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
+| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._sanitize_string` | 614 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
+| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._stable_text` | 624 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
+| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._signature` | 636 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
+| `apps/memory_service/builder.py` | `OperationalMemoryBuilder._dedupe_strings` | 641 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryBuilder |
 | `apps/memory_service/consolidation.py` | `summarize_entries` | 12 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/memory_service/consolidation.py` | `summarize_service` | 39 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/memory_service/feedback.py` | `_uuid` | 16 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
@@ -2003,8 +2003,9 @@
 | `tests/integration/test_health_probes.py` | `test_readiness_contract.healthy_db` | 14 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_readiness_contract |
 | `tests/integration/test_health_probes.py` | `test_readiness_contract.healthy_external` | 17 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_readiness_contract |
 | `tests/integration/test_master_api_surface.py` | `test_master_api_surface_is_registered` | 4 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/integration/test_operational_memory_v2_db.py` | `_state` | 21 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `tests/integration/test_operational_memory_v2_db.py` | `test_memory_v2_postgres_hybrid_retrieval_and_feedback` | 93 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/integration/test_operational_memory_v2_db.py` | `_state` | 22 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/integration/test_operational_memory_v2_db.py` | `test_memory_v2_lexical_retrieval_survives_embedding_provider_outage` | 94 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/integration/test_operational_memory_v2_db.py` | `test_memory_v2_postgres_hybrid_retrieval_and_feedback` | 130 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/integration/test_operator_summary_api.py` | `test_operator_summary_api_route_is_registered_read_only` | 8 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/integration/test_operator_summary_api.py` | `test_dashboard_serves_persian_operator_summary_ui_and_structured_api_call` | 14 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/integration/test_operator_summary_api.py` | `test_operator_summary_backend_is_deterministic_and_has_no_execution_path` | 37 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
