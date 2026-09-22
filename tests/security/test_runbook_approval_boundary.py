@@ -9,6 +9,7 @@ class _Registry:
         return {
             "id": runbook_id,
             "version": "1",
+            "action": "restart_service",
             "execution": {
                 "tool": "ssh_vm",
                 "allowed_actions": ["restart_service"],
