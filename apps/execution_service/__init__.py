@@ -3,6 +3,7 @@ from typing import Dict, Any, Optional
 from pydantic import BaseModel, Field
 
 from domain.contracts.logging import logger
+from apps.approval_service.execution_claim import redeem_execution_claim
 from apps.execution_service.tools.base import ToolInput
 from apps.execution_service.tools.registry import tool_registry
 
@@ -20,6 +21,7 @@ class ExecutionRequest(BaseModel):
     runbook_id: Optional[str] = None
     runbook_version: Optional[str] = None
     rollback: bool = False
+    execution_claim: Optional[str] = Field(default=None, exclude=True)
 
 
 class ExecutionResult(BaseModel):
@@ -73,6 +75,20 @@ class ExecutionService:
                     success=False, tool_name=request.tool_name, action=request.action, target=request.target,
                     execution_blocked=True, reason="approval_not_granted",
                     error="Approved execution requires durable approval validation", approval_id=request.approval_id,
+                )
+            if not redeem_execution_claim(str(request.execution_claim or "")):
+                return ExecutionResult(
+                    success=False,
+                    tool_name=request.tool_name,
+                    action=request.action,
+                    target=request.target,
+                    execution_blocked=True,
+                    reason="approval_execution_claim_invalid_or_replayed",
+                    error=(
+                        "Approved execution requires the ephemeral single-use "
+                        "claim issued to the PostgreSQL consume winner"
+                    ),
+                    approval_id=request.approval_id,
                 )
 
         tool_input = ToolInput(
