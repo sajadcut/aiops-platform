@@ -167,11 +167,20 @@ async def test_duplicate_save_cannot_resurrect_terminal_approval_states():
         await store.save(_record(once_id, incident_id))
         once_approved = await store.set_status(once_id, "approved")
         assert once_approved["status"] == "approved"
-        first_consume = await store.consume(once_id)
+        first_consume = await store.consume(
+            once_id,
+            issue_claim=True,
+        )
         assert first_consume["status"] == "consumed"
-        second_consume = await store.consume(once_id)
+        assert first_consume.get("_execution_claim")
+        second_consume = await store.consume(
+            once_id,
+            issue_claim=True,
+        )
         assert second_consume is None
-        assert (await store.get(once_id))["status"] == "consumed"
+        durable_once = await store.get(once_id)
+        assert durable_once["status"] == "consumed"
+        assert "_execution_claim" not in durable_once
 
         await db.execute(
             text("DELETE FROM approvals WHERE incident_id=:incident_id"),
@@ -198,7 +207,10 @@ async def test_concurrent_consume_has_exactly_one_execution_authority_winner():
 
     async def claim():
         async with AsyncSessionLocal() as session:
-            return await PostgreSQLApprovalStore(session).consume(approval_id)
+            return await PostgreSQLApprovalStore(session).consume(
+                approval_id,
+                issue_claim=True,
+            )
 
     first, second = await asyncio.gather(claim(), claim())
     winners = [
@@ -210,11 +222,13 @@ async def test_concurrent_consume_has_exactly_one_execution_authority_winner():
 
     assert len(winners) == 1
     assert len(losers) == 1
+    assert winners[0].get("_execution_claim")
 
     async with AsyncSessionLocal() as db:
         store = PostgreSQLApprovalStore(db)
         durable = await store.get(approval_id)
         assert durable["status"] == "consumed"
+        assert "_execution_claim" not in durable
 
         await db.execute(
             text("DELETE FROM approvals WHERE approval_id=:approval_id"),
