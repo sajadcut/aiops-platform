@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 370 | Dashboard JS files scanned: 5 | Symbols indexed: 3255**
+**Python files scanned: 370 | Dashboard JS files scanned: 5 | Symbols indexed: 3256**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1067,13 +1067,14 @@
 | `apps/memory_service/__init__.py` | `OperationalMemoryService.search_similar` | 371 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | OperationalMemoryService |
 | `apps/memory_service/__init__.py` | `OperationalMemoryService.record_feedback` | 387 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryService |
 | `apps/memory_service/__init__.py` | `OperationalMemoryService.backfill_embeddings` | 403 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryService |
-| `apps/memory_service/__init__.py` | `OperationalMemoryService.mark_stale_entries` | 458 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryService |
-| `apps/memory_service/__init__.py` | `OperationalMemoryService.invalidate` | 490 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryService |
-| `apps/memory_service/__init__.py` | `OperationalMemoryService.mark_validated` | 514 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryService |
-| `apps/memory_service/__init__.py` | `OperationalMemoryService.update_reuse_count` | 525 | async method | state یا داده را به‌صورت durable ذخیره/به‌روزرسانی می‌کند | OperationalMemoryService |
-| `apps/memory_service/__init__.py` | `OperationalMemoryService.serialize_entry` | 533 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryService |
-| `apps/memory_service/__init__.py` | `OperationalMemoryService._legacy_embedding_document` | 593 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryService |
-| `apps/memory_service/__init__.py` | `OperationalMemoryService._uuid_or_none` | 609 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryService |
+| `apps/memory_service/__init__.py` | `OperationalMemoryService.stats` | 458 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryService |
+| `apps/memory_service/__init__.py` | `OperationalMemoryService.mark_stale_entries` | 556 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryService |
+| `apps/memory_service/__init__.py` | `OperationalMemoryService.invalidate` | 588 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryService |
+| `apps/memory_service/__init__.py` | `OperationalMemoryService.mark_validated` | 612 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryService |
+| `apps/memory_service/__init__.py` | `OperationalMemoryService.update_reuse_count` | 623 | async method | state یا داده را به‌صورت durable ذخیره/به‌روزرسانی می‌کند | OperationalMemoryService |
+| `apps/memory_service/__init__.py` | `OperationalMemoryService.serialize_entry` | 631 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryService |
+| `apps/memory_service/__init__.py` | `OperationalMemoryService._legacy_embedding_document` | 691 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryService |
+| `apps/memory_service/__init__.py` | `OperationalMemoryService._uuid_or_none` | 707 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryService |
 | `apps/memory_service/builder.py` | `OperationalMemoryBuilder` | 13 | class | Build a bounded, sanitized, evidence-linked historical incident episode. | module |
 | `apps/memory_service/builder.py` | `OperationalMemoryBuilder.build` | 36 | method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | OperationalMemoryBuilder |
 | `apps/memory_service/builder.py` | `OperationalMemoryBuilder.build_embedding_document` | 225 | method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | OperationalMemoryBuilder |
