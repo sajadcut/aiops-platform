@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 363 | Dashboard JS files scanned: 5 | Symbols indexed: 3195**
+**Python files scanned: 364 | Dashboard JS files scanned: 5 | Symbols indexed: 3206**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -2387,6 +2387,17 @@
 | `tests/unit/test_chatbot_kubernetes_contract.py` | `test_kubernetes_read_operations_are_normalized_without_direct_api_mutation.fake_get` | 35 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_kubernetes_read_operations_are_normalized_without_direct_api_mutation |
 | `tests/unit/test_chatbot_kubernetes_contract.py` | `test_kubernetes_mcp_client_sends_only_allowlisted_read_tool` | 63 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_chatbot_kubernetes_contract.py` | `test_kubernetes_mcp_client_sends_only_allowlisted_read_tool.fake_call_tool` | 67 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_kubernetes_mcp_client_sends_only_allowlisted_read_tool |
+| `tests/unit/test_chatbot_memory_learning.py` | `FakeDB` | 9 | class | کلاس | module |
+| `tests/unit/test_chatbot_memory_learning.py` | `FakeDB.__init__` | 10 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeDB |
+| `tests/unit/test_chatbot_memory_learning.py` | `FakeDB.commit` | 13 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeDB |
+| `tests/unit/test_chatbot_memory_learning.py` | `FakeIncidentRepository` | 17 | class | کلاس | module |
+| `tests/unit/test_chatbot_memory_learning.py` | `FakeIncidentRepository.__init__` | 20 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeIncidentRepository |
+| `tests/unit/test_chatbot_memory_learning.py` | `FakeIncidentRepository.set_status` | 23 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeIncidentRepository |
+| `tests/unit/test_chatbot_memory_learning.py` | `FakeMemoryService` | 27 | class | کلاس | module |
+| `tests/unit/test_chatbot_memory_learning.py` | `FakeMemoryService.__init__` | 30 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeMemoryService |
+| `tests/unit/test_chatbot_memory_learning.py` | `FakeMemoryService.add_episode` | 33 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeMemoryService |
+| `tests/unit/test_chatbot_memory_learning.py` | `test_chatbot_verified_execution_writes_resolved_memory` | 39 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_memory_learning.py` | `test_chatbot_unverified_execution_escalates` | 94 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_chatbot_reliable_service.py` | `SequencedLLM` | 15 | class | کلاس | module |
 | `tests/unit/test_chatbot_reliable_service.py` | `SequencedLLM.__init__` | 16 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SequencedLLM |
 | `tests/unit/test_chatbot_reliable_service.py` | `SequencedLLM.provider_name` | 21 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SequencedLLM |
