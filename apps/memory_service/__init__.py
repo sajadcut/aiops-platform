@@ -6,6 +6,7 @@ from typing import Any, Dict, List, Optional, cast
 from uuid import UUID, uuid4
 
 from sqlalchemy import or_, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from domain.contracts.config import settings
@@ -17,6 +18,7 @@ from .feedback import apply_feedback, record_retrieval_events
 from .retrieval import candidates, rrf_score
 from .telemetry import (
     MEMORY_CREATED_TOTAL,
+    MEMORY_IDEMPOTENT_TOTAL,
     MEMORY_EMBEDDING_TOTAL,
     MEMORY_LIFECYCLE_TOTAL,
     MEMORY_RETRIEVAL_LATENCY,
@@ -100,12 +102,32 @@ class OperationalMemoryService:
         if status not in self.VALID_STATUSES:
             raise ValueError("memory_invalid_verification_status")
 
+        fingerprint = str(episode.get("episode_fingerprint") or "").strip() or None
+        if fingerprint:
+            existing = (
+                await self.db.execute(
+                    select(MemoryEntry).where(
+                        MemoryEntry.episode_fingerprint == fingerprint
+                    )
+                )
+            ).scalars().first()
+            if existing is not None:
+                MEMORY_IDEMPOTENT_TOTAL.labels(path="precheck").inc()
+                logger.info(
+                    "aiops.memory.idempotent_reuse",
+                    memory_id=str(existing.id),
+                    episode_fingerprint=fingerprint,
+                    path="precheck",
+                )
+                return cast(UUID, existing.id)
+
         entry = MemoryEntry(
             id=uuid4(),
             incident_id=self._uuid_or_none(episode.get("incident_id")),
             memory_schema_version=str(
                 episode.get("memory_schema_version") or "2.0"
             ),
+            episode_fingerprint=fingerprint,
             pattern=pattern,
             symptoms=episode.get("symptoms") or {},
             root_cause=episode.get("root_cause"),
@@ -161,7 +183,29 @@ class OperationalMemoryService:
             effectiveness_score=0.0,
         )
         self.db.add(entry)
-        await self.db.commit()
+        try:
+            await self.db.commit()
+        except IntegrityError:
+            await self.db.rollback()
+            if not fingerprint:
+                raise
+            existing = (
+                await self.db.execute(
+                    select(MemoryEntry).where(
+                        MemoryEntry.episode_fingerprint == fingerprint
+                    )
+                )
+            ).scalars().first()
+            if existing is None:
+                raise
+            MEMORY_IDEMPOTENT_TOTAL.labels(path="unique_conflict").inc()
+            logger.info(
+                "aiops.memory.idempotent_reuse",
+                memory_id=str(existing.id),
+                episode_fingerprint=fingerprint,
+                path="unique_conflict",
+            )
+            return cast(UUID, existing.id)
         await self.db.refresh(entry)
         logger.info(
             "aiops.memory.created",
@@ -468,6 +512,7 @@ class OperationalMemoryService:
                 str(entry.incident_id) if entry.incident_id else None
             ),
             "memory_schema_version": entry.memory_schema_version,
+            "episode_fingerprint": entry.episode_fingerprint,
             "pattern": entry.pattern,
             "incident_pattern": entry.incident_pattern or {},
             "symptoms": entry.symptoms or {},
