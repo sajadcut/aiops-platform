@@ -170,7 +170,7 @@ async def test_confirmed_kubernetes_restart_uses_bound_execution_and_consumed_ap
             approval_id=request.approval_id,
         )
 
-    async def fake_verify(self, proposal_row):
+    async def fake_verify(self, proposal_row, before_snapshot=None):
         return {"verified": True, "source": "fake_kubernetes_mcp", "result": {"rollout_complete": True}}
 
     monkeypatch.setattr(ExecutionService, "execute", staticmethod(fake_execute))
