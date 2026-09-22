@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 382 | Dashboard JS files scanned: 5 | Symbols indexed: 3331**
+**Python files scanned: 382 | Dashboard JS files scanned: 5 | Symbols indexed: 3333**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1950,9 +1950,11 @@
 | `scripts/trace_incident_logs.py` | `main` | 36 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `scripts/verify_operational_memory.py` | `inspect` | 16 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `scripts/verify_operational_memory.py` | `main` | 51 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `tests/integration/test_approval_store_db.py` | `_seed_incident` | 18 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `tests/integration/test_approval_store_db.py` | `_record` | 34 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `tests/integration/test_approval_store_db.py` | `test_duplicate_save_cannot_resurrect_terminal_approval_states` | 57 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/integration/test_approval_store_db.py` | `_seed_incident` | 19 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/integration/test_approval_store_db.py` | `_record` | 35 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/integration/test_approval_store_db.py` | `test_duplicate_save_cannot_resurrect_terminal_approval_states` | 58 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/integration/test_approval_store_db.py` | `test_concurrent_consume_has_exactly_one_execution_authority_winner` | 175 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/integration/test_approval_store_db.py` | `test_concurrent_consume_has_exactly_one_execution_authority_winner.claim` | 186 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_concurrent_consume_has_exactly_one_execution_authority_winner |
 | `tests/integration/test_chatbot_db_acceptance.py` | `_seed_proposal` | 24 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/integration/test_chatbot_db_acceptance.py` | `test_chat_session_and_proposal_are_owner_scoped` | 65 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/integration/test_chatbot_db_acceptance.py` | `test_confirmed_vm_action_uses_durable_approval_consumption_and_is_not_replayable` | 79 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
