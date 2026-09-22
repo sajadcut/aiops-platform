@@ -142,6 +142,9 @@ async def test_memory_v2_reembeds_stale_embedding_contract():
         assert row.embedding is not None
 
         row.embedding_model = "obsolete-embedding-model"
+        row.embedding_document_version = "obsolete-document-version"
+        row.embedding_document = "legacy embedding text that must be rebuilt"
+        row.embedding_text_hash = "obsolete-hash"
         await db.commit()
 
         lexical_only = await service.retrieve(
@@ -165,6 +168,8 @@ async def test_memory_v2_reembeds_stale_embedding_contract():
         assert row.embedding_model == settings.EMBEDDING_MODEL
         assert row.embedding_dimension == settings.EMBEDDING_DIMENSION
         assert row.embedding_document_version == OperationalMemoryBuilder.EMBEDDING_DOCUMENT_VERSION
+        assert row.embedding_document != "legacy embedding text that must be rebuilt"
+        assert row.embedding_text_hash not in {None, "", "obsolete-hash"}
         assert row.embedding is not None
 
 
@@ -203,6 +208,18 @@ async def test_memory_v2_postgres_hybrid_retrieval_and_feedback():
         assert success_row.embedding is not None
         assert success_row.embedding_status == "ready"
         assert success_row.actual_remediation["action"] == "start_service"
+
+        self_excluded = await service.retrieve(
+            "nginx inactive port 86 tcp unreachable",
+            service_scope="nginx",
+            environment="test",
+            retrieval_mode="SIMILAR_INCIDENT",
+            limit=10,
+            successful_only=False,
+            target_incident_id=successful_incident,
+            record_retrieval=False,
+        )
+        assert str(success_id) not in {item["id"] for item in self_excluded}
 
         results = await service.retrieve(
             "nginx inactive port 86 tcp unreachable",
