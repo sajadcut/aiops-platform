@@ -5,7 +5,7 @@ Evidence، confidence پایین، disagreement یا recommendation ناامن �
 کند. در نتیجه LLM نمی‌تواند با متن خود این gate را دور بزند.
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Iterable, List, Optional
 
 from apps.evaluator.thresholds import DEFAULT_THRESHOLDS
 from domain.contracts.config import settings
@@ -25,7 +25,10 @@ class EvaluationGate:
         return False
 
     @staticmethod
-    def _governed_deterministic_recovery(finding: Dict[str, Any]) -> bool:
+    def _governed_deterministic_recovery(
+        finding: Dict[str, Any],
+        live_evidence_ids: Optional[set[str]] = None,
+    ) -> bool:
         """Return true only for an evidence-grounded, approval-bound stopped-service recovery.
 
         This narrow escape hatch separates uncertainty about *why* a service stopped
@@ -38,8 +41,18 @@ class EvaluationGate:
             return False
         if float(finding.get("confidence", 0) or 0) < DEFAULT_THRESHOLDS.minimum_confidence:
             return False
-        if len(finding.get("evidence_ids") or []) < 3:
+        finding_evidence_ids = {
+            str(value)
+            for value in (finding.get("evidence_ids") or [])
+            if str(value).strip()
+        }
+        if len(finding_evidence_ids) < 3:
             return False
+        if live_evidence_ids is not None:
+            if not finding_evidence_ids.issubset(live_evidence_ids):
+                return False
+            if len(finding_evidence_ids & live_evidence_ids) < 3:
+                return False
         for action in finding.get("recommended_actions") or []:
             if not isinstance(action, dict):
                 continue
@@ -58,8 +71,18 @@ class EvaluationGate:
         findings: List[Dict[str, Any]],
         plan: str,
         coordination: Optional[Dict[str, Any]] = None,
+        live_evidence_ids: Optional[Iterable[str]] = None,
     ) -> Dict[str, Any]:
         coordination = coordination or {}
+        live_ids = (
+            {
+                str(value)
+                for value in live_evidence_ids
+                if str(value).strip()
+            }
+            if live_evidence_ids is not None
+            else None
+        )
 
         # Triage فقط routing اولیه است و نباید به‌عنوان specialist evidence باعث بالا رفتن
         # confidence یا coverage ارزیابی نهایی شود.
@@ -76,13 +99,33 @@ class EvaluationGate:
         specialist_failures = [str(f.get("agent_name")) for f in failed_findings]
         degraded_specialist_analysis = bool(grounded_findings and failed_findings)
         deterministic_recoveries = [
-            f for f in grounded_findings if cls._governed_deterministic_recovery(f)
+            f
+            for f in grounded_findings
+            if cls._governed_deterministic_recovery(
+                f,
+                live_evidence_ids=live_ids,
+            )
         ]
         operational_state_resolved = bool(deterministic_recoveries)
 
         confidences = [float(f.get("confidence", 0) or 0) for f in specialist_findings]
         max_confidence = max(confidences, default=0.0)
-        evidence_ids = {str(e) for f in specialist_findings for e in (f.get("evidence_ids") or [])}
+        reported_evidence_ids = {
+            str(e)
+            for f in specialist_findings
+            for e in (f.get("evidence_ids") or [])
+            if str(e).strip()
+        }
+        invalid_evidence_ids = (
+            sorted(reported_evidence_ids.difference(live_ids))
+            if live_ids is not None
+            else []
+        )
+        evidence_ids = (
+            reported_evidence_ids.intersection(live_ids)
+            if live_ids is not None
+            else reported_evidence_ids
+        )
         evidence_count = len(evidence_ids)
         coverages = [float(f.get("evidence_coverage", 0) or 0) for f in specialist_findings]
         mean_coverage = sum(coverages) / len(coverages) if coverages else 0.0
@@ -104,13 +147,26 @@ class EvaluationGate:
                 if not action.get("read_only", True) and not action.get("requires_approval", False):
                     unsafe_recommendations.append(action.get("action", "unknown"))
 
-        # hypothesis با probability بالا ولی بدون Evidence ID یک ادعای ungrounded است.
+        # A high-probability hypothesis must cite current Live Evidence.
         hypothesis_without_evidence = False
+        invalid_hypothesis_evidence_ids: set[str] = set()
         for finding in specialist_findings:
             for hypothesis in finding.get("hypotheses") or []:
-                if isinstance(hypothesis, dict) and float(hypothesis.get("probability", 0) or 0) > settings.AGENT_LOW_CONFIDENCE_THRESHOLD:
-                    if not hypothesis.get("evidence_ids"):
+                if not isinstance(hypothesis, dict):
+                    continue
+                probability = float(hypothesis.get("probability", 0) or 0)
+                hypothesis_ids = {
+                    str(value)
+                    for value in (hypothesis.get("evidence_ids") or [])
+                    if str(value).strip()
+                }
+                if probability > settings.AGENT_LOW_CONFIDENCE_THRESHOLD:
+                    if not hypothesis_ids:
                         hypothesis_without_evidence = True
+                    elif live_ids is not None:
+                        invalid_hypothesis_evidence_ids.update(
+                            hypothesis_ids.difference(live_ids)
+                        )
 
         blockers = []
         advisories = []
@@ -124,6 +180,10 @@ class EvaluationGate:
             blockers.append("specialist_failure")
         if max_confidence < DEFAULT_THRESHOLDS.minimum_confidence:
             blockers.append("low_confidence")
+        if invalid_evidence_ids:
+            blockers.append("non_live_evidence_reference")
+        if invalid_hypothesis_evidence_ids:
+            blockers.append("hypothesis_non_live_evidence_reference")
         if evidence_count < DEFAULT_THRESHOLDS.minimum_evidence:
             blockers.append("insufficient_evidence")
         if mean_coverage < settings.AGENT_MIN_EVIDENCE_COVERAGE:
@@ -156,6 +216,11 @@ class EvaluationGate:
             "confidence": max_confidence,
             "evidence_count": evidence_count,
             "evidence_coverage": round(mean_coverage, 4),
+            "live_evidence_validation_enabled": live_ids is not None,
+            "invalid_evidence_ids": invalid_evidence_ids,
+            "invalid_hypothesis_evidence_ids": sorted(
+                invalid_hypothesis_evidence_ids
+            ),
             "agreement_score": round(agreement_score, 4),
             "missing_evidence": missing,
             "disagreement": unresolved_disagreement,
