@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 378 | Dashboard JS files scanned: 5 | Symbols indexed: 3298**
+**Python files scanned: 378 | Dashboard JS files scanned: 5 | Symbols indexed: 3300**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -2149,6 +2149,8 @@
 | `tests/security/test_runbook_approval_boundary.py` | `test_non_empty_approval_id_does_not_grant_execution.fake_execute` | 31 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_non_empty_approval_id_does_not_grant_execution |
 | `tests/security/test_runbook_approval_boundary.py` | `test_validated_upstream_approval_context_is_propagated` | 52 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/security/test_runbook_approval_boundary.py` | `test_validated_upstream_approval_context_is_propagated.fake_execute` | 55 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_validated_upstream_approval_context_is_propagated |
+| `tests/security/test_runbook_approval_boundary.py` | `test_replay_cache_is_scoped_to_same_consumed_approval` | 78 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/security/test_runbook_approval_boundary.py` | `test_replay_cache_is_scoped_to_same_consumed_approval.fake_execute` | 81 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_replay_cache_is_scoped_to_same_consumed_approval |
 | `tests/security/test_vm_mcp_security.py` | `test_vm_target_and_service_allowlists` | 10 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/security/test_vm_mcp_security.py` | `test_production_vm_edge_rejects_root_and_missing_host_pinning` | 23 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/security/test_vm_mcp_security.py` | `_FakeVMConnector` | 40 | class | کلاس | module |
