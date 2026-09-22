@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 375 | Dashboard JS files scanned: 5 | Symbols indexed: 3289**
+**Python files scanned: 376 | Dashboard JS files scanned: 5 | Symbols indexed: 3291**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -2629,6 +2629,8 @@
 | `tests/unit/test_elastic_anomaly_ingestion.py` | `test_native_json_arrays_from_asjson_webhook_are_normalized` | 98 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_evaluator.py` | `test_rejects_empty_plan` | 4 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_evaluator.py` | `test_accepts_evidence_backed_plan` | 10 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_evaluator_live_evidence_binding.py` | `test_orchestrator_evaluator_passes_authoritative_live_evidence_ids` | 8 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_evaluator_live_evidence_binding.py` | `test_orchestrator_evaluator_passes_authoritative_live_evidence_ids.fake_evaluate` | 12 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_orchestrator_evaluator_passes_authoritative_live_evidence_ids |
 | `tests/unit/test_execution_approval_propagation.py` | `ApprovalRequiredTool` | 8 | class | کلاس | module |
 | `tests/unit/test_execution_approval_propagation.py` | `ApprovalRequiredTool.name` | 10 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ApprovalRequiredTool |
 | `tests/unit/test_execution_approval_propagation.py` | `ApprovalRequiredTool.risk_level` | 14 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ApprovalRequiredTool |
