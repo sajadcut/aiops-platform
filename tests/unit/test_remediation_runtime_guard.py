@@ -45,6 +45,20 @@ class _Store:
         }
 
 
+class _IncidentRepo:
+    calls = []
+
+    def __init__(self, _db):
+        pass
+
+    async def record_operational_outcome(self, incident_id, **kwargs):
+        self.__class__.calls.append((incident_id, kwargs))
+        return "resolved" if kwargs.get("verified") else "escalated"
+
+    async def commit(self):
+        return None
+
+
 class _Registry:
     def __init__(self, _root):
         pass
@@ -146,6 +160,8 @@ async def test_remediation_success_requires_post_action_verification(monkeypatch
     monkeypatch.setattr(api, "PostgreSQLApprovalStore", _Store)
     monkeypatch.setattr(api, "assert_bound", lambda *args, **kwargs: None)
     monkeypatch.setattr(api, "RunbookRegistry", _Registry)
+    _IncidentRepo.calls = []
+    monkeypatch.setattr(api, "IncidentRepository", _IncidentRepo)
 
     async def no_audit(*args, **kwargs):
         return None
@@ -224,6 +240,10 @@ async def test_remediation_success_requires_post_action_verification(monkeypatch
     assert result["verification"]["status"] == "success"
     assert result["precondition"]["safe_to_execute"] is True
     assert result["operational_memory_writeback"]["memory_id"] == "memory-remediation-1"
+    assert result["incident_status"] == "resolved"
+    assert len(_IncidentRepo.calls) == 1
+    assert _IncidentRepo.calls[0][1]["verified"] is True
+    assert _IncidentRepo.calls[0][1]["memory_id"] == "memory-remediation-1"
     assert len(memory_calls) == 1
     assert memory_calls[0]["incident_id"] == "incident-1"
     assert memory_calls[0]["action"] == "start_service"
@@ -369,6 +389,8 @@ async def test_manual_verification_uses_runbook_objectives_and_validates_matchin
             return True
 
     monkeypatch.setattr(api, "OperationalMemoryService", _Memory)
+    _IncidentRepo.calls = []
+    monkeypatch.setattr(api, "IncidentRepository", _IncidentRepo)
 
     result = await api.verify_remediation(
         "approval-1",
@@ -381,7 +403,10 @@ async def test_manual_verification_uses_runbook_objectives_and_validates_matchin
     assert result["verification_status"] == "success"
     assert result["memory_id"] == "44444444-4444-4444-4444-444444444444"
     assert result["memory_validated"] is True
+    assert result["incident_status"] == "resolved"
     assert validated == ["44444444-4444-4444-4444-444444444444"]
+    assert len(_IncidentRepo.calls) == 1
+    assert _IncidentRepo.calls[0][1]["verified"] is True
     assert snapshot_calls[0]["phase"] == "manual_verify"
     assert snapshot_calls[0]["parameters"] == {
         "service": "nginx",
@@ -445,6 +470,8 @@ async def test_manual_failed_verification_does_not_revalidate_memory(monkeypatch
             return True
 
     monkeypatch.setattr(api, "OperationalMemoryService", _Memory)
+    _IncidentRepo.calls = []
+    monkeypatch.setattr(api, "IncidentRepository", _IncidentRepo)
 
     result = await api.verify_remediation(
         "approval-1",
@@ -456,4 +483,7 @@ async def test_manual_failed_verification_does_not_revalidate_memory(monkeypatch
     assert result["status"] == "not_recovered"
     assert result["memory_id"] == "55555555-5555-5555-5555-555555555555"
     assert result["memory_validated"] is False
+    assert result["incident_status"] == "escalated"
     assert validated == []
+    assert len(_IncidentRepo.calls) == 1
+    assert _IncidentRepo.calls[0][1]["verified"] is False
