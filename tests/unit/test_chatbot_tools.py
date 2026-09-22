@@ -42,14 +42,22 @@ def test_vm_metric_tool_normalizes_to_read_only_execution_tool():
 
 def test_vm_service_mutation_maps_only_to_governed_high_risk_tool():
     name, args = parse_tool_call(
-        _call("vm_service_action", {"action": "reload_service", "target": "vm01", "service": "nginx"})
+        _call("vm_service_action", {"action": "restart_service", "target": "vm01", "service": "nginx"})
     )
     intent = normalize_tool_intent(name, args)
     assert intent.tool_name == "ssh_vm"
-    assert intent.action == "reload_service"
+    assert intent.action == "restart_service"
     assert intent.parameters == {"service": "nginx"}
     assert intent.mutating is True
     assert intent.risk_level == "high"
+
+
+def test_vm_reload_is_not_exposed_without_runtime_runbook_contract():
+    with pytest.raises(ValueError, match="invalid_vm_service_action"):
+        normalize_tool_intent(
+            "vm_service_action",
+            {"action": "reload_service", "target": "vm01", "service": "nginx"},
+        )
 
 
 def test_kubernetes_read_uses_single_governed_mcp_read_boundary():
