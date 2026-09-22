@@ -140,3 +140,161 @@ async def test_chatbot_unverified_execution_escalates(monkeypatch):
 
     assert FakeIncidentRepository.statuses[-1][1] == "escalated"
     assert FakeMemoryService.episodes[-1]["verification_result"] == "inconclusive"
+
+
+def _baseline_vm_snapshot():
+    return {
+        "source": "vm_mcp",
+        "state": {
+            "service_active": 0.0,
+            "port_listening": 0.0,
+            "tcp_reachable": 0.0,
+        },
+        "context": {
+            "live_evidence": {
+                "evidence": [
+                    {
+                        "source": "vm_mcp",
+                        "reference": "before-service",
+                        "raw_data": {
+                            "diagnostic": "service_status",
+                            "active_state": "inactive",
+                            "healthy": False,
+                        },
+                    },
+                    {
+                        "source": "vm_mcp",
+                        "reference": "before-listener",
+                        "raw_data": {
+                            "diagnostic": "port_listener_status",
+                            "listening": False,
+                        },
+                    },
+                    {
+                        "source": "vm_mcp",
+                        "reference": "before-tcp",
+                        "raw_data": {
+                            "diagnostic": "tcp_check",
+                            "reachable": False,
+                        },
+                    },
+                ]
+            }
+        },
+    }
+
+
+def _chatbot_vm_proposal():
+    return {
+        "incident_id": "a1415045-537d-437c-a379-f0d6e8e05d8a",
+        "tool_name": "ssh_vm",
+        "action": "start_service",
+        "target": "10.100.6.199",
+        "parameters": {"service": "nginx", "target_port": 86},
+        "risk_level": "high",
+    }
+
+
+@pytest.mark.asyncio
+async def test_chatbot_verification_rejects_active_service_when_port_remains_down(monkeypatch):
+    responses = [
+        SimpleNamespace(
+            success=True,
+            result={
+                "success": True,
+                "active_state": "active",
+                "healthy": True,
+            },
+            error=None,
+        ),
+        SimpleNamespace(
+            success=True,
+            result={
+                "success": True,
+                "supported": True,
+                "listening": False,
+            },
+            error=None,
+        ),
+        SimpleNamespace(
+            success=True,
+            result={
+                "success": True,
+                "supported": True,
+                "reachable": True,
+            },
+            error=None,
+        ),
+    ]
+
+    async def fake_execute(_request):
+        return responses.pop(0)
+
+    monkeypatch.setattr(
+        chatbot_module.ExecutionService,
+        "execute",
+        fake_execute,
+    )
+    result = await ChatbotService()._verify_mutation(
+        _chatbot_vm_proposal(),
+        before_snapshot=_baseline_vm_snapshot(),
+    )
+
+    assert result["verified"] is False
+    assert result["status"] == "failed"
+    assert result["after_state"]["service_active"] == 1.0
+    assert result["after_state"]["port_listening"] == 0.0
+
+
+@pytest.mark.asyncio
+async def test_chatbot_verification_requires_before_after_recovery(monkeypatch):
+    responses = [
+        SimpleNamespace(
+            success=True,
+            result={
+                "success": True,
+                "active_state": "active",
+                "healthy": True,
+            },
+            error=None,
+        ),
+        SimpleNamespace(
+            success=True,
+            result={
+                "success": True,
+                "supported": True,
+                "listening": True,
+            },
+            error=None,
+        ),
+        SimpleNamespace(
+            success=True,
+            result={
+                "success": True,
+                "supported": True,
+                "reachable": True,
+            },
+            error=None,
+        ),
+    ]
+
+    async def fake_execute(_request):
+        return responses.pop(0)
+
+    monkeypatch.setattr(
+        chatbot_module.ExecutionService,
+        "execute",
+        fake_execute,
+    )
+    result = await ChatbotService()._verify_mutation(
+        _chatbot_vm_proposal(),
+        before_snapshot=_baseline_vm_snapshot(),
+    )
+
+    assert result["verified"] is True
+    assert result["status"] == "success"
+    assert set(result["after_state"]) >= {
+        "service_active",
+        "port_listening",
+        "tcp_reachable",
+    }
