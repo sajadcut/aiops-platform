@@ -142,6 +142,7 @@ async def test_memory_v2_postgres_hybrid_retrieval_and_feedback():
             target_incident,
             execution_request={"action": "start_service"},
             verification_result={"status": "success"},
+            cited_memory_ids=[str(success_id)],
         )
         assert updated >= 1
 
@@ -154,3 +155,9 @@ async def test_memory_v2_postgres_hybrid_retrieval_and_feedback():
         ).scalars().all()
         assert events
         assert any(event.action_executed for event in events)
+        assert any(event.was_cited_by_agent for event in events)
+        assert any(event.influenced_plan for event in events)
+        refreshed = await db.get(MemoryEntry, success_id)
+        assert refreshed is not None
+        assert refreshed.successful_reuse_count >= 1
+        assert refreshed.effectiveness_score > 0
