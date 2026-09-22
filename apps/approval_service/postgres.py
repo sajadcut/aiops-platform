@@ -61,7 +61,13 @@ class PostgreSQLApprovalStore:
         return bool(str(row.get("status") or "").lower() == "resolved" and marker.get("incident_resolved"))
 
     async def save(self, record: Dict[str, Any]) -> Dict[str, Any]:
-        """Approval request و metadata binding آن را durable می‌کند."""
+        """Create durable approval authority exactly once.
+
+        Existing approval IDs are immutable through save(): terminal states such
+        as consumed/rejected/expired must never be resurrected by a repeated
+        persistence call. State transitions are allowed only through the
+        dedicated compare-and-set transition methods.
+        """
         record_to_save = dict(record)
         metadata = dict(record.get("metadata") or {})
         if (
@@ -89,9 +95,7 @@ class PostgreSQLApprovalStore:
                 (approval_id, incident_id, action, risk_level, approver, status, metadata, created_at, approved_at, rejected_at)
                 VALUES (:approval_id, :incident_id, :action, :risk_level, :approver, :status, CAST(:metadata AS jsonb),
                         :created_at, :approved_at, :rejected_at)
-                ON CONFLICT (approval_id) DO UPDATE SET status=EXCLUDED.status,
-                    metadata=EXCLUDED.metadata, approved_at=EXCLUDED.approved_at,
-                    rejected_at=EXCLUDED.rejected_at
+                ON CONFLICT (approval_id) DO NOTHING
                 """
             ),
             params,
