@@ -99,8 +99,9 @@ Operational Memory write-back is retry/resume safe.
 
 Each structured episode receives a deterministic `episode_fingerprint` derived
 from incident identity, governed remediation identity, verification before/after
-state, evidence references and outcome class. Secret values are redacted before
-the fingerprint is produced.
+state and outcome class. Transient Evidence IDs are deliberately excluded so an
+evidence refresh does not create a duplicate episode. Secret values are redacted
+before the fingerprint is produced.
 
 The application performs a fast pre-check and PostgreSQL enforces a unique
 partial index on non-null fingerprints. Therefore:
@@ -126,7 +127,11 @@ Build sanitized episode
      -> failure: embedding_status=failed, core episode remains durable
 ```
 
-Use `scripts/backfill_memory_embeddings.py` to retry pending/failed vectors.
+Use `scripts/backfill_memory_embeddings.py` to retry pending/failed vectors
+and to rebuild vectors whose provider/model/dimension/document-version no longer
+matches the current embedding contract. Until re-embedding completes, those
+rows remain available through lexical retrieval but are excluded from vector
+similarity.
 
 Development/test may use deterministic embeddings. Production still requires a
 real configured embedding provider under the existing fail-closed provider
@@ -145,10 +150,17 @@ Raw giant logs and credentials are not embedding input.
 
 Retrieval uses:
 
-1. structured filters
-2. pgvector cosine similarity
-3. PostgreSQL Full Text Search
-4. Reciprocal Rank Fusion plus bounded metadata bonuses
+1. a bounded query built from the current incident plus fresh Live Evidence
+   symptom fields; raw logs and credential values are not copied into the query
+2. structured service/environment/lifecycle filters
+3. pgvector cosine similarity only for rows matching the current embedding
+   provider/model/dimension/document-version contract
+4. PostgreSQL Full Text Search, which remains available if the embedding
+   provider is unavailable
+5. Reciprocal Rank Fusion plus bounded metadata bonuses
+
+The current incident's own Memory episode is excluded from historical retrieval
+to prevent self-reinforcing feedback loops.
 
 Supported retrieval modes:
 
@@ -164,11 +176,35 @@ safe_as_evidence=false
 requires_current_validation=true
 ```
 
-## Feedback
+## Agent use and feedback
 
-`memory_reuse_events` records retrieval/rank/similarity and whether the same
-historical action was later executed and verified. Memory effectiveness is
-updated from verified reuse outcomes; it does not change execution authority.
+Retrieved Memory is projected into a shallow bounded prompt form containing the
+historical incident pattern, investigation/RCA summary, uncertainty, actual
+remediation, verification and reusable lesson. Raw remediation parameters are
+not forwarded to agent prompts.
+
+Agents may cite a retrieved episode only through its exact
+`historical_memory_ids` value. The runtime allowlists citations against the
+Memory IDs actually retrieved for that incident. Historical Memory IDs are
+never accepted as Live Evidence IDs.
+
+`memory_reuse_events` records retrieval/rank/similarity plus later attribution:
+
+- `was_cited_by_agent`: the historical episode materially influenced analysis
+- `action_executed`: the current governed action matches the historical action
+- `influenced_plan`: both citation and action match are true
+- verification outcome/reward
+
+`cited_count` counts explicit agent citations once per target incident even
+when the final action differs. `reuse_count`, successful/failed reuse counters
+and effectiveness change only for attributed action reuse. Duplicate retrieval
+events or retrieval through multiple modes cannot double-reward one Memory
+episode for the same incident.
+
+Failed or blocked governed executions are also written back as negative
+historical experience. They never resolve the incident. Durable runtime and
+signal-aware runtime use the same canonical write-back behavior; the historical
+`Learning*` classes remain compatibility aliases only.
 
 ## Security and governance
 
@@ -197,6 +233,7 @@ MEMORY_RETRIEVAL_CANDIDATE_MULTIPLIER=4
 MEMORY_RRF_K=60
 MEMORY_MAX_EMBEDDING_TEXT_CHARS=12000
 MEMORY_REUSE_FEEDBACK_ENABLED=True
+MEMORY_STALE_AFTER_DAYS=180
 ```
 
 ## Migration
@@ -217,7 +254,14 @@ A repository-level acceptance requires:
 - clean Alembic upgrade and upgrade-from-existing DB
 - pgvector dimension validation
 - episode-builder/redaction tests
+- idempotent duplicate-suppression test
 - embedding-failure core persistence test
+- stale embedding-contract re-embedding test
+- lexical retrieval during embedding-provider outage
+- current-incident self-exclusion test
+- agent Memory citation allowlist and prompt-bounding test
+- positive/negative reuse-attribution test
+- failed approved execution negative-learning test
 - full test suite
 - security/hygiene checks
 
