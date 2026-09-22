@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 370 | Dashboard JS files scanned: 5 | Symbols indexed: 3257**
+**Python files scanned: 370 | Dashboard JS files scanned: 5 | Symbols indexed: 3258**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -3122,12 +3122,13 @@
 | `tests/unit/test_structured_agent_resilience.py` | `test_agent_models_normalize_qualitative_scores` | 59 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_structured_agent_resilience.py` | `test_structured_shape_normalizes_percent_and_label_scores` | 72 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_structured_agent_resilience.py` | `test_generate_structured_repairs_truncated_response_with_larger_budget` | 91 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_structured_agent_resilience.py` | `test_generate_structured_reports_persistent_truncation` | 127 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_structured_agent_resilience.py` | `FakeMCPHTTPClient` | 147 | class | کلاس | module |
-| `tests/unit/test_structured_agent_resilience.py` | `FakeMCPHTTPClient.post` | 148 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeMCPHTTPClient |
-| `tests/unit/test_structured_agent_resilience.py` | `FakeMCPHTTPClient.delete` | 163 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeMCPHTTPClient |
-| `tests/unit/test_structured_agent_resilience.py` | `FakeMCPHTTPClient.aclose` | 167 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeMCPHTTPClient |
-| `tests/unit/test_structured_agent_resilience.py` | `test_generic_mcp_tool_is_error_is_failed_not_completed` | 172 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_structured_agent_resilience.py` | `test_historical_memory_citations_are_allowlisted_and_not_evidence` | 127 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_structured_agent_resilience.py` | `test_generate_structured_reports_persistent_truncation` | 197 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_structured_agent_resilience.py` | `FakeMCPHTTPClient` | 217 | class | کلاس | module |
+| `tests/unit/test_structured_agent_resilience.py` | `FakeMCPHTTPClient.post` | 218 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeMCPHTTPClient |
+| `tests/unit/test_structured_agent_resilience.py` | `FakeMCPHTTPClient.delete` | 233 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeMCPHTTPClient |
+| `tests/unit/test_structured_agent_resilience.py` | `FakeMCPHTTPClient.aclose` | 237 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeMCPHTTPClient |
+| `tests/unit/test_structured_agent_resilience.py` | `test_generic_mcp_tool_is_error_is_failed_not_completed` | 242 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_triage_production_engine.py` | `StaticTriageLLM` | 13 | class | کلاس | module |
 | `tests/unit/test_triage_production_engine.py` | `StaticTriageLLM.__init__` | 14 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | StaticTriageLLM |
 | `tests/unit/test_triage_production_engine.py` | `StaticTriageLLM.provider_name` | 19 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | StaticTriageLLM |
