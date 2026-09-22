@@ -466,22 +466,29 @@ class BaseAgent(ABC):
             text_value = str(value).strip()
             if not text_value:
                 return None
-            return text_value if len(text_value) <= limit else text_value[:limit] + "...[truncated]"
+            return (
+                text_value
+                if len(text_value) <= limit
+                else text_value[:limit] + "...[truncated]"
+            )
 
-        def bounded_list(
+        def bounded_joined(
             value: Any,
             *,
             item_limit: int = 10,
-            text_limit: int = 600,
-        ) -> List[str]:
+            text_limit: int = 500,
+            total_limit: int = 1800,
+        ) -> Optional[str]:
             if not isinstance(value, (list, tuple)):
-                return []
-            result: List[str] = []
+                return None
+            values: List[str] = []
             for item in list(value)[:item_limit]:
                 text_value = bounded_text(item, text_limit)
                 if text_value:
-                    result.append(text_value)
-            return result
+                    values.append(text_value)
+            if not values:
+                return None
+            return bounded_text(" | ".join(values), total_limit)
 
         projected: List[Dict[str, Any]] = []
         for item in raw:
@@ -490,6 +497,7 @@ class BaseAgent(ABC):
             memory_id = bounded_text(item.get("id"), 128)
             if not memory_id:
                 continue
+
             investigation = (
                 item.get("investigation")
                 if isinstance(item.get("investigation"), dict)
@@ -510,6 +518,11 @@ class BaseAgent(ABC):
                 if isinstance(item.get("incident_pattern"), dict)
                 else {}
             )
+
+            # Keep the projection deliberately shallow. DomainDiagnosticAgent
+            # bounds nested auxiliary values at depth=4; a flat episode summary
+            # preserves useful historical investigation/RCA without loosening
+            # that token/safety boundary.
             projected.append(
                 {
                     "id": memory_id,
@@ -518,66 +531,77 @@ class BaseAgent(ABC):
                     ),
                     "service_scope": bounded_text(item.get("service_scope"), 255),
                     "environment": bounded_text(item.get("environment"), 100),
-                    "incident_pattern": {
-                        "summary": bounded_text(incident_pattern.get("summary"), 800),
-                        "observed_faults": bounded_list(
-                            incident_pattern.get("observed_faults"),
-                            item_limit=12,
-                        ),
-                    },
-                    "investigation": {
-                        "summary": bounded_text(
-                            investigation.get("investigation_summary"), 1400
-                        ),
-                        "rca_synthesis": bounded_text(
-                            investigation.get("rca_synthesis"), 1800
-                        ),
-                        "missing_evidence": bounded_list(
-                            investigation.get("missing_evidence"),
-                            item_limit=10,
-                        ),
-                        "contradictions": bounded_list(
-                            investigation.get("contradictions"),
-                            item_limit=10,
-                        ),
-                        "specialist_agents_used": bounded_list(
-                            investigation.get("specialist_agents_used"),
-                            item_limit=12,
-                            text_limit=128,
-                        ),
-                    },
-                    "historical_root_cause": {
-                        "summary": bounded_text(item.get("root_cause"), 1200),
-                        "status": bounded_text(item.get("root_cause_status"), 32),
-                        "confidence": item.get("root_cause_confidence"),
-                    },
-                    "actual_remediation": {
-                        "tool_name": bounded_text(remediation.get("tool_name"), 128),
-                        "action": bounded_text(remediation.get("action"), 255),
-                        "target": bounded_text(remediation.get("target"), 255),
-                        "service": bounded_text(remediation.get("service"), 255),
-                        "runbook_id": bounded_text(remediation.get("runbook_id"), 255),
-                        "runbook_version": bounded_text(
-                            remediation.get("runbook_version"), 100
-                        ),
-                        "execution_success": remediation.get("execution_success"),
-                        "execution_blocked": remediation.get("execution_blocked"),
-                    },
-                    "verification": {
-                        "status": bounded_text(verification.get("status"), 50),
-                        "recovered_signals": bounded_list(
-                            verification.get("recovered_signals"),
-                            item_limit=12,
-                        ),
-                        "remaining_symptoms": bounded_list(
-                            verification.get("remaining_symptoms"),
-                            item_limit=12,
-                        ),
-                        "unexpected_regressions": bounded_list(
-                            verification.get("unexpected_regressions"),
-                            item_limit=12,
-                        ),
-                    },
+                    "incident_summary": bounded_text(
+                        incident_pattern.get("summary"), 800
+                    ),
+                    "observed_faults": bounded_joined(
+                        incident_pattern.get("observed_faults"),
+                        item_limit=12,
+                    ),
+                    "investigation_summary": bounded_text(
+                        investigation.get("investigation_summary"), 1400
+                    ),
+                    "rca_synthesis": bounded_text(
+                        investigation.get("rca_synthesis"), 1800
+                    ),
+                    "missing_evidence": bounded_joined(
+                        investigation.get("missing_evidence"),
+                        item_limit=10,
+                    ),
+                    "contradictions": bounded_joined(
+                        investigation.get("contradictions"),
+                        item_limit=10,
+                    ),
+                    "specialist_agents_used": bounded_joined(
+                        investigation.get("specialist_agents_used"),
+                        item_limit=12,
+                        text_limit=128,
+                        total_limit=900,
+                    ),
+                    "historical_root_cause": bounded_text(
+                        item.get("root_cause"), 1200
+                    ),
+                    "historical_root_cause_status": bounded_text(
+                        item.get("root_cause_status"), 32
+                    ),
+                    "historical_root_cause_confidence": item.get(
+                        "root_cause_confidence"
+                    ),
+                    "remediation_tool": bounded_text(
+                        remediation.get("tool_name"), 128
+                    ),
+                    "remediation_action": bounded_text(
+                        remediation.get("action"), 255
+                    ),
+                    "remediation_target": bounded_text(
+                        remediation.get("target"), 255
+                    ),
+                    "remediation_service": bounded_text(
+                        remediation.get("service"), 255
+                    ),
+                    "runbook_id": bounded_text(
+                        remediation.get("runbook_id"), 255
+                    ),
+                    "runbook_version": bounded_text(
+                        remediation.get("runbook_version"), 100
+                    ),
+                    "execution_success": remediation.get("execution_success"),
+                    "execution_blocked": remediation.get("execution_blocked"),
+                    "verification_status": bounded_text(
+                        verification.get("status"), 50
+                    ),
+                    "recovered_signals": bounded_joined(
+                        verification.get("recovered_signals"),
+                        item_limit=12,
+                    ),
+                    "remaining_symptoms": bounded_joined(
+                        verification.get("remaining_symptoms"),
+                        item_limit=12,
+                    ),
+                    "unexpected_regressions": bounded_joined(
+                        verification.get("unexpected_regressions"),
+                        item_limit=12,
+                    ),
                     "memory_outcome_class": bounded_text(
                         item.get("memory_outcome_class"), 64
                     ),
