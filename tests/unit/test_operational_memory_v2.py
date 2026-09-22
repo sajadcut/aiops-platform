@@ -234,6 +234,25 @@ def test_builder_normalizes_failed_execution_without_verification_for_learning()
     assert episode["outcome"] == "mcp_write_failed"
 
 
+def test_builder_preserves_historical_memory_lineage_without_promoting_it_to_evidence():
+    state = _state()
+    state["findings"][0]["historical_memory_ids"] = [
+        "11111111-1111-1111-1111-111111111111",
+        "11111111-1111-1111-1111-111111111111",
+        "22222222-2222-2222-2222-222222222222",
+    ]
+
+    episode = OperationalMemoryBuilder.build(state)
+
+    assert episode["investigation"]["historical_memory_ids"] == [
+        "11111111-1111-1111-1111-111111111111",
+        "22222222-2222-2222-2222-222222222222",
+    ]
+    evidence_refs = episode["evidence_provenance"]["evidence_refs"]
+    assert "11111111-1111-1111-1111-111111111111" not in evidence_refs
+    assert "22222222-2222-2222-2222-222222222222" not in evidence_refs
+
+
 def test_builder_does_not_convert_recovery_into_confirmed_cause():
     state = _state()
     state["triage_result"] = {
