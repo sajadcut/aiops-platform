@@ -6,13 +6,13 @@ import time
 from typing import Any, Dict, List, Optional, cast
 from uuid import UUID, uuid4
 
-from sqlalchemy import or_, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from domain.contracts.config import settings
 from domain.contracts.logging import logger
-from domain.models import MemoryEntry
+from domain.models import MemoryEntry, MemoryReuseEvent
 from knowledge import EmbeddingService
 
 from .builder import OperationalMemoryBuilder
@@ -454,6 +454,104 @@ class OperationalMemoryService:
             "ready": ready,
             "failed": failed,
         }
+
+    async def stats(self) -> Dict[str, Any]:
+        current_contract = (
+            MemoryEntry.embedding_status == "ready",
+            MemoryEntry.embedding.is_not(None),
+            MemoryEntry.embedding_provider == settings.EMBEDDING_PROVIDER,
+            MemoryEntry.embedding_model == settings.EMBEDDING_MODEL,
+            MemoryEntry.embedding_dimension == settings.EMBEDDING_DIMENSION,
+            MemoryEntry.embedding_document_version == EMBEDDING_DOCUMENT_VERSION,
+        )
+        row = (
+            await self.db.execute(
+                select(
+                    func.count(MemoryEntry.id).label("entries_total"),
+                    func.count(MemoryEntry.id)
+                    .filter(MemoryEntry.lifecycle_status == "active")
+                    .label("active"),
+                    func.count(MemoryEntry.id)
+                    .filter(MemoryEntry.lifecycle_status == "stale")
+                    .label("stale"),
+                    func.count(MemoryEntry.id)
+                    .filter(MemoryEntry.lifecycle_status == "invalidated")
+                    .label("invalidated"),
+                    func.count(MemoryEntry.id)
+                    .filter(MemoryEntry.lifecycle_status == "superseded")
+                    .label("superseded"),
+                    func.count(MemoryEntry.id)
+                    .filter(*current_contract)
+                    .label("embedding_ready_current_contract"),
+                    func.count(MemoryEntry.id)
+                    .filter(MemoryEntry.embedding_status == "failed")
+                    .label("embedding_failed"),
+                    func.count(MemoryEntry.id)
+                    .filter(
+                        MemoryEntry.embedding_status.in_(
+                            ["pending", "pending_retry"]
+                        )
+                    )
+                    .label("embedding_pending"),
+                    func.count(MemoryEntry.id)
+                    .filter(
+                        MemoryEntry.memory_outcome_class
+                        == "successful_recovery"
+                    )
+                    .label("successful_recovery"),
+                    func.count(MemoryEntry.id)
+                    .filter(
+                        MemoryEntry.memory_outcome_class == "failed_recovery"
+                    )
+                    .label("failed_recovery"),
+                    func.count(MemoryEntry.id)
+                    .filter(
+                        MemoryEntry.memory_outcome_class == "partial_recovery"
+                    )
+                    .label("partial_recovery"),
+                    func.count(MemoryEntry.id)
+                    .filter(
+                        MemoryEntry.memory_outcome_class == "execution_blocked"
+                    )
+                    .label("execution_blocked"),
+                    func.count(MemoryEntry.id)
+                    .filter(MemoryEntry.successful_reuse_count > 0)
+                    .label("entries_successfully_reused"),
+                    func.max(MemoryEntry.created_at).label("last_created_at"),
+                )
+            )
+        ).mappings().one()
+
+        reuse = (
+            await self.db.execute(
+                select(
+                    func.count(MemoryReuseEvent.id).label("reuse_events_total"),
+                    func.count(MemoryReuseEvent.id)
+                    .filter(MemoryReuseEvent.influenced_plan.is_(True))
+                    .label("reuse_influenced_plan"),
+                    func.count(MemoryReuseEvent.id)
+                    .filter(MemoryReuseEvent.helpful.is_(True))
+                    .label("reuse_helpful"),
+                    func.count(MemoryReuseEvent.id)
+                    .filter(MemoryReuseEvent.helpful.is_(False))
+                    .label("reuse_unhelpful"),
+                )
+            )
+        ).mappings().one()
+
+        result = {**dict(row), **dict(reuse)}
+        for key, value in list(result.items()):
+            if key == "last_created_at":
+                result[key] = value.isoformat() if value else None
+            else:
+                result[key] = int(value or 0)
+        result["embedding_contract"] = {
+            "provider": settings.EMBEDDING_PROVIDER,
+            "model": settings.EMBEDDING_MODEL,
+            "dimension": settings.EMBEDDING_DIMENSION,
+            "document_version": EMBEDDING_DOCUMENT_VERSION,
+        }
+        return result
 
     async def mark_stale_entries(self, limit: int = 1000) -> int:
         cutoff = datetime.now(timezone.utc) - timedelta(
