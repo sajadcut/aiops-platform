@@ -3,6 +3,7 @@ import pytest
 
 from agents.shared import base as agent_base
 from agents.shared.base import AgentInput, AgentOutput, BaseAgent, StructuredAgentResponseError
+from agents.shared.domain_agent import DomainDiagnosticAgent, DomainSpec
 from domain.contracts.config import settings
 from integrations import mcp_client as mcp_module
 from integrations.llm.base import LLMAdapter, LLMResponse
@@ -37,6 +38,17 @@ class FakeLLM(LLMAdapter):
         **kwargs,
     ) -> LLMResponse:
         raise NotImplementedError
+
+
+class MemoryAwareDomainAgent(DomainDiagnosticAgent):
+    spec = DomainSpec(
+        name="memory_test",
+        description="memory citation test specialist",
+        focus=["historical pattern comparison"],
+        required_evidence_types=[],
+        read_tools=["read_test"],
+        default_handoffs=[],
+    )
 
 
 class DummyAgent(BaseAgent):
@@ -191,6 +203,107 @@ async def test_historical_memory_citations_are_allowlisted_and_not_evidence(monk
     assert spoofed_id not in output.historical_memory_ids
     assert "historical_memory_ids" in llm.calls[0]["prompt"]
     assert "never current Evidence" in llm.calls[0]["prompt"]
+
+
+@pytest.mark.asyncio
+async def test_domain_agent_uses_bounded_historical_memory_and_emits_citation(monkeypatch):
+    _disable_agent_telemetry(monkeypatch)
+    monkeypatch.setattr(settings, "AGENT_MAX_TOKENS", 1200)
+    monkeypatch.setattr(settings, "AGENT_STRUCTURED_REPAIR_ATTEMPTS", 0)
+    monkeypatch.setattr(settings, "AGENT_TIMEOUT_SECONDS", 5)
+    monkeypatch.setattr(settings, "AGENT_MAX_AUXILIARY_CONTEXT_ITEMS", 5)
+    monkeypatch.setattr(settings, "AGENT_MAX_EVIDENCE_ITEMS", 20)
+
+    memory_id = "22222222-2222-2222-2222-222222222222"
+    llm = FakeLLM(
+        [
+            LLMResponse(
+                content=(
+                    '{"severity":"medium","health_status":"degraded",'
+                    '"findings":["prior nginx pattern is relevant"],'
+                    '"hypotheses":[],"missing_evidence":[],'
+                    '"handoff_agents":[],"immediate_checks":[],'
+                    '"confidence":0.8,"historical_memory_ids":["'
+                    + memory_id
+                    + '"]}'
+                ),
+                model="assistance-model",
+                finish_reason="stop",
+            )
+        ]
+    )
+    agent = MemoryAwareDomainAgent(llm)
+    input_data = AgentInput(
+        incident_id="incident-current",
+        evidence_summary="nginx inactive and port 86 down",
+        service_name="nginx",
+        context={
+            "evidence": [
+                {
+                    "id": "ev-current-1",
+                    "type": "metric",
+                    "source": "prometheus",
+                    "raw_data": {"status": "down"},
+                }
+            ],
+            "memory_results": [
+                {
+                    "id": memory_id,
+                    "source_incident_id": "incident-old",
+                    "service_scope": "nginx",
+                    "environment": "production",
+                    "incident_pattern": {
+                        "summary": "nginx inactive and port 86 down",
+                        "observed_faults": [
+                            "service_active=false",
+                            "port_listening=false",
+                        ],
+                    },
+                    "investigation": {
+                        "investigation_summary": "service inactive; cause unconfirmed",
+                        "rca_synthesis": "Historical journal was missing.",
+                        "missing_evidence": ["systemd audit trail"],
+                        "contradictions": [],
+                        "specialist_agents_used": ["vm"],
+                    },
+                    "root_cause": "Historical root cause was not proven",
+                    "root_cause_status": "unconfirmed",
+                    "root_cause_confidence": 0.4,
+                    "actual_remediation": {
+                        "tool_name": "ssh_vm",
+                        "action": "start_service",
+                        "target": "10.100.6.199",
+                        "service": "nginx",
+                        "parameters": {"password": "must-never-reach-prompt"},
+                        "execution_success": True,
+                    },
+                    "verification": {
+                        "status": "success",
+                        "recovered_signals": [
+                            "service_active",
+                            "port_listening",
+                        ],
+                    },
+                    "memory_outcome_class": "successful_recovery",
+                    "reusable_lesson": "Revalidate current evidence before reuse.",
+                    "final_rank_score": 0.12,
+                    "safe_as_evidence": False,
+                    "requires_current_validation": True,
+                }
+            ],
+        },
+    )
+
+    output = await agent.analyze(input_data)
+
+    assert output.historical_memory_ids == [memory_id]
+    assert output.evidence_ids == ["ev-current-1"]
+    assert memory_id not in output.evidence_ids
+    prompt = llm.calls[0]["prompt"]
+    assert memory_id in prompt
+    assert "Historical journal was missing." in prompt
+    assert "must-never-reach-prompt" not in prompt
+    assert "Historical memory is not current Evidence" in prompt
 
 
 @pytest.mark.asyncio
