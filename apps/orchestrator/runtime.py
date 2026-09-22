@@ -10,6 +10,7 @@ from apps.incident_service.repository import IncidentRepository
 from apps.orchestrator.e2e_graph import E2EOrchestrator
 from apps.orchestrator.signal_aware import SignalAwareE2EOrchestrator
 from apps.orchestrator.workflow_store import WorkflowCheckpointStore
+from apps.runbook_service.runtime_guard import RunbookRuntimeGuard
 from integrations.vm.target_context import bind_vm_port, bind_vm_target, reset_vm_port, reset_vm_target
 
 
@@ -153,6 +154,124 @@ class DurableWorkflowRuntime:
         reset_vm_port(port_token)
         reset_vm_target(target_token)
 
+    async def _preconsume_execution_guard(
+        self,
+        incident_id: str,
+        approval_id: str,
+        execution_request: Dict[str, Any],
+        state: Dict[str, Any],
+    ) -> None:
+        """Revalidate supported write intent before consuming approval authority."""
+        runbook_id = str(execution_request.get("runbook_id") or "").strip()
+        if runbook_id != RunbookRuntimeGuard.VM_SERVICE_RUNBOOK:
+            return
+
+        target = str(execution_request.get("target") or "").strip()
+        parameters = dict(execution_request.get("parameters") or {})
+        tokens = self._bind_execution_context(execution_request)
+        try:
+            snapshot = await RunbookRuntimeGuard.collect_snapshot(
+                runbook_id=runbook_id,
+                target=target,
+                parameters=parameters,
+                incident_id=incident_id,
+                phase="approval_preconsume",
+            )
+        finally:
+            self._reset_execution_context(tokens)
+
+        precondition = RunbookRuntimeGuard.preflight(
+            runbook_id=runbook_id,
+            tool_name=str(execution_request.get("tool_name") or ""),
+            action=str(execution_request.get("action") or ""),
+            target=target,
+            parameters=parameters,
+            incident_id=incident_id,
+            evidence=list(snapshot.get("evidence") or []),
+        )
+        state["approval_precondition"] = precondition
+        state.setdefault("context", {})["approval_preconsume_snapshot"] = {
+            "read_success": bool(snapshot.get("read_success")),
+            "error": snapshot.get("error"),
+            "evidence": list(snapshot.get("evidence") or []),
+        }
+
+        if precondition.get("safe_to_execute"):
+            AuditService.record(
+                "approval_precondition_verified",
+                "durable_runtime",
+                incident_id,
+                execution_request.get("action"),
+                "recorded",
+                {
+                    "approval_id": approval_id,
+                    "runbook_id": runbook_id,
+                    "evidence_refs": precondition.get("evidence_refs", []),
+                },
+            )
+            return
+
+        reason = str(
+            precondition.get("reason") or "runtime_precondition_failed"
+        )
+        stale = RunbookRuntimeGuard.approval_should_be_revoked(precondition)
+        if stale:
+            revoked = await self.approvals.cancel(
+                approval_id,
+                reason="fresh_precondition_invalidated_approved_intent",
+                metadata_patch={
+                    "precondition_reason": reason,
+                    "revoked_before_execution": True,
+                },
+            )
+            if revoked is not None:
+                state["approval"] = revoked
+            state["execution_result"] = {
+                "success": False,
+                "tool_name": execution_request.get("tool_name"),
+                "action": execution_request.get("action"),
+                "target": execution_request.get("target"),
+                "execution_blocked": True,
+                "reason": reason,
+            }
+            state["terminal_reason"] = "approval_preflight_stale"
+            AuditService.record(
+                "approval_precondition_stale",
+                "durable_runtime",
+                incident_id,
+                execution_request.get("action"),
+                "blocked",
+                {
+                    "approval_id": approval_id,
+                    "runbook_id": runbook_id,
+                    "reason": reason,
+                    "approval_revoked": bool(
+                        revoked and revoked.get("status") == "rejected"
+                    ),
+                },
+            )
+            await self.checkpoints.mark_failed(incident_id, state)
+            await self._flush_audit(incident_id)
+            await self.incidents.commit()
+            raise ValueError(f"approval_preflight_stale:{reason}")
+
+        AuditService.record(
+            "approval_precondition_retryable",
+            "durable_runtime",
+            incident_id,
+            execution_request.get("action"),
+            "blocked",
+            {
+                "approval_id": approval_id,
+                "runbook_id": runbook_id,
+                "reason": reason,
+                "approval_revoked": False,
+            },
+        )
+        await self._flush_audit(incident_id)
+        await self.incidents.commit()
+        raise ValueError(f"approval_preflight_retryable:{reason}")
+
     async def resume_after_approval(self, incident_id: str) -> Dict[str, Any]:
         checkpoint = await self.checkpoints.load(incident_id)
         if not checkpoint:
@@ -173,6 +292,12 @@ class DurableWorkflowRuntime:
         if not execution_request:
             raise ValueError("execution_request_not_found_in_checkpoint")
         self._assert_binding(durable, execution_request)
+        await self._preconsume_execution_guard(
+            incident_id,
+            str(approval_id),
+            execution_request,
+            state,
+        )
 
         consumed = await self.approvals.consume(str(approval_id))
         if not consumed or consumed.get("status") != "consumed":
