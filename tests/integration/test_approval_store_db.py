@@ -10,10 +10,13 @@ from apps.approval_service.postgres import PostgreSQLApprovalStore
 from database import AsyncSessionLocal
 
 
-pytestmark = pytest.mark.skipif(
-    os.getenv("RUN_DB_APPROVAL_TEST") != "1",
-    reason="requires PostgreSQL approval acceptance environment",
-)
+pytestmark = [
+    pytest.mark.skipif(
+        os.getenv("RUN_DB_APPROVAL_TEST") != "1",
+        reason="requires PostgreSQL approval acceptance environment",
+    ),
+    pytest.mark.asyncio(loop_scope="module"),
+]
 
 
 async def _seed_incident(db, incident_id):
