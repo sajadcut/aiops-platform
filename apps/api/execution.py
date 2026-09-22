@@ -11,10 +11,12 @@ from apps.audit_service.postgres import PostgreSQLAuditStore
 from apps.execution_service import ExecutionRequest, ExecutionService
 from apps.execution_service.tools.registry import tool_registry
 from apps.runbook_service.registry import RunbookRegistry
+from apps.runbook_service.learning import record_runbook_outcome
 from apps.runbook_service.runtime_guard import RunbookRuntimeGuard
 from apps.security.auth import require_permission
 from apps.security.rbac import allowed
 from database import AsyncSessionLocal
+from domain.contracts.logging import logger
 
 router = APIRouter()
 _VALID_RISK_LEVELS = {"low", "medium", "high", "critical"}
@@ -195,6 +197,11 @@ async def execute(payload: Dict[str, Any], identity=Depends(require_permission("
     approval_id = payload.get("approval_id")
     incident_id = str(payload.get("incident_id") or "")
     approval_granted = False
+    consumed = None
+    runtime_contract = None
+    before_snapshot = None
+    after_snapshot = None
+    runbook = None
 
     async with AsyncSessionLocal() as db:
         if tool.requires_approval:
@@ -209,6 +216,9 @@ async def execute(payload: Dict[str, Any], identity=Depends(require_permission("
             _validate_approval_binding(approval, payload)
 
             runtime_contract = _direct_runtime_contract(payload)
+            runbook = RunbookRegistry("runbooks").get(
+                runtime_contract["runbook_id"]
+            )
             before_snapshot = await RunbookRuntimeGuard.collect_snapshot(
                 runbook_id=runtime_contract["runbook_id"],
                 target=str(payload["target"]),
@@ -285,9 +295,6 @@ async def execute(payload: Dict[str, Any], identity=Depends(require_permission("
                     incident_id=incident_id,
                     phase="post",
                 )
-                runbook = RunbookRegistry("runbooks").get(
-                    runtime_contract["runbook_id"]
-                )
                 verification = await RunbookRuntimeGuard.verify(
                     runbook=runbook,
                     action=request.action,
@@ -324,6 +331,46 @@ async def execute(payload: Dict[str, Any], identity=Depends(require_permission("
             response["verification"] = verification_payload
             response["verified"] = verified
 
+        memory_id = None
+        memory_error = None
+        if (
+            tool.requires_approval
+            and runtime_contract
+            and runbook
+            and consumed
+        ):
+            try:
+                memory_id = await record_runbook_outcome(
+                    db,
+                    incident_id=incident_id,
+                    runbook=runbook,
+                    tool_name=request.tool_name,
+                    action=request.action,
+                    target=request.target,
+                    parameters=dict(request.parameters or {}),
+                    approval=consumed,
+                    execution_result=result.model_dump(mode="json"),
+                    verification_result=dict(verification_payload or {}),
+                    before_snapshot=before_snapshot,
+                    after_snapshot=after_snapshot,
+                )
+                if memory_id:
+                    response["operational_memory_writeback"] = {
+                        "memory_id": memory_id,
+                        "verification_status": (
+                            verification_payload or {}
+                        ).get("status"),
+                    }
+            except Exception as exc:
+                memory_error = type(exc).__name__
+                logger.error(
+                    "direct_execution_operational_memory_writeback_failed",
+                    incident_id=incident_id,
+                    tool_name=request.tool_name,
+                    action=request.action,
+                    error_type=memory_error,
+                )
+
         await _audit_durable(
             db,
             "direct_execution_completed",
@@ -338,6 +385,8 @@ async def execute(payload: Dict[str, Any], identity=Depends(require_permission("
                 "approval_id": approval_id,
                 "verified": verified,
                 "verification": verification_payload,
+                "memory_id": memory_id,
+                "memory_error": memory_error,
             },
         )
         return response
