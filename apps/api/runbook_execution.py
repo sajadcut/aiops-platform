@@ -210,7 +210,10 @@ async def execute_runbook(
                     ),
                 )
 
-        consumed = await store.consume(approval_id)
+        consumed = await store.consume(
+            approval_id,
+            issue_claim=True,
+        )
         if not consumed or consumed.get("status") != "consumed":
             raise HTTPException(status_code=409, detail="approval_already_consumed_or_unavailable")
 
@@ -225,6 +228,7 @@ async def execute_runbook(
             incident_id=incident_id,
             approval_id=approval_id,
             approval_granted=True,
+            approval_context=consumed,
             rollback_requested=rollback,
         )
 
