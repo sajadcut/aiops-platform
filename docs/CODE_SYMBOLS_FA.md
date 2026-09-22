@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 395 | Dashboard JS files scanned: 5 | Symbols indexed: 3521**
+**Python files scanned: 395 | Dashboard JS files scanned: 5 | Symbols indexed: 3522**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -2195,7 +2195,8 @@
 | `tests/security/test_runbook_approval_boundary.py` | `test_replay_cache_is_scoped_to_same_consumed_approval` | 117 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/security/test_runbook_approval_boundary.py` | `test_replay_cache_is_scoped_to_same_consumed_approval.fake_execute` | 120 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_replay_cache_is_scoped_to_same_consumed_approval |
 | `tests/security/test_runbook_approval_boundary.py` | `test_consumed_claim_cannot_be_replayed_through_new_executor` | 164 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/security/test_runbook_approval_boundary.py` | `test_consumed_claim_cannot_be_replayed_through_new_executor.fake_execute` | 167 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_consumed_claim_cannot_be_replayed_through_new_executor |
+| `tests/security/test_runbook_approval_boundary.py` | `test_consumed_claim_cannot_be_replayed_through_new_executor.fake_tool_execute` | 169 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_consumed_claim_cannot_be_replayed_through_new_executor |
+| `tests/security/test_runbook_approval_boundary.py` | `test_consumed_claim_cannot_be_replayed_through_new_executor.execute_through_claim_boundary` | 172 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | test_consumed_claim_cannot_be_replayed_through_new_executor |
 | `tests/security/test_vm_mcp_security.py` | `test_vm_target_and_service_allowlists` | 10 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/security/test_vm_mcp_security.py` | `test_production_vm_edge_rejects_root_and_missing_host_pinning` | 23 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/security/test_vm_mcp_security.py` | `_FakeVMConnector` | 40 | class | کلاس | module |
