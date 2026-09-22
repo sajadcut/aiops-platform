@@ -6,7 +6,14 @@ from apps.runbook_service.executor import RunbookExecutor
 
 class _Registry:
     def get(self, runbook_id):
-        return {"id": runbook_id, "version": "1", "action": "restart_service"}
+        return {
+            "id": runbook_id,
+            "version": "1",
+            "execution": {
+                "tool": "ssh_vm",
+                "allowed_actions": ["restart_service"],
+            },
+        }
 
     def validate(self, runbook_id, parameters):
         return {"valid": True}
