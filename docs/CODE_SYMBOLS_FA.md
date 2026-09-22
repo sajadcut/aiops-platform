@@ -2994,7 +2994,7 @@
 | `tests/unit/test_recovery_readiness_engine.py` | `CapturingRecoveryLLM.generate_with_messages` | 157 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CapturingRecoveryLLM |
 | `tests/unit/test_recovery_readiness_engine.py` | `test_recovery_agent_runs_readiness_analyzer_before_llm_and_never_executes_restore` | 162 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_release_rendering.py` | `test_release_renderer_rejects_tags_and_zero_digest` | 11 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_release_rendering.py` | `test_release_renderer_uses_same_immutable_artifact_for_api_and_migration` | 18 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_release_rendering.py` | `test_release_renderer_uses_same_immutable_artifact_for_api_migration_and_memory_jobs` | 18 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_release_rendering.py` | `test_raw_templates_are_fail_closed_and_never_mutable` | 29 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_remediation_planner.py` | `_evidence` | 8 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_remediation_planner.py` | `_state` | 17 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
