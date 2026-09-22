@@ -124,13 +124,13 @@ async def test_preconfirm_guard_keeps_transient_telemetry_failure_retryable(monk
 
 
 @pytest.mark.asyncio
-async def test_preconfirm_guard_does_not_invent_contract_for_other_tools():
+async def test_preconfirm_guard_does_not_invent_contract_for_unsupported_tools():
     proposal = {
         "incident_id": "11111111-1111-1111-1111-111111111111",
-        "tool_name": "kubernetes_mcp",
-        "action": "restart_workload",
+        "tool_name": "jenkins_mcp",
+        "action": "deploy",
         "target": "payment-api",
-        "parameters": {"namespace": "payments"},
+        "parameters": {},
     }
 
     result = await ChatbotService()._preconfirm_mutation_guard(proposal)
