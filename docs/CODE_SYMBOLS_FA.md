@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 388 | Dashboard JS files scanned: 5 | Symbols indexed: 3417**
+**Python files scanned: 388 | Dashboard JS files scanned: 5 | Symbols indexed: 3420**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -3138,6 +3138,8 @@
 | `tests/unit/test_runbook_api_preflight.py` | `test_direct_runbook_preflight_blocks_before_approval_consume.no_audit` | 49 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_direct_runbook_preflight_blocks_before_approval_consume |
 | `tests/unit/test_runbook_api_preflight.py` | `test_direct_runbook_preflight_blocks_before_approval_consume.snapshot` | 54 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_direct_runbook_preflight_blocks_before_approval_consume |
 | `tests/unit/test_runbook_api_preflight.py` | `test_direct_runbook_preflight_blocks_before_approval_consume.execute` | 78 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | test_direct_runbook_preflight_blocks_before_approval_consume |
+| `tests/unit/test_runbook_api_preflight.py` | `test_non_executable_runbook_cannot_reach_production_execute` | 111 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_runbook_api_preflight.py` | `test_non_executable_runbook_remains_available_for_dry_run_contract_resolution` | 143 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_runbook_execution_contract.py` | `test_vm_recovery_contract_derives_tool_and_requires_allowlisted_action` | 9 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_runbook_execution_contract.py` | `test_vm_recovery_contract_rejects_caller_tool_override` | 28 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_runbook_execution_contract.py` | `test_vm_recovery_contract_rejects_action_outside_runbook_allowlist` | 44 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
@@ -3148,6 +3150,7 @@
 | `tests/unit/test_runbook_executor.py` | `Registry.validate` | 13 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Registry |
 | `tests/unit/test_runbook_executor.py` | `test_dry_run_is_side_effect_free` | 20 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_runbook_executor.py` | `test_runbook_registry_validation` | 31 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_runbook_executor.py` | `test_non_executable_runbook_is_dry_run_only` | 37 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_runbook_learning.py` | `_snapshot` | 5 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_runbook_learning.py` | `_runbook` | 35 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_runbook_learning.py` | `test_direct_runbook_success_builds_verified_operational_memory_episode` | 43 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
