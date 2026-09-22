@@ -171,6 +171,7 @@ class OperationalMemoryService:
         text_value = str(
             entry.embedding_document or entry.pattern or ""
         ).strip()
+        entry_id = entry.id
         try:
             embedding = await EmbeddingService.generate_embedding(text_value)
             entry.embedding = embedding
@@ -189,12 +190,32 @@ class OperationalMemoryService:
             )
             return True
         except Exception as exc:
-            entry.embedding = None
-            entry.embedding_status = "failed"
-            await self.db.commit()
+            try:
+                await self.db.rollback()
+            except Exception:
+                pass
+            try:
+                persisted = await self.db.get(MemoryEntry, entry_id)
+                if persisted is not None:
+                    persisted.embedding = None
+                    persisted.embedding_status = "failed"
+                    persisted.embedding_provider = settings.EMBEDDING_PROVIDER
+                    persisted.embedding_model = settings.EMBEDDING_MODEL
+                    persisted.embedding_dimension = settings.EMBEDDING_DIMENSION
+                    await self.db.commit()
+            except Exception as state_exc:
+                try:
+                    await self.db.rollback()
+                except Exception:
+                    pass
+                logger.error(
+                    "aiops.memory.embedding_state_update_failed",
+                    memory_id=str(entry_id),
+                    error_type=type(state_exc).__name__,
+                )
             logger.warning(
                 "aiops.memory.embedding.failed",
-                memory_id=str(entry.id),
+                memory_id=str(entry_id),
                 error_type=type(exc).__name__,
             )
             return False
