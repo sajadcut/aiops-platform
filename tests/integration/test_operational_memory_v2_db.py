@@ -13,10 +13,13 @@ from domain.models import MemoryEntry, MemoryReuseEvent
 from knowledge import EmbeddingService
 
 
-pytestmark = pytest.mark.skipif(
-    os.getenv("RUN_DB_MEMORY_V2_TEST") != "1",
-    reason="requires PostgreSQL/pgvector database acceptance environment",
-)
+pytestmark = [
+    pytest.mark.skipif(
+        os.getenv("RUN_DB_MEMORY_V2_TEST") != "1",
+        reason="requires PostgreSQL/pgvector database acceptance environment",
+    ),
+    pytest.mark.asyncio(loop_scope="module"),
+]
 
 
 def _state(incident_id: str, *, success: bool = True):
@@ -90,7 +93,6 @@ def _state(incident_id: str, *, success: bool = True):
     }
 
 
-@pytest.mark.asyncio
 async def test_memory_v2_lexical_retrieval_survives_embedding_provider_outage(monkeypatch):
     incident_id = str(uuid4())
 
@@ -126,7 +128,6 @@ async def test_memory_v2_lexical_retrieval_survives_embedding_provider_outage(mo
         assert match["requires_current_validation"] is True
 
 
-@pytest.mark.asyncio
 async def test_memory_v2_reembeds_stale_embedding_contract():
     incident_id = str(uuid4())
 
@@ -167,7 +168,6 @@ async def test_memory_v2_reembeds_stale_embedding_contract():
         assert row.embedding is not None
 
 
-@pytest.mark.asyncio
 async def test_memory_v2_postgres_hybrid_retrieval_and_feedback():
     successful_incident = str(uuid4())
     failed_incident = str(uuid4())
