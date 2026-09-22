@@ -131,6 +131,10 @@ class RunbookExecutor:
         if incident_id and str(incident_id) != context_incident_id:
             raise ValueError("approval_incident_context_mismatch")
 
+        claim = str(
+            approval_context.get("_execution_claim") or ""
+        ).strip()
+
         assert_consumed_bound(
             approval_context,
             incident_id=context_incident_id,
@@ -142,7 +146,6 @@ class RunbookExecutor:
             runbook_id=runbook_id,
             runbook_version=str(runbook.get("version") or ""),
             rollback=rollback_requested,
-            execution_claim=claim,
         )
 
         fingerprint = execution_fingerprint(
@@ -166,10 +169,6 @@ class RunbookExecutor:
                 "result": previous.model_dump(mode="json"),
             }
 
-        claim = str(
-            approval_context.get("_execution_claim") or ""
-        ).strip()
-
         request = ExecutionRequest(
             tool_name=tool_name,
             action=requested_action,
@@ -183,6 +182,7 @@ class RunbookExecutor:
             runbook_id=runbook_id,
             runbook_version=str(runbook.get("version") or ""),
             rollback=rollback_requested,
+            execution_claim=claim,
         )
         result = await ExecutionService.execute(request)
         if result.success:
