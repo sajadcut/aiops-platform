@@ -1,3 +1,4 @@
+import asyncio
 import os
 from datetime import datetime, timedelta, timezone
 from uuid import uuid4
@@ -156,12 +157,55 @@ async def test_duplicate_save_cannot_resurrect_terminal_approval_states():
         first_consume = await store.consume(once_id)
         assert first_consume["status"] == "consumed"
         second_consume = await store.consume(once_id)
-        assert second_consume["status"] == "consumed"
+        assert second_consume is None
         assert (await store.get(once_id))["status"] == "consumed"
 
         await db.execute(
             text("DELETE FROM approvals WHERE incident_id=:incident_id"),
             {"incident_id": incident_id},
+        )
+        await db.execute(
+            text("DELETE FROM incidents WHERE id=:incident_id"),
+            {"incident_id": incident_id},
+        )
+        await db.commit()
+
+
+@pytest.mark.asyncio
+async def test_concurrent_consume_has_exactly_one_execution_authority_winner():
+    incident_id = uuid4()
+    approval_id = str(uuid4())
+
+    async with AsyncSessionLocal() as db:
+        await _seed_incident(db, incident_id)
+        store = PostgreSQLApprovalStore(db)
+        await store.save(_record(approval_id, incident_id))
+        approved = await store.set_status(approval_id, "approved")
+        assert approved["status"] == "approved"
+
+    async def claim():
+        async with AsyncSessionLocal() as session:
+            return await PostgreSQLApprovalStore(session).consume(approval_id)
+
+    first, second = await asyncio.gather(claim(), claim())
+    winners = [
+        result
+        for result in (first, second)
+        if result is not None and result.get("status") == "consumed"
+    ]
+    losers = [result for result in (first, second) if result is None]
+
+    assert len(winners) == 1
+    assert len(losers) == 1
+
+    async with AsyncSessionLocal() as db:
+        store = PostgreSQLApprovalStore(db)
+        durable = await store.get(approval_id)
+        assert durable["status"] == "consumed"
+
+        await db.execute(
+            text("DELETE FROM approvals WHERE approval_id=:approval_id"),
+            {"approval_id": approval_id},
         )
         await db.execute(
             text("DELETE FROM incidents WHERE id=:incident_id"),
