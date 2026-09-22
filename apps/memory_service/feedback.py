@@ -91,6 +91,7 @@ async def apply_feedback(
     cited = {str(value) for value in (cited_memory_ids or []) if str(value).strip()}
     now = datetime.now(timezone.utc)
     rewarded_memory_ids: set[UUID] = set()
+    cited_memory_ids_seen: set[UUID] = set()
 
     for event in events:
         action_matches = bool(current_action and event.suggested_action == current_action)
@@ -100,7 +101,7 @@ async def apply_feedback(
         event.was_cited_by_agent = explicitly_cited
         event.influenced_plan = influenced
         event.verification_result = status
-        if influenced and status == "success":
+        if influenced and status in {"success", "succeeded", "verified"}:
             event.helpful = True
             event.reward_score = 1.0
         elif influenced and status in {"failed", "failure"}:
@@ -112,23 +113,33 @@ async def apply_feedback(
             event.helpful = None
             event.reward_score = 0.0
 
+        attribution = (
+            "cited_and_matched"
+            if influenced
+            else "cited_action_mismatch"
+            if explicitly_cited
+            else "not_cited"
+        )
         MEMORY_FEEDBACK_TOTAL.labels(
             verification_status=status,
-            attribution="cited_and_matched" if influenced else "not_attributed",
+            attribution=attribution,
         ).inc()
 
         entry = await db.get(MemoryEntry, event.memory_id)
-        if (
-            entry is None
-            or not influenced
-            or event.memory_id in rewarded_memory_ids
-        ):
+        if entry is None:
             continue
+
+        if explicitly_cited and event.memory_id not in cited_memory_ids_seen:
+            cited_memory_ids_seen.add(event.memory_id)
+            entry.cited_count = int(entry.cited_count or 0) + 1
+
+        if not influenced or event.memory_id in rewarded_memory_ids:
+            continue
+
         rewarded_memory_ids.add(event.memory_id)
         entry.reuse_count = int(entry.reuse_count or 0) + 1
-        entry.cited_count = int(entry.cited_count or 0) + 1
         entry.last_reused_at = now
-        if status == "success":
+        if status in {"success", "succeeded", "verified"}:
             entry.successful_reuse_count = int(entry.successful_reuse_count or 0) + 1
             entry.last_successful_reuse_at = now
         elif status in {"failed", "failure"}:
@@ -143,6 +154,7 @@ async def apply_feedback(
         "aiops.memory.feedback.recorded",
         target_incident_id=target_incident_id,
         count=len(events),
+        cited_memory_count=len(cited_memory_ids_seen),
         attributed_memory_count=len(rewarded_memory_ids),
         verification_status=status,
     )
