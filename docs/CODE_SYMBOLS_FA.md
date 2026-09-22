@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 367 | Dashboard JS files scanned: 5 | Symbols indexed: 3235**
+**Python files scanned: 368 | Dashboard JS files scanned: 5 | Symbols indexed: 3236**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1903,6 +1903,7 @@
 | `scripts/generate_file_index_fa.py` | `classify` | 22 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `scripts/generate_file_index_fa.py` | `render` | 140 | function | خروجی UI/نمایشی را می‌سازد | module |
 | `scripts/generate_file_index_fa.py` | `main` | 159 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `scripts/mark_stale_memory.py` | `main` | 10 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `scripts/reconcile_legacy_database.py` | `_sync_database_url` | 100 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `scripts/reconcile_legacy_database.py` | `_alembic_config` | 109 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `scripts/reconcile_legacy_database.py` | `_table_exists` | 114 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
