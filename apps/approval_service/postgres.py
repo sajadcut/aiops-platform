@@ -14,6 +14,7 @@ from typing import Any, Dict, Optional
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from apps.approval_service.execution_claim import issue_execution_claim
 from domain.contracts.config import settings
 
 
@@ -257,7 +258,12 @@ class PostgreSQLApprovalStore:
         await self.session.commit()
         return [str(value) for value in rows]
 
-    async def consume(self, approval_id: str) -> Optional[Dict[str, Any]]:
+    async def consume(
+        self,
+        approval_id: str,
+        *,
+        issue_claim: bool = False,
+    ) -> Optional[Dict[str, Any]]:
         """Claim approved authority exactly once at the execution boundary.
 
         Consumed means execution has claimed the approval and is about to enter
@@ -296,7 +302,14 @@ class PostgreSQLApprovalStore:
         # Only the winner of the approved->consumed compare-and-set receives
         # execution authority. A concurrent/replayed loser gets no claim even
         # though the durable row is now terminally consumed.
-        return dict(row) if row else None
+        if not row:
+            return None
+        result = dict(row)
+        if issue_claim:
+            # Ephemeral and deliberately NOT persisted. Loading the consumed
+            # approval later cannot recreate immediate execution authority.
+            result["_execution_claim"] = issue_execution_claim()
+        return result
 
     async def is_approved(self, approval_id: str) -> bool:
         """برای read-only check؛ execution واقعی همچنان باید consume اتمیک انجام دهد."""
