@@ -245,11 +245,13 @@ class VerificationEngine:
                 if expected_text == "below_pre_action_baseline":
                     if target not in before:
                         reason = "pre_action_objective_evidence_missing"
+                        missing.append(target)
                     else:
                         passed = float(actual) < float(before[target])
                 elif expected_text == "above_pre_action_baseline":
                     if target not in before:
                         reason = "pre_action_objective_evidence_missing"
+                        missing.append(target)
                     else:
                         passed = float(actual) > float(before[target])
                 elif expected_numeric is not None:
@@ -325,6 +327,7 @@ class VerificationEngine:
                 "required_objectives_met": all_met,
             }
         )
+
     @classmethod
     def _inconclusive(cls, before: Dict[str, float], after: Dict[str, float], refs: List[str], message: str) -> VerificationResult:
         return VerificationResult(
