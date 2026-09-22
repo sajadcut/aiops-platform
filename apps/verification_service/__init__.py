@@ -59,18 +59,30 @@ class VerificationEngine:
         before_metrics = cls._extract_metrics(before_context)
         objectives = [item for item in (verification_objectives or []) if isinstance(item, dict)]
         if after_context is None:
-            return cls._apply_objectives(\n                cls._inconclusive(before_metrics, {}, cls._evidence_refs(before_context), "No post-execution context was supplied."),\n                before_metrics, {}, objectives,\n            )
+            return cls._apply_objectives(
+                cls._inconclusive(before_metrics, {}, cls._evidence_refs(before_context), "No post-execution context was supplied."),
+                before_metrics, {}, objectives,
+            )
 
         after_metrics = cls._extract_metrics(after_context)
         if not before_metrics:
-            return cls._apply_objectives(\n                cls._inconclusive({}, after_metrics, cls._evidence_refs(after_context), "No pre-execution metrics or operational conditions were available."),\n                {}, after_metrics, objectives,\n            )
+            return cls._apply_objectives(
+                cls._inconclusive({}, after_metrics, cls._evidence_refs(after_context), "No pre-execution metrics or operational conditions were available."),
+                {}, after_metrics, objectives,
+            )
         if not after_metrics:
-            return cls._apply_objectives(\n                cls._inconclusive(before_metrics, {}, cls._evidence_refs(before_context), "No post-execution metrics or operational conditions were available."),\n                before_metrics, {}, objectives,\n            )
+            return cls._apply_objectives(
+                cls._inconclusive(before_metrics, {}, cls._evidence_refs(before_context), "No post-execution metrics or operational conditions were available."),
+                before_metrics, {}, objectives,
+            )
 
         comparable_keys = sorted(set(before_metrics) & set(after_metrics))
         comparable_keys = [key for key in comparable_keys if cls._direction(key) is not None]
         if not comparable_keys:
-            return cls._apply_objectives(\n                cls._inconclusive(before_metrics, after_metrics, cls._evidence_refs(before_context) + cls._evidence_refs(after_context), "No comparable evidence with defined verification semantics was found."),\n                before_metrics, after_metrics, objectives,\n            )
+            return cls._apply_objectives(
+                cls._inconclusive(before_metrics, after_metrics, cls._evidence_refs(before_context) + cls._evidence_refs(after_context), "No comparable evidence with defined verification semantics was found."),
+                before_metrics, after_metrics, objectives,
+            )
 
         changes: List[str] = []
         improvements = 0
