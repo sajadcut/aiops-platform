@@ -876,8 +876,8 @@
 | `apps/chatbot/service.py` | `ChatbotService._collect_mutation_snapshot` | 525 | async method | Collect read-only operational state for independent before/after verification. | ChatbotService |
 | `apps/chatbot/service.py` | `ChatbotService._verify_mutation` | 701 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
 | `apps/chatbot/service.py` | `ChatbotService._record_memory_after_mutation` | 739 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
-| `apps/chatbot/service.py` | `ChatbotService._preconfirm_mutation_guard` | 854 | async method | Freshly revalidate supported VM recovery intent before confirmation. | ChatbotService |
-| `apps/chatbot/service.py` | `ChatbotService.decide` | 906 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
+| `apps/chatbot/service.py` | `ChatbotService._preconfirm_mutation_guard` | 854 | async method | Freshly revalidate supported mutation intent before confirmation. | ChatbotService |
+| `apps/chatbot/service.py` | `ChatbotService.decide` | 1048 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
 | `apps/chatbot/store.py` | `_utcnow` | 19 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/chatbot/store.py` | `_json` | 23 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/chatbot/store.py` | `_title` | 27 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
