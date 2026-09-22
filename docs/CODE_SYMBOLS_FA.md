@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 387 | Dashboard JS files scanned: 5 | Symbols indexed: 3387**
+**Python files scanned: 387 | Dashboard JS files scanned: 5 | Symbols indexed: 3392**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -745,13 +745,13 @@
 | `apps/api/main.py` | `_validate_production_configuration` | 158 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/main.py` | `startup_event` | 249 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/main.py` | `shutdown_event` | 302 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/remediation.py` | `_audit_durable` | 27 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/remediation.py` | `_read_vm` | 33 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/remediation.py` | `RemediationRequest` | 40 | class | کلاس | module |
-| `apps/api/remediation.py` | `create_remediation_request` | 50 | async function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
-| `apps/api/remediation.py` | `execute_approved_remediation` | 103 | async function | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | module |
-| `apps/api/remediation.py` | `VMVerificationRequest` | 324 | class | کلاس | module |
-| `apps/api/remediation.py` | `verify_remediation` | 330 | async function | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | module |
+| `apps/api/remediation.py` | `_audit_durable` | 28 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/remediation.py` | `_read_vm` | 34 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/remediation.py` | `RemediationRequest` | 41 | class | کلاس | module |
+| `apps/api/remediation.py` | `create_remediation_request` | 51 | async function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
+| `apps/api/remediation.py` | `execute_approved_remediation` | 104 | async function | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | module |
+| `apps/api/remediation.py` | `VMVerificationRequest` | 325 | class | کلاس | module |
+| `apps/api/remediation.py` | `verify_remediation` | 331 | async function | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | module |
 | `apps/api/runbook_execution.py` | `_audit_durable` | 24 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/runbook_execution.py` | `_runbook_contract` | 30 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/runbook_execution.py` | `execute_runbook` | 100 | async function | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | module |
@@ -1565,10 +1565,15 @@
 | `domain/contracts/logging.py` | `_file_handler` | 103 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `domain/contracts/logging.py` | `configure_logging` | 122 | function | Configure human console/text logs and JSON-line file logs. | module |
 | `domain/contracts/logging.py` | `log_workflow_step` | 195 | function | Emit one canonical Incident timeline event to text and JSON logs. | module |
-| `domain/contracts/rate_limit.py` | `RateLimiter` | 14 | class | In-process rate limiter using centrally configured limits. | module |
-| `domain/contracts/rate_limit.py` | `RateLimiter.__init__` | 22 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RateLimiter |
-| `domain/contracts/rate_limit.py` | `RateLimiter.__call__` | 26 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RateLimiter |
-| `domain/contracts/rate_limit.py` | `RateLimiter.clear_cache` | 47 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RateLimiter |
+| `domain/contracts/rate_limit.py` | `RateLimiter` | 17 | class | Fixed-window limiter with a shared production backend. | module |
+| `domain/contracts/rate_limit.py` | `RateLimiter.__init__` | 26 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RateLimiter |
+| `domain/contracts/rate_limit.py` | `RateLimiter._backend` | 37 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RateLimiter |
+| `domain/contracts/rate_limit.py` | `RateLimiter._route_template` | 43 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RateLimiter |
+| `domain/contracts/rate_limit.py` | `RateLimiter._rate_key` | 49 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RateLimiter |
+| `domain/contracts/rate_limit.py` | `RateLimiter._consume_postgres` | 55 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RateLimiter |
+| `domain/contracts/rate_limit.py` | `RateLimiter._consume_memory` | 103 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RateLimiter |
+| `domain/contracts/rate_limit.py` | `RateLimiter.__call__` | 115 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RateLimiter |
+| `domain/contracts/rate_limit.py` | `RateLimiter.clear_cache` | 160 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RateLimiter |
 | `domain/contracts/redaction.py` | `is_sensitive_key` | 49 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `domain/contracts/redaction.py` | `_redact_inline_secret` | 54 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `domain/contracts/redaction.py` | `redact_text` | 58 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
