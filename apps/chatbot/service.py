@@ -659,8 +659,35 @@ class ChatbotService:
                 )
 
                 history = await store.history(session_id, HISTORY_LIMIT)
+                policy = infer_request_policy(request.message)
+                context = resolve_context(history)
                 messages = self._history_messages(history)
+                resolved_context = context_instruction(context)
+                if resolved_context:
+                    messages.insert(1, {"role": "system", "content": resolved_context})
                 recent_operator_context = self._recent_operator_context(history)
+
+                await self._audit(
+                    db,
+                    event_type="chat_intent_detected",
+                    actor=identity.subject,
+                    status="completed",
+                    metadata={
+                        "session_id": session_id,
+                        "kind": policy.kind,
+                        "requires_live_evidence": policy.requires_live_evidence,
+                        "diagnostic": policy.diagnostic,
+                        "required_capabilities": list(policy.required_capabilities),
+                    },
+                )
+                await self._audit(
+                    db,
+                    event_type="chat_context_resolved",
+                    actor=identity.subject,
+                    status="completed",
+                    metadata={"session_id": session_id, "context": context.compact()},
+                )
+
                 try:
                     response = await self._llm().generate_with_messages(
                         messages,
@@ -684,30 +711,8 @@ class ChatbotService:
                     )
                     raise HTTPException(status_code=503, detail="chatbot_llm_unavailable") from exc
 
-                tool_calls = list(response.tool_calls or [])
-                if not tool_calls:
-                    answer = str(response.content or "").strip() or "I could not produce a complete answer."
-                    answer = answer[:8000]
-                    await store.add_message(session_id, "assistant", answer, {"kind": "answer", "model": response.model})
-                    await self._audit(
-                        db,
-                        event_type="chatbot_response",
-                        actor=identity.subject,
-                        status="completed",
-                        metadata={"session_id": session_id, "model": response.model, "tool_calls": 0},
-                    )
-                    CHAT_REQUESTS.labels(outcome="answer").inc()
-                    return ChatMessageResponse(session_id=UUID(session_id), kind="answer", message=answer)
-
-                if len(tool_calls) > max_tool_calls():
-                    CHAT_BLOCKED_ACTIONS.labels(reason="too_many_tool_calls").inc()
-                    raise HTTPException(status_code=400, detail="chatbot_tool_call_limit_exceeded")
-
-                intents: list[ToolIntent] = []
                 try:
-                    for call in tool_calls:
-                        name, args = parse_tool_call(call)
-                        intents.append(normalize_tool_intent(name, args))
+                    intents = self._normalize_model_intents(response)
                 except PermissionError as exc:
                     CHAT_BLOCKED_ACTIONS.labels(reason="tool_not_allowlisted").inc()
                     await self._audit(
@@ -722,6 +727,112 @@ class ChatbotService:
                     CHAT_BLOCKED_ACTIONS.labels(reason="invalid_tool_arguments").inc()
                     raise HTTPException(status_code=400, detail=str(exc)) from exc
 
+                # A live operational question is never allowed to fall through to
+                # model prose. Give the planner a bounded second chance to select
+                # a governed read capability; otherwise return a truthful
+                # missing-capability outcome instead of a hallucinated state.
+                if not intents and policy.requires_live_evidence:
+                    for attempt in range(settings.CHAT_MAX_REPLAN_ATTEMPTS):
+                        CHAT_REPLANS.labels(outcome="requested").inc()
+                        await self._audit(
+                            db,
+                            event_type="chat_replan_requested",
+                            actor=identity.subject,
+                            status="started",
+                            metadata={
+                                "session_id": session_id,
+                                "attempt": attempt + 1,
+                                "reason": "live_question_without_tool",
+                            },
+                        )
+                        try:
+                            intents = await self._replan(
+                                messages=messages,
+                                request_message=request.message,
+                                session_id=session_id,
+                                identity=identity,
+                                context=context,
+                                evidence=[],
+                                reason="Current operational facts require live evidence, but the first plan selected no tool.",
+                            )
+                        except Exception as exc:
+                            CHAT_LLM_FAILURES.inc()
+                            logger.warning("chatbot_replan_failed", error_type=type(exc).__name__, session_id=session_id)
+                            intents = []
+                        if intents:
+                            CHAT_REPLANS.labels(outcome="tool_selected").inc()
+                            break
+
+                    if not intents:
+                        answer = missing_capability_message(request.message, policy)
+                        for capability in policy.required_capabilities or ("unknown",):
+                            CHAT_MISSING_CAPABILITIES.labels(capability=str(capability)[:80]).inc()
+                        await store.add_message(
+                            session_id,
+                            "assistant",
+                            answer,
+                            {
+                                "kind": "answer",
+                                "validation": "missing_capability",
+                                "required_capabilities": list(policy.required_capabilities),
+                            },
+                        )
+                        await self._audit(
+                            db,
+                            event_type="chat_missing_capability",
+                            actor=identity.subject,
+                            status="degraded",
+                            metadata={
+                                "session_id": session_id,
+                                "required_capabilities": list(policy.required_capabilities),
+                            },
+                        )
+                        CHAT_REQUESTS.labels(outcome="answer").inc()
+                        return ChatMessageResponse(session_id=UUID(session_id), kind="answer", message=answer)
+
+                # Knowledge/information answers do not require live tools, but they
+                # still pass the final response-quality judge before persistence.
+                if not intents:
+                    draft = (str(response.content or "").strip() or "I could not produce a complete answer.")[:8000]
+                    valid, rule, judge, confidence = await self._validate_answer(
+                        question=request.message,
+                        policy=policy,
+                        context=context,
+                        evidence=[],
+                        draft=draft,
+                        session_id=session_id,
+                        identity=identity,
+                    )
+                    answer = draft if valid else guarded_failure_message(
+                        request.message, [], (judge.reason if judge else rule.reason)
+                    )
+                    await store.add_message(
+                        session_id,
+                        "assistant",
+                        answer,
+                        {
+                            "kind": "answer",
+                            "model": response.model,
+                            "validated": valid,
+                            "confidence": confidence,
+                        },
+                    )
+                    await self._audit(
+                        db,
+                        event_type="chat_final_answer",
+                        actor=identity.subject,
+                        status="completed" if valid else "degraded",
+                        metadata={
+                            "session_id": session_id,
+                            "model": response.model,
+                            "tool_calls": 0,
+                            "validated": valid,
+                            "confidence": confidence,
+                        },
+                    )
+                    CHAT_REQUESTS.labels(outcome="answer").inc()
+                    return ChatMessageResponse(session_id=UUID(session_id), kind="answer", message=answer)
+
                 mutations = [intent for intent in intents if intent.mutating]
                 if mutations:
                     if len(intents) != 1:
@@ -734,84 +845,201 @@ class ChatbotService:
                     CHAT_BLOCKED_ACTIONS.labels(reason="read_permission").inc()
                     raise HTTPException(status_code=403, detail="insufficient_role")
 
-                results: list[dict[str, Any]] = []
-                for intent in intents:
+                evidence: list[EvidenceRecord] = []
+                results = await self._execute_read_intents(
+                    db=db,
+                    store=store,
+                    identity=identity,
+                    session_id=session_id,
+                    intents=intents,
+                    evidence=evidence,
+                )
+                draft, source, data, tool_name = await self._summarize_results(
+                    request_message=request.message,
+                    results=results,
+                    identity=identity,
+                    session_id=session_id,
+                    recent_operator_context=recent_operator_context,
+                )
+                valid, rule, judge, confidence = await self._validate_answer(
+                    question=request.message,
+                    policy=policy,
+                    context=context,
+                    evidence=evidence,
+                    draft=draft,
+                    session_id=session_id,
+                    identity=identity,
+                )
+
+                seen = {
+                    (
+                        item["intent"].semantic_name,
+                        item["intent"].action,
+                        item["intent"].target,
+                        json.dumps(item["intent"].parameters, sort_keys=True, default=str),
+                    )
+                    for item in results
+                }
+                replan_attempt = 0
+                while (
+                    not valid
+                    and replan_attempt < settings.CHAT_MAX_REPLAN_ATTEMPTS
+                    and (rule.needs_replan or (judge is not None and judge.needs_replan))
+                ):
+                    replan_attempt += 1
+                    reason_parts = list(rule.missing_evidence)
+                    if judge is not None:
+                        reason_parts.extend(judge.missing_evidence)
+                        reason_parts.extend(judge.unsupported_claims)
+                        if judge.reason:
+                            reason_parts.append(judge.reason)
+                    reason = "; ".join(dict.fromkeys(reason_parts)) or "answer validation requested more evidence"
+
+                    CHAT_REPLANS.labels(outcome="requested").inc()
+                    await self._audit(
+                        db,
+                        event_type="chat_replan_requested",
+                        actor=identity.subject,
+                        status="started",
+                        metadata={"session_id": session_id, "attempt": replan_attempt, "reason": reason[:1000]},
+                    )
                     try:
-                        payload = await self._execute_read(intent, session_id)
-                        CHAT_TOOL_CALLS.labels(tool=intent.semantic_name, outcome="success").inc()
-                        results.append({"intent": intent, "payload": payload})
-                        await store.add_message(
-                            session_id,
-                            "tool",
-                            f"{intent.semantic_name} completed",
-                            {"tool": intent.semantic_name, "source": payload.get("source")},
-                        )
-                        await self._audit(
-                            db,
-                            event_type="chatbot_tool_invoked",
-                            actor=identity.subject,
-                            status="completed",
-                            metadata={"session_id": session_id, "tool": intent.semantic_name, "source": payload.get("source")},
+                        replanned = await self._replan(
+                            messages=messages,
+                            request_message=request.message,
+                            session_id=session_id,
+                            identity=identity,
+                            context=context,
+                            evidence=evidence,
+                            reason=reason,
                         )
                     except Exception as exc:
-                        CHAT_TOOL_CALLS.labels(tool=intent.semantic_name, outcome="failed").inc()
-                        await self._audit(
-                            db,
-                            event_type="chatbot_tool_failed",
-                            actor=identity.subject,
-                            status="failed",
-                            metadata={"session_id": session_id, "tool": intent.semantic_name, "error_type": type(exc).__name__},
+                        CHAT_REPLANS.labels(outcome="failed").inc()
+                        logger.warning("chatbot_replan_failed", error_type=type(exc).__name__, session_id=session_id)
+                        break
+
+                    additional: list[ToolIntent] = []
+                    for intent in replanned:
+                        signature = (
+                            intent.semantic_name,
+                            intent.action,
+                            intent.target,
+                            json.dumps(intent.parameters, sort_keys=True, default=str),
                         )
-                        raise HTTPException(status_code=502, detail=f"chatbot_tool_failed:{intent.semantic_name}") from exc
+                        if signature not in seen:
+                            seen.add(signature)
+                            additional.append(intent)
+                    if not additional:
+                        CHAT_REPLANS.labels(outcome="no_new_capability").inc()
+                        break
 
-                if len(results) == 1:
-                    intent = results[0]["intent"]
-                    payload = results[0]["payload"]
-                    answer = await self._summarize(
-                        request.message,
-                        intent,
-                        payload,
-                        identity,
-                        session_id,
-                        recent_operator_context,
+                    extra = await self._execute_read_intents(
+                        db=db,
+                        store=store,
+                        identity=identity,
+                        session_id=session_id,
+                        intents=additional,
+                        evidence=evidence,
                     )
-                    source = str(payload.get("source") or "") or None
-                    data = redact(payload.get("result"))
-                    tool_name = intent.semantic_name
-                else:
-                    merged = {
-                        "source": "multiple_governed_tools",
-                        "result": [
-                            {"tool": item["intent"].semantic_name, "payload": item["payload"]}
-                            for item in results
-                        ],
-                    }
-                    synthetic = ToolIntent("multiple", "multiple", "read", "multiple", {}, False, "low")
-                    answer = await self._summarize(
-                        request.message,
-                        synthetic,
-                        merged,
-                        identity,
-                        session_id,
-                        recent_operator_context,
+                    results.extend(extra)
+                    CHAT_REPLANS.labels(outcome="completed").inc()
+                    draft, source, data, tool_name = await self._summarize_results(
+                        request_message=request.message,
+                        results=results,
+                        identity=identity,
+                        session_id=session_id,
+                        recent_operator_context=recent_operator_context,
                     )
-                    source = "multiple_governed_tools"
-                    data = redact(merged["result"])
-                    tool_name = "multiple"
+                    valid, rule, judge, confidence = await self._validate_answer(
+                        question=request.message,
+                        policy=policy,
+                        context=context,
+                        evidence=evidence,
+                        draft=draft,
+                        session_id=session_id,
+                        identity=identity,
+                    )
 
-                await store.add_message(session_id, "assistant", answer, {"kind": "tool_result", "tool": tool_name, "source": source})
+                if not valid:
+                    missing = list(policy.required_capabilities)
+                    if judge is not None and judge.missing_capabilities:
+                        missing = judge.missing_capabilities
+                    if missing and not evidence:
+                        answer = missing_capability_message(request.message, policy)
+                        event_type = "chat_missing_capability"
+                    else:
+                        reason = judge.reason if judge is not None and judge.reason else rule.reason
+                        answer = guarded_failure_message(request.message, evidence, reason)
+                        event_type = "chat_answer_validation"
+                    await store.add_message(
+                        session_id,
+                        "assistant",
+                        answer,
+                        {
+                            "kind": "tool_result",
+                            "tool": tool_name,
+                            "source": source,
+                            "validated": False,
+                            "confidence": confidence,
+                            "evidence_ids": [item.evidence_id for item in evidence],
+                        },
+                    )
+                    await self._audit(
+                        db,
+                        event_type=event_type,
+                        actor=identity.subject,
+                        status="degraded",
+                        metadata={
+                            "session_id": session_id,
+                            "validated": False,
+                            "confidence": confidence,
+                            "evidence_count": len(evidence),
+                            "missing_evidence": rule.missing_evidence,
+                            "missing_capabilities": missing,
+                        },
+                    )
+                    CHAT_REQUESTS.labels(outcome="tool_result").inc()
+                    return ChatMessageResponse(
+                        session_id=UUID(session_id),
+                        kind="tool_result",
+                        message=answer,
+                        tool=tool_name,
+                        source=source,
+                        data=data,
+                    )
+
+                await store.add_message(
+                    session_id,
+                    "assistant",
+                    draft,
+                    {
+                        "kind": "tool_result",
+                        "tool": tool_name,
+                        "source": source,
+                        "validated": True,
+                        "confidence": confidence,
+                        "evidence_ids": [item.evidence_id for item in evidence],
+                    },
+                )
                 await self._audit(
                     db,
-                    event_type="chatbot_response",
+                    event_type="chat_final_answer",
                     actor=identity.subject,
                     status="completed",
-                    metadata={"session_id": session_id, "tool_calls": len(intents), "source": source},
+                    metadata={
+                        "session_id": session_id,
+                        "tool_calls": len(results),
+                        "source": source,
+                        "validated": True,
+                        "confidence": confidence,
+                        "evidence_count": len(evidence),
+                    },
                 )
                 CHAT_REQUESTS.labels(outcome="tool_result").inc()
                 return ChatMessageResponse(
                     session_id=UUID(session_id),
                     kind="tool_result",
-                    message=answer,
+                    message=draft,
                     tool=tool_name,
                     source=source,
                     data=data,
