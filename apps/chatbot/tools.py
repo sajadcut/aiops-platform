@@ -122,6 +122,57 @@ CHAT_TOOL_SCHEMAS = [
     {
         "type": "function",
         "function": {
+            "name": "cognia_search",
+            "description": "Search the governed Cognia Knowledge RAG for runbooks, policies, procedures, architecture or prior approved knowledge relevant to the operator request. This is knowledge context, not live operational evidence.",
+            "parameters": {
+                "type": "object",
+                "required": ["query"],
+                "additionalProperties": False,
+                "properties": {
+                    "query": {"type": "string", "minLength": 1, "maxLength": 2000},
+                    "limit": {"type": "integer", "minimum": 1, "maximum": 10},
+                },
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "cognia_register_knowledge",
+            "description": "Register new governed knowledge in Cognia when the operator explicitly asks to save/register/store information in Cognia. This is a knowledge write and requires backend write:knowledge permission. The backend owns KB allowlisting, scope and idempotency.",
+            "parameters": {
+                "type": "object",
+                "required": ["title", "content"],
+                "additionalProperties": False,
+                "properties": {
+                    "knowledge_base_id": {"type": "integer", "minimum": 1},
+                    "title": {"type": "string", "minLength": 1, "maxLength": 500},
+                    "content": {"type": "string", "minLength": 1, "maxLength": 1000000},
+                },
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "cognia_create_revision",
+            "description": "Create a new candidate revision for existing Cognia knowledge only when the operator explicitly asks to update existing Cognia knowledge and provides or unambiguously establishes the knowledge id. Backend performs optimistic concurrency using the current candidate revision.",
+            "parameters": {
+                "type": "object",
+                "required": ["knowledge_id", "title", "content"],
+                "additionalProperties": False,
+                "properties": {
+                    "knowledge_base_id": {"type": "integer", "minimum": 1},
+                    "knowledge_id": {"type": "integer", "minimum": 1},
+                    "title": {"type": "string", "minLength": 1, "maxLength": 500},
+                    "content": {"type": "string", "minLength": 1, "maxLength": 1000000},
+                },
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "vm_service_action",
             "description": "Propose a governed VM service mutation. This only creates an action proposal; it never executes without explicit backend confirmation and durable approval.",
             "parameters": {
@@ -189,6 +240,27 @@ def _bounded_int(value: Any, field: str, minimum: int, maximum: int, default: in
     except (TypeError, ValueError) as exc:
         raise ValueError(f"invalid_{field}") from exc
     if not minimum <= parsed <= maximum:
+        raise ValueError(f"invalid_{field}")
+    return parsed
+
+
+def _bounded_text(value: Any, field: str, maximum: int) -> str:
+    text = str(value or "").strip()
+    if not text or len(text) > maximum:
+        raise ValueError(f"invalid_{field}")
+    return text
+
+
+def _optional_positive_int(value: Any, field: str) -> int | None:
+    if value in (None, ""):
+        return None
+    if isinstance(value, bool):
+        raise ValueError(f"invalid_{field}")
+    try:
+        parsed = int(value)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"invalid_{field}") from exc
+    if parsed <= 0:
         raise ValueError(f"invalid_{field}")
     return parsed
 
@@ -261,6 +333,45 @@ def normalize_tool_intent(name: str, args: dict[str, Any]) -> ToolIntent:
             raise ValueError("resource_required")
         params = {"operation": operation, "namespace": namespace, "service": service or None, "resource": resource or None}
         return ToolIntent(name, "kubernetes_mcp_read", operation, resource or service or namespace, params, False, "low")
+
+    if name == "cognia_search":
+        query = _bounded_text(args.get("query"), "query", 2000)
+        limit = _bounded_int(args.get("limit"), "limit", 1, 10, 5)
+        return ToolIntent(
+            name,
+            "cognia_knowledge_read",
+            "search",
+            "cognia",
+            {"query": query, "limit": limit},
+            False,
+            "low",
+        )
+
+    if name in {"cognia_register_knowledge", "cognia_create_revision"}:
+        kb_id = _optional_positive_int(args.get("knowledge_base_id"), "knowledge_base_id")
+        title = _bounded_text(args.get("title"), "title", 500)
+        content = _bounded_text(args.get("content"), "content", 1_000_000)
+        params: dict[str, Any] = {
+            "knowledge_base_id": kb_id,
+            "title": title,
+            "content": content,
+        }
+        action = "register_knowledge"
+        if name == "cognia_create_revision":
+            knowledge_id = _optional_positive_int(args.get("knowledge_id"), "knowledge_id")
+            if knowledge_id is None:
+                raise ValueError("invalid_knowledge_id")
+            params["knowledge_id"] = knowledge_id
+            action = "create_revision"
+        return ToolIntent(
+            name,
+            "cognia_knowledge_write",
+            action,
+            "cognia",
+            params,
+            True,
+            "medium",
+        )
 
     if name == "vm_service_action":
         action = str(args.get("action") or "").strip()
