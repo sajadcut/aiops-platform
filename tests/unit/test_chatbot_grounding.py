@@ -3,6 +3,7 @@ from datetime import datetime, timedelta, timezone
 from apps.chatbot.grounding import (
     EvidenceRecord,
     JudgeDecision,
+    judge_allows_display,
     infer_request_policy,
     missing_capability_message,
     resolve_context,
@@ -113,3 +114,21 @@ def test_mutation_request_is_not_misclassified_as_read_only():
     assert policy.kind == "execution_request"
     assert policy.mutating is True
     assert "vm.service.action" in policy.required_capabilities
+
+
+def test_performance_diagnostic_requires_metrics_and_logs():
+    policy = infer_request_policy("چرا API کند شده؟")
+    assert policy.kind == "diagnostic"
+    assert "prometheus.metrics.read" in policy.required_capabilities
+    assert "logs.read" in policy.required_capabilities
+
+
+def test_judge_reported_contradiction_is_deterministically_blocked():
+    decision = JudgeDecision.parse(
+        '{"valid":true,"question_answered":true,"evidence_sufficient":true,'
+        '"claims_grounded":true,"hallucination_risk":"medium","tool_usage_complete":true,'
+        '"missing_capabilities":[],"missing_evidence":[],"contradictions":["Zabbix says up; VM says down"],'
+        '"unsupported_claims":[],"needs_replan":false,"needs_user_clarification":false,'
+        '"rewrite_required":false,"confidence":0.80,"reason":"conflict"}'
+    )
+    assert judge_allows_display(decision) is False
