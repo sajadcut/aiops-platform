@@ -331,10 +331,24 @@ def missing_capability_message(message: str, policy: RequestPolicy) -> str:
 
 
 def guarded_failure_message(message: str, evidence: list[EvidenceRecord], reason: str) -> str:
+    failed = [item for item in evidence if item.status == "failed"]
+    failed_label = ", ".join(
+        sorted({f"{item.tool}/{item.error_type or 'failure'}" for item in failed})
+    )
     if PERSIAN_RE.search(message):
+        if failed_label:
+            return (
+                "امکان تأیید وضعیت واقعی فراهم نشد، چون یک یا چند منبع عملیاتی در این بررسی پاسخ معتبر ندادند "
+                f"({failed_label}). به‌جای حدس‌زدن، نتیجه قطعی نمایش داده نمی‌شود. علت اعتبارسنجی: {reason}."
+            )
         return (
             f"مرحله صحت‌سنجی نتوانست یک پاسخ عملیاتی قابل اتکا را تأیید کند ({reason}). "
             "به‌جای نمایش نتیجه حدسی، پاسخ متوقف شد؛ شواهد جمع‌آوری‌شده همچنان قابل بررسی است."
+        )
+    if failed_label:
+        return (
+            "The live state could not be verified because one or more operational sources failed "
+            f"during this check ({failed_label}). No current-state value was guessed. Validation reason: {reason}."
         )
     return (
         f"Final validation could not confirm a reliable operational answer ({reason}). "
