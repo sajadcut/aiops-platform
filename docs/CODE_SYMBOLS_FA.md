@@ -989,10 +989,10 @@
 | `apps/evaluator/gate.py` | `EvaluationGate._governed_deterministic_recovery` | 28 | method | Return true only for an evidence-grounded, approval-bound stopped-service recovery. | EvaluationGate |
 | `apps/evaluator/gate.py` | `EvaluationGate.evaluate` | 69 | method | کیفیت/confidence یا اولویت را به‌صورت deterministic محاسبه می‌کند | EvaluationGate |
 | `apps/evaluator/thresholds.py` | `EvaluationThresholds` | 4 | class | کلاس | module |
-| `apps/execution_service/__init__.py` | `ExecutionRequest` | 11 | class | کلاس | module |
-| `apps/execution_service/__init__.py` | `ExecutionResult` | 27 | class | کلاس | module |
-| `apps/execution_service/__init__.py` | `ExecutionService` | 40 | class | کلاس | module |
-| `apps/execution_service/__init__.py` | `ExecutionService.execute` | 42 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | ExecutionService |
+| `apps/execution_service/__init__.py` | `ExecutionRequest` | 12 | class | کلاس | module |
+| `apps/execution_service/__init__.py` | `ExecutionResult` | 28 | class | کلاس | module |
+| `apps/execution_service/__init__.py` | `ExecutionService` | 43 | class | کلاس | module |
+| `apps/execution_service/__init__.py` | `ExecutionService.execute` | 45 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | ExecutionService |
 | `apps/execution_service/idempotency.py` | `ExecutionIdempotency` | 13 | class | Registry درون-process از fingerprintهای دیده‌شده برای جلوگیری از duplicate سریع. | module |
 | `apps/execution_service/idempotency.py` | `ExecutionIdempotency.key` | 19 | method | Request را با canonical hashing دامنه به یک کلید deterministic تبدیل می‌کند. | ExecutionIdempotency |
 | `apps/execution_service/idempotency.py` | `ExecutionIdempotency.already_seen` | 24 | method | بررسی می‌کند همین request در عمر process فعلی قبلاً علامت‌گذاری شده یا نه. | ExecutionIdempotency |
