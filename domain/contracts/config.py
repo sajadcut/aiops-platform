@@ -32,15 +32,15 @@ class Settings(BaseSettings):
     LLM_MODEL: str = Field(...)
     LLM_TIMEOUT_SECONDS: int = Field(...)
 
-    # Evidence-grounded Operations Copilot. Defaults preserve compatibility for
-    # deployments that have not yet added the new variables to their secret/config map.
-    CHAT_ANSWER_VALIDATION_ENABLED: bool = Field(default=True)
-    CHAT_LLM_JUDGE_ENABLED: bool = Field(default=True)
-    CHAT_MAX_REPLAN_ATTEMPTS: int = Field(default=2, ge=0, le=4)
-    CHAT_REQUIRE_EVIDENCE_FOR_OPERATIONAL_FACTS: bool = Field(default=True)
-    CHAT_MIN_EVIDENCE_CONFIDENCE: float = Field(default=0.70, ge=0.0, le=1.0)
-    CHAT_MAX_EVIDENCE_AGE_SECONDS: int = Field(default=300, ge=1, le=3600)
-    CHAT_MISSING_CAPABILITY_LOGGING: bool = Field(default=True)
+    # Evidence-grounded Operations Copilot. Runtime values live in .env.example
+    # and environment-specific overrides, consistent with the central config contract.
+    CHAT_ANSWER_VALIDATION_ENABLED: bool = Field(...)
+    CHAT_LLM_JUDGE_ENABLED: bool = Field(...)
+    CHAT_MAX_REPLAN_ATTEMPTS: int = Field(..., ge=0, le=4)
+    CHAT_REQUIRE_EVIDENCE_FOR_OPERATIONAL_FACTS: bool = Field(...)
+    CHAT_MIN_EVIDENCE_CONFIDENCE: float = Field(..., ge=0.0, le=1.0)
+    CHAT_MAX_EVIDENCE_AGE_SECONDS: int = Field(..., ge=1, le=3600)
+    CHAT_MISSING_CAPABILITY_LOGGING: bool = Field(...)
 
     EMBEDDING_PROVIDER: str = Field(...)
     EMBEDDING_BASE_URL: Optional[str] = Field(...)
