@@ -232,7 +232,7 @@ def clarification_requirements(
     policy: RequestPolicy,
     context: OperationalContext,
 ) -> list[str]:
-    if not policy.requires_live_evidence or policy.mutating:
+    if not policy.requires_live_evidence:
         return []
     required: list[str] = []
     caps = set(policy.required_capabilities)
@@ -245,12 +245,13 @@ def clarification_requirements(
         "vm.service.config.read",
         "prometheus.metrics.read",
         "elasticsearch.logs.read",
+        "vm.service.action",
     }
     if caps.intersection(service_caps) and not context.service:
         lowered = str(message or "").casefold()
         if not any(name in lowered for name in ("nginx", "haproxy")):
             required.append("service")
-    if "kubernetes.read" in caps and not context.namespace:
+    if caps.intersection({"kubernetes.read", "kubernetes.action"}) and not context.namespace:
         lowered = str(message or "").casefold()
         if "namespace" not in lowered and "فضای نام" not in lowered:
             required.append("namespace")
