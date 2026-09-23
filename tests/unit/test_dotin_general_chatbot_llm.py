@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import httpx
 import pytest
 
 from domain.contracts.config import settings
@@ -11,10 +12,19 @@ from integrations.llm.openai_compatible import (
 
 
 class FakeResponse:
-    def __init__(self, payload):
+    def __init__(self, payload, status_code=200):
         self._payload = payload
+        self.status_code = status_code
 
     def raise_for_status(self):
+        if self.status_code >= 400:
+            request = httpx.Request("POST", "https://llm.example/v1/chat/completions")
+            response = httpx.Response(self.status_code, request=request)
+            raise httpx.HTTPStatusError(
+                f"HTTP {self.status_code}",
+                request=request,
+                response=response,
+            )
         return None
 
     def json(self):
@@ -190,3 +200,141 @@ def test_configured_llm_adapter_selects_dotin_provider(monkeypatch):
 
     assert isinstance(adapter, DotinGeneralChatbotLLMProvider)
     assert adapter.chat_endpoint.endswith("/v1/chat/completions")
+
+class SequenceClient:
+    def __init__(self, recorder, responses):
+        self.recorder = recorder
+        self.responses = responses
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, exc_type, exc, tb):
+        return False
+
+    async def post(self, url, *, headers, json):
+        self.recorder.setdefault("calls", []).append(
+            {"url": url, "headers": dict(headers), "json": dict(json)}
+        )
+        item = self.responses.pop(0)
+        if isinstance(item, Exception):
+            raise item
+        return item
+
+
+def _install_sequence_client(monkeypatch, recorder, responses):
+    sequence = list(responses)
+
+    def factory(**kwargs):
+        recorder.setdefault("client_kwargs", []).append(dict(kwargs))
+        return SequenceClient(recorder, sequence)
+
+    monkeypatch.setattr(llm_module, "insecure_async_client", factory)
+
+
+@pytest.mark.asyncio
+async def test_dotin_provider_retries_transient_500_then_succeeds(monkeypatch):
+    recorder = {}
+    monkeypatch.setattr(settings, "RETRY_MAX_ATTEMPTS", 3)
+    monkeypatch.setattr(settings, "RETRY_DELAY_SECONDS", 0.0)
+    monkeypatch.setattr(settings, "RETRY_BACKOFF_FACTOR", 2.0)
+    _install_sequence_client(
+        monkeypatch,
+        recorder,
+        [
+            FakeResponse({"error": "temporary"}, status_code=500),
+            FakeResponse(
+                {
+                    "choices": [
+                        {
+                            "finish_reason": "stop",
+                            "message": {"role": "assistant", "content": "recovered"},
+                        }
+                    ],
+                    "model": "assistance-model",
+                },
+                status_code=200,
+            ),
+        ],
+    )
+    provider = DotinGeneralChatbotLLMProvider(
+        "https://aifa-chatbot.dev.dotin.ir",
+        "assistance-model",
+        "secret-token",
+    )
+
+    result = await provider.generate_with_messages(
+        [{"role": "user", "content": "status?"}],
+        request_id="retry-500",
+    )
+
+    assert result.content == "recovered"
+    assert len(recorder["calls"]) == 2
+    assert {call["headers"]["x-request-id"] for call in recorder["calls"]} == {"retry-500"}
+
+
+@pytest.mark.asyncio
+async def test_dotin_provider_does_not_retry_nontransient_400(monkeypatch):
+    recorder = {}
+    monkeypatch.setattr(settings, "RETRY_MAX_ATTEMPTS", 3)
+    monkeypatch.setattr(settings, "RETRY_DELAY_SECONDS", 0.0)
+    _install_sequence_client(
+        monkeypatch,
+        recorder,
+        [FakeResponse({"error": "bad request"}, status_code=400)],
+    )
+    provider = DotinGeneralChatbotLLMProvider(
+        "https://aifa-chatbot.dev.dotin.ir",
+        "assistance-model",
+        "secret-token",
+    )
+
+    with pytest.raises(httpx.HTTPStatusError):
+        await provider.generate_with_messages(
+            [{"role": "user", "content": "invalid"}],
+            request_id="no-retry-400",
+        )
+
+    assert len(recorder["calls"]) == 1
+
+
+@pytest.mark.asyncio
+async def test_dotin_provider_retries_transport_error_then_succeeds(monkeypatch):
+    recorder = {}
+    monkeypatch.setattr(settings, "RETRY_MAX_ATTEMPTS", 2)
+    monkeypatch.setattr(settings, "RETRY_DELAY_SECONDS", 0.0)
+    _install_sequence_client(
+        monkeypatch,
+        recorder,
+        [
+            httpx.ConnectError(
+                "temporary",
+                request=httpx.Request("POST", "https://llm.example/v1/chat/completions"),
+            ),
+            FakeResponse(
+                {
+                    "choices": [
+                        {
+                            "finish_reason": "stop",
+                            "message": {"role": "assistant", "content": "ok-after-connect-error"},
+                        }
+                    ],
+                    "model": "assistance-model",
+                }
+            ),
+        ],
+    )
+    provider = DotinGeneralChatbotLLMProvider(
+        "https://aifa-chatbot.dev.dotin.ir",
+        "assistance-model",
+        "secret-token",
+    )
+
+    result = await provider.generate_with_messages(
+        [{"role": "user", "content": "status?"}],
+        request_id="retry-connect",
+    )
+
+    assert result.content == "ok-after-connect-error"
+    assert len(recorder["calls"]) == 2
+
