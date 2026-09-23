@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 399 | Dashboard JS files scanned: 5 | Symbols indexed: 3556**
+**Python files scanned: 399 | Dashboard JS files scanned: 5 | Symbols indexed: 3566**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -2713,21 +2713,31 @@
 | `tests/unit/test_direct_execution_runtime_guard.py` | `test_direct_execute_returns_verified_only_after_post_action_verification.verify` | 245 | async method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | test_direct_execute_returns_verified_only_after_post_action_verification |
 | `tests/unit/test_direct_execution_runtime_guard.py` | `test_direct_execute_returns_verified_only_after_post_action_verification.record_memory` | 252 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_direct_execute_returns_verified_only_after_post_action_verification |
 | `tests/unit/test_direct_execution_runtime_guard.py` | `test_direct_execute_returns_verified_only_after_post_action_verification.execute` | 258 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | test_direct_execute_returns_verified_only_after_post_action_verification |
-| `tests/unit/test_dotin_general_chatbot_llm.py` | `FakeResponse` | 13 | class | کلاس | module |
-| `tests/unit/test_dotin_general_chatbot_llm.py` | `FakeResponse.__init__` | 14 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeResponse |
-| `tests/unit/test_dotin_general_chatbot_llm.py` | `FakeResponse.raise_for_status` | 17 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeResponse |
-| `tests/unit/test_dotin_general_chatbot_llm.py` | `FakeResponse.json` | 20 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeResponse |
-| `tests/unit/test_dotin_general_chatbot_llm.py` | `FakeClient` | 24 | class | کلاس | module |
-| `tests/unit/test_dotin_general_chatbot_llm.py` | `FakeClient.__init__` | 25 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeClient |
-| `tests/unit/test_dotin_general_chatbot_llm.py` | `FakeClient.__aenter__` | 29 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeClient |
-| `tests/unit/test_dotin_general_chatbot_llm.py` | `FakeClient.__aexit__` | 32 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeClient |
-| `tests/unit/test_dotin_general_chatbot_llm.py` | `FakeClient.post` | 35 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeClient |
-| `tests/unit/test_dotin_general_chatbot_llm.py` | `_install_fake_client` | 42 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `tests/unit/test_dotin_general_chatbot_llm.py` | `_install_fake_client.factory` | 43 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _install_fake_client |
-| `tests/unit/test_dotin_general_chatbot_llm.py` | `test_dotin_provider_uses_documented_endpoint_headers_and_defaults` | 51 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_dotin_general_chatbot_llm.py` | `test_dotin_provider_preserves_documented_tool_call_response` | 102 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_dotin_general_chatbot_llm.py` | `test_dotin_provider_validates_documented_model_and_request_options` | 163 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_dotin_general_chatbot_llm.py` | `test_configured_llm_adapter_selects_dotin_provider` | 183 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_dotin_general_chatbot_llm.py` | `FakeResponse` | 14 | class | کلاس | module |
+| `tests/unit/test_dotin_general_chatbot_llm.py` | `FakeResponse.__init__` | 15 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeResponse |
+| `tests/unit/test_dotin_general_chatbot_llm.py` | `FakeResponse.raise_for_status` | 19 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeResponse |
+| `tests/unit/test_dotin_general_chatbot_llm.py` | `FakeResponse.json` | 30 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeResponse |
+| `tests/unit/test_dotin_general_chatbot_llm.py` | `FakeClient` | 34 | class | کلاس | module |
+| `tests/unit/test_dotin_general_chatbot_llm.py` | `FakeClient.__init__` | 35 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeClient |
+| `tests/unit/test_dotin_general_chatbot_llm.py` | `FakeClient.__aenter__` | 39 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeClient |
+| `tests/unit/test_dotin_general_chatbot_llm.py` | `FakeClient.__aexit__` | 42 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeClient |
+| `tests/unit/test_dotin_general_chatbot_llm.py` | `FakeClient.post` | 45 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeClient |
+| `tests/unit/test_dotin_general_chatbot_llm.py` | `_install_fake_client` | 52 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_dotin_general_chatbot_llm.py` | `_install_fake_client.factory` | 53 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _install_fake_client |
+| `tests/unit/test_dotin_general_chatbot_llm.py` | `test_dotin_provider_uses_documented_endpoint_headers_and_defaults` | 61 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_dotin_general_chatbot_llm.py` | `test_dotin_provider_preserves_documented_tool_call_response` | 112 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_dotin_general_chatbot_llm.py` | `test_dotin_provider_validates_documented_model_and_request_options` | 173 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_dotin_general_chatbot_llm.py` | `test_configured_llm_adapter_selects_dotin_provider` | 193 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_dotin_general_chatbot_llm.py` | `SequenceClient` | 204 | class | کلاس | module |
+| `tests/unit/test_dotin_general_chatbot_llm.py` | `SequenceClient.__init__` | 205 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SequenceClient |
+| `tests/unit/test_dotin_general_chatbot_llm.py` | `SequenceClient.__aenter__` | 209 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SequenceClient |
+| `tests/unit/test_dotin_general_chatbot_llm.py` | `SequenceClient.__aexit__` | 212 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SequenceClient |
+| `tests/unit/test_dotin_general_chatbot_llm.py` | `SequenceClient.post` | 215 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SequenceClient |
+| `tests/unit/test_dotin_general_chatbot_llm.py` | `_install_sequence_client` | 225 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_dotin_general_chatbot_llm.py` | `_install_sequence_client.factory` | 228 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _install_sequence_client |
+| `tests/unit/test_dotin_general_chatbot_llm.py` | `test_dotin_provider_retries_transient_500_then_succeeds` | 236 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_dotin_general_chatbot_llm.py` | `test_dotin_provider_does_not_retry_nontransient_400` | 277 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_dotin_general_chatbot_llm.py` | `test_dotin_provider_retries_transport_error_then_succeeds` | 302 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_dual_logging.py` | `_flush_root_handlers` | 10 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_dual_logging.py` | `_configure_file_logging` | 15 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_dual_logging.py` | `test_dual_format_logging_writes_human_and_json_files` | 32 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
