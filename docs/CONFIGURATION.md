@@ -89,7 +89,7 @@ All fields below are required by `Settings`. “Secret” means the tracked temp
 | `INTERNAL_API_KEY` | API authentication | Yes | Optional only if OIDC is complete; one authentication mechanism is mandatory in production. |
 | `INTERNAL_API_ROLE` | API-key RBAC mapping | No | Must map to a known policy when API key is used. |
 | `API_RATE_LIMIT_PER_MINUTE`, `RATE_LIMIT_STRICT_REQUESTS`, `RATE_LIMIT_LOOSE_REQUESTS`, `RATE_LIMIT_WINDOW_SECONDS` | API rate limiter | No | Required; invalid values can deny or under-limit traffic. |
-| `RETRY_MAX_ATTEMPTS`, `RETRY_DELAY_SECONDS`, `RETRY_BACKOFF_FACTOR` | retry helpers/MCP/Cognia/LLM transient transport | No | Cognia Search/auth, MCP reads and LLM 408/429/5xx or transport failures use bounded retry; governed writes deliberately do not auto-retry. |
+| `RETRY_MAX_ATTEMPTS`, `RETRY_DELAY_SECONDS`, `RETRY_BACKOFF_FACTOR` | retry helpers/MCP/Cognia/LLM transient transport | No | Cognia Search/auth, ordinary MCP reads and LLM 408/429/5xx or transport failures use bounded retry. Repeated health/readiness probes intentionally force MCP reads to a single transport attempt to avoid retry amplification. Governed writes deliberately do not auto-retry. |
 | `CORS_ORIGINS` | FastAPI CORS | No | Wildcard forbidden in production. |
 | `APPROVAL_TTL_SECONDS` | PostgreSQL approval store | No | Must be positive in production; expired approvals cannot transition/execute. |
 | `MCP_PROTOCOL_VERSION`, `MCP_TIMEOUT_SECONDS` | MCP clients/server | No | HTTP and HTTPS are supported; invalid timeout fails production validation. HTTPS server certificates are not validated by project policy. |
