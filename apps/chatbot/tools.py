@@ -230,6 +230,28 @@ CHAT_TOOL_SCHEMAS = [
 
 _ALLOWED_SEMANTIC_TOOLS = {item["function"]["name"] for item in CHAT_TOOL_SCHEMAS}
 
+# Capability names are vendor-neutral planning concepts. The LLM may choose a
+# semantic tool, but the backend owns this mapping and can detect when a user
+# asks for a capability that the connected chatbot surface does not expose.
+CHAT_CAPABILITY_MAP: dict[str, tuple[str, ...]] = {
+    "vm.metrics.read": ("vm_metrics",),
+    "vm.disk.read": ("vm_diagnostics",),
+    "vm.service.status.read": ("vm_service_status",),
+    "vm.service.logs.read": ("vm_service_logs",),
+    "vm.service.config.read": ("vm_service_diagnostics",),
+    "vm.network.read": ("vm_diagnostics", "vm_service_diagnostics"),
+    "logs.read": ("vm_service_logs", "elasticsearch_logs"),
+    "zabbix.problems.read": ("zabbix_problems",),
+    "prometheus.metrics.read": ("prometheus_metrics",),
+    "prometheus.alerts.read": ("prometheus_alerts",),
+    "elasticsearch.logs.read": ("elasticsearch_logs",),
+    "kubernetes.read": ("kubernetes_read",),
+}
+
+
+def tools_for_capability(capability: str) -> tuple[str, ...]:
+    return CHAT_CAPABILITY_MAP.get(str(capability), ())
+
 
 def max_tool_calls() -> int:
     return _MAX_TOOL_CALLS
