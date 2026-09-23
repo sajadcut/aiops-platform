@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 399 | Dashboard JS files scanned: 5 | Symbols indexed: 3567**
+**Python files scanned: 399 | Dashboard JS files scanned: 5 | Symbols indexed: 3571**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -2064,6 +2064,10 @@
 | `tests/integration/test_health_probes.py` | `test_readiness_contract` | 13 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/integration/test_health_probes.py` | `test_readiness_contract.healthy_db` | 14 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_readiness_contract |
 | `tests/integration/test_health_probes.py` | `test_readiness_contract.healthy_external` | 17 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_readiness_contract |
+| `tests/integration/test_health_probes.py` | `test_mcp_dependency_health_probe_forces_single_read_attempt` | 32 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/integration/test_health_probes.py` | `test_mcp_dependency_health_probe_forces_single_read_attempt.FakeMCPClient` | 35 | class | کلاس | test_mcp_dependency_health_probe_forces_single_read_attempt |
+| `tests/integration/test_health_probes.py` | `test_mcp_dependency_health_probe_forces_single_read_attempt.FakeMCPClient.health_check` | 38 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_mcp_dependency_health_probe_forces_single_read_attempt.FakeMCPClient |
+| `tests/integration/test_health_probes.py` | `test_mcp_dependency_health_probe_forces_single_read_attempt.FakeMCPClient.close` | 42 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_mcp_dependency_health_probe_forces_single_read_attempt.FakeMCPClient |
 | `tests/integration/test_master_api_surface.py` | `test_master_api_surface_is_registered` | 4 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/integration/test_operational_memory_v2_db.py` | `_state` | 25 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/integration/test_operational_memory_v2_db.py` | `test_memory_v2_lexical_retrieval_survives_embedding_provider_outage` | 96 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
