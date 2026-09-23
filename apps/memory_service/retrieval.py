@@ -159,6 +159,7 @@ def rrf_score(
     service_scope: Optional[str],
     environment: Optional[str],
     mode: str,
+    query: Optional[str] = None,
 ) -> float:
     entry = item["entry"]
     k = max(1, int(getattr(settings, "MEMORY_RRF_K", 60)))
@@ -171,6 +172,34 @@ def rrf_score(
         score += 0.03
     if environment and entry.environment == environment:
         score += 0.01
+    # Metadata compatibility supplements RRF; it never converts Memory into
+    # Evidence and deliberately uses small bounded boosts.
+    pattern = entry.incident_pattern or {}
+    trigger = entry.trigger or {}
+    query_tokens = {
+        token for token in str(query or "").lower().split() if len(token) > 2
+    }
+    symptom_text = " ".join(
+        str(value)
+        for value in (
+            entry.pattern,
+            pattern.get("summary") if isinstance(pattern, dict) else None,
+            entry.root_cause if mode == "RCA_ANALOG" else None,
+            (entry.actual_remediation or {}).get("action")
+            if mode == "REMEDIATION_EXPERIENCE"
+            else None,
+        )
+        if value
+    ).lower()
+    symptom_tokens = {token for token in symptom_text.split() if len(token) > 2}
+    if query_tokens:
+        score += min(0.02, (len(query_tokens & symptom_tokens) / len(query_tokens)) * 0.02)
+    if entry.asset_type:
+        score += 0.003
+    if isinstance(trigger, dict) and trigger.get("signal_type"):
+        score += 0.003
+    if mode == "RCA_ANALOG" and entry.root_cause_status in {"confirmed", "probable"}:
+        score += 0.008
     if entry.verification_result in SUCCESS_STATUSES:
         score += 0.01
     if (
