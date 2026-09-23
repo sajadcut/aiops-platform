@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 396 | Dashboard JS files scanned: 5 | Symbols indexed: 3529**
+**Python files scanned: 397 | Dashboard JS files scanned: 5 | Symbols indexed: 3536**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1122,6 +1122,12 @@
 | `apps/memory_service/feedback.py` | `_uuid` | 16 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/memory_service/feedback.py` | `record_retrieval_events` | 27 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/memory_service/feedback.py` | `apply_feedback` | 65 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/memory_service/quality.py` | `recall_at_k` | 6 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/memory_service/quality.py` | `precision_at_k` | 14 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/memory_service/quality.py` | `reciprocal_rank` | 23 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/memory_service/quality.py` | `successful_remediation_retrieval_rate` | 31 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/memory_service/quality.py` | `failed_action_avoidance_rate` | 45 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/memory_service/quality.py` | `evaluate_golden_ranking` | 56 | function | کیفیت/confidence یا اولویت را به‌صورت deterministic محاسبه می‌کند | module |
 | `apps/memory_service/retrieval.py` | `candidates` | 21 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/memory_service/retrieval.py` | `rrf_score` | 156 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/operator_summary.py` | `_t` | 18 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
@@ -2060,6 +2066,7 @@
 | `tests/integration/test_operational_memory_v2_db.py` | `test_memory_v2_lexical_retrieval_survives_embedding_provider_outage` | 96 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/integration/test_operational_memory_v2_db.py` | `test_memory_v2_reembeds_stale_embedding_contract` | 131 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/integration/test_operational_memory_v2_db.py` | `test_memory_v2_postgres_hybrid_retrieval_and_feedback` | 183 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/integration/test_operational_memory_v2_db.py` | `test_memory_v2_incident_learning_a_b_c_acceptance` | 403 | async function | Prove A -> Memory -> B governed reuse feedback and C negative learning. | module |
 | `tests/integration/test_operator_summary_api.py` | `test_operator_summary_api_route_is_registered_read_only` | 8 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/integration/test_operator_summary_api.py` | `test_dashboard_serves_persian_operator_summary_ui_and_structured_api_call` | 14 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/integration/test_operator_summary_api.py` | `test_operator_summary_backend_is_deterministic_and_has_no_execution_path` | 37 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
