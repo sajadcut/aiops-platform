@@ -138,6 +138,23 @@ CHAT_TOOL_SCHEMAS = [
     {
         "type": "function",
         "function": {
+            "name": "cognia_processing_status",
+            "description": "Read Cognia processing/lifecycle status for a known knowledge revision. Use this to verify whether a registered/candidate revision is WaitingEligibility, Queued, Processing, ArtifactsReady, Activated, Failed or Obsolete. This is read-only.",
+            "parameters": {
+                "type": "object",
+                "required": ["knowledge_id", "revision_id"],
+                "additionalProperties": False,
+                "properties": {
+                    "knowledge_base_id": {"type": "integer", "minimum": 1},
+                    "knowledge_id": {"type": "integer", "minimum": 1},
+                    "revision_id": {"type": "integer", "minimum": 1}
+                }
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "cognia_register_knowledge",
             "description": "Register new governed knowledge in Cognia when the operator explicitly asks to save/register/store information. Backend uses Cognia's documented Knowledge registration contract, KB allowlist, machine identity, server-owned ClientApplication identity and Idempotency-Key. Registration does not imply Activated/Searchable.",
             "parameters": {
@@ -413,6 +430,26 @@ def normalize_tool_intent(name: str, args: dict[str, Any]) -> ToolIntent:
             "search",
             "cognia",
             {"query": query, "limit": limit},
+            False,
+            "low",
+        )
+
+    if name == "cognia_processing_status":
+        kb_id = _optional_positive_int(args.get("knowledge_base_id"), "knowledge_base_id")
+        knowledge_id = _optional_positive_int(args.get("knowledge_id"), "knowledge_id")
+        revision_id = _optional_positive_int(args.get("revision_id"), "revision_id")
+        if knowledge_id is None or revision_id is None:
+            raise ValueError("knowledge_and_revision_id_required")
+        return ToolIntent(
+            name,
+            "cognia_knowledge_read",
+            "processing_status",
+            "cognia",
+            {
+                "knowledge_base_id": kb_id,
+                "knowledge_id": knowledge_id,
+                "revision_id": revision_id,
+            },
             False,
             "low",
         )
