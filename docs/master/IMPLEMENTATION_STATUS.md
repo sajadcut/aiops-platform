@@ -1,6 +1,6 @@
 # Implementation Status vs MASTER.md
 
-Updated: 2026-09-14
+Updated: 2026-09-23
 
 This file is traceability evidence, not a replacement for `MASTER.md`. It distinguishes implemented repository capabilities from runtime acceptance that still needs evidence.
 
@@ -31,7 +31,7 @@ This file is traceability evidence, not a replacement for `MASTER.md`. It distin
 | pgvector | extension/type/dimension validation for `memory_entries` only | PASS (repository); target DB validation pending |
 | Knowledge RAG boundary | `KnowledgeRAGService` is Cognia-only; no runtime provider selector or local Knowledge retrieval path | PASS (repository) |
 | Cognia governed Knowledge | Sole RAG: Application Client auth + authoring/Revision + Search + optional Context + readiness + fail-closed/no-alternate-RAG behavior | PASS (repository contract); **REAL ENV REQUIRED** for target Cognia acceptance |
-| Operational Memory | service + namespace + E2E write-back, PostgreSQL/pgvector, separate from Knowledge RAG | PASS (repository) |
+| Operational Memory | v2 episodic builder, actual execution + before/after verification, positive/negative learning, core-first embeddings/backfill, hybrid pgvector+FTS/RRF retrieval, lifecycle/consolidation, reuse feedback/effectiveness, operator API projections; separate from Cognia Knowledge RAG | PASS (repository implementation); current HEAD CI must be green; target DB/provider acceptance **REAL ENV REQUIRED** |
 | Context Builder | IncidentContext + normalization + MCP-backed EvidenceCollector | PASS |
 | Evidence | Zabbix + Elastic Agent Builder MCP + Prometheus + optional K8s/VM MCP aggregation | PASS (repository); target endpoint acceptance pending |
 | Hypothesis/RCA | evidence-linked contract + E2E RCA | PASS |
