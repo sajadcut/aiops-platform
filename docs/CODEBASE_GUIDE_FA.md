@@ -118,7 +118,7 @@ Evidence چند منبع را جمع می‌کند. تفاوت مهم: source fa
 Persistence canonical Incident، Evidence و Finding. transaction/locking مربوط به correlation و durable state در این لایه قرار می‌گیرد.
 
 ### apps/memory_service/
-Operational Memory v2 تجربه‌های تاریخی Incident را به‌صورت episode مستقل در PostgreSQL + pgvector نگه می‌دارد. `builder.py` episode deterministic و sanitized را از trigger، Evidence reference، investigation، RCA با uncertainty، Actual Execution و Verification می‌سازد. `retrieval.py` structured filtering + pgvector cosine + PostgreSQL FTS + RRF و metadata compatibility را برای modeهای `SIMILAR_INCIDENT`، `RCA_ANALOG` و `REMEDIATION_EXPERIENCE` اجرا می‌کند. `feedback.py` reuse attribution/effectiveness را ثبت می‌کند و `consolidation.py` summary تاریخی بدون overwrite کردن episodeها می‌سازد. Memory همیشه با برچسب Historical Operational Experience و `safe_as_evidence=false` به Agent/API می‌رود؛ failed actionها warning هستند و هیچ Memory به‌تنهایی write authority ایجاد نمی‌کند. Core episode قبل از embedding commit می‌شود و embeddingهای pending/failed یا contract-mismatched با backfill قابل بازسازی‌اند.
+Operational Memory v2 تجربه‌های تاریخی Incident را به‌صورت episode مستقل در PostgreSQL + pgvector نگه می‌دارد. `builder.py` episode deterministic و sanitized را از trigger، Evidence reference، investigation، RCA با uncertainty، Actual Execution شامل start/completion timing و Verification می‌سازد. `retrieval.py` structured filtering + pgvector cosine + PostgreSQL FTS + RRF، reuse-quality gate و مقایسه metadata جاری/تاریخی برای asset type، signal type، environment، service version و configuration fingerprint را برای modeهای `SIMILAR_INCIDENT`، `RCA_ANALOG` و `REMEDIATION_EXPERIENCE` اجرا می‌کند. episodeهای diagnostic-only/inconclusive کم‌اطلاعات ممکن است برای audit durable بمانند اما وارد primary retrieval نمی‌شوند. `feedback.py` reuse attribution/effectiveness را ثبت می‌کند و `consolidation.py` summary تاریخی بدون overwrite کردن episodeها می‌سازد. Memory همیشه با برچسب Historical Operational Experience و `safe_as_evidence=false` به Agent/API می‌رود؛ failed actionها warning هستند و هیچ Memory به‌تنهایی write authority ایجاد نمی‌کند. Core episode قبل از embedding commit می‌شود و embeddingهای pending/failed یا contract-mismatched با backfill قابل بازسازی‌اند.
 
 ### apps/orchestrator/e2e_graph.py
 تعریف workflow اصلی LangGraph و node/routingها. state از context تا verification/memory پیش می‌رود. این فایل باید evaluator gate، approval pause، failure route و عدم bypass execution را حفظ کند.
@@ -198,7 +198,7 @@ Migration `f1a2b3c4d5e6` persistenceهای `approvals`, `audit_events`, `runbook
 
 فایل‌های SQL `002_*.sql` و `003_*.sql` legacy هستند و برای دیتابیس جدید نباید جدا از Alembic canonical اجرا شوند.
 
-JSON/JSONB برای stateهای heterogeneous مثل metadata، checkpoint، runbook steps و evidence payload استفاده می‌شود. pgvector برای similarity retrieval دانش و memory است؛ dimension runtime از config validate می‌شود.
+JSON/JSONB برای stateهای heterogeneous مثل metadata، checkpoint، runbook steps و evidence payload استفاده می‌شود. pgvector فقط برای similarity retrieval **Operational Memory** است؛ Governed Knowledge RAG فقط در Cognia باقی می‌ماند. dimension runtime از config validate می‌شود.
 
 ## 7) Security boundaries
 
