@@ -8,6 +8,15 @@ from typing import Any, Dict, List, Optional
 from fastapi import HTTPException
 from prometheus_client import Counter, Histogram
 
+from apps.chatbot.governance import (
+    CHAT_MISSING_CAPABILITIES,
+    build_evidence,
+    grounded_fallback,
+    llm_validate,
+    missing_capability_message,
+    most_recent_user_message,
+    requires_live_evidence,
+)
 from apps.chatbot.models import ChatMessageRequest, ChatMessageResponse
 from apps.chatbot.service import ChatbotService
 from apps.chatbot.tools import ToolIntent
@@ -118,22 +127,34 @@ class ReliableChatLLMAdapter(LLMAdapter):
             raise
 
         stage = str(kwargs.get("stage") or kwargs.get("purpose") or "")
-        if stage != "chatbot_intent" or not _looks_obviously_incomplete(response):
+        if stage != "chatbot_intent":
             return response
 
-        # No governed tool has executed yet, so one bounded retry is safe.
+        user_message = most_recent_user_message(messages)
+        incomplete = _looks_obviously_incomplete(response)
+        evidence_required = requires_live_evidence(user_message) and not response.tool_calls
+        if not incomplete and not evidence_required:
+            return response
+
+        # No governed tool has executed yet, so one bounded repair/replan is safe.
         CHAT_INCOMPLETE_RESPONSES.inc()
         repair_messages = list(messages)
-        repair_messages.append(
-            {
-                "role": "user",
-                "content": (
-                    "RETRY REQUIRED: the previous response was incomplete. Return one fresh, complete, "
-                    "concise answer, or select the correct provided tool when live operational data is "
-                    "required. Do not continue the partial prefix."
-                ),
-            }
-        )
+        if evidence_required:
+            repair_instruction = (
+                "REPLAN REQUIRED: this is a live operational question. Do not answer from model memory "
+                "or infer the current state. Select the best matching provided read-only tool(s) using "
+                "the established conversation target when unambiguous. For a diagnostic 'why' question, "
+                "collect enough independent evidence to support the cause rather than stopping at a "
+                "single status check. If no provided tool can establish the requested fact, return a "
+                "short explicit statement that the live capability is unavailable; do not guess."
+            )
+        else:
+            repair_instruction = (
+                "RETRY REQUIRED: the previous response was incomplete. Return one fresh, complete, "
+                "concise answer, or select the correct provided tool when live operational data is "
+                "required. Do not continue the partial prefix."
+            )
+        repair_messages.append({"role": "user", "content": repair_instruction})
         try:
             repaired = await self.delegate.generate_with_messages(
                 repair_messages,
@@ -148,6 +169,17 @@ class ReliableChatLLMAdapter(LLMAdapter):
         if _looks_obviously_incomplete(repaired):
             CHAT_INCOMPLETE_RESPONSES.inc()
             raise ValueError("chatbot_llm_incomplete_response")
+        if evidence_required and not repaired.tool_calls:
+            CHAT_MISSING_CAPABILITIES.inc()
+            # Fail useful, not silent: an operational fact without evidence is never persisted
+            # as if it were a verified answer.
+            return LLMResponse(
+                content=missing_capability_message(user_message),
+                model=repaired.model,
+                usage=repaired.usage,
+                tool_calls=None,
+                finish_reason=repaired.finish_reason,
+            )
         return repaired
 
 
@@ -237,5 +269,44 @@ class OperationsCopilotService(ChatbotService):
             return (
                 f"Operational data was received successfully from {source}, but the LLM could not "
                 "produce a reliable summary. Open Details to inspect the governed source data."
+            )
+        evidence = [
+            build_evidence(
+                source=str(payload.get("source") or "governed_tool"),
+                tool=intent.semantic_name,
+                target=intent.target,
+                data=payload.get("result"),
+            )
+        ]
+        try:
+            verdict = await llm_validate(
+                llm=self._llm(),
+                question=user_message,
+                answer=answer,
+                evidence=evidence,
+                session_id=session_id,
+                user_id=identity.subject,
+            )
+        except Exception:
+            # Judge failure never promotes an unverified answer. The deterministic
+            # fallback remains grounded in the already validated tool payload.
+            return grounded_fallback(
+                question=user_message,
+                evidence=evidence,
+                reason="answer validator unavailable",
+            )
+
+        if (
+            not verdict.valid
+            or not verdict.question_answered
+            or not verdict.evidence_sufficient
+            or not verdict.claims_grounded
+            or verdict.unsupported_claims
+            or verdict.contradictions
+        ):
+            return grounded_fallback(
+                question=user_message,
+                evidence=evidence,
+                reason=verdict.reason or "response validation failed",
             )
         return answer
