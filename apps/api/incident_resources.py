@@ -132,6 +132,41 @@ async def get_memory(incident_id: UUID, limit: int = Query(default=5, le=20)):
                 "requires_current_validation": True,
             },
             "current_episode": service.serialize_entry(current) if current else None,
+            # Explicit operator-facing projections; keep "items" for backward compatibility.
+            "similar_incidents": items,
+            "historical_rca": [
+                {
+                    "memory_id": item["id"],
+                    "status": item.get("root_cause_status"),
+                    "confidence": item.get("root_cause_confidence"),
+                    "summary": item.get("root_cause"),
+                }
+                for item in items
+            ],
+            "previous_actions": [
+                {
+                    "memory_id": item["id"],
+                    "actual_remediation": item.get("actual_remediation") or {},
+                    "verification": item.get("verification") or {},
+                    "outcome": item.get("memory_outcome_class"),
+                    "effectiveness": item.get("effectiveness_score", 0.0),
+                    "age_days": item.get("age_days"),
+                    "rank": item.get("rank_position"),
+                    "similarity": item.get("vector_similarity", 0.0),
+                }
+                for item in items
+            ],
+            "failed_previous_attempts": [
+                {
+                    "memory_id": item["id"],
+                    "action": item.get("action"),
+                    "outcome": item.get("memory_outcome_class"),
+                    "warnings": item.get("failure_warnings") or [],
+                }
+                for item in items
+                if item.get("memory_outcome_class")
+                in {"failed_recovery", "partial_recovery", "execution_blocked"}
+            ],
             "items": items,
         }
 
