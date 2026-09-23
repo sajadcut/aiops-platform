@@ -53,7 +53,7 @@ The API performs a second fail-closed migration HEAD check at startup/readiness.
 
 1. Pin the Deployment image by signed digest, not mutable tag.
 2. Apply configuration/secrets and the Deployment.
-3. Wait for startup/liveness/readiness probes. `/api/v1/health/ready` must return HTTP 200; HTTP 503 means the pod is not production-ready.
+3. Wait for startup/liveness/readiness probes. `/api/v1/health/ready` must return HTTP 200; HTTP 503 means the pod is not production-ready. MCP dependency health probes are intentionally single-attempt so an unavailable provider cannot multiply readiness traffic through application retry policy.
 4. Verify `/api/v1/metrics` is being scraped and `/var/log/aiops` plus stdout are being collected.
 5. Confirm no production startup error indicates mock providers, wildcard CORS, insecure MCP, auth gaps or migration drift.
 6. Keep write execution disabled at the traffic/policy layer until smoke tests pass.
