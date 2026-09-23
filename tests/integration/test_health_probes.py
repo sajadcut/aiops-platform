@@ -1,6 +1,6 @@
 import pytest
 
-from apps.api.health import liveness, readiness
+from apps.api.health import _probe_one, liveness, readiness
 
 
 @pytest.mark.asyncio
@@ -27,3 +27,24 @@ async def test_readiness_contract(monkeypatch):
 
     result = await readiness()
     assert result["status"] == "ready"
+
+@pytest.mark.asyncio
+async def test_mcp_dependency_health_probe_forces_single_read_attempt():
+    seen = []
+
+    class FakeMCPClient:
+        read_retry_attempts_override = None
+
+        async def health_check(self):
+            seen.append(self.read_retry_attempts_override)
+            return False
+
+        async def close(self):
+            return None
+
+    name, result = await _probe_one("prometheus_mcp", FakeMCPClient())
+
+    assert name == "prometheus_mcp"
+    assert result == {"healthy": False}
+    assert seen == [1]
+
