@@ -12,10 +12,12 @@ from apps.chatbot.governance import (
     CHAT_MISSING_CAPABILITIES,
     ChatGovernanceConfig,
     build_evidence,
+    cognia_write_unavailable_message,
     grounded_fallback,
     llm_validate,
     missing_capability_message,
     most_recent_user_message,
+    requires_cognia_write,
     requires_live_evidence,
 )
 from apps.chatbot.models import ChatMessageRequest, ChatMessageResponse
@@ -140,16 +142,29 @@ class ReliableChatLLMAdapter(LLMAdapter):
         while True:
             incomplete = _looks_obviously_incomplete(current)
             evidence_required = requires_live_evidence(user_message) and not current.tool_calls
-            if not incomplete and not evidence_required:
+            cognia_write_required = requires_cognia_write(user_message) and not current.tool_calls
+            if not incomplete and not evidence_required and not cognia_write_required:
                 return current
 
-            max_attempts = 1 if incomplete and not evidence_required else cfg.max_replan_attempts
+            max_attempts = (
+                1
+                if incomplete and not evidence_required and not cognia_write_required
+                else cfg.max_replan_attempts
+            )
             if attempts >= max_attempts:
                 break
 
             attempts += 1
             CHAT_INCOMPLETE_RESPONSES.inc()
-            if evidence_required:
+            if cognia_write_required:
+                repair_instruction = (
+                    "REPLAN REQUIRED: the operator explicitly requested a Cognia knowledge write. "
+                    "Do not merely acknowledge the request. Select exactly one provided Cognia write tool: "
+                    "cognia_register_knowledge for new knowledge, or cognia_create_revision only when an "
+                    "existing knowledge id is explicitly available. Preserve the operator's supplied content; "
+                    "do not invent scope, KB authority or an existing knowledge id."
+                )
+            elif evidence_required:
                 repair_instruction = (
                     "REPLAN REQUIRED: this is a live operational question. Do not answer from model memory "
                     "or infer the current state. Select the best matching provided read-only tool(s) using "
@@ -181,6 +196,15 @@ class ReliableChatLLMAdapter(LLMAdapter):
         if _looks_obviously_incomplete(current):
             CHAT_INCOMPLETE_RESPONSES.inc()
             raise ValueError("chatbot_llm_incomplete_response")
+        if requires_cognia_write(user_message) and not current.tool_calls:
+            CHAT_MISSING_CAPABILITIES.inc()
+            return LLMResponse(
+                content=cognia_write_unavailable_message(user_message),
+                model=current.model,
+                usage=current.usage,
+                tool_calls=None,
+                finish_reason=current.finish_reason,
+            )
         if requires_live_evidence(user_message) and not current.tool_calls:
             CHAT_MISSING_CAPABILITIES.inc()
             return LLMResponse(
@@ -280,14 +304,27 @@ class OperationsCopilotService(ChatbotService):
                 f"Operational data was received successfully from {source}, but the LLM could not "
                 "produce a reliable summary. Open Details to inspect the governed source data."
             )
+        evidence_kind = "knowledge" if str(payload.get("source") or "") == "cognia" else "live"
         evidence = [
             build_evidence(
                 source=str(payload.get("source") or "governed_tool"),
                 tool=intent.semantic_name,
                 target=intent.target,
                 data=payload.get("result"),
+                evidence_kind=evidence_kind,
             )
         ]
+        knowledge_context = payload.get("knowledge_context")
+        if knowledge_context:
+            evidence.append(
+                build_evidence(
+                    source="cognia",
+                    tool="cognia_auto_lookup",
+                    target="knowledge",
+                    data=knowledge_context,
+                    evidence_kind="knowledge",
+                )
+            )
         try:
             verdict = await llm_validate(
                 llm=self._llm(),
