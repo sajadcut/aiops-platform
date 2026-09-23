@@ -15,6 +15,7 @@ def test_dashboard_contains_required_operational_capabilities():
         "Verified remediations",
         "Partial / inconclusive",
         "Memory learned",
+        "Historical Operational Memory ≠ Live Evidence",
         "Automation success",
         "Mean confidence",
         "Remediation Lifecycle",
