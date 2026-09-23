@@ -43,6 +43,7 @@ class Settings(BaseSettings):
     CHAT_LLM_JUDGE_ENABLED: bool = Field(default=True)
     CHAT_COGNIA_AUTO_LOOKUP_ENABLED: bool = Field(default=True)
     CHAT_COGNIA_LOOKUP_LIMIT: int = Field(default=5, ge=1, le=10)
+    CHAT_COGNIA_LOOKUP_TIMEOUT_SECONDS: float = Field(default=5.0, gt=0.0, le=30.0)
     CHAT_COGNIA_WRITE_ENABLED: bool = Field(default=True)
     CHAT_COGNIA_DEFAULT_KNOWLEDGE_BASE_ID: Optional[int] = Field(default=None)
     CHAT_COGNIA_WRITE_SCOPE: str = Field(default="clientApplication")
