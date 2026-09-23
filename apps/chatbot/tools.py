@@ -194,6 +194,44 @@ CHAT_TOOL_SCHEMAS = [
     {
         "type": "function",
         "function": {
+            "name": "cognia_publish_incident_knowledge",
+            "description": "Publish a verified AIOps incident learning into Cognia. The backend, not the LLM, builds the Knowledge content from durable Incident/Finding/Evidence/verified remediation data. Publication is rejected unless the incident has a verified operational outcome.",
+            "parameters": {
+                "type": "object",
+                "required": ["incident_id"],
+                "additionalProperties": False,
+                "properties": {
+                    "incident_id": {"type": "string", "minLength": 1, "maxLength": 64},
+                    "knowledge_base_id": {"type": "integer", "minimum": 1},
+                    "title": {"type": "string", "minLength": 1, "maxLength": 500},
+                    "scope_type": {
+                        "type": "string",
+                        "enum": ["general", "clientApplication", "externalSubject"]
+                    },
+                    "subject_namespace": {"type": "string", "minLength": 1, "maxLength": 64},
+                    "external_subject_id": {"type": "string", "minLength": 1, "maxLength": 256},
+                    "tag_ids": {
+                        "type": "array",
+                        "maxItems": 64,
+                        "items": {"type": "integer", "minimum": 1}
+                    },
+                    "category_ids": {
+                        "type": "array",
+                        "maxItems": 64,
+                        "items": {"type": "integer", "minimum": 1}
+                    },
+                    "metadata": {
+                        "type": "object",
+                        "maxProperties": 64,
+                        "additionalProperties": {"type": "string"}
+                    }
+                }
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "cognia_create_revision",
             "description": "Create a new candidate revision for existing Cognia knowledge only when the operator explicitly asks to update existing Cognia knowledge and provides or unambiguously establishes the knowledge id. Backend performs optimistic concurrency using the current candidate revision.",
             "parameters": {
@@ -452,6 +490,44 @@ def normalize_tool_intent(name: str, args: dict[str, Any]) -> ToolIntent:
             },
             False,
             "low",
+        )
+
+    if name == "cognia_publish_incident_knowledge":
+        incident_id = _bounded_text(args.get("incident_id"), "incident_id", 64)
+        kb_id = _optional_positive_int(args.get("knowledge_base_id"), "knowledge_base_id")
+        title = str(args.get("title") or "").strip()
+        if title and len(title) > 500:
+            raise ValueError("invalid_title")
+        scope_type = str(args.get("scope_type") or "").strip() or None
+        if scope_type not in {None, "general", "clientApplication", "externalSubject"}:
+            raise ValueError("invalid_scope_type")
+        subject_namespace = str(args.get("subject_namespace") or "").strip()
+        external_subject_id = str(args.get("external_subject_id") or "").strip()
+        if scope_type == "externalSubject":
+            if not subject_namespace or not external_subject_id:
+                raise ValueError("external_subject_requires_namespace_and_id")
+            if not _NAMESPACE.fullmatch(subject_namespace.lower()):
+                raise ValueError("invalid_subject_namespace")
+        elif subject_namespace or external_subject_id:
+            raise ValueError("external_subject_fields_require_externalSubject_scope")
+        return ToolIntent(
+            name,
+            "cognia_knowledge_write",
+            "publish_incident_knowledge",
+            "cognia",
+            {
+                "incident_id": incident_id,
+                "knowledge_base_id": kb_id,
+                "title": title or None,
+                "scope_type": scope_type,
+                "subject_namespace": subject_namespace or None,
+                "external_subject_id": external_subject_id or None,
+                "tag_ids": _positive_int_list(args.get("tag_ids"), "tag_ids"),
+                "category_ids": _positive_int_list(args.get("category_ids"), "category_ids"),
+                "metadata": _flat_string_metadata(args.get("metadata")),
+            },
+            True,
+            "medium",
         )
 
     if name in {"cognia_register_knowledge", "cognia_create_revision"}:
