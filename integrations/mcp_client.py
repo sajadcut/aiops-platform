@@ -51,6 +51,10 @@ class MCPClient:
         self.write_authorization_header = str(write_authorization_header or "").strip() or None
         self.session_id: Optional[str] = None
         self._initialized = False
+        # Ordinary read operations use the shared bounded retry policy. Health
+        # probes may temporarily override this to one attempt so readiness
+        # checks do not amplify an unavailable dependency into repeated traffic.
+        self.read_retry_attempts_override: Optional[int] = None
 
         parsed = urlparse(self.server_url)
         if parsed.scheme not in {"http", "https"} or not parsed.netloc:
@@ -141,7 +145,12 @@ class MCPClient:
         # Writes are intentionally never retried: a lost response after a remote
         # side effect is ambiguous until the remote protocol supports a durable
         # idempotency key. Read/initialize/list calls may retry transport/5xx.
-        attempts = 1 if tool_name in self.write_tools else max(1, int(settings.RETRY_MAX_ATTEMPTS))
+        configured_read_attempts = (
+            settings.RETRY_MAX_ATTEMPTS
+            if self.read_retry_attempts_override is None
+            else self.read_retry_attempts_override
+        )
+        attempts = 1 if tool_name in self.write_tools else max(1, int(configured_read_attempts))
         delay = max(0.0, float(settings.RETRY_DELAY_SECONDS))
         method = str(payload.get("method") or "unknown")
         incident_id = self._incident_id_from_payload(payload)
