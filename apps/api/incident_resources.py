@@ -103,7 +103,6 @@ async def get_knowledge(incident_id: UUID, limit: int = Query(default=5, le=20))
         incident = await db.get(Incident, incident_id)
         if incident is None:
             raise HTTPException(status_code=404, detail="Incident not found")
-        await _require_current_database_schema(db)
         query = f"{incident.service or ''} {incident.summary or ''}".strip()
         try:
             items = await KnowledgeRAGService().search(query, limit=limit)
@@ -136,6 +135,7 @@ async def get_memory(incident_id: UUID, limit: int = Query(default=5, le=20)):
         incident = await db.get(Incident, incident_id)
         if incident is None:
             raise HTTPException(status_code=404, detail="Incident not found")
+        await _require_current_database_schema(db)
         query = f"{incident.service or ''} {incident.summary or ''}".strip()
         incident_context = incident.context if isinstance(incident.context, dict) else {}
         asset_context = (
