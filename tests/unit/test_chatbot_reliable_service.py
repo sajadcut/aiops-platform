@@ -52,18 +52,18 @@ def test_direct_chat_incomplete_detector_is_conservative():
 @pytest.mark.asyncio
 async def test_chatbot_intent_retries_one_incomplete_direct_answer_before_persistence():
     delegate = SequencedLLM([
-        response("سرویس **haproxy** روی سر"),
-        response("سرویس **haproxy** روی سرور 10.100.6.199 فعال و در حال اجراست."),
+        response("ITIL یک چارچوب برای"),
+        response("ITIL یک چارچوب مدیریت خدمات است که برای بهبود خلق ارزش و مدیریت خدمات استفاده می‌شود."),
     ])
     adapter = ReliableChatLLMAdapter(delegate)
     result = await adapter.generate_with_messages(
-        [{"role": "user", "content": "haproxy چی؟"}],
+        [{"role": "user", "content": "ITIL را توضیح بده"}],
         max_tokens=100,
         stage="chatbot_intent",
         tools=[{"type": "function", "function": {"name": "vm_service_status"}}],
         tool_choice="auto",
     )
-    assert "10.100.6.199" in result.content
+    assert "ITIL" in result.content
     assert len(delegate.calls) == 2
     assert delegate.calls[0][1] == 100
     assert delegate.calls[1][1] == 200
