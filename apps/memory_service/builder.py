@@ -410,6 +410,8 @@ class OperationalMemoryBuilder:
             "execution_error_class": cls._error_class(
                 execution_result.get("error") or execution_result.get("reason")
             ),
+            "execution_started_at": execution_result.get("execution_started_at"),
+            "execution_completed_at": execution_result.get("execution_completed_at"),
             "execution_duration": execution_result.get("execution_time"),
         }
 
