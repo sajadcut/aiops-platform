@@ -289,6 +289,26 @@ After rollout, verify the live database from the promoted application image:
 python scripts/verify_operational_memory.py --limit 10
 ```
 
+### Runtime migration drift recovery
+
+Development mode may remain up for diagnostics when the database is behind the
+repository Alembic head, but schema-dependent API operations fail closed with
+HTTP 503 and `DATABASE_MIGRATION_DRIFT` instead of issuing ORM queries against
+missing columns. Production startup remains blocked by migration drift.
+
+Inspect and repair the same configured database with:
+
+```bash
+python -m alembic -c database/migrations/alembic.ini current
+python -m alembic -c database/migrations/alembic.ini upgrade head
+python -m alembic -c database/migrations/alembic.ini current
+python scripts/verify_operational_memory.py --limit 10
+```
+
+Do not create missing Operational Memory columns manually and do not stamp the
+Alembic version forward without running the migrations. The migration chain is
+the canonical schema upgrade path and preserves existing rows.
+
 After at least one incident has reached Memory write-back, require a durable
 episode:
 
