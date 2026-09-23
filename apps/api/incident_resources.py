@@ -6,11 +6,9 @@ from pydantic import BaseModel, Field
 from sqlalchemy import desc, select, text
 
 from database import AsyncSessionLocal
-from database.migration_validation import validate_migration_head
 from domain.models import Incident, Evidence, Finding, MemoryEntry
 from domain.contracts.exceptions import AppException
-from domain.contracts.config import settings
-from domain.contracts.logging import logger
+from apps.api.database_guard import require_database_ready
 from apps.rag_service import KnowledgeRAGService
 from apps.memory_service import OperationalMemoryService
 from apps.memory_service.consolidation import summarize_service
@@ -29,29 +27,7 @@ class MemoryLifecycleRequest(BaseModel):
 
 
 async def _require_current_database_schema(db) -> None:
-    """Return a controlled 503 instead of leaking ORM errors on migration drift.
-
-    Development mode intentionally allows the API process to boot with a stale
-    schema so operators can inspect health. Endpoints that depend on the current
-    MemoryEntry model must still fail closed before issuing ORM queries against
-    columns that may not exist yet.
-    """
-    if not settings.DATABASE_VALIDATE_MIGRATIONS_ON_STARTUP:
-        return
-    migration = await validate_migration_head(db)
-    if migration.get("valid"):
-        return
-    logger.error("incident_resource_blocked_by_migration_drift", migration=migration)
-    raise HTTPException(
-        status_code=503,
-        detail={
-            "code": "DATABASE_MIGRATION_DRIFT",
-            "message": "Database schema is not at the repository Alembic head",
-            "expected_heads": migration.get("expected_heads", []),
-            "current_heads": migration.get("current_heads", []),
-            "error": migration.get("error"),
-        },
-    )
+    await require_database_ready(db, operation="incident_memory_resource")
 
 
 @router.get("/incidents/{incident_id}/context")
