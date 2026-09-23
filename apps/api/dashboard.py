@@ -5,6 +5,7 @@ from typing import Any, Dict
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import text
 
+from apps.api.database_guard import require_database_ready
 from apps.memory_service import OperationalMemoryService
 from apps.security.auth import require_permission
 from database import AsyncSessionLocal
@@ -17,6 +18,7 @@ async def dashboard_summary(_identity=Depends(require_permission("read:incident"
     """Return live PostgreSQL-backed KPIs. Database failures are never converted to fake zeroes."""
     try:
         async with AsyncSessionLocal() as db:
+            await require_database_ready(db, operation="dashboard_summary")
             row = (
                 await db.execute(
                     text(
@@ -119,5 +121,7 @@ async def dashboard_summary(_identity=Depends(require_permission("read:incident"
         result["memory_embedding_backlog"] = int(memory_stats["embedding_backlog"])
         result["data_status"] = "live"
         return result
+    except HTTPException:
+        raise
     except Exception as exc:
         raise HTTPException(status_code=503, detail="dashboard_data_unavailable") from exc
