@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from typing import Dict, Any, Optional
 
 from pydantic import BaseModel, Field
@@ -34,12 +35,15 @@ class ExecutionResult(BaseModel):
     result: Optional[Dict[str, Any]] = None
     error: Optional[str] = None
     execution_time: Optional[float] = None
+    execution_started_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    execution_completed_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     approval_id: Optional[str] = None
 
 
 class ExecutionService:
     @classmethod
     async def execute(cls, request: ExecutionRequest) -> ExecutionResult:
+        execution_started_at = datetime.now(timezone.utc)
         logger.info(
             "execution_request_received",
             tool=request.tool_name,
@@ -128,5 +132,7 @@ class ExecutionService:
             result=result.get("result"),
             error=result.get("error"),
             execution_time=result.get("execution_time"),
+            execution_started_at=execution_started_at,
+            execution_completed_at=datetime.now(timezone.utc),
             approval_id=request.approval_id,
         )
