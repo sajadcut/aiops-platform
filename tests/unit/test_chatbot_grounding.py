@@ -3,6 +3,7 @@ from datetime import datetime, timedelta, timezone
 from apps.chatbot.grounding import (
     EvidenceRecord,
     JudgeDecision,
+    clarification_requirements,
     judge_allows_display,
     infer_request_policy,
     missing_capability_message,
@@ -139,3 +140,37 @@ def test_advisory_start_triage_is_not_a_mutation():
     assert policy.kind == "information"
     assert policy.mutating is False
     assert policy.requires_live_evidence is False
+
+
+def test_missing_vm_target_requests_clarification_not_missing_capability():
+    rows = [{"role": "user", "content": "nginx بالاست؟", "metadata": {}}]
+    context = resolve_context(rows)
+    policy = infer_request_policy("nginx بالاست؟")
+    assert context.service == "nginx"
+    assert clarification_requirements("nginx بالاست؟", policy, context) == ["target"]
+
+
+def test_followup_with_resolved_target_does_not_ask_again():
+    rows = [
+        {
+            "role": "tool",
+            "content": "vm_service_status completed",
+            "metadata": {
+                "tool": "vm_service_status",
+                "target": "10.100.6.199",
+                "parameters": {"service": "nginx"},
+            },
+        },
+        {"role": "user", "content": "nginx بالاست؟", "metadata": {}},
+    ]
+    context = resolve_context(rows)
+    policy = infer_request_policy("nginx بالاست؟")
+    assert clarification_requirements("nginx بالاست؟", policy, context) == []
+
+
+def test_action_without_target_requests_target_clarification():
+    rows = [{"role": "user", "content": "nginx رو restart کن", "metadata": {}}]
+    context = resolve_context(rows)
+    policy = infer_request_policy("nginx رو restart کن")
+    assert policy.mutating is True
+    assert clarification_requirements("nginx رو restart کن", policy, context) == ["target"]
