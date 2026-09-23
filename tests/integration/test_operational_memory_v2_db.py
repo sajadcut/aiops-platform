@@ -497,6 +497,7 @@ async def test_memory_v2_golden_retrieval_quality_dataset():
 
         def episode(label: str, summary: str, *, success: bool, environment: str = "test"):
             state = _state(str(uuid4()), success=success)
+            state["service_name"] = "nginx-golden"
             state["evidence_summary"] = summary
             state["context"]["incident"]["summary"] = summary
             state["context"]["trigger_signal"]["summary"] = summary
@@ -549,7 +550,7 @@ async def test_memory_v2_golden_retrieval_quality_dataset():
 
         results = await service.retrieve(
             "nginx inactive tcp port unavailable",
-            service_scope="nginx",
+            service_scope="nginx-golden",
             environment="test",
             retrieval_mode="REMEDIATION_EXPERIENCE",
             limit=10,
