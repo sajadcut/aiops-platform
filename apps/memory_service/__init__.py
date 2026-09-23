@@ -320,6 +320,21 @@ class OperationalMemoryService:
                     "safe_as_evidence": False,
                     "requires_current_validation": True,
                     "retrieval_mode": retrieval_mode,
+                    "reuse_guidance": {
+                        "safe_as_evidence": False,
+                        "requires_current_validation": True,
+                    },
+                    "failure_warnings": (
+                        [
+                            (
+                                f"{row.get('action') or 'historical action'} was previously "
+                                "attempted on a similar condition without verified recovery."
+                            )
+                        ]
+                        if row.get("memory_outcome_class")
+                        in {"failed_recovery", "partial_recovery", "execution_blocked"}
+                        else []
+                    ),
                     "vector_similarity": round(similarity, 6),
                     "lexical_score": round(
                         float(item.get("lexical_score") or 0.0), 6
@@ -330,6 +345,7 @@ class OperationalMemoryService:
                             service_scope=service_scope,
                             environment=environment,
                             mode=retrieval_mode,
+                            query=query,
                         ),
                         8,
                     ),
@@ -702,6 +718,36 @@ class OperationalMemoryService:
             "failed_reuse_count": int(entry.failed_reuse_count or 0),
             "effectiveness_score": float(
                 entry.effectiveness_score or 0.0
+            ),
+            "cited_count": int(entry.cited_count or 0),
+            "last_retrieved_at": (
+                entry.last_retrieved_at.isoformat()
+                if entry.last_retrieved_at else None
+            ),
+            "last_reused_at": (
+                entry.last_reused_at.isoformat()
+                if entry.last_reused_at else None
+            ),
+            "last_successful_reuse_at": (
+                entry.last_successful_reuse_at.isoformat()
+                if entry.last_successful_reuse_at else None
+            ),
+            "age_days": (
+                max(
+                    0,
+                    int(
+                        (
+                            datetime.now(timezone.utc)
+                            - (
+                                entry.created_at
+                                if entry.created_at.tzinfo
+                                else entry.created_at.replace(tzinfo=timezone.utc)
+                            )
+                        ).total_seconds()
+                        // 86400
+                    ),
+                )
+                if entry.created_at else None
             ),
             "created_at": (
                 entry.created_at.isoformat()
