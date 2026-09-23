@@ -328,3 +328,19 @@ async def test_embedding_failure_keeps_core_episode(monkeypatch):
     assert db.items[0].embedding is None
     assert db.items[0].embedding_status == "failed"
     assert db.commits >= 2
+
+
+def test_builder_redacts_secrets_from_persisted_and_embedding_fields():
+    state = _state()
+    state["context"]["incident"]["summary"] = "nginx failed token=super-secret-value"
+    state["execution_request"]["parameters"]["authorization"] = "Bearer abc.def.ghi"
+    state["execution_request"]["parameters"]["password"] = "hunter2"
+    episode = OperationalMemoryBuilder.build(state)
+    serialized = str(episode).lower()
+    embedding = episode["embedding_document"].lower()
+    assert "super-secret-value" not in serialized
+    assert "abc.def.ghi" not in serialized
+    assert "hunter2" not in serialized
+    assert "super-secret-value" not in embedding
+    assert "abc.def.ghi" not in embedding
+    assert "hunter2" not in embedding
