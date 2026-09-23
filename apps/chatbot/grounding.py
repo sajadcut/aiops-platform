@@ -9,6 +9,8 @@ from typing import Any
 from domain.contracts.redaction import redact
 
 IP_RE = re.compile(r"\b(?:\d{1,3}\.){3}\d{1,3}\b")
+HOST_RE = re.compile(r"(?i)(?:روی|on|host|server|سرور)\s+([A-Za-z0-9][A-Za-z0-9._-]{1,253})")
+SERVICE_RE = re.compile(r"(?i)(?:service|سرویس)\s+([A-Za-z0-9][A-Za-z0-9._-]{0,127})")
 PATH_RE = re.compile(r"(?<![\w.])/(?:[A-Za-z0-9._-]+/?)+")
 PERSIAN_RE = re.compile(r"[\u0600-\u06ff]")
 
@@ -203,11 +205,72 @@ def resolve_context(rows: list[dict[str, Any]]) -> OperationalContext:
         content = str(row.get("content") or "")
         if context.target is None:
             ips = IP_RE.findall(content)
-            context.target = ips[-1] if ips else None
+            if ips:
+                context.target = ips[-1]
+            else:
+                host_match = HOST_RE.search(content)
+                if host_match:
+                    context.target = host_match.group(1)
+        if context.service is None:
+            service_match = SERVICE_RE.search(content)
+            if service_match:
+                context.service = service_match.group(1)
+            else:
+                folded = content.casefold()
+                for known_service in ("nginx", "haproxy"):
+                    if known_service in folded:
+                        context.service = known_service
+                        break
         if context.path is None:
             paths = PATH_RE.findall(content)
             context.path = paths[-1] if paths else None
     return context
+
+
+def clarification_requirements(
+    message: str,
+    policy: RequestPolicy,
+    context: OperationalContext,
+) -> list[str]:
+    if not policy.requires_live_evidence or policy.mutating:
+        return []
+    required: list[str] = []
+    caps = set(policy.required_capabilities)
+    vm_caps = {cap for cap in caps if cap.startswith("vm.")}
+    if vm_caps and not context.target:
+        required.append("target")
+    service_caps = {
+        "vm.service.status.read",
+        "vm.service.logs.read",
+        "vm.service.config.read",
+        "prometheus.metrics.read",
+        "elasticsearch.logs.read",
+    }
+    if caps.intersection(service_caps) and not context.service:
+        lowered = str(message or "").casefold()
+        if not any(name in lowered for name in ("nginx", "haproxy")):
+            required.append("service")
+    if "kubernetes.read" in caps and not context.namespace:
+        lowered = str(message or "").casefold()
+        if "namespace" not in lowered and "فضای نام" not in lowered:
+            required.append("namespace")
+    return required
+
+
+def clarification_message(message: str, missing: list[str]) -> str:
+    labels_fa = {"target": "نام یا IP سرور/هدف", "service": "نام سرویس", "namespace": "namespace"}
+    labels_en = {"target": "target host/IP", "service": "service name", "namespace": "namespace"}
+    if PERSIAN_RE.search(str(message or "")):
+        details = "، ".join(labels_fa.get(item, item) for item in missing)
+        return (
+            f"برای بررسی زنده، {details} مشخص نیست. همین مورد را بفرستید تا بررسی را با ابزار متصل انجام دهم؛ "
+            "بدون آن وضعیت واقعی را حدس نمی‌زنم."
+        )
+    details = ", ".join(labels_en.get(item, item) for item in missing)
+    return (
+        f"I need the {details} to perform the live check. Provide that value and I can query the connected "
+        "operational source; I will not guess the current state without it."
+    )
 
 
 def context_instruction(context: OperationalContext) -> str:
@@ -279,8 +342,10 @@ JUDGE_SYSTEM_PROMPT = """You validate a production AIOps copilot answer. Evaluat
 Current operational facts require successful fresh live Evidence. Historical memory is context, not current proof.
 Reject unsupported facts, contradictions, stale/failed evidence, and manual-how-to answers when a connected tool
 should perform the check. Diagnostic conclusions need corroborating checks, not only service status.
-If another available read tool is needed set needs_replan=true. If the required capability is unavailable, list it
-under missing_capabilities. Return JSON only with: valid, question_answered, evidence_sufficient, claims_grounded,
+Score the answer for correctness, grounding, completeness, relevance, actionability, concision, context awareness,
+and operational usefulness. A technically true but non-actionable manual instruction is not a good answer when the
+platform can perform the check itself. If another available read tool is needed set needs_replan=true. If the
+required capability is unavailable, list it under missing_capabilities. Return JSON only with: valid, question_answered, evidence_sufficient, claims_grounded,
 hallucination_risk, tool_usage_complete, missing_capabilities, missing_evidence, contradictions, unsupported_claims,
 needs_replan, needs_user_clarification, rewrite_required, confidence, reason."""
 
