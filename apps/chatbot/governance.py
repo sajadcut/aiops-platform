@@ -349,6 +349,11 @@ async def llm_validate(
         return baseline
 
     judged = ValidationResult.from_mapping(parsed if isinstance(parsed, dict) else {})
+    if judged.confidence < cfg.min_evidence_confidence:
+        judged.valid = False
+        judged.rewrite_required = True
+        judged.reason = judged.reason or "judge_confidence_below_threshold"
+        CHAT_VALIDATION_FAILURES.labels(reason="low_confidence").inc()
     if judged.unsupported_claims:
         CHAT_UNSUPPORTED_CLAIMS.inc(len(judged.unsupported_claims))
     if judged.needs_replan:
