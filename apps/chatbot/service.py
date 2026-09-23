@@ -12,6 +12,7 @@ from prometheus_client import Counter, Histogram
 from apps.approval_service.binding import assert_bound, bind_metadata, execution_intent, intent_digest
 from apps.approval_service.postgres import PostgreSQLApprovalStore
 from apps.audit_service.postgres import PostgreSQLAuditStore
+from apps.chatbot.governance import missing_capability_message, requires_live_evidence
 from apps.chatbot.models import ActionProposalView, ChatMessageRequest, ChatMessageResponse
 from apps.chatbot.store import ChatStore, HISTORY_LIMIT
 from apps.chatbot.tools import CHAT_TOOL_SCHEMAS, ToolIntent, max_tool_calls, normalize_tool_intent, parse_tool_call
@@ -50,6 +51,12 @@ all required arguments are present in the current request or can be unambiguousl
 Never ask the user for a yes/no confirmation before a read-only tool call. Ask a clarification only when a
 required argument genuinely cannot be resolved without guessing. Confirmation is reserved for governed
 mutation proposals handled by the backend.
+Any claim about current operational state (CPU, memory, disk, service/process/port status, logs, alerts,
+latency, Kubernetes state or other live telemetry) requires a governed tool result. Never answer those
+facts from model memory. For diagnostic/why questions, prefer enough complementary evidence to support
+the cause (for example status plus logs/diagnostics) instead of concluding from a single observation.
+If no provided tool can establish the requested current fact, explicitly say that live verification is
+unavailable rather than guessing.
 Never invent live values. Never emit or execute arbitrary shell, SSH, kubectl, SQL or HTTP commands.
 For a requested infrastructure change, select only the matching mutation proposal tool. The backend,
 not you, owns authorization, approval, confirmation and execution. Never claim an action executed
@@ -390,6 +397,21 @@ class ChatbotService:
                 tool_calls = list(response.tool_calls or [])
                 if not tool_calls:
                     answer = str(response.content or "").strip() or "I could not produce a complete answer."
+                    if requires_live_evidence(request.message):
+                        safe_missing = missing_capability_message(request.message)
+                        if answer != safe_missing:
+                            answer = safe_missing
+                        await self._audit(
+                            db,
+                            event_type="chatbot_missing_capability",
+                            actor=identity.subject,
+                            status="degraded",
+                            metadata={
+                                "session_id": session_id,
+                                "required_capability": "live_operational_evidence",
+                                "tool_calls": 0,
+                            },
+                        )
                     answer = answer[:8000]
                     await store.add_message(session_id, "assistant", answer, {"kind": "answer", "model": response.model})
                     await self._audit(
