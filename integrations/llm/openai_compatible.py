@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+import asyncio
 import json
 import time
+
+import httpx
 from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
@@ -211,6 +214,8 @@ class OpenAICompatibleLLMProvider(LLMAdapter):
                             "attempts_used": attempt + 1,
                             "repair_attempts_used": attempt,
                             "configured_attempts": attempts,
+                            "configured_completion_attempts": attempts,
+                            "configured_transport_attempts": max(1, int(settings.RETRY_MAX_ATTEMPTS)),
                             "finish_reason": response.finish_reason,
                             "total_duration_ms": round((time.perf_counter() - generation_started) * 1000, 3),
                         },
@@ -228,6 +233,8 @@ class OpenAICompatibleLLMProvider(LLMAdapter):
                     "model": self.model,
                     "error_type": type(exc).__name__,
                     "configured_attempts": attempts,
+                    "configured_completion_attempts": attempts,
+                    "configured_transport_attempts": max(1, int(settings.RETRY_MAX_ATTEMPTS)),
                     "total_duration_ms": round((time.perf_counter() - generation_started) * 1000, 3),
                 },
                 level="warning",
@@ -293,38 +300,119 @@ class OpenAICompatibleLLMProvider(LLMAdapter):
                 "reasoning_effort": request_payload.get("reasoning_effort"),
                 "tool_count": len(request_payload.get("tools") or []),
                 "tool_choice": request_payload.get("tool_choice"),
+                "configured_transport_attempts": max(1, int(settings.RETRY_MAX_ATTEMPTS)),
             },
         )
 
-        try:
-            async with insecure_async_client(timeout=settings.LLM_TIMEOUT_SECONDS, component=f"llm:{self.provider_name}") as client:
-                response = await client.post(
-                    self.chat_endpoint,
-                    headers=headers,
-                    json=request_payload,
+        transport_attempts = max(1, int(settings.RETRY_MAX_ATTEMPTS))
+        delay = max(0.0, float(settings.RETRY_DELAY_SECONDS))
+        backoff = max(1.0, float(settings.RETRY_BACKOFF_FACTOR))
+        result: Optional[LLMResponse] = None
+
+        for attempt in range(1, transport_attempts + 1):
+            attempt_started = time.perf_counter()
+            try:
+                async with insecure_async_client(
+                    timeout=settings.LLM_TIMEOUT_SECONDS,
+                    component=f"llm:{self.provider_name}",
+                ) as client:
+                    response = await client.post(
+                        self.chat_endpoint,
+                        headers=headers,
+                        json=request_payload,
+                    )
+                    retryable_status = response.status_code in {408, 429} or response.status_code >= 500
+                    if retryable_status and attempt < transport_attempts:
+                        log_workflow_step(
+                            incident_id=incident_id,
+                            stage=stage,
+                            component=self.provider_name,
+                            action="chat_completion_retrying",
+                            status="retrying",
+                            summary="LLM request returned a transient HTTP status; retrying",
+                            details={
+                                "request_id": request_id,
+                                "model": self.model,
+                                "http_status": response.status_code,
+                                "attempt": attempt,
+                                "configured_transport_attempts": transport_attempts,
+                                "duration_ms": round((time.perf_counter() - attempt_started) * 1000, 3),
+                            },
+                            level="warning",
+                        )
+                        await asyncio.sleep(delay)
+                        delay *= backoff
+                        continue
+
+                    response.raise_for_status()
+                    payload = response.json()
+
+                if not isinstance(payload, dict):
+                    raise RuntimeError("invalid_llm_gateway_response")
+                result = self._response_from_payload(payload, self.model)
+                break
+            except (httpx.TimeoutException, httpx.TransportError) as exc:
+                if attempt < transport_attempts:
+                    log_workflow_step(
+                        incident_id=incident_id,
+                        stage=stage,
+                        component=self.provider_name,
+                        action="chat_completion_retrying",
+                        status="retrying",
+                        summary="LLM transport failure; retrying",
+                        details={
+                            "request_id": request_id,
+                            "model": self.model,
+                            "error_type": type(exc).__name__,
+                            "attempt": attempt,
+                            "configured_transport_attempts": transport_attempts,
+                            "duration_ms": round((time.perf_counter() - attempt_started) * 1000, 3),
+                        },
+                        level="warning",
+                    )
+                    await asyncio.sleep(delay)
+                    delay *= backoff
+                    continue
+                log_workflow_step(
+                    incident_id=incident_id,
+                    stage=stage,
+                    component=self.provider_name,
+                    action="chat_completion_failed",
+                    status="failed",
+                    summary="LLM request failed",
+                    details={
+                        "request_id": request_id,
+                        "model": self.model,
+                        "error_type": type(exc).__name__,
+                        "attempt": attempt,
+                        "configured_transport_attempts": transport_attempts,
+                        "duration_ms": round((time.perf_counter() - started) * 1000, 3),
+                    },
+                    level="warning",
                 )
-                response.raise_for_status()
-                payload = response.json()
-            if not isinstance(payload, dict):
-                raise RuntimeError("invalid_llm_gateway_response")
-            result = self._response_from_payload(payload, self.model)
-        except Exception as exc:
-            log_workflow_step(
-                incident_id=incident_id,
-                stage=stage,
-                component=self.provider_name,
-                action="chat_completion_failed",
-                status="failed",
-                summary="LLM request failed",
-                details={
-                    "request_id": request_id,
-                    "model": self.model,
-                    "error_type": type(exc).__name__,
-                    "duration_ms": round((time.perf_counter() - started) * 1000, 3),
-                },
-                level="warning",
-            )
-            raise
+                raise
+            except Exception as exc:
+                log_workflow_step(
+                    incident_id=incident_id,
+                    stage=stage,
+                    component=self.provider_name,
+                    action="chat_completion_failed",
+                    status="failed",
+                    summary="LLM request failed",
+                    details={
+                        "request_id": request_id,
+                        "model": self.model,
+                        "error_type": type(exc).__name__,
+                        "attempt": attempt,
+                        "configured_transport_attempts": transport_attempts,
+                        "duration_ms": round((time.perf_counter() - started) * 1000, 3),
+                    },
+                    level="warning",
+                )
+                raise
+
+        if result is None:
+            raise RuntimeError("llm_transport_retry_exhausted")
 
         log_workflow_step(
             incident_id=incident_id,
