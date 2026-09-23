@@ -43,6 +43,15 @@ A machine Client Application does not perform human Approve/Reject decisions. Pr
 
 Context Generation is used only when a Context Profile has been provisioned. The Context Package is auxiliary input for the downstream reasoning layer, not a final answer. `HTTP 200` with `isSufficient=false` is preserved as insufficient. A fail-generation profile may return `422 CONTEXT_INSUFFICIENT_KNOWLEDGE` without a package.
 
+## Chatbot integration
+
+The Operations Copilot consumes Cognia in two governed modes:
+
+- **Automatic read context:** operator questions and infrastructure action requests are searched against Cognia before intent planning when `CHAT_COGNIA_AUTO_LOOKUP_ENABLED=True`. The lookup is bounded by `CHAT_COGNIA_LOOKUP_LIMIT` and a chatbot-specific timeout so a Cognia outage does not stall the control plane. Search results are Knowledge Evidence only and never satisfy the Live Evidence requirement for current runtime facts.
+- **Explicit authoring:** when an authorized operator explicitly asks to save/register information in Cognia, the chatbot may use `cognia_register_knowledge`. Updating existing knowledge uses `cognia_create_revision`, which re-reads current state and supplies Cognia's optimistic-concurrency candidate revision id. Viewer has `read:knowledge`; operator/SRE additionally have `write:knowledge`.
+
+The LLM cannot choose arbitrary Knowledge Base authority or Scope. KBs stay inside `COGNIA_KNOWLEDGE_BASE_IDS`; ambiguous multi-KB authoring requires an explicit/default KB. Scope is server-side `CHAT_COGNIA_WRITE_SCOPE` and defaults to `clientApplication`. A successful registration/revision response is not described as searchable/activated unless Cognia reports the corresponding lifecycle state.
+
 ## Error and retry policy
 
 External API failures are interpreted from HTTP status + Cognia `code`; human-readable title/detail are not control-flow inputs. Search/read requests may use bounded transient retry. Registration is retried only with Idempotency-Key. Candidate Revision creation is never blindly retried because optimistic concurrency requires a fresh read/decision after conflict.
