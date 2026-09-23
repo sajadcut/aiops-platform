@@ -35,7 +35,7 @@ class Settings(BaseSettings):
     # Chatbot response governance. Defaults preserve backward-compatible startup
     # for deployments that have not yet added the new environment variables.
     CHAT_ANSWER_VALIDATION_ENABLED: bool = Field(default=True)
-    CHAT_MAX_REPLAN_ATTEMPTS: int = Field(default=2, ge=0, le=5)
+    CHAT_MAX_REPLAN_ATTEMPTS: int = Field(default=1, ge=0, le=5)
     CHAT_REQUIRE_EVIDENCE_FOR_OPERATIONAL_FACTS: bool = Field(default=True)
     CHAT_MIN_EVIDENCE_CONFIDENCE: float = Field(default=0.70, ge=0.0, le=1.0)
     CHAT_MAX_EVIDENCE_AGE_SECONDS: int = Field(default=300, ge=5, le=86400)
