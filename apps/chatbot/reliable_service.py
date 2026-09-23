@@ -10,6 +10,7 @@ from prometheus_client import Counter, Histogram
 
 from apps.chatbot.governance import (
     CHAT_MISSING_CAPABILITIES,
+    ChatGovernanceConfig,
     build_evidence,
     grounded_fallback,
     llm_validate,
@@ -131,56 +132,65 @@ class ReliableChatLLMAdapter(LLMAdapter):
             return response
 
         user_message = most_recent_user_message(messages)
-        incomplete = _looks_obviously_incomplete(response)
-        evidence_required = requires_live_evidence(user_message) and not response.tool_calls
-        if not incomplete and not evidence_required:
-            return response
-
-        # No governed tool has executed yet, so one bounded repair/replan is safe.
-        CHAT_INCOMPLETE_RESPONSES.inc()
+        cfg = ChatGovernanceConfig.from_env()
+        current = response
         repair_messages = list(messages)
-        if evidence_required:
-            repair_instruction = (
-                "REPLAN REQUIRED: this is a live operational question. Do not answer from model memory "
-                "or infer the current state. Select the best matching provided read-only tool(s) using "
-                "the established conversation target when unambiguous. For a diagnostic 'why' question, "
-                "collect enough independent evidence to support the cause rather than stopping at a "
-                "single status check. If no provided tool can establish the requested fact, return a "
-                "short explicit statement that the live capability is unavailable; do not guess."
-            )
-        else:
-            repair_instruction = (
-                "RETRY REQUIRED: the previous response was incomplete. Return one fresh, complete, "
-                "concise answer, or select the correct provided tool when live operational data is "
-                "required. Do not continue the partial prefix."
-            )
-        repair_messages.append({"role": "user", "content": repair_instruction})
-        try:
-            repaired = await self.delegate.generate_with_messages(
-                repair_messages,
-                temperature=temperature,
-                max_tokens=max(1, int(max_tokens)) * 2,
-                **kwargs,
-            )
-        except Exception as exc:
-            if _is_timeout_error(exc):
-                CHAT_LLM_TIMEOUTS.inc()
-            raise
-        if _looks_obviously_incomplete(repaired):
+        attempts = 0
+
+        while True:
+            incomplete = _looks_obviously_incomplete(current)
+            evidence_required = requires_live_evidence(user_message) and not current.tool_calls
+            if not incomplete and not evidence_required:
+                return current
+
+            max_attempts = 1 if incomplete and not evidence_required else cfg.max_replan_attempts
+            if attempts >= max_attempts:
+                break
+
+            attempts += 1
+            CHAT_INCOMPLETE_RESPONSES.inc()
+            if evidence_required:
+                repair_instruction = (
+                    "REPLAN REQUIRED: this is a live operational question. Do not answer from model memory "
+                    "or infer the current state. Select the best matching provided read-only tool(s) using "
+                    "the established conversation target when unambiguous. For a diagnostic 'why' question, "
+                    "collect enough independent evidence to support the cause rather than stopping at a "
+                    "single status check. If no provided tool can establish the requested fact, return a "
+                    "short explicit statement that the live capability is unavailable; do not guess."
+                )
+            else:
+                repair_instruction = (
+                    "RETRY REQUIRED: the previous response was incomplete. Return one fresh, complete, "
+                    "concise answer, or select the correct provided tool when live operational data is "
+                    "required. Do not continue the partial prefix."
+                )
+            repair_messages = list(repair_messages)
+            repair_messages.append({"role": "user", "content": repair_instruction})
+            try:
+                current = await self.delegate.generate_with_messages(
+                    repair_messages,
+                    temperature=temperature,
+                    max_tokens=max(1, int(max_tokens)) * 2,
+                    **kwargs,
+                )
+            except Exception as exc:
+                if _is_timeout_error(exc):
+                    CHAT_LLM_TIMEOUTS.inc()
+                raise
+
+        if _looks_obviously_incomplete(current):
             CHAT_INCOMPLETE_RESPONSES.inc()
             raise ValueError("chatbot_llm_incomplete_response")
-        if evidence_required and not repaired.tool_calls:
+        if requires_live_evidence(user_message) and not current.tool_calls:
             CHAT_MISSING_CAPABILITIES.inc()
-            # Fail useful, not silent: an operational fact without evidence is never persisted
-            # as if it were a verified answer.
             return LLMResponse(
                 content=missing_capability_message(user_message),
-                model=repaired.model,
-                usage=repaired.usage,
+                model=current.model,
+                usage=current.usage,
                 tool_calls=None,
-                finish_reason=repaired.finish_reason,
+                finish_reason=current.finish_reason,
             )
-        return repaired
+        return current
 
 
 class OperationsCopilotService(ChatbotService):
