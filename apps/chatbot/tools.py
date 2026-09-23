@@ -122,6 +122,76 @@ CHAT_TOOL_SCHEMAS = [
     {
         "type": "function",
         "function": {
+            "name": "vm_service_diagnostics",
+            "description": "Read deeper governed VM service diagnostics. Use process_status/config_validate/port_listener_status/tcp_check to corroborate diagnostic questions such as why a service is down. Read-only; never requires confirmation.",
+            "parameters": {
+                "type": "object",
+                "required": ["target", "diagnostic"],
+                "additionalProperties": False,
+                "properties": {
+                    "target": {"type": "string"},
+                    "diagnostic": {"type": "string", "enum": ["process_status", "config_validate", "port_listener_status", "tcp_check"]},
+                    "service": {"type": "string"},
+                    "host": {"type": "string"},
+                    "port": {"type": "integer", "minimum": 1, "maximum": 65535}
+                }
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "prometheus_metrics",
+            "description": "Read live Prometheus metric samples for a service through the governed Prometheus MCP. Use for current latency/error-rate/capacity and service metrics; never invent metric values.",
+            "parameters": {
+                "type": "object",
+                "required": ["service", "metric_names"],
+                "additionalProperties": False,
+                "properties": {
+                    "service": {"type": "string"},
+                    "metric_names": {"type": "array", "items": {"type": "string"}, "minItems": 1, "maxItems": 12},
+                    "window_minutes": {"type": "integer", "minimum": 1, "maximum": 1440}
+                }
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "prometheus_alerts",
+            "description": "Read current/recent Prometheus or Alertmanager alerts through the governed Prometheus MCP.",
+            "parameters": {
+                "type": "object",
+                "additionalProperties": False,
+                "properties": {
+                    "service": {"type": "string"},
+                    "window_minutes": {"type": "integer", "minimum": 1, "maximum": 1440},
+                    "limit": {"type": "integer", "minimum": 1, "maximum": 100}
+                }
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "elasticsearch_logs",
+            "description": "Read bounded current/recent application logs for one service through Elastic Agent Builder MCP. Use live log Evidence for diagnosis instead of guessing from historical memory.",
+            "parameters": {
+                "type": "object",
+                "required": ["service"],
+                "additionalProperties": False,
+                "properties": {
+                    "service": {"type": "string"},
+                    "window_minutes": {"type": "integer", "minimum": 1, "maximum": 1440},
+                    "level": {"type": "string"},
+                    "limit": {"type": "integer", "minimum": 1, "maximum": 200}
+                }
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "vm_service_action",
             "description": "Propose a governed VM service mutation. This only creates an action proposal; it never executes without explicit backend confirmation and durable approval.",
             "parameters": {
@@ -159,6 +229,30 @@ CHAT_TOOL_SCHEMAS = [
 
 
 _ALLOWED_SEMANTIC_TOOLS = {item["function"]["name"] for item in CHAT_TOOL_SCHEMAS}
+
+# Capability names are vendor-neutral planning concepts. The LLM may choose a
+# semantic tool, but the backend owns this mapping and can detect when a user
+# asks for a capability that the connected chatbot surface does not expose.
+CHAT_CAPABILITY_MAP: dict[str, tuple[str, ...]] = {
+    "vm.metrics.read": ("vm_metrics",),
+    "vm.disk.read": ("vm_diagnostics",),
+    "vm.service.status.read": ("vm_service_status",),
+    "vm.service.logs.read": ("vm_service_logs",),
+    "vm.service.config.read": ("vm_service_diagnostics",),
+    "vm.network.read": ("vm_diagnostics", "vm_service_diagnostics"),
+    "logs.read": ("vm_service_logs", "elasticsearch_logs"),
+    "zabbix.problems.read": ("zabbix_problems",),
+    "prometheus.metrics.read": ("prometheus_metrics",),
+    "prometheus.alerts.read": ("prometheus_alerts",),
+    "elasticsearch.logs.read": ("elasticsearch_logs",),
+    "kubernetes.read": ("kubernetes_read",),
+    "vm.service.action": ("vm_service_action",),
+    "kubernetes.action": ("kubernetes_action",),
+}
+
+
+def tools_for_capability(capability: str) -> tuple[str, ...]:
+    return CHAT_CAPABILITY_MAP.get(str(capability), ())
 
 
 def max_tool_calls() -> int:
@@ -235,6 +329,58 @@ def normalize_tool_intent(name: str, args: dict[str, Any]) -> ToolIntent:
         if action == "service_logs":
             params["limit"] = _bounded_int(args.get("limit"), "limit", 1, 200, 50)
         return ToolIntent(name, "vm_telemetry", action, target, params, False, "low")
+
+    if name == "vm_service_diagnostics":
+        target = _safe_name(args.get("target"), "target")
+        diagnostic = str(args.get("diagnostic") or "").strip()
+        service = str(args.get("service") or "").strip()
+        host = str(args.get("host") or "").strip()
+        port = _bounded_int(args.get("port"), "port", 1, 65535, 0) if args.get("port") not in (None, "") else None
+        if diagnostic == "process_status":
+            if not service:
+                raise ValueError("service_required")
+            return ToolIntent(name, "vm_telemetry", diagnostic, target, {"process": _safe_name(service, "service")}, False, "low")
+        if diagnostic == "config_validate":
+            if not service:
+                raise ValueError("service_required")
+            return ToolIntent(name, "vm_telemetry", diagnostic, target, {"service": _safe_name(service, "service")}, False, "low")
+        if diagnostic == "port_listener_status":
+            if port is None:
+                raise ValueError("port_required")
+            return ToolIntent(name, "vm_telemetry", diagnostic, target, {"port": port}, False, "low")
+        if diagnostic == "tcp_check":
+            if port is None:
+                raise ValueError("port_required")
+            resolved_host = _safe_name(host, "host") if host else target
+            return ToolIntent(name, "vm_telemetry", diagnostic, target, {"host": resolved_host, "port": port}, False, "low")
+        raise ValueError("invalid_vm_service_diagnostic")
+
+    if name == "prometheus_metrics":
+        service = _safe_name(args.get("service"), "service")
+        raw_names = args.get("metric_names")
+        if not isinstance(raw_names, list) or not raw_names:
+            raise ValueError("metric_names_required")
+        metric_names = [_safe_name(item, "metric_name") for item in raw_names[:12]]
+        window = _bounded_int(args.get("window_minutes"), "window_minutes", 1, 1440, 15)
+        return ToolIntent(name, "prometheus_mcp", "get_metrics", service, {"service": service, "metric_names": metric_names, "window_minutes": window}, False, "low")
+
+    if name == "prometheus_alerts":
+        service = str(args.get("service") or "").strip()
+        if service:
+            service = _safe_name(service, "service")
+        window = _bounded_int(args.get("window_minutes"), "window_minutes", 1, 1440, 60)
+        limit = _bounded_int(args.get("limit"), "limit", 1, 100, 25)
+        return ToolIntent(name, "prometheus_mcp", "get_alerts", service or "*", {"service": service or None, "window_minutes": window, "limit": limit}, False, "low")
+
+    if name == "elasticsearch_logs":
+        service = _safe_name(args.get("service"), "service")
+        window = _bounded_int(args.get("window_minutes"), "window_minutes", 1, 1440, 15)
+        limit = _bounded_int(args.get("limit"), "limit", 1, 200, 50)
+        level = str(args.get("level") or "").strip()
+        params = {"service": service, "window_minutes": window, "limit": limit}
+        if level:
+            params["level"] = _safe_name(level, "level")
+        return ToolIntent(name, "elasticsearch_mcp", "get_logs", service, params, False, "low")
 
     if name == "zabbix_problems":
         service = str(args.get("service") or "").strip()

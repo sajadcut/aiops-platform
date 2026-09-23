@@ -1,0 +1,188 @@
+from datetime import datetime, timedelta, timezone
+
+from apps.chatbot.grounding import (
+    EvidenceRecord,
+    JudgeDecision,
+    clarification_requirements,
+    judge_allows_display,
+    infer_request_policy,
+    missing_capability_message,
+    resolve_context,
+    validate_rules,
+)
+
+
+def evidence(action="service_status", minutes_old=0):
+    return EvidenceRecord(
+        evidence_id=f"ev-{action}",
+        source="vm_mcp",
+        tool="vm_service_status",
+        action=action,
+        target="10.100.6.199",
+        observed_at=datetime.now(timezone.utc) - timedelta(minutes=minutes_old),
+        status="success",
+        data={"healthy": False},
+    )
+
+
+def test_knowledge_question_does_not_require_live_evidence():
+    policy = infer_request_policy("OOMKilled چیست؟")
+    assert policy.kind == "knowledge"
+    assert policy.requires_live_evidence is False
+
+
+def test_live_vm_status_requires_evidence():
+    policy = infer_request_policy("وضعیت nginx روی 10.100.6.199 چیه؟")
+    assert policy.kind == "operational"
+    assert policy.requires_live_evidence is True
+    assert "vm.service.status.read" in policy.required_capabilities
+
+
+def test_mount_followup_maps_to_disk_capability():
+    policy = infer_request_policy("/app چقدر فضا داره؟")
+    assert policy.requires_live_evidence is True
+    assert "vm.disk.read" in policy.required_capabilities
+
+
+def test_diagnostic_requires_corroborating_checks():
+    policy = infer_request_policy("چرا nginx بالا نمیاد؟")
+    assert policy.diagnostic is True
+    first = validate_rules(policy, [evidence()], "nginx inactive است", max_age_seconds=300, min_confidence=0.70)
+    assert first.valid is False
+    assert first.needs_replan is True
+
+    corroborated = validate_rules(
+        policy,
+        [evidence("service_status"), evidence("service_logs")],
+        "nginx inactive است و لاگ سرویس خطای پیکربندی نشان می‌دهد.",
+        max_age_seconds=300,
+        min_confidence=0.70,
+    )
+    assert corroborated.valid is True
+
+
+def test_stale_operational_evidence_is_rejected():
+    policy = infer_request_policy("وضعیت nginx چیه؟")
+    result = validate_rules(
+        policy, [evidence(minutes_old=10)], "nginx فعال است",
+        max_age_seconds=300, min_confidence=0.70,
+    )
+    assert result.valid is False
+    assert "fresh" in result.missing_evidence[0]
+
+
+def test_context_resolver_reuses_validated_tool_target_and_service():
+    rows = [
+        {"role": "user", "content": "وضعیت nginx روی 10.100.6.199 چیه؟", "metadata": {}},
+        {
+            "role": "tool",
+            "content": "vm_service_status completed",
+            "metadata": {
+                "tool": "vm_service_status",
+                "target": "10.100.6.199",
+                "parameters": {"service": "nginx"},
+            },
+        },
+        {"role": "user", "content": "/app چقدر فضا داره؟", "metadata": {}},
+    ]
+    context = resolve_context(rows)
+    assert context.target == "10.100.6.199"
+    assert context.service == "nginx"
+    assert context.path == "/app"
+
+
+def test_judge_parser_requires_structured_json():
+    decision = JudgeDecision.parse(
+        '{"valid":true,"question_answered":true,"evidence_sufficient":true,'
+        '"claims_grounded":true,"hallucination_risk":"low","tool_usage_complete":true,'
+        '"missing_capabilities":[],"missing_evidence":[],"contradictions":[],'
+        '"unsupported_claims":[],"needs_replan":false,"needs_user_clarification":false,'
+        '"rewrite_required":false,"confidence":0.94,"reason":"grounded"}'
+    )
+    assert decision.valid is True
+    assert decision.confidence == 0.94
+
+
+def test_missing_capability_response_is_truthful_in_persian():
+    policy = infer_request_policy("/app چقدر فضا داره؟")
+    text = missing_capability_message("/app چقدر فضا داره؟", policy)
+    assert "حدس" in text
+    assert "vm.disk.read" in text
+
+
+def test_mutation_request_is_not_misclassified_as_read_only():
+    policy = infer_request_policy("nginx روی vm01 رو restart کن")
+    assert policy.kind == "execution_request"
+    assert policy.mutating is True
+    assert "vm.service.action" in policy.required_capabilities
+
+
+def test_performance_diagnostic_requires_metrics_and_logs():
+    policy = infer_request_policy("چرا API کند شده؟")
+    assert policy.kind == "diagnostic"
+    assert "prometheus.metrics.read" in policy.required_capabilities
+    assert "logs.read" in policy.required_capabilities
+
+
+def test_judge_reported_contradiction_is_deterministically_blocked():
+    decision = JudgeDecision.parse(
+        '{"valid":true,"question_answered":true,"evidence_sufficient":true,'
+        '"claims_grounded":true,"hallucination_risk":"medium","tool_usage_complete":true,'
+        '"missing_capabilities":[],"missing_evidence":[],"contradictions":["Zabbix says up; VM says down"],'
+        '"unsupported_claims":[],"needs_replan":false,"needs_user_clarification":false,'
+        '"rewrite_required":false,"confidence":0.80,"reason":"conflict"}'
+    )
+    assert judge_allows_display(decision) is False
+
+
+def test_advisory_start_triage_is_not_a_mutation():
+    policy = infer_request_policy("How should I start triage?")
+    assert policy.kind == "information"
+    assert policy.mutating is False
+    assert policy.requires_live_evidence is False
+
+
+def test_missing_vm_target_requests_clarification_not_missing_capability():
+    rows = [{"role": "user", "content": "nginx بالاست؟", "metadata": {}}]
+    context = resolve_context(rows)
+    policy = infer_request_policy("nginx بالاست؟")
+    assert context.service == "nginx"
+    assert clarification_requirements("nginx بالاست؟", policy, context) == ["target"]
+
+
+def test_followup_with_resolved_target_does_not_ask_again():
+    rows = [
+        {
+            "role": "tool",
+            "content": "vm_service_status completed",
+            "metadata": {
+                "tool": "vm_service_status",
+                "target": "10.100.6.199",
+                "parameters": {"service": "nginx"},
+            },
+        },
+        {"role": "user", "content": "nginx بالاست؟", "metadata": {}},
+    ]
+    context = resolve_context(rows)
+    policy = infer_request_policy("nginx بالاست؟")
+    assert clarification_requirements("nginx بالاست؟", policy, context) == []
+
+
+def test_action_without_target_requests_target_clarification():
+    rows = [{"role": "user", "content": "nginx رو restart کن", "metadata": {}}]
+    context = resolve_context(rows)
+    policy = infer_request_policy("nginx رو restart کن")
+    assert policy.mutating is True
+    assert clarification_requirements("nginx رو restart کن", policy, context) == ["target"]
+
+
+def test_judge_reported_unsupported_claim_is_deterministically_blocked():
+    decision = JudgeDecision.parse(
+        '{"valid":true,"question_answered":true,"evidence_sufficient":true,'
+        '"claims_grounded":true,"hallucination_risk":"high","tool_usage_complete":true,'
+        '"missing_capabilities":[],"missing_evidence":[],"contradictions":[],'
+        '"unsupported_claims":["CPU is 80% but no metric evidence exists"],'
+        '"needs_replan":false,"needs_user_clarification":false,'
+        '"rewrite_required":true,"confidence":0.40,"reason":"unsupported fact"}'
+    )
+    assert judge_allows_display(decision) is False

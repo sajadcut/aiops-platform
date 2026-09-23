@@ -2,7 +2,7 @@ import json
 
 import pytest
 
-from apps.chatbot.tools import CHAT_TOOL_SCHEMAS, max_tool_calls, normalize_tool_intent, parse_tool_call
+from apps.chatbot.tools import CHAT_TOOL_SCHEMAS, max_tool_calls, normalize_tool_intent, parse_tool_call, tools_for_capability
 
 
 def _call(name: str, args: dict):
@@ -16,7 +16,11 @@ def test_chatbot_tool_catalog_is_bounded_and_has_no_arbitrary_execution():
         "vm_diagnostics",
         "vm_service_status",
         "vm_service_logs",
+        "vm_service_diagnostics",
         "zabbix_problems",
+        "prometheus_metrics",
+        "prometheus_alerts",
+        "elasticsearch_logs",
         "kubernetes_read",
         "vm_service_action",
         "kubernetes_action",
@@ -102,3 +106,36 @@ def test_prompt_injection_text_cannot_create_capability():
     # User text is data. Tool capability still comes only from a valid model tool call.
     with pytest.raises(PermissionError):
         parse_tool_call(_call("kubectl", {"command": hostile}))
+
+
+def test_service_diagnostics_normalize_to_governed_vm_reads():
+    intent = normalize_tool_intent(
+        "vm_service_diagnostics",
+        {"diagnostic": "config_validate", "target": "vm01", "service": "nginx"},
+    )
+    assert intent.tool_name == "vm_telemetry"
+    assert intent.action == "config_validate"
+    assert intent.parameters == {"service": "nginx"}
+    assert intent.mutating is False
+
+
+def test_prometheus_and_elastic_chat_tools_are_read_only():
+    metrics = normalize_tool_intent(
+        "prometheus_metrics",
+        {"service": "payment-api", "metric_names": ["http_requests_total"], "window_minutes": 10},
+    )
+    assert metrics.tool_name == "prometheus_mcp"
+    assert metrics.action == "get_metrics"
+    assert metrics.mutating is False
+
+    logs = normalize_tool_intent(
+        "elasticsearch_logs",
+        {"service": "payment-api", "window_minutes": 15, "limit": 25},
+    )
+    assert logs.tool_name == "elasticsearch_mcp"
+    assert logs.action == "get_logs"
+    assert logs.mutating is False
+
+
+def test_unknown_capability_has_no_silent_tool_fallback():
+    assert tools_for_capability("database.production.write") == ()

@@ -25,6 +25,42 @@ Browser / API client
 
 The LLM never receives the API key, MCP credentials or bearer tokens. It never receives an arbitrary shell, SSH or kubectl capability. Tool output is treated as untrusted data, recursively redacted before it is returned or summarized, and bounded before it is placed in an LLM prompt.
 
+## Evidence-grounded response lifecycle
+
+Operational answers are no longer returned directly from the first LLM completion. The read-only answer path is:
+
+```text
+User question
+  -> deterministic request policy (knowledge / operational / diagnostic)
+  -> backend conversation referent resolution
+  -> semantic capability / allowlisted tool planning
+  -> live Evidence collection
+  -> draft answer
+  -> deterministic Evidence/freshness/corroboration gate
+  -> optional structured LLM Answer Judge
+  -> bounded replan when more available read Evidence is needed
+  -> validated final answer
+```
+
+Current-state facts such as CPU, memory, disk, service state, ports, logs, alerts, Kubernetes state and live metrics require successful fresh tool Evidence. Historical memory may inform a hypothesis but is not treated as proof of current state. Diagnostic questions such as "why is nginx down?" require corroborating checks rather than a conclusion from `service_status` alone.
+
+Conversation referents (for example the target in a follow-up `/app چقدر فضا داره؟`) are resolved from explicit recent operator text and validated tool metadata. Referent context is never promoted to live health Evidence.
+
+If a required capability is absent from the deterministic capability map, the chatbot returns a missing-capability response and explicitly avoids guessing the current state. If the capability exists but a required referent such as target host, service or namespace is genuinely unresolved, the chatbot asks only for that missing value; validated conversation referents are reused so follow-up questions do not repeat already-known targets. Tool/MCP timeout or transport failure is recorded as failed Evidence, allows a bounded alternate-source replan, and ultimately becomes a guarded user-facing "could not verify" answer rather than a fabricated healthy/unhealthy value.
+
+The final Answer Judge emits structured internal fields for grounding, evidence sufficiency, contradictions, unsupported claims, replan/rewrite needs and confidence. Judge output is backend-only and is not shown as an operator answer. If live Evidence is sufficient but the wording itself is rejected, the backend performs at most one Evidence-constrained rewrite and validates the rewritten answer again.
+
+### Confidence model
+
+Confidence is not an unconstrained LLM self-score. The deterministic Evidence score is composed of:
+
+- 45% Evidence coverage (one live check for status questions; at least two distinct live checks for causal diagnostics);
+- 20% Evidence freshness relative to `CHAT_MAX_EVIDENCE_AGE_SECONDS`;
+- 20% corroboration for diagnostic questions;
+- 15% tool execution reliability for the checks attempted.
+
+When the structured Answer Judge is enabled, final confidence is 60% deterministic Evidence score and 40% Judge confidence. Historical Operational Memory and Cognia knowledge context do **not** increase confidence in current operational facts; they may only inform hypotheses that still require current Live Evidence.
+
 ## Web UI
 
 Start the normal API service and open:
@@ -103,7 +139,11 @@ The LLM can select only the following semantic tools:
 | `vm_diagnostics` | `vm_telemetry` -> VM MCP | host/disk/network/process/system logs | No |
 | `vm_service_status` | `vm_telemetry` -> VM MCP | systemd service status | No |
 | `vm_service_logs` | `vm_telemetry` -> VM MCP | bounded service journal | No |
+| `vm_service_diagnostics` | `vm_telemetry` -> VM MCP | process/config/listener/TCP corroboration | No |
 | `zabbix_problems` | `ZabbixMCPClient` | current/recent Zabbix problems | No |
+| `prometheus_metrics` | `PrometheusMCPClient` | live service metric samples | No |
+| `prometheus_alerts` | `PrometheusMCPClient` | current/recent Prometheus alerts | No |
+| `elasticsearch_logs` | Elastic Agent Builder MCP | bounded service logs | No |
 | `kubernetes_read` | Kubernetes MCP | pod/deployment/events/usage/rollout/evidence | No |
 | `vm_service_action` | Approval -> `ssh_vm` -> VM MCP | start/restart/reload service | Yes |
 | `kubernetes_action` | Approval -> `kubernetes_mcp` | restart/rollback/scale workload | Yes |
@@ -189,12 +229,35 @@ Prometheus metrics include:
 - `aiops_chatbot_tool_calls_total`
 - `aiops_chatbot_blocked_actions_total`
 - `aiops_chatbot_executed_actions_total`
+- `aiops_chatbot_replans_total`
+- `aiops_chatbot_validation_failures_total`
+- `aiops_chatbot_missing_capabilities_total`
+- `aiops_chatbot_unsupported_claims_total`
+- `aiops_chatbot_evidence_coverage_ratio`
+- `aiops_chatbot_answer_confidence`
+
+Structured audit/workflow events additionally include `chat_intent_detected`, `chat_context_resolved`, `chat_plan_created`, `chat_tool_selected`,
+`chat_tool_execution`, `chat_evidence_collected`, `chat_draft_generated`,
+`chat_replan_requested`, `chat_answer_validation`, `chat_historical_memory_retrieved`,
+`chat_final_answer` and `chat_missing_capability`.
 
 They are exposed by the existing application metrics endpoint.
 
 ## Configuration
 
-No chatbot-specific secret is introduced. Configure the existing platform contracts:
+No chatbot-specific secret is introduced. Answer governance is controlled by non-secret typed settings:
+
+- `CHAT_ANSWER_VALIDATION_ENABLED=True`
+- `CHAT_LLM_JUDGE_ENABLED=True`
+- `CHAT_MAX_REPLAN_ATTEMPTS=2`
+- `CHAT_REQUIRE_EVIDENCE_FOR_OPERATIONAL_FACTS=True`
+- `CHAT_MIN_EVIDENCE_CONFIDENCE=0.70`
+- `CHAT_MAX_EVIDENCE_AGE_SECONDS=300`
+- `CHAT_MISSING_CAPABILITY_LOGGING=True`
+
+The tracked `.env.example` supplies these runtime defaults and environment-specific configuration may override them. Production should keep Evidence enforcement and validation enabled.
+
+Configure the existing platform contracts:
 
 - `INTERNAL_API_KEY` / `INTERNAL_API_ROLE`, or production OIDC settings.
 - `LLM_PROVIDER`, `LLM_BASE_URL`, `LLM_MODEL`, `LLM_API_KEY`.

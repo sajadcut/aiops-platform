@@ -32,6 +32,15 @@ class ToolSelectingLLM(LLMAdapter):
 
     async def generate(self, prompt, system_prompt=None, temperature=0.7, max_tokens=1000, **kwargs):
         self.summary_prompts.append(prompt)
+        if kwargs.get("stage") == "chatbot_answer_validation":
+            return LLMResponse(
+                content='{"valid":true,"question_answered":true,"evidence_sufficient":true,'
+                        '"claims_grounded":true,"hallucination_risk":"low","tool_usage_complete":true,'
+                        '"missing_capabilities":[],"missing_evidence":[],"contradictions":[],'
+                        '"unsupported_claims":[],"needs_replan":false,"needs_user_clarification":false,'
+                        '"rewrite_required":false,"confidence":0.95,"reason":"test-grounded"}',
+                model="chatbot-tool-acceptance",
+            )
         return LLMResponse(content=self.summary, model="chatbot-tool-acceptance")
 
     async def generate_with_messages(self, messages, temperature=0.7, max_tokens=1000, **kwargs):
@@ -97,8 +106,8 @@ async def test_zabbix_read_uses_allowlisted_mcp_adapter_and_writes_audit(monkeyp
                 {"owner": owner},
             )
         ).scalars().all()
-        assert "chatbot_tool_invoked" in events
-        assert "chatbot_response" in events
+        assert "chat_evidence_collected" in events
+        assert "chat_final_answer" in events
     await _cleanup(owner)
 
 
@@ -130,7 +139,7 @@ async def test_kubernetes_read_stays_behind_mcp_client(monkeypatch):
 
 @pytest.mark.asyncio(loop_scope="session")
 @pytest.mark.parametrize("failure", [TimeoutError("timeout"), RuntimeError("mcp unavailable")])
-async def test_tool_timeout_or_mcp_failure_returns_502_without_fabricated_answer(monkeypatch, failure):
+async def test_tool_timeout_or_mcp_failure_returns_guarded_answer_without_fabricated_state(monkeypatch, failure):
     owner = f"chat-tool-failure-{type(failure).__name__.lower()}"
     identity = Identity(subject=owner, roles=("viewer",))
     llm = ToolSelectingLLM("vm_metrics", '{"target":"vm01"}')
@@ -139,10 +148,11 @@ async def test_tool_timeout_or_mcp_failure_returns_502_without_fabricated_answer
         raise failure
 
     monkeypatch.setattr(ChatbotService, "_execute_read", fail_read)
-    with pytest.raises(HTTPException) as blocked:
-        await ChatbotService(llm).message(identity, ChatMessageRequest(message="cpu vm01 چقدره؟"))
-    assert blocked.value.status_code == 502
-    assert blocked.value.detail == "chatbot_tool_failed:vm_metrics"
+    response = await ChatbotService(llm).message(identity, ChatMessageRequest(message="cpu vm01 چقدره؟"))
+    assert response.kind == "tool_result"
+    assert "امکان تأیید وضعیت واقعی" in response.message
+    assert "cpu_percent" not in response.message
+    assert "41" not in response.message
     await _cleanup(owner)
 
 
