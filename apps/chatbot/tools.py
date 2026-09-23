@@ -246,6 +246,8 @@ CHAT_CAPABILITY_MAP: dict[str, tuple[str, ...]] = {
     "prometheus.alerts.read": ("prometheus_alerts",),
     "elasticsearch.logs.read": ("elasticsearch_logs",),
     "kubernetes.read": ("kubernetes_read",),
+    "vm.service.action": ("vm_service_action",),
+    "kubernetes.action": ("kubernetes_action",),
 }
 
 
