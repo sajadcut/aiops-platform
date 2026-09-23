@@ -265,10 +265,13 @@ needs_replan, needs_user_clarification, rewrite_required, confidence, reason."""
 
 
 def judge_input(question: str, policy: RequestPolicy, context: OperationalContext,
-                evidence: list[EvidenceRecord], draft: str, rule: RuleValidation) -> str:
+                evidence: list[EvidenceRecord], draft: str, rule: RuleValidation,
+                historical_context: Any = None) -> str:
     payload = {
         "question": question[:4000], "policy": asdict(policy), "context": context.compact(),
-        "evidence": [x.public(data=True) for x in evidence], "draft": draft[:8000], "rule": asdict(rule),
+        "evidence": [x.public(data=True) for x in evidence],
+        "historical_context_not_live_evidence": redact(historical_context or []),
+        "draft": draft[:8000], "rule": asdict(rule),
     }
     text = json.dumps(redact(payload), ensure_ascii=False, default=str)
     return text[:24000]
