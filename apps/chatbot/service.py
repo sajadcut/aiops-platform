@@ -206,7 +206,24 @@ class ChatbotService:
             return {"source": "vm_mcp", "result": result.result or {}}
 
         if intent.tool_name == "cognia_knowledge_read":
-            items = await KnowledgeRAGService().search(
+            service = KnowledgeRAGService()
+            if intent.action == "processing_status":
+                kb_id = self._resolve_cognia_kb_id(
+                    intent.parameters.get("knowledge_base_id")
+                )
+                result = await service.get_processing_status(
+                    knowledge_base_id=kb_id,
+                    knowledge_id=int(intent.parameters["knowledge_id"]),
+                    revision_id=int(intent.parameters["revision_id"]),
+                )
+                return {
+                    "source": "cognia",
+                    "result": result,
+                    "knowledge_base_id": kb_id,
+                    "knowledge_id": int(intent.parameters["knowledge_id"]),
+                    "revision_id": int(intent.parameters["revision_id"]),
+                }
+            items = await service.search(
                 str(intent.parameters.get("query") or ""),
                 limit=int(intent.parameters.get("limit") or 5),
             )
@@ -252,15 +269,31 @@ class ChatbotService:
         raise ValueError("cognia_knowledge_base_required")
 
     @staticmethod
-    def _cognia_write_scope() -> dict[str, Any]:
-        scope_type = str(settings.CHAT_COGNIA_WRITE_SCOPE or "").strip()
+    def _cognia_write_scope(parameters: dict[str, Any]) -> dict[str, Any]:
+        requested = str(parameters.get("scope_type") or "").strip()
+        scope_type = requested or str(settings.CHAT_COGNIA_WRITE_SCOPE or "").strip()
         if scope_type == "general":
             return {"type": "general"}
+
+        app_id = settings.COGNIA_CLIENT_APPLICATION_ID
+        if app_id is None:
+            raise ValueError("cognia_client_application_id_required_for_chatbot_write")
+
         if scope_type == "clientApplication":
-            app_id = settings.COGNIA_CLIENT_APPLICATION_ID
-            if app_id is None:
-                raise ValueError("cognia_client_application_id_required_for_chatbot_write")
             return {"type": "clientApplication", "clientApplicationId": int(app_id)}
+
+        if scope_type == "externalSubject":
+            namespace = str(parameters.get("subject_namespace") or "").strip()
+            external_subject_id = str(parameters.get("external_subject_id") or "").strip()
+            if not namespace or not external_subject_id:
+                raise ValueError("cognia_external_subject_requires_namespace_and_externalSubjectId")
+            return {
+                "type": "externalSubject",
+                "clientApplicationId": int(app_id),
+                "subjectNamespace": namespace,
+                "externalSubjectId": external_subject_id,
+            }
+
         raise ValueError("invalid_chatbot_cognia_write_scope")
 
     async def _execute_cognia_write(
@@ -277,18 +310,88 @@ class ChatbotService:
         title = str(intent.parameters.get("title") or "").strip()
         content = str(intent.parameters.get("content") or "")
         if intent.action == "register_knowledge":
+            scope = self._cognia_write_scope(intent.parameters)
+            knowledge_type = str(intent.parameters.get("knowledge_type") or "text")
+            tag_ids = [int(v) for v in intent.parameters.get("tag_ids") or []]
+            category_ids = [int(v) for v in intent.parameters.get("category_ids") or []]
+            metadata = {
+                str(k): str(v)
+                for k, v in (intent.parameters.get("metadata") or {}).items()
+            }
+            metadata.setdefault("source", "aiops-chatbot")
+
+            canonical_payload = {
+                "knowledgeBaseId": kb_id,
+                "knowledgeType": knowledge_type,
+                "title": title,
+                "content": content,
+                "scope": scope,
+                "tagIds": tag_ids,
+                "categoryIds": category_ids,
+                "metadata": metadata,
+            }
             digest = hashlib.sha256(
-                f"{session_id}:{kb_id}:{title}:{content}".encode("utf-8")
+                json.dumps(
+                    canonical_payload,
+                    ensure_ascii=False,
+                    sort_keys=True,
+                    separators=(",", ":"),
+                ).encode("utf-8")
             ).hexdigest()
+
             result = await service.register_knowledge(
                 knowledge_base_id=kb_id,
                 title=title,
                 content=content,
-                scope=self._cognia_write_scope(),
-                metadata={"source": "aiops-chatbot"},
+                scope=scope,
+                knowledge_type=knowledge_type,
+                tag_ids=tag_ids,
+                category_ids=category_ids,
+                metadata=metadata,
                 idempotency_key=f"chatbot-{digest}",
             )
-            return {"source": "cognia", "result": result, "knowledge_base_id": kb_id}
+
+            knowledge_id = result.get("knowledgeId")
+            revision_id = result.get("revisionId")
+            processing: dict[str, Any] | None = None
+            processing_error: str | None = None
+            if knowledge_id is not None and revision_id is not None:
+                try:
+                    processing = await service.get_processing_status(
+                        knowledge_base_id=kb_id,
+                        knowledge_id=int(knowledge_id),
+                        revision_id=int(revision_id),
+                    )
+                except Exception as exc:
+                    processing_error = type(exc).__name__
+                    logger.warning(
+                        "chatbot_cognia_processing_probe_failed",
+                        session_id=session_id,
+                        knowledge_base_id=kb_id,
+                        knowledge_id=knowledge_id,
+                        revision_id=revision_id,
+                        error_type=processing_error,
+                    )
+
+            return {
+                "source": "cognia",
+                "result": result,
+                "knowledge_base_id": kb_id,
+                "knowledge_id": knowledge_id,
+                "revision_id": revision_id,
+                "processing": processing,
+                "processing_error": processing_error,
+                "searchable": bool(
+                    isinstance(processing, dict)
+                    and str(
+                        processing.get("state")
+                        or processing.get("status")
+                        or processing.get("processingState")
+                        or ""
+                    ).lower()
+                    == "activated"
+                ),
+            }
 
         if intent.action == "create_revision":
             knowledge_id = int(intent.parameters.get("knowledge_id") or 0)
@@ -299,6 +402,13 @@ class ChatbotService:
                 knowledge_id=knowledge_id,
             )
             expected = detail.get("currentCandidateRevisionId")
+            tag_ids = [int(v) for v in intent.parameters.get("tag_ids") or []]
+            category_ids = [int(v) for v in intent.parameters.get("category_ids") or []]
+            metadata = {
+                str(k): str(v)
+                for k, v in (intent.parameters.get("metadata") or {}).items()
+            }
+            metadata.setdefault("source", "aiops-chatbot")
             result = await service.create_revision(
                 knowledge_base_id=kb_id,
                 knowledge_id=knowledge_id,
@@ -307,13 +417,48 @@ class ChatbotService:
                 ),
                 title=title,
                 content=content,
-                metadata={"source": "aiops-chatbot"},
+                tag_ids=tag_ids,
+                category_ids=category_ids,
+                metadata=metadata,
             )
+            revision_id = result.get("revisionId")
+            processing: dict[str, Any] | None = None
+            processing_error: str | None = None
+            if revision_id is not None:
+                try:
+                    processing = await service.get_processing_status(
+                        knowledge_base_id=kb_id,
+                        knowledge_id=knowledge_id,
+                        revision_id=int(revision_id),
+                    )
+                except Exception as exc:
+                    processing_error = type(exc).__name__
+                    logger.warning(
+                        "chatbot_cognia_processing_probe_failed",
+                        session_id=session_id,
+                        knowledge_base_id=kb_id,
+                        knowledge_id=knowledge_id,
+                        revision_id=revision_id,
+                        error_type=processing_error,
+                    )
             return {
                 "source": "cognia",
                 "result": result,
                 "knowledge_base_id": kb_id,
                 "knowledge_id": knowledge_id,
+                "revision_id": revision_id,
+                "processing": processing,
+                "processing_error": processing_error,
+                "searchable": bool(
+                    isinstance(processing, dict)
+                    and str(
+                        processing.get("state")
+                        or processing.get("status")
+                        or processing.get("processingState")
+                        or ""
+                    ).lower()
+                    == "activated"
+                ),
             }
 
         raise PermissionError("chatbot_cognia_write_action_not_allowlisted")
