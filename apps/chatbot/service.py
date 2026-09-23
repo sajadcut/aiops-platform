@@ -399,6 +399,59 @@ class ChatbotService:
             )
             return None
 
+    async def _rewrite_answer(
+        self,
+        *,
+        question: str,
+        draft: str,
+        evidence: list[EvidenceRecord],
+        historical_context: Any,
+        judge: JudgeDecision,
+        session_id: str,
+        identity: Identity,
+    ) -> str:
+        payload = {
+            "question": str(question)[:4000],
+            "draft": str(draft)[:8000],
+            "live_evidence": [item.public(data=True) for item in evidence],
+            "historical_context_not_live_evidence": redact(historical_context or []),
+            "validator_feedback": {
+                "reason": judge.reason,
+                "unsupported_claims": judge.unsupported_claims,
+                "contradictions": judge.contradictions,
+                "missing_evidence": judge.missing_evidence,
+            },
+        }
+        encoded = json.dumps(redact(payload), ensure_ascii=False, default=str)[:24000]
+        system_prompt = (
+            "Rewrite the operator-facing answer only. Do not add facts that are absent from live_evidence. "
+            "For current operational state, live_evidence is the only factual authority. Historical context may "
+            "be mentioned only as historical experience and never as proof of current state. Preserve uncertainty, "
+            "answer the actual question directly, keep the response concise and operationally useful, and do not "
+            "tell the operator to run a manual check when the supplied Evidence already answers it. Return only "
+            "the rewritten answer, not JSON or commentary."
+        )
+        try:
+            response = await self._llm().generate(
+                encoded,
+                system_prompt=system_prompt,
+                temperature=0.0,
+                max_tokens=700,
+                session_id=session_id,
+                user_id=identity.subject,
+                stage="chatbot_answer_rewrite",
+            )
+            text = str(response.content or "").strip()
+            return text[:8000] if text else draft
+        except Exception as exc:
+            CHAT_LLM_FAILURES.inc()
+            logger.warning(
+                "chatbot_answer_rewrite_failed",
+                error_type=type(exc).__name__,
+                session_id=session_id,
+            )
+            return draft
+
     async def _validate_answer(
         self,
         *,
@@ -850,17 +903,18 @@ class ChatbotService:
                                 "missing_capabilities": missing_from_catalog,
                             },
                         )
-                        await self._audit(
-                            db,
-                            event_type="chat_missing_capability",
-                            actor=identity.subject,
-                            status="degraded",
-                            metadata={
-                                "session_id": session_id,
-                                "required_capabilities": list(policy.required_capabilities),
-                                "missing_capabilities": missing_from_catalog,
-                            },
-                        )
+                        if settings.CHAT_MISSING_CAPABILITY_LOGGING:
+                            await self._audit(
+                                db,
+                                event_type="chat_missing_capability",
+                                actor=identity.subject,
+                                status="degraded",
+                                metadata={
+                                    "session_id": session_id,
+                                    "required_capabilities": list(policy.required_capabilities),
+                                    "missing_capabilities": missing_from_catalog,
+                                },
+                            )
                         CHAT_REQUESTS.labels(outcome="answer").inc()
                         return ChatMessageResponse(session_id=UUID(session_id), kind="answer", message=answer)
 
@@ -914,16 +968,17 @@ class ChatbotService:
                                 "required_capabilities": list(policy.required_capabilities),
                             },
                         )
-                        await self._audit(
-                            db,
-                            event_type="chat_missing_capability",
-                            actor=identity.subject,
-                            status="degraded",
-                            metadata={
-                                "session_id": session_id,
-                                "required_capabilities": list(policy.required_capabilities),
-                            },
-                        )
+                        if settings.CHAT_MISSING_CAPABILITY_LOGGING:
+                            await self._audit(
+                                db,
+                                event_type="chat_missing_capability",
+                                actor=identity.subject,
+                                status="degraded",
+                                metadata={
+                                    "session_id": session_id,
+                                    "required_capabilities": list(policy.required_capabilities),
+                                },
+                            )
                         CHAT_REQUESTS.labels(outcome="answer").inc()
                         return ChatMessageResponse(session_id=UUID(session_id), kind="answer", message=answer)
 
@@ -941,6 +996,31 @@ class ChatbotService:
                         session_id=session_id,
                         identity=identity,
                     )
+                    if (
+                        not valid
+                        and judge is not None
+                        and judge.rewrite_required
+                        and not judge.needs_replan
+                    ):
+                        draft = await self._rewrite_answer(
+                            question=request.message,
+                            draft=draft,
+                            evidence=[],
+                            historical_context=historical_context,
+                            judge=judge,
+                            session_id=session_id,
+                            identity=identity,
+                        )
+                        valid, rule, judge, confidence = await self._validate_answer(
+                            question=request.message,
+                            policy=policy,
+                            context=context,
+                            evidence=[],
+                            draft=draft,
+                            historical_context=historical_context,
+                            session_id=session_id,
+                            identity=identity,
+                        )
                     answer = draft if valid else guarded_failure_message(
                         request.message, [], (judge.reason if judge else rule.reason)
                     )
@@ -1149,10 +1229,60 @@ class ChatbotService:
                         },
                     )
 
+                if (
+                    not valid
+                    and judge is not None
+                    and judge.rewrite_required
+                    and not judge.needs_replan
+                ):
+                    draft = await self._rewrite_answer(
+                        question=request.message,
+                        draft=draft,
+                        evidence=evidence,
+                        historical_context=historical_context,
+                        judge=judge,
+                        session_id=session_id,
+                        identity=identity,
+                    )
+                    await self._audit(
+                        db,
+                        event_type="chat_draft_generated",
+                        actor=identity.subject,
+                        status="rewritten",
+                        metadata={"session_id": session_id, "evidence_count": len(evidence)},
+                    )
+                    valid, rule, judge, confidence = await self._validate_answer(
+                        question=request.message,
+                        policy=policy,
+                        context=context,
+                        evidence=evidence,
+                        draft=draft,
+                        historical_context=historical_context,
+                        session_id=session_id,
+                        identity=identity,
+                    )
+                    await self._audit(
+                        db,
+                        event_type="chat_answer_validation",
+                        actor=identity.subject,
+                        status="completed" if valid else "degraded",
+                        metadata={
+                            "session_id": session_id,
+                            "valid": valid,
+                            "confidence": confidence,
+                            "evidence_count": len(evidence),
+                            "phase": "post_rewrite",
+                            "missing_evidence": rule.missing_evidence,
+                            "judge_reason": judge.reason if judge else None,
+                        },
+                    )
+
                 if not valid:
                     missing = list(policy.required_capabilities)
                     if judge is not None and judge.missing_capabilities:
                         missing = judge.missing_capabilities
+                    for capability in missing:
+                        CHAT_MISSING_CAPABILITIES.labels(capability=str(capability)[:80]).inc()
                     if missing and not evidence:
                         answer = missing_capability_message(request.message, policy)
                         event_type = "chat_missing_capability"
