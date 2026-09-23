@@ -10,6 +10,7 @@ from uuid import UUID, uuid4
 
 from fastapi import HTTPException
 from prometheus_client import Counter, Histogram
+from sqlalchemy import select
 
 from apps.approval_service.binding import assert_bound, bind_metadata, execution_intent, intent_digest
 from apps.approval_service.postgres import PostgreSQLApprovalStore
@@ -37,6 +38,7 @@ from database import AsyncSessionLocal
 from domain.contracts.config import settings
 from domain.contracts.logging import log_workflow_step, logger
 from domain.contracts.redaction import redact
+from domain.models import Evidence, Finding, Incident
 from integrations.cognia import CogniaAPIError, CogniaConfigurationError, CogniaContractError
 from integrations.kubernetes.mcp_client import KubernetesMCPClient
 from integrations.llm.base import LLMAdapter
@@ -297,14 +299,176 @@ class ChatbotService:
 
         raise ValueError("invalid_chatbot_cognia_write_scope")
 
+    async def _verified_incident_knowledge_draft(
+        self,
+        db,
+        incident_id: str,
+    ) -> dict[str, Any]:
+        try:
+            incident_uuid = UUID(str(incident_id))
+        except (TypeError, ValueError) as exc:
+            raise ValueError("invalid_incident_id") from exc
+
+        incident = await db.get(Incident, incident_uuid)
+        if incident is None:
+            raise ValueError("incident_not_found")
+
+        context = dict(incident.context or {})
+        outcome = dict(context.get("latest_operational_outcome") or {})
+        if not bool(outcome.get("verified")):
+            raise ValueError("incident_not_verified_for_knowledge_publication")
+
+        findings = (
+            await db.execute(
+                select(Finding)
+                .where(Finding.incident_id == incident_uuid)
+                .order_by(Finding.created_at.asc())
+                .limit(25)
+            )
+        ).scalars().all()
+        evidence_rows = (
+            await db.execute(
+                select(Evidence)
+                .where(Evidence.incident_id == incident_uuid)
+                .order_by(Evidence.created_at.asc())
+                .limit(50)
+            )
+        ).scalars().all()
+
+        service_name = str(incident.service or "unknown-service")
+        verification = dict(redact(outcome.get("verification") or {}))
+        verification_status = str(verification.get("status") or "")
+        verification_summary = str(
+            verification.get("summary")
+            or verification.get("reason")
+            or verification.get("message")
+            or ""
+        )[:2000]
+
+        lines = [
+            "# Verified Incident Knowledge",
+            "",
+            f"- Incident ID: {incident.id}",
+            f"- Service: {service_name}",
+            f"- Severity: {incident.severity}",
+            f"- Incident Status: {getattr(incident.status, 'value', incident.status)}",
+            f"- Summary: {str(incident.summary or '').strip()}",
+            "",
+            "## Evidence-linked findings",
+        ]
+        if findings:
+            for item in findings:
+                evidence_ids = ", ".join(
+                    str(value) for value in (item.evidence_ids or [])[:12]
+                )
+                lines.append(
+                    "- "
+                    + f"[{item.finding_type}] {item.statement} "
+                    + f"(agent={item.agent}, confidence={float(item.confidence or 0.0):.2f}"
+                    + (f", evidence={evidence_ids}" if evidence_ids else "")
+                    + ")"
+                )
+        else:
+            lines.append("- No persisted findings were available.")
+
+        lines.extend(
+            [
+                "",
+                "## Verified remediation",
+                f"- Action: {str(outcome.get('action') or '')}",
+                f"- Target: {str(outcome.get('target') or '')}",
+                f"- Execution success: {str(outcome.get('execution_success'))}",
+                "- Verified: true",
+                f"- Verification status: {verification_status}",
+            ]
+        )
+        if verification_summary:
+            lines.append(f"- Verification summary: {verification_summary}")
+
+        lines.extend(["", "## Evidence provenance"])
+        if evidence_rows:
+            for item in evidence_rows:
+                evidence_type = getattr(item.type, "value", item.type)
+                lines.append(
+                    "- "
+                    + f"source={item.source}; type={evidence_type}; "
+                    + f"reference={str(item.reference or '')}; "
+                    + f"confidence={float(item.confidence or 0.0):.2f}"
+                )
+        else:
+            lines.append("- No persisted evidence provenance rows were available.")
+
+        metadata = {
+            "source": "aiops-chatbot",
+            "incidentId": str(incident.id),
+            "service": service_name,
+            "severity": str(incident.severity or ""),
+            "incidentStatus": str(getattr(incident.status, "value", incident.status) or ""),
+            "verified": "true",
+            "action": str(outcome.get("action") or ""),
+            "target": str(outcome.get("target") or ""),
+            "verificationStatus": verification_status,
+        }
+        memory_id = outcome.get("memory_id")
+        if memory_id:
+            metadata["memoryId"] = str(memory_id)
+
+        return {
+            "title": f"Verified recovery - {service_name} - {str(incident.id)[:8]}",
+            "content": "\n".join(lines),
+            "metadata": metadata,
+        }
+
     async def _execute_cognia_write(
         self,
         intent: ToolIntent,
         *,
         session_id: str,
+        db=None,
     ) -> dict[str, Any]:
         if not settings.CHAT_COGNIA_WRITE_ENABLED:
             raise PermissionError("chatbot_cognia_write_disabled")
+
+        if intent.action == "publish_incident_knowledge":
+            if db is None:
+                raise ValueError("database_context_required_for_incident_publication")
+            draft = await self._verified_incident_knowledge_draft(
+                db,
+                str(intent.parameters.get("incident_id") or ""),
+            )
+            metadata = dict(draft["metadata"])
+            metadata.update(
+                {
+                    str(k): str(v)
+                    for k, v in (intent.parameters.get("metadata") or {}).items()
+                }
+            )
+            metadata["source"] = "aiops-chatbot"
+            generated = ToolIntent(
+                semantic_name="cognia_register_knowledge",
+                tool_name="cognia_knowledge_write",
+                action="register_knowledge",
+                target="cognia",
+                parameters={
+                    "knowledge_base_id": intent.parameters.get("knowledge_base_id"),
+                    "knowledge_type": "text",
+                    "title": str(intent.parameters.get("title") or draft["title"]),
+                    "content": draft["content"],
+                    "scope_type": intent.parameters.get("scope_type"),
+                    "subject_namespace": intent.parameters.get("subject_namespace"),
+                    "external_subject_id": intent.parameters.get("external_subject_id"),
+                    "tag_ids": list(intent.parameters.get("tag_ids") or []),
+                    "category_ids": list(intent.parameters.get("category_ids") or []),
+                    "metadata": metadata,
+                },
+                mutating=True,
+                risk_level="medium",
+            )
+            return await self._execute_cognia_write(
+                generated,
+                session_id=session_id,
+                db=db,
+            )
 
         kb_id = self._resolve_cognia_kb_id(intent.parameters.get("knowledge_base_id"))
         service = KnowledgeRAGService()
@@ -778,6 +942,7 @@ class ChatbotService:
                             payload = await self._execute_cognia_write(
                                 mutation,
                                 session_id=session_id,
+                                db=db,
                             )
                         except (ValueError, PermissionError) as exc:
                             CHAT_TOOL_CALLS.labels(
