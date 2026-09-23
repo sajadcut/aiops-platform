@@ -1,3 +1,6 @@
+from types import SimpleNamespace
+from uuid import uuid4
+
 import pytest
 
 import apps.chatbot.service as chatbot_service_module
@@ -205,3 +208,116 @@ async def test_chatbot_cognia_processing_status_is_read_only(monkeypatch):
     assert result["result"] == {"state": "Processing"}
     assert result["knowledge_id"] == 9001
     assert result["revision_id"] == 12001
+
+
+
+class _ScalarRows:
+    def __init__(self, rows):
+        self._rows = rows
+
+    def scalars(self):
+        return self
+
+    def all(self):
+        return list(self._rows)
+
+
+class _FakeIncidentDB:
+    def __init__(self, incident, findings=None, evidence=None):
+        self.incident = incident
+        self._results = [
+            _ScalarRows(findings or []),
+            _ScalarRows(evidence or []),
+        ]
+
+    async def get(self, model, identifier):
+        return self.incident
+
+    async def execute(self, statement):
+        return self._results.pop(0)
+
+
+@pytest.mark.asyncio
+async def test_verified_incident_draft_uses_durable_summary_and_provenance_not_raw_payload():
+    incident_id = uuid4()
+    incident = SimpleNamespace(
+        id=incident_id,
+        service="nginx",
+        severity="average",
+        status="resolved",
+        summary="Port 86 was down",
+        context={
+            "latest_operational_outcome": {
+                "action": "start_service",
+                "target": "10.100.6.199",
+                "execution_success": True,
+                "verified": True,
+                "verification": {
+                    "status": "success",
+                    "summary": "nginx active and port 86 listening",
+                },
+                "memory_id": "22222222-2222-2222-2222-222222222222",
+            }
+        },
+    )
+    findings = [
+        SimpleNamespace(
+            finding_type="analysis",
+            statement="nginx was inactive",
+            agent="vm",
+            confidence=0.95,
+            evidence_ids=["vm:service:1"],
+            created_at=None,
+        )
+    ]
+    evidence = [
+        SimpleNamespace(
+            source="vm_mcp",
+            type="event",
+            reference="vm:service:1",
+            confidence=1.0,
+            raw_data={"password": "must-not-be-published"},
+            created_at=None,
+        )
+    ]
+    db = _FakeIncidentDB(incident, findings, evidence)
+
+    draft = await ChatbotService()._verified_incident_knowledge_draft(
+        db,
+        str(incident_id),
+    )
+
+    assert "nginx was inactive" in draft["content"]
+    assert "start_service" in draft["content"]
+    assert "vm:service:1" in draft["content"]
+    assert "must-not-be-published" not in draft["content"]
+    assert draft["metadata"]["verified"] == "true"
+    assert draft["metadata"]["incidentId"] == str(incident_id)
+
+
+@pytest.mark.asyncio
+async def test_unverified_incident_cannot_be_published_to_cognia():
+    incident_id = uuid4()
+    incident = SimpleNamespace(
+        id=incident_id,
+        service="nginx",
+        severity="average",
+        status="escalated",
+        summary="Diagnosis incomplete",
+        context={
+            "latest_operational_outcome": {
+                "action": "start_service",
+                "target": "10.100.6.199",
+                "execution_success": True,
+                "verified": False,
+                "verification": {"status": "inconclusive"},
+            }
+        },
+    )
+    db = _FakeIncidentDB(incident)
+
+    with pytest.raises(ValueError, match="incident_not_verified_for_knowledge_publication"):
+        await ChatbotService()._verified_incident_knowledge_draft(
+            db,
+            str(incident_id),
+        )
