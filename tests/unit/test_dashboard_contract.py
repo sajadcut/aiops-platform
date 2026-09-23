@@ -91,3 +91,12 @@ def test_dashboard_summary_tracks_full_governed_lifecycle():
         "execution_success_rate",
     ]:
         assert token in api
+
+def test_incident_refresh_lazy_loads_historical_memory():
+    js = Path("dashboards/control-center.js").read_text(encoding="utf-8")
+    assert "const [context, evidence, lifecycle, verification] = await Promise.all" in js
+    assert "memory: null" in js
+    assert "async function loadIncidentMemory" in js
+    assert "Loading historical Operational Memory on demand" in js
+    assert "loadIncidentMemory(S.selected)" in js
+
