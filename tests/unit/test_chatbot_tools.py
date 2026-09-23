@@ -2,7 +2,7 @@ import json
 
 import pytest
 
-from apps.chatbot.tools import CHAT_TOOL_SCHEMAS, max_tool_calls, normalize_tool_intent, parse_tool_call
+from apps.chatbot.tools import CHAT_TOOL_SCHEMAS, max_tool_calls, normalize_tool_intent, parse_tool_call, tools_for_capability
 
 
 def _call(name: str, args: dict):
@@ -135,3 +135,7 @@ def test_prometheus_and_elastic_chat_tools_are_read_only():
     assert logs.tool_name == "elasticsearch_mcp"
     assert logs.action == "get_logs"
     assert logs.mutating is False
+
+
+def test_unknown_capability_has_no_silent_tool_fallback():
+    assert tools_for_capability("database.production.write") == ()
