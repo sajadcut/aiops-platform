@@ -148,6 +148,18 @@ async def apply_feedback(
         entry.effectiveness_score = (
             float(entry.successful_reuse_count or 0) / attempts if attempts else 0.0
         )
+        logger.info(
+            "aiops.memory.reused",
+            memory_id=str(event.memory_id),
+            target_incident_id=target_incident_id,
+            service_name=entry.service_scope,
+            environment=entry.environment,
+            retrieval_mode=event.retrieval_mode,
+            rank_position=event.rank_position,
+            verification_status=status,
+            helpful=event.helpful,
+            reward_score=float(event.reward_score or 0.0),
+        )
 
     await db.commit()
     logger.info(
