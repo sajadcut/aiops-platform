@@ -344,3 +344,22 @@ def test_builder_redacts_secrets_from_persisted_and_embedding_fields():
     assert "super-secret-value" not in embedding
     assert "abc.def.ghi" not in embedding
     assert "hunter2" not in embedding
+
+def test_feedback_reuse_event_name_is_stable_and_low_cardinality():
+    from pathlib import Path
+
+    source = Path("apps/memory_service/feedback.py").read_text(encoding="utf-8")
+    assert '"aiops.memory.reused"' in source
+    for attribute in (
+        "memory_id",
+        "target_incident_id",
+        "service_name",
+        "environment",
+        "retrieval_mode",
+        "rank_position",
+        "verification_status",
+        "helpful",
+        "reward_score",
+    ):
+        assert f"{attribute}=" in source
+
