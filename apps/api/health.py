@@ -81,6 +81,13 @@ async def _probe_one(name: str, client) -> tuple[str, dict]:
         if name == "cognia"
         else float(settings.MCP_TIMEOUT_SECONDS) + 1.0
     )
+    # Read retry is valuable for evidence collection but harmful for readiness:
+    # Kubernetes and dashboards probe health repeatedly, so retrying every
+    # unavailable MCP multiple times creates retry amplification and slow health
+    # responses. Limit only MCP health clients to one transport attempt; normal
+    # operational clients retain the configured bounded retry policy.
+    if name != "cognia" and hasattr(client, "read_retry_attempts_override"):
+        client.read_retry_attempts_override = 1
     try:
         value = await asyncio.wait_for(client.health_check(), timeout=min(timeout, 30.0))
         healthy = bool(value)
