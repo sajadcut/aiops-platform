@@ -37,6 +37,26 @@ async def candidates(
         MemoryEntry.lifecycle_status == "active",
         MemoryEntry.outcome.is_not(None),
     ]
+    evidence_count = func.coalesce(
+        MemoryEntry.evidence_provenance["evidence_count"].as_integer(),
+        0,
+    )
+    # Persistence may retain inconclusive/diagnostic episodes for audit history,
+    # but primary retrieval must exclude low-information garbage. Conclusive
+    # operational outcomes remain reusable; diagnostic-only episodes require
+    # evidence-linked RCA. Negative execution outcomes are preserved.
+    conditions.append(
+        or_(
+            MemoryEntry.verification_result.in_(
+                ["success", "succeeded", "verified", "failed", "failure", "partial"]
+            ),
+            MemoryEntry.memory_outcome_class.in_(["self_recovered", "false_positive", "execution_blocked"]),
+            and_(
+                evidence_count > 0,
+                MemoryEntry.root_cause_status.in_(["confirmed", "probable", "possible"]),
+            ),
+        )
+    )
     if service_scope:
         conditions.append(MemoryEntry.service_scope == service_scope)
     if environment:
@@ -160,6 +180,10 @@ def rrf_score(
     environment: Optional[str],
     mode: str,
     query: Optional[str] = None,
+    asset_type: Optional[str] = None,
+    signal_type: Optional[str] = None,
+    service_version: Optional[str] = None,
+    configuration_fingerprint: Optional[str] = None,
 ) -> float:
     entry = item["entry"]
     k = max(1, int(getattr(settings, "MEMORY_RRF_K", 60)))
@@ -194,10 +218,23 @@ def rrf_score(
     symptom_tokens = {token for token in symptom_text.split() if len(token) > 2}
     if query_tokens:
         score += min(0.02, (len(query_tokens & symptom_tokens) / len(query_tokens)) * 0.02)
-    if entry.asset_type:
-        score += 0.003
-    if isinstance(trigger, dict) and trigger.get("signal_type"):
-        score += 0.003
+    if asset_type and entry.asset_type:
+        score += 0.006 if str(entry.asset_type) == str(asset_type) else -0.006
+    historical_signal_type = (
+        str(trigger.get("signal_type"))
+        if isinstance(trigger, dict) and trigger.get("signal_type")
+        else None
+    )
+    if signal_type and historical_signal_type:
+        score += 0.006 if historical_signal_type == str(signal_type) else -0.004
+    if service_version and entry.service_version:
+        score += 0.006 if str(entry.service_version) == str(service_version) else -0.015
+    if configuration_fingerprint and entry.configuration_fingerprint:
+        score += (
+            0.006
+            if str(entry.configuration_fingerprint) == str(configuration_fingerprint)
+            else -0.02
+        )
     if mode == "RCA_ANALOG" and entry.root_cause_status in {"confirmed", "probable"}:
         score += 0.008
     if entry.verification_result in SUCCESS_STATUSES:
