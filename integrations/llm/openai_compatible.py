@@ -169,8 +169,11 @@ class OpenAICompatibleLLMProvider(LLMAdapter):
         # summaries additionally reject obvious incomplete prefixes even when a
         # gateway incorrectly labels them finish_reason=stop. Regenerate from the
         # original prompt with a larger budget and an explicit concise completion
-        # instruction. Tool-enabled chat remains single-shot because replaying a
-        # model tool decision can change call semantics.
+        # instruction. Completion repair for tool-enabled chat remains single-shot
+        # because replaying a valid model tool decision can change semantics.
+        # Transport retry is separate: 408/429/5xx and transport failures may be
+        # retried before any valid model response exists, and this adapter never
+        # executes model-proposed tools itself.
         repair_attempts = max(0, int(kwargs.pop("completion_repair_attempts", settings.AGENT_STRUCTURED_REPAIR_ATTEMPTS)))
         attempts = 1 if kwargs.get("tools") else 1 + repair_attempts
         base_max_tokens = max(1, int(max_tokens))
