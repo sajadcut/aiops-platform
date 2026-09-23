@@ -8,6 +8,18 @@ from typing import Any, Dict, List, Optional
 from fastapi import HTTPException
 from prometheus_client import Counter, Histogram
 
+from apps.chatbot.governance import (
+    CHAT_MISSING_CAPABILITIES,
+    ChatGovernanceConfig,
+    build_evidence,
+    cognia_write_unavailable_message,
+    grounded_fallback,
+    llm_validate,
+    missing_capability_message,
+    most_recent_user_message,
+    requires_cognia_write,
+    requires_live_evidence,
+)
 from apps.chatbot.models import ChatMessageRequest, ChatMessageResponse
 from apps.chatbot.service import ChatbotService
 from apps.chatbot.tools import ToolIntent
@@ -118,37 +130,92 @@ class ReliableChatLLMAdapter(LLMAdapter):
             raise
 
         stage = str(kwargs.get("stage") or kwargs.get("purpose") or "")
-        if stage != "chatbot_intent" or not _looks_obviously_incomplete(response):
+        if stage != "chatbot_intent":
             return response
 
-        # No governed tool has executed yet, so one bounded retry is safe.
-        CHAT_INCOMPLETE_RESPONSES.inc()
+        user_message = most_recent_user_message(messages)
+        cfg = ChatGovernanceConfig.from_env()
+        current = response
         repair_messages = list(messages)
-        repair_messages.append(
-            {
-                "role": "user",
-                "content": (
+        attempts = 0
+
+        while True:
+            incomplete = _looks_obviously_incomplete(current)
+            evidence_required = requires_live_evidence(user_message) and not current.tool_calls
+            cognia_write_required = requires_cognia_write(user_message) and not current.tool_calls
+            if not incomplete and not evidence_required and not cognia_write_required:
+                return current
+
+            max_attempts = (
+                1
+                if incomplete and not evidence_required and not cognia_write_required
+                else cfg.max_replan_attempts
+            )
+            if attempts >= max_attempts:
+                break
+
+            attempts += 1
+            CHAT_INCOMPLETE_RESPONSES.inc()
+            if cognia_write_required:
+                repair_instruction = (
+                    "REPLAN REQUIRED: the operator explicitly requested a Cognia knowledge write. "
+                    "Do not merely acknowledge the request. Select exactly one provided Cognia write tool: "
+                    "cognia_publish_incident_knowledge when the operator wants a verified incident/solution "
+                    "published from durable AIOps data; cognia_register_knowledge for new supplied knowledge; "
+                    "or cognia_create_revision only when an existing knowledge id is explicitly available. "
+                    "Do not invent scope, KB authority, incident verification, or an existing knowledge id."
+                )
+            elif evidence_required:
+                repair_instruction = (
+                    "REPLAN REQUIRED: this is a live operational question. Do not answer from model memory "
+                    "or infer the current state. Select the best matching provided read-only tool(s) using "
+                    "the established conversation target when unambiguous. For a diagnostic 'why' question, "
+                    "collect enough independent evidence to support the cause rather than stopping at a "
+                    "single status check. If no provided tool can establish the requested fact, return a "
+                    "short explicit statement that the live capability is unavailable; do not guess."
+                )
+            else:
+                repair_instruction = (
                     "RETRY REQUIRED: the previous response was incomplete. Return one fresh, complete, "
                     "concise answer, or select the correct provided tool when live operational data is "
                     "required. Do not continue the partial prefix."
-                ),
-            }
-        )
-        try:
-            repaired = await self.delegate.generate_with_messages(
-                repair_messages,
-                temperature=temperature,
-                max_tokens=max(1, int(max_tokens)) * 2,
-                **kwargs,
-            )
-        except Exception as exc:
-            if _is_timeout_error(exc):
-                CHAT_LLM_TIMEOUTS.inc()
-            raise
-        if _looks_obviously_incomplete(repaired):
+                )
+            repair_messages = list(repair_messages)
+            repair_messages.append({"role": "user", "content": repair_instruction})
+            try:
+                current = await self.delegate.generate_with_messages(
+                    repair_messages,
+                    temperature=temperature,
+                    max_tokens=max(1, int(max_tokens)) * 2,
+                    **kwargs,
+                )
+            except Exception as exc:
+                if _is_timeout_error(exc):
+                    CHAT_LLM_TIMEOUTS.inc()
+                raise
+
+        if _looks_obviously_incomplete(current):
             CHAT_INCOMPLETE_RESPONSES.inc()
             raise ValueError("chatbot_llm_incomplete_response")
-        return repaired
+        if requires_cognia_write(user_message) and not current.tool_calls:
+            CHAT_MISSING_CAPABILITIES.inc()
+            return LLMResponse(
+                content=cognia_write_unavailable_message(user_message),
+                model=current.model,
+                usage=current.usage,
+                tool_calls=None,
+                finish_reason=current.finish_reason,
+            )
+        if requires_live_evidence(user_message) and not current.tool_calls:
+            CHAT_MISSING_CAPABILITIES.inc()
+            return LLMResponse(
+                content=missing_capability_message(user_message),
+                model=current.model,
+                usage=current.usage,
+                tool_calls=None,
+                finish_reason=current.finish_reason,
+            )
+        return current
 
 
 class OperationsCopilotService(ChatbotService):
@@ -237,5 +304,57 @@ class OperationsCopilotService(ChatbotService):
             return (
                 f"Operational data was received successfully from {source}, but the LLM could not "
                 "produce a reliable summary. Open Details to inspect the governed source data."
+            )
+        evidence_kind = "knowledge" if str(payload.get("source") or "") == "cognia" else "live"
+        evidence = [
+            build_evidence(
+                source=str(payload.get("source") or "governed_tool"),
+                tool=intent.semantic_name,
+                target=intent.target,
+                data=payload.get("result"),
+                evidence_kind=evidence_kind,
+            )
+        ]
+        knowledge_context = payload.get("knowledge_context")
+        if knowledge_context:
+            evidence.append(
+                build_evidence(
+                    source="cognia",
+                    tool="cognia_auto_lookup",
+                    target="knowledge",
+                    data=knowledge_context,
+                    evidence_kind="knowledge",
+                )
+            )
+        try:
+            verdict = await llm_validate(
+                llm=self._llm(),
+                question=user_message,
+                answer=answer,
+                evidence=evidence,
+                session_id=session_id,
+                user_id=identity.subject,
+            )
+        except Exception:
+            # Judge failure never promotes an unverified answer. The deterministic
+            # fallback remains grounded in the already validated tool payload.
+            return grounded_fallback(
+                question=user_message,
+                evidence=evidence,
+                reason="answer validator unavailable",
+            )
+
+        if (
+            not verdict.valid
+            or not verdict.question_answered
+            or not verdict.evidence_sufficient
+            or not verdict.claims_grounded
+            or verdict.unsupported_claims
+            or verdict.contradictions
+        ):
+            return grounded_fallback(
+                question=user_message,
+                evidence=evidence,
+                reason=verdict.reason or "response validation failed",
             )
         return answer

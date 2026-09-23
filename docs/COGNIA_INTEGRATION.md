@@ -31,6 +31,14 @@ No Subject is inferred from an Incident service/customer name. Public `/workflow
 
 For Context Generation the request subject contains only `namespace` and `externalSubjectId`; the Client Application is defined by the Context Profile.
 
+## Chatbot authoring contract
+
+Chatbot authoring uses the same Cognia consumer API contract as other machine integrations. Registration sends the configured/allowlisted KB, `knowledgeType=text`, title/content, one of the three documented scopes (`general`, `clientApplication`, `externalSubject`), optional Tag/Category IDs and flat string metadata, plus a deterministic `Idempotency-Key`. `clientApplicationId` is always taken from server configuration for machine-scoped writes.
+
+After registration, `knowledgeId` and `revisionId` are retained in the response and the chatbot probes the documented processing-status endpoint. Registered/Processing/PendingApproval is never presented as Searchable; only `Activated` is searchable.
+
+For verified incident learning, the chatbot has a dedicated publication path. It refuses to publish an Incident without `latest_operational_outcome.verified=true`. The Knowledge body is deterministically built from durable Incident summary, evidence-linked Findings, Evidence provenance (source/type/reference/confidence only), and verified remediation/verification. Raw operational evidence payloads are not copied into Cognia. This preserves Cognia as governed reusable knowledge rather than an operational data dump.
+
 ## Authoring and Revision
 
 Registration calls `/api/engine/knowledge-bases/{kbId}/knowledge` with explicit KB and Scope. A caller should provide an `Idempotency-Key`; automatic transient retry is allowed only when that key is present. Registration creates Knowledge + Revision #1 atomically.
@@ -42,6 +50,15 @@ A machine Client Application does not perform human Approve/Reject decisions. Pr
 ## Context Generation
 
 Context Generation is used only when a Context Profile has been provisioned. The Context Package is auxiliary input for the downstream reasoning layer, not a final answer. `HTTP 200` with `isSufficient=false` is preserved as insufficient. A fail-generation profile may return `422 CONTEXT_INSUFFICIENT_KNOWLEDGE` without a package.
+
+## Chatbot integration
+
+The Operations Copilot consumes Cognia in two governed modes:
+
+- **Automatic read context:** operator questions and infrastructure action requests are searched against Cognia before intent planning when `CHAT_COGNIA_AUTO_LOOKUP_ENABLED=True`. The lookup is bounded by `CHAT_COGNIA_LOOKUP_LIMIT` and a chatbot-specific timeout so a Cognia outage does not stall the control plane. Search results are Knowledge Evidence only and never satisfy the Live Evidence requirement for current runtime facts.
+- **Explicit authoring:** when an authorized operator explicitly asks to save/register information in Cognia, the chatbot may use `cognia_register_knowledge`. Updating existing knowledge uses `cognia_create_revision`, which re-reads current state and supplies Cognia's optimistic-concurrency candidate revision id. Viewer has `read:knowledge`; operator/SRE additionally have `write:knowledge`.
+
+The LLM cannot choose arbitrary Knowledge Base authority or Scope. KBs stay inside `COGNIA_KNOWLEDGE_BASE_IDS`; ambiguous multi-KB authoring requires an explicit/default KB. Scope is server-side `CHAT_COGNIA_WRITE_SCOPE` and defaults to `clientApplication`. A successful registration/revision response is not described as searchable/activated unless Cognia reports the corresponding lifecycle state.
 
 ## Error and retry policy
 

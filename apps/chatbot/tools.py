@@ -122,6 +122,149 @@ CHAT_TOOL_SCHEMAS = [
     {
         "type": "function",
         "function": {
+            "name": "cognia_search",
+            "description": "Search the governed Cognia Knowledge RAG for runbooks, policies, procedures, architecture or prior approved knowledge relevant to the operator request. This is knowledge context, not live operational evidence.",
+            "parameters": {
+                "type": "object",
+                "required": ["query"],
+                "additionalProperties": False,
+                "properties": {
+                    "query": {"type": "string", "minLength": 1, "maxLength": 2000},
+                    "limit": {"type": "integer", "minimum": 1, "maximum": 10},
+                },
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "cognia_processing_status",
+            "description": "Read Cognia processing/lifecycle status for a known knowledge revision. Use this to verify whether a registered/candidate revision is WaitingEligibility, Queued, Processing, ArtifactsReady, Activated, Failed or Obsolete. This is read-only.",
+            "parameters": {
+                "type": "object",
+                "required": ["knowledge_id", "revision_id"],
+                "additionalProperties": False,
+                "properties": {
+                    "knowledge_base_id": {"type": "integer", "minimum": 1},
+                    "knowledge_id": {"type": "integer", "minimum": 1},
+                    "revision_id": {"type": "integer", "minimum": 1}
+                }
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "cognia_register_knowledge",
+            "description": "Register new governed knowledge in Cognia when the operator explicitly asks to save/register/store information. Backend uses Cognia's documented Knowledge registration contract, KB allowlist, machine identity, server-owned ClientApplication identity and Idempotency-Key. Registration does not imply Activated/Searchable.",
+            "parameters": {
+                "type": "object",
+                "required": ["title", "content"],
+                "additionalProperties": False,
+                "properties": {
+                    "knowledge_base_id": {"type": "integer", "minimum": 1},
+                    "knowledge_type": {"type": "string", "enum": ["text"]},
+                    "title": {"type": "string", "minLength": 1, "maxLength": 500},
+                    "content": {"type": "string", "minLength": 1, "maxLength": 1000000},
+                    "scope_type": {
+                        "type": "string",
+                        "enum": ["general", "clientApplication", "externalSubject"]
+                    },
+                    "subject_namespace": {"type": "string", "minLength": 1, "maxLength": 64},
+                    "external_subject_id": {"type": "string", "minLength": 1, "maxLength": 256},
+                    "tag_ids": {
+                        "type": "array",
+                        "maxItems": 64,
+                        "items": {"type": "integer", "minimum": 1}
+                    },
+                    "category_ids": {
+                        "type": "array",
+                        "maxItems": 64,
+                        "items": {"type": "integer", "minimum": 1}
+                    },
+                    "metadata": {
+                        "type": "object",
+                        "maxProperties": 64,
+                        "additionalProperties": {"type": "string"}
+                    }
+                },
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "cognia_publish_incident_knowledge",
+            "description": "Publish a verified AIOps incident learning into Cognia. The backend, not the LLM, builds the Knowledge content from durable Incident/Finding/Evidence/verified remediation data. Publication is rejected unless the incident has a verified operational outcome.",
+            "parameters": {
+                "type": "object",
+                "required": ["incident_id"],
+                "additionalProperties": False,
+                "properties": {
+                    "incident_id": {"type": "string", "minLength": 1, "maxLength": 64},
+                    "knowledge_base_id": {"type": "integer", "minimum": 1},
+                    "title": {"type": "string", "minLength": 1, "maxLength": 500},
+                    "scope_type": {
+                        "type": "string",
+                        "enum": ["general", "clientApplication", "externalSubject"]
+                    },
+                    "subject_namespace": {"type": "string", "minLength": 1, "maxLength": 64},
+                    "external_subject_id": {"type": "string", "minLength": 1, "maxLength": 256},
+                    "tag_ids": {
+                        "type": "array",
+                        "maxItems": 64,
+                        "items": {"type": "integer", "minimum": 1}
+                    },
+                    "category_ids": {
+                        "type": "array",
+                        "maxItems": 64,
+                        "items": {"type": "integer", "minimum": 1}
+                    },
+                    "metadata": {
+                        "type": "object",
+                        "maxProperties": 64,
+                        "additionalProperties": {"type": "string"}
+                    }
+                }
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "cognia_create_revision",
+            "description": "Create a new candidate revision for existing Cognia knowledge only when the operator explicitly asks to update existing Cognia knowledge and provides or unambiguously establishes the knowledge id. Backend performs optimistic concurrency using the current candidate revision.",
+            "parameters": {
+                "type": "object",
+                "required": ["knowledge_id", "title", "content"],
+                "additionalProperties": False,
+                "properties": {
+                    "knowledge_base_id": {"type": "integer", "minimum": 1},
+                    "knowledge_id": {"type": "integer", "minimum": 1},
+                    "title": {"type": "string", "minLength": 1, "maxLength": 500},
+                    "content": {"type": "string", "minLength": 1, "maxLength": 1000000},
+                    "tag_ids": {
+                        "type": "array",
+                        "maxItems": 64,
+                        "items": {"type": "integer", "minimum": 1}
+                    },
+                    "category_ids": {
+                        "type": "array",
+                        "maxItems": 64,
+                        "items": {"type": "integer", "minimum": 1}
+                    },
+                    "metadata": {
+                        "type": "object",
+                        "maxProperties": 64,
+                        "additionalProperties": {"type": "string"}
+                    },
+                },
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "vm_service_action",
             "description": "Propose a governed VM service mutation. This only creates an action proposal; it never executes without explicit backend confirmation and durable approval.",
             "parameters": {
@@ -193,6 +336,60 @@ def _bounded_int(value: Any, field: str, minimum: int, maximum: int, default: in
     return parsed
 
 
+def _bounded_text(value: Any, field: str, maximum: int) -> str:
+    text = str(value or "").strip()
+    if not text or len(text) > maximum:
+        raise ValueError(f"invalid_{field}")
+    return text
+
+
+def _optional_positive_int(value: Any, field: str) -> int | None:
+    if value in (None, ""):
+        return None
+    if isinstance(value, bool):
+        raise ValueError(f"invalid_{field}")
+    try:
+        parsed = int(value)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"invalid_{field}") from exc
+    if parsed <= 0:
+        raise ValueError(f"invalid_{field}")
+    return parsed
+
+
+def _positive_int_list(value: Any, field: str) -> list[int]:
+    if value in (None, ""):
+        return []
+    if not isinstance(value, list) or len(value) > 64:
+        raise ValueError(f"invalid_{field}")
+    result: list[int] = []
+    for item in value:
+        if isinstance(item, bool):
+            raise ValueError(f"invalid_{field}")
+        try:
+            parsed = int(item)
+        except (TypeError, ValueError) as exc:
+            raise ValueError(f"invalid_{field}") from exc
+        if parsed <= 0:
+            raise ValueError(f"invalid_{field}")
+        result.append(parsed)
+    return result
+
+
+def _flat_string_metadata(value: Any) -> dict[str, str]:
+    if value in (None, ""):
+        return {}
+    if not isinstance(value, dict) or len(value) > 64:
+        raise ValueError("invalid_metadata")
+    result: dict[str, str] = {}
+    for key, item in value.items():
+        normalized_key = str(key or "").strip()
+        if not normalized_key or isinstance(item, (dict, list, tuple, set)):
+            raise ValueError("invalid_metadata")
+        result[normalized_key] = str(item)
+    return result
+
+
 def parse_tool_call(call: dict[str, Any]) -> tuple[str, dict[str, Any]]:
     function = call.get("function") if isinstance(call, dict) else None
     if not isinstance(function, dict):
@@ -261,6 +458,135 @@ def normalize_tool_intent(name: str, args: dict[str, Any]) -> ToolIntent:
             raise ValueError("resource_required")
         params = {"operation": operation, "namespace": namespace, "service": service or None, "resource": resource or None}
         return ToolIntent(name, "kubernetes_mcp_read", operation, resource or service or namespace, params, False, "low")
+
+    if name == "cognia_search":
+        query = _bounded_text(args.get("query"), "query", 2000)
+        limit = _bounded_int(args.get("limit"), "limit", 1, 10, 5)
+        return ToolIntent(
+            name,
+            "cognia_knowledge_read",
+            "search",
+            "cognia",
+            {"query": query, "limit": limit},
+            False,
+            "low",
+        )
+
+    if name == "cognia_processing_status":
+        kb_id = _optional_positive_int(args.get("knowledge_base_id"), "knowledge_base_id")
+        knowledge_id = _optional_positive_int(args.get("knowledge_id"), "knowledge_id")
+        revision_id = _optional_positive_int(args.get("revision_id"), "revision_id")
+        if knowledge_id is None or revision_id is None:
+            raise ValueError("knowledge_and_revision_id_required")
+        return ToolIntent(
+            name,
+            "cognia_knowledge_read",
+            "processing_status",
+            "cognia",
+            {
+                "knowledge_base_id": kb_id,
+                "knowledge_id": knowledge_id,
+                "revision_id": revision_id,
+            },
+            False,
+            "low",
+        )
+
+    if name == "cognia_publish_incident_knowledge":
+        incident_id = _bounded_text(args.get("incident_id"), "incident_id", 64)
+        kb_id = _optional_positive_int(args.get("knowledge_base_id"), "knowledge_base_id")
+        title = str(args.get("title") or "").strip()
+        if title and len(title) > 500:
+            raise ValueError("invalid_title")
+        scope_type = str(args.get("scope_type") or "").strip() or None
+        if scope_type not in {None, "general", "clientApplication", "externalSubject"}:
+            raise ValueError("invalid_scope_type")
+        subject_namespace = str(args.get("subject_namespace") or "").strip()
+        external_subject_id = str(args.get("external_subject_id") or "").strip()
+        if scope_type == "externalSubject":
+            if not subject_namespace or not external_subject_id:
+                raise ValueError("external_subject_requires_namespace_and_id")
+            if not _NAMESPACE.fullmatch(subject_namespace.lower()):
+                raise ValueError("invalid_subject_namespace")
+        elif subject_namespace or external_subject_id:
+            raise ValueError("external_subject_fields_require_externalSubject_scope")
+        return ToolIntent(
+            name,
+            "cognia_knowledge_write",
+            "publish_incident_knowledge",
+            "cognia",
+            {
+                "incident_id": incident_id,
+                "knowledge_base_id": kb_id,
+                "title": title or None,
+                "scope_type": scope_type,
+                "subject_namespace": subject_namespace or None,
+                "external_subject_id": external_subject_id or None,
+                "tag_ids": _positive_int_list(args.get("tag_ids"), "tag_ids"),
+                "category_ids": _positive_int_list(args.get("category_ids"), "category_ids"),
+                "metadata": _flat_string_metadata(args.get("metadata")),
+            },
+            True,
+            "medium",
+        )
+
+    if name in {"cognia_register_knowledge", "cognia_create_revision"}:
+        kb_id = _optional_positive_int(args.get("knowledge_base_id"), "knowledge_base_id")
+        title = _bounded_text(args.get("title"), "title", 500)
+        content = _bounded_text(args.get("content"), "content", 1_000_000)
+        tag_ids = _positive_int_list(args.get("tag_ids"), "tag_ids")
+        category_ids = _positive_int_list(args.get("category_ids"), "category_ids")
+        metadata = _flat_string_metadata(args.get("metadata"))
+        params: dict[str, Any] = {
+            "knowledge_base_id": kb_id,
+            "title": title,
+            "content": content,
+            "tag_ids": tag_ids,
+            "category_ids": category_ids,
+            "metadata": metadata,
+        }
+        action = "register_knowledge"
+        if name == "cognia_register_knowledge":
+            knowledge_type = str(args.get("knowledge_type") or "text").strip()
+            if knowledge_type != "text":
+                raise ValueError("invalid_knowledge_type")
+            scope_type = str(args.get("scope_type") or "").strip() or None
+            if scope_type not in {None, "general", "clientApplication", "externalSubject"}:
+                raise ValueError("invalid_scope_type")
+            subject_namespace = str(args.get("subject_namespace") or "").strip()
+            external_subject_id = str(args.get("external_subject_id") or "").strip()
+            if scope_type == "externalSubject":
+                if not subject_namespace or not external_subject_id:
+                    raise ValueError("external_subject_requires_namespace_and_id")
+                if not _NAMESPACE.fullmatch(subject_namespace.lower()):
+                    raise ValueError("invalid_subject_namespace")
+                if len(external_subject_id) > 256:
+                    raise ValueError("invalid_external_subject_id")
+            elif subject_namespace or external_subject_id:
+                raise ValueError("external_subject_fields_require_externalSubject_scope")
+            params.update(
+                {
+                    "knowledge_type": knowledge_type,
+                    "scope_type": scope_type,
+                    "subject_namespace": subject_namespace or None,
+                    "external_subject_id": external_subject_id or None,
+                }
+            )
+        else:
+            knowledge_id = _optional_positive_int(args.get("knowledge_id"), "knowledge_id")
+            if knowledge_id is None:
+                raise ValueError("invalid_knowledge_id")
+            params["knowledge_id"] = knowledge_id
+            action = "create_revision"
+        return ToolIntent(
+            name,
+            "cognia_knowledge_write",
+            action,
+            "cognia",
+            params,
+            True,
+            "medium",
+        )
 
     if name == "vm_service_action":
         action = str(args.get("action") or "").strip()

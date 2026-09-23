@@ -32,6 +32,22 @@ class Settings(BaseSettings):
     LLM_MODEL: str = Field(...)
     LLM_TIMEOUT_SECONDS: int = Field(...)
 
+    # Chatbot response governance. Defaults preserve backward-compatible startup
+    # for deployments that have not yet added the new environment variables.
+    CHAT_ANSWER_VALIDATION_ENABLED: bool = Field(default=True)
+    CHAT_MAX_REPLAN_ATTEMPTS: int = Field(default=1, ge=0, le=5)
+    CHAT_REQUIRE_EVIDENCE_FOR_OPERATIONAL_FACTS: bool = Field(default=True)
+    CHAT_MIN_EVIDENCE_CONFIDENCE: float = Field(default=0.70, ge=0.0, le=1.0)
+    CHAT_MAX_EVIDENCE_AGE_SECONDS: int = Field(default=300, ge=5, le=86400)
+    CHAT_MISSING_CAPABILITY_LOGGING: bool = Field(default=True)
+    CHAT_LLM_JUDGE_ENABLED: bool = Field(default=True)
+    CHAT_COGNIA_AUTO_LOOKUP_ENABLED: bool = Field(default=True)
+    CHAT_COGNIA_LOOKUP_LIMIT: int = Field(default=5, ge=1, le=10)
+    CHAT_COGNIA_LOOKUP_TIMEOUT_SECONDS: float = Field(default=5.0, gt=0.0, le=30.0)
+    CHAT_COGNIA_WRITE_ENABLED: bool = Field(default=True)
+    CHAT_COGNIA_DEFAULT_KNOWLEDGE_BASE_ID: Optional[int] = Field(default=None)
+    CHAT_COGNIA_WRITE_SCOPE: str = Field(default="clientApplication")
+
     EMBEDDING_PROVIDER: str = Field(...)
     EMBEDDING_BASE_URL: Optional[str] = Field(...)
     EMBEDDING_API_KEY: Optional[str] = Field(...)
@@ -204,6 +220,24 @@ class Settings(BaseSettings):
         normalized = str(value or "").strip().lower()
         if normalized not in {"key", "password"}:
             raise ValueError("SSH_AUTH_MODE must be key or password")
+        return normalized
+
+    @field_validator("CHAT_COGNIA_DEFAULT_KNOWLEDGE_BASE_ID", mode="before")
+    @classmethod
+    def parse_optional_chat_cognia_kb_id(cls, value):
+        if value is None or (isinstance(value, str) and not value.strip()):
+            return None
+        parsed = int(value)
+        if parsed <= 0:
+            raise ValueError("CHAT_COGNIA_DEFAULT_KNOWLEDGE_BASE_ID must be positive")
+        return parsed
+
+    @field_validator("CHAT_COGNIA_WRITE_SCOPE")
+    @classmethod
+    def validate_chat_cognia_write_scope(cls, value: str) -> str:
+        normalized = str(value or "").strip()
+        if normalized not in {"general", "clientApplication"}:
+            raise ValueError("CHAT_COGNIA_WRITE_SCOPE must be general or clientApplication")
         return normalized
 
     @field_validator("COGNIA_CONTEXT_PROFILE_ID", "COGNIA_CLIENT_APPLICATION_ID", mode="before")
