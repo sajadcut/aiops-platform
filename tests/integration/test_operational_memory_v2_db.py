@@ -415,7 +415,7 @@ async def test_memory_v2_incident_learning_a_b_c_acceptance():
         )
         row_a = await db.get(MemoryEntry, memory_a)
         assert row_a is not None
-        assert row_a.outcome_class == "successful_recovery"
+        assert row_a.memory_outcome_class == "successful_recovery"
         assert row_a.verification_result["status"] == "success"
 
         # Incident B: the similar historical episode is retrieved as auxiliary
@@ -469,7 +469,7 @@ async def test_memory_v2_incident_learning_a_b_c_acceptance():
         )
         row_c = await db.get(MemoryEntry, memory_c)
         assert row_c is not None
-        assert row_c.outcome_class == "failed_recovery"
+        assert row_c.memory_outcome_class == "failed_recovery"
         assert row_c.verification_result["status"] == "failed"
 
         retrieved_c = await service.retrieve(
