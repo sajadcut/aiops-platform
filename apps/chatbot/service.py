@@ -31,7 +31,7 @@ from apps.chatbot.grounding import (
     validate_rules,
 )
 from apps.chatbot.store import ChatStore, HISTORY_LIMIT
-from apps.chatbot.tools import CHAT_TOOL_SCHEMAS, ToolIntent, max_tool_calls, normalize_tool_intent, parse_tool_call
+from apps.chatbot.tools import CHAT_TOOL_SCHEMAS, ToolIntent, max_tool_calls, normalize_tool_intent, parse_tool_call, tools_for_capability
 from apps.execution_service import ExecutionRequest, ExecutionService
 from apps.incident_service.repository import IncidentRepository
 from apps.memory_service import OperationalMemoryService
@@ -732,6 +732,40 @@ class ChatbotService:
                 # a governed read capability; otherwise return a truthful
                 # missing-capability outcome instead of a hallucinated state.
                 if not intents and policy.requires_live_evidence:
+                    missing_from_catalog = [
+                        capability
+                        for capability in policy.required_capabilities
+                        if not tools_for_capability(capability)
+                    ]
+                    if missing_from_catalog:
+                        answer = missing_capability_message(request.message, policy)
+                        for capability in missing_from_catalog:
+                            CHAT_MISSING_CAPABILITIES.labels(capability=str(capability)[:80]).inc()
+                        await store.add_message(
+                            session_id,
+                            "assistant",
+                            answer,
+                            {
+                                "kind": "answer",
+                                "validation": "missing_capability",
+                                "required_capabilities": list(policy.required_capabilities),
+                                "missing_capabilities": missing_from_catalog,
+                            },
+                        )
+                        await self._audit(
+                            db,
+                            event_type="chat_missing_capability",
+                            actor=identity.subject,
+                            status="degraded",
+                            metadata={
+                                "session_id": session_id,
+                                "required_capabilities": list(policy.required_capabilities),
+                                "missing_capabilities": missing_from_catalog,
+                            },
+                        )
+                        CHAT_REQUESTS.labels(outcome="answer").inc()
+                        return ChatMessageResponse(session_id=UUID(session_id), kind="answer", message=answer)
+
                     for attempt in range(settings.CHAT_MAX_REPLAN_ATTEMPTS):
                         CHAT_REPLANS.labels(outcome="requested").inc()
                         await self._audit(
