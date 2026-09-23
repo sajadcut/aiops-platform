@@ -246,10 +246,25 @@ def validate_rules(
         missing.append("no fresh successful live evidence")
     if policy.diagnostic and len(actions) < 2:
         missing.append("diagnostic answer requires at least two corroborating live checks")
-    coverage = 1.0 if fresh else 0.0
+    required_checks = 2 if policy.diagnostic else 1
+    coverage = min(1.0, len(actions) / required_checks) if fresh else 0.0
+    if fresh:
+        freshness_scores = [
+            max(0.0, 1.0 - ((now - item.observed_at).total_seconds() / max(max_age_seconds, 1)))
+            for item in fresh
+        ]
+        freshness = sum(freshness_scores) / len(freshness_scores)
+    else:
+        freshness = 0.0
     reliability = len(successful) / max(len(evidence), 1)
     corroboration = 1.0 if (not policy.diagnostic or len(actions) >= 2) else 0.0
-    confidence = min(1.0, 0.40 * coverage + 0.20 * coverage + 0.15 * corroboration + 0.10 * reliability + 0.15)
+    confidence = min(
+        1.0,
+        (0.45 * coverage)
+        + (0.20 * freshness)
+        + (0.20 * corroboration)
+        + (0.15 * reliability),
+    )
     valid = not missing and confidence >= min_confidence
     return RuleValidation(valid, not valid, valid, confidence, coverage, missing, "rules_passed" if valid else "insufficient_evidence")
 
@@ -277,8 +292,26 @@ def judge_input(question: str, policy: RequestPolicy, context: OperationalContex
     return text[:24000]
 
 
+def judge_allows_display(judge: JudgeDecision) -> bool:
+    return bool(
+        judge.valid
+        and judge.question_answered
+        and judge.evidence_sufficient
+        and judge.claims_grounded
+        and not judge.unsupported_claims
+        and not judge.contradictions
+    )
+
+
 def combined_confidence(rule: RuleValidation, judge: JudgeDecision | None) -> float:
-    return min(1.0, max(0.0, rule.confidence * (0.9 if judge is None else 0.6) + (0.0 if judge is None else judge.confidence * 0.4)))
+    return min(
+        1.0,
+        max(
+            0.0,
+            rule.confidence * (0.9 if judge is None else 0.6)
+            + (0.0 if judge is None else judge.confidence * 0.4),
+        ),
+    )
 
 
 def missing_capability_message(message: str, policy: RequestPolicy) -> str:
