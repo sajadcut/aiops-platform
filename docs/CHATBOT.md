@@ -46,7 +46,7 @@ Current-state facts such as CPU, memory, disk, service state, ports, logs, alert
 
 Conversation referents (for example the target in a follow-up `/app چقدر فضا داره؟`) are resolved from explicit recent operator text and validated tool metadata. Referent context is never promoted to live health Evidence.
 
-If a required capability is absent from the deterministic capability map, or the bounded planner still cannot select a suitable read tool, the chatbot returns a missing-capability response and explicitly avoids guessing the current state. Tool/MCP transport failure also never becomes a synthetic healthy/unhealthy value.
+If a required capability is absent from the deterministic capability map, the chatbot returns a missing-capability response and explicitly avoids guessing the current state. If the capability exists but a required referent such as target host, service or namespace is genuinely unresolved, the chatbot asks only for that missing value; validated conversation referents are reused so follow-up questions do not repeat already-known targets. Tool/MCP timeout or transport failure is recorded as failed Evidence, allows a bounded alternate-source replan, and ultimately becomes a guarded user-facing "could not verify" answer rather than a fabricated healthy/unhealthy value.
 
 The final Answer Judge emits structured internal fields for grounding, evidence sufficiency, contradictions, unsupported claims, replan/rewrite needs and confidence. Judge output is backend-only and is not shown as an operator answer. If live Evidence is sufficient but the wording itself is rejected, the backend performs at most one Evidence-constrained rewrite and validates the rewritten answer again.
 
