@@ -6,8 +6,11 @@ from pydantic import BaseModel, Field
 from sqlalchemy import desc, select, text
 
 from database import AsyncSessionLocal
+from database.migration_validation import validate_migration_head
 from domain.models import Incident, Evidence, Finding, MemoryEntry
 from domain.contracts.exceptions import AppException
+from domain.contracts.config import settings
+from domain.contracts.logging import logger
 from apps.rag_service import KnowledgeRAGService
 from apps.memory_service import OperationalMemoryService
 from apps.memory_service.consolidation import summarize_service
@@ -23,6 +26,32 @@ router = APIRouter(dependencies=[Depends(require_permission("read:incident"))])
 class MemoryLifecycleRequest(BaseModel):
     reason: str = Field(min_length=3, max_length=2000)
     superseded_by_memory_id: UUID | None = None
+
+
+async def _require_current_database_schema(db) -> None:
+    """Return a controlled 503 instead of leaking ORM errors on migration drift.
+
+    Development mode intentionally allows the API process to boot with a stale
+    schema so operators can inspect health. Endpoints that depend on the current
+    MemoryEntry model must still fail closed before issuing ORM queries against
+    columns that may not exist yet.
+    """
+    if not settings.DATABASE_VALIDATE_MIGRATIONS_ON_STARTUP:
+        return
+    migration = await validate_migration_head(db)
+    if migration.get("valid"):
+        return
+    logger.error("incident_resource_blocked_by_migration_drift", migration=migration)
+    raise HTTPException(
+        status_code=503,
+        detail={
+            "code": "DATABASE_MIGRATION_DRIFT",
+            "message": "Database schema is not at the repository Alembic head",
+            "expected_heads": migration.get("expected_heads", []),
+            "current_heads": migration.get("current_heads", []),
+            "error": migration.get("error"),
+        },
+    )
 
 
 @router.get("/incidents/{incident_id}/context")
@@ -74,6 +103,7 @@ async def get_knowledge(incident_id: UUID, limit: int = Query(default=5, le=20))
         incident = await db.get(Incident, incident_id)
         if incident is None:
             raise HTTPException(status_code=404, detail="Incident not found")
+        await _require_current_database_schema(db)
         query = f"{incident.service or ''} {incident.summary or ''}".strip()
         try:
             items = await KnowledgeRAGService().search(query, limit=limit)
@@ -195,6 +225,7 @@ async def get_memory(incident_id: UUID, limit: int = Query(default=5, le=20)):
 @router.get("/memory/health")
 async def get_memory_health():
     async with AsyncSessionLocal() as db:
+        await _require_current_database_schema(db)
         stats = await OperationalMemoryService(db).stats()
     return {
         "status": "healthy",
@@ -209,6 +240,7 @@ async def get_memory_summary(
     limit: int = Query(default=500, ge=1, le=2000),
 ):
     async with AsyncSessionLocal() as db:
+        await _require_current_database_schema(db)
         summary = await summarize_service(
             db,
             service_scope,
@@ -230,6 +262,7 @@ async def get_memory_summary(
 )
 async def invalidate_memory(memory_id: UUID, request: MemoryLifecycleRequest):
     async with AsyncSessionLocal() as db:
+        await _require_current_database_schema(db)
         service = OperationalMemoryService(db)
         changed = await service.invalidate(
             memory_id,
@@ -256,6 +289,7 @@ async def invalidate_memory(memory_id: UUID, request: MemoryLifecycleRequest):
 )
 async def validate_memory(memory_id: UUID):
     async with AsyncSessionLocal() as db:
+        await _require_current_database_schema(db)
         service = OperationalMemoryService(db)
         changed = await service.mark_validated(memory_id)
         if not changed:
@@ -360,6 +394,7 @@ async def get_operator_summary(incident_id: UUID):
         incident = await db.get(Incident, incident_id)
         if incident is None:
             raise HTTPException(status_code=404, detail="Incident not found")
+        await _require_current_database_schema(db)
 
         evidence_rows = (
             await db.execute(
