@@ -310,12 +310,32 @@ class E2EOrchestrator:
             context=context,
             live_evidence=state["live_evidence"],
         )
+        asset_context = dict(
+            context.get("asset_context")
+            or state["live_evidence"].get("asset_context")
+            or {}
+        )
+        trigger_context = dict(
+            context.get("trigger_signal")
+            or context.get("incident")
+            or {}
+        )
         if self.db is not None:
             try:
                 state["memory_results"] = await OperationalMemoryService(self.db).retrieve(
                     memory_query,
                     service_scope=service,
                     environment=settings.APP_ENV,
+                    asset_type=asset_context.get("asset_type"),
+                    signal_type=trigger_context.get("signal_type"),
+                    service_version=(
+                        asset_context.get("service_version")
+                        or context.get("service_version")
+                    ),
+                    configuration_fingerprint=(
+                        asset_context.get("configuration_fingerprint")
+                        or context.get("configuration_fingerprint")
+                    ),
                     retrieval_mode="SIMILAR_INCIDENT",
                     limit=settings.AGENT_MAX_AUXILIARY_CONTEXT_ITEMS,
                     min_similarity=0.5,
