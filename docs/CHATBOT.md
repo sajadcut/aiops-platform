@@ -126,7 +126,9 @@ The LLM can select only the following semantic tools:
 | `zabbix_problems` | `ZabbixMCPClient` | current/recent Zabbix problems | No |
 | `kubernetes_read` | Kubernetes MCP | pod/deployment/events/usage/rollout/evidence | No |
 | `cognia_search` | `KnowledgeRAGService` -> Cognia | governed runbooks/policies/procedures/architecture knowledge | No |
-| `cognia_register_knowledge` | `KnowledgeRAGService` -> Cognia | register new knowledge in an allowlisted KB | Yes — knowledge write |
+| `cognia_processing_status` | `KnowledgeRAGService` -> Cognia | read revision processing state (WaitingEligibility/Queued/Processing/ArtifactsReady/Activated/Failed/Obsolete) | No |
+| `cognia_register_knowledge` | `KnowledgeRAGService` -> Cognia | register new knowledge with documented Scope/Taxonomy/Metadata contract | Yes — knowledge write |
+| `cognia_publish_incident_knowledge` | PostgreSQL Incident/Finding/Evidence -> `KnowledgeRAGService` -> Cognia | publish only verified incident learning built from durable platform data | Yes — knowledge write |
 | `cognia_create_revision` | `KnowledgeRAGService` -> Cognia | create a new candidate revision for existing knowledge | Yes — knowledge write |
 | `vm_service_action` | Approval -> `ssh_vm` -> VM MCP | start/restart/reload service | Yes |
 | `kubernetes_action` | Approval -> `kubernetes_mcp` | restart/rollback/scale workload | Yes |
@@ -159,7 +161,12 @@ This also applies to operational action requests: Cognia can contribute the appr
 
 Explicit authoring requests are separate:
 
-- `cognia_register_knowledge`: register new knowledge. The KB is caller-specified only if it is configured in `COGNIA_KNOWLEDGE_BASE_IDS`; otherwise the configured chatbot default is used, or the sole configured KB when exactly one exists. Registration uses an idempotency key derived server-side so transport retry cannot silently duplicate a chatbot write.
+The registration path follows Cognia's v1 consumer contract exactly: machine authentication is handled by `CogniaClient`; the backend calls `POST /api/engine/knowledge-bases/{kbId}/knowledge` with `knowledgeType`, `title`, `content`, a validated `scope`, optional `tagIds`, `categoryIds`, flat string `metadata`, and an `Idempotency-Key`. The backend records returned `knowledgeId`/`revisionId` and performs a processing-status probe. A successful registration is reported as registered/candidate/processing; only an explicit Cognia `Activated` state is reported as searchable.
+
+Supported registration scope mirrors Cognia: `general`, `clientApplication`, and `externalSubject`. For `clientApplication` and `externalSubject`, `clientApplicationId` comes from server configuration and cannot be supplied/spoofed by the model. `externalSubject` additionally requires stable `subjectNamespace` + `externalSubjectId`.
+
+- `cognia_register_knowledge`: register new supplied knowledge. The KB is caller-specified only if it is configured in `COGNIA_KNOWLEDGE_BASE_IDS`; otherwise the configured chatbot default is used, or the sole configured KB when exactly one exists. Registration uses an idempotency key derived from the canonical Cognia payload server-side so transport retry cannot silently duplicate a chatbot write.
+- `cognia_publish_incident_knowledge`: publish an incident only when PostgreSQL durable state contains a verified operational outcome. The backend builds the Cognia content from Incident metadata, evidence-linked Findings, Evidence provenance, and verified remediation/verification. Raw Evidence payloads are deliberately not copied into Cognia.
 - `cognia_create_revision`: update existing knowledge by creating a Candidate Revision. The backend first reads current Knowledge state and supplies `currentCandidateRevisionId` to Cognia's optimistic-concurrency contract. A conflicting/stale revision is not blindly overwritten.
 - Scope is never model-generated. `CHAT_COGNIA_WRITE_SCOPE` is server configuration (`clientApplication` by default, or explicitly `general`).
 - Cognia write success is reported only from the Cognia backend result; the LLM cannot claim that a write happened merely because the user requested it.
