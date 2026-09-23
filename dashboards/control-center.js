@@ -8,6 +8,7 @@ const S = {
   agentMetrics: [],
   selected: null,
   detail: null,
+  memoryLoadingFor: null,
   view: 'overview'
 };
 
@@ -281,20 +282,34 @@ function openIncident(id) {
 
 async function selectIncident(id) {
   S.selected = id;
+  S.memoryLoadingFor = null;
   renderIncidents();
   $('#detail').innerHTML = '<div class="empty-state tall">Loading durable incident state…</div>';
   try {
-    const [context, evidence, lifecycle, verification, memory] = await Promise.all([
+    const [context, evidence, lifecycle, verification] = await Promise.all([
       api(`/api/v1/incidents/${id}/context`),
       api(`/api/v1/incidents/${id}/evidence?limit=100`),
       api(`/api/v1/incidents/${id}/lifecycle`),
-      api(`/api/v1/incidents/${id}/verification`),
-      api(`/api/v1/incidents/${id}/memory?limit=5`).catch(error => ({items: [], error: error.message}))
+      api(`/api/v1/incidents/${id}/verification`)
     ]);
-    S.detail = {context, evidence, lifecycle, verification, memory};
+    S.detail = {context, evidence, lifecycle, verification, memory: null};
     renderDetail('overview');
   } catch (e) {
     $('#detail').innerHTML = `<div class="empty-state tall">${esc(e.message)}</div>`;
+  }
+}
+
+async function loadIncidentMemory(id) {
+  if (!id || S.memoryLoadingFor === id) return;
+  S.memoryLoadingFor = id;
+  try {
+    const memory = await api(`/api/v1/incidents/${id}/memory?limit=5`)
+      .catch(error => ({items: [], error: error.message}));
+    if (S.selected !== id || !S.detail) return;
+    S.detail.memory = memory;
+    renderDetail('memory');
+  } finally {
+    if (S.memoryLoadingFor === id) S.memoryLoadingFor = null;
   }
 }
 
@@ -382,6 +397,11 @@ function renderDetail(tab = 'overview') {
   if (tab === 'decision') pane.innerHTML = `<div class="insight-card"><h4>Evaluator gate</h4><div class="json">${esc(JSON.stringify(l.evaluation || {}, null, 2))}</div></div><div class="insight-card"><h4>Decision / policy</h4><div class="json">${esc(JSON.stringify(l.decision || {}, null, 2))}</div></div><div class="insight-card"><h4>Final remediation plan</h4><p>${esc(l.final_plan || 'No final plan recorded.')}</p></div>${renderBinding(l.approval || {})}<div class="insight-card"><h4>Approval</h4><div class="json">${esc(JSON.stringify(l.approval || {}, null, 2))}</div></div><div class="insight-card"><h4>Execution receipt</h4><div class="json">${esc(JSON.stringify(l.execution || {}, null, 2))}</div></div>`;
   if (tab === 'verification') pane.innerHTML = renderVerification(l, v, incident);
   if (tab === 'memory') {
+    if (!memory) {
+      pane.innerHTML = '<div class="empty-state">Loading historical Operational Memory on demand…</div>';
+      loadIncidentMemory(S.selected);
+      return;
+    }
     const writeback = (l.audit || []).filter(a => lower(a.event_type).startsWith('memory_writeback'));
     const episode = memory?.current_episode || null;
     const policy = memory?.policy || {};
@@ -461,6 +481,7 @@ window.saveKey = saveKey;
 window.setView = setView;
 window.syncGlobalSearch = syncGlobalSearch;
 window.selectIncident = selectIncident;
+window.loadIncidentMemory = loadIncidentMemory;
 window.openIncident = openIncident;
 window.renderDetail = renderDetail;
 window.renderIncidents = renderIncidents;
