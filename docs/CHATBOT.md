@@ -25,6 +25,24 @@ Browser / API client
 
 The LLM never receives the API key, MCP credentials or bearer tokens. It never receives an arbitrary shell, SSH or kubectl capability. Tool output is treated as untrusted data, recursively redacted before it is returned or summarized, and bounded before it is placed in an LLM prompt.
 
+## Evidence-grounded response governance
+
+Operational answers now pass through two independent gates before they are returned:
+
+1. **Deterministic live-evidence gate.** Questions about current CPU/memory/disk, service/process/port state, logs, alerts, latency, Kubernetes state and similar live facts are not allowed to fall through as model-only answers. If the first LLM turn does not select a governed tool, the chat reliability adapter performs one bounded replan. If no tool can establish the fact, the user receives an explicit missing-capability response instead of a guessed value.
+2. **Post-tool answer validation.** A tool summary is converted into an internal EvidenceRecord and checked deterministically. When enabled, a separate LLM judge evaluates whether the candidate answer actually answers the question, stays inside the supplied evidence, avoids unsupported certainty and identifies missing/contradictory evidence. A failed validation returns a bounded evidence-only fallback rather than the rejected prose.
+
+The validator treats Observed Facts, inference/hypothesis, recommendation and action as different trust levels. Historical memory is not considered live evidence. Diagnostic/why questions are prompted to gather complementary evidence rather than infer a cause from one status observation.
+
+New metrics:
+
+- `aiops_chatbot_validation_failures_total`
+- `aiops_chatbot_replans_total`
+- `aiops_chatbot_missing_capabilities_total`
+- `aiops_chatbot_unsupported_claims_total`
+- `aiops_chatbot_evidence_coverage_ratio`
+- `aiops_chatbot_answer_confidence`
+
 ## Web UI
 
 Start the normal API service and open:
@@ -194,7 +212,17 @@ They are exposed by the existing application metrics endpoint.
 
 ## Configuration
 
-No chatbot-specific secret is introduced. Configure the existing platform contracts:
+No chatbot-specific secret is introduced. Response-governance controls are non-secret runtime settings:
+
+- `CHAT_ANSWER_VALIDATION_ENABLED=True`
+- `CHAT_MAX_REPLAN_ATTEMPTS=2`
+- `CHAT_REQUIRE_EVIDENCE_FOR_OPERATIONAL_FACTS=True`
+- `CHAT_MIN_EVIDENCE_CONFIDENCE=0.70`
+- `CHAT_MAX_EVIDENCE_AGE_SECONDS=300`
+- `CHAT_MISSING_CAPABILITY_LOGGING=True`
+- `CHAT_LLM_JUDGE_ENABLED=True`
+
+Configure the existing platform contracts:
 
 - `INTERNAL_API_KEY` / `INTERNAL_API_ROLE`, or production OIDC settings.
 - `LLM_PROVIDER`, `LLM_BASE_URL`, `LLM_MODEL`, `LLM_API_KEY`.
