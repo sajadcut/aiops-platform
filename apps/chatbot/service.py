@@ -19,6 +19,8 @@ from apps.chatbot.grounding import (
     JudgeDecision,
     OperationalContext,
     RequestPolicy,
+    clarification_message,
+    clarification_requirements,
     combined_confidence,
     context_instruction,
     evidence_failure,
@@ -891,6 +893,37 @@ class ChatbotService:
                 # a governed read capability; otherwise return a truthful
                 # missing-capability outcome instead of a hallucinated state.
                 if not intents and policy.requires_live_evidence:
+                    missing_context = clarification_requirements(request.message, policy, context)
+                    if missing_context:
+                        answer = clarification_message(request.message, missing_context)
+                        await store.add_message(
+                            session_id,
+                            "assistant",
+                            answer,
+                            {
+                                "kind": "clarification",
+                                "missing_context": missing_context,
+                                "resolved_context": context.compact(),
+                            },
+                        )
+                        await self._audit(
+                            db,
+                            event_type="chat_context_clarification",
+                            actor=identity.subject,
+                            status="waiting",
+                            metadata={
+                                "session_id": session_id,
+                                "missing_context": missing_context,
+                                "resolved_context": context.compact(),
+                            },
+                        )
+                        CHAT_REQUESTS.labels(outcome="answer").inc()
+                        return ChatMessageResponse(
+                            session_id=UUID(session_id),
+                            kind="answer",
+                            message=answer,
+                        )
+
                     missing_from_catalog = [
                         capability
                         for capability in policy.required_capabilities
