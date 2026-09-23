@@ -19,6 +19,7 @@ def test_chatbot_tool_catalog_is_bounded_and_has_no_arbitrary_execution():
         "zabbix_problems",
         "kubernetes_read",
         "cognia_search",
+        "cognia_processing_status",
         "cognia_register_knowledge",
         "cognia_create_revision",
         "vm_service_action",
@@ -145,3 +146,53 @@ def test_cognia_register_and_revision_are_explicit_knowledge_writes():
     assert revision.action == "create_revision"
     assert revision.parameters["knowledge_id"] == 9001
     assert revision.mutating is True
+
+
+def test_cognia_registration_accepts_documented_scope_and_taxonomy_shape():
+    name, args = parse_tool_call(
+        _call(
+            "cognia_register_knowledge",
+            {
+                "knowledge_base_id": 10,
+                "knowledge_type": "text",
+                "title": "Ticket recovery",
+                "content": "Validated resolution",
+                "scope_type": "externalSubject",
+                "subject_namespace": "ticket",
+                "external_subject_id": "TCK-55301",
+                "tag_ids": [5, 8],
+                "category_ids": [20],
+                "metadata": {"issuer": "aiops", "year": "2026"},
+            },
+        )
+    )
+    intent = normalize_tool_intent(name, args)
+    assert intent.parameters["scope_type"] == "externalSubject"
+    assert intent.parameters["subject_namespace"] == "ticket"
+    assert intent.parameters["external_subject_id"] == "TCK-55301"
+    assert intent.parameters["tag_ids"] == [5, 8]
+    assert intent.parameters["category_ids"] == [20]
+    assert intent.parameters["metadata"] == {"issuer": "aiops", "year": "2026"}
+
+
+def test_cognia_external_subject_requires_both_namespace_and_id():
+    with pytest.raises(ValueError, match="external_subject_requires_namespace_and_id"):
+        normalize_tool_intent(
+            "cognia_register_knowledge",
+            {
+                "title": "Ticket recovery",
+                "content": "Validated resolution",
+                "scope_type": "externalSubject",
+                "subject_namespace": "ticket",
+            },
+        )
+
+
+def test_cognia_processing_status_normalizes_to_read_only_tool():
+    intent = normalize_tool_intent(
+        "cognia_processing_status",
+        {"knowledge_base_id": 10, "knowledge_id": 9001, "revision_id": 12001},
+    )
+    assert intent.tool_name == "cognia_knowledge_read"
+    assert intent.action == "processing_status"
+    assert intent.mutating is False
