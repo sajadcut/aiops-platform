@@ -24,7 +24,11 @@ class FakeKnowledgeRAGService:
 
     async def create_revision(self, **kwargs):
         type(self).calls.append(("revision", kwargs))
-        return {"knowledgeId": kwargs["knowledge_id"], "revisionId": 12002, "status": "Processing"}
+        return {"knowledgeId": kwargs["knowledge_id"], "revisionId": 12002, "revisionNumber": 2}
+
+    async def get_processing_status(self, **kwargs):
+        type(self).calls.append(("processing", kwargs))
+        return {"state": "Processing"}
 
 
 @pytest.fixture(autouse=True)
@@ -73,7 +77,18 @@ async def test_chatbot_cognia_register_uses_allowlisted_default_scope_and_idempo
         "cognia_knowledge_write",
         "register_knowledge",
         "cognia",
-        {"knowledge_base_id": None, "title": "Nginx recovery", "content": "Validated steps"},
+        {
+            "knowledge_base_id": None,
+            "knowledge_type": "text",
+            "title": "Nginx recovery",
+            "content": "Validated steps",
+            "scope_type": None,
+            "subject_namespace": None,
+            "external_subject_id": None,
+            "tag_ids": [5, 8],
+            "category_ids": [20],
+            "metadata": {"owner": "operations"},
+        },
         True,
         "medium",
     )
@@ -85,8 +100,15 @@ async def test_chatbot_cognia_register_uses_allowlisted_default_scope_and_idempo
     assert call[0] == "register"
     kwargs = call[1]
     assert kwargs["scope"] == {"type": "clientApplication", "clientApplicationId": 42}
+    assert kwargs["knowledge_type"] == "text"
+    assert kwargs["tag_ids"] == [5, 8]
+    assert kwargs["category_ids"] == [20]
+    assert kwargs["metadata"] == {"owner": "operations", "source": "aiops-chatbot"}
     assert kwargs["idempotency_key"].startswith("chatbot-")
-    assert kwargs["metadata"] == {"source": "aiops-chatbot"}
+    assert result["revision_id"] == 12001
+    assert result["processing"] == {"state": "Processing"}
+    assert result["searchable"] is False
+    assert [row[0] for row in FakeKnowledgeRAGService.calls] == ["register", "processing"]
 
 
 @pytest.mark.asyncio
@@ -114,7 +136,7 @@ async def test_chatbot_cognia_revision_reads_current_candidate_before_write(monk
     result = await ChatbotService()._execute_cognia_write(intent, session_id="session-1")
 
     assert result["knowledge_id"] == 9001
-    assert [row[0] for row in FakeKnowledgeRAGService.calls] == ["detail", "revision"]
+    assert [row[0] for row in FakeKnowledgeRAGService.calls] == ["detail", "revision", "processing"]
     revision_kwargs = FakeKnowledgeRAGService.calls[1][1]
     assert revision_kwargs["expected_current_candidate_revision_id"] == 12001
 
@@ -124,3 +146,62 @@ def test_chatbot_cognia_write_rejects_ambiguous_kb(monkeypatch):
     monkeypatch.setattr(settings, "CHAT_COGNIA_DEFAULT_KNOWLEDGE_BASE_ID", None)
     with pytest.raises(ValueError, match="cognia_knowledge_base_required"):
         ChatbotService._resolve_cognia_kb_id(None)
+
+
+@pytest.mark.asyncio
+async def test_chatbot_cognia_external_subject_scope_is_server_bound(monkeypatch):
+    monkeypatch.setattr(chatbot_service_module, "KnowledgeRAGService", FakeKnowledgeRAGService)
+    monkeypatch.setattr(settings, "COGNIA_KNOWLEDGE_BASE_IDS", [10])
+    monkeypatch.setattr(settings, "COGNIA_CLIENT_APPLICATION_ID", 42)
+    monkeypatch.setattr(settings, "CHAT_COGNIA_DEFAULT_KNOWLEDGE_BASE_ID", 10)
+    monkeypatch.setattr(settings, "CHAT_COGNIA_WRITE_SCOPE", "clientApplication")
+    monkeypatch.setattr(settings, "CHAT_COGNIA_WRITE_ENABLED", True)
+
+    intent = ToolIntent(
+        "cognia_register_knowledge",
+        "cognia_knowledge_write",
+        "register_knowledge",
+        "cognia",
+        {
+            "knowledge_base_id": 10,
+            "knowledge_type": "text",
+            "title": "Ticket recovery note",
+            "content": "Validated resolution",
+            "scope_type": "externalSubject",
+            "subject_namespace": "ticket",
+            "external_subject_id": "TCK-55301",
+            "tag_ids": [],
+            "category_ids": [],
+            "metadata": {},
+        },
+        True,
+        "medium",
+    )
+
+    await ChatbotService()._execute_cognia_write(intent, session_id="session-1")
+    kwargs = FakeKnowledgeRAGService.calls[0][1]
+    assert kwargs["scope"] == {
+        "type": "externalSubject",
+        "clientApplicationId": 42,
+        "subjectNamespace": "ticket",
+        "externalSubjectId": "TCK-55301",
+    }
+
+
+@pytest.mark.asyncio
+async def test_chatbot_cognia_processing_status_is_read_only(monkeypatch):
+    monkeypatch.setattr(chatbot_service_module, "KnowledgeRAGService", FakeKnowledgeRAGService)
+    monkeypatch.setattr(settings, "COGNIA_KNOWLEDGE_BASE_IDS", [10])
+    intent = ToolIntent(
+        "cognia_processing_status",
+        "cognia_knowledge_read",
+        "processing_status",
+        "cognia",
+        {"knowledge_base_id": 10, "knowledge_id": 9001, "revision_id": 12001},
+        False,
+        "low",
+    )
+    result = await ChatbotService()._execute_read(intent, "session-1")
+    assert result["result"] == {"state": "Processing"}
+    assert result["knowledge_id"] == 9001
+    assert result["revision_id"] == 12001
