@@ -15,6 +15,7 @@ PERSIAN_RE = re.compile(r"[\u0600-\u06ff]")
 KNOWLEDGE = (" چیست", "چیست", "یعنی چی", "what is", "explain", "تعریف")
 DIAGNOSTIC = ("چرا", "علت", "ریشه", "root cause", "why ", "بالا نمیاد", "بالا نمی آید", "کند شده", "slow", "failure")
 ACTION = ("restart", "start ", "reload", "rollback", "scale ", "ریستارت", "استارت", "بالا بیار", "اجرا کن", "اعمال کن")
+STRONG_ACTION = ("restart", "reload", "rollback", "scale ", "ریستارت", "استارت", "بالا بیار", "اجرا کن", "اعمال کن")
 OPERATIONAL = (
     "وضعیت", "الان", "current", "status", "cpu", "memory", "ram", "swap", "disk", "دیسک",
     "فضا", "خالی", "service", "سرویس", "nginx", "haproxy", "port", "پورت", "log", "لاگ",
@@ -173,8 +174,10 @@ def infer_request_policy(message: str) -> RequestPolicy:
     text = str(message or "").strip()
     diagnostic = _has(text, DIAGNOSTIC)
     knowledge = _has(text, KNOWLEDGE)
-    action = _has(text, ACTION)
     operational = _has(text, OPERATIONAL) or bool(IP_RE.search(text))
+    # "start" is ambiguous in ordinary advisory language ("start triage").
+    # Treat it as a mutation only when the same turn is operationally scoped.
+    action = _has(text, STRONG_ACTION) or ("start " in text.casefold() and operational)
     if action:
         return RequestPolicy("execution_request", True, False, True, required_capabilities(text))
     if knowledge and not diagnostic and not IP_RE.search(text):
