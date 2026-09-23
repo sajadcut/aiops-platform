@@ -363,3 +363,79 @@ def test_feedback_reuse_event_name_is_stable_and_low_cardinality():
     ):
         assert f"{attribute}=" in source
 
+def test_builder_retains_actual_execution_timestamps():
+    state = _state()
+    state["execution_result"]["execution_started_at"] = "2026-09-23T10:00:00+00:00"
+    state["execution_result"]["execution_completed_at"] = "2026-09-23T10:00:00.400000+00:00"
+
+    episode = OperationalMemoryBuilder.build(state)
+    remediation = episode["actual_remediation"]
+
+    assert remediation["execution_started_at"] == "2026-09-23T10:00:00+00:00"
+    assert remediation["execution_completed_at"] == "2026-09-23T10:00:00.400000+00:00"
+    assert remediation["execution_duration"] == 0.4
+
+
+@pytest.mark.asyncio
+async def test_execution_service_results_include_timestamps():
+    from apps.execution_service import ExecutionRequest, ExecutionService
+
+    result = await ExecutionService.execute(
+        ExecutionRequest(
+            tool_name="missing-memory-test-tool",
+            action="noop",
+            target="test-target",
+        )
+    )
+
+    assert result.execution_started_at.tzinfo is not None
+    assert result.execution_completed_at.tzinfo is not None
+    assert result.execution_completed_at >= result.execution_started_at
+
+
+def test_rrf_metadata_compatibility_penalizes_version_and_config_mismatch():
+    from apps.memory_service.retrieval import rrf_score
+    from domain.models import MemoryEntry
+
+    base = {
+        "pattern": "nginx inactive port unavailable",
+        "service_scope": "nginx",
+        "environment": "test",
+        "asset_type": "vm",
+        "trigger": {"signal_type": "problem"},
+        "service_version": "1.24.0",
+        "configuration_fingerprint": "cfg-current",
+        "verification_result": "success",
+        "effectiveness_score": 0.5,
+        "memory_outcome_class": "successful_recovery",
+    }
+    matching = MemoryEntry(**base)
+    mismatched = MemoryEntry(
+        **{
+            **base,
+            "service_version": "2.0.0",
+            "configuration_fingerprint": "cfg-old",
+        }
+    )
+    common = {
+        "service_scope": "nginx",
+        "environment": "test",
+        "mode": "SIMILAR_INCIDENT",
+        "query": "nginx inactive port unavailable",
+        "asset_type": "vm",
+        "signal_type": "problem",
+        "service_version": "1.24.0",
+        "configuration_fingerprint": "cfg-current",
+    }
+
+    matching_score = rrf_score(
+        {"entry": matching, "vector_rank": 1, "vector_similarity": 0.9},
+        **common,
+    )
+    mismatched_score = rrf_score(
+        {"entry": mismatched, "vector_rank": 1, "vector_similarity": 0.9},
+        **common,
+    )
+
+    assert matching_score > mismatched_score
+
