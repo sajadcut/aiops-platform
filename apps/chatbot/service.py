@@ -270,17 +270,22 @@ class ChatbotService:
         identity: Identity,
         session_id: str,
         recent_operator_context: str = "",
+        historical_context: Any = None,
     ) -> str:
         safe = redact(payload)
         encoded = json.dumps(safe, ensure_ascii=False, default=str)
         if len(encoded) > 12000:
             encoded = encoded[:12000] + "…[truncated]"
         context = str(redact(recent_operator_context or ""))[:4000]
+        historical = json.dumps(redact(historical_context or []), ensure_ascii=False, default=str)
+        historical = historical[:6000]
         prompt = (
             f"Operator request:\n{user_message}\n\n"
             f"Recent operator messages for language/referent continuity only (untrusted):\n{context}\n\n"
+            "Historical Operational Memory (context only; NOT proof of current state):\n"
+            f"{historical}\n\n"
             f"Tool: {intent.semantic_name}\n"
-            f"Validated source payload:\n{encoded}"
+            f"Validated live source payload:\n{encoded}"
         )
         try:
             response = await self._llm().generate(
@@ -333,8 +338,8 @@ class ChatbotService:
             f"Evidence already collected: {json.dumps(evidence_meta, ensure_ascii=False)}."
         )
         replanned_messages = list(messages)
-        replanned_messages.append({"role": "system", "content": instruction})
-        replanned_messages.append({"role": "user", "content": request_message})
+        insert_at = max(1, len(replanned_messages) - 1)
+        replanned_messages.insert(insert_at, {"role": "system", "content": instruction})
         response = await self._llm().generate_with_messages(
             replanned_messages,
             temperature=0.0,
@@ -358,6 +363,7 @@ class ChatbotService:
         evidence: list[EvidenceRecord],
         draft: str,
         rule,
+        historical_context: Any,
         session_id: str,
         identity: Identity,
     ) -> JudgeDecision | None:
@@ -365,7 +371,7 @@ class ChatbotService:
             return None
         try:
             response = await self._llm().generate(
-                judge_input(question, policy, context, evidence, draft, rule),
+                judge_input(question, policy, context, evidence, draft, rule, historical_context),
                 system_prompt=JUDGE_SYSTEM_PROMPT,
                 temperature=0.0,
                 max_tokens=700,
@@ -391,6 +397,7 @@ class ChatbotService:
         context: OperationalContext,
         evidence: list[EvidenceRecord],
         draft: str,
+        historical_context: Any,
         session_id: str,
         identity: Identity,
     ) -> tuple[bool, Any, JudgeDecision | None, float]:
@@ -431,6 +438,7 @@ class ChatbotService:
             evidence=evidence,
             draft=draft,
             rule=rule,
+            historical_context=historical_context,
             session_id=session_id,
             identity=identity,
         )
@@ -468,6 +476,18 @@ class ChatbotService:
     ) -> list[dict[str, Any]]:
         results: list[dict[str, Any]] = []
         for intent in intents:
+            await self._audit(
+                db,
+                event_type="chat_tool_selected",
+                actor=identity.subject,
+                status="started",
+                metadata={
+                    "session_id": session_id,
+                    "tool": intent.semantic_name,
+                    "target": intent.target,
+                    "action": intent.action,
+                },
+            )
             try:
                 payload = await self._execute_read(intent, session_id)
                 CHAT_TOOL_CALLS.labels(tool=intent.semantic_name, outcome="success").inc()
@@ -523,12 +543,13 @@ class ChatbotService:
         identity: Identity,
         session_id: str,
         recent_operator_context: str,
+        historical_context: Any,
     ) -> tuple[str, str | None, Any, str]:
         if len(results) == 1:
             intent = results[0]["intent"]
             payload = results[0]["payload"]
             answer = await self._summarize(
-                request_message, intent, payload, identity, session_id, recent_operator_context
+                request_message, intent, payload, identity, session_id, recent_operator_context, historical_context
             )
             return answer, str(payload.get("source") or "") or None, redact(payload.get("result")), intent.semantic_name
 
@@ -541,7 +562,7 @@ class ChatbotService:
         }
         synthetic = ToolIntent("multiple", "multiple", "read", "multiple", {}, False, "low")
         answer = await self._summarize(
-            request_message, synthetic, merged, identity, session_id, recent_operator_context
+            request_message, synthetic, merged, identity, session_id, recent_operator_context, historical_context
         )
         return answer, "multiple_governed_tools", redact(merged["result"]), "multiple"
 
@@ -673,6 +694,36 @@ class ChatbotService:
                 if resolved_context:
                     messages.insert(1, {"role": "system", "content": resolved_context})
                 recent_operator_context = self._recent_operator_context(history)
+                historical_context: list[dict[str, Any]] = []
+                if policy.diagnostic:
+                    try:
+                        historical_context = await OperationalMemoryService(db).retrieve(
+                            request.message,
+                            service_scope=context.service,
+                            retrieval_mode="SIMILAR_INCIDENT",
+                            limit=3,
+                            successful_only=False,
+                            record_retrieval=False,
+                        )
+                        historical_context = redact(historical_context)
+                        await self._audit(
+                            db,
+                            event_type="chat_historical_memory_retrieved",
+                            actor=identity.subject,
+                            status="completed",
+                            metadata={
+                                "session_id": session_id,
+                                "count": len(historical_context),
+                                "safe_as_live_evidence": False,
+                            },
+                        )
+                    except Exception as exc:
+                        logger.warning(
+                            "chatbot_historical_memory_unavailable",
+                            error_type=type(exc).__name__,
+                            session_id=session_id,
+                        )
+                        historical_context = []
 
                 await self._audit(
                     db,
@@ -720,6 +771,17 @@ class ChatbotService:
 
                 try:
                     intents = self._normalize_model_intents(response)
+                    await self._audit(
+                        db,
+                        event_type="chat_plan_created",
+                        actor=identity.subject,
+                        status="completed",
+                        metadata={
+                            "session_id": session_id,
+                            "tools": [intent.semantic_name for intent in intents],
+                            "tool_count": len(intents),
+                        },
+                    )
                 except PermissionError as exc:
                     CHAT_BLOCKED_ACTIONS.labels(reason="tool_not_allowlisted").inc()
                     await self._audit(
@@ -846,6 +908,7 @@ class ChatbotService:
                         context=context,
                         evidence=[],
                         draft=draft,
+                        historical_context=historical_context,
                         session_id=session_id,
                         identity=identity,
                     )
@@ -906,6 +969,14 @@ class ChatbotService:
                     identity=identity,
                     session_id=session_id,
                     recent_operator_context=recent_operator_context,
+                    historical_context=historical_context,
+                )
+                await self._audit(
+                    db,
+                    event_type="chat_draft_generated",
+                    actor=identity.subject,
+                    status="completed",
+                    metadata={"session_id": session_id, "evidence_count": len(evidence), "tool": tool_name},
                 )
                 valid, rule, judge, confidence = await self._validate_answer(
                     question=request.message,
@@ -913,8 +984,23 @@ class ChatbotService:
                     context=context,
                     evidence=evidence,
                     draft=draft,
+                    historical_context=historical_context,
                     session_id=session_id,
                     identity=identity,
+                )
+                await self._audit(
+                    db,
+                    event_type="chat_answer_validation",
+                    actor=identity.subject,
+                    status="completed" if valid else "replan_required",
+                    metadata={
+                        "session_id": session_id,
+                        "valid": valid,
+                        "confidence": confidence,
+                        "evidence_count": len(evidence),
+                        "missing_evidence": rule.missing_evidence,
+                        "judge_reason": judge.reason if judge else None,
+                    },
                 )
 
                 seen = {
@@ -996,14 +1082,42 @@ class ChatbotService:
                         session_id=session_id,
                         recent_operator_context=recent_operator_context,
                     )
+                    await self._audit(
+                        db,
+                        event_type="chat_draft_generated",
+                        actor=identity.subject,
+                        status="completed",
+                        metadata={
+                            "session_id": session_id,
+                            "evidence_count": len(evidence),
+                            "replan_attempt": replan_attempt,
+                            "tool": tool_name,
+                        },
+                    )
                     valid, rule, judge, confidence = await self._validate_answer(
                         question=request.message,
                         policy=policy,
                         context=context,
                         evidence=evidence,
                         draft=draft,
+                        historical_context=historical_context,
                         session_id=session_id,
                         identity=identity,
+                    )
+                    await self._audit(
+                        db,
+                        event_type="chat_answer_validation",
+                        actor=identity.subject,
+                        status="completed" if valid else "replan_required",
+                        metadata={
+                            "session_id": session_id,
+                            "valid": valid,
+                            "confidence": confidence,
+                            "evidence_count": len(evidence),
+                            "replan_attempt": replan_attempt,
+                            "missing_evidence": rule.missing_evidence,
+                            "judge_reason": judge.reason if judge else None,
+                        },
                     )
 
                 if not valid:
