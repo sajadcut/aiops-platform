@@ -287,6 +287,10 @@ class OperationalMemoryService:
         *,
         service_scope: Optional[str] = None,
         environment: Optional[str] = None,
+        asset_type: Optional[str] = None,
+        signal_type: Optional[str] = None,
+        service_version: Optional[str] = None,
+        configuration_fingerprint: Optional[str] = None,
         retrieval_mode: str = "SIMILAR_INCIDENT",
         limit: int = 5,
         min_similarity: float = 0.0,
@@ -335,6 +339,42 @@ class OperationalMemoryService:
                         in {"failed_recovery", "partial_recovery", "execution_blocked"}
                         else []
                     ),
+                    "compatibility_warnings": [
+                        warning
+                        for warning, mismatch in (
+                            (
+                                "historical asset type differs from current asset type",
+                                bool(asset_type and entry.asset_type and str(asset_type) != str(entry.asset_type)),
+                            ),
+                            (
+                                "historical signal type differs from current signal type",
+                                bool(
+                                    signal_type
+                                    and isinstance(entry.trigger, dict)
+                                    and entry.trigger.get("signal_type")
+                                    and str(signal_type) != str(entry.trigger.get("signal_type"))
+                                ),
+                            ),
+                            (
+                                "historical service version differs from current service version",
+                                bool(
+                                    service_version
+                                    and entry.service_version
+                                    and str(service_version) != str(entry.service_version)
+                                ),
+                            ),
+                            (
+                                "historical configuration fingerprint differs from current configuration",
+                                bool(
+                                    configuration_fingerprint
+                                    and entry.configuration_fingerprint
+                                    and str(configuration_fingerprint)
+                                    != str(entry.configuration_fingerprint)
+                                ),
+                            ),
+                        )
+                        if mismatch
+                    ],
                     "vector_similarity": round(similarity, 6),
                     "lexical_score": round(
                         float(item.get("lexical_score") or 0.0), 6
@@ -346,6 +386,10 @@ class OperationalMemoryService:
                             environment=environment,
                             mode=retrieval_mode,
                             query=query,
+                            asset_type=asset_type,
+                            signal_type=signal_type,
+                            service_version=service_version,
+                            configuration_fingerprint=configuration_fingerprint,
                         ),
                         8,
                     ),
@@ -372,6 +416,9 @@ class OperationalMemoryService:
             count=len(ranked),
             retrieval_mode=retrieval_mode,
             service=service_scope,
+            asset_type=asset_type,
+            signal_type=signal_type,
+            service_version=service_version,
             target_incident_id=target_incident_id,
         )
         mode = str(retrieval_mode or "SIMILAR_INCIDENT").upper()
