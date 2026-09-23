@@ -398,3 +398,91 @@ async def test_memory_v2_postgres_hybrid_retrieval_and_feedback():
         await db.refresh(stale_row)
         assert stale_row.lifecycle_status == "active"
         assert stale_row.last_validated_at is not None
+
+
+async def test_memory_v2_incident_learning_a_b_c_acceptance():
+    """Prove A -> Memory -> B governed reuse feedback and C negative learning."""
+    incident_a = str(uuid4())
+    incident_b = str(uuid4())
+    incident_c = str(uuid4())
+
+    async with AsyncSessionLocal() as db:
+        service = OperationalMemoryService(db)
+
+        # Incident A: verified successful recovery becomes durable experience.
+        memory_a = await service.add_episode(
+            OperationalMemoryBuilder.build(_state(incident_a, success=True))
+        )
+        row_a = await db.get(MemoryEntry, memory_a)
+        assert row_a is not None
+        assert row_a.outcome_class == "successful_recovery"
+        assert row_a.verification_result["status"] == "success"
+
+        # Incident B: the similar historical episode is retrieved as auxiliary
+        # context, explicitly cited, matched to the governed action, and rewarded
+        # only after fresh successful verification.
+        retrieved_b = await service.retrieve(
+            "nginx inactive port 86 unavailable tcp unreachable",
+            service_scope="nginx",
+            environment="test",
+            retrieval_mode="REMEDIATION_EXPERIENCE",
+            limit=10,
+            successful_only=False,
+            target_incident_id=incident_b,
+            record_retrieval=True,
+        )
+        match_a = next(item for item in retrieved_b if item["id"] == str(memory_a))
+        assert match_a["safe_as_evidence"] is False
+        assert match_a["requires_current_validation"] is True
+
+        before_reuse = int(row_a.reuse_count or 0)
+        before_success = int(row_a.successful_reuse_count or 0)
+        await service.record_feedback(
+            incident_b,
+            execution_request={"action": "start_service"},
+            verification_result={"status": "success"},
+            cited_memory_ids=[str(memory_a)],
+        )
+        await db.refresh(row_a)
+        assert int(row_a.reuse_count or 0) == before_reuse + 1
+        assert int(row_a.successful_reuse_count or 0) == before_success + 1
+
+        reuse_events_b = (
+            await db.execute(
+                select(MemoryReuseEvent).where(
+                    MemoryReuseEvent.target_incident_id == incident_b
+                )
+            )
+        ).scalars().all()
+        assert any(
+            event.was_cited_by_agent
+            and event.action_executed
+            and event.influenced_plan
+            and event.verification_outcome == "success"
+            for event in reuse_events_b
+        )
+
+        # Incident C: a failed governed attempt is retained as negative
+        # experience. It can warn later analysis, but is never safe Evidence.
+        memory_c = await service.add_episode(
+            OperationalMemoryBuilder.build(_state(incident_c, success=False))
+        )
+        row_c = await db.get(MemoryEntry, memory_c)
+        assert row_c is not None
+        assert row_c.outcome_class == "failed_recovery"
+        assert row_c.verification_result["status"] == "failed"
+
+        retrieved_c = await service.retrieve(
+            "nginx inactive port 86 unavailable start service",
+            service_scope="nginx",
+            environment="test",
+            retrieval_mode="REMEDIATION_EXPERIENCE",
+            limit=20,
+            successful_only=False,
+            target_incident_id=str(uuid4()),
+            record_retrieval=False,
+        )
+        negative = next(item for item in retrieved_c if item["id"] == str(memory_c))
+        assert negative["memory_outcome_class"] == "failed_recovery"
+        assert negative["safe_as_evidence"] is False
+        assert negative["requires_current_validation"] is True
