@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 397 | Dashboard JS files scanned: 5 | Symbols indexed: 3542**
+**Python files scanned: 397 | Dashboard JS files scanned: 5 | Symbols indexed: 3543**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -2068,6 +2068,7 @@
 | `tests/integration/test_operational_memory_v2_db.py` | `test_memory_v2_postgres_hybrid_retrieval_and_feedback` | 183 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/integration/test_operational_memory_v2_db.py` | `test_memory_v2_incident_learning_a_b_c_acceptance` | 403 | async function | Prove A -> Memory -> B governed reuse feedback and C negative learning. | module |
 | `tests/integration/test_operational_memory_v2_db.py` | `test_memory_v2_golden_retrieval_quality_dataset` | 491 | async function | Exercise the real PostgreSQL vector+FTS+RRF path against cases A-E. | module |
+| `tests/integration/test_operational_memory_v2_db.py` | `test_memory_v2_primary_retrieval_excludes_inconclusive_diagnostic_garbage` | 593 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/integration/test_operator_summary_api.py` | `test_operator_summary_api_route_is_registered_read_only` | 8 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/integration/test_operator_summary_api.py` | `test_dashboard_serves_persian_operator_summary_ui_and_structured_api_call` | 14 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/integration/test_operator_summary_api.py` | `test_operator_summary_backend_is_deterministic_and_has_no_execution_path` | 37 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
