@@ -18,6 +18,9 @@ def test_chatbot_tool_catalog_is_bounded_and_has_no_arbitrary_execution():
         "vm_service_logs",
         "zabbix_problems",
         "kubernetes_read",
+        "cognia_search",
+        "cognia_register_knowledge",
+        "cognia_create_revision",
         "vm_service_action",
         "kubernetes_action",
     }
@@ -102,3 +105,43 @@ def test_prompt_injection_text_cannot_create_capability():
     # User text is data. Tool capability still comes only from a valid model tool call.
     with pytest.raises(PermissionError):
         parse_tool_call(_call("kubectl", {"command": hostile}))
+
+
+def test_cognia_search_is_read_only_knowledge_tool():
+    name, args = parse_tool_call(_call("cognia_search", {"query": "nginx restart runbook", "limit": 4}))
+    intent = normalize_tool_intent(name, args)
+    assert intent.tool_name == "cognia_knowledge_read"
+    assert intent.action == "search"
+    assert intent.parameters == {"query": "nginx restart runbook", "limit": 4}
+    assert intent.mutating is False
+
+
+def test_cognia_register_and_revision_are_explicit_knowledge_writes():
+    name, args = parse_tool_call(
+        _call(
+            "cognia_register_knowledge",
+            {"knowledge_base_id": 10, "title": "Runbook", "content": "Validated recovery steps"},
+        )
+    )
+    intent = normalize_tool_intent(name, args)
+    assert intent.tool_name == "cognia_knowledge_write"
+    assert intent.action == "register_knowledge"
+    assert intent.parameters["knowledge_base_id"] == 10
+    assert intent.mutating is True
+    assert intent.risk_level == "medium"
+
+    name, args = parse_tool_call(
+        _call(
+            "cognia_create_revision",
+            {
+                "knowledge_base_id": 10,
+                "knowledge_id": 9001,
+                "title": "Runbook v2",
+                "content": "Updated validated recovery steps",
+            },
+        )
+    )
+    revision = normalize_tool_intent(name, args)
+    assert revision.action == "create_revision"
+    assert revision.parameters["knowledge_id"] == 9001
+    assert revision.mutating is True
