@@ -206,6 +206,24 @@ historical experience. They never resolve the incident. Durable runtime and
 signal-aware runtime use the same canonical write-back behavior; the historical
 `Learning*` classes remain compatibility aliases only.
 
+## Observability
+
+Operational Memory emits stable low-cardinality lifecycle events, with dynamic
+incident/memory/service/retrieval/verification/embedding data carried as
+structured attributes:
+
+- `aiops.memory.created`
+- `aiops.memory.embedding.generated`
+- `aiops.memory.embedding.failed`
+- `aiops.memory.retrieved`
+- `aiops.memory.reused`
+- `aiops.memory.feedback.recorded`
+- `aiops.memory.invalidated`
+
+The dedicated `aiops.memory.reused` event is emitted only for attributed reuse:
+the historical episode was explicitly cited and its governed action matched the
+current execution. It therefore does not turn mere retrieval into a reuse claim.
+
 ## Security and governance
 
 The builder redacts common credential fields and secret-like strings before
