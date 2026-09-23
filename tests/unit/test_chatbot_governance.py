@@ -124,3 +124,31 @@ async def test_live_question_without_available_tool_returns_safe_missing_capabil
     assert result.tool_calls is None
     assert result.content == missing_capability_message("CPU سرور 10.100.6.199 چقدره؟")
     assert "حدس" in result.content
+
+
+@pytest.mark.asyncio
+async def test_explicit_cognia_write_is_replanned_to_write_tool():
+    tool_call = {
+        "function": {
+            "name": "cognia_register_knowledge",
+            "arguments": '{"title":"Nginx recovery","content":"validated steps"}',
+        }
+    }
+    delegate = SequencedLLM(
+        [
+            llm_response("باشه، در Cognia ذخیره می‌کنم."),
+            llm_response("", tool_calls=[tool_call]),
+        ]
+    )
+    adapter = ReliableChatLLMAdapter(delegate)
+
+    result = await adapter.generate_with_messages(
+        [{"role": "user", "content": "این اطلاعات را در Cognia ذخیره کن"}],
+        stage="chatbot_intent",
+        tools=[{"type": "function", "function": {"name": "cognia_register_knowledge"}}],
+        tool_choice="auto",
+    )
+
+    assert result.tool_calls == [tool_call]
+    assert len(delegate.calls) == 2
+    assert "Cognia knowledge write" in delegate.calls[1][1][-1]["content"]
