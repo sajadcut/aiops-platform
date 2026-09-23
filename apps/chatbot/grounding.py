@@ -14,6 +14,7 @@ PERSIAN_RE = re.compile(r"[\u0600-\u06ff]")
 
 KNOWLEDGE = (" چیست", "چیست", "یعنی چی", "what is", "explain", "تعریف")
 DIAGNOSTIC = ("چرا", "علت", "ریشه", "root cause", "why ", "بالا نمیاد", "بالا نمی آید", "کند شده", "slow", "failure")
+ACTION = ("restart", "start ", "reload", "rollback", "scale ", "ریستارت", "استارت", "بالا بیار", "اجرا کن", "اعمال کن")
 OPERATIONAL = (
     "وضعیت", "الان", "current", "status", "cpu", "memory", "ram", "swap", "disk", "دیسک",
     "فضا", "خالی", "service", "سرویس", "nginx", "haproxy", "port", "پورت", "log", "لاگ",
@@ -26,6 +27,7 @@ class RequestPolicy:
     kind: str
     requires_live_evidence: bool
     diagnostic: bool = False
+    mutating: bool = False
     required_capabilities: tuple[str, ...] = ()
 
 
@@ -152,6 +154,11 @@ def required_capabilities(message: str, diagnostic: bool = False) -> tuple[str, 
         add("elasticsearch.logs.read")
     if any(x in text for x in ("kubernetes", "k8s", "pod", "deployment", "namespace")):
         add("kubernetes.read")
+    if _has(text, ACTION):
+        if any(x in text for x in ("kubernetes", "k8s", "pod", "deployment", "workload")):
+            add("kubernetes.action")
+        elif any(x in text for x in ("service", "سرویس", "nginx", "haproxy")):
+            add("vm.service.action")
     if diagnostic and ("vm.service.status.read" in caps or any(x in text for x in ("nginx", "haproxy", "سرویس"))):
         add("vm.service.status.read")
         add("vm.service.logs.read")
@@ -163,13 +170,16 @@ def infer_request_policy(message: str) -> RequestPolicy:
     text = str(message or "").strip()
     diagnostic = _has(text, DIAGNOSTIC)
     knowledge = _has(text, KNOWLEDGE)
+    action = _has(text, ACTION)
     operational = _has(text, OPERATIONAL) or bool(IP_RE.search(text))
+    if action:
+        return RequestPolicy("execution_request", True, False, True, required_capabilities(text))
     if knowledge and not diagnostic and not IP_RE.search(text):
         return RequestPolicy("knowledge", False)
     if diagnostic:
-        return RequestPolicy("diagnostic", True, True, required_capabilities(text, True))
+        return RequestPolicy("diagnostic", True, True, False, required_capabilities(text, True))
     if operational:
-        return RequestPolicy("operational", True, False, required_capabilities(text))
+        return RequestPolicy("operational", True, False, False, required_capabilities(text))
     return RequestPolicy("information", False)
 
 
