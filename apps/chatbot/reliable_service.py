@@ -160,9 +160,10 @@ class ReliableChatLLMAdapter(LLMAdapter):
                 repair_instruction = (
                     "REPLAN REQUIRED: the operator explicitly requested a Cognia knowledge write. "
                     "Do not merely acknowledge the request. Select exactly one provided Cognia write tool: "
-                    "cognia_register_knowledge for new knowledge, or cognia_create_revision only when an "
-                    "existing knowledge id is explicitly available. Preserve the operator's supplied content; "
-                    "do not invent scope, KB authority or an existing knowledge id."
+                    "cognia_publish_incident_knowledge when the operator wants a verified incident/solution "
+                    "published from durable AIOps data; cognia_register_knowledge for new supplied knowledge; "
+                    "or cognia_create_revision only when an existing knowledge id is explicitly available. "
+                    "Do not invent scope, KB authority, incident verification, or an existing knowledge id."
                 )
             elif evidence_required:
                 repair_instruction = (
