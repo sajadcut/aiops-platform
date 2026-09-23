@@ -117,6 +117,9 @@ Evidence چند منبع را جمع می‌کند. تفاوت مهم: source fa
 ### apps/incident_service/repository.py
 Persistence canonical Incident، Evidence و Finding. transaction/locking مربوط به correlation و durable state در این لایه قرار می‌گیرد.
 
+### apps/memory_service/
+Operational Memory v2 تجربه‌های تاریخی Incident را به‌صورت episode مستقل در PostgreSQL + pgvector نگه می‌دارد. `builder.py` episode deterministic و sanitized را از trigger، Evidence reference، investigation، RCA با uncertainty، Actual Execution و Verification می‌سازد. `retrieval.py` structured filtering + pgvector cosine + PostgreSQL FTS + RRF و metadata compatibility را برای modeهای `SIMILAR_INCIDENT`، `RCA_ANALOG` و `REMEDIATION_EXPERIENCE` اجرا می‌کند. `feedback.py` reuse attribution/effectiveness را ثبت می‌کند و `consolidation.py` summary تاریخی بدون overwrite کردن episodeها می‌سازد. Memory همیشه با برچسب Historical Operational Experience و `safe_as_evidence=false` به Agent/API می‌رود؛ failed actionها warning هستند و هیچ Memory به‌تنهایی write authority ایجاد نمی‌کند. Core episode قبل از embedding commit می‌شود و embeddingهای pending/failed یا contract-mismatched با backfill قابل بازسازی‌اند.
+
 ### apps/orchestrator/e2e_graph.py
 تعریف workflow اصلی LangGraph و node/routingها. state از context تا verification/memory پیش می‌رود. این فایل باید evaluator gate، approval pause، failure route و عدم bypass execution را حفظ کند.
 
