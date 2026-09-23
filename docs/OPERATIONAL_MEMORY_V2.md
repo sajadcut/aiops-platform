@@ -77,8 +77,8 @@ context and are never treated as Evidence.
 
 The episode is built from the structured ExecutionRequest / ExecutionResult,
 not from the LLM final-plan prose. The stored record can therefore identify the
-real tool, action, target, sanitized parameters, service, runbook and execution
-result.
+real tool, action, target, sanitized parameters, service, runbook, execution
+start/completion timestamps, duration and execution result.
 
 ## Verification
 
@@ -157,7 +157,15 @@ Retrieval uses:
    provider/model/dimension/document-version contract
 4. PostgreSQL Full Text Search, which remains available if the embedding
    provider is unavailable
-5. Reciprocal Rank Fusion plus bounded metadata bonuses
+5. Reciprocal Rank Fusion plus bounded metadata compatibility scoring for the
+   current asset type, signal type, environment, service version and configuration
+   fingerprint, with mismatch penalties rather than blind historical reuse
+
+Primary retrieval also applies a reuse-quality gate. Inconclusive diagnostic-only
+episodes may remain durable for audit/history, but they are excluded from the main
+retrieval pool unless they carry evidence-linked RCA of sufficient status.
+Conclusive successful/failed/partial outcomes and blocked negative experience
+remain retrievable.
 
 The current incident's own Memory episode is excluded from historical retrieval
 to prevent self-reinforcing feedback loops.
@@ -248,9 +256,11 @@ Operational Memory cannot bypass any of these stages.
 Operational Memory write-back is attached to all governed execution paths:
 durable incident workflow, direct VM remediation/runbook execution and ChatOps.
 Verified successful recovery is promoted only when evidence provenance exists.
-Failed, blocked or inconclusive governed attempts are also persisted as negative
-experience even when post-action evidence could not be collected, so the next
-incident can avoid blindly repeating an unsuccessful action.
+Failed or blocked governed attempts are also persisted as negative experience
+even when post-action evidence could not be collected, so the next incident can
+avoid blindly repeating an unsuccessful action. Inconclusive diagnostic episodes
+may still be retained durably for audit/history, but low-information inconclusive
+records are not reusable through primary retrieval.
 
 Approval authority remains independent of Memory. A durable approval is bound to
 the exact incident/tool/action/target/parameters/runbook intent and is consumed
@@ -303,7 +313,7 @@ MEMORY_RETRIEVAL_CANDIDATE_MULTIPLIER=4
 MEMORY_RRF_K=60
 MEMORY_MAX_EMBEDDING_TEXT_CHARS=12000
 MEMORY_REUSE_FEEDBACK_ENABLED=True
-MEMORY_STALE_AFTER_DAYS=180
+MEMORY_STALE_AFTER_DAYS=90
 ```
 
 ## Migration
@@ -344,6 +354,9 @@ A repository-level acceptance requires:
 - stale embedding-contract re-embedding test
 - lexical retrieval during embedding-provider outage
 - current-incident self-exclusion test
+- inconclusive diagnostic-garbage retrieval exclusion test
+- current-vs-historical asset/signal/version/config compatibility ranking test
+- governed execution start/completion timestamp preservation test
 - agent Memory citation allowlist and prompt-bounding test
 - positive/negative reuse-attribution test
 - failed approved execution negative-learning test
