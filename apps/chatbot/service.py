@@ -321,6 +321,7 @@ class ChatbotService:
         context: OperationalContext,
         evidence: list[EvidenceRecord],
         reason: str,
+        allow_mutation: bool = False,
     ) -> list[ToolIntent]:
         evidence_meta = [item.public(data=False) for item in evidence[-8:]]
         instruction = (
@@ -346,7 +347,7 @@ class ChatbotService:
             stage="chatbot_replan",
         )
         intents = self._normalize_model_intents(response)
-        return [intent for intent in intents if not intent.mutating]
+        return intents if allow_mutation else [intent for intent in intents if not intent.mutating]
 
     async def _judge_answer(
         self,
@@ -403,7 +404,13 @@ class ChatbotService:
 
         enforced_policy = policy
         if not settings.CHAT_REQUIRE_EVIDENCE_FOR_OPERATIONAL_FACTS and policy.requires_live_evidence:
-            enforced_policy = RequestPolicy(policy.kind, False, policy.diagnostic, policy.required_capabilities)
+            enforced_policy = RequestPolicy(
+                kind=policy.kind,
+                requires_live_evidence=False,
+                diagnostic=policy.diagnostic,
+                mutating=policy.mutating,
+                required_capabilities=policy.required_capabilities,
+            )
 
         rule = validate_rules(
             enforced_policy,
@@ -787,7 +794,12 @@ class ChatbotService:
                                 identity=identity,
                                 context=context,
                                 evidence=[],
-                                reason="Current operational facts require live evidence, but the first plan selected no tool.",
+                                reason=(
+                                    "The request requires a governed action proposal, but the first plan selected no tool."
+                                    if policy.mutating
+                                    else "Current operational facts require live evidence, but the first plan selected no tool."
+                                ),
+                                allow_mutation=policy.mutating,
                             )
                         except Exception as exc:
                             CHAT_LLM_FAILURES.inc()
