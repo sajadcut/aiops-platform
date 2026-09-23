@@ -486,3 +486,105 @@ async def test_memory_v2_incident_learning_a_b_c_acceptance():
         assert negative["memory_outcome_class"] == "failed_recovery"
         assert negative["safe_as_evidence"] is False
         assert negative["requires_current_validation"] is True
+
+
+async def test_memory_v2_golden_retrieval_quality_dataset():
+    """Exercise the real PostgreSQL vector+FTS+RRF path against cases A-E."""
+    from apps.memory_service.quality import evaluate_golden_ranking
+
+    async with AsyncSessionLocal() as db:
+        service = OperationalMemoryService(db)
+
+        def episode(label: str, summary: str, *, success: bool, environment: str = "test"):
+            state = _state(str(uuid4()), success=success)
+            state["evidence_summary"] = summary
+            state["context"]["incident"]["summary"] = summary
+            state["context"]["trigger_signal"]["summary"] = summary
+            state["findings"][0]["statement"] = summary
+            built = OperationalMemoryBuilder.build(state)
+            built["environment"] = environment
+            built["pattern"] = summary
+            built["incident_pattern"]["summary"] = summary
+            built["embedding_document"] = OperationalMemoryBuilder.build_embedding_document(built)
+            built["search_document"] = OperationalMemoryBuilder._search_document(built)
+            built["embedding_text_hash"] = __import__("hashlib").sha256(
+                built["embedding_document"].encode("utf-8")
+            ).hexdigest()
+            built["episode_fingerprint"] = OperationalMemoryBuilder._episode_fingerprint(built)
+            built["_golden_label"] = label
+            return built
+
+        cases = {
+            "A": episode(
+                "A",
+                "nginx stopped inactive port closed tcp unavailable",
+                success=True,
+            ),
+            "B": episode(
+                "B",
+                "nginx active service healthy port blocked by firewall network policy",
+                success=False,
+            ),
+            "C": episode(
+                "C",
+                "nginx inactive bad configuration config invalid port unavailable",
+                success=False,
+            ),
+            "D": episode(
+                "D",
+                "application process killed by high memory pressure oom",
+                success=False,
+            ),
+            "E": episode(
+                "E",
+                "nginx inactive port closed tcp unavailable different version",
+                success=True,
+                environment="production",
+            ),
+        }
+        ids = {}
+        for label, built in cases.items():
+            built.pop("_golden_label", None)
+            ids[label] = str(await service.add_episode(built))
+
+        results = await service.retrieve(
+            "nginx inactive tcp port unavailable",
+            service_scope="nginx",
+            environment="test",
+            retrieval_mode="REMEDIATION_EXPERIENCE",
+            limit=10,
+            successful_only=False,
+            record_retrieval=False,
+        )
+        ranked_ids = [item["id"] for item in results]
+        labels_by_id = {memory_id: label for label, memory_id in ids.items()}
+        ranked_labels = [labels_by_id[item] for item in ranked_ids if item in labels_by_id]
+
+        # Different environment/version case is filtered from the test query.
+        assert "E" not in ranked_labels
+        # The closest verified recovery must be surfaced, while the failed
+        # configuration case remains available as negative experience.
+        assert "A" in ranked_labels
+        assert "C" in ranked_labels
+        assert ranked_labels.index("A") < ranked_labels.index("B")
+        assert ranked_labels.index("A") < ranked_labels.index("D")
+
+        metrics = evaluate_golden_ranking(
+            ranked_labels,
+            relevant_ids={"A", "C"},
+            outcomes={
+                "A": "successful_recovery",
+                "B": "failed_recovery",
+                "C": "failed_recovery",
+                "D": "failed_recovery",
+                "E": "successful_recovery",
+            },
+            surfaced_failed_ids={"C"} if "C" in ranked_labels else set(),
+            blindly_repeated_ids=set(),
+            k=min(3, len(ranked_labels)),
+        )
+        assert metrics["recall_at_k"] > 0
+        assert metrics["precision_at_k"] > 0
+        assert metrics["mrr"] > 0
+        assert metrics["successful_remediation_retrieval_rate"] > 0
+        assert metrics["failed_action_avoidance_rate"] == 1.0
