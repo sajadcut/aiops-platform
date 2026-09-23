@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 399 | Dashboard JS files scanned: 5 | Symbols indexed: 3571**
+**Python files scanned: 399 | Dashboard JS files scanned: 5 | Symbols indexed: 3574**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -2649,6 +2649,7 @@
 | `tests/unit/test_dashboard_contract.py` | `test_dashboard_does_not_embed_demo_or_synthetic_operational_data` | 55 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_dashboard_contract.py` | `test_service_health_is_durable_not_static_topology` | 64 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_dashboard_contract.py` | `test_dashboard_summary_tracks_full_governed_lifecycle` | 77 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_dashboard_contract.py` | `test_incident_refresh_lazy_loads_historical_memory` | 95 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_dashboard_control_center.py` | `test_dashboard_is_single_live_control_center` | 7 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_dashboard_control_center.py` | `test_incident_workbench_defaults_to_active_and_shows_unambiguous_local_time` | 34 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_dashboard_control_center.py` | `test_dashboard_assets_and_agent_route_are_served_by_fastapi` | 48 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
@@ -2959,16 +2960,18 @@
 | `tests/unit/test_latency_observability.py` | `test_orchestrator_analysis_phases_publish_duration_ms` | 38 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_latency_observability.py` | `test_mcp_server_and_vm_ssh_publish_server_side_latency` | 55 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_latency_observability.py` | `test_latency_logging_does_not_log_http_query_headers_or_body` | 70 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_mcp_external_boundary.py` | `test_context_builder_uses_mcp_clients_not_native_external_connectors` | 21 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_mcp_external_boundary.py` | `test_zabbix_is_mcp_only_and_has_no_direct_runtime_config` | 31 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_mcp_external_boundary.py` | `test_evidence_collector_has_no_native_external_fallbacks` | 47 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_mcp_external_boundary.py` | `test_control_plane_apps_cannot_import_native_operational_connectors` | 55 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_mcp_external_boundary.py` | `test_orchestrator_and_health_use_mcp_providers` | 67 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_mcp_external_boundary.py` | `test_api_execution_registration_does_not_open_direct_ssh` | 79 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_mcp_external_boundary.py` | `test_mcp_client_rejects_non_allowlisted_tool` | 86 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_mcp_external_boundary.py` | `test_mcp_client_supports_http_and_https` | 99 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_mcp_external_boundary.py` | `test_elastic_mcp_builds_basic_authorization_from_kibana_credentials` | 107 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_mcp_external_boundary.py` | `test_elastic_mcp_explicit_authorization_header_takes_precedence` | 116 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_mcp_external_boundary.py` | `test_context_builder_uses_mcp_clients_not_native_external_connectors` | 22 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_mcp_external_boundary.py` | `test_zabbix_is_mcp_only_and_has_no_direct_runtime_config` | 32 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_mcp_external_boundary.py` | `test_evidence_collector_has_no_native_external_fallbacks` | 48 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_mcp_external_boundary.py` | `test_control_plane_apps_cannot_import_native_operational_connectors` | 56 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_mcp_external_boundary.py` | `test_orchestrator_and_health_use_mcp_providers` | 68 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_mcp_external_boundary.py` | `test_api_execution_registration_does_not_open_direct_ssh` | 80 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_mcp_external_boundary.py` | `test_mcp_client_rejects_non_allowlisted_tool` | 87 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_mcp_external_boundary.py` | `test_mcp_client_supports_http_and_https` | 100 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_mcp_external_boundary.py` | `test_elastic_mcp_builds_basic_authorization_from_kibana_credentials` | 108 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_mcp_external_boundary.py` | `test_elastic_mcp_explicit_authorization_header_takes_precedence` | 117 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_mcp_external_boundary.py` | `test_mcp_read_retry_override_limits_transport_attempts` | 125 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_mcp_external_boundary.py` | `test_mcp_read_retry_override_limits_transport_attempts.fail_post` | 132 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_mcp_read_retry_override_limits_transport_attempts |
 | `tests/unit/test_mcp_server_contract.py` | `test_provider_tool_names_match_control_plane_clients` | 6 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_mcp_server_contract.py` | `test_internal_mcp_server_has_no_native_zabbix_provider` | 21 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_mcp_server_contract.py` | `test_mcp_server_is_the_only_place_remaining_native_provider_connectors_are_composed` | 28 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
