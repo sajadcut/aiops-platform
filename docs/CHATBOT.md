@@ -243,8 +243,7 @@ No chatbot-specific secret is introduced. Answer governance is controlled by non
 - `CHAT_MAX_EVIDENCE_AGE_SECONDS=300`
 - `CHAT_MISSING_CAPABILITY_LOGGING=True`
 
-The defaults are intentionally backward-compatible for deployments whose existing ConfigMap has not yet
-declared these variables. Production should keep Evidence enforcement and validation enabled.
+The tracked `.env.example` supplies these runtime defaults and environment-specific configuration may override them. Production should keep Evidence enforcement and validation enabled.
 
 Configure the existing platform contracts:
 
