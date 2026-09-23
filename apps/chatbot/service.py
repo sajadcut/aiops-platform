@@ -438,13 +438,13 @@ class ChatbotService:
                 db,
                 str(intent.parameters.get("incident_id") or ""),
             )
-            metadata = dict(draft["metadata"])
-            metadata.update(
-                {
-                    str(k): str(v)
-                    for k, v in (intent.parameters.get("metadata") or {}).items()
-                }
-            )
+            metadata = {
+                str(k): str(v)
+                for k, v in (intent.parameters.get("metadata") or {}).items()
+            }
+            # Durable incident provenance is authoritative and cannot be
+            # overridden by model/user-supplied metadata.
+            metadata.update({str(k): str(v) for k, v in draft["metadata"].items()})
             metadata["source"] = "aiops-chatbot"
             generated = ToolIntent(
                 semantic_name="cognia_register_knowledge",
