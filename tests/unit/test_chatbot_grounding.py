@@ -106,3 +106,10 @@ def test_missing_capability_response_is_truthful_in_persian():
     text = missing_capability_message("/app چقدر فضا داره؟", policy)
     assert "حدس" in text
     assert "vm.disk.read" in text
+
+
+def test_mutation_request_is_not_misclassified_as_read_only():
+    policy = infer_request_policy("nginx روی vm01 رو restart کن")
+    assert policy.kind == "execution_request"
+    assert policy.mutating is True
+    assert "vm.service.action" in policy.required_capabilities
