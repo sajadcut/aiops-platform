@@ -714,15 +714,15 @@
 | `apps/api/incident_resources.py` | `get_evidence` | 46 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
 | `apps/api/incident_resources.py` | `get_knowledge` | 72 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
 | `apps/api/incident_resources.py` | `get_memory` | 104 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
-| `apps/api/incident_resources.py` | `get_memory_health` | 175 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
-| `apps/api/incident_resources.py` | `get_memory_summary` | 186 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
-| `apps/api/incident_resources.py` | `invalidate_memory` | 210 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/incident_resources.py` | `validate_memory` | 236 | async function | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | module |
-| `apps/api/incident_resources.py` | `get_plan` | 255 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
-| `apps/api/incident_resources.py` | `get_verification` | 280 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
-| `apps/api/incident_resources.py` | `get_incident_audit` | 288 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
-| `apps/api/incident_resources.py` | `get_incident_lifecycle` | 295 | async function | Return durable governance plus structured agent routing/collaboration state. | module |
-| `apps/api/incident_resources.py` | `get_operator_summary` | 336 | async function | Return a read-only Persian operator summary derived from current durable Incident state. | module |
+| `apps/api/incident_resources.py` | `get_memory_health` | 196 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
+| `apps/api/incident_resources.py` | `get_memory_summary` | 207 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
+| `apps/api/incident_resources.py` | `invalidate_memory` | 231 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/incident_resources.py` | `validate_memory` | 257 | async function | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | module |
+| `apps/api/incident_resources.py` | `get_plan` | 276 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
+| `apps/api/incident_resources.py` | `get_verification` | 301 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
+| `apps/api/incident_resources.py` | `get_incident_audit` | 309 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
+| `apps/api/incident_resources.py` | `get_incident_lifecycle` | 316 | async function | Return durable governance plus structured agent routing/collaboration state. | module |
+| `apps/api/incident_resources.py` | `get_operator_summary` | 357 | async function | Return a read-only Persian operator summary derived from current durable Incident state. | module |
 | `apps/api/incidents.py` | `simulate_incident` | 24 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/incidents.py` | `analyze_incident` | 48 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/incidents.py` | `RemediationRequest` | 109 | class | کلاس | module |
