@@ -589,3 +589,46 @@ async def test_memory_v2_golden_retrieval_quality_dataset():
         assert metrics["mrr"] > 0
         assert metrics["successful_remediation_retrieval_rate"] > 0
         assert metrics["failed_action_avoidance_rate"] == 1.0
+
+async def test_memory_v2_primary_retrieval_excludes_inconclusive_diagnostic_garbage():
+    async with AsyncSessionLocal() as db:
+        service = OperationalMemoryService(db)
+
+        inconclusive_state = _state(str(uuid4()), success=True)
+        inconclusive_state["service_name"] = "memory-gate-nginx"
+        inconclusive_state["evidence_summary"] = "memory gate nginx inactive exact diagnostic phrase"
+        inconclusive_state["context"]["incident"]["summary"] = inconclusive_state["evidence_summary"]
+        inconclusive_state["execution_result"]["success"] = True
+        inconclusive_state["verification_result"] = {
+            "status": "inconclusive",
+            "confidence": 0.2,
+            "before_state": {"service_active": 0},
+            "after_state": {},
+            "evidence_refs": [],
+            "message": "verification unavailable",
+        }
+        inconclusive = OperationalMemoryBuilder.build(inconclusive_state)
+        assert inconclusive["memory_outcome_class"] == "diagnostic_only"
+        assert inconclusive["verification_result"] == "inconclusive"
+        inconclusive_id = await service.add_episode(inconclusive)
+
+        verified_state = _state(str(uuid4()), success=True)
+        verified_state["service_name"] = "memory-gate-nginx"
+        verified_state["evidence_summary"] = "memory gate nginx inactive exact diagnostic phrase"
+        verified_state["context"]["incident"]["summary"] = verified_state["evidence_summary"]
+        verified = OperationalMemoryBuilder.build(verified_state)
+        verified_id = await service.add_episode(verified)
+
+        results = await service.retrieve(
+            "memory gate nginx inactive exact diagnostic phrase",
+            service_scope="memory-gate-nginx",
+            environment="test",
+            retrieval_mode="SIMILAR_INCIDENT",
+            limit=20,
+            successful_only=False,
+        )
+        ids = {item["id"] for item in results}
+
+        assert str(verified_id) in ids
+        assert str(inconclusive_id) not in ids
+
