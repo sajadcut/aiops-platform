@@ -107,11 +107,32 @@ async def get_memory(incident_id: UUID, limit: int = Query(default=5, le=20)):
         if incident is None:
             raise HTTPException(status_code=404, detail="Incident not found")
         query = f"{incident.service or ''} {incident.summary or ''}".strip()
+        incident_context = incident.context if isinstance(incident.context, dict) else {}
+        asset_context = (
+            incident_context.get("asset_context")
+            if isinstance(incident_context.get("asset_context"), dict)
+            else {}
+        )
+        trigger_context = (
+            incident_context.get("trigger_signal")
+            if isinstance(incident_context.get("trigger_signal"), dict)
+            else {}
+        )
         service = OperationalMemoryService(db)
         items = await service.retrieve(
             query,
             service_scope=incident.service,
             environment=None,
+            asset_type=asset_context.get("asset_type"),
+            signal_type=trigger_context.get("signal_type"),
+            service_version=(
+                asset_context.get("service_version")
+                or incident_context.get("service_version")
+            ),
+            configuration_fingerprint=(
+                asset_context.get("configuration_fingerprint")
+                or incident_context.get("configuration_fingerprint")
+            ),
             retrieval_mode="SIMILAR_INCIDENT",
             limit=limit,
             target_incident_id=str(incident_id),
