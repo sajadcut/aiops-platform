@@ -13,7 +13,7 @@ PATH_RE = re.compile(r"(?<![\w.])/(?:[A-Za-z0-9._-]+/?)+")
 PERSIAN_RE = re.compile(r"[\u0600-\u06ff]")
 
 KNOWLEDGE = (" چیست", "چیست", "یعنی چی", "what is", "explain", "تعریف")
-DIAGNOSTIC = ("چرا", "علت", "root cause", "why ", "بالا نمیاد", "کند", "slow", "failure", "مشکل")
+DIAGNOSTIC = ("چرا", "علت", "ریشه", "root cause", "why ", "بالا نمیاد", "بالا نمی آید", "کند شده", "slow", "failure")
 OPERATIONAL = (
     "وضعیت", "الان", "current", "status", "cpu", "memory", "ram", "swap", "disk", "دیسک",
     "فضا", "خالی", "service", "سرویس", "nginx", "haproxy", "port", "پورت", "log", "لاگ",
