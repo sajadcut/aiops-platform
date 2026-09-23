@@ -314,6 +314,8 @@ A repository-level acceptance requires:
 - agent Memory citation allowlist and prompt-bounding test
 - positive/negative reuse-attribution test
 - failed approved execution negative-learning test
+- explicit Incident A -> durable Memory -> Incident B retrieval/citation/action-match -> successful reuse feedback acceptance
+- explicit Incident C failed-recovery persistence and retrieval as non-evidence negative experience
 - full test suite
 - security/hygiene checks
 
