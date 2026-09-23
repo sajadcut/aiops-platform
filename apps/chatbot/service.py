@@ -12,7 +12,13 @@ from prometheus_client import Counter, Histogram
 from apps.approval_service.binding import assert_bound, bind_metadata, execution_intent, intent_digest
 from apps.approval_service.postgres import PostgreSQLApprovalStore
 from apps.audit_service.postgres import PostgreSQLAuditStore
-from apps.chatbot.governance import missing_capability_message, requires_live_evidence
+from apps.chatbot.governance import (
+    CHAT_REPLANS,
+    ChatGovernanceConfig,
+    is_diagnostic_question,
+    missing_capability_message,
+    requires_live_evidence,
+)
 from apps.chatbot.models import ActionProposalView, ChatMessageRequest, ChatMessageResponse
 from apps.chatbot.store import ChatStore, HISTORY_LIMIT
 from apps.chatbot.tools import CHAT_TOOL_SCHEMAS, ToolIntent, max_tool_calls, normalize_tool_intent, parse_tool_call
@@ -488,6 +494,136 @@ class ChatbotService:
                             metadata={"session_id": session_id, "tool": intent.semantic_name, "error_type": type(exc).__name__},
                         )
                         raise HTTPException(status_code=502, detail=f"chatbot_tool_failed:{intent.semantic_name}") from exc
+
+                # Diagnostic/why questions get a bounded evidence-completeness replan
+                # before prose is generated. This can only add allowlisted read tools.
+                if is_diagnostic_question(request.message) and results:
+                    cfg = ChatGovernanceConfig.from_env()
+                    seen = {
+                        (
+                            item["intent"].semantic_name,
+                            item["intent"].target,
+                            json.dumps(item["intent"].parameters, sort_keys=True, default=str),
+                        )
+                        for item in results
+                    }
+                    for _ in range(cfg.max_replan_attempts):
+                        if len(results) >= max_tool_calls():
+                            break
+                        existing = [
+                            {
+                                "tool": item["intent"].semantic_name,
+                                "target": item["intent"].target,
+                                "source": item["payload"].get("source"),
+                                "result": redact(item["payload"].get("result")),
+                            }
+                            for item in results
+                        ]
+                        encoded_existing = json.dumps(existing, ensure_ascii=False, default=str)
+                        if len(encoded_existing) > 8000:
+                            encoded_existing = encoded_existing[:8000] + "…[truncated]"
+                        replan_messages = list(messages)
+                        replan_messages.append(
+                            {
+                                "role": "user",
+                                "content": (
+                                    "DIAGNOSTIC EVIDENCE REVIEW: the operator asked a why/root-cause question. "
+                                    "Review the already-collected governed evidence below. If another provided "
+                                    "READ-ONLY tool is materially necessary to support the cause, select only "
+                                    "that additional tool now. Never select a mutation/action tool in this phase. "
+                                    "If the evidence is already sufficient, return a short text response and no "
+                                    "tool call. Existing evidence:\n" + encoded_existing
+                                ),
+                            }
+                        )
+                        try:
+                            replan = await self._llm().generate_with_messages(
+                                replan_messages,
+                                temperature=0.0,
+                                max_tokens=500,
+                                tools=CHAT_TOOL_SCHEMAS,
+                                tool_choice="auto",
+                                request_id=str(uuid4()),
+                                session_id=session_id,
+                                user_id=identity.subject,
+                                stage="chatbot_replan",
+                            )
+                        except Exception as exc:
+                            CHAT_LLM_FAILURES.inc()
+                            logger.warning(
+                                "chatbot_replan_llm_failed",
+                                error_type=type(exc).__name__,
+                                session_id=session_id,
+                            )
+                            break
+
+                        extra_calls = list(replan.tool_calls or [])
+                        if not extra_calls:
+                            break
+
+                        added = False
+                        for call in extra_calls:
+                            if len(results) >= max_tool_calls():
+                                break
+                            try:
+                                name, args = parse_tool_call(call)
+                                extra_intent = normalize_tool_intent(name, args)
+                            except (PermissionError, ValueError):
+                                continue
+                            if extra_intent.mutating:
+                                CHAT_BLOCKED_ACTIONS.labels(reason="mutation_during_replan").inc()
+                                continue
+                            key = (
+                                extra_intent.semantic_name,
+                                extra_intent.target,
+                                json.dumps(extra_intent.parameters, sort_keys=True, default=str),
+                            )
+                            if key in seen:
+                                continue
+                            seen.add(key)
+                            try:
+                                payload = await self._execute_read(extra_intent, session_id)
+                            except Exception as exc:
+                                CHAT_TOOL_CALLS.labels(
+                                    tool=extra_intent.semantic_name, outcome="failed"
+                                ).inc()
+                                logger.warning(
+                                    "chatbot_replan_tool_failed",
+                                    tool=extra_intent.semantic_name,
+                                    error_type=type(exc).__name__,
+                                    session_id=session_id,
+                                )
+                                continue
+
+                            CHAT_REPLANS.labels(reason="diagnostic_evidence_gap").inc()
+                            CHAT_TOOL_CALLS.labels(
+                                tool=extra_intent.semantic_name, outcome="success"
+                            ).inc()
+                            results.append({"intent": extra_intent, "payload": payload})
+                            added = True
+                            await store.add_message(
+                                session_id,
+                                "tool",
+                                f"{extra_intent.semantic_name} completed",
+                                {
+                                    "tool": extra_intent.semantic_name,
+                                    "source": payload.get("source"),
+                                    "replan": True,
+                                },
+                            )
+                            await self._audit(
+                                db,
+                                event_type="chatbot_replan_tool_invoked",
+                                actor=identity.subject,
+                                status="completed",
+                                metadata={
+                                    "session_id": session_id,
+                                    "tool": extra_intent.semantic_name,
+                                    "source": payload.get("source"),
+                                },
+                            )
+                        if not added:
+                            break
 
                 if len(results) == 1:
                     intent = results[0]["intent"]
