@@ -10,9 +10,11 @@ Browser / API client
   -> FastAPI /api/v1/chatbot/*
   -> ChatbotService
        -> configured_llm_adapter()   [intent / explanation only]
+       -> automatic Cognia governed knowledge lookup [knowledge guidance]
        -> validated semantic tool
-            -> read: governed MCP / low-risk ExecutionService
-            -> write: Action Proposal
+            -> read: governed MCP / low-risk ExecutionService / Cognia Search
+            -> Cognia knowledge write: RBAC + KB allowlist + Scope + idempotency/revision concurrency
+            -> infrastructure write: Action Proposal
                       -> explicit decision endpoint
                       -> ChatOps Incident
                       -> durable Approval + intent digest
@@ -123,6 +125,9 @@ The LLM can select only the following semantic tools:
 | `vm_service_logs` | `vm_telemetry` -> VM MCP | bounded service journal | No |
 | `zabbix_problems` | `ZabbixMCPClient` | current/recent Zabbix problems | No |
 | `kubernetes_read` | Kubernetes MCP | pod/deployment/events/usage/rollout/evidence | No |
+| `cognia_search` | `KnowledgeRAGService` -> Cognia | governed runbooks/policies/procedures/architecture knowledge | No |
+| `cognia_register_knowledge` | `KnowledgeRAGService` -> Cognia | register new knowledge in an allowlisted KB | Yes — knowledge write |
+| `cognia_create_revision` | `KnowledgeRAGService` -> Cognia | create a new candidate revision for existing knowledge | Yes — knowledge write |
 | `vm_service_action` | Approval -> `ssh_vm` -> VM MCP | start/restart/reload service | Yes |
 | `kubernetes_action` | Approval -> `kubernetes_mcp` | restart/rollback/scale workload | Yes |
 
@@ -146,13 +151,28 @@ The server-side `KubernetesEvidenceClient` remains GET-only. In production the C
 
 The chatbot uses only the already-supported initMAX Zabbix MCP read contract. It does not invent a raw history/item metric tool. Current conversational Zabbix support therefore covers the allowlisted problem/alert evidence exposed by `ZabbixMCPClient`.
 
+### Cognia knowledge in chat
+
+When `CHAT_COGNIA_AUTO_LOOKUP_ENABLED=True`, the chatbot performs a governed Cognia Search before intent/tool planning for authenticated identities with `read:knowledge`. The returned chunks are bounded, redacted and injected as **knowledge context**, never as proof of current runtime state. For example, a Cognia runbook may say how nginx should be recovered, but `vm_service_status`/logs/metrics are still required to claim what nginx is doing now.
+
+This also applies to operational action requests: Cognia can contribute the approved runbook/policy/procedure before the model proposes a VM/Kubernetes action. Existing infrastructure approval and execution boundaries remain unchanged.
+
+Explicit authoring requests are separate:
+
+- `cognia_register_knowledge`: register new knowledge. The KB is caller-specified only if it is configured in `COGNIA_KNOWLEDGE_BASE_IDS`; otherwise the configured chatbot default is used, or the sole configured KB when exactly one exists. Registration uses an idempotency key derived server-side so transport retry cannot silently duplicate a chatbot write.
+- `cognia_create_revision`: update existing knowledge by creating a Candidate Revision. The backend first reads current Knowledge state and supplies `currentCandidateRevisionId` to Cognia's optimistic-concurrency contract. A conflicting/stale revision is not blindly overwritten.
+- Scope is never model-generated. `CHAT_COGNIA_WRITE_SCOPE` is server configuration (`clientApplication` by default, or explicitly `general`).
+- Cognia write success is reported only from the Cognia backend result; the LLM cannot claim that a write happened merely because the user requested it.
+
+Cognia authoring is a **knowledge mutation**, not an infrastructure execution. It therefore uses `write:knowledge` RBAC rather than the high-risk VM/Kubernetes Approval path. Human Cognia Approve/Reject lifecycle decisions, where required by Cognia policy, remain outside the machine client; registration/revision may therefore return Processing/Candidate state before the knowledge becomes searchable.
+
 ## Authorization
 
 No broad `chat:execute` permission was introduced. The chatbot reuses existing granular RBAC:
 
-- `viewer`: can authenticate and use read-only chatbot functions.
-- `operator`: can use read-only chatbot functions and keeps the existing low-risk platform permissions, but cannot execute chatbot high-risk VM/Kubernetes mutations.
-- `sre`: can use read-only functions and, because the existing role has both `approve:high_risk` and `execute:approved`, may confirm a chatbot high-risk proposal.
+- `viewer`: can authenticate, use read-only operational functions and query Cognia through `read:knowledge`; cannot author knowledge.
+- `operator`: additionally has `write:knowledge` for explicit Cognia register/revision requests, while still lacking high-risk VM/Kubernetes execution permission.
+- `sre`: has `read:knowledge` and `write:knowledge`, and because the existing role also has both `approve:high_risk` and `execute:approved`, may confirm a chatbot high-risk infrastructure proposal.
 
 A future dedicated chatbot execution role can be added by changing the central RBAC policy; the chatbot must still require the underlying approval/execution permissions.
 
@@ -221,6 +241,11 @@ No chatbot-specific secret is introduced. Response-governance controls are non-s
 - `CHAT_MAX_EVIDENCE_AGE_SECONDS=300`
 - `CHAT_MISSING_CAPABILITY_LOGGING=True`
 - `CHAT_LLM_JUDGE_ENABLED=True`
+- `CHAT_COGNIA_AUTO_LOOKUP_ENABLED=True`
+- `CHAT_COGNIA_LOOKUP_LIMIT=5`
+- `CHAT_COGNIA_WRITE_ENABLED=True`
+- `CHAT_COGNIA_DEFAULT_KNOWLEDGE_BASE_ID=` (optional when exactly one KB is configured)
+- `CHAT_COGNIA_WRITE_SCOPE=clientApplication`
 
 Configure the existing platform contracts:
 
@@ -229,6 +254,7 @@ Configure the existing platform contracts:
 - `VM_MCP_URL` and fixed MCP Control-Plane identity for VM questions/actions.
 - `KUBERNETES_MCP_URL` for Kubernetes questions/actions.
 - `ZABBIX_MCP_URL` and its configured authentication header for Zabbix evidence.
+- `COGNIA_BASE_URL`, machine credentials, `COGNIA_CLIENT_APPLICATION_ID` and explicit `COGNIA_KNOWLEDGE_BASE_IDS` for governed knowledge lookup/authoring.
 - PostgreSQL `DATABASE_URL` with migration `f3c4d5e6f7a8` applied.
 
 Production startup already rejects mock LLM, direct Control-Plane SSH/Kubernetes access and unsafe MCP identity configuration.
@@ -246,6 +272,7 @@ The following require a real environment and must not be inferred from mocks/CI:
 - live VM MCP against approved VM targets and service allowlists;
 - live Kubernetes MCP read permissions, Metrics API availability and namespace scoping;
 - live Kubernetes/VM mutation plus independent verification;
+- real Cognia automatic chat lookup, KB permissions, registration -> processing/activation -> search, and revision concurrency behavior;
 - production TLS/network policy, secret manager delivery and real OIDC/JWKS behavior.
 
 Mark these `REAL ENV REQUIRED` until exercised against staging/production-equivalent infrastructure.
