@@ -221,6 +221,19 @@ def requires_cognia_write(text: str) -> bool:
     return bool(_COGNIA_WRITE_RE.search(str(text or "")))
 
 
+def cognia_write_unavailable_message(text: str) -> str:
+    if _PERSIAN_RE.search(str(text or "")):
+        return (
+            "درخواست ثبت/به‌روزرسانی دانش در Cognia تشخیص داده شد، اما نتوانستم آن را به "
+            "ابزار مجاز Cognia Write نگاشت کنم. هیچ دانشی ثبت نشده است؛ برای جلوگیری از ثبت "
+            "اشتباه، عملیات را حدس نمی‌زنم."
+        )
+    return (
+        "A Cognia knowledge write was requested, but it could not be mapped to an allowed Cognia "
+        "write tool. Nothing was written; the operation will not be guessed."
+    )
+
+
 def missing_capability_message(text: str) -> str:
     if _PERSIAN_RE.search(str(text or "")):
         return (
