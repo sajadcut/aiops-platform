@@ -243,6 +243,7 @@ No chatbot-specific secret is introduced. Response-governance controls are non-s
 - `CHAT_LLM_JUDGE_ENABLED=True`
 - `CHAT_COGNIA_AUTO_LOOKUP_ENABLED=True`
 - `CHAT_COGNIA_LOOKUP_LIMIT=5`
+- `CHAT_COGNIA_LOOKUP_TIMEOUT_SECONDS=5`
 - `CHAT_COGNIA_WRITE_ENABLED=True`
 - `CHAT_COGNIA_DEFAULT_KNOWLEDGE_BASE_ID=` (optional when exactly one KB is configured)
 - `CHAT_COGNIA_WRITE_SCOPE=clientApplication`
