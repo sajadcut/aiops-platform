@@ -299,6 +299,21 @@ Both migrations are additive and preserve existing `memory_entries`. Legacy
 rows remain readable; old rows may keep a null episode fingerprint until they
 are rewritten as v2 episodes. Existing vectors/search metadata remain intact.
 
+
+## Retrieval quality acceptance
+
+The database-backed acceptance corpus covers the specification's A-E cases:
+successful nginx service recovery, firewall/network mismatch, failed bad-config
+recovery, unrelated memory-pressure failure, and an environment/version mismatch.
+The acceptance path executes the real PostgreSQL FTS + pgvector + RRF retriever
+and reports Recall@K, Precision@K, MRR, successful-remediation retrieval rate and
+failed-action avoidance rate via `apps/memory_service/quality.py`.
+
+The incident Memory API keeps the legacy `items` response while also exposing
+operator projections for similar incidents, historical RCA, previous actions,
+verification/outcome/effectiveness/age/rank and failed previous attempts. These
+remain explicitly separate from Live Evidence.
+
 ## Acceptance criteria
 
 A repository-level acceptance requires:
