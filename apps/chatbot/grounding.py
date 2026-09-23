@@ -159,6 +159,9 @@ def required_capabilities(message: str, diagnostic: bool = False) -> tuple[str, 
             add("kubernetes.action")
         elif any(x in text for x in ("service", "سرویس", "nginx", "haproxy")):
             add("vm.service.action")
+    if diagnostic and any(x in text for x in ("کند شده", "slow", "latency", "تاخیر", "تأخیر")):
+        add("prometheus.metrics.read")
+        add("logs.read")
     if diagnostic and ("vm.service.status.read" in caps or any(x in text for x in ("nginx", "haproxy", "سرویس"))):
         add("vm.service.status.read")
         add("vm.service.logs.read")
