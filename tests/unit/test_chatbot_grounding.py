@@ -174,3 +174,15 @@ def test_action_without_target_requests_target_clarification():
     policy = infer_request_policy("nginx رو restart کن")
     assert policy.mutating is True
     assert clarification_requirements("nginx رو restart کن", policy, context) == ["target"]
+
+
+def test_judge_reported_unsupported_claim_is_deterministically_blocked():
+    decision = JudgeDecision.parse(
+        '{"valid":true,"question_answered":true,"evidence_sufficient":true,'
+        '"claims_grounded":true,"hallucination_risk":"high","tool_usage_complete":true,'
+        '"missing_capabilities":[],"missing_evidence":[],"contradictions":[],'
+        '"unsupported_claims":["CPU is 80% but no metric evidence exists"],'
+        '"needs_replan":false,"needs_user_clarification":false,'
+        '"rewrite_required":true,"confidence":0.40,"reason":"unsupported fact"}'
+    )
+    assert judge_allows_display(decision) is False
