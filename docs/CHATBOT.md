@@ -48,7 +48,18 @@ Conversation referents (for example the target in a follow-up `/app چقدر ف�
 
 If a required capability is absent from the deterministic capability map, or the bounded planner still cannot select a suitable read tool, the chatbot returns a missing-capability response and explicitly avoids guessing the current state. Tool/MCP transport failure also never becomes a synthetic healthy/unhealthy value.
 
-The final Answer Judge emits structured internal fields for grounding, evidence sufficiency, contradictions, unsupported claims, replan/rewrite needs and confidence. Judge output is backend-only and is not shown as an operator answer.
+The final Answer Judge emits structured internal fields for grounding, evidence sufficiency, contradictions, unsupported claims, replan/rewrite needs and confidence. Judge output is backend-only and is not shown as an operator answer. If live Evidence is sufficient but the wording itself is rejected, the backend performs at most one Evidence-constrained rewrite and validates the rewritten answer again.
+
+### Confidence model
+
+Confidence is not an unconstrained LLM self-score. The deterministic Evidence score is composed of:
+
+- 45% Evidence coverage (one live check for status questions; at least two distinct live checks for causal diagnostics);
+- 20% Evidence freshness relative to `CHAT_MAX_EVIDENCE_AGE_SECONDS`;
+- 20% corroboration for diagnostic questions;
+- 15% tool execution reliability for the checks attempted.
+
+When the structured Answer Judge is enabled, final confidence is 60% deterministic Evidence score and 40% Judge confidence. Historical Operational Memory and Cognia knowledge context do **not** increase confidence in current operational facts; they may only inform hypotheses that still require current Live Evidence.
 
 ## Web UI
 
@@ -225,8 +236,9 @@ Prometheus metrics include:
 - `aiops_chatbot_evidence_coverage_ratio`
 - `aiops_chatbot_answer_confidence`
 
-Structured audit/workflow events additionally include `chat_intent_detected`, `chat_context_resolved`,
-`chat_evidence_collected`, `chat_replan_requested`, `chat_answer_validation`,
+Structured audit/workflow events additionally include `chat_intent_detected`, `chat_context_resolved`, `chat_plan_created`, `chat_tool_selected`,
+`chat_tool_execution`, `chat_evidence_collected`, `chat_draft_generated`,
+`chat_replan_requested`, `chat_answer_validation`, `chat_historical_memory_retrieved`,
 `chat_final_answer` and `chat_missing_capability`.
 
 They are exposed by the existing application metrics endpoint.
