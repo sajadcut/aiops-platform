@@ -37,6 +37,7 @@ from database import AsyncSessionLocal
 from domain.contracts.config import settings
 from domain.contracts.logging import log_workflow_step, logger
 from domain.contracts.redaction import redact
+from integrations.cognia import CogniaAPIError, CogniaConfigurationError, CogniaContractError
 from integrations.kubernetes.mcp_client import KubernetesMCPClient
 from integrations.llm.base import LLMAdapter
 from integrations.llm.openai_compatible import configured_llm_adapter
@@ -318,7 +319,7 @@ class ChatbotService:
                 str(k): str(v)
                 for k, v in (intent.parameters.get("metadata") or {}).items()
             }
-            metadata.setdefault("source", "aiops-chatbot")
+            metadata["source"] = "aiops-chatbot"
 
             canonical_payload = {
                 "knowledgeBaseId": kb_id,
@@ -778,6 +779,70 @@ class ChatbotService:
                                 mutation,
                                 session_id=session_id,
                             )
+                        except (ValueError, PermissionError) as exc:
+                            CHAT_TOOL_CALLS.labels(
+                                tool=mutation.semantic_name,
+                                outcome="blocked",
+                            ).inc()
+                            await self._audit(
+                                db,
+                                event_type="chatbot_cognia_write",
+                                actor=identity.subject,
+                                status="blocked",
+                                metadata={
+                                    "session_id": session_id,
+                                    "tool": mutation.semantic_name,
+                                    "error_type": type(exc).__name__,
+                                    "reason": str(exc),
+                                },
+                            )
+                            status_code = 403 if isinstance(exc, PermissionError) else 400
+                            raise HTTPException(
+                                status_code=status_code,
+                                detail=f"chatbot_cognia_write_invalid:{str(exc)}",
+                            ) from exc
+                        except CogniaAPIError as exc:
+                            CHAT_TOOL_CALLS.labels(
+                                tool=mutation.semantic_name,
+                                outcome="failed",
+                            ).inc()
+                            await self._audit(
+                                db,
+                                event_type="chatbot_cognia_write",
+                                actor=identity.subject,
+                                status="failed",
+                                metadata={
+                                    "session_id": session_id,
+                                    "tool": mutation.semantic_name,
+                                    "provider_status": exc.status_code,
+                                    "provider_code": exc.code,
+                                },
+                            )
+                            exposed = 503 if exc.status_code in {429, 502, 503, 504} else 502
+                            raise HTTPException(
+                                status_code=exposed,
+                                detail=f"chatbot_cognia_write_failed:{exc.code}",
+                            ) from exc
+                        except (CogniaConfigurationError, CogniaContractError) as exc:
+                            CHAT_TOOL_CALLS.labels(
+                                tool=mutation.semantic_name,
+                                outcome="failed",
+                            ).inc()
+                            await self._audit(
+                                db,
+                                event_type="chatbot_cognia_write",
+                                actor=identity.subject,
+                                status="failed",
+                                metadata={
+                                    "session_id": session_id,
+                                    "tool": mutation.semantic_name,
+                                    "error_type": type(exc).__name__,
+                                },
+                            )
+                            raise HTTPException(
+                                status_code=503,
+                                detail=f"chatbot_cognia_write_unavailable:{type(exc).__name__}",
+                            ) from exc
                         except Exception as exc:
                             CHAT_TOOL_CALLS.labels(
                                 tool=mutation.semantic_name,
