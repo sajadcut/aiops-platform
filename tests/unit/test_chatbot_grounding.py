@@ -132,3 +132,10 @@ def test_judge_reported_contradiction_is_deterministically_blocked():
         '"rewrite_required":false,"confidence":0.80,"reason":"conflict"}'
     )
     assert judge_allows_display(decision) is False
+
+
+def test_advisory_start_triage_is_not_a_mutation():
+    policy = infer_request_policy("How should I start triage?")
+    assert policy.kind == "information"
+    assert policy.mutating is False
+    assert policy.requires_live_evidence is False
