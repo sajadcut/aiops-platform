@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 399 | Dashboard JS files scanned: 5 | Symbols indexed: 3550**
+**Python files scanned: 399 | Dashboard JS files scanned: 5 | Symbols indexed: 3556**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -2819,11 +2819,17 @@
 | `tests/unit/test_incident_repository_json.py` | `_SampleState` | 10 | class | کلاس | module |
 | `tests/unit/test_incident_repository_json.py` | `test_json_safe_normalizes_durable_operational_context` | 14 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_incident_repository_json.py` | `test_database_json_serializer_is_a_final_datetime_safeguard` | 38 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_incident_resource_migration_guard.py` | `test_incident_resource_migration_guard_returns_controlled_503` | 11 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_incident_resource_migration_guard.py` | `test_incident_resource_migration_guard_returns_controlled_503.stale_schema` | 14 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_incident_resource_migration_guard_returns_controlled_503 |
-| `tests/unit/test_incident_resource_migration_guard.py` | `test_incident_resource_migration_guard_can_be_disabled` | 39 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_incident_resource_migration_guard.py` | `test_incident_resource_migration_guard_can_be_disabled.should_not_run` | 42 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_incident_resource_migration_guard_can_be_disabled |
-| `tests/unit/test_incident_resource_migration_guard.py` | `test_memory_dependent_incident_resources_are_guarded_against_schema_drift` | 54 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_resource_migration_guard.py` | `test_shared_migration_guard_returns_controlled_503` | 12 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_resource_migration_guard.py` | `test_shared_migration_guard_returns_controlled_503.stale_schema` | 15 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_shared_migration_guard_returns_controlled_503 |
+| `tests/unit/test_incident_resource_migration_guard.py` | `test_shared_migration_guard_can_be_disabled` | 39 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_resource_migration_guard.py` | `test_shared_migration_guard_can_be_disabled.should_not_run` | 42 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_shared_migration_guard_can_be_disabled |
+| `tests/unit/test_incident_resource_migration_guard.py` | `test_signal_and_memory_resources_use_shared_guard` | 54 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_resource_migration_guard.py` | `test_signal_and_memory_resources_use_shared_guard.capture` | 57 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_signal_and_memory_resources_use_shared_guard |
+| `tests/unit/test_incident_resource_migration_guard.py` | `test_dashboard_summary_preserves_migration_drift_contract` | 70 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_resource_migration_guard.py` | `test_dashboard_summary_preserves_migration_drift_contract.FakeSessionContext` | 71 | class | کلاس | test_dashboard_summary_preserves_migration_drift_contract |
+| `tests/unit/test_incident_resource_migration_guard.py` | `test_dashboard_summary_preserves_migration_drift_contract.FakeSessionContext.__aenter__` | 72 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_dashboard_summary_preserves_migration_drift_contract.FakeSessionContext |
+| `tests/unit/test_incident_resource_migration_guard.py` | `test_dashboard_summary_preserves_migration_drift_contract.FakeSessionContext.__aexit__` | 75 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_dashboard_summary_preserves_migration_drift_contract.FakeSessionContext |
+| `tests/unit/test_incident_resource_migration_guard.py` | `test_dashboard_summary_preserves_migration_drift_contract.drift` | 78 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_dashboard_summary_preserves_migration_drift_contract |
 | `tests/unit/test_incident_rid_logging.py` | `_configure_json_logging` | 16 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_incident_rid_logging.py` | `test_incident_rid_is_stable_and_uuid_derived` | 31 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_incident_rid_logging.py` | `test_non_uuid_legacy_incident_ids_are_stable_and_not_copied_verbatim` | 39 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
