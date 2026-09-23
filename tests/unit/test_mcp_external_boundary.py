@@ -1,4 +1,5 @@
 import base64
+import httpx
 from pathlib import Path
 
 import pytest
@@ -119,3 +120,27 @@ def test_elastic_mcp_explicit_authorization_header_takes_precedence(monkeypatch)
     monkeypatch.setattr(settings, "ELASTICSEARCH_MCP_PASSWORD", None)
 
     assert ElasticsearchMCPClient._configured_authorization_header() == "ApiKey explicit-test-key"
+
+@pytest.mark.asyncio
+async def test_mcp_read_retry_override_limits_transport_attempts(monkeypatch):
+    monkeypatch.setattr(settings, "RETRY_MAX_ATTEMPTS", 3)
+    monkeypatch.setattr(settings, "RETRY_DELAY_SECONDS", 0.0)
+    client = MCPClient("http://mcp.test/mcp", "test", allowed_tools={"read_safe"})
+    client.read_retry_attempts_override = 1
+    calls = {"count": 0}
+
+    async def fail_post(*args, **kwargs):
+        calls["count"] += 1
+        raise httpx.ConnectError(
+            "down",
+            request=httpx.Request("POST", "http://mcp.test/mcp"),
+        )
+
+    monkeypatch.setattr(client._client, "post", fail_post)
+    try:
+        with pytest.raises(RuntimeError, match="mcp_transport_error:test"):
+            await client._post({"jsonrpc": "2.0", "id": 1, "method": "tools/list", "params": {}})
+        assert calls["count"] == 1
+    finally:
+        await client.close()
+
