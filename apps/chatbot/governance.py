@@ -93,7 +93,7 @@ def _float_env(name: str, default: float, minimum: float, maximum: float) -> flo
 class ChatGovernanceConfig:
     validation_enabled: bool = True
     require_evidence_for_operational_facts: bool = True
-    max_replan_attempts: int = 2
+    max_replan_attempts: int = 1
     min_evidence_confidence: float = 0.70
     max_evidence_age_seconds: int = 300
     missing_capability_logging: bool = True
@@ -106,7 +106,7 @@ class ChatGovernanceConfig:
             require_evidence_for_operational_facts=_bool_env(
                 "CHAT_REQUIRE_EVIDENCE_FOR_OPERATIONAL_FACTS", True
             ),
-            max_replan_attempts=_int_env("CHAT_MAX_REPLAN_ATTEMPTS", 2, 0, 5),
+            max_replan_attempts=_int_env("CHAT_MAX_REPLAN_ATTEMPTS", 1, 0, 5),
             min_evidence_confidence=_float_env(
                 "CHAT_MIN_EVIDENCE_CONFIDENCE", 0.70, 0.0, 1.0
             ),
