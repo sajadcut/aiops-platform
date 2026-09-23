@@ -21,6 +21,7 @@ def test_chatbot_tool_catalog_is_bounded_and_has_no_arbitrary_execution():
         "cognia_search",
         "cognia_processing_status",
         "cognia_register_knowledge",
+        "cognia_publish_incident_knowledge",
         "cognia_create_revision",
         "vm_service_action",
         "kubernetes_action",
@@ -196,3 +197,22 @@ def test_cognia_processing_status_normalizes_to_read_only_tool():
     assert intent.tool_name == "cognia_knowledge_read"
     assert intent.action == "processing_status"
     assert intent.mutating is False
+
+
+def test_cognia_publish_incident_knowledge_is_explicit_governed_write():
+    intent = normalize_tool_intent(
+        "cognia_publish_incident_knowledge",
+        {
+            "incident_id": "11111111-1111-1111-1111-111111111111",
+            "knowledge_base_id": 10,
+            "scope_type": "clientApplication",
+            "tag_ids": [5],
+            "category_ids": [20],
+            "metadata": {"owner": "operations"},
+        },
+    )
+    assert intent.tool_name == "cognia_knowledge_write"
+    assert intent.action == "publish_incident_knowledge"
+    assert intent.parameters["incident_id"] == "11111111-1111-1111-1111-111111111111"
+    assert intent.mutating is True
+    assert intent.risk_level == "medium"
