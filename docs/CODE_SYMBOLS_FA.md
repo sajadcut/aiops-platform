@@ -1129,7 +1129,7 @@
 | `apps/memory_service/quality.py` | `failed_action_avoidance_rate` | 45 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/memory_service/quality.py` | `evaluate_golden_ranking` | 56 | function | کیفیت/confidence یا اولویت را به‌صورت deterministic محاسبه می‌کند | module |
 | `apps/memory_service/retrieval.py` | `candidates` | 21 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/memory_service/retrieval.py` | `rrf_score` | 156 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/memory_service/retrieval.py` | `rrf_score` | 176 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/operator_summary.py` | `_t` | 18 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/operator_summary.py` | `_low` | 24 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/operator_summary.py` | `_d` | 28 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
