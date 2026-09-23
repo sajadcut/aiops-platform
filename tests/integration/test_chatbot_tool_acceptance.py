@@ -32,6 +32,15 @@ class ToolSelectingLLM(LLMAdapter):
 
     async def generate(self, prompt, system_prompt=None, temperature=0.7, max_tokens=1000, **kwargs):
         self.summary_prompts.append(prompt)
+        if kwargs.get("stage") == "chatbot_answer_validation":
+            return LLMResponse(
+                content='{"valid":true,"question_answered":true,"evidence_sufficient":true,'
+                        '"claims_grounded":true,"hallucination_risk":"low","tool_usage_complete":true,'
+                        '"missing_capabilities":[],"missing_evidence":[],"contradictions":[],'
+                        '"unsupported_claims":[],"needs_replan":false,"needs_user_clarification":false,'
+                        '"rewrite_required":false,"confidence":0.95,"reason":"test-grounded"}',
+                model="chatbot-tool-acceptance",
+            )
         return LLMResponse(content=self.summary, model="chatbot-tool-acceptance")
 
     async def generate_with_messages(self, messages, temperature=0.7, max_tokens=1000, **kwargs):
@@ -97,8 +106,8 @@ async def test_zabbix_read_uses_allowlisted_mcp_adapter_and_writes_audit(monkeyp
                 {"owner": owner},
             )
         ).scalars().all()
-        assert "chatbot_tool_invoked" in events
-        assert "chatbot_response" in events
+        assert "chat_evidence_collected" in events
+        assert "chat_final_answer" in events
     await _cleanup(owner)
 
 
