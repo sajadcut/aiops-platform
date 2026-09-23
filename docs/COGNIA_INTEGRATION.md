@@ -31,6 +31,14 @@ No Subject is inferred from an Incident service/customer name. Public `/workflow
 
 For Context Generation the request subject contains only `namespace` and `externalSubjectId`; the Client Application is defined by the Context Profile.
 
+## Chatbot authoring contract
+
+Chatbot authoring uses the same Cognia consumer API contract as other machine integrations. Registration sends the configured/allowlisted KB, `knowledgeType=text`, title/content, one of the three documented scopes (`general`, `clientApplication`, `externalSubject`), optional Tag/Category IDs and flat string metadata, plus a deterministic `Idempotency-Key`. `clientApplicationId` is always taken from server configuration for machine-scoped writes.
+
+After registration, `knowledgeId` and `revisionId` are retained in the response and the chatbot probes the documented processing-status endpoint. Registered/Processing/PendingApproval is never presented as Searchable; only `Activated` is searchable.
+
+For verified incident learning, the chatbot has a dedicated publication path. It refuses to publish an Incident without `latest_operational_outcome.verified=true`. The Knowledge body is deterministically built from durable Incident summary, evidence-linked Findings, Evidence provenance (source/type/reference/confidence only), and verified remediation/verification. Raw operational evidence payloads are not copied into Cognia. This preserves Cognia as governed reusable knowledge rather than an operational data dump.
+
 ## Authoring and Revision
 
 Registration calls `/api/engine/knowledge-bases/{kbId}/knowledge` with explicit KB and Scope. A caller should provide an `Idempotency-Key`; automatic transient retry is allowed only when that key is present. Registration creates Knowledge + Revision #1 atomically.
