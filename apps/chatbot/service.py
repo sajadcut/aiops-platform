@@ -25,6 +25,7 @@ from apps.chatbot.grounding import (
     evidence_success,
     guarded_failure_message,
     infer_request_policy,
+    judge_allows_display,
     judge_input,
     missing_capability_message,
     resolve_context,
@@ -329,13 +330,22 @@ class ChatbotService:
         allow_mutation: bool = False,
     ) -> list[ToolIntent]:
         evidence_meta = [item.public(data=False) for item in evidence[-8:]]
+        if allow_mutation:
+            tool_policy = (
+                "Select exactly one governed mutation proposal tool that matches the operator request. "
+                "Do not execute anything directly and do not combine it with read tools; backend approval remains mandatory."
+            )
+        else:
+            tool_policy = (
+                "Select only additional read-only tools from the provided catalog that materially close the evidence gap. "
+                "Do not repeat an already successful identical check and do not propose mutations."
+            )
         instruction = (
-            "REPLAN REQUIRED. The previous evidence is insufficient to answer the operator's actual question. "
-            "Select only additional read-only tools from the provided catalog that materially close the evidence gap. "
-            "Do not repeat an already successful identical check. Do not propose mutations. If no available tool can "
-            "supply the missing evidence, return no tool call and a short explanation. "
-            f"Reason: {reason}. Resolved context: {json.dumps(context.compact(), ensure_ascii=False)}. "
-            f"Evidence already collected: {json.dumps(evidence_meta, ensure_ascii=False)}."
+            "REPLAN REQUIRED. The previous plan/evidence is insufficient to answer the operator's actual question. "
+            + tool_policy
+            + " If no available tool can supply the missing capability, return no tool call and a short explanation. "
+            + f"Reason: {reason}. Resolved context: {json.dumps(context.compact(), ensure_ascii=False)}. "
+            + f"Evidence already collected: {json.dumps(evidence_meta, ensure_ascii=False)}."
         )
         replanned_messages = list(messages)
         insert_at = max(1, len(replanned_messages) - 1)
@@ -451,14 +461,7 @@ class ChatbotService:
         if judge is not None:
             if judge.unsupported_claims:
                 CHAT_UNSUPPORTED_CLAIMS.inc(len(judge.unsupported_claims))
-            valid = bool(
-                judge.valid
-                and judge.question_answered
-                and judge.evidence_sufficient
-                and judge.claims_grounded
-                and not judge.unsupported_claims
-                and not judge.contradictions
-            )
+            valid = judge_allows_display(judge)
             if not valid:
                 CHAT_VALIDATION_FAILURES.labels(reason="judge_rejected").inc()
             return valid, rule, judge, confidence
@@ -491,6 +494,19 @@ class ChatbotService:
             try:
                 payload = await self._execute_read(intent, session_id)
                 CHAT_TOOL_CALLS.labels(tool=intent.semantic_name, outcome="success").inc()
+                await self._audit(
+                    db,
+                    event_type="chat_tool_execution",
+                    actor=identity.subject,
+                    status="completed",
+                    metadata={
+                        "session_id": session_id,
+                        "tool": intent.semantic_name,
+                        "target": intent.target,
+                        "action": intent.action,
+                        "source": payload.get("source"),
+                    },
+                )
                 record = evidence_success(intent, payload, len(evidence) + 1)
                 evidence.append(record)
                 results.append({"intent": intent, "payload": payload})
@@ -525,6 +541,19 @@ class ChatbotService:
             except Exception as exc:
                 CHAT_TOOL_CALLS.labels(tool=intent.semantic_name, outcome="failed").inc()
                 evidence.append(evidence_failure(intent, exc, len(evidence) + 1))
+                await self._audit(
+                    db,
+                    event_type="chat_tool_execution",
+                    actor=identity.subject,
+                    status="failed",
+                    metadata={
+                        "session_id": session_id,
+                        "tool": intent.semantic_name,
+                        "target": intent.target,
+                        "action": intent.action,
+                        "error_type": type(exc).__name__,
+                    },
+                )
                 await self._audit(
                     db,
                     event_type="chatbot_tool_failed",
