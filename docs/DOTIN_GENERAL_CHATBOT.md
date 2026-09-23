@@ -75,6 +75,19 @@ Normal text responses populate `LLMResponse.content`. Tool-call responses may le
 
 The raw provider body remains available in `LLMResponse.raw_response`, including provider `id`, `choices`, `usage` and other OpenAI-compatible fields.
 
+Transient gateway failures use the shared bounded retry policy:
+`RETRY_MAX_ATTEMPTS`, `RETRY_DELAY_SECONDS` and
+`RETRY_BACKOFF_FACTOR`. Only HTTP 408, 429, 5xx responses and transport/timeout
+failures are retried. Non-transient 4xx responses fail immediately. The
+`x-request-id` remains stable across transport retries so the upstream gateway
+can correlate a single logical request.
+
+This transport retry is separate from completion repair. Completion repair only
+regenerates incomplete/truncated model output and remains disabled for
+tool-enabled chat. Transport retry can occur before any valid model response
+exists; the adapter still never executes model-proposed tools, so Policy,
+Approval and ExecutionService remain authoritative.
+
 ## Acceptance coverage
 
 `tests/unit/test_dotin_general_chatbot_llm.py` covers:
@@ -86,4 +99,6 @@ The raw provider body remains available in `LLMResponse.raw_response`, including
 - tool definition and `tool_choice` forwarding;
 - `finish_reason=tool_calls` response preservation;
 - explicit rejection of unsupported streaming mode and invalid contract values;
-- provider selection through `configured_llm_adapter()`.
+- provider selection through `configured_llm_adapter()`;
+- bounded retry of transient HTTP 500/transport failures;
+- immediate failure without retry for non-transient HTTP 400 responses.
