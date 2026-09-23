@@ -64,6 +64,11 @@ _DIAGNOSTIC_CUES_RE = re.compile(
     r"چرا|علت|ریشه|عیب.?یابی|مشکل از کجاست)",
     re.IGNORECASE,
 )
+_COGNIA_WRITE_RE = re.compile(
+    r"(?=.*(?:cognia|کاگنیا))(?=.*(?:ثبت|ذخیره|بریز|اضافه|بنویس|به.?روزرسان|"
+    r"\bsave\b|\bstore\b|\badd\b|\bregister\b|\bupdate\b))",
+    re.IGNORECASE | re.DOTALL,
+)
 
 
 def _bool_env(name: str, default: bool) -> bool:
@@ -130,6 +135,7 @@ class EvidenceRecord:
     status: str
     data: Any
     freshness_seconds: float = 0.0
+    evidence_kind: str = "live"
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -139,6 +145,7 @@ class EvidenceRecord:
             "target": self.target,
             "collected_at": self.collected_at,
             "freshness_seconds": round(max(0.0, self.freshness_seconds), 3),
+            "evidence_kind": self.evidence_kind,
             "status": self.status,
             "data": redact(self.data),
         }
@@ -210,6 +217,10 @@ def is_diagnostic_question(text: str) -> bool:
     return bool(_DIAGNOSTIC_CUES_RE.search(str(text or "")))
 
 
+def requires_cognia_write(text: str) -> bool:
+    return bool(_COGNIA_WRITE_RE.search(str(text or "")))
+
+
 def missing_capability_message(text: str) -> str:
     if _PERSIAN_RE.search(str(text or "")):
         return (
@@ -235,9 +246,15 @@ def deterministic_validation(
     cfg = config or ChatGovernanceConfig.from_env()
     operational = requires_live_evidence(question)
     successful = [e for e in evidence if e.status == "success"]
-    fresh = [e for e in successful if e.freshness_seconds <= cfg.max_evidence_age_seconds]
+    live_successful = [
+        e for e in successful if str(e.evidence_kind or "").lower() == "live"
+    ]
+    fresh = [
+        e for e in live_successful
+        if e.freshness_seconds <= cfg.max_evidence_age_seconds
+    ]
 
-    if operational and cfg.require_evidence_for_operational_facts and not successful:
+    if operational and cfg.require_evidence_for_operational_facts and not live_successful:
         CHAT_VALIDATION_FAILURES.labels(reason="missing_evidence").inc()
         CHAT_EVIDENCE_COVERAGE.observe(0.0)
         CHAT_ANSWER_CONFIDENCE.observe(0.0)
@@ -267,16 +284,16 @@ def deterministic_validation(
             reason="empty_answer",
         )
 
-    coverage = 1.0 if successful else (0.0 if operational else 1.0)
-    freshness = 1.0 if not successful else len(fresh) / len(successful)
+    coverage = 1.0 if (live_successful if operational else successful) else (0.0 if operational else 1.0)
+    freshness = 1.0 if not live_successful else len(fresh) / len(live_successful)
     confidence = round((coverage * 0.6) + (freshness * 0.25) + 0.15, 4)
     CHAT_EVIDENCE_COVERAGE.observe(coverage)
     CHAT_ANSWER_CONFIDENCE.observe(confidence)
     return ValidationResult(
         valid=True,
         question_answered=True,
-        evidence_sufficient=(not operational) or bool(successful),
-        claims_grounded=(not operational) or bool(successful),
+        evidence_sufficient=(not operational) or bool(live_successful),
+        claims_grounded=(not operational) or bool(live_successful),
         confidence=confidence,
         reason="deterministic_gate_passed",
     )
@@ -369,6 +386,7 @@ def build_evidence(
     target: Optional[str],
     data: Any,
     status: str = "success",
+    evidence_kind: str = "live",
 ) -> EvidenceRecord:
     now = datetime.now(timezone.utc)
     return EvidenceRecord(
@@ -380,6 +398,7 @@ def build_evidence(
         freshness_seconds=0.0,
         status=status,
         data=redact(data),
+        evidence_kind=str(evidence_kind or "live"),
     )
 
 
