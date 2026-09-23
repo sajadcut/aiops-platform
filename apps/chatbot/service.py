@@ -300,6 +300,244 @@ class ChatbotService:
             logger.warning("chatbot_summary_llm_failed", error_type=type(exc).__name__, session_id=session_id)
         return f"{intent.semantic_name} completed via {payload.get('source', 'governed tool')}. Result: {encoded[:5000]}"
 
+    @staticmethod
+    def _normalize_model_intents(response) -> list[ToolIntent]:
+        tool_calls = list(response.tool_calls or [])
+        if len(tool_calls) > max_tool_calls():
+            raise HTTPException(status_code=400, detail="chatbot_tool_call_limit_exceeded")
+        intents: list[ToolIntent] = []
+        for call in tool_calls:
+            name, args = parse_tool_call(call)
+            intents.append(normalize_tool_intent(name, args))
+        return intents
+
+    async def _replan(
+        self,
+        *,
+        messages: list[dict[str, str]],
+        request_message: str,
+        session_id: str,
+        identity: Identity,
+        context: OperationalContext,
+        evidence: list[EvidenceRecord],
+        reason: str,
+    ) -> list[ToolIntent]:
+        evidence_meta = [item.public(data=False) for item in evidence[-8:]]
+        instruction = (
+            "REPLAN REQUIRED. The previous evidence is insufficient to answer the operator's actual question. "
+            "Select only additional read-only tools from the provided catalog that materially close the evidence gap. "
+            "Do not repeat an already successful identical check. Do not propose mutations. If no available tool can "
+            "supply the missing evidence, return no tool call and a short explanation. "
+            f"Reason: {reason}. Resolved context: {json.dumps(context.compact(), ensure_ascii=False)}. "
+            f"Evidence already collected: {json.dumps(evidence_meta, ensure_ascii=False)}."
+        )
+        replanned_messages = list(messages)
+        replanned_messages.append({"role": "system", "content": instruction})
+        replanned_messages.append({"role": "user", "content": request_message})
+        response = await self._llm().generate_with_messages(
+            replanned_messages,
+            temperature=0.0,
+            max_tokens=600,
+            tools=CHAT_TOOL_SCHEMAS,
+            tool_choice="auto",
+            request_id=str(uuid4()),
+            session_id=session_id,
+            user_id=identity.subject,
+            stage="chatbot_replan",
+        )
+        intents = self._normalize_model_intents(response)
+        return [intent for intent in intents if not intent.mutating]
+
+    async def _judge_answer(
+        self,
+        *,
+        question: str,
+        policy: RequestPolicy,
+        context: OperationalContext,
+        evidence: list[EvidenceRecord],
+        draft: str,
+        rule,
+        session_id: str,
+        identity: Identity,
+    ) -> JudgeDecision | None:
+        if not settings.CHAT_ANSWER_VALIDATION_ENABLED or not settings.CHAT_LLM_JUDGE_ENABLED:
+            return None
+        try:
+            response = await self._llm().generate(
+                judge_input(question, policy, context, evidence, draft, rule),
+                system_prompt=JUDGE_SYSTEM_PROMPT,
+                temperature=0.0,
+                max_tokens=700,
+                session_id=session_id,
+                user_id=identity.subject,
+                stage="chatbot_answer_validation",
+            )
+            return JudgeDecision.parse(response.content)
+        except Exception as exc:
+            CHAT_LLM_FAILURES.inc()
+            logger.warning(
+                "chatbot_answer_judge_failed",
+                error_type=type(exc).__name__,
+                session_id=session_id,
+            )
+            return None
+
+    async def _validate_answer(
+        self,
+        *,
+        question: str,
+        policy: RequestPolicy,
+        context: OperationalContext,
+        evidence: list[EvidenceRecord],
+        draft: str,
+        session_id: str,
+        identity: Identity,
+    ) -> tuple[bool, Any, JudgeDecision | None, float]:
+        if not settings.CHAT_ANSWER_VALIDATION_ENABLED:
+            rule = validate_rules(
+                RequestPolicy("validation_disabled", False), evidence, draft,
+                max_age_seconds=settings.CHAT_MAX_EVIDENCE_AGE_SECONDS,
+                min_confidence=settings.CHAT_MIN_EVIDENCE_CONFIDENCE,
+            )
+            return True, rule, None, 1.0
+
+        enforced_policy = policy
+        if not settings.CHAT_REQUIRE_EVIDENCE_FOR_OPERATIONAL_FACTS and policy.requires_live_evidence:
+            enforced_policy = RequestPolicy(policy.kind, False, policy.diagnostic, policy.required_capabilities)
+
+        rule = validate_rules(
+            enforced_policy,
+            evidence,
+            draft,
+            max_age_seconds=settings.CHAT_MAX_EVIDENCE_AGE_SECONDS,
+            min_confidence=settings.CHAT_MIN_EVIDENCE_CONFIDENCE,
+        )
+        CHAT_EVIDENCE_COVERAGE.observe(rule.coverage)
+        if not rule.valid:
+            CHAT_VALIDATION_FAILURES.labels(reason=rule.reason).inc()
+            return False, rule, None, rule.confidence
+
+        judge = await self._judge_answer(
+            question=question,
+            policy=enforced_policy,
+            context=context,
+            evidence=evidence,
+            draft=draft,
+            rule=rule,
+            session_id=session_id,
+            identity=identity,
+        )
+        if settings.CHAT_LLM_JUDGE_ENABLED and judge is None:
+            CHAT_VALIDATION_FAILURES.labels(reason="judge_unavailable").inc()
+            return False, rule, None, combined_confidence(rule, None)
+
+        confidence = combined_confidence(rule, judge)
+        CHAT_ANSWER_CONFIDENCE.observe(confidence)
+        if judge is not None:
+            if judge.unsupported_claims:
+                CHAT_UNSUPPORTED_CLAIMS.inc(len(judge.unsupported_claims))
+            valid = bool(
+                judge.valid
+                and judge.question_answered
+                and judge.evidence_sufficient
+                and judge.claims_grounded
+                and not judge.unsupported_claims
+                and not judge.contradictions
+            )
+            if not valid:
+                CHAT_VALIDATION_FAILURES.labels(reason="judge_rejected").inc()
+            return valid, rule, judge, confidence
+        return True, rule, None, confidence
+
+    async def _execute_read_intents(
+        self,
+        *,
+        db,
+        store: ChatStore,
+        identity: Identity,
+        session_id: str,
+        intents: list[ToolIntent],
+        evidence: list[EvidenceRecord],
+    ) -> list[dict[str, Any]]:
+        results: list[dict[str, Any]] = []
+        for intent in intents:
+            try:
+                payload = await self._execute_read(intent, session_id)
+                CHAT_TOOL_CALLS.labels(tool=intent.semantic_name, outcome="success").inc()
+                record = evidence_success(intent, payload, len(evidence) + 1)
+                evidence.append(record)
+                results.append({"intent": intent, "payload": payload})
+                await store.add_message(
+                    session_id,
+                    "tool",
+                    f"{intent.semantic_name} completed",
+                    {
+                        "tool": intent.semantic_name,
+                        "source": payload.get("source"),
+                        "target": intent.target,
+                        "action": intent.action,
+                        "parameters": intent.parameters,
+                        "service": intent.parameters.get("service"),
+                        "namespace": intent.parameters.get("namespace"),
+                        "evidence_id": record.evidence_id,
+                    },
+                )
+                await self._audit(
+                    db,
+                    event_type="chat_evidence_collected",
+                    actor=identity.subject,
+                    status="completed",
+                    metadata={
+                        "session_id": session_id,
+                        "tool": intent.semantic_name,
+                        "source": payload.get("source"),
+                        "target": intent.target,
+                        "evidence_id": record.evidence_id,
+                    },
+                )
+            except Exception as exc:
+                CHAT_TOOL_CALLS.labels(tool=intent.semantic_name, outcome="failed").inc()
+                evidence.append(evidence_failure(intent, exc, len(evidence) + 1))
+                await self._audit(
+                    db,
+                    event_type="chatbot_tool_failed",
+                    actor=identity.subject,
+                    status="failed",
+                    metadata={"session_id": session_id, "tool": intent.semantic_name, "error_type": type(exc).__name__},
+                )
+                raise HTTPException(status_code=502, detail=f"chatbot_tool_failed:{intent.semantic_name}") from exc
+        return results
+
+    async def _summarize_results(
+        self,
+        *,
+        request_message: str,
+        results: list[dict[str, Any]],
+        identity: Identity,
+        session_id: str,
+        recent_operator_context: str,
+    ) -> tuple[str, str | None, Any, str]:
+        if len(results) == 1:
+            intent = results[0]["intent"]
+            payload = results[0]["payload"]
+            answer = await self._summarize(
+                request_message, intent, payload, identity, session_id, recent_operator_context
+            )
+            return answer, str(payload.get("source") or "") or None, redact(payload.get("result")), intent.semantic_name
+
+        merged = {
+            "source": "multiple_governed_tools",
+            "result": [
+                {"tool": item["intent"].semantic_name, "payload": item["payload"]}
+                for item in results
+            ],
+        }
+        synthetic = ToolIntent("multiple", "multiple", "read", "multiple", {}, False, "low")
+        answer = await self._summarize(
+            request_message, synthetic, merged, identity, session_id, recent_operator_context
+        )
+        return answer, "multiple_governed_tools", redact(merged["result"]), "multiple"
+
     async def _create_chatops_incident(self, db, identity: Identity, session_id: str, intent: ToolIntent) -> str:
         incident_id = str(uuid4())
         await IncidentRepository(db).upsert_incident(
