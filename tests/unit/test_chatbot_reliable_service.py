@@ -6,6 +6,7 @@ from apps.chatbot.models import ChatMessageRequest
 from apps.chatbot.reliable_service import (
     OperationsCopilotService,
     ReliableChatLLMAdapter,
+    _deterministic_vm_service_read_call,
     _looks_obviously_incomplete,
     _requires_live_operational_tool,
 )
@@ -307,18 +308,9 @@ def test_live_inspection_classifier_does_not_force_generic_architecture_review()
 
 
 @pytest.mark.asyncio
-async def test_live_inspection_repair_requires_structured_tool_choice():
-    tool_call = {
-        "id": "call-haproxy",
-        "type": "function",
-        "function": {
-            "name": "vm_service_status",
-            "arguments": '{"target":"10.100.6.199","service":"haproxy"}',
-        },
-    }
+async def test_live_inspection_uses_deterministic_governed_read_before_slow_repair():
     delegate = SequencedLLM([
         response("Service is not in the read allowlist: haproxy."),
-        response("", tool_calls=[tool_call]),
     ])
     adapter = ReliableChatLLMAdapter(delegate)
 
@@ -334,9 +326,18 @@ async def test_live_inspection_repair_requires_structured_tool_choice():
         tool_choice="auto",
     )
 
-    assert result.tool_calls == [tool_call]
-    assert len(delegate.calls) == 2
-    assert delegate.calls[1][2]["tool_choice"] == "required"
+    assert len(delegate.calls) == 1
+    assert result.finish_reason == "tool_calls"
+    assert result.tool_calls == [
+        {
+            "id": "deterministic-vm-service-read",
+            "type": "function",
+            "function": {
+                "name": "vm_service_status",
+                "arguments": '{"target":"10.100.6.199","service":"haproxy"}',
+            },
+        }
+    ]
 
 
 def test_vm_metric_summary_contract_preserves_percentage_points_exactly():
@@ -362,4 +363,48 @@ def test_vm_metric_summary_contract_preserves_percentage_points_exactly():
     assert annotated["result"]["metrics"]["memory_usage"]["display"] == "8.14%"
     assert annotated["result"]["metrics"]["load_avg"] == "0.01,0.01,0.00"
     assert "cpu_usage=0.74 means 0.74%, never 74%" in _SUMMARY_SYSTEM_PROMPT
+
+def test_deterministic_vm_service_read_reconstructs_partial_target_and_recent_service():
+    call = _deterministic_vm_service_read_call(
+        [
+            {"role": "user", "content": "nginx سرور 10.100.6.199 در چه وضعیته"},
+            {"role": "assistant", "content": "live result"},
+            {"role": "user", "content": "6.200چی"},
+        ],
+        tools=[{"type": "function", "function": {"name": "vm_service_status"}}],
+    )
+
+    assert call is not None
+    assert call["function"]["name"] == "vm_service_status"
+    assert call["function"]["arguments"] == '{"target":"10.100.6.200","service":"nginx"}'
+
+
+def test_deterministic_vm_service_read_fails_closed_on_ambiguous_prefix():
+    call = _deterministic_vm_service_read_call(
+        [
+            {"role": "user", "content": "nginx سرور 10.100.6.199 در چه وضعیته"},
+            {"role": "user", "content": "nginx سرور 10.200.7.199 در چه وضعیته"},
+            {"role": "user", "content": "6.200چی"},
+        ],
+        tools=[{"type": "function", "function": {"name": "vm_service_status"}}],
+    )
+
+    assert call is None
+
+
+def test_deterministic_vm_service_read_uses_logs_tool_only_when_requested():
+    call = _deterministic_vm_service_read_call(
+        [
+            {"role": "user", "content": "nginx سرور 10.100.6.199 در چه وضعیته"},
+            {"role": "user", "content": "لاگ nginx رو چک کن"},
+        ],
+        tools=[
+            {"type": "function", "function": {"name": "vm_service_status"}},
+            {"type": "function", "function": {"name": "vm_service_logs"}},
+        ],
+    )
+
+    assert call is not None
+    assert call["function"]["name"] == "vm_service_logs"
+    assert call["function"]["arguments"] == '{"target":"10.100.6.199","service":"nginx"}'
 
