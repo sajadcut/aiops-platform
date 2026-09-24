@@ -70,6 +70,19 @@ _FOLLOWUP_LOCATOR_RE = re.compile(
     r"(?:\b\d{1,3}(?:\.\d{1,3}){1,3}\b|چی(?:ه)?\s*$|what about|how about)",
     re.IGNORECASE,
 )
+_LIVE_INSPECTION_RE = re.compile(
+    r"(?:بررسی(?:\s|\u200c)*کن|چک(?:\s|\u200c)*کن|ببین|استعلام(?:\s|\u200c)*کن|"
+    r"\bcheck\b|\binspect\b|\bverify\b|\blook\s+up\b|\bquery\b)",
+    re.IGNORECASE,
+)
+_OPERATIONAL_LOCATOR_RE = re.compile(
+    r"(?:\b\d{1,3}(?:\.\d{1,3}){1,3}\b|"
+    r"سرور|هاست|سرویس|پاد|نام(?:\s|\u200c)*اسپیس|دیسک|شبکه|پورت|پروسس|پردازش|"
+    r"\bserver\b|\bhost\b|\bvm\b|\bservice\b|\bpod\b|\bnamespace\b|"
+    r"\bkubernetes\b|\bk8s\b|\bzabbix\b|\bdisk\b|\bnetwork\b|\bport\b|\bprocess\b)",
+    re.IGNORECASE,
+)
+_ASCII_RESOURCE_TOKEN_RE = re.compile(r"\b[a-z][a-z0-9_.-]{2,}\b", re.IGNORECASE)
 
 
 def _requires_live_operational_tool(messages: List[Dict[str, str]], *, tools_available: bool) -> bool:
@@ -85,10 +98,33 @@ def _requires_live_operational_tool(messages: List[Dict[str, str]], *, tools_ava
     if not operator_turns:
         return False
     current = operator_turns[-1]
-    if _LIVE_OPERATIONAL_QUERY_RE.search(current):
+    normalized_current = current.replace("\u200c", " ")
+    prior_turns = operator_turns[-7:-1]
+
+    if _LIVE_OPERATIONAL_QUERY_RE.search(normalized_current):
         return True
-    if len(current) <= 80 and _FOLLOWUP_LOCATOR_RE.search(current):
-        return any(_LIVE_OPERATIONAL_QUERY_RE.search(previous) for previous in operator_turns[-3:-1])
+
+    if _LIVE_INSPECTION_RE.search(normalized_current):
+        if _OPERATIONAL_LOCATOR_RE.search(normalized_current):
+            return True
+        # Conversational service checks such as "haproxy بررسی کن" may inherit
+        # the target from recent operator context. Require a resource-looking
+        # token in the current turn and an operational locator in history.
+        if _ASCII_RESOURCE_TOKEN_RE.search(normalized_current) and any(
+            _OPERATIONAL_LOCATOR_RE.search(previous.replace("\u200c", " "))
+            for previous in prior_turns
+        ):
+            return True
+
+    if len(normalized_current) <= 80 and _FOLLOWUP_LOCATOR_RE.search(normalized_current):
+        return any(
+            _LIVE_OPERATIONAL_QUERY_RE.search(previous.replace("\u200c", " "))
+            or (
+                _LIVE_INSPECTION_RE.search(previous.replace("\u200c", " "))
+                and _OPERATIONAL_LOCATOR_RE.search(previous.replace("\u200c", " "))
+            )
+            for previous in prior_turns
+        )
     return False
 
 
@@ -213,12 +249,18 @@ class ReliableChatLLMAdapter(LLMAdapter):
                 ),
             }
         )
+        repair_kwargs = dict(kwargs)
+        if requires_live_tool and tools_available:
+            # The first model turn already proved that a live governed read is
+            # required. Do not allow the bounded repair turn to narrate or
+            # fabricate another direct answer; require a structured tool call.
+            repair_kwargs["tool_choice"] = "required"
         try:
             repaired = await self.delegate.generate_with_messages(
                 repair_messages,
                 temperature=temperature,
                 max_tokens=max(1, int(max_tokens)) * 2,
-                **kwargs,
+                **repair_kwargs,
             )
         except Exception as exc:
             if _is_timeout_error(exc):
