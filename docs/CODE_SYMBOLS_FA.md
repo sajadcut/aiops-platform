@@ -2058,8 +2058,8 @@
 | `tests/integration/test_controlled_connectors.py` | `test_native_edge_observability_failure_harness` | 20 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/integration/test_controlled_connectors.py` | `test_native_edge_observability_failure_harness.failed` | 21 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_native_edge_observability_failure_harness |
 | `tests/integration/test_dashboard_api.py` | `test_dashboard_ui_contains_live_api_calls` | 8 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/integration/test_dashboard_api.py` | `test_dashboard_route_and_api_are_registered` | 20 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/integration/test_dashboard_api.py` | `test_dashboard_html_css_and_js_are_actually_served_over_http` | 31 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/integration/test_dashboard_api.py` | `test_dashboard_route_and_api_are_registered` | 22 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/integration/test_dashboard_api.py` | `test_dashboard_html_css_and_js_are_actually_served_over_http` | 33 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/integration/test_e2e_safety.py` | `FakeEvidenceCollector` | 6 | class | کلاس | module |
 | `tests/integration/test_e2e_safety.py` | `FakeEvidenceCollector.collect` | 7 | async method | Evidence/داده موردنیاز را از منبع مربوط جمع می‌کند | FakeEvidenceCollector |
 | `tests/integration/test_e2e_safety.py` | `test_e2e_blocks_execution_without_explicit_request` | 19 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
