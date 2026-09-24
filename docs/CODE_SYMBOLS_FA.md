@@ -2221,12 +2221,12 @@
 | `tests/security/test_runbook_approval_boundary.py` | `test_consumed_claim_cannot_be_replayed_through_new_executor.fake_tool_execute` | 169 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_consumed_claim_cannot_be_replayed_through_new_executor |
 | `tests/security/test_runbook_approval_boundary.py` | `test_consumed_claim_cannot_be_replayed_through_new_executor.execute_through_claim_boundary` | 172 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | test_consumed_claim_cannot_be_replayed_through_new_executor |
 | `tests/security/test_vm_mcp_security.py` | `test_vm_target_and_service_allowlists` | 10 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/security/test_vm_mcp_security.py` | `test_production_vm_edge_rejects_root_and_missing_host_pinning` | 23 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/security/test_vm_mcp_security.py` | `_FakeVMConnector` | 40 | class | کلاس | module |
-| `tests/security/test_vm_mcp_security.py` | `_FakeVMConnector.restart_service` | 43 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _FakeVMConnector |
-| `tests/security/test_vm_mcp_security.py` | `test_vm_mcp_write_requires_approval_and_incident_context` | 49 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/security/test_vm_mcp_security.py` | `test_vm_mcp_rejects_wrong_server_identity` | 72 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/security/test_vm_mcp_security.py` | `test_vm_mcp_rejects_wrong_server_identity.fake_initialize` | 76 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_vm_mcp_rejects_wrong_server_identity |
+| `tests/security/test_vm_mcp_security.py` | `test_production_vm_edge_rejects_root_and_missing_host_pinning` | 24 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/security/test_vm_mcp_security.py` | `_FakeVMConnector` | 41 | class | کلاس | module |
+| `tests/security/test_vm_mcp_security.py` | `_FakeVMConnector.restart_service` | 44 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _FakeVMConnector |
+| `tests/security/test_vm_mcp_security.py` | `test_vm_mcp_write_requires_approval_and_incident_context` | 50 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/security/test_vm_mcp_security.py` | `test_vm_mcp_rejects_wrong_server_identity` | 73 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/security/test_vm_mcp_security.py` | `test_vm_mcp_rejects_wrong_server_identity.fake_initialize` | 77 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_vm_mcp_rejects_wrong_server_identity |
 | `tests/security/test_vm_ssh_password_auth.py` | `_FakeSSHResult` | 10 | class | کلاس | module |
 | `tests/security/test_vm_ssh_password_auth.py` | `_FakeSSHConnection` | 16 | class | کلاس | module |
 | `tests/security/test_vm_ssh_password_auth.py` | `_FakeSSHConnection.run` | 17 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | _FakeSSHConnection |
