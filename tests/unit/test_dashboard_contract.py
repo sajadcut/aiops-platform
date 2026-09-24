@@ -113,3 +113,26 @@ def test_dashboard_assets_use_absolute_routes_without_client_redirect_race():
     assert 'href="control-center.css"' not in html
     assert 'src="control-center.js"' not in html
 
+def test_dashboard_theme_matches_chatbot_and_persists_across_surfaces():
+    html = Path("dashboards/index.html").read_text(encoding="utf-8")
+    css = Path("dashboards/control-center.css").read_text(encoding="utf-8")
+    actions_css = Path("dashboards/approval-actions.css").read_text(encoding="utf-8")
+    js = Path("dashboards/control-center.js").read_text(encoding="utf-8")
+
+    assert 'id="themeToggle"' in html
+    assert 'id="themeMoon"' in html
+    assert 'id="themeSun"' in html
+    assert 'id="themeLabel"' in html
+    assert "aiops.chatbot.theme" in html
+    assert "aiops.chatbot.theme" in js
+    assert "window.matchMedia('(prefers-color-scheme: light)')" in js
+    assert "document.documentElement.dataset.theme = theme" in js
+    assert "localStorage.setItem(THEME_STORAGE, theme)" in js
+    assert "window.addEventListener('storage'" in js
+    assert ":root[data-theme=\"light\"]" in css
+    assert "--bg:#0B0F14" in css
+    assert "--bg:#F6F8FA" in css
+    assert "--blue:#5B8DEF" in css
+    assert "--blue:#315FAD" in css
+    assert ':root[data-theme="light"] .approval-card' in actions_css
+
