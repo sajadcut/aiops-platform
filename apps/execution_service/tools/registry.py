@@ -94,6 +94,26 @@ class ToolRegistry:
             })
             logger.info("execution_tool_call_completed", agent=agent_name, tool=tool_name, approval_id=input_data.approval_id, success=bool(response.get("success")))
             return response
+        except PermissionError as exc:
+            safe_reason = str(exc)
+            if safe_reason not in {"vm_target_not_allowed", "vm_service_not_allowed"}:
+                safe_reason = "permission_denied"
+            logger.warning(
+                "execution_tool_call_denied",
+                tool=tool_name,
+                agent=agent_name,
+                approval_id=input_data.approval_id,
+                reason=safe_reason,
+            )
+            return {
+                "success": False,
+                "execution_blocked": True,
+                "reason": safe_reason,
+                "error": safe_reason,
+                "tool": tool_name,
+                "agent": agent_name,
+                "approval_id": input_data.approval_id,
+            }
         except Exception as exc:
             logger.exception("execution_tool_call_failed", tool=tool_name, agent=agent_name, approval_id=input_data.approval_id, error_type=type(exc).__name__)
             return {
