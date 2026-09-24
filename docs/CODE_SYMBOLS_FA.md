@@ -859,24 +859,24 @@
 | `apps/chatbot/reliable_service.py` | `_service_candidates` | 116 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/chatbot/reliable_service.py` | `_resolve_service_from_turns` | 127 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/chatbot/reliable_service.py` | `_resolve_vm_target_from_turns` | 144 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/chatbot/reliable_service.py` | `_available_tool_names` | 176 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/chatbot/reliable_service.py` | `_deterministic_vm_service_read_call` | 191 | function | Build only an unambiguous governed VM service read; never infer a write. | module |
-| `apps/chatbot/reliable_service.py` | `_requires_live_operational_tool` | 231 | function | Fail closed for clear live-read requests before any governed tool has run. | module |
-| `apps/chatbot/reliable_service.py` | `_looks_obviously_incomplete` | 274 | function | Reject only strong incomplete-prefix signals for direct chatbot answers. | module |
-| `apps/chatbot/reliable_service.py` | `_is_timeout_error` | 289 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/chatbot/reliable_service.py` | `_is_connection_error` | 295 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/chatbot/reliable_service.py` | `_safe_policy_denial` | 302 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/chatbot/reliable_service.py` | `ReliableChatLLMAdapter` | 311 | class | Chat-stage reliability wrapper around the configured LLM adapter. | module |
-| `apps/chatbot/reliable_service.py` | `ReliableChatLLMAdapter.__init__` | 314 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ReliableChatLLMAdapter |
-| `apps/chatbot/reliable_service.py` | `ReliableChatLLMAdapter.provider_name` | 318 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ReliableChatLLMAdapter |
-| `apps/chatbot/reliable_service.py` | `ReliableChatLLMAdapter.generate` | 321 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ReliableChatLLMAdapter |
-| `apps/chatbot/reliable_service.py` | `ReliableChatLLMAdapter.generate_with_messages` | 342 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ReliableChatLLMAdapter |
-| `apps/chatbot/reliable_service.py` | `OperationsCopilotService` | 441 | class | ChatbotService reliability/UI adapter without changing governance boundaries. | module |
-| `apps/chatbot/reliable_service.py` | `OperationsCopilotService.__init__` | 444 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationsCopilotService |
-| `apps/chatbot/reliable_service.py` | `OperationsCopilotService._llm` | 448 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationsCopilotService |
-| `apps/chatbot/reliable_service.py` | `OperationsCopilotService.message` | 456 | async method | Preserve safe cause categories after the base service fail-closed wrapper. | OperationsCopilotService |
-| `apps/chatbot/reliable_service.py` | `OperationsCopilotService._execute_read` | 488 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationsCopilotService |
-| `apps/chatbot/reliable_service.py` | `OperationsCopilotService._summarize` | 500 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationsCopilotService |
+| `apps/chatbot/reliable_service.py` | `_available_tool_names` | 189 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/chatbot/reliable_service.py` | `_deterministic_vm_service_read_call` | 204 | function | Build only an unambiguous governed VM service read; never infer a write. | module |
+| `apps/chatbot/reliable_service.py` | `_requires_live_operational_tool` | 244 | function | Fail closed for clear live-read requests before any governed tool has run. | module |
+| `apps/chatbot/reliable_service.py` | `_looks_obviously_incomplete` | 287 | function | Reject only strong incomplete-prefix signals for direct chatbot answers. | module |
+| `apps/chatbot/reliable_service.py` | `_is_timeout_error` | 302 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/chatbot/reliable_service.py` | `_is_connection_error` | 308 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/chatbot/reliable_service.py` | `_safe_policy_denial` | 315 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/chatbot/reliable_service.py` | `ReliableChatLLMAdapter` | 324 | class | Chat-stage reliability wrapper around the configured LLM adapter. | module |
+| `apps/chatbot/reliable_service.py` | `ReliableChatLLMAdapter.__init__` | 327 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ReliableChatLLMAdapter |
+| `apps/chatbot/reliable_service.py` | `ReliableChatLLMAdapter.provider_name` | 331 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ReliableChatLLMAdapter |
+| `apps/chatbot/reliable_service.py` | `ReliableChatLLMAdapter.generate` | 334 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ReliableChatLLMAdapter |
+| `apps/chatbot/reliable_service.py` | `ReliableChatLLMAdapter.generate_with_messages` | 355 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ReliableChatLLMAdapter |
+| `apps/chatbot/reliable_service.py` | `OperationsCopilotService` | 454 | class | ChatbotService reliability/UI adapter without changing governance boundaries. | module |
+| `apps/chatbot/reliable_service.py` | `OperationsCopilotService.__init__` | 457 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationsCopilotService |
+| `apps/chatbot/reliable_service.py` | `OperationsCopilotService._llm` | 461 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationsCopilotService |
+| `apps/chatbot/reliable_service.py` | `OperationsCopilotService.message` | 469 | async method | Preserve safe cause categories after the base service fail-closed wrapper. | OperationsCopilotService |
+| `apps/chatbot/reliable_service.py` | `OperationsCopilotService._execute_read` | 501 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationsCopilotService |
+| `apps/chatbot/reliable_service.py` | `OperationsCopilotService._summarize` | 513 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationsCopilotService |
 | `apps/chatbot/service.py` | `_iso` | 79 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/chatbot/service.py` | `_has_permission` | 85 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/chatbot/service.py` | `_annotate_metric_units` | 92 | function | Annotate known VM percentages for LLM summarization without changing API data. | module |
