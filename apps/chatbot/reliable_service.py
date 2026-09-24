@@ -130,15 +130,14 @@ def _resolve_service_from_turns(turns: list[str]) -> str | None:
     current = _service_candidates(turns[-1])
     if len(current) == 1:
         return current[0]
-    if len(current) > 1:
+    if len(current) > 1 or len(turns) < 2:
         return None
-    for previous in reversed(turns[:-1]):
-        candidates = _service_candidates(previous)
-        if len(candidates) == 1:
-            return candidates[0]
-        if len(candidates) > 1:
-            return None
-    return None
+
+    # Referent carry-over is intentionally one operator turn only. This keeps
+    # "6.200چی" after an nginx question deterministic, while preventing an old
+    # service name from leaking across a newer generic server-status request.
+    previous = _service_candidates(turns[-2])
+    return previous[0] if len(previous) == 1 else None
 
 
 def _resolve_vm_target_from_turns(turns: list[str]) -> str | None:
