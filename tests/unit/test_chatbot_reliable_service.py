@@ -7,8 +7,9 @@ from apps.chatbot.reliable_service import (
     OperationsCopilotService,
     ReliableChatLLMAdapter,
     _looks_obviously_incomplete,
+    _requires_live_operational_tool,
 )
-from apps.chatbot.service import ChatbotService
+from apps.chatbot.service import ChatbotService, _SUMMARY_SYSTEM_PROMPT, _annotate_metric_units
 from apps.security.oidc import Identity
 from integrations.llm.base import LLMAdapter, LLMResponse
 
@@ -290,4 +291,75 @@ def test_chatbot_vm_allowlist_denials_are_operator_safe_and_non_retryable():
     assert service.component == "authorization"
     assert service.retryable is False
     assert "SSH_ALLOWED_SERVICES" in service.message
+
+def test_live_inspection_classifier_covers_service_check_with_partial_target_context():
+    messages = [
+        {"role": "user", "content": "وضعیت سرور 10.100.6.199 بگو"},
+        {"role": "assistant", "content": "وضعیت از ابزارهای live خوانده شد."},
+        {"role": "user", "content": "haproxy 6.199 بررسی کن"},
+    ]
+    assert _requires_live_operational_tool(messages, tools_available=True) is True
+
+
+def test_live_inspection_classifier_does_not_force_generic_architecture_review():
+    messages = [{"role": "user", "content": "این معماری را بررسی کن"}]
+    assert _requires_live_operational_tool(messages, tools_available=True) is False
+
+
+@pytest.mark.asyncio
+async def test_live_inspection_repair_requires_structured_tool_choice():
+    tool_call = {
+        "id": "call-haproxy",
+        "type": "function",
+        "function": {
+            "name": "vm_service_status",
+            "arguments": '{"target":"10.100.6.199","service":"haproxy"}',
+        },
+    }
+    delegate = SequencedLLM([
+        response("Service is not in the read allowlist: haproxy."),
+        response("", tool_calls=[tool_call]),
+    ])
+    adapter = ReliableChatLLMAdapter(delegate)
+
+    result = await adapter.generate_with_messages(
+        [
+            {"role": "user", "content": "وضعیت سرور 10.100.6.199 بگو"},
+            {"role": "assistant", "content": "live result"},
+            {"role": "user", "content": "haproxy 6.199 بررسی کن"},
+        ],
+        max_tokens=120,
+        stage="chatbot_intent",
+        tools=[{"type": "function", "function": {"name": "vm_service_status"}}],
+        tool_choice="auto",
+    )
+
+    assert result.tool_calls == [tool_call]
+    assert len(delegate.calls) == 2
+    assert delegate.calls[1][2]["tool_choice"] == "required"
+
+
+def test_vm_metric_summary_contract_preserves_percentage_points_exactly():
+    payload = {
+        "source": "vm_mcp",
+        "result": {
+            "metrics": {
+                "cpu_usage": 0.74,
+                "memory_usage": 8.14,
+                "swap_usage": 0.0,
+                "io_wait": 0.0,
+                "load_avg": "0.01,0.01,0.00",
+            }
+        },
+    }
+    annotated = _annotate_metric_units(payload)
+
+    assert annotated["result"]["metrics"]["cpu_usage"] == {
+        "value": 0.74,
+        "unit": "percent",
+        "display": "0.74%",
+    }
+    assert annotated["result"]["metrics"]["memory_usage"]["display"] == "8.14%"
+    assert annotated["result"]["metrics"]["load_avg"] == "0.01,0.01,0.00"
+    assert "cpu_usage=0.74 means 0.74%, never 74%" in _SUMMARY_SYSTEM_PROMPT
 
