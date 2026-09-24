@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 400 | Dashboard JS files scanned: 5 | Symbols indexed: 3600**
+**Python files scanned: 400 | Dashboard JS files scanned: 5 | Symbols indexed: 3601**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -870,25 +870,26 @@
 | `apps/chatbot/reliable_service.py` | `OperationsCopilotService.message` | 297 | async method | Preserve safe cause categories after the base service fail-closed wrapper. | OperationsCopilotService |
 | `apps/chatbot/reliable_service.py` | `OperationsCopilotService._execute_read` | 329 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationsCopilotService |
 | `apps/chatbot/reliable_service.py` | `OperationsCopilotService._summarize` | 341 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationsCopilotService |
-| `apps/chatbot/service.py` | `_iso` | 77 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/chatbot/service.py` | `_has_permission` | 83 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/chatbot/service.py` | `ChatbotService` | 87 | class | LLM-assisted, policy-enforced operations copilot. | module |
-| `apps/chatbot/service.py` | `ChatbotService.__init__` | 95 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
-| `apps/chatbot/service.py` | `ChatbotService._llm` | 98 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
-| `apps/chatbot/service.py` | `ChatbotService._audit` | 102 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
-| `apps/chatbot/service.py` | `ChatbotService._session` | 133 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
-| `apps/chatbot/service.py` | `ChatbotService._history_messages` | 145 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
-| `apps/chatbot/service.py` | `ChatbotService._recent_operator_context` | 158 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
-| `apps/chatbot/service.py` | `ChatbotService._execute_read` | 168 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
-| `apps/chatbot/service.py` | `ChatbotService._summarize` | 206 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
-| `apps/chatbot/service.py` | `ChatbotService._create_chatops_incident` | 244 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
-| `apps/chatbot/service.py` | `ChatbotService._proposal` | 264 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
-| `apps/chatbot/service.py` | `ChatbotService.message` | 348 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
-| `apps/chatbot/service.py` | `ChatbotService._collect_mutation_snapshot` | 525 | async method | Collect read-only operational state for independent before/after verification. | ChatbotService |
-| `apps/chatbot/service.py` | `ChatbotService._verify_mutation` | 701 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
-| `apps/chatbot/service.py` | `ChatbotService._record_memory_after_mutation` | 739 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
-| `apps/chatbot/service.py` | `ChatbotService._preconfirm_mutation_guard` | 854 | async method | Freshly revalidate supported mutation intent before confirmation. | ChatbotService |
-| `apps/chatbot/service.py` | `ChatbotService.decide` | 1048 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
+| `apps/chatbot/service.py` | `_iso` | 79 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/chatbot/service.py` | `_has_permission` | 85 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/chatbot/service.py` | `_annotate_metric_units` | 92 | function | Annotate known VM percentages for LLM summarization without changing API data. | module |
+| `apps/chatbot/service.py` | `ChatbotService` | 113 | class | LLM-assisted, policy-enforced operations copilot. | module |
+| `apps/chatbot/service.py` | `ChatbotService.__init__` | 121 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
+| `apps/chatbot/service.py` | `ChatbotService._llm` | 124 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
+| `apps/chatbot/service.py` | `ChatbotService._audit` | 128 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
+| `apps/chatbot/service.py` | `ChatbotService._session` | 159 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
+| `apps/chatbot/service.py` | `ChatbotService._history_messages` | 171 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
+| `apps/chatbot/service.py` | `ChatbotService._recent_operator_context` | 184 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
+| `apps/chatbot/service.py` | `ChatbotService._execute_read` | 194 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
+| `apps/chatbot/service.py` | `ChatbotService._summarize` | 232 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
+| `apps/chatbot/service.py` | `ChatbotService._create_chatops_incident` | 270 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
+| `apps/chatbot/service.py` | `ChatbotService._proposal` | 290 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
+| `apps/chatbot/service.py` | `ChatbotService.message` | 374 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
+| `apps/chatbot/service.py` | `ChatbotService._collect_mutation_snapshot` | 551 | async method | Collect read-only operational state for independent before/after verification. | ChatbotService |
+| `apps/chatbot/service.py` | `ChatbotService._verify_mutation` | 727 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
+| `apps/chatbot/service.py` | `ChatbotService._record_memory_after_mutation` | 765 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
+| `apps/chatbot/service.py` | `ChatbotService._preconfirm_mutation_guard` | 880 | async method | Freshly revalidate supported mutation intent before confirmation. | ChatbotService |
+| `apps/chatbot/service.py` | `ChatbotService.decide` | 1074 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
 | `apps/chatbot/store.py` | `_utcnow` | 19 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/chatbot/store.py` | `_json` | 23 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/chatbot/store.py` | `_title` | 27 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
