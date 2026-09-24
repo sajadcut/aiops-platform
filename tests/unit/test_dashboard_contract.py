@@ -100,3 +100,16 @@ def test_incident_refresh_lazy_loads_historical_memory():
     assert "Loading historical Operational Memory on demand" in js
     assert "loadIncidentMemory(S.selected)" in js
 
+def test_dashboard_assets_use_absolute_routes_without_client_redirect_race():
+    html = Path("dashboards/index.html").read_text(encoding="utf-8")
+    for asset in (
+        "/dashboard/control-center.css",
+        "/dashboard/approval-actions.css",
+        "/dashboard/control-center.js",
+        "/dashboard/approval-actions.js",
+    ):
+        assert asset in html
+    assert "location.replace(location.pathname+'/'" not in html
+    assert 'href="control-center.css"' not in html
+    assert 'src="control-center.js"' not in html
+
