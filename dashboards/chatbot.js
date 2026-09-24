@@ -1,5 +1,6 @@
 import {
   SIDEBAR_STORAGE,
+  THEME_STORAGE,
   addBadge,
   addDetails,
   addErrorMeta,
@@ -925,6 +926,17 @@ dom.sidebarCollapse.addEventListener("click", () => {
 
 dom.themeToggle.addEventListener("click", () => {
   setTheme(document.documentElement.dataset.theme === "light" ? "dark" : "light");
+});
+
+window.addEventListener("storage", (event) => {
+  if (event.key === THEME_STORAGE && (event.newValue === "light" || event.newValue === "dark")) {
+    applyTheme(event.newValue, {
+      toggle: dom.themeToggle,
+      moon: dom.themeMoon,
+      sun: dom.themeSun,
+      label: dom.themeLabel,
+    });
+  }
 });
 
 dom.renameForm.addEventListener("submit", async (event) => {
