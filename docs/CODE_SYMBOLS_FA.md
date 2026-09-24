@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 400 | Dashboard JS files scanned: 5 | Symbols indexed: 3619**
+**Python files scanned: 400 | Dashboard JS files scanned: 5 | Symbols indexed: 3620**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -2075,6 +2075,7 @@
 | `tests/integration/test_dashboard_api.py` | `test_dashboard_ui_contains_live_api_calls` | 8 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/integration/test_dashboard_api.py` | `test_dashboard_route_and_api_are_registered` | 22 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/integration/test_dashboard_api.py` | `test_dashboard_html_css_and_js_are_actually_served_over_http` | 33 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/integration/test_dashboard_api.py` | `test_legacy_dashboard_asset_aliases_remain_available_for_stale_tabs` | 56 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/integration/test_e2e_safety.py` | `FakeEvidenceCollector` | 6 | class | کلاس | module |
 | `tests/integration/test_e2e_safety.py` | `FakeEvidenceCollector.collect` | 7 | async method | Evidence/داده موردنیاز را از منبع مربوط جمع می‌کند | FakeEvidenceCollector |
 | `tests/integration/test_e2e_safety.py` | `test_e2e_blocks_execution_without_explicit_request` | 19 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
