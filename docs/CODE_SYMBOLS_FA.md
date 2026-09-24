@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 399 | Dashboard JS files scanned: 5 | Symbols indexed: 3582**
+**Python files scanned: 399 | Dashboard JS files scanned: 5 | Symbols indexed: 3586**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -2980,6 +2980,10 @@
 | `tests/unit/test_mcp_external_boundary.py` | `test_elastic_mcp_explicit_authorization_header_takes_precedence` | 117 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_mcp_external_boundary.py` | `test_mcp_read_retry_override_limits_transport_attempts` | 125 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_mcp_external_boundary.py` | `test_mcp_read_retry_override_limits_transport_attempts.fail_post` | 132 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_mcp_read_retry_override_limits_transport_attempts |
+| `tests/unit/test_mcp_external_boundary.py` | `test_mcp_preserves_only_allowlisted_remote_vm_policy_denial` | 148 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_mcp_external_boundary.py` | `test_mcp_preserves_only_allowlisted_remote_vm_policy_denial.denied_post` | 152 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_mcp_preserves_only_allowlisted_remote_vm_policy_denial |
+| `tests/unit/test_mcp_external_boundary.py` | `test_mcp_does_not_expose_arbitrary_remote_error_text` | 164 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_mcp_external_boundary.py` | `test_mcp_does_not_expose_arbitrary_remote_error_text.unsafe_post` | 168 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_mcp_does_not_expose_arbitrary_remote_error_text |
 | `tests/unit/test_mcp_server_contract.py` | `test_provider_tool_names_match_control_plane_clients` | 6 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_mcp_server_contract.py` | `test_internal_mcp_server_has_no_native_zabbix_provider` | 21 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_mcp_server_contract.py` | `test_mcp_server_is_the_only_place_remaining_native_provider_connectors_are_composed` | 28 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
