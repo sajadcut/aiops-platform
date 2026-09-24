@@ -63,3 +63,20 @@
 @media(max-width:1380px){.kpis{grid-template-columns:repeat(3,1fr)}.lifecycle-strip{grid-template-columns:repeat(3,1fr)}.lifecycle-node:nth-child(3n){border-right:0}.mcp-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:900px){.lifecycle-strip{grid-template-columns:repeat(2,1fr)}.lifecycle-node:nth-child(3n){border-right:1px solid var(--line)}.lifecycle-node:nth-child(2n){border-right:0}.workflow{grid-template-columns:repeat(2,1fr)}.operator-summary-sections{grid-template-columns:1fr}.operator-summary-sections article.operator-summary-wide{grid-column:auto}.operator-summary-head{display:block}.operator-summary-badges{margin-top:8px}.operator-summary-facts{grid-template-columns:1fr}.operator-summary-control-grid{grid-template-columns:1fr}}
 @media(max-width:780px){.approval-facts,.approval-result{grid-template-columns:1fr}.approval-buttons{flex-direction:column-reverse}.approval-btn{width:100%}.execution-controls .approval-btn.execute{justify-self:stretch}.lifecycle-strip{grid-template-columns:1fr}.lifecycle-node,.lifecycle-node:nth-child(2n),.lifecycle-node:nth-child(3n){border-right:0;border-bottom:1px solid var(--line)}.lifecycle-node:last-child{border-bottom:0}.kpis{grid-template-columns:repeat(2,1fr)}.mcp-grid{grid-template-columns:1fr}.operator-summary-evidence{grid-template-columns:1fr}.operator-summary-evidence code{grid-column:auto}}
+
+
+:root[data-theme="light"] .approval-card{border-color:var(--line);background:var(--surface)}
+:root[data-theme="light"] .approval-card.pending{border-color:color-mix(in srgb,var(--amber) 42%,var(--line));box-shadow:inset 0 0 0 1px var(--amber-soft)}
+:root[data-theme="light"] .approval-card.approved,
+:root[data-theme="light"] .approval-card.consumed{border-color:color-mix(in srgb,var(--green) 40%,var(--line));background:var(--green-soft)}
+:root[data-theme="light"] .approval-card.rejected,
+:root[data-theme="light"] .approval-card.expired{border-color:color-mix(in srgb,var(--red) 35%,var(--line))}
+:root[data-theme="light"] .approval-facts>div,
+:root[data-theme="light"] .approval-result>div{border-color:var(--line);background:var(--surface-2)}
+:root[data-theme="light"] .approval-controls textarea{border-color:var(--line);background:var(--surface-2);color:var(--text)}
+:root[data-theme="light"] .approval-controls textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px var(--accent-soft)}
+:root[data-theme="light"] .approval-btn.reject{background:var(--red-soft);color:var(--red);border-color:color-mix(in srgb,var(--red) 35%,var(--line))}
+:root[data-theme="light"] .execution-ready{border-color:color-mix(in srgb,var(--green) 30%,var(--line));background:var(--green-soft)}
+:root[data-theme="light"] .execution-consumed{color:var(--green)}
+:root[data-theme="light"] .stage.failed{border-color:color-mix(in srgb,var(--red) 40%,var(--line));color:var(--red);background:var(--red-soft)}
+:root[data-theme="light"] .stage.warning{border-color:color-mix(in srgb,var(--amber) 40%,var(--line));color:var(--amber);background:var(--amber-soft)}
