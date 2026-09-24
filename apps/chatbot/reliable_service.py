@@ -56,6 +56,41 @@ def _looks_like_nonterminal_tool_preamble(response: LLMResponse, *, tools_availa
     return any(pattern.search(text) for pattern in _NONTERMINAL_TOOL_PREAMBLE_PATTERNS)
 
 
+_LIVE_OPERATIONAL_QUERY_RE = re.compile(
+    r"(?:"
+    r"وضعیت|وضعیته|چقدره|چنده|مصرف|فعال|غیرفعال|خاموش|روشن|"
+    r"لاگ|لاگ‌ها|متریک|cpu|memory|ram|"
+    r"\\bstatus\\b|\\bhealth\\b|\\bmetrics?\\b|\\blogs?\\b|\\bpods?\\b|"
+    r"\\brunning\\b|\\bactive\\b|\\binactive\\b"
+    r")",
+    re.IGNORECASE,
+)
+_FOLLOWUP_LOCATOR_RE = re.compile(
+    r"(?:\\b\\d{1,3}(?:\\.\\d{1,3}){1,3}\\b|چی(?:ه)?\\s*$|what about|how about)",
+    re.IGNORECASE,
+)
+
+
+def _requires_live_operational_tool(messages: List[Dict[str, str]], *, tools_available: bool) -> bool:
+    """Fail closed for clear live-read requests before any governed tool has run."""
+
+    if not tools_available:
+        return False
+    operator_turns = [
+        str(item.get("content") or "").strip()
+        for item in messages
+        if str(item.get("role") or "") == "user" and str(item.get("content") or "").strip()
+    ]
+    if not operator_turns:
+        return False
+    current = operator_turns[-1]
+    if _LIVE_OPERATIONAL_QUERY_RE.search(current):
+        return True
+    if len(current) <= 80 and _FOLLOWUP_LOCATOR_RE.search(current):
+        return any(_LIVE_OPERATIONAL_QUERY_RE.search(previous) for previous in operator_turns[-3:-1])
+    return False
+
+
 def _looks_obviously_incomplete(response: LLMResponse) -> bool:
     """Reject only strong incomplete-prefix signals for direct chatbot answers."""
 
@@ -141,7 +176,14 @@ class ReliableChatLLMAdapter(LLMAdapter):
             response,
             tools_available=tools_available,
         )
-        if stage != "chatbot_intent" or not (incomplete or nonterminal_tool_preamble):
+        requires_live_tool = _requires_live_operational_tool(
+            messages,
+            tools_available=tools_available,
+        )
+        missing_required_live_tool = requires_live_tool and not response.tool_calls
+        if stage != "chatbot_intent" or not (
+            incomplete or nonterminal_tool_preamble or missing_required_live_tool
+        ):
             return response
 
         # No governed tool has executed yet, so one bounded retry is safe.
@@ -172,9 +214,13 @@ class ReliableChatLLMAdapter(LLMAdapter):
             if _is_timeout_error(exc):
                 CHAT_LLM_TIMEOUTS.inc()
             raise
-        if _looks_obviously_incomplete(repaired) or _looks_like_nonterminal_tool_preamble(
-            repaired,
-            tools_available=tools_available,
+        if (
+            _looks_obviously_incomplete(repaired)
+            or _looks_like_nonterminal_tool_preamble(
+                repaired,
+                tools_available=tools_available,
+            )
+            or (requires_live_tool and not repaired.tool_calls)
         ):
             CHAT_INCOMPLETE_RESPONSES.inc()
             raise ValueError("chatbot_llm_incomplete_response")
