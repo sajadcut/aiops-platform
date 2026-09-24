@@ -144,3 +144,39 @@ async def test_mcp_read_retry_override_limits_transport_attempts(monkeypatch):
     finally:
         await client.close()
 
+@pytest.mark.asyncio
+async def test_mcp_preserves_only_allowlisted_remote_vm_policy_denial(monkeypatch):
+    client = MCPClient("http://mcp.test/mcp", "vm-edge", allowed_tools={"service_status"})
+    client._initialized = True
+
+    async def denied_post(*args, **kwargs):
+        return {"jsonrpc": "2.0", "id": 1, "error": {"code": -32602, "message": "vm_target_not_allowed"}}
+
+    monkeypatch.setattr(client, "_post", denied_post)
+    try:
+        with pytest.raises(PermissionError, match="^vm_target_not_allowed$"):
+            await client.call_tool("service_status", {"target": "10.100.6.200", "service": "nginx"})
+    finally:
+        await client.close()
+
+
+@pytest.mark.asyncio
+async def test_mcp_does_not_expose_arbitrary_remote_error_text(monkeypatch):
+    client = MCPClient("http://mcp.test/mcp", "vm-edge", allowed_tools={"service_status"})
+    client._initialized = True
+
+    async def unsafe_post(*args, **kwargs):
+        return {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "error": {"code": -32000, "message": "backend secret path /internal/credential"},
+        }
+
+    monkeypatch.setattr(client, "_post", unsafe_post)
+    try:
+        with pytest.raises(RuntimeError, match="^mcp_remote_error:vm-edge$") as failure:
+            await client.call_tool("service_status", {"target": "10.100.6.200", "service": "nginx"})
+        assert "credential" not in str(failure.value)
+    finally:
+        await client.close()
+
