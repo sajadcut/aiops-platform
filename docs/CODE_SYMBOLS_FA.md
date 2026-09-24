@@ -854,22 +854,22 @@
 | `apps/chatbot/models.py` | `ChatHistoryResponse` | 97 | class | کلاس | module |
 | `apps/chatbot/models.py` | `ChatIdentityResponse` | 102 | class | کلاس | module |
 | `apps/chatbot/reliable_service.py` | `_looks_like_nonterminal_tool_preamble` | 48 | function | Detect model narration that promises a governed read instead of selecting a tool. | module |
-| `apps/chatbot/reliable_service.py` | `_requires_live_operational_tool` | 75 | function | Fail closed for clear live-read requests before any governed tool has run. | module |
-| `apps/chatbot/reliable_service.py` | `_looks_obviously_incomplete` | 95 | function | Reject only strong incomplete-prefix signals for direct chatbot answers. | module |
-| `apps/chatbot/reliable_service.py` | `_is_timeout_error` | 110 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/chatbot/reliable_service.py` | `_is_connection_error` | 116 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/chatbot/reliable_service.py` | `_safe_policy_denial` | 123 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/chatbot/reliable_service.py` | `ReliableChatLLMAdapter` | 132 | class | Chat-stage reliability wrapper around the configured LLM adapter. | module |
-| `apps/chatbot/reliable_service.py` | `ReliableChatLLMAdapter.__init__` | 135 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ReliableChatLLMAdapter |
-| `apps/chatbot/reliable_service.py` | `ReliableChatLLMAdapter.provider_name` | 139 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ReliableChatLLMAdapter |
-| `apps/chatbot/reliable_service.py` | `ReliableChatLLMAdapter.generate` | 142 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ReliableChatLLMAdapter |
-| `apps/chatbot/reliable_service.py` | `ReliableChatLLMAdapter.generate_with_messages` | 163 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ReliableChatLLMAdapter |
-| `apps/chatbot/reliable_service.py` | `OperationsCopilotService` | 240 | class | ChatbotService reliability/UI adapter without changing governance boundaries. | module |
-| `apps/chatbot/reliable_service.py` | `OperationsCopilotService.__init__` | 243 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationsCopilotService |
-| `apps/chatbot/reliable_service.py` | `OperationsCopilotService._llm` | 247 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationsCopilotService |
-| `apps/chatbot/reliable_service.py` | `OperationsCopilotService.message` | 255 | async method | Preserve safe cause categories after the base service fail-closed wrapper. | OperationsCopilotService |
-| `apps/chatbot/reliable_service.py` | `OperationsCopilotService._execute_read` | 287 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationsCopilotService |
-| `apps/chatbot/reliable_service.py` | `OperationsCopilotService._summarize` | 299 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationsCopilotService |
+| `apps/chatbot/reliable_service.py` | `_requires_live_operational_tool` | 88 | function | Fail closed for clear live-read requests before any governed tool has run. | module |
+| `apps/chatbot/reliable_service.py` | `_looks_obviously_incomplete` | 131 | function | Reject only strong incomplete-prefix signals for direct chatbot answers. | module |
+| `apps/chatbot/reliable_service.py` | `_is_timeout_error` | 146 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/chatbot/reliable_service.py` | `_is_connection_error` | 152 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/chatbot/reliable_service.py` | `_safe_policy_denial` | 159 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/chatbot/reliable_service.py` | `ReliableChatLLMAdapter` | 168 | class | Chat-stage reliability wrapper around the configured LLM adapter. | module |
+| `apps/chatbot/reliable_service.py` | `ReliableChatLLMAdapter.__init__` | 171 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ReliableChatLLMAdapter |
+| `apps/chatbot/reliable_service.py` | `ReliableChatLLMAdapter.provider_name` | 175 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ReliableChatLLMAdapter |
+| `apps/chatbot/reliable_service.py` | `ReliableChatLLMAdapter.generate` | 178 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ReliableChatLLMAdapter |
+| `apps/chatbot/reliable_service.py` | `ReliableChatLLMAdapter.generate_with_messages` | 199 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ReliableChatLLMAdapter |
+| `apps/chatbot/reliable_service.py` | `OperationsCopilotService` | 282 | class | ChatbotService reliability/UI adapter without changing governance boundaries. | module |
+| `apps/chatbot/reliable_service.py` | `OperationsCopilotService.__init__` | 285 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationsCopilotService |
+| `apps/chatbot/reliable_service.py` | `OperationsCopilotService._llm` | 289 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationsCopilotService |
+| `apps/chatbot/reliable_service.py` | `OperationsCopilotService.message` | 297 | async method | Preserve safe cause categories after the base service fail-closed wrapper. | OperationsCopilotService |
+| `apps/chatbot/reliable_service.py` | `OperationsCopilotService._execute_read` | 329 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationsCopilotService |
+| `apps/chatbot/reliable_service.py` | `OperationsCopilotService._summarize` | 341 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationsCopilotService |
 | `apps/chatbot/service.py` | `_iso` | 77 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/chatbot/service.py` | `_has_permission` | 83 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/chatbot/service.py` | `ChatbotService` | 87 | class | LLM-assisted, policy-enforced operations copilot. | module |
