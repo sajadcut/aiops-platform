@@ -168,6 +168,19 @@ def _resolve_vm_target_from_turns(turns: list[str]) -> str | None:
         matches = [value for value in prior_targets if value.endswith("." + suffix)]
         if len(matches) == 1:
             return matches[0]
+        if matches:
+            return None
+
+        # Operator shorthand such as "6.200" means "same recent network
+        # prefix, replace the final two octets". Reconstruct it only when the
+        # recent explicit VM targets agree on one two-octet prefix.
+        prefixes = {
+            ".".join(value.split(".")[:2])
+            for value in prior_targets
+        }
+        if len(prefixes) == 1:
+            candidate = next(iter(prefixes)) + "." + suffix
+            return candidate if _valid_ipv4(candidate) else None
         return None
 
     return prior_targets[0] if prior_targets else None
