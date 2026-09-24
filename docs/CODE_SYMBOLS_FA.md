@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 399 | Dashboard JS files scanned: 5 | Symbols indexed: 3588**
+**Python files scanned: 400 | Dashboard JS files scanned: 5 | Symbols indexed: 3596**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -2784,6 +2784,14 @@
 | `tests/unit/test_execution_policy.py` | `test_production_high_risk_requires_approval` | 4 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_execution_policy.py` | `test_allowlisted_low_risk_can_run_without_approval_requirement` | 8 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_execution_policy.py` | `test_non_allowlisted_tool_is_denied` | 12 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_execution_tool_policy_errors.py` | `_DeniedReadTool` | 7 | class | کلاس | module |
+| `tests/unit/test_execution_tool_policy_errors.py` | `_DeniedReadTool.name` | 9 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _DeniedReadTool |
+| `tests/unit/test_execution_tool_policy_errors.py` | `_DeniedReadTool.risk_level` | 13 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _DeniedReadTool |
+| `tests/unit/test_execution_tool_policy_errors.py` | `_DeniedReadTool.execute` | 16 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | _DeniedReadTool |
+| `tests/unit/test_execution_tool_policy_errors.py` | `_UnknownDeniedReadTool` | 20 | class | کلاس | module |
+| `tests/unit/test_execution_tool_policy_errors.py` | `_UnknownDeniedReadTool.execute` | 21 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | _UnknownDeniedReadTool |
+| `tests/unit/test_execution_tool_policy_errors.py` | `test_execution_registry_preserves_safe_vm_policy_denial` | 26 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_execution_tool_policy_errors.py` | `test_execution_registry_redacts_unknown_permission_denial` | 43 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_health_readiness_mcp.py` | `test_production_readiness_requires_cognia_and_configured_optional_mcps` | 4 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_health_readiness_mcp.py` | `test_non_production_readiness_does_not_gate_on_external_dependencies` | 32 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_http_transport_policy.py` | `test_transport_factories_always_disable_tls_certificate_validation` | 12 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
