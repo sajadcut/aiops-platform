@@ -209,3 +209,54 @@ async def test_direct_nonoperational_future_statement_is_not_forced_to_tool():
     assert "معماری" in result.content
     assert len(delegate.calls) == 1
 
+@pytest.mark.asyncio
+async def test_chatbot_live_followup_rejects_tool_free_fabricated_status():
+    tool_call = {
+        "id": "call-live-status",
+        "type": "function",
+        "function": {
+            "name": "vm_service_status",
+            "arguments": '{"target":"10.100.6.200","service":"nginx"}',
+        },
+    }
+    delegate = SequencedLLM([
+        response("nginx روی 10.100.6.200 فعال و healthy است."),
+        response("", tool_calls=[tool_call]),
+    ])
+    adapter = ReliableChatLLMAdapter(delegate)
+
+    result = await adapter.generate_with_messages(
+        [
+            {"role": "user", "content": "nginx سرور 10.100.6.199 در چه وضعیته"},
+            {"role": "assistant", "content": "nginx روی 10.100.6.199 inactive است."},
+            {"role": "user", "content": "6.200چی"},
+        ],
+        max_tokens=120,
+        stage="chatbot_intent",
+        tools=[{"type": "function", "function": {"name": "vm_service_status"}}],
+        tool_choice="auto",
+    )
+
+    assert result.tool_calls == [tool_call]
+    assert len(delegate.calls) == 2
+
+
+@pytest.mark.asyncio
+async def test_chatbot_live_request_fails_closed_if_model_refuses_tool_twice():
+    delegate = SequencedLLM([
+        response("CPU سرور 10.100.6.200 حدود 10 درصد است."),
+        response("CPU سرور 10.100.6.200 حدود 11 درصد است."),
+    ])
+    adapter = ReliableChatLLMAdapter(delegate)
+
+    with pytest.raises(ValueError, match="chatbot_llm_incomplete_response"):
+        await adapter.generate_with_messages(
+            [{"role": "user", "content": "cpu سرور 10.100.6.200 چقدره"}],
+            max_tokens=120,
+            stage="chatbot_intent",
+            tools=[{"type": "function", "function": {"name": "vm_metrics"}}],
+            tool_choice="auto",
+        )
+
+    assert len(delegate.calls) == 2
+
