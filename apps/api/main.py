@@ -118,6 +118,30 @@ async def dashboard_approval_script():
     return FileResponse(_DASHBOARD_DIR / "approval-actions.js", media_type="application/javascript")
 
 
+# Backward-compatible aliases for browser tabs which loaded the pre-/dashboard
+# relative asset contract before the dashboard routing fix. New HTML always
+# emits /dashboard/... URLs; these aliases may be removed after the rollout
+# window once stale tabs/caches are no longer expected.
+@app.get("/control-center.css", include_in_schema=False)
+async def dashboard_legacy_stylesheet():
+    return FileResponse(_DASHBOARD_DIR / "control-center.css", media_type="text/css")
+
+
+@app.get("/control-center.js", include_in_schema=False)
+async def dashboard_legacy_script():
+    return FileResponse(_DASHBOARD_DIR / "control-center.js", media_type="application/javascript")
+
+
+@app.get("/approval-actions.css", include_in_schema=False)
+async def dashboard_legacy_approval_stylesheet():
+    return FileResponse(_DASHBOARD_DIR / "approval-actions.css", media_type="text/css")
+
+
+@app.get("/approval-actions.js", include_in_schema=False)
+async def dashboard_legacy_approval_script():
+    return FileResponse(_DASHBOARD_DIR / "approval-actions.js", media_type="application/javascript")
+
+
 @app.get("/chatbot", include_in_schema=False)
 async def chatbot_page():
     return FileResponse(_DASHBOARD_DIR / "chatbot.html")
