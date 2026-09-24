@@ -408,3 +408,15 @@ def test_deterministic_vm_service_read_uses_logs_tool_only_when_requested():
     assert call["function"]["name"] == "vm_service_logs"
     assert call["function"]["arguments"] == '{"target":"10.100.6.199","service":"nginx"}'
 
+def test_deterministic_vm_service_read_does_not_reuse_stale_service_past_generic_server_turn():
+    call = _deterministic_vm_service_read_call(
+        [
+            {"role": "user", "content": "nginx سرور 10.100.6.199 در چه وضعیته"},
+            {"role": "user", "content": "وضعیت سرور 10.100.6.199 بگو"},
+            {"role": "user", "content": "6.200 بگو"},
+        ],
+        tools=[{"type": "function", "function": {"name": "vm_service_status"}}],
+    )
+
+    assert call is None
+
