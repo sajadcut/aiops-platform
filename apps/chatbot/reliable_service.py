@@ -37,6 +37,23 @@ CHAT_TOOL_LATENCY = Histogram(
 
 _PERSIAN_RE = re.compile(r"[\u0600-\u06ff]")
 _TERMINAL_PUNCTUATION = tuple(".!?؟…؛:)]}»\"'")
+_NONTERMINAL_TOOL_PREAMBLE_PATTERNS = (
+    re.compile(r"(?:بررسی|چک|استعلام)\\s*(?:می\\s*کنم|خواهم\\s*کرد)", re.IGNORECASE),
+    re.compile(r"(?:ابتدا|اول).*(?:بررسی|چک).*(?:سپس|بعد)", re.IGNORECASE | re.DOTALL),
+    re.compile(r"\\b(?:i(?:'ll| will)|let me)\\s+(?:check|inspect|look up|verify|query|retrieve)\\b", re.IGNORECASE),
+    re.compile(r"\\b(?:first|initially)\\b.*\\b(?:check|inspect|verify|query)\\b.*\\b(?:then|after)\\b", re.IGNORECASE | re.DOTALL),
+)
+
+
+def _looks_like_nonterminal_tool_preamble(response: LLMResponse, *, tools_available: bool) -> bool:
+    """Detect model narration that promises a governed read instead of selecting a tool."""
+
+    if not tools_available or response.tool_calls:
+        return False
+    text = str(response.content or "").strip()
+    if not text:
+        return False
+    return any(pattern.search(text) for pattern in _NONTERMINAL_TOOL_PREAMBLE_PATTERNS)
 
 
 def _looks_obviously_incomplete(response: LLMResponse) -> bool:
@@ -118,19 +135,29 @@ class ReliableChatLLMAdapter(LLMAdapter):
             raise
 
         stage = str(kwargs.get("stage") or kwargs.get("purpose") or "")
-        if stage != "chatbot_intent" or not _looks_obviously_incomplete(response):
+        tools_available = bool(kwargs.get("tools"))
+        incomplete = _looks_obviously_incomplete(response)
+        nonterminal_tool_preamble = _looks_like_nonterminal_tool_preamble(
+            response,
+            tools_available=tools_available,
+        )
+        if stage != "chatbot_intent" or not (incomplete or nonterminal_tool_preamble):
             return response
 
         # No governed tool has executed yet, so one bounded retry is safe.
+        # A model sentence such as "I'll check that now" is not a terminal
+        # operational answer: with live-read tools available it must either
+        # select a governed tool or provide an actually complete direct answer.
         CHAT_INCOMPLETE_RESPONSES.inc()
         repair_messages = list(messages)
         repair_messages.append(
             {
                 "role": "user",
                 "content": (
-                    "RETRY REQUIRED: the previous response was incomplete. Return one fresh, complete, "
-                    "concise answer, or select the correct provided tool when live operational data is "
-                    "required. Do not continue the partial prefix."
+                    "RETRY REQUIRED: the previous response was incomplete or only narrated a future check. "
+                    "Return one fresh, complete, concise answer, or select the correct provided governed tool "
+                    "when live operational data is required. Do not say that you will check/inspect/query later; "
+                    "select the tool now. Do not continue the previous prefix."
                 ),
             }
         )
@@ -145,7 +172,10 @@ class ReliableChatLLMAdapter(LLMAdapter):
             if _is_timeout_error(exc):
                 CHAT_LLM_TIMEOUTS.inc()
             raise
-        if _looks_obviously_incomplete(repaired):
+        if _looks_obviously_incomplete(repaired) or _looks_like_nonterminal_tool_preamble(
+            repaired,
+            tools_available=tools_available,
+        ):
             CHAT_INCOMPLETE_RESPONSES.inc()
             raise ValueError("chatbot_llm_incomplete_response")
         return repaired
