@@ -88,6 +88,22 @@ def classify_chatbot_error(exc: BaseException) -> ChatErrorDescriptor:
                 retryable=True,
                 http_status=502,
             )
+        if detail.startswith("chatbot_target_not_allowed:"):
+            return ChatErrorDescriptor(
+                code="VM_TARGET_NOT_ALLOWED",
+                message="این سرور در allowlist مجاز VM نیست. تنظیم SSH_ALLOWED_TARGETS را بررسی کنید.",
+                component="authorization",
+                retryable=False,
+                http_status=403,
+            )
+        if detail.startswith("chatbot_service_not_allowed:"):
+            return ChatErrorDescriptor(
+                code="VM_SERVICE_NOT_ALLOWED",
+                message="این سرویس در allowlist مجاز VM نیست. تنظیم SSH_ALLOWED_SERVICES را بررسی کنید.",
+                component="authorization",
+                retryable=False,
+                http_status=403,
+            )
         if detail.startswith("chatbot_tool_failed:"):
             return ChatErrorDescriptor(
                 code="MCP_TOOL_ERROR",
