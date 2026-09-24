@@ -115,6 +115,9 @@ def test_chatbot_theme_toggle_is_labeled_persistent_and_respects_system_preferen
     assert "localStorage.getItem(THEME_STORAGE)" in ui
     assert "localStorage.setItem(THEME_STORAGE" in ui
     assert "setTheme(initialTheme())" in script
+    assert "THEME_STORAGE" in script
+    assert 'window.addEventListener("storage"' in script
+    assert "event.key === THEME_STORAGE" in script
     assert "sessionStorage.setItem(THEME_STORAGE" not in _frontend()
 
 
