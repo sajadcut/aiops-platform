@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 400 | Dashboard JS files scanned: 5 | Symbols indexed: 3621**
+**Python files scanned: 401 | Dashboard JS files scanned: 5 | Symbols indexed: 3623**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -2564,20 +2564,21 @@
 | `tests/unit/test_chatbot_reliable_service.py` | `test_non_chatbot_stage_does_not_add_chat_repair_semantics` | 90 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_chatbot_reliable_service.py` | `test_operations_copilot_preserves_safe_failure_cause_taxonomy` | 133 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_chatbot_reliable_service.py` | `test_operations_copilot_preserves_safe_failure_cause_taxonomy.fail_closed_base_message` | 140 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_operations_copilot_preserves_safe_failure_cause_taxonomy |
-| `tests/unit/test_chatbot_reliable_service.py` | `test_chatbot_intent_retries_tool_free_operational_check_preamble` | 152 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_chatbot_reliable_service.py` | `test_chatbot_intent_fails_closed_when_tool_preamble_repeats` | 190 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_chatbot_reliable_service.py` | `test_direct_nonoperational_future_statement_is_not_forced_to_tool` | 210 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_chatbot_reliable_service.py` | `test_chatbot_live_followup_rejects_tool_free_fabricated_status` | 228 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_chatbot_reliable_service.py` | `test_chatbot_live_request_fails_closed_if_model_refuses_tool_twice` | 260 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_chatbot_reliable_service.py` | `test_chatbot_vm_allowlist_denials_are_operator_safe_and_non_retryable` | 278 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_chatbot_reliable_service.py` | `test_live_inspection_classifier_covers_service_check_with_partial_target_context` | 296 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_chatbot_reliable_service.py` | `test_live_inspection_classifier_does_not_force_generic_architecture_review` | 305 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_chatbot_reliable_service.py` | `test_live_inspection_uses_deterministic_governed_read_before_slow_repair` | 311 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_chatbot_reliable_service.py` | `test_vm_metric_summary_contract_preserves_percentage_points_exactly` | 343 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_chatbot_reliable_service.py` | `test_deterministic_vm_service_read_reconstructs_partial_target_and_recent_service` | 367 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_chatbot_reliable_service.py` | `test_deterministic_vm_service_read_fails_closed_on_ambiguous_prefix` | 382 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_chatbot_reliable_service.py` | `test_deterministic_vm_service_read_uses_logs_tool_only_when_requested` | 395 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_chatbot_reliable_service.py` | `test_deterministic_vm_service_read_does_not_reuse_stale_service_past_generic_server_turn` | 411 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_reliable_service.py` | `test_chatbot_intent_routes_unambiguous_service_followup_without_llm` | 152 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_reliable_service.py` | `test_chatbot_intent_fails_closed_when_tool_preamble_repeats` | 183 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_reliable_service.py` | `test_direct_nonoperational_future_statement_is_not_forced_to_tool` | 203 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_reliable_service.py` | `test_chatbot_live_followup_cannot_use_model_fabricated_status` | 221 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_reliable_service.py` | `test_chatbot_live_request_fails_closed_if_model_refuses_tool_twice` | 245 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_reliable_service.py` | `test_chatbot_vm_allowlist_denials_are_operator_safe_and_non_retryable` | 263 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_reliable_service.py` | `test_live_inspection_classifier_covers_service_check_with_partial_target_context` | 281 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_reliable_service.py` | `test_live_inspection_classifier_does_not_force_generic_architecture_review` | 290 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_reliable_service.py` | `test_live_inspection_uses_deterministic_governed_read_before_slow_repair` | 296 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_reliable_service.py` | `test_vm_metric_summary_contract_preserves_percentage_points_exactly` | 328 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_reliable_service.py` | `test_deterministic_vm_service_read_reconstructs_partial_target_and_recent_service` | 352 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_reliable_service.py` | `test_deterministic_vm_service_read_fails_closed_on_ambiguous_prefix` | 367 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_reliable_service.py` | `test_deterministic_vm_service_read_uses_logs_tool_only_when_requested` | 380 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_reliable_service.py` | `test_deterministic_vm_service_read_does_not_reuse_stale_service_past_generic_server_turn` | 396 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_reliable_service.py` | `test_deterministic_vm_service_read_never_routes_mutation_language` | 408 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_chatbot_response_redaction.py` | `test_chatbot_response_redacts_inline_secrets_before_ui_serialization` | 7 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_chatbot_response_redaction.py` | `test_chat_history_response_applies_same_redaction_defense_in_depth` | 22 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_chatbot_stop_regression.py` | `_script` | 4 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
@@ -2726,6 +2727,7 @@
 | `tests/unit/test_dependency_causal_engine.py` | `CapturingDependencyLLM.generate` | 166 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CapturingDependencyLLM |
 | `tests/unit/test_dependency_causal_engine.py` | `CapturingDependencyLLM.generate_with_messages` | 191 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CapturingDependencyLLM |
 | `tests/unit/test_dependency_causal_engine.py` | `test_dependency_agent_exposes_graph_and_caps_confidence_for_incomplete_traces` | 196 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_dependency_contract.py` | `test_sqlalchemy_asyncio_runtime_extra_is_declared` | 4 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_direct_execution_runtime_guard.py` | `_Session` | 10 | class | کلاس | module |
 | `tests/unit/test_direct_execution_runtime_guard.py` | `_Session.__aenter__` | 11 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Session |
 | `tests/unit/test_direct_execution_runtime_guard.py` | `_Session.__aexit__` | 14 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Session |
