@@ -181,6 +181,8 @@ Conversation context is bounded to the most recent history and only a smaller re
 
 The chatbot writes durable audit events for request, LLM failure, tool success/failure, policy block, action proposal, rejection, approval consumption and execution result. Correlation metadata includes session/proposal/incident/approval identifiers where applicable, but not prompt bodies or credentials.
 
+For clear live operational reads, a model-only answer is not accepted as current evidence. If the model narrates a future check (for example, "I'll check the service") or returns a live-looking status/metric without selecting a governed read tool, the reliability wrapper performs one bounded repair attempt. The repaired response must select a governed tool; otherwise the request fails closed instead of persisting guessed or stale operational data. Short follow-ups such as `6.200چی` may reuse the unambiguous service/query context from recent operator turns, but the new target is still re-read through the governed tool boundary.
+
 Prometheus metrics include:
 
 - `aiops_chatbot_requests_total`
