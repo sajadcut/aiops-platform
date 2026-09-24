@@ -10,10 +10,11 @@ from integrations.vm.ssh_connector import SSHVMConnector
 def test_vm_target_and_service_allowlists(monkeypatch):
     monkeypatch.setattr(settings, "APP_ENV", "test")
     monkeypatch.setattr(settings, "SSH_ALLOWED_TARGETS", ["vm01"])
-    monkeypatch.setattr(settings, "SSH_ALLOWED_SERVICES", ["nginx"])
+    monkeypatch.setattr(settings, "SSH_ALLOWED_SERVICES", ["nginx", "haproxy"])
     connector = SSHVMConnector()
     connector._validate_target("vm01")
     connector._validate_service("nginx")
+    connector._validate_service("haproxy")
     with pytest.raises(PermissionError):
         connector._validate_target("vm02")
     with pytest.raises(PermissionError):
