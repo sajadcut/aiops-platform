@@ -20,6 +20,41 @@ const fmtDate = v => v ? new Date(v).toLocaleString() : '—';
 const fmtShortDate = v => v ? new Date(v).toLocaleString([], {month:'short',day:'2-digit',hour:'2-digit',minute:'2-digit'}) : '—';
 const pct = v => `${Math.round((Number(v) || 0) * 100)}%`;
 const isOpen = i => !['closed', 'resolved'].includes(lower(i.status));
+const THEME_STORAGE = 'aiops.chatbot.theme';
+
+function initialTheme() {
+  const saved = localStorage.getItem(THEME_STORAGE);
+  if (saved === 'light' || saved === 'dark') return saved;
+  return window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+}
+
+function applyTheme(value, {persist = true} = {}) {
+  const theme = value === 'light' ? 'light' : 'dark';
+  document.documentElement.dataset.theme = theme;
+  if (persist) localStorage.setItem(THEME_STORAGE, theme);
+
+  const toggle = $('#themeToggle');
+  const moon = $('#themeMoon');
+  const sun = $('#themeSun');
+  const label = $('#themeLabel');
+  const switchTo = theme === 'dark' ? 'روشن' : 'تیره';
+  if (toggle) {
+    toggle.dataset.theme = theme;
+    toggle.setAttribute('aria-label', 'تغییر به پوسته ' + switchTo);
+    toggle.title = 'تغییر به پوسته ' + switchTo;
+  }
+  if (moon) moon.classList.toggle('hidden', theme !== 'dark');
+  if (sun) sun.classList.toggle('hidden', theme !== 'light');
+  if (label) label.textContent = theme === 'dark' ? 'تیره' : 'روشن';
+
+  const themeColor = document.querySelector('meta[name="theme-color"]');
+  if (themeColor) themeColor.setAttribute('content', theme === 'light' ? '#F6F8FA' : '#0B0F14');
+  return theme;
+}
+
+function toggleTheme() {
+  applyTheme(document.documentElement.dataset.theme === 'light' ? 'dark' : 'light');
+}
 
 function pill(v = '') {
   const s = lower(v);
@@ -489,7 +524,17 @@ window.renderServices = renderServices;
 window.renderMcp = renderMcp;
 window.renderAudit = renderAudit;
 window.loadAll = loadAll;
+window.toggleTheme = toggleTheme;
+
+window.addEventListener('storage', event => {
+  if (event.key === THEME_STORAGE && (event.newValue === 'light' || event.newValue === 'dark')) {
+    applyTheme(event.newValue, {persist: false});
+  }
+});
+
 window.addEventListener('DOMContentLoaded', () => {
+  applyTheme(initialTheme(), {persist: false});
+  $('#themeToggle')?.addEventListener('click', toggleTheme);
   if (S.key) $('#apiKey').value = S.key;
   loadAll();
   setInterval(loadAll, 60000);
