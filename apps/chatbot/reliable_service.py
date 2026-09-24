@@ -120,6 +120,15 @@ def _is_connection_error(exc: BaseException | None) -> bool:
     return isinstance(exc, ConnectionError) or "connect" in name or "network" in name
 
 
+def _safe_policy_denial(exc: BaseException | None) -> str | None:
+    if exc is None:
+        return None
+    value = str(exc)
+    if value in {"vm_target_not_allowed", "vm_service_not_allowed"}:
+        return value
+    return None
+
+
 class ReliableChatLLMAdapter(LLMAdapter):
     """Chat-stage reliability wrapper around the configured LLM adapter."""
 
@@ -264,6 +273,11 @@ class OperationsCopilotService(ChatbotService):
                     raise HTTPException(status_code=504, detail="chatbot_llm_timeout") from cause
             if detail.startswith("chatbot_tool_failed:"):
                 tool = detail.partition(":")[2]
+                policy_denial = _safe_policy_denial(cause)
+                if policy_denial == "vm_target_not_allowed":
+                    raise HTTPException(status_code=403, detail=f"chatbot_target_not_allowed:{tool}") from cause
+                if policy_denial == "vm_service_not_allowed":
+                    raise HTTPException(status_code=403, detail=f"chatbot_service_not_allowed:{tool}") from cause
                 if _is_timeout_error(cause):
                     raise HTTPException(status_code=504, detail=f"chatbot_tool_timeout:{tool}") from cause
                 if _is_connection_error(cause):
