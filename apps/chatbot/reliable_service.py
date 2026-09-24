@@ -98,6 +98,14 @@ _SERVICE_STOPWORDS = {
     "pod", "pods", "query", "ram", "running", "server", "service", "status",
     "swap", "verify", "vm", "zabbix",
 }
+_MUTATION_REQUEST_RE = re.compile(
+    r"(?:"
+    r"ریستارت|راه(?:\s|\u200c)*انداز|استارت|توقف|خاموش(?:\s|\u200c)*کن|"
+    r"\brestart\b|\bstart\b|\breload\b|\bstop\b|\breboot\b|"
+    r"\bscale\b|\brollback\b"
+    r")",
+    re.IGNORECASE,
+)
 
 
 def _valid_ipv4(value: str) -> bool:
@@ -211,6 +219,8 @@ def _deterministic_vm_service_read_call(
     if not turns:
         return None
     current = turns[-1].replace("\u200c", " ")
+    if _MUTATION_REQUEST_RE.search(current):
+        return None
     if not (
         _LIVE_INSPECTION_RE.search(current)
         or _LIVE_OPERATIONAL_QUERY_RE.search(current)
@@ -358,6 +368,23 @@ class ReliableChatLLMAdapter(LLMAdapter):
         max_tokens: int = 1000,
         **kwargs: Any,
     ) -> LLMResponse:
+        stage = str(kwargs.get("stage") or kwargs.get("purpose") or "")
+        tools_available = bool(kwargs.get("tools"))
+        if stage == "chatbot_intent" and tools_available:
+            deterministic_call = _deterministic_vm_service_read_call(
+                messages,
+                tools=kwargs.get("tools"),
+            )
+            if deterministic_call is not None:
+                tool_name = str((deterministic_call.get("function") or {}).get("name") or "unknown")
+                CHAT_DETERMINISTIC_READ_FALLBACKS.labels(tool=tool_name).inc()
+                return LLMResponse(
+                    content="",
+                    model="deterministic-governed-router",
+                    tool_calls=[deterministic_call],
+                    finish_reason="tool_calls",
+                )
+
         try:
             response = await self.delegate.generate_with_messages(
                 messages,
@@ -370,8 +397,6 @@ class ReliableChatLLMAdapter(LLMAdapter):
                 CHAT_LLM_TIMEOUTS.inc()
             raise
 
-        stage = str(kwargs.get("stage") or kwargs.get("purpose") or "")
-        tools_available = bool(kwargs.get("tools"))
         incomplete = _looks_obviously_incomplete(response)
         nonterminal_tool_preamble = _looks_like_nonterminal_tool_preamble(
             response,
