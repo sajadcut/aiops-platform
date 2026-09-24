@@ -16,6 +16,12 @@ from domain.contracts.logging import log_workflow_step, logger
 from domain.contracts.redaction import redact
 
 
+_SAFE_REMOTE_POLICY_ERRORS = frozenset({
+    "vm_target_not_allowed",
+    "vm_service_not_allowed",
+})
+
+
 class MCPClient:
     production_supported = True
     _ids = itertools.count(1)
@@ -378,6 +384,16 @@ class MCPClient:
         )
         if result.get("error"):
             logger.warning("mcp_remote_error", server=self.server_name, method=method, tool=tool_name, response=self._bounded_for_log(result))
+            remote_error = result.get("error")
+            remote_message = (
+                str(remote_error.get("message") or "").strip()
+                if isinstance(remote_error, dict)
+                else ""
+            )
+            # Preserve only explicit, locally allowlisted policy denials. Never
+            # propagate arbitrary remote error text into higher layers or UI.
+            if remote_message in _SAFE_REMOTE_POLICY_ERRORS:
+                raise PermissionError(remote_message)
             raise RuntimeError(f"mcp_remote_error:{self.server_name}")
         payload = result.get("result", {})
         if method == "tools/call" and isinstance(payload, dict) and payload.get("isError") is True:
