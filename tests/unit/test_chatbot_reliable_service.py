@@ -132,3 +132,80 @@ async def test_operations_copilot_preserves_safe_failure_cause_taxonomy(
         await service.message(identity, ChatMessageRequest(message="status?"))
     assert failure.value.status_code == expected_status
     assert failure.value.detail == expected_detail
+
+@pytest.mark.asyncio
+async def test_chatbot_intent_retries_tool_free_operational_check_preamble():
+    tool_call = {
+        "id": "call-status",
+        "type": "function",
+        "function": {
+            "name": "vm_service_status",
+            "arguments": '{"target":"10.100.6.200","service":"nginx"}',
+        },
+    }
+    delegate = SequencedLLM([
+        response(
+            "برای بررسی وضعیت سرویس nginx روی سرور 10.100.6.200، ابتدا وضعیت سرویس "
+            "و سپس منابع سرور را بررسی می‌کنم."
+        ),
+        response("", tool_calls=[tool_call]),
+    ])
+    adapter = ReliableChatLLMAdapter(delegate)
+
+    result = await adapter.generate_with_messages(
+        [
+            {"role": "user", "content": "nginx سرور 10.100.6.199 در چه وضعیته"},
+            {"role": "assistant", "content": "سرویس nginx روی 10.100.6.199 غیرفعال است."},
+            {"role": "user", "content": "6.200چی"},
+        ],
+        max_tokens=120,
+        stage="chatbot_intent",
+        tools=[{"type": "function", "function": {"name": "vm_service_status"}}],
+        tool_choice="auto",
+    )
+
+    assert result.tool_calls == [tool_call]
+    assert len(delegate.calls) == 2
+    repair = delegate.calls[1][3][-1]["content"]
+    assert "select the tool now" in repair
+    assert "future check" in repair
+
+
+@pytest.mark.asyncio
+async def test_chatbot_intent_fails_closed_when_tool_preamble_repeats():
+    delegate = SequencedLLM([
+        response("برای بررسی وضعیت سرور، ابتدا وضعیت سرویس را بررسی می‌کنم."),
+        response("ابتدا وضعیت سرویس را چک می‌کنم و سپس منابع را بررسی می‌کنم."),
+    ])
+    adapter = ReliableChatLLMAdapter(delegate)
+
+    with pytest.raises(ValueError, match="chatbot_llm_incomplete_response"):
+        await adapter.generate_with_messages(
+            [{"role": "user", "content": "6.200چی"}],
+            max_tokens=120,
+            stage="chatbot_intent",
+            tools=[{"type": "function", "function": {"name": "vm_service_status"}}],
+            tool_choice="auto",
+        )
+
+    assert len(delegate.calls) == 2
+
+
+@pytest.mark.asyncio
+async def test_direct_nonoperational_future_statement_is_not_forced_to_tool():
+    delegate = SequencedLLM([
+        response("اگر بخواهید، بعداً می‌توانم این معماری را هم توضیح بدهم."),
+    ])
+    adapter = ReliableChatLLMAdapter(delegate)
+
+    result = await adapter.generate_with_messages(
+        [{"role": "user", "content": "MCP یعنی چه؟"}],
+        max_tokens=120,
+        stage="chatbot_intent",
+        tools=[{"type": "function", "function": {"name": "vm_service_status"}}],
+        tool_choice="auto",
+    )
+
+    assert "معماری" in result.content
+    assert len(delegate.calls) == 1
+
