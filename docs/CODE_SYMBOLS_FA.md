@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 400 | Dashboard JS files scanned: 5 | Symbols indexed: 3599**
+**Python files scanned: 400 | Dashboard JS files scanned: 5 | Symbols indexed: 3600**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -2663,6 +2663,7 @@
 | `tests/unit/test_dashboard_contract.py` | `test_dashboard_summary_tracks_full_governed_lifecycle` | 77 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_dashboard_contract.py` | `test_incident_refresh_lazy_loads_historical_memory` | 95 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_dashboard_contract.py` | `test_dashboard_assets_use_absolute_routes_without_client_redirect_race` | 103 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_dashboard_contract.py` | `test_dashboard_theme_matches_chatbot_and_persists_across_surfaces` | 116 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_dashboard_control_center.py` | `test_dashboard_is_single_live_control_center` | 7 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_dashboard_control_center.py` | `test_incident_workbench_defaults_to_active_and_shows_unambiguous_local_time` | 34 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_dashboard_control_center.py` | `test_dashboard_assets_and_agent_route_are_served_by_fastapi` | 48 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
