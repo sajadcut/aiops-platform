@@ -51,3 +51,18 @@ def test_dashboard_html_css_and_js_are_actually_served_over_http():
     assert "javascript" in js.headers.get("content-type", "")
     assert "loadAll" in js.text
     assert "renderServices" in js.text
+
+@pytest.mark.asyncio
+async def test_legacy_dashboard_asset_aliases_remain_available_for_stale_tabs():
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://testserver") as client:
+        for path, content_type in (
+            ("/control-center.css", "text/css"),
+            ("/approval-actions.css", "text/css"),
+            ("/control-center.js", "application/javascript"),
+            ("/approval-actions.js", "application/javascript"),
+        ):
+            response = await client.get(path)
+            assert response.status_code == 200
+            assert content_type in response.headers.get("content-type", "")
+
