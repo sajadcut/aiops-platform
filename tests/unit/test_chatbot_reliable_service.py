@@ -1,6 +1,7 @@
 import pytest
 from fastapi import HTTPException
 
+from apps.chatbot.errors import classify_chatbot_error
 from apps.chatbot.models import ChatMessageRequest
 from apps.chatbot.reliable_service import (
     OperationsCopilotService,
@@ -112,6 +113,18 @@ async def test_non_chatbot_stage_does_not_add_chat_repair_semantics():
             ConnectionError("mcp connection refused"),
             502,
             "chatbot_tool_unavailable:vm_metrics",
+        ),
+        (
+            "chatbot_tool_failed:vm_service_status",
+            RuntimeError("vm_target_not_allowed"),
+            403,
+            "chatbot_target_not_allowed:vm_service_status",
+        ),
+        (
+            "chatbot_tool_failed:vm_service_status",
+            RuntimeError("vm_service_not_allowed"),
+            403,
+            "chatbot_service_not_allowed:vm_service_status",
         ),
     ],
 )
@@ -259,4 +272,22 @@ async def test_chatbot_live_request_fails_closed_if_model_refuses_tool_twice():
         )
 
     assert len(delegate.calls) == 2
+
+def test_chatbot_vm_allowlist_denials_are_operator_safe_and_non_retryable():
+    target = classify_chatbot_error(
+        HTTPException(status_code=403, detail="chatbot_target_not_allowed:vm_service_status")
+    )
+    service = classify_chatbot_error(
+        HTTPException(status_code=403, detail="chatbot_service_not_allowed:vm_service_status")
+    )
+
+    assert target.code == "VM_TARGET_NOT_ALLOWED"
+    assert target.component == "authorization"
+    assert target.retryable is False
+    assert "SSH_ALLOWED_TARGETS" in target.message
+
+    assert service.code == "VM_SERVICE_NOT_ALLOWED"
+    assert service.component == "authorization"
+    assert service.retryable is False
+    assert "SSH_ALLOWED_SERVICES" in service.message
 
