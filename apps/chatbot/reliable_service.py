@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import re
 import time
 from typing import Any, Dict, List, Optional
@@ -32,6 +33,11 @@ CHAT_MCP_ERRORS = Counter(
 CHAT_TOOL_LATENCY = Histogram(
     "aiops_chatbot_tool_call_latency_seconds",
     "AIOps chatbot governed tool latency",
+    ["tool"],
+)
+CHAT_DETERMINISTIC_READ_FALLBACKS = Counter(
+    "aiops_chatbot_deterministic_read_fallback_total",
+    "Clear live VM reads resolved deterministically after a model omitted the governed tool call",
     ["tool"],
 )
 
@@ -83,6 +89,143 @@ _OPERATIONAL_LOCATOR_RE = re.compile(
     re.IGNORECASE,
 )
 _ASCII_RESOURCE_TOKEN_RE = re.compile(r"\b[a-z][a-z0-9_.-]{2,}\b", re.IGNORECASE)
+_FULL_IPV4_RE = re.compile(r"(?<![\d.])(?:\d{1,3}\.){3}\d{1,3}(?![\d.])")
+_IP_SUFFIX_RE = re.compile(r"(?<![\d.])(\d{1,3})\.(\d{1,3})(?![\d.])")
+_SERVICE_TOKEN_RE = re.compile(r"\b[a-z][a-z0-9@_.:-]{1,63}\b", re.IGNORECASE)
+_SERVICE_STOPWORDS = {
+    "active", "check", "cpu", "disk", "health", "host", "inactive", "inspect",
+    "k8s", "kubernetes", "load", "log", "logs", "memory", "metrics", "network",
+    "pod", "pods", "query", "ram", "running", "server", "service", "status",
+    "swap", "verify", "vm", "zabbix",
+}
+
+
+def _valid_ipv4(value: str) -> bool:
+    parts = value.split(".")
+    return len(parts) == 4 and all(part.isdigit() and 0 <= int(part) <= 255 for part in parts)
+
+
+def _user_turns(messages: List[Dict[str, str]]) -> list[str]:
+    return [
+        str(item.get("content") or "").strip()
+        for item in messages
+        if str(item.get("role") or "") == "user" and str(item.get("content") or "").strip()
+    ]
+
+
+def _service_candidates(text: str) -> list[str]:
+    candidates: list[str] = []
+    for token in _SERVICE_TOKEN_RE.findall(text):
+        value = token.lower()
+        if value in _SERVICE_STOPWORDS or value.isdigit():
+            continue
+        if value not in candidates:
+            candidates.append(value)
+    return candidates
+
+
+def _resolve_service_from_turns(turns: list[str]) -> str | None:
+    if not turns:
+        return None
+    current = _service_candidates(turns[-1])
+    if len(current) == 1:
+        return current[0]
+    if len(current) > 1:
+        return None
+    for previous in reversed(turns[:-1]):
+        candidates = _service_candidates(previous)
+        if len(candidates) == 1:
+            return candidates[0]
+        if len(candidates) > 1:
+            return None
+    return None
+
+
+def _resolve_vm_target_from_turns(turns: list[str]) -> str | None:
+    if not turns:
+        return None
+    current = turns[-1]
+    explicit = [value for value in _FULL_IPV4_RE.findall(current) if _valid_ipv4(value)]
+    explicit = list(dict.fromkeys(explicit))
+    if len(explicit) == 1:
+        return explicit[0]
+    if len(explicit) > 1:
+        return None
+
+    suffixes = []
+    for left, right in _IP_SUFFIX_RE.findall(current):
+        if 0 <= int(left) <= 255 and 0 <= int(right) <= 255:
+            suffixes.append((left, right))
+    suffixes = list(dict.fromkeys(suffixes))
+    prior_targets: list[str] = []
+    for previous in reversed(turns[:-1]):
+        for value in _FULL_IPV4_RE.findall(previous):
+            if _valid_ipv4(value) and value not in prior_targets:
+                prior_targets.append(value)
+
+    if len(suffixes) == 1:
+        suffix = ".".join(suffixes[0])
+        matches = [value for value in prior_targets if value.endswith("." + suffix)]
+        if len(matches) == 1:
+            return matches[0]
+        return None
+
+    return prior_targets[0] if prior_targets else None
+
+
+def _available_tool_names(tools: Any) -> set[str]:
+    names: set[str] = set()
+    if not isinstance(tools, list):
+        return names
+    for item in tools:
+        if not isinstance(item, dict):
+            continue
+        function = item.get("function")
+        if isinstance(function, dict):
+            name = str(function.get("name") or "").strip()
+            if name:
+                names.add(name)
+    return names
+
+
+def _deterministic_vm_service_read_call(
+    messages: List[Dict[str, str]],
+    *,
+    tools: Any,
+) -> dict[str, Any] | None:
+    """Build only an unambiguous governed VM service read; never infer a write."""
+
+    turns = _user_turns(messages)
+    if not turns:
+        return None
+    current = turns[-1].replace("\u200c", " ")
+    if not (
+        _LIVE_INSPECTION_RE.search(current)
+        or _LIVE_OPERATIONAL_QUERY_RE.search(current)
+        or _FOLLOWUP_LOCATOR_RE.search(current)
+    ):
+        return None
+
+    target = _resolve_vm_target_from_turns(turns)
+    service = _resolve_service_from_turns(turns)
+    if not target or not service:
+        return None
+
+    available = _available_tool_names(tools)
+    wants_logs = bool(re.search(r"(?:لاگ|log|logs)", current, re.IGNORECASE))
+    tool_name = "vm_service_logs" if wants_logs else "vm_service_status"
+    if tool_name not in available:
+        return None
+
+    arguments: dict[str, Any] = {"target": target, "service": service}
+    return {
+        "id": "deterministic-vm-service-read",
+        "type": "function",
+        "function": {
+            "name": tool_name,
+            "arguments": json.dumps(arguments, ensure_ascii=False, separators=(",", ":")),
+        },
+    }
 
 
 def _requires_live_operational_tool(messages: List[Dict[str, str]], *, tools_available: bool) -> bool:
@@ -231,6 +374,22 @@ class ReliableChatLLMAdapter(LLMAdapter):
             incomplete or nonterminal_tool_preamble or missing_required_live_tool
         ):
             return response
+
+        if missing_required_live_tool:
+            deterministic_call = _deterministic_vm_service_read_call(
+                messages,
+                tools=kwargs.get("tools"),
+            )
+            if deterministic_call is not None:
+                tool_name = str((deterministic_call.get("function") or {}).get("name") or "unknown")
+                CHAT_DETERMINISTIC_READ_FALLBACKS.labels(tool=tool_name).inc()
+                return LLMResponse(
+                    content="",
+                    model=response.model,
+                    usage=response.usage,
+                    tool_calls=[deterministic_call],
+                    finish_reason="tool_calls",
+                )
 
         # No governed tool has executed yet, so one bounded retry is safe.
         # A model sentence such as "I'll check that now" is not a terminal
