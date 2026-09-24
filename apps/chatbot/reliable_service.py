@@ -38,10 +38,10 @@ CHAT_TOOL_LATENCY = Histogram(
 _PERSIAN_RE = re.compile(r"[\u0600-\u06ff]")
 _TERMINAL_PUNCTUATION = tuple(".!?؟…؛:)]}»\"'")
 _NONTERMINAL_TOOL_PREAMBLE_PATTERNS = (
-    re.compile(r"(?:بررسی|چک|استعلام)\\s*(?:می\\s*کنم|خواهم\\s*کرد)", re.IGNORECASE),
+    re.compile(r"(?:بررسی|چک|استعلام)\s*(?:می\s*کنم|خواهم\s*کرد)", re.IGNORECASE),
     re.compile(r"(?:ابتدا|اول).*(?:بررسی|چک).*(?:سپس|بعد)", re.IGNORECASE | re.DOTALL),
-    re.compile(r"\\b(?:i(?:'ll| will)|let me)\\s+(?:check|inspect|look up|verify|query|retrieve)\\b", re.IGNORECASE),
-    re.compile(r"\\b(?:first|initially)\\b.*\\b(?:check|inspect|verify|query)\\b.*\\b(?:then|after)\\b", re.IGNORECASE | re.DOTALL),
+    re.compile(r"\b(?:i(?:'ll| will)|let me)\s+(?:check|inspect|look up|verify|query|retrieve)\b", re.IGNORECASE),
+    re.compile(r"\b(?:first|initially)\b.*\b(?:check|inspect|verify|query)\b.*\b(?:then|after)\b", re.IGNORECASE | re.DOTALL),
 )
 
 
@@ -60,13 +60,13 @@ _LIVE_OPERATIONAL_QUERY_RE = re.compile(
     r"(?:"
     r"وضعیت|وضعیته|چقدره|چنده|مصرف|فعال|غیرفعال|خاموش|روشن|"
     r"لاگ|لاگ‌ها|متریک|cpu|memory|ram|"
-    r"\\bstatus\\b|\\bhealth\\b|\\bmetrics?\\b|\\blogs?\\b|\\bpods?\\b|"
-    r"\\brunning\\b|\\bactive\\b|\\binactive\\b"
+    r"\bstatus\b|\bhealth\b|\bmetrics?\b|\blogs?\b|\bpods?\b|"
+    r"\brunning\b|\bactive\b|\binactive\b"
     r")",
     re.IGNORECASE,
 )
 _FOLLOWUP_LOCATOR_RE = re.compile(
-    r"(?:\\b\\d{1,3}(?:\\.\\d{1,3}){1,3}\\b|چی(?:ه)?\\s*$|what about|how about)",
+    r"(?:\b\d{1,3}(?:\.\d{1,3}){1,3}\b|چی(?:ه)?\s*$|what about|how about)",
     re.IGNORECASE,
 )
 
