@@ -1407,47 +1407,47 @@
 | `dashboards/chatbot-ui.js` | `addOperationalFacts` | 273 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
 | `dashboards/chatbot-ui.js` | `addErrorMeta` | 295 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
 | `dashboards/chatbot-ui.js` | `formatMessageTime` | 318 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/chatbot.js` | `$` | 19 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/chatbot.js` | `apiKey` | 72 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/chatbot.js` | `sessionId` | 73 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/chatbot.js` | `toast` | 76 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/chatbot.js` | `isNearBottom` | 84 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/chatbot.js` | `updateScrollAffordance` | 88 | JavaScript function | state یا داده را به‌صورت durable ذخیره/به‌روزرسانی می‌کند | browser module |
-| `dashboards/chatbot.js` | `scrollToLatest` | 93 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/chatbot.js` | `messagesInner` | 100 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/chatbot.js` | `renderEmptyState` | 110 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/chatbot.js` | `clearConversation` | 142 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/chatbot.js` | `removeEmptyState` | 148 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/chatbot.js` | `addMessage` | 153 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/chatbot.js` | `addProposalControls` | 240 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/chatbot.js` | `decide` | 301 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/chatbot.js` | `renderResponse` | 334 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/chatbot.js` | `renderTerminalError` | 341 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/chatbot.js` | `showStatus` | 357 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/chatbot.js` | `hideStatus` | 364 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/chatbot.js` | `activeSession` | 371 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/chatbot.js` | `formatSessionTime` | 375 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/chatbot.js` | `renderSessionSkeleton` | 388 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/chatbot.js` | `renderSessionList` | 400 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/chatbot.js` | `rows` | 404 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/chatbot.js` | `loadSessions` | 479 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
-| `dashboards/chatbot.js` | `draftKey` | 493 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/chatbot.js` | `saveDraft` | 497 | JavaScript function | state یا داده را به‌صورت durable ذخیره/به‌روزرسانی می‌کند | browser module |
-| `dashboards/chatbot.js` | `restoreDraft` | 501 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/chatbot.js` | `loadHistory` | 506 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
-| `dashboards/chatbot.js` | `selectSession` | 583 | JavaScript function | بر اساس state/capability مسیر یا handler مناسب را انتخاب می‌کند | browser module |
-| `dashboards/chatbot.js` | `setStreaming` | 599 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/chatbot.js` | `stopGeneration` | 610 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/chatbot.js` | `createStreamView` | 617 | JavaScript function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | browser module |
-| `dashboards/chatbot.js` | `finishStream` | 633 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/chatbot.js` | `sendMessage` | 653 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/chatbot.js` | `validateLogin` | 780 | JavaScript function | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | browser module |
-| `dashboards/chatbot.js` | `updateComposerMetrics` | 793 | JavaScript function | state یا داده را به‌صورت durable ذخیره/به‌روزرسانی می‌کند | browser module |
-| `dashboards/chatbot.js` | `openSidebar` | 800 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/chatbot.js` | `closeSidebar` | 807 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/chatbot.js` | `setSidebarCollapsed` | 813 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/chatbot.js` | `setTheme` | 825 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/chatbot.js` | `toggleApiKeyVisibility` | 834 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `$` | 20 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `apiKey` | 73 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `sessionId` | 74 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `toast` | 77 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `isNearBottom` | 85 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `updateScrollAffordance` | 89 | JavaScript function | state یا داده را به‌صورت durable ذخیره/به‌روزرسانی می‌کند | browser module |
+| `dashboards/chatbot.js` | `scrollToLatest` | 94 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `messagesInner` | 101 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `renderEmptyState` | 111 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/chatbot.js` | `clearConversation` | 143 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `removeEmptyState` | 149 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `addMessage` | 154 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `addProposalControls` | 241 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `decide` | 302 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `renderResponse` | 335 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/chatbot.js` | `renderTerminalError` | 342 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/chatbot.js` | `showStatus` | 358 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/chatbot.js` | `hideStatus` | 365 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `activeSession` | 372 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `formatSessionTime` | 376 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `renderSessionSkeleton` | 389 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/chatbot.js` | `renderSessionList` | 401 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/chatbot.js` | `rows` | 405 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `loadSessions` | 480 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
+| `dashboards/chatbot.js` | `draftKey` | 494 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `saveDraft` | 498 | JavaScript function | state یا داده را به‌صورت durable ذخیره/به‌روزرسانی می‌کند | browser module |
+| `dashboards/chatbot.js` | `restoreDraft` | 502 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `loadHistory` | 507 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
+| `dashboards/chatbot.js` | `selectSession` | 584 | JavaScript function | بر اساس state/capability مسیر یا handler مناسب را انتخاب می‌کند | browser module |
+| `dashboards/chatbot.js` | `setStreaming` | 600 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `stopGeneration` | 611 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `createStreamView` | 618 | JavaScript function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | browser module |
+| `dashboards/chatbot.js` | `finishStream` | 634 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `sendMessage` | 654 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `validateLogin` | 781 | JavaScript function | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | browser module |
+| `dashboards/chatbot.js` | `updateComposerMetrics` | 794 | JavaScript function | state یا داده را به‌صورت durable ذخیره/به‌روزرسانی می‌کند | browser module |
+| `dashboards/chatbot.js` | `openSidebar` | 801 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `closeSidebar` | 808 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `setSidebarCollapsed` | 814 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `setTheme` | 826 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `toggleApiKeyVisibility` | 835 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
 | `dashboards/control-center.js` | `$` | 15 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
 | `dashboards/control-center.js` | `$$` | 16 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
 | `dashboards/control-center.js` | `esc` | 17 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
