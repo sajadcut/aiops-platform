@@ -149,22 +149,8 @@ async def test_operations_copilot_preserves_safe_failure_cause_taxonomy(
     assert failure.value.detail == expected_detail
 
 @pytest.mark.asyncio
-async def test_chatbot_intent_retries_tool_free_operational_check_preamble():
-    tool_call = {
-        "id": "call-status",
-        "type": "function",
-        "function": {
-            "name": "vm_service_status",
-            "arguments": '{"target":"10.100.6.200","service":"nginx"}',
-        },
-    }
-    delegate = SequencedLLM([
-        response(
-            "برای بررسی وضعیت سرویس nginx روی سرور 10.100.6.200، ابتدا وضعیت سرویس "
-            "و سپس منابع سرور را بررسی می‌کنم."
-        ),
-        response("", tool_calls=[tool_call]),
-    ])
+async def test_chatbot_intent_routes_unambiguous_service_followup_without_llm():
+    delegate = SequencedLLM([])
     adapter = ReliableChatLLMAdapter(delegate)
 
     result = await adapter.generate_with_messages(
@@ -179,11 +165,18 @@ async def test_chatbot_intent_retries_tool_free_operational_check_preamble():
         tool_choice="auto",
     )
 
-    assert result.tool_calls == [tool_call]
-    assert len(delegate.calls) == 2
-    repair = delegate.calls[1][3][-1]["content"]
-    assert "select the tool now" in repair
-    assert "future check" in repair
+    assert len(delegate.calls) == 0
+    assert result.model == "deterministic-governed-router"
+    assert result.tool_calls == [
+        {
+            "id": "deterministic-vm-service-read",
+            "type": "function",
+            "function": {
+                "name": "vm_service_status",
+                "arguments": '{"target":"10.100.6.200","service":"nginx"}',
+            },
+        }
+    ]
 
 
 @pytest.mark.asyncio
@@ -225,18 +218,9 @@ async def test_direct_nonoperational_future_statement_is_not_forced_to_tool():
     assert len(delegate.calls) == 1
 
 @pytest.mark.asyncio
-async def test_chatbot_live_followup_rejects_tool_free_fabricated_status():
-    tool_call = {
-        "id": "call-live-status",
-        "type": "function",
-        "function": {
-            "name": "vm_service_status",
-            "arguments": '{"target":"10.100.6.200","service":"nginx"}',
-        },
-    }
+async def test_chatbot_live_followup_cannot_use_model_fabricated_status():
     delegate = SequencedLLM([
         response("nginx روی 10.100.6.200 فعال و healthy است."),
-        response("", tool_calls=[tool_call]),
     ])
     adapter = ReliableChatLLMAdapter(delegate)
 
@@ -252,8 +236,9 @@ async def test_chatbot_live_followup_rejects_tool_free_fabricated_status():
         tool_choice="auto",
     )
 
-    assert result.tool_calls == [tool_call]
-    assert len(delegate.calls) == 2
+    assert len(delegate.calls) == 0
+    assert result.tool_calls[0]["function"]["name"] == "vm_service_status"
+    assert '"target":"10.100.6.200"' in result.tool_calls[0]["function"]["arguments"]
 
 
 @pytest.mark.asyncio
@@ -326,7 +311,7 @@ async def test_live_inspection_uses_deterministic_governed_read_before_slow_repa
         tool_choice="auto",
     )
 
-    assert len(delegate.calls) == 1
+    assert len(delegate.calls) == 0
     assert result.finish_reason == "tool_calls"
     assert result.tool_calls == [
         {
@@ -416,6 +401,20 @@ def test_deterministic_vm_service_read_does_not_reuse_stale_service_past_generic
             {"role": "user", "content": "6.200 بگو"},
         ],
         tools=[{"type": "function", "function": {"name": "vm_service_status"}}],
+    )
+
+    assert call is None
+
+def test_deterministic_vm_service_read_never_routes_mutation_language():
+    call = _deterministic_vm_service_read_call(
+        [
+            {"role": "user", "content": "nginx سرور 10.100.6.199 در چه وضعیته"},
+            {"role": "user", "content": "haproxy 6.199 رو restart کن"},
+        ],
+        tools=[
+            {"type": "function", "function": {"name": "vm_service_status"}},
+            {"type": "function", "function": {"name": "vm_service_action"}},
+        ],
     )
 
     assert call is None
