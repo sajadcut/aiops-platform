@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 399 | Dashboard JS files scanned: 5 | Symbols indexed: 3575**
+**Python files scanned: 399 | Dashboard JS files scanned: 5 | Symbols indexed: 3578**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -2546,6 +2546,9 @@
 | `tests/unit/test_chatbot_reliable_service.py` | `test_non_chatbot_stage_does_not_add_chat_repair_semantics` | 87 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_chatbot_reliable_service.py` | `test_operations_copilot_preserves_safe_failure_cause_taxonomy` | 118 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_chatbot_reliable_service.py` | `test_operations_copilot_preserves_safe_failure_cause_taxonomy.fail_closed_base_message` | 125 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_operations_copilot_preserves_safe_failure_cause_taxonomy |
+| `tests/unit/test_chatbot_reliable_service.py` | `test_chatbot_intent_retries_tool_free_operational_check_preamble` | 137 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_reliable_service.py` | `test_chatbot_intent_fails_closed_when_tool_preamble_repeats` | 175 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_reliable_service.py` | `test_direct_nonoperational_future_statement_is_not_forced_to_tool` | 195 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_chatbot_response_redaction.py` | `test_chatbot_response_redacts_inline_secrets_before_ui_serialization` | 7 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_chatbot_response_redaction.py` | `test_chat_history_response_applies_same_redaction_defense_in_depth` | 22 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_chatbot_stop_regression.py` | `_script` | 4 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
