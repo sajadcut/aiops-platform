@@ -53,7 +53,8 @@ def _looks_like_nonterminal_tool_preamble(response: LLMResponse, *, tools_availa
     text = str(response.content or "").strip()
     if not text:
         return False
-    return any(pattern.search(text) for pattern in _NONTERMINAL_TOOL_PREAMBLE_PATTERNS)
+    normalized = text.replace("\u200c", " ").replace("\u200f", " ")
+    return any(pattern.search(normalized) for pattern in _NONTERMINAL_TOOL_PREAMBLE_PATTERNS)
 
 
 _LIVE_OPERATIONAL_QUERY_RE = re.compile(
