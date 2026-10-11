@@ -18,3 +18,7 @@ artifacts/
 Thumbs.db
 *.zip
 !docs/**/*.zip
+
+# Local Windows start/stop runtime state and per-machine VM MCP config
+.runtime/
+start-all.local.ps1
