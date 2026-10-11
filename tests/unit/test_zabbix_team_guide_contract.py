@@ -206,3 +206,61 @@ def test_no_trigger_based_vm_execution_identity():
     assert target_from_zabbix_payload(normalized) is None
     assert target_port_from_zabbix_payload(normalized) is None
     assert _asset(payload)["service"] == "nginx"
+
+
+@pytest.mark.asyncio
+async def test_api_ingestion_passes_normalized_guide_payload_to_lifecycle(monkeypatch):
+    from apps.api import signals as signals_api
+    from integrations.vm.target_context import current_vm_port, current_vm_target
+
+    recorded = {}
+
+    class FakeDB:
+        async def __aenter__(self):
+            return self
+        async def __aexit__(self, exc_type, exc, tb):
+            return False
+
+    async def fake_database_ready(db):
+        return None
+
+    async def fake_lifecycle(db, payload):
+        recorded.update(payload)
+        assert current_vm_target() == "10.20.10.15"
+        assert current_vm_port() == 8800
+        return {"status": "accepted", "incident_id": "incident-501001", "signal_state": "problem"}
+
+    monkeypatch.setattr(signals_api, "AsyncSessionLocal", FakeDB)
+    monkeypatch.setattr(signals_api, "_require_database_ready", fake_database_ready)
+    monkeypatch.setattr(signals_api, "ingest_zabbix_payload", fake_lifecycle)
+
+    result = await signals_api._ingest_zabbix({
+        "eventid": "501001", "event_value": "1",
+        "host": "payment-vm-01", "host_ip": "192.0.2.200",
+        "tags": [
+            {"tag": "service", "value": "payment-api"},
+            {"tag": "target_ip", "value": "10.20.10.15"},
+            {"tag": "target_port", "value": "8800"},
+        ],
+    })
+    assert result["incident_id"] == "incident-501001"
+    assert recorded["service"] == "payment-api"
+    assert recorded["target_ip"] == "10.20.10.15"
+    assert recorded["target_port"] == 8800
+    assert current_vm_target() is None
+    assert current_vm_port() is None
+
+
+@pytest.mark.asyncio
+async def test_api_rejects_missing_source_event_identity_before_calling_db(monkeypatch):
+    from fastapi import HTTPException
+    from apps.api import signals as signals_api
+
+    def no_database_session():
+        raise AssertionError("Invalid webhook must not open a DB session")
+
+    monkeypatch.setattr(signals_api, "AsyncSessionLocal", no_database_session)
+    with pytest.raises(HTTPException) as exc:
+        await signals_api._ingest_zabbix({"eventid": "{EVENT.ID}"})
+    assert exc.value.status_code == 422
+    assert exc.value.detail == "zabbix_eventid_required"
