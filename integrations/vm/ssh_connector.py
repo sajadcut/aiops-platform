@@ -351,26 +351,64 @@ class SSHVMConnector:
         return {"success": True, "supported": True, "target": target, "interfaces": interfaces, "routes": routes}
 
     async def service_status(self, target: str, service: str) -> Dict[str, Any]:
+        """Read structured systemd properties and bounded 'systemctl status'.
+
+        Failed/inactive units can make `systemctl status` exit 3; this is a
+        diagnostic observation, not an SSH failure. Never use arbitrary shell
+        commands supplied by an agent or HTTP request.
+        """
         self._validate_service(service)
-        props = " --property=".join(["LoadState", "ActiveState", "SubState", "UnitFileState", "MainPID", "ExecMainStatus", "NRestarts", "Result"])
+        props = " --property=".join([
+            "LoadState", "ActiveState", "SubState", "UnitFileState", "MainPID",
+            "ExecMainCode", "ExecMainStatus", "NRestarts", "Result",
+            "TimeoutStartUSec", "TimeoutStopUSec",
+        ])
         result = await self._run(target, f"systemctl show --no-pager --property={props} {service}")
         if not result.get("success"):
-            return {"success": False, "target": target, "service": service, "status": "unknown", "error": "service_status_failed"}
+            return {
+                "success": False, "target": target, "service": service,
+                "status": "unknown", "error": "service_status_failed",
+                "detail": str(result.get("stderr") or result.get("error") or "")[:500],
+            }
         values: Dict[str, str] = {}
         for line in str(result.get("stdout") or "").splitlines():
             key, sep, value = line.partition("=")
             if sep:
                 values[key] = value
+
+        def numeric(field: str) -> int | None:
+            value = values.get(field, "")
+            try:
+                return int(value) if value else None
+            except ValueError:
+                return None
+
         active_state = values.get("ActiveState", "unknown")
-        return {
+        diagnostics: Dict[str, Any] = {
             "success": True, "target": target, "service": service,
             "load_state": values.get("LoadState"), "active_state": active_state,
             "sub_state": values.get("SubState"), "unit_file_state": values.get("UnitFileState"),
-            "main_pid": int(values.get("MainPID", "0") or 0),
-            "exec_main_status": int(values.get("ExecMainStatus", "0") or 0),
-            "restart_count": int(values.get("NRestarts", "0") or 0), "result": values.get("Result"),
+            "main_pid": numeric("MainPID"), "exec_main_code": numeric("ExecMainCode"),
+            "exec_main_status": numeric("ExecMainStatus"),
+            "restart_count": numeric("NRestarts"), "result": values.get("Result"),
+            "timeout_start_usec": values.get("TimeoutStartUSec"),
+            "timeout_stop_usec": values.get("TimeoutStopUSec"),
             "status": active_state, "healthy": active_state == "active", "error": None,
         }
+        if active_state in {"failed", "inactive", "activating", "deactivating"}:
+            status = await self._run(
+                target, f"LC_ALL=C systemctl status {service} --no-pager -l --lines=30"
+            )
+            # 3 means an inactive/failed service; preserve its status output.
+            if status.get("success") or status.get("exit_code") == 3:
+                diagnostics["systemctl_status"] = str(status.get("stdout") or "")[:12000]
+                diagnostics["systemctl_status_exit_code"] = status.get("exit_code")
+            else:
+                diagnostics["systemctl_status"] = None
+                diagnostics["systemctl_status_error"] = str(
+                    status.get("stderr") or status.get("error") or "status_command_failed"
+                )[:500]
+        return diagnostics
 
     async def process_status(self, target: str, process: str) -> Dict[str, Any]:
         self._validate_service(process)
@@ -401,14 +439,35 @@ class SSHVMConnector:
                     continue
         return {"success": True, "target": target, "processes": rows, "error": None}
 
-    async def service_logs(self, target: str, service: str, limit: int = 100) -> Dict[str, Any]:
+    async def service_logs(self, target: str, service: str, limit: int = 150) -> Dict[str, Any]:
+        """Collect bounded journald history; retry read-only via sudo -n if denied.
+
+        A narrowly scoped NOPASSWD journalctl permission is provisioned by the
+        VM owner, never by AIOps. A failed attempt remains an error observation.
+        """
         self._validate_service(service)
         bounded = self._bounded_limit(limit)
-        result = await self._run(target, f"journalctl --no-pager -u {service} -n {bounded} -o short-iso 2>/dev/null")
+        command = f"journalctl --no-pager -u {service} -n {bounded} -o short-iso"
+        result = await self._run(target, command)
+        mode = "user"
         if not result.get("success"):
-            return {"success": False, "target": target, "service": service, "logs": [], "error": "service_logs_failed"}
-        lines = [line for line in str(result.get("stdout") or "").splitlines() if line.strip()]
-        return {"success": True, "target": target, "service": service, "logs": lines[-bounded:], "count": len(lines[-bounded:])}
+            failure = str(result.get("stderr") or "") + " " + str(result.get("stdout") or "")
+            if any(word in failure.lower() for word in ("permission", "access denied", "not permitted", "insufficient")):
+                mode = "sudo"
+                result = await self._run(target, f"sudo -n {command}")
+        if not result.get("success"):
+            detail = str(result.get("stderr") or result.get("error") or "journalctl_failed")
+            return {
+                "success": False, "target": target, "service": service,
+                "logs": [], "error": "journal_access_denied" if mode == "sudo" else "service_logs_failed",
+                "access_mode": mode, "exit_code": result.get("exit_code"),
+                "detail": detail[:500],
+            }
+        lines = [line[:1200] for line in str(result.get("stdout") or "").splitlines() if line.strip()]
+        return {
+            "success": True, "target": target, "service": service,
+            "logs": lines[-bounded:], "count": len(lines[-bounded:]), "access_mode": mode,
+        }
 
     async def system_logs(self, target: str, limit: int = 100) -> Dict[str, Any]:
         bounded = self._bounded_limit(limit)
