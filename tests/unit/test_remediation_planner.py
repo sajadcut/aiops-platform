@@ -19,7 +19,11 @@ def _state(evidence, *, source="zabbix"):
         "incident_id": "incident-1",
         "evaluation": {"approved_for_decision": True},
         "context": {
-            "trigger_signal": {"source": source, "summary": "service unavailable"},
+            "trigger_signal": {
+                "source": source,
+                "summary": "service unavailable",
+                "raw_data": {"target_ip": "10.100.6.199"} if source == "zabbix" else {},
+            },
             "evidence": list(evidence),
         },
         "findings": [
@@ -279,3 +283,35 @@ def test_durable_resume_restores_persisted_vm_target_and_port_context():
 
     assert current_vm_target() is None
     assert current_vm_port() is None
+
+
+def test_zabbix_automatic_remediation_requires_explicit_matching_target_ip():
+    evidence = [
+        _evidence(
+            "service_status", "vm-service",
+            target="10.100.6.199", service="haproxy.service", active_state="failed",
+        ),
+        _healthy_config(),
+    ]
+    state = _state(evidence)
+    state["context"]["trigger_signal"]["raw_data"] = {
+        "host_ip": "10.100.6.199",
+        "host": "vm-01",
+    }
+    missing = RemediationPlanner.plan(state)
+    assert missing["status"] == "not_planned"
+    assert missing["reason"] == "zabbix_explicit_target_ip_required"
+    assert missing["execution_request"] is None
+
+    state["context"]["trigger_signal"]["raw_data"] = {"target_ip": "10.0.0.99"}
+    mismatch = RemediationPlanner.plan(state)
+    assert mismatch["status"] == "not_planned"
+    assert mismatch["reason"] == "zabbix_trigger_target_mismatch"
+    assert mismatch["execution_request"] is None
+
+    state["context"]["trigger_signal"]["raw_data"] = {
+        "tags": [{"tag": "target_ip", "value": "10.100.6.199"}]
+    }
+    matched = RemediationPlanner.plan(state)
+    assert matched["status"] == "planned"
+    assert matched["target"] == "10.100.6.199"
