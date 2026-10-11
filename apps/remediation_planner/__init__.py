@@ -66,9 +66,16 @@ class RemediationPlanner:
         # to find a VM with matching service-state evidence.
         if source == "zabbix":
             trigger_raw = trigger_signal.get("raw_data")
-            declared_target = target_from_zabbix_payload(
-                trigger_raw if isinstance(trigger_raw, dict) else {}
-            )
+            trigger_raw = trigger_raw if isinstance(trigger_raw, dict) else {}
+            trigger_platform = str(trigger_raw.get("platform") or "").strip().lower()
+            trigger_asset_type = str(trigger_raw.get("asset_type") or "").strip().lower()
+            if (
+                trigger_platform in {"kubernetes", "network", "application"}
+                or trigger_asset_type in {"network", "application"}
+                or trigger_asset_type.startswith("kubernetes_")
+            ):
+                return {**base, "reason": "zabbix_non_vm_signal_not_auto_remediation_eligible"}
+            declared_target = target_from_zabbix_payload(trigger_raw)
             if not declared_target:
                 return {**base, "reason": "zabbix_explicit_target_ip_required"}
             if declared_target != target:
