@@ -64,7 +64,16 @@ def upgrade() -> None:
             ELSE
                 target_incident := NEW.incident_id;
             END IF;
-            PERFORM 1 FROM incidents WHERE id=target_incident FOR UPDATE;
+            IF TG_OP = 'UPDATE' AND
+                OLD.incident_id IS DISTINCT FROM NEW.incident_id THEN
+                -- Moving evidence to another Incident also alters the former
+                -- Incident's inventory; lock both in stable ID order.
+                PERFORM 1 FROM incidents
+                WHERE id IN (OLD.incident_id, NEW.incident_id)
+                ORDER BY id FOR UPDATE;
+            ELSE
+                PERFORM 1 FROM incidents WHERE id=target_incident FOR UPDATE;
+            END IF;
             IF TG_OP = 'DELETE' THEN
                 RETURN OLD;
             END IF;
