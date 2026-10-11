@@ -282,6 +282,10 @@ jobs:
         env:
           RUN_DB_RATE_LIMIT_TEST: '1'
         run: python -m pytest -q tests/integration/test_rate_limit_db.py
+      - name: Validate Knowledge Review human approval and Cognia publishing boundary
+        env:
+          RUN_DB_KNOWLEDGE_REVIEW_TEST: '1'
+        run: python -m pytest -q tests/integration/test_knowledge_review_db.py
       - name: Validate upgrade from an existing older database
         shell: bash
         run: |
