@@ -250,3 +250,14 @@ def test_durable_target_projection_is_labeled_and_not_execution_authority():
     assert report["approval_readiness"]["binding_digest"] == "digest-1"
     assert report["approval_readiness"]["evidence_snapshot_binding"] == "not_verified"
     assert report["source_policy"]["authorizes_execution"] is False
+
+
+def test_persian_fallback_translates_operational_statuses_without_raw_json():
+    report = make_brief()
+    prose = report["localized_narrative"]["fa"]
+    assert "در حال تحلیل" in prose
+    assert "در دسترس" in prose
+    assert "ریسک اقدام: زیاد" in prose
+    assert "وضعیت تأیید: در انتظار تأیید" in prose
+    assert "Cognia: available" not in prose
+    assert '"status":' not in prose
