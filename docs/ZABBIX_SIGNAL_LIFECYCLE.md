@@ -196,9 +196,11 @@ Get-Content .\logs\aiops.json.log |
   ConvertTo-Json -Depth 30
 ```
 
-For Kubernetes deployments, the same JSON records go to configured
-stdout/stderr logging collectors if JSON file logging is disabled. Normal
-log rotation/retention still applies; logging is not a durable webhook queue.
+For Kubernetes deployments with JSON file logging disabled, these
+structured fields are still emitted to the enabled console handler, which
+uses the configured human-readable renderer; the cluster log collector owns
+retention and any downstream JSON conversion. Normal log rotation/retention
+still applies to files; logging is not a durable webhook queue.
 
 ## Zabbix action and acceptance
 
