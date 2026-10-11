@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 403 | Dashboard JS files scanned: 5 | Symbols indexed: 3645**
+**Python files scanned: 404 | Dashboard JS files scanned: 5 | Symbols indexed: 3648**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1789,6 +1789,9 @@
 | `integrations/kubernetes/mcp_client.py` | `KubernetesMCPClient.restart_workload` | 118 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KubernetesMCPClient |
 | `integrations/kubernetes/mcp_client.py` | `KubernetesMCPClient.rollback_workload` | 129 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KubernetesMCPClient |
 | `integrations/kubernetes/mcp_client.py` | `KubernetesMCPClient.scale_workload` | 142 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KubernetesMCPClient |
+| `integrations/kubernetes/target_context.py` | `bind_kubernetes_namespace` | 16 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `integrations/kubernetes/target_context.py` | `current_kubernetes_namespace` | 21 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `integrations/kubernetes/target_context.py` | `reset_kubernetes_namespace` | 25 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `integrations/llm/base.py` | `LLMResponse` | 7 | class | نتیجه استاندارد از هر LLM Provider | module |
 | `integrations/llm/base.py` | `LLMAdapter` | 18 | class | اینترفیس انتزاعی برای همه‌ی Providerهای LLM | module |
 | `integrations/llm/base.py` | `LLMAdapter.generate` | 22 | async method | تولید متن بر اساس prompt | LLMAdapter |
