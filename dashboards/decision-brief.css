@@ -1,5 +1,5 @@
 /* Incident Decision Brief respects existing light/dark dashboard variables. */
-.decision-brief{font:400 13px/1.7 inherit;color:var(--text,#e7eff7);margin:0;overflow-wrap:anywhere}
+.decision-brief{font-family:inherit;font-size:13px;line-height:1.7;color:var(--text,#e7eff7);margin:0;overflow-wrap:anywhere}
 .decision-brief button{font:inherit;cursor:pointer;border:1px solid var(--line,#25445f);background:var(--surface-2,#102a3e);color:var(--text,#e7eff7);padding:7px 11px;border-radius:8px}
 .decision-brief button:hover,.decision-brief button:focus-visible{outline:2px solid var(--cyan,#59c6e8);outline-offset:1px}
 .db-header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px}
