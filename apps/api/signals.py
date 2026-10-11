@@ -13,7 +13,7 @@ from apps.signal_gateway.prometheus_alertmanager import AlertmanagerWebhookPaylo
 from apps.signal_gateway.zabbix_lifecycle import ingest_zabbix_payload
 from database import AsyncSessionLocal
 from domain.contracts.logging import logger
-from domain.contracts.rate_limit import rate_limiter_strict
+from domain.contracts.rate_limit import rate_limiter_loose, rate_limiter_strict
 from integrations.vm.target_context import bind_vm_port, bind_vm_target, bind_vm_probe_blocked, reset_vm_port, reset_vm_target, reset_vm_probe_blocked, target_from_zabbix_payload, target_port_from_zabbix_payload
 from integrations.zabbix.webhook_contract import normalize_zabbix_payload
 from integrations.kubernetes.target_context import bind_kubernetes_namespace, reset_kubernetes_namespace
@@ -195,6 +195,8 @@ async def ingest_prometheus_signal(request: Request, body: RawSignalPayload, _us
     }
 
 
-@router.post("/signals/zabbix", dependencies=[Depends(rate_limiter_strict)])
+# Zabbix delivers all Problem and Recovery events, including bursts.
+# Use the shared, configurable high-volume limiter; do not relax API-key RBAC.
+@router.post("/signals/zabbix", dependencies=[Depends(rate_limiter_loose)])
 async def ingest_zabbix_signal(request: Request, body: RawSignalPayload, _user=Depends(require_permission("ingest:signal"))):
     return await _ingest_zabbix(body.payload)
