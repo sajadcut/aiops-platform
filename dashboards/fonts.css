@@ -1,9 +1,8 @@
-/* Shared AIOps Persian typography. The .ttf files are supplied by the project
-   owner under font/ only when their license permits the intended deployment.
-   Missing fonts gracefully fall back without hiding UI content. */
+/* Shared AIOps Persian typography. Font files are delivered from font/ under
+   the deployment's applicable license. Missing fonts fall back safely. */
 @font-face {
   font-family: 'IRANSansX';
-  src: url('/assets/fonts/IRANSansXThin.ttf') format('truetype');
+  src: url('/assets/fonts/IRANSansXThin.ttf?v=2') format('truetype');
   font-style: normal;
   font-weight: 100;
   font-display: swap;
@@ -11,7 +10,7 @@
 
 @font-face {
   font-family: 'IRANSansX';
-  src: url('/assets/fonts/IRANSansXUltraLight.ttf') format('truetype');
+  src: url('/assets/fonts/IRANSansXUltraLight.ttf?v=2') format('truetype');
   font-style: normal;
   font-weight: 200;
   font-display: swap;
@@ -19,7 +18,7 @@
 
 @font-face {
   font-family: 'IRANSansX';
-  src: url('/assets/fonts/IRANSansXLight.ttf') format('truetype');
+  src: url('/assets/fonts/IRANSansXLight.ttf?v=2') format('truetype');
   font-style: normal;
   font-weight: 300;
   font-display: swap;
@@ -27,7 +26,7 @@
 
 @font-face {
   font-family: 'IRANSansX';
-  src: url('/assets/fonts/IRANSansXRegular.ttf') format('truetype');
+  src: url('/assets/fonts/IRANSansXRegular.ttf?v=2') format('truetype');
   font-style: normal;
   font-weight: 400;
   font-display: swap;
@@ -35,7 +34,7 @@
 
 @font-face {
   font-family: 'IRANSansX';
-  src: url('/assets/fonts/IRANSansXMedium.ttf') format('truetype');
+  src: url('/assets/fonts/IRANSansXMedium.ttf?v=2') format('truetype');
   font-style: normal;
   font-weight: 500;
   font-display: swap;
@@ -43,7 +42,7 @@
 
 @font-face {
   font-family: 'IRANSansX';
-  src: url('/assets/fonts/IRANSansXDemiBold.ttf') format('truetype');
+  src: url('/assets/fonts/IRANSansXDemiBold.ttf?v=2') format('truetype');
   font-style: normal;
   font-weight: 600;
   font-display: swap;
@@ -51,7 +50,7 @@
 
 @font-face {
   font-family: 'IRANSansX';
-  src: url('/assets/fonts/IRANSansXBold.ttf') format('truetype');
+  src: url('/assets/fonts/IRANSansXBold.ttf?v=2') format('truetype');
   font-style: normal;
   font-weight: 700;
   font-display: swap;
@@ -59,7 +58,7 @@
 
 @font-face {
   font-family: 'IRANSansX';
-  src: url('/assets/fonts/IRANSansXExtraBold.ttf') format('truetype');
+  src: url('/assets/fonts/IRANSansXExtraBold.ttf?v=2') format('truetype');
   font-style: normal;
   font-weight: 800;
   font-display: swap;
@@ -67,7 +66,7 @@
 
 @font-face {
   font-family: 'IRANSansX';
-  src: url('/assets/fonts/IRANSansXBlack.ttf') format('truetype');
+  src: url('/assets/fonts/IRANSansXBlack.ttf?v=2') format('truetype');
   font-style: normal;
   font-weight: 900;
   font-display: swap;
@@ -75,10 +74,11 @@
 
 :root {
   --aiops-font-family: 'IRANSansX', 'Vazirmatn', Tahoma, 'Segoe UI', Arial, sans-serif;
+  font-family: var(--aiops-font-family);
 }
 
 /* Form controls don't consistently inherit the page font across browsers.
    Code blocks keep their existing explicit monospace declarations. */
-html, body, button, input, select, textarea, optgroup, option {
+html, body, button, input, select, textarea, optgroup, option, summary {
   font-family: var(--aiops-font-family);
 }
