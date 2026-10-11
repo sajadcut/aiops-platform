@@ -15,8 +15,9 @@
       } catch (_) { document.documentElement.dataset.theme = 'dark'; }
     })();
   </script>
-  <link rel="stylesheet" href="/dashboard/fonts.css?v=1">
   <link rel="stylesheet" href="/dashboard/incident-command-room.css">
+  <!-- Load typography last so application CSS cannot override the Persian font. -->
+  <link rel="stylesheet" href="/dashboard/fonts.css?v=2">
 </head>
 <body>
 <a class="ic-skip" href="#ic-main">رفتن به گزارش رخداد</a>
