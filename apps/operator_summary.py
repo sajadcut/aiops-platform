@@ -272,6 +272,22 @@ def _observed_text(o: Dict[str, Any]) -> str:
     return f"برای {o.get('service')}{location}، " + ("، ".join(parts) + "." if parts else "Evidence عملیاتی ثبت شده اما وضعیت سرویس/Process/Port به‌صورت کامل موجود نیست.")
 
 
+_PERSIAN_CHARS = re.compile(r"[\u0600-\u06ff]")
+
+_ACTION_PERSIAN = {
+    "start_service": "راه‌اندازی سرویس",
+    "restart_service": "راه‌اندازی مجدد سرویس",
+    "reload_service": "بارگذاری مجدد پیکربندی سرویس",
+    "stop_service": "توقف سرویس",
+    "check_service": "بررسی وضعیت سرویس",
+    "service_status": "بررسی وضعیت سرویس",
+}
+
+
+def _has_persian(text: str) -> bool:
+    return bool(_PERSIAN_CHARS.search(text))
+
+
 def build_operator_summary(*, incident: Dict[str, Any], durable_evidence: Iterable[Dict[str, Any]], findings: Iterable[Dict[str, Any]], checkpoint: Dict[str, Any], approval: Optional[Dict[str, Any]] = None, audit_events: Optional[Iterable[Dict[str, Any]]] = None, memory_entry: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     """Deterministic, read-only operator Decision Support; never an execution authority."""
     state, finding_rows, audit = _d(checkpoint.get("state")), [dict(x) for x in findings if isinstance(x, dict)], [dict(x) for x in (audit_events or []) if isinstance(x, dict)]
@@ -303,7 +319,9 @@ def build_operator_summary(*, incident: Dict[str, Any], durable_evidence: Iterab
             "runbook_id": request.get("runbook_id"),
             "runbook_version": request.get("runbook_version"),
             "text_fa": " ".join(x for x in (
-                action_name, "روی" if action_target else "", action_target,
+                _ACTION_PERSIAN.get(action_name, "اقدام پیشنهادی: " + action_name) if action_name else "",
+                "از طریق " + action_tool if action_tool else "",
+                "روی " + action_target if action_target else "",
             ) if x) or None,
             "text_en": " ".join(part for part in english_parts if part) + ".",
         }
@@ -311,8 +329,11 @@ def build_operator_summary(*, incident: Dict[str, Any], durable_evidence: Iterab
         plan = _t(state.get("final_plan") or durable_approval.get("action"))
         recommended = {
             "tool": None, "action": None, "target": None, "parameters": {},
-            "text_fa": plan,
-            "text_en": plan if plan.isascii() else None,
+            # Never place English JSON/LLM prose under a Persian label.
+            # On-demand translation is display-only and cannot grant action authority.
+            "text_fa": plan if _has_persian(plan) else None,
+            "text_en": plan if not _has_persian(plan) else None,
+            "needs_persian_translation": not _has_persian(plan),
         } if plan else None
     execution = _d(state.get("execution_result")); execution_status = "not_executed" if not execution else "blocked" if _true(execution.get("execution_blocked") or execution.get("blocked")) else "success" if _true(execution.get("success")) else "failed"
     execution_view = None if not execution else {"status": execution_status, "tool": execution.get("tool_name"), "action": execution.get("action"), "target": execution.get("target"), "reason": execution.get("reason"), "error": execution.get("error"), "result": execution.get("result"), "approval_id": execution.get("approval_id")}
