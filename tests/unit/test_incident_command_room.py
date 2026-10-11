@@ -159,6 +159,14 @@ const assert = require('node:assert/strict');
   listeners.change({target:{id:'ic-check',checked:true}});
   assert.doesNotMatch(el('#ic-action-controls').innerHTML.match(/id="ic-approve"[^>]*>/)[0],/disabled/);
   const click=(selector)=>listeners.click({target:{closest(sel){return sel===selector?{}:null;}}});
+  // The backend changes its durable snapshot after the operator reviewed it.
+  // The first click MUST NOT authorize an action on that stale report.
+  version++;
+  click('#ic-approve');
+  await settle();
+  assert.equal(events.filter(x=>x[0]==='POST').length,0);
+  assert.match(el('#ic-action-controls').innerHTML,/disabled/);
+  listeners.change({target:{id:'ic-check',checked:true}});
   click('#ic-approve');
   await settle();
   assert.equal(events.filter(x=>x[0]==='POST'&&x[1].endsWith('/approve')).length,1);
