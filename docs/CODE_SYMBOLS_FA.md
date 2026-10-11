@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 409 | Dashboard JS files scanned: 5 | Symbols indexed: 3747**
+**Python files scanned: 409 | Dashboard JS files scanned: 5 | Symbols indexed: 3749**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -2662,6 +2662,8 @@
 | `tests/unit/test_cognia_client.py` | `test_candidate_revision_conflict_is_not_blindly_retried` | 371 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_cognia_client.py` | `test_candidate_revision_conflict_is_not_blindly_retried.handler` | 375 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_candidate_revision_conflict_is_not_blindly_retried |
 | `tests/unit/test_cognia_client.py` | `test_machine_client_does_not_expose_human_approval_decisions` | 407 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_cognia_client.py` | `test_machine_token_redirect_is_rejected_without_replaying_credentials` | 413 | async function | Cognia may redirect HTTP to HTTPS; the client must not forward secrets. | module |
+| `tests/unit/test_cognia_client.py` | `test_machine_token_redirect_is_rejected_without_replaying_credentials.handler` | 418 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_machine_token_redirect_is_rejected_without_replaying_credentials |
 | `tests/unit/test_cognia_only_rag_architecture.py` | `_join` | 4 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_cognia_only_rag_architecture.py` | `test_cognia_is_the_only_rag_runtime_contract` | 8 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_cognia_only_rag_architecture.py` | `test_historical_local_knowledge_table_is_retired_without_vector_retrieval` | 27 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
