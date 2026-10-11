@@ -1548,9 +1548,9 @@
 | `dashboards/knowledge-review.js` | `notice` | 13 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
 | `dashboards/knowledge-review.js` | `renderQueue` | 18 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
 | `dashboards/knowledge-review.js` | `renderSelection` | 30 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/knowledge-review.js` | `reload` | 72 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/knowledge-review.js` | `invoke` | 90 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/knowledge-review.js` | `createDraft` | 138 | JavaScript function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | browser module |
+| `dashboards/knowledge-review.js` | `reload` | 73 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/knowledge-review.js` | `invoke` | 91 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/knowledge-review.js` | `createDraft` | 139 | JavaScript function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | browser module |
 | `database/__init__.py` | `_json_default` | 23 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `database/__init__.py` | `_json_serializer` | 38 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `database/__init__.py` | `get_db` | 56 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
