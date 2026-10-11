@@ -433,3 +433,79 @@ async def test_evidence_collector_preserves_zabbix_request_namespace():
     finally:
         reset_kubernetes_namespace(token)
     assert k8s.queries == [("cognia", "cognia")]
+
+
+def test_exact_v11_media_type_fields_are_preserved_by_receiver():
+    from apps.api.signals import RawSignalPayload
+
+    fields = {
+        "eventid": "501001",
+        "event_value": "1",
+        "event_status": "PROBLEM",
+        "name": "VM memory usage is high",
+        "severity": "High",
+        "hostid": "9001",
+        "host": "vm-payment-01",
+        "host_name": "Payment VM",
+        "host_ip": "10.20.10.99",
+        "triggerid": "21001",
+        "trigger": "Memory usage high",
+        "tags": [{"tag": "platform", "value": "vm"}],
+        "operational_data": "Memory utilization=94%",
+        "acknowledged": "No",
+        "timestamp": "1791712800",
+    }
+    request = RawSignalPayload.model_validate({"payload": fields})
+    normalized = normalize_zabbix_payload(request.payload)
+    for key, value in fields.items():
+        assert normalized[key] == value
+    assert "api_key" not in normalized
+    assert "url" not in normalized
+    recovery = normalize_zabbix_payload({
+        "eventid": "501001", "event_value": "0",
+        "recovery_eventid": "501009",
+        "recovery_timestamp": "1791713100",
+    })
+    assert recovery["recovery_eventid"] == "501009"
+    assert recovery["recovery_timestamp"] == "1791713100"
+
+
+def test_zabbix_route_keeps_api_key_auth_and_high_volume_rate_limit():
+    from apps.api import signals as signals_api
+    from domain.contracts.rate_limit import rate_limiter_loose
+
+    route = next(
+        row for row in signals_api.router.routes
+        if getattr(row, "path", None) == "/signals/zabbix"
+    )
+    assert any(
+        depends.dependency is rate_limiter_loose
+        for depends in route.dependencies
+    )
+    auth = [
+        dependency for dependency in route.dependant.dependencies
+        if "require_permission" in getattr(dependency.call, "__qualname__", "")
+        or getattr(dependency.call, "__name__", "") == "dependency"
+    ]
+    assert auth
+
+
+def test_zabbix_kubernetes_node_identity_is_not_inferred_from_pod():
+    signal = signal_from_zabbix({
+        "eventid": "601201",
+        "event_value": "1",
+        "name": "Kubernetes node worker-03 is under pressure",
+        "platform": "kubernetes",
+        "asset_type": "kubernetes_node",
+        "cluster": "prod-k8s",
+        "node": "worker-03",
+        "owner": "infrastructure",
+        "datacenter": "dc1",
+    })
+    asset = AssetIdentityResolver.resolve([signal.to_evidence()])
+    assert asset["platform"] == "kubernetes"
+    assert asset["asset_type"] == "kubernetes_node"
+    assert asset["node"] == "worker-03"
+    assert asset["cluster"] == "prod-k8s"
+    assert asset["owner"] == "infrastructure"
+    assert asset["pod"] is None
