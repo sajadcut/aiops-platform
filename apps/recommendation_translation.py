@@ -13,7 +13,7 @@ from collections import OrderedDict
 
 from domain.contracts.config import settings
 from domain.contracts.redaction import redact_text
-from integrations.llm.openai_compatible import OpenAICompatibleLLMProvider
+from integrations.llm.openai_compatible import configured_llm_adapter
 
 _PERSIAN = re.compile(r"[\u0600-\u06ff]")
 _IP = re.compile(r"(?<![\d.])(?:\d{1,3}\.){3}\d{1,3}(?![\d.])")
@@ -57,17 +57,15 @@ async def translate_recommendation(source: str) -> str:
     if cached and time.monotonic() - cached[0] < _CACHE_SECONDS:
         _CACHE.move_to_end(digest)
         return cached[1]
-    if str(settings.LLM_PROVIDER or "").lower() not in {"openai-compatible", "openai_compatible"}:
+    if str(settings.LLM_PROVIDER or "").lower() not in {"openai-compatible", "openai_compatible", "dotin-general-chatbot", "dotin_general_chatbot"}:
         raise TranslationUnavailable("translation_model_not_configured")
     if not settings.LLM_BASE_URL or not settings.LLM_MODEL:
         raise TranslationUnavailable("translation_model_not_configured")
     # Scrub inline credentials before sending to the configured internal LLM.
     safe_source = redact_text(source)
-    provider = OpenAICompatibleLLMProvider(
-        base_url=settings.LLM_BASE_URL,
-        model=settings.LLM_MODEL,
-        api_key=settings.LLM_API_KEY,
-    )
+    # Reuse the configured AIOps provider (including Dotin General Chatbot)
+    # so localization never bypasses the existing credential/URL contract.
+    provider = configured_llm_adapter()
     system = (
         "You are a strictly read-only English-to-Persian technical TRANSLATOR, not an SRE agent. "
         "Translate the given stored AIOps JSON/plan into fluent Persian for a human operator. "
