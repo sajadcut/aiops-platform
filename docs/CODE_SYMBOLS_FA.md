@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 414 | Dashboard JS files scanned: 6 | Symbols indexed: 3803**
+**Python files scanned: 414 | Dashboard JS files scanned: 6 | Symbols indexed: 3804**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1188,7 +1188,8 @@
 | `apps/operator_summary.py` | `_cause` | 214 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/operator_summary.py` | `_evidence_summary` | 246 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/operator_summary.py` | `_observed_text` | 261 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/operator_summary.py` | `build_operator_summary` | 275 | function | Deterministic, read-only operator Decision Support; never an execution authority. | module |
+| `apps/operator_summary.py` | `_has_persian` | 287 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/operator_summary.py` | `build_operator_summary` | 291 | function | Deterministic, read-only operator Decision Support; never an execution authority. | module |
 | `apps/orchestrator/a2a_gateway.py` | `A2AGateway` | 11 | class | Compatibility gateway for structured multi-agent analysis. | module |
 | `apps/orchestrator/a2a_gateway.py` | `A2AGateway.__init__` | 18 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | A2AGateway |
 | `apps/orchestrator/a2a_gateway.py` | `A2AGateway.process_incident` | 24 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | A2AGateway |
