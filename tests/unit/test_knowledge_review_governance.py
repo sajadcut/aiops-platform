@@ -33,6 +33,7 @@ def _memory(**changes):
         memory_outcome_class="successful_recovery",
         outcome="verified recovery",
         reusable_lesson="Revalidate current signals and approval before repeat.",
+        evidence_provenance={"evidence_count": 1, "evidence_refs": ["vm:status"]},
     )
     fields.update(changes)
     return SimpleNamespace(**fields)
