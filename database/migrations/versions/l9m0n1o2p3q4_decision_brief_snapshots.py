@@ -51,6 +51,37 @@ def upgrade() -> None:
         END
         $$
     """)
+    # Serialize incident Evidence and Workflow Checkpoint writes against the
+    # final approval claim on the same incidents row. This closes the interval
+    # between approval snapshot recheck and consumed authority.
+    op.execute("""
+        CREATE FUNCTION lock_incident_on_decision_source_write()
+        RETURNS trigger LANGUAGE plpgsql AS $
+        DECLARE target_incident UUID;
+        BEGIN
+            IF TG_OP = 'DELETE' THEN
+                target_incident := OLD.incident_id;
+            ELSE
+                target_incident := NEW.incident_id;
+            END IF;
+            PERFORM 1 FROM incidents WHERE id=target_incident FOR UPDATE;
+            IF TG_OP = 'DELETE' THEN
+                RETURN OLD;
+            END IF;
+            RETURN NEW;
+        END
+        $
+    """)
+    op.execute("""
+        CREATE TRIGGER evidence_decision_source_lock
+        BEFORE INSERT OR UPDATE OR DELETE ON evidences
+        FOR EACH ROW EXECUTE FUNCTION lock_incident_on_decision_source_write()
+    """)
+    op.execute("""
+        CREATE TRIGGER checkpoint_decision_source_lock
+        BEFORE INSERT OR UPDATE OR DELETE ON workflow_checkpoints
+        FOR EACH ROW EXECUTE FUNCTION lock_incident_on_decision_source_write()
+    """)
     op.execute("""
         CREATE TRIGGER decision_brief_snapshots_no_update
         BEFORE UPDATE ON incident_decision_brief_snapshots
@@ -59,5 +90,8 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
+    op.execute("DROP TRIGGER IF EXISTS checkpoint_decision_source_lock ON workflow_checkpoints")
+    op.execute("DROP TRIGGER IF EXISTS evidence_decision_source_lock ON evidences")
+    op.execute("DROP FUNCTION IF EXISTS lock_incident_on_decision_source_write()")
     op.execute("DROP TABLE IF EXISTS incident_decision_brief_snapshots")
     op.execute("DROP FUNCTION IF EXISTS block_decision_brief_snapshot_update()")
