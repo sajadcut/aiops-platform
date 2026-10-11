@@ -266,3 +266,37 @@ terminal_reason
 ```
 
 Problem notifications continue through the normal Signal Gateway path: Knowledge RAG discovery, live MCP evidence, Triage, specialist Agents, RCA, Evaluator, deterministic Remediation Planner, Decision, governed Approval/Execution, Verification and Operational Memory.
+
+## Automatic VM systemd incident diagnostics
+
+When an authenticated Zabbix Problem identifies an explicitly tagged VM
+`target_ip` and a service such as `gfpapi`, the AIOps EvidenceCollector
+automatically probes the **allowlisted** VM via the dedicated VM MCP server.
+It prioritizes those local reads before waiting for optional external Zabbix,
+Prometheus or Elastic MCP providers:
+
+- `systemctl show --no-pager` gathers ActiveState, SubState, Result,
+  ExecMainCode, ExecMainStatus, TimeoutStartUSec, TimeoutStopUSec,
+  MainPID and restart information.
+- On a failed or inactive state, `systemctl status <service> --no-pager -l
+  --lines=30` captures bounded human-readable status. Nonzero exit code
+  3 (normal for a failed unit) is accepted as diagnostic data.
+- That same failed/inactive state **automatically** triggers collection of
+  the last 150 service-specific `journalctl` lines. No LLM request or
+  Operator shell command is required. For a journal permission denial the
+  VM MCP tries the same *read-only* command using `sudo -n`. The VM owner
+  must separately provision narrow passwordless journal-read permission or
+  grant journal group access; AIOps never configures those privileges.
+  If access still fails, the Incident carries a source-error observation,
+  not fabricated log evidence.
+
+All commands are fixed platform-owned read tools; user-supplied
+service/target fields pass the existing allowlists. Credentials in returned
+text are redacted. This does not start, stop, restart or reload the service;
+the existing controlled Approval and Execution boundaries are unchanged.
+The optional `config_validate` only applies to recognized service adapters
+such as HAProxy/Nginx/Apache; an arbitrary unit like `gfpapi` can still
+receive systemd status and journal diagnostics without a config adapter.
+
+The VM target is the event's explicit `target_ip`, **not** `host_ip`.
+Check this carefully when test requests use different private IP addresses.
