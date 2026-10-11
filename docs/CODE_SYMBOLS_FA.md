@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 404 | Dashboard JS files scanned: 5 | Symbols indexed: 3676**
+**Python files scanned: 404 | Dashboard JS files scanned: 5 | Symbols indexed: 3679**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -3683,3 +3683,6 @@
 | `tests/unit/test_zabbix_team_guide_contract.py` | `test_evidence_collector_preserves_zabbix_request_namespace.K8s` | 418 | class | کلاس | test_evidence_collector_preserves_zabbix_request_namespace |
 | `tests/unit/test_zabbix_team_guide_contract.py` | `test_evidence_collector_preserves_zabbix_request_namespace.K8s.__init__` | 421 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_evidence_collector_preserves_zabbix_request_namespace.K8s |
 | `tests/unit/test_zabbix_team_guide_contract.py` | `test_evidence_collector_preserves_zabbix_request_namespace.K8s.collect_evidence` | 424 | async method | Evidence/داده موردنیاز را از منبع مربوط جمع می‌کند | test_evidence_collector_preserves_zabbix_request_namespace.K8s |
+| `tests/unit/test_zabbix_team_guide_contract.py` | `test_exact_v11_media_type_fields_are_preserved_by_receiver` | 438 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_zabbix_team_guide_contract.py` | `test_zabbix_route_keeps_api_key_auth_and_high_volume_rate_limit` | 473 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_zabbix_team_guide_contract.py` | `test_zabbix_kubernetes_node_identity_is_not_inferred_from_pod` | 493 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
