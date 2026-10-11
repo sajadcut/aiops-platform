@@ -323,6 +323,10 @@ def build_decision_brief(
             "decision": decision_state,
             "why": "مبنای پیشنهاد در یافته‌ها و تصمیم ذخیره‌شده است؛ ارتباط علّی تأییدنشده را قطعی تلقی نکنید.",
             "unverified_assumptions": missing,
+            "blast_radius": safe(decision.get("blast_radius"), 150),
+            "risk_of_inaction": safe(decision.get("risk_of_inaction"), 250),
+            "expected_outcome": safe(decision.get("expected_outcome"), 250),
+            "verification_plan": safe(state.get("verification_plan"), 350),
         },
         "approval_readiness": {
             "status": "human_review_required" if approval.get("status") == "pending" else "not_pending",
