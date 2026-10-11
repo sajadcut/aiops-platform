@@ -766,19 +766,19 @@
 | `apps/api/runbooks.py` | `list_runbooks` | 11 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
 | `apps/api/runbooks.py` | `get_runbook` | 16 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
 | `apps/api/runbooks.py` | `dry_run` | 24 | async function | Validate a runbook without crossing the real execution boundary. | module |
-| `apps/api/signals.py` | `RawSignalPayload` | 24 | class | کلاس | module |
-| `apps/api/signals.py` | `_response_from_result` | 28 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/signals.py` | `_require_database_ready` | 59 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/signals.py` | `_ingest` | 63 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/signals.py` | `_ingest_elastic_anomaly` | 76 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/signals.py` | `_ingest_prometheus_alertmanager` | 89 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/signals.py` | `_ingest_zabbix` | 101 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/signals.py` | `ingest_signal` | 153 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/signals.py` | `ingest_elasticsearch_signal` | 158 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/signals.py` | `ingest_elasticsearch_anomaly` | 163 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/signals.py` | `ingest_prometheus_alertmanager` | 172 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/signals.py` | `ingest_prometheus_signal` | 181 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/signals.py` | `ingest_zabbix_signal` | 201 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/signals.py` | `RawSignalPayload` | 25 | class | کلاس | module |
+| `apps/api/signals.py` | `_response_from_result` | 29 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/signals.py` | `_require_database_ready` | 60 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/signals.py` | `_ingest` | 64 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/signals.py` | `_ingest_elastic_anomaly` | 77 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/signals.py` | `_ingest_prometheus_alertmanager` | 90 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/signals.py` | `_ingest_zabbix` | 102 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/signals.py` | `ingest_signal` | 212 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/signals.py` | `ingest_elasticsearch_signal` | 217 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/signals.py` | `ingest_elasticsearch_anomaly` | 222 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/signals.py` | `ingest_prometheus_alertmanager` | 231 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/signals.py` | `ingest_prometheus_signal` | 240 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/signals.py` | `ingest_zabbix_signal` | 260 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/workflow.py` | `WorkflowRequest` | 18 | class | کلاس | module |
 | `apps/api/workflow.py` | `WorkflowResponse` | 25 | class | کلاس | module |
 | `apps/api/workflow.py` | `run_workflow` | 39 | async function | Compatibility analysis endpoint backed by the canonical durable E2E runtime. | module |
