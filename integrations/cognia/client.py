@@ -219,6 +219,26 @@ class CogniaClient:
                 raise
         raise CogniaAPIError(401, "COGNIA_AUTHENTICATION_FAILED")
 
+    async def verify_machine_auth(self) -> None:
+        """Verify Client Application authentication without returning/logging the token."""
+        await self._machine_access_token()
+
+    async def get_knowledge_base(self, knowledge_base_id: int) -> Dict[str, Any]:
+        """Read one KB with the Machine Client identity; never mutate its policy."""
+        kb_id = int(knowledge_base_id)
+        if kb_id <= 0:
+            raise ValueError("cognia_knowledge_base_id_must_be_positive")
+        payload = await self._authorized_json(
+            "GET", f"/api/engine/knowledge-bases/{kb_id}"
+        )
+        try:
+            returned_id = int(payload["id"])
+        except (KeyError, ValueError, TypeError) as exc:
+            raise CogniaContractError("cognia_knowledge_base_id_missing_or_invalid") from exc
+        if returned_id != kb_id or not isinstance(payload.get("isActive"), bool):
+            raise CogniaContractError("cognia_knowledge_base_identity_or_activity_invalid")
+        return payload
+
     async def health_check(self) -> bool:
         """Probe Cognia's documented readiness endpoint without exposing credentials."""
         try:
@@ -468,9 +488,12 @@ class CogniaClient:
             raise ValueError("cognia_context_task_required")
         if int(context_profile_id) <= 0:
             raise ValueError("cognia_context_profile_id_must_be_positive")
+        # Cognia's consumer collection sends explicit JSON null when no
+        # external Subject is bound; never infer a Subject from Incident data.
         request: Dict[str, Any] = {
             "contextProfileId": int(context_profile_id),
             "task": task,
+            "subject": None,
         }
         if subject is not None:
             namespace = str(subject.get("namespace") or "").strip()
