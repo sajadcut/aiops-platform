@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 403 | Dashboard JS files scanned: 5 | Symbols indexed: 3636**
+**Python files scanned: 403 | Dashboard JS files scanned: 5 | Symbols indexed: 3644**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -3643,3 +3643,11 @@
 | `tests/unit/test_zabbix_team_guide_contract.py` | `test_missing_or_unexpanded_eventid_is_rejected_for_deduplication` | 184 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_zabbix_team_guide_contract.py` | `test_timestamp_supports_epoch_iso_and_empty_without_guessing` | 189 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_zabbix_team_guide_contract.py` | `test_no_trigger_based_vm_execution_identity` | 198 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_zabbix_team_guide_contract.py` | `test_api_ingestion_passes_normalized_guide_payload_to_lifecycle` | 212 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_zabbix_team_guide_contract.py` | `test_api_ingestion_passes_normalized_guide_payload_to_lifecycle.FakeDB` | 218 | class | کلاس | test_api_ingestion_passes_normalized_guide_payload_to_lifecycle |
+| `tests/unit/test_zabbix_team_guide_contract.py` | `test_api_ingestion_passes_normalized_guide_payload_to_lifecycle.FakeDB.__aenter__` | 219 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_api_ingestion_passes_normalized_guide_payload_to_lifecycle.FakeDB |
+| `tests/unit/test_zabbix_team_guide_contract.py` | `test_api_ingestion_passes_normalized_guide_payload_to_lifecycle.FakeDB.__aexit__` | 221 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_api_ingestion_passes_normalized_guide_payload_to_lifecycle.FakeDB |
+| `tests/unit/test_zabbix_team_guide_contract.py` | `test_api_ingestion_passes_normalized_guide_payload_to_lifecycle.fake_database_ready` | 224 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_api_ingestion_passes_normalized_guide_payload_to_lifecycle |
+| `tests/unit/test_zabbix_team_guide_contract.py` | `test_api_ingestion_passes_normalized_guide_payload_to_lifecycle.fake_lifecycle` | 227 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_api_ingestion_passes_normalized_guide_payload_to_lifecycle |
+| `tests/unit/test_zabbix_team_guide_contract.py` | `test_api_rejects_missing_source_event_identity_before_calling_db` | 255 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_zabbix_team_guide_contract.py` | `test_api_rejects_missing_source_event_identity_before_calling_db.no_database_session` | 259 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_api_rejects_missing_source_event_identity_before_calling_db |
