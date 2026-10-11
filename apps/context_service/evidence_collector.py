@@ -5,7 +5,7 @@ from typing import Any, Dict, Iterable, List, Optional, Set
 
 from apps.context_service.asset_identity import AssetIdentityResolver
 from domain.contracts.config import settings
-from integrations.vm.target_context import current_vm_port, current_vm_target
+from integrations.vm.target_context import current_vm_port, current_vm_target, vm_probes_blocked
 from integrations.kubernetes.target_context import current_kubernetes_namespace
 
 
@@ -325,6 +325,7 @@ class EvidenceCollector:
         asset_type = str(asset.get("asset_type") or "unknown").lower()
         linux_candidate = (
             str(asset.get("os_family") or "unknown").lower() != "windows"
+            and not vm_probes_blocked()
             and platform not in {"kubernetes", "network", "application"}
             and asset_type not in {"network", "application"}
             and not asset_type.startswith("kubernetes_")
