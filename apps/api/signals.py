@@ -15,6 +15,7 @@ from database import AsyncSessionLocal
 from domain.contracts.logging import logger
 from domain.contracts.rate_limit import rate_limiter_strict
 from integrations.vm.target_context import bind_vm_port, bind_vm_target, reset_vm_port, reset_vm_target, target_from_zabbix_payload, target_port_from_zabbix_payload
+from integrations.zabbix.webhook_contract import normalize_zabbix_payload
 
 router = APIRouter()
 
@@ -97,6 +98,10 @@ async def _ingest_prometheus_alertmanager(payload: Dict[str, Any]) -> Dict[str, 
 
 
 async def _ingest_zabbix(payload: Dict[str, Any]) -> Dict[str, Any]:
+    try:
+        payload = normalize_zabbix_payload(payload)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
     target_token = bind_vm_target(target_from_zabbix_payload(payload))
     port_token = bind_vm_port(target_port_from_zabbix_payload(payload))
     try:
