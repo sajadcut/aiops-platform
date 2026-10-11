@@ -18,7 +18,7 @@ pytestmark = [
         os.getenv("RUN_DB_DECISION_HISTORY_TEST") != "1",
         reason="requires migrated PostgreSQL acceptance database",
     ),
-    pytest.mark.asyncio,
+    pytest.mark.asyncio(loop_scope="module"),
 ]
 
 
