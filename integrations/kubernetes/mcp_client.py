@@ -77,12 +77,17 @@ class KubernetesMCPClient(MCPClient):
             return []
         return rows[0] if len(rows) == 1 else rows
 
-    async def collect_evidence(self, service: str) -> List[Dict[str, Any]]:
+    async def collect_evidence(self, service: str, *, namespace: str | None = None) -> List[Dict[str, Any]]:
+        # Preserve existing callers while honoring the authoritative namespace
+        # sent as a Zabbix event tag for workload/namespace alerts.
+        effective_namespace = str(namespace or settings.KUBERNETES_NAMESPACE or "").strip()
+        if not effective_namespace:
+            raise ValueError("namespace_required")
         result = await self.call_tool(
             self.READ_TOOL,
             {
                 "operation": "service_evidence",
-                "namespace": settings.KUBERNETES_NAMESPACE,
+                "namespace": effective_namespace,
                 "service": service,
             },
         )
