@@ -16,6 +16,7 @@ from domain.contracts.logging import logger
 from domain.contracts.rate_limit import rate_limiter_strict
 from integrations.vm.target_context import bind_vm_port, bind_vm_target, reset_vm_port, reset_vm_target, target_from_zabbix_payload, target_port_from_zabbix_payload
 from integrations.zabbix.webhook_contract import normalize_zabbix_payload
+from integrations.kubernetes.target_context import bind_kubernetes_namespace, reset_kubernetes_namespace
 
 router = APIRouter()
 
@@ -102,8 +103,19 @@ async def _ingest_zabbix(payload: Dict[str, Any]) -> Dict[str, Any]:
         payload = normalize_zabbix_payload(payload)
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
-    target_token = bind_vm_target(target_from_zabbix_payload(payload))
-    port_token = bind_vm_port(target_port_from_zabbix_payload(payload))
+    platform = str(payload.get("platform") or "").lower()
+    asset_type = str(payload.get("asset_type") or "").lower()
+    is_kubernetes = platform == "kubernetes" or asset_type.startswith("kubernetes_")
+    is_non_vm = is_kubernetes or platform in {"network", "application"} or asset_type in {"network", "application"}
+    target_token = bind_vm_target(
+        None if is_non_vm else target_from_zabbix_payload(payload)
+    )
+    port_token = bind_vm_port(
+        None if is_non_vm else target_port_from_zabbix_payload(payload)
+    )
+    namespace_token = bind_kubernetes_namespace(
+        payload.get("namespace") if is_kubernetes else None
+    )
     try:
         async with AsyncSessionLocal() as db:
             await _require_database_ready(db)
@@ -130,6 +142,7 @@ async def _ingest_zabbix(payload: Dict[str, Any]) -> Dict[str, Any]:
         logger.exception("signal_ingestion_failed", source="zabbix", error_type=type(exc).__name__)
         raise HTTPException(status_code=500, detail="signal_ingestion_failed") from exc
     finally:
+        reset_kubernetes_namespace(namespace_token)
         reset_vm_port(port_token)
         reset_vm_target(target_token)
 
