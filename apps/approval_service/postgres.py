@@ -277,6 +277,18 @@ class PostgreSQLApprovalStore:
             return None
 
         incident_id = str(current.get("incident_id") or "")
+        if issue_claim and incident_id:
+            # Evidence and checkpoint DB triggers acquire the same row lock,
+            # so their writes cannot commit between this check and consume.
+            locked = (
+                await self.session.execute(
+                    text("SELECT id FROM incidents WHERE id=:id FOR UPDATE"),
+                    {"id": incident_id},
+                )
+            ).scalar_one_or_none()
+            if locked is None:
+                raise ValueError("approval_incident_missing")
+
         if incident_id and await self._incident_source_recovered(incident_id):
             await self.cancel_unconsumed_for_incident(
                 incident_id,
@@ -287,6 +299,55 @@ class PostgreSQLApprovalStore:
                 },
             )
             return await self._get_raw(approval_id)
+
+        metadata = dict(current.get("metadata") or {})
+        expected = metadata.get("decision_snapshot_digest")
+        if (
+            issue_claim and not expected
+            and metadata.get("workflow") == "e2e"
+            and str(current.get("risk_level") or "").lower() in {"high", "critical"}
+        ):
+            # Only old E2E Incident workflow approvals require a new bound
+            # Incident snapshot. Chatbot and other separately governed approval
+            # families keep their own execution policy and cannot be conflated.
+            return await self.cancel(
+                approval_id, reason="legacy_high_risk_requires_reapproval",
+                metadata_patch={"snapshot_upgrade_required": True},
+            )
+        if issue_claim and metadata.get("decision_snapshot_version") and not expected:
+            raise ValueError("approval_snapshot_binding_incomplete")
+        if issue_claim and expected:
+            from apps.approval_service.binding import decision_snapshot_digest
+            from apps.incident_service.repository import IncidentRepository
+            from apps.orchestrator.workflow_store import WorkflowCheckpointStore
+
+            checkpoint = await WorkflowCheckpointStore(self.session).load(incident_id) or {}
+            inventory = await IncidentRepository(self.session).evidence_inventory_digest(incident_id)
+            observed = decision_snapshot_digest(checkpoint.get("state") or {}, inventory)
+            if observed != expected:
+                row = (
+                    await self.session.execute(
+                        text("""
+                            UPDATE approvals SET status='rejected',
+                                rejected_at=CURRENT_TIMESTAMP,
+                                metadata=COALESCE(metadata, '{}'::jsonb) ||
+                                    CAST(:patch AS jsonb)
+                            WHERE approval_id=:id AND status='approved'
+                            RETURNING approval_id, incident_id, action, risk_level,
+                                      approver, status, metadata, created_at, approved_at, rejected_at
+                        """),
+                        {
+                            "id": approval_id,
+                            "patch": json.dumps({
+                                "cancellation_reason": "approval_decision_snapshot_changed",
+                                "decision_snapshot_invalidated": True,
+                                "consume_blocked": True,
+                            }),
+                        },
+                    )
+                ).mappings().first()
+                await self.session.commit()
+                return dict(row) if row else await self._get_raw(approval_id)
 
         row = (
             await self.session.execute(

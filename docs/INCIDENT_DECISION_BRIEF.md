@@ -4,7 +4,7 @@ The Decision Brief is available in Dashboard → Incidents → Incident Intellig
 
 ## Architecture and trust boundaries
 
-- GET /api/v1/incidents/{incident_id}/decision-brief uses the existing read:incident policy and DB readiness check.
+- GET /api/v1/incidents/{incident_id}/decision-brief uses the existing read:incident policy and DB readiness check. Historical snapshot listing and exact snapshot reads share this policy; no POST or hidden archive writes are exposed to the browser.
 - Version: decision-brief.v1. checkpoint_version, snapshot_id (SHA-256 of the read-only projection) and generated_at support provenance inspection. The snapshot digest is NOT an authorization binding or permission token.
 - Reads persisted Incident, Evidence, Finding, WorkflowCheckpoint, Approval, Memory and related KnowledgeReview draft data. It reuses the current deterministic operator-summary logic for RCA/approval interpretation. This endpoint performs no live MCP calls, Cognia searches, workflow actions, LLM requests or translation.
 - MCP is classified only when durable records identify the server; nested tool success or failure is checked separately from HTTP status. Persisted EvidenceCollector source observations additionally distinguish unavailable/error/queried/skipped for Zabbix, Prometheus and Elasticsearch without treating an HTTP 200 or empty query as a tool success.
@@ -21,7 +21,7 @@ The Decision Brief is available in Dashboard → Incidents → Incident Intellig
 
 From repository root in PowerShell with the existing development environment configured:
 
-    python -m pytest -q tests/unit/test_decision_brief.py tests/unit/test_decision_brief_narrative.py tests/integration/test_decision_brief_ui_api.py
+    python -m pytest -q tests/unit/test_decision_brief.py tests/unit/test_decision_brief_narrative.py tests/unit/test_decision_brief_browser_runtime.py tests/integration/test_decision_brief_ui_api.py
     python -m pytest -q tests
     python -m compileall -q apps tests
 
@@ -50,8 +50,8 @@ REAL ENV REQUIRED: production Cognia, SSH/VM MCP, Prometheus, Elasticsearch, Pos
 
 - Optional grounded LLM narrative is implemented, but actual Dotin gateway access and semantic accuracy with production Incident data are REAL ENV REQUIRED. Citation identifiers are syntactically validated; this does not independently prove every assertion in generated prose.
 - MCP traces without stored server/tool identifiers cannot be classified as successful calls and remain unknown.
-- No new historical report-snapshot database table; snapshot_id identifies the latest reproducible report projection.
-- New approval records from Durable Workflow and direct execution API now carry a separate versioned decision/evidence inventory digest. Both supported execution boundaries compare it before consuming approval authority and cancel a drifted approval. Historical approvals without this metadata still rely on the earlier execution-intent binding and live preflight, and are shown as Not Verified for snapshot binding. This is not the Brief's own execution authority. Concurrent evidence-ingestion races still require dedicated production concurrency acceptance.
+- Historical reports are now archived (on newly recorded approval, rejection, execution and verification transitions) to `incident_decision_brief_snapshots`. Existing historical Incidents are not retroactively reconstructed; the table intentionally begins at deployment. The archive is append-only with an UPDATE-blocking database trigger, de-duplication by event/snapshot hash, source redaction and RBAC-protected read endpoints. Incident retention can remove all associated snapshots through FK cascade. Read-only report GETs never write.
+- New approval records from Durable Workflow and direct execution API now carry a separate versioned decision/evidence inventory digest. Both supported execution boundaries compare it before consuming approval authority and cancel a drifted approval. Legacy E2E high/critical approvals without this metadata now require a fresh issued approval; separately governed Chatbot approvals and other legacy scopes retain their existing execution-intent and preflight controls, and are shown as Not Verified for snapshot binding. This is not the Brief's own execution authority. Concurrent Evidence/Checkpoint changes are now serialized against final approval claims via PostgreSQL incident-row locks and a recheck of the full decision/evidence digest under that lock; unit and DB integration acceptance cover the lock. Cross-service, live production concurrency acceptance remains REAL ENV REQUIRED.
 - Actual production connectivity and browser E2E acceptance are pending.
 
 ## راهنمای تست دستی در ویندوز
@@ -62,9 +62,21 @@ REAL ENV REQUIRED: production Cognia, SSH/VM MCP, Prometheus, Elasticsearch, Pos
 
     GET /api/v1/incidents/{incident_id}/decision-brief
     GET /api/v1/incidents/{incident_id}/decision-brief/narrative?lang=fa
+    GET /api/v1/incidents/{incident_id}/decision-brief/history
+    GET /api/v1/incidents/{incident_id}/decision-brief/history/{snapshot_id}
 
 خروجی route دوم صرفاً متن نمایشی است. از خود این پنل نباید درخواست POST برای تأیید یا اجرای عملیات ارسال شود. تأیید انسانی، مصرف یک‌باره مجوز، Resume و Verification همچنان از مسیر فعلی Dashboard → Decision انجام می‌شوند. تست اجرای واقعی روی محیط اشتراکی یا Production بدون سناریوی تأییدشده مجاز نیست.
 
 ## پذیرش بندبه‌بند
 
 ماتریس ممیزی تمام بخش‌های پرامت و ۱۸ سناریوی تست، همراه با تفکیک «پیاده‌سازی شده»، «مشروط به داده»، «گپ» و «نیازمند محیط واقعی»، در [INCIDENT_DECISION_BRIEF_ACCEPTANCE_AUDIT_FA.md](INCIDENT_DECISION_BRIEF_ACCEPTANCE_AUDIT_FA.md) ثبت شده است. وضعیت PASS در CI به معنی Production acceptance نیست.
+
+## Historical snapshots and database validation
+
+After deploying the versioned migration, **run Alembic before starting the API**. A migration failure is a deployment blocker; do not silently disable the archive or approval guard. In the Incidents → Decision Brief view select «تاریخچه نسخه‌های قابل ممیزی». Select any immutable snapshot for historical inspection and return to the current report before acting on an approval. Archived snapshots are never execution credentials.
+
+PostgreSQL acceptance uses the existing CI pgvector service:
+
+    RUN_DB_DECISION_HISTORY_TEST=1 python -m pytest -q tests/integration/test_decision_brief_history_db.py
+
+The test exercises real database immutability, incident isolation, snapshot evolution, stale-approval denial and concurrent evidence/checkpoint locking. The test is not a live MCP/Cognia/LLM or production browser acceptance.

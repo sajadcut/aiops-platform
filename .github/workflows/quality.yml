@@ -278,6 +278,10 @@ jobs:
         env:
           RUN_DB_APPROVAL_TEST: '1'
         run: python -m pytest -q tests/integration/test_approval_store_db.py
+      - name: Validate immutable Incident Decision Brief archive on PostgreSQL
+        env:
+          RUN_DB_DECISION_HISTORY_TEST: '1'
+        run: python -m pytest -q tests/integration/test_decision_brief_history_db.py
       - name: Validate shared PostgreSQL API rate limiting
         env:
           RUN_DB_RATE_LIMIT_TEST: '1'
@@ -328,7 +332,7 @@ jobs:
                   cur.execute("SELECT to_regclass('public.chat_sessions'), to_regclass('public.chat_messages'), to_regclass('public.chat_action_proposals')")
                   assert cur.fetchone() == ('chat_sessions', 'chat_messages', 'chat_action_proposals'), 'chatbot persistence was not created during forward migration'
                   cur.execute("SELECT version_num FROM alembic_version")
-                  assert cur.fetchone()[0] == 'k8h9i0j1k2l3', 'forward migration must end at Knowledge Review head'
+                  assert cur.fetchone()[0] == 'l9m0n1o2p3q4', 'forward migration must end at Decision Brief Snapshot head'
           PY
       - name: Migration downgrade and clean rebuild
         run: |

@@ -31,6 +31,24 @@ class DurableWorkflowRuntime:
     async def _flush_audit(self, incident_id: str) -> None:
         await AuditService.flush_to_store(self.audit, incident_id=incident_id)
 
+    async def _archive_decision_brief(self, incident_id: str, event_type: str) -> None:
+        """Record an immutable historical report only at durable lifecycle edges."""
+        from sqlalchemy.ext.asyncio import AsyncSession
+        from apps.decision_brief_history import archive_decision_brief
+
+        if isinstance(self.session, AsyncSession):
+            from domain.contracts.logging import logger
+            try:
+                async with self.session.begin_nested():
+                    await archive_decision_brief(self.session, incident_id, event_type)
+            except Exception as exc:
+                # Checkpoint/execution authority may already be consumed.
+                # Never turn a successful operation into a misleading HTTP failure.
+                logger.error(
+                    "decision_brief_archiving_failed", incident_id=incident_id,
+                    event_type=event_type, error_type=type(exc).__name__,
+                )
+
     async def _set_incident_status(self, incident_id: str, status: str) -> None:
         setter = getattr(self.incidents, "set_status", None)
         if callable(setter):
@@ -113,6 +131,8 @@ class DurableWorkflowRuntime:
             status=self._final_incident_status(result), context=final_fields["context"],
         )
         await self._flush_audit(incident_id)
+        if approval.get("approval_id"):
+            await self._archive_decision_brief(incident_id, "approval_requested")
         await self.incidents.commit()
         return result
 
@@ -383,6 +403,7 @@ class DurableWorkflowRuntime:
                 result.get("findings", []),
             )
             await self._flush_audit(incident_id)
+            await self._archive_decision_brief(incident_id, "execution_finished")
             await self.incidents.commit()
             return result
 
@@ -414,5 +435,6 @@ class DurableWorkflowRuntime:
                 status="resolved" if verification_status == "success" else "escalated", context=final_fields["context"],
             )
         await self._flush_audit(incident_id)
+        await self._archive_decision_brief(incident_id, "verification_finished")
         await self.incidents.commit()
         return result

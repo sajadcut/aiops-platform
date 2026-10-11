@@ -503,103 +503,99 @@ async def get_operator_summary(incident_id: UUID):
     )
 
 
-@router.get("/incidents/{incident_id}/decision-brief")
-async def get_incident_decision_brief(incident_id: UUID):
-    """Read-only, provenance-limited Decision Brief. No live tools or LLM calls."""
+async def load_decision_brief_for_incident(db, incident_id: UUID) -> dict:
+    """Internal builder; reads all contract sections in the caller's transaction."""
     from apps.decision_brief import build_decision_brief
     from domain.models import KnowledgeReview
 
-    # Read one consistent incident view; a second session could pair a new
-    # approval with the previous checkpoint or evidence snapshot.
-    async with AsyncSessionLocal() as db:
-        incident = await db.get(Incident, incident_id)
-        if incident is None:
-            raise HTTPException(status_code=404, detail="Incident not found")
-        checkpoint = await WorkflowCheckpointStore(db).load(str(incident_id)) or {}
-        evidence_rows = (
+    incident = await db.get(Incident, incident_id)
+    if incident is None:
+        raise HTTPException(status_code=404, detail="Incident not found")
+    checkpoint = await WorkflowCheckpointStore(db).load(str(incident_id)) or {}
+    evidence_rows = (
+        await db.execute(
+            select(Evidence).where(Evidence.incident_id == incident_id)
+            .order_by(desc(Evidence.created_at)).limit(500)
+        )
+    ).scalars().all()
+    finding_rows = (
+        await db.execute(
+            select(Finding).where(Finding.incident_id == incident_id)
+            .order_by(desc(Finding.created_at)).limit(100)
+        )
+    ).scalars().all()
+    audit_rows = await PostgreSQLAuditStore(db).list(str(incident_id), 200)
+    approval_row = (
+        await db.execute(text(
+            "SELECT approval_id,action,risk_level,approver,status,metadata,created_at,approved_at,rejected_at "
+            "FROM approvals WHERE incident_id=:id ORDER BY created_at DESC LIMIT 1"
+        ), {"id": str(incident_id)})
+    ).mappings().first()
+    memory_row = (
+        await db.execute(
+            select(MemoryEntry).where(MemoryEntry.incident_id == incident_id)
+            .order_by(desc(MemoryEntry.created_at)).limit(1)
+        )
+    ).scalars().first()
+    persisted_evidence = [{
+        "id": str(row.id),
+        "type": row.type.value if hasattr(row.type, "value") else str(row.type),
+        "source": row.source, "reference": row.reference,
+        "query": row.query, "raw_data": row.raw_data or {},
+        "confidence": row.confidence,
+        "created_at": row.created_at.isoformat() if row.created_at else None,
+    } for row in evidence_rows]
+    persisted_findings = [{
+        "id": str(row.id), "agent": row.agent,
+        "finding_type": row.finding_type, "statement": row.statement,
+        "evidence_ids": row.evidence_ids or [],
+        "confidence": row.confidence,
+        "created_at": row.created_at.isoformat() if row.created_at else None,
+    } for row in finding_rows]
+    incident_data = {
+        "id": str(incident.id), "service": incident.service,
+        "severity": incident.severity,
+        "status": incident.status.value if hasattr(incident.status, "value") else str(incident.status),
+        "summary": incident.summary, "context": incident.context or {},
+        "started_at": incident.started_at.isoformat() if incident.started_at else None,
+    }
+    operator_summary = build_operator_summary(
+        incident=incident_data, durable_evidence=persisted_evidence,
+        findings=persisted_findings, checkpoint=checkpoint,
+        approval=dict(approval_row) if approval_row else None,
+        audit_events=audit_rows,
+        memory_entry=(
+            {"id": str(memory_row.id), "verification_result": memory_row.verification_result,
+             "outcome": memory_row.outcome, "root_cause": memory_row.root_cause,
+             "action": memory_row.action}
+            if memory_row else None
+        ),
+    )
+    from apps.approval_service.binding import decision_snapshot_digest
+    from apps.incident_service.repository import IncidentRepository
+
+    approval_metadata = dict(approval_row["metadata"] or {}) if approval_row else {}
+    bound_snapshot = approval_metadata.get("decision_snapshot_digest")
+    if bound_snapshot:
+        current_inventory = await IncidentRepository(db).evidence_inventory_digest(str(incident_id))
+        current_digest = decision_snapshot_digest(
+            checkpoint.get("state") or {}, current_inventory,
+        )
+        snapshot_status = "matched" if current_digest == bound_snapshot else "drift_detected"
+    else:
+        snapshot_status = "legacy_unbound"
+    operator_summary["approval"]["decision_snapshot_status"] = snapshot_status
+    memory_id = (operator_summary.get("memory") or {}).get("memory_entry_id")
+    latest_review = None
+    if memory_id:
+        latest_review = (
             await db.execute(
-                select(Evidence).where(Evidence.incident_id == incident_id)
-                .order_by(desc(Evidence.created_at)).limit(500)
-            )
-        ).scalars().all()
-        finding_rows = (
-            await db.execute(
-                select(Finding).where(Finding.incident_id == incident_id)
-                .order_by(desc(Finding.created_at)).limit(100)
-            )
-        ).scalars().all()
-        audit_rows = await PostgreSQLAuditStore(db).list(str(incident_id), 200)
-        approval_row = (
-            await db.execute(text(
-                "SELECT approval_id,action,risk_level,approver,status,metadata,created_at,approved_at,rejected_at "
-                "FROM approvals WHERE incident_id=:id ORDER BY created_at DESC LIMIT 1"
-            ), {"id": str(incident_id)})
-        ).mappings().first()
-        memory_row = (
-            await db.execute(
-                select(MemoryEntry).where(MemoryEntry.incident_id == incident_id)
-                .order_by(desc(MemoryEntry.created_at)).limit(1)
+                select(KnowledgeReview).where(
+                    KnowledgeReview.incident_id == incident_id,
+                    KnowledgeReview.memory_id == UUID(memory_id),
+                ).order_by(desc(KnowledgeReview.created_at)).limit(1)
             )
         ).scalars().first()
-        persisted_evidence = [{
-            "id": str(row.id),
-            "type": row.type.value if hasattr(row.type, "value") else str(row.type),
-            "source": row.source, "reference": row.reference,
-            "query": row.query, "raw_data": row.raw_data or {},
-            "confidence": row.confidence,
-            "created_at": row.created_at.isoformat() if row.created_at else None,
-        } for row in evidence_rows]
-        persisted_findings = [{
-            "id": str(row.id), "agent": row.agent,
-            "finding_type": row.finding_type, "statement": row.statement,
-            "evidence_ids": row.evidence_ids or [],
-            "confidence": row.confidence,
-            "created_at": row.created_at.isoformat() if row.created_at else None,
-        } for row in finding_rows]
-        incident_data = {
-            "id": str(incident.id), "service": incident.service,
-            "severity": incident.severity,
-            "status": incident.status.value if hasattr(incident.status, "value") else str(incident.status),
-            "summary": incident.summary, "context": incident.context or {},
-            "started_at": incident.started_at.isoformat() if incident.started_at else None,
-        }
-        operator_summary = build_operator_summary(
-            incident=incident_data, durable_evidence=persisted_evidence,
-            findings=persisted_findings, checkpoint=checkpoint,
-            approval=dict(approval_row) if approval_row else None,
-            audit_events=audit_rows,
-            memory_entry=(
-                {"id": str(memory_row.id), "verification_result": memory_row.verification_result,
-                 "outcome": memory_row.outcome, "root_cause": memory_row.root_cause,
-                 "action": memory_row.action}
-                if memory_row else None
-            ),
-        )
-        from apps.approval_service.binding import decision_snapshot_digest
-        from apps.incident_service.repository import IncidentRepository
-
-        approval_metadata = dict(approval_row["metadata"] or {}) if approval_row else {}
-        bound_snapshot = approval_metadata.get("decision_snapshot_digest")
-        if bound_snapshot:
-            current_inventory = await IncidentRepository(db).evidence_inventory_digest(str(incident_id))
-            current_digest = decision_snapshot_digest(
-                checkpoint.get("state") or {}, current_inventory,
-            )
-            snapshot_status = "matched" if current_digest == bound_snapshot else "drift_detected"
-        else:
-            snapshot_status = "legacy_unbound"
-        operator_summary["approval"]["decision_snapshot_status"] = snapshot_status
-        memory_id = (operator_summary.get("memory") or {}).get("memory_entry_id")
-        latest_review = None
-        if memory_id:
-            latest_review = (
-                await db.execute(
-                    select(KnowledgeReview).where(
-                        KnowledgeReview.incident_id == incident_id,
-                        KnowledgeReview.memory_id == UUID(memory_id),
-                    ).order_by(desc(KnowledgeReview.created_at)).limit(1)
-                )
-            ).scalars().first()
 
     return build_decision_brief(
         incident=incident_data,
@@ -613,6 +609,46 @@ async def get_incident_decision_brief(incident_id: UUID):
             if latest_review is not None else None
         ),
     )
+
+
+@router.get("/incidents/{incident_id}/decision-brief")
+async def get_incident_decision_brief(incident_id: UUID):
+    """Read-only, RBAC-protected latest version. No archive writes or side effects."""
+    async with AsyncSessionLocal() as db:
+        # Multiple Incident tables must be read at the same MVCC snapshot.
+        # A shared AsyncSession alone is insufficient at READ COMMITTED.
+        await db.execute(text("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY"))
+        return await load_decision_brief_for_incident(db, incident_id)
+
+
+@router.get("/incidents/{incident_id}/decision-brief/history")
+async def get_decision_brief_history(
+    incident_id: UUID, limit: int = Query(default=30, ge=1, le=100),
+):
+    """Read only previously archived, immutable lifecycle reports."""
+    from apps.decision_brief_history import list_decision_brief_history
+
+    async with AsyncSessionLocal() as db:
+        if await db.get(Incident, incident_id) is None:
+            raise HTTPException(status_code=404, detail="Incident not found")
+        return {
+            "incident_id": str(incident_id),
+            "items": await list_decision_brief_history(db, incident_id, limit),
+        }
+
+
+@router.get("/incidents/{incident_id}/decision-brief/history/{snapshot_id}")
+async def get_decision_brief_historical_snapshot(incident_id: UUID, snapshot_id: UUID):
+    """Exact archived report; never regenerated against current Incident state."""
+    from apps.decision_brief_history import read_decision_brief_snapshot
+
+    async with AsyncSessionLocal() as db:
+        if await db.get(Incident, incident_id) is None:
+            raise HTTPException(status_code=404, detail="Incident not found")
+        brief = await read_decision_brief_snapshot(db, incident_id, snapshot_id)
+        if brief is None:
+            raise HTTPException(status_code=404, detail="Decision brief snapshot not found")
+        return brief
 
 
 @router.get("/incidents/{incident_id}/decision-brief/narrative")

@@ -50,6 +50,15 @@ const assert = require('node:assert/strict');
   global.api = async url => {
     const pathIncident = url.match(/incidents\/([^/]+)/)?.[1];
     if (url.endsWith('/decision-brief')) return incident(pathIncident);
+    if (url.endsWith('/decision-brief/history')) return {items: [
+      {id: '22222222-2222-4222-8222-222222222222', event_type: 'approval_requested',
+       created_at: '2026-10-11T12:00:00Z', checkpoint_version: 7}
+    ]};
+    if (url.includes('/decision-brief/history/')) return {
+      ...incident(pathIncident),
+      snapshot_id: 'archived-' + pathIncident,
+      localized_narrative: {fa: 'نسخه تاریخی رخداد', en: 'Historical incident snapshot'}
+    };
     const lang = new URL('https://test.local' + url).searchParams.get('lang');
     const sectionText = lang === 'fa' ?
       'این گزارش بر اساس شواهد ثبت‌شده تهیه شده و تأیید عملیاتی لازم دارد.' :
@@ -71,6 +80,21 @@ const assert = require('node:assert/strict');
   await new Promise(resolve => setImmediate(resolve));
   assert.match(pane.innerHTML, /This report uses durable evidence/);
   assert.match(pane.innerHTML, /dir="ltr"/);
+  await listeners.click({target: {closest(sel) {
+    return sel === '[data-db-history-toggle]' ? {} : null;
+  }}});
+  assert.match(pane.innerHTML, /approval_requested/);
+  await listeners.click({target: {closest(sel) {
+    return sel === '[data-db-history-id]' ?
+      {getAttribute: () => '22222222-2222-4222-8222-222222222222'} : null;
+  }}});
+  assert.match(pane.innerHTML, /Historical incident snapshot/);
+  assert.match(pane.innerHTML, /Historical read-only report/);
+  await listeners.click({target: {closest(sel) {
+    return sel === '[data-db-history-current]' ? {} : null;
+  }}});
+  assert.doesNotMatch(pane.innerHTML, /Historical incident snapshot/);
+  assert.match(pane.innerHTML, /Stored incident facts/);
   console.log('decision brief browser runtime passed');
 })().catch(err => {console.error(err); process.exitCode = 1;});
 """

@@ -6,6 +6,11 @@
   let brief = null;
   let loading = false;
   let failed = null;
+  let historyRows = [];
+  let historyShown = false;
+  let historyError = null;
+  let historicBrief = null;
+  let historicLoading = false;
   let narrative = null;
   let narrativePendingKey = null;
   const narrativeCache = new Map();
@@ -319,10 +324,29 @@
     if (tab !== 'brief') return;
     const pane = document.querySelector('#detailPane');
     if (!pane) return;
+    const historyControls = '<div class="db-history-toolbar">' +
+      '<button type="button" data-db-history-toggle="1">' +
+      (language === 'fa' ? 'تاریخچه نسخه‌های قابل ممیزی' : 'Audited snapshot history') +
+      '</button>' + (historicBrief ? '<button type="button" data-db-history-current="1">' +
+      (language === 'fa' ? 'بازگشت به گزارش فعلی' : 'Return to current report') +
+      '</button>' : '') + '</div>';
+    const historicalBanner = historicBrief ? '<p class="db-warning">' +
+      (language === 'fa' ? 'نسخه تاریخی؛ فقط جهت مشاهده و ممیزی، نه تأیید عملیات فعلی' :
+       'Historical read-only report — not current execution authorization') + '</p>' : '';
+    const historyList = historyShown ? '<div class="db-record">' +
+      (historyError ? '<p class="db-warning">' + html(historyError) + '</p>' :
+       historyRows.length ? historyRows.map(x =>
+         '<button type="button" class="db-history-item" data-db-history-id="' + html(x.id) + '">' +
+         html(x.event_type) + ' · ' + html(x.created_at) + ' · ' +
+         html(x.checkpoint_version) + '</button>').join('') :
+         '<p class="db-subtle">' + (language === 'fa' ? 'نسخه تاریخی ثبت نشده است.' : 'No archived versions yet.') + '</p>') +
+      '</div>' : '';
     pane.innerHTML = loading ? '<div class="db-placeholder">' + t('loading') + '</div>' :
       failed ? '<div class="db-placeholder db-error">' + t('unavailable') + ' ' + html(failed) + '</div>' :
-      brief ? body(brief) : '<div class="db-placeholder">' + t('noData') + '</div>';
-    if (brief && (!narrativeCache.has(brief.snapshot_id + ':' + language) ||
+      brief ? historyControls + historyList + historicalBanner +
+        (historicLoading ? '<p class="db-subtle">' + t('loading') + '</p>' : body(historicBrief || brief)) :
+        '<div class="db-placeholder">' + t('noData') + '</div>';
+    if (brief && !historicBrief && (!narrativeCache.has(brief.snapshot_id + ':' + language) ||
       (narrativeCache.get(brief.snapshot_id + ':' + language)?.status !== 'available' &&
        Date.now() - (narrativeCache.get(brief.snapshot_id + ':' + language)?._fetchedAt || 0) >= 60000))) {
       void ensureNarrative();
@@ -332,6 +356,11 @@
   window.selectIncident = selectIncident = async function selectWithDecisionBrief(id) {
     activeId = String(id);
     brief = null;
+    historyRows = [];
+    historyShown = false;
+    historyError = null;
+    historicBrief = null;
+    historicLoading = false;
     narrative = null;
     narrativePendingKey = null;
     failed = null;
@@ -354,6 +383,51 @@
   };
 
   document.addEventListener('click', async event => {
+    const toggleHistory = event.target.closest('[data-db-history-toggle]');
+    if (toggleHistory && brief) {
+      historyShown = !historyShown;
+      if (historyShown) {
+        historyError = null;
+        const selectedId = String(activeId);
+        try {
+          const res = await api('/api/v1/incidents/' + encodeURIComponent(selectedId) +
+                                '/decision-brief/history');
+          if (String(activeId) !== selectedId) return;
+          historyRows = Array.isArray(res.items) ? res.items : [];
+        } catch (_) {
+          historyError = language === 'fa' ? 'خواندن نسخه‌های تاریخی ممکن نشد.' :
+            'Historical snapshots could not be loaded.';
+        }
+      }
+      window.renderDetail('brief');
+      return;
+    }
+    const historicVersion = event.target.closest('[data-db-history-id]');
+    if (historicVersion && brief) {
+      const selectedId = String(activeId);
+      const snapshotId = historicVersion.getAttribute('data-db-history-id');
+      historicLoading = true;
+      window.renderDetail('brief');
+      try {
+        const result = await api('/api/v1/incidents/' + encodeURIComponent(selectedId) +
+                                 '/decision-brief/history/' + encodeURIComponent(snapshotId));
+        if (String(activeId) !== selectedId) return;
+        historicBrief = result;
+      } catch (_) {
+        toast(t('unavailable'));
+      } finally {
+        if (String(activeId) === selectedId) {
+          historicLoading = false;
+          window.renderDetail('brief');
+        }
+      }
+      return;
+    }
+    if (event.target.closest('[data-db-history-current]')) {
+      historicBrief = null;
+      window.renderDetail('brief');
+      return;
+    }
     const lang = event.target.closest('[data-db-lang]');
     if (lang) {
       language = lang.getAttribute('data-db-lang') === 'en' ? 'en' : 'fa';
@@ -364,24 +438,33 @@
     }
     const copy = event.target.closest('[data-db-copy]');
     if (copy && brief) {
-      const intro = (language === 'fa' ? brief.localized_narrative?.fa : brief.localized_narrative?.en) || '';
-      const detailed = narrative?.snapshot_id === brief.snapshot_id && narrative?.language === language &&
+      const selectedBrief = historicBrief || brief;
+      const intro = (language === 'fa' ? selectedBrief.localized_narrative?.fa : selectedBrief.localized_narrative?.en) || '';
+      const detailed = !historicBrief && narrative?.snapshot_id === brief.snapshot_id && narrative?.language === language &&
         narrative?.status === 'available' ? (narrative.sections || []).map(x =>
           x.heading + '\n' + x.text + '\n' + (x.citations || []).join(', ')
         ).join('\n\n') : '';
       const report = [intro, detailed,
-        'Incident ID: ' + brief.incident_summary.incident_id,
-        'Snapshot: ' + brief.snapshot_id,
-        'Action: ' + (brief.remediation_recommendation?.action || 'Unknown'),
-        'Target: ' + (brief.remediation_recommendation?.target || 'Unknown'),
-        'Evidence: ' + (brief.source_references || []).join(', '),
+        'Incident ID: ' + selectedBrief.incident_summary.incident_id,
+        'Snapshot: ' + selectedBrief.snapshot_id,
+        'Action: ' + (selectedBrief.remediation_recommendation?.action || 'Unknown'),
+        'Target: ' + (selectedBrief.remediation_recommendation?.target || 'Unknown'),
+        'Evidence: ' + (selectedBrief.source_references || []).join(', '),
       ].filter(Boolean).join('\n\n');
       try { await navigator.clipboard.writeText(report); toast(t('copyDone')); }
       catch (_) { toast(t('unavailable')); }
       return;
     }
     const nav = event.target.closest('[data-db-nav]');
-    if (nav) { window.renderDetail(nav.getAttribute('data-db-nav')); return; }
+    if (nav) {
+      if (historicBrief && nav.getAttribute('data-db-nav') === 'decision') {
+        toast(language === 'fa' ? 'برای تصمیم عملیاتی ابتدا به گزارش فعلی برگردید.' :
+          'Return to the current report before taking any operational decision.');
+        return;
+      }
+      window.renderDetail(nav.getAttribute('data-db-nav'));
+      return;
+    }
     const knowledge = event.target.closest('[data-db-knowledge]');
     if (knowledge && typeof setView === 'function') {
       setView('knowledge');
