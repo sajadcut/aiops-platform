@@ -432,7 +432,10 @@ def build_decision_brief(
             "verification_plan": safe(state.get("verification_plan"), 350),
         },
         "approval_readiness": {
-            "status": "human_review_required" if approval.get("status") == "pending" else "not_pending",
+            "status": (
+                "new_approval_required" if approval.get("decision_snapshot_status") == "drift_detected" else
+                "human_review_required" if approval.get("status") == "pending" else "not_pending"
+            ),
             "approval_id": safe(approval.get("approval_id"), 180),
             "approval_status": safe(approval.get("status"), 60),
             "binding_complete": approval.get("binding_complete") is True,
@@ -446,7 +449,12 @@ def build_decision_brief(
             "binding_digest": safe(approval.get("binding_digest"), 130),
             "rollback_supported": approval.get("rollback_supported") is True,
             "timeout_seconds": approval.get("timeout_seconds"),
-            "evidence_snapshot_binding": "not_verified",
+            "evidence_snapshot_binding": (
+                "matched_at_read" if approval.get("decision_snapshot_status") == "matched" else
+                "drift_detected" if approval.get("decision_snapshot_status") == "drift_detected" else
+                "not_verified"
+            ),
+            "decision_snapshot_version": approval.get("decision_snapshot_version"),
             "data_freshness": data_freshness,
             "approver": safe(approval.get("approver"), 120),
             "warning": "A report never authorizes execution. Approval and one-time workflow resume remain mandatory.",
