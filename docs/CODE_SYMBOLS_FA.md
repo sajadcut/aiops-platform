@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 404 | Dashboard JS files scanned: 5 | Symbols indexed: 3675**
+**Python files scanned: 404 | Dashboard JS files scanned: 5 | Symbols indexed: 3676**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -3261,6 +3261,7 @@
 | `tests/unit/test_remediation_planner.py` | `test_pre_execution_revalidation_fails_closed_without_fresh_config_check` | 246 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_remediation_planner.py` | `test_durable_resume_restores_persisted_vm_target_and_port_context` | 270 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_remediation_planner.py` | `test_zabbix_automatic_remediation_requires_explicit_matching_target_ip` | 288 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_remediation_planner.py` | `test_non_vm_zabbix_alert_cannot_plan_vm_restart_even_with_matching_vm_evidence` | 320 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_remediation_runtime_guard.py` | `_Session` | 11 | class | کلاس | module |
 | `tests/unit/test_remediation_runtime_guard.py` | `_Session.__aenter__` | 12 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Session |
 | `tests/unit/test_remediation_runtime_guard.py` | `_Session.__aexit__` | 15 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Session |
