@@ -48,7 +48,7 @@ const assert = require('node:assert/strict');
     cognia_knowledge: {status: 'empty', retrieved_count: 0}, operational_memory: {}
   });
   global.api = async url => {
-    const pathIncident = url.match(/incidents\\/([^/]+)/)?.[1];
+    const pathIncident = url.match(/incidents\/([^/]+)/)?.[1];
     if (url.endsWith('/decision-brief')) return incident(pathIncident);
     const lang = new URL('https://test.local' + url).searchParams.get('lang');
     const sectionText = lang === 'fa' ?
