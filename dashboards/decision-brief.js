@@ -81,7 +81,8 @@
     'Cause certainty':'قطعیت علت', 'Evidence source':'منبع شواهد',
     'LLM status':'وضعیت تحلیل هوشمند', 'Approver':'تأییدکننده',
     'Verification confidence':'اطمینان راستی‌آزمایی', 'Memory outcome':'نتیجه تجربه',
-    'Source type':'نوع داده', 'Document':'سند', 'Historical context':'زمینه تاریخی'
+    'Source type':'نوع داده', 'Document':'سند', 'Historical context':'زمینه تاریخی',
+    'Approval':'تأیید عملیات', 'Snapshot version':'نسخه اتصال شواهد'
   };
   const statesFa = {
     available:'در دسترس', empty:'بدون نتیجه', failed:'ناموفق', error:'خطا',
@@ -93,7 +94,8 @@
     not_pending:'در انتظار نیست', human_review_required:'نیازمند بررسی انسانی',
     observed:'مشاهده شده', not_executed:'اجرا نشده',
     matched_at_read:'مطابق شواهد فعلی', drift_detected:'نامعتبر به علت تغییر شواهد',
-    new_approval_required:'نیازمند تأیید جدید'
+    new_approval_required:'نیازمند تأیید جدید',
+    'Complete':'کامل', 'Recorded':'ثبت شده', 'Not verified':'تأیید نشده'
   };
   const fmt = value => {
     if (value == null || value === '') return t('unknown');
