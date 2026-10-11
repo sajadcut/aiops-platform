@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 405 | Dashboard JS files scanned: 5 | Symbols indexed: 3698**
+**Python files scanned: 406 | Dashboard JS files scanned: 5 | Symbols indexed: 3717**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -3602,6 +3602,25 @@
 | `tests/unit/test_vm_symptom_verification.py` | `test_material_regression_keeps_recovery_partial` | 70 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_vm_symptom_verification.py` | `test_successful_command_cannot_mask_port_still_down` | 89 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_vm_symptom_verification.py` | `test_invalid_config_blocks_successful_verification` | 109 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_systemd_auto_diagnostics.py` | `test_failed_systemd_status_collects_full_diagnostics_even_when_status_exits_three` | 15 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_systemd_auto_diagnostics.py` | `test_failed_systemd_status_collects_full_diagnostics_even_when_status_exits_three.fake_run` | 19 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_failed_systemd_status_collects_full_diagnostics_even_when_status_exits_three |
+| `tests/unit/test_vm_systemd_auto_diagnostics.py` | `test_active_systemd_status_does_not_fetch_expensive_diagnostics` | 55 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_systemd_auto_diagnostics.py` | `test_active_systemd_status_does_not_fetch_expensive_diagnostics.fake_run` | 59 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_active_systemd_status_does_not_fetch_expensive_diagnostics |
+| `tests/unit/test_vm_systemd_auto_diagnostics.py` | `test_journal_reads_last_150_lines_and_redacts_credentials` | 72 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_systemd_auto_diagnostics.py` | `test_journal_reads_last_150_lines_and_redacts_credentials.fake_run` | 76 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_journal_reads_last_150_lines_and_redacts_credentials |
+| `tests/unit/test_vm_systemd_auto_diagnostics.py` | `test_journal_permission_failure_retries_read_only_noninteractive_sudo` | 95 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_systemd_auto_diagnostics.py` | `test_journal_permission_failure_retries_read_only_noninteractive_sudo.fake_run` | 99 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_journal_permission_failure_retries_read_only_noninteractive_sudo |
+| `tests/unit/test_vm_systemd_auto_diagnostics.py` | `test_journal_sudo_denied_returns_auditable_error` | 119 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_systemd_auto_diagnostics.py` | `test_journal_sudo_denied_returns_auditable_error.failed_run` | 122 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_journal_sudo_denied_returns_auditable_error |
+| `tests/unit/test_vm_systemd_auto_diagnostics.py` | `test_disallowed_service_never_runs_systemd_or_journal` | 139 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_systemd_auto_diagnostics.py` | `test_disallowed_service_never_runs_systemd_or_journal.fake_run` | 143 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_disallowed_service_never_runs_systemd_or_journal |
+| `tests/unit/test_vm_systemd_auto_diagnostics.py` | `_VM` | 157 | class | کلاس | module |
+| `tests/unit/test_vm_systemd_auto_diagnostics.py` | `_VM.__init__` | 158 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _VM |
+| `tests/unit/test_vm_systemd_auto_diagnostics.py` | `_VM.service_status` | 163 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _VM |
+| `tests/unit/test_vm_systemd_auto_diagnostics.py` | `_VM.service_logs` | 171 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _VM |
+| `tests/unit/test_vm_systemd_auto_diagnostics.py` | `test_failed_service_automatically_collects_journal_without_llm_or_external_mcp` | 185 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_systemd_auto_diagnostics.py` | `test_healthy_service_does_not_automatically_query_journal` | 212 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_systemd_auto_diagnostics.py` | `test_journal_permission_failure_survives_as_explicit_source_observation` | 226 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_vm_target_resolution.py` | `_RecordingVM` | 13 | class | کلاس | module |
 | `tests/unit/test_vm_target_resolution.py` | `_RecordingVM.__init__` | 14 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _RecordingVM |
 | `tests/unit/test_vm_target_resolution.py` | `_RecordingVM.collect_vm_metrics` | 17 | async method | Evidence/داده موردنیاز را از منبع مربوط جمع می‌کند | _RecordingVM |
