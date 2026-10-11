@@ -1,0 +1,84 @@
+/* Shared AIOps Persian typography. The .ttf files are supplied by the project
+   owner under font/ only when their license permits the intended deployment.
+   Missing fonts gracefully fall back without hiding UI content. */
+@font-face {
+  font-family: 'IRANSansX';
+  src: url('/assets/fonts/IRANSansXThin.ttf') format('truetype');
+  font-style: normal;
+  font-weight: 100;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'IRANSansX';
+  src: url('/assets/fonts/IRANSansXUltraLight.ttf') format('truetype');
+  font-style: normal;
+  font-weight: 200;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'IRANSansX';
+  src: url('/assets/fonts/IRANSansXLight.ttf') format('truetype');
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'IRANSansX';
+  src: url('/assets/fonts/IRANSansXRegular.ttf') format('truetype');
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'IRANSansX';
+  src: url('/assets/fonts/IRANSansXMedium.ttf') format('truetype');
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'IRANSansX';
+  src: url('/assets/fonts/IRANSansXDemiBold.ttf') format('truetype');
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'IRANSansX';
+  src: url('/assets/fonts/IRANSansXBold.ttf') format('truetype');
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'IRANSansX';
+  src: url('/assets/fonts/IRANSansXExtraBold.ttf') format('truetype');
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'IRANSansX';
+  src: url('/assets/fonts/IRANSansXBlack.ttf') format('truetype');
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+}
+
+:root {
+  --aiops-font-family: 'IRANSansX', 'Vazirmatn', Tahoma, 'Segoe UI', Arial, sans-serif;
+}
+
+/* Form controls don't consistently inherit the page font across browsers.
+   Code blocks keep their existing explicit monospace declarations. */
+html, body, button, input, select, textarea, optgroup, option {
+  font-family: var(--aiops-font-family);
+}
