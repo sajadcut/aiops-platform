@@ -138,6 +138,14 @@ Asset types tested against the guide's appendix:
 | Database | `vm` / `database` | `service` + `db_instance` |
 | Application/Web | `application` / `application` | `service` + optional `fqdn`/`endpoint` |
 
+Kubernetes MCP evidence collection uses the event's explicit `namespace` for a
+Kubernetes signal, rather than blindly selecting the AIOps process default.
+This is a read-only scope; it does not authorize Kubernetes changes. Network
+and Application alerts never promote an endpoint or HOST.IP into VM SSH
+diagnostics. The Zabbix webhook route uses the existing configurable
+high-volume rate limiter (default 500 requests/minute per client/route),
+with the production PostgreSQL limiter and API-key authentication unchanged.
+
 Pod names are optional, ephemeral investigation evidence, not stable workload
 identity. The original `eventid` survives retry and Recovery. Problem retries
 reuse the exact evidence reference; a matched Recovery is attached to the same
@@ -185,7 +193,7 @@ A matched Recovery:
 6. marks a single-source Zabbix Incident `resolved` because the monitoring source has provided live recovery evidence;
 7. does **not** auto-resolve when other correlated signals exist; the Incident remains active until cross-source verification is complete.
 
-A Recovery without a usable original Problem identity never creates a new Incident. The API accepts the notification but returns `recovery_unmatched=true` and a bounded terminal reason so the mapping/configuration problem is observable.
+A Recovery without a usable original Problem identity never creates a new Incident. To prevent lost Recovery notifications, the HTTP endpoint returns **422** when recovery identity is incomplete, or **503** with `Retry-After: 10` when the original Problem has not yet been ingested. The unchanged v1.1 Zabbix Webhook script treats either non-2xx response as a failed delivery, allowing the team's configured Zabbix retries to handle out-of-order notifications. A matched Recovery and exact retries return 2xx.
 
 ## Response fields
 
