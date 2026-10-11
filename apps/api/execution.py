@@ -4,13 +4,14 @@ from uuid import uuid4
 
 from fastapi import APIRouter, Depends, HTTPException
 
-from apps.approval_service.binding import assert_bound, bind_metadata
+from apps.approval_service.binding import assert_bound, bind_metadata, decision_snapshot_digest
 from apps.approval_service.postgres import PostgreSQLApprovalStore
 from apps.audit_service import AuditService
 from apps.audit_service.postgres import PostgreSQLAuditStore
 from apps.execution_service import ExecutionRequest, ExecutionService
 from apps.execution_service.tools.registry import tool_registry
 from apps.incident_service.repository import IncidentRepository
+from apps.orchestrator.workflow_store import WorkflowCheckpointStore
 from apps.runbook_service.registry import RunbookRegistry
 from apps.runbook_service.learning import record_runbook_outcome
 from apps.runbook_service.runtime_guard import RunbookRuntimeGuard
@@ -83,6 +84,13 @@ async def create_approval(payload: Dict[str, Any], identity=Depends(require_perm
     _require_risk_permission(identity, str(payload["risk_level"]))
     record = _approval_record(payload)
     async with AsyncSessionLocal() as db:
+        checkpoint = await WorkflowCheckpointStore(db).load(record["incident_id"]) or {}
+        inventory = await IncidentRepository(db).evidence_inventory_digest(record["incident_id"])
+        record["metadata"].update({
+            "decision_snapshot_digest": decision_snapshot_digest(checkpoint.get("state") or {}, inventory),
+            "decision_snapshot_version": 1,
+            "decision_evidence_inventory_digest": inventory,
+        })
         saved = await PostgreSQLApprovalStore(db).save(record)
         await _audit_durable(db, "approval_requested", identity.subject, record["incident_id"], record["action"], {
             "approval_id": record["approval_id"], "risk_level": record["risk_level"],
@@ -215,6 +223,25 @@ async def execute(payload: Dict[str, Any], identity=Depends(require_permission("
             if approval is None:
                 raise HTTPException(status_code=404, detail="approval_not_found")
             _validate_approval_binding(approval, payload)
+            approval_meta = dict(approval.get("metadata") or {})
+            bound_digest = approval_meta.get("decision_snapshot_digest")
+            if approval_meta.get("decision_snapshot_version") and not bound_digest:
+                raise HTTPException(status_code=409, detail="approval_snapshot_binding_incomplete")
+            if bound_digest:
+                checkpoint = await WorkflowCheckpointStore(db).load(incident_id) or {}
+                inventory = await IncidentRepository(db).evidence_inventory_digest(incident_id)
+                current_digest = decision_snapshot_digest(checkpoint.get("state") or {}, inventory)
+                if current_digest != bound_digest:
+                    await store.cancel(
+                        str(approval_id), reason="approval_decision_or_evidence_snapshot_changed",
+                        metadata_patch={"decision_snapshot_invalidated": True},
+                    )
+                    await _audit_durable(
+                        db, "approval_decision_snapshot_changed", identity.subject,
+                        incident_id, str(payload["action"]),
+                        {"approval_id": str(approval_id), "execution_denied": True},
+                    )
+                    raise HTTPException(status_code=409, detail="approval_decision_snapshot_changed")
 
             runtime_contract = _direct_runtime_contract(payload)
             runbook = RunbookRegistry("runbooks").get(

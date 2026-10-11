@@ -7,7 +7,7 @@
   let loading = false;
   let failed = null;
   let narrative = null;
-  let narrativePending = false;
+  let narrativePendingKey = null;
   const narrativeCache = new Map();
   const storageKey = 'aiops.incident.decision_brief.language';
   let language = (() => {
@@ -35,7 +35,7 @@
       risk:'ریسک', binding:'اتصال مجوز', freshness:'تازگی داده', verification:'نتیجه Verification', result:'نتیجه اجرا',
       narrative:'جمع‌بندی AIOps برای تصمیم‌گیری اپراتور', generated:'تحلیل فارسی مبتنی بر شواهد',
       narrativeFallback:'خلاصه ساختاریافته؛ تحلیل پیشرفته LLM در دسترس نیست.', citations:'استناد به شواهد',
-      providerMissing:'این منبع در دسترس نبود؛ نتیجه‌گیری بدون داده‌های آن انجام شده است.', mixed:'ترکیبی از شواهد تازه و قدیمی/نامشخص'
+      providerMissing:'این منبع در دسترس نبود؛ نتیجه‌گیری بدون داده‌های آن انجام شده است.', mixed:'ترکیبی از شواهد تازه و قدیمی/نامشخص', approvalStale:'شواهد یا برنامه نسبت به زمان تأیید تغییر کرده است؛ مجوز قبلی معتبر نیست و تأیید جدید لازم است.'
     },
     en: {
       tab:'Decision Brief',title:'Incident Decision Brief',lead:'Operator decision summary',
@@ -57,7 +57,7 @@
       risk:'Risk',binding:'Approval binding',freshness:'Data freshness',verification:'Verification result',result:'Execution result',
       narrative:'AIOps operator decision summary', generated:'Grounded AI narrative',
       narrativeFallback:'Deterministic summary; enhanced LLM narrative unavailable.', citations:'Evidence references',
-      providerMissing:'This monitoring source was unavailable; the assessment was made without its data.', mixed:'Mixed fresh, stale or unknown evidence'
+      providerMissing:'This monitoring source was unavailable; the assessment was made without its data.', mixed:'Mixed fresh, stale or unknown evidence', approvalStale:'Plan or evidence changed since approval; fresh authorization is required.'
     }
   };
   const t = key => dict[language][key] || key;
@@ -72,7 +72,17 @@
     'Outcome':'نتیجه', 'Memory ID':'شناسه حافظه', 'Relevance':'ارتباط',
     'Runbook':'راهنمای عملیاتی', 'Approval ID':'شناسه تأیید',
     'Snapshot':'نسخه گزارش', 'Evidence':'شواهد', 'Agent':'عامل تحلیل',
-    'Incident confidence':'اطمینان رخداد', 'Target':'هدف', 'Status':'وضعیت'
+    'Incident confidence':'اطمینان رخداد', 'Target':'هدف', 'Status':'وضعیت',
+    'Elapsed (seconds)':'مدت سپری‌شده (ثانیه)', 'Namespace':'فضای نام', 'Cluster':'کلاستر',
+    'Host':'میزبان', 'Verified observations':'شواهد تازه و غیرخطا',
+    'Monitoring sources':'منابع پایش', 'Cause':'علت احتمالی', 'Mission':'مأموریت',
+    'Tools':'ابزارهای استفاده‌شده', 'Health':'سلامت', 'Trace ID':'شناسه ردگیری',
+    'Phase':'مرحله جمع‌آوری', 'Similarity':'شباهت', 'Source status':'وضعیت منبع',
+    'Cause certainty':'قطعیت علت', 'Evidence source':'منبع شواهد',
+    'LLM status':'وضعیت تحلیل هوشمند', 'Approver':'تأییدکننده',
+    'Verification confidence':'اطمینان راستی‌آزمایی', 'Memory outcome':'نتیجه تجربه',
+    'Source type':'نوع داده', 'Document':'سند', 'Historical context':'زمینه تاریخی',
+    'Approval':'تأیید عملیات', 'Snapshot version':'نسخه اتصال شواهد'
   };
   const statesFa = {
     available:'در دسترس', empty:'بدون نتیجه', failed:'ناموفق', error:'خطا',
@@ -82,7 +92,10 @@
     consumed:'مصرف شده', success:'موفق', partial:'ناقص', stale:'قدیمی',
     fresh:'تازه', mixed:'ترکیبی', queried:'جست‌وجو شده', skipped:'اجرا نشده',
     not_pending:'در انتظار نیست', human_review_required:'نیازمند بررسی انسانی',
-    observed:'مشاهده شده', not_executed:'اجرا نشده'
+    observed:'مشاهده شده', not_executed:'اجرا نشده',
+    matched_at_read:'مطابق شواهد فعلی', drift_detected:'نامعتبر به علت تغییر شواهد',
+    new_approval_required:'نیازمند تأیید جدید',
+    'Complete':'کامل', 'Recorded':'ثبت شده', 'Not verified':'تأیید نشده'
   };
   const fmt = value => {
     if (value == null || value === '') return t('unknown');
@@ -121,7 +134,7 @@
     const outcome = b.execution_outcome || {};
     const verify = b.verification_result || {};
     const learning = b.knowledge_learning_status || {};
-    const narrative = b.localized_narrative || {};
+    const deterministicNarrative = b.localized_narrative || {};
     const agents = b.agent_findings || [];
     const mcp = b.mcp_evidence || [];
     const resources = b.monitoring_sources || [];
@@ -130,26 +143,37 @@
     const narrativeRows = matchedNarrative?.status === 'available' ? (matchedNarrative.sections || []) : [];
     const narrativeSection = narrativeRows.length
       ? '<div class="db-narrative">' + narrativeRows.map(x => '<article class="db-narrative-part"><h4>' + html(x.heading) + '</h4><p>' + html(x.text) + '</p>' + linkRefs(x.citations) + '</article>').join('') + '</div>'
-      : '<p class="db-subtle">' + (narrativePending ? t('loading') : t('narrativeFallback')) + '</p>';
+      : '<p class="db-subtle">' + (narrativePendingKey === (activeId + ':' + b.snapshot_id + ':' + language) ? t('loading') : t('narrativeFallback')) + '</p>';
     const direction = language === 'fa' ? 'rtl' : 'ltr';
     const agentCards = agents.map(x => '<div class="db-record"><div class="db-record-head"><b>' +
       html(x.agent) + '</b>' + flag(x.status) + '</div>' + originalText(x.finding) +
+      field('Mission', x.mission) + field('Tools', (x.tools || []).join('، ')) +
+      field('Health', x.health_status) + field('Trace ID', x.trace_id) +
       field(t('rca'), confidence(x.confidence)) + linkRefs(x.evidence_refs) +
       list(x.missing_evidence) + (x.conflicting_evidence_refs?.length ? linkRefs(x.conflicting_evidence_refs) : '') +
       '</div>').join('') || '<p class="db-subtle">' + t('none') + '</p>';
+    const incidentObserved = i.observed_service_state || {};
+    const observedCards = Object.entries(incidentObserved).map(([name, obj]) => {
+      if (!obj || typeof obj !== 'object') return '';
+      const facts = Object.entries(obj).filter(([, value]) => value != null &&
+        ['string', 'number', 'boolean'].includes(typeof value)).slice(0, 10);
+      return '<div class="db-record"><b>' + html(name) + '</b><div class="db-fields">' +
+        facts.map(([key, value]) => field(key, value)).join('') + '</div></div>';
+    }).join('');
     const mcpCards = mcp.map(x => '<div class="db-record"><div class="db-record-head"><b>' +
       html(x.server) + ' / ' + html(x.tool) + '</b>' + flag(x.status) + '</div>' +
-      field(t('timestamp'), x.collected_at) + field(t('freshness'), x.freshness) + field('Timestamp basis', x.time_basis) +
+      field(t('timestamp'), x.collected_at) + field(t('freshness'), x.freshness) + field('Timestamp basis', x.time_basis) + field('Phase', x.phase) +
       originalText(x.finding) + linkRefs(x.evidence_ref ? [x.evidence_ref] : []) + '</div>').join('');
     const healthCards = resources.map(x => '<div class="db-record"><div class="db-record-head"><b>' + html(x.source) + '</b>' + flag(x.status) + '</div>' + field(t('freshness'), x.freshness) + (['unavailable','error'].includes(x.status) ? '<p class="db-warning">' + t('providerMissing') + '</p>' : '') + '</div>').join('');
     const knowledgeCards = (c.items || []).map(x => '<div class="db-record"><div class="db-record-head"><b>' +
-      html(x.source_id) + '</b>' + flag(x.use_status) + '</div>' +
+      html(x.title || x.source_id) + '</b>' + flag(x.use_status) + '</div>' +
       field(t('record'), [x.knowledge_base_id,x.knowledge_id,x.revision_id].filter(Boolean).join(' / ')) +
-      field('Relevance', confidence(x.relevance)) + originalText(x.excerpt) + '</div>').join('');
+      field('Relevance', confidence(x.relevance)) + field('Document', x.source_id) + originalText(x.excerpt) + '</div>').join('');
     const memoryCards = (m.items || []).map(x => '<div class="db-record"><div class="db-record-head"><b>' +
       html(x.memory_id) + '</b>' + flag(x.use_status) + '</div>' +
       field('Incident ID', x.previous_incident_id) + field(t('verification'), x.verification) +
-      field('Outcome', x.outcome) + originalText(x.root_cause) + originalText(x.action) + '</div>').join('');
+      field('Outcome', x.outcome) + field('Similarity', confidence(x.similarity)) +
+      field('Cause certainty', x.root_cause_status) + originalText(x.root_cause) + originalText(x.action) + '</div>').join('');
     const conf = b.rca_assessment || {};
     const warnings = [];
     if (b.data_freshness === 'stale') warnings.push(t('older'));
@@ -158,33 +182,44 @@
     if (b.data_freshness === 'unknown') warnings.push(t('missing'));
     if ((b.missing_evidence || []).length || (b.evidence_conflicts || []).length) warnings.push(t('missing'));
     if (c.retrieved_count && c.use_status !== 'cited_by_agent') warnings.push(t('notVerified'));
+    if (a.evidence_snapshot_binding === 'drift_detected') warnings.push(t('approvalStale'));
     const summary = '<header class="db-header"><div><span class="db-kicker">' + t('lead') +
       '</span><h3>' + t('title') + '</h3><p>' + html(i.service) + ' · ' + html(i.severity) +
       ' · ' + html(i.status) + '</p></div><div class="db-tools">' +
       '<button type="button" data-db-lang="fa" aria-pressed="' + (language === 'fa') + '">فارسی</button>' +
       '<button type="button" data-db-lang="en" aria-pressed="' + (language === 'en') + '">English</button>' +
       '<button type="button" data-db-copy="1">' + t('copy') + '</button></div></header>' +
-      '<p class="db-lead">' + html(language === 'fa' ? narrative.fa : narrative.en) + '</p>' +
+      '<p class="db-lead">' + html(language === 'fa' ? deterministicNarrative.fa : deterministicNarrative.en) + '</p>' +
       '<div class="db-fields">' + field('Incident ID', i.incident_id) +
       field(t('freshness'), b.data_freshness) + field(t('risk'), r.risk_level) +
-      field('Approval', a.approval_status) + field('Evidence', b.source_references?.length ?? 0) +
+      field('Approval', a.status === 'new_approval_required' ? a.status : a.approval_status) + field('Evidence', b.source_references?.length ?? 0) +
       field(t('timestamp'), b.generated_at) +
       field(t('target'), i.target) + field('Port', i.port) +
-      field('Started', i.started_at) + field('Likely cause', i.cause_status) + '</div>' +
+      field('Started', i.started_at) + field('Elapsed (seconds)', i.elapsed_seconds) +
+      field('Host', i.host) + field('Namespace', i.namespace) + field('Cluster', i.cluster) +
+      field('Verified observations', i.valid_evidence_count) +
+      field('Monitoring sources', i.observed_sources) +
+      field('Cause', i.likely_cause) + field('Likely cause', i.cause_status) + '</div>' +
       (warnings.length ? '<div class="db-warning">' + list([...new Set(warnings)]) + '</div>' : '') +
       '<p class="db-notice">' + t('readOnly') + '</p>';
     const agentsSection = '<div class="db-fields">' + field(t('rca'), confidence(conf.rca_confidence)) +
       field(t('evaluator'), confidence(conf.evaluator_confidence)) +
-      field(t('agreement'), confidence(conf.agent_agreement)) + '</div>' + agentCards;
+      field(t('agreement'), confidence(conf.agent_agreement)) + '</div>' +
+      '<p class="db-notice">' + (language === 'fa' ?
+        'اطمینان RCA احتمال درستی علت است؛ اطمینان Evaluator ارزیابی برنامه پیشنهادی است؛ توافق Agentها میزان هم‌نظر بودن تحلیل‌گران است. این سه معیار یکسان نیستند.' :
+        'RCA confidence assesses the suspected cause; evaluator confidence assesses the plan; agreement measures cross-agent consensus. These are different signals.') +
+      '</p>' + agentCards;
     const sourcesSection = '<div class="db-fields">' + healthCards + '</div>' +
-      (mcpCards || '<p class="db-subtle">' + t('noData') + '</p>');
+      observedCards + (mcpCards || '<p class="db-subtle">' + t('noData') + '</p>');
     const cSection = field(t('status'), c.status) + field(t('retrieved'), c.retrieved_count) +
       '<p class="db-notice">' + t('explain') + '</p>' +
       (knowledgeCards || '<p class="db-subtle">' + t('none') + '</p>');
     const memorySection = '<p class="db-notice">' + t('explain') + '</p>' +
       (memoryCards || '<p class="db-subtle">' + t('none') + '</p>');
-    const gapsSection = '<h4>Missing evidence</h4>' + list(b.missing_evidence) +
-      '<h4>Conflicting evidence refs</h4>' + list(b.evidence_conflicts);
+    const gapsSection = '<h4>' + (language === 'fa' ? 'شواهد ناقص' : 'Missing evidence') +
+      '</h4>' + list(b.missing_evidence) + '<h4>' +
+      (language === 'fa' ? 'ارجاعات متناقض' : 'Conflicting evidence refs') +
+      '</h4>' + list(b.evidence_conflicts);
     const actionSection = '<div class="db-fields">' + field(t('tool'), r.tool) +
       field(t('target'), r.target) + field('Action', r.action) +
       field(t('risk'), r.risk_level) + field('Blast radius', r.blast_radius) +
@@ -202,7 +237,8 @@
       field('Execution binding', a.binding_digest ? 'Recorded' : 'Not verified') +
       field('Evidence snapshot binding', a.evidence_snapshot_binding) +
       field('Rollback supported', a.rollback_supported ? 'Recorded' : 'Not verified') +
-      field('Timeout (s)', a.timeout_seconds) + '</div>' +
+      field('Timeout (s)', a.timeout_seconds) + field('Approver', a.approver) +
+      field('Snapshot version', a.decision_snapshot_version) + '</div>' +
       '<p class="db-warning">' + t('actionSeparate') + '</p>' +
       '<div class="db-buttons"><button type="button" data-db-nav="decision">' + t('approval') + '</button>' +
       '<button type="button" data-db-nav="evidence">' + t('raw') + '</button>' +
@@ -214,7 +250,11 @@
     const postSection = '<div class="db-fields">' + field(t('result'), outcome.status) +
       field(t('tool'), outcome.tool) + field(t('target'), outcome.target) +
       field(t('verification'), verify.status) +
-      field('Memory ID', learning.memory_id) + '</div>' + originalText(verify.message) +
+      field('Memory ID', learning.memory_id) +
+      field('Approver', a.approver) + field('Verification confidence', confidence(verify.confidence)) +
+      field('Approval ID', outcome.approval_id) + '</div>' +
+      originalText(outcome.error || outcome.details) + originalText(verify.message) +
+      list(verify.changes) +
       linkRefs(verify.evidence_refs) + (learning.review_available ? '<button type="button" data-db-knowledge="' +
       html(learning.review_id) + '">' + t('review') + '</button>' : '');
     return '<div class="decision-brief" dir="' + direction + '" lang="' + language + '" data-snapshot="' +
@@ -228,28 +268,35 @@
   }
 
   async function ensureNarrative() {
-    if (!brief || narrativePending || String(S.selected) !== String(activeId)) return;
+    if (!brief || String(S.selected) !== String(activeId)) return;
     const snapshot = brief.snapshot_id;
     const currentLang = language;
+    const requestedId = String(activeId);
     const key = snapshot + ':' + currentLang;
+    const requestKey = requestedId + ':' + key;
+    if (narrativePendingKey === requestKey) return;
     if (narrativeCache.has(key)) {
-      narrative = narrativeCache.get(key);
-      return;
+      const cached = narrativeCache.get(key);
+      if (cached.status === 'available' || Date.now() - (cached._fetchedAt || 0) < 60000) {
+        narrative = cached;
+        return;
+      }
+      narrativeCache.delete(key);
     }
-    narrativePending = true;
+    narrativePendingKey = requestKey;
     try {
-      const result = await api('/api/v1/incidents/' + encodeURIComponent(activeId) + '/decision-brief/narrative?lang=' + encodeURIComponent(currentLang));
+      const result = await api('/api/v1/incidents/' + encodeURIComponent(requestedId) + '/decision-brief/narrative?lang=' + encodeURIComponent(currentLang));
       if (result?.snapshot_id !== snapshot || result?.language !== currentLang) throw new Error('narrative_snapshot_mismatch');
-      narrativeCache.set(key, result);
-      if (String(S.selected) === String(activeId) && brief?.snapshot_id === snapshot && language === currentLang) narrative = result;
+      narrativeCache.set(key, {...result, _fetchedAt: Date.now()});
+      if (String(S.selected) === requestedId && brief?.snapshot_id === snapshot && language === currentLang) narrative = result;
     } catch (_) {
       // A missing model or transient connectivity never disables durable Incident evidence.
-      const fallback = {snapshot_id: snapshot, language: currentLang, status: 'fallback', sections: []};
+      const fallback = {snapshot_id: snapshot, language: currentLang, status: 'fallback', sections: [], _fetchedAt: Date.now()};
       narrativeCache.set(key, fallback);
-      if (String(S.selected) === String(activeId) && language === currentLang) narrative = fallback;
+      if (String(S.selected) === requestedId && brief?.snapshot_id === snapshot && language === currentLang) narrative = fallback;
     } finally {
-      narrativePending = false;
-      if (S.detail && String(S.selected) === String(activeId) && brief?.snapshot_id === snapshot && document.querySelector('.decision-brief')) {
+      if (narrativePendingKey === requestKey) narrativePendingKey = null;
+      if (S.detail && String(S.selected) === requestedId && brief?.snapshot_id === snapshot && document.querySelector('.decision-brief')) {
         window.renderDetail('brief');
       }
     }
@@ -275,14 +322,18 @@
     pane.innerHTML = loading ? '<div class="db-placeholder">' + t('loading') + '</div>' :
       failed ? '<div class="db-placeholder db-error">' + t('unavailable') + ' ' + html(failed) + '</div>' :
       brief ? body(brief) : '<div class="db-placeholder">' + t('noData') + '</div>';
-    if (brief && !narrativeCache.has(brief.snapshot_id + ':' + language)) void ensureNarrative();
+    if (brief && (!narrativeCache.has(brief.snapshot_id + ':' + language) ||
+      (narrativeCache.get(brief.snapshot_id + ':' + language)?.status !== 'available' &&
+       Date.now() - (narrativeCache.get(brief.snapshot_id + ':' + language)?._fetchedAt || 0) >= 60000))) {
+      void ensureNarrative();
+    }
   }
 
   window.selectIncident = selectIncident = async function selectWithDecisionBrief(id) {
     activeId = String(id);
     brief = null;
     narrative = null;
-    narrativePending = false;
+    narrativePendingKey = null;
     failed = null;
     loading = true;
     const request = api('/api/v1/incidents/' + encodeURIComponent(id) + '/decision-brief')

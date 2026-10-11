@@ -509,9 +509,8 @@ async def get_incident_decision_brief(incident_id: UUID):
     from apps.decision_brief import build_decision_brief
     from domain.models import KnowledgeReview
 
-    # Reuse the existing deterministic operator projection, not a competing
-    # interpreter of RCA, governed action, or approval semantics.
-    operator_summary = await get_operator_summary(incident_id)
+    # Read one consistent incident view; a second session could pair a new
+    # approval with the previous checkpoint or evidence snapshot.
     async with AsyncSessionLocal() as db:
         incident = await db.get(Incident, incident_id)
         if incident is None:
@@ -529,7 +528,67 @@ async def get_incident_decision_brief(incident_id: UUID):
                 .order_by(desc(Finding.created_at)).limit(100)
             )
         ).scalars().all()
-        audit_rows = await PostgreSQLAuditStore(db).list(str(incident_id), 100)
+        audit_rows = await PostgreSQLAuditStore(db).list(str(incident_id), 200)
+        approval_row = (
+            await db.execute(text(
+                "SELECT approval_id,action,risk_level,approver,status,metadata,created_at,approved_at,rejected_at "
+                "FROM approvals WHERE incident_id=:id ORDER BY created_at DESC LIMIT 1"
+            ), {"id": str(incident_id)})
+        ).mappings().first()
+        memory_row = (
+            await db.execute(
+                select(MemoryEntry).where(MemoryEntry.incident_id == incident_id)
+                .order_by(desc(MemoryEntry.created_at)).limit(1)
+            )
+        ).scalars().first()
+        persisted_evidence = [{
+            "id": str(row.id),
+            "type": row.type.value if hasattr(row.type, "value") else str(row.type),
+            "source": row.source, "reference": row.reference,
+            "query": row.query, "raw_data": row.raw_data or {},
+            "confidence": row.confidence,
+            "created_at": row.created_at.isoformat() if row.created_at else None,
+        } for row in evidence_rows]
+        persisted_findings = [{
+            "id": str(row.id), "agent": row.agent,
+            "finding_type": row.finding_type, "statement": row.statement,
+            "evidence_ids": row.evidence_ids or [],
+            "confidence": row.confidence,
+            "created_at": row.created_at.isoformat() if row.created_at else None,
+        } for row in finding_rows]
+        incident_data = {
+            "id": str(incident.id), "service": incident.service,
+            "severity": incident.severity,
+            "status": incident.status.value if hasattr(incident.status, "value") else str(incident.status),
+            "summary": incident.summary, "context": incident.context or {},
+            "started_at": incident.started_at.isoformat() if incident.started_at else None,
+        }
+        operator_summary = build_operator_summary(
+            incident=incident_data, durable_evidence=persisted_evidence,
+            findings=persisted_findings, checkpoint=checkpoint,
+            approval=dict(approval_row) if approval_row else None,
+            audit_events=audit_rows,
+            memory_entry=(
+                {"id": str(memory_row.id), "verification_result": memory_row.verification_result,
+                 "outcome": memory_row.outcome, "root_cause": memory_row.root_cause,
+                 "action": memory_row.action}
+                if memory_row else None
+            ),
+        )
+        from apps.approval_service.binding import decision_snapshot_digest
+        from apps.incident_service.repository import IncidentRepository
+
+        approval_metadata = dict(approval_row["metadata"] or {}) if approval_row else {}
+        bound_snapshot = approval_metadata.get("decision_snapshot_digest")
+        if bound_snapshot:
+            current_inventory = await IncidentRepository(db).evidence_inventory_digest(str(incident_id))
+            current_digest = decision_snapshot_digest(
+                checkpoint.get("state") or {}, current_inventory,
+            )
+            snapshot_status = "matched" if current_digest == bound_snapshot else "drift_detected"
+        else:
+            snapshot_status = "legacy_unbound"
+        operator_summary["approval"]["decision_snapshot_status"] = snapshot_status
         memory_id = (operator_summary.get("memory") or {}).get("memory_entry_id")
         latest_review = None
         if memory_id:
@@ -543,31 +602,11 @@ async def get_incident_decision_brief(incident_id: UUID):
             ).scalars().first()
 
     return build_decision_brief(
-        incident={
-            "id": str(incident.id), "service": incident.service,
-            "severity": incident.severity,
-            "status": incident.status.value if hasattr(incident.status, "value") else str(incident.status),
-            "summary": incident.summary,
-            "started_at": incident.started_at.isoformat() if incident.started_at else None,
-        },
+        incident=incident_data,
         operator_summary=operator_summary,
         checkpoint=checkpoint,
-        durable_evidence=[
-            {
-                "id": str(row.id), "source": row.source,
-                "reference": row.reference, "raw_data": row.raw_data or {},
-                "created_at": row.created_at.isoformat() if row.created_at else None,
-            }
-            for row in evidence_rows
-        ],
-        findings=[
-            {
-                "id": str(row.id), "agent": row.agent,
-                "finding_type": row.finding_type, "statement": row.statement,
-                "evidence_ids": row.evidence_ids or [], "confidence": row.confidence,
-            }
-            for row in finding_rows
-        ],
+        durable_evidence=persisted_evidence,
+        findings=persisted_findings,
         audit_events=audit_rows,
         knowledge_review=(
             {"id": str(latest_review.id), "status": latest_review.status}

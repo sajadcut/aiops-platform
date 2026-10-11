@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import hashlib
+import json
 from datetime import date, datetime, time, timezone
 from decimal import Decimal
 from enum import Enum
@@ -95,6 +97,36 @@ class IncidentRepository:
             incident.summary = summary
             if incoming_context is not None:
                 incident.context = incoming_context
+
+    async def evidence_inventory_digest(self, incident_id: str) -> str:
+        """Fingerprint complete persisted Incident Evidence at approval/resume.
+
+        Excludes no evidence sources. This is a drift detector, not an
+        authorization token; the original approval binding is still mandatory.
+        """
+        await self.session.flush()
+        evidence_rows = (
+            await self.session.execute(
+                select(Evidence.id, Evidence.source, Evidence.reference,
+                       Evidence.created_at, Evidence.raw_data)
+                .where(Evidence.incident_id == UUID(str(incident_id)))
+                .order_by(Evidence.id).limit(5001)
+            )
+        ).all()
+        if len(evidence_rows) > 5000:
+            raise ValueError("approval_evidence_inventory_limit")
+        fingerprint = hashlib.sha256()
+        for row in evidence_rows:
+            payload = {
+                "id": str(row.id), "source": row.source,
+                "reference": row.reference,
+                "created_at": row.created_at.isoformat() if row.created_at else None,
+                "raw_data": row.raw_data or {},
+            }
+            fingerprint.update(json.dumps(payload, ensure_ascii=False,
+                sort_keys=True, separators=(",", ":"), default=str).encode("utf-8"))
+            fingerprint.update(b"\\n")
+        return fingerprint.hexdigest()
 
     async def set_status(self, incident_id: str, status: str) -> None:
         incident = await self.session.get(Incident, UUID(str(incident_id)))
