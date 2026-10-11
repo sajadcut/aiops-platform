@@ -198,7 +198,20 @@
   async function api(path, options={}) {
     const headers={'Accept':'application/json', ...(state.key ? {'X-API-Key':state.key}:{}),...(options.headers||{})};
     const response=await fetch(path,{...options,headers,credentials:'same-origin'});
-    if(!response.ok){let detail='';try{const body=await response.json();detail=typeof body.detail==='string'?body.detail:JSON.stringify(body.detail||'');}catch(_){}const e=new Error(response.status+' '+(detail||response.statusText));e.status=response.status;throw e;}
+    if(!response.ok){
+      let detail='',code='';
+      try {
+        const body=await response.json();
+        code=body?.detail?.code||body?.error?.code||'';
+        detail=typeof body.detail==='string'?body.detail:JSON.stringify(body.detail||'');
+      }catch(_){}
+      const message=code==='DATABASE_MIGRATION_DRIFT'?
+        (state.language==='fa'?
+          'نسخه دیتابیس قدیمی است و عملیات به‌صورت ایمن متوقف شده. مدیر سیستم باید پس از بکاپ، Alembic migration را اجرا کند.':
+          'Database schema is behind the application. Operations are safely blocked; a DBA must back up and apply Alembic migrations.') :
+        response.status+' '+(detail||response.statusText);
+      const e=new Error(message);e.status=response.status;e.code=code;throw e;
+    }
     return response.json();
   }
   const base='/api/v1/incidents/'+encodeURIComponent(incidentId);
