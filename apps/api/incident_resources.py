@@ -618,6 +618,36 @@ async def get_incident_decision_brief(incident_id: UUID):
         return await load_decision_brief_for_incident(db, incident_id)
 
 
+@router.get("/incidents/{incident_id}/decision-brief/history")
+async def get_decision_brief_history(
+    incident_id: UUID, limit: int = Query(default=30, ge=1, le=100),
+):
+    """Read only previously archived, immutable lifecycle reports."""
+    from apps.decision_brief_history import list_decision_brief_history
+
+    async with AsyncSessionLocal() as db:
+        if await db.get(Incident, incident_id) is None:
+            raise HTTPException(status_code=404, detail="Incident not found")
+        return {
+            "incident_id": str(incident_id),
+            "items": await list_decision_brief_history(db, incident_id, limit),
+        }
+
+
+@router.get("/incidents/{incident_id}/decision-brief/history/{snapshot_id}")
+async def get_decision_brief_historical_snapshot(incident_id: UUID, snapshot_id: UUID):
+    """Exact archived report; never regenerated against current Incident state."""
+    from apps.decision_brief_history import read_decision_brief_snapshot
+
+    async with AsyncSessionLocal() as db:
+        if await db.get(Incident, incident_id) is None:
+            raise HTTPException(status_code=404, detail="Incident not found")
+        brief = await read_decision_brief_snapshot(db, incident_id, snapshot_id)
+        if brief is None:
+            raise HTTPException(status_code=404, detail="Decision brief snapshot not found")
+        return brief
+
+
 @router.get("/incidents/{incident_id}/decision-brief/narrative")
 async def get_incident_decision_brief_narrative(
     incident_id: UUID,
