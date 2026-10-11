@@ -1925,15 +1925,15 @@
 | `integrations/vm/ssh_connector.py` | `SSHVMConnector.start_service` | 502 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
 | `integrations/vm/ssh_connector.py` | `SSHVMConnector.restart_service` | 509 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
 | `integrations/vm/ssh_connector.py` | `SSHVMConnector.reload_service` | 516 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/target_context.py` | `_clean` | 17 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `integrations/vm/target_context.py` | `target_from_zabbix_payload` | 22 | function | Resolve a VM endpoint without conflating it with the service name. | module |
-| `integrations/vm/target_context.py` | `target_port_from_zabbix_payload` | 51 | function | Return only an explicitly supplied TCP target port. | module |
-| `integrations/vm/target_context.py` | `bind_vm_target` | 68 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `integrations/vm/target_context.py` | `reset_vm_target` | 72 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `integrations/vm/target_context.py` | `current_vm_target` | 76 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `integrations/vm/target_context.py` | `bind_vm_port` | 80 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `integrations/vm/target_context.py` | `reset_vm_port` | 84 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `integrations/vm/target_context.py` | `current_vm_port` | 88 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `integrations/vm/target_context.py` | `_clean` | 19 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `integrations/vm/target_context.py` | `target_from_zabbix_payload` | 24 | function | Only the explicit target_ip field/tag may select a VM MCP target. | module |
+| `integrations/vm/target_context.py` | `target_port_from_zabbix_payload` | 39 | function | Only a valid explicit target_port field/tag is accepted. | module |
+| `integrations/vm/target_context.py` | `bind_vm_target` | 53 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `integrations/vm/target_context.py` | `reset_vm_target` | 57 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `integrations/vm/target_context.py` | `current_vm_target` | 61 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `integrations/vm/target_context.py` | `bind_vm_port` | 65 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `integrations/vm/target_context.py` | `reset_vm_port` | 69 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `integrations/vm/target_context.py` | `current_vm_port` | 73 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `integrations/zabbix/client.py` | `ZabbixClient` | 4 | class | کلاس | module |
 | `integrations/zabbix/client.py` | `ZabbixClient.get_alert` | 5 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | ZabbixClient |
 | `integrations/zabbix/client.py` | `MockZabbixClient` | 8 | class | کلاس | module |
