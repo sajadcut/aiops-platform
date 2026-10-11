@@ -272,7 +272,7 @@ def test_recommendation_contains_two_languages_from_same_governed_action():
         },
     )
     action = summary["recommended_action"]
-    assert action["text_fa"] == "start_service روی 10.100.6.199"
+    assert action["text_fa"] == "راه‌اندازی سرویس از طریق ssh_vm روی 10.100.6.199"
     assert action["text_en"] == "Proposed action: start_service via ssh_vm on 10.100.6.199."
     assert action["action"] == "start_service"
     assert action["target"] == "10.100.6.199"
