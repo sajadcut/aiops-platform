@@ -14,7 +14,7 @@ from apps.signal_gateway.zabbix_lifecycle import ingest_zabbix_payload
 from database import AsyncSessionLocal
 from domain.contracts.logging import logger
 from domain.contracts.rate_limit import rate_limiter_strict
-from integrations.vm.target_context import bind_vm_port, bind_vm_target, reset_vm_port, reset_vm_target, target_from_zabbix_payload, target_port_from_zabbix_payload
+from integrations.vm.target_context import bind_vm_port, bind_vm_target, bind_vm_probe_blocked, reset_vm_port, reset_vm_target, reset_vm_probe_blocked, target_from_zabbix_payload, target_port_from_zabbix_payload
 from integrations.zabbix.webhook_contract import normalize_zabbix_payload
 from integrations.kubernetes.target_context import bind_kubernetes_namespace, reset_kubernetes_namespace
 
@@ -116,6 +116,7 @@ async def _ingest_zabbix(payload: Dict[str, Any]) -> Dict[str, Any]:
     namespace_token = bind_kubernetes_namespace(
         payload.get("namespace") if is_kubernetes else None
     )
+    vm_probe_token = bind_vm_probe_blocked(is_non_vm)
     try:
         async with AsyncSessionLocal() as db:
             await _require_database_ready(db)
@@ -142,6 +143,7 @@ async def _ingest_zabbix(payload: Dict[str, Any]) -> Dict[str, Any]:
         logger.exception("signal_ingestion_failed", source="zabbix", error_type=type(exc).__name__)
         raise HTTPException(status_code=500, detail="signal_ingestion_failed") from exc
     finally:
+        reset_vm_probe_blocked(vm_probe_token)
         reset_kubernetes_namespace(namespace_token)
         reset_vm_port(port_token)
         reset_vm_target(target_token)
