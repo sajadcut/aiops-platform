@@ -9,6 +9,30 @@ from domain.contracts.config import settings
 BINDING_VERSION = 1
 
 
+def decision_snapshot_digest(state: Dict[str, Any], evidence_inventory: str | None = None) -> str:
+    """Immutable approval-time decision inputs, excluding approval status.
+
+    All new durable Workflow approvals can carry this digest. An external
+    incident evidence write or change of plan, evaluation, findings, or
+    execution request then invalidates that approval at the resume boundary.
+    The digest is not itself an approval or execution permission.
+    """
+    payload = {
+        "final_plan": state.get("final_plan"),
+        "decision": state.get("decision"),
+        "evaluation": state.get("evaluation"),
+        "analysis_results": state.get("analysis_results"),
+        "triage_result": state.get("triage_result"),
+        "execution_request": state.get("execution_request"),
+        "live_evidence": state.get("live_evidence"),
+        "knowledge_results": state.get("knowledge_results"),
+        "memory_results": state.get("memory_results"),
+        "persisted_evidence_inventory": evidence_inventory,
+    }
+    raw = json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":"), default=str)
+    return hashlib.sha256(raw.encode("utf-8")).hexdigest()
+
+
 def _canonical_parameters(parameters: Any) -> Dict[str, Any]:
     return dict(parameters or {}) if isinstance(parameters or {}, dict) else {}
 
