@@ -121,7 +121,7 @@ async def edit_review(review_id: UUID, payload: ReviewEditRequest, actor=Depends
     async with AsyncSessionLocal() as db:
         await require_database_ready(db, operation="knowledge_review_edit")
         row = await get_locked_review(db, review_id)
-        if row.status not in {"pending_review", "rejected", "approved", "publish_failed"}:
+        if row.status not in {"pending_review", "rejected", "approved"}:
             raise HTTPException(409, "published_or_inflight_review_immutable")
         if row.revision != payload.expected_revision:
             raise HTTPException(409, "review_revision_conflict")
