@@ -2,6 +2,9 @@ from __future__ import annotations
 
 from typing import Any, Dict, Optional
 
+from domain.contracts.config import settings
+from domain.contracts.logging import logger
+
 from apps.memory_service import OperationalMemoryService
 from apps.memory_service.builder import OperationalMemoryBuilder
 
@@ -106,4 +109,23 @@ async def record_runbook_outcome(
     )
     if evidence_count <= 0 and not negative_outcome:
         return None
-    return str(await OperationalMemoryService(db).add_episode(episode))
+    memory_id = await OperationalMemoryService(db).add_episode(episode)
+    # Generate only a Pending Review candidate: this path has NO Cognia write
+    # authority and must never make remediation success depend on knowledge sync.
+    if (
+        episode.get("memory_outcome_class") == "successful_recovery"
+        and verification_status == "success"
+        and execution_success
+        and int(settings.COGNIA_CLIENT_APPLICATION_ID or 0) > 0
+        and len(settings.COGNIA_KNOWLEDGE_BASE_IDS) == 1
+    ):
+        try:
+            from apps.knowledge_review import create_from_memory
+            await create_from_memory(db, memory_id, "system:verified-remediation")
+        except Exception as exc:
+            logger.warning(
+                "knowledge_candidate_draft_failed",
+                incident_id=incident_id, error_type=type(exc).__name__,
+            )
+            await db.rollback()
+    return str(memory_id)
