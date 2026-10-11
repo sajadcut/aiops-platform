@@ -363,6 +363,48 @@ async def get_incident_lifecycle(incident_id: UUID):
     }
 
 
+@router.get("/incidents/{incident_id}/operator-recommendation/fa")
+async def get_operator_recommendation_fa(incident_id: UUID):
+    """Translate the durable English recommendation solely for Persian display.
+
+    Neither translation nor its failure can change the Incident or authorize
+    action. The untouched English plan stays available in operator-summary.
+    """
+    from apps.recommendation_translation import (
+        TranslationUnavailable, translate_recommendation,
+    )
+
+    async with AsyncSessionLocal() as db:
+        incident = await db.get(Incident, incident_id)
+        if incident is None:
+            raise HTTPException(status_code=404, detail="Incident not found")
+        checkpoint = await WorkflowCheckpointStore(db).load(str(incident_id)) or {}
+    state = (checkpoint.get("state") or {})
+    if not isinstance(state, dict) or state.get("execution_request"):
+        raise HTTPException(status_code=409, detail="free_text_translation_not_required")
+    original = state.get("final_plan")
+    if isinstance(original, dict):
+        import json
+        source = json.dumps(original, ensure_ascii=False)
+    elif isinstance(original, str):
+        source = original.strip()
+    else:
+        raise HTTPException(status_code=404, detail="no_free_text_recommendation")
+    if not source:
+        raise HTTPException(status_code=404, detail="no_free_text_recommendation")
+    try:
+        translated = await translate_recommendation(source)
+    except TranslationUnavailable as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from None
+    return {
+        "incident_id": str(incident_id),
+        "language": "fa",
+        "text_fa": translated,
+        "source": "llm_translation_display_only",
+        "execution_authority": False,
+    }
+
+
 @router.get("/incidents/{incident_id}/operator-summary")
 async def get_operator_summary(incident_id: UUID):
     """Return a read-only Persian operator summary derived from current durable Incident state."""
