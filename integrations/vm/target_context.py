@@ -14,6 +14,21 @@ _CURRENT_VM_PORT: ContextVar[Optional[int]] = ContextVar(
     "aiops_current_vm_port",
     default=None,
 )
+_BLOCK_VM_PROBES: ContextVar[bool] = ContextVar(
+    "aiops_block_vm_probes_for_non_vm_signal", default=False
+)
+
+
+def bind_vm_probe_blocked(blocked: bool) -> Token:
+    return _BLOCK_VM_PROBES.set(bool(blocked))
+
+
+def reset_vm_probe_blocked(token: Token) -> None:
+    _BLOCK_VM_PROBES.reset(token)
+
+
+def vm_probes_blocked() -> bool:
+    return bool(_BLOCK_VM_PROBES.get())
 
 
 def _clean(value: Any) -> Optional[str]:
