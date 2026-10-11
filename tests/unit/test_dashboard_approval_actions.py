@@ -35,3 +35,10 @@ def test_fastapi_serves_approval_assets():
     source = (ROOT / "apps/api/main.py").read_text(encoding="utf-8")
     assert '@app.get("/dashboard/approval-actions.css"' in source
     assert '@app.get("/dashboard/approval-actions.js"' in source
+
+
+def test_critical_risk_requires_secondary_confirmation_before_approval_and_resume():
+    from pathlib import Path
+    source = Path("dashboards/approval-actions.js").read_text(encoding="utf-8")
+    assert "['high', 'critical'].includes(risk)" in source
+    assert "['high', 'critical'].includes(lower(approval.risk_level))" in source
