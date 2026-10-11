@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, Type
 
-from apps.approval_service.binding import assert_bound, bind_metadata
+from apps.approval_service.binding import assert_bound, bind_metadata, decision_snapshot_digest
 from apps.approval_service.postgres import PostgreSQLApprovalStore
 from apps.audit_service import AuditService
 from apps.audit_service.postgres import PostgreSQLAuditStore
@@ -92,6 +92,12 @@ class DurableWorkflowRuntime:
                 timeout=execution_request.get("timeout", 30), runbook_id=execution_request.get("runbook_id"),
                 runbook_version=execution_request.get("runbook_version"), rollback=execution_request.get("rollback", False),
             )
+            evidence_inventory = await self._evidence_inventory(incident_id)
+            approval["metadata"].update({
+                "decision_snapshot_digest": decision_snapshot_digest(result, evidence_inventory),
+                "decision_snapshot_version": 1,
+                "decision_evidence_inventory_digest": evidence_inventory,
+            })
             result["approval"] = approval
             await self.approvals.save(approval)
 
@@ -109,6 +115,43 @@ class DurableWorkflowRuntime:
         await self._flush_audit(incident_id)
         await self.incidents.commit()
         return result
+
+    async def _evidence_inventory(self, incident_id: str) -> str | None:
+        reader = getattr(self.incidents, "evidence_inventory_digest", None)
+        return await reader(incident_id) if callable(reader) else None
+
+    async def _assert_decision_snapshot(
+        self, incident_id: str, approval_id: str, state: Dict[str, Any],
+        durable: Dict[str, Any],
+    ) -> None:
+        metadata = dict(durable.get("metadata") or {})
+        stored = metadata.get("decision_snapshot_digest")
+        if not stored:
+            # Approvals created before this feature still pass the existing
+            # full Execution Intent binding and live runbook preconsume guard.
+            return
+        inventory = await self._evidence_inventory(incident_id)
+        current = decision_snapshot_digest(state, inventory)
+        if current == stored:
+            return
+        await self.approvals.cancel(
+            approval_id, reason="approval_decision_or_evidence_snapshot_changed",
+            metadata_patch={"decision_snapshot_invalidated": True},
+        )
+        state["terminal_reason"] = "approval_decision_snapshot_changed"
+        state["execution_result"] = {
+            "success": False, "execution_blocked": True,
+            "reason": "approval_decision_snapshot_changed",
+        }
+        AuditService.record(
+            "approval_decision_snapshot_changed", "durable_runtime",
+            incident_id, (state.get("execution_request") or {}).get("action"),
+            "blocked", {"approval_id": approval_id, "execution_denied": True},
+        )
+        await self.checkpoints.mark_failed(incident_id, state)
+        await self._flush_audit(incident_id)
+        await self.incidents.commit()
+        raise ValueError("approval_decision_snapshot_changed")
 
     @staticmethod
     def _assert_binding(approval: Dict[str, Any], execution_request: Dict[str, Any]) -> None:
@@ -292,6 +335,7 @@ class DurableWorkflowRuntime:
         if not execution_request:
             raise ValueError("execution_request_not_found_in_checkpoint")
         self._assert_binding(durable, execution_request)
+        await self._assert_decision_snapshot(incident_id, str(approval_id), state, durable)
         await self._preconsume_execution_guard(
             incident_id,
             str(approval_id),
