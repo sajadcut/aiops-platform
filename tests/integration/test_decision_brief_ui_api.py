@@ -40,3 +40,25 @@ def test_decision_brief_never_starts_tools_or_retrieval():
     assert "/decision-brief" in js
     assert "/resume" not in js
     assert "/approve" not in js
+
+
+def test_narrative_route_is_read_only_and_requires_authentication():
+    matches = [
+        route for route in app.routes
+        if getattr(route, "path", None) == "/api/v1/incidents/{incident_id}/decision-brief/narrative"
+    ]
+    assert len(matches) == 1
+    assert matches[0].methods == {"GET"}
+    response = TestClient(app).get(
+        "/api/v1/incidents/11111111-1111-4111-8111-111111111111/decision-brief/narrative?lang=fa"
+    )
+    assert response.status_code == 401
+
+
+def test_narrative_does_not_replace_structured_report_or_approval_buttons():
+    js = Path("dashboards/decision-brief.js").read_text(encoding="utf-8")
+    assert "/decision-brief/narrative?lang=" in js
+    assert "narrative_snapshot_mismatch" in js
+    assert "narrativeFallback" in js
+    assert "approveCurrentApproval()" not in js
+    assert "resumeCurrentWorkflow()" not in js
