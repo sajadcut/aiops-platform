@@ -529,6 +529,7 @@ async def get_incident_decision_brief(incident_id: UUID):
                 .order_by(desc(Finding.created_at)).limit(100)
             )
         ).scalars().all()
+        audit_rows = await PostgreSQLAuditStore(db).list(str(incident_id), 100)
         memory_id = (operator_summary.get("memory") or {}).get("memory_entry_id")
         latest_review = None
         if memory_id:
@@ -567,9 +568,21 @@ async def get_incident_decision_brief(incident_id: UUID):
             }
             for row in finding_rows
         ],
-        audit_events=[],
+        audit_events=audit_rows,
         knowledge_review=(
             {"id": str(latest_review.id), "status": latest_review.status}
             if latest_review is not None else None
         ),
     )
+
+
+@router.get("/incidents/{incident_id}/decision-brief/narrative")
+async def get_incident_decision_brief_narrative(
+    incident_id: UUID,
+    lang: str = Query(default="fa", pattern="^(fa|en)$"),
+):
+    """Optional display prose; approval and the deterministic brief stay authoritative."""
+    from apps.decision_brief_narrative import generate_narrative
+
+    brief = await get_incident_decision_brief(incident_id)
+    return await generate_narrative(brief, lang)

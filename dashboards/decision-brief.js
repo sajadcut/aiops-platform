@@ -6,6 +6,9 @@
   let brief = null;
   let loading = false;
   let failed = null;
+  let narrative = null;
+  let narrativePending = false;
+  const narrativeCache = new Map();
   const storageKey = 'aiops.incident.decision_brief.language';
   let language = (() => {
     try { return localStorage.getItem(storageKey) === 'en' ? 'en' : 'fa'; }
@@ -29,7 +32,10 @@
       verified:'به‌صورت مستقل تأیید شود', explain:'بازیابی سابقه به‌تنهایی به معنی صحت RCA یا اجازه اجرا نیست.',
       fail:'ناموفق', pending:'در انتظار ارزیابی اپراتور', actionSeparate:'Approve به‌تنهایی اجرا نمی‌کند؛ پس از آن Resume با کنترل‌های مجدد انجام می‌شود.',
       timestamp:'به‌روزرسانی', record:'شناسه سند', tool:'ابزار', target:'هدف', environment:'محیط',
-      risk:'ریسک', binding:'اتصال مجوز', freshness:'تازگی داده', verification:'نتیجه Verification', result:'نتیجه اجرا'
+      risk:'ریسک', binding:'اتصال مجوز', freshness:'تازگی داده', verification:'نتیجه Verification', result:'نتیجه اجرا',
+      narrative:'جمع‌بندی AIOps برای تصمیم‌گیری اپراتور', generated:'تحلیل فارسی مبتنی بر شواهد',
+      narrativeFallback:'خلاصه ساختاریافته؛ تحلیل پیشرفته LLM در دسترس نیست.', citations:'استناد به شواهد',
+      providerMissing:'این منبع در دسترس نبود؛ نتیجه‌گیری بدون داده‌های آن انجام شده است.', mixed:'ترکیبی از شواهد تازه و قدیمی/نامشخص'
     },
     en: {
       tab:'Decision Brief',title:'Incident Decision Brief',lead:'Operator decision summary',
@@ -48,20 +54,51 @@
       verified:'Requires independent verification',explain:'Historical retrieval alone does not prove RCA or authorize execution.',
       fail:'Failed',pending:'Human review required',actionSeparate:'Approval does not execute an action. Resume performs separate authorization checks.',
       timestamp:'Generated',record:'Source ID',tool:'Tool',target:'Target',environment:'Environment',
-      risk:'Risk',binding:'Approval binding',freshness:'Data freshness',verification:'Verification result',result:'Execution result'
+      risk:'Risk',binding:'Approval binding',freshness:'Data freshness',verification:'Verification result',result:'Execution result',
+      narrative:'AIOps operator decision summary', generated:'Grounded AI narrative',
+      narrativeFallback:'Deterministic summary; enhanced LLM narrative unavailable.', citations:'Evidence references',
+      providerMissing:'This monitoring source was unavailable; the assessment was made without its data.', mixed:'Mixed fresh, stale or unknown evidence'
     }
   };
   const t = key => dict[language][key] || key;
-  const fmt = value => value == null || value === '' ? t('unknown') : String(value);
+  const fieldFa = {
+    'Incident ID':'شناسه رخداد', 'Port':'پورت', 'Started':'زمان شروع',
+    'Likely cause':'وضعیت علت احتمالی', 'Action':'عملیات', 'Blast radius':'دامنه تأثیر',
+    'Risk of inaction':'ریسک اقدام نکردن', 'Expected outcome':'نتیجه مورد انتظار',
+    'Verification plan':'برنامه راستی‌آزمایی', 'Execution binding':'اتصال مجوز اجرا',
+    'Evidence snapshot binding':'اتصال مجوز به نسخه شواهد',
+    'Rollback supported':'امکان بازگشت', 'Timeout (s)':'مهلت اجرا (ثانیه)',
+    'Timestamp basis':'مبنای زمان', 'Actor':'عامل', 'Event':'رویداد',
+    'Outcome':'نتیجه', 'Memory ID':'شناسه حافظه', 'Relevance':'ارتباط',
+    'Runbook':'راهنمای عملیاتی', 'Approval ID':'شناسه تأیید',
+    'Snapshot':'نسخه گزارش', 'Evidence':'شواهد', 'Agent':'عامل تحلیل',
+    'Incident confidence':'اطمینان رخداد', 'Target':'هدف', 'Status':'وضعیت'
+  };
+  const statesFa = {
+    available:'در دسترس', empty:'بدون نتیجه', failed:'ناموفق', error:'خطا',
+    unavailable:'در دسترس نیست', not_queried:'جست‌وجو نشده', unknown:'نامشخص',
+    not_verified:'تأیید نشده', cited_by_agent:'دارای استناد Agent',
+    pending:'در انتظار تأیید', approved:'تأیید شده', rejected:'رد شده',
+    consumed:'مصرف شده', success:'موفق', partial:'ناقص', stale:'قدیمی',
+    fresh:'تازه', mixed:'ترکیبی', queried:'جست‌وجو شده', skipped:'اجرا نشده',
+    not_pending:'در انتظار نیست', human_review_required:'نیازمند بررسی انسانی',
+    observed:'مشاهده شده', not_executed:'اجرا نشده'
+  };
+  const fmt = value => {
+    if (value == null || value === '') return t('unknown');
+    if (typeof value === 'number') return new Intl.NumberFormat(language === 'fa' ? 'fa-IR' : 'en-US').format(value);
+    const text = String(value);
+    return language === 'fa' && Object.prototype.hasOwnProperty.call(statesFa, text) ? statesFa[text] : text;
+  };
   const html = value => esc(fmt(value));
   const sClass = value => {
     const str = String(value || '').toLowerCase();
-    if (['failed','stale','rejected','blocked'].includes(str)) return 'failed';
+    if (['failed','stale','rejected','blocked','error','unavailable'].includes(str)) return 'failed';
     if (['success','fresh','approved','verified','cited_by_agent'].includes(str)) return 'success';
     return 'unknown';
   };
   const flag = value => '<span class="db-flag ' + sClass(value) + '">' + html(value) + '</span>';
-  const field = (name, value) => '<div class="db-field"><span>' + esc(name) + '</span><strong>' + html(value) + '</strong></div>';
+  const field = (name, value) => '<div class="db-field"><span>' + esc(language === 'fa' ? fieldFa[name] || name : name) + '</span><strong>' + html(value) + '</strong></div>';
   const linkRefs = refs => (refs || []).length
     ? '<div class="db-refs">' + refs.map(r => '<code>' + html(r) + '</code>').join('') + '</div>'
     : '';
@@ -73,7 +110,7 @@
     : '<p class="db-subtle">' + t('none') + '</p>';
   const section = (key, content, opened = false) =>
     '<details class="db-section"' + (opened ? ' open' : '') + '><summary>' + t(key) + '</summary><div class="db-section-body">' + content + '</div></details>';
-  const confidence = score => score == null ? t('unknown') : Math.round(Number(score) * 100) + '%';
+  const confidence = score => score == null ? t('unknown') : new Intl.NumberFormat(language === 'fa' ? 'fa-IR' : 'en-US').format(Math.round(Number(score) * 100)) + (language === 'fa' ? '٪' : '%');
 
   function body(b) {
     const i = b.incident_summary || {};
@@ -88,6 +125,12 @@
     const agents = b.agent_findings || [];
     const mcp = b.mcp_evidence || [];
     const resources = b.monitoring_sources || [];
+    const timeline = b.timeline || [];
+    const matchedNarrative = narrative && narrative.snapshot_id === b.snapshot_id && narrative.language === language ? narrative : null;
+    const narrativeRows = matchedNarrative?.status === 'available' ? (matchedNarrative.sections || []) : [];
+    const narrativeSection = narrativeRows.length
+      ? '<div class="db-narrative">' + narrativeRows.map(x => '<article class="db-narrative-part"><h4>' + html(x.heading) + '</h4><p>' + html(x.text) + '</p>' + linkRefs(x.citations) + '</article>').join('') + '</div>'
+      : '<p class="db-subtle">' + (narrativePending ? t('loading') : t('narrativeFallback')) + '</p>';
     const direction = language === 'fa' ? 'rtl' : 'ltr';
     const agentCards = agents.map(x => '<div class="db-record"><div class="db-record-head"><b>' +
       html(x.agent) + '</b>' + flag(x.status) + '</div>' + originalText(x.finding) +
@@ -96,9 +139,9 @@
       '</div>').join('') || '<p class="db-subtle">' + t('none') + '</p>';
     const mcpCards = mcp.map(x => '<div class="db-record"><div class="db-record-head"><b>' +
       html(x.server) + ' / ' + html(x.tool) + '</b>' + flag(x.status) + '</div>' +
-      field(t('timestamp'), x.collected_at) + field(t('freshness'), x.freshness) +
+      field(t('timestamp'), x.collected_at) + field(t('freshness'), x.freshness) + field('Timestamp basis', x.time_basis) +
       originalText(x.finding) + linkRefs(x.evidence_ref ? [x.evidence_ref] : []) + '</div>').join('');
-    const healthCards = resources.map(x => field(x.source, x.freshness)).join('');
+    const healthCards = resources.map(x => '<div class="db-record"><div class="db-record-head"><b>' + html(x.source) + '</b>' + flag(x.status) + '</div>' + field(t('freshness'), x.freshness) + (['unavailable','error'].includes(x.status) ? '<p class="db-warning">' + t('providerMissing') + '</p>' : '') + '</div>').join('');
     const knowledgeCards = (c.items || []).map(x => '<div class="db-record"><div class="db-record-head"><b>' +
       html(x.source_id) + '</b>' + flag(x.use_status) + '</div>' +
       field(t('record'), [x.knowledge_base_id,x.knowledge_id,x.revision_id].filter(Boolean).join(' / ')) +
@@ -110,6 +153,8 @@
     const conf = b.rca_assessment || {};
     const warnings = [];
     if (b.data_freshness === 'stale') warnings.push(t('older'));
+    if (b.data_freshness === 'mixed') warnings.push(t('mixed'));
+    if (resources.some(x => ['unavailable','error'].includes(x.status))) warnings.push(t('providerMissing'));
     if (b.data_freshness === 'unknown') warnings.push(t('missing'));
     if ((b.missing_evidence || []).length || (b.evidence_conflicts || []).length) warnings.push(t('missing'));
     if (c.retrieved_count && c.use_status !== 'cited_by_agent') warnings.push(t('notVerified'));
@@ -121,9 +166,11 @@
       '<button type="button" data-db-copy="1">' + t('copy') + '</button></div></header>' +
       '<p class="db-lead">' + html(language === 'fa' ? narrative.fa : narrative.en) + '</p>' +
       '<div class="db-fields">' + field('Incident ID', i.incident_id) +
-      field(t('freshness'), b.data_freshness) + field(t('risk'), a.status === 'not_pending' ? r.risk_level : a.status) +
+      field(t('freshness'), b.data_freshness) + field(t('risk'), r.risk_level) +
       field('Approval', a.approval_status) + field('Evidence', b.source_references?.length ?? 0) +
-      field(t('timestamp'), b.generated_at) + '</div>' +
+      field(t('timestamp'), b.generated_at) +
+      field(t('target'), i.target) + field('Port', i.port) +
+      field('Started', i.started_at) + field('Likely cause', i.cause_status) + '</div>' +
       (warnings.length ? '<div class="db-warning">' + list([...new Set(warnings)]) + '</div>' : '') +
       '<p class="db-notice">' + t('readOnly') + '</p>';
     const agentsSection = '<div class="db-fields">' + field(t('rca'), confidence(conf.rca_confidence)) +
@@ -140,7 +187,10 @@
       '<h4>Conflicting evidence refs</h4>' + list(b.evidence_conflicts);
     const actionSection = '<div class="db-fields">' + field(t('tool'), r.tool) +
       field(t('target'), r.target) + field('Action', r.action) +
-      field(t('risk'), r.risk_level) + '</div><p class="db-notice">' +
+      field(t('risk'), r.risk_level) + field('Blast radius', r.blast_radius) +
+      field('Risk of inaction', r.risk_of_inaction) +
+      field('Expected outcome', r.expected_outcome) +
+      field('Verification plan', r.verification_plan) + '</div><p class="db-notice">' +
       (language === 'fa' ? 'پیشنهاد فقط از Action Plan ذخیره‌شده خوانده شده است؛ ارتباط علّی بدون Citation قطعی نیست.' :
        'Proposal comes from the recorded action plan. Causal support is not assumed without citations.') +
       '</p>' + linkRefs(i.cause_evidence_refs);
@@ -148,11 +198,19 @@
       field('Approval ID', a.approval_id) + field(t('binding'), a.binding_complete ? 'Complete' : 'Not verified') +
       field(t('tool'), a.tool) + field(t('target'), a.target) +
       field(t('environment'), a.environment) + field('Runbook', [a.runbook_id,a.runbook_version].filter(Boolean).join(' @ ')) +
-      field(t('freshness'), a.data_freshness) + '</div>' +
+      field(t('freshness'), a.data_freshness) +
+      field('Execution binding', a.binding_digest ? 'Recorded' : 'Not verified') +
+      field('Evidence snapshot binding', a.evidence_snapshot_binding) +
+      field('Rollback supported', a.rollback_supported ? 'Recorded' : 'Not verified') +
+      field('Timeout (s)', a.timeout_seconds) + '</div>' +
       '<p class="db-warning">' + t('actionSeparate') + '</p>' +
       '<div class="db-buttons"><button type="button" data-db-nav="decision">' + t('approval') + '</button>' +
       '<button type="button" data-db-nav="evidence">' + t('raw') + '</button>' +
       '<button type="button" data-db-nav="audit">' + t('timeline') + '</button></div>';
+    const timelineSection = timeline.length ? timeline.map(x =>
+      '<div class="db-record">' + field('Event', x.event) + field(t('status'), x.status) +
+      field('Actor', x.actor) + field(t('timestamp'), x.timestamp) + '</div>'
+    ).join('') : '<p class="db-subtle">' + t('noData') + '</p>';
     const postSection = '<div class="db-fields">' + field(t('result'), outcome.status) +
       field(t('tool'), outcome.tool) + field(t('target'), outcome.target) +
       field(t('verification'), verify.status) +
@@ -161,11 +219,40 @@
       html(learning.review_id) + '">' + t('review') + '</button>' : '');
     return '<div class="decision-brief" dir="' + direction + '" lang="' + language + '" data-snapshot="' +
       html(b.snapshot_id) + '">' + summary +
+      section('narrative', narrativeSection, true) +
       section('agents', agentsSection, true) + section('sources', sourcesSection, true) +
       section('knowledge', cSection) + section('memory', memorySection) +
       section('risks', gapsSection, (b.missing_evidence || []).length > 0) +
       section('action', actionSection, true) + section('before', beforeSection, true) +
-      section('execution', postSection) + '</div>';
+      section('execution', postSection) + section('timeline', timelineSection) + '</div>';
+  }
+
+  async function ensureNarrative() {
+    if (!brief || narrativePending || String(S.selected) !== String(activeId)) return;
+    const snapshot = brief.snapshot_id;
+    const currentLang = language;
+    const key = snapshot + ':' + currentLang;
+    if (narrativeCache.has(key)) {
+      narrative = narrativeCache.get(key);
+      return;
+    }
+    narrativePending = true;
+    try {
+      const result = await api('/api/v1/incidents/' + encodeURIComponent(activeId) + '/decision-brief/narrative?lang=' + encodeURIComponent(currentLang));
+      if (result?.snapshot_id !== snapshot || result?.language !== currentLang) throw new Error('narrative_snapshot_mismatch');
+      narrativeCache.set(key, result);
+      if (String(S.selected) === String(activeId) && brief?.snapshot_id === snapshot && language === currentLang) narrative = result;
+    } catch (_) {
+      // A missing model or transient connectivity never disables durable Incident evidence.
+      const fallback = {snapshot_id: snapshot, language: currentLang, status: 'fallback', sections: []};
+      narrativeCache.set(key, fallback);
+      if (String(S.selected) === String(activeId) && language === currentLang) narrative = fallback;
+    } finally {
+      narrativePending = false;
+      if (S.detail && String(S.selected) === String(activeId) && brief?.snapshot_id === snapshot && document.querySelector('.decision-brief')) {
+        window.renderDetail('brief');
+      }
+    }
   }
 
   function paint(tab = 'overview') {
@@ -188,11 +275,14 @@
     pane.innerHTML = loading ? '<div class="db-placeholder">' + t('loading') + '</div>' :
       failed ? '<div class="db-placeholder db-error">' + t('unavailable') + ' ' + html(failed) + '</div>' :
       brief ? body(brief) : '<div class="db-placeholder">' + t('noData') + '</div>';
+    if (brief && !narrativeCache.has(brief.snapshot_id + ':' + language)) void ensureNarrative();
   }
 
   window.selectIncident = selectIncident = async function selectWithDecisionBrief(id) {
     activeId = String(id);
     brief = null;
+    narrative = null;
+    narrativePending = false;
     failed = null;
     loading = true;
     const request = api('/api/v1/incidents/' + encodeURIComponent(id) + '/decision-brief')
@@ -217,14 +307,25 @@
     if (lang) {
       language = lang.getAttribute('data-db-lang') === 'en' ? 'en' : 'fa';
       try { localStorage.setItem(storageKey, language); } catch (_) {}
+      narrative = narrativeCache.get(brief?.snapshot_id + ':' + language) || null;
       window.renderDetail('brief');
       return;
     }
     const copy = event.target.closest('[data-db-copy]');
     if (copy && brief) {
-      const narrative = brief.localized_narrative || {};
-      const text = (language === 'fa' ? narrative.fa : narrative.en) || '';
-      try { await navigator.clipboard.writeText(text + '\nIncident ID: ' + brief.incident_summary.incident_id); toast(t('copyDone')); }
+      const intro = (language === 'fa' ? brief.localized_narrative?.fa : brief.localized_narrative?.en) || '';
+      const detailed = narrative?.snapshot_id === brief.snapshot_id && narrative?.language === language &&
+        narrative?.status === 'available' ? (narrative.sections || []).map(x =>
+          x.heading + '\n' + x.text + '\n' + (x.citations || []).join(', ')
+        ).join('\n\n') : '';
+      const report = [intro, detailed,
+        'Incident ID: ' + brief.incident_summary.incident_id,
+        'Snapshot: ' + brief.snapshot_id,
+        'Action: ' + (brief.remediation_recommendation?.action || 'Unknown'),
+        'Target: ' + (brief.remediation_recommendation?.target || 'Unknown'),
+        'Evidence: ' + (brief.source_references || []).join(', '),
+      ].filter(Boolean).join('\n\n');
+      try { await navigator.clipboard.writeText(report); toast(t('copyDone')); }
       catch (_) { toast(t('unavailable')); }
       return;
     }

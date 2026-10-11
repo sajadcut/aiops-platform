@@ -175,3 +175,89 @@ def test_snapshot_changes_when_recorded_state_changes():
     before = make_brief()
     after = make_brief(state={"knowledge_status": {"status": "failed"}})
     assert before["snapshot_id"] != after["snapshot_id"]
+
+
+def test_provider_source_observation_failure_is_not_reported_as_success():
+    evidence = [
+        {"id": "prom-observation", "source": "prometheus",
+         "created_at": NOW.isoformat(),
+         "raw_data": {"status": "unavailable", "result_count": 0}},
+    ]
+    report = make_brief(evidence=evidence)
+    assert report["monitoring_sources"][0]["status"] == "unavailable"
+    assert report["mcp_evidence"][0]["status"] == "failed"
+    assert report["mcp_evidence"][0]["tool"] == "source_observation"
+
+
+def test_empty_monitoring_query_does_not_prove_source_failure_or_success():
+    evidence = [
+        {"id": "prom-queried", "source": "prometheus",
+         "created_at": NOW.isoformat(),
+         "raw_data": {"status": "queried", "result_count": 0}},
+    ]
+    report = make_brief(evidence=evidence)
+    assert report["monitoring_sources"][0]["status"] == "queried"
+    assert report["mcp_evidence"][0]["status"] == "queried"
+
+
+def test_fresh_and_stale_evidence_do_not_report_all_fresh():
+    evidence = [
+        {"id": "new", "source": "vm_mcp", "created_at": NOW.isoformat(),
+         "raw_data": {"mcp_server": "vm", "success": True}},
+        {"id": "old", "source": "vm_mcp",
+         "created_at": (NOW - timedelta(hours=2)).isoformat(),
+         "raw_data": {"mcp_server": "vm", "success": True}},
+    ]
+    report = make_brief(evidence=evidence)
+    assert report["data_freshness"] == "mixed"
+    assert report["approval_readiness"]["data_freshness"] == "mixed"
+
+
+def test_safe_timeline_does_not_expose_raw_audit_metadata():
+    from apps.decision_brief import build_decision_brief
+    report = build_decision_brief(
+        incident={"id": "i-1", "service": "nginx"},
+        operator_summary={"approval": {}},
+        checkpoint={"state": {}},
+        durable_evidence=[], findings=[],
+        audit_events=[{"event_id": "audit-1", "event_type": "approval_granted",
+                       "actor": "sre", "status": "success",
+                       "created_at": NOW.isoformat(),
+                       "metadata": {"password": "NeverExpose123"}}],
+        now=NOW,
+    )
+    assert report["timeline"][0]["actor"] == "sre"
+    assert "NeverExpose123" not in str(report)
+
+
+def test_durable_target_projection_is_labeled_and_not_execution_authority():
+    from apps.decision_brief import build_decision_brief
+    report = build_decision_brief(
+        incident={"id": "i-1", "service": "nginx"},
+        operator_summary={"observed_state": {
+            "target": "vm.example.local", "port": 443,
+            "field_sources": {"target": "service_status"},
+            "service_status": {"active_state": "inactive", "evidence_id": "ev-1"},
+        }, "approval": {
+            "status": "pending", "binding_complete": True,
+            "binding_digest": "digest-1", "rollback_supported": False,
+        }},
+        checkpoint={"state": {}}, durable_evidence=[], findings=[],
+        audit_events=[], now=NOW,
+    )
+    assert report["incident_summary"]["target"] == "vm.example.local"
+    assert report["incident_summary"]["observed_service_state"]["service_status"]["active_state"] == "inactive"
+    assert report["approval_readiness"]["binding_digest"] == "digest-1"
+    assert report["approval_readiness"]["evidence_snapshot_binding"] == "not_verified"
+    assert report["source_policy"]["authorizes_execution"] is False
+
+
+def test_persian_fallback_translates_operational_statuses_without_raw_json():
+    report = make_brief()
+    prose = report["localized_narrative"]["fa"]
+    assert "در حال تحلیل" in prose
+    assert "در دسترس" in prose
+    assert "ریسک اقدام: زیاد" in prose
+    assert "وضعیت تأیید: در انتظار تأیید" in prose
+    assert "Cognia: available" not in prose
+    assert '"status":' not in prose

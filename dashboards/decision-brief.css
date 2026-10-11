@@ -40,3 +40,5 @@
 :root[data-theme="light"] .db-flag.success{color:#11744f}
 :root[data-theme="light"] .db-flag.failed{color:#a6323e}
 @media(max-width:700px){.db-header{flex-direction:column}.db-fields{grid-template-columns:1fr}.db-header h3{font-size:17px}.db-section-body{padding:9px}}
+
+.db-narrative{display:grid;gap:8px}.db-narrative-part{border:1px solid var(--line,#263e55);border-radius:8px;padding:9px 11px;background:var(--surface-2,#0a1e30)}.db-narrative-part h4{margin:0 0 4px;font-size:13px}.db-narrative-part p{font-size:12px;line-height:1.9;margin:0 0 5px;white-space:pre-wrap}
