@@ -257,3 +257,38 @@ def test_explicit_human_audit_command_can_confirm_manual_stop():
     assert summary["cause_confidence"] == "confirmed"
     assert summary["likely_cause"] == "توقف دستی سرویس — تأیید شده"
     assert "audit-human-stop" in summary["human_action_indicator"]["evidence_ids"]
+
+
+def test_recommendation_contains_two_languages_from_same_governed_action():
+    summary = _base_summary(
+        [_service_status(active="failed", sub="failed", result="timeout", exec_status=9)],
+        state={
+            "execution_request": {
+                "action": "start_service",
+                "tool_name": "ssh_vm",
+                "target": "10.100.6.199",
+                "parameters": {"service": "nginx"},
+            }
+        },
+    )
+    action = summary["recommended_action"]
+    assert action["text_fa"] == "start_service روی 10.100.6.199"
+    assert action["text_en"] == "Proposed action: start_service via ssh_vm on 10.100.6.199."
+    assert action["action"] == "start_service"
+    assert action["target"] == "10.100.6.199"
+    assert summary["source_policy"]["execution_authority"] is False
+
+
+def test_persian_free_text_plan_is_not_misrepresented_as_english_translation():
+    summary = _base_summary(
+        [],
+        state={"final_plan": "علت خرابی سرویس را با شواهد جدید بررسی کنید."},
+    )
+    assert summary["recommended_action"]["text_fa"].startswith("علت خرابی")
+    assert summary["recommended_action"]["text_en"] is None
+    assert summary["source_policy"]["summary_is_decision_support"] is True
+
+
+def test_english_free_text_plan_remains_readable_in_english_option():
+    summary = _base_summary([], state={"final_plan": "Review service logs before remediation."})
+    assert summary["recommended_action"]["text_en"] == "Review service logs before remediation."
