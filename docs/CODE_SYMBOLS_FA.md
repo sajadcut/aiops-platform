@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 406 | Dashboard JS files scanned: 5 | Symbols indexed: 3730**
+**Python files scanned: 406 | Dashboard JS files scanned: 5 | Symbols indexed: 3733**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -3181,6 +3181,9 @@
 | `tests/unit/test_operator_summary.py` | `test_lifecycle_fields_are_recomputed_from_current_checkpoint_and_durable_governance` | 145 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_operator_summary.py` | `test_pending_approval_next_step_does_not_imply_execution_authority` | 222 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_operator_summary.py` | `test_explicit_human_audit_command_can_confirm_manual_stop` | 244 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_operator_summary.py` | `test_recommendation_contains_two_languages_from_same_governed_action` | 262 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_operator_summary.py` | `test_persian_free_text_plan_is_not_misrepresented_as_english_translation` | 282 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_operator_summary.py` | `test_english_free_text_plan_remains_readable_in_english_option` | 292 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_production_fail_closed.py` | `test_deterministic_embedding_is_forbidden_in_production` | 9 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_production_fail_closed.py` | `test_production_orchestrator_forbids_mock_llm_provider` | 16 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_production_hardening_batch.py` | `_finding` | 15 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
