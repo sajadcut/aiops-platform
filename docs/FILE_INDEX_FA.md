@@ -3,7 +3,7 @@
 > این فایل فهرست فایل‌به‌فایل repository است. توضیح معماری و flow در `CODEBASE_GUIDE_FA.md` آمده است.
 > این فایل با `scripts/generate_file_index_fa.py` ساخته و در CI کنترل می‌شود.
 
-**تعداد فایل‌های track‌شده و پوشش‌داده‌شده: 521**
+**تعداد فایل‌های track‌شده و پوشش‌داده‌شده: 524**
 
 | Path | Type | Purpose | Called By | Calls/Depends On | Runtime/Test/Docs | Notes |
 |---|---|---|---|---|---|---|
@@ -122,6 +122,7 @@
 | `apps/database/pgvector_contract.py` | Python | DB: قرارداد/validation pgvector فقط برای Operational Memory | startup/CI | PostgreSQL | Runtime | memory schema/dimension guard |
 | `apps/database/vector_validation.py` | Python | DB: قرارداد/validation pgvector فقط برای Operational Memory | startup/CI | PostgreSQL | Runtime | memory schema/dimension guard |
 | `apps/decision_brief.py` | Python | ماژول service لایه application | Runtime | domain/integrations | Runtime | جزء Control Plane |
+| `apps/decision_brief_history.py` | Python | ماژول service لایه application | Runtime | domain/integrations | Runtime | جزء Control Plane |
 | `apps/decision_brief_narrative.py` | Python | ماژول service لایه application | Runtime | domain/integrations | Runtime | جزء Control Plane |
 | `apps/decision_engine/__init__.py` | Python | Decision: تبدیل RCA/evaluation به تصمیم و risk | Orchestrator | evaluation/policy | Runtime | LLM authority نیست |
 | `apps/evaluator/__init__.py` | Python | Evaluator: Critic/evaluator gate برای کیفیت RCA | Orchestrator | agent findings/thresholds | Runtime | قبل از decision |
@@ -209,6 +210,7 @@
 | `database/migrations/versions/i6f7a8b9c0d1_memory_episode_idempotency.py` | Alembic | Migration نسخه‌دار schema PostgreSQL | Alembic/CI | domain models/pgvector | DB | canonical migration chain |
 | `database/migrations/versions/j7g8h9i0j1k2_distributed_rate_limits.py` | Alembic | Migration نسخه‌دار schema PostgreSQL | Alembic/CI | domain models/pgvector | DB | canonical migration chain |
 | `database/migrations/versions/k8h9i0j1k2l3_knowledge_review_outbox.py` | Alembic | Migration نسخه‌دار schema PostgreSQL | Alembic/CI | domain models/pgvector | DB | canonical migration chain |
+| `database/migrations/versions/l9m0n1o2p3q4_decision_brief_snapshots.py` | Alembic | Migration نسخه‌دار schema PostgreSQL | Alembic/CI | domain models/pgvector | DB | canonical migration chain |
 | `deployment/__init__.py` | Docs | راهنما یا artifact manifest استقرار | اپراتور | deployment files | Deploy | offline/supply-chain |
 | `deployment/docker/offline/ARTIFACT_MANIFEST.md` | Docs | راهنما یا artifact manifest استقرار | اپراتور | deployment files | Deploy | offline/supply-chain |
 | `deployment/docker/offline/Dockerfile` | Docker | ساخت image آفلاین پلتفرم | Docker/CI | requirements/repo | Deploy | برای شبکه محدود |
@@ -349,6 +351,7 @@
 | `tests/integration/test_chatbot_write_acceptance.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/integration/test_controlled_connectors.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/integration/test_dashboard_api.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
+| `tests/integration/test_decision_brief_history_db.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/integration/test_decision_brief_ui_api.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/integration/test_e2e_safety.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/integration/test_health_probes.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |

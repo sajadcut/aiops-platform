@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 424 | Dashboard JS files scanned: 7 | Symbols indexed: 3938**
+**Python files scanned: 427 | Dashboard JS files scanned: 7 | Symbols indexed: 3956**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -680,18 +680,19 @@
 | `apps/api/e2e_workflow.py` | `_response_from_result` | 50 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/e2e_workflow.py` | `run_e2e_workflow` | 66 | async function | Run the guarded durable incident lifecycle without bypassing Decision/Approval. | module |
 | `apps/api/e2e_workflow.py` | `resume_e2e_workflow` | 106 | async function | Resume a paused workflow only after its durable approval is granted. | module |
-| `apps/api/execution.py` | `_normalize_risk_level` | 27 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/execution.py` | `_approval_record` | 34 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/execution.py` | `_require_risk_permission` | 58 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/execution.py` | `_audit_durable` | 65 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/execution.py` | `_require_pending` | 70 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/execution.py` | `create_approval` | 79 | async function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
-| `apps/api/execution.py` | `get_approval` | 103 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
-| `apps/api/execution.py` | `approve` | 112 | async function | transition مربوط به Approval/Governance را اعمال می‌کند | module |
-| `apps/api/execution.py` | `reject` | 130 | async function | transition مربوط به Approval/Governance را اعمال می‌کند | module |
-| `apps/api/execution.py` | `_direct_runtime_contract` | 152 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/execution.py` | `_validate_approval_binding` | 180 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/execution.py` | `execute` | 196 | async function | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | module |
+| `apps/api/execution.py` | `_archive_persisted_transition` | 12 | async function | Archiving must never misreport an already executed operation as failed. | module |
+| `apps/api/execution.py` | `_normalize_risk_level` | 46 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/execution.py` | `_approval_record` | 53 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/execution.py` | `_require_risk_permission` | 77 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/execution.py` | `_audit_durable` | 84 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/execution.py` | `_require_pending` | 89 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/execution.py` | `create_approval` | 98 | async function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
+| `apps/api/execution.py` | `get_approval` | 123 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
+| `apps/api/execution.py` | `approve` | 132 | async function | transition مربوط به Approval/Governance را اعمال می‌کند | module |
+| `apps/api/execution.py` | `reject` | 151 | async function | transition مربوط به Approval/Governance را اعمال می‌کند | module |
+| `apps/api/execution.py` | `_direct_runtime_contract` | 174 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/execution.py` | `_validate_approval_binding` | 202 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/execution.py` | `execute` | 218 | async function | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | module |
 | `apps/api/health.py` | `_pool_status` | 28 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/health.py` | `_probe_database` | 51 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/health.py` | `_probe_one` | 78 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
@@ -726,8 +727,11 @@
 | `apps/api/incident_resources.py` | `get_incident_lifecycle` | 326 | async function | Return durable governance plus structured agent routing/collaboration state. | module |
 | `apps/api/incident_resources.py` | `get_operator_recommendation_fa` | 367 | async function | Translate the durable English recommendation solely for Persian display. | module |
 | `apps/api/incident_resources.py` | `get_operator_summary` | 409 | async function | Return a read-only Persian operator summary derived from current durable Incident state. | module |
-| `apps/api/incident_resources.py` | `get_incident_decision_brief` | 507 | async function | Read-only, provenance-limited Decision Brief. No live tools or LLM calls. | module |
-| `apps/api/incident_resources.py` | `get_incident_decision_brief_narrative` | 619 | async function | Optional display prose; approval and the deterministic brief stay authoritative. | module |
+| `apps/api/incident_resources.py` | `load_decision_brief_for_incident` | 506 | async function | Internal builder; reads all contract sections in the caller's transaction. | module |
+| `apps/api/incident_resources.py` | `get_incident_decision_brief` | 615 | async function | Read-only, RBAC-protected latest version. No archive writes or side effects. | module |
+| `apps/api/incident_resources.py` | `get_decision_brief_history` | 625 | async function | Read only previously archived, immutable lifecycle reports. | module |
+| `apps/api/incident_resources.py` | `get_decision_brief_historical_snapshot` | 641 | async function | Exact archived report; never regenerated against current Incident state. | module |
+| `apps/api/incident_resources.py` | `get_incident_decision_brief_narrative` | 655 | async function | Optional display prose; approval and the deterministic brief stay authoritative. | module |
 | `apps/api/incidents.py` | `simulate_incident` | 24 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/incidents.py` | `analyze_incident` | 48 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/incidents.py` | `RemediationRequest` | 109 | class | کلاس | module |
@@ -747,32 +751,32 @@
 | `apps/api/knowledge_reviews.py` | `reject_review` | 182 | async function | transition مربوط به Approval/Governance را اعمال می‌کند | module |
 | `apps/api/knowledge_reviews.py` | `publish_review` | 200 | async function | Publish with a deterministic Idempotency-Key; no unapproved content crosses. | module |
 | `apps/api/knowledge_reviews.py` | `refresh_review` | 268 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/main.py` | `root` | 79 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/main.py` | `dashboard_page` | 91 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/main.py` | `dashboard_page_slash` | 96 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/main.py` | `agent_dashboard_page` | 101 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/main.py` | `dashboard_stylesheet` | 106 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/main.py` | `dashboard_script` | 111 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/main.py` | `dashboard_approval_stylesheet` | 116 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/main.py` | `dashboard_approval_script` | 121 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/main.py` | `dashboard_knowledge_review_script` | 125 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/main.py` | `dashboard_knowledge_review_stylesheet` | 130 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/main.py` | `dashboard_legacy_stylesheet` | 139 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/main.py` | `dashboard_legacy_script` | 144 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/main.py` | `dashboard_legacy_approval_stylesheet` | 149 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/main.py` | `dashboard_legacy_approval_script` | 154 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/main.py` | `chatbot_page` | 159 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/main.py` | `chatbot_page_slash` | 164 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/main.py` | `chatbot_stylesheet` | 169 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/main.py` | `chatbot_script` | 174 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/main.py` | `chatbot_ui_script` | 179 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/main.py` | `chatbot_transport_script` | 184 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/main.py` | `_is_http_or_https` | 188 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/main.py` | `_validate_production_configuration` | 195 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/main.py` | `startup_event` | 286 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/main.py` | `shutdown_event` | 339 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/main.py` | `dashboard_decision_brief_script` | 344 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/main.py` | `dashboard_decision_brief_stylesheet` | 349 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/main.py` | `root` | 81 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/main.py` | `dashboard_page` | 93 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/main.py` | `dashboard_page_slash` | 98 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/main.py` | `agent_dashboard_page` | 103 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/main.py` | `dashboard_stylesheet` | 108 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/main.py` | `dashboard_script` | 113 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/main.py` | `dashboard_approval_stylesheet` | 118 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/main.py` | `dashboard_approval_script` | 123 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/main.py` | `dashboard_knowledge_review_script` | 127 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/main.py` | `dashboard_knowledge_review_stylesheet` | 132 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/main.py` | `dashboard_legacy_stylesheet` | 141 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/main.py` | `dashboard_legacy_script` | 146 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/main.py` | `dashboard_legacy_approval_stylesheet` | 151 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/main.py` | `dashboard_legacy_approval_script` | 156 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/main.py` | `chatbot_page` | 161 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/main.py` | `chatbot_page_slash` | 166 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/main.py` | `chatbot_stylesheet` | 171 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/main.py` | `chatbot_script` | 176 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/main.py` | `chatbot_ui_script` | 181 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/main.py` | `chatbot_transport_script` | 186 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/main.py` | `_is_http_or_https` | 190 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/main.py` | `_validate_production_configuration` | 197 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/main.py` | `startup_event` | 288 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/main.py` | `shutdown_event` | 341 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/main.py` | `dashboard_decision_brief_script` | 346 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/main.py` | `dashboard_decision_brief_stylesheet` | 351 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/remediation.py` | `_audit_durable` | 29 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/remediation.py` | `_read_vm` | 35 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/remediation.py` | `RemediationRequest` | 42 | class | کلاس | module |
@@ -834,7 +838,7 @@
 | `apps/approval_service/postgres.py` | `PostgreSQLApprovalStore.cancel` | 196 | async method | Revoke one still-unconsumed authority token without touching peers. | PostgreSQLApprovalStore |
 | `apps/approval_service/postgres.py` | `PostgreSQLApprovalStore.cancel_unconsumed_for_incident` | 230 | async method | Invalidate pending/approved authority after recovery or another terminal fact. | PostgreSQLApprovalStore |
 | `apps/approval_service/postgres.py` | `PostgreSQLApprovalStore.consume` | 261 | async method | Claim approved authority exactly once at the execution boundary. | PostgreSQLApprovalStore |
-| `apps/approval_service/postgres.py` | `PostgreSQLApprovalStore.is_approved` | 314 | async method | برای read-only check؛ execution واقعی همچنان باید consume اتمیک انجام دهد. | PostgreSQLApprovalStore |
+| `apps/approval_service/postgres.py` | `PostgreSQLApprovalStore.is_approved` | 375 | async method | برای read-only check؛ execution واقعی همچنان باید consume اتمیک انجام دهد. | PostgreSQLApprovalStore |
 | `apps/approval_service/store.py` | `ApprovalStore` | 14 | class | کلاس | module |
 | `apps/approval_service/store.py` | `ApprovalStore.create` | 16 | method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | ApprovalStore |
 | `apps/approval_service/store.py` | `ApprovalStore.get` | 20 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ApprovalStore |
@@ -1026,6 +1030,9 @@
 | `apps/decision_brief.py` | `_knowledge` | 234 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/decision_brief.py` | `_memory` | 270 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/decision_brief.py` | `build_decision_brief` | 295 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
+| `apps/decision_brief_history.py` | `archive_decision_brief` | 22 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/decision_brief_history.py` | `list_decision_brief_history` | 62 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
+| `apps/decision_brief_history.py` | `read_decision_brief_snapshot` | 83 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
 | `apps/decision_brief_narrative.py` | `fallback` | 37 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/decision_brief_narrative.py` | `projection` | 50 | function | Allowlist short provenance fields; never send raw MCP tool responses. | module |
 | `apps/decision_brief_narrative.py` | `validate_narrative` | 78 | function | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | module |
@@ -1259,17 +1266,18 @@
 | `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime.__init__` | 20 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
 | `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime._orchestrator_type` | 28 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
 | `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime._flush_audit` | 31 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
-| `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime._set_incident_status` | 34 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
-| `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime._incident_fields` | 40 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
-| `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime._final_incident_status` | 52 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
-| `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime.start` | 65 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
-| `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime._evidence_inventory` | 119 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
-| `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime._assert_decision_snapshot` | 123 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
-| `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime._assert_binding` | 159 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
-| `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime._bind_execution_context` | 169 | method | Restore request-scoped VM identity after a durable approval pause. | DurableWorkflowRuntime |
-| `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime._reset_execution_context` | 195 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
-| `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime._preconsume_execution_guard` | 202 | async method | Revalidate supported write intent before consuming approval authority. | DurableWorkflowRuntime |
-| `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime.resume_after_approval` | 320 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
+| `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime._archive_decision_brief` | 34 | async method | Record an immutable historical report only at durable lifecycle edges. | DurableWorkflowRuntime |
+| `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime._set_incident_status` | 52 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
+| `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime._incident_fields` | 58 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
+| `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime._final_incident_status` | 70 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
+| `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime.start` | 83 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
+| `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime._evidence_inventory` | 139 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
+| `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime._assert_decision_snapshot` | 143 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
+| `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime._assert_binding` | 179 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
+| `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime._bind_execution_context` | 189 | method | Restore request-scoped VM identity after a durable approval pause. | DurableWorkflowRuntime |
+| `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime._reset_execution_context` | 215 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
+| `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime._preconsume_execution_guard` | 222 | async method | Revalidate supported write intent before consuming approval authority. | DurableWorkflowRuntime |
+| `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime.resume_after_approval` | 340 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
 | `apps/orchestrator/signal_aware.py` | `SignalAwareE2EOrchestrator` | 22 | class | Collaborative E2E workflow for source-triggered and API-triggered incidents. | module |
 | `apps/orchestrator/signal_aware.py` | `SignalAwareE2EOrchestrator._context_node` | 31 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalAwareE2EOrchestrator |
 | `apps/orchestrator/signal_aware.py` | `SignalAwareE2EOrchestrator._publish_peer_context` | 186 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalAwareE2EOrchestrator |
@@ -1579,29 +1587,29 @@
 | `dashboards/control-center.js` | `renderMcp` | 465 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
 | `dashboards/control-center.js` | `renderAudit` | 483 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
 | `dashboards/control-center.js` | `loadAll` | 489 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
-| `dashboards/decision-brief.js` | `t` | 63 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/decision-brief.js` | `fmt` | 100 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/decision-brief.js` | `html` | 106 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/decision-brief.js` | `sClass` | 107 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/decision-brief.js` | `flag` | 113 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/decision-brief.js` | `field` | 114 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/decision-brief.js` | `linkRefs` | 115 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/decision-brief.js` | `originalText` | 118 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/decision-brief.js` | `list` | 121 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/decision-brief.js` | `confidence` | 126 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/decision-brief.js` | `body` | 128 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/decision-brief.js` | `agentCards` | 148 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/decision-brief.js` | `observedCards` | 156 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/decision-brief.js` | `facts` | 158 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/decision-brief.js` | `mcpCards` | 163 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/decision-brief.js` | `healthCards` | 167 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/decision-brief.js` | `knowledgeCards` | 168 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/decision-brief.js` | `memoryCards` | 172 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/decision-brief.js` | `timelineSection` | 246 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/decision-brief.js` | `ensureNarrative` | 270 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/decision-brief.js` | `paint` | 305 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/decision-brief.js` | `selectWithDecisionBrief` | 332 | JavaScript function | بر اساس state/capability مسیر یا handler مناسب را انتخاب می‌کند | browser module |
-| `dashboards/decision-brief.js` | `renderWithDecisionBrief` | 351 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/decision-brief.js` | `t` | 68 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/decision-brief.js` | `fmt` | 105 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/decision-brief.js` | `html` | 111 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/decision-brief.js` | `sClass` | 112 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/decision-brief.js` | `flag` | 118 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/decision-brief.js` | `field` | 119 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/decision-brief.js` | `linkRefs` | 120 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/decision-brief.js` | `originalText` | 123 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/decision-brief.js` | `list` | 126 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/decision-brief.js` | `confidence` | 131 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/decision-brief.js` | `body` | 133 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/decision-brief.js` | `agentCards` | 153 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/decision-brief.js` | `observedCards` | 161 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/decision-brief.js` | `facts` | 163 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/decision-brief.js` | `mcpCards` | 168 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/decision-brief.js` | `healthCards` | 172 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/decision-brief.js` | `knowledgeCards` | 173 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/decision-brief.js` | `memoryCards` | 177 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/decision-brief.js` | `timelineSection` | 251 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/decision-brief.js` | `ensureNarrative` | 275 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/decision-brief.js` | `paint` | 310 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/decision-brief.js` | `selectWithDecisionBrief` | 356 | JavaScript function | بر اساس state/capability مسیر یا handler مناسب را انتخاب می‌کند | browser module |
+| `dashboards/decision-brief.js` | `renderWithDecisionBrief` | 380 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
 | `dashboards/knowledge-review.js` | `el` | 10 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
 | `dashboards/knowledge-review.js` | `current` | 11 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
 | `dashboards/knowledge-review.js` | `notice` | 14 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
@@ -1643,6 +1651,8 @@
 | `database/migrations/versions/j7g8h9i0j1k2_distributed_rate_limits.py` | `downgrade` | 37 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `database/migrations/versions/k8h9i0j1k2l3_knowledge_review_outbox.py` | `upgrade` | 15 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `database/migrations/versions/k8h9i0j1k2l3_knowledge_review_outbox.py` | `downgrade` | 54 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `database/migrations/versions/l9m0n1o2p3q4_decision_brief_snapshots.py` | `upgrade` | 19 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `database/migrations/versions/l9m0n1o2p3q4_decision_brief_snapshots.py` | `downgrade` | 101 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `domain/action_plan.py` | `ActionPlan` | 5 | class | کلاس | module |
 | `domain/audit_event.py` | `AuditEvent` | 6 | class | کلاس | module |
 | `domain/contracts/config.py` | `Settings` | 8 | class | Typed loader for the centralized runtime environment contract. | module |
@@ -2191,11 +2201,19 @@
 | `tests/integration/test_dashboard_api.py` | `test_dashboard_route_and_api_are_registered` | 24 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/integration/test_dashboard_api.py` | `test_dashboard_html_css_and_js_are_actually_served_over_http` | 35 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/integration/test_dashboard_api.py` | `test_legacy_dashboard_asset_aliases_remain_available_for_stale_tabs` | 58 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/integration/test_decision_brief_history_db.py` | `test_archive_history_is_immutable_versioned_and_incident_scoped` | 25 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/integration/test_decision_brief_history_db.py` | `test_consumption_rechecks_snapshot_atomically_after_evidence_change` | 85 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/integration/test_decision_brief_history_db.py` | `test_trigger_serializes_evidence_and_checkpoint_writes_with_incident_lock` | 141 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/integration/test_decision_brief_history_db.py` | `test_trigger_serializes_evidence_and_checkpoint_writes_with_incident_lock.write_evidence` | 153 | async method | state یا داده را به‌صورت durable ذخیره/به‌روزرسانی می‌کند | test_trigger_serializes_evidence_and_checkpoint_writes_with_incident_lock |
+| `tests/integration/test_decision_brief_history_db.py` | `test_trigger_serializes_evidence_and_checkpoint_writes_with_incident_lock.write_checkpoint` | 161 | async method | state یا داده را به‌صورت durable ذخیره/به‌روزرسانی می‌کند | test_trigger_serializes_evidence_and_checkpoint_writes_with_incident_lock |
+| `tests/integration/test_decision_brief_history_db.py` | `test_legacy_high_risk_approval_requires_fresh_versioned_approval` | 181 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/integration/test_decision_brief_ui_api.py` | `test_decision_brief_route_is_read_only_and_rbac_scoped` | 8 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/integration/test_decision_brief_ui_api.py` | `test_dashboard_decision_brief_assets_are_served_and_mounted` | 20 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/integration/test_decision_brief_ui_api.py` | `test_decision_brief_never_starts_tools_or_retrieval` | 34 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/integration/test_decision_brief_ui_api.py` | `test_narrative_route_is_read_only_and_requires_authentication` | 45 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/integration/test_decision_brief_ui_api.py` | `test_narrative_does_not_replace_structured_report_or_approval_buttons` | 58 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/integration/test_decision_brief_ui_api.py` | `test_history_endpoints_enforce_incident_read_permission_and_get_only` | 67 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/integration/test_decision_brief_ui_api.py` | `test_historical_ui_never_uses_archived_report_to_authorize_execution` | 87 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/integration/test_e2e_safety.py` | `FakeEvidenceCollector` | 6 | class | کلاس | module |
 | `tests/integration/test_e2e_safety.py` | `FakeEvidenceCollector.collect` | 7 | async method | Evidence/داده موردنیاز را از منبع مربوط جمع می‌کند | FakeEvidenceCollector |
 | `tests/integration/test_e2e_safety.py` | `test_e2e_blocks_execution_without_explicit_request` | 19 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
