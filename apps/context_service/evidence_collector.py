@@ -6,6 +6,7 @@ from typing import Any, Dict, Iterable, List, Optional, Set
 from apps.context_service.asset_identity import AssetIdentityResolver
 from domain.contracts.config import settings
 from integrations.vm.target_context import current_vm_port, current_vm_target
+from integrations.kubernetes.target_context import current_kubernetes_namespace
 
 
 class EvidenceCollector:
@@ -305,7 +306,13 @@ class EvidenceCollector:
                 evidence.append(self._observation("kubernetes_api", f"k8s-skipped:{since.isoformat()}", status="skipped", detail="asset_service_unresolved"))
             else:
                 try:
-                    k8s_evidence = await self.kubernetes.collect_evidence(effective_service)
+                    alert_namespace = current_kubernetes_namespace()
+                    if alert_namespace:
+                        k8s_evidence = await self.kubernetes.collect_evidence(
+                            effective_service, namespace=alert_namespace
+                        )
+                    else:
+                        k8s_evidence = await self.kubernetes.collect_evidence(effective_service)
                     evidence.extend(k8s_evidence)
                     evidence.append(self._observation("kubernetes_api", f"k8s-observation:{effective_service}:{since.isoformat()}", status="queried", result_count=len(k8s_evidence), service=effective_service))
                     asset = AssetIdentityResolver.resolve(evidence, effective_service)
@@ -314,7 +321,14 @@ class EvidenceCollector:
 
         vm_target = current_vm_target() or self._vm_target_from_asset(asset)
         vm_port = current_vm_port()
-        linux_candidate = str(asset.get("os_family") or "unknown").lower() != "windows" and str(asset.get("platform") or "unknown").lower() != "kubernetes"
+        platform = str(asset.get("platform") or "unknown").lower()
+        asset_type = str(asset.get("asset_type") or "unknown").lower()
+        linux_candidate = (
+            str(asset.get("os_family") or "unknown").lower() != "windows"
+            and platform not in {"kubernetes", "network", "application"}
+            and asset_type not in {"network", "application"}
+            and not asset_type.startswith("kubernetes_")
+        )
         if self.vm and vm_target and linux_candidate:
             actions = self._vm_actions_for_requests(requests, service=effective_service, port=vm_port, elastic_logs_available=elastic_logs_available)
             for action in actions:
