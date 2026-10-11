@@ -7,7 +7,7 @@
   let loading = false;
   let failed = null;
   let narrative = null;
-  let narrativePending = false;
+  let narrativePendingKey = null;
   const narrativeCache = new Map();
   const storageKey = 'aiops.incident.decision_brief.language';
   let language = (() => {
@@ -121,7 +121,7 @@
     const outcome = b.execution_outcome || {};
     const verify = b.verification_result || {};
     const learning = b.knowledge_learning_status || {};
-    const narrative = b.localized_narrative || {};
+    const deterministicNarrative = b.localized_narrative || {};
     const agents = b.agent_findings || [];
     const mcp = b.mcp_evidence || [];
     const resources = b.monitoring_sources || [];
@@ -130,7 +130,7 @@
     const narrativeRows = matchedNarrative?.status === 'available' ? (matchedNarrative.sections || []) : [];
     const narrativeSection = narrativeRows.length
       ? '<div class="db-narrative">' + narrativeRows.map(x => '<article class="db-narrative-part"><h4>' + html(x.heading) + '</h4><p>' + html(x.text) + '</p>' + linkRefs(x.citations) + '</article>').join('') + '</div>'
-      : '<p class="db-subtle">' + (narrativePending ? t('loading') : t('narrativeFallback')) + '</p>';
+      : '<p class="db-subtle">' + (narrativePendingKey === (activeId + ':' + b.snapshot_id + ':' + language) ? t('loading') : t('narrativeFallback')) + '</p>';
     const direction = language === 'fa' ? 'rtl' : 'ltr';
     const agentCards = agents.map(x => '<div class="db-record"><div class="db-record-head"><b>' +
       html(x.agent) + '</b>' + flag(x.status) + '</div>' + originalText(x.finding) +
@@ -164,7 +164,7 @@
       '<button type="button" data-db-lang="fa" aria-pressed="' + (language === 'fa') + '">فارسی</button>' +
       '<button type="button" data-db-lang="en" aria-pressed="' + (language === 'en') + '">English</button>' +
       '<button type="button" data-db-copy="1">' + t('copy') + '</button></div></header>' +
-      '<p class="db-lead">' + html(language === 'fa' ? narrative.fa : narrative.en) + '</p>' +
+      '<p class="db-lead">' + html(language === 'fa' ? deterministicNarrative.fa : deterministicNarrative.en) + '</p>' +
       '<div class="db-fields">' + field('Incident ID', i.incident_id) +
       field(t('freshness'), b.data_freshness) + field(t('risk'), r.risk_level) +
       field('Approval', a.approval_status) + field('Evidence', b.source_references?.length ?? 0) +
@@ -228,28 +228,31 @@
   }
 
   async function ensureNarrative() {
-    if (!brief || narrativePending || String(S.selected) !== String(activeId)) return;
+    if (!brief || String(S.selected) !== String(activeId)) return;
     const snapshot = brief.snapshot_id;
     const currentLang = language;
+    const requestedId = String(activeId);
     const key = snapshot + ':' + currentLang;
+    const requestKey = requestedId + ':' + key;
+    if (narrativePendingKey === requestKey) return;
     if (narrativeCache.has(key)) {
       narrative = narrativeCache.get(key);
       return;
     }
-    narrativePending = true;
+    narrativePendingKey = requestKey;
     try {
-      const result = await api('/api/v1/incidents/' + encodeURIComponent(activeId) + '/decision-brief/narrative?lang=' + encodeURIComponent(currentLang));
+      const result = await api('/api/v1/incidents/' + encodeURIComponent(requestedId) + '/decision-brief/narrative?lang=' + encodeURIComponent(currentLang));
       if (result?.snapshot_id !== snapshot || result?.language !== currentLang) throw new Error('narrative_snapshot_mismatch');
       narrativeCache.set(key, result);
-      if (String(S.selected) === String(activeId) && brief?.snapshot_id === snapshot && language === currentLang) narrative = result;
+      if (String(S.selected) === requestedId && brief?.snapshot_id === snapshot && language === currentLang) narrative = result;
     } catch (_) {
       // A missing model or transient connectivity never disables durable Incident evidence.
       const fallback = {snapshot_id: snapshot, language: currentLang, status: 'fallback', sections: []};
       narrativeCache.set(key, fallback);
-      if (String(S.selected) === String(activeId) && language === currentLang) narrative = fallback;
+      if (String(S.selected) === requestedId && brief?.snapshot_id === snapshot && language === currentLang) narrative = fallback;
     } finally {
-      narrativePending = false;
-      if (S.detail && String(S.selected) === String(activeId) && brief?.snapshot_id === snapshot && document.querySelector('.decision-brief')) {
+      if (narrativePendingKey === requestKey) narrativePendingKey = null;
+      if (S.detail && String(S.selected) === requestedId && brief?.snapshot_id === snapshot && document.querySelector('.decision-brief')) {
         window.renderDetail('brief');
       }
     }
@@ -282,7 +285,7 @@
     activeId = String(id);
     brief = null;
     narrative = null;
-    narrativePending = false;
+    narrativePendingKey = null;
     failed = null;
     loading = true;
     const request = api('/api/v1/incidents/' + encodeURIComponent(id) + '/decision-brief')
