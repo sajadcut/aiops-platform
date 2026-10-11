@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 413 | Dashboard JS files scanned: 6 | Symbols indexed: 3794**
+**Python files scanned: 414 | Dashboard JS files scanned: 6 | Symbols indexed: 3800**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -2141,6 +2141,12 @@
 | `tests/integration/test_health_probes.py` | `test_mcp_dependency_health_probe_forces_single_read_attempt.FakeMCPClient` | 35 | class | کلاس | test_mcp_dependency_health_probe_forces_single_read_attempt |
 | `tests/integration/test_health_probes.py` | `test_mcp_dependency_health_probe_forces_single_read_attempt.FakeMCPClient.health_check` | 38 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_mcp_dependency_health_probe_forces_single_read_attempt.FakeMCPClient |
 | `tests/integration/test_health_probes.py` | `test_mcp_dependency_health_probe_forces_single_read_attempt.FakeMCPClient.close` | 42 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_mcp_dependency_health_probe_forces_single_read_attempt.FakeMCPClient |
+| `tests/integration/test_knowledge_review_db.py` | `test_verified_memory_human_review_and_cognia_activation` | 25 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/integration/test_knowledge_review_db.py` | `test_verified_memory_human_review_and_cognia_activation.FakeCognia` | 33 | class | کلاس | test_verified_memory_human_review_and_cognia_activation |
+| `tests/integration/test_knowledge_review_db.py` | `test_verified_memory_human_review_and_cognia_activation.FakeCognia.__aenter__` | 34 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_verified_memory_human_review_and_cognia_activation.FakeCognia |
+| `tests/integration/test_knowledge_review_db.py` | `test_verified_memory_human_review_and_cognia_activation.FakeCognia.__aexit__` | 36 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_verified_memory_human_review_and_cognia_activation.FakeCognia |
+| `tests/integration/test_knowledge_review_db.py` | `test_verified_memory_human_review_and_cognia_activation.FakeCognia.register_knowledge` | 38 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_verified_memory_human_review_and_cognia_activation.FakeCognia |
+| `tests/integration/test_knowledge_review_db.py` | `test_verified_memory_human_review_and_cognia_activation.FakeCognia.get_knowledge_detail` | 41 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | test_verified_memory_human_review_and_cognia_activation.FakeCognia |
 | `tests/integration/test_master_api_surface.py` | `test_master_api_surface_is_registered` | 4 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/integration/test_operational_memory_v2_db.py` | `_state` | 25 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/integration/test_operational_memory_v2_db.py` | `test_memory_v2_lexical_retrieval_survives_embedding_provider_outage` | 96 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
