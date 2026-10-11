@@ -1,0 +1,34 @@
+# Copy this file to start-all.local.ps1 and edit the values for your VM MCP project.
+# start-all.local.ps1 is ignored by Git. Do not put passwords or tokens in this file.
+#
+# Set Executable and Arguments to the exact command you already use to start VM MCP.
+# Example below is only a template for an HTTP MCP server launched with Uvicorn;
+# it is NOT a claim that your VM MCP project uses this module name.
+#
+# If your VM MCP starts with:
+#   D:\some-path\.venv\Scripts\python.exe server.py
+# then use that Python executable, set Arguments = 'server.py', and set MatchText = 'server.py'.
+
+$VMMcpConfig = [pscustomobject]@{
+    Enabled = $true
+
+    Name = 'VM MCP'
+
+    # Full path to the VM MCP repository.
+    WorkingDirectory = 'D:\REPLACE_WITH_VM_MCP_FOLDER'
+
+    # Full path to the runtime/executable used by your VM MCP.
+    # This can be its .venv\Scripts\python.exe, uv.exe, or another executable.
+    Executable = 'D:\REPLACE_WITH_VM_MCP_FOLDER\.venv\Scripts\python.exe'
+
+    # Replace this with your project's actual start command and module/entry point.
+    # Do not include the executable itself in this value.
+    Arguments = '-m uvicorn REPLACE_WITH_MODULE:app --host 0.0.0.0 --port 9101'
+
+    # Unique substring that appears in the process command line.
+    # stop-all.ps1 uses this to avoid killing an unrelated process if a PID was reused.
+    MatchText = 'REPLACE_WITH_MODULE:app'
+
+    # VM MCP HTTP port used by the command above. Set to 0 if no local TCP port check is wanted.
+    TcpPort = 9101
+}
