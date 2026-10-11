@@ -77,7 +77,10 @@ async function api(path, opts = {}) {
   if (!r.ok) {
     let d;
     try { d = await r.json(); } catch {}
-    throw new Error(`${r.status} ${d?.detail || r.statusText}`);
+    if (r.status === 503 && d?.detail?.code === 'DATABASE_MIGRATION_DRIFT') {
+      throw new Error('پایگاه‌داده هنوز به نسخه جدید ارتقا نیافته است. عملیات موقتاً برای حفظ امنیت متوقف شده؛ مدیر سیستم باید پس از تهیه بکاپ Migration را اجرا کند.');
+    }
+    throw new Error(`${r.status} ${typeof d?.detail === 'string' ? d.detail : (d?.detail?.code || r.statusText)}`);
   }
   return r.json();
 }

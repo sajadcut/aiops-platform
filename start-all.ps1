@@ -180,6 +180,20 @@ try {
     Pop-Location
 }
 
+# Fail early with a safe explanation rather than starting a 'live' API that
+# returns 503 on Zabbix signals / dashboard summary due to schema drift.
+# This is strictly read-only: upgrades require a separately verified backup.
+Push-Location $ProjectRoot
+try {
+    & $Python -m scripts.check_database_migrations
+    $migrationPreflightExit = $LASTEXITCODE
+} finally {
+    Pop-Location
+}
+if ($migrationPreflightExit -ne 0) {
+    throw 'AIOps startup blocked: database migration preflight failed. Follow the commands above; no migration was applied automatically.'
+}
+
 $State = @{ AIOps = $null; VMMcp = $null }
 if (Test-Path -LiteralPath $StatePath -PathType Leaf) {
     try {

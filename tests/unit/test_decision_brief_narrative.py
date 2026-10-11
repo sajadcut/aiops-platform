@@ -138,3 +138,83 @@ async def test_llm_failure_leaves_structured_brief_available(monkeypatch):
     assert result["status"] == "fallback"
     assert "private internal error" not in str(result)
     assert result["summary"] == brief["localized_narrative"]["fa"]
+
+
+def test_large_realistic_incident_has_bounded_grounded_narrative_projection():
+    brief = sample_brief()
+    brief["source_references"] = [f"durable-evidence-{i}" for i in range(90)]
+    brief["agent_findings"] = [
+        {
+            "agent": f"agent-{i}", "status": "partial", "finding": "Observed: " + "x" * 1500,
+            "mission": "Analyze live telemetry", "confidence": 0.6,
+            "evidence_refs": [f"durable-evidence-{i}"],
+            "tool_diagnostic_blob": "THIS MUST NEVER BE GIVEN TO THE LLM " * 1000,
+        } for i in range(50)
+    ]
+    brief["mcp_evidence"] = [
+        {
+            "server": "vm-edge", "tool": "service_status",
+            "status": "success", "finding": "inactive " + "y" * 1200,
+            "evidence_ref": f"durable-evidence-{i}",
+            "raw_secret": "hidden-credential",
+        } for i in range(70)
+    ]
+    brief["cognia_knowledge"]["items"] = [
+        {"source_id": f"cognia:{i}", "use_status": "not_verified", "relevance": 0.5}
+        for i in range(60)
+    ]
+    brief["missing_evidence"] = ["prometheus_unavailable"]
+    brief["remediation_recommendation"] = {
+        "action": "start_service", "tool": "ssh_vm", "target": "vm-staging",
+        "risk_level": "high",
+    }
+    encoded = service.bounded_projection_json(brief)
+    assert encoded is not None
+    assert len(encoded) <= 18000
+    obj = json.loads(encoded)
+    assert obj["remediation"]["target"] == "vm-staging"
+    assert obj["remediation"]["action"] == "start_service"
+    assert obj["source_counts"]["agents_total"] == 50
+    assert obj["source_counts"]["mcp_observations_total"] == 70
+    assert len(obj["agents"]) < 50
+    assert len(obj["mcp_observations"]) < 70
+    assert "hidden-credential" not in encoded
+    assert "THIS MUST NEVER" not in encoded
+    assert obj["missing_evidence"] == ["prometheus_unavailable"]
+
+
+@pytest.mark.asyncio
+async def test_large_incident_calls_llm_instead_of_unconditional_size_fallback(monkeypatch):
+    brief = sample_brief()
+    brief["snapshot_id"] = "large-incident-bounded-projection"
+    brief["agent_findings"] = [
+        {"agent": f"sre-{i}", "status": "partial",
+         "finding": "observed issue " + ("a" * 2600),
+         "evidence_refs": ["evidence-1"]}
+        for i in range(22)
+    ]
+    brief["mcp_evidence"] = [
+        {"server": "vm", "tool": "service_status",
+         "finding": "inactive " + ("b" * 2000),
+         "evidence_ref": "evidence-1"}
+        for _ in range(24)
+    ]
+    monkeypatch.setattr(settings, "LLM_PROVIDER", "dotin-general-chatbot")
+    monkeypatch.setattr(settings, "LLM_BASE_URL", "https://llm.example.invalid")
+    monkeypatch.setattr(settings, "LLM_MODEL", "internal-model")
+    calls = []
+
+    class Provider:
+        async def generate_with_messages(self, messages, **kwargs):
+            calls.append(messages)
+            return SimpleNamespace(
+                content=json.dumps(valid_rows(), ensure_ascii=False),
+                finish_reason="stop",
+            )
+
+    monkeypatch.setattr(service, "configured_llm_adapter", lambda: Provider())
+    outcome = await service.generate_narrative(brief, "fa")
+    assert outcome["status"] == "available"
+    assert outcome["authorizes_execution"] is False
+    assert len(calls) == 1
+    assert len(calls[0][1]["content"]) < 18500

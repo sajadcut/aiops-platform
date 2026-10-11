@@ -47,32 +47,132 @@ def fallback(brief: dict, lang: str, reason: str) -> dict:
     }
 
 
+def _bounded_text(value: object, limit: int = 450) -> object:
+    if isinstance(value, str) and len(value) > limit:
+        # Retain provenance-friendly beginning; never ask a model to fill gaps.
+        return value[:limit] + "… [truncated]"
+    return value
+
+
+def _field_view(row: object, keys: tuple[str, ...], *, limit: int = 450) -> dict:
+    if not isinstance(row, dict):
+        return {}
+    return {
+        key: (
+            [_bounded_text(v, 140) for v in value[:12]]
+            if isinstance(value, list)
+            else _bounded_text(value, limit)
+        )
+        for key in keys
+        if (value := row.get(key)) is not None
+        and not isinstance(value, dict)
+    }
+
+
 def projection(brief: dict) -> dict:
-    """Allowlist short provenance fields; never send raw MCP tool responses."""
+    """Compact, redacted source allowlist for an explain-only LLM.
+
+    Real incidents may contain dozens of durable MCP observations. Supplying
+    every raw diagnostic field caused brief_too_large before the LLM was called.
+    Preserve citation IDs, source health, agent status, risk, and exact bound
+    operations; do not transmit raw MCP responses or history payloads.
+    """
     cognia = brief.get("cognia_knowledge") or {}
     memory = brief.get("operational_memory") or {}
+    incident = brief.get("incident_summary") or {}
+    agents = brief.get("agent_findings") or []
+    mcp = brief.get("mcp_evidence") or []
+    knowledge = cognia.get("items") or []
+    memories = memory.get("items") or []
     return redact({
-        "incident": brief.get("incident_summary"),
-        "agents": (brief.get("agent_findings") or [])[:15],
-        "mcp_observations": (brief.get("mcp_evidence") or [])[:20],
+        "incident": _field_view(incident, (
+            "incident_id", "service", "severity", "status", "started_at",
+            "elapsed_seconds", "host", "namespace", "cluster", "summary",
+            "target", "port", "likely_cause", "cause_status",
+            "cause_evidence_refs", "valid_evidence_count", "observed_sources",
+        )),
+        "agents": [_field_view(a, (
+            "agent", "mission", "status", "finding", "confidence",
+            "health_status", "evidence_refs", "missing_evidence",
+            "conflicting_evidence_refs", "tools",
+        )) for a in agents[:12]],
+        "mcp_observations": [_field_view(row, (
+            "server", "tool", "status", "finding", "evidence_ref",
+            "collected_at", "freshness", "time_basis", "phase",
+        )) for row in mcp[:15]],
+        "monitoring_sources": [_field_view(row, ("source", "status", "freshness"))
+            for row in (brief.get("monitoring_sources") or [])[:12]],
         "cognia_status": cognia.get("status"),
-        "cognia_sources": [
-            {"source_id": x.get("source_id"), "use_status": x.get("use_status"), "relevance": x.get("relevance")}
-            for x in cognia.get("items", [])[:12]
-        ],
-        "historical_memory": [
-            {"memory_id": x.get("memory_id"), "outcome": x.get("outcome"), "use_status": x.get("use_status")}
-            for x in memory.get("items", [])[:12]
-        ],
+        "cognia_sources": [_field_view(row, (
+            "source_id", "use_status", "relevance", "title",
+        ), limit=200) for row in knowledge[:10]],
+        "historical_memory": [_field_view(row, (
+            "memory_id", "outcome", "verification", "use_status", "root_cause_status",
+        ), limit=150) for row in memories[:10]],
         "rca": brief.get("rca_assessment"),
-        "conflicting_evidence": brief.get("evidence_conflicts"),
-        "missing_evidence": brief.get("missing_evidence"),
-        "remediation": brief.get("remediation_recommendation"),
-        "approval": brief.get("approval_readiness"),
-        "execution": brief.get("execution_outcome"),
-        "verification": brief.get("verification_result"),
-        "allowed_evidence_references": brief.get("source_references"),
+        "conflicting_evidence": (brief.get("evidence_conflicts") or [])[:40],
+        "missing_evidence": (brief.get("missing_evidence") or [])[:40],
+        "remediation": _field_view(brief.get("remediation_recommendation"), (
+            "action", "tool", "target", "risk_level", "decision", "why",
+            "blast_radius", "risk_of_inaction", "expected_outcome",
+            "verification_plan",
+        )),
+        "approval": _field_view(brief.get("approval_readiness"), (
+            "status", "approval_status", "tool", "action", "target",
+            "environment", "runbook_id", "runbook_version", "binding_complete",
+            "rollback_supported", "timeout_seconds", "evidence_snapshot_binding",
+        )),
+        "execution": _field_view(brief.get("execution_outcome"), (
+            "status", "tool", "action", "target", "error",
+        )),
+        "verification": _field_view(brief.get("verification_result"), (
+            "status", "message", "evidence_refs", "confidence", "changes",
+        )),
+        "allowed_evidence_references": (brief.get("source_references") or [])[:120],
+        "source_counts": {
+            "agents_total": len(agents),
+            "mcp_observations_total": len(mcp),
+            "cognia_results_total": len(knowledge),
+            "historical_memories_total": len(memories),
+            "missing_evidence_total": len(brief.get("missing_evidence") or []),
+            "conflicts_total": len(brief.get("evidence_conflicts") or []),
+            "evidence_references_total": len(brief.get("source_references") or []),
+            "note": "Selected source details may be omitted for token budget; omitted is NOT verified.",
+        },
     })
+
+
+def bounded_projection_json(brief: dict, max_chars: int = 18000) -> str | None:
+    """Fit an explain-only projection within a strict request-size budget.
+
+    Drop secondary observations first and include counts of omitted records.
+    Never strip the exact action/target, approval constraints, evidence gaps or
+    verification status to force generation. If those core fields alone are too
+    large, deterministic fallback remains the safe outcome.
+    """
+    payload = projection(brief)
+    def encode() -> str:
+        return json.dumps(payload, ensure_ascii=False, sort_keys=True, default=str)
+
+    encoded = encode()
+    if len(encoded) <= max_chars:
+        return encoded
+    for key, retained in (
+        ("mcp_observations", 8),
+        ("agents", 8),
+        ("mcp_observations", 4),
+        ("cognia_sources", 5),
+        ("historical_memory", 5),
+        ("agents", 5),
+        ("mcp_observations", 2),
+    ):
+        items = payload.get(key) or []
+        if len(items) > retained:
+            payload[key] = items[:retained]
+            encoded = encode()
+            if len(encoded) <= max_chars:
+                return encoded
+    return encoded if len(encoded) <= max_chars else None
 
 
 def validate_narrative(raw: str, brief: dict, lang: str) -> list[dict]:
@@ -125,8 +225,8 @@ async def generate_narrative(brief: dict, lang: str = "fa") -> dict:
     ):
         return fallback(brief, lang, "model_not_configured")
 
-    encoded = json.dumps(projection(brief), ensure_ascii=False, sort_keys=True, default=str)
-    if len(encoded) > 18000:
+    encoded = bounded_projection_json(brief)
+    if encoded is None:
         return fallback(brief, lang, "brief_too_large")
     cache_key = hashlib.sha256((brief["snapshot_id"] + ":" + lang).encode()).hexdigest()
     cached = _CACHE.get(cache_key)
