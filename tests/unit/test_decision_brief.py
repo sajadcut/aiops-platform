@@ -261,3 +261,99 @@ def test_persian_fallback_translates_operational_statuses_without_raw_json():
     assert "وضعیت تأیید: در انتظار تأیید" in prose
     assert "Cognia: available" not in prose
     assert '"status":' not in prose
+
+
+def test_complete_nginx_vm_cognia_memory_exposes_operator_decision_context():
+    report = make_brief()
+    assert report["incident_summary"]["valid_evidence_count"] == 1
+    assert report["incident_summary"]["observed_sources"] == 1
+    assert report["mcp_evidence"][0]["tool"] == "service_status"
+    assert report["cognia_knowledge"]["retrieved_count"] == 1
+    assert report["cognia_knowledge"]["items"][0]["use_status"] == "not_verified"
+    assert report["operational_memory"]["items"][0]["similarity"] == 0.89
+    assert report["approval_readiness"]["status"] == "human_review_required"
+
+
+def test_previously_unverified_agent_cannot_be_shown_as_success():
+    report = make_brief(state={
+        "analysis_results": [
+            {"agent_name": "network", "status": "skipped", "statement": "Skipped"},
+            {"agent_name": "storage", "status": "failed", "statement": "Timed out"},
+            {"agent_name": "application", "status": "partial", "statement": "Degraded"},
+        ],
+        "knowledge_status": {"status": "not_queried"},
+    })
+    assert [x["status"] for x in report["agent_findings"]] == [
+        "skipped", "failed", "partial",
+    ]
+
+
+def test_missing_or_invalid_incident_start_does_not_break_legacy_report():
+    for timestamp in ("not-a-time", "2026-10-11T16:00:00", None):
+        report = build_decision_brief(
+            incident={"id": "i-1", "service": "nginx", "started_at": timestamp},
+            operator_summary={}, checkpoint={"state": {}},
+            durable_evidence=[], findings=[], audit_events=[], now=NOW,
+        )
+        assert report["incident_summary"]["elapsed_seconds"] is None
+        assert report["source_policy"]["authorizes_execution"] is False
+
+
+def test_incident_duration_and_kubernetes_identity_are_provenance_only():
+    report = build_decision_brief(
+        incident={"id": "i-1", "service": "api", "started_at": (NOW-timedelta(minutes=10)).isoformat(),
+                  "context": {"kubernetes_namespace": "ns-api", "cluster": "blue-cluster"}},
+        operator_summary={}, checkpoint={"state": {}},
+        durable_evidence=[], findings=[], audit_events=[], now=NOW,
+    )
+    assert report["incident_summary"]["elapsed_seconds"] == 600
+    assert report["incident_summary"]["namespace"] == "ns-api"
+    assert report["incident_summary"]["cluster"] == "blue-cluster"
+
+
+def test_source_health_query_is_not_counted_as_confirmed_evidence():
+    report = make_brief(evidence=[{
+        "id": "obs-1", "source": "prometheus", "created_at": NOW.isoformat(),
+        "raw_data": {"status": "queried", "result_count": 0},
+    }])
+    assert report["incident_summary"]["valid_evidence_count"] == 0
+    assert report["mcp_evidence"][0]["status"] == "queried"
+
+
+def test_recorded_execution_failure_verification_and_approver_are_distinct():
+    state = {
+        "execution_result": {"success": False, "error": "connection_timeout",
+                             "tool_name": "vm-mcp", "action": "restart_service",
+                             "target": "host-1", "approval_id": "ap-1"},
+        "verification_result": {"status": "failed", "confidence": 0.19,
+                                "message": "port still closed", "evidence_refs": ["ev-2"]},
+        "knowledge_status": {"status": "empty"},
+    }
+    report = build_decision_brief(
+        incident={"id": "i-1", "service": "nginx", "status": "escalated"},
+        operator_summary={
+            "execution_status": "failed", "verification_status": "failed",
+            "execution": {"error": "connection_timeout", "approval_id": "ap-1"},
+            "verification": state["verification_result"],
+            "approval": {"status": "consumed", "approver": "sre-operator"},
+        },
+        checkpoint={"state": state}, durable_evidence=[],
+        findings=[], audit_events=[], now=NOW,
+    )
+    assert report["execution_outcome"]["status"] == "failed"
+    assert report["verification_result"]["confidence"] == 0.19
+    assert report["verification_result"]["evidence_refs"] == ["ev-2"]
+    assert report["approval_readiness"]["approver"] == "sre-operator"
+    assert report["knowledge_learning_status"]["review_available"] is False
+
+
+def test_retrieved_cognia_document_exposes_source_title_without_inventing_use():
+    state = {
+        "knowledge_status": {"status": "available"},
+        "knowledge_results": [{"source_id": "src-1", "title": "nginx playbook",
+                               "knowledge_id": "k-2", "relevance": 0.82}],
+    }
+    result = make_brief(state=state)
+    doc = result["cognia_knowledge"]["items"][0]
+    assert doc["title"] == "nginx playbook"
+    assert doc["use_status"] == "not_verified"
