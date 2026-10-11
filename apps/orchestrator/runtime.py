@@ -127,6 +127,8 @@ class DurableWorkflowRuntime:
         metadata = dict(durable.get("metadata") or {})
         stored = metadata.get("decision_snapshot_digest")
         if not stored:
+            if metadata.get("decision_snapshot_version"):
+                raise ValueError("approval_snapshot_binding_incomplete")
             # Approvals created before this feature still pass the existing
             # full Execution Intent binding and live runbook preconsume guard.
             return
