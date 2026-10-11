@@ -96,7 +96,7 @@
 | Raw Evidence و Timeline | ✅ | هدایت به پنل اصلی Evidence/Audit |
 | جلوگیری از اجرا بدون Approval و High Risk | ✅ | Binding و مصرف یک‌باره مجوز در Backend موجود؛ تست‌های `tests/security` و `tests/unit/test_runtime_guard_approval_revocation.py` |
 | Binding به Incident/Action/Tool/Target/Runbook | ✅ | `apps/approval_service/binding.py` |
-| Binding صریح به Evidence Snapshot و نسخه Plan و Reapproval بر اثر Drift | ✅ / ◐ | در Approvalهای **جدید** Durable Workflow و Direct API اثرانگشت Plan/Agent Results/Checkpoint و تمام Evidenceهای پایدار ثبت می‌شود و در Resume و /execute پیش از مصرف مجوز تطبیق و در صورت تغییر لغو می‌شود. Approvalهای قدیمی که فاقد Digest هستند با Binding/Preflight قبلی سازگارند و Snapshot آن‌ها Not Verified است |
+| Binding صریح به Evidence Snapshot و نسخه Plan و Reapproval بر اثر Drift | ✅ / ◐ | در Approvalهای **جدید** Durable Workflow و Direct API اثرانگشت Plan/Agent Results/Checkpoint و تمام Evidenceهای پایدار ثبت می‌شود و در Resume و /execute پیش از مصرف مجوز تطبیق و در صورت تغییر لغو می‌شود. Approvalهای Legacy با ریسک high/critical و بدون Digest هنگام Claim رد و برای re-approval لغو می‌شوند؛ موارد کم‌ریسک قدیمی با Binding/Preflight قبلی سازگار می‌مانند |
 
 ## ۵) پس از اجرا
 
@@ -125,7 +125,7 @@
 |---|---|---|
 | قرارداد Versioned با تمام بخش‌های اصلی | ✅ | `decision-brief.v1`؛ ساختارهای Incident/Agents/MCP/Cognia/Memory/RCA/Approval/Execution/Verification/Localization |
 | یک نمای سازگار از Incident/Approval/Checkpoint | ✅ | سازنده Operator Summary و Brief در همان SQLAlchemy Session |
-| Snapshot/Version و تازگی Workflow | ◐ | Hash پایدار + نسخه Checkpoint در هر بازخوانی؛ برای Approvalهای جدید Digest جداگانه Plan/Evidence نیز پیش از اجرا ارزیابی می‌شود؛ جدول تاریخچه مستقل Snapshot وجود ندارد |
+| Snapshot/Version و تازگی Workflow | ✅ / ◐ | History immutable جدید از رویدادهای واقعی Approval/Execution/Verification با JSONB پاک‌سازی‌شده و خواندن RBAC؛ Checkpoint و Evidence در قفل مشترک Incident هنگام Claim دوباره اعتبارسنجی می‌شوند. Snapshotهای قبل از استقرار به‌طور مصنوعی بازسازی نمی‌شوند |
 | Redaction، RBAC، خطا و Unknown | ✅ | `redact`، `read:incident` و fallback |
 | عدم اجرای Workflow/Tool/RAG هنگام بازشدن Brief | ✅ | GET فقط خواندنی؛ GET جداگانه Narrative فقط LLM نمایشی را فراخوانی می‌کند |
 | Cache/Timeout/کنترل هزینه LLM | ✅ | Cache حداکثر ۱۰۰ گزارش در پردازش؛ زمان انتظار محدود و خروجی bounded |
@@ -142,7 +142,7 @@
 | ۵ | Cognia بازیابی شده ولی در RCA استفاده نشده | ✅ unit/synthetic |
 | ۶ | Agentهای متناقض | ✅ unit/synthetic |
 | ۷ | RCA نامطمئن و Remediation قابل بررسی | ✅ unit/synthetic |
-| ۸ | Evidence کهنه یا Snapshot drift | ✅ Freshness و گیت Drift برای Approvalهای جدید همراه تست deny-before-consume؛ ◐ Approvalهای Legacy |
+| ۸ | Evidence کهنه یا Snapshot drift | ✅ Freshness، تطبیق زیر قفل و تست واقعی دیتابیس؛ high/critical legacy بدون Digest رد می‌شود؛ ◐ اتصال Production |
 | ۹ | High Risk نیازمند Approval | ✅ تست Governance موجود؛ 🌐 Live |
 | ۱۰ | Reject و عدم اجرا | ✅ در تست‌های Backend؛ 🌐 Live |
 | ۱۱ | Approve، اجرا و Verification موفق | ✅ در تست‌های Backend؛ 🌐 Live |
@@ -163,6 +163,6 @@ python -m pytest -q tests/unit/test_decision_brief.py tests/unit/test_decision_b
 python -m pytest -q tests
 ```
 
-**گپ‌های قطعی باقی‌مانده:** (۱) مهاجرت یا سیاست لغو/تأیید مجدد برای Approvalهای Legacy فاقد Decision Snapshot و ارزیابی Race هم‌زمان Evidence/Consume؛ (۲) آرشیو مستقل Snapshotهای قابل بازیابی برای ممیزی تاریخی؛ (۳) Provenance دقیق Trace/Tool/Knowledge اگر در مبادی داده Persist نشده؛ (۴) آزمون واقعی Chrome/Firefox، اتصال Dotin/Cognia/MCP/pgvector و Remediation + Rollback Production؛ (۵) راستی‌آزمایی معنایی هر گزاره مدل؛ (۶) تست قابل‌سنجش زمان ۳۰–۶۰ ثانیه‌ای و UX.
+**گپ‌های باقی‌مانده:** (۱) سیاست استفاده از Approvalهای Legacy کم‌ریسک و صدور مجوز جدید در فرایند عملیاتی (high/critical اکنون fail-closed هستند)؛ (۲) نبود Snapshotهای تاریخی مربوط به پیش از استقرار این Migration؛ (۳) Provenance دقیق Trace/Tool/Knowledge در صورت Persist نشدن در مبادی داده؛ (۴) تست واقعی Chrome/Firefox، اتصال Dotin/Cognia/MCP/pgvector و Remediation + Rollback Production؛ (۵) راستی‌آزمایی معنایی هر گزاره مدل؛ (۶) تست زمان ۳۰–۶۰ ثانیه‌ای UX در محیط واقعی.
 
 **نکتهٔ پذیرش:** تا بسته‌شدن گپ‌های امنیتی و اجرای آزمون‌های REAL ENV REQUIRED، اعلام «Production accepted» یا جایگزین‌کردن بازبینی اپراتور با تصمیم خودکار مجاز نیست.
