@@ -35,7 +35,7 @@
       risk:'ریسک', binding:'اتصال مجوز', freshness:'تازگی داده', verification:'نتیجه Verification', result:'نتیجه اجرا',
       narrative:'جمع‌بندی AIOps برای تصمیم‌گیری اپراتور', generated:'تحلیل فارسی مبتنی بر شواهد',
       narrativeFallback:'خلاصه ساختاریافته؛ تحلیل پیشرفته LLM در دسترس نیست.', citations:'استناد به شواهد',
-      providerMissing:'این منبع در دسترس نبود؛ نتیجه‌گیری بدون داده‌های آن انجام شده است.', mixed:'ترکیبی از شواهد تازه و قدیمی/نامشخص'
+      providerMissing:'این منبع در دسترس نبود؛ نتیجه‌گیری بدون داده‌های آن انجام شده است.', mixed:'ترکیبی از شواهد تازه و قدیمی/نامشخص', approvalStale:'شواهد یا برنامه نسبت به زمان تأیید تغییر کرده است؛ مجوز قبلی معتبر نیست و تأیید جدید لازم است.'
     },
     en: {
       tab:'Decision Brief',title:'Incident Decision Brief',lead:'Operator decision summary',
@@ -57,7 +57,7 @@
       risk:'Risk',binding:'Approval binding',freshness:'Data freshness',verification:'Verification result',result:'Execution result',
       narrative:'AIOps operator decision summary', generated:'Grounded AI narrative',
       narrativeFallback:'Deterministic summary; enhanced LLM narrative unavailable.', citations:'Evidence references',
-      providerMissing:'This monitoring source was unavailable; the assessment was made without its data.', mixed:'Mixed fresh, stale or unknown evidence'
+      providerMissing:'This monitoring source was unavailable; the assessment was made without its data.', mixed:'Mixed fresh, stale or unknown evidence', approvalStale:'Plan or evidence changed since approval; fresh authorization is required.'
     }
   };
   const t = key => dict[language][key] || key;
@@ -91,7 +91,9 @@
     consumed:'مصرف شده', success:'موفق', partial:'ناقص', stale:'قدیمی',
     fresh:'تازه', mixed:'ترکیبی', queried:'جست‌وجو شده', skipped:'اجرا نشده',
     not_pending:'در انتظار نیست', human_review_required:'نیازمند بررسی انسانی',
-    observed:'مشاهده شده', not_executed:'اجرا نشده'
+    observed:'مشاهده شده', not_executed:'اجرا نشده',
+    matched_at_read:'مطابق شواهد فعلی', drift_detected:'نامعتبر به علت تغییر شواهد',
+    new_approval_required:'نیازمند تأیید جدید'
   };
   const fmt = value => {
     if (value == null || value === '') return t('unknown');
@@ -178,6 +180,7 @@
     if (b.data_freshness === 'unknown') warnings.push(t('missing'));
     if ((b.missing_evidence || []).length || (b.evidence_conflicts || []).length) warnings.push(t('missing'));
     if (c.retrieved_count && c.use_status !== 'cited_by_agent') warnings.push(t('notVerified'));
+    if (a.evidence_snapshot_binding === 'drift_detected') warnings.push(t('approvalStale'));
     const summary = '<header class="db-header"><div><span class="db-kicker">' + t('lead') +
       '</span><h3>' + t('title') + '</h3><p>' + html(i.service) + ' · ' + html(i.severity) +
       ' · ' + html(i.status) + '</p></div><div class="db-tools">' +
@@ -187,7 +190,7 @@
       '<p class="db-lead">' + html(language === 'fa' ? deterministicNarrative.fa : deterministicNarrative.en) + '</p>' +
       '<div class="db-fields">' + field('Incident ID', i.incident_id) +
       field(t('freshness'), b.data_freshness) + field(t('risk'), r.risk_level) +
-      field('Approval', a.approval_status) + field('Evidence', b.source_references?.length ?? 0) +
+      field('Approval', a.status === 'new_approval_required' ? a.status : a.approval_status) + field('Evidence', b.source_references?.length ?? 0) +
       field(t('timestamp'), b.generated_at) +
       field(t('target'), i.target) + field('Port', i.port) +
       field('Started', i.started_at) + field('Elapsed (seconds)', i.elapsed_seconds) +
@@ -232,7 +235,8 @@
       field('Execution binding', a.binding_digest ? 'Recorded' : 'Not verified') +
       field('Evidence snapshot binding', a.evidence_snapshot_binding) +
       field('Rollback supported', a.rollback_supported ? 'Recorded' : 'Not verified') +
-      field('Timeout (s)', a.timeout_seconds) + field('Approver', a.approver) + '</div>' +
+      field('Timeout (s)', a.timeout_seconds) + field('Approver', a.approver) +
+      field('Snapshot version', a.decision_snapshot_version) + '</div>' +
       '<p class="db-warning">' + t('actionSeparate') + '</p>' +
       '<div class="db-buttons"><button type="button" data-db-nav="decision">' + t('approval') + '</button>' +
       '<button type="button" data-db-nav="evidence">' + t('raw') + '</button>' +
