@@ -34,7 +34,8 @@
       timestamp:'به‌روزرسانی', record:'شناسه سند', tool:'ابزار', target:'هدف', environment:'محیط',
       risk:'ریسک', binding:'اتصال مجوز', freshness:'تازگی داده', verification:'نتیجه Verification', result:'نتیجه اجرا',
       narrative:'جمع‌بندی AIOps برای تصمیم‌گیری اپراتور', generated:'تحلیل فارسی مبتنی بر شواهد',
-      narrativeFallback:'خلاصه ساختاریافته؛ تحلیل پیشرفته LLM در دسترس نیست.', citations:'استناد به شواهد'
+      narrativeFallback:'خلاصه ساختاریافته؛ تحلیل پیشرفته LLM در دسترس نیست.', citations:'استناد به شواهد',
+      providerMissing:'این منبع در دسترس نبود؛ نتیجه‌گیری بدون داده‌های آن انجام شده است.', mixed:'ترکیبی از شواهد تازه و قدیمی/نامشخص'
     },
     en: {
       tab:'Decision Brief',title:'Incident Decision Brief',lead:'Operator decision summary',
@@ -55,7 +56,8 @@
       timestamp:'Generated',record:'Source ID',tool:'Tool',target:'Target',environment:'Environment',
       risk:'Risk',binding:'Approval binding',freshness:'Data freshness',verification:'Verification result',result:'Execution result',
       narrative:'AIOps operator decision summary', generated:'Grounded AI narrative',
-      narrativeFallback:'Deterministic summary; enhanced LLM narrative unavailable.', citations:'Evidence references'
+      narrativeFallback:'Deterministic summary; enhanced LLM narrative unavailable.', citations:'Evidence references',
+      providerMissing:'This monitoring source was unavailable; the assessment was made without its data.', mixed:'Mixed fresh, stale or unknown evidence'
     }
   };
   const t = key => dict[language][key] || key;
@@ -63,7 +65,7 @@
   const html = value => esc(fmt(value));
   const sClass = value => {
     const str = String(value || '').toLowerCase();
-    if (['failed','stale','rejected','blocked'].includes(str)) return 'failed';
+    if (['failed','stale','rejected','blocked','error','unavailable'].includes(str)) return 'failed';
     if (['success','fresh','approved','verified','cited_by_agent'].includes(str)) return 'success';
     return 'unknown';
   };
@@ -109,9 +111,9 @@
       '</div>').join('') || '<p class="db-subtle">' + t('none') + '</p>';
     const mcpCards = mcp.map(x => '<div class="db-record"><div class="db-record-head"><b>' +
       html(x.server) + ' / ' + html(x.tool) + '</b>' + flag(x.status) + '</div>' +
-      field(t('timestamp'), x.collected_at) + field(t('freshness'), x.freshness) +
+      field(t('timestamp'), x.collected_at) + field(t('freshness'), x.freshness) + field('Timestamp basis', x.time_basis) +
       originalText(x.finding) + linkRefs(x.evidence_ref ? [x.evidence_ref] : []) + '</div>').join('');
-    const healthCards = resources.map(x => field(x.source, x.freshness)).join('');
+    const healthCards = resources.map(x => '<div class="db-record"><div class="db-record-head"><b>' + html(x.source) + '</b>' + flag(x.status) + '</div>' + field(t('freshness'), x.freshness) + (['unavailable','error'].includes(x.status) ? '<p class="db-warning">' + t('providerMissing') + '</p>' : '') + '</div>').join('');
     const knowledgeCards = (c.items || []).map(x => '<div class="db-record"><div class="db-record-head"><b>' +
       html(x.source_id) + '</b>' + flag(x.use_status) + '</div>' +
       field(t('record'), [x.knowledge_base_id,x.knowledge_id,x.revision_id].filter(Boolean).join(' / ')) +
@@ -123,6 +125,8 @@
     const conf = b.rca_assessment || {};
     const warnings = [];
     if (b.data_freshness === 'stale') warnings.push(t('older'));
+    if (b.data_freshness === 'mixed') warnings.push(t('mixed'));
+    if (resources.some(x => ['unavailable','error'].includes(x.status))) warnings.push(t('providerMissing'));
     if (b.data_freshness === 'unknown') warnings.push(t('missing'));
     if ((b.missing_evidence || []).length || (b.evidence_conflicts || []).length) warnings.push(t('missing'));
     if (c.retrieved_count && c.use_status !== 'cited_by_agent') warnings.push(t('notVerified'));
