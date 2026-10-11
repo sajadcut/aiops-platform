@@ -1241,17 +1241,17 @@
 | `apps/rag_service/__init__.py` | `KnowledgeRAGService.create_revision` | 234 | async method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | KnowledgeRAGService |
 | `apps/rag_service/__init__.py` | `KnowledgeRAGService.get_processing_status` | 259 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | KnowledgeRAGService |
 | `apps/rag_service/__init__.py` | `KnowledgeRAGService.generate_context` | 270 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeRAGService |
-| `apps/remediation_planner/__init__.py` | `RemediationPlanner` | 9 | class | Deterministically bind live operational Evidence to a governed write request. | module |
-| `apps/remediation_planner/__init__.py` | `RemediationPlanner.plan` | 29 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
-| `apps/remediation_planner/__init__.py` | `RemediationPlanner.revalidate_execution` | 149 | method | Fail closed if the approved write is stale immediately before execution. | RemediationPlanner |
-| `apps/remediation_planner/__init__.py` | `RemediationPlanner._recovery_action` | 192 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
-| `apps/remediation_planner/__init__.py` | `RemediationPlanner._load_vm_service_policy` | 207 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
-| `apps/remediation_planner/__init__.py` | `RemediationPlanner._evidence_items` | 220 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
-| `apps/remediation_planner/__init__.py` | `RemediationPlanner._service_states` | 229 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
-| `apps/remediation_planner/__init__.py` | `RemediationPlanner._unhealthy_service_bindings` | 257 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
-| `apps/remediation_planner/__init__.py` | `RemediationPlanner._configuration_precondition` | 287 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
-| `apps/remediation_planner/__init__.py` | `RemediationPlanner._target_port` | 314 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
-| `apps/remediation_planner/__init__.py` | `RemediationPlanner._dedupe` | 348 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
+| `apps/remediation_planner/__init__.py` | `RemediationPlanner` | 10 | class | Deterministically bind live operational Evidence to a governed write request. | module |
+| `apps/remediation_planner/__init__.py` | `RemediationPlanner.plan` | 30 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
+| `apps/remediation_planner/__init__.py` | `RemediationPlanner.revalidate_execution` | 164 | method | Fail closed if the approved write is stale immediately before execution. | RemediationPlanner |
+| `apps/remediation_planner/__init__.py` | `RemediationPlanner._recovery_action` | 207 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
+| `apps/remediation_planner/__init__.py` | `RemediationPlanner._load_vm_service_policy` | 222 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
+| `apps/remediation_planner/__init__.py` | `RemediationPlanner._evidence_items` | 235 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
+| `apps/remediation_planner/__init__.py` | `RemediationPlanner._service_states` | 244 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
+| `apps/remediation_planner/__init__.py` | `RemediationPlanner._unhealthy_service_bindings` | 272 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
+| `apps/remediation_planner/__init__.py` | `RemediationPlanner._configuration_precondition` | 302 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
+| `apps/remediation_planner/__init__.py` | `RemediationPlanner._target_port` | 329 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
+| `apps/remediation_planner/__init__.py` | `RemediationPlanner._dedupe` | 363 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
 | `apps/runbook_service/executor.py` | `RunbookExecution` | 13 | class | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | module |
 | `apps/runbook_service/executor.py` | `RunbookExecutor` | 20 | class | Safe runtime boundary for registered runbooks. | module |
 | `apps/runbook_service/executor.py` | `RunbookExecutor.__init__` | 29 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RunbookExecutor |
