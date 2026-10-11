@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 409 | Dashboard JS files scanned: 5 | Symbols indexed: 3750**
+**Python files scanned: 410 | Dashboard JS files scanned: 5 | Symbols indexed: 3752**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1549,6 +1549,8 @@
 | `database/migrations/versions/i6f7a8b9c0d1_memory_episode_idempotency.py` | `downgrade` | 31 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `database/migrations/versions/j7g8h9i0j1k2_distributed_rate_limits.py` | `upgrade` | 18 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `database/migrations/versions/j7g8h9i0j1k2_distributed_rate_limits.py` | `downgrade` | 37 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `database/migrations/versions/k8h9i0j1k2l3_knowledge_review_outbox.py` | `upgrade` | 15 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `database/migrations/versions/k8h9i0j1k2l3_knowledge_review_outbox.py` | `downgrade` | 54 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `domain/action_plan.py` | `ActionPlan` | 5 | class | کلاس | module |
 | `domain/audit_event.py` | `AuditEvent` | 6 | class | کلاس | module |
 | `domain/contracts/config.py` | `Settings` | 8 | class | Typed loader for the centralized runtime environment contract. | module |
