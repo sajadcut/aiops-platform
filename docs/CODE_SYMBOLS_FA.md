@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 403 | Dashboard JS files scanned: 5 | Symbols indexed: 3644**
+**Python files scanned: 403 | Dashboard JS files scanned: 5 | Symbols indexed: 3645**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -3243,17 +3243,18 @@
 | `tests/unit/test_release_rendering.py` | `test_memory_maintenance_cronjobs_are_non_overlapping_and_console_only` | 43 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_remediation_planner.py` | `_evidence` | 8 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_remediation_planner.py` | `_state` | 17 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `tests/unit/test_remediation_planner.py` | `_healthy_config` | 41 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `tests/unit/test_remediation_planner.py` | `test_planner_builds_restart_for_failed_service_only_from_live_vm_evidence` | 52 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_remediation_planner.py` | `test_planner_uses_start_for_inactive_dead_service` | 94 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_remediation_planner.py` | `test_planner_never_turns_llm_recommendation_into_write_without_live_binding` | 132 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_remediation_planner.py` | `test_planner_blocks_invalid_configuration` | 140 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_remediation_planner.py` | `test_planner_blocks_ambiguous_live_service_bindings` | 165 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_remediation_planner.py` | `test_manual_trigger_is_not_eligible_for_automatic_remediation` | 179 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_remediation_planner.py` | `test_pre_execution_revalidation_blocks_restart_after_service_self_recovers` | 191 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_remediation_planner.py` | `test_pre_execution_revalidation_allows_start_only_while_service_remains_inactive` | 216 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_remediation_planner.py` | `test_pre_execution_revalidation_fails_closed_without_fresh_config_check` | 242 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_remediation_planner.py` | `test_durable_resume_restores_persisted_vm_target_and_port_context` | 266 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_remediation_planner.py` | `_healthy_config` | 45 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_remediation_planner.py` | `test_planner_builds_restart_for_failed_service_only_from_live_vm_evidence` | 56 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_remediation_planner.py` | `test_planner_uses_start_for_inactive_dead_service` | 98 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_remediation_planner.py` | `test_planner_never_turns_llm_recommendation_into_write_without_live_binding` | 136 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_remediation_planner.py` | `test_planner_blocks_invalid_configuration` | 144 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_remediation_planner.py` | `test_planner_blocks_ambiguous_live_service_bindings` | 169 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_remediation_planner.py` | `test_manual_trigger_is_not_eligible_for_automatic_remediation` | 183 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_remediation_planner.py` | `test_pre_execution_revalidation_blocks_restart_after_service_self_recovers` | 195 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_remediation_planner.py` | `test_pre_execution_revalidation_allows_start_only_while_service_remains_inactive` | 220 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_remediation_planner.py` | `test_pre_execution_revalidation_fails_closed_without_fresh_config_check` | 246 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_remediation_planner.py` | `test_durable_resume_restores_persisted_vm_target_and_port_context` | 270 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_remediation_planner.py` | `test_zabbix_automatic_remediation_requires_explicit_matching_target_ip` | 288 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_remediation_runtime_guard.py` | `_Session` | 11 | class | کلاس | module |
 | `tests/unit/test_remediation_runtime_guard.py` | `_Session.__aenter__` | 12 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Session |
 | `tests/unit/test_remediation_runtime_guard.py` | `_Session.__aexit__` | 15 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Session |
