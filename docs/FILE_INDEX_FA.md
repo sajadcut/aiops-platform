@@ -3,7 +3,7 @@
 > این فایل فهرست فایل‌به‌فایل repository است. توضیح معماری و flow در `CODEBASE_GUIDE_FA.md` آمده است.
 > این فایل با `scripts/generate_file_index_fa.py` ساخته و در CI کنترل می‌شود.
 
-**تعداد فایل‌های track‌شده و پوشش‌داده‌شده: 510**
+**تعداد فایل‌های track‌شده و پوشش‌داده‌شده: 516**
 
 | Path | Type | Purpose | Called By | Calls/Depends On | Runtime/Test/Docs | Notes |
 |---|---|---|---|---|---|---|
@@ -121,6 +121,7 @@
 | `apps/context_service/source_policy.py` | Python | Context: Asset Resolution، Context و Evidence collection | Orchestrator/signal flow | MCP integrations/domain | Runtime | live evidence مرجع عملیات است |
 | `apps/database/pgvector_contract.py` | Python | DB: قرارداد/validation pgvector فقط برای Operational Memory | startup/CI | PostgreSQL | Runtime | memory schema/dimension guard |
 | `apps/database/vector_validation.py` | Python | DB: قرارداد/validation pgvector فقط برای Operational Memory | startup/CI | PostgreSQL | Runtime | memory schema/dimension guard |
+| `apps/decision_brief.py` | Python | ماژول service لایه application | Runtime | domain/integrations | Runtime | جزء Control Plane |
 | `apps/decision_engine/__init__.py` | Python | Decision: تبدیل RCA/evaluation به تصمیم و risk | Orchestrator | evaluation/policy | Runtime | LLM authority نیست |
 | `apps/evaluator/__init__.py` | Python | Evaluator: Critic/evaluator gate برای کیفیت RCA | Orchestrator | agent findings/thresholds | Runtime | قبل از decision |
 | `apps/evaluator/gate.py` | Python | Evaluator: Critic/evaluator gate برای کیفیت RCA | Orchestrator | agent findings/thresholds | Runtime | قبل از decision |
@@ -184,6 +185,8 @@
 | `dashboards/chatbot.js` | JS | state، API binding و interaction داشبورد | Browser | /api/v1 endpoints | Runtime UI | action حساس backend-governed است |
 | `dashboards/control-center.css` | CSS | استایل Control Center و کنترل‌های عملیاتی | Browser | HTML classes | Runtime UI | بدون داده fake |
 | `dashboards/control-center.js` | JS | state، API binding و interaction داشبورد | Browser | /api/v1 endpoints | Runtime UI | action حساس backend-governed است |
+| `dashboards/decision-brief.css` | CSS | استایل Control Center و کنترل‌های عملیاتی | Browser | HTML classes | Runtime UI | بدون داده fake |
+| `dashboards/decision-brief.js` | JS | state، API binding و interaction داشبورد | Browser | /api/v1 endpoints | Runtime UI | action حساس backend-governed است |
 | `dashboards/index.html` | HTML | پوسته و layout داشبورد | FastAPI static route | CSS/JS/API | Runtime UI | صفحه اپراتوری |
 | `dashboards/knowledge-review.css` | CSS | استایل Control Center و کنترل‌های عملیاتی | Browser | HTML classes | Runtime UI | بدون داده fake |
 | `dashboards/knowledge-review.js` | JS | state، API binding و interaction داشبورد | Browser | /api/v1 endpoints | Runtime UI | action حساس backend-governed است |
@@ -230,6 +233,7 @@
 | `docs/DOTIN_GENERAL_CHATBOT.md` | Docs | مستند معماری/عملیات/وضعیت پروژه | تیم | کد و MASTER | Docs | SSoT نیست مگر MASTER root |
 | `docs/ELASTIC_ANOMALY_INGESTION.md` | Docs | مستند معماری/عملیات/وضعیت پروژه | تیم | کد و MASTER | Docs | SSoT نیست مگر MASTER root |
 | `docs/FILE_INDEX_FA.md` | Docs | مستند معماری/عملیات/وضعیت پروژه | تیم | کد و MASTER | Docs | SSoT نیست مگر MASTER root |
+| `docs/INCIDENT_DECISION_BRIEF.md` | Docs | مستند معماری/عملیات/وضعیت پروژه | تیم | کد و MASTER | Docs | SSoT نیست مگر MASTER root |
 | `docs/INCIDENT_TIMELINE_LOGGING.md` | Docs | مستند معماری/عملیات/وضعیت پروژه | تیم | کد و MASTER | Docs | SSoT نیست مگر MASTER root |
 | `docs/KNOWLEDGE_REVIEW.md` | Docs | مستند معماری/عملیات/وضعیت پروژه | تیم | کد و MASTER | Docs | SSoT نیست مگر MASTER root |
 | `docs/LOGGING.md` | Docs | مستند معماری/عملیات/وضعیت پروژه | تیم | کد و MASTER | Docs | SSoT نیست مگر MASTER root |
@@ -343,6 +347,7 @@
 | `tests/integration/test_chatbot_write_acceptance.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/integration/test_controlled_connectors.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/integration/test_dashboard_api.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
+| `tests/integration/test_decision_brief_ui_api.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/integration/test_e2e_safety.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/integration/test_health_probes.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/integration/test_knowledge_review_db.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
@@ -423,6 +428,7 @@
 | `tests/unit/test_dashboard_persian_translation_flow.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_dashboard_recommendation_language.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_database_reliability_engine.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
+| `tests/unit/test_decision_brief.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_dependency_causal_engine.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_dependency_contract.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_direct_execution_runtime_guard.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
