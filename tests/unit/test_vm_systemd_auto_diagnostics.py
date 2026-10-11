@@ -199,7 +199,7 @@ async def test_failed_service_automatically_collects_journal_without_llm_or_exte
     ]
     by_action = {
         e["raw_data"]["diagnostic"]: e for e in result["evidence"]
-        if e["source"] == "vm_mcp"
+        if e["source"] == "vm_mcp" and e.get("raw_data", {}).get("diagnostic")
     }
     assert by_action["service_status"]["raw_data"]["timeout_start_usec"] == "90s"
     journal = by_action["service_logs"]["raw_data"]
