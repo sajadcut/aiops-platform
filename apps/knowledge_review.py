@@ -36,12 +36,14 @@ def validated_document(title: str, content: str) -> tuple[str, str]:
 def memory_is_verified(row: MemoryEntry) -> bool:
     remediation = row.actual_remediation if isinstance(row.actual_remediation, dict) else {}
     verification = row.verification if isinstance(row.verification, dict) else {}
+    provenance = row.evidence_provenance if isinstance(row.evidence_provenance, dict) else {}
     return (
         row.memory_outcome_class == "successful_recovery"
         and str(row.verification_result or "").lower() in {"success", "verified", "succeeded"}
         and str(verification.get("status") or "").lower() == "success"
         and remediation.get("execution_success") is True
         and bool(remediation.get("action"))
+        and int(provenance.get("evidence_count") or 0) > 0
         and str(row.lifecycle_status or "").lower() in {"active", "validated"}
         and bool(row.incident_id)
     )
