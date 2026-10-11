@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import re
 from typing import Any, Mapping
 
@@ -88,6 +89,16 @@ def redact(value: Any, key: str | None = None) -> Any:
     if isinstance(value, tuple):
         return tuple(redact(item) for item in value)
     if isinstance(value, str):
+        # Legacy Zabbix senders can supply EVENT.TAGSJSON as a JSON string
+        # rather than a parsed array. Scrub secret-tag values without losing
+        # that original field type in logs/HTTP transaction records.
+        if str(key or "").lower() in {"tags", "tagsjson", "event_tags"}:
+            try:
+                parsed_tags = json.loads(value)
+            except (ValueError, TypeError):
+                parsed_tags = None
+            if isinstance(parsed_tags, list):
+                return json.dumps(redact(parsed_tags), ensure_ascii=False)
         return redact_text(value)
     return value
 
