@@ -191,3 +191,38 @@ class MemoryReuseEvent(Base):
     helpful = Column(Boolean, nullable=True)
     reward_score = Column(Float, default=0.0)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+
+class KnowledgeReview(Base):
+    """Governed *candidate* metadata; published knowledge belongs only to Cognia.
+
+    This table is a review/outbox ledger, never an alternate Knowledge RAG index.
+    """
+
+    __tablename__ = "knowledge_reviews"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    source_type = Column(String(32), nullable=False)
+    incident_id = Column(UUID(as_uuid=True), nullable=True)
+    memory_id = Column(UUID(as_uuid=True), nullable=True, unique=True)
+    kb_id = Column(Integer, nullable=False)
+    scope = Column(JSON, nullable=False)
+    title = Column(String(500), nullable=False)
+    content = Column(Text, nullable=False)
+    content_hash = Column(String(64), nullable=False)
+    revision = Column(Integer, nullable=False, default=1)
+    status = Column(String(32), nullable=False, default="pending_review")
+    created_by = Column(String(255), nullable=False)
+    reviewed_by = Column(String(255), nullable=True)
+    review_reason = Column(Text, nullable=True)
+    approved_hash = Column(String(64), nullable=True)
+    approved_revision = Column(Integer, nullable=True)
+    cognia_knowledge_id = Column(Integer, nullable=True)
+    cognia_revision_id = Column(Integer, nullable=True)
+    published_at = Column(DateTime(timezone=True), nullable=True)
+    submitted_at = Column(DateTime(timezone=True), nullable=True)
+    publish_attempted_at = Column(DateTime(timezone=True), nullable=True)
+    publish_error_code = Column(String(100), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+
