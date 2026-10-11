@@ -3,7 +3,7 @@
 > این فایل فهرست فایل‌به‌فایل repository است. توضیح معماری و flow در `CODEBASE_GUIDE_FA.md` آمده است.
 > این فایل با `scripts/generate_file_index_fa.py` ساخته و در CI کنترل می‌شود.
 
-**تعداد فایل‌های track‌شده و پوشش‌داده‌شده: 518**
+**تعداد فایل‌های track‌شده و پوشش‌داده‌شده: 521**
 
 | Path | Type | Purpose | Called By | Calls/Depends On | Runtime/Test/Docs | Notes |
 |---|---|---|---|---|---|---|
@@ -235,6 +235,7 @@
 | `docs/ELASTIC_ANOMALY_INGESTION.md` | Docs | مستند معماری/عملیات/وضعیت پروژه | تیم | کد و MASTER | Docs | SSoT نیست مگر MASTER root |
 | `docs/FILE_INDEX_FA.md` | Docs | مستند معماری/عملیات/وضعیت پروژه | تیم | کد و MASTER | Docs | SSoT نیست مگر MASTER root |
 | `docs/INCIDENT_DECISION_BRIEF.md` | Docs | مستند معماری/عملیات/وضعیت پروژه | تیم | کد و MASTER | Docs | SSoT نیست مگر MASTER root |
+| `docs/INCIDENT_DECISION_BRIEF_ACCEPTANCE_AUDIT_FA.md` | Docs | مستند معماری/عملیات/وضعیت پروژه | تیم | کد و MASTER | Docs | SSoT نیست مگر MASTER root |
 | `docs/INCIDENT_TIMELINE_LOGGING.md` | Docs | مستند معماری/عملیات/وضعیت پروژه | تیم | کد و MASTER | Docs | SSoT نیست مگر MASTER root |
 | `docs/KNOWLEDGE_REVIEW.md` | Docs | مستند معماری/عملیات/وضعیت پروژه | تیم | کد و MASTER | Docs | SSoT نیست مگر MASTER root |
 | `docs/LOGGING.md` | Docs | مستند معماری/عملیات/وضعیت پروژه | تیم | کد و MASTER | Docs | SSoT نیست مگر MASTER root |
@@ -429,7 +430,9 @@
 | `tests/unit/test_dashboard_persian_translation_flow.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_dashboard_recommendation_language.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_database_reliability_engine.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
+| `tests/unit/test_decision_approval_snapshot_binding.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_decision_brief.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
+| `tests/unit/test_decision_brief_browser_runtime.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_decision_brief_narrative.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_dependency_causal_engine.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_dependency_contract.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
