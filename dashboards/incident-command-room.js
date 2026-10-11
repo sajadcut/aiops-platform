@@ -168,7 +168,20 @@
   const labels = {pending:'pending',approved:'approved',rejected:'rejected',consumed:'consumed',failed:'failed',success:'success',
     resolved:'resolved',fresh:'fresh',mixed:'mixed',stale:'stale',not_verified:'not_verified',drift_detected:'drift_detected',
     matched_at_read:'matched_at_read',not_pending:'not_pending',unavailable:'unavailable'};
-  const status = x => {const k=low(x);return vocabulary[state.language][labels[k]] || value(x);};
+  const operationStatesFA = {
+    critical:'بحرانی',high:'زیاد',medium:'متوسط',low:'کم',open:'باز',analyzing:'در حال تحلیل',
+    escalated:'ارجاع‌شده',closed:'بسته‌شده',hypothesis:'فرضیه',confirmed:'تأییدشده',
+    not_requested:'درخواست نشده',not_executed:'اجرا نشده',not_recorded:'ثبت نشده',
+    partial:'ناقص',inconclusive:'نامطمئن',queried:'پرس‌وجو انجام شده',not_queried:'پرس‌وجو نشده',
+    cited_by_agent:'مورد استناد Agent',skipped:'اجرا نشده',error:'خطا',unknown:'نامشخص',
+    unavailable:'در دسترس نیست',legacy_unbound:'بدون اتصال Snapshot',blocked:'مسدود',completed:'تکمیل شده',
+    human_review_required:'نیازمند بررسی انسانی',new_approval_required:'نیازمند تأیید جدید'
+  };
+  const status = x => {
+    const k=low(x);
+    return (state.language==='fa' && operationStatesFA[k]) ||
+      vocabulary[state.language][labels[k]] || value(x);
+  };
   const pill = x => '<span class="ic-status" data-tone="' + tone(x) + '">' + esc(status(x)) + '</span>';
   const empty = message => '<p class="ic-empty">' + esc(message || tr('none')) + '</p>';
   const refs = values => arr(values).length ? '<div class="ic-ref-list">' + arr(values).map(x => '<code dir="ltr">' + txt(x) + '</code>').join('') + '</div>' : '';
@@ -476,6 +489,27 @@
   function bind(){
     document.querySelectorAll('[data-lang]').forEach(el=>el.addEventListener('click',()=>setLang(el.dataset.lang)));
     $('#ic-theme').addEventListener('click',()=>{const theme=document.documentElement.dataset.theme==='light'?'dark':'light';document.documentElement.dataset.theme=theme;try{localStorage.setItem('aiops.chatbot.theme',theme);}catch(_){}});
+    $('#ic-copy').addEventListener('click',async()=>{
+      const r=state.historic||state.report;
+      if(!r)return;
+      const i=r.incident_summary||{},a=r.approval_readiness||{},x=r.remediation_recommendation||{};
+      const summary=[
+        tr('service')+': '+value(i.service),
+        tr('status')+': '+status(i.status),
+        tr('cause')+': '+value(i.likely_cause),
+        tr('action')+': '+value(x.action),
+        tr('tool')+': '+value(x.tool),
+        tr('target')+': '+value(x.target),
+        tr('risk')+': '+status(x.risk_level),
+        tr('approval')+': '+status(a.approval_status),
+        tr('freshness')+': '+status(r.data_freshness),
+        'Incident ID: '+incidentId,
+        'Snapshot: '+r.snapshot_id,
+        tr('refs')+': '+arr(r.source_references).join(', ')
+      ].join('\n');
+      try{await navigator.clipboard.writeText(summary);notify(tr('copied'));}
+      catch(_){notify(tr('failure'),true);}
+    });
     $('#ic-refresh').addEventListener('click',()=>{state.reviewedSnapshot=null;void load();});
     $('#ic-connect').addEventListener('click',()=>{state.key=$('#ic-key').value.trim();try{localStorage.setItem('aiops_api_key',state.key);}catch(_){}void load();});
     $('#ic-key').addEventListener('keydown',e=>{if(e.key==='Enter')$('#ic-connect').click();});
