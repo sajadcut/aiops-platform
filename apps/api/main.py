@@ -75,6 +75,38 @@ for _path, (_endpoint, _methods, _dependencies) in _MASTER_API_ROUTES.items():
         app.add_api_route(_path, _endpoint, methods=_methods, dependencies=_dependencies)
 
 _DASHBOARD_DIR = Path(__file__).resolve().parents[2] / "dashboards"
+_FONT_DIR = Path(__file__).resolve().parents[2] / "font"
+_APPROVED_FONT_NAMES = frozenset(
+    f"IRANSansX{weight}.ttf"
+    for weight in (
+        "Thin", "UltraLight", "Light", "Regular", "Medium",
+        "DemiBold", "Bold", "ExtraBold", "Black",
+    )
+)
+
+
+@app.get("/dashboard/fonts.css", include_in_schema=False)
+async def dashboard_font_stylesheet():
+    """Shared font definitions for dashboard, chatbot and incident room."""
+    return FileResponse(_DASHBOARD_DIR / "fonts.css", media_type="text/css")
+
+
+@app.get("/assets/fonts/{filename}", include_in_schema=False)
+async def approved_ui_font(filename: str):
+    """Serve only explicitly allowlisted local font assets (no directory browse)."""
+    from fastapi import HTTPException
+
+    if filename not in _APPROVED_FONT_NAMES:
+        raise HTTPException(status_code=404, detail="Font not found")
+    path = _FONT_DIR / filename
+    if path.is_symlink() or not path.is_file():
+        # Font binaries are provided separately by the license holder.
+        raise HTTPException(status_code=404, detail="Font unavailable")
+    return FileResponse(
+        path,
+        media_type="font/ttf",
+        headers={"Cache-Control": "public, max-age=3600", "X-Content-Type-Options": "nosniff"},
+    )
 
 
 @app.get("/")
