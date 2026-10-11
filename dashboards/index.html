@@ -20,6 +20,7 @@
   </script>
   <link rel="stylesheet" href="/dashboard/control-center.css">
   <link rel="stylesheet" href="/dashboard/approval-actions.css">
+  <link rel="stylesheet" href="/dashboard/knowledge-review.css">
 </head>
 <body>
 <div class="app-shell">
@@ -32,6 +33,7 @@
       <button data-view="services" onclick="setView('services')"><span>▦</span>Services</button>
       <button data-view="agents" onclick="setView('agents')"><span>◎</span>Agents & RCA</button>
       <button data-view="mcp" onclick="setView('mcp')"><span>◇</span>MCP Fabric</button>
+      <button data-view="knowledge" onclick="setView('knowledge')"><span>▤</span>Knowledge Review</button>
       <button data-view="audit" onclick="setView('audit')"><span>▣</span>Audit & Governance</button>
     </nav>
     <div class="sidebar-spacer"></div>
@@ -126,6 +128,27 @@
       <div id="mcpGrid" class="mcp-grid"></div>
     </section>
 
+    <section class="view" data-view="knowledge">
+      <div class="policy-banner"><div><span class="section-kicker">Cognia governed knowledge</span><h2>Knowledge Review</h2><p>Verified incident experiences and manual runbooks remain drafts until approved. Knowledge approval never authorizes operational execution.</p></div><div class="policy-chips"><span>Pending Review</span><span>Evidence first</span><span>Human approval</span><span>Cognia KB #1</span></div></div>
+      <div class="knowledge-layout">
+        <section class="panel">
+          <div class="panel-head"><div><span class="section-kicker">Review queue</span><h2>Pending Knowledge <span id="knowledgePendingCount" class="pill">—</span></h2></div><button type="button" class="approval-btn" onclick="loadKnowledgeReviews()">Refresh</button></div>
+          <div class="knowledge-source"><label for="knowledgeMemoryId">Verified Operational Memory ID</label><div class="knowledge-inline"><input id="knowledgeMemoryId" placeholder="Memory UUID"><button type="button" onclick="createKnowledgeFromMemory()">Create draft</button></div></div>
+          <div id="knowledgeReviewQueue" class="knowledge-queue"><div class="empty-state">The review queue will load here.</div></div>
+        </section>
+        <section class="panel knowledge-editor">
+          <div class="panel-head"><div><span class="section-kicker">Human approval boundary</span><h2 id="knowledgeReviewHeading">Select a candidate</h2></div><span class="pill amber" id="knowledgeReviewStatus">No selection</span></div>
+          <div id="knowledgeReviewDetails" class="knowledge-review-details"><div class="empty-state">Select a draft and review its source, evidence and exact content.</div></div>
+          <div class="knowledge-manual">
+            <h3>Manual Knowledge / Runbook</h3><p class="muted">Creates a draft only. Human approval is required to publish.</p>
+            <label for="knowledgeManualTitle">Title</label><input id="knowledgeManualTitle" maxlength="500" placeholder="Runbook title">
+            <label for="knowledgeManualContent">Knowledge</label><textarea id="knowledgeManualContent" rows="4" maxlength="1048576" placeholder="Validated operational knowledge"></textarea>
+            <button type="button" onclick="createManualKnowledgeDraft()">Create manual draft</button>
+          </div>
+        </section>
+      </div>
+    </section>
+
     <section class="view" data-view="audit">
       <div class="audit-layout"><section class="panel"><div class="panel-head"><div><span class="section-kicker">Durable history</span><h2>Audit Timeline</h2></div><span class="badge neutral">PostgreSQL</span></div><div id="auditList" class="timeline"></div></section><aside class="panel governance-panel"><div class="panel-head"><div><span class="section-kicker">Invariants</span><h2>Governance Controls</h2></div></div><div class="governance-list">
         <div><span>01</span><p><b>LLM is not authority</b><small>Policy and human approval authorize operational writes.</small></p></div>
@@ -142,6 +165,7 @@
 <div id="toast" class="toast"></div>
 <script src="/dashboard/control-center.js"></script>
 <script src="/dashboard/approval-actions.js"></script>
+<script src="/dashboard/knowledge-review.js"></script>
 <script>
 (() => {
   const baseRenderOverviewForIncidentTime = window.renderOverview;
