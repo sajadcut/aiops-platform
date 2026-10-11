@@ -3,6 +3,8 @@ from __future__ import annotations
 from contextvars import ContextVar, Token
 from typing import Any, Dict, Optional
 
+from integrations.zabbix.webhook_contract import clean_zabbix_value, zabbix_tags
+
 
 _CURRENT_VM_TARGET: ContextVar[Optional[str]] = ContextVar(
     "aiops_current_vm_target",
@@ -20,48 +22,31 @@ def _clean(value: Any) -> Optional[str]:
 
 
 def target_from_zabbix_payload(payload: Dict[str, Any]) -> Optional[str]:
-    """Resolve a VM endpoint without conflating it with the service name."""
-    for key in ("target_ip", "interface_ip", "ip"):
-        value = _clean(payload.get(key))
-        if value:
-            return value
+    """Only the explicit target_ip field/tag may select a VM MCP target.
 
-    host = payload.get("host")
-    if isinstance(host, dict):
-        for key in ("target_ip", "interface_ip", "ip"):
-            value = _clean(host.get(key))
-            if value:
-                return value
-        interfaces = host.get("interfaces") or []
-        if isinstance(interfaces, list):
-            for interface in interfaces:
-                if not isinstance(interface, dict):
-                    continue
-                value = _clean(interface.get("ip"))
-                if value:
-                    return value
-        for key in ("host", "name", "hostname"):
-            value = _clean(host.get(key))
-            if value:
-                return value
-
-    return _clean(payload.get("hostname")) or _clean(host)
+    The v1.1 team guide explicitly forbids deriving an execution target from
+    HOST.IP, HOST.HOST or free-form trigger/service text.
+    """
+    target = clean_zabbix_value(payload.get("target_ip"))
+    if target:
+        return target
+    for item in zabbix_tags(payload.get("tags")):
+        if item["tag"] == "target_ip" and item["value"]:
+            return item["value"]
+    return None
 
 
 def target_port_from_zabbix_payload(payload: Dict[str, Any]) -> Optional[int]:
-    """Return only an explicitly supplied TCP target port.
-
-    Parsing a port from free-form trigger text would make the execution target
-    dependent on untrusted prose. The webhook's normalized ``target_port`` is
-    therefore the authoritative source.
-    """
-    raw = payload.get("target_port")
-    if raw in (None, ""):
+    """Only a valid explicit target_port field/tag is accepted."""
+    value = clean_zabbix_value(payload.get("target_port"))
+    if not value:
+        for item in zabbix_tags(payload.get("tags")):
+            if item["tag"] == "target_port":
+                value = item["value"]
+                break
+    if not value.isascii() or not value.isdecimal():
         return None
-    try:
-        port = int(raw)
-    except (TypeError, ValueError):
-        return None
+    port = int(value)
     return port if 1 <= port <= 65535 else None
 
 
