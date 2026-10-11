@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 416 | Dashboard JS files scanned: 6 | Symbols indexed: 3823**
+**Python files scanned: 417 | Dashboard JS files scanned: 6 | Symbols indexed: 3824**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -2765,6 +2765,7 @@
 | `tests/unit/test_dashboard_control_center.py` | `test_legacy_agent_url_has_compatibility_redirect_only` | 55 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_dashboard_javascript_syntax.py` | `_check_javascript` | 12 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_dashboard_javascript_syntax.py` | `test_dashboard_javascript_syntax` | 19 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_dashboard_persian_translation_flow.py` | `test_persian_tab_fetches_translation_only_once_and_ignores_stale_incident` | 11 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_dashboard_recommendation_language.py` | `test_dashboard_recommendation_has_accessible_bilingual_controls` | 12 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_dashboard_recommendation_language.py` | `test_dashboard_recommendation_switches_between_persian_and_english_without_api_calls` | 26 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_database_reliability_engine.py` | `metric` | 11 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
