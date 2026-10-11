@@ -407,3 +407,38 @@ async def test_candidate_revision_conflict_is_not_blindly_retried(monkeypatch):
 def test_machine_client_does_not_expose_human_approval_decisions():
     assert not hasattr(CogniaClient, "approve_revision")
     assert not hasattr(CogniaClient, "reject_revision")
+
+
+@pytest.mark.asyncio
+async def test_machine_token_redirect_is_rejected_without_replaying_credentials(monkeypatch):
+    """Cognia may redirect HTTP to HTTPS; the client must not forward secrets."""
+    monkeypatch.setattr(settings, "RETRY_MAX_ATTEMPTS", 3)
+    destinations = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        destinations.append(str(request.url))
+        assert request.url.scheme == "http"
+        assert request.url.path == "/api/access/client-auth/token"
+        assert json.loads(request.content) == {
+            "clientId": "test-machine", "clientSecret": "private-test-value"
+        }
+        return httpx.Response(
+            301,
+            headers={"Location": "https://redirected.example/api/access/client-auth/token"},
+        )
+
+    async with CogniaClient(
+        base_url="http://cognia.test",
+        client_id="test-machine",
+        client_secret="private-test-value",
+        transport=httpx.MockTransport(handler),
+    ) as client:
+        with pytest.raises(CogniaAPIError) as caught:
+            await client.verify_machine_auth()
+
+    assert caught.value.status_code == 301
+    assert caught.value.code == "COGNIA_REDIRECT_REJECTED"
+    assert len(destinations) == 1
+    assert all(url.startswith("http://cognia.test/") for url in destinations)
+    assert "redirected.example" not in str(caught.value)
+    assert "private-test-value" not in str(caught.value)
