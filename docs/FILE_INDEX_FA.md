@@ -3,7 +3,7 @@
 > این فایل فهرست فایل‌به‌فایل repository است. توضیح معماری و flow در `CODEBASE_GUIDE_FA.md` آمده است.
 > این فایل با `scripts/generate_file_index_fa.py` ساخته و در CI کنترل می‌شود.
 
-**تعداد فایل‌های track‌شده و پوشش‌داده‌شده: 487**
+**تعداد فایل‌های track‌شده و پوشش‌داده‌شده: 491**
 
 | Path | Type | Purpose | Called By | Calls/Depends On | Runtime/Test/Docs | Notes |
 |---|---|---|---|---|---|---|
@@ -168,6 +168,7 @@
 | `apps/signal_gateway/correlation.py` | Python | Signal: ورود، normalization، correlation و dedupe سیگنال | API/webhooks | incident repository/context | Runtime | ابتدای Incident flow |
 | `apps/signal_gateway/elastic_anomaly.py` | Python | Signal: ورود، normalization، correlation و dedupe سیگنال | API/webhooks | incident repository/context | Runtime | ابتدای Incident flow |
 | `apps/signal_gateway/prometheus_alertmanager.py` | Python | Signal: ورود، normalization، correlation و dedupe سیگنال | API/webhooks | incident repository/context | Runtime | ابتدای Incident flow |
+| `apps/signal_gateway/zabbix_contract.py` | Python | Signal: ورود، normalization، correlation و dedupe سیگنال | API/webhooks | incident repository/context | Runtime | ابتدای Incident flow |
 | `apps/signal_gateway/zabbix_lifecycle.py` | Python | Signal: ورود، normalization، correlation و dedupe سیگنال | API/webhooks | incident repository/context | Runtime | ابتدای Incident flow |
 | `apps/verification_service/__init__.py` | Python | Verify: Verification مستقل پس از remediation | Workflow/execution | live evidence/audit | Runtime | tool success برابر recovery نیست |
 | `dashboards/__init__.py` | Python | package marker dashboard | Python | — | Tooling | رفتار مستقل ندارد |
@@ -320,6 +321,9 @@
 | `scripts/repair_legacy_audit_timestamp.py` | Python | ابزار maintenance/validation/seed/build | Developer/CI | repo/database | Tooling | مسیر اپراتوری کمکی |
 | `scripts/trace_incident_logs.py` | Python | ابزار maintenance/validation/seed/build | Developer/CI | repo/database | Tooling | مسیر اپراتوری کمکی |
 | `scripts/verify_operational_memory.py` | Python | ابزار maintenance/validation/seed/build | Developer/CI | repo/database | Tooling | مسیر اپراتوری کمکی |
+| `start-all.local.ps1.example` | File | فایل پروژه | — | — | Other |  |
+| `start-all.ps1` | File | فایل پروژه | — | — | Other |  |
+| `stop-all.ps1` | File | فایل پروژه | — | — | Other |  |
 | `tests/__init__.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/integration/test_approval_store_db.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/integration/test_chatbot_db_acceptance.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
