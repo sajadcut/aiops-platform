@@ -59,6 +59,7 @@ def test_verified_incident_can_be_drafted_but_hypothetical_cause_never_becomes_f
     {"actual_remediation": {"action": "restart_service", "execution_success": False}},
     {"actual_remediation": {"execution_success": True}},
     {"lifecycle_status": "invalidated"},
+    {"evidence_provenance": {"evidence_count": 0}},
     {"incident_id": None},
 ])
 def test_unverified_or_negative_experience_cannot_be_mislabeled_as_success(change):
