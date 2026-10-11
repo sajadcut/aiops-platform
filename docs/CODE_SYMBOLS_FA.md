@@ -1670,23 +1670,23 @@
 | `integrations/cognia/client.py` | `CogniaClient._problem_from_response` | 93 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaClient |
 | `integrations/cognia/client.py` | `CogniaClient._json_object` | 106 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaClient |
 | `integrations/cognia/client.py` | `CogniaClient._request_json` | 115 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaClient |
-| `integrations/cognia/client.py` | `CogniaClient._invalidate_token` | 158 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaClient |
-| `integrations/cognia/client.py` | `CogniaClient._machine_access_token` | 162 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaClient |
-| `integrations/cognia/client.py` | `CogniaClient._authorized_json` | 193 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaClient |
-| `integrations/cognia/client.py` | `CogniaClient.verify_machine_auth` | 222 | async method | Verify Client Application authentication without returning/logging the token. | CogniaClient |
-| `integrations/cognia/client.py` | `CogniaClient.get_knowledge_base` | 226 | async method | Read one KB with the Machine Client identity; never mutate its policy. | CogniaClient |
-| `integrations/cognia/client.py` | `CogniaClient.health_check` | 242 | async method | Probe Cognia's documented readiness endpoint without exposing credentials. | CogniaClient |
-| `integrations/cognia/client.py` | `CogniaClient.list_knowledge_bases` | 250 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | CogniaClient |
-| `integrations/cognia/client.py` | `CogniaClient._assert_own_client_application` | 261 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaClient |
-| `integrations/cognia/client.py` | `CogniaClient._normalize_scope_context` | 271 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaClient |
-| `integrations/cognia/client.py` | `CogniaClient._normalize_knowledge_scope` | 285 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaClient |
-| `integrations/cognia/client.py` | `CogniaClient._validate_revision_payload` | 307 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaClient |
-| `integrations/cognia/client.py` | `CogniaClient.register_knowledge` | 331 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaClient |
-| `integrations/cognia/client.py` | `CogniaClient.get_knowledge_detail` | 374 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | CogniaClient |
-| `integrations/cognia/client.py` | `CogniaClient.create_revision` | 380 | async method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | CogniaClient |
-| `integrations/cognia/client.py` | `CogniaClient.get_processing_status` | 426 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | CogniaClient |
-| `integrations/cognia/client.py` | `CogniaClient.search` | 434 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | CogniaClient |
-| `integrations/cognia/client.py` | `CogniaClient.generate_context` | 479 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaClient |
+| `integrations/cognia/client.py` | `CogniaClient._invalidate_token` | 165 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaClient |
+| `integrations/cognia/client.py` | `CogniaClient._machine_access_token` | 169 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaClient |
+| `integrations/cognia/client.py` | `CogniaClient._authorized_json` | 200 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaClient |
+| `integrations/cognia/client.py` | `CogniaClient.verify_machine_auth` | 229 | async method | Verify Client Application authentication without returning/logging the token. | CogniaClient |
+| `integrations/cognia/client.py` | `CogniaClient.get_knowledge_base` | 233 | async method | Read one KB with the Machine Client identity; never mutate its policy. | CogniaClient |
+| `integrations/cognia/client.py` | `CogniaClient.health_check` | 249 | async method | Probe Cognia's documented readiness endpoint without exposing credentials. | CogniaClient |
+| `integrations/cognia/client.py` | `CogniaClient.list_knowledge_bases` | 257 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | CogniaClient |
+| `integrations/cognia/client.py` | `CogniaClient._assert_own_client_application` | 268 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaClient |
+| `integrations/cognia/client.py` | `CogniaClient._normalize_scope_context` | 278 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaClient |
+| `integrations/cognia/client.py` | `CogniaClient._normalize_knowledge_scope` | 292 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaClient |
+| `integrations/cognia/client.py` | `CogniaClient._validate_revision_payload` | 314 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaClient |
+| `integrations/cognia/client.py` | `CogniaClient.register_knowledge` | 338 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaClient |
+| `integrations/cognia/client.py` | `CogniaClient.get_knowledge_detail` | 381 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | CogniaClient |
+| `integrations/cognia/client.py` | `CogniaClient.create_revision` | 387 | async method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | CogniaClient |
+| `integrations/cognia/client.py` | `CogniaClient.get_processing_status` | 433 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | CogniaClient |
+| `integrations/cognia/client.py` | `CogniaClient.search` | 441 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | CogniaClient |
+| `integrations/cognia/client.py` | `CogniaClient.generate_context` | 486 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaClient |
 | `integrations/elasticsearch/client.py` | `ElasticsearchClient` | 10 | class | Production connector for operational log evidence and ECS asset metadata. | module |
 | `integrations/elasticsearch/client.py` | `ElasticsearchClient.__init__` | 18 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ElasticsearchClient |
 | `integrations/elasticsearch/client.py` | `ElasticsearchClient.source_name` | 26 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ElasticsearchClient |
