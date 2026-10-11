@@ -14,6 +14,7 @@ from apps.orchestrator.signal_aware import SignalAwareE2EOrchestrator
 from apps.orchestrator.workflow_store import WorkflowCheckpointStore
 from apps.rag_service import KnowledgeRAGService
 from apps.signal_gateway.correlation import build_correlation_identity
+from apps.signal_gateway.zabbix_contract import normalize_zabbix_payload, zabbix_event_time, zabbix_tags
 from domain.contracts.config import settings
 from domain.contracts.logging import logger
 
@@ -356,40 +357,42 @@ def signal_from_prometheus(payload: Dict[str, Any]) -> OperationalSignal:
 
 
 def _zabbix_service_from_tags(payload: Dict[str, Any]) -> Optional[str]:
-    candidates = []
-    raw_tags = payload.get("tags") or []
-    if isinstance(raw_tags, list):
-        candidates.extend(raw_tags)
+    candidates = zabbix_tags(payload.get("tags"))
     host = payload.get("host")
-    if isinstance(host, dict) and isinstance(host.get("tags"), list):
-        candidates.extend(host.get("tags") or [])
+    if isinstance(host, dict):
+        candidates.extend(zabbix_tags(host.get("tags")))
     for item in candidates:
-        if not isinstance(item, dict):
-            continue
-        key = str(item.get("tag") or item.get("key") or "").strip().lower()
-        if key in {"service", "service_name", "app"}:
-            value = str(item.get("value") or "").strip()
-            if value:
-                return value
+        if item["tag"] in {"service", "service_name", "app"} and item["value"]:
+            return item["value"]
     return None
 
 
 def signal_from_zabbix(payload: Dict[str, Any]) -> OperationalSignal:
-    raw = dict(payload)
-    host_value = payload.get("host") or payload.get("hostname")
+    # The Zabbix Team Guide v1.1 emits a flat JSON payload with a separate
+    # tags array. Keep all original fields for Evidence; normalize only the
+    # identity data that is explicitly supplied by the Webhook.
+    normalized = normalize_zabbix_payload(payload)
+    raw = dict(normalized)
+    host_value = normalized.get("host") or normalized.get("hostname")
     if host_value and not isinstance(host_value, dict):
-        raw["host"] = {"host": str(host_value), "name": str(host_value)}
-    # A Zabbix Web Scenario Host can be a logical monitoring container rather
-    # than the runtime service. Treat it as hostname metadata, not service
-    # identity, unless an explicit service field/tag exists.
-    service = payload.get("service") or _zabbix_service_from_tags(payload)
-    return OperationalSignal(
-        source="zabbix",
-        source_id=str(payload.get("eventid") or payload.get("event_id") or payload.get("id") or uuid4()),
-        signal_type=str(payload.get("trigger") or payload.get("name") or "zabbix_problem"),
-        severity=str(payload.get("severity") or "unknown"),
-        summary=str(payload.get("name") or payload.get("message") or "Zabbix problem detected"),
-        service=str(service) if service else None,
-        correlation_key=payload.get("correlation_key") or payload.get("incident_key"),
-        raw_data=raw,
-    )
+        raw["host"] = {
+            "host": str(host_value),
+            "name": str(normalized.get("host_name") or host_value),
+            "hostid": str(normalized.get("hostid") or ""),
+        }
+    # A Web Scenario monitoring host is not the monitored service.
+    service = normalized.get("service") or _zabbix_service_from_tags(normalized)
+    event_time = zabbix_event_time(normalized.get("timestamp"))
+    args = {
+        "source": "zabbix",
+        "source_id": str(normalized["eventid"]),
+        "signal_type": str(normalized.get("trigger") or normalized.get("name") or "zabbix_problem"),
+        "severity": str(normalized.get("severity") or "unknown"),
+        "summary": str(normalized.get("name") or normalized.get("message") or "Zabbix problem detected"),
+        "service": str(service) if service else None,
+        "correlation_key": normalized.get("correlation_key") or normalized.get("incident_key"),
+        "raw_data": raw,
+    }
+    if event_time is not None:
+        args["timestamp"] = event_time
+    return OperationalSignal(**args)
