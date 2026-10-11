@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 406 | Dashboard JS files scanned: 5 | Symbols indexed: 3717**
+**Python files scanned: 406 | Dashboard JS files scanned: 5 | Symbols indexed: 3727**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -3621,6 +3621,16 @@
 | `tests/unit/test_vm_systemd_auto_diagnostics.py` | `test_failed_service_automatically_collects_journal_without_llm_or_external_mcp` | 185 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_vm_systemd_auto_diagnostics.py` | `test_healthy_service_does_not_automatically_query_journal` | 212 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_vm_systemd_auto_diagnostics.py` | `test_journal_permission_failure_survives_as_explicit_source_observation` | 226 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_systemd_auto_diagnostics.py` | `test_zabbix_explicit_vm_target_is_diagnosed_before_unhealthy_optional_providers` | 244 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_systemd_auto_diagnostics.py` | `test_zabbix_explicit_vm_target_is_diagnosed_before_unhealthy_optional_providers.FastVM` | 246 | class | کلاس | test_zabbix_explicit_vm_target_is_diagnosed_before_unhealthy_optional_providers |
+| `tests/unit/test_vm_systemd_auto_diagnostics.py` | `test_zabbix_explicit_vm_target_is_diagnosed_before_unhealthy_optional_providers.FastVM.service_status` | 247 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_zabbix_explicit_vm_target_is_diagnosed_before_unhealthy_optional_providers.FastVM |
+| `tests/unit/test_vm_systemd_auto_diagnostics.py` | `test_zabbix_explicit_vm_target_is_diagnosed_before_unhealthy_optional_providers.FastVM.service_logs` | 250 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_zabbix_explicit_vm_target_is_diagnosed_before_unhealthy_optional_providers.FastVM |
+| `tests/unit/test_vm_systemd_auto_diagnostics.py` | `test_zabbix_explicit_vm_target_is_diagnosed_before_unhealthy_optional_providers.UnavailableZabbix` | 254 | class | کلاس | test_zabbix_explicit_vm_target_is_diagnosed_before_unhealthy_optional_providers |
+| `tests/unit/test_vm_systemd_auto_diagnostics.py` | `test_zabbix_explicit_vm_target_is_diagnosed_before_unhealthy_optional_providers.UnavailableZabbix.health_check` | 255 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_zabbix_explicit_vm_target_is_diagnosed_before_unhealthy_optional_providers.UnavailableZabbix |
+| `tests/unit/test_vm_systemd_auto_diagnostics.py` | `test_zabbix_explicit_vm_target_is_diagnosed_before_unhealthy_optional_providers.UnavailablePrometheus` | 259 | class | کلاس | test_zabbix_explicit_vm_target_is_diagnosed_before_unhealthy_optional_providers |
+| `tests/unit/test_vm_systemd_auto_diagnostics.py` | `test_zabbix_explicit_vm_target_is_diagnosed_before_unhealthy_optional_providers.UnavailablePrometheus.health_check` | 260 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_zabbix_explicit_vm_target_is_diagnosed_before_unhealthy_optional_providers.UnavailablePrometheus |
+| `tests/unit/test_vm_systemd_auto_diagnostics.py` | `test_zabbix_explicit_vm_target_is_diagnosed_before_unhealthy_optional_providers.UnavailableElastic` | 264 | class | کلاس | test_zabbix_explicit_vm_target_is_diagnosed_before_unhealthy_optional_providers |
+| `tests/unit/test_vm_systemd_auto_diagnostics.py` | `test_zabbix_explicit_vm_target_is_diagnosed_before_unhealthy_optional_providers.UnavailableElastic.health_check` | 265 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_zabbix_explicit_vm_target_is_diagnosed_before_unhealthy_optional_providers.UnavailableElastic |
 | `tests/unit/test_vm_target_resolution.py` | `_RecordingVM` | 13 | class | کلاس | module |
 | `tests/unit/test_vm_target_resolution.py` | `_RecordingVM.__init__` | 14 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _RecordingVM |
 | `tests/unit/test_vm_target_resolution.py` | `_RecordingVM.collect_vm_metrics` | 17 | async method | Evidence/داده موردنیاز را از منبع مربوط جمع می‌کند | _RecordingVM |
