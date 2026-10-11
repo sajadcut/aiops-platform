@@ -3,7 +3,7 @@
 > این فایل فهرست فایل‌به‌فایل repository است. توضیح معماری و flow در `CODEBASE_GUIDE_FA.md` آمده است.
 > این فایل با `scripts/generate_file_index_fa.py` ساخته و در CI کنترل می‌شود.
 
-**تعداد فایل‌های track‌شده و پوشش‌داده‌شده: 536**
+**تعداد فایل‌های track‌شده و پوشش‌داده‌شده: 546**
 
 | Path | Type | Purpose | Called By | Calls/Depends On | Runtime/Test/Docs | Notes |
 |---|---|---|---|---|---|---|
@@ -285,6 +285,15 @@
 | `domain/runbook_validation.py` | Python | مدل/Schema/قواعد دامنه AIOps | apps/* | Pydantic/SQLAlchemy | Runtime | مدل مشترک لایه‌ها |
 | `domain/schemas.py` | Python | مدل/Schema/قواعد دامنه AIOps | apps/* | Pydantic/SQLAlchemy | Runtime | مدل مشترک لایه‌ها |
 | `domain/verification_gate.py` | Python | مدل/Schema/قواعد دامنه AIOps | apps/* | Pydantic/SQLAlchemy | Runtime | مدل مشترک لایه‌ها |
+| `font/IRANSansXBlack.ttf` | File | فایل پروژه | — | — | Other |  |
+| `font/IRANSansXBold.ttf` | File | فایل پروژه | — | — | Other |  |
+| `font/IRANSansXDemiBold.ttf` | File | فایل پروژه | — | — | Other |  |
+| `font/IRANSansXExtraBold.ttf` | File | فایل پروژه | — | — | Other |  |
+| `font/IRANSansXLight.ttf` | File | فایل پروژه | — | — | Other |  |
+| `font/IRANSansXMedium.ttf` | File | فایل پروژه | — | — | Other |  |
+| `font/IRANSansXRegular.ttf` | File | فایل پروژه | — | — | Other |  |
+| `font/IRANSansXThin.ttf` | File | فایل پروژه | — | — | Other |  |
+| `font/IRANSansXUltraLight.ttf` | File | فایل پروژه | — | — | Other |  |
 | `font/README.md` | File | فایل پروژه | — | — | Other |  |
 | `integrations/__init__.py` | Python | Adapter provider/read-only integration | MCP server/test helper | external API/.env | Runtime/Helper | Control Plane production ترجیحاً MCP |
 | `integrations/base.py` | Python | Adapter provider/read-only integration | MCP server/test helper | external API/.env | Runtime/Helper | Control Plane production ترجیحاً MCP |
@@ -334,6 +343,7 @@
 | `scripts/__init__.py` | Python | ابزار maintenance/validation/seed/build | Developer/CI | repo/database | Tooling | مسیر اپراتوری کمکی |
 | `scripts/add_memory.py` | Python | ابزار maintenance/validation/seed/build | Developer/CI | repo/database | Tooling | مسیر اپراتوری کمکی |
 | `scripts/backfill_memory_embeddings.py` | Python | ابزار maintenance/validation/seed/build | Developer/CI | repo/database | Tooling | مسیر اپراتوری کمکی |
+| `scripts/check-ui-fonts.ps1` | Python | ابزار maintenance/validation/seed/build | Developer/CI | repo/database | Tooling | مسیر اپراتوری کمکی |
 | `scripts/check_database_migrations.py` | Python | ابزار maintenance/validation/seed/build | Developer/CI | repo/database | Tooling | مسیر اپراتوری کمکی |
 | `scripts/check_python_integrity.py` | Python | ابزار maintenance/validation/seed/build | Developer/CI | repo/database | Tooling | مسیر اپراتوری کمکی |
 | `scripts/cleanup_repository.py` | Python | ابزار maintenance/validation/seed/build | Developer/CI | repo/database | Tooling | مسیر اپراتوری کمکی |

@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 431 | Dashboard JS files scanned: 8 | Symbols indexed: 4032**
+**Python files scanned: 431 | Dashboard JS files scanned: 8 | Symbols indexed: 4033**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -3195,11 +3195,12 @@
 | `tests/unit/test_internal_api_key_role.py` | `test_invalid_internal_api_role_fails_closed` | 15 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_internal_api_key_role.py` | `test_wrong_internal_api_key_is_rejected` | 22 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_iransansx_assets.py` | `test_all_three_main_pages_load_one_shared_font_stylesheet` | 26 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_iransansx_assets.py` | `test_shared_font_stylesheet_declares_nine_weights_and_safe_fallbacks` | 33 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_iransansx_assets.py` | `test_font_http_route_rejects_unknown_paths_and_absent_font` | 50 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_iransansx_assets.py` | `test_font_http_route_serves_only_approved_files` | 58 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_iransansx_assets.py` | `test_symlink_is_never_served_as_font` | 71 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_iransansx_assets.py` | `test_public_repository_publishing_script_requires_redistribution_permission` | 83 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_iransansx_assets.py` | `test_shared_font_stylesheet_declares_nine_weights_and_safe_fallbacks` | 35 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_iransansx_assets.py` | `test_font_http_route_rejects_unknown_paths_and_absent_font` | 52 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_iransansx_assets.py` | `test_font_http_route_serves_only_approved_files` | 60 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_iransansx_assets.py` | `test_symlink_is_never_served_as_font` | 73 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_iransansx_assets.py` | `test_public_repository_publishing_script_requires_redistribution_permission` | 85 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_iransansx_assets.py` | `test_font_diagnostic_checks_real_running_routes_without_mutation` | 96 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_jenkins_mcp_client.py` | `_client` | 14 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_jenkins_mcp_client.py` | `test_official_jenkins_mcp_contract_uses_streamable_http_and_2025_06_18` | 26 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_jenkins_mcp_client.py` | `test_jenkins_headers_use_basic_auth_and_optional_origin` | 42 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
