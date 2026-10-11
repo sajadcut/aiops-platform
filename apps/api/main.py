@@ -9,7 +9,7 @@ from domain.contracts.logging import configure_logging, logger
 from domain.contracts.exceptions import register_exception_handlers
 from domain.contracts.rate_limit import rate_limiter_strict
 
-from apps.api import health, workflow, incidents, a2a, execution, e2e_workflow, audit, runbooks, incident_resources, dashboard, runbook_execution, dashboard_incidents, remediation, agents, signals, chatbot
+from apps.api import health, workflow, incidents, a2a, execution, e2e_workflow, audit, runbooks, incident_resources, dashboard, runbook_execution, dashboard_incidents, remediation, agents, signals, chatbot, knowledge_reviews
 from apps.api.http_logging import HTTPTransactionLoggingMiddleware
 from apps.execution_service.tools.registry import tool_registry
 from apps.execution_service.tools.mock_executor import MockExecutorTool
@@ -43,6 +43,7 @@ for router, tags in [
     (runbooks.router, ["Runbooks"]),
     (runbook_execution.router, ["Runbook Execution"]),
     (incident_resources.router, ["Incident Resources"]),
+    (knowledge_reviews.router, ["Knowledge Review"]),
     (incidents.router, ["Incidents"]),
     (signals.router, ["Signals"]),
     (remediation.router, ["Remediation"]),
@@ -116,6 +117,15 @@ async def dashboard_approval_stylesheet():
 @app.get("/dashboard/approval-actions.js", include_in_schema=False)
 async def dashboard_approval_script():
     return FileResponse(_DASHBOARD_DIR / "approval-actions.js", media_type="application/javascript")
+
+@app.get("/dashboard/knowledge-review.js", include_in_schema=False)
+async def dashboard_knowledge_review_script():
+    return FileResponse(_DASHBOARD_DIR / "knowledge-review.js", media_type="application/javascript")
+
+
+@app.get("/dashboard/knowledge-review.css", include_in_schema=False)
+async def dashboard_knowledge_review_stylesheet():
+    return FileResponse(_DASHBOARD_DIR / "knowledge-review.css", media_type="text/css")
 
 
 # Backward-compatible aliases for browser tabs which loaded the pre-/dashboard
