@@ -27,7 +27,9 @@ def test_all_three_main_pages_load_one_shared_font_stylesheet():
     for url in ("/dashboard", "/chatbot", "/dashboard/incidents/11111111-1111-4111-8111-111111111111"):
         resp = client.get(url)
         assert resp.status_code == 200
-        assert "/dashboard/fonts.css?v=1" in resp.text
+        assert "/dashboard/fonts.css?v=2" in resp.text
+        # The shared font CSS must follow page-specific CSS to avoid stale overrides.
+        assert resp.text.index("/dashboard/fonts.css?v=2") > resp.text.rindex('rel="stylesheet" href="')
 
 
 def test_shared_font_stylesheet_declares_nine_weights_and_safe_fallbacks():
@@ -90,3 +92,13 @@ def test_public_repository_publishing_script_requires_redistribution_permission(
     assert "push --force" not in script
     assert "font/$_" in script
     assert (ROOT / "font" / "README.md").is_file()
+
+def test_font_diagnostic_checks_real_running_routes_without_mutation():
+    script = (ROOT / "scripts" / "check-ui-fonts.ps1").read_text(encoding="utf-8")
+    assert "Invoke-WebRequest" in script
+    assert "/dashboard/fonts.css?v=2" in script
+    assert "IRANSansXRegular.ttf" in script
+    assert "IRANSansXDemiBold.ttf" in script
+    assert "Cache-Control" in script
+    assert "git -C $root ls-files -v" in script
+    assert "git -C $root push" not in script
