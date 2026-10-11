@@ -17,6 +17,7 @@ from apps.knowledge_review import (
 from apps.security.auth import require_permission
 from database import AsyncSessionLocal
 from domain.contracts.config import settings
+from domain.contracts.redaction import redact_text
 from domain.models import KnowledgeReview
 from integrations.cognia import CogniaClient, CogniaAPIError, CogniaContractError, CogniaConfigurationError
 
@@ -161,7 +162,9 @@ async def approve_review(review_id: UUID, payload: ReviewDecisionRequest, actor=
             raise HTTPException(409, "knowledge_content_digest_mismatch")
         row.status = "approved"
         row.reviewed_by = actor.subject
-        row.review_reason = payload.reason
+        if redact_text(payload.reason) != payload.reason:
+            raise HTTPException(422, "knowledge_review_reason_contains_sensitive_material")
+        row.review_reason = payload.reason.strip()
         row.approved_hash = row.content_hash
         row.approved_revision = row.revision
         await _audit(db, row, actor.subject, "approved")
@@ -179,7 +182,9 @@ async def reject_review(review_id: UUID, payload: ReviewDecisionRequest, actor=D
             raise HTTPException(409, "review_not_pending_or_revision_conflict")
         row.status = "rejected"
         row.reviewed_by = actor.subject
-        row.review_reason = payload.reason
+        if redact_text(payload.reason) != payload.reason:
+            raise HTTPException(422, "knowledge_review_reason_contains_sensitive_material")
+        row.review_reason = payload.reason.strip()
         await _audit(db, row, actor.subject, "rejected")
         await db.commit()
         await db.refresh(row)
