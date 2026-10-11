@@ -575,6 +575,20 @@ async def get_incident_decision_brief(incident_id: UUID):
                 if memory_row else None
             ),
         )
+        from apps.approval_service.binding import decision_snapshot_digest
+        from apps.incident_service.repository import IncidentRepository
+
+        approval_metadata = dict(approval_row["metadata"] or {}) if approval_row else {}
+        bound_snapshot = approval_metadata.get("decision_snapshot_digest")
+        if bound_snapshot:
+            current_inventory = await IncidentRepository(db).evidence_inventory_digest(str(incident_id))
+            current_digest = decision_snapshot_digest(
+                checkpoint.get("state") or {}, current_inventory,
+            )
+            snapshot_status = "matched" if current_digest == bound_snapshot else "drift_detected"
+        else:
+            snapshot_status = "legacy_unbound"
+        operator_summary["approval"]["decision_snapshot_status"] = snapshot_status
         memory_id = (operator_summary.get("memory") or {}).get("memory_entry_id")
         latest_review = None
         if memory_id:
