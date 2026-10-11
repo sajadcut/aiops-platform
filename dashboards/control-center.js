@@ -313,8 +313,8 @@ function renderServices() {
 }
 
 function openIncident(id) {
-  setView('incidents');
-  selectIncident(id);
+  // All queue and attention entry points use one unambiguous full-page workflow.
+  window.location.assign('/dashboard/incidents/' + encodeURIComponent(id));
 }
 
 async function selectIncident(id) {
@@ -506,7 +506,7 @@ async function loadAll() {
     renderServices();
     renderMcp();
     renderAudit();
-    if (!S.selected && S.incidents[0] && S.view === 'incidents') selectIncident(S.incidents[0].id);
+    // No implicit selection: operators explicitly open an Incident in its full-page workspace.
   } catch (e) {
     showError(`Live dashboard unavailable: ${e.message}`);
     $('#liveDot').classList.remove('ok');
@@ -538,6 +538,8 @@ window.addEventListener('DOMContentLoaded', () => {
   applyTheme(initialTheme(), {persist: false});
   $('#themeToggle')?.addEventListener('click', toggleTheme);
   if (S.key) $('#apiKey').value = S.key;
+  const requestedView = new URLSearchParams(window.location.search).get('view');
+  if (['incidents', 'knowledge', 'audit', 'services'].includes(requestedView)) setView(requestedView);
   loadAll();
   setInterval(loadAll, 60000);
 });
