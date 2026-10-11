@@ -529,12 +529,17 @@ async def get_incident_decision_brief(incident_id: UUID):
                 .order_by(desc(Finding.created_at)).limit(100)
             )
         ).scalars().all()
-        latest_review = (
-            await db.execute(
-                select(KnowledgeReview).where(KnowledgeReview.incident_id == incident_id)
-                .order_by(desc(KnowledgeReview.created_at)).limit(1)
-            )
-        ).scalars().first()
+        memory_id = (operator_summary.get("memory") or {}).get("memory_entry_id")
+        latest_review = None
+        if memory_id:
+            latest_review = (
+                await db.execute(
+                    select(KnowledgeReview).where(
+                        KnowledgeReview.incident_id == incident_id,
+                        KnowledgeReview.memory_id == UUID(memory_id),
+                    ).order_by(desc(KnowledgeReview.created_at)).limit(1)
+                )
+            ).scalars().first()
 
     return build_decision_brief(
         incident={
