@@ -1617,7 +1617,7 @@
 | `domain/contracts/redaction.py` | `_redact_inline_secret` | 54 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `domain/contracts/redaction.py` | `redact_text` | 58 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `domain/contracts/redaction.py` | `redact` | 68 | function | Recursively redact credentials from structured and free-form values. | module |
-| `domain/contracts/redaction.py` | `redact_event_dict` | 83 | function | structlog processor: scrub the final event, including rendered traceback text. | module |
+| `domain/contracts/redaction.py` | `redact_event_dict` | 95 | function | structlog processor: scrub the final event, including rendered traceback text. | module |
 | `domain/contracts/retry.py` | `RetryError` | 11 | class | کلاس | module |
 | `domain/contracts/retry.py` | `retry_async` | 15 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `domain/contracts/retry.py` | `with_retry` | 53 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
