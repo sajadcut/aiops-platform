@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 415 | Dashboard JS files scanned: 6 | Symbols indexed: 3811**
+**Python files scanned: 416 | Dashboard JS files scanned: 6 | Symbols indexed: 3823**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -3241,6 +3241,18 @@
 | `tests/unit/test_operational_resilience_regressions.py` | `test_total_specialist_failure_still_fails_closed` | 289 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_operational_resilience_regressions.py` | `test_evaluator_rejects_historical_or_unknown_ids_as_live_evidence` | 305 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_operational_resilience_regressions.py` | `test_evaluator_rejects_high_probability_hypothesis_citing_non_live_id` | 346 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_operator_recommendation_translation.py` | `summary_for` | 12 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_operator_recommendation_translation.py` | `test_freeform_english_json_is_never_falsely_labeled_as_persian` | 19 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_operator_recommendation_translation.py` | `test_governed_action_persian_label_is_real_persian_not_english_command` | 31 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_operator_recommendation_translation.py` | `test_native_persian_plan_keeps_language_label_correct` | 45 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_operator_recommendation_translation.py` | `test_llm_translates_full_plan_display_only_using_configured_provider` | 52 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_operator_recommendation_translation.py` | `test_llm_translates_full_plan_display_only_using_configured_provider.Provider` | 64 | class | کلاس | test_llm_translates_full_plan_display_only_using_configured_provider |
+| `tests/unit/test_operator_recommendation_translation.py` | `test_llm_translates_full_plan_display_only_using_configured_provider.Provider.generate_with_messages` | 65 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_llm_translates_full_plan_display_only_using_configured_provider.Provider |
+| `tests/unit/test_operator_recommendation_translation.py` | `test_translation_rejects_missing_targets_or_commands` | 86 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_operator_recommendation_translation.py` | `test_translation_rejects_missing_targets_or_commands.Provider` | 89 | class | کلاس | test_translation_rejects_missing_targets_or_commands |
+| `tests/unit/test_operator_recommendation_translation.py` | `test_translation_rejects_missing_targets_or_commands.Provider.generate_with_messages` | 90 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_translation_rejects_missing_targets_or_commands.Provider |
+| `tests/unit/test_operator_recommendation_translation.py` | `test_translation_fail_closed_when_model_not_configured` | 101 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_operator_recommendation_translation.py` | `test_authenticated_get_route_and_no_execution_authority` | 107 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_operator_summary.py` | `_service_status` | 4 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_operator_summary.py` | `_base_summary` | 23 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_operator_summary.py` | `test_clean_systemd_stop_never_claims_manual_stop_without_direct_evidence` | 40 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
