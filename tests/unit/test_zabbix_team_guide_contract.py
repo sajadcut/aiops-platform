@@ -264,3 +264,172 @@ async def test_api_rejects_missing_source_event_identity_before_calling_db(monke
         await signals_api._ingest_zabbix({"eventid": "{EVENT.ID}"})
     assert exc.value.status_code == 422
     assert exc.value.detail == "zabbix_eventid_required"
+
+
+@pytest.mark.asyncio
+async def test_recovery_without_parent_incident_is_retryable_not_silently_acknowledged(monkeypatch):
+    from fastapi import HTTPException
+    from apps.api import signals as signals_api
+
+    class FakeDB:
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, exc_type, exc, tb):
+            return False
+
+    async def ready(db):
+        return None
+
+    async def unmatched(db, payload):
+        return {
+            "signal_state": "recovery",
+            "recovery_unmatched": True,
+            "terminal_reason": "zabbix_recovery_problem_event_not_found",
+        }
+
+    monkeypatch.setattr(signals_api, "AsyncSessionLocal", FakeDB)
+    monkeypatch.setattr(signals_api, "_require_database_ready", ready)
+    monkeypatch.setattr(signals_api, "ingest_zabbix_payload", unmatched)
+
+    with pytest.raises(HTTPException) as result:
+        await signals_api._ingest_zabbix({
+            "eventid": "501001", "recovery_eventid": "501009",
+            "event_value": "0", "event_status": "RESOLVED",
+        })
+    assert result.value.status_code == 503
+    assert result.value.headers == {"Retry-After": "10"}
+    assert result.value.detail == "zabbix_recovery_problem_event_not_found"
+
+
+@pytest.mark.asyncio
+async def test_recovery_without_recovery_id_is_explicit_contract_error(monkeypatch):
+    from fastapi import HTTPException
+    from apps.api import signals as signals_api
+
+    class FakeDB:
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, exc_type, exc, tb):
+            return False
+
+    async def ready(db):
+        return None
+
+    async def invalid(db, payload):
+        return {
+            "signal_state": "recovery",
+            "recovery_unmatched": True,
+            "terminal_reason": "zabbix_recovery_parent_event_missing",
+        }
+
+    monkeypatch.setattr(signals_api, "AsyncSessionLocal", FakeDB)
+    monkeypatch.setattr(signals_api, "_require_database_ready", ready)
+    monkeypatch.setattr(signals_api, "ingest_zabbix_payload", invalid)
+
+    with pytest.raises(HTTPException) as result:
+        await signals_api._ingest_zabbix({
+            "eventid": "501001", "event_value": "0",
+        })
+    assert result.value.status_code == 422
+    assert result.value.detail == "zabbix_recovery_parent_event_missing"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("asset_tags", "expected_ns", "expected_vm_blocked"),
+    [
+        ({"platform": "kubernetes", "asset_type": "kubernetes_workload", "namespace": "payment"}, "payment", True),
+        ({"platform": "kubernetes", "asset_type": "kubernetes_namespace", "namespace": "cognia"}, "cognia", True),
+        ({"platform": "network", "asset_type": "network", "namespace": "payment"}, None, True),
+        ({"platform": "application", "asset_type": "application", "namespace": "payment"}, None, True),
+    ],
+)
+async def test_non_vm_webhooks_keep_namespace_and_vm_probe_guards_request_scoped(
+    monkeypatch, asset_tags, expected_ns, expected_vm_blocked
+):
+    from apps.api import signals as signals_api
+    from integrations.kubernetes.target_context import current_kubernetes_namespace
+    from integrations.vm.target_context import current_vm_target, vm_probes_blocked
+
+    class FakeDB:
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, exc_type, exc, tb):
+            return False
+
+    async def ready(db):
+        return None
+
+    async def lifecycle(db, payload):
+        assert current_kubernetes_namespace() == expected_ns
+        assert vm_probes_blocked() is expected_vm_blocked
+        assert current_vm_target() is None
+        return {"status": "accepted", "incident_id": "incident-501001"}
+
+    monkeypatch.setattr(signals_api, "AsyncSessionLocal", FakeDB)
+    monkeypatch.setattr(signals_api, "_require_database_ready", ready)
+    monkeypatch.setattr(signals_api, "ingest_zabbix_payload", lifecycle)
+    await signals_api._ingest_zabbix({
+        "eventid": "501001", "event_value": "1",
+        "target_ip": "10.10.0.1", "service": "payment-api",
+        **asset_tags,
+    })
+    assert current_kubernetes_namespace() is None
+    assert vm_probes_blocked() is False
+    assert current_vm_target() is None
+
+
+@pytest.mark.asyncio
+async def test_zabbix_namespace_is_passed_to_kubernetes_mcp_not_global_default(monkeypatch):
+    from integrations.kubernetes.mcp_client import KubernetesMCPClient
+    from domain.contracts.config import settings
+
+    called = []
+
+    async def call_tool(self, name, args):
+        called.append((name, args))
+        return {}
+
+    monkeypatch.setattr(KubernetesMCPClient, "call_tool", call_tool)
+    monkeypatch.setattr(KubernetesMCPClient, "json_content", staticmethod(lambda result: []))
+    monkeypatch.setattr(settings, "KUBERNETES_NAMESPACE", "default")
+    client = object.__new__(KubernetesMCPClient)
+
+    assert await client.collect_evidence("payment-api", namespace="payment") == []
+    assert called == [(
+        "collect_kubernetes_evidence",
+        {"operation": "service_evidence", "namespace": "payment", "service": "payment-api"},
+    )]
+
+    await client.collect_evidence("cognia")
+    assert called[-1][1]["namespace"] == "default"
+
+
+@pytest.mark.asyncio
+async def test_evidence_collector_preserves_zabbix_request_namespace():
+    from apps.context_service.evidence_collector import EvidenceCollector
+    from integrations.kubernetes.target_context import (
+        bind_kubernetes_namespace, reset_kubernetes_namespace
+    )
+
+    class K8s:
+        enabled = True
+
+        def __init__(self):
+            self.queries = []
+
+        async def collect_evidence(self, service, *, namespace=None):
+            self.queries.append((service, namespace))
+            return []
+
+    k8s = K8s()
+    collector = EvidenceCollector(kubernetes=k8s)
+    token = bind_kubernetes_namespace("cognia")
+    try:
+        await collector.collect("cognia", datetime.now(timezone.utc))
+    finally:
+        reset_kubernetes_namespace(token)
+    assert k8s.queries == [("cognia", "cognia")]
