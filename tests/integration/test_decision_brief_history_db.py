@@ -176,3 +176,27 @@ async def test_trigger_serializes_evidence_and_checkpoint_writes_with_incident_l
         assert not checkpoint_task.done(), "checkpoint writer bypassed incident guard lock"
         await blocker.commit()
         await asyncio.wait_for(asyncio.gather(evidence_task, checkpoint_task), timeout=8)
+
+
+async def test_legacy_high_risk_approval_requires_fresh_versioned_approval():
+    from apps.approval_service.postgres import PostgreSQLApprovalStore
+    incident_id, approval_id = uuid4(), str(uuid4())
+    async with AsyncSessionLocal() as db:
+        await db.execute(text("""
+            INSERT INTO incidents(id, source, service, status, severity, summary)
+            VALUES (:id, 'ci', 'legacy-service', 'OPEN', 'high', 'Legacy approval')
+        """), {"id": str(incident_id)})
+        await db.commit()
+        store = PostgreSQLApprovalStore(db)
+        await store.save({
+            "approval_id": approval_id, "incident_id": str(incident_id),
+            "action": "restart_service", "risk_level": "high",
+            "approver": "ci", "status": "pending",
+            "metadata": {"binding_complete": True, "binding_version": 1},
+            "created_at": None, "approved_at": None, "rejected_at": None,
+        })
+        await store.set_status(approval_id, "approved")
+        denied = await store.consume(approval_id, issue_claim=True)
+        assert denied["status"] == "rejected"
+        assert denied["metadata"]["snapshot_upgrade_required"] is True
+        assert "_execution_claim" not in denied
