@@ -16,7 +16,7 @@ from domain.contracts.redaction import redact_text
 from integrations.llm.openai_compatible import configured_llm_adapter
 
 _PERSIAN = re.compile(r"[\u0600-\u06ff]")
-_IP = re.compile(r"(?<![\d.])(?:\d{1,3}\.){3}\d{1,3}(?![\d.])")
+_IP = re.compile(r"(?<![\d.])(?:\d{1,3}\.){3}\d{1,3}(?!\d|\.\d)")
 _COMMAND = re.compile(r"`([^`\n]{3,120})`")
 _CACHE: OrderedDict[str, tuple[float, str]] = OrderedDict()
 _CACHE_SECONDS = 3600
