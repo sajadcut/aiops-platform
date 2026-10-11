@@ -152,6 +152,30 @@ def _agents(state: dict, findings: Iterable[dict]) -> list[dict]:
     return items
 
 
+def tool_observation_summary(raw: dict) -> str | None:
+    """Only bounded, whitelisted scalar facts: never dump journals or tool JSON."""
+    diagnostic = str(raw.get("diagnostic") or raw.get("tool_name") or "").lower()
+    fields = {
+        "service_status": ("active_state", "sub_state", "main_pid", "restart_count"),
+        "process_status": ("running", "count"),
+        "port_listener_status": ("supported", "listening", "target_port"),
+        "tcp_check": ("supported", "reachable", "target_port"),
+        "config_validate": ("supported", "valid"),
+        "collect_vm_metrics": ("name", "value"),
+        "disk_status": ("used_percent", "free_bytes"),
+        "service_logs": ("count", "access_mode"),
+        "system_logs": ("count", "access_mode"),
+    }.get(diagnostic, ())
+    details = [
+        f"{name}={safe(raw.get(name), 80)}" for name in fields
+        if isinstance(raw.get(name), (str, bool, int, float))
+    ]
+    if details:
+        return safe("; ".join(details), 380)
+    return safe(raw.get("summary") or raw.get("message") or raw.get("detail") or
+                raw.get("diagnostic"), 380)
+
+
 def _mcp(rows: Iterable[dict], now: datetime) -> tuple[list[dict], list[dict]]:
     items = []
     sources = {}
@@ -202,7 +226,7 @@ def _mcp(rows: Iterable[dict], now: datetime) -> tuple[list[dict], list[dict]]:
             "time_basis": "source_observed" if explicit_time else "evidence_persisted",
             "freshness": age,
             "phase": safe(raw.get("phase") or raw.get("collection_phase"), 70) or "unknown",
-            "finding": safe(raw.get("summary") or raw.get("message") or raw.get("detail") or raw.get("diagnostic"), 380),
+            "finding": tool_observation_summary(raw),
         })
     return items[:100], list(sources.values())[:50]
 
@@ -302,6 +326,9 @@ def build_decision_brief(
         missing.append("live_evidence_collection_failed")
     if not evidence:
         missing.append("no_durable_evidence")
+    for source in sources:
+        if source.get("status") in {"unavailable", "error"}:
+            missing.append("monitoring_source_unavailable:" + str(source["source"]))
     freshnesses = [
         freshness(obj(e.get("raw_data")).get("collected_at") or
                   obj(e.get("raw_data")).get("observed_at") or
