@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 414 | Dashboard JS files scanned: 6 | Symbols indexed: 3804**
+**Python files scanned: 415 | Dashboard JS files scanned: 6 | Symbols indexed: 3807**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1266,6 +1266,9 @@
 | `apps/rag_service/__init__.py` | `KnowledgeRAGService.create_revision` | 234 | async method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | KnowledgeRAGService |
 | `apps/rag_service/__init__.py` | `KnowledgeRAGService.get_processing_status` | 259 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | KnowledgeRAGService |
 | `apps/rag_service/__init__.py` | `KnowledgeRAGService.generate_context` | 270 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeRAGService |
+| `apps/recommendation_translation.py` | `TranslationUnavailable` | 26 | class | Safe exception that never includes source prose or credentials. | module |
+| `apps/recommendation_translation.py` | `_validate` | 30 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/recommendation_translation.py` | `translate_recommendation` | 47 | async function | Translate existing analysis once per distinct snapshot, never invent new analysis. | module |
 | `apps/remediation_planner/__init__.py` | `RemediationPlanner` | 10 | class | Deterministically bind live operational Evidence to a governed write request. | module |
 | `apps/remediation_planner/__init__.py` | `RemediationPlanner.plan` | 30 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
 | `apps/remediation_planner/__init__.py` | `RemediationPlanner.revalidate_execution` | 171 | method | Fail closed if the approved write is stale immediately before execution. | RemediationPlanner |
