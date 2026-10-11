@@ -11,6 +11,7 @@ from apps.incident_service.repository import IncidentRepository
 from apps.orchestrator.workflow_store import WorkflowCheckpointStore
 from domain.contracts.logging import logger
 from domain.models import Incident, IncidentStatus
+from integrations.zabbix.webhook_contract import normalize_zabbix_payload, zabbix_event_time
 
 
 _RECOVERY_STATES = {"recovery", "recovered", "resolved", "resolve", "ok", "closed"}
@@ -73,13 +74,8 @@ def classify_zabbix_lifecycle(payload: Dict[str, Any]) -> Dict[str, Optional[str
 
 
 def _recovery_timestamp(payload: Dict[str, Any]) -> str:
-    raw = _text_value(payload, "recovery_timestamp", "timestamp")
-    if raw and raw.isdigit():
-        try:
-            return datetime.fromtimestamp(int(raw), tz=timezone.utc).isoformat()
-        except (OverflowError, OSError, ValueError):
-            pass
-    return datetime.now(timezone.utc).isoformat()
+    parsed = zabbix_event_time(payload.get("recovery_timestamp")) or zabbix_event_time(payload.get("timestamp"))
+    return (parsed or datetime.now(timezone.utc)).isoformat()
 
 
 def _recovery_evidence(payload: Dict[str, Any], identity: Dict[str, Optional[str]]) -> Dict[str, Any]:
@@ -190,6 +186,7 @@ async def _audit_recovery(
 
 async def ingest_zabbix_payload(session, payload: Dict[str, Any]) -> Dict[str, Any]:
     """Ingest a Zabbix Problem or Recovery without turning Recovery into a new Incident."""
+    payload = normalize_zabbix_payload(payload)
     identity = classify_zabbix_lifecycle(payload)
     if identity["state"] == "problem":
         from apps.signal_gateway import SignalGateway, signal_from_zabbix
