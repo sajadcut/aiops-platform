@@ -13,6 +13,7 @@ from apps.signal_gateway.prometheus_alertmanager import AlertmanagerWebhookPaylo
 from apps.signal_gateway.zabbix_lifecycle import ingest_zabbix_payload
 from database import AsyncSessionLocal
 from domain.contracts.logging import logger
+from domain.contracts.redaction import redact
 from domain.contracts.rate_limit import rate_limiter_loose, rate_limiter_strict
 from integrations.vm.target_context import bind_vm_port, bind_vm_target, bind_vm_probe_blocked, reset_vm_port, reset_vm_target, reset_vm_probe_blocked, target_from_zabbix_payload, target_port_from_zabbix_payload
 from integrations.zabbix.webhook_contract import normalize_zabbix_payload
@@ -99,9 +100,32 @@ async def _ingest_prometheus_alertmanager(payload: Dict[str, Any]) -> Dict[str, 
 
 
 async def _ingest_zabbix(payload: Dict[str, Any]) -> Dict[str, Any]:
+    # This is the original authenticated Zabbix JSON body, before validation
+    # or normalization. The generic HTTP logger may omit large bodies; this
+    # dedicated event intentionally preserves ALL fields and tags (apart from
+    # credential redaction) even for invalid or repeated deliveries.
+    raw_event_id = str(payload.get("eventid") or "").strip()
+    logger.info(
+        "zabbix_webhook_received",
+        log_type="zabbix_webhook",
+        source="zabbix",
+        phase="received",
+        eventid=raw_event_id,
+        recovery_eventid=str(payload.get("recovery_eventid") or ""),
+        raw_request=redact({"payload": payload}),
+    )
     try:
         payload = normalize_zabbix_payload(payload)
     except ValueError as exc:
+        logger.warning(
+            "zabbix_webhook_rejected",
+            log_type="zabbix_webhook",
+            source="zabbix",
+            phase="rejected",
+            eventid=raw_event_id,
+            http_status=422,
+            reason=str(exc),
+        )
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     platform = str(payload.get("platform") or "").lower()
     asset_type = str(payload.get("asset_type") or "").lower()
@@ -136,10 +160,45 @@ async def _ingest_zabbix(payload: Dict[str, Any]) -> Dict[str, Any]:
                 status_code=422,
                 detail=reason or "zabbix_recovery_identity_incomplete",
             )
-        return _response_from_result(result)
-    except HTTPException:
+        response = _response_from_result(result)
+        logger.info(
+            "zabbix_webhook_processed",
+            log_type="zabbix_webhook",
+            source="zabbix",
+            phase="processed",
+            eventid=str(payload.get("eventid") or ""),
+            recovery_eventid=str(payload.get("recovery_eventid") or ""),
+            signal_state=response.get("signal_state"),
+            incident_id=response.get("incident_id"),
+            incident_status=response.get("incident_status"),
+            deduplicated=response.get("deduplicated"),
+            recovered=response.get("recovered"),
+            http_status=200,
+        )
+        return response
+    except HTTPException as exc:
+        logger.warning(
+            "zabbix_webhook_rejected",
+            log_type="zabbix_webhook",
+            source="zabbix",
+            phase="rejected",
+            eventid=str(payload.get("eventid") or ""),
+            recovery_eventid=str(payload.get("recovery_eventid") or ""),
+            http_status=exc.status_code,
+            reason=exc.detail,
+        )
         raise
     except Exception as exc:
+        logger.error(
+            "zabbix_webhook_failed",
+            log_type="zabbix_webhook",
+            source="zabbix",
+            phase="failed",
+            eventid=str(payload.get("eventid") or ""),
+            recovery_eventid=str(payload.get("recovery_eventid") or ""),
+            http_status=500,
+            error_type=type(exc).__name__,
+        )
         logger.exception("signal_ingestion_failed", source="zabbix", error_type=type(exc).__name__)
         raise HTTPException(status_code=500, detail="signal_ingestion_failed") from exc
     finally:
