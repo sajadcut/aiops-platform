@@ -138,6 +138,7 @@ async def edit_review(review_id: UUID, payload: ReviewEditRequest, actor=Depends
         row.publish_error_code = None
         await _audit(db, row, actor.subject, "edited")
         await db.commit()
+        await db.refresh(row)
         return review_summary(row)
 
 
@@ -165,6 +166,7 @@ async def approve_review(review_id: UUID, payload: ReviewDecisionRequest, actor=
         row.approved_revision = row.revision
         await _audit(db, row, actor.subject, "approved")
         await db.commit()
+        await db.refresh(row)
         return review_summary(row)
 
 
@@ -180,6 +182,7 @@ async def reject_review(review_id: UUID, payload: ReviewDecisionRequest, actor=D
         row.review_reason = payload.reason
         await _audit(db, row, actor.subject, "rejected")
         await db.commit()
+        await db.refresh(row)
         return review_summary(row)
 
 
@@ -247,6 +250,7 @@ async def publish_review(review_id: UUID, actor=Depends(require_permission("know
         row.submitted_at = datetime.now(timezone.utc)
         await _audit(db, row, actor.subject, "submitted")
         await db.commit()
+        await db.refresh(row)
         return review_summary(row)
 
 
@@ -275,4 +279,5 @@ async def refresh_review(review_id: UUID, actor=Depends(require_permission("know
             row.published_at = datetime.now(timezone.utc)
             await _audit(db, row, actor.subject, "published")
             await db.commit()
+        await db.refresh(row)
         return review_summary(row)
