@@ -57,6 +57,7 @@ async def test_verified_memory_human_review_and_cognia_activation(monkeypatch):
             service_scope="gfpapi-ci", outcome="service restored",
             reusable_lesson="Verify running status before reuse",
             lifecycle_status="active",
+            evidence_provenance={"evidence_count": 1, "evidence_refs": ["ci:service-status"]},
             actual_remediation={"action": "restart_service", "execution_success": True},
             verification={"status": "success", "recovered_signals": ["service_active"]},
         ))
