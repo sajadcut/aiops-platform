@@ -119,6 +119,7 @@ function setView(v) {
     services: ['Service Health', 'Service-centric impact derived only from durable incident and governance state.'],
     agents: ['Agents & RCA', 'Analysis-only specialist agents, routing, collaboration and runtime quality signals.'],
     mcp: ['MCP Fabric', 'Operational MCP connectivity plus the separate governed Cognia Knowledge boundary.'],
+    knowledge: ['Knowledge Review', 'Human-approved organizational learning and Cognia publication.'],
     audit: ['Audit & Governance', 'Durable decision, approval, capability, execution, verification and learning history.']
   };
   $('#pageTitle').textContent = titles[v][0];
@@ -127,6 +128,7 @@ function setView(v) {
   if (v === 'services') renderServices();
   if (v === 'mcp') renderMcp();
   if (v === 'audit') renderAudit();
+  if (v === 'knowledge' && typeof window.loadKnowledgeReviews === 'function') window.loadKnowledgeReviews();
 }
 
 function serviceState(s) {
