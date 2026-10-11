@@ -95,6 +95,7 @@
     const agents = b.agent_findings || [];
     const mcp = b.mcp_evidence || [];
     const resources = b.monitoring_sources || [];
+    const timeline = b.timeline || [];
     const matchedNarrative = narrative && narrative.snapshot_id === b.snapshot_id && narrative.language === language ? narrative : null;
     const narrativeRows = matchedNarrative?.status === 'available' ? (matchedNarrative.sections || []) : [];
     const narrativeSection = narrativeRows.length
@@ -133,9 +134,11 @@
       '<button type="button" data-db-copy="1">' + t('copy') + '</button></div></header>' +
       '<p class="db-lead">' + html(language === 'fa' ? narrative.fa : narrative.en) + '</p>' +
       '<div class="db-fields">' + field('Incident ID', i.incident_id) +
-      field(t('freshness'), b.data_freshness) + field(t('risk'), a.status === 'not_pending' ? r.risk_level : a.status) +
+      field(t('freshness'), b.data_freshness) + field(t('risk'), r.risk_level) +
       field('Approval', a.approval_status) + field('Evidence', b.source_references?.length ?? 0) +
-      field(t('timestamp'), b.generated_at) + '</div>' +
+      field(t('timestamp'), b.generated_at) +
+      field(t('target'), i.target) + field('Port', i.port) +
+      field('Started', i.started_at) + field('Likely cause', i.cause_status) + '</div>' +
       (warnings.length ? '<div class="db-warning">' + list([...new Set(warnings)]) + '</div>' : '') +
       '<p class="db-notice">' + t('readOnly') + '</p>';
     const agentsSection = '<div class="db-fields">' + field(t('rca'), confidence(conf.rca_confidence)) +
@@ -160,11 +163,19 @@
       field('Approval ID', a.approval_id) + field(t('binding'), a.binding_complete ? 'Complete' : 'Not verified') +
       field(t('tool'), a.tool) + field(t('target'), a.target) +
       field(t('environment'), a.environment) + field('Runbook', [a.runbook_id,a.runbook_version].filter(Boolean).join(' @ ')) +
-      field(t('freshness'), a.data_freshness) + '</div>' +
+      field(t('freshness'), a.data_freshness) +
+      field('Execution binding', a.binding_digest ? 'Recorded' : 'Not verified') +
+      field('Evidence snapshot binding', a.evidence_snapshot_binding) +
+      field('Rollback supported', a.rollback_supported ? 'Recorded' : 'Not verified') +
+      field('Timeout (s)', a.timeout_seconds) + '</div>' +
       '<p class="db-warning">' + t('actionSeparate') + '</p>' +
       '<div class="db-buttons"><button type="button" data-db-nav="decision">' + t('approval') + '</button>' +
       '<button type="button" data-db-nav="evidence">' + t('raw') + '</button>' +
       '<button type="button" data-db-nav="audit">' + t('timeline') + '</button></div>';
+    const timelineSection = timeline.length ? timeline.map(x =>
+      '<div class="db-record">' + field('Event', x.event) + field(t('status'), x.status) +
+      field('Actor', x.actor) + field(t('timestamp'), x.timestamp) + '</div>'
+    ).join('') : '<p class="db-subtle">' + t('noData') + '</p>';
     const postSection = '<div class="db-fields">' + field(t('result'), outcome.status) +
       field(t('tool'), outcome.tool) + field(t('target'), outcome.target) +
       field(t('verification'), verify.status) +
@@ -178,7 +189,7 @@
       section('knowledge', cSection) + section('memory', memorySection) +
       section('risks', gapsSection, (b.missing_evidence || []).length > 0) +
       section('action', actionSection, true) + section('before', beforeSection, true) +
-      section('execution', postSection) + '</div>';
+      section('execution', postSection) + section('timeline', timelineSection) + '</div>';
   }
 
   async function ensureNarrative() {
@@ -203,7 +214,7 @@
       if (String(S.selected) === String(activeId) && language === currentLang) narrative = fallback;
     } finally {
       narrativePending = false;
-      if (S.detail && String(S.selected) === String(activeId) && language === currentLang && brief?.snapshot_id === snapshot && document.querySelector('.decision-brief')) {
+      if (S.detail && String(S.selected) === String(activeId) && brief?.snapshot_id === snapshot && document.querySelector('.decision-brief')) {
         window.renderDetail('brief');
       }
     }
