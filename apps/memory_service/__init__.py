@@ -223,6 +223,26 @@ class OperationalMemoryService:
             outcome_class=str(entry.memory_outcome_class or "unknown")
         ).inc()
         await self._embed_entry(entry)
+        # Successful, independently verified historical episodes are eligible
+        # for a REVIEW DRAFT only, never automatic Cognia publication. Centralize
+        # this hook so autonomous workflows and direct runbook paths behave alike.
+        if (
+            str(entry.memory_outcome_class) == "successful_recovery"
+            and str(entry.verification_result).lower() in self.SUCCESS_STATUSES
+            and settings.COGNIA_CLIENT_APPLICATION_ID
+            and len(settings.COGNIA_KNOWLEDGE_BASE_IDS) == 1
+        ):
+            try:
+                from apps.knowledge_review import create_from_memory
+                await create_from_memory(
+                    self.db, cast(UUID, entry.id), "system:verified-incident"
+                )
+            except Exception as exc:
+                await self.db.rollback()
+                logger.warning(
+                    "knowledge_review_draft_unavailable",
+                    memory_id=str(entry.id), error_type=type(exc).__name__,
+                )
         return cast(UUID, entry.id)
 
     async def _embed_entry(self, entry: MemoryEntry) -> bool:
