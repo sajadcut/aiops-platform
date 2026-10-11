@@ -84,6 +84,7 @@ const assert = require('node:assert/strict');
   const listeners = {};
   const el = selector => elements[selector] ||= {
     hidden:false, innerHTML:'', textContent:'', value:'', dataset:{},
+    classList:{add(){},remove(){},toggle(){}},
     addEventListener(name, cb) {this.events ||= {}; this.events[name] = cb;},
     focus(){}, setAttribute(){},
   };
