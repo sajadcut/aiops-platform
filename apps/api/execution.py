@@ -6,6 +6,15 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from apps.approval_service.binding import assert_bound, bind_metadata, decision_snapshot_digest
 from apps.decision_brief_history import archive_decision_brief
+from sqlalchemy.ext.asyncio import AsyncSession
+
+
+async def _archive_persisted_transition(db, incident_id: str, event_type: str) -> None:
+    """Real database transitions archive; test doubles carry no durable storage."""
+    if isinstance(db, AsyncSession):
+        await archive_decision_brief(db, incident_id, event_type)
+        await db.commit()
+
 from apps.approval_service.postgres import PostgreSQLApprovalStore
 from apps.audit_service import AuditService
 from apps.audit_service.postgres import PostgreSQLAuditStore
@@ -97,8 +106,7 @@ async def create_approval(payload: Dict[str, Any], identity=Depends(require_perm
             "approval_id": record["approval_id"], "risk_level": record["risk_level"],
             "binding_complete": bool(record["metadata"].get("binding_complete")),
         })
-        await archive_decision_brief(db, record["incident_id"], "approval_requested")
-        await db.commit()
+        await _archive_persisted_transition(db, record["incident_id"], "approval_requested")
         return saved
 
 
@@ -126,8 +134,7 @@ async def approve(approval_id: str, identity=Depends(require_permission("approve
         await _audit_durable(db, "approval_granted", identity.subject, str(current.get("incident_id")), str(current.get("action")), {
             "approval_id": approval_id, "risk_level": current.get("risk_level"),
         })
-        await archive_decision_brief(db, str(current["incident_id"]), "approval_approved")
-        await db.commit()
+        await _archive_persisted_transition(db, str(current["incident_id"]), "approval_approved")
         return approval
 
 
@@ -151,8 +158,7 @@ async def reject(approval_id: str, payload: Dict[str, Any], identity=Depends(req
         await _audit_durable(db, "approval_rejected", identity.subject, str(current.get("incident_id")), str(current.get("action")), {
             "approval_id": approval_id, "risk_level": current.get("risk_level"), "reason": reason,
         })
-        await archive_decision_brief(db, str(current["incident_id"]), "approval_rejected")
-        await db.commit()
+        await _archive_persisted_transition(db, str(current["incident_id"]), "approval_rejected")
         return approval
 
 
@@ -457,6 +463,5 @@ async def execute(payload: Dict[str, Any], identity=Depends(require_permission("
             },
         )
         if incident_id and approval_granted:
-            await archive_decision_brief(db, incident_id, "direct_execution_finished")
-            await db.commit()
+            await _archive_persisted_transition(db, incident_id, "direct_execution_finished")
         return response
