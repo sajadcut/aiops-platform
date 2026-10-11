@@ -74,6 +74,29 @@ def freshness(value: Any, now: datetime) -> str:
         return "unknown"
 
 
+def elapsed_seconds(value: Any, now: datetime) -> int | None:
+    if not value:
+        return None
+    try:
+        start = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+        if start.tzinfo is None:
+            return None
+        return max(0, int((now - start.astimezone(timezone.utc)).total_seconds()))
+    except (TypeError, ValueError, OverflowError):
+        return None
+
+
+def evidence_usable(item: dict, age: str) -> bool:
+    raw = obj(item.get("raw_data"))
+    status = str(raw.get("status") or "").lower()
+    # Provider health observations (including successful empty queries) are
+    # useful diagnostics, not evidence confirming the service state.
+    is_observation = "result_count" in raw and status in {
+        "queried", "unavailable", "error", "skipped",
+    }
+    return age == "fresh" and not is_observation and not tool_failed(raw)
+
+
 def tool_failed(record: dict) -> bool:
     """HTTP 200 alone does not prove nested tool success."""
     if record.get("success") is False or record.get("ok") is False:
@@ -330,11 +353,7 @@ def build_decision_brief(
             "service": service, "severity": safe(incident.get("severity"), 40),
             "status": safe(incident.get("status"), 50),
             "started_at": safe(incident.get("started_at"), 55),
-            "elapsed_seconds": (
-                max(0, int((now - datetime.fromisoformat(str(incident["started_at"]).replace("Z", "+00:00"))).total_seconds()))
-                if incident.get("started_at") and datetime.fromisoformat(str(incident["started_at"]).replace("Z", "+00:00")).tzinfo
-                else None
-            ),
+            "elapsed_seconds": elapsed_seconds(incident.get("started_at"), now),
             "namespace": safe(obj(incident.get("context")).get("namespace") or obj(incident.get("context")).get("kubernetes_namespace"), 150),
             "cluster": safe(obj(incident.get("context")).get("cluster") or obj(incident.get("context")).get("cluster_name"), 150),
             "host": safe(obj(incident.get("context")).get("host") or obj(incident.get("context")).get("hostname"), 150),
@@ -353,10 +372,7 @@ def build_decision_brief(
             "cause_status": safe(summary.get("cause_confidence"), 40),
             "cause_evidence_refs": refs(summary.get("cause_evidence_ids")),
             "valid_evidence_count": sum(
-                1 for row, age in zip(evidence, freshnesses)
-                if age == "fresh" and not tool_failed(obj(row.get("raw_data")))
-                and str(obj(row.get("raw_data")).get("status") or "").lower()
-                not in {"unavailable", "error", "skipped"}
+                1 for row, age in zip(evidence, freshnesses) if evidence_usable(row, age)
             ),
             "observed_sources": len({str(row.get("source") or "")
                 for row in evidence if row.get("source")}),
