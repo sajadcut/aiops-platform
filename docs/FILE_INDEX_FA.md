@@ -3,7 +3,7 @@
 > این فایل فهرست فایل‌به‌فایل repository است. توضیح معماری و flow در `CODEBASE_GUIDE_FA.md` آمده است.
 > این فایل با `scripts/generate_file_index_fa.py` ساخته و در CI کنترل می‌شود.
 
-**تعداد فایل‌های track‌شده و پوشش‌داده‌شده: 532**
+**تعداد فایل‌های track‌شده و پوشش‌داده‌شده: 536**
 
 | Path | Type | Purpose | Called By | Calls/Depends On | Runtime/Test/Docs | Notes |
 |---|---|---|---|---|---|---|
@@ -189,6 +189,7 @@
 | `dashboards/control-center.js` | JS | state، API binding و interaction داشبورد | Browser | /api/v1 endpoints | Runtime UI | action حساس backend-governed است |
 | `dashboards/decision-brief.css` | CSS | استایل Control Center و کنترل‌های عملیاتی | Browser | HTML classes | Runtime UI | بدون داده fake |
 | `dashboards/decision-brief.js` | JS | state، API binding و interaction داشبورد | Browser | /api/v1 endpoints | Runtime UI | action حساس backend-governed است |
+| `dashboards/fonts.css` | CSS | استایل Control Center و کنترل‌های عملیاتی | Browser | HTML classes | Runtime UI | بدون داده fake |
 | `dashboards/incident-command-room.css` | CSS | استایل Control Center و کنترل‌های عملیاتی | Browser | HTML classes | Runtime UI | بدون داده fake |
 | `dashboards/incident-command-room.html` | HTML | پوسته و layout داشبورد | FastAPI static route | CSS/JS/API | Runtime UI | صفحه اپراتوری |
 | `dashboards/incident-command-room.js` | JS | state، API binding و interaction داشبورد | Browser | /api/v1 endpoints | Runtime UI | action حساس backend-governed است |
@@ -284,6 +285,7 @@
 | `domain/runbook_validation.py` | Python | مدل/Schema/قواعد دامنه AIOps | apps/* | Pydantic/SQLAlchemy | Runtime | مدل مشترک لایه‌ها |
 | `domain/schemas.py` | Python | مدل/Schema/قواعد دامنه AIOps | apps/* | Pydantic/SQLAlchemy | Runtime | مدل مشترک لایه‌ها |
 | `domain/verification_gate.py` | Python | مدل/Schema/قواعد دامنه AIOps | apps/* | Pydantic/SQLAlchemy | Runtime | مدل مشترک لایه‌ها |
+| `font/README.md` | File | فایل پروژه | — | — | Other |  |
 | `integrations/__init__.py` | Python | Adapter provider/read-only integration | MCP server/test helper | external API/.env | Runtime/Helper | Control Plane production ترجیحاً MCP |
 | `integrations/base.py` | Python | Adapter provider/read-only integration | MCP server/test helper | external API/.env | Runtime/Helper | Control Plane production ترجیحاً MCP |
 | `integrations/cognia/__init__.py` | Python | Cognia canonical Governed Knowledge client: machine auth/Search/Context/authoring | RAG service/readiness | Cognia HTTP/.env | Runtime | opaque token، explicit KB/Scope، no hidden fallback |
@@ -339,6 +341,7 @@
 | `scripts/generate_file_index_fa.py` | Python | ابزار maintenance/validation/seed/build | Developer/CI | repo/database | Tooling | مسیر اپراتوری کمکی |
 | `scripts/generate_image_attestation.py` | Python | ابزار maintenance/validation/seed/build | Developer/CI | repo/database | Tooling | مسیر اپراتوری کمکی |
 | `scripts/mark_stale_memory.py` | Python | ابزار maintenance/validation/seed/build | Developer/CI | repo/database | Tooling | مسیر اپراتوری کمکی |
+| `scripts/publish-iransansx-fonts.ps1` | Python | ابزار maintenance/validation/seed/build | Developer/CI | repo/database | Tooling | مسیر اپراتوری کمکی |
 | `scripts/reconcile_legacy_database.py` | Python | ابزار maintenance/validation/seed/build | Developer/CI | repo/database | Tooling | مسیر اپراتوری کمکی |
 | `scripts/render_k8s_release.py` | Python | ابزار maintenance/validation/seed/build | Developer/CI | repo/database | Tooling | مسیر اپراتوری کمکی |
 | `scripts/repair_legacy_audit_timestamp.py` | Python | ابزار maintenance/validation/seed/build | Developer/CI | repo/database | Tooling | مسیر اپراتوری کمکی |
@@ -467,6 +470,7 @@
 | `tests/unit/test_incident_rid_logging.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_infrastructure_use_engine.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_internal_api_key_role.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
+| `tests/unit/test_iransansx_assets.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_jenkins_mcp_client.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_jsonb_persistence_contract.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_knowledge_review_governance.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |

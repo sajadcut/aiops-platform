@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 430 | Dashboard JS files scanned: 8 | Symbols indexed: 4024**
+**Python files scanned: 431 | Dashboard JS files scanned: 8 | Symbols indexed: 4032**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -751,35 +751,37 @@
 | `apps/api/knowledge_reviews.py` | `reject_review` | 182 | async function | transition مربوط به Approval/Governance را اعمال می‌کند | module |
 | `apps/api/knowledge_reviews.py` | `publish_review` | 200 | async function | Publish with a deterministic Idempotency-Key; no unapproved content crosses. | module |
 | `apps/api/knowledge_reviews.py` | `refresh_review` | 268 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/main.py` | `root` | 81 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/main.py` | `dashboard_page` | 93 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/main.py` | `dashboard_page_slash` | 98 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/main.py` | `agent_dashboard_page` | 103 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/main.py` | `incident_command_room_page` | 108 | async function | Dedicated full-page workspace; API authentication remains server-enforced. | module |
-| `apps/api/main.py` | `incident_command_room_styles` | 121 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/main.py` | `incident_command_room_script` | 126 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/main.py` | `dashboard_stylesheet` | 131 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/main.py` | `dashboard_script` | 136 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/main.py` | `dashboard_approval_stylesheet` | 141 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/main.py` | `dashboard_approval_script` | 146 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/main.py` | `dashboard_knowledge_review_script` | 150 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/main.py` | `dashboard_knowledge_review_stylesheet` | 155 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/main.py` | `dashboard_legacy_stylesheet` | 164 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/main.py` | `dashboard_legacy_script` | 169 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/main.py` | `dashboard_legacy_approval_stylesheet` | 174 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/main.py` | `dashboard_legacy_approval_script` | 179 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/main.py` | `chatbot_page` | 184 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/main.py` | `chatbot_page_slash` | 189 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/main.py` | `chatbot_stylesheet` | 194 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/main.py` | `chatbot_script` | 199 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/main.py` | `chatbot_ui_script` | 204 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/main.py` | `chatbot_transport_script` | 209 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/main.py` | `_is_http_or_https` | 213 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/main.py` | `_validate_production_configuration` | 220 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/main.py` | `startup_event` | 311 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/main.py` | `shutdown_event` | 364 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/main.py` | `dashboard_decision_brief_script` | 369 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/main.py` | `dashboard_decision_brief_stylesheet` | 374 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/main.py` | `dashboard_font_stylesheet` | 89 | async function | Shared font definitions for dashboard, chatbot and incident room. | module |
+| `apps/api/main.py` | `approved_ui_font` | 95 | async function | Serve only explicitly allowlisted local font assets (no directory browse). | module |
+| `apps/api/main.py` | `root` | 113 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/main.py` | `dashboard_page` | 125 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/main.py` | `dashboard_page_slash` | 130 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/main.py` | `agent_dashboard_page` | 135 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/main.py` | `incident_command_room_page` | 140 | async function | Dedicated full-page workspace; API authentication remains server-enforced. | module |
+| `apps/api/main.py` | `incident_command_room_styles` | 153 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/main.py` | `incident_command_room_script` | 158 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/main.py` | `dashboard_stylesheet` | 163 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/main.py` | `dashboard_script` | 168 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/main.py` | `dashboard_approval_stylesheet` | 173 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/main.py` | `dashboard_approval_script` | 178 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/main.py` | `dashboard_knowledge_review_script` | 182 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/main.py` | `dashboard_knowledge_review_stylesheet` | 187 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/main.py` | `dashboard_legacy_stylesheet` | 196 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/main.py` | `dashboard_legacy_script` | 201 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/main.py` | `dashboard_legacy_approval_stylesheet` | 206 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/main.py` | `dashboard_legacy_approval_script` | 211 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/main.py` | `chatbot_page` | 216 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/main.py` | `chatbot_page_slash` | 221 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/main.py` | `chatbot_stylesheet` | 226 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/main.py` | `chatbot_script` | 231 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/main.py` | `chatbot_ui_script` | 236 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/main.py` | `chatbot_transport_script` | 241 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/main.py` | `_is_http_or_https` | 245 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/main.py` | `_validate_production_configuration` | 252 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/main.py` | `startup_event` | 343 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/main.py` | `shutdown_event` | 396 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/main.py` | `dashboard_decision_brief_script` | 401 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/main.py` | `dashboard_decision_brief_stylesheet` | 406 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/remediation.py` | `_audit_durable` | 29 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/remediation.py` | `_read_vm` | 35 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/remediation.py` | `RemediationRequest` | 42 | class | کلاس | module |
@@ -3192,6 +3194,12 @@
 | `tests/unit/test_internal_api_key_role.py` | `test_internal_api_key_uses_server_configured_role` | 7 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_internal_api_key_role.py` | `test_invalid_internal_api_role_fails_closed` | 15 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_internal_api_key_role.py` | `test_wrong_internal_api_key_is_rejected` | 22 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_iransansx_assets.py` | `test_all_three_main_pages_load_one_shared_font_stylesheet` | 26 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_iransansx_assets.py` | `test_shared_font_stylesheet_declares_nine_weights_and_safe_fallbacks` | 33 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_iransansx_assets.py` | `test_font_http_route_rejects_unknown_paths_and_absent_font` | 50 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_iransansx_assets.py` | `test_font_http_route_serves_only_approved_files` | 58 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_iransansx_assets.py` | `test_symlink_is_never_served_as_font` | 71 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_iransansx_assets.py` | `test_public_repository_publishing_script_requires_redistribution_permission` | 83 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_jenkins_mcp_client.py` | `_client` | 14 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_jenkins_mcp_client.py` | `test_official_jenkins_mcp_contract_uses_streamable_http_and_2025_06_18` | 26 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_jenkins_mcp_client.py` | `test_jenkins_headers_use_basic_auth_and_optional_origin` | 42 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
