@@ -135,6 +135,43 @@
   }
   S.recommendationLanguage = storedRecommendationLanguage();
 
+  // Cache per Incident and exact English source. Never mutate the durable
+  // recommendation or feed translations into operational execution paths.
+  const recommendationTranslations = new Map();
+  function recommendationTranslationKey(id, source) {
+    return String(id) + ':' + String(source);
+  }
+  function translatedRecommendation(action) {
+    const entry = recommendationTranslations.get(
+      recommendationTranslationKey(S.selected, action?.text_en)
+    );
+    return entry?.status === 'success' ? entry.text : null;
+  }
+  async function ensurePersianRecommendation(action) {
+    if (!action?.needs_persian_translation || !action.text_en || !S.selected) return;
+    const id = String(S.selected);
+    const source = String(action.text_en);
+    const key = recommendationTranslationKey(id, source);
+    if (recommendationTranslations.has(key)) return;
+    recommendationTranslations.set(key, {status: 'pending'});
+    try {
+      const result = await api(
+        `/api/v1/incidents/${encodeURIComponent(id)}/operator-recommendation/fa`
+      );
+      if (result?.incident_id !== id || !result.text_fa) throw new Error('translation_invalid');
+      recommendationTranslations.set(key, {status: 'success', text: result.text_fa});
+    } catch (_) {
+      recommendationTranslations.set(key, {status: 'error'});
+    }
+    // An async translation must never update another Incident's selected card.
+    if (String(S.selected) !== id ||
+        S.operatorSummary?.recommended_action?.text_en !== source) return;
+    const text = document.querySelector('#detail .operator-recommendation [data-recommendation-text]');
+    if (text && S.recommendationLanguage === 'fa') {
+      text.textContent = actionText(action, 'fa');
+    }
+  }
+
   function actionText(action, language = 'fa') {
     if (!action) {
       return language === 'en'
@@ -142,7 +179,14 @@
         : 'پیشنهاد عملیاتی ساختاریافته ثبت نشده است.';
     }
     if (language === 'en') {
-      if (action.text_en) return action.text_en;
+      if (action.text_en) {
+        const source = String(action.text_en);
+        try {
+          return JSON.stringify(JSON.parse(source), null, 2);
+        } catch (_) {
+          return source;
+        }
+      }
       // Backward compatibility for incidents returned by older API versions:
       // derive a description only from existing governed fields.
       const pieces = [
@@ -153,6 +197,16 @@
       return pieces.length
         ? pieces.join(' ') + '.'
         : 'An English translation is not available for this recorded recommendation.';
+    }
+    if (action.needs_persian_translation) {
+      const translation = translatedRecommendation(action);
+      if (translation) return translation;
+      const cache = recommendationTranslations.get(
+        recommendationTranslationKey(S.selected, action.text_en)
+      );
+      return cache?.status === 'error'
+        ? 'ترجمه فارسی فعلاً در دسترس نیست. برای مشاهده تحلیل اصلی گزینه English را انتخاب کنید.'
+        : 'در حال آماده‌سازی ترجمه فارسی تحلیل AIOps…';
     }
     const pieces = [action.action, action.tool ? `از طریق ${action.tool}` : '', action.target ? `روی ${action.target}` : ''].filter(Boolean);
     return action.text_fa || pieces.join(' ') || 'پیشنهاد عملیاتی ساختاریافته ثبت نشده است.';
@@ -202,6 +256,7 @@
     }
     const original = card.querySelector('[data-recommendation-original]');
     if (original) original.hidden = language !== 'en';
+    if (language === 'fa') void ensurePersianRecommendation(S.operatorSummary?.recommended_action);
   });
 
   function controlRows(summary) {
@@ -271,7 +326,12 @@
       head.insertAdjacentHTML('afterend', `<section class="operator-summary-card unavailable" dir="rtl" lang="fa"><h3>خلاصه فارسی رخداد</h3><p>${esc(S.operatorSummaryError)}</p><small>داده‌های ساختاریافته Incident در بخش‌های زیر همچنان قابل مشاهده هستند.</small></section>`);
       return;
     }
-    if (S.operatorSummary) head.insertAdjacentHTML('afterend', operatorSummaryCard(S.operatorSummary));
+    if (S.operatorSummary) {
+      head.insertAdjacentHTML('afterend', operatorSummaryCard(S.operatorSummary));
+      if (S.recommendationLanguage === 'fa') {
+        void ensurePersianRecommendation(S.operatorSummary.recommended_action);
+      }
+    }
   }
 
   async function refreshIncidentDecision() {
