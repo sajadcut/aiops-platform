@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 404 | Dashboard JS files scanned: 5 | Symbols indexed: 3679**
+**Python files scanned: 405 | Dashboard JS files scanned: 5 | Symbols indexed: 3697**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -3686,3 +3686,21 @@
 | `tests/unit/test_zabbix_team_guide_contract.py` | `test_exact_v11_media_type_fields_are_preserved_by_receiver` | 438 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_zabbix_team_guide_contract.py` | `test_zabbix_route_keeps_api_key_auth_and_high_volume_rate_limit` | 473 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_zabbix_team_guide_contract.py` | `test_zabbix_kubernetes_node_identity_is_not_inferred_from_pod` | 493 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_zabbix_webhook_logging.py` | `_Session` | 22 | class | کلاس | module |
+| `tests/unit/test_zabbix_webhook_logging.py` | `_Session.__aenter__` | 23 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Session |
+| `tests/unit/test_zabbix_webhook_logging.py` | `_Session.__aexit__` | 26 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Session |
+| `tests/unit/test_zabbix_webhook_logging.py` | `json_log` | 31 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_zabbix_webhook_logging.py` | `_records` | 56 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_zabbix_webhook_logging.py` | `_ingress` | 62 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_zabbix_webhook_logging.py` | `test_sensitive_event_tags_are_redacted_without_dropping_normal_tags` | 66 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_zabbix_webhook_logging.py` | `test_entire_original_problem_and_all_tags_are_logged_even_beyond_http_body_limit` | 89 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_zabbix_webhook_logging.py` | `test_entire_original_problem_and_all_tags_are_logged_even_beyond_http_body_limit.ready` | 92 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_entire_original_problem_and_all_tags_are_logged_even_beyond_http_body_limit |
+| `tests/unit/test_zabbix_webhook_logging.py` | `test_entire_original_problem_and_all_tags_are_logged_even_beyond_http_body_limit.ingest` | 95 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_entire_original_problem_and_all_tags_are_logged_even_beyond_http_body_limit |
+| `tests/unit/test_zabbix_webhook_logging.py` | `test_recovery_and_duplicate_are_logged_as_separate_deliveries` | 160 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_zabbix_webhook_logging.py` | `test_recovery_and_duplicate_are_logged_as_separate_deliveries.ready` | 161 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_recovery_and_duplicate_are_logged_as_separate_deliveries |
+| `tests/unit/test_zabbix_webhook_logging.py` | `test_recovery_and_duplicate_are_logged_as_separate_deliveries.ingest` | 164 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_recovery_and_duplicate_are_logged_as_separate_deliveries |
+| `tests/unit/test_zabbix_webhook_logging.py` | `test_invalid_eventid_still_logs_original_payload_and_rejection` | 193 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_zabbix_webhook_logging.py` | `test_invalid_eventid_still_logs_original_payload_and_rejection.should_not_connect` | 194 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_invalid_eventid_still_logs_original_payload_and_rejection |
+| `tests/unit/test_zabbix_webhook_logging.py` | `test_unmatched_recovery_logs_failure_and_original_fields` | 214 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_zabbix_webhook_logging.py` | `test_unmatched_recovery_logs_failure_and_original_fields.ready` | 215 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_unmatched_recovery_logs_failure_and_original_fields |
+| `tests/unit/test_zabbix_webhook_logging.py` | `test_unmatched_recovery_logs_failure_and_original_fields.ingest` | 218 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_unmatched_recovery_logs_failure_and_original_fields |
