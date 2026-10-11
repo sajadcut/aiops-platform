@@ -21,8 +21,8 @@ class RolePolicy:
 # high-risk approval یا اجرای action approved اختیار ندارد. sre boundary حساس‌تر را دارد.
 POLICIES = {
     "viewer": RolePolicy("viewer", frozenset({"read:incident", "read:audit"})),
-    "operator": RolePolicy("operator", frozenset({"read:incident", "read:audit", "ingest:signal", "approve:low_risk", "execute:low_risk", "runbook:dry_run"})),
-    "sre": RolePolicy("sre", frozenset({"read:incident", "read:audit", "ingest:signal", "approve:low_risk", "approve:high_risk", "execute:low_risk", "execute:approved", "runbook:dry_run"})),
+    "operator": RolePolicy("operator", frozenset({"read:incident", "read:audit", "ingest:signal", "approve:low_risk", "execute:low_risk", "runbook:dry_run", "knowledge:draft"})),
+    "sre": RolePolicy("sre", frozenset({"read:incident", "read:audit", "ingest:signal", "approve:low_risk", "approve:high_risk", "execute:low_risk", "execute:approved", "runbook:dry_run", "knowledge:draft", "knowledge:review", "knowledge:publish"})),
 }
 
 
