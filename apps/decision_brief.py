@@ -15,6 +15,24 @@ from domain.contracts.redaction import redact
 CONTRACT_VERSION = "decision-brief.v1"
 FRESHNESS_SECONDS = 900  # UI warning threshold, not an execution policy
 
+_FA_STATUS = {
+    "open": "باز", "analyzing": "در حال تحلیل", "resolved": "رفع شده",
+    "closed": "بسته شده", "escalated": "ارجاع شده",
+    "pending": "در انتظار تأیید", "approved": "تأیید شده",
+    "rejected": "رد شده", "consumed": "مصرف شده",
+    "available": "در دسترس", "empty": "بدون نتیجه",
+    "failed": "ناموفق", "not_queried": "جست‌وجو نشده",
+    "unknown": "نامشخص", "low": "کم", "medium": "متوسط",
+    "high": "زیاد", "critical": "بحرانی",
+    "confirmed": "تأیید شده", "probable": "محتمل",
+}
+
+
+def fa_status(value: Any) -> str:
+    key = str(value or "unknown").lower()
+    return _FA_STATUS.get(key, "نامشخص")
+
+
 
 def obj(value: Any) -> dict:
     return value if isinstance(value, dict) else {}
@@ -254,12 +272,13 @@ def build_decision_brief(
     service = safe(incident.get("service"), 120) or "نامشخص"
     decision_state = safe(decision.get("decision"), 90) or "unknown"
     result_fa = (
-        f"رخداد سرویس «{service}» در وضعیت {safe(incident.get('status'), 50) or 'نامشخص'} قرار دارد. "
+        f"رخداد سرویس «{service}» در وضعیت {fa_status(incident.get('status'))} قرار دارد. "
         f"{len(evidence)} رکورد شواهد ثبت شده است؛ اعتبار زمانی شواهد: "
         f"{'تازه' if data_freshness == 'fresh' else 'قدیمی' if data_freshness == 'stale' else 'نامشخص'}. "
-        f"وضعیت دانش Cognia: {knowledge['status']}؛ {knowledge['retrieved_count']} نتیجه بازیابی شده است. "
+        f"وضعیت دانش Cognia: {fa_status(knowledge['status'])}؛ {knowledge['retrieved_count']} نتیجه بازیابی شده است. "
         "استفاده از دانش و تجربه تاریخی فقط در صورت وجود استناد مستقل قابل تأیید است. "
-        f"ریسک اقدام: {risk}؛ وضعیت تأیید: {approval.get('status') or 'ثبت نشده'}. "
+        f"وضعیت علت ریشه‌ای: {fa_status(summary.get('cause_confidence'))}. "
+        f"ریسک اقدام: {fa_status(risk)}؛ وضعیت تأیید: {fa_status(approval.get('status'))}. "
         "پیش از تصمیم، هدف، ابزار، شواهد ناقص و برنامه Verification را بررسی کنید."
     )
     result_en = (
