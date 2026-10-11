@@ -147,6 +147,13 @@ class CogniaClient:
                     return {}
                 return self._json_object(response)
 
+            # Never follow a 3xx response from the Machine Client token endpoint
+            # (or a Bearer-authenticated request). Redirects may change origin or
+            # protocol, and 301/302 can rewrite POST to GET. Report the issue
+            # without exposing the Location URL or replaying credentials.
+            if 300 <= response.status_code < 400:
+                raise CogniaAPIError(response.status_code, "COGNIA_REDIRECT_REJECTED")
+
             if response.status_code in self._TRANSIENT_STATUS and attempt + 1 < attempts:
                 if delay:
                     await asyncio.sleep(delay * (backoff ** attempt))
