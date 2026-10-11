@@ -204,6 +204,7 @@ def build_decision_brief(
     knowledge = _knowledge(state, agents)
     memory = _memory(state, agents)
     approval = obj(summary.get("approval"))
+    observed = obj(summary.get("observed_state"))
     recommendation = obj(summary.get("recommended_action"))
     verification = obj(summary.get("verification"))
     execution = obj(summary.get("execution"))
@@ -241,12 +242,31 @@ def build_decision_brief(
         f"Action risk: {risk}; approval: {approval.get('status') or 'not requested'}. "
         "Review the bound target, tool, missing evidence and verification plan before deciding."
     )
+    timeline = [
+        {
+            "event": safe(row.get("event_type"), 120),
+            "status": safe(row.get("status"), 60),
+            "actor": safe(row.get("actor"), 100),
+            "timestamp": safe(row.get("created_at"), 55),
+            "event_id": safe(row.get("event_id"), 180),
+        }
+        for row in audit_events if isinstance(row, dict)
+    ][:100]
     recorded = {
         "incident_summary": {
             "incident_id": safe(incident.get("id"), 180),
             "service": service, "severity": safe(incident.get("severity"), 40),
             "status": safe(incident.get("status"), 50),
             "started_at": safe(incident.get("started_at"), 55),
+            "target": safe(observed.get("target"), 180),
+            "port": observed.get("port"),
+            "target_source": safe(obj(observed.get("field_sources")).get("target"), 90),
+            "observed_service_state": redact({
+                key: observed.get(key) for key in (
+                    "service_status", "process_status", "port_listener_status",
+                    "tcp_check", "config_validate",
+                ) if observed.get(key) is not None
+            }),
             "summary": safe(incident.get("summary"), 450),
             "likely_cause": safe(summary.get("likely_cause"), 420),
             "cause_status": safe(summary.get("cause_confidence"), 40),
@@ -255,6 +275,7 @@ def build_decision_brief(
         "agent_findings": agents,
         "mcp_evidence": mcp,
         "monitoring_sources": sources,
+        "timeline": timeline,
         "cognia_knowledge": knowledge,
         "operational_memory": memory,
         "rca_assessment": {
@@ -285,6 +306,11 @@ def build_decision_brief(
             "environment": safe(approval.get("environment"), 90),
             "runbook_id": safe(approval.get("runbook_id"), 90),
             "runbook_version": safe(approval.get("runbook_version"), 90),
+            "binding_version": approval.get("binding_version"),
+            "binding_digest": safe(approval.get("binding_digest"), 130),
+            "rollback_supported": approval.get("rollback_supported") is True,
+            "timeout_seconds": approval.get("timeout_seconds"),
+            "evidence_snapshot_binding": "not_verified",
             "data_freshness": data_freshness,
             "warning": "A report never authorizes execution. Approval and one-time workflow resume remain mandatory.",
         },
@@ -324,7 +350,7 @@ def build_decision_brief(
     }
     # Snapshot fingerprint excludes generated_at; the same durable state produces
     # the same binding for audit and staleness inspection, never authorization.
-    canonical = json.dumps(recorded, sort_keys=True, ensure_ascii=False, default=str)
+    canonical = json.dumps(redact(recorded), sort_keys=True, ensure_ascii=False, default=str)
     snapshot = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
     return {
         "contract_version": CONTRACT_VERSION,
