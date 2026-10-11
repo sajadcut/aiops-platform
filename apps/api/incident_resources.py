@@ -615,6 +615,9 @@ async def load_decision_brief_for_incident(db, incident_id: UUID) -> dict:
 async def get_incident_decision_brief(incident_id: UUID):
     """Read-only, RBAC-protected latest version. No archive writes or side effects."""
     async with AsyncSessionLocal() as db:
+        # Multiple Incident tables must be read at the same MVCC snapshot.
+        # A shared AsyncSession alone is insufficient at READ COMMITTED.
+        await db.execute(text("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY"))
         return await load_decision_brief_for_incident(db, incident_id)
 
 
