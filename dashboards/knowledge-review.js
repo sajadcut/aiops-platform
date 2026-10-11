@@ -51,6 +51,7 @@
         <div><label>Operational Memory</label><strong>${esc(r.memory_id || '—')}</strong></div>
       </div>
       <p class="muted">Review supporting evidence, confirmed cause, real action, outcome and secrets before approval. Edits invalidate an earlier approval.</p>
+      ${r.incident_id ? `<button type="button" class="approval-btn" data-knowledge-incident="${esc(r.incident_id)}">Open Incident &amp; Evidence</button>` : ''}
       <label for="knowledgeEditTitle">Knowledge title</label>
       <input id="knowledgeEditTitle" maxlength="500" value="${esc(r.title)}" ${editable ? '' : 'readonly'}>
       <label for="knowledgeEditContent">Reviewed content (the exact bytes sent to Cognia)</label>
@@ -165,6 +166,14 @@
     return createDraft('/api/v1/knowledge-reviews/manual', {title, content});
   };
   document.addEventListener('click', e => {
+    const incidentLink = e.target.closest('[data-knowledge-incident]');
+    if (incidentLink) {
+      const id = incidentLink.getAttribute('data-knowledge-incident');
+      if (/^[0-9a-fA-F-]{36}$/.test(id) && typeof window.openIncident === 'function') {
+        window.openIncident(id);
+      }
+      return;
+    }
     const choose = e.target.closest('[data-knowledge-select]');
     if (choose) {
       selectedId = choose.getAttribute('data-knowledge-select');
