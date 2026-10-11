@@ -730,20 +730,20 @@
 | `apps/api/incidents.py` | `RemediationRequest` | 109 | class | کلاس | module |
 | `apps/api/incidents.py` | `_remediation_contract_from_checkpoint` | 115 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/incidents.py` | `request_remediation` | 178 | async function | Return/create only an approval bound to the durable workflow execution intent. | module |
-| `apps/api/knowledge_reviews.py` | `IncidentDraftRequest` | 26 | class | کلاس | module |
-| `apps/api/knowledge_reviews.py` | `ManualDraftRequest` | 31 | class | کلاس | module |
-| `apps/api/knowledge_reviews.py` | `ReviewEditRequest` | 37 | class | کلاس | module |
-| `apps/api/knowledge_reviews.py` | `ReviewDecisionRequest` | 43 | class | کلاس | module |
-| `apps/api/knowledge_reviews.py` | `_audit` | 48 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/knowledge_reviews.py` | `list_reviews` | 68 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
-| `apps/api/knowledge_reviews.py` | `get_review` | 79 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
-| `apps/api/knowledge_reviews.py` | `draft_from_memory` | 89 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/knowledge_reviews.py` | `draft_manual` | 97 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/knowledge_reviews.py` | `edit_review` | 119 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/knowledge_reviews.py` | `approve_review` | 146 | async function | transition مربوط به Approval/Governance را اعمال می‌کند | module |
-| `apps/api/knowledge_reviews.py` | `reject_review` | 174 | async function | transition مربوط به Approval/Governance را اعمال می‌کند | module |
-| `apps/api/knowledge_reviews.py` | `publish_review` | 190 | async function | Publish with a deterministic Idempotency-Key; no unapproved content crosses. | module |
-| `apps/api/knowledge_reviews.py` | `refresh_review` | 258 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/knowledge_reviews.py` | `IncidentDraftRequest` | 27 | class | کلاس | module |
+| `apps/api/knowledge_reviews.py` | `ManualDraftRequest` | 32 | class | کلاس | module |
+| `apps/api/knowledge_reviews.py` | `ReviewEditRequest` | 38 | class | کلاس | module |
+| `apps/api/knowledge_reviews.py` | `ReviewDecisionRequest` | 44 | class | کلاس | module |
+| `apps/api/knowledge_reviews.py` | `_audit` | 49 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/knowledge_reviews.py` | `list_reviews` | 69 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
+| `apps/api/knowledge_reviews.py` | `get_review` | 80 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
+| `apps/api/knowledge_reviews.py` | `draft_from_memory` | 90 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/knowledge_reviews.py` | `draft_manual` | 98 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/knowledge_reviews.py` | `edit_review` | 120 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/knowledge_reviews.py` | `approve_review` | 147 | async function | transition مربوط به Approval/Governance را اعمال می‌کند | module |
+| `apps/api/knowledge_reviews.py` | `reject_review` | 177 | async function | transition مربوط به Approval/Governance را اعمال می‌کند | module |
+| `apps/api/knowledge_reviews.py` | `publish_review` | 195 | async function | Publish with a deterministic Idempotency-Key; no unapproved content crosses. | module |
+| `apps/api/knowledge_reviews.py` | `refresh_review` | 263 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/main.py` | `root` | 76 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/main.py` | `dashboard_page` | 88 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/main.py` | `dashboard_page_slash` | 93 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
