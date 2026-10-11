@@ -65,7 +65,7 @@ async def _audit(db, row: KnowledgeReview, actor: str, event: str) -> None:
     })
 
 
-@router.get("/knowledge-reviews", dependencies=[Depends(require_permission("read:incident"))])
+@router.get("/knowledge-reviews", dependencies=[Depends(require_permission("knowledge:draft"))])
 async def list_reviews(status: str | None = Query(default=None), limit: int = Query(default=50, ge=1, le=100)):
     async with AsyncSessionLocal() as db:
         await require_database_ready(db, operation="knowledge_review_list")
@@ -81,7 +81,7 @@ async def list_reviews(status: str | None = Query(default=None), limit: int = Qu
         ]}
 
 
-@router.get("/knowledge-reviews/{review_id}", dependencies=[Depends(require_permission("read:incident"))])
+@router.get("/knowledge-reviews/{review_id}", dependencies=[Depends(require_permission("knowledge:draft"))])
 async def get_review(review_id: UUID):
     async with AsyncSessionLocal() as db:
         await require_database_ready(db, operation="knowledge_review_read")
