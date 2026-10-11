@@ -10,6 +10,7 @@ import asyncssh
 
 from domain.contracts.config import settings
 from domain.contracts.logging import logger
+from domain.contracts.redaction import redact_text
 from integrations.vm.service_adapters import get_service_adapter
 
 _SAFE_HOST = re.compile(r"^[A-Za-z0-9._:-]+$")
@@ -401,7 +402,7 @@ class SSHVMConnector:
             )
             # 3 means an inactive/failed service; preserve its status output.
             if status.get("success") or status.get("exit_code") == 3:
-                diagnostics["systemctl_status"] = str(status.get("stdout") or "")[:12000]
+                diagnostics["systemctl_status"] = redact_text(str(status.get("stdout") or "")[:12000])
                 diagnostics["systemctl_status_exit_code"] = status.get("exit_code")
             else:
                 diagnostics["systemctl_status"] = None
@@ -463,7 +464,7 @@ class SSHVMConnector:
                 "access_mode": mode, "exit_code": result.get("exit_code"),
                 "detail": detail[:500],
             }
-        lines = [line[:1200] for line in str(result.get("stdout") or "").splitlines() if line.strip()]
+        lines = [redact_text(line[:1200]) for line in str(result.get("stdout") or "").splitlines() if line.strip()]
         return {
             "success": True, "target": target, "service": service,
             "logs": lines[-bounded:], "count": len(lines[-bounded:]), "access_mode": mode,
