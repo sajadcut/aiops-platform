@@ -159,7 +159,10 @@
       '<h4>Conflicting evidence refs</h4>' + list(b.evidence_conflicts);
     const actionSection = '<div class="db-fields">' + field(t('tool'), r.tool) +
       field(t('target'), r.target) + field('Action', r.action) +
-      field(t('risk'), r.risk_level) + '</div><p class="db-notice">' +
+      field(t('risk'), r.risk_level) + field('Blast radius', r.blast_radius) +
+      field('Risk of inaction', r.risk_of_inaction) +
+      field('Expected outcome', r.expected_outcome) +
+      field('Verification plan', r.verification_plan) + '</div><p class="db-notice">' +
       (language === 'fa' ? 'پیشنهاد فقط از Action Plan ذخیره‌شده خوانده شده است؛ ارتباط علّی بدون Citation قطعی نیست.' :
        'Proposal comes from the recorded action plan. Causal support is not assumed without citations.') +
       '</p>' + linkRefs(i.cause_evidence_refs);
@@ -283,8 +286,19 @@
     const copy = event.target.closest('[data-db-copy]');
     if (copy && brief) {
       const narrative = brief.localized_narrative || {};
-      const text = (language === 'fa' ? narrative.fa : narrative.en) || '';
-      try { await navigator.clipboard.writeText(text + '\nIncident ID: ' + brief.incident_summary.incident_id); toast(t('copyDone')); }
+      const intro = (language === 'fa' ? brief.localized_narrative?.fa : brief.localized_narrative?.en) || '';
+      const detailed = narrative?.snapshot_id === brief.snapshot_id && narrative?.language === language &&
+        narrative?.status === 'available' ? (narrative.sections || []).map(x =>
+          x.heading + '\n' + x.text + '\n' + (x.citations || []).join(', ')
+        ).join('\n\n') : '';
+      const report = [intro, detailed,
+        'Incident ID: ' + brief.incident_summary.incident_id,
+        'Snapshot: ' + brief.snapshot_id,
+        'Action: ' + (brief.remediation_recommendation?.action || 'Unknown'),
+        'Target: ' + (brief.remediation_recommendation?.target || 'Unknown'),
+        'Evidence: ' + (brief.source_references || []).join(', '),
+      ].filter(Boolean).join('\n\n');
+      try { await navigator.clipboard.writeText(report); toast(t('copyDone')); }
       catch (_) { toast(t('unavailable')); }
       return;
     }
