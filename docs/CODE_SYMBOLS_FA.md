@@ -938,20 +938,20 @@
 | `apps/context_service/__init__.py` | `ContextBuilder._knowledge_failure_status` | 64 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ContextBuilder |
 | `apps/context_service/__init__.py` | `ContextBuilder.build_context` | 91 | async method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | ContextBuilder |
 | `apps/context_service/__init__.py` | `ContextBuilder.build_context.avg` | 184 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ContextBuilder.build_context |
-| `apps/context_service/asset_identity.py` | `AssetContext` | 8 | class | کلاس | module |
-| `apps/context_service/asset_identity.py` | `AssetIdentityResolver` | 33 | class | Deterministically derives one asset identity from live-source metadata. | module |
-| `apps/context_service/asset_identity.py` | `AssetIdentityResolver.resolve` | 44 | method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | AssetIdentityResolver |
-| `apps/context_service/asset_identity.py` | `AssetIdentityResolver._extract` | 111 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | AssetIdentityResolver |
-| `apps/context_service/asset_identity.py` | `AssetIdentityResolver._from_zabbix` | 125 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | AssetIdentityResolver |
-| `apps/context_service/asset_identity.py` | `AssetIdentityResolver._from_prometheus` | 160 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | AssetIdentityResolver |
-| `apps/context_service/asset_identity.py` | `AssetIdentityResolver._from_elastic` | 182 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | AssetIdentityResolver |
-| `apps/context_service/asset_identity.py` | `AssetIdentityResolver._from_kubernetes` | 210 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | AssetIdentityResolver |
-| `apps/context_service/asset_identity.py` | `AssetIdentityResolver._apply_tags` | 225 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | AssetIdentityResolver |
-| `apps/context_service/asset_identity.py` | `AssetIdentityResolver._derive_platform` | 241 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | AssetIdentityResolver |
-| `apps/context_service/asset_identity.py` | `AssetIdentityResolver._os_family` | 253 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | AssetIdentityResolver |
-| `apps/context_service/asset_identity.py` | `AssetIdentityResolver._classify_text` | 262 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | AssetIdentityResolver |
-| `apps/context_service/asset_identity.py` | `AssetIdentityResolver._classify_labels` | 275 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | AssetIdentityResolver |
-| `apps/context_service/asset_identity.py` | `AssetIdentityResolver._classify_elastic` | 291 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | AssetIdentityResolver |
+| `apps/context_service/asset_identity.py` | `AssetContext` | 10 | class | کلاس | module |
+| `apps/context_service/asset_identity.py` | `AssetIdentityResolver` | 35 | class | Deterministically derives one asset identity from live-source metadata. | module |
+| `apps/context_service/asset_identity.py` | `AssetIdentityResolver.resolve` | 46 | method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | AssetIdentityResolver |
+| `apps/context_service/asset_identity.py` | `AssetIdentityResolver._extract` | 113 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | AssetIdentityResolver |
+| `apps/context_service/asset_identity.py` | `AssetIdentityResolver._from_zabbix` | 127 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | AssetIdentityResolver |
+| `apps/context_service/asset_identity.py` | `AssetIdentityResolver._from_prometheus` | 185 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | AssetIdentityResolver |
+| `apps/context_service/asset_identity.py` | `AssetIdentityResolver._from_elastic` | 207 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | AssetIdentityResolver |
+| `apps/context_service/asset_identity.py` | `AssetIdentityResolver._from_kubernetes` | 235 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | AssetIdentityResolver |
+| `apps/context_service/asset_identity.py` | `AssetIdentityResolver._apply_tags` | 250 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | AssetIdentityResolver |
+| `apps/context_service/asset_identity.py` | `AssetIdentityResolver._derive_platform` | 266 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | AssetIdentityResolver |
+| `apps/context_service/asset_identity.py` | `AssetIdentityResolver._os_family` | 278 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | AssetIdentityResolver |
+| `apps/context_service/asset_identity.py` | `AssetIdentityResolver._classify_text` | 287 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | AssetIdentityResolver |
+| `apps/context_service/asset_identity.py` | `AssetIdentityResolver._classify_labels` | 300 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | AssetIdentityResolver |
+| `apps/context_service/asset_identity.py` | `AssetIdentityResolver._classify_elastic` | 316 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | AssetIdentityResolver |
 | `apps/context_service/builder.py` | `ContextBuilder` | 4 | class | Normalizes an incoming incident context and preserves evidence refs. | module |
 | `apps/context_service/builder.py` | `ContextBuilder.build` | 7 | method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | ContextBuilder |
 | `apps/context_service/evidence_collector.py` | `EvidenceCollector` | 11 | class | Read-only cross-source Evidence boundary used by orchestration. | module |
