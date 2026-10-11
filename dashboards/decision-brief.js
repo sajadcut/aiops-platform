@@ -270,18 +270,22 @@
     const requestKey = requestedId + ':' + key;
     if (narrativePendingKey === requestKey) return;
     if (narrativeCache.has(key)) {
-      narrative = narrativeCache.get(key);
-      return;
+      const cached = narrativeCache.get(key);
+      if (cached.status === 'available' || Date.now() - (cached._fetchedAt || 0) < 60000) {
+        narrative = cached;
+        return;
+      }
+      narrativeCache.delete(key);
     }
     narrativePendingKey = requestKey;
     try {
       const result = await api('/api/v1/incidents/' + encodeURIComponent(requestedId) + '/decision-brief/narrative?lang=' + encodeURIComponent(currentLang));
       if (result?.snapshot_id !== snapshot || result?.language !== currentLang) throw new Error('narrative_snapshot_mismatch');
-      narrativeCache.set(key, result);
+      narrativeCache.set(key, {...result, _fetchedAt: Date.now()});
       if (String(S.selected) === requestedId && brief?.snapshot_id === snapshot && language === currentLang) narrative = result;
     } catch (_) {
       // A missing model or transient connectivity never disables durable Incident evidence.
-      const fallback = {snapshot_id: snapshot, language: currentLang, status: 'fallback', sections: []};
+      const fallback = {snapshot_id: snapshot, language: currentLang, status: 'fallback', sections: [], _fetchedAt: Date.now()};
       narrativeCache.set(key, fallback);
       if (String(S.selected) === requestedId && brief?.snapshot_id === snapshot && language === currentLang) narrative = fallback;
     } finally {
@@ -312,7 +316,11 @@
     pane.innerHTML = loading ? '<div class="db-placeholder">' + t('loading') + '</div>' :
       failed ? '<div class="db-placeholder db-error">' + t('unavailable') + ' ' + html(failed) + '</div>' :
       brief ? body(brief) : '<div class="db-placeholder">' + t('noData') + '</div>';
-    if (brief && !narrativeCache.has(brief.snapshot_id + ':' + language)) void ensureNarrative();
+    if (brief && (!narrativeCache.has(brief.snapshot_id + ':' + language) ||
+      (narrativeCache.get(brief.snapshot_id + ':' + language)?.status !== 'available' &&
+       Date.now() - (narrativeCache.get(brief.snapshot_id + ':' + language)?._fetchedAt || 0) >= 60000))) {
+      void ensureNarrative();
+    }
   }
 
   window.selectIncident = selectIncident = async function selectWithDecisionBrief(id) {
