@@ -138,3 +138,62 @@ async def test_verified_memory_human_review_and_cognia_activation(monkeypatch):
         assert persisted.status == "published"
         assert persisted.reviewed_by == "api-key"
         assert persisted.cognia_knowledge_id == 501
+
+
+
+async def test_central_memory_writeback_auto_queues_only_verified_success(monkeypatch):
+    """The autonomous workflow and runbook path share the same guarded writer."""
+    from apps.memory_service import OperationalMemoryService
+    monkeypatch.setattr(settings, "COGNIA_KNOWLEDGE_BASE_IDS", [1])
+    monkeypatch.setattr(settings, "COGNIA_CLIENT_APPLICATION_ID", 2)
+
+    async def no_embedding(_self, _entry):
+        return True
+
+    monkeypatch.setattr(OperationalMemoryService, "_embed_entry", no_embedding)
+    incident_id = uuid4()
+    async with AsyncSessionLocal() as db:
+        db.add(Incident(
+            id=incident_id, source="ci-knowledge-auto",
+            severity="low", service="ci-auto-service",
+            status=IncidentStatus.RESOLVED, summary="auto candidate acceptance",
+        ))
+        await db.commit()
+
+        verified_episode = {
+            "incident_id": str(incident_id),
+            "pattern": "service stopped with verified recovery",
+            "outcome": "recovered",
+            "verification_result": "success",
+            "memory_outcome_class": "successful_recovery",
+            "service_scope": "ci-auto-service",
+            "evidence_provenance": {
+                "evidence_count": 1, "evidence_refs": ["ci:auto:service_status"]
+            },
+            "actual_remediation": {
+                "action": "restart_service", "execution_success": True,
+            },
+            "verification": {"status": "success", "recovered_signals": ["service_active"]},
+            "reusable_lesson": "Only reuse after fresh verification and approval.",
+        }
+        memory_id = await OperationalMemoryService(db).add_episode(verified_episode)
+        pending = (await db.execute(
+            select(KnowledgeReview).where(KnowledgeReview.memory_id == memory_id)
+        )).scalars().one()
+        assert pending.status == "pending_review"
+        assert pending.reviewed_by is None
+        assert pending.cognia_knowledge_id is None
+        assert pending.created_by == "system:verified-incident"
+
+        failed_episode = {
+            **verified_episode,
+            "verification_result": "failed",
+            "memory_outcome_class": "failed_recovery",
+            "outcome": "remediation failed",
+            "verification": {"status": "failed"},
+        }
+        failed_memory_id = await OperationalMemoryService(db).add_episode(failed_episode)
+        count = (await db.execute(select(KnowledgeReview).where(
+            KnowledgeReview.memory_id == failed_memory_id
+        ))).scalars().all()
+        assert count == []
