@@ -238,3 +238,46 @@ async def test_journal_permission_failure_survives_as_explicit_source_observatio
         and item["raw_data"]["detail"] == "journal_access_denied"
         for item in result["source_observations"]
     )
+
+
+@pytest.mark.asyncio
+async def test_zabbix_explicit_vm_target_is_diagnosed_before_unhealthy_optional_providers():
+    sequence = []
+    class FastVM(_VM):
+        async def service_status(self, target, service):
+            sequence.append("systemctl_show")
+            return await super().service_status(target, service)
+        async def service_logs(self, target, service):
+            sequence.append("journalctl")
+            return await super().service_logs(target, service)
+
+    class UnavailableZabbix:
+        async def health_check(self):
+            sequence.append("zabbix_health")
+            return False
+
+    class UnavailablePrometheus:
+        async def health_check(self):
+            sequence.append("prometheus_health")
+            return False
+
+    class UnavailableElastic:
+        async def health_check(self):
+            sequence.append("elastic_health")
+            return False
+
+    vm = FastVM()
+    token = bind_vm_target("10.248.19.82")
+    try:
+        result = await EvidenceCollector(
+            vm=vm, zabbix=UnavailableZabbix(),
+            prometheus=UnavailablePrometheus(), elasticsearch=UnavailableElastic(),
+        ).collect("gfpapi", datetime.now(timezone.utc))
+    finally:
+        reset_vm_target(token)
+
+    assert sequence[:2] == ["systemctl_show", "journalctl"]
+    assert sequence.count("systemctl_show") == 1
+    assert sequence.count("journalctl") == 1
+    assert any(item["raw_data"].get("diagnostic") == "service_logs"
+               for item in result["evidence"])
