@@ -93,3 +93,6 @@
 .operator-summary-sections article .operator-recommendation-original{margin-top:8px;padding-top:8px;border-top:1px solid var(--line);color:var(--muted)}
 .operator-recommendation-original[hidden]{display:none}
 @media(max-width:480px){.operator-recommendation-head{align-items:flex-start;flex-direction:column}.operator-recommendation-switch{max-width:100%}}
+
+/* Multiline translated operator analysis; protect long IPs, paths and command text. */
+.operator-summary-sections .operator-recommendation-text{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.85;unicode-bidi:plaintext}
