@@ -87,7 +87,9 @@ const assert = require('node:assert/strict');
     addEventListener(name, cb) {this.events ||= {}; this.events[name] = cb;},
     focus(){}, setAttribute(){},
   };
-  const l10n = [{dataset:{lang:'fa'},setAttribute(){}},{dataset:{lang:'en'},setAttribute(){}}];
+  const langNode = lang => ({dataset:{lang},events:{},setAttribute(){},
+    addEventListener(name,cb){this.events[name]=cb;}});
+  const l10n = [langNode('fa'),langNode('en')];
   global.window = global;
   global.location = {pathname:'/dashboard/incidents/11111111-1111-4111-8111-111111111111'};
   global.document = {
@@ -167,9 +169,11 @@ const assert = require('node:assert/strict');
   assert.match(el('#ic-action-state').innerHTML,/consumed|مصرف/);
   // Language switching is real, not a header-only cosmetic toggle.
   const english=l10n[1].dataset.lang;
-  const callback = l10n[1].events?.click;
-  if(callback)callback();
-  else assert.equal(english,'en');
+  const callback = l10n[1].events.click;
+  assert.equal(typeof callback,'function');
+  callback();
+  assert.equal(document.documentElement.dir,'ltr');
+  assert.match(el('#ic-action-state').innerHTML,/Consumed|consumed/);
   console.log('Incident Command Room safe approval runtime PASS');
 })().catch(e=>{console.error(e);process.exitCode=1;});
 """
