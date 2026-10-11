@@ -162,7 +162,7 @@ if (-not (Test-Path -LiteralPath $LocalConfigPath -PathType Leaf)) {
         Copy-Item -LiteralPath $ExampleConfigPath -Destination $LocalConfigPath
         Write-Host "Created local configuration: $LocalConfigPath" -ForegroundColor Yellow
         Write-Host 'Edit the VM MCP folder, executable, arguments, and MatchText, then run start-all.ps1 again.'
-        throw 'Local config created. Edit start-all.local.ps1 with the actual VM MCP startup values, then run start-all.ps1 again.'
+        return
     }
 
     throw "Missing VM MCP config: $LocalConfigPath"
