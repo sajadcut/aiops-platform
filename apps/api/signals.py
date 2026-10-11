@@ -108,6 +108,21 @@ async def _ingest_zabbix(payload: Dict[str, Any]) -> Dict[str, Any]:
         async with AsyncSessionLocal() as db:
             await _require_database_ready(db)
             result = await ingest_zabbix_payload(db, payload)
+        if result.get("recovery_unmatched"):
+            # The v1.1 sender raises on non-2xx and exposes failed deliveries
+            # for retry. Never acknowledge an unpaired Recovery as delivered:
+            # its Problem may still be in flight, and 2xx would lose pairing.
+            reason = str(result.get("terminal_reason") or "")
+            if reason == "zabbix_recovery_problem_event_not_found":
+                raise HTTPException(
+                    status_code=503,
+                    detail=reason,
+                    headers={"Retry-After": "10"},
+                )
+            raise HTTPException(
+                status_code=422,
+                detail=reason or "zabbix_recovery_identity_incomplete",
+            )
         return _response_from_result(result)
     except HTTPException:
         raise
