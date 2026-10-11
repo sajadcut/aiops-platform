@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 from apps.runbook_service.registry import RunbookRegistry
+from integrations.vm.target_context import target_from_zabbix_payload
 
 
 class RemediationPlanner:
@@ -59,6 +60,20 @@ class RemediationPlanner:
             return {**base, "reason": "ambiguous_live_service_binding"}
 
         (target, service), binding_refs = next(iter(service_bindings.items()))
+
+        # Guide v1.1: Zabbix HOST.IP/HOST.HOST/trigger prose cannot select a
+        # remediation destination, even when read-only MCP discovery happened
+        # to find a VM with matching service-state evidence.
+        if source == "zabbix":
+            trigger_raw = trigger_signal.get("raw_data")
+            declared_target = target_from_zabbix_payload(
+                trigger_raw if isinstance(trigger_raw, dict) else {}
+            )
+            if not declared_target:
+                return {**base, "reason": "zabbix_explicit_target_ip_required"}
+            if declared_target != target:
+                return {**base, "reason": "zabbix_trigger_target_mismatch"}
+
         states, status_refs = cls._service_states(evidence, target=target, service=service)
         action, action_reason = cls._recovery_action(states)
         status_refs = cls._dedupe(binding_refs + status_refs)
