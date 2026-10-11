@@ -239,3 +239,30 @@ async def test_concurrent_consume_has_exactly_one_execution_authority_winner():
             {"incident_id": incident_id},
         )
         await db.commit()
+
+
+@pytest.mark.asyncio(loop_scope="module")
+async def test_incident_evidence_inventory_digest_changes_on_durable_append():
+    """Real PostgreSQL acceptance: new incident Evidence must invalidate an old approval fingerprint."""
+    from apps.incident_service.repository import IncidentRepository
+    from apps.approval_service.binding import decision_snapshot_digest
+
+    incident_id = uuid4()
+    async with AsyncSessionLocal() as db:
+        await _seed_incident(db, incident_id)
+        incidents = IncidentRepository(db)
+        original_inventory = await incidents.evidence_inventory_digest(str(incident_id))
+        state = {
+            "final_plan": "restart after human approval",
+            "execution_request": {"tool_name": "ssh_vm", "action": "restart_service", "target": "vm-1"},
+        }
+        approved_digest = decision_snapshot_digest(state, original_inventory)
+        await incidents.add_evidence(str(incident_id), [{
+            "type": "telemetry", "source": "vm_mcp",
+            "reference": f"approval-snapshot-test-{uuid4()}",
+            "raw_data": {"diagnostic": "service_status", "active_state": "inactive", "success": True},
+        }])
+        await incidents.commit()
+        updated_inventory = await incidents.evidence_inventory_digest(str(incident_id))
+        assert updated_inventory != original_inventory
+        assert decision_snapshot_digest(state, updated_inventory) != approved_digest
