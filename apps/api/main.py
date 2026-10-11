@@ -104,6 +104,29 @@ async def agent_dashboard_page():
     return FileResponse(_DASHBOARD_DIR / "index.html")
 
 
+@app.get("/dashboard/incidents/{incident_id}", include_in_schema=False)
+async def incident_command_room_page(incident_id: str):
+    """Dedicated full-page workspace; API authentication remains server-enforced."""
+    from uuid import UUID
+    from fastapi import HTTPException
+
+    try:
+        UUID(incident_id)
+    except (ValueError, AttributeError) as exc:
+        raise HTTPException(status_code=404, detail="Incident not found") from exc
+    return FileResponse(_DASHBOARD_DIR / "incident-command-room.html")
+
+
+@app.get("/dashboard/incident-command-room.css", include_in_schema=False)
+async def incident_command_room_styles():
+    return FileResponse(_DASHBOARD_DIR / "incident-command-room.css", media_type="text/css")
+
+
+@app.get("/dashboard/incident-command-room.js", include_in_schema=False)
+async def incident_command_room_script():
+    return FileResponse(_DASHBOARD_DIR / "incident-command-room.js", media_type="application/javascript")
+
+
 @app.get("/dashboard/control-center.css", include_in_schema=False)
 async def dashboard_stylesheet():
     return FileResponse(_DASHBOARD_DIR / "control-center.css", media_type="text/css")

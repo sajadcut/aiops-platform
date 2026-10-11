@@ -226,7 +226,7 @@ function renderOverview() {
     const score = attentionRank(i);
     const level = attentionLevel(score);
     const critical = level === 'P0' ? 'critical' : '';
-    return `<div class="attention-item" onclick="openIncident('${esc(i.id)}')"><i class="attention-marker ${critical}"></i><div><div class="attention-title">${esc(i.service || 'Unknown service')} · ${esc(i.summary || 'Incident')}</div><div class="attention-meta">${esc(attentionReason(i).join(' · '))} · ${fmtShortDate(i.created_at)}</div></div><div class="attention-score"><strong>${level}</strong><small>${esc(i.severity || '')}</small></div></div>`;
+    return `<a class="attention-item" href="/dashboard/incidents/${encodeURIComponent(i.id)}" aria-label="گزارش و تصمیم‌گیری رخداد ${esc(i.service || i.id)}"><i class="attention-marker ${critical}"></i><div><div class="attention-title">${esc(i.service || 'Unknown service')} · ${esc(i.summary || 'Incident')}</div><div class="attention-meta">${esc(attentionReason(i).join(' · '))} · ${fmtShortDate(i.created_at)}</div></div><div class="attention-score"><strong>${level}</strong><small>${esc(i.severity || '')}</small></div></a>`;
   }).join('') || '<div class="empty-state">No active incident currently requires elevated operator attention.</div>';
 
   $('#servicePreview').innerHTML = S.services.slice(0, 6).map(s => {
@@ -313,8 +313,8 @@ function renderServices() {
 }
 
 function openIncident(id) {
-  setView('incidents');
-  selectIncident(id);
+  // All queue and attention entry points use one unambiguous full-page workflow.
+  window.location.assign('/dashboard/incidents/' + encodeURIComponent(id));
 }
 
 async function selectIncident(id) {
@@ -506,7 +506,7 @@ async function loadAll() {
     renderServices();
     renderMcp();
     renderAudit();
-    if (!S.selected && S.incidents[0] && S.view === 'incidents') selectIncident(S.incidents[0].id);
+    // No implicit selection: operators explicitly open an Incident in its full-page workspace.
   } catch (e) {
     showError(`Live dashboard unavailable: ${e.message}`);
     $('#liveDot').classList.remove('ok');
@@ -538,6 +538,8 @@ window.addEventListener('DOMContentLoaded', () => {
   applyTheme(initialTheme(), {persist: false});
   $('#themeToggle')?.addEventListener('click', toggleTheme);
   if (S.key) $('#apiKey').value = S.key;
+  const requestedView = new URLSearchParams(window.location.search).get('view');
+  if (['incidents', 'knowledge', 'audit', 'services'].includes(requestedView)) setView(requestedView);
   loadAll();
   setInterval(loadAll, 60000);
 });

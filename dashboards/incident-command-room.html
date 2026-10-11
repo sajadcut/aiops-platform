@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#0b1018">
+  <meta name="description" content="فضای اختصاصی بررسی، تصمیم‌گیری و تأیید ایمن رخداد AIOps">
+  <title>گزارش و تصمیم‌گیری رخداد | AIOps</title>
+  <script>
+    (() => {
+      try {
+        document.documentElement.dataset.theme =
+          localStorage.getItem('aiops.chatbot.theme') ||
+          (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+      } catch (_) { document.documentElement.dataset.theme = 'dark'; }
+    })();
+  </script>
+  <link rel="stylesheet" href="/dashboard/incident-command-room.css">
+</head>
+<body>
+<a class="ic-skip" href="#ic-main">رفتن به گزارش رخداد</a>
+<header class="ic-topbar">
+  <div class="ic-topbar-inner">
+    <div class="ic-brand"><span class="ic-logo" aria-hidden="true">AI</span><div><strong>AIOps <span>Command Room</span></strong><small data-i18n="brandDetail">فضای تصمیم‌گیری عملیاتی</small></div></div>
+    <nav class="ic-breadcrumb" aria-label="موقعیت فعلی">
+      <a href="/dashboard" data-i18n="dashboard">داشبورد</a><span aria-hidden="true">/</span>
+      <a href="/dashboard?view=incidents" data-i18n="incidents">رخدادها</a><span aria-hidden="true">/</span>
+      <span data-i18n="thisIncident">این رخداد</span>
+    </nav>
+    <div class="ic-top-actions">
+      <div class="ic-lang" role="group" aria-label="Report language">
+        <button type="button" data-lang="fa" aria-pressed="true">فارسی</button>
+        <button type="button" data-lang="en" aria-pressed="false">EN</button>
+      </div>
+      <button id="ic-theme" class="ic-icon-button" type="button" aria-label="تغییر پوسته" title="تغییر پوسته">◐</button>
+      <button id="ic-copy" class="ic-btn ic-btn-muted" type="button" data-i18n="copy">کپی خلاصه</button>
+      <button id="ic-refresh" class="ic-btn ic-btn-muted" type="button" data-i18n="refresh">↻ تازه‌سازی</button>
+      <a class="ic-btn ic-btn-back" href="/dashboard?view=incidents"><span aria-hidden="true">←</span> <span data-i18n="back">بازگشت به رخدادها</span></a>
+    </div>
+  </div>
+</header>
+
+<div id="ic-alert" class="ic-global-alert" role="alert" hidden></div>
+<div id="ic-auth" class="ic-auth" hidden>
+  <strong data-i18n="authTitle">برای دیدن اطلاعات واقعی این رخداد، اتصال مجاز لازم است.</strong>
+  <label for="ic-key" data-i18n="apiKey">کلید دسترسی API</label>
+  <div class="ic-auth-row"><input id="ic-key" type="password" autocomplete="off" placeholder="API key">
+  <button id="ic-connect" class="ic-btn ic-btn-primary" type="button" data-i18n="connect">اتصال امن</button></div>
+  <p data-i18n="authNote">کلید فقط برای درخواست‌های احرازهویت‌شده همین مرورگر استفاده می‌شود.</p>
+</div>
+
+<div id="ic-loader" class="ic-loader" role="status" aria-live="polite">
+  <div class="ic-loader-top"><span class="ic-skeleton ic-skeleton-line"></span><span class="ic-skeleton ic-skeleton-short"></span></div>
+  <div class="ic-skeleton ic-skeleton-hero"></div>
+  <div class="ic-loader-grid"><span class="ic-skeleton"></span><span class="ic-skeleton"></span><span class="ic-skeleton"></span></div>
+  <p data-i18n="loading">در حال خواندن گزارش مستند از داده‌های ثبت‌شده رخداد…</p>
+</div>
+
+<main id="ic-main" class="ic-main" hidden>
+  <section class="ic-hero" aria-labelledby="ic-title">
+    <div class="ic-hero-heading">
+      <div class="ic-hero-copy">
+        <div class="ic-kicker"><span class="ic-live-dot"></span><span data-i18n="heroKicker">اتاق بررسی و تصمیم‌گیری</span> <span id="ic-short-id" class="ic-identifier"></span></div>
+        <h1 id="ic-title" tabindex="-1">—</h1>
+        <p id="ic-description" class="ic-hero-description"></p>
+        <div id="ic-hero-badges" class="ic-hero-badges"></div>
+      </div>
+      <div id="ic-decision-pulse" class="ic-pulse" aria-live="polite"></div>
+    </div>
+    <div id="ic-quick-facts" class="ic-quick-facts"></div>
+  </section>
+
+  <nav class="ic-section-nav" aria-label="بخش‌های گزارش">
+    <a href="#ic-overview" data-i18n="navOverview">خلاصه تصمیم</a>
+    <a href="#ic-review" data-i18n="navReview">قبل از تأیید</a>
+    <a href="#ic-analysis" data-i18n="navAnalysis">تحلیل Agentها</a>
+    <a href="#ic-evidence" data-i18n="navEvidence">شواهد و MCP</a>
+    <a href="#ic-knowledge" data-i18n="navKnowledge">دانش و تجربه</a>
+    <a href="#ic-outcome" data-i18n="navOutcome">نتیجه اجرا</a>
+    <a href="#ic-history" data-i18n="navHistory">تاریخچه</a>
+  </nav>
+
+  <div id="ic-archive-banner" class="ic-archive-banner" role="status" hidden>
+    <div><strong data-i18n="archivedNotice">در حال مشاهده نسخه تاریخی هستید</strong><p data-i18n="archiveHint">این نسخه فقط برای ممیزی است و مبنای تأیید یا اجرای فعلی نیست.</p></div>
+    <button type="button" class="ic-btn ic-btn-primary" id="ic-return-live" data-i18n="returnLive">بازگشت به نسخه فعلی</button>
+  </div>
+
+      <section class="ic-section ic-section-featured" id="ic-overview">
+        <div class="ic-section-heading"><span class="ic-section-number">۰۱</span><div><p class="ic-overline" data-i18n="readFirst">اول این بخش را بخوانید</p><h2 data-i18n="overviewTitle">در ۳۰ ثانیه چه بدانم؟</h2></div></div>
+        <div id="ic-brief-lead" class="ic-lead"></div>
+        <div id="ic-key-answer" class="ic-summary-block"></div>
+        <div id="ic-warning-list" class="ic-warnings"></div>
+      </section>
+
+
+  <div class="ic-content-grid">
+    <div class="ic-content">
+      <section class="ic-section" id="ic-review">
+        <div class="ic-section-heading"><span class="ic-section-number">۰۲</span><div><p class="ic-overline" data-i18n="decisionSafety">بررسی ریسک پیش از اقدام</p><h2 data-i18n="reviewTitle">من دقیقاً چه چیزی را تأیید می‌کنم؟</h2></div></div>
+        <div id="ic-proposal" class="ic-proposal"></div>
+        <div id="ic-preconditions" class="ic-preconditions"></div>
+      </section>
+
+      <section class="ic-section" id="ic-analysis">
+        <div class="ic-section-heading"><span class="ic-section-number">۰۳</span><div><p class="ic-overline" data-i18n="agentSubtitle">نتیجه واقعی متخصص‌ها</p><h2 data-i18n="agentsTitle">تحلیل Agentها و اطمینان RCA</h2></div></div>
+        <div id="ic-confidence" class="ic-confidence-grid"></div>
+        <div id="ic-agents" class="ic-detail-stack"></div>
+      </section>
+
+      <section class="ic-section" id="ic-evidence">
+        <div class="ic-section-heading"><span class="ic-section-number">۰۴</span><div><p class="ic-overline" data-i18n="sourceSubtitle">فقط شواهد ثبت‌شده</p><h2 data-i18n="evidenceTitle">MCP و وضعیت منابع</h2></div></div>
+        <div id="ic-sources" class="ic-source-grid"></div>
+        <div id="ic-mcp" class="ic-detail-stack"></div>
+        <details class="ic-reveal" id="ic-raw-details"><summary data-i18n="rawShow">مشاهده شواهد خام (اختیاری)</summary>
+          <div class="ic-reveal-content"><button type="button" id="ic-fetch-raw" class="ic-btn ic-btn-muted" data-i18n="loadRaw">دریافت شواهد ثبت‌شده</button><pre id="ic-raw-text" aria-live="polite"></pre></div>
+        </details>
+      </section>
+
+      <section class="ic-section" id="ic-knowledge">
+        <div class="ic-section-heading"><span class="ic-section-number">۰۵</span><div><p class="ic-overline" data-i18n="knowledgeSubtitle">دانش بازیابی‌شده، نه واقعیت قطعی</p><h2 data-i18n="knowledgeTitle">Cognia و تجربیات قبلی</h2></div></div>
+        <div class="ic-dual">
+          <div class="ic-subsection"><div class="ic-subsection-head"><h3 data-i18n="cognia">دانش سازمانی Cognia</h3><span id="ic-cognia-count" class="ic-tag"></span></div><div id="ic-cognia" class="ic-detail-stack"></div></div>
+          <div class="ic-subsection"><div class="ic-subsection-head"><h3 data-i18n="memory">Operational Memory</h3><span id="ic-memory-count" class="ic-tag"></span></div><div id="ic-memory" class="ic-detail-stack"></div></div>
+        </div>
+      </section>
+
+      <section class="ic-section" id="ic-outcome">
+        <div class="ic-section-heading"><span class="ic-section-number">۰۶</span><div><p class="ic-overline" data-i18n="afterSubtitle">بعد از تأیید چه اتفاقی افتاد؟</p><h2 data-i18n="outcomeTitle">اجرا، راستی‌آزمایی و یادگیری</h2></div></div>
+        <div id="ic-outcome-view" class="ic-outcome-view"></div>
+      </section>
+
+      <section class="ic-section" id="ic-history">
+        <div class="ic-section-heading"><span class="ic-section-number">۰۷</span><div><p class="ic-overline" data-i18n="historySubtitle">قابل پیگیری و قابل ممیزی</p><h2 data-i18n="historyTitle">زمان‌بندی اتفاقات و نسخه‌ها</h2></div></div>
+        <div id="ic-timeline" class="ic-timeline"></div>
+        <details class="ic-reveal" id="ic-history-details"><summary data-i18n="archiveShow">نمایش نسخه‌های تاریخی ذخیره‌شده</summary>
+          <div id="ic-snapshots" class="ic-reveal-content"><p data-i18n="archiveLoading">برای دیدن نسخه‌های قبلی این بخش را باز کنید.</p></div>
+        </details>
+      </section>
+
+      <footer class="ic-footer"><strong>AIOps Decision Brief</strong><span data-i18n="footerTrust">تصمیم نهایی انسانی است؛ گزارش فقط بر مبنای داده ذخیره‌شده تهیه شده است.</span><small id="ic-snapshot-label"></small></footer>
+    </div>
+
+    <aside class="ic-decision-column" aria-label="کنترل مستقل تصمیم و تأیید">
+      <section class="ic-decision-card" id="ic-decision-card">
+        <div class="ic-decision-head"><div><p class="ic-overline" data-i18n="decisionDesk">میز تصمیم اپراتور</p><h2 data-i18n="actionTitle">اقدام بعدی چیست؟</h2></div><span class="ic-lock" aria-hidden="true">◇</span></div>
+        <div id="ic-action-state"></div>
+        <div id="ic-action-checks"></div>
+        <div id="ic-action-controls"></div>
+        <p class="ic-safety-foot" data-i18n="neverAuto">تأیید و اجرا دو مرحله جداگانه‌اند. این صفحه مجوز جدید ایجاد نمی‌کند.</p>
+      </section>
+      <div class="ic-help-card"><span aria-hidden="true">ⓘ</span><div><strong data-i18n="helpTitle">وقتی شک داری، اجرا نکن</strong><p data-i18n="helpText">اول «شواهد و MCP» و «قبل از تأیید» را بخوان؛ برای رد کردن تصمیم، دلیل ثبت کن.</p></div></div>
+    </aside>
+  </div>
+</main>
+<div id="ic-toast" class="ic-toast" role="status" aria-live="polite"></div>
+<script src="/dashboard/incident-command-room.js" defer></script>
+</body>
+</html>

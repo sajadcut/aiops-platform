@@ -108,10 +108,11 @@
         <div class="filter-group"><input id="incidentSearch" placeholder="Search incidents, services or targets" oninput="renderIncidents()"><select id="severityFilter" onchange="renderIncidents()"><option value="">All severities</option><option value="critical">Critical</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select><select id="statusFilter" onchange="renderIncidents()"><option value="__active__" selected>Active only</option><option value="">All history</option><option value="open">Open</option><option value="analyzing">Analyzing</option><option value="escalated">Escalated</option><option value="resolved">Resolved</option><option value="closed">Closed</option></select></div>
         <span id="incidentCount" class="badge neutral">0 incidents</span>
       </div>
-      <div class="incident-layout">
-        <section class="panel incident-table-panel"><div class="panel-head"><div><span class="section-kicker">Live queue</span><h2>Incident Workbench</h2></div><span class="muted">PostgreSQL durable state</span></div><div class="table-wrap"><table><thead><tr><th>Incident</th><th>Service</th><th>Severity</th><th>Status</th><th>Confidence</th><th>Risk</th><th>Approval</th><th>Execution</th><th>Verification</th><th>Memory</th><th>Started (local)</th></tr></thead><tbody id="incidentRows"></tbody></table></div></section>
-        <aside class="panel detail-panel"><div class="panel-head"><div><span class="section-kicker">Investigation</span><h2>Incident Intelligence</h2></div><span class="badge neutral">durable + live evidence</span></div><div id="detail"><div class="empty-state tall">Select an incident to inspect evidence, routing, RCA, evaluator decision, approval binding, execution, verification and learning.</div></div></aside>
-      </div>
+      <section class="panel incident-queue-panel" aria-labelledby="incidentQueueTitle">
+        <div class="panel-head incident-queue-heading"><div><span class="section-kicker">Incident Intelligence · Started (local)</span><h2 id="incidentQueueTitle">Incident Workbench</h2><p>روی هر رخداد بزنید تا گزارش، شواهد و تأیید ایمن را در یک صفحه تمام‌عرض ببینید.</p></div><span class="badge neutral">صفحه اختصاصی هر رخداد ↗</span></div>
+        <div id="incidentRows" class="incident-cards"></div>
+      </section>
+      <div id="detail" hidden aria-hidden="true"></div>
     </section>
 
     <section class="view" data-view="services">
@@ -216,14 +217,31 @@
       (!q || lower([i.id, i.service, i.summary, i.execution_target, i.execution_tool, i.runbook_id].join(' ')).includes(q)) &&
       (!sev || lower(i.severity) === sev) &&
       matchesIncidentStatusScope(i, status)
-    );
+    ).sort((a,b) => {
+      const priority = incident => (lower(incident.approval_status) === 'pending' ? 1000 : lower(incident.approval_status) === 'approved' ? 900 : 0) +
+        (lower(incident.severity) === 'critical' ? 200 : lower(incident.severity) === 'high' ? 100 : 0);
+      return priority(b) - priority(a) || Date.parse(b.started_at || b.created_at || 0) - Date.parse(a.started_at || a.created_at || 0);
+    });
     if ($('#incidentCount')) $('#incidentCount').textContent = `${rows.length} shown · ${S.incidents.length} loaded`;
     if (!$('#incidentRows')) return;
     $('#incidentRows').innerHTML = rows.map(i => {
       const started = incidentTimeInfo(i.started_at || i.created_at);
       const created = incidentTimeInfo(i.created_at);
-      return `<tr class="${S.selected === i.id ? 'selected' : ''}" onclick="selectIncident('${esc(i.id)}')"><td><div class="incident-main">${esc(String(i.id).slice(0, 8))}</div><div class="incident-sub">${esc(i.summary || '')}</div></td><td>${esc(i.service || '—')}</td><td>${pill(i.severity)}</td><td>${pill(i.status)}</td><td>${pct(i.confidence)}</td><td>${pill(i.risk_level || '—')}</td><td>${pill(i.approval_status || '—')}</td><td>${pill(i.execution_status || '—')}</td><td>${pill(i.verification_status || '—')}</td><td>${pill(i.memory_status || '—')}</td><td title="DB record created ${esc(created.exact)} ${esc(created.zone)}"><div class="incident-main">${esc(started.exact)}</div><div class="incident-sub">${esc(started.zone)} · ${esc(started.relative)}</div></td></tr>`;
-    }).join('') || '<tr><td colspan="11"><div class="empty-state">No active incidents match the current filters. Switch to All history to inspect resolved or closed incidents.</div></td></tr>';
+      const pending = ['pending','approved'].includes(lower(i.approval_status));
+      const risk = ['critical','high'].includes(lower(i.severity));
+      const path = '/dashboard/incidents/' + encodeURIComponent(i.id);
+      return `<a class="incident-queue-card ${pending ? 'needs-decision' : ''}" href="${path}" aria-label="گزارش کامل رخداد ${esc(i.service || i.id)}">
+        <div class="incident-queue-main">
+          <div class="incident-queue-eyebrow">${pill(i.severity)}${pill(i.approval_status || i.status)}<span class="incident-queue-id">#${esc(String(i.id).slice(0,8))}</span></div>
+          <h3>${esc(i.service || 'Incident')}</h3>
+          <p>${esc(i.summary || 'شرح رخداد ثبت نشده است.')}</p>
+          <div class="incident-queue-meta"><span>شروع: ${esc(started.exact)} <small>${esc(started.zone)}</small></span><span>وضعیت: ${esc(i.status || '—')}</span><span>ریسک: ${esc(i.risk_level || '—')}</span></div>
+        </div>
+        <div class="incident-queue-next">${pending ? '<span class="incident-queue-urgent">نیازمند تصمیم اپراتور</span>' : (risk ? '<span class="incident-queue-urgent">اولویت بررسی</span>' : '')}
+          <span class="incident-queue-open">باز کردن صفحه رخداد <b aria-hidden="true">←</b></span>
+        </div>
+      </a>`;
+    }).join('') || '<div class="empty-state">No active incidents match the current filters. Switch to All history to inspect resolved or closed incidents.</div>';
   }
 
   function patchAttentionIncidentTimes() {
