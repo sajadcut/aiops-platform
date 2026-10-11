@@ -3,7 +3,7 @@
 > این فایل فهرست فایل‌به‌فایل repository است. توضیح معماری و flow در `CODEBASE_GUIDE_FA.md` آمده است.
 > این فایل با `scripts/generate_file_index_fa.py` ساخته و در CI کنترل می‌شود.
 
-**تعداد فایل‌های track‌شده و پوشش‌داده‌شده: 516**
+**تعداد فایل‌های track‌شده و پوشش‌داده‌شده: 518**
 
 | Path | Type | Purpose | Called By | Calls/Depends On | Runtime/Test/Docs | Notes |
 |---|---|---|---|---|---|---|
@@ -122,6 +122,7 @@
 | `apps/database/pgvector_contract.py` | Python | DB: قرارداد/validation pgvector فقط برای Operational Memory | startup/CI | PostgreSQL | Runtime | memory schema/dimension guard |
 | `apps/database/vector_validation.py` | Python | DB: قرارداد/validation pgvector فقط برای Operational Memory | startup/CI | PostgreSQL | Runtime | memory schema/dimension guard |
 | `apps/decision_brief.py` | Python | ماژول service لایه application | Runtime | domain/integrations | Runtime | جزء Control Plane |
+| `apps/decision_brief_narrative.py` | Python | ماژول service لایه application | Runtime | domain/integrations | Runtime | جزء Control Plane |
 | `apps/decision_engine/__init__.py` | Python | Decision: تبدیل RCA/evaluation به تصمیم و risk | Orchestrator | evaluation/policy | Runtime | LLM authority نیست |
 | `apps/evaluator/__init__.py` | Python | Evaluator: Critic/evaluator gate برای کیفیت RCA | Orchestrator | agent findings/thresholds | Runtime | قبل از decision |
 | `apps/evaluator/gate.py` | Python | Evaluator: Critic/evaluator gate برای کیفیت RCA | Orchestrator | agent findings/thresholds | Runtime | قبل از decision |
@@ -429,6 +430,7 @@
 | `tests/unit/test_dashboard_recommendation_language.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_database_reliability_engine.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_decision_brief.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
+| `tests/unit/test_decision_brief_narrative.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_dependency_causal_engine.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_dependency_contract.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_direct_execution_runtime_guard.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
