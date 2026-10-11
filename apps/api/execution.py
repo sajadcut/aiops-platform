@@ -223,7 +223,10 @@ async def execute(payload: Dict[str, Any], identity=Depends(require_permission("
             if approval is None:
                 raise HTTPException(status_code=404, detail="approval_not_found")
             _validate_approval_binding(approval, payload)
-            bound_digest = (approval.get("metadata") or {}).get("decision_snapshot_digest")
+            approval_meta = dict(approval.get("metadata") or {})
+            bound_digest = approval_meta.get("decision_snapshot_digest")
+            if approval_meta.get("decision_snapshot_version") and not bound_digest:
+                raise HTTPException(status_code=409, detail="approval_snapshot_binding_incomplete")
             if bound_digest:
                 checkpoint = await WorkflowCheckpointStore(db).load(incident_id) or {}
                 inventory = await IncidentRepository(db).evidence_inventory_digest(incident_id)
