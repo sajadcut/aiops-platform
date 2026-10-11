@@ -138,7 +138,7 @@ class AssetIdentityResolver:
         if not isinstance(inventory, dict):
             inventory = {}
         tags: Dict[str, str] = {}
-        for item in zabbix_tags(raw.get("tags")) + zabbix_tags(host.get("tags")):
+        for item in zabbix_tags(host.get("tags")) + zabbix_tags(raw.get("tags")):
             if item["value"]:
                 tags[item["tag"]] = item["value"]
         # The Webhook's flattened fields are values explicitly copied from
