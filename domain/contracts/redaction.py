@@ -70,7 +70,19 @@ def redact(value: Any, key: str | None = None) -> Any:
     if is_sensitive_key(key):
         return REDACTED
     if isinstance(value, Mapping):
-        return {str(k): redact(v, str(k)) for k, v in value.items()}
+        # Zabbix EVENT.TAGSJSON is [{"tag": "api_key", "value": "..."}].
+        # The confidential *key* is in a data value, rather than as a JSON
+        # property name. Normal key-based redaction would leak these values.
+        # Preserve every ordinary tag verbatim while protecting secret tags.
+        tag_name = value.get("tag")
+        if tag_name is None:
+            tag_name = value.get("key")
+        sensitive_tag = isinstance(tag_name, str) and is_sensitive_key(tag_name)
+        return {
+            str(k): REDACTED if sensitive_tag and str(k).lower() == "value"
+            else redact(v, str(k))
+            for k, v in value.items()
+        }
     if isinstance(value, list):
         return [redact(item) for item in value]
     if isinstance(value, tuple):
