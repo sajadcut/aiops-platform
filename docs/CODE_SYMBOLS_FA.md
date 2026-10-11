@@ -968,7 +968,7 @@
 | `apps/context_service/evidence_collector.py` | `EvidenceCollector._alert_evidence` | 167 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | EvidenceCollector |
 | `apps/context_service/evidence_collector.py` | `EvidenceCollector._healthy` | 174 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | EvidenceCollector |
 | `apps/context_service/evidence_collector.py` | `EvidenceCollector._vm_evidence` | 186 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | EvidenceCollector |
-| `apps/context_service/evidence_collector.py` | `EvidenceCollector._collect` | 212 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | EvidenceCollector |
+| `apps/context_service/evidence_collector.py` | `EvidenceCollector._collect` | 218 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | EvidenceCollector |
 | `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver` | 9 | class | Deterministic bridge from Cognia Knowledge chunks to asset-discovery hints. | module |
 | `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver.build_discovery_query` | 71 | method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | KnowledgeTopologyResolver |
 | `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver.extract_fqdns` | 102 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeTopologyResolver |
