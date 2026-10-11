@@ -221,6 +221,68 @@ class EvidenceCollector:
         evidence: List[Dict[str, Any]] = []
         requested_service = self._known_service(service)
 
+        # Zabbix explicitly binds the VM target at the HTTP boundary. For an
+        # initial Incident collection or systemd-specific evidence request,
+        # obtain local systemd facts FIRST: never wait on failing Zabbix,
+        # Prometheus, Elastic or RAG providers to read a failed service.
+        early_vm_actions: set[str] = set()
+        fast_target = current_vm_target()
+        needs_service_status = wants_all or (
+            requests is not None and any(
+                token in f"{row.get('reason', '')} {row.get('preferred_source', '')}".lower()
+                for row in requests
+                for token in ("systemd", "service status", "active state", "substate")
+            )
+        )
+        if (
+            self.vm and fast_target and requested_service and needs_service_status
+            and not vm_probes_blocked()
+        ):
+            method = getattr(self.vm, "service_status", None)
+            if callable(method):
+                early_vm_actions.add("service_status")
+                try:
+                    status_result = await method(fast_target, requested_service)
+                    if isinstance(status_result, dict) and status_result.get("success"):
+                        rows = self._vm_evidence(
+                            "service_status", fast_target, requested_service, current_vm_port(),
+                            status_result, since,
+                        )
+                        evidence.extend(rows)
+                        if str(status_result.get("active_state") or "").lower() in {"failed", "inactive"}:
+                            logs_method = getattr(self.vm, "service_logs", None)
+                            if callable(logs_method):
+                                early_vm_actions.add("service_logs")
+                                try:
+                                    journal = await logs_method(fast_target, requested_service)
+                                    if isinstance(journal, dict) and journal.get("success"):
+                                        evidence.extend(self._vm_evidence(
+                                            "service_logs", fast_target, requested_service,
+                                            current_vm_port(), journal, since,
+                                        ))
+                                    else:
+                                        evidence.append(self._observation(
+                                            "vm_mcp", f"vm-early-logs-error:{fast_target}:{since.isoformat()}",
+                                            status="error", service=requested_service,
+                                            detail=str(journal.get("error") if isinstance(journal, dict) else "invalid_result"),
+                                        ))
+                                except Exception as exc:
+                                    evidence.append(self._observation(
+                                        "vm_mcp", f"vm-early-logs-error:{fast_target}:{since.isoformat()}",
+                                        status="error", service=requested_service, detail=str(exc),
+                                    ))
+                    else:
+                        evidence.append(self._observation(
+                            "vm_mcp", f"vm-early-status-error:{fast_target}:{since.isoformat()}",
+                            status="error", service=requested_service,
+                            detail=str(status_result.get("error") if isinstance(status_result, dict) else "invalid_result"),
+                        ))
+                except Exception as exc:
+                    evidence.append(self._observation(
+                        "vm_mcp", f"vm-early-status-error:{fast_target}:{since.isoformat()}",
+                        status="error", service=requested_service, detail=str(exc),
+                    ))
+
         if self.zabbix and (wants_all or "alert" in wants):
             if await self._healthy(self.zabbix):
                 try:
@@ -339,6 +401,8 @@ class EvidenceCollector:
         if self.vm and vm_target and linux_candidate:
             actions = self._vm_actions_for_requests(requests, service=effective_service, port=vm_port, elastic_logs_available=elastic_logs_available)
             for action in actions:
+                if action in early_vm_actions:
+                    continue
                 method = getattr(self.vm, action, None)
                 if not callable(method):
                     evidence.append(self._observation("vm_mcp", f"vm-skipped:{vm_target}:{action}:{since.isoformat()}", status="skipped", service=effective_service, detail="diagnostic_not_supported"))
