@@ -4,6 +4,8 @@ from typing import Any, Dict, Iterable, List, Optional
 
 from pydantic import BaseModel, Field
 
+from apps.signal_gateway.zabbix_contract import IDENTITY_FIELDS, clean_zabbix_value, zabbix_tags
+
 
 class AssetContext(BaseModel):
     asset_id: Optional[str] = None
@@ -123,30 +125,53 @@ class AssetIdentityResolver:
 
     @staticmethod
     def _from_zabbix(raw: Dict[str, Any]) -> Dict[str, Any]:
+        # Both the guide's flat Webhook and structured Zabbix MCP responses
+        # contribute identity. A monitoring host is never a service identity.
         host = raw.get("host") or {}
         if isinstance(host, list):
             host = host[0] if host else {}
+        if isinstance(host, str):
+            host = {"host": host}
+        if not isinstance(host, dict):
+            host = {}
         inventory = host.get("inventory") or raw.get("inventory") or {}
-        tags = {}
-        for tag in (raw.get("tags") or []) + (host.get("tags") or []):
-            if isinstance(tag, dict) and tag.get("tag"):
-                tags[str(tag["tag"]).lower()] = str(tag.get("value", ""))
+        if not isinstance(inventory, dict):
+            inventory = {}
+        tags: Dict[str, str] = {}
+        for item in zabbix_tags(raw.get("tags")) + zabbix_tags(host.get("tags")):
+            if item["value"]:
+                tags[item["tag"]] = item["value"]
+        # The Webhook's flattened fields are values explicitly copied from
+        # EVENT.TAGSJSON. If the sender omits the tags array (guide appendix),
+        # retain those identity fields in both asset_context and tags.
+        for key in IDENTITY_FIELDS:
+            text = clean_zabbix_value(raw.get(key))
+            if text:
+                tags[key] = text
+
         groups = [str(g.get("name", "")) for g in host.get("groups", []) if isinstance(g, dict)]
         templates = [str(t.get("name", "")) for t in host.get("parentTemplates", []) if isinstance(t, dict)]
         interfaces = host.get("interfaces") or []
         ips = [str(i.get("ip")) for i in interfaces if isinstance(i, dict) and i.get("ip")]
+        # HOST.IP is informational, not a substitute for target_ip. Only an
+        # explicitly supplied target_ip becomes a webhook VM target.
+        explicit_target = tags.get("target_ip")
+        if explicit_target and explicit_target not in ips:
+            ips.append(explicit_target)
         os_text = str(inventory.get("os_full") or inventory.get("os") or tags.get("os_family") or "")
         return {
-            "asset_id": str(host.get("hostid") or raw.get("hostid") or "") or None,
-            "hostname": host.get("host") or host.get("name") or raw.get("host"),
+            "asset_id": clean_zabbix_value(host.get("hostid") or raw.get("hostid")) or None,
+            "hostname": host.get("host") or host.get("name") or raw.get("host_name"),
             "os_family": AssetIdentityResolver._os_family(os_text),
             "os_version": inventory.get("os_full") or inventory.get("os"),
+            "platform": tags.get("platform"),
             "environment": tags.get("environment") or tags.get("env"),
             "service": tags.get("service") or tags.get("service_name"),
             "business_service": tags.get("business_service"),
             "owner": tags.get("owner"),
             "cluster": tags.get("cluster"),
             "namespace": tags.get("namespace"),
+            "workload_kind": tags.get("workload_kind"),
             "workload": tags.get("workload"),
             "pod": tags.get("pod"),
             "node": tags.get("node"),
