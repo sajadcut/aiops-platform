@@ -3,11 +3,12 @@
   'use strict';
   let reviews = [];
   let selectedId = null;
+  let selectedDetails = null;
   let loading = false;
   let actionPending = false;
 
   const el = id => document.getElementById(id);
-  const current = () => reviews.find(row => row.id === selectedId);
+  const current = () => selectedDetails && selectedDetails.id === selectedId ? selectedDetails : null;
   const pendingStatuses = new Set(['pending_review', 'approved', 'publish_failed', 'submitted', 'publishing']);
 
   function notice(message) {
@@ -70,6 +71,22 @@
     `;
   }
 
+  async function loadSelected() {
+    const id = selectedId;
+    selectedDetails = null;
+    renderSelection();
+    if (!id) return;
+    try {
+      const detail = await api('/api/v1/knowledge-reviews/' + encodeURIComponent(id));
+      if (selectedId === id) {
+        selectedDetails = detail;
+        renderSelection();
+      }
+    } catch (err) {
+      notice('Cannot load review content: ' + err.message);
+    }
+  }
+
   async function reload(preferred = selectedId) {
     if (loading) return;
     loading = true;
@@ -78,7 +95,7 @@
       reviews = result.items || [];
       selectedId = reviews.some(r => r.id === preferred) ? preferred : (reviews[0]?.id || null);
       renderQueue();
-      renderSelection();
+      await loadSelected();
     } catch (err) {
       const list = el('knowledgeReviewQueue');
       if (list) list.textContent = 'Unable to load Knowledge Review: ' + err.message;
@@ -178,7 +195,7 @@
     if (choose) {
       selectedId = choose.getAttribute('data-knowledge-select');
       renderQueue();
-      renderSelection();
+      loadSelected();
       return;
     }
     const action = e.target.closest('[data-knowledge-op]');
