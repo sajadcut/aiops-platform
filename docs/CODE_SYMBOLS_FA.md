@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 414 | Dashboard JS files scanned: 6 | Symbols indexed: 3800**
+**Python files scanned: 414 | Dashboard JS files scanned: 6 | Symbols indexed: 3802**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -2147,6 +2147,8 @@
 | `tests/integration/test_knowledge_review_db.py` | `test_verified_memory_human_review_and_cognia_activation.FakeCognia.__aexit__` | 36 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_verified_memory_human_review_and_cognia_activation.FakeCognia |
 | `tests/integration/test_knowledge_review_db.py` | `test_verified_memory_human_review_and_cognia_activation.FakeCognia.register_knowledge` | 38 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_verified_memory_human_review_and_cognia_activation.FakeCognia |
 | `tests/integration/test_knowledge_review_db.py` | `test_verified_memory_human_review_and_cognia_activation.FakeCognia.get_knowledge_detail` | 41 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | test_verified_memory_human_review_and_cognia_activation.FakeCognia |
+| `tests/integration/test_knowledge_review_db.py` | `test_central_memory_writeback_auto_queues_only_verified_success` | 144 | async function | The autonomous workflow and runbook path share the same guarded writer. | module |
+| `tests/integration/test_knowledge_review_db.py` | `test_central_memory_writeback_auto_queues_only_verified_success.no_embedding` | 150 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_central_memory_writeback_auto_queues_only_verified_success |
 | `tests/integration/test_master_api_surface.py` | `test_master_api_surface_is_registered` | 4 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/integration/test_operational_memory_v2_db.py` | `_state` | 25 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/integration/test_operational_memory_v2_db.py` | `test_memory_v2_lexical_retrieval_survives_embedding_provider_outage` | 96 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
