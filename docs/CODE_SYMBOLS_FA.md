@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 409 | Dashboard JS files scanned: 5 | Symbols indexed: 3749**
+**Python files scanned: 409 | Dashboard JS files scanned: 5 | Symbols indexed: 3750**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1638,6 +1638,7 @@
 | `domain/models.py` | `Finding` | 75 | class | نتیجه تحلیل Agent؛ evidence_ids نشان می‌دهد ادعا بر کدام factها تکیه دارد. | module |
 | `domain/models.py` | `MemoryEntry` | 93 | class | Immutable-style historical incident episode plus mutable reuse statistics. | module |
 | `domain/models.py` | `MemoryReuseEvent` | 171 | class | Feedback trail showing how a historical episode affected a later incident. | module |
+| `domain/models.py` | `KnowledgeReview` | 196 | class | Governed *candidate* metadata; published knowledge belongs only to Cognia. | module |
 | `domain/observability.py` | `observe_http` | 29 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `domain/runbook.py` | `Runbook` | 5 | class | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | module |
 | `domain/runbook_validation.py` | `validate_runbook` | 12 | function | Validate a runbook definition. | module |
