@@ -3006,15 +3006,15 @@
 | `tests/unit/test_jsonb_persistence_contract.py` | `test_approval_metadata_and_timestamps_are_normalized_before_postgres_bind` | 32 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_jsonb_persistence_contract.py` | `test_audit_metadata_and_timestamp_are_normalized_before_postgres_bind` | 60 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_knowledge_review_governance.py` | `_memory` | 21 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `tests/unit/test_knowledge_review_governance.py` | `test_verified_incident_can_be_drafted_but_hypothetical_cause_never_becomes_fact` | 41 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_knowledge_review_governance.py` | `test_unverified_or_negative_experience_cannot_be_mislabeled_as_success` | 63 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_knowledge_review_governance.py` | `test_verified_cause_may_be_included_but_still_requires_human_review` | 71 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_knowledge_review_governance.py` | `test_sensitive_content_is_rejected_not_silently_published` | 79 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_knowledge_review_governance.py` | `test_knowledge_review_is_durable_outbox_not_local_rag` | 89 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_knowledge_review_governance.py` | `test_only_sre_can_review_and_publish_knowledge` | 99 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_knowledge_review_governance.py` | `test_kb_must_be_configured_not_caller_controlled` | 109 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_knowledge_review_governance.py` | `test_publish_path_is_approval_hash_bound_and_does_not_auto_execute` | 120 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_knowledge_review_governance.py` | `test_dashboard_review_is_real_ui_and_not_authorization_authority` | 134 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_knowledge_review_governance.py` | `test_verified_incident_can_be_drafted_but_hypothetical_cause_never_becomes_fact` | 42 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_knowledge_review_governance.py` | `test_unverified_or_negative_experience_cannot_be_mislabeled_as_success` | 64 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_knowledge_review_governance.py` | `test_verified_cause_may_be_included_but_still_requires_human_review` | 72 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_knowledge_review_governance.py` | `test_sensitive_content_is_rejected_not_silently_published` | 80 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_knowledge_review_governance.py` | `test_knowledge_review_is_durable_outbox_not_local_rag` | 90 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_knowledge_review_governance.py` | `test_only_sre_can_review_and_publish_knowledge` | 100 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_knowledge_review_governance.py` | `test_kb_must_be_configured_not_caller_controlled` | 110 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_knowledge_review_governance.py` | `test_publish_path_is_approval_hash_bound_and_does_not_auto_execute` | 121 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_knowledge_review_governance.py` | `test_dashboard_review_is_real_ui_and_not_authorization_authority` | 135 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_knowledge_topology_execution_gate.py` | `_finding` | 4 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_knowledge_topology_execution_gate.py` | `test_decision_rejects_write_when_target_identity_is_only_knowledge_assisted` | 8 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_knowledge_topology_execution_gate.py` | `test_decision_allows_normal_policy_after_live_target_verification` | 28 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
