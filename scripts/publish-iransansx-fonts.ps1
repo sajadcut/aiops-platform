@@ -11,7 +11,7 @@ $ErrorActionPreference = 'Stop'
 $root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $fontDirectory = Join-Path $root 'font'
 $weights = @('Thin','UltraLight','Light','Regular','Medium','DemiBold','Bold','ExtraBold','Black')
-$names = @($weights | ForEach-Object { "IRANSansX$_.ttf" })
+$names = @($weights | ForEach-Object { "IRANSansX$($_).ttf" })
 
 function Run-Git {
     param([string[]]$Arguments)
