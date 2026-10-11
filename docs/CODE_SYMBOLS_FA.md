@@ -1785,10 +1785,10 @@
 | `integrations/kubernetes/mcp_client.py` | `KubernetesMCPClient.__init__` | 33 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KubernetesMCPClient |
 | `integrations/kubernetes/mcp_client.py` | `KubernetesMCPClient.collect_query` | 51 | async method | Evidence/داده موردنیاز را از منبع مربوط جمع می‌کند | KubernetesMCPClient |
 | `integrations/kubernetes/mcp_client.py` | `KubernetesMCPClient.collect_evidence` | 80 | async method | Evidence/داده موردنیاز را از منبع مربوط جمع می‌کند | KubernetesMCPClient |
-| `integrations/kubernetes/mcp_client.py` | `KubernetesMCPClient._write_args` | 104 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KubernetesMCPClient |
-| `integrations/kubernetes/mcp_client.py` | `KubernetesMCPClient.restart_workload` | 118 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KubernetesMCPClient |
-| `integrations/kubernetes/mcp_client.py` | `KubernetesMCPClient.rollback_workload` | 129 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KubernetesMCPClient |
-| `integrations/kubernetes/mcp_client.py` | `KubernetesMCPClient.scale_workload` | 142 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KubernetesMCPClient |
+| `integrations/kubernetes/mcp_client.py` | `KubernetesMCPClient._write_args` | 109 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KubernetesMCPClient |
+| `integrations/kubernetes/mcp_client.py` | `KubernetesMCPClient.restart_workload` | 123 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KubernetesMCPClient |
+| `integrations/kubernetes/mcp_client.py` | `KubernetesMCPClient.rollback_workload` | 134 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KubernetesMCPClient |
+| `integrations/kubernetes/mcp_client.py` | `KubernetesMCPClient.scale_workload` | 147 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KubernetesMCPClient |
 | `integrations/kubernetes/target_context.py` | `bind_kubernetes_namespace` | 16 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `integrations/kubernetes/target_context.py` | `current_kubernetes_namespace` | 21 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `integrations/kubernetes/target_context.py` | `reset_kubernetes_namespace` | 25 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
