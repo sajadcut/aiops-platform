@@ -195,10 +195,16 @@ class EvidenceCollector:
                     })
             return rows
         if action in {"service_logs", "system_logs"}:
-            entries = [str(item) for item in (result.get("logs") or []) if str(item).strip()][-40:]
+            # Keep the last 150 systemd journal lines for the diagnosing agents.
+            # The VM edge already enforces the same limit before returning data.
+            entries = [str(item) for item in (result.get("logs") or []) if str(item).strip()][-150:]
             return [{
                 "type": "log", "source": "vm_mcp", "reference": f"vm:{target}:{action}:{since.isoformat()}",
-                "timestamp": now, "raw_data": {"diagnostic": action, "target": target, "service": service, "entries": entries, "count": len(entries)},
+                "timestamp": now, "raw_data": {
+                    "diagnostic": action, "target": target, "service": service,
+                    "entries": entries, "count": len(entries),
+                    "access_mode": result.get("access_mode"),
+                },
             }]
         payload = dict(result)
         payload.update({"diagnostic": action, "target": target, "service": service})
@@ -352,6 +358,17 @@ class EvidenceCollector:
                         rows = self._vm_evidence(action, vm_target, effective_service, vm_port, result, since)
                         evidence.extend(rows)
                         evidence.append(self._observation("vm_mcp", f"vm-observation:{vm_target}:{action}:{since.isoformat()}", status="queried", result_count=len(rows), service=effective_service, detail=f"target={vm_target};diagnostic={action}"))
+                        # Incident-time deterministic diagnostics, not an LLM
+                        # suggestion: fetch the journal immediately after a
+                        # failed/inactive systemd state. Do this even if Elastic,
+                        # Zabbix, Prometheus and Cognia are unreachable.
+                        if (
+                            action == "service_status"
+                            and effective_service
+                            and str(result.get("active_state") or "").lower() in {"failed", "inactive"}
+                            and "service_logs" not in actions
+                        ):
+                            actions.append("service_logs")
                     else:
                         detail = str((result or {}).get("error") if isinstance(result, dict) else "invalid_result")
                         evidence.append(self._observation("vm_mcp", f"vm-error:{vm_target}:{action}:{since.isoformat()}", status="error", service=effective_service, detail=detail))
