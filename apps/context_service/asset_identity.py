@@ -4,7 +4,7 @@ from typing import Any, Dict, Iterable, List, Optional
 
 from pydantic import BaseModel, Field
 
-from apps.signal_gateway.zabbix_contract import IDENTITY_FIELDS, clean_zabbix_value, zabbix_tags
+from integrations.zabbix.webhook_contract import IDENTITY_FIELDS, clean_zabbix_value, zabbix_tags
 
 
 class AssetContext(BaseModel):
