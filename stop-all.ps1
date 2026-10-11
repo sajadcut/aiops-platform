@@ -10,7 +10,8 @@ function Get-ProcessInfoById {
     param([int]$ProcessId)
 
     try {
-        return Get-CimInstance -ClassName Win32_Process -Filter "ProcessId = $ProcessId" -ErrorAction SilentlyContinue
+        $processInfo = Get-CimInstance -ClassName Win32_Process -Filter "ProcessId = $ProcessId" -ErrorAction SilentlyContinue
+        return $processInfo
     }
     catch {
         return $null
