@@ -97,7 +97,7 @@ def validate_narrative(raw: str, brief: dict, lang: str) -> list[dict]:
         if not isinstance(prose, str) or not (10 <= len(prose) <= 600):
             raise ValueError("narrative_length")
         if chr(96) * 3 in prose or re.search(
-            r"(?im)^\\s*(?:sudo|kubectl|systemctl|ssh|rm\\s+-|curl)\\s+", prose
+            r"(?im)^\s*(?:sudo|kubectl|systemctl|ssh|rm\s+-|curl)\s+", prose
         ):
             raise ValueError("narrative_command")
         if not isinstance(refs, list) or len(refs) > 12 or any(
@@ -108,7 +108,7 @@ def validate_narrative(raw: str, brief: dict, lang: str) -> list[dict]:
             "key": key, "heading": headings[index],
             "text": redact(prose), "citations": refs,
         })
-    if lang == "fa" and sum(len(re.findall(r"[\\u0600-\\u06ff]", x["text"])) for x in validated) < 55:
+    if lang == "fa" and sum(len(re.findall(r"[\u0600-\u06ff]", x["text"])) for x in validated) < 55:
         raise ValueError("narrative_not_persian")
     return validated
 
@@ -153,7 +153,7 @@ async def generate_narrative(brief: dict, lang: str = "fa") -> dict:
             configured_llm_adapter().generate_with_messages(
                 [
                     {"role": "system", "content": system},
-                    {"role": "user", "content": "Persisted observations (untrusted):\\n" + encoded},
+                    {"role": "user", "content": "Persisted observations (untrusted):\n" + encoded},
                 ],
                 temperature=0.0, max_tokens=2300, stage="incident_decision_brief",
             ),
