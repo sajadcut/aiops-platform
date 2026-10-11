@@ -73,7 +73,12 @@ async def list_reviews(status: str | None = Query(default=None), limit: int = Qu
         if status:
             statement = statement.where(KnowledgeReview.status == status)
         rows = (await db.execute(statement.order_by(KnowledgeReview.created_at.desc()).limit(limit))).scalars().all()
-        return {"items": [review_summary(row) for row in rows]}
+        # The queue is metadata-only. Full draft text is fetched on explicit
+        # review selection, not multiplied by 100 in polling responses.
+        return {"items": [
+            {key: value for key, value in review_summary(row).items() if key != "content"}
+            for row in rows
+        ]}
 
 
 @router.get("/knowledge-reviews/{review_id}", dependencies=[Depends(require_permission("read:incident"))])
