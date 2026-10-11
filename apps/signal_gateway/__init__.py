@@ -14,7 +14,7 @@ from apps.orchestrator.signal_aware import SignalAwareE2EOrchestrator
 from apps.orchestrator.workflow_store import WorkflowCheckpointStore
 from apps.rag_service import KnowledgeRAGService
 from apps.signal_gateway.correlation import build_correlation_identity
-from apps.signal_gateway.zabbix_contract import normalize_zabbix_payload, zabbix_event_time, zabbix_tags
+from integrations.zabbix.webhook_contract import normalize_zabbix_payload, zabbix_event_time, zabbix_tags
 from domain.contracts.config import settings
 from domain.contracts.logging import logger
 
