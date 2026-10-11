@@ -64,3 +64,7 @@ REAL ENV REQUIRED: production Cognia, SSH/VM MCP, Prometheus, Elasticsearch, Pos
     GET /api/v1/incidents/{incident_id}/decision-brief/narrative?lang=fa
 
 خروجی route دوم صرفاً متن نمایشی است. از خود این پنل نباید درخواست POST برای تأیید یا اجرای عملیات ارسال شود. تأیید انسانی، مصرف یک‌باره مجوز، Resume و Verification همچنان از مسیر فعلی Dashboard → Decision انجام می‌شوند. تست اجرای واقعی روی محیط اشتراکی یا Production بدون سناریوی تأییدشده مجاز نیست.
+
+## پذیرش بندبه‌بند
+
+ماتریس ممیزی تمام بخش‌های پرامت و ۱۸ سناریوی تست، همراه با تفکیک «پیاده‌سازی شده»، «مشروط به داده»، «گپ» و «نیازمند محیط واقعی»، در [INCIDENT_DECISION_BRIEF_ACCEPTANCE_AUDIT_FA.md](INCIDENT_DECISION_BRIEF_ACCEPTANCE_AUDIT_FA.md) ثبت شده است. وضعیت PASS در CI به معنی Production acceptance نیست.
