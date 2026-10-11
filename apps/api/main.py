@@ -336,3 +336,13 @@ async def startup_event():
 @app.on_event("shutdown")
 async def shutdown_event():
     logger.info("application_shutting_down", app=settings.APP_NAME)
+
+
+@app.get("/dashboard/decision-brief.js", include_in_schema=False)
+async def dashboard_decision_brief_script():
+    return FileResponse(_DASHBOARD_DIR / "decision-brief.js", media_type="application/javascript")
+
+
+@app.get("/dashboard/decision-brief.css", include_in_schema=False)
+async def dashboard_decision_brief_stylesheet():
+    return FileResponse(_DASHBOARD_DIR / "decision-brief.css", media_type="text/css")
