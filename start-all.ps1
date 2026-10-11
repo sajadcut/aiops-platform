@@ -1,240 +1,232 @@
+# Start AIOps API/Dashboard and the dedicated VM MCP edge on Windows.
+# Run from any directory: .\start-all.ps1 [-ApiPort 8000] [-VmMcpPort 9105]
 [CmdletBinding()]
-param()
+param(
+    [ValidateRange(1,65535)][int]$ApiPort = 8000,
+    [ValidateRange(1,65535)][int]$VmMcpPort = 9105,
+    [ValidateSet('127.0.0.1','0.0.0.0')][string]$ApiHost = '127.0.0.1'
+)
 
 $ErrorActionPreference = 'Stop'
 $ProjectRoot = $PSScriptRoot
 $RuntimeRoot = Join-Path $ProjectRoot '.runtime'
 $StatePath = Join-Path $RuntimeRoot 'processes.json'
-$LocalConfigPath = Join-Path $ProjectRoot 'start-all.local.ps1'
-$ExampleConfigPath = Join-Path $ProjectRoot 'start-all.local.ps1.example'
-
-New-Item -ItemType Directory -Path $RuntimeRoot -Force | Out-Null
+$Python = Join-Path $ProjectRoot '.venv\Scripts\python.exe'
 
 function Get-ProcessInfoById {
     param([int]$ProcessId)
-
     try {
-        $processInfo = Get-CimInstance -ClassName Win32_Process -Filter "ProcessId = $ProcessId" -ErrorAction SilentlyContinue
-        return $processInfo
-    }
-    catch {
+        return Get-CimInstance Win32_Process -Filter "ProcessId = $ProcessId" -ErrorAction SilentlyContinue
+    } catch {
         return $null
     }
 }
 
-function Test-TrackedProcess {
-    param($Entry)
-
-    if ($null -eq $Entry -or -not $Entry.Pid -or [string]::IsNullOrWhiteSpace([string]$Entry.MatchText)) {
-        return $false
-    }
-
-    $processInfo = Get-ProcessInfoById -ProcessId ([int]$Entry.Pid)
-    if ($null -eq $processInfo -or [string]::IsNullOrWhiteSpace([string]$processInfo.CommandLine)) {
-        return $false
-    }
-
-    return $processInfo.CommandLine.IndexOf([string]$Entry.MatchText, [StringComparison]::OrdinalIgnoreCase) -ge 0
+function Get-ProcessCreationStamp {
+    param($ProcessInfo)
+    if ($null -eq $ProcessInfo -or -not $ProcessInfo.CreationDate) { return '' }
+    return ([datetime]$ProcessInfo.CreationDate).ToUniversalTime().ToString('o')
 }
 
-function Test-TcpPortInUse {
-    param([int]$Port)
-
-    if ($Port -le 0) { return $false }
-
-    $client = New-Object System.Net.Sockets.TcpClient
-    try {
-        $asyncResult = $client.BeginConnect('127.0.0.1', $Port, $null, $null)
-        if (-not $asyncResult.AsyncWaitHandle.WaitOne(300)) {
-            return $false
-        }
-
-        $client.EndConnect($asyncResult)
-        return $true
-    }
-    catch {
+function Test-TrackedProcess {
+    param($Entry)
+    if ($null -eq $Entry -or -not $Entry.Pid -or -not $Entry.CreatedAt -or -not $Entry.Module -or -not $Entry.Port) {
         return $false
     }
-    finally {
+    $info = Get-ProcessInfoById -ProcessId ([int]$Entry.Pid)
+    if ($null -eq $info -or -not $info.CommandLine) { return $false }
+    if ((Get-ProcessCreationStamp $info) -ne [string]$Entry.CreatedAt) { return $false }
+    $command = [string]$info.CommandLine
+    $moduleText = [string]$Entry.Module
+    $portPattern = '--port\s+' + [regex]::Escape([string]$Entry.Port) + '(?:\s|$)'
+    return ($command.IndexOf($moduleText, [StringComparison]::OrdinalIgnoreCase) -ge 0 -and
+            [regex]::IsMatch($command, $portPattern))
+}
+
+function Test-PortInUse {
+    param([int]$Port)
+    $client = New-Object System.Net.Sockets.TcpClient
+    try {
+        $connection = $client.BeginConnect('127.0.0.1', $Port, $null, $null)
+        if (-not $connection.AsyncWaitHandle.WaitOne(400)) { return $false }
+        $client.EndConnect($connection)
+        return $true
+    } catch {
+        return $false
+    } finally {
         $client.Dispose()
     }
 }
 
-function Resolve-ExecutablePath {
-    param([string]$Executable)
-
-    if (Test-Path -LiteralPath $Executable -PathType Leaf) {
-        return (Resolve-Path -LiteralPath $Executable).Path
-    }
-
-    $command = Get-Command $Executable -ErrorAction SilentlyContinue
-    if ($null -ne $command -and -not [string]::IsNullOrWhiteSpace([string]$command.Source)) {
-        return [string]$command.Source
-    }
-
-    throw "Executable not found: $Executable"
-}
-
-function Save-ProcessState {
+function Save-State {
     $payload = [ordered]@{
         UpdatedAt = (Get-Date).ToString('o')
         AIOps = $State.AIOps
         VMMcp = $State.VMMcp
     }
+    $payload | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $StatePath -Encoding UTF8
+}
 
-    $payload | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $StatePath -Encoding UTF8
+function Test-ServiceHealth {
+    param($Service)
+    try {
+        $body = Invoke-RestMethod -Method Get -Uri $Service.HealthUrl -TimeoutSec 2 -ErrorAction Stop
+        if ($Service.Key -eq 'VMMcp') {
+            return ($body.status -eq 'ok' -and $body.provider -eq 'vm')
+        }
+        return ($body.status -eq 'alive')
+    } catch {
+        return $false
+    }
+}
+
+function Wait-ServiceHealth {
+    param($Service, $Entry)
+    $deadline = (Get-Date).AddSeconds(20)
+    while ((Get-Date) -lt $deadline) {
+        if (-not (Test-TrackedProcess -Entry $Entry)) { break }
+        if (Test-ServiceHealth -Service $Service) { return $true }
+        Start-Sleep -Milliseconds 600
+    }
+    return $false
 }
 
 function Start-ManagedService {
     param($Service)
-
     $existing = $State[$Service.Key]
     if (Test-TrackedProcess -Entry $existing) {
-        Write-Host ("[RUNNING] {0} is already running (PID {1})." -f $Service.Name, $existing.Pid) -ForegroundColor Green
+        if (-not (Test-ServiceHealth -Service $Service)) {
+            throw ("{0} is tracked on PID {1} but its health endpoint is not ready. Check the logs or run .\stop-all.ps1." -f $Service.Name, $existing.Pid)
+        }
+        Write-Host ("[RUNNING] {0}: PID {1}" -f $Service.Name, $existing.Pid) -ForegroundColor Green
         return
     }
-
     if ($null -ne $existing) {
-        Write-Warning ("Saved PID for {0} is stale or no longer matches; refreshing its state." -f $Service.Name)
+        Write-Warning ("Stale state for {0}; the old PID will not be stopped or reused." -f $Service.Name)
         $State[$Service.Key] = $null
-        Save-ProcessState
+        Save-State
+    }
+    if (Test-PortInUse -Port ([int]$Service.Port)) {
+        throw ("Port {0} is already in use; refusing to start {1} over another process." -f $Service.Port, $Service.Name)
     }
 
-    if (-not (Test-Path -LiteralPath $Service.WorkingDirectory -PathType Container)) {
-        throw ("Working directory for {0} does not exist: {1}" -f $Service.Name, $Service.WorkingDirectory)
+    $stamp = Get-Date -Format 'yyyyMMdd-HHmmss-fff'
+    $stdout = Join-Path $RuntimeRoot ("{0}-{1}.out.log" -f $Service.Key, $stamp)
+    $stderr = Join-Path $RuntimeRoot ("{0}-{1}.err.log" -f $Service.Key, $stamp)
+    $args = "-m uvicorn $($Service.Module) --host $($Service.Host) --port $($Service.Port)"
+    $previous = @{}
+    $process = $null
+    Write-Host ("[STARTING] {0} on {1}:{2}" -f $Service.Name, $Service.Host, $Service.Port) -ForegroundColor Cyan
+    try {
+        foreach ($key in $Service.Environment.Keys) {
+            $previous[$key] = [Environment]::GetEnvironmentVariable($key, 'Process')
+            [Environment]::SetEnvironmentVariable($key, [string]$Service.Environment[$key], 'Process')
+        }
+        $process = Start-Process -FilePath $Python -ArgumentList $args -WorkingDirectory $ProjectRoot -RedirectStandardOutput $stdout -RedirectStandardError $stderr -WindowStyle Hidden -PassThru
+    } finally {
+        foreach ($key in $previous.Keys) {
+            [Environment]::SetEnvironmentVariable($key, $previous[$key], 'Process')
+        }
     }
 
-    $resolvedExecutable = Resolve-ExecutablePath -Executable ([string]$Service.Executable)
-    if ([string]::IsNullOrWhiteSpace([string]$Service.Arguments)) {
-        throw ("No command-line arguments configured for {0}." -f $Service.Name)
+    $info = Get-ProcessInfoById -ProcessId ([int]$process.Id)
+    if ($null -eq $info) {
+        throw ("{0} exited immediately. Check {1}" -f $Service.Name, $stderr)
     }
-
-    if ([string]$Service.MatchText -match 'REPLACE_WITH') {
-        throw ("Update MatchText for {0} in start-all.local.ps1 before running." -f $Service.Name)
-    }
-
-    if (Test-TcpPortInUse -Port ([int]$Service.TcpPort)) {
-        throw ("Port {0} is already accepting connections. Check whether {1} is already running." -f $Service.TcpPort, $Service.Name)
-    }
-
-    $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
-    $stdoutPath = Join-Path $RuntimeRoot ("{0}-{1}.out.log" -f $Service.Key, $stamp)
-    $stderrPath = Join-Path $RuntimeRoot ("{0}-{1}.err.log" -f $Service.Key, $stamp)
-
-    Write-Host ("[STARTING] {0}" -f $Service.Name) -ForegroundColor Cyan
-    Write-Host ("  Directory: {0}" -f $Service.WorkingDirectory)
-    Write-Host ("  Command:   {0} {1}" -f $resolvedExecutable, $Service.Arguments)
-
-    $process = Start-Process -FilePath $resolvedExecutable -ArgumentList ([string]$Service.Arguments) -WorkingDirectory ([string]$Service.WorkingDirectory) -WindowStyle Hidden -RedirectStandardOutput $stdoutPath -RedirectStandardError $stderrPath -PassThru
-
-    Start-Sleep -Seconds 3
-
     $entry = [pscustomobject]@{
-        Name = [string]$Service.Name
+        Name = $Service.Name
         Pid = [int]$process.Id
-        Executable = $resolvedExecutable
-        WorkingDirectory = [string]$Service.WorkingDirectory
-        Arguments = [string]$Service.Arguments
-        MatchText = [string]$Service.MatchText
-        TcpPort = [int]$Service.TcpPort
-        StdoutLog = $stdoutPath
-        StderrLog = $stderrPath
+        CreatedAt = Get-ProcessCreationStamp $info
+        Module = $Service.Module
+        Port = [int]$Service.Port
+        StdoutLog = $stdout
+        StderrLog = $stderr
         StartedAt = (Get-Date).ToString('o')
     }
-
-    if (-not (Test-TrackedProcess -Entry $entry)) {
-        $stderrTail = ''
-        if (Test-Path -LiteralPath $stderrPath) {
-            $stderrTail = (Get-Content -LiteralPath $stderrPath -Tail 30 -ErrorAction SilentlyContinue) -join [Environment]::NewLine
-        }
-
-        throw ("{0} did not remain running. Review log: {1}{2}{3}" -f $Service.Name, $stderrPath, [Environment]::NewLine, $stderrTail)
+    if (-not $entry.CreatedAt) {
+        throw ("Cannot verify creation time of PID {0}; refusing to track it." -f $entry.Pid)
     }
-
     $State[$Service.Key] = $entry
-    Save-ProcessState
-    Write-Host ("[STARTED] {0} (PID {1})" -f $Service.Name, $process.Id) -ForegroundColor Green
-    Write-Host ("  Logs: {0} | {1}" -f $stdoutPath, $stderrPath)
-}
+    Save-State
 
-if (-not (Test-Path -LiteralPath $LocalConfigPath -PathType Leaf)) {
-    if (Test-Path -LiteralPath $ExampleConfigPath -PathType Leaf) {
-        Copy-Item -LiteralPath $ExampleConfigPath -Destination $LocalConfigPath
-        Write-Host "Created local configuration: $LocalConfigPath" -ForegroundColor Yellow
-        Write-Host 'Edit the VM MCP folder, executable, arguments, and MatchText, then run start-all.ps1 again.'
-        return
+    if (-not (Wait-ServiceHealth -Service $Service -Entry $entry)) {
+        $tail = ''
+        if (Test-Path -LiteralPath $stderr -PathType Leaf) {
+            $tail = (Get-Content -LiteralPath $stderr -Tail 15 -ErrorAction SilentlyContinue) -join [Environment]::NewLine
+        }
+        throw ("{0} did not become healthy. Process is tracked for .\stop-all.ps1.`nLog: {1}`n{2}" -f $Service.Name, $stderr, $tail)
     }
-
-    throw "Missing VM MCP config: $LocalConfigPath"
+    Write-Host ("[STARTED] {0}: PID {1}" -f $Service.Name, $entry.Pid) -ForegroundColor Green
 }
 
-. $LocalConfigPath
-$configVariable = Get-Variable -Name VMMcpConfig -ErrorAction SilentlyContinue
-if ($null -eq $configVariable -or $null -eq $configVariable.Value) {
-    throw 'start-all.local.ps1 must define $VMMcpConfig.'
+if ($ApiPort -eq $VmMcpPort) { throw 'API and VM MCP must use different TCP ports.' }
+if (-not (Test-Path -LiteralPath $Python -PathType Leaf)) {
+    throw 'Missing .venv\Scripts\python.exe. Create a Python 3.12 virtual environment and install requirements.txt.'
 }
-$VMMcpConfig = $configVariable.Value
+if (-not (Test-Path -LiteralPath (Join-Path $ProjectRoot '.env') -PathType Leaf)) {
+    throw 'Missing .env. Copy .env.example to .env, then configure DB, MCP_BEARER_TOKEN, and SSH settings.'
+}
+New-Item -ItemType Directory -Path $RuntimeRoot -Force | Out-Null
 
-if (-not [bool]$VMMcpConfig.Enabled) {
-    throw 'VM MCP is disabled in start-all.local.ps1. Set Enabled = $true to start both projects.'
-}
-
-if (-not (Test-Path -LiteralPath (Join-Path $ProjectRoot '.venv\Scripts\python.exe') -PathType Leaf)) {
-    throw "AIOps Python was not found at .venv\Scripts\python.exe. Create the project's Python 3.12 virtual environment first."
-}
-
-if ([string]$VMMcpConfig.WorkingDirectory -match 'REPLACE_WITH' -or -not (Test-Path -LiteralPath ([string]$VMMcpConfig.WorkingDirectory) -PathType Container)) {
-    throw "Set WorkingDirectory in start-all.local.ps1 to the actual VM MCP project folder."
-}
-if ([string]$VMMcpConfig.Executable -match 'REPLACE_WITH') {
-    throw "Set Executable in start-all.local.ps1 to the actual VM MCP runtime, such as its .venv\Scripts\python.exe."
-}
-if ([string]$VMMcpConfig.Arguments -match 'REPLACE_WITH') {
-    throw "Replace the sample Arguments in start-all.local.ps1 with the actual VM MCP startup command."
-}
-if ([string]$VMMcpConfig.MatchText -match 'REPLACE_WITH') {
-    throw "Set MatchText in start-all.local.ps1 to a unique substring of the VM MCP command line."
+# The same token must authenticate the API MCP client and the VM edge.
+# Do not start an unauthenticated VM edge, even in development.
+Push-Location $ProjectRoot
+try {
+    & $Python -c "import uvicorn; from domain.contracts.config import settings; import sys; sys.exit(0 if (settings.MCP_BEARER_TOKEN or '').strip() else 2)"
+    if ($LASTEXITCODE -ne 0) {
+        throw 'Python configuration check failed. Install requirements, validate .env and set MCP_BEARER_TOKEN to a non-empty secret.'
+    }
+} finally {
+    Pop-Location
 }
 
 $State = @{ AIOps = $null; VMMcp = $null }
 if (Test-Path -LiteralPath $StatePath -PathType Leaf) {
     try {
-        $previousState = Get-Content -LiteralPath $StatePath -Raw | ConvertFrom-Json
-        $State.AIOps = $previousState.AIOps
-        $State.VMMcp = $previousState.VMMcp
-    }
-    catch {
-        Write-Warning 'Previous process state could not be read; a new state file will be created.'
+        $saved = Get-Content -LiteralPath $StatePath -Raw -Encoding UTF8 | ConvertFrom-Json -ErrorAction Stop
+        $State.AIOps = $saved.AIOps
+        $State.VMMcp = $saved.VMMcp
+    } catch {
+        throw "Cannot read $StatePath. Inspect it before retrying to avoid duplicate processes."
     }
 }
 
-$AIOpsService = [pscustomobject]@{
-    Key = 'AIOps'
-    Name = 'AIOps API + Web'
-    WorkingDirectory = $ProjectRoot
-    Executable = (Join-Path $ProjectRoot '.venv\Scripts\python.exe')
-    Arguments = '-m uvicorn apps.api.main:app --host 0.0.0.0 --port 8000'
-    MatchText = 'apps.api.main:app'
-    TcpPort = 8000
-}
-
-$McpService = [pscustomobject]@{
+# AIOps itself never receives SSH privileges. Only the VM edge does.
+$vm = [pscustomobject]@{
     Key = 'VMMcp'
-    Name = [string]$VMMcpConfig.Name
-    WorkingDirectory = [string]$VMMcpConfig.WorkingDirectory
-    Executable = [string]$VMMcpConfig.Executable
-    Arguments = [string]$VMMcpConfig.Arguments
-    MatchText = [string]$VMMcpConfig.MatchText
-    TcpPort = [int]$VMMcpConfig.TcpPort
+    Name = 'VM MCP'
+    Module = 'apps.mcp_server.main:app'
+    Host = '127.0.0.1'
+    Port = $VmMcpPort
+    HealthUrl = "http://127.0.0.1:$VmMcpPort/health"
+    Environment = @{
+        MCP_SERVER_PROVIDER = 'vm'
+        MCP_SERVER_REQUIRE_AUTH = 'true'
+        SSH_ENABLED = 'true'
+    }
+}
+$api = [pscustomobject]@{
+    Key = 'AIOps'
+    Name = 'AIOps API / Dashboard / Chatbot'
+    Module = 'apps.api.main:app'
+    Host = $ApiHost
+    Port = $ApiPort
+    HealthUrl = "http://127.0.0.1:$ApiPort/api/v1/health/live"
+    Environment = @{
+        SSH_ENABLED = 'false'
+        VM_MCP_URL = "http://127.0.0.1:$VmMcpPort/mcp"
+    }
 }
 
-# Start VM MCP first so the API's external tool dependency is available early.
-Start-ManagedService -Service $McpService
-Start-ManagedService -Service $AIOpsService
+# Start the dependency before the API. Existing tracked services are not duplicated.
+Start-ManagedService $vm
+Start-ManagedService $api
 
 Write-Host ''
-Write-Host 'All configured projects are running.' -ForegroundColor Green
-Write-Host 'AIOps dashboard: http://127.0.0.1:8000/dashboard'
-Write-Host 'AIOps API docs:  http://127.0.0.1:8000/docs'
-Write-Host ("Process state:   {0}" -f $StatePath)
-Write-Host 'Use .\stop-all.ps1 to stop the processes started by this script.'
+Write-Host 'AIOps and VM MCP are running.' -ForegroundColor Green
+Write-Host "Dashboard : http://127.0.0.1:$ApiPort/dashboard"
+Write-Host "Chatbot   : http://127.0.0.1:$ApiPort/chatbot"
+Write-Host "Swagger   : http://127.0.0.1:$ApiPort/docs"
+Write-Host "VM MCP    : http://127.0.0.1:$VmMcpPort/mcp"
+Write-Host "Logs/state: $RuntimeRoot"
+Write-Host 'Stop with : .\stop-all.ps1'
