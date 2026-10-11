@@ -71,6 +71,7 @@ def incident_document(row: MemoryEntry) -> tuple[str, str]:
         f"Root cause: {root_cause}",
         f"Approved execution action (historical): {rem.get('action')}",
         f"Runbook: {rem.get('runbook_id') or 'not recorded'}",
+        f"Evidence references (historical): {', '.join(str(ref)[:200] for ref in (row.evidence_provenance or {}).get('evidence_refs', [])[:10]) or 'not recorded'}",
         f"Verification status: {verification.get('status')}",
         f"Recovered signals: {', '.join(map(str, verification.get('recovered_signals') or [])) or 'not recorded'}",
         f"Outcome: {row.outcome or 'verified recovery'}",
