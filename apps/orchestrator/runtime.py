@@ -37,7 +37,17 @@ class DurableWorkflowRuntime:
         from apps.decision_brief_history import archive_decision_brief
 
         if isinstance(self.session, AsyncSession):
-            await archive_decision_brief(self.session, incident_id, event_type)
+            from domain.contracts.logging import logger
+            try:
+                async with self.session.begin_nested():
+                    await archive_decision_brief(self.session, incident_id, event_type)
+            except Exception as exc:
+                # Checkpoint/execution authority may already be consumed.
+                # Never turn a successful operation into a misleading HTTP failure.
+                logger.error(
+                    "decision_brief_archiving_failed", incident_id=incident_id,
+                    event_type=event_type, error_type=type(exc).__name__,
+                )
 
     async def _set_incident_status(self, incident_id: str, status: str) -> None:
         setter = getattr(self.incidents, "set_status", None)
