@@ -203,6 +203,13 @@ class HTTPTransactionLoggingMiddleware:
                 response_content_type,
                 enabled=settings.LOG_HTTP_BODY_ENABLED,
             )
+            # Knowledge candidates can contain sensitive operational context.
+            # Do not log full drafts or response bodies, even after generic
+            # secret-key redaction; preserve only method, route, status, actor
+            # and timing in transaction telemetry.
+            if path.startswith("/api/v1/knowledge-reviews"):
+                request_payload = {"omitted": "governed_knowledge_content"}
+                response_payload = {"omitted": "governed_knowledge_content"}
             route = getattr(scope.get("route"), "path", None) or path
             path_params = scope.get("path_params") or {}
             identity = state.get("identity_subject")
