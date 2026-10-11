@@ -32,7 +32,10 @@ def test_zabbix_vm_target_resolution_prefers_target_ip_and_never_service():
         "service": "haproxy",
     }
     assert target_from_zabbix_payload(payload) == "10.100.6.199"
-    assert target_from_zabbix_payload({"host": "NeoBanking-6.199", "service": "haproxy"}) == "NeoBanking-6.199"
+    # Host metadata is not an authorized VM endpoint under the Zabbix guide.
+    assert target_from_zabbix_payload({"host": "NeoBanking-6.199", "service": "haproxy"}) is None
+    assert target_from_zabbix_payload({"host_ip": "10.100.6.199", "service": "haproxy"}) is None
+    assert target_from_zabbix_payload({"tags": [{"tag": "target_ip", "value": "10.100.6.199"}]}) == "10.100.6.199"
     assert target_from_zabbix_payload({"service": "haproxy"}) is None
 
 
