@@ -4,6 +4,10 @@ Governed AIOps control plane for Signal ingestion, durable Incident/Evidence/RCA
 
 The architecture contract is [`MASTER.md`](MASTER.md). Strict production acceptance criteria are in [`PRODUCTION_ACCEPTANCE.md`](PRODUCTION_ACCEPTANCE.md), the current acceptance report is [`FINAL_ACCEPTANCE_REPORT.md`](FINAL_ACCEPTANCE_REPORT.md), Cognia integration details are in [`docs/COGNIA_INTEGRATION.md`](docs/COGNIA_INTEGRATION.md), production operational guidance is in [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md), configuration is in [`docs/CONFIGURATION.md`](docs/CONFIGURATION.md), and the authenticated Operations Copilot is documented in [`docs/CHATBOT.md`](docs/CHATBOT.md).
 
+## Incident Decision Brief
+
+The Incident workbench now includes a read-only, bilingual Decision Brief built from durable Incident state. It distinguishes live evidence, Agent findings, Cognia retrieval, historical Operational Memory, risk and governed approval. See [Incident Decision Brief](docs/INCIDENT_DECISION_BRIEF.md) for implementation limits, Windows tests and real-environment acceptance requirements. This report does not grant execution permission.
+
 ## Knowledge architecture
 
 **Cognia is the only Governed Knowledge RAG in development, test and production.** It owns Knowledge Base permission, Knowledge/Revision lifecycle, processing/activation, Scope, Search and optional Context Generation. AIOps consumes Cognia through a machine Client Application. There is no second Knowledge RAG, no provider switch and no fallback to PostgreSQL/pgvector when Cognia is unavailable.
