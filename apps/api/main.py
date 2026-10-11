@@ -61,6 +61,7 @@ _MASTER_API_ROUTES = {
     "/api/v1/incidents/analyze": (incidents.analyze_incident, ["POST"], [Depends(rate_limiter_strict), Depends(require_permission("read:incident"))]),
     "/api/v1/incidents/{incident_id}/operator-summary": (incident_resources.get_operator_summary, ["GET"], [Depends(require_permission("read:incident"))]),
     "/api/v1/incidents/{incident_id}/decision-brief": (incident_resources.get_incident_decision_brief, ["GET"], [Depends(require_permission("read:incident"))]),
+    "/api/v1/incidents/{incident_id}/decision-brief/narrative": (incident_resources.get_incident_decision_brief_narrative, ["GET"], [Depends(require_permission("read:incident"))]),
     "/api/v1/incidents/{incident_id}/operator-recommendation/fa": (incident_resources.get_operator_recommendation_fa, ["GET"], [Depends(require_permission("read:incident"))]),
     "/api/v1/dashboard/summary": (dashboard.dashboard_summary, ["GET"], [Depends(require_permission("read:incident"))]),
     "/api/v1/approvals": (execution.create_approval, ["POST"], [Depends(require_permission("approve:low_risk"))]),
