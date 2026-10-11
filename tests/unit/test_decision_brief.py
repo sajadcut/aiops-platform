@@ -357,3 +357,29 @@ def test_retrieved_cognia_document_exposes_source_title_without_inventing_use():
     doc = result["cognia_knowledge"]["items"][0]
     assert doc["title"] == "nginx playbook"
     assert doc["use_status"] == "not_verified"
+
+
+def test_vm_mcp_uses_allowlisted_tool_facts_not_raw_logs():
+    report = make_brief(evidence=[
+        {"id": "ev-status", "source": "vm_mcp", "created_at": NOW.isoformat(),
+         "raw_data": {"diagnostic": "service_status", "success": True,
+                      "active_state": "inactive", "sub_state": "dead",
+                      "secret": "do-not-emit"}},
+        {"id": "ev-logs", "source": "vm_mcp", "created_at": NOW.isoformat(),
+         "raw_data": {"diagnostic": "service_logs", "count": 23,
+                      "entries": ["password private_value"], "access_mode": "ssh"}},
+    ])
+    summary = " ".join(item["finding"] or "" for item in report["mcp_evidence"])
+    assert "active_state=inactive" in summary
+    assert "count=23" in summary
+    assert "private_value" not in str(report)
+    assert "entries" not in summary
+
+
+def test_monitoring_provider_failure_creates_missing_evidence_warning():
+    report = make_brief(evidence=[
+        {"id": "ev-1", "source": "elasticsearch", "created_at": NOW.isoformat(),
+         "raw_data": {"status": "unavailable", "result_count": 0}},
+    ])
+    assert "monitoring_source_unavailable:elasticsearch" in report["missing_evidence"]
+    assert report["incident_summary"]["valid_evidence_count"] == 0
