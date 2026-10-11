@@ -278,6 +278,10 @@ jobs:
         env:
           RUN_DB_APPROVAL_TEST: '1'
         run: python -m pytest -q tests/integration/test_approval_store_db.py
+      - name: Validate immutable Incident Decision Brief archive on PostgreSQL
+        env:
+          RUN_DB_DECISION_HISTORY_TEST: '1'
+        run: python -m pytest -q tests/integration/test_decision_brief_history_db.py
       - name: Validate shared PostgreSQL API rate limiting
         env:
           RUN_DB_RATE_LIMIT_TEST: '1'
