@@ -456,7 +456,15 @@
       return;
     }
     const nav = event.target.closest('[data-db-nav]');
-    if (nav) { window.renderDetail(nav.getAttribute('data-db-nav')); return; }
+    if (nav) {
+      if (historicBrief && nav.getAttribute('data-db-nav') === 'decision') {
+        toast(language === 'fa' ? 'برای تصمیم عملیاتی ابتدا به گزارش فعلی برگردید.' :
+          'Return to the current report before taking any operational decision.');
+        return;
+      }
+      window.renderDetail(nav.getAttribute('data-db-nav'));
+      return;
+    }
     const knowledge = event.target.closest('[data-db-knowledge]');
     if (knowledge && typeof setView === 'function') {
       setView('knowledge');
