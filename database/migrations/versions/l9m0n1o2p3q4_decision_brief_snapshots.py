@@ -56,7 +56,7 @@ def upgrade() -> None:
     # between approval snapshot recheck and consumed authority.
     op.execute("""
         CREATE FUNCTION lock_incident_on_decision_source_write()
-        $$
+        RETURNS trigger LANGUAGE plpgsql AS $$
         DECLARE target_incident UUID;
         BEGIN
             IF TG_OP = 'DELETE' THEN
