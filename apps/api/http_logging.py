@@ -207,7 +207,7 @@ class HTTPTransactionLoggingMiddleware:
             # Do not log full drafts or response bodies, even after generic
             # secret-key redaction; preserve only method, route, status, actor
             # and timing in transaction telemetry.
-            if path.startswith("/api/v1/knowledge-reviews"):
+            if path.startswith("/api/v1/knowledge-reviews") or path.endswith("/operator-recommendation/fa"):
                 request_payload = {"omitted": "governed_knowledge_content"}
                 response_payload = {"omitted": "governed_knowledge_content"}
             route = getattr(scope.get("route"), "path", None) or path
