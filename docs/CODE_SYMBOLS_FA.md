@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 415 | Dashboard JS files scanned: 6 | Symbols indexed: 3807**
+**Python files scanned: 415 | Dashboard JS files scanned: 6 | Symbols indexed: 3808**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -724,7 +724,8 @@
 | `apps/api/incident_resources.py` | `get_verification` | 311 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
 | `apps/api/incident_resources.py` | `get_incident_audit` | 319 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
 | `apps/api/incident_resources.py` | `get_incident_lifecycle` | 326 | async function | Return durable governance plus structured agent routing/collaboration state. | module |
-| `apps/api/incident_resources.py` | `get_operator_summary` | 367 | async function | Return a read-only Persian operator summary derived from current durable Incident state. | module |
+| `apps/api/incident_resources.py` | `get_operator_recommendation_fa` | 367 | async function | Translate the durable English recommendation solely for Persian display. | module |
+| `apps/api/incident_resources.py` | `get_operator_summary` | 409 | async function | Return a read-only Persian operator summary derived from current durable Incident state. | module |
 | `apps/api/incidents.py` | `simulate_incident` | 24 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/incidents.py` | `analyze_incident` | 48 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/incidents.py` | `RemediationRequest` | 109 | class | کلاس | module |
