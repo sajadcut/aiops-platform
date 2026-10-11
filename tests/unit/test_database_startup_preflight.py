@@ -47,5 +47,15 @@ def test_windows_launcher_runs_read_only_preflight_before_mcp_or_api_startup():
     assert "-m scripts.check_database_migrations" in source
     assert source.index("-m scripts.check_database_migrations") < source.index("Start-ManagedService $vm")
     assert "migrationPreflightExit -ne 0" in source
-    assert "No migration was applied automatically" not in source or "no migration was applied automatically" in source
+    assert "no migration was applied automatically" in source
     assert "alembic upgrade" not in source
+
+
+def test_dashboard_error_explains_migration_drift_without_bypassing_guard():
+    dashboard = Path("dashboards/control-center.js").read_text(encoding="utf-8")
+    room = Path("dashboards/incident-command-room.js").read_text(encoding="utf-8")
+    assert "DATABASE_MIGRATION_DRIFT" in dashboard
+    assert "DATABASE_MIGRATION_DRIFT" in room
+    assert "پس از تهیه بکاپ" in dashboard
+    assert "Alembic migration" in room
+    assert "migration validation" not in room.lower() or "disable" not in room.lower()
