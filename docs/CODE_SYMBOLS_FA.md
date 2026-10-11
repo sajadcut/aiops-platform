@@ -1279,8 +1279,8 @@
 | `apps/runbook_service/executor.py` | `RunbookExecutor.__init__` | 29 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RunbookExecutor |
 | `apps/runbook_service/executor.py` | `RunbookExecutor.validate` | 33 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | RunbookExecutor |
 | `apps/runbook_service/executor.py` | `RunbookExecutor.execute` | 39 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | RunbookExecutor |
-| `apps/runbook_service/learning.py` | `build_runbook_memory_state` | 9 | function | Build the canonical Memory-builder state for direct runbook execution. | module |
-| `apps/runbook_service/learning.py` | `record_runbook_outcome` | 78 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/runbook_service/learning.py` | `build_runbook_memory_state` | 12 | function | Build the canonical Memory-builder state for direct runbook execution. | module |
+| `apps/runbook_service/learning.py` | `record_runbook_outcome` | 81 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/runbook_service/registry.py` | `RunbookRegistry` | 11 | class | Loads governed runbooks and rejects malformed definitions fail-closed. | module |
 | `apps/runbook_service/registry.py` | `RunbookRegistry.__init__` | 14 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RunbookRegistry |
 | `apps/runbook_service/registry.py` | `RunbookRegistry._identity` | 19 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RunbookRegistry |
