@@ -52,3 +52,9 @@ External API failures are interpreted from HTTP status + Cognia `code`; human-re
 Cognia transport supports both HTTP and HTTPS because the supplied Cognia environment contract exposes HTTP. If HTTPS is configured in Production, certificate verification is intentionally disabled. Secrets come from the deployment secret store and are covered by recursive redaction. The repository does not ship a Kubernetes `NetworkPolicy` and does not impose project-level IP, CIDR, destination-host or port restrictions on Cognia connectivity; any network controls that still exist are infrastructure/cluster controls outside this repository.
 
 Before Cognia can be marked Production PASS, record evidence for: machine authentication and rotation, exact KB grants, positive and negative Search authorization, General/ClientApplication/ExternalSubject behavior where used, registration → approval (if policy requires human approval) → processing → Activated → Search, index/dependency outage behavior/no fallback, and Context Profile/sufficiency behavior if Context Generation is enabled.
+
+## Handover acceptance
+
+See [COGNIA_HANDOVER_ACCEPTANCE.md](COGNIA_HANDOVER_ACCEPTANCE.md) for the exact deployment identifiers and the read-only Cognia Machine Client / Knowledge Base / Search acceptance check.
+
+Run `python -m scripts.verify_cognia_connection` from the repository root after configuring the private environment. Empty Search results are not proof of network or authorization failure.
