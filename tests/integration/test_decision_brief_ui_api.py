@@ -62,3 +62,33 @@ def test_narrative_does_not_replace_structured_report_or_approval_buttons():
     assert "narrativeFallback" in js
     assert "approveCurrentApproval()" not in js
     assert "resumeCurrentWorkflow()" not in js
+
+
+def test_history_endpoints_enforce_incident_read_permission_and_get_only():
+    paths = (
+        "/api/v1/incidents/{incident_id}/decision-brief/history",
+        "/api/v1/incidents/{incident_id}/decision-brief/history/{snapshot_id}",
+    )
+    for path in paths:
+        matches = [route for route in app.routes if getattr(route, "path", None) == path]
+        assert len(matches) == 1, path
+        assert matches[0].methods == {"GET"}, path
+    response = TestClient(app).get(
+        "/api/v1/incidents/11111111-1111-4111-8111-111111111111/decision-brief/history"
+    )
+    assert response.status_code == 401
+    response = TestClient(app).get(
+        "/api/v1/incidents/11111111-1111-4111-8111-111111111111/"
+        "decision-brief/history/22222222-2222-4222-8222-222222222222"
+    )
+    assert response.status_code == 401
+
+
+def test_historical_ui_never_uses_archived_report_to_authorize_execution():
+    js = Path("dashboards/decision-brief.js").read_text(encoding="utf-8")
+    assert "data-db-history-id" in js
+    assert "data-db-history-current" in js
+    assert "historicBrief || brief" in js
+    assert "Historical read-only report" in js
+    assert "approval_granted" not in js
+    assert "issue_execution_claim" not in js
