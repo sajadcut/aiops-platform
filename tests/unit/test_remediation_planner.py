@@ -315,3 +315,30 @@ def test_zabbix_automatic_remediation_requires_explicit_matching_target_ip():
     matched = RemediationPlanner.plan(state)
     assert matched["status"] == "planned"
     assert matched["target"] == "10.100.6.199"
+
+
+def test_non_vm_zabbix_alert_cannot_plan_vm_restart_even_with_matching_vm_evidence():
+    evidence = [
+        _evidence(
+            "service_status", "vm-service",
+            target="10.100.6.199", service="haproxy.service", active_state="failed",
+        ),
+        _healthy_config(),
+    ]
+    for platform, asset_type in [
+        ("network", "network"),
+        ("application", "application"),
+        ("kubernetes", "kubernetes_workload"),
+        ("kubernetes", "kubernetes_namespace"),
+    ]:
+        state = _state(evidence)
+        state["context"]["trigger_signal"]["raw_data"] = {
+            "platform": platform,
+            "asset_type": asset_type,
+            "service": "haproxy.service",
+            "target_ip": "10.100.6.199",
+        }
+        result = RemediationPlanner.plan(state)
+        assert result["status"] == "not_planned"
+        assert result["reason"] == "zabbix_non_vm_signal_not_auto_remediation_eligible"
+        assert result["execution_request"] is None
