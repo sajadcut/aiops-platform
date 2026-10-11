@@ -6,6 +6,9 @@
   let brief = null;
   let loading = false;
   let failed = null;
+  let narrative = null;
+  let narrativePending = false;
+  const narrativeCache = new Map();
   const storageKey = 'aiops.incident.decision_brief.language';
   let language = (() => {
     try { return localStorage.getItem(storageKey) === 'en' ? 'en' : 'fa'; }
@@ -29,7 +32,9 @@
       verified:'به‌صورت مستقل تأیید شود', explain:'بازیابی سابقه به‌تنهایی به معنی صحت RCA یا اجازه اجرا نیست.',
       fail:'ناموفق', pending:'در انتظار ارزیابی اپراتور', actionSeparate:'Approve به‌تنهایی اجرا نمی‌کند؛ پس از آن Resume با کنترل‌های مجدد انجام می‌شود.',
       timestamp:'به‌روزرسانی', record:'شناسه سند', tool:'ابزار', target:'هدف', environment:'محیط',
-      risk:'ریسک', binding:'اتصال مجوز', freshness:'تازگی داده', verification:'نتیجه Verification', result:'نتیجه اجرا'
+      risk:'ریسک', binding:'اتصال مجوز', freshness:'تازگی داده', verification:'نتیجه Verification', result:'نتیجه اجرا',
+      narrative:'جمع‌بندی AIOps برای تصمیم‌گیری اپراتور', generated:'تحلیل فارسی مبتنی بر شواهد',
+      narrativeFallback:'خلاصه ساختاریافته؛ تحلیل پیشرفته LLM در دسترس نیست.', citations:'استناد به شواهد'
     },
     en: {
       tab:'Decision Brief',title:'Incident Decision Brief',lead:'Operator decision summary',
@@ -48,7 +53,9 @@
       verified:'Requires independent verification',explain:'Historical retrieval alone does not prove RCA or authorize execution.',
       fail:'Failed',pending:'Human review required',actionSeparate:'Approval does not execute an action. Resume performs separate authorization checks.',
       timestamp:'Generated',record:'Source ID',tool:'Tool',target:'Target',environment:'Environment',
-      risk:'Risk',binding:'Approval binding',freshness:'Data freshness',verification:'Verification result',result:'Execution result'
+      risk:'Risk',binding:'Approval binding',freshness:'Data freshness',verification:'Verification result',result:'Execution result',
+      narrative:'AIOps operator decision summary', generated:'Grounded AI narrative',
+      narrativeFallback:'Deterministic summary; enhanced LLM narrative unavailable.', citations:'Evidence references'
     }
   };
   const t = key => dict[language][key] || key;
@@ -88,6 +95,11 @@
     const agents = b.agent_findings || [];
     const mcp = b.mcp_evidence || [];
     const resources = b.monitoring_sources || [];
+    const matchedNarrative = narrative && narrative.snapshot_id === b.snapshot_id && narrative.language === language ? narrative : null;
+    const narrativeRows = matchedNarrative?.status === 'available' ? (matchedNarrative.sections || []) : [];
+    const narrativeSection = narrativeRows.length
+      ? '<div class="db-narrative">' + narrativeRows.map(x => '<article class="db-narrative-part"><h4>' + html(x.heading) + '</h4><p>' + html(x.text) + '</p>' + linkRefs(x.citations) + '</article>').join('') + '</div>'
+      : '<p class="db-subtle">' + (narrativePending ? t('loading') : t('narrativeFallback')) + '</p>';
     const direction = language === 'fa' ? 'rtl' : 'ltr';
     const agentCards = agents.map(x => '<div class="db-record"><div class="db-record-head"><b>' +
       html(x.agent) + '</b>' + flag(x.status) + '</div>' + originalText(x.finding) +
@@ -161,11 +173,40 @@
       html(learning.review_id) + '">' + t('review') + '</button>' : '');
     return '<div class="decision-brief" dir="' + direction + '" lang="' + language + '" data-snapshot="' +
       html(b.snapshot_id) + '">' + summary +
+      section('narrative', narrativeSection, true) +
       section('agents', agentsSection, true) + section('sources', sourcesSection, true) +
       section('knowledge', cSection) + section('memory', memorySection) +
       section('risks', gapsSection, (b.missing_evidence || []).length > 0) +
       section('action', actionSection, true) + section('before', beforeSection, true) +
       section('execution', postSection) + '</div>';
+  }
+
+  async function ensureNarrative() {
+    if (!brief || narrativePending || String(S.selected) !== String(activeId)) return;
+    const snapshot = brief.snapshot_id;
+    const currentLang = language;
+    const key = snapshot + ':' + currentLang;
+    if (narrativeCache.has(key)) {
+      narrative = narrativeCache.get(key);
+      return;
+    }
+    narrativePending = true;
+    try {
+      const result = await api('/api/v1/incidents/' + encodeURIComponent(activeId) + '/decision-brief/narrative?lang=' + encodeURIComponent(currentLang));
+      if (result?.snapshot_id !== snapshot || result?.language !== currentLang) throw new Error('narrative_snapshot_mismatch');
+      narrativeCache.set(key, result);
+      if (String(S.selected) === String(activeId) && brief?.snapshot_id === snapshot && language === currentLang) narrative = result;
+    } catch (_) {
+      // A missing model or transient connectivity never disables durable Incident evidence.
+      const fallback = {snapshot_id: snapshot, language: currentLang, status: 'fallback', sections: []};
+      narrativeCache.set(key, fallback);
+      if (String(S.selected) === String(activeId) && language === currentLang) narrative = fallback;
+    } finally {
+      narrativePending = false;
+      if (S.detail && String(S.selected) === String(activeId) && language === currentLang && brief?.snapshot_id === snapshot && document.querySelector('.decision-brief')) {
+        window.renderDetail('brief');
+      }
+    }
   }
 
   function paint(tab = 'overview') {
@@ -188,11 +229,14 @@
     pane.innerHTML = loading ? '<div class="db-placeholder">' + t('loading') + '</div>' :
       failed ? '<div class="db-placeholder db-error">' + t('unavailable') + ' ' + html(failed) + '</div>' :
       brief ? body(brief) : '<div class="db-placeholder">' + t('noData') + '</div>';
+    if (brief && !narrativeCache.has(brief.snapshot_id + ':' + language)) void ensureNarrative();
   }
 
   window.selectIncident = selectIncident = async function selectWithDecisionBrief(id) {
     activeId = String(id);
     brief = null;
+    narrative = null;
+    narrativePending = false;
     failed = null;
     loading = true;
     const request = api('/api/v1/incidents/' + encodeURIComponent(id) + '/decision-brief')
@@ -217,6 +261,7 @@
     if (lang) {
       language = lang.getAttribute('data-db-lang') === 'en' ? 'en' : 'fa';
       try { localStorage.setItem(storageKey, language); } catch (_) {}
+      narrative = narrativeCache.get(brief?.snapshot_id + ':' + language) || null;
       window.renderDetail('brief');
       return;
     }
