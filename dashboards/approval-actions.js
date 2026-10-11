@@ -347,7 +347,7 @@
     const risk = lower(approval.risk_level);
     const first = window.confirm(`Approve governed action \"${approval.action}\"?\n\nThis grants authorization but does NOT execute it yet.`);
     if (!first) return;
-    if (risk === 'high' && !window.confirm('HIGH-RISK approval: confirm that you reviewed target, tool, evidence, runbook and blast radius.')) return;
+    if (['high', 'critical'].includes(risk) && !window.confirm('HIGH-RISK approval: confirm that you reviewed target, tool, evidence, runbook and blast radius.')) return;
     try {
       await api(`/api/v1/approvals/${encodeURIComponent(approval.approval_id)}/approve`, {method: 'POST'});
       toast('Approval granted. Workflow remains paused until Resume & Execute.');
@@ -396,7 +396,7 @@
     }
     const summary = [meta.tool_name, approval.action, meta.target].filter(Boolean).join(' → ');
     if (!window.confirm(`Resume this approved workflow and execute the bound action?\n\n${summary}\n\nThe approval will be consumed exactly once when execution begins.`)) return;
-    if (lower(approval.risk_level) === 'high' && !window.confirm('HIGH-RISK execution: confirm final operator intent to consume the approval and execute now.')) return;
+    if (['high', 'critical'].includes(lower(approval.risk_level)) && !window.confirm('HIGH-RISK execution: confirm final operator intent to consume the approval and execute now.')) return;
 
     const button = document.querySelector('#resumeExecutionBtn');
     if (button) {
