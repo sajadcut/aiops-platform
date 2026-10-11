@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 406 | Dashboard JS files scanned: 5 | Symbols indexed: 3727**
+**Python files scanned: 406 | Dashboard JS files scanned: 5 | Symbols indexed: 3730**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1377,28 +1377,31 @@
 | `dashboards/approval-actions.js` | `memoryBadge` | 103 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
 | `dashboards/approval-actions.js` | `observedStateRows` | 110 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
 | `dashboards/approval-actions.js` | `evidenceRows` | 124 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `actionText` | 128 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `controlRows` | 134 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `executionText` | 146 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `verificationText` | 154 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `operatorSummaryCard` | 164 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `injectOperatorSummary` | 188 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `refreshIncidentDecision` | 204 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `approveCurrentApproval` | 211 | JavaScript function | transition مربوط به Approval/Governance را اعمال می‌کند | browser module |
-| `dashboards/approval-actions.js` | `rejectCurrentApproval` | 228 | JavaScript function | transition مربوط به Approval/Governance را اعمال می‌کند | browser module |
-| `dashboards/approval-actions.js` | `resumeCurrentWorkflow` | 253 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `selectIncidentWithOperatorSummary` | 287 | JavaScript function | بر اساس state/capability مسیر یا handler مناسب را انتخاب می‌کند | browser module |
-| `dashboards/approval-actions.js` | `enhancedRenderDetail` | 304 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `loadAllWithCurrentIncidentSummary` | 314 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
-| `dashboards/approval-actions.js` | `list` | 331 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `uniqueText` | 332 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `safeJson` | 334 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `detailsFor` | 343 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `analyzerKeys` | 349 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `candidateCount` | 355 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `agentAnalysisCard` | 362 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `renderDetailWithAgentAnalysis` | 405 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/approval-actions.js` | `loadAgentsWithReliabilityContract` | 420 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
+| `dashboards/approval-actions.js` | `storedRecommendationLanguage` | 129 | JavaScript function | state یا داده را به‌صورت durable ذخیره/به‌روزرسانی می‌کند | browser module |
+| `dashboards/approval-actions.js` | `actionText` | 138 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `recommendationHasUntranslatedOriginal` | 161 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `recommendationArticle` | 165 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `controlRows` | 207 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `executionText` | 219 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `verificationText` | 227 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `operatorSummaryCard` | 237 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `injectOperatorSummary` | 261 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `refreshIncidentDecision` | 277 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `approveCurrentApproval` | 284 | JavaScript function | transition مربوط به Approval/Governance را اعمال می‌کند | browser module |
+| `dashboards/approval-actions.js` | `rejectCurrentApproval` | 301 | JavaScript function | transition مربوط به Approval/Governance را اعمال می‌کند | browser module |
+| `dashboards/approval-actions.js` | `resumeCurrentWorkflow` | 326 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `selectIncidentWithOperatorSummary` | 360 | JavaScript function | بر اساس state/capability مسیر یا handler مناسب را انتخاب می‌کند | browser module |
+| `dashboards/approval-actions.js` | `enhancedRenderDetail` | 377 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `loadAllWithCurrentIncidentSummary` | 387 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
+| `dashboards/approval-actions.js` | `list` | 404 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `uniqueText` | 405 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `safeJson` | 407 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `detailsFor` | 416 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `analyzerKeys` | 422 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `candidateCount` | 428 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `agentAnalysisCard` | 435 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `renderDetailWithAgentAnalysis` | 478 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/approval-actions.js` | `loadAgentsWithReliabilityContract` | 493 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
 | `dashboards/chatbot-transport.js` | `createTransport` | 1 | JavaScript function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | browser module |
 | `dashboards/chatbot-transport.js` | `authHeaders` | 2 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
 | `dashboards/chatbot-transport.js` | `api` | 8 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
