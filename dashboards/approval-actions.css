@@ -80,3 +80,16 @@
 :root[data-theme="light"] .execution-consumed{color:var(--green)}
 :root[data-theme="light"] .stage.failed{border-color:color-mix(in srgb,var(--red) 40%,var(--line));color:var(--red);background:var(--red-soft)}
 :root[data-theme="light"] .stage.warning{border-color:color-mix(in srgb,var(--amber) 40%,var(--line));color:var(--amber);background:var(--amber-soft)}
+
+/* Recommendation language selector: scoped to the AIOps suggestion only. */
+.operator-recommendation-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:7px}
+.operator-summary-sections .operator-recommendation-head h4{margin:0}
+.operator-recommendation-switch{display:inline-flex;align-items:center;gap:2px;padding:3px;border:1px solid var(--line);border-radius:8px;background:var(--surface-2)}
+.operator-recommendation-switch button{border:1px solid transparent;border-radius:6px;padding:5px 9px;background:transparent;color:var(--muted);font-size:10px;line-height:1.2;min-height:28px}
+.operator-recommendation-switch button[aria-pressed="true"]{border-color:var(--blue);background:var(--accent-soft);color:var(--text);font-weight:700}
+.operator-recommendation-switch button:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+.operator-summary-sections article .operator-recommendation-text[dir="ltr"]{text-align:left;direction:ltr;unicode-bidi:plaintext}
+.operator-summary-sections article .operator-recommendation-text[dir="rtl"]{text-align:right;direction:rtl}
+.operator-summary-sections article .operator-recommendation-original{margin-top:8px;padding-top:8px;border-top:1px solid var(--line);color:var(--muted)}
+.operator-recommendation-original[hidden]{display:none}
+@media(max-width:480px){.operator-recommendation-head{align-items:flex-start;flex-direction:column}.operator-recommendation-switch{max-width:100%}}
