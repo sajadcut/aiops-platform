@@ -1,102 +1,107 @@
+# Stop only the AIOps API and VM MCP processes tracked by start-all.ps1.
 [CmdletBinding()]
 param()
 
 $ErrorActionPreference = 'Stop'
-$ProjectRoot = $PSScriptRoot
-$RuntimeRoot = Join-Path $ProjectRoot '.runtime'
+$RuntimeRoot = Join-Path $PSScriptRoot '.runtime'
 $StatePath = Join-Path $RuntimeRoot 'processes.json'
 
 function Get-ProcessInfoById {
     param([int]$ProcessId)
-
     try {
-        $processInfo = Get-CimInstance -ClassName Win32_Process -Filter "ProcessId = $ProcessId" -ErrorAction SilentlyContinue
-        return $processInfo
-    }
-    catch {
+        return Get-CimInstance Win32_Process -Filter "ProcessId = $ProcessId" -ErrorAction SilentlyContinue
+    } catch {
         return $null
     }
 }
 
-function Save-ProcessState {
-    param($State)
+function Get-ProcessCreationStamp {
+    param($ProcessInfo)
+    if ($null -eq $ProcessInfo -or -not $ProcessInfo.CreationDate) { return '' }
+    return ([datetime]$ProcessInfo.CreationDate).ToUniversalTime().ToString('o')
+}
 
+function Test-TrackedProcess {
+    param($Entry, $Info)
+    if ($null -eq $Entry -or $null -eq $Info -or -not $Entry.CreatedAt -or -not $Entry.Module -or -not $Entry.Port) {
+        return $false
+    }
+    if ((Get-ProcessCreationStamp $Info) -ne [string]$Entry.CreatedAt) { return $false }
+    $command = [string]$Info.CommandLine
+    if ([string]::IsNullOrWhiteSpace($command)) { return $false }
+    $portPattern = '--port\s+' + [regex]::Escape([string]$Entry.Port) + '(?:\s|$)'
+    return ($command.IndexOf([string]$Entry.Module, [StringComparison]::OrdinalIgnoreCase) -ge 0 -and
+            [regex]::IsMatch($command, $portPattern))
+}
+
+function Save-State {
+    param($Current)
     $payload = [ordered]@{
         UpdatedAt = (Get-Date).ToString('o')
-        AIOps = $State.AIOps
-        VMMcp = $State.VMMcp
+        AIOps = $Current.AIOps
+        VMMcp = $Current.VMMcp
     }
-
-    $payload | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $StatePath -Encoding UTF8
+    $payload | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $StatePath -Encoding UTF8
 }
 
 if (-not (Test-Path -LiteralPath $StatePath -PathType Leaf)) {
-    Write-Host 'No process state was found. Nothing started by start-all.ps1 is tracked.' -ForegroundColor Yellow
+    Write-Host 'No managed processes are tracked; nothing to stop.' -ForegroundColor Yellow
     return
 }
 
 try {
-    $saved = Get-Content -LiteralPath $StatePath -Raw | ConvertFrom-Json
-}
-catch {
-    throw "Cannot read process state at $StatePath. Inspect or remove the file manually only after checking which services are running."
+    $saved = Get-Content -LiteralPath $StatePath -Raw -Encoding UTF8 | ConvertFrom-Json -ErrorAction Stop
+} catch {
+    throw "Cannot read $StatePath. No processes were stopped; inspect the file manually."
 }
 
 $State = @{ AIOps = $saved.AIOps; VMMcp = $saved.VMMcp }
-$TaskkillPath = Join-Path $env:SystemRoot 'System32\taskkill.exe'
-$StillTracked = $false
 
-# Stop in reverse startup order: API first, then VM MCP.
+# Reverse startup order. Never kill by image name or port alone.
 foreach ($key in @('AIOps', 'VMMcp')) {
     $entry = $State[$key]
-    if ($null -eq $entry -or -not $entry.Pid) {
-        continue
-    }
+    if ($null -eq $entry -or -not $entry.Pid) { continue }
 
-    $pidValue = [int]$entry.Pid
-    $processInfo = Get-ProcessInfoById -ProcessId $pidValue
-
-    if ($null -eq $processInfo) {
-        Write-Host ("[ALREADY STOPPED] {0} (PID {1})" -f $entry.Name, $pidValue) -ForegroundColor DarkGray
+    $processId = [int]$entry.Pid
+    $info = Get-ProcessInfoById -ProcessId $processId
+    if ($null -eq $info) {
+        Write-Host ("[ALREADY STOPPED] {0} (PID {1})" -f $entry.Name, $processId)
         $State[$key] = $null
+        Save-State $State
+        continue
+    }
+    if (-not (Test-TrackedProcess -Entry $entry -Info $info)) {
+        Write-Warning ("PID {0} no longer matches the saved identity of {1}. It will NOT be killed." -f $processId, $entry.Name)
+        $State[$key] = $null
+        Save-State $State
         continue
     }
 
-    $matchText = [string]$entry.MatchText
-    $commandLine = [string]$processInfo.CommandLine
-    if ([string]::IsNullOrWhiteSpace($matchText) -or [string]::IsNullOrWhiteSpace($commandLine) -or $commandLine.IndexOf($matchText, [StringComparison]::OrdinalIgnoreCase) -lt 0) {
-        Write-Warning ("Not stopping PID {0}: its command line no longer matches tracked service '{1}'. This prevents killing an unrelated process if a PID was reused." -f $pidValue, $entry.Name)
-        $StillTracked = $true
-        continue
+    Write-Host ("[STOPPING] {0} (PID {1})" -f $entry.Name, $processId) -ForegroundColor Cyan
+    try {
+        Stop-Process -Id $processId -ErrorAction Stop
+    } catch {
+        Write-Warning ("Failed to stop PID {0}: {1}" -f $processId, $_.Exception.Message)
     }
 
-    Write-Host ("[STOPPING] {0} (PID {1})" -f $entry.Name, $pidValue) -ForegroundColor Cyan
-    if (-not (Test-Path -LiteralPath $TaskkillPath -PathType Leaf)) {
-        throw "taskkill.exe was not found at $TaskkillPath"
+    $deadline = (Get-Date).AddSeconds(5)
+    while ((Get-Date) -lt $deadline) {
+        if ($null -eq (Get-ProcessInfoById -ProcessId $processId)) { break }
+        Start-Sleep -Milliseconds 200
     }
-
-    & $TaskkillPath /PID $pidValue /T /F | Out-Null
-    $taskkillExitCode = $LASTEXITCODE
-    Start-Sleep -Milliseconds 700
-
-    $remaining = Get-ProcessInfoById -ProcessId $pidValue
-    if ($null -eq $remaining -or $taskkillExitCode -eq 0) {
+    if ($null -eq (Get-ProcessInfoById -ProcessId $processId)) {
         Write-Host ("[STOPPED] {0}" -f $entry.Name) -ForegroundColor Green
         $State[$key] = $null
+    } else {
+        Write-Warning ("PID {0} is still running. It remains tracked; check permissions." -f $processId)
     }
-    else {
-        Write-Warning ("Could not confirm that {0} stopped. Check PID {1} and the process log." -f $entry.Name, $pidValue)
-        $StillTracked = $true
-    }
+    Save-State $State
 }
 
-if ($StillTracked) {
-    Save-ProcessState -State $State
-    Write-Warning ("Some entries were retained in {0}; inspect the warning above." -f $StatePath)
-}
-else {
+if ($null -eq $State.AIOps -and $null -eq $State.VMMcp) {
     Remove-Item -LiteralPath $StatePath -Force -ErrorAction SilentlyContinue
-    Write-Host 'All tracked project processes have been stopped.' -ForegroundColor Green
+    Write-Host 'All tracked services have stopped.' -ForegroundColor Green
+} else {
+    Write-Warning "Some services remain tracked in $StatePath"
 }
-
-Write-Host ("Logs remain in: {0}" -f $RuntimeRoot)
+Write-Host "Logs remain in: $RuntimeRoot"
