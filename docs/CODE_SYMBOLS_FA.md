@@ -1095,14 +1095,14 @@
 | `apps/incident_service/repository.py` | `IncidentRepository._evidence_type` | 312 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentRepository |
 | `apps/incident_service/repository.py` | `IncidentRepository.add_evidence` | 319 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentRepository |
 | `apps/incident_service/repository.py` | `IncidentRepository.commit` | 350 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentRepository |
-| `apps/knowledge_review.py` | `content_digest` | 20 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/knowledge_review.py` | `validated_document` | 24 | function | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | module |
-| `apps/knowledge_review.py` | `memory_is_verified` | 35 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/knowledge_review.py` | `incident_document` | 49 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/knowledge_review.py` | `configured_kb` | 81 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/knowledge_review.py` | `review_summary` | 89 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/knowledge_review.py` | `create_from_memory` | 112 | async function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
-| `apps/knowledge_review.py` | `get_locked_review` | 147 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
+| `apps/knowledge_review.py` | `content_digest` | 21 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/knowledge_review.py` | `validated_document` | 25 | function | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | module |
+| `apps/knowledge_review.py` | `memory_is_verified` | 36 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/knowledge_review.py` | `incident_document` | 50 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/knowledge_review.py` | `configured_kb` | 82 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/knowledge_review.py` | `review_summary` | 90 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/knowledge_review.py` | `create_from_memory` | 113 | async function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
+| `apps/knowledge_review.py` | `get_locked_review` | 163 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
 | `apps/mcp_server/main.py` | `JsonRpcRequest` | 20 | class | کلاس | module |
 | `apps/mcp_server/main.py` | `_provider` | 85 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/mcp_server/main.py` | `_parse_dt` | 92 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
