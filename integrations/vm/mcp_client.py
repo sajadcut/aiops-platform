@@ -61,7 +61,7 @@ class VMEdgeMCPClient(MCPClient):
     async def disk_status(self, target: str) -> Dict[str, Any]: return await self._invoke("disk_status", target)
     async def network_status(self, target: str) -> Dict[str, Any]: return await self._invoke("network_status", target)
     async def service_status(self, target: str, service: str) -> Dict[str, Any]: return await self._invoke("service_status", target, service=service)
-    async def service_logs(self, target: str, service: str, limit: int = 30) -> Dict[str, Any]: return await self._invoke("service_logs", target, service=service, limit=limit)
+    async def service_logs(self, target: str, service: str, limit: int = 150) -> Dict[str, Any]: return await self._invoke("service_logs", target, service=service, limit=limit)
     async def system_logs(self, target: str, limit: int = 50) -> Dict[str, Any]: return await self._invoke("system_logs", target, limit=limit)
     async def process_snapshot(self, target: str) -> Dict[str, Any]: return await self._invoke("process_snapshot", target)
     async def process_status(self, target: str, process: str) -> Dict[str, Any]: return await self._invoke("process_status", target, process=process)
