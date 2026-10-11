@@ -271,7 +271,7 @@ def build_decision_brief(
             "target": safe(recommendation.get("target") or approval.get("target"), 180),
             "risk_level": risk,
             "decision": decision_state,
-            "why": "مبنای پیشنهاد در یافته‌ها و تصمیم ذخیره‌شده است؛ ارتباط علّی تأییدنشده نیست.",
+            "why": "مبنای پیشنهاد در یافته‌ها و تصمیم ذخیره‌شده است؛ ارتباط علّی تأییدنشده را قطعی تلقی نکنید.",
             "unverified_assumptions": missing,
         },
         "approval_readiness": {
