@@ -32,7 +32,7 @@ function Save-ProcessState {
 
 if (-not (Test-Path -LiteralPath $StatePath -PathType Leaf)) {
     Write-Host 'No process state was found. Nothing started by start-all.ps1 is tracked.' -ForegroundColor Yellow
-    exit 0
+    return
 }
 
 try {
