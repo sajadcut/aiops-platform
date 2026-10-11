@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 407 | Dashboard JS files scanned: 5 | Symbols indexed: 3737**
+**Python files scanned: 408 | Dashboard JS files scanned: 5 | Symbols indexed: 3740**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -2013,6 +2013,9 @@
 | `scripts/trace_incident_logs.py` | `_open` | 17 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `scripts/trace_incident_logs.py` | `_files` | 23 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `scripts/trace_incident_logs.py` | `main` | 36 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `scripts/verify_cognia_connection.py` | `_safe_failure` | 19 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `scripts/verify_cognia_connection.py` | `run_probe` | 30 | async function | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | module |
+| `scripts/verify_cognia_connection.py` | `main` | 133 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `scripts/verify_operational_memory.py` | `inspect` | 16 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `scripts/verify_operational_memory.py` | `main` | 51 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/integration/test_approval_store_db.py` | `_seed_incident` | 22 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
