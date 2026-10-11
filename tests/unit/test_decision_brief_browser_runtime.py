@@ -48,12 +48,13 @@ const assert = require('node:assert/strict');
     cognia_knowledge: {status: 'empty', retrieved_count: 0}, operational_memory: {}
   });
   global.api = async url => {
-    if (url.endsWith('/decision-brief')) return incident(S.selected);
+    const pathIncident = url.match(/incidents\\/([^/]+)/)?.[1];
+    if (url.endsWith('/decision-brief')) return incident(pathIncident);
     const lang = new URL('https://test.local' + url).searchParams.get('lang');
     const sectionText = lang === 'fa' ?
       'این گزارش بر اساس شواهد ثبت‌شده تهیه شده و تأیید عملیاتی لازم دارد.' :
       'This report uses durable evidence and requires operator approval.';
-    return {snapshot_id: incident(S.selected).snapshot_id, status: 'available',
+    return {snapshot_id: incident(pathIncident).snapshot_id, status: 'available',
       language: lang, sections: [{heading: lang === 'fa' ? 'شرح اتفاق' : 'Incident',
         text: sectionText, citations: ['ev-1']}]};
   };
