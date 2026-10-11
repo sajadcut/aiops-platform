@@ -77,6 +77,9 @@ async def test_verified_memory_human_review_and_cognia_activation(monkeypatch):
         assert repeated.json()["id"] == review_id
         listed = await client.get("/api/v1/knowledge-reviews", params={"status": "pending_review"})
         assert any(item["id"] == review_id for item in listed.json()["items"])
+        assert all("content" not in item for item in listed.json()["items"])
+        single = await client.get(f"/api/v1/knowledge-reviews/{review_id}")
+        assert "content" in single.json()
 
         forbidden = await client.post(f"/api/v1/knowledge-reviews/{review_id}/publish")
         assert forbidden.status_code == 409 and not calls
