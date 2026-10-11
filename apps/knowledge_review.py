@@ -6,10 +6,11 @@ the separate Cognia Knowledge boundary.
 from __future__ import annotations
 
 import hashlib
-from uuid import UUID
+import json
+from uuid import UUID, uuid4
 
 from fastapi import HTTPException
-from sqlalchemy import select
+from sqlalchemy import select, text
 from sqlalchemy.exc import IntegrityError
 
 from domain.contracts.config import settings
@@ -131,6 +132,21 @@ async def create_from_memory(db, memory_id: UUID, actor: str, *, kb_id: int | No
         raise HTTPException(503, "cognia_client_application_id_not_configured")
     db.add(record)
     try:
+        await db.flush()
+        # Draft creation must also be durably auditable (without raw content).
+        await db.execute(text("""
+            INSERT INTO audit_events
+            (event_id,event_type,actor,incident_id,action,status,metadata,created_at)
+            VALUES (:event_id,'knowledge_drafted',:actor,:incident_id,
+                    'drafted','pending_review',CAST(:metadata AS jsonb),now())
+        """), {
+            "event_id": uuid4(), "actor": actor,
+            "incident_id": record.incident_id,
+            "metadata": json.dumps({
+                "review_id": str(record.id), "memory_id": str(memory_id),
+                "kb_id": selected, "content_hash": record.content_hash,
+            }),
+        })
         await db.commit()
     except IntegrityError:
         await db.rollback()
