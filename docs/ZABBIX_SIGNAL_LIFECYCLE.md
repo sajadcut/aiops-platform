@@ -151,6 +151,55 @@ identity. The original `eventid` survives retry and Recovery. Problem retries
 reuse the exact evidence reference; a matched Recovery is attached to the same
 Incident and cannot create a new one.
 
+## Full Zabbix Webhook delivery logging (AIOps side only)
+
+For every **authenticated** Zabbix HTTP delivery, AIOps emits
+`zabbix_webhook_received` at INFO level **before normalization and
+validation**, including retries and incomplete event IDs. The structured
+`raw_request.payload` is the complete original JSON payload delivered by
+the unchanged v1.1 Webhook Media Type: event IDs, host/trigger metadata,
+severity, operational data, all event tags, and any additional fields.
+No arbitrary length cap from `LOG_HTTP_BODY_MAX_BYTES` is applied to this
+specific log entry. Secret-bearing keys and secret-labeled tags have their
+values redacted; the sender's original JSON is not modified.
+
+A second entry captures the processing outcome:
+
+- `zabbix_webhook_processed` — 2xx, Incident ID, Problem/Recovery state,
+  deduplication/recovery status
+- `zabbix_webhook_rejected` — invalid event identity or unmatched Recovery
+  (including HTTP 422/503 and failure reason)
+- `zabbix_webhook_failed` — unexpected processing/DB exception (HTTP 500)
+
+All records include `log_type=zabbix_webhook`, `eventid`, and the
+same request correlation trace ID as the HTTP transaction log.
+No API key or Authorization header is added to the Zabbix payload log.
+Large messages are limited only by the configured destination/rotation and
+available storage, so plan disk capacity and log-retention policies.
+
+With the default file logging settings (`LOG_LEVEL=INFO`,
+`LOG_JSON_FILE_ENABLED=True`, `LOG_DIR=logs`,
+`LOG_JSON_FILE=aiops.json.log`) on Windows, use PowerShell from the
+repository root to inspect the complete records:
+
+```powershell
+Get-Content .\logs\aiops.json.log -Wait |
+  Where-Object { $_ -match '"event": "zabbix_webhook_received"' }
+```
+
+For one source event ID including its receipt and outcome:
+
+```powershell
+Get-Content .\logs\aiops.json.log |
+  ConvertFrom-Json |
+  Where-Object { $_.log_type -eq "zabbix_webhook" -and $_.eventid -eq "501001" } |
+  ConvertTo-Json -Depth 30
+```
+
+For Kubernetes deployments, the same JSON records go to configured
+stdout/stderr logging collectors if JSON file logging is disabled. Normal
+log rotation/retention still applies; logging is not a durable webhook queue.
+
 ## Zabbix action and acceptance
 
 Configure Media Type **AIOps Signal Gateway**, User `aiops-webhook` (all
