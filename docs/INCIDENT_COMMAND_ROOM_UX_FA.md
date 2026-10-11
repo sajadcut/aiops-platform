@@ -1,0 +1,59 @@
+# اتاق فرمان رخداد — طراحی جدید UI/UX تمام‌صفحه
+
+## سناریوی اپراتور ساعت ۳ بامداد
+
+هدف نسخه جدید حذف مدل «جدول در چپ + پنل ریز و پر از تب در گوشه راست» است. اپراتور باید از **Command Center → Operator Attention Queue** یا **Incidents → Incident Workbench** روی یک رخداد در انتظار تأیید کلیک کند و مستقیماً به یک صفحه اختصاصی و خوانا برود:
+
+`/dashboard/incidents/{incident_id}`
+
+این صفحه یک URL مستقل، قابل Bookmark و قابل باز شدن در تب جدید است. مسیر بازگشت `/dashboard?view=incidents` انتخاب صف رخدادها را برمی‌گرداند.
+
+### سلسله‌مراتب دیداری
+
+1. **Hero تمام‌عرض:** سرویس، شرح، Severity، وضعیت، تازگی شواهد، مدت اختلال و نوع تصمیم لازم؛ بدون JSON.
+2. **در ۳۰ ثانیه چه بدانم؟** خلاصه فارسی قطعی و شش نکته مهم؛ هشدار شواهد قدیمی/ناقص و تغییر Snapshot در همین بالا.
+3. **قبل از تأیید:** Action واقعی، Tool، Target، Risk، Blast Radius، Runbook، Rollback و Verification Plan.
+4. **تحلیل و منبع:** Agentها، اطمینان RCA و Evaluator و Agreement مستقل، MCP، مراقبت از خطای داخلی Tool، دانش Cognia و Operational Memory.
+5. **بعد از اجرا:** وضعیت Execution مستقل از Verification، Memory و لینک بازبینی دانش در صورت پشتیبانی داده.
+6. **زمان‌بندی و تاریخچه:** Audit Timeline و Snapshotهای تاریخی نسخه‌دار و فقط‌خواندنی.
+7. **میز تصمیم مستقل:** در نمایش بزرگ در ستون کناری Sticky، در موبایل **قبل از جزئیات** اما **بعد از خلاصه بالایی**؛ دکمه‌ها با چک‌باکس بررسی فعال می‌شوند.
+
+نوع‌بندی فارسی با `Vazirmatn/IRANSans/Tahoma` و اندازه ۱۵px پایه، تیترهای ۲۲ تا ۵۲px، فضاهای سفید کافی، سطح‌های کم‌عمق، کنتراست مناسب و Mobile Breakpoints. انتخاب فارسی/English در `aiops.decision-brief.language` و تم روشن/تیره در `aiops.chatbot.theme` مشترک با Dashboard ذخیره می‌شود.
+
+### امنیت و رفتار واقعی
+
+- **خواندن صفحه GET** فقط همان APIهای دارای مجوز `read:incident` را فراخوانی می‌کند؛ خودش هیچ Workflow یا Tool دارای اثر جانبی را اجرا نمی‌کند.
+- **Approve** از `POST /api/v1/approvals/{approval_id}/approve` استفاده می‌کند و بلافاصله عملیات را اجرا نمی‌کند.
+- **Reject** دلیل الزامی را از اپراتور دریافت و در API موجود ثبت می‌کند.
+- **Resume & Execute** فقط برای Approval با وضعیت `approved` از `POST /api/v1/workflow/e2e/{incident_id}/resume` استفاده می‌کند.
+- هر اقدام قبل از POST، مجدداً `decision-brief` و `lifecycle` را می‌خواند و Snapshot، Approval ID و وضعیت را تطبیق می‌دهد؛ در صورت تغییر، چک‌باکس قبلی را بی‌اعتبار و صفحه را Refresh می‌کند.
+- ریسک `high` و `critical` تأیید دوم دارند. `binding_complete` و `drift_detected` باعث جلوگیری از اقدام از UI می‌شوند؛ سیاست Backend همچنان منبع نهایی صدور/مصرف مجوز است.
+- Snapshot تاریخی صراحتاً بنر هشدار دارد و هنگام مشاهده آن **هیچ** عملیات Approve/Resume/Reject قابل انجام نیست.
+- LLM فقط هنگام نمایش گزارش فعلی (نه Snapshot تاریخی) برای prose اختیاری خوانده می‌شود؛ قطع LLM خروجی پایدار را مخفی نمی‌کند.
+- Raw Evidence به‌صورت Collapse و درخواست مجزای کاربر است، نه متن خامی که از ابتدا صفحه را اشغال کند. به‌دلیل حساس بودن داده‌های زیرساخت، برای مشاهده آن مجوز `read:incident` لازم است.
+
+## تست مرحله‌ای Windows
+
+بعد از `git pull --ff-only origin main` و اجرای Stack با راهنمای موجود:
+
+```powershell
+python -m pytest -q tests/unit/test_incident_command_room.py tests/integration/test_decision_brief_ui_api.py
+python -m pytest -q tests
+```
+
+1. Dashboard را باز و از صف Incidentها یک مورد `pending` را انتخاب کنید. URL باید به `/dashboard/incidents/<incident-id>` تغییر کند؛ پنل کناری ریز دیگر نباید دیده شود.
+2. بدون کلیک، دکمه Approve باید غیرفعال باشد. بعد از تیک تأیید بررسی و تأییدهای لازم، فقط Approval به `approved` منتقل می‌شود؛ هیچ Command نباید در این مرحله اجرا شود.
+3. برای اجرای واقعی **فقط روی VM آزمایشی مجاز و Disposable**، دومین تأیید و دکمه `Resume & Execute` را بررسی کنید. پیش‌شرط و Verification باید از Backend معتبر همان Incident بیایند.
+4. Reload صفحه / ذخیره لینک / Back/Forward / RTL/LTR / Dark/Light / موبایل / قطع LLM / Evidence ناقص / وضعیت `approved, consumed, rejected` و تاریخی را آزمایش کنید.
+5. تغییر برنامه یا Evidence در فاصله بین بارگذاری و POST باید گزارش را تازه و اقدام را متوقف کند؛ Backend هم به‌طور مستقل سیاست Snapshot و Approval یک‌بارمصرف را اعمال می‌کند.
+
+**REAL ENV REQUIRED:** مرورگرهای واقعی، زمان ۳۰ تا ۶۰ ثانیه با اپراتور شب‌کار، دستگاه موبایل واقعی، اتصال Dotin/Cognia/MCP و اجرای واقعی روی VM باید در محیط مجاز جداگانه پذیرفته شوند. Node DOM runtime و CI، معادل تست UX با انسان یا Production E2E نیستند.
+
+## فایل‌ها
+
+- `dashboards/incident-command-room.html` — اسکلت معنایی قابل دسترس و ناحیه تصمیم مجزا
+- `dashboards/incident-command-room.css` — چیدمان کامل و پاسخ‌گو با تم‌های مشترک
+- `dashboards/incident-command-room.js` — اتصال واقعی API و مدیریت وضعیت/زبان/تعامل
+- `apps/api/main.py` — Route اختصاصی و Assetها
+- `dashboards/index.html`، `control-center.js/css` — صف کارت‌محور و ناوبری مستقیم
+- `tests/unit/test_incident_command_room.py` — پذیرش مسیر صفحه و اجرای JS کنترل‌های Approval
