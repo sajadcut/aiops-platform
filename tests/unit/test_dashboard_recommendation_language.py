@@ -37,7 +37,7 @@ let lastMarkup = '';
 let calls = 0;
 const detail = {
   contains: () => true,
-  querySelector: selector => selector === '.detail-head' ? {} : null,
+  querySelector: selector => selector === '.detail-head' ? {insertAdjacentHTML: (_location, html) => { lastMarkup = html; }} : null,
   insertAdjacentHTML: (_location, html) => { lastMarkup = html; },
 };
 const document = {
