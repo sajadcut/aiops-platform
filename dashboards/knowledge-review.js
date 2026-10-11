@@ -37,7 +37,7 @@
       box.innerHTML = '<div class="empty-state">Choose a draft from the queue.</div>';
       return;
     }
-    const editable = ['pending_review', 'rejected', 'approved', 'publish_failed'].includes(r.status);
+    const editable = ['pending_review', 'rejected', 'approved'].includes(r.status);
     const reviewable = r.status === 'pending_review';
     const publishable = ['approved', 'publish_failed'].includes(r.status);
     const canRefresh = ['submitted', 'published'].includes(r.status);
