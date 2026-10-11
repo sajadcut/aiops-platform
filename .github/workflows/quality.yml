@@ -199,11 +199,15 @@ jobs:
                   required = {
                       'incidents','evidences','findings','memory_entries','memory_reuse_events','approvals',
                       'audit_events','workflow_checkpoints','runbooks','api_rate_limits',
-                      'legacy_knowledge_documents_archive','chat_sessions','chat_messages',
+                      'legacy_knowledge_documents_archive','knowledge_reviews','chat_sessions','chat_messages',
                       'chat_action_proposals'
                   }
                   assert required <= tables, required - tables
                   assert 'knowledge_documents' not in tables, 'active local Knowledge RAG table must be retired'
+                  cur.execute("SELECT indexname FROM pg_indexes WHERE schemaname='public' AND tablename='knowledge_reviews'")
+                  review_indexes = {row[0] for row in cur.fetchall()}
+                  assert 'ux_knowledge_reviews_memory_id' in review_indexes, 'knowledge review idempotency index missing'
+
 
                   cur.execute("""
                       SELECT table_name, udt_name FROM information_schema.columns
@@ -320,7 +324,7 @@ jobs:
                   cur.execute("SELECT to_regclass('public.chat_sessions'), to_regclass('public.chat_messages'), to_regclass('public.chat_action_proposals')")
                   assert cur.fetchone() == ('chat_sessions', 'chat_messages', 'chat_action_proposals'), 'chatbot persistence was not created during forward migration'
                   cur.execute("SELECT version_num FROM alembic_version")
-                  assert cur.fetchone()[0] == 'j7g8h9i0j1k2'
+                  assert cur.fetchone()[0] == 'k8h9i0j1k2l3', 'forward migration must end at Knowledge Review head'
           PY
       - name: Migration downgrade and clean rebuild
         run: |
