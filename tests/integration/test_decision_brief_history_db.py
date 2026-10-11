@@ -192,7 +192,7 @@ async def test_legacy_high_risk_approval_requires_fresh_versioned_approval():
             "approval_id": approval_id, "incident_id": str(incident_id),
             "action": "restart_service", "risk_level": "high",
             "approver": "ci", "status": "pending",
-            "metadata": {"binding_complete": True, "binding_version": 1},
+            "metadata": {"binding_complete": True, "binding_version": 1, "workflow": "e2e"},
             "created_at": None, "approved_at": None, "rejected_at": None,
         })
         await store.set_status(approval_id, "approved")
