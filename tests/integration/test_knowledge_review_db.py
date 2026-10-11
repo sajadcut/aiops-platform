@@ -18,7 +18,7 @@ from domain.models import Incident, IncidentStatus, KnowledgeReview, MemoryEntry
 pytestmark = [
     pytest.mark.skipif(os.environ.get("RUN_DB_KNOWLEDGE_REVIEW_TEST") != "1",
                        reason="requires isolated PostgreSQL acceptance DB"),
-    pytest.mark.asyncio,
+    pytest.mark.asyncio(loop_scope="module"),
 ]
 
 
