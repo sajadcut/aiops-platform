@@ -96,7 +96,7 @@
 | Raw Evidence و Timeline | ✅ | هدایت به پنل اصلی Evidence/Audit |
 | جلوگیری از اجرا بدون Approval و High Risk | ✅ | Binding و مصرف یک‌باره مجوز در Backend موجود؛ تست‌های `tests/security` و `tests/unit/test_runtime_guard_approval_revocation.py` |
 | Binding به Incident/Action/Tool/Target/Runbook | ✅ | `apps/approval_service/binding.py` |
-| Binding صریح به Evidence Snapshot و نسخه Plan و Reapproval بر اثر Drift | ⛔ | Digest اجرای موجود تمامیت Execution Intent را کنترل می‌کند، اما Snapshot شواهد به‌عنوان شرط مستقل اجرای همه مسیرها گیت نشده؛ UI این مورد را Not Verified نشان می‌دهد |
+| Binding صریح به Evidence Snapshot و نسخه Plan و Reapproval بر اثر Drift | ✅ / ◐ | در Approvalهای **جدید** Durable Workflow و Direct API اثرانگشت Plan/Agent Results/Checkpoint و تمام Evidenceهای پایدار ثبت می‌شود و در Resume و /execute پیش از مصرف مجوز تطبیق و در صورت تغییر لغو می‌شود. Approvalهای قدیمی که فاقد Digest هستند با Binding/Preflight قبلی سازگارند و Snapshot آن‌ها Not Verified است |
 
 ## ۵) پس از اجرا
 
@@ -125,7 +125,7 @@
 |---|---|---|
 | قرارداد Versioned با تمام بخش‌های اصلی | ✅ | `decision-brief.v1`؛ ساختارهای Incident/Agents/MCP/Cognia/Memory/RCA/Approval/Execution/Verification/Localization |
 | یک نمای سازگار از Incident/Approval/Checkpoint | ✅ | سازنده Operator Summary و Brief در همان SQLAlchemy Session |
-| Snapshot/Version و تازگی Workflow | ◐ | Hash پایدار + نسخه Checkpoint در هر بازخوانی؛ جدول تاریخچه مستقل Snapshot وجود ندارد |
+| Snapshot/Version و تازگی Workflow | ◐ | Hash پایدار + نسخه Checkpoint در هر بازخوانی؛ برای Approvalهای جدید Digest جداگانه Plan/Evidence نیز پیش از اجرا ارزیابی می‌شود؛ جدول تاریخچه مستقل Snapshot وجود ندارد |
 | Redaction، RBAC، خطا و Unknown | ✅ | `redact`، `read:incident` و fallback |
 | عدم اجرای Workflow/Tool/RAG هنگام بازشدن Brief | ✅ | GET فقط خواندنی؛ GET جداگانه Narrative فقط LLM نمایشی را فراخوانی می‌کند |
 | Cache/Timeout/کنترل هزینه LLM | ✅ | Cache حداکثر ۱۰۰ گزارش در پردازش؛ زمان انتظار محدود و خروجی bounded |
@@ -142,7 +142,7 @@
 | ۵ | Cognia بازیابی شده ولی در RCA استفاده نشده | ✅ unit/synthetic |
 | ۶ | Agentهای متناقض | ✅ unit/synthetic |
 | ۷ | RCA نامطمئن و Remediation قابل بررسی | ✅ unit/synthetic |
-| ۸ | Evidence کهنه یا Snapshot drift | ◐ تست Freshness موجود؛ Drift در Approval مستقل گیت نشده |
+| ۸ | Evidence کهنه یا Snapshot drift | ✅ Freshness و گیت Drift برای Approvalهای جدید همراه تست deny-before-consume؛ ◐ Approvalهای Legacy |
 | ۹ | High Risk نیازمند Approval | ✅ تست Governance موجود؛ 🌐 Live |
 | ۱۰ | Reject و عدم اجرا | ✅ در تست‌های Backend؛ 🌐 Live |
 | ۱۱ | Approve، اجرا و Verification موفق | ✅ در تست‌های Backend؛ 🌐 Live |
@@ -163,6 +163,6 @@ python -m pytest -q tests/unit/test_decision_brief.py tests/unit/test_decision_b
 python -m pytest -q tests
 ```
 
-**گپ‌های قطعی باقی‌مانده:** (۱) گیت الزام‌آور برای Plan/Evidence Snapshot Drift در تمام مسیرهای Approval/Execution؛ (۲) آرشیو مستقل Snapshotهای قابل بازیابی برای ممیزی تاریخی؛ (۳) Provenance دقیق Trace/Tool/Knowledge اگر در مبادی داده Persist نشده؛ (۴) آزمون واقعی Chrome/Firefox، اتصال Dotin/Cognia/MCP/pgvector و Remediation + Rollback Production؛ (۵) راستی‌آزمایی معنایی هر گزاره مدل؛ (۶) تست قابل‌سنجش زمان ۳۰–۶۰ ثانیه‌ای و UX.
+**گپ‌های قطعی باقی‌مانده:** (۱) مهاجرت یا سیاست لغو/تأیید مجدد برای Approvalهای Legacy فاقد Decision Snapshot و ارزیابی Race هم‌زمان Evidence/Consume؛ (۲) آرشیو مستقل Snapshotهای قابل بازیابی برای ممیزی تاریخی؛ (۳) Provenance دقیق Trace/Tool/Knowledge اگر در مبادی داده Persist نشده؛ (۴) آزمون واقعی Chrome/Firefox، اتصال Dotin/Cognia/MCP/pgvector و Remediation + Rollback Production؛ (۵) راستی‌آزمایی معنایی هر گزاره مدل؛ (۶) تست قابل‌سنجش زمان ۳۰–۶۰ ثانیه‌ای و UX.
 
 **نکتهٔ پذیرش:** تا بسته‌شدن گپ‌های امنیتی و اجرای آزمون‌های REAL ENV REQUIRED، اعلام «Production accepted» یا جایگزین‌کردن بازبینی اپراتور با تصمیم خودکار مجاز نیست.
