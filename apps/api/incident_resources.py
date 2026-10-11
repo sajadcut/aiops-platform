@@ -501,3 +501,70 @@ async def get_operator_summary(incident_id: UUID):
         audit_events=audits,
         memory_entry=memory_entry,
     )
+
+
+@router.get("/incidents/{incident_id}/decision-brief")
+async def get_incident_decision_brief(incident_id: UUID):
+    """Read-only, provenance-limited Decision Brief. No live tools or LLM calls."""
+    from apps.decision_brief import build_decision_brief
+    from domain.models import KnowledgeReview
+
+    # Reuse the existing deterministic operator projection, not a competing
+    # interpreter of RCA, governed action, or approval semantics.
+    operator_summary = await get_operator_summary(incident_id)
+    async with AsyncSessionLocal() as db:
+        incident = await db.get(Incident, incident_id)
+        if incident is None:
+            raise HTTPException(status_code=404, detail="Incident not found")
+        checkpoint = await WorkflowCheckpointStore(db).load(str(incident_id)) or {}
+        evidence_rows = (
+            await db.execute(
+                select(Evidence).where(Evidence.incident_id == incident_id)
+                .order_by(desc(Evidence.created_at)).limit(500)
+            )
+        ).scalars().all()
+        finding_rows = (
+            await db.execute(
+                select(Finding).where(Finding.incident_id == incident_id)
+                .order_by(desc(Finding.created_at)).limit(100)
+            )
+        ).scalars().all()
+        latest_review = (
+            await db.execute(
+                select(KnowledgeReview).where(KnowledgeReview.incident_id == incident_id)
+                .order_by(desc(KnowledgeReview.created_at)).limit(1)
+            )
+        ).scalars().first()
+
+    return build_decision_brief(
+        incident={
+            "id": str(incident.id), "service": incident.service,
+            "severity": incident.severity,
+            "status": incident.status.value if hasattr(incident.status, "value") else str(incident.status),
+            "summary": incident.summary,
+            "started_at": incident.started_at.isoformat() if incident.started_at else None,
+        },
+        operator_summary=operator_summary,
+        checkpoint=checkpoint,
+        durable_evidence=[
+            {
+                "id": str(row.id), "source": row.source,
+                "reference": row.reference, "raw_data": row.raw_data or {},
+                "created_at": row.created_at.isoformat() if row.created_at else None,
+            }
+            for row in evidence_rows
+        ],
+        findings=[
+            {
+                "id": str(row.id), "agent": row.agent,
+                "finding_type": row.finding_type, "statement": row.statement,
+                "evidence_ids": row.evidence_ids or [], "confidence": row.confidence,
+            }
+            for row in finding_rows
+        ],
+        audit_events=[],
+        knowledge_review=(
+            {"id": str(latest_review.id), "status": latest_review.status}
+            if latest_review is not None else None
+        ),
+    )
