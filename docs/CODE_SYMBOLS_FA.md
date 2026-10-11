@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 402 | Dashboard JS files scanned: 5 | Symbols indexed: 3627**
+**Python files scanned: 403 | Dashboard JS files scanned: 5 | Symbols indexed: 3636**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -3634,3 +3634,12 @@
 | `tests/unit/test_zabbix_recovery_lifecycle.py` | `test_recovery_ingest_updates_existing_incident_and_never_creates_new_one.FakeApprovalStore.cancel_unconsumed_for_incident` | 248 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_recovery_ingest_updates_existing_incident_and_never_creates_new_one.FakeApprovalStore |
 | `tests/unit/test_zabbix_recovery_lifecycle.py` | `test_recovery_ingest_updates_existing_incident_and_never_creates_new_one.fake_record_source_recovery` | 253 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_recovery_ingest_updates_existing_incident_and_never_creates_new_one |
 | `tests/unit/test_zabbix_recovery_lifecycle.py` | `test_recovery_ingest_updates_existing_incident_and_never_creates_new_one.fake_audit` | 261 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_recovery_ingest_updates_existing_incident_and_never_creates_new_one |
+| `tests/unit/test_zabbix_team_guide_contract.py` | `_asset` | 27 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_zabbix_team_guide_contract.py` | `test_media_type_script_flat_vm_payload_and_event_timestamp` | 31 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_zabbix_team_guide_contract.py` | `test_vm_port_and_optional_metadata_are_bounded_and_not_guessed` | 68 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_zabbix_team_guide_contract.py` | `test_guide_asset_scenarios_keep_stable_domain_identity` | 134 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_zabbix_team_guide_contract.py` | `test_tags_json_and_unknown_macro_are_handled_without_false_identity` | 145 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_zabbix_team_guide_contract.py` | `test_problem_and_recovery_identifiers_match_document_appendix_a6` | 164 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_zabbix_team_guide_contract.py` | `test_missing_or_unexpanded_eventid_is_rejected_for_deduplication` | 184 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_zabbix_team_guide_contract.py` | `test_timestamp_supports_epoch_iso_and_empty_without_guessing` | 189 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_zabbix_team_guide_contract.py` | `test_no_trigger_based_vm_execution_identity` | 198 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
