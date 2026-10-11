@@ -110,25 +110,49 @@ def _mcp(rows: Iterable[dict], now: datetime) -> tuple[list[dict], list[dict]]:
             continue
         raw = obj(item.get("raw_data"))
         origin = str(item.get("source") or "")
-        mcp = raw.get("mcp_server") or raw.get("server") or (origin if "mcp" in origin.lower() else None)
-        collected = item.get("created_at")
+        observation_status = str(raw.get("status") or "").lower()
+        # EvidenceCollector records provider outage/empty-query status as a
+        # source_observation; the Incident repository stores it under type=event.
+        # Identify it by the canonical result_count/status shape, not HTTP 200.
+        is_source_observation = (
+            "result_count" in raw
+            and observation_status in {"queried", "unavailable", "error", "skipped"}
+            and origin.lower() in {"prometheus", "elasticsearch", "zabbix", "vm_mcp"}
+        )
+        mcp = raw.get("mcp_server") or raw.get("server") or (
+            origin if "mcp" in origin.lower() or is_source_observation else None
+        )
+        explicit_time = raw.get("collected_at") or raw.get("observed_at") or raw.get("timestamp")
+        collected = explicit_time or item.get("created_at")
         age = freshness(collected, now)
         source_name = safe(mcp or origin, 160) or "unknown"
-        sources[source_name] = {"source": source_name, "freshness": age}
+        if source_name not in sources:
+            sources[source_name] = {
+                "source": source_name,
+                "freshness": age,
+                "status": observation_status if is_source_observation else "observed",
+            }
         if mcp is None:
             continue
         inner = obj(raw.get("tool_result") or raw.get("result"))
         explicit_success = raw.get("success") is True or inner.get("success") is True
-        status = "failed" if tool_failed(raw) else "success" if explicit_success else "unknown"
+        status = (
+            "failed" if is_source_observation and observation_status in {"unavailable", "error"} else
+            observation_status if is_source_observation else
+            "failed" if tool_failed(raw) else
+            "success" if explicit_success else "unknown"
+        )
         items.append({
             "evidence_ref": safe(item.get("id") or item.get("evidence_id") or item.get("reference"), 180),
             "server": source_name,
-            "tool": safe(raw.get("tool_name") or raw.get("tool") or raw.get("diagnostic"), 120),
+            "tool": safe(raw.get("tool_name") or raw.get("tool") or raw.get("diagnostic"), 120)
+                    or ("source_observation" if is_source_observation else None),
             "status": status,
             "collected_at": safe(collected, 55),
+            "time_basis": "source_observed" if explicit_time else "evidence_persisted",
             "freshness": age,
             "phase": safe(raw.get("phase") or raw.get("collection_phase"), 70) or "unknown",
-            "finding": safe(raw.get("summary") or raw.get("message") or raw.get("diagnostic"), 380),
+            "finding": safe(raw.get("summary") or raw.get("message") or raw.get("detail") or raw.get("diagnostic"), 380),
         })
     return items[:100], list(sources.values())[:50]
 
@@ -219,8 +243,13 @@ def build_decision_brief(
     if not evidence:
         missing.append("no_durable_evidence")
     freshnesses = [freshness(e.get("created_at"), now) for e in evidence]
-    data_freshness = ("unknown" if not freshnesses or all(x == "unknown" for x in freshnesses)
-                      else "fresh" if "fresh" in freshnesses else "stale")
+    data_freshness = (
+        "unknown" if not freshnesses or all(x == "unknown" for x in freshnesses)
+        else "mixed" if "fresh" in freshnesses and ("stale" in freshnesses or "unknown" in freshnesses)
+        else "stale" if "stale" in freshnesses
+        else "fresh" if all(x == "fresh" for x in freshnesses)
+        else "unknown"
+    )
     risk = safe(summary.get("risk_level"), 40) or "unknown"
     service = safe(incident.get("service"), 120) or "نامشخص"
     decision_state = safe(decision.get("decision"), 90) or "unknown"
