@@ -1,64 +1,161 @@
-# Zabbix Problem/Recovery lifecycle
+# Zabbix Team Guide v1.1 — authoritative Webhook contract
 
-`aiops-platform` receives Zabbix lifecycle notifications through one authenticated endpoint:
+This page is synchronized to the 18-page **Zabbix_to_AIOps_Team_Guide_FA,
+version 1.1 (2026-10-04)** supplied to the Zabbix integration team.
+It defines the exact push-side contract for Problem and Recovery:
 
-```text
-POST /api/v1/signals/zabbix
+```http
+POST https://<AIOPS-FQDN>/api/v1/signals/zabbix
+Content-Type: application/json
+X-API-Key: <AIOPS_API_KEY>
 ```
 
-The same endpoint accepts both the original Problem and its Recovery. Zabbix MCP is not the push channel; MCP is used later by AIOps to collect live evidence after a signal has arrived.
+Zabbix uses a **Webhook Media Type** with a secret-text macro
+`{$AIOPS_API_KEY}`. Its JS must send `JSON.stringify({payload: payload})`,
+**not** the bare payload, with the API key only in the header.
+AIOps requires an identity with `ingest:signal` permission. The API key
+must not be embedded in the JSON body, logs or screenshots.
 
-## Recommended webhook body
+## Media Type parameter names (exact)
 
-Configure the Zabbix Action/Media Type so the problem event keeps a stable event identity and the recovery carries both identities:
+These keys are Webhook Media Type parameters. The JS strips unexpanded Zabbix
+macros (`{...}`) and transfers their values to the JSON payload.
+
+| Name | Zabbix macro |
+|---|---|
+| `url` | `https://<AIOPS-FQDN>/api/v1/signals/zabbix` |
+| `api_key` | `{$AIOPS_API_KEY}` |
+| `eventid` | `{EVENT.ID}` |
+| `recovery_eventid` | `{EVENT.RECOVERY.ID}` |
+| `event_value` | `{EVENT.VALUE}` |
+| `event_status` | `{EVENT.STATUS}` |
+| `name` | `{EVENT.NAME}` |
+| `severity` | `{EVENT.SEVERITY}` |
+| `hostid` | `{HOST.ID}` |
+| `host` | `{HOST.HOST}` |
+| `host_name` | `{HOST.NAME}` |
+| `host_ip` | `{HOST.IP}` |
+| `triggerid` | `{TRIGGER.ID}` |
+| `trigger` | `{TRIGGER.NAME}` |
+| `tags` | `{EVENT.TAGSJSON}` |
+| `operational_data` | `{EVENT.OPDATA}` |
+| `acknowledged` | `{EVENT.ACK.STATUS}` |
+| `timestamp` | `{EVENT.TIMESTAMP}` |
+| `recovery_timestamp` | `{EVENT.RECOVERY.TIMESTAMP}` |
+
+`url` and `api_key` are transport configuration, **not JSON payload fields**.
+Problem JSON includes a stable `eventid`. Recovery JSON includes both the
+**original problem** `eventid` and the recovery `recovery_eventid`, and
+`event_value=0`.
+
+## Webhook request examples
 
 ```json
 {
   "payload": {
-    "eventid": "{EVENT.ID}",
-    "recovery_eventid": "{EVENT.RECOVERY.ID}",
-    "event_value": "{EVENT.VALUE}",
-    "event_status": "{EVENT.STATUS}",
-    "recovery_status": "{EVENT.RECOVERY.STATUS}",
-    "name": "{EVENT.NAME}",
-    "severity": "{EVENT.SEVERITY}",
-    "hostid": "{HOST.ID}",
-    "host": "{HOST.HOST}",
-    "triggerid": "{TRIGGER.ID}",
-    "tags": {EVENT.TAGSJSON},
-    "operational_data": "{EVENT.OPDATA}",
-    "acknowledged": "{EVENT.ACK.STATUS}",
-    "timestamp": "{EVENT.TIMESTAMP}",
-    "recovery_timestamp": "{EVENT.RECOVERY.TIMESTAMP}"
+    "eventid": "501001",
+    "event_value": "1",
+    "event_status": "PROBLEM",
+    "name": "VM memory usage is high",
+    "severity": "High",
+    "hostid": "42",
+    "host": "payment-vm-01",
+    "host_name": "Payments VM",
+    "host_ip": "10.20.10.99",
+    "triggerid": "21001",
+    "trigger": "VM memory usage is high",
+    "tags": [
+      {"tag":"platform","value":"vm"},
+      {"tag":"asset_type","value":"vm"},
+      {"tag":"service","value":"payment-api"},
+      {"tag":"target_ip","value":"10.20.10.15"}
+    ],
+    "platform": "vm",
+    "asset_type": "vm",
+    "service": "payment-api",
+    "target_ip": "10.20.10.15",
+    "operational_data": "Memory utilization=94%",
+    "acknowledged": "No",
+    "timestamp": "1791712800"
   }
 }
 ```
 
-Use the macro set supported by the installed Zabbix version. The application contract is the field names above; if a site uses a different Zabbix script, it may populate the same fields explicitly.
-
-For deterministic VM remediation, the sender should additionally normalize operational identity fields when they are known authoritatively:
-
 ```json
 {
-  "service": "haproxy.service",
-  "target_ip": "10.100.6.199",
-  "target_port": 8800
+  "payload": {
+    "eventid": "501001",
+    "recovery_eventid": "501009",
+    "event_value": "0",
+    "event_status": "RESOLVED",
+    "name": "VM memory usage is high",
+    "recovery_timestamp": "1791713100"
+  }
 }
 ```
 
-These values are discovery inputs, not write authority. Before a restart plan is emitted, the platform must independently confirm the exact target/service through live VM MCP evidence. A generic tag such as `haproxyvm` is not interpreted as `haproxy.service`, and the trigger text is never parsed into a shell command, service name, or execution target.
+## Identity contract and source normalization
 
-## Identity rules
+Recognized **flat fields copied from EVENT.TAGSJSON**, as defined by the
+guide's JS:
 
-- Problem: `eventid` is the source event identity used for idempotency and incident correlation.
-- Recovery: `recovery_eventid` is the recovery event identity and `eventid` remains the original problem identity for pairing.
-- Alternative recovery senders may use `problem_eventid` plus `eventid` when `eventid` is the recovery identity.
-- `value` is treated as arbitrary operational data and never determines lifecycle state.
-- Only the explicit `event_value` field is interpreted as Zabbix event value (`1` problem, `0` recovery).
-- `target_port` is accepted only as an explicit normalized integer. The platform does not derive a port from free-form trigger text.
-- Knowledge/Cognia may guide read-only discovery, but a Knowledge-only identity cannot authorize a write.
+- Universal: `platform`, `asset_type`, `environment`, `service`,
+  `business_service`, `owner`, `datacenter`, `correlation_key`.
+- Kubernetes: `cluster`, `namespace`, `workload_kind`, `workload`,
+  `pod`, `node`.
+- VM: `target_ip` and numeric `target_port` (1–65535).
+- Optional: `fqdn`, `endpoint`, `database`, `db_engine`,
+  `db_instance`, `device`, `interface`.
 
-This distinction is intentional because an alert may contain operational data equal to `0` while it is still a Problem.
+AIOps additionally recognizes `filesystem` directly in the `tags` array
+(the Disk alert example in Appendix A.2). The v1.1 JS does *not* copy
+`filesystem` to a flat JSON field, so the receiver reads it from tags
+without requiring a change to the delivered Media Type script.
+
+All documented signal fields are preserved in Incident Evidence. AIOps uses
+explicit flat identity first, then falls back to same-named event tags.
+For missing or unresolved `eventid` the endpoint returns **422** instead
+of inventing a random deduplication ID. Native and JSON-encoded tag arrays
+are accepted. Timestamps accept Unix epoch seconds and ISO-8601; when
+missing/invalid, processing time is the fallback rather than a fabricated
+original-event timestamp.
+
+Zabbix's `HOST.IP`/`host_ip`, `HOST.HOST`/`host`, and text within a
+Trigger are **not** a VM MCP execution target. Only explicit `target_ip`
+(or the identically named event tag) may bind the VM target. The optional
+`target_port` is accepted only as an integer in the valid TCP range.
+Zabbix never issues a direct restart, shell command or workload mutation.
+The independent Approval/Execution/Verification gates remain authoritative.
+
+Asset types tested against the guide's appendix:
+
+| Guide case | `platform` / `asset_type` | Stable identity |
+|---|---|---|
+| VM Memory / Disk | `vm` / `vm` | `service` + `target_ip` |
+| Network Down | `network` / `network` | `service` + `target_ip` or `endpoint` |
+| Kubernetes CrashLoopBackOff | `kubernetes` / `kubernetes_workload` | `cluster` + `namespace` + `workload_kind` + `workload` + `service` |
+| Cognia namespace memory | `kubernetes` / `kubernetes_namespace` | `cluster` + `namespace` |
+| Database | `vm` / `database` | `service` + `db_instance` |
+| Application/Web | `application` / `application` | `service` + optional `fqdn`/`endpoint` |
+
+Pod names are optional, ephemeral investigation evidence, not stable workload
+identity. The original `eventid` survives retry and Recovery. Problem retries
+reuse the exact evidence reference; a matched Recovery is attached to the same
+Incident and cannot create a new one.
+
+## Zabbix action and acceptance
+
+Configure Media Type **AIOps Signal Gateway**, User `aiops-webhook` (all
+severity bands, all days, required Host Group read access), and an action
+that forwards both **Problem operations** and **Recovery operations**.
+Leave Update operations empty; ACK/comments are not new incidents in v1.1.
+
+Acceptance requires: a 2xx Media Type test; a real Problem; a same-ID retry
+with no duplicate Incident; matching recovery; a VM alert with `service`
+and explicit `target_ip`; a Kubernetes alert with cluster/namespace/workload
+identity; and confirmation that secrets never appear in logs/screenshots.
+A green CI test is not a substitute for these real Zabbix/Kibana/network
+delivery checks.
 
 ## Automatic governed remediation planning
 
