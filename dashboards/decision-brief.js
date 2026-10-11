@@ -61,7 +61,35 @@
     }
   };
   const t = key => dict[language][key] || key;
-  const fmt = value => value == null || value === '' ? t('unknown') : String(value);
+  const fieldFa = {
+    'Incident ID':'شناسه رخداد', 'Port':'پورت', 'Started':'زمان شروع',
+    'Likely cause':'وضعیت علت احتمالی', 'Action':'عملیات', 'Blast radius':'دامنه تأثیر',
+    'Risk of inaction':'ریسک اقدام نکردن', 'Expected outcome':'نتیجه مورد انتظار',
+    'Verification plan':'برنامه راستی‌آزمایی', 'Execution binding':'اتصال مجوز اجرا',
+    'Evidence snapshot binding':'اتصال مجوز به نسخه شواهد',
+    'Rollback supported':'امکان بازگشت', 'Timeout (s)':'مهلت اجرا (ثانیه)',
+    'Timestamp basis':'مبنای زمان', 'Actor':'عامل', 'Event':'رویداد',
+    'Outcome':'نتیجه', 'Memory ID':'شناسه حافظه', 'Relevance':'ارتباط',
+    'Runbook':'راهنمای عملیاتی', 'Approval ID':'شناسه تأیید',
+    'Snapshot':'نسخه گزارش', 'Evidence':'شواهد', 'Agent':'عامل تحلیل',
+    'Incident confidence':'اطمینان رخداد', 'Target':'هدف', 'Status':'وضعیت'
+  };
+  const statesFa = {
+    available:'در دسترس', empty:'بدون نتیجه', failed:'ناموفق', error:'خطا',
+    unavailable:'در دسترس نیست', not_queried:'جست‌وجو نشده', unknown:'نامشخص',
+    not_verified:'تأیید نشده', cited_by_agent:'دارای استناد Agent',
+    pending:'در انتظار تأیید', approved:'تأیید شده', rejected:'رد شده',
+    consumed:'مصرف شده', success:'موفق', partial:'ناقص', stale:'قدیمی',
+    fresh:'تازه', mixed:'ترکیبی', queried:'جست‌وجو شده', skipped:'اجرا نشده',
+    not_pending:'در انتظار نیست', human_review_required:'نیازمند بررسی انسانی',
+    observed:'مشاهده شده', not_executed:'اجرا نشده'
+  };
+  const fmt = value => {
+    if (value == null || value === '') return t('unknown');
+    if (typeof value === 'number') return new Intl.NumberFormat(language === 'fa' ? 'fa-IR' : 'en-US').format(value);
+    const text = String(value);
+    return language === 'fa' && Object.prototype.hasOwnProperty.call(statesFa, text) ? statesFa[text] : text;
+  };
   const html = value => esc(fmt(value));
   const sClass = value => {
     const str = String(value || '').toLowerCase();
@@ -70,7 +98,7 @@
     return 'unknown';
   };
   const flag = value => '<span class="db-flag ' + sClass(value) + '">' + html(value) + '</span>';
-  const field = (name, value) => '<div class="db-field"><span>' + esc(name) + '</span><strong>' + html(value) + '</strong></div>';
+  const field = (name, value) => '<div class="db-field"><span>' + esc(language === 'fa' ? fieldFa[name] || name : name) + '</span><strong>' + html(value) + '</strong></div>';
   const linkRefs = refs => (refs || []).length
     ? '<div class="db-refs">' + refs.map(r => '<code>' + html(r) + '</code>').join('') + '</div>'
     : '';
@@ -82,7 +110,7 @@
     : '<p class="db-subtle">' + t('none') + '</p>';
   const section = (key, content, opened = false) =>
     '<details class="db-section"' + (opened ? ' open' : '') + '><summary>' + t(key) + '</summary><div class="db-section-body">' + content + '</div></details>';
-  const confidence = score => score == null ? t('unknown') : Math.round(Number(score) * 100) + '%';
+  const confidence = score => score == null ? t('unknown') : new Intl.NumberFormat(language === 'fa' ? 'fa-IR' : 'en-US').format(Math.round(Number(score) * 100)) + (language === 'fa' ? '٪' : '%');
 
   function body(b) {
     const i = b.incident_summary || {};
@@ -285,7 +313,6 @@
     }
     const copy = event.target.closest('[data-db-copy]');
     if (copy && brief) {
-      const narrative = brief.localized_narrative || {};
       const intro = (language === 'fa' ? brief.localized_narrative?.fa : brief.localized_narrative?.en) || '';
       const detailed = narrative?.snapshot_id === brief.snapshot_id && narrative?.language === language &&
         narrative?.status === 'available' ? (narrative.sections || []).map(x =>
