@@ -10,10 +10,19 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 
 async def _archive_persisted_transition(db, incident_id: str, event_type: str) -> None:
-    """Real database transitions archive; test doubles carry no durable storage."""
-    if isinstance(db, AsyncSession):
-        await archive_decision_brief(db, incident_id, event_type)
+    """Archiving must never misreport an already executed operation as failed."""
+    if not isinstance(db, AsyncSession):
+        return
+    try:
+        async with db.begin_nested():
+            await archive_decision_brief(db, incident_id, event_type)
         await db.commit()
+    except Exception as exc:
+        await db.rollback()
+        logger.error(
+            "decision_brief_archiving_failed", incident_id=incident_id,
+            event_type=event_type, error_type=type(exc).__name__,
+        )
 
 from apps.approval_service.postgres import PostgreSQLApprovalStore
 from apps.audit_service import AuditService
