@@ -91,6 +91,7 @@ const assert = require('node:assert/strict');
     addEventListener(name,cb){this.events[name]=cb;}});
   const l10n = [langNode('fa'),langNode('en')];
   global.window = global;
+  global.addEventListener = (type,handler) => {listeners['window:'+type]=handler;};
   global.location = {pathname:'/dashboard/incidents/11111111-1111-4111-8111-111111111111'};
   global.document = {
     readyState:'complete',
