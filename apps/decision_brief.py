@@ -104,12 +104,21 @@ def _agents(state: dict, findings: Iterable[dict]) -> list[dict]:
         conflict_refs = refs(result.get("conflicting_evidence_ids"))
         missing = [safe(x, 250) for x in arr(result.get("missing_evidence"))[:15]]
         failed = bool(details.get("error")) or str(result.get("finding_type") or "").endswith("_error")
+        explicit_status = str(result.get("status") or "").lower()
         status = ("unknown" if result.get("_legacy_finding") else
-                  "failed" if failed else "partial" if missing or conflict_refs else "success")
+                  "failed" if failed or explicit_status in {"failed", "error", "timeout"} else
+                  "skipped" if explicit_status == "skipped" else
+                  "partial" if explicit_status == "partial" or missing or conflict_refs else
+                  "success" if explicit_status in {"success", "completed"} or result.get("statement") else "unknown")
         items.append({
             "agent": safe(result.get("agent_name") or result.get("agent") or "unknown", 90),
             "status": status,
+            "mission": safe(result.get("mission") or result.get("task") or details.get("objective"), 220),
+            "tools": refs(result.get("tools_used") or result.get("tool_names")),
+            "trace_id": safe(result.get("trace_id"), 180),
             "finding": safe(result.get("statement") or result.get("finding_type")),
+            "finding_type": safe(result.get("finding_type"), 95),
+            "health_status": safe(result.get("health_status"), 60),
             "confidence": numeric(result.get("confidence")),
             "evidence_refs": refs(result.get("evidence_ids")),
             "conflicting_evidence_refs": conflict_refs,
@@ -192,6 +201,11 @@ def _knowledge(state: dict, agents: list[dict]) -> dict:
             "relevance": numeric(doc.get("relevance")),
             "excerpt": safe(doc.get("content"), 450),
             "retrieved_at": safe(doc.get("retrieved_at"), 55),
+            "title": safe(doc.get("title") or doc.get("knowledge_title"), 180),
+            "chunk_id": safe(doc.get("chunk_id"), 100),
+            "knowledge_type": safe(doc.get("knowledge_type"), 80),
+            "previous_outcome": safe(doc.get("previous_outcome"), 140),
+            "conditions": safe(doc.get("conditions"), 240),
             "use_status": "cited_by_agent" if source_id and source_id in cited else "not_verified",
         })
     status = str(retrieval.get("status") or "not_queried").lower()
@@ -221,6 +235,11 @@ def _memory(state: dict, agents: list[dict]) -> dict:
             "outcome": safe(memory.get("memory_outcome_class") or memory.get("outcome"), 100),
             "verification": safe(memory.get("verification_result"), 100),
             "similarity": numeric(memory.get("vector_similarity")),
+            "pattern": safe(memory.get("pattern"), 300),
+            "service_version": safe(memory.get("service_version"), 90),
+            "asset_type": safe(memory.get("asset_type"), 90),
+            "root_cause_status": safe(memory.get("root_cause_status"), 70),
+            "generalization_warning": "Historical similarity does not prove current causality or safe reuse.",
             "use_status": "cited_by_agent" if mid and mid in cited else "not_verified",
         })
     return {"items": items, "retrieved_count": len(arr(state.get("memory_results"))), "historical_not_current_evidence": True}
@@ -260,7 +279,12 @@ def build_decision_brief(
         missing.append("live_evidence_collection_failed")
     if not evidence:
         missing.append("no_durable_evidence")
-    freshnesses = [freshness(e.get("created_at"), now) for e in evidence]
+    freshnesses = [
+        freshness(obj(e.get("raw_data")).get("collected_at") or
+                  obj(e.get("raw_data")).get("observed_at") or
+                  obj(e.get("raw_data")).get("timestamp") or e.get("created_at"), now)
+        for e in evidence
+    ]
     data_freshness = (
         "unknown" if not freshnesses or all(x == "unknown" for x in freshnesses)
         else "mixed" if "fresh" in freshnesses and ("stale" in freshnesses or "unknown" in freshnesses)
@@ -274,7 +298,7 @@ def build_decision_brief(
     result_fa = (
         f"رخداد سرویس «{service}» در وضعیت {fa_status(incident.get('status'))} قرار دارد. "
         f"{len(evidence)} رکورد شواهد ثبت شده است؛ اعتبار زمانی شواهد: "
-        f"{'تازه' if data_freshness == 'fresh' else 'قدیمی' if data_freshness == 'stale' else 'نامشخص'}. "
+        f"{'تازه' if data_freshness == 'fresh' else 'قدیمی' if data_freshness == 'stale' else 'ترکیبی' if data_freshness == 'mixed' else 'نامشخص'}. "
         f"وضعیت دانش Cognia: {fa_status(knowledge['status'])}؛ {knowledge['retrieved_count']} نتیجه بازیابی شده است. "
         "استفاده از دانش و تجربه تاریخی فقط در صورت وجود استناد مستقل قابل تأیید است. "
         f"وضعیت علت ریشه‌ای: {fa_status(summary.get('cause_confidence'))}. "
@@ -306,6 +330,15 @@ def build_decision_brief(
             "service": service, "severity": safe(incident.get("severity"), 40),
             "status": safe(incident.get("status"), 50),
             "started_at": safe(incident.get("started_at"), 55),
+            "elapsed_seconds": (
+                max(0, int((now - datetime.fromisoformat(str(incident["started_at"]).replace("Z", "+00:00"))).total_seconds()))
+                if incident.get("started_at") and datetime.fromisoformat(str(incident["started_at"]).replace("Z", "+00:00")).tzinfo
+                else None
+            ),
+            "namespace": safe(obj(incident.get("context")).get("namespace") or obj(incident.get("context")).get("kubernetes_namespace"), 150),
+            "cluster": safe(obj(incident.get("context")).get("cluster") or obj(incident.get("context")).get("cluster_name"), 150),
+            "host": safe(obj(incident.get("context")).get("host") or obj(incident.get("context")).get("hostname"), 150),
+            "analysis_result": safe(summary.get("likely_cause"), 300),
             "target": safe(observed.get("target"), 180),
             "port": observed.get("port"),
             "target_source": safe(obj(observed.get("field_sources")).get("target"), 90),
@@ -319,6 +352,14 @@ def build_decision_brief(
             "likely_cause": safe(summary.get("likely_cause"), 420),
             "cause_status": safe(summary.get("cause_confidence"), 40),
             "cause_evidence_refs": refs(summary.get("cause_evidence_ids")),
+            "valid_evidence_count": sum(
+                1 for row, age in zip(evidence, freshnesses)
+                if age == "fresh" and not tool_failed(obj(row.get("raw_data")))
+                and str(obj(row.get("raw_data")).get("status") or "").lower()
+                not in {"unavailable", "error", "skipped"}
+            ),
+            "observed_sources": len({str(row.get("source") or "")
+                for row in evidence if row.get("source")}),
         },
         "agent_findings": agents,
         "mcp_evidence": mcp,
@@ -330,7 +371,7 @@ def build_decision_brief(
             "rca_confidence": numeric(state.get("confidence")),
             "evaluator_confidence": numeric(evaluation.get("confidence")),
             "agent_agreement": numeric(coordination.get("agreement_score")),
-            "note": "RCA, evaluator and agent agreement are independent measurements; absent values are unknown.",
+            "note": "RCA is root-cause belief; evaluator confidence assesses a proposed plan; agreement measures cross-agent consensus. Values are independent and unavailable values are not zero.",
         },
         "evidence_conflicts": conflict_refs,
         "missing_evidence": missing,
@@ -364,6 +405,7 @@ def build_decision_brief(
             "timeout_seconds": approval.get("timeout_seconds"),
             "evidence_snapshot_binding": "not_verified",
             "data_freshness": data_freshness,
+            "approver": safe(approval.get("approver"), 120),
             "warning": "A report never authorizes execution. Approval and one-time workflow resume remain mandatory.",
         },
         "execution_outcome": {
@@ -372,11 +414,16 @@ def build_decision_brief(
             "action": safe(execution.get("action"), 120),
             "target": safe(execution.get("target"), 180),
             "error": safe(execution.get("error"), 280),
+            "approval_id": safe(execution.get("approval_id"), 180),
+            "details": safe(execution.get("reason") or execution.get("result"), 380),
         },
         "verification_result": {
             "status": safe(summary.get("verification_status"), 60),
             "message": safe(verification.get("message"), 350),
             "evidence_refs": refs(verification.get("evidence_refs")),
+            "confidence": numeric(verification.get("confidence")),
+            "changes": [safe(item, 200) for item in arr(verification.get("changes"))[:12]],
+            "metrics": redact(obj(verification.get("comparable_metrics"))),
         },
         "knowledge_learning_status": {
             "memory_id": safe(obj(summary.get("memory")).get("memory_entry_id"), 180),
