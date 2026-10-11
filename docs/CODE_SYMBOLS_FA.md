@@ -1347,10 +1347,6 @@
 | `apps/signal_gateway/prometheus_alertmanager.py` | `_audit_recovery` | 257 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/signal_gateway/prometheus_alertmanager.py` | `_ingest_resolved_alert` | 294 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/signal_gateway/prometheus_alertmanager.py` | `ingest_alertmanager_payload` | 457 | async function | Process every native Alertmanager webhook alert independently. | module |
-| `apps/signal_gateway/zabbix_contract.py` | `clean_zabbix_value` | 25 | function | Match the Zabbix webhook script's handling of unresolved macros. | module |
-| `apps/signal_gateway/zabbix_contract.py` | `zabbix_tags` | 35 | function | Accept the actual JS array and JSON-text legacy parameter formats. | module |
-| `apps/signal_gateway/zabbix_contract.py` | `normalize_zabbix_payload` | 55 | function | Preserve original event fields; fill only absent identity fields from tags. | module |
-| `apps/signal_gateway/zabbix_contract.py` | `zabbix_event_time` | 99 | function | Zabbix EVENT.TIMESTAMP may be Unix seconds; ISO-8601 is also accepted. | module |
 | `apps/signal_gateway/zabbix_lifecycle.py` | `_text_value` | 19 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/signal_gateway/zabbix_lifecycle.py` | `classify_zabbix_lifecycle` | 30 | function | Return deterministic Problem/Recovery identity from the webhook payload. | module |
 | `apps/signal_gateway/zabbix_lifecycle.py` | `_recovery_timestamp` | 75 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
@@ -1951,6 +1947,10 @@
 | `integrations/zabbix/mcp_client.py` | `ZabbixMCPClient._tool_error_text` | 55 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ZabbixMCPClient |
 | `integrations/zabbix/mcp_client.py` | `ZabbixMCPClient._active_problem_fallback` | 61 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ZabbixMCPClient |
 | `integrations/zabbix/mcp_client.py` | `ZabbixMCPClient.get_alerts` | 71 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | ZabbixMCPClient |
+| `integrations/zabbix/webhook_contract.py` | `clean_zabbix_value` | 25 | function | Match the Zabbix webhook script's handling of unresolved macros. | module |
+| `integrations/zabbix/webhook_contract.py` | `zabbix_tags` | 35 | function | Accept the actual JS array and JSON-text legacy parameter formats. | module |
+| `integrations/zabbix/webhook_contract.py` | `normalize_zabbix_payload` | 55 | function | Preserve original event fields; fill only absent identity fields from tags. | module |
+| `integrations/zabbix/webhook_contract.py` | `zabbix_event_time` | 99 | function | Zabbix EVENT.TIMESTAMP may be Unix seconds; ISO-8601 is also accepted. | module |
 | `knowledge/__init__.py` | `EmbeddingService` | 15 | class | Provider-neutral embedding service for Operational Memory only. | module |
 | `knowledge/__init__.py` | `EmbeddingService._deterministic_embedding` | 25 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | EmbeddingService |
 | `knowledge/__init__.py` | `EmbeddingService.generate_embedding` | 35 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | EmbeddingService |

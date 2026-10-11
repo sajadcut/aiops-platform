@@ -168,7 +168,6 @@
 | `apps/signal_gateway/correlation.py` | Python | Signal: ورود، normalization، correlation و dedupe سیگنال | API/webhooks | incident repository/context | Runtime | ابتدای Incident flow |
 | `apps/signal_gateway/elastic_anomaly.py` | Python | Signal: ورود، normalization، correlation و dedupe سیگنال | API/webhooks | incident repository/context | Runtime | ابتدای Incident flow |
 | `apps/signal_gateway/prometheus_alertmanager.py` | Python | Signal: ورود، normalization، correlation و dedupe سیگنال | API/webhooks | incident repository/context | Runtime | ابتدای Incident flow |
-| `apps/signal_gateway/zabbix_contract.py` | Python | Signal: ورود، normalization، correlation و dedupe سیگنال | API/webhooks | incident repository/context | Runtime | ابتدای Incident flow |
 | `apps/signal_gateway/zabbix_lifecycle.py` | Python | Signal: ورود، normalization، correlation و dedupe سیگنال | API/webhooks | incident repository/context | Runtime | ابتدای Incident flow |
 | `apps/verification_service/__init__.py` | Python | Verify: Verification مستقل پس از remediation | Workflow/execution | live evidence/audit | Runtime | tool success برابر recovery نیست |
 | `dashboards/__init__.py` | Python | package marker dashboard | Python | — | Tooling | رفتار مستقل ندارد |
@@ -294,6 +293,7 @@
 | `integrations/zabbix/client.py` | Python | Adapter provider/read-only integration | MCP server/test helper | external API/.env | Runtime/Helper | Control Plane production ترجیحاً MCP |
 | `integrations/zabbix/evidence.py` | Python | Adapter provider/read-only integration | MCP server/test helper | external API/.env | Runtime/Helper | Control Plane production ترجیحاً MCP |
 | `integrations/zabbix/mcp_client.py` | Python | MCP client برای ارتباط governed با ابزار بیرونی | Evidence/Tool layer | MCP transport/.env | Runtime | canonical external-tool path |
+| `integrations/zabbix/webhook_contract.py` | Python | Adapter provider/read-only integration | MCP server/test helper | external API/.env | Runtime/Helper | Control Plane production ترجیحاً MCP |
 | `knowledge/__init__.py` | Python | Contract/helper لایه Cognia-only Knowledge RAG | RAG service | Cognia retrieval contract | Runtime | دانش رسمی governed فقط از Cognia |
 | `knowledge/retrieval_contract.py` | Python | Contract/helper لایه Cognia-only Knowledge RAG | RAG service | Cognia retrieval contract | Runtime | دانش رسمی governed فقط از Cognia |
 | `memory/__init__.py` | Python | Namespace/contract Operational Memory | Memory service | pgvector | Runtime | تجربه incidentهای قبلی |
