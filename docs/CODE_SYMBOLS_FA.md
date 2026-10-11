@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 412 | Dashboard JS files scanned: 5 | Symbols indexed: 3776**
+**Python files scanned: 412 | Dashboard JS files scanned: 6 | Symbols indexed: 3784**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1543,6 +1543,14 @@
 | `dashboards/control-center.js` | `renderMcp` | 465 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
 | `dashboards/control-center.js` | `renderAudit` | 483 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
 | `dashboards/control-center.js` | `loadAll` | 489 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
+| `dashboards/knowledge-review.js` | `el` | 9 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/knowledge-review.js` | `current` | 10 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/knowledge-review.js` | `notice` | 13 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/knowledge-review.js` | `renderQueue` | 18 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/knowledge-review.js` | `renderSelection` | 30 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/knowledge-review.js` | `reload` | 72 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/knowledge-review.js` | `invoke` | 90 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/knowledge-review.js` | `createDraft` | 138 | JavaScript function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | browser module |
 | `database/__init__.py` | `_json_default` | 23 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `database/__init__.py` | `_json_serializer` | 38 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `database/__init__.py` | `get_db` | 56 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |

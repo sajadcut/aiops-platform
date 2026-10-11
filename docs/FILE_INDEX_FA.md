@@ -3,7 +3,7 @@
 > این فایل فهرست فایل‌به‌فایل repository است. توضیح معماری و flow در `CODEBASE_GUIDE_FA.md` آمده است.
 > این فایل با `scripts/generate_file_index_fa.py` ساخته و در CI کنترل می‌شود.
 
-**تعداد فایل‌های track‌شده و پوشش‌داده‌شده: 502**
+**تعداد فایل‌های track‌شده و پوشش‌داده‌شده: 503**
 
 | Path | Type | Purpose | Called By | Calls/Depends On | Runtime/Test/Docs | Notes |
 |---|---|---|---|---|---|---|
@@ -184,6 +184,7 @@
 | `dashboards/control-center.css` | CSS | استایل Control Center و کنترل‌های عملیاتی | Browser | HTML classes | Runtime UI | بدون داده fake |
 | `dashboards/control-center.js` | JS | state، API binding و interaction داشبورد | Browser | /api/v1 endpoints | Runtime UI | action حساس backend-governed است |
 | `dashboards/index.html` | HTML | پوسته و layout داشبورد | FastAPI static route | CSS/JS/API | Runtime UI | صفحه اپراتوری |
+| `dashboards/knowledge-review.js` | JS | state، API binding و interaction داشبورد | Browser | /api/v1 endpoints | Runtime UI | action حساس backend-governed است |
 | `database/__init__.py` | Python | Engine/session factory پایگاه‌داده | repository/storeها | SQLAlchemy/.env | Runtime | اتصال مرکزی PostgreSQL |
 | `database/migration_validation.py` | File | فایل پروژه | — | — | Other |  |
 | `database/migrations/README` | Alembic | تنظیمات و runtime migration | Alembic | SQLAlchemy/.env | DB | زیرساخت migration |
