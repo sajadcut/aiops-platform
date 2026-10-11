@@ -573,3 +573,15 @@ async def get_incident_decision_brief(incident_id: UUID):
             if latest_review is not None else None
         ),
     )
+
+
+@router.get("/incidents/{incident_id}/decision-brief/narrative")
+async def get_incident_decision_brief_narrative(
+    incident_id: UUID,
+    lang: str = Query(default="fa", pattern="^(fa|en)$"),
+):
+    """Optional display prose; approval and the deterministic brief stay authoritative."""
+    from apps.decision_brief_narrative import generate_narrative
+
+    brief = await get_incident_decision_brief(incident_id)
+    return await generate_narrative(brief, lang)
