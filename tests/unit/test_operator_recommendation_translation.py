@@ -85,7 +85,9 @@ async def test_llm_translates_full_plan_display_only_using_configured_provider(m
 @pytest.mark.asyncio
 async def test_translation_rejects_missing_targets_or_commands(monkeypatch):
     source = 'TCP port 86 on 10.100.6.198. Run `systemctl start nginx` after approval.'
-    translated = 'وضعیت بررسی شد و امکان اجرای عملیات با مجوز وجود دارد؛ نتیجه علت باید با شواهد زنده بررسی شود.'
+    translated = ('وضعیت سرویس بررسی شد اما علت اصلی خرابی از شواهد زنده قابل تأیید نیست. '
+                  'پیش از اقدام عملیاتی باید وضعیت کنونی سیستم و مجوز انسانی بررسی شود. '
+                  'این ترجمه به تنهایی اجازه اجرای هیچ فرمانی را ایجاد نمی‌کند.')
     class Provider:
         async def generate_with_messages(self, messages, **kwargs):
             return SimpleNamespace(content=translated, finish_reason="stop")
