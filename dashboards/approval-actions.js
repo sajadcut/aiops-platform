@@ -125,11 +125,84 @@
     return items.slice(0, 8).map(item => `<div class="operator-summary-evidence"><div><b>${esc(item.diagnostic || item.type || item.source || 'evidence')}</b><span>${esc(item.source || 'unknown')}</span></div><p>${esc(item.summary || 'Evidence ثبت شده')}</p><code>${esc(item.evidence_id || item.reference || 'بدون شناسه')}</code></div>`).join('') || '<p class="operator-summary-muted">Evidence کلیدی قابل نمایش ثبت نشده است.</p>';
   }
 
-  function actionText(action) {
-    if (!action) return 'پیشنهاد عملیاتی ساختاریافته ثبت نشده است.';
+  const RECOMMENDATION_LANGUAGE_KEY = 'aiops.operator.recommendation_language';
+  function storedRecommendationLanguage() {
+    try {
+      return localStorage.getItem(RECOMMENDATION_LANGUAGE_KEY) === 'en' ? 'en' : 'fa';
+    } catch (_) {
+      return 'fa';
+    }
+  }
+  S.recommendationLanguage = storedRecommendationLanguage();
+
+  function actionText(action, language = 'fa') {
+    if (!action) {
+      return language === 'en'
+        ? 'No structured AIOps recommendation has been recorded.'
+        : 'پیشنهاد عملیاتی ساختاریافته ثبت نشده است.';
+    }
+    if (language === 'en') {
+      if (action.text_en) return action.text_en;
+      // Backward compatibility for incidents returned by older API versions:
+      // derive a description only from existing governed fields.
+      const pieces = [
+        action.action ? `Proposed action: ${action.action}` : '',
+        action.tool ? `via ${action.tool}` : '',
+        action.target ? `on ${action.target}` : '',
+      ].filter(Boolean);
+      return pieces.length
+        ? pieces.join(' ') + '.'
+        : 'An English translation is not available for this recorded recommendation.';
+    }
     const pieces = [action.action, action.tool ? `از طریق ${action.tool}` : '', action.target ? `روی ${action.target}` : ''].filter(Boolean);
     return action.text_fa || pieces.join(' ') || 'پیشنهاد عملیاتی ساختاریافته ثبت نشده است.';
   }
+
+  function recommendationHasUntranslatedOriginal(action) {
+    return Boolean(action?.text_fa && !action.text_en && !action.action && !action.tool && !action.target);
+  }
+
+  function recommendationArticle(action) {
+    const language = S.recommendationLanguage === 'en' ? 'en' : 'fa';
+    const original = recommendationHasUntranslatedOriginal(action);
+    return `<article class="operator-recommendation">
+      <div class="operator-recommendation-head">
+        <h4>پیشنهاد AIOps</h4>
+        <div class="operator-recommendation-switch" role="group" aria-label="زبان پیشنهاد AIOps / AIOps recommendation language">
+          <button type="button" data-recommendation-lang="fa" lang="fa" aria-pressed="${language === 'fa'}">فارسی</button>
+          <button type="button" data-recommendation-lang="en" lang="en" aria-pressed="${language === 'en'}">English</button>
+        </div>
+      </div>
+      <p class="operator-recommendation-text" data-recommendation-text lang="${language}" dir="${language === 'en' ? 'ltr' : 'rtl'}">${esc(actionText(action, language))}</p>
+      ${original ? `<p class="operator-recommendation-original" data-recommendation-original lang="fa" dir="auto" ${language === 'en' ? '' : 'hidden'}>${esc(action.text_fa)}</p>` : ''}
+    </article>`;
+  }
+
+  document.addEventListener('click', event => {
+    const button = event.target.closest('[data-recommendation-lang]');
+    if (!button || !document.querySelector('#detail')?.contains(button)) return;
+    const language = button.getAttribute('data-recommendation-lang');
+    if (language !== 'fa' && language !== 'en') return;
+    S.recommendationLanguage = language;
+    try {
+      localStorage.setItem(RECOMMENDATION_LANGUAGE_KEY, language);
+    } catch (_) {
+      // Keep the in-memory preference when storage is unavailable.
+    }
+    const card = button.closest('.operator-recommendation');
+    if (!card) return;
+    card.querySelectorAll('[data-recommendation-lang]').forEach(option => {
+      option.setAttribute('aria-pressed', String(option.getAttribute('data-recommendation-lang') === language));
+    });
+    const text = card.querySelector('[data-recommendation-text]');
+    if (text) {
+      text.textContent = actionText(S.operatorSummary?.recommended_action, language);
+      text.setAttribute('lang', language);
+      text.setAttribute('dir', language === 'en' ? 'ltr' : 'rtl');
+    }
+    const original = card.querySelector('[data-recommendation-original]');
+    if (original) original.hidden = language !== 'en';
+  });
 
   function controlRows(summary) {
     const decision = summary.decision || {};
@@ -173,7 +246,7 @@
         <article><h4>چه چیزی مشاهده شد؟</h4><div class="operator-summary-facts">${observedStateRows(summary.observed_state)}</div></article>
         <article><h4>علت محتمل ${causeBadge(summary)}</h4><p>${esc(summary.likely_cause || 'نامشخص')}</p></article>
         <article><h4>نشانه‌های اقدام انسانی ${summaryBadge(human.status_fa || 'نامشخص', lower(human.status || 'unknown'))}</h4><p>${esc(human.text_fa || 'شواهد کافی موجود نیست.')}</p></article>
-        <article><h4>پیشنهاد AIOps</h4><p>${esc(actionText(summary.recommended_action))}</p></article>
+        ${recommendationArticle(summary.recommended_action)}
         <article><h4>وضعیت کنترل ${approvalBadge(summary.approval_status)}</h4>${controlRows(summary)}</article>
         <article><h4>اجرای عملیات ${executionBadge(summary.execution_status)}</h4><p>${esc(executionText(summary))}</p></article>
         <article><h4>Verification ${verificationBadge(summary.verification_status)}</h4><p>${esc(verificationText(summary))}</p></article>
