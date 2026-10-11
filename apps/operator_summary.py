@@ -282,7 +282,38 @@ def build_operator_summary(*, incident: Dict[str, Any], durable_evidence: Iterab
     meta = _d(durable_approval.get("metadata"))
     approval_view = {"approval_id": _t(durable_approval.get("approval_id")) or None, "status": _low(durable_approval.get("status")) or "not_requested", "approver": meta.get("approved_by") or meta.get("rejected_by") or durable_approval.get("approver"), "risk_level": durable_approval.get("risk_level"), "action": durable_approval.get("action"), "binding_complete": _true(meta.get("binding_complete")), "tool": meta.get("tool_name"), "target": meta.get("target"), "runbook_id": meta.get("runbook_id"), "runbook_version": meta.get("runbook_version"), "environment": meta.get("environment")}
     request = _d(state.get("execution_request"))
-    recommended = ({"tool": request.get("tool_name"), "action": request.get("action"), "target": request.get("target"), "parameters": _d(request.get("parameters")), "runbook_id": request.get("runbook_id"), "runbook_version": request.get("runbook_version"), "text_fa": " ".join(x for x in (_t(request.get("action")), "روی" if request.get("target") else "", _t(request.get("target"))) if x) or None} if request else ({"tool": None, "action": None, "target": None, "parameters": {}, "text_fa": _t(state.get("final_plan") or durable_approval.get("action"))} if _t(state.get("final_plan") or durable_approval.get("action")) else None))
+    # Recommendation text comes from the durable, governed action, not an
+    # independent free-form translation that could alter operational intent.
+    # A free-form final_plan may be Persian, English, or mixed; avoid claiming
+    # it has a verified English translation when that is not the case.
+    if request:
+        action_name = _t(request.get("action"))
+        action_tool = _t(request.get("tool_name"))
+        action_target = _t(request.get("target"))
+        english_parts = [
+            f"Proposed action: {action_name}" if action_name else "Proposed operation",
+            f"via {action_tool}" if action_tool else "",
+            f"on {action_target}" if action_target else "",
+        ]
+        recommended = {
+            "tool": request.get("tool_name"),
+            "action": request.get("action"),
+            "target": request.get("target"),
+            "parameters": _d(request.get("parameters")),
+            "runbook_id": request.get("runbook_id"),
+            "runbook_version": request.get("runbook_version"),
+            "text_fa": " ".join(x for x in (
+                action_name, "روی" if action_target else "", action_target,
+            ) if x) or None,
+            "text_en": " ".join(part for part in english_parts if part) + ".",
+        }
+    else:
+        plan = _t(state.get("final_plan") or durable_approval.get("action"))
+        recommended = {
+            "tool": None, "action": None, "target": None, "parameters": {},
+            "text_fa": plan,
+            "text_en": plan if plan.isascii() else None,
+        } if plan else None
     execution = _d(state.get("execution_result")); execution_status = "not_executed" if not execution else "blocked" if _true(execution.get("execution_blocked") or execution.get("blocked")) else "success" if _true(execution.get("success")) else "failed"
     execution_view = None if not execution else {"status": execution_status, "tool": execution.get("tool_name"), "action": execution.get("action"), "target": execution.get("target"), "reason": execution.get("reason"), "error": execution.get("error"), "result": execution.get("result"), "approval_id": execution.get("approval_id")}
     verification = _d(state.get("verification_result")); verification_status = _low(verification.get("status")) or ("not_recorded" if not verification else "unknown")
