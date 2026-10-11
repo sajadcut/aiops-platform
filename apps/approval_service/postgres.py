@@ -302,10 +302,14 @@ class PostgreSQLApprovalStore:
 
         metadata = dict(current.get("metadata") or {})
         expected = metadata.get("decision_snapshot_digest")
-        if issue_claim and not expected and str(current.get("risk_level") or "").lower() in {"high", "critical"}:
-            # Historical high-risk authority predates decision/evidence snapshot
-            # binding. Re-issue approval under the versioned policy; never guess
-            # that its stale operational evidence is safe to reuse.
+        if (
+            issue_claim and not expected
+            and metadata.get("workflow") == "e2e"
+            and str(current.get("risk_level") or "").lower() in {"high", "critical"}
+        ):
+            # Only old E2E Incident workflow approvals require a new bound
+            # Incident snapshot. Chatbot and other separately governed approval
+            # families keep their own execution policy and cannot be conflated.
             return await self.cancel(
                 approval_id, reason="legacy_high_risk_requires_reapproval",
                 metadata_patch={"snapshot_upgrade_required": True},
