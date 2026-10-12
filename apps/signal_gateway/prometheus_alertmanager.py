@@ -15,6 +15,7 @@ from apps.incident_service.repository import IncidentRepository
 from apps.orchestrator.workflow_store import WorkflowCheckpointStore
 from domain.contracts.config import settings
 from domain.contracts.logging import logger
+from apps.signal_gateway.received_signal import capture_received_signal
 from domain.models import Incident, IncidentStatus
 
 
@@ -115,6 +116,7 @@ def _signal_from_alert(alert: Dict[str, Any], envelope: Dict[str, Any]):
     }
     raw_data = {
         "prometheus_alert_kind": "alertmanager",
+        "_received_payload": capture_received_signal(alert),
         "alertmanager": group_context,
         "labels": labels,
         "annotations": annotations,
@@ -180,6 +182,7 @@ def _recovery_evidence(
         "confidence": 1.0,
         "raw_data": {
             "prometheus_alert_kind": "alertmanager_recovery",
+            "_received_payload": capture_received_signal(alert),
             "labels": labels,
             "annotations": annotations,
             "startsAt": alert.get("startsAt") or alert.get("starts_at"),
