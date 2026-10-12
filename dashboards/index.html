@@ -107,8 +107,13 @@
 
     <section class="view" data-view="incidents">
       <div class="view-toolbar">
-        <div class="filter-group"><input id="incidentSearch" placeholder="Search incidents, services or targets" oninput="renderIncidents()"><select id="severityFilter" onchange="renderIncidents()"><option value="">All severities</option><option value="critical">Critical</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select><select id="statusFilter" onchange="renderIncidents()"><option value="__active__" selected>فقط رخدادهای فعال</option><option value="">همه رخدادها</option><option value="open">Open</option><option value="analyzing">Analyzing</option><option value="escalated">Escalated</option><option value="resolved">Resolved</option><option value="closed">Closed</option></select></div>
+        <div class="filter-group"><input id="incidentSearch" placeholder="Search incidents, services or targets" oninput="renderIncidents()"><select id="severityFilter" onchange="renderIncidents()"><option value="">All severities</option><option value="critical">Critical</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select><select id="statusFilter" onchange="renderIncidents()"><option value="__active__">فقط رخدادهای فعال</option><option value="" selected>همه رخدادها</option><option value="open">Open</option><option value="analyzing">Analyzing</option><option value="escalated">Escalated</option><option value="resolved">Resolved</option><option value="closed">Closed</option></select></div>
         <div class="incident-display-toolbar" role="group" aria-label="مرتب‌سازی و شکل نمایش رخدادها">
+          <label for="incidentPeriod">بازه نمایش:</label>
+          <select id="incidentPeriod" aria-label="بازه نمایش رخدادها" onchange="setIncidentPeriod(this.value)">
+            <option value="recent" selected>۲۴ ساعت اخیر</option>
+            <option value="archived">آرشیو (قدیمی‌تر از ۲۴ ساعت)</option>
+          </select>
           <label for="incidentSort">مرتب‌سازی:</label>
           <select id="incidentSort" aria-label="مرتب‌سازی رخدادها" onchange="setIncidentSort(this.value)">
             <option value="newest">جدیدترین رخدادها</option>
@@ -126,7 +131,7 @@
         </div>
       </div>
       <section class="panel incident-queue-panel" aria-labelledby="incidentQueueTitle">
-        <div class="panel-head incident-queue-heading"><div><span class="section-kicker">فهرست رخدادهای ثبت‌شده</span><h2 id="incidentQueueTitle">رخدادها</h2><p>رخدادها را بر اساس تاریخ مرتب کن، اندازه نمایش را تغییر بده و برای دیدن گزارش و تصمیم‌گیری روی هر مورد کلیک کن.</p></div><span class="badge neutral">صفحه اختصاصی هر رخداد ↗</span></div>
+        <div class="panel-head incident-queue-heading"><div><span class="section-kicker">فهرست رخدادهای ثبت‌شده</span><h2 id="incidentQueueTitle">رخدادها</h2><p>هر هشدار تا ۲۴ ساعت پس از دریافت در نمای روزانه نمایش داده می‌شود؛ سپس فقط از این نما کنار می‌رود و سوابق آن در آرشیو و Audit باقی می‌ماند.</p></div><span class="badge neutral">صفحه اختصاصی هر رخداد ↗</span></div>
         <div id="incidentRows" class="incident-cards" data-size="medium"></div>
       </section>
       <div id="detail" hidden aria-hidden="true"></div>
@@ -289,13 +294,21 @@
     const q = lower($('#incidentSearch')?.value);
     const sev = $('#severityFilter')?.value || '';
     const status = $('#statusFilter') ? $('#statusFilter').value : '__active__';
-    const rows = sortIncidents(S.incidents.filter(i =>
+    const archived = S.incidentPeriod === 'archived';
+    if (archived && !S.archiveLoaded) {
+      const list = $('#incidentRows');
+      if (list) list.innerHTML = '<div class="empty-state">در حال بارگذاری آرشیو رخدادها…</div>';
+      if ($('#incidentCount')) $('#incidentCount').textContent = 'آرشیو';
+      return;
+    }
+    const sourceRows = archived ? S.archivedIncidents : S.incidents;
+    const rows = sortIncidents(sourceRows.filter(i =>
       (!q || lower([i.id, i.service, i.source_host, i.summary, i.execution_target, i.execution_tool, i.runbook_id].join(' ')).includes(q)) &&
       (!sev || lower(i.severity) === sev) &&
       matchesIncidentStatusScope(i, status)
     ));
     updateIncidentDisplayControls();
-    if ($('#incidentCount')) $('#incidentCount').textContent = `${rows.length} از ${S.incidents.length} رخداد`;
+    if ($('#incidentCount')) $('#incidentCount').textContent = `${rows.length} از ${sourceRows.length} رخداد`;
     if (!$('#incidentRows')) return;
     if (incidentSize === 'list') {
       const header = '<div class="incident-list-header" aria-hidden="true">'+
