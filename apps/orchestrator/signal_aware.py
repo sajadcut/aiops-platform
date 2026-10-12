@@ -12,6 +12,7 @@ from agents.shared.telemetry import AgentTelemetry
 from apps.context_service.asset_identity import AssetIdentityResolver
 from apps.context_service.knowledge_topology import KnowledgeTopologyResolver
 from apps.context_service.service_identity import ServiceIdentityResolver
+from apps.context_service.llm_identity import suggest_from_llm
 from apps.decision_engine import DecisionEngine
 from apps.execution_service.tools.registry import tool_registry
 from apps.orchestrator.e2e_graph import E2EOrchestrator, E2EState
@@ -151,12 +152,40 @@ class SignalAwareE2EOrchestrator(E2EOrchestrator):
             if isinstance(trigger_signal, dict)
             else (initial_context.get("incident") or {}).get("service")
         )
+        declared_target = None
+        if isinstance(trigger_signal, dict) and isinstance(trigger_signal.get("raw_data"), dict):
+            declared_target = trigger_signal["raw_data"].get("target_ip")
+        live_verified = ServiceIdentityResolver.independently_verified(
+            expected_service=source_service,
+            expected_target=declared_target,
+            evidence=merged_evidence,
+        )
         resolution = ServiceIdentityResolver.resolve(
             source_service=source_service,
             live_asset=live_asset_context,
             knowledge_topology=knowledge_topology,
             expected_fqdns=expected_fqdns,
+            live_service_verified=live_verified,
         )
+        # A model can suggest what to investigate, never rename the Incident
+        # or provide an execution binding. The direct alert/MCP trust boundary
+        # above remains authoritative when the model is unavailable.
+        if resolution["service_identity"]["status"] in {"unknown", "observed"}:
+            hypothesis = await suggest_from_llm(
+                summary=trigger_text or str(state.get("evidence_summary") or ""),
+                evidence=merged_evidence,
+                adapter=self.llm,
+            )
+            context["llm_service_identity_hypothesis"] = hypothesis
+            if hypothesis.get("status") == "hypothesis":
+                resolution = ServiceIdentityResolver.resolve(
+                    source_service=source_service,
+                    live_asset=live_asset_context,
+                    knowledge_topology=knowledge_topology,
+                    expected_fqdns=expected_fqdns,
+                    candidate_hypotheses=[hypothesis],
+                    live_service_verified=live_verified,
+                )
         topology_context = resolution["topology_context"]
         asset_context = resolution["asset_context"]
         state["service_name"] = resolution["service"]
