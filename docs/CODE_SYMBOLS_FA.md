@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 441 | Dashboard JS files scanned: 8 | Symbols indexed: 4121**
+**Python files scanned: 443 | Dashboard JS files scanned: 8 | Symbols indexed: 4141**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -2165,6 +2165,11 @@
 | `scripts/check_database_migrations.py` | `inspect_migrations` | 14 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `scripts/check_database_migrations.py` | `migration_preflight_result` | 19 | function | Return 0 for matching heads, 3 for schema drift; print no credentials. | module |
 | `scripts/check_database_migrations.py` | `main` | 40 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `scripts/check_elastic_mcp.py` | `_http_status` | 23 | function | Recover the original HTTP status wrapped by MCPClient._post. | module |
+| `scripts/check_elastic_mcp.py` | `_safe_endpoint` | 35 | function | Display the MCP target without URL userinfo or arbitrary query secrets. | module |
+| `scripts/check_elastic_mcp.py` | `_failure` | 47 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `scripts/check_elastic_mcp.py` | `check_connection` | 70 | async function | Exercise initialize and tools/list, without issuing ES/QL or write calls. | module |
+| `scripts/check_elastic_mcp.py` | `main` | 117 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `scripts/check_python_integrity.py` | `_norm` | 16 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `scripts/check_python_integrity.py` | `_requirement_name` | 20 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `scripts/check_python_integrity.py` | `_python_files` | 28 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
@@ -2856,6 +2861,21 @@
 | `tests/unit/test_chatbot_tools.py` | `test_tool_arguments_reject_command_injection_shapes` | 93 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_chatbot_tools.py` | `test_prompt_injection_text_cannot_create_capability` | 100 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_chatbot_user_message_copy.py` | `test_operator_messages_expose_copy_action_without_changing_message_text` | 4 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_check_elastic_mcp.py` | `FakeElasticClient` | 12 | class | کلاس | module |
+| `tests/unit/test_check_elastic_mcp.py` | `FakeElasticClient.__init__` | 16 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeElasticClient |
+| `tests/unit/test_check_elastic_mcp.py` | `FakeElasticClient._headers` | 23 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeElasticClient |
+| `tests/unit/test_check_elastic_mcp.py` | `FakeElasticClient._raise_if_requested` | 26 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeElasticClient |
+| `tests/unit/test_check_elastic_mcp.py` | `FakeElasticClient.initialize` | 33 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeElasticClient |
+| `tests/unit/test_check_elastic_mcp.py` | `FakeElasticClient.list_tools` | 37 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | FakeElasticClient |
+| `tests/unit/test_check_elastic_mcp.py` | `FakeElasticClient.close` | 41 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeElasticClient |
+| `tests/unit/test_check_elastic_mcp.py` | `run_check` | 45 | function | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | module |
+| `tests/unit/test_check_elastic_mcp.py` | `test_successful_initialize_and_tool_discovery` | 51 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_check_elastic_mcp.py` | `test_missing_authentication_is_reported_without_network_call` | 64 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_check_elastic_mcp.py` | `test_wrapped_401_is_distinguished_from_403` | 72 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_check_elastic_mcp.py` | `test_wrapped_403_is_reported_as_permissions_issue` | 80 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_check_elastic_mcp.py` | `test_tools_list_failure_preserves_stage_and_http_status` | 88 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_check_elastic_mcp.py` | `test_missing_allowlisted_tool_is_not_a_pass` | 97 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_check_elastic_mcp.py` | `test_http_status_not_in_unrelated_errors` | 105 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_cognia_client.py` | `_search_response` | 10 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_cognia_client.py` | `test_machine_token_is_opaque_cached_and_search_contract_is_exact` | 35 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_cognia_client.py` | `test_machine_token_is_opaque_cached_and_search_contract_is_exact.handler` | 39 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_machine_token_is_opaque_cached_and_search_contract_is_exact |
