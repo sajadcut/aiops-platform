@@ -357,7 +357,7 @@
     const matched=n && n.snapshot_id===r.snapshot_id && n.language===state.language && !state.historic && n.status==='available';
     const narrative=matched?'<details class="ic-reveal"><summary>'+esc(tr('narrative'))+'</summary><div class="ic-reveal-content">'+arr(n.sections).map(s=>
       '<article class="ic-detail-card"><h4>'+txt(s.heading)+'</h4><p>'+txt(s.text)+'</p>'+refs(s.citations)+'</article>').join('')+'</div></details>':'';
-    show('#ic-brief-lead','<p>'+txt(deterministic)+'</p>'+narrative);
+    show('#ic-brief-lead','<p>'+txt(deterministic)+'</p>'+original(i.likely_cause,'شرح علت احتمالی در گزارش اصلی')+narrative);
     show('#ic-key-answer',[
       fact('cause',humanCause(i.likely_cause)),fact('causeStatus',status(i.cause_status)),
       fact('action',humanAction(act.action)),fact('target',act.target),
@@ -380,9 +380,9 @@
       fact('approvalId',a.approval_id),
       fact('verificationPlan',x.verification_plan),fact('expected',x.expected_outcome)
     ].join(''));
-    show('#ic-preconditions','<div class="ic-callout"><strong>'+esc(tr('why'))+'</strong><p>'+txt(explanation(r))+'</p>'+
+    show('#ic-preconditions','<div class="ic-callout"><strong>'+esc(tr('why'))+'</strong><p>'+txt(explanation(r))+'</p>'+original(x.why,'توضیح فنی دلیل پیشنهاد')+
       refs(i.cause_evidence_refs)+'</div>'+
-      (arr(x.unverified_assumptions).length?'<div class="ic-warnings">'+arr(x.unverified_assumptions).slice(0,10).map(y=>'<div class="ic-warning">'+txt(y)+'</div>').join('')+'</div>':''));
+      (arr(x.unverified_assumptions).length?'<div class="ic-warning">'+tr('missing')+'</div><details class="ic-technical"><summary>مشاهده بررسی‌های باقی‌مانده</summary><p dir="auto">'+arr(x.unverified_assumptions).slice(0,10).map(txt).join('، ')+'</p></details>':''));
   }
   function renderAnalysis(r) {
     const c=r.rca_assessment||{};
@@ -392,9 +392,9 @@
     const agents=arr(r.agent_findings);
     show('#ic-agents',agents.length?agents.map(a=>'<article class="ic-detail-card"><div class="ic-detail-head"><h4>'+txt(humanAgent(a.agent))+'</h4>'+pill(a.status)+'</div>'+
       '<p>'+txt(plain(a.finding))+'</p>'+original(a.finding)+'<div class="ic-meta">'+tr('confidence')+': '+esc(numberPct(a.confidence))+
-      (a.mission?' · '+tr('description')+': '+txt(a.mission):'')+
-      (arr(a.tools).length?' · '+tr('tool')+': '+arr(a.tools).map(txt).join(', '):'')+'</div>'+refs(a.evidence_refs)+
-      (arr(a.missing_evidence).length?'<p class="ic-warning">'+tr('missing')+': '+arr(a.missing_evidence).map(txt).join('، ')+'</p>':'')+
+      (a.mission && (state.language!=='fa'||isFaText(a.mission))?' · '+tr('description')+': '+txt(a.mission):'')+
+      (arr(a.tools).length?' · '+tr('tool')+': '+arr(a.tools).map(y=>txt(humanTool(y))).join('، '):'')+'</div>'+refs(a.evidence_refs)+
+      (arr(a.missing_evidence).length?'<div class="ic-warning">'+tr('missing')+'</div><details class="ic-technical"><summary>مواردی که هنوز بررسی نشده‌اند</summary><p dir="auto">'+arr(a.missing_evidence).map(txt).join('، ')+'</p></details>':'')+
       '</article>').join('')+ '<p class="ic-callout">'+esc(tr('agentNone'))+'</p>':empty(tr('none')));
   }
   function renderEvidence(r) {
