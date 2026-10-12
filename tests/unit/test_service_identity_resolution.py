@@ -72,6 +72,41 @@ async def test_general_memory_alert_does_not_inherit_incidental_nginx_from_cogni
 
 
 @pytest.mark.asyncio
+async def test_unrelated_mcp_nginx_on_host_does_not_rename_memory_alert():
+    collector = FakeCollector(service="nginx")
+    result = await ContextBuilder(
+        collector=collector, rag_service=FakeRAG([]),
+    ).build_context(IncidentCreate(
+        source="zabbix", severity="high",
+        summary="High memory utilization on host APORSDTNKSA0101",
+        context={"host": "APORSDTNKSA0101"},
+    ))
+    assert collector.queries == ["unknown"]
+    assert result["service"] == "unknown"
+    assert result["asset_context"]["service"] is None
+    assert result["service_identity"]["status"] == "unknown"
+    assert result["service_identity"]["basis"] == "live_service_unlinked_to_alert"
+    assert result["service_identity"]["suspected_service"] == "nginx"
+    assert result["service_identity"]["suspected_service_source"] == "mcp_observation"
+    assert result["service_identity"]["verified"] is False
+
+
+def test_conflicting_mcp_name_and_exact_cognia_fqdn_stays_unknown():
+    doc = KnowledgeTopologyResolver.resolve([WEB_DOC], expected_fqdns=["web.wepod.ir"])
+    result = ServiceIdentityResolver.resolve(
+        source_service=None,
+        live_asset={"service": "nginx"},
+        knowledge_topology=doc,
+        expected_fqdns=["web.wepod.ir"],
+    )
+    assert result["service"] == "unknown"
+    assert result["service_identity"]["status"] == "unknown"
+    assert result["service_identity"]["suspected_service"] == "web-api"
+    assert result["service_identity"]["conflicts"]
+    assert result["topology_context"]["requires_live_verification"] is True
+
+
+@pytest.mark.asyncio
 async def test_exact_source_fqdn_still_enables_service_scoped_diagnostics_but_is_not_verified():
     collector = FakeCollector()
     result = await ContextBuilder(
