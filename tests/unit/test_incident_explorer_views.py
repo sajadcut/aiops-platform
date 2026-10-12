@@ -20,7 +20,7 @@ const elements={
   incidentCount:{textContent:''},incidentRows:{innerHTML:'',dataset:{}},
   incidentSort:{value:''}
 };
-const buttons=['large','medium','small'].map(size=>({
+const buttons=['large','medium','small','list'].map(size=>({
   dataset:{incidentSize:size},attrs:{},
   setAttribute(k,v){this.attrs[k]=v;}
 }));
@@ -69,6 +69,27 @@ assert.equal(storage['aiops.incidents.sort'],'newest');
 ctx.setIncidentDisplayMode('large');
 assert.equal(elements.incidentRows.dataset.size,'large');
 assert.equal(buttons[0].attrs['aria-pressed'],'true');
+ctx.setIncidentDisplayMode('list');
+assert.equal(elements.incidentRows.dataset.size,'list');
+assert.equal(storage['aiops.incidents.size'],'list');
+assert.equal(buttons[3].attrs['aria-pressed'],'true');
+assert.equal(buttons[2].attrs['aria-pressed'],'false');
+assert.match(elements.incidentRows.innerHTML,/class="incident-list-header"/);
+assert.match(elements.incidentRows.innerHTML,/class="incident-list-row /);
+assert.match(elements.incidentRows.innerHTML,/شرح کوتاه/);
+assert.match(elements.incidentRows.innerHTML,/شروع رخداد/);
+assert.match(elements.incidentRows.innerHTML,/وضعیت تأیید/);
+assert.match(elements.incidentRows.innerHTML,/منتظر تأیید شما/);
+assert.deepEqual(keys(),['new','old','unknown']);
+elements.statusFilter.value='';
+ctx.setIncidentSort('oldest');
+assert.deepEqual(keys(),['old','closed','new','unknown']);
+assert.match(elements.incidentRows.innerHTML,/رفع شده/);
+ctx.setIncidentSort('newest');
+elements.statusFilter.value='__active__';
+ctx.setIncidentDisplayMode('list');
+assert.deepEqual(keys(),['new','old','unknown']);
+ctx.setIncidentDisplayMode('large');
 ctx.setIncidentSort('not-a-sort');
 assert.equal(storage['aiops.incidents.sort'],'newest');
 ctx.setIncidentDisplayMode('invalid');
@@ -77,6 +98,10 @@ assert.match(elements.incidentRows.innerHTML,/نیازمند تصمیم شما/)
 assert.match(html,/data-incident-size="large"/);
 assert.match(html,/data-incident-size="medium"/);
 assert.match(html,/data-incident-size="small"/);
+assert.match(html,/data-incident-size="list"/);
+const css=fs.readFileSync('dashboards/control-center.css','utf8');
+assert.match(css,/\.incident-cards\[data-size="list"\]/);
+assert.match(css,/grid-template-columns:minmax\(165px/);
 assert.match(html,/id="incidentSort"/);
 console.log('Incident Explorer ordering and view sizes passed');
 """
