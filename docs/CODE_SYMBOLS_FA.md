@@ -796,19 +796,19 @@
 | `apps/api/runbooks.py` | `list_runbooks` | 11 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
 | `apps/api/runbooks.py` | `get_runbook` | 16 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
 | `apps/api/runbooks.py` | `dry_run` | 24 | async function | Validate a runbook without crossing the real execution boundary. | module |
-| `apps/api/signals.py` | `RawSignalPayload` | 25 | class | کلاس | module |
-| `apps/api/signals.py` | `_response_from_result` | 29 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/signals.py` | `_require_database_ready` | 60 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/signals.py` | `_ingest` | 64 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/signals.py` | `_ingest_elastic_anomaly` | 77 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/signals.py` | `_ingest_prometheus_alertmanager` | 90 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/signals.py` | `_ingest_zabbix` | 102 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/signals.py` | `ingest_signal` | 212 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/signals.py` | `ingest_elasticsearch_signal` | 217 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/signals.py` | `ingest_elasticsearch_anomaly` | 222 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/signals.py` | `ingest_prometheus_alertmanager` | 231 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/signals.py` | `ingest_prometheus_signal` | 240 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/signals.py` | `ingest_zabbix_signal` | 260 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/signals.py` | `RawSignalPayload` | 26 | class | کلاس | module |
+| `apps/api/signals.py` | `_response_from_result` | 30 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/signals.py` | `_require_database_ready` | 61 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/signals.py` | `_ingest` | 65 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/signals.py` | `_ingest_elastic_anomaly` | 78 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/signals.py` | `_ingest_prometheus_alertmanager` | 91 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/signals.py` | `_ingest_zabbix` | 103 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/signals.py` | `ingest_signal` | 216 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/signals.py` | `ingest_elasticsearch_signal` | 221 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/signals.py` | `ingest_elasticsearch_anomaly` | 226 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/signals.py` | `ingest_prometheus_alertmanager` | 235 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/signals.py` | `ingest_prometheus_signal` | 244 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/signals.py` | `ingest_zabbix_signal` | 264 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/workflow.py` | `WorkflowRequest` | 18 | class | کلاس | module |
 | `apps/api/workflow.py` | `WorkflowResponse` | 25 | class | کلاس | module |
 | `apps/api/workflow.py` | `run_workflow` | 39 | async function | Compatibility analysis endpoint backed by the canonical durable E2E runtime. | module |
@@ -1361,66 +1361,66 @@
 | `apps/security/token_validator.py` | `OIDCTokenValidator.__init__` | 18 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OIDCTokenValidator |
 | `apps/security/token_validator.py` | `OIDCTokenValidator.validate` | 24 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | OIDCTokenValidator |
 | `apps/security/token_validator.py` | `discover_jwks` | 57 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/signal_gateway/__init__.py` | `OperationalSignal` | 25 | class | کلاس | module |
-| `apps/signal_gateway/__init__.py` | `OperationalSignal.normalize_source` | 38 | method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | OperationalSignal |
-| `apps/signal_gateway/__init__.py` | `OperationalSignal.normalize_severity` | 45 | method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | OperationalSignal |
-| `apps/signal_gateway/__init__.py` | `OperationalSignal.to_evidence` | 50 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalSignal |
-| `apps/signal_gateway/__init__.py` | `SignalGateway` | 79 | class | Source-agnostic, race-safe entry point for operational signals. | module |
-| `apps/signal_gateway/__init__.py` | `SignalGateway._append_trigger_to_checkpoint` | 88 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalGateway |
-| `apps/signal_gateway/__init__.py` | `SignalGateway._existing_state` | 100 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalGateway |
-| `apps/signal_gateway/__init__.py` | `SignalGateway._knowledge_assisted_asset` | 107 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalGateway |
-| `apps/signal_gateway/__init__.py` | `SignalGateway.ingest` | 181 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalGateway |
-| `apps/signal_gateway/__init__.py` | `signal_from_elasticsearch` | 325 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/signal_gateway/__init__.py` | `signal_from_prometheus` | 344 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/signal_gateway/__init__.py` | `_zabbix_service_from_tags` | 359 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/signal_gateway/__init__.py` | `signal_from_zabbix` | 370 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/__init__.py` | `OperationalSignal` | 26 | class | کلاس | module |
+| `apps/signal_gateway/__init__.py` | `OperationalSignal.normalize_source` | 39 | method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | OperationalSignal |
+| `apps/signal_gateway/__init__.py` | `OperationalSignal.normalize_severity` | 46 | method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | OperationalSignal |
+| `apps/signal_gateway/__init__.py` | `OperationalSignal.to_evidence` | 51 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalSignal |
+| `apps/signal_gateway/__init__.py` | `SignalGateway` | 80 | class | Source-agnostic, race-safe entry point for operational signals. | module |
+| `apps/signal_gateway/__init__.py` | `SignalGateway._append_trigger_to_checkpoint` | 89 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalGateway |
+| `apps/signal_gateway/__init__.py` | `SignalGateway._existing_state` | 101 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalGateway |
+| `apps/signal_gateway/__init__.py` | `SignalGateway._knowledge_assisted_asset` | 108 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalGateway |
+| `apps/signal_gateway/__init__.py` | `SignalGateway.ingest` | 182 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalGateway |
+| `apps/signal_gateway/__init__.py` | `signal_from_elasticsearch` | 326 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/__init__.py` | `signal_from_prometheus` | 345 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/__init__.py` | `_zabbix_service_from_tags` | 360 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/__init__.py` | `signal_from_zabbix` | 371 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/signal_gateway/correlation.py` | `CorrelationIdentity` | 20 | class | خروجی canonical correlation شامل fingerprint و scope قابل audit. | module |
 | `apps/signal_gateway/correlation.py` | `_token` | 30 | function | مقادیر vendor-specific را به token پایدار و قابل hash تبدیل می‌کند. | module |
 | `apps/signal_gateway/correlation.py` | `signal_family` | 36 | function | نام‌های alert مختلف را محافظه‌کارانه به symptom family مشترک نگاشت می‌کند. | module |
 | `apps/signal_gateway/correlation.py` | `build_correlation_identity` | 53 | function | Fingerprint ثابت می‌سازد تا Zabbix/Elastic/Prometheus یک failure را duplicate نکنند. | module |
-| `apps/signal_gateway/elastic_anomaly.py` | `ElasticAnomalyWebhookPayload` | 26 | class | Versioned contract consumed by the Kibana ML anomaly webhook action. | module |
-| `apps/signal_gateway/elastic_anomaly.py` | `_text` | 47 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/signal_gateway/elastic_anomaly.py` | `_jsonish_list` | 56 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/signal_gateway/elastic_anomaly.py` | `_string_list` | 80 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/signal_gateway/elastic_anomaly.py` | `_object_list` | 89 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/signal_gateway/elastic_anomaly.py` | `_bool` | 93 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/signal_gateway/elastic_anomaly.py` | `_score` | 99 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/signal_gateway/elastic_anomaly.py` | `_timestamp` | 111 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/signal_gateway/elastic_anomaly.py` | `_stable_digest` | 140 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/signal_gateway/elastic_anomaly.py` | `_normalized_rule` | 145 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/signal_gateway/elastic_anomaly.py` | `_normalized_alert` | 156 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/signal_gateway/elastic_anomaly.py` | `_normalized_anomaly` | 169 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/signal_gateway/elastic_anomaly.py` | `normalize_elastic_anomaly_payload` | 187 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
-| `apps/signal_gateway/elastic_anomaly.py` | `_influencer_value` | 201 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/signal_gateway/elastic_anomaly.py` | `_influencer_name` | 214 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/signal_gateway/elastic_anomaly.py` | `_service_from_rule_tags` | 218 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/signal_gateway/elastic_anomaly.py` | `resolve_elastic_anomaly_service` | 230 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
-| `apps/signal_gateway/elastic_anomaly.py` | `_merge_path` | 256 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/signal_gateway/elastic_anomaly.py` | `_ecs_from_influencers` | 275 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/signal_gateway/elastic_anomaly.py` | `_severity_from_score` | 292 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/signal_gateway/elastic_anomaly.py` | `_active_source_id` | 306 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/signal_gateway/elastic_anomaly.py` | `classify_elastic_anomaly_lifecycle` | 324 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/signal_gateway/elastic_anomaly.py` | `signal_from_elastic_anomaly` | 363 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/signal_gateway/elastic_anomaly.py` | `_recovery_timestamp` | 415 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/signal_gateway/elastic_anomaly.py` | `_recovery_evidence` | 422 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/signal_gateway/elastic_anomaly.py` | `_record_source_recovery` | 455 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/signal_gateway/elastic_anomaly.py` | `_audit_recovery` | 507 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/signal_gateway/elastic_anomaly.py` | `ingest_elastic_anomaly_payload` | 544 | async function | Ingest Elastic ML anomaly active/recovery lifecycle events. | module |
-| `apps/signal_gateway/prometheus_alertmanager.py` | `AlertmanagerAlert` | 21 | class | کلاس | module |
-| `apps/signal_gateway/prometheus_alertmanager.py` | `AlertmanagerWebhookPayload` | 33 | class | Native Alertmanager generic-webhook v4 payload. | module |
-| `apps/signal_gateway/prometheus_alertmanager.py` | `_text` | 51 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/signal_gateway/prometheus_alertmanager.py` | `_timestamp` | 56 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/signal_gateway/prometheus_alertmanager.py` | `_stable_hash` | 72 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/signal_gateway/prometheus_alertmanager.py` | `_alert_source_id` | 77 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/signal_gateway/prometheus_alertmanager.py` | `_service` | 87 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/signal_gateway/prometheus_alertmanager.py` | `_status` | 96 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/signal_gateway/prometheus_alertmanager.py` | `_signal_from_alert` | 100 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/signal_gateway/prometheus_alertmanager.py` | `classify_alertmanager_alert` | 144 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/signal_gateway/prometheus_alertmanager.py` | `_recovery_evidence` | 167 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/signal_gateway/prometheus_alertmanager.py` | `_record_source_recovery` | 201 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/signal_gateway/prometheus_alertmanager.py` | `_audit_recovery` | 257 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/signal_gateway/prometheus_alertmanager.py` | `_ingest_resolved_alert` | 294 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/signal_gateway/prometheus_alertmanager.py` | `ingest_alertmanager_payload` | 457 | async function | Process every native Alertmanager webhook alert independently. | module |
+| `apps/signal_gateway/elastic_anomaly.py` | `ElasticAnomalyWebhookPayload` | 27 | class | Versioned contract consumed by the Kibana ML anomaly webhook action. | module |
+| `apps/signal_gateway/elastic_anomaly.py` | `_text` | 48 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/elastic_anomaly.py` | `_jsonish_list` | 57 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/elastic_anomaly.py` | `_string_list` | 81 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/elastic_anomaly.py` | `_object_list` | 90 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/elastic_anomaly.py` | `_bool` | 94 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/elastic_anomaly.py` | `_score` | 100 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/elastic_anomaly.py` | `_timestamp` | 112 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/elastic_anomaly.py` | `_stable_digest` | 141 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/elastic_anomaly.py` | `_normalized_rule` | 146 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/elastic_anomaly.py` | `_normalized_alert` | 157 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/elastic_anomaly.py` | `_normalized_anomaly` | 170 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/elastic_anomaly.py` | `normalize_elastic_anomaly_payload` | 188 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
+| `apps/signal_gateway/elastic_anomaly.py` | `_influencer_value` | 202 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/elastic_anomaly.py` | `_influencer_name` | 215 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/elastic_anomaly.py` | `_service_from_rule_tags` | 219 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/elastic_anomaly.py` | `resolve_elastic_anomaly_service` | 231 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
+| `apps/signal_gateway/elastic_anomaly.py` | `_merge_path` | 257 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/elastic_anomaly.py` | `_ecs_from_influencers` | 276 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/elastic_anomaly.py` | `_severity_from_score` | 293 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/elastic_anomaly.py` | `_active_source_id` | 307 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/elastic_anomaly.py` | `classify_elastic_anomaly_lifecycle` | 325 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/elastic_anomaly.py` | `signal_from_elastic_anomaly` | 364 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/elastic_anomaly.py` | `_recovery_timestamp` | 417 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/elastic_anomaly.py` | `_recovery_evidence` | 424 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/elastic_anomaly.py` | `_record_source_recovery` | 458 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/elastic_anomaly.py` | `_audit_recovery` | 510 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/elastic_anomaly.py` | `ingest_elastic_anomaly_payload` | 547 | async function | Ingest Elastic ML anomaly active/recovery lifecycle events. | module |
+| `apps/signal_gateway/prometheus_alertmanager.py` | `AlertmanagerAlert` | 22 | class | کلاس | module |
+| `apps/signal_gateway/prometheus_alertmanager.py` | `AlertmanagerWebhookPayload` | 34 | class | Native Alertmanager generic-webhook v4 payload. | module |
+| `apps/signal_gateway/prometheus_alertmanager.py` | `_text` | 52 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/prometheus_alertmanager.py` | `_timestamp` | 57 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/prometheus_alertmanager.py` | `_stable_hash` | 73 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/prometheus_alertmanager.py` | `_alert_source_id` | 78 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/prometheus_alertmanager.py` | `_service` | 88 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/prometheus_alertmanager.py` | `_status` | 97 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/prometheus_alertmanager.py` | `_signal_from_alert` | 101 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/prometheus_alertmanager.py` | `classify_alertmanager_alert` | 146 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/prometheus_alertmanager.py` | `_recovery_evidence` | 169 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/prometheus_alertmanager.py` | `_record_source_recovery` | 204 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/prometheus_alertmanager.py` | `_audit_recovery` | 260 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/prometheus_alertmanager.py` | `_ingest_resolved_alert` | 297 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/prometheus_alertmanager.py` | `ingest_alertmanager_payload` | 460 | async function | Process every native Alertmanager webhook alert independently. | module |
 | `apps/signal_gateway/received_signal.py` | `capture_received_signal` | 16 | function | Retain JSON structure and source tag casing, not wire bytes/secret fields. | module |
 | `apps/signal_gateway/zabbix_lifecycle.py` | `_text_value` | 20 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/signal_gateway/zabbix_lifecycle.py` | `classify_zabbix_lifecycle` | 31 | function | Return deterministic Problem/Recovery identity from the webhook payload. | module |
