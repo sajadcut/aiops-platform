@@ -73,6 +73,51 @@ async def get_evidence(incident_id: UUID, limit: int = Query(default=100, le=500
         ]}
 
 
+@router.get("/incidents/{incident_id}/received-signals")
+async def get_received_signals(incident_id: UUID, limit: int = Query(default=60, ge=1, le=100)):
+    """Original source notifications from durable Evidence; read-only and RBAC-guarded.
+
+    Old rows were normalized at ingestion, so they are labelled accurately.
+    The newer ingress pipeline also retains a size-limited redacted copy of
+    the received JSON object. This endpoint never calls a monitoring source.
+    """
+    from apps.received_signal_view import SOURCE_NAMES, project_received_signal
+
+    async with AsyncSessionLocal() as db:
+        incident = await db.get(Incident, incident_id)
+        if incident is None:
+            raise HTTPException(status_code=404, detail="Incident not found")
+        rows = (
+            await db.execute(
+                select(Evidence)
+                .where(Evidence.incident_id == incident_id, Evidence.source.in_(tuple(SOURCE_NAMES)))
+                .order_by(Evidence.created_at.asc(), Evidence.id.asc())
+                .limit(501)
+            )
+        ).scalars().all()
+
+    projected = []
+    for row in rows:
+        item = project_received_signal({
+            "id": row.id,
+            "source": row.source,
+            "reference": row.reference,
+            "raw_data": row.raw_data or {},
+            "created_at": row.created_at,
+        })
+        if item is not None:
+            projected.append(item)
+        if len(projected) > limit:
+            break
+    return {
+        "incident_id": str(incident_id),
+        "items": projected[:limit],
+        "has_more": len(projected) > limit or len(rows) > 500,
+        "source_policy": "durable_source_notification_only",
+        "redacted": True,
+    }
+
+
 @router.get("/incidents/{incident_id}/knowledge")
 async def get_knowledge(incident_id: UUID, limit: int = Query(default=5, le=20)):
     async with AsyncSessionLocal() as db:
