@@ -74,6 +74,7 @@
 
   <nav class="ic-section-nav" aria-label="بخش‌های گزارش">
     <a href="#ic-overview" data-i18n="navOverview">خلاصه تصمیم</a>
+    <a href="#ic-received" data-i18n="navReceived">آلارم دریافتی</a>
     <a href="#ic-review" data-i18n="navReview">قبل از تأیید</a>
     <a href="#ic-analysis" data-i18n="navAnalysis">تحلیل Agentها</a>
     <a href="#ic-evidence" data-i18n="navEvidence">شواهد و MCP</a>
@@ -97,6 +98,17 @@
 
   <div class="ic-content-grid">
     <div class="ic-content">
+      <section class="ic-section" id="ic-received" aria-labelledby="ic-received-heading">
+        <div class="ic-section-heading"><span class="ic-section-number">۰۲</span>
+          <div><p class="ic-overline" data-i18n="receivedSubtitle">آنچه واقعاً از سیستم مانیتورینگ دریافت شده</p>
+            <h2 id="ic-received-heading" data-i18n="receivedTitle">آلارم دریافتی</h2></div>
+        </div>
+        <p class="ic-received-note" data-i18n="receivedNote">متن و اطلاعات اصلی ثبت‌شده در زمان دریافت آلارم را می‌بینی. اطلاعات محرمانه پنهان شده‌اند. موارد قدیمی ممکن است قبل از ذخیره‌سازی نرمال شده باشند.</p>
+        <div id="ic-received-signals" class="ic-received-signals" aria-live="polite" aria-busy="true">
+          <p class="ic-empty" data-i18n="receivedLoading">در حال دریافت آلارم ثبت‌شده…</p>
+        </div>
+      </section>
+
       <section class="ic-section" id="ic-review">
         <div class="ic-section-heading"><span class="ic-section-number">۰۲</span><div><p class="ic-overline" data-i18n="decisionSafety">بررسی ریسک پیش از اقدام</p><h2 data-i18n="reviewTitle">من دقیقاً چه چیزی را تأیید می‌کنم؟</h2></div></div>
         <div id="ic-proposal" class="ic-proposal"></div>
