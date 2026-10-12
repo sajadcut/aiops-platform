@@ -140,16 +140,20 @@ class SignalAwareE2EOrchestrator(E2EOrchestrator):
             knowledge_by_id.values(),
             expected_fqdns=expected_fqdns,
         )
-        topology_context = KnowledgeTopologyResolver.reconcile(
-            live_asset_context,
-            knowledge_topology,
+        topology_context = KnowledgeTopologyResolver.constrain_trigger_service(
+            KnowledgeTopologyResolver.reconcile(
+                live_asset_context,
+                knowledge_topology,
+            ),
+            expected_fqdns=expected_fqdns,
         )
         asset_context = dict(topology_context.get("effective_asset") or live_asset_context)
 
         resolved_service = asset_context.get("service") or service_hint
-        if resolved_service:
-            state["service_name"] = str(resolved_service)
-            context["service"] = str(resolved_service)
+        if str(resolved_service or "").strip().lower() in {"", "none", "null", "n/a"}:
+            resolved_service = "unknown"
+        state["service_name"] = str(resolved_service)
+        context["service"] = str(resolved_service)
 
         live = dict(state.get("live_evidence") or {})
         live["evidence"] = merged_evidence
