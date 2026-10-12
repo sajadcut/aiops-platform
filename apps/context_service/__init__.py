@@ -17,6 +17,7 @@ from integrations.kubernetes.mcp_client import KubernetesMCPClient
 
 from .evidence_collector import EvidenceCollector
 from .knowledge_topology import KnowledgeTopologyResolver
+from .service_identity import ServiceIdentityResolver
 
 
 class ContextBuilder:
@@ -92,16 +93,9 @@ class ContextBuilder:
         incident = incident_data.model_dump(mode="json")
         explicit_service = self._known(incident_data.service)
         discovery_query = KnowledgeTopologyResolver.build_discovery_query(incident)
-        expected_fqdns = KnowledgeTopologyResolver.extract_fqdns(
-            " ".join(
-                str(value or "")
-                for value in (
-                    incident_data.summary,
-                    (incident_data.context or {}).get("url") if isinstance(incident_data.context, dict) else None,
-                    (incident_data.context or {}).get("fqdn") if isinstance(incident_data.context, dict) else None,
-                    (incident_data.context or {}).get("host") if isinstance(incident_data.context, dict) else None,
-                )
-            )
+        expected_fqdns = ServiceIdentityResolver.expected_fqdns(
+            summary=incident_data.summary,
+            context=incident_data.context,
         )
 
         knowledge_results = []
@@ -138,8 +132,14 @@ class ContextBuilder:
             knowledge_results,
             expected_fqdns=expected_fqdns,
         )
+        initial_resolution = ServiceIdentityResolver.resolve(
+            source_service=explicit_service,
+            live_asset={},
+            knowledge_topology=knowledge_topology,
+            expected_fqdns=expected_fqdns,
+        )
         knowledge_service = self._known((knowledge_topology.get("fields") or {}).get("service"))
-        requested_service = explicit_service or knowledge_service or "unknown"
+        requested_service = initial_resolution["service"]
         since = datetime.now(timezone.utc) - timedelta(seconds=settings.AGENT_INITIAL_EVIDENCE_WINDOW_SECONDS)
         logger.info(
             "building_knowledge_assisted_context",
@@ -151,18 +151,21 @@ class ContextBuilder:
 
         live = await self.collector.collect(requested_service, since)
         live_asset = dict(live.get("asset_context") or {})
-        topology_context = KnowledgeTopologyResolver.reconcile(live_asset, knowledge_topology)
-        asset = dict(topology_context.get("effective_asset") or live_asset)
-        resolved_service = (
-            self._known(asset.get("service"))
-            or self._known(live.get("service"))
-            or requested_service
+        resolution = ServiceIdentityResolver.resolve(
+            source_service=explicit_service,
+            live_asset=live_asset,
+            knowledge_topology=knowledge_topology,
+            expected_fqdns=expected_fqdns,
         )
+        topology_context = resolution["topology_context"]
+        asset = resolution["asset_context"]
+        resolved_service = resolution["service"]
         evidence = list(live.get("evidence") or [])
 
         live = {
             **live,
             "asset_context": asset,
+            "service_identity": resolution["service_identity"],
             "live_asset_context": live_asset,
             "knowledge_topology": knowledge_topology,
             "topology_context": topology_context,
@@ -188,6 +191,7 @@ class ContextBuilder:
         return {
             "incident": incident,
             "service": resolved_service,
+            "service_identity": resolution["service_identity"],
             "time_window": {"since": live.get("since"), "until": live.get("until")},
             "asset_context": asset,
             "live_asset_context": live_asset,
