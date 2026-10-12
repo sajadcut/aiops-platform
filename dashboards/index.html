@@ -278,7 +278,7 @@
   function renderIncidentsWithClearTime() {
     const q = lower($('#incidentSearch')?.value);
     const sev = $('#severityFilter')?.value || '';
-    const status = $('#statusFilter')?.value || '__active__';
+    const status = $('#statusFilter') ? $('#statusFilter').value : '__active__';
     const rows = sortIncidents(S.incidents.filter(i =>
       (!q || lower([i.id, i.service, i.summary, i.execution_target, i.execution_tool, i.runbook_id].join(' ')).includes(q)) &&
       (!sev || lower(i.severity) === sev) &&
