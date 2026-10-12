@@ -1650,34 +1650,34 @@
 | `dashboards/incident-command-room.js` | `plainLead` | 265 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
 | `dashboards/incident-command-room.js` | `findings` | 268 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
 | `dashboards/incident-command-room.js` | `facts` | 269 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/incident-command-room.js` | `refs` | 280 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/incident-command-room.js` | `fact` | 285 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/incident-command-room.js` | `mini` | 287 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/incident-command-room.js` | `show` | 288 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/incident-command-room.js` | `notify` | 289 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/incident-command-room.js` | `alert` | 294 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/incident-command-room.js` | `api` | 295 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/incident-command-room.js` | `setLang` | 315 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/incident-command-room.js` | `renderHero` | 326 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/incident-command-room.js` | `warningMessages` | 342 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/incident-command-room.js` | `renderOverview` | 353 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/incident-command-room.js` | `renderReview` | 370 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/incident-command-room.js` | `renderAnalysis` | 387 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/incident-command-room.js` | `renderEvidence` | 400 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/incident-command-room.js` | `renderKnowledge` | 411 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/incident-command-room.js` | `renderOutcome` | 428 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/incident-command-room.js` | `renderTimeline` | 441 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/incident-command-room.js` | `renderDecision` | 446 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/incident-command-room.js` | `render` | 490 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/incident-command-room.js` | `loadNarrative` | 498 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
-| `dashboards/incident-command-room.js` | `load` | 508 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
-| `dashboards/incident-command-room.js` | `returnLive` | 529 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/incident-command-room.js` | `loadHistory` | 530 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
-| `dashboards/incident-command-room.js` | `openHistory` | 540 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/incident-command-room.js` | `loadRaw` | 548 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
-| `dashboards/incident-command-room.js` | `approvalCurrent` | 556 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/incident-command-room.js` | `action` | 563 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/incident-command-room.js` | `bind` | 599 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/incident-command-room.js` | `refs` | 283 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/incident-command-room.js` | `fact` | 288 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/incident-command-room.js` | `mini` | 290 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/incident-command-room.js` | `show` | 291 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/incident-command-room.js` | `notify` | 292 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/incident-command-room.js` | `alert` | 297 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/incident-command-room.js` | `api` | 298 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/incident-command-room.js` | `setLang` | 318 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/incident-command-room.js` | `renderHero` | 329 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/incident-command-room.js` | `warningMessages` | 345 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/incident-command-room.js` | `renderOverview` | 356 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/incident-command-room.js` | `renderReview` | 373 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/incident-command-room.js` | `renderAnalysis` | 390 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/incident-command-room.js` | `renderEvidence` | 403 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/incident-command-room.js` | `renderKnowledge` | 414 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/incident-command-room.js` | `renderOutcome` | 431 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/incident-command-room.js` | `renderTimeline` | 444 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/incident-command-room.js` | `renderDecision` | 449 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/incident-command-room.js` | `render` | 493 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/incident-command-room.js` | `loadNarrative` | 501 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
+| `dashboards/incident-command-room.js` | `load` | 511 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
+| `dashboards/incident-command-room.js` | `returnLive` | 532 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/incident-command-room.js` | `loadHistory` | 533 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
+| `dashboards/incident-command-room.js` | `openHistory` | 543 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/incident-command-room.js` | `loadRaw` | 551 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
+| `dashboards/incident-command-room.js` | `approvalCurrent` | 559 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/incident-command-room.js` | `action` | 566 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/incident-command-room.js` | `bind` | 602 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
 | `dashboards/knowledge-review.js` | `el` | 10 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
 | `dashboards/knowledge-review.js` | `current` | 11 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
 | `dashboards/knowledge-review.js` | `notice` | 14 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
