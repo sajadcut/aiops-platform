@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 438 | Dashboard JS files scanned: 8 | Symbols indexed: 4085**
+**Python files scanned: 439 | Dashboard JS files scanned: 8 | Symbols indexed: 4087**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1016,6 +1016,8 @@
 | `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver._normalize_field` | 346 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeTopologyResolver |
 | `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver._normalize_fqdn` | 366 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeTopologyResolver |
 | `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver._same_value` | 378 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeTopologyResolver |
+| `apps/context_service/llm_identity.py` | `diagnostic_candidates` | 20 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/context_service/llm_identity.py` | `suggest_from_llm` | 46 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/context_service/normalizer.py` | `normalize_evidence` | 4 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
 | `apps/context_service/service_identity.py` | `ServiceIdentityResolver` | 20 | class | کلاس | module |
 | `apps/context_service/service_identity.py` | `ServiceIdentityResolver.known` | 22 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ServiceIdentityResolver |
