@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 432 | Dashboard JS files scanned: 8 | Symbols indexed: 4050**
+**Python files scanned: 433 | Dashboard JS files scanned: 8 | Symbols indexed: 4051**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1421,6 +1421,7 @@
 | `apps/signal_gateway/prometheus_alertmanager.py` | `_audit_recovery` | 257 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/signal_gateway/prometheus_alertmanager.py` | `_ingest_resolved_alert` | 294 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/signal_gateway/prometheus_alertmanager.py` | `ingest_alertmanager_payload` | 457 | async function | Process every native Alertmanager webhook alert independently. | module |
+| `apps/signal_gateway/received_signal.py` | `capture_received_signal` | 16 | function | Retain JSON structure and source tag casing, not wire bytes/secret fields. | module |
 | `apps/signal_gateway/zabbix_lifecycle.py` | `_text_value` | 20 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/signal_gateway/zabbix_lifecycle.py` | `classify_zabbix_lifecycle` | 31 | function | Return deterministic Problem/Recovery identity from the webhook payload. | module |
 | `apps/signal_gateway/zabbix_lifecycle.py` | `_recovery_timestamp` | 76 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
