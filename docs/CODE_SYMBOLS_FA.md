@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 436 | Dashboard JS files scanned: 8 | Symbols indexed: 4069**
+**Python files scanned: 436 | Dashboard JS files scanned: 8 | Symbols indexed: 4070**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1003,18 +1003,19 @@
 | `apps/context_service/evidence_collector.py` | `EvidenceCollector._collect` | 218 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | EvidenceCollector |
 | `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver` | 9 | class | Deterministic bridge from Cognia Knowledge chunks to asset-discovery hints. | module |
 | `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver.build_discovery_query` | 71 | method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | KnowledgeTopologyResolver |
-| `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver.extract_fqdns` | 102 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeTopologyResolver |
-| `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver.resolve` | 111 | method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | KnowledgeTopologyResolver |
-| `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver.reconcile` | 172 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeTopologyResolver |
-| `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver._parse_content` | 233 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeTopologyResolver |
-| `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver._parse_json` | 258 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeTopologyResolver |
-| `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver._collect_mapping_fields` | 270 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeTopologyResolver |
-| `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver._canonical_key` | 282 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeTopologyResolver |
-| `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver._normalize_key` | 286 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeTopologyResolver |
-| `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver._clean` | 290 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeTopologyResolver |
-| `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver._normalize_field` | 297 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeTopologyResolver |
-| `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver._normalize_fqdn` | 317 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeTopologyResolver |
-| `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver._same_value` | 329 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeTopologyResolver |
+| `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver.constrain_trigger_service` | 102 | method | Do not turn an unrelated RAG hit into a source-alert service identity. | KnowledgeTopologyResolver |
+| `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver.extract_fqdns` | 151 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeTopologyResolver |
+| `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver.resolve` | 160 | method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | KnowledgeTopologyResolver |
+| `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver.reconcile` | 221 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeTopologyResolver |
+| `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver._parse_content` | 282 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeTopologyResolver |
+| `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver._parse_json` | 307 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeTopologyResolver |
+| `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver._collect_mapping_fields` | 319 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeTopologyResolver |
+| `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver._canonical_key` | 331 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeTopologyResolver |
+| `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver._normalize_key` | 335 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeTopologyResolver |
+| `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver._clean` | 339 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeTopologyResolver |
+| `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver._normalize_field` | 346 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeTopologyResolver |
+| `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver._normalize_fqdn` | 366 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeTopologyResolver |
+| `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver._same_value` | 378 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeTopologyResolver |
 | `apps/context_service/normalizer.py` | `normalize_evidence` | 4 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
 | `apps/context_service/source_policy.py` | `EvidenceSourcePolicy` | 5 | class | کلاس | module |
 | `apps/context_service/source_policy.py` | `EvidenceSourcePolicy.allows` | 9 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | EvidenceSourcePolicy |
