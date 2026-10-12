@@ -14,7 +14,7 @@ def test_dashboard_is_single_live_control_center():
     assert "MCP Fabric" in html
     assert "Most Impacted Services" in html
     assert "Operator Attention Queue" in html
-    assert "Incident Intelligence" in html
+    assert "فهرست رخدادهای ثبت‌شده" in html
     assert "Audit & Governance" in html
     assert "/api/v1/dashboard/summary" in js
     assert "/api/v1/dashboard/incidents?limit=100" in js
@@ -34,15 +34,15 @@ def test_dashboard_is_single_live_control_center():
 def test_incident_workbench_defaults_to_active_and_shows_unambiguous_local_time():
     html = (ROOT / "dashboards/index.html").read_text(encoding="utf-8")
 
-    assert 'value="__active__" selected>Active only' in html
-    assert 'value="">All history' in html
-    assert "Started (local)" in html
+    assert 'value="__active__" selected>فقط رخدادهای فعال' in html
+    assert 'value="">همه رخدادها' in html
+    assert "فهرست رخدادهای ثبت‌شده" in html
     assert "function incidentTimeInfo" in html
     assert "i.started_at || i.created_at" in html
     assert "Intl.DateTimeFormat().resolvedOptions().timeZone" in html
     assert "matchesIncidentStatusScope" in html
     assert "scope === '__active__'" in html
-    assert "No active incidents match the current filters" in html
+    assert "رخدادی با این فیلترها پیدا نشد" in html
 
 
 def test_dashboard_assets_and_agent_route_are_served_by_fastapi():
