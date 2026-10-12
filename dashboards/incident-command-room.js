@@ -44,6 +44,7 @@
       unknown:'نامشخص',service:'سرویس',severity:'شدت',status:'وضعیت رخداد',started:'زمان شروع',
       duration:'مدت اختلال',target:'هدف',host:'میزبان',cluster:'کلاستر',namespace:'فضای نام',
       approval:'تأیید انسانی',risk:'سطح ریسک',action:'اقدام پیشنهادشده',tool:'ابزار اجرا',freshness:'تازگی شواهد',
+      serviceIdentity:'وضعیت شناسایی سرویس',suspectedService:'سرویس احتمالی (تأیید نشده)',identityBasis:'منبع تشخیص سرویس',
       evidence:'شواهد معتبر',cause:'علت احتمالی',causeStatus:'میزان اطمینان به علت',why:'چرا این اقدام؟',
       criticalWarning:'پیش از تصمیم‌گیری به این هشدارها توجه کنید.',agents:'Agentهای اجراشده',
       mcp:'یافته‌های MCP',monitoring:'پایش زیرساخت',none:'اطلاعات قابل‌استنادی ثبت نشده است.',
@@ -124,6 +125,7 @@
       duration:'Elapsed',target:'Target',host:'Host',cluster:'Cluster',namespace:'Namespace',approval:'Approval',
       risk:'Risk',action:'Proposed action',tool:'Execution tool',freshness:'Evidence freshness',evidence:'Usable evidence',
       cause:'Likely cause',causeStatus:'Cause certainty',why:'Why this action?',criticalWarning:'Review these warnings before deciding.',
+      serviceIdentity:'Service identity status',suspectedService:'Suspected service (unverified)',identityBasis:'Service identity source',
       agents:'Specialists',mcp:'MCP findings',monitoring:'Monitoring',none:'No verified evidence was recorded for this section.',
       infoUnavailable:'No durable data recorded; no result is inferred.',notUsed:'Retrieval does not prove causal influence.',
       approvalPending:'Waiting for your decision',approvalApproved:'Approved; execution still separate',
@@ -203,6 +205,11 @@
     remediation_plan_generated:'تهیه برنامه رفع مشکل',evaluation_completed:'بررسی کیفیت پیشنهاد',
     rca_completed:'بررسی علت مشکل',specialist_analysis_completed:'نتیجه بررسی ایجنت‌ها',
     agent_evidence_round_completed:'جمع‌آوری شواهد',context_loaded:'جمع‌آوری اطلاعات اولیه',
+    reported:'ثبت‌شده در آلارم',observed:'در ابزار پایش دیده شده (ارتباط هنوز تأیید نشده)',
+    verified:'با شواهد مستقل تأیید شده',suspected:'احتمالی؛ نیازمند بررسی زنده',
+    no_verified_service_identity:'هویت سرویس مشخص نیست',source_declared_service:'Tag یا فیلد معتبر آلارم',
+    live_observed_service:'شواهد زنده MCP',source_fqdn_matches_knowledge:'تطابق دامنه با دانش کاگنیا',
+    unavailable:'نامشخص',unverified_knowledge_hint_blocked:'حدس نامعتبر دانش مسدود شده',
     trigger_evidence_merged:'ثبت هشدار و اطلاعات اولیه',agent_handoff_completed:'ارجاع به ایجنت‌های تخصصی',
     triage_completed:'پایان بررسی اولیه',approval_requested:'درخواست تأیید از اپراتور',
     remediation_execution_precondition_verified:'بررسی دوباره شرایط اجرا',
@@ -293,9 +300,11 @@
     const i=r.incident_summary||{},x=r.remediation_recommendation||{};
     const findings=arr(r.mcp_evidence).filter(y=>!['failed','error','unavailable'].includes(low(y.status)));
     const facts=[...new Set(findings.flatMap(y=>signalFacts(y.finding)))].slice(0,4);
-    const subject='سرویس '+safe(i.service);
-    const host=i.host||i.target||x.target;
-    const where=host?' روی سرور '+safe(host):'';
+    const identity=i.service_identity||{};
+    const unknownService=['','unknown','none','نامشخص'].includes(low(i.service));
+    const subject=unknownService?'این هشدار سرور':'سرویس '+safe(i.service);
+    const host=identity.source_host||i.host||i.target||x.target;
+    const where=host?' '+(unknownService?'':'روی سرور ')+safe(host):'';
     const situation=facts.length?'بررسی ابزارها نشان می‌دهد: '+facts.join('؛ ')+'.' :
       'هنوز اطلاعات کافی برای توضیح دقیق وضعیت سرویس نداریم.';
     const stored=String(r.localized_narrative?.fa || '').trim();
@@ -354,7 +363,11 @@
   }
   function renderHero(r) {
     const i=r.incident_summary||{},a=r.approval_readiness||{},action=r.remediation_recommendation||{};
-    $('#ic-title').textContent=value(i.service);
+    const identity=i.service_identity||{};
+    const serviceUnknown=['','unknown','none','نامشخص'].includes(low(i.service));
+    $('#ic-title').textContent=serviceUnknown
+      ? (state.language==='fa' ? 'هشدار سرور'+(identity.source_host?' '+identity.source_host:'؛ سرویس نامشخص') : 'Host alert: '+(identity.source_host||'unidentified service'))
+      : value(i.service);
     $('#ic-description').textContent=value(i.summary);
     $('#ic-short-id').textContent='#'+String(incidentId).slice(0,8);
     show('#ic-hero-badges',pill(i.severity)+pill(i.status)+pill(a.approval_status));
@@ -389,6 +402,9 @@
     show('#ic-brief-lead','<p>'+txt(deterministic)+'</p>'+original(i.likely_cause,'شرح علت احتمالی در گزارش اصلی')+narrative);
     show('#ic-key-answer',[
       fact('cause',humanCause(i.likely_cause)),fact('causeStatus',status(i.cause_status)),
+      fact('serviceIdentity',status(i.service_identity?.status)),
+      (i.service_identity?.suspected_service?fact('suspectedService',i.service_identity.suspected_service):''),
+      fact('identityBasis',status(i.service_identity?.basis)),
       fact('action',humanAction(act.action)),fact('target',act.target),
       fact('tool',humanTool(act.tool)),fact('freshness',status(r.data_freshness))
     ].join(''));
