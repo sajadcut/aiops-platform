@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 437 | Dashboard JS files scanned: 8 | Symbols indexed: 4080**
+**Python files scanned: 438 | Dashboard JS files scanned: 8 | Symbols indexed: 4084**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1017,6 +1017,10 @@
 | `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver._normalize_fqdn` | 366 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeTopologyResolver |
 | `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver._same_value` | 378 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeTopologyResolver |
 | `apps/context_service/normalizer.py` | `normalize_evidence` | 4 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
+| `apps/context_service/service_identity.py` | `ServiceIdentityResolver` | 20 | class | کلاس | module |
+| `apps/context_service/service_identity.py` | `ServiceIdentityResolver.known` | 22 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ServiceIdentityResolver |
+| `apps/context_service/service_identity.py` | `ServiceIdentityResolver.expected_fqdns` | 29 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ServiceIdentityResolver |
+| `apps/context_service/service_identity.py` | `ServiceIdentityResolver.resolve` | 38 | method | Produce provenance plus a canonical service for non-executable display. | ServiceIdentityResolver |
 | `apps/context_service/source_policy.py` | `EvidenceSourcePolicy` | 5 | class | کلاس | module |
 | `apps/context_service/source_policy.py` | `EvidenceSourcePolicy.allows` | 9 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | EvidenceSourcePolicy |
 | `apps/database/pgvector_contract.py` | `validate_pgvector` | 9 | async function | Validate pgvector strictly for Operational Memory, never Knowledge RAG. | module |
