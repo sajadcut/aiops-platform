@@ -24,9 +24,9 @@ async def dashboard_summary(_identity=Depends(require_permission("read:incident"
                     text(
                         """
                         SELECT
-                          (SELECT COUNT(*) FROM incidents) AS incidents_total,
-                          (SELECT COUNT(*) FROM incidents WHERE LOWER(status::text) NOT IN ('closed','resolved')) AS incidents_active,
-                          (SELECT COUNT(*) FROM incidents WHERE LOWER(severity)='critical' AND LOWER(status::text) NOT IN ('closed','resolved')) AS incidents_critical,
+                          (SELECT COUNT(*) FROM incidents WHERE created_at >= CURRENT_TIMESTAMP - INTERVAL '24 hours') AS incidents_total,
+                          (SELECT COUNT(*) FROM incidents WHERE created_at >= CURRENT_TIMESTAMP - INTERVAL '24 hours' AND LOWER(status::text) NOT IN ('closed','resolved')) AS incidents_active,
+                          (SELECT COUNT(*) FROM incidents WHERE created_at >= CURRENT_TIMESTAMP - INTERVAL '24 hours' AND LOWER(severity)='critical' AND LOWER(status::text) NOT IN ('closed','resolved')) AS incidents_critical,
                           (SELECT COUNT(*) FROM approvals WHERE status='pending') AS approvals_pending,
                           (SELECT COUNT(*) FROM approvals WHERE status='approved') AS approvals_approved,
                           (SELECT COUNT(*) FROM approvals WHERE status='consumed') AS approvals_consumed,
