@@ -191,7 +191,73 @@
   };
   const pill = x => '<span class="ic-status" data-tone="' + tone(x) + '">' + esc(status(x)) + '</span>';
   const empty = message => '<p class="ic-empty">' + esc(message || tr('none')) + '</p>';
-  const refs = values => arr(values).length ? '<div class="ic-ref-list">' + arr(values).map(x => '<code dir="ltr">' + txt(x) + '</code>').join('') + '</div>' : '';
+
+  // Plain-language presentation only. All original Evidence IDs, payloads and
+  // execution bindings stay intact. Unrecognised English remains expandable,
+  // never silently portrayed as a verified Persian interpretation.
+  const isFaText = v => /[آ-ی]/.test(String(v || ''));
+  const actionFa = {start_service:'راه‌اندازی سرویس',restart_service:'راه‌اندازی مجدد سرویس',
+    reload_service:'بارگذاری دوباره تنظیمات سرویس',stop_service:'متوقف کردن سرویس'};
+  const agentFa = {triage:'بررسی اولیه',network:'بررسی شبکه',vm:'بررسی ماشین مجازی',
+    application:'بررسی برنامه',infrastructure:'بررسی زیرساخت',dependency:'بررسی وابستگی‌ها',
+    rca:'بررسی علت خرابی',evaluator:'ارزیابی پیشنهاد'};
+  const toolFa = {ssh_vm:'اتصال به سرور با SSH',vm_mcp:'ابزار بررسی ماشین مجازی',
+    zabbix:'زبیکس',prometheus:'پرومتئوس',elasticsearch:'جست‌وجوی لاگ‌ها',
+    service_status:'بررسی وضعیت سرویس',process_status:'بررسی پردازش',
+    tcp_check:'تست اتصال به پورت',port_listener_status:'بررسی پورت باز',
+    config_validate:'بررسی درستی تنظیمات',service_logs:'بررسی لاگ سرویس',
+    collect_vm_metrics:'بررسی منابع سرور',source_observation:'اطلاعات ثبت‌شده ابزار',
+    host_info:'اطلاعات سرور',disk_status:'بررسی دیسک'};
+  const humanAction = x => state.language === 'fa' && actionFa[low(x)]
+    ? actionFa[low(x)] + ' (' + safe(x) + ')' : value(x);
+  const humanAgent = x => state.language === 'fa' ? (agentFa[low(x)] || value(x)) : value(x);
+  const humanTool = x => state.language === 'fa' ? (toolFa[low(x)] || value(x)) : value(x);
+  function signalFacts(raw) {
+    const x=String(raw || ''),facts=[];
+    if(/active_state\s*=\s*inactive|service (?:is |was )?(?:inactive|stopped)|inactive \(dead\)/i.test(x)) facts.push('سرویس متوقف است');
+    if(/running\s*=\s*false|process(?:es)? (?:are |is )?not running|process count (?:is )?0/i.test(x)) facts.push('پردازش سرویس اجرا نمی‌شود');
+    if(/listening\s*=\s*false|not listening locally|port \d+ is not listening/i.test(x)) facts.push('پورت مورد انتظار باز نیست');
+    if(/reachable\s*=\s*false|TCP connectivity check .*fails|TCP port .*unreachable/i.test(x)) facts.push('ارتباط با پورت برقرار نمی‌شود');
+    if(/valid\s*=\s*true|syntax (?:is )?(?:valid|OK)|configuration validation passed/i.test(x)) facts.push('تنظیمات سرویس از نظر ساختاری درست است');
+    if(/clean stop|stopped cleanly|exit status 0\/SUCCESS/i.test(x)) facts.push('سرویس بدون خطای توقف بسته شده، ولی دلیل آن معلوم نیست');
+    const cpu=x.match(/name=cpu_usage;\s*value=([\d.]+)/i);
+    const memory=x.match(/name=memory_usage;\s*value=([\d.]+)/i);
+    if(cpu) facts.push('مصرف CPU: '+cpu[1]+' درصد');
+    if(memory) facts.push('مصرف RAM: '+memory[1]+' درصد');
+    return [...new Set(facts)].slice(0,6);
+  }
+  const plain = (raw,fallback) => {
+    if(state.language!=='fa' || isFaText(raw)) return value(raw);
+    const facts=signalFacts(raw);
+    return facts.length ? facts.join('؛ ') + '.' :
+      (fallback || 'متن این بررسی به فارسی آماده نشده است؛ برای جزئیات، متن اصلی را باز کن.');
+  };
+  const original = (raw,label) => state.language==='fa' && raw && !isFaText(raw) ?
+    '<details class="ic-technical"><summary>'+esc(label || 'متن تخصصی اصلی')+'</summary><p dir="ltr">'+txt(raw)+'</p></details>' : '';
+  const humanCause = raw => state.language==='fa' && raw && !isFaText(raw) ?
+    (/clean (?:stop|shutdown)|stopped cleanly/i.test(raw) ?
+      'سرویس بدون خطای توقف بسته شده؛ هنوز معلوم نیست چه چیزی آن را متوقف کرده است.' :
+      'علت اصلی هنوز مشخص نشده است؛ اطلاعات فنی و شواهد را بررسی کن.') : value(raw);
+  function plainLead(r) {
+    if(state.language!=='fa') return r.localized_narrative?.en || tr('infoUnavailable');
+    const i=r.incident_summary||{},x=r.remediation_recommendation||{};
+    const findings=arr(r.mcp_evidence).filter(y=>!['failed','error','unavailable'].includes(low(y.status)));
+    const facts=[...new Set(findings.flatMap(y=>signalFacts(y.finding)))].slice(0,4);
+    const subject='سرویس '+safe(i.service);
+    const host=i.host||i.target||x.target;
+    const where=host?' روی سرور '+safe(host):'';
+    const situation=facts.length?'بررسی ابزارها نشان می‌دهد: '+facts.join('؛ ')+'.' :
+      'هنوز اطلاعات کافی برای توضیح دقیق وضعیت سرویس نداریم.';
+    const next=x.action?'پیشنهاد سیستم '+humanAction(x.action)+' است.':'هنوز کاری برای اجرا پیشنهاد نشده است.';
+    return 'برای '+subject+where+' رخداد ثبت شده. '+situation+' '+next+
+      ' دلیل اصلی مشکل هنوز به‌طور قطعی روشن نشده است؛ تأیید و اجرای اقدام دو مرحله جدا هستند.';
+  }
+
+  const refs = values => arr(values).length ?
+    '<details class="ic-technical ic-evidence-refs"><summary>'+
+    (state.language==='fa'?'دیدن شناسه شواهد ('+num(arr(values).length)+')':'Evidence references ('+arr(values).length+')')+
+    '</summary><div class="ic-ref-list">'+arr(values).map(x=>'<code dir="ltr">'+txt(x)+'</code>').join('')+'</div></details>' : '';
+
   const fact = (key, v) => '<div class="ic-fact"><span class="ic-fact-label">' + esc(tr(key)) +
     '</span><strong class="ic-fact-value">' + txt(v) + '</strong></div>';
   const mini = (key,v) => '<div><span>' + esc(tr(key)) + '</span><b>' + txt(v) + '</b></div>';
