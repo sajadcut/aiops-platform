@@ -964,12 +964,12 @@
 | `apps/chatbot/tools.py` | `_bounded_int` | 182 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/chatbot/tools.py` | `parse_tool_call` | 196 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/chatbot/tools.py` | `normalize_tool_intent` | 216 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
-| `apps/context_service/__init__.py` | `ContextBuilder` | 22 | class | Build knowledge-assisted operational context through governed boundaries. | module |
-| `apps/context_service/__init__.py` | `ContextBuilder.__init__` | 37 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ContextBuilder |
-| `apps/context_service/__init__.py` | `ContextBuilder._known` | 57 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ContextBuilder |
-| `apps/context_service/__init__.py` | `ContextBuilder._knowledge_failure_status` | 64 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ContextBuilder |
-| `apps/context_service/__init__.py` | `ContextBuilder.build_context` | 91 | async method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | ContextBuilder |
-| `apps/context_service/__init__.py` | `ContextBuilder.build_context.avg` | 184 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ContextBuilder.build_context |
+| `apps/context_service/__init__.py` | `ContextBuilder` | 23 | class | Build knowledge-assisted operational context through governed boundaries. | module |
+| `apps/context_service/__init__.py` | `ContextBuilder.__init__` | 38 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ContextBuilder |
+| `apps/context_service/__init__.py` | `ContextBuilder._known` | 58 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ContextBuilder |
+| `apps/context_service/__init__.py` | `ContextBuilder._knowledge_failure_status` | 65 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ContextBuilder |
+| `apps/context_service/__init__.py` | `ContextBuilder.build_context` | 92 | async method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | ContextBuilder |
+| `apps/context_service/__init__.py` | `ContextBuilder.build_context.avg` | 187 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ContextBuilder.build_context |
 | `apps/context_service/asset_identity.py` | `AssetContext` | 10 | class | کلاس | module |
 | `apps/context_service/asset_identity.py` | `AssetIdentityResolver` | 35 | class | Deterministically derives one asset identity from live-source metadata. | module |
 | `apps/context_service/asset_identity.py` | `AssetIdentityResolver.resolve` | 46 | method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | AssetIdentityResolver |
