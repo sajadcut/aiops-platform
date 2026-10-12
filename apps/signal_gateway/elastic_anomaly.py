@@ -15,6 +15,7 @@ from apps.incident_service.repository import IncidentRepository
 from apps.orchestrator.workflow_store import WorkflowCheckpointStore
 from domain.contracts.config import settings
 from domain.contracts.logging import logger
+from apps.signal_gateway.received_signal import capture_received_signal
 from domain.models import Incident, IncidentStatus
 
 
@@ -372,6 +373,7 @@ def signal_from_elastic_anomaly(payload: Dict[str, Any]):
     raw_data.update(
         {
             "elastic_alert_kind": "ml_anomaly",
+            "_received_payload": capture_received_signal(payload),
             "rule": normalized["rule"],
             "alert": normalized["alert"],
             "anomaly": {
@@ -432,6 +434,7 @@ def _recovery_evidence(
     raw.update(
         {
             "elastic_alert_kind": "ml_anomaly_recovery",
+            "_received_payload": capture_received_signal(payload),
             "rule": normalized.get("rule"),
             "alert": normalized.get("alert"),
             "anomaly": {
