@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Literal
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import text
 
@@ -12,6 +14,7 @@ router = APIRouter()
 @router.get("/dashboard/incidents")
 async def dashboard_incidents(
     limit: int = Query(default=50, ge=1, le=200),
+    scope: Literal["recent", "archived"] = Query(default="recent"),
     _identity=Depends(require_permission("read:incident")),
 ):
     """Operational incident list enriched from durable governance/audit state."""
@@ -51,11 +54,15 @@ async def dashboard_incidents(
                                     ELSE NULL
                                 END FROM audit_events ae WHERE ae.incident_id=i.id AND ae.event_type='memory_writeback' ORDER BY ae.created_at DESC LIMIT 1) AS memory_status
                         FROM incidents i
+                        WHERE (
+                            (:scope = 'recent' AND i.created_at >= CURRENT_TIMESTAMP - INTERVAL '24 hours')
+                            OR (:scope = 'archived' AND i.created_at < CURRENT_TIMESTAMP - INTERVAL '24 hours')
+                        )
                         ORDER BY i.created_at DESC
                         LIMIT :limit
                         """
                     ),
-                    {"limit": limit},
+                    {"limit": limit, "scope": scope},
                 )
             ).mappings().all()
         return {
@@ -84,6 +91,8 @@ async def dashboard_incidents(
                 for row in rows
             ],
             "data_status": "live",
+            "scope": scope,
+            "window_hours": 24,
         }
     except Exception as exc:
         raise HTTPException(status_code=503, detail="incident_dashboard_unavailable") from exc
@@ -119,6 +128,7 @@ async def dashboard_services(
                                 (SELECT LOWER(COALESCE(ae.metadata->>'status','')) FROM audit_events ae WHERE ae.incident_id=i.id AND ae.event_type='verification_completed' ORDER BY ae.created_at DESC LIMIT 1) AS verification_status,
                                 (SELECT LOWER(COALESCE(ae.metadata->>'persisted','')) FROM audit_events ae WHERE ae.incident_id=i.id AND ae.event_type='memory_writeback' ORDER BY ae.created_at DESC LIMIT 1) AS memory_persisted
                             FROM incidents i
+                            WHERE i.created_at >= CURRENT_TIMESTAMP - INTERVAL '24 hours'
                         )
                         SELECT
                             service,
