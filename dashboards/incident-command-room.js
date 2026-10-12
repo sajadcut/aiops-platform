@@ -238,6 +238,30 @@
     (/clean (?:stop|shutdown)|stopped cleanly/i.test(raw) ?
       'سرویس بدون خطای توقف بسته شده؛ هنوز معلوم نیست چه چیزی آن را متوقف کرده است.' :
       'علت اصلی هنوز مشخص نشده است؛ اطلاعات فنی و شواهد را بررسی کن.') : value(raw);
+
+  function previousExperience(item, kind) {
+    if (state.language !== 'fa') return truncate(kind==='cognia'?item.excerpt:item.root_cause,400);
+    const source=String(kind==='cognia'?item.excerpt:item.root_cause||'');
+    const action=String(item.action || (/historical\):\s*(start_service|restart_service|reload_service)/i.exec(source)||[])[1] || '');
+    const outcome=kind==='memory'?low(item.verification):/verification status:\s*success/i.test(source)?'success':'unknown';
+    const prefix=kind==='cognia'?'کاگنیا یک تجربه مشابه پیدا کرده. ':'در حافظه عملیاتی، تجربه مشابهی ثبت شده. ';
+    const used=action?'در آن تجربه، '+humanAction(action)+' انجام شده. ':'';
+    const verified=outcome==='success'?'بعد از اجرا، نتیجه بررسی سرویس موفق ثبت شده. ':'نتیجه نهایی رفع مشکل در این خلاصه مشخص نیست. ';
+    const caution=/unconfirmed|not independently confirmed/i.test(source)?'علت اصلی آن مشکل هم تأیید نشده بود. ':'';
+    return prefix+used+verified+caution+'قبل از تکرار اقدام باید وضعیت فعلی جداگانه بررسی شود.';
+  }
+  function explanation(r) {
+    const x=r.remediation_recommendation||{};
+    if(state.language!=='fa') return value(x.why);
+    const tools=arr(r.mcp_evidence).filter(e=>!['failed','error','unavailable'].includes(low(e.status)));
+    const observations=[...new Set(tools.flatMap(e=>signalFacts(e.finding)))];
+    if(low(x.action)==='start_service' && observations.includes('سرویس متوقف است')) {
+      return 'ابزار بررسی سرور نشان داده سرویس متوقف است. به همین دلیل سیستم پیشنهاد داده آن را دوباره روشن کنیم. '+
+        'اگر شواهد قدیمی شده‌اند، وضعیت فعلی باید دوباره بررسی شود. این اقدام لزوماً علت توقف سرویس را برطرف نمی‌کند.';
+    }
+    if(isFaText(x.why)) return value(x.why);
+    return 'این اقدام با توجه به شواهد ثبت‌شده پیشنهاد شده، اما برای تأیید آن باید گزارش بررسی سرویس و ریسک اجرا را ببینی.';
+  }
   function plainLead(r) {
     if(state.language!=='fa') return r.localized_narrative?.en || tr('infoUnavailable');
     const i=r.incident_summary||{},x=r.remediation_recommendation||{};
@@ -356,7 +380,7 @@
       fact('approvalId',a.approval_id),
       fact('verificationPlan',x.verification_plan),fact('expected',x.expected_outcome)
     ].join(''));
-    show('#ic-preconditions','<div class="ic-callout"><strong>'+esc(tr('why'))+'</strong><p>'+txt(x.why)+'</p>'+
+    show('#ic-preconditions','<div class="ic-callout"><strong>'+esc(tr('why'))+'</strong><p>'+txt(explanation(r))+'</p>'+
       refs(i.cause_evidence_refs)+'</div>'+
       (arr(x.unverified_assumptions).length?'<div class="ic-warnings">'+arr(x.unverified_assumptions).slice(0,10).map(y=>'<div class="ic-warning">'+txt(y)+'</div>').join('')+'</div>':''));
   }
@@ -390,15 +414,15 @@
     $('#ic-memory-count').textContent=num(m.retrieved_count||0);
     show('#ic-cognia','<div class="ic-callout"><strong>'+txt(status(k.status))+'</strong><p>'+tr('notUsed')+'</p></div>'+
       (arr(k.items).length?arr(k.items).map(x=>'<article class="ic-detail-card"><div class="ic-detail-head"><h4>'+
-        txt(x.title||x.source_id)+'</h4>'+pill(x.use_status)+'</div>'+
-        '<p>'+txt(truncate(x.excerpt,500))+'</p><div class="ic-meta">KB: '+txt(x.knowledge_base_id)+
+        txt(state.language==='fa' && /Verified Incident Experience/.test(x.excerpt||'') ? 'تجربه حل مشکل مشابه' : (x.title||x.source_id))+'</h4>'+pill(x.use_status)+'</div>'+
+        '<p>'+txt(previousExperience(x,"cognia"))+'</p>'+original(truncate(x.excerpt,1600),"متن اصلی دانش کاگنیا")+'<p class="ic-technical-spacer"+'</p><div class="ic-meta">KB: '+txt(x.knowledge_base_id)+
         ' · ID: '+txt(x.knowledge_id)+' · '+tr('confidence')+': '+esc(numberPct(x.relevance))+'</div>'+
         refs(x.source_id?[x.source_id]:[])+'</article>').join(''):empty()));
     show('#ic-memory','<div class="ic-callout"><strong>'+tr('knowledgeNotProof')+'</strong></div>'+
       (arr(m.items).length?arr(m.items).map(x=>'<article class="ic-detail-card"><div class="ic-detail-head"><h4>'+
-        txt(x.memory_id)+'</h4>'+pill(x.use_status)+'</div><p>'+txt(truncate(x.root_cause,300))+'</p>'+
-        '<div class="ic-meta">'+tr('action')+': '+txt(humanAction(x.action))+' · '+tr('verification')+': '+txt(x.verification)+
-        ' · '+tr('result')+': '+txt(x.outcome)+' · '+tr('confidence')+': '+esc(numberPct(x.similarity))+'</div>'+
+        txt(state.language==='fa'?'تجربه رخداد قبلی':x.memory_id)+'</h4>'+pill(x.use_status)+'</div><p>'+txt(previousExperience(x,"memory"))+'</p>'+
+        '<div class="ic-meta">'+tr('action')+': '+txt(humanAction(x.action))+' · '+tr('verification')+': '+txt(status(x.verification))+
+        ' · '+tr('result')+': '+txt(status(x.outcome))+' · '+tr('confidence')+': '+esc(numberPct(x.similarity))+'</div>'+
         refs(x.previous_incident_id?[x.previous_incident_id]:[])+'</article>').join(''):empty()));
   }
   function renderOutcome(r) {
@@ -407,7 +431,7 @@
     const first=performed?'<div class="ic-outcome-heading"><strong>'+tr('execute')+'</strong>'+pill(o.status)+'</div>':
       '<p class="ic-empty">'+tr('noExecution')+'</p>';
     show('#ic-outcome-view',first+'<div class="ic-proposal">'+
-      fact('action',o.action)+fact('tool',o.tool)+fact('target',o.target)+fact('approvalId',o.approval_id||a.approval_id)+
+      fact('action',humanAction(o.action))+fact('tool',humanTool(o.tool))+fact('target',o.target)+fact('approvalId',o.approval_id||a.approval_id)+
       fact('verification',status(v.status))+fact('confidence',numberPct(v.confidence))+
       fact('memory',learn.memory_id)+fact('result',v.message||o.error||o.details)+'</div>'+
       (arr(v.changes).length?'<div class="ic-callout"><strong>'+tr('verification')+'</strong><p>'+arr(v.changes).map(txt).join(' · ')+'</p></div>':'')+
@@ -430,8 +454,8 @@
     show('#ic-action-state','<div class="ic-decision-status"><strong>'+esc(heading)+'</strong><p>'+
       esc(archived?tr('archiveHint'):pending?tr('approvalSeparate'):tr('execBound'))+'</p>'+
       pill(statusValue)+'</div><div class="ic-mini-facts">'+
-      mini('action',a.action||x.action)+mini('target',a.target||x.target)+mini('risk',status(x.risk_level))+
-      mini('tool',a.tool||x.tool)+mini('freshness',status(a.data_freshness))+
+      mini('action',humanAction(a.action||x.action))+mini('target',a.target||x.target)+mini('risk',status(x.risk_level))+
+      mini('tool',humanTool(a.tool||x.tool))+mini('freshness',status(a.data_freshness))+
       mini('approvalId',a.approval_id)+'</div>');
     if(archived) {
       show('#ic-action-checks','');
