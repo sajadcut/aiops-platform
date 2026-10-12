@@ -99,6 +99,55 @@ class KnowledgeTopologyResolver:
         return " | ".join(parts)
 
     @classmethod
+    def constrain_trigger_service(
+        cls,
+        reconciliation: Dict[str, Any],
+        *,
+        expected_fqdns: Iterable[str],
+    ) -> Dict[str, Any]:
+        """Do not turn an unrelated RAG hit into a source-alert service identity.
+
+        A missing live service may be resolved from Cognia *only* when the same
+        source notification identifies a FQDN and the actual retrieved topology
+        declares that exact FQDN. Generic CPU/disk/memory alerts don't provide
+        this identity link, regardless of RAG relevance. Other topology hints
+        remain auxiliary and require the existing live verification boundary.
+        """
+        result = dict(reconciliation)
+        provenance = dict(result.get("field_provenance") or {})
+        asset = dict(result.get("effective_asset") or {})
+        if provenance.get("service") != "knowledge":
+            return result
+
+        topology = dict(result.get("knowledge_topology") or {})
+        claimed_fqdn = cls._normalize_fqdn(
+            str((topology.get("fields") or {}).get("fqdn") or "")
+        )
+        expected = {
+            match for value in expected_fqdns
+            if (match := cls._normalize_fqdn(str(value or "")))
+        }
+        if claimed_fqdn and claimed_fqdn in expected:
+            result["service_identity_basis"] = "source_fqdn_matches_knowledge"
+            return result
+
+        # Record which source supplied the unverifiable hint, without using it
+        # as the identity for incident grouping, monitoring queries or writes.
+        result["unverified_knowledge_service_hint"] = asset.get("service")
+        asset["service"] = None
+        asset["field_provenance"] = {
+            **dict(asset.get("field_provenance") or {}), "service": "unverified_knowledge_hint"
+        }
+        asset["service_identity_unverified"] = True
+        provenance["service"] = "unverified_knowledge_hint"
+        result["field_provenance"] = provenance
+        result["effective_asset"] = asset
+        result["service_identity_basis"] = "unverified_knowledge_hint_blocked"
+        result["requires_live_verification"] = True
+        asset["requires_live_verification"] = True
+        return result
+
+    @classmethod
     def extract_fqdns(cls, text: str) -> List[str]:
         values: List[str] = []
         for match in cls._FQDN_RE.finditer(str(text or "")):
