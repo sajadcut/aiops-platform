@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field, field_validator
 
 from apps.context_service.asset_identity import AssetIdentityResolver
 from apps.context_service.knowledge_topology import KnowledgeTopologyResolver
+from apps.context_service.service_identity import ServiceIdentityResolver
 from apps.incident_service.repository import IncidentRepository
 from apps.orchestrator.learning_runtime import LearningDurableWorkflowRuntime
 from apps.orchestrator.signal_aware import SignalAwareE2EOrchestrator
@@ -121,16 +122,8 @@ class SignalGateway:
             },
         }
         query = KnowledgeTopologyResolver.build_discovery_query(incident)
-        expected_fqdns = KnowledgeTopologyResolver.extract_fqdns(
-            " ".join(
-                str(value or "")
-                for value in (
-                    signal.summary,
-                    signal.raw_data.get("url"),
-                    signal.raw_data.get("endpoint"),
-                    signal.raw_data.get("fqdn"),
-                )
-            )
+        expected_fqdns = ServiceIdentityResolver.expected_fqdns(
+            summary=signal.summary, context=signal.raw_data,
         )
         knowledge_results = []
         knowledge_status: Dict[str, Any] = {
@@ -168,14 +161,17 @@ class SignalGateway:
             knowledge_results,
             expected_fqdns=expected_fqdns,
         )
-        topology_context = KnowledgeTopologyResolver.constrain_trigger_service(
-            KnowledgeTopologyResolver.reconcile(live_asset, topology),
+        resolution = ServiceIdentityResolver.resolve(
+            source_service=signal.service,
+            live_asset=live_asset,
+            knowledge_topology=topology,
             expected_fqdns=expected_fqdns,
         )
         return {
-            "asset_context": topology_context["effective_asset"],
+            "asset_context": resolution["asset_context"],
+            "service_identity": resolution["service_identity"],
             "live_asset_context": live_asset,
-            "topology_context": topology_context,
+            "topology_context": resolution["topology_context"],
             "knowledge_results": knowledge_results,
             "knowledge_status": knowledge_status,
             "knowledge_discovery_query": query,
@@ -186,14 +182,9 @@ class SignalGateway:
         trigger_evidence = signal.to_evidence()
         discovery = await SignalGateway._knowledge_assisted_asset(signal, trigger_evidence)
         asset = dict(discovery.get("asset_context") or {})
-        # The monitoring host is NOT the monitored application. A generic
-        # resource alert with no explicit service and no matching FQDN must
-        # remain service-unresolved, even when Cognia suggests nginx.
-        candidate_service = str(asset.get("service") or signal.service or "").strip()
-        resolved_service = (
-            candidate_service if candidate_service.lower() not in
-            {"", "unknown", "none", "null", "n/a", "unset"} else "unknown"
-        )
+        # One shared authority policy across webhooks, ContextBuilder and
+        # orchestration. Hostnames are kept distinct from service identity.
+        resolved_service = str(discovery["service_identity"]["service"])
         correlation = build_correlation_identity(
             service=resolved_service,
             signal_type=signal.signal_type,
@@ -290,7 +281,8 @@ class SignalGateway:
             "severity": signal.severity,
             "service": resolved_service,
             "summary": signal.summary,
-            "service_identity_basis": discovery.get("topology_context", {}).get("service_identity_basis"),
+            "service_identity_basis": discovery["service_identity"]["basis"],
+            "service_identity_status": discovery["service_identity"]["status"],
             "source_host": asset.get("hostname"),
             "signal_type": signal.signal_type,
             "correlation_key": correlation_key,
@@ -303,6 +295,7 @@ class SignalGateway:
                 "incident": incident_context,
                 "service": resolved_service,
                 "asset_context": asset,
+                "service_identity": discovery["service_identity"],
                 "live_asset_context": discovery.get("live_asset_context"),
                 "topology_context": discovery.get("topology_context"),
                 "knowledge_results": discovery.get("knowledge_results", []),
