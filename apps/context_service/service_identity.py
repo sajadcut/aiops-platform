@@ -103,18 +103,34 @@ class ServiceIdentityResolver:
             })
             # A disagreement is never silently resolved by the latest collector.
             verified = False
+        knowledge_service = cls.known((topology.get("fields") or {}).get("service"))
+        knowledge_fqdn = KnowledgeTopologyResolver._normalize_fqdn(
+            str((topology.get("fields") or {}).get("fqdn") or "")
+        )
+        matches_source = bool(knowledge_service and knowledge_fqdn and any(
+            KnowledgeTopologyResolver._normalize_fqdn(str(value)) == knowledge_fqdn
+            for value in expected
+        ))
         if declared:
             name = declared
             status = "verified" if verified and observed and declared.casefold() == observed.casefold() else "reported"
             basis = "source_declared_service"
-        elif observed:
+        elif observed and matches_source and observed.casefold() == knowledge_service.casefold():
+            # The independent read agrees with a source-linked domain. Still
+            # classify as observed, NOT confirmed causal ownership.
             name = observed
-            status = "verified" if verified else "observed"
+            status = "observed"
             basis = "live_observed_service"
-        elif reconciliation.get("service_identity_basis") == "source_fqdn_matches_knowledge":
-            name = cls.known(asset.get("service")) or "unknown"
-            status = "suspected" if name != "unknown" else "unknown"
+        elif matches_source and not observed:
+            name = knowledge_service
+            status = "suspected"
             basis = "source_fqdn_matches_knowledge"
+        elif observed:
+            # A stopped nginx daemon discovered during investigation of an
+            # unrelated memory alert is *not* the alert's named service.
+            name = "unknown"
+            status = "unknown"
+            basis = "live_service_unlinked_to_alert"
         else:
             name = "unknown"
             status = "unknown"
@@ -127,7 +143,11 @@ class ServiceIdentityResolver:
 
         hypothesis = None
         hint = cls.known(reconciliation.get("unverified_knowledge_service_hint"))
-        if hint and hint.casefold() != name.casefold():
+        if observed and name == "unknown":
+            hypothesis = {"service": observed, "origin": "mcp_observation", "verified": False}
+        if matches_source and knowledge_service and name == "unknown":
+            hypothesis = {"service": knowledge_service, "origin": "cognia", "verified": False}
+        if hint and hint.casefold() != name.casefold() and hypothesis is None:
             hypothesis = {"service": hint, "origin": "cognia", "verified": False}
         for candidate in candidate_hypotheses:
             if not isinstance(candidate, Mapping):
@@ -139,6 +159,11 @@ class ServiceIdentityResolver:
 
         reconciliation["effective_asset"] = asset
         reconciliation["conflicts"] = conflicts
+        if name == "unknown" and observed:
+            provenance = dict(reconciliation.get("field_provenance") or {})
+            provenance["service"] = "unlinked_live_observation"
+            reconciliation["field_provenance"] = provenance
+            asset["field_provenance"] = {**dict(asset.get("field_provenance") or {}), **provenance}
         # Preserve the auditable legacy topology reason separately from the
         # canonical identity's (more general) unknown-state reason.
         reconciliation["service_identity_basis"] = (
