@@ -1,0 +1,250 @@
+"""One deterministic identity authority across ingestion, live MCP and ContextBuilder."""
+from __future__ import annotations
+
+from datetime import datetime, timezone
+from types import SimpleNamespace
+
+import pytest
+
+from apps.context_service import ContextBuilder
+from apps.context_service.knowledge_topology import KnowledgeTopologyResolver
+from apps.context_service.service_identity import ServiceIdentityResolver
+from apps.context_service.llm_identity import suggest_from_llm
+from apps.remediation_planner import RemediationPlanner
+from domain.contracts.config import settings
+from domain.schemas import IncidentCreate
+
+
+NGINX_DOC = {
+    "source_id": "cognia:unrelated:nginx",
+    "content": "Service: nginx\nPlatform: VM\nOwner: ops",
+    "relevance": 0.4,
+}
+WEB_DOC = {
+    "source_id": "cognia:domain:web",
+    "content": "Service: web-api\nURL: https://web.wepod.ir\nPlatform: Kubernetes",
+    "relevance": 12.5,
+}
+
+
+class FakeRAG:
+    def __init__(self, results):
+        self.results = results
+
+    async def search(self, *args, **kwargs):
+        return list(self.results)
+
+
+class FakeCollector:
+    def __init__(self, service=None):
+        self.service = service
+        self.queries = []
+
+    async def collect(self, name, since, until=None):
+        self.queries.append(name)
+        return {
+            "service": self.service,
+            "since": since.isoformat(),
+            "until": None,
+            "asset_context": {"service": self.service, "hostname": "monitor-host"},
+            "evidence": [],
+        }
+
+
+@pytest.mark.asyncio
+async def test_general_memory_alert_does_not_inherit_incidental_nginx_from_cognia():
+    collector = FakeCollector()
+    context = await ContextBuilder(
+        collector=collector, rag_service=FakeRAG([NGINX_DOC]),
+    ).build_context(IncidentCreate(
+        source="zabbix", severity="medium",
+        summary="High memory utilization on APORSDTNKSA0101",
+        context={"host": "APORSDTNKSA0101"},
+    ))
+    assert collector.queries == ["unknown"]
+    assert context["service"] == "unknown"
+    assert context["service_identity"]["status"] == "unknown"
+    assert context["service_identity"]["verified"] is False
+    assert context["service_identity"]["suspected_service"] == "nginx"
+    assert context["asset_context"]["service"] is None
+    assert context["topology_context"]["unverified_knowledge_service_hint"] == "nginx"
+    assert context["knowledge_status"]["status"] == "available"
+
+
+@pytest.mark.asyncio
+async def test_exact_source_fqdn_still_enables_service_scoped_diagnostics_but_is_not_verified():
+    collector = FakeCollector()
+    result = await ContextBuilder(
+        collector=collector, rag_service=FakeRAG([WEB_DOC]),
+    ).build_context(IncidentCreate(
+        source="zabbix", severity="medium",
+        summary='Download speed for "web.wepod.ir" has slowed down',
+    ))
+    assert collector.queries == ["web-api"]
+    assert result["service"] == "web-api"
+    assert result["service_identity"]["status"] == "suspected"
+    assert result["service_identity"]["verified"] is False
+    assert result["service_identity"]["requires_more_evidence"] is True
+    assert result["topology_context"]["requires_live_verification"] is True
+
+
+@pytest.mark.asyncio
+async def test_explicit_service_beats_unrelated_cognia_and_is_reported_not_verified():
+    collector = FakeCollector()
+    result = await ContextBuilder(
+        collector=collector, rag_service=FakeRAG([NGINX_DOC]),
+    ).build_context(IncidentCreate(
+        source="prometheus", severity="high", service="payment-api",
+        summary="Payment latency high",
+    ))
+    assert collector.queries == ["payment-api"]
+    assert result["service"] == "payment-api"
+    assert result["service_identity"]["status"] == "reported"
+    assert result["service_identity"]["verified"] is False
+    assert result["asset_context"]["service"] == "payment-api"
+
+
+def test_live_mcp_verifies_only_source_declared_service_at_exact_source_target():
+    row = {
+        "source": "vm_mcp", "type": "telemetry", "reference": "vm:service:1",
+        "raw_data": {"diagnostic": "service_status", "target": "10.100.6.199",
+                     "service": "nginx", "active_state": "inactive", "supported": True},
+    }
+    assert ServiceIdentityResolver.independently_verified(
+        expected_service="nginx", expected_target="10.100.6.199",
+        evidence=[row],
+    )
+    for bad in [
+        {**row, "raw_data": {**row["raw_data"], "target": "10.100.6.200"}},
+        {**row, "source": "zabbix"},
+        {**row, "raw_data": {**row["raw_data"], "service": "postgresql"}},
+        {**row, "raw_data": {**row["raw_data"], "success": False}},
+        {**row, "raw_data": {**row["raw_data"], "diagnostic": "process_snapshot"}},
+    ]:
+        assert not ServiceIdentityResolver.independently_verified(
+            expected_service="nginx", expected_target="10.100.6.199", evidence=[bad]
+        )
+
+
+def test_disagreement_between_source_and_mcp_is_explicit_and_blocks_write():
+    result = ServiceIdentityResolver.resolve(
+        source_service="payment-api",
+        live_asset={"service": "nginx"},
+        knowledge_topology={},
+        expected_fqdns=[],
+    )
+    assert result["service"] == "payment-api"
+    assert result["service_identity"]["verified"] is False
+    assert result["service_identity"]["conflicts"]
+    state = {
+        "evaluation": {"approved_for_decision": True},
+        "context": {
+            "service_identity": result["service_identity"],
+            "trigger_signal": {
+                "source": "zabbix",
+                "service": "payment-api",
+                "raw_data": {"target_ip": "10.100.6.199"},
+            },
+            "evidence": [],
+        },
+    }
+    plan = RemediationPlanner.plan(state)
+    assert plan["status"] == "not_planned"
+    assert plan["reason"] == "service_identity_conflict_requires_review"
+
+
+def test_generic_alert_even_with_unrelated_inactive_nginx_cannot_auto_plan():
+    evidence = [{
+        "type": "telemetry", "source": "vm_mcp", "reference": "vm:s1",
+        "raw_data": {"diagnostic": "service_status", "target": "10.100.6.199",
+                     "service": "nginx", "active_state": "inactive"},
+    }]
+    for status in ("unknown", "observed"):
+        plan = RemediationPlanner.plan({
+            "evaluation": {"approved_for_decision": True},
+            "context": {
+                "service_identity": {
+                    "status": status, "service": "unknown" if status == "unknown" else "nginx",
+                    "verified": False, "conflicts": [],
+                },
+                "trigger_signal": {
+                    "source": "zabbix", "service": None,
+                    "summary": "High memory utilization", "raw_data": {"target_ip": "10.100.6.199"},
+                },
+                "evidence": evidence,
+            },
+        })
+        assert plan["status"] == "not_planned"
+        assert plan["reason"] == "service_identity_unverified_for_automatic_planning"
+
+
+@pytest.mark.asyncio
+async def test_llm_can_only_suggest_candidate_from_actual_mcp_and_never_change_identity(monkeypatch):
+    monkeypatch.setattr(settings, "LLM_PROVIDER", "dotin-general-chatbot")
+    monkeypatch.setattr(settings, "LLM_BASE_URL", "http://internal-llm")
+    monkeypatch.setattr(settings, "LLM_MODEL", "internal-model")
+    logs = []
+
+    class Provider:
+        async def generate_with_messages(self, messages, **kwargs):
+            logs.append((messages, kwargs))
+            return SimpleNamespace(
+                content='{"service":"nginx","reason":"May warrant investigation"}',
+                finish_reason="stop",
+            )
+
+    evidence = [{
+        "source": "vm_mcp", "type": "telemetry", "reference": "live:1",
+        "raw_data": {"diagnostic": "service_status", "service": "nginx",
+                     "target": "10.100.6.199", "active_state": "inactive"},
+    }]
+    result = await suggest_from_llm(
+        summary="High memory utilization", evidence=evidence, adapter=Provider()
+    )
+    assert result["status"] == "hypothesis"
+    assert result["verified"] is False
+    assert result["execution_authority"] is False
+    assert result["service"] == "nginx"
+    assert result["evidence_refs"] == ["live:1"]
+    assert len(logs) == 1
+    assert logs[0][1]["temperature"] == 0.0
+    resolution = ServiceIdentityResolver.resolve(
+        source_service=None, live_asset={}, knowledge_topology={},
+        candidate_hypotheses=[result],
+    )
+    assert resolution["service"] == "unknown"
+    assert resolution["service_identity"]["suspected_service"] == "nginx"
+    assert resolution["service_identity"]["suspected_service_source"] == "llm_hypothesis"
+    assert not resolution["service_identity"]["verified"]
+
+
+@pytest.mark.asyncio
+async def test_llm_hallucination_and_no_diagnostic_candidates_are_rejected(monkeypatch):
+    monkeypatch.setattr(settings, "LLM_PROVIDER", "openai-compatible")
+    monkeypatch.setattr(settings, "LLM_BASE_URL", "http://internal-llm")
+    monkeypatch.setattr(settings, "LLM_MODEL", "internal-model")
+
+    class Provider:
+        async def generate_with_messages(self, messages, **kwargs):
+            return SimpleNamespace(content='{"service":"postgresql"}', finish_reason="stop")
+
+    candidates = [{
+        "source": "vm_mcp", "type": "telemetry", "reference": "live:1",
+        "raw_data": {"service": "nginx", "diagnostic": "service_status"},
+    }]
+    assert (await suggest_from_llm(
+        summary="CPU high", evidence=candidates, adapter=Provider()
+    ))["status"] == "unsubstantiated"
+    assert (await suggest_from_llm(
+        summary="CPU high", evidence=[], adapter=Provider()
+    ))["status"] == "no_diagnostic_candidates"
+
+
+def test_identity_has_bounded_provenance_in_snapshot_and_persian_ui():
+    from pathlib import Path
+    brief = Path("apps/decision_brief.py").read_text(encoding="utf-8")
+    ui = Path("dashboards/incident-command-room.js").read_text(encoding="utf-8")
+    assert '"service_identity": service_identity_display' in brief
+    assert "suspectedService:'سرویس احتمالی (تأیید نشده)'" in ui
+    assert "source_declared_service:'Tag یا فیلد معتبر آلارم'" in ui
+    assert "status(i.service_identity?.status)" in ui
