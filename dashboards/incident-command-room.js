@@ -182,6 +182,11 @@
     remediation_plan_generated:'تهیه برنامه رفع مشکل',evaluation_completed:'بررسی کیفیت پیشنهاد',
     rca_completed:'بررسی علت مشکل',specialist_analysis_completed:'نتیجه بررسی ایجنت‌ها',
     agent_evidence_round_completed:'جمع‌آوری شواهد',context_loaded:'جمع‌آوری اطلاعات اولیه',
+    trigger_evidence_merged:'ثبت هشدار و اطلاعات اولیه',agent_handoff_completed:'ارجاع به ایجنت‌های تخصصی',
+    triage_completed:'پایان بررسی اولیه',approval_requested:'درخواست تأیید از اپراتور',
+    remediation_execution_precondition_verified:'بررسی دوباره شرایط اجرا',
+    execution_completed:'عملیات اجرا شد',verification_completed:'پایان بررسی نتیجه اجرا',
+    memory_writeback:'ثبت تجربه در حافظه عملیاتی',approval_rejected:'اپراتور اقدام را رد کرد',
     human_review_required:'نیازمند بررسی انسانی',new_approval_required:'نیازمند تأیید جدید'
   };
   const status = x => {
@@ -417,7 +422,7 @@
     $('#ic-memory-count').textContent=num(m.retrieved_count||0);
     show('#ic-cognia','<div class="ic-callout"><strong>'+txt(status(k.status))+'</strong><p>'+tr('notUsed')+'</p></div>'+
       (arr(k.items).length?arr(k.items).map(x=>'<article class="ic-detail-card"><div class="ic-detail-head"><h4>'+
-        txt(state.language==='fa' && /Verified Incident Experience/.test(x.excerpt||'') ? 'تجربه حل مشکل مشابه' : (x.title||x.source_id))+'</h4>'+pill(x.use_status)+'</div>'+
+        txt(state.language==='fa' ? (/Verified Incident Experience/.test(x.excerpt||'') ? 'تجربه حل مشکل مشابه' : 'دانش مرتبط بازیابی‌شده از کاگنیا') : (x.title||x.source_id))+'</h4>'+pill(x.use_status)+'</div>'+
         '<p>'+txt(previousExperience(x,"cognia"))+'</p>'+original(truncate(x.excerpt,1600),"متن اصلی دانش کاگنیا")+'<div class="ic-meta">پایگاه دانش: '+txt(x.knowledge_base_id)+
         ' · ID: '+txt(x.knowledge_id)+' · '+tr('confidence')+': '+esc(numberPct(x.relevance))+'</div>'+
         refs(x.source_id?[x.source_id]:[])+'</article>').join(''):empty()));
