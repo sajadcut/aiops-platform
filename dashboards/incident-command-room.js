@@ -503,7 +503,7 @@
       const labels=item.source==='prometheus'?receivedPairs(payload.labels,tr('receivedLabels')):'';
       const annotations=item.source==='prometheus'?receivedPairs(payload.annotations,tr('receivedAnnotations')):'';
       const ruleTags=item.source==='elasticsearch'?
-        receivedPairs(payload.rule?.tags?.map(tag=>({tag,value:'ثبت شده'})),state.language==='fa'?'تگ‌های قانون ELK':'ELK rule tags'):'';
+        receivedPairs(payload.rule?.tags?.map(tag=>({tag,value:''})),state.language==='fa'?'تگ‌های قانون ELK':'ELK rule tags'):'';
       return '<article class="ic-received-card"><div class="ic-received-heading"><h3>'+txt(name)+'</h3>'+
         '<span class="ic-tag">'+esc(lifecycle)+'</span></div>'+
         '<p class="ic-received-capture">'+esc(capture)+'</p>'+
