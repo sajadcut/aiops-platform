@@ -31,11 +31,12 @@ def test_dashboard_is_single_live_control_center():
     assert ".incident-layout" in css
 
 
-def test_incident_workbench_defaults_to_active_and_shows_unambiguous_local_time():
+def test_incident_workbench_defaults_to_last_24h_including_resolved_and_shows_unambiguous_local_time():
     html = (ROOT / "dashboards/index.html").read_text(encoding="utf-8")
 
-    assert 'value="__active__" selected>فقط رخدادهای فعال' in html
-    assert 'value="">همه رخدادها' in html
+    assert 'value="__active__">فقط رخدادهای فعال' in html
+    assert 'value="" selected>همه رخدادها' in html
+    assert 'value="recent" selected>۲۴ ساعت اخیر' in html
     assert "فهرست رخدادهای ثبت‌شده" in html
     assert "function incidentTimeInfo" in html
     assert "i.started_at || i.created_at" in html
