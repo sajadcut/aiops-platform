@@ -316,6 +316,22 @@ def build_decision_brief(
     recommendation = obj(summary.get("recommended_action"))
     verification = obj(summary.get("verification"))
     execution = obj(summary.get("execution"))
+    service_identity = obj(obj(state.get("context")).get("service_identity"))
+    if not service_identity:
+        service_identity = obj(obj(incident.get("context")).get("service_identity"))
+    # Auditable, purely informational: a model/Cognia hint is never an action
+    # target or evidence that a service itself caused a host-level alert.
+    service_identity_display = {
+        "status": safe(service_identity.get("status"), 40) or "unknown",
+        "verified": service_identity.get("verified") is True,
+        "basis": safe(service_identity.get("basis"), 80) or "unavailable",
+        "source_host": safe(service_identity.get("source_host"), 160),
+        "suspected_service": safe(service_identity.get("suspected_service"), 120),
+        "suspected_service_source": safe(service_identity.get("suspected_service_source"), 60),
+        "requires_more_evidence": service_identity.get("requires_more_evidence") is not False,
+        "conflict_count": len(arr(service_identity.get("conflicts"))),
+        "confidence": numeric(service_identity.get("confidence")),
+    }
     decision = obj(state.get("decision"))
     evaluation = obj(state.get("evaluation"))
     coordination = obj(state.get("coordination"))
@@ -377,6 +393,7 @@ def build_decision_brief(
     recorded = {
         "incident_summary": {
             "incident_id": safe(incident.get("id"), 180),
+            "service_identity": service_identity_display,
             "service": service, "severity": safe(incident.get("severity"), 40),
             "status": safe(incident.get("status"), 50),
             "started_at": safe(incident.get("started_at"), 55),
