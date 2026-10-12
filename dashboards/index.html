@@ -120,6 +120,7 @@
             <button type="button" data-incident-size="large" aria-pressed="false" onclick="setIncidentDisplayMode('large')" title="آیکون بزرگ">▦ <span>بزرگ</span></button>
             <button type="button" data-incident-size="medium" aria-pressed="true" onclick="setIncidentDisplayMode('medium')" title="آیکون متوسط">▥ <span>متوسط</span></button>
             <button type="button" data-incident-size="small" aria-pressed="false" onclick="setIncidentDisplayMode('small')" title="آیکون کوچک">☷ <span>کوچک</span></button>
+            <button type="button" data-incident-size="list" aria-pressed="false" onclick="setIncidentDisplayMode('list')" title="نمایش لیستی، هر رخداد در یک ردیف">☰ <span>لیستی</span></button>
           </div>
           <span id="incidentCount" class="badge neutral" aria-live="polite">0 رخداد</span>
         </div>
@@ -232,7 +233,7 @@
     catch (_) { return fallback; }
   };
   let incidentSort = preference(incidentSortKey, ['newest','oldest','priority'], 'newest');
-  let incidentSize = preference(incidentSizeKey, ['large','medium','small'], 'medium');
+  let incidentSize = preference(incidentSizeKey, ['large','medium','small','list'], 'medium');
   const timestamp = i => {
     // Incident start time takes precedence. Unknown or malformed times ALWAYS go last.
     const input = i.started_at || i.created_at;
@@ -270,7 +271,7 @@
     renderIncidentsWithClearTime();
   }
   function setIncidentDisplayMode(next) {
-    if (!['large','medium','small'].includes(next)) return;
+    if (!['large','medium','small','list'].includes(next)) return;
     incidentSize = next;
     try { localStorage.setItem(incidentSizeKey, next); } catch (_) {}
     renderIncidentsWithClearTime();
@@ -287,6 +288,43 @@
     updateIncidentDisplayControls();
     if ($('#incidentCount')) $('#incidentCount').textContent = `${rows.length} از ${S.incidents.length} رخداد`;
     if (!$('#incidentRows')) return;
+    if (incidentSize === 'list') {
+      const header = '<div class="incident-list-header" aria-hidden="true">'+
+        '<span>سرویس / رخداد</span><span>شرح کوتاه</span><span>شدت</span>'+
+        '<span>وضعیت رخداد</span><span>شروع رخداد</span><span>وضعیت تأیید</span><span>جزئیات</span></div>';
+      const listRows = rows.map(i => {
+        const started = incidentTimeInfo(i.started_at || i.created_at);
+        const approval = lower(i.approval_status);
+        const approvalLabel = ({
+          pending: 'منتظر تأیید شما', approved: 'تأیید شده، منتظر اجرا',
+          rejected: 'رد شده', consumed: 'مجوز استفاده شده',
+          expired: 'مهلت تأیید تمام شده'
+        })[approval] || (approval ? i.approval_status : 'درخواستی ثبت نشده');
+        const statusLabel = ({
+          analyzing: 'در حال بررسی', open: 'باز', resolved: 'رفع شده',
+          closed: 'بسته شده', escalated: 'ارجاع داده شده'
+        })[lower(i.status)] || i.status || 'نامشخص';
+        const severityLabel = ({
+          critical: 'بحرانی', high: 'زیاد', medium: 'متوسط', low: 'کم'
+        })[lower(i.severity)] || i.severity || 'نامشخص';
+        const needsDecision = ['pending','approved'].includes(approval);
+        const path = '/dashboard/incidents/' + encodeURIComponent(i.id);
+        return `<a class="incident-list-row ${needsDecision ? 'needs-decision' : ''}" href="${path}"
+          aria-label="مشاهده گزارش ${esc(i.service || i.id)}، ${esc(statusLabel)}، ${esc(approvalLabel)}">
+          <span class="incident-list-service"><span class="incident-list-symbol" aria-hidden="true">◈</span><span>
+            <strong>${esc(i.service || 'رخداد بدون نام')}</strong><small>#${esc(String(i.id).slice(0,8))}</small></span></span>
+          <span class="incident-list-summary" title="${esc(i.summary || '')}">${esc(i.summary || 'شرحی ثبت نشده')}</span>
+          <span><span class="incident-queue-severity">${esc(severityLabel)}</span></span>
+          <span class="incident-list-status">${esc(statusLabel)}</span>
+          <time class="incident-list-date" datetime="${esc(i.started_at || i.created_at || '')}">${esc(started.exact)} <small>${esc(started.zone)}</small></time>
+          <span class="incident-list-approval ${needsDecision ? 'attention' : ''}">${esc(approvalLabel)}</span>
+          <span class="incident-list-open">مشاهده ←</span>
+        </a>`;
+      }).join('');
+      $('#incidentRows').innerHTML = rows.length ? header + listRows :
+        '<div class="empty-state">رخدادی با این فیلترها پیدا نشد. برای دیدن موارد بسته‌شده، گزینه «همه رخدادها» را انتخاب کن.</div>';
+      return;
+    }
     $('#incidentRows').innerHTML = rows.map(i => {
       const started = incidentTimeInfo(i.started_at || i.created_at);
       const pending = ['pending','approved'].includes(lower(i.approval_status));
