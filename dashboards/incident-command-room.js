@@ -272,8 +272,11 @@
     const where=host?' روی سرور '+safe(host):'';
     const situation=facts.length?'بررسی ابزارها نشان می‌دهد: '+facts.join('؛ ')+'.' :
       'هنوز اطلاعات کافی برای توضیح دقیق وضعیت سرویس نداریم.';
+    const stored=String(r.localized_narrative?.fa || '').trim();
+    const storedNote=isFaText(stored) && stored.length <= 280 &&
+      !/^رخداد سرویس|^شواهد ثبت شده|^برای این رخداد/.test(stored) ? stored+' ' : '';
     const next=x.action?'پیشنهاد سیستم '+humanAction(x.action)+' است.':'هنوز کاری برای اجرا پیشنهاد نشده است.';
-    return 'برای '+subject+where+' رخداد ثبت شده. '+situation+' '+next+
+    return 'برای '+subject+where+' رخداد ثبت شده. '+storedNote+situation+' '+next+
       ' دلیل اصلی مشکل هنوز به‌طور قطعی روشن نشده است؛ تأیید و اجرای اقدام دو مرحله جدا هستند.';
   }
 
