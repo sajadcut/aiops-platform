@@ -415,12 +415,12 @@
     show('#ic-cognia','<div class="ic-callout"><strong>'+txt(status(k.status))+'</strong><p>'+tr('notUsed')+'</p></div>'+
       (arr(k.items).length?arr(k.items).map(x=>'<article class="ic-detail-card"><div class="ic-detail-head"><h4>'+
         txt(state.language==='fa' && /Verified Incident Experience/.test(x.excerpt||'') ? 'تجربه حل مشکل مشابه' : (x.title||x.source_id))+'</h4>'+pill(x.use_status)+'</div>'+
-        '<p>'+txt(previousExperience(x,"cognia"))+'</p>'+original(truncate(x.excerpt,1600),"متن اصلی دانش کاگنیا")+'<p class="ic-technical-spacer"+'</p><div class="ic-meta">KB: '+txt(x.knowledge_base_id)+
+        '<p>'+txt(previousExperience(x,"cognia"))+'</p>'+original(truncate(x.excerpt,1600),"متن اصلی دانش کاگنیا")+'<div class="ic-meta">پایگاه دانش: '+txt(x.knowledge_base_id)+
         ' · ID: '+txt(x.knowledge_id)+' · '+tr('confidence')+': '+esc(numberPct(x.relevance))+'</div>'+
         refs(x.source_id?[x.source_id]:[])+'</article>').join(''):empty()));
     show('#ic-memory','<div class="ic-callout"><strong>'+tr('knowledgeNotProof')+'</strong></div>'+
       (arr(m.items).length?arr(m.items).map(x=>'<article class="ic-detail-card"><div class="ic-detail-head"><h4>'+
-        txt(state.language==='fa'?'تجربه رخداد قبلی':x.memory_id)+'</h4>'+pill(x.use_status)+'</div><p>'+txt(previousExperience(x,"memory"))+'</p>'+
+        txt(state.language==='fa'?'تجربه رخداد قبلی':x.memory_id)+'</h4>'+pill(x.use_status)+'</div><p>'+txt(previousExperience(x,"memory"))+'</p>'+original(truncate(x.root_cause,1000))+
         '<div class="ic-meta">'+tr('action')+': '+txt(humanAction(x.action))+' · '+tr('verification')+': '+txt(status(x.verification))+
         ' · '+tr('result')+': '+txt(status(x.outcome))+' · '+tr('confidence')+': '+esc(numberPct(x.similarity))+'</div>'+
         refs(x.previous_incident_id?[x.previous_incident_id]:[])+'</article>').join(''):empty()));
