@@ -36,7 +36,7 @@ def test_dashboard_incident_queue_routes_attention_to_full_screen():
     css = (ROOT / "dashboards/control-center.css").read_text(encoding="utf-8")
     assert "incident-queue-card" in html
     assert "needs-decision" in html
-    assert "Incident Intelligence" in html
+    assert "فهرست رخدادهای ثبت‌شده" in html
     assert "S.incidents.filter" in html
     assert "encodeURIComponent(i.id)" in html
     assert "selectIncident('${esc(i.id)}')" not in html
