@@ -14,6 +14,7 @@ from apps.orchestrator.signal_aware import SignalAwareE2EOrchestrator
 from apps.orchestrator.workflow_store import WorkflowCheckpointStore
 from apps.rag_service import KnowledgeRAGService
 from apps.signal_gateway.correlation import build_correlation_identity
+from apps.signal_gateway.received_signal import capture_received_signal
 from integrations.zabbix.webhook_contract import normalize_zabbix_payload, zabbix_event_time, zabbix_tags
 from domain.contracts.config import settings
 from domain.contracts.logging import logger
@@ -337,7 +338,7 @@ def signal_from_elasticsearch(payload: Dict[str, Any]) -> OperationalSignal:
         summary=str(source.get("message") or rule.get("name") or "Elasticsearch anomaly detected"),
         service=str(service) if service else None,
         correlation_key=source.get("correlation_key") or event.get("correlation_key"),
-        raw_data=source,
+        raw_data={**source, "_received_payload": capture_received_signal(payload)},
     )
 
 
@@ -352,7 +353,7 @@ def signal_from_prometheus(payload: Dict[str, Any]) -> OperationalSignal:
         summary=str(annotations.get("summary") or annotations.get("description") or labels.get("alertname") or "Prometheus alert"),
         service=labels.get("service") or labels.get("service_name") or labels.get("app"),
         correlation_key=labels.get("correlation_key") or labels.get("incident_key"),
-        raw_data={"labels": labels, "annotations": annotations, **{k: v for k, v in payload.items() if k not in {"labels", "annotations"}}},
+        raw_data={"labels": labels, "annotations": annotations, **{k: v for k, v in payload.items() if k not in {"labels", "annotations"}}, "_received_payload": capture_received_signal(payload)},
     )
 
 
