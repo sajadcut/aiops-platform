@@ -328,16 +328,16 @@
   }
   function renderOverview(r) {
     const i=r.incident_summary||{},act=r.remediation_recommendation||{},a=r.approval_readiness||{};
-    const deterministic=r.localized_narrative?.[state.language] || (state.language==='fa'?tr('infoUnavailable'):tr('infoUnavailable'));
+    const deterministic=plainLead(r);
     const n=state.narrative;
     const matched=n && n.snapshot_id===r.snapshot_id && n.language===state.language && !state.historic && n.status==='available';
     const narrative=matched?'<details class="ic-reveal"><summary>'+esc(tr('narrative'))+'</summary><div class="ic-reveal-content">'+arr(n.sections).map(s=>
       '<article class="ic-detail-card"><h4>'+txt(s.heading)+'</h4><p>'+txt(s.text)+'</p>'+refs(s.citations)+'</article>').join('')+'</div></details>':'';
     show('#ic-brief-lead','<p>'+txt(deterministic)+'</p>'+narrative);
     show('#ic-key-answer',[
-      fact('cause',i.likely_cause),fact('causeStatus',status(i.cause_status)),
-      fact('action',act.action),fact('target',act.target),
-      fact('tool',act.tool),fact('freshness',status(r.data_freshness))
+      fact('cause',humanCause(i.likely_cause)),fact('causeStatus',status(i.cause_status)),
+      fact('action',humanAction(act.action)),fact('target',act.target),
+      fact('tool',humanTool(act.tool)),fact('freshness',status(r.data_freshness))
     ].join(''));
     const warnings=warningMessages(r);
     show('#ic-warning-list',warnings.length?warnings.map(x=>'<div class="ic-warning'+(x.critical?' critical':'')+'">'+esc(x.text)+'</div>').join('') :
@@ -346,7 +346,7 @@
   function renderReview(r) {
     const i=r.incident_summary||{},a=r.approval_readiness||{},x=r.remediation_recommendation||{};
     show('#ic-proposal',[
-      fact('action',x.action),fact('tool',a.tool||x.tool),fact('target',a.target||x.target),fact('risk',status(x.risk_level)),
+      fact('action',humanAction(x.action)),fact('tool',humanTool(a.tool||x.tool)),fact('target',a.target||x.target),fact('risk',status(x.risk_level)),
       fact('host',i.host||i.target),fact('cluster',i.cluster),fact('namespace',i.namespace),
       fact('blast',x.blast_radius),fact('inaction',x.risk_of_inaction),
       fact('runbook',[a.runbook_id,a.runbook_version].filter(Boolean).join(' @ ')||null),
@@ -366,8 +366,8 @@
       ['rca',c.rca_confidence],['evaluator',c.evaluator_confidence],['agreement',c.agent_agreement]
     ].map(([key,v])=>'<div class="ic-confidence-card"><span>'+esc(tr(key))+'</span><strong>'+esc(numberPct(v))+'</strong><small>'+esc(tr('riskMeaning'))+'</small></div>').join(''));
     const agents=arr(r.agent_findings);
-    show('#ic-agents',agents.length?agents.map(a=>'<article class="ic-detail-card"><div class="ic-detail-head"><h4>'+txt(a.agent)+'</h4>'+pill(a.status)+'</div>'+
-      '<p>'+txt(a.finding)+'</p><div class="ic-meta">'+tr('confidence')+': '+esc(numberPct(a.confidence))+
+    show('#ic-agents',agents.length?agents.map(a=>'<article class="ic-detail-card"><div class="ic-detail-head"><h4>'+txt(humanAgent(a.agent))+'</h4>'+pill(a.status)+'</div>'+
+      '<p>'+txt(plain(a.finding))+'</p>'+original(a.finding)+'<div class="ic-meta">'+tr('confidence')+': '+esc(numberPct(a.confidence))+
       (a.mission?' · '+tr('description')+': '+txt(a.mission):'')+
       (arr(a.tools).length?' · '+tr('tool')+': '+arr(a.tools).map(txt).join(', '):'')+'</div>'+refs(a.evidence_refs)+
       (arr(a.missing_evidence).length?'<p class="ic-warning">'+tr('missing')+': '+arr(a.missing_evidence).map(txt).join('، ')+'</p>':'')+
@@ -379,8 +379,8 @@
       '<p>'+tr('freshness')+': '+txt(status(x.freshness))+'</p>'+
       (['error','unavailable'].includes(low(x.status))?'<p class="ic-warning">'+tr('sourceUnavailable')+'</p>':'')+'</article>').join(''):empty());
     show('#ic-mcp',mcp.length?mcp.map(x=>'<article class="ic-detail-card"><div class="ic-detail-head"><h4>'+
-      txt(x.server)+' / '+txt(x.tool)+'</h4>'+pill(x.status)+'</div>'+
-      '<p>'+txt(x.finding)+'</p><div class="ic-meta">'+tr('sampleTime')+': '+txt(date(x.collected_at))+
+      txt(humanTool(x.server))+' / '+txt(humanTool(x.tool))+'</h4>'+pill(x.status)+'</div>'+
+      '<p>'+txt(plain(x.finding))+'</p>'+original(x.finding)+'<div class="ic-meta">'+tr('sampleTime')+': '+txt(date(x.collected_at))+
       ' · '+tr('freshness')+': '+txt(status(x.freshness))+' · '+tr('phase')+': '+txt(x.phase)+'</div>'+
       refs(x.evidence_ref?[x.evidence_ref]:[])+'</article>').join(''):empty());
   }
@@ -397,7 +397,7 @@
     show('#ic-memory','<div class="ic-callout"><strong>'+tr('knowledgeNotProof')+'</strong></div>'+
       (arr(m.items).length?arr(m.items).map(x=>'<article class="ic-detail-card"><div class="ic-detail-head"><h4>'+
         txt(x.memory_id)+'</h4>'+pill(x.use_status)+'</div><p>'+txt(truncate(x.root_cause,300))+'</p>'+
-        '<div class="ic-meta">'+tr('action')+': '+txt(x.action)+' · '+tr('verification')+': '+txt(x.verification)+
+        '<div class="ic-meta">'+tr('action')+': '+txt(humanAction(x.action))+' · '+tr('verification')+': '+txt(x.verification)+
         ' · '+tr('result')+': '+txt(x.outcome)+' · '+tr('confidence')+': '+esc(numberPct(x.similarity))+'</div>'+
         refs(x.previous_incident_id?[x.previous_incident_id]:[])+'</article>').join(''):empty()));
   }
@@ -417,7 +417,7 @@
   function renderTimeline(r) {
     const rows=arr(r.timeline);
     show('#ic-timeline',rows.length?rows.slice(0,70).map(e=>'<div class="ic-timeline-item"><strong>'+
-      txt(e.event)+'</strong>'+pill(e.status)+'<p>'+txt(date(e.timestamp))+' · '+txt(e.actor)+'</p></div>').join(''):empty());
+      txt(status(e.event))+'</strong>'+pill(e.status)+'<p>'+txt(date(e.timestamp))+' · '+txt(e.actor)+'</p></div>').join(''):empty());
   }
   function renderDecision(r) {
     const a=r.approval_readiness||{},x=r.remediation_recommendation||{},statusValue=low(a.approval_status);
