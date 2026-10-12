@@ -1374,11 +1374,11 @@
 | `apps/signal_gateway/__init__.py` | `SignalGateway._append_trigger_to_checkpoint` | 89 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalGateway |
 | `apps/signal_gateway/__init__.py` | `SignalGateway._existing_state` | 101 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalGateway |
 | `apps/signal_gateway/__init__.py` | `SignalGateway._knowledge_assisted_asset` | 108 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalGateway |
-| `apps/signal_gateway/__init__.py` | `SignalGateway.ingest` | 182 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalGateway |
-| `apps/signal_gateway/__init__.py` | `signal_from_elasticsearch` | 326 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/signal_gateway/__init__.py` | `signal_from_prometheus` | 345 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/signal_gateway/__init__.py` | `_zabbix_service_from_tags` | 360 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/signal_gateway/__init__.py` | `signal_from_zabbix` | 371 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/__init__.py` | `SignalGateway.ingest` | 185 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalGateway |
+| `apps/signal_gateway/__init__.py` | `signal_from_elasticsearch` | 333 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/__init__.py` | `signal_from_prometheus` | 352 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/__init__.py` | `_zabbix_service_from_tags` | 367 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/__init__.py` | `signal_from_zabbix` | 378 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/signal_gateway/correlation.py` | `CorrelationIdentity` | 20 | class | خروجی canonical correlation شامل fingerprint و scope قابل audit. | module |
 | `apps/signal_gateway/correlation.py` | `_token` | 30 | function | مقادیر vendor-specific را به token پایدار و قابل hash تبدیل می‌کند. | module |
 | `apps/signal_gateway/correlation.py` | `signal_family` | 36 | function | نام‌های alert مختلف را محافظه‌کارانه به symptom family مشترک نگاشت می‌کند. | module |
