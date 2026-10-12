@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 433 | Dashboard JS files scanned: 8 | Symbols indexed: 4051**
+**Python files scanned: 434 | Dashboard JS files scanned: 8 | Symbols indexed: 4054**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1312,6 +1312,9 @@
 | `apps/rag_service/__init__.py` | `KnowledgeRAGService.create_revision` | 234 | async method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | KnowledgeRAGService |
 | `apps/rag_service/__init__.py` | `KnowledgeRAGService.get_processing_status` | 259 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | KnowledgeRAGService |
 | `apps/rag_service/__init__.py` | `KnowledgeRAGService.generate_context` | 270 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeRAGService |
+| `apps/received_signal_view.py` | `_dict` | 24 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/received_signal_view.py` | `_as_timestamp` | 28 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/received_signal_view.py` | `project_received_signal` | 32 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/recommendation_translation.py` | `TranslationUnavailable` | 26 | class | Safe exception that never includes source prose or credentials. | module |
 | `apps/recommendation_translation.py` | `_validate` | 30 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/recommendation_translation.py` | `translate_recommendation` | 47 | async function | Translate existing analysis once per distinct snapshot, never invent new analysis. | module |
