@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 434 | Dashboard JS files scanned: 8 | Symbols indexed: 4059**
+**Python files scanned: 435 | Dashboard JS files scanned: 8 | Symbols indexed: 4068**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -3548,6 +3548,15 @@
 | `tests/unit/test_rca_auxiliary_memory.py` | `_state` | 34 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_rca_auxiliary_memory.py` | `test_rca_auxiliary_context_contains_only_agent_cited_memory` | 135 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_rca_auxiliary_memory.py` | `test_rca_prompt_receives_bounded_cited_history_but_not_uncited_memory` | 153 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_received_signal_view.py` | `record` | 19 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_received_signal_view.py` | `test_exact_source_zabbix_fields_tags_and_secret_values_redacted` | 29 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_received_signal_view.py` | `test_old_zabbix_incident_honestly_labeled_as_normalized` | 65 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_received_signal_view.py` | `test_prometheus_labels_annotations_and_recovery_are_not_lost` | 77 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_received_signal_view.py` | `test_elastic_rule_tags_anomaly_payload_preserved` | 95 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_received_signal_view.py` | `test_secret_bearing_labels_and_untrusted_text_are_redacted` | 111 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_received_signal_view.py` | `test_nonsignal_evidence_is_not_presented_as_ingress_notification` | 126 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_received_signal_view.py` | `test_original_payload_size_budget_has_no_false_original_claim` | 138 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_received_signal_view.py` | `test_readonly_api_requires_incident_access_and_page_has_real_source_tab` | 143 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_recovery_readiness_details.py` | `StaticLLM` | 10 | class | کلاس | module |
 | `tests/unit/test_recovery_readiness_details.py` | `StaticLLM.provider_name` | 12 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | StaticLLM |
 | `tests/unit/test_recovery_readiness_details.py` | `StaticLLM.generate` | 15 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | StaticLLM |
