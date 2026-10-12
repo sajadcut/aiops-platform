@@ -22,6 +22,8 @@ async def dashboard_incidents(
                     text(
                         """
                         SELECT i.id, i.service, i.status, i.severity, i.summary, i.started_at, i.created_at,
+                               i.context #>> '{incident,source_host}' AS source_host,
+                               i.context #>> '{incident,service_identity_basis}' AS service_identity_basis,
                                COALESCE((SELECT AVG(f.confidence) FROM findings f WHERE f.incident_id=i.id),0) AS confidence,
                                (SELECT a.approval_id FROM approvals a WHERE a.incident_id=i.id ORDER BY a.created_at DESC LIMIT 1) AS approval_id,
                                (SELECT a.status FROM approvals a WHERE a.incident_id=i.id ORDER BY a.created_at DESC LIMIT 1) AS approval_status,
