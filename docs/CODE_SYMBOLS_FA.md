@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 436 | Dashboard JS files scanned: 8 | Symbols indexed: 4070**
+**Python files scanned: 437 | Dashboard JS files scanned: 8 | Symbols indexed: 4080**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -3795,6 +3795,16 @@
 | `tests/unit/test_security_incident_engine.py` | `StaticSecurityLLM.generate_with_messages` | 204 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | StaticSecurityLLM |
 | `tests/unit/test_security_incident_engine.py` | `test_agent_blocks_llm_compromise_upgrade_and_keeps_containment_approval_required` | 209 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_security_incident_engine.py` | `test_identity_network_application_peer_findings_are_auxiliary_and_require_live_link` | 241 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_signal_service_identity_guard.py` | `test_unrelated_memory_and_filesystem_alerts_do_not_become_nginx` | 37 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_signal_service_identity_guard.py` | `test_unrelated_memory_and_filesystem_alerts_do_not_become_nginx.search` | 40 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | test_unrelated_memory_and_filesystem_alerts_do_not_become_nginx |
+| `tests/unit/test_signal_service_identity_guard.py` | `test_trusted_zabbix_tag_wins_over_unrelated_rag_identity` | 57 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_signal_service_identity_guard.py` | `test_trusted_zabbix_tag_wins_over_unrelated_rag_identity.search` | 60 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | test_trusted_zabbix_tag_wins_over_unrelated_rag_identity |
+| `tests/unit/test_signal_service_identity_guard.py` | `test_gateway_stores_unknown_service_instead_of_host_or_nginx` | 74 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_signal_service_identity_guard.py` | `test_gateway_stores_unknown_service_instead_of_host_or_nginx.search` | 79 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | test_gateway_stores_unknown_service_instead_of_host_or_nginx |
+| `tests/unit/test_signal_service_identity_guard.py` | `test_gateway_stores_unknown_service_instead_of_host_or_nginx.fake_start` | 89 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_gateway_stores_unknown_service_instead_of_host_or_nginx |
+| `tests/unit/test_signal_service_identity_guard.py` | `_return_none` | 108 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_signal_service_identity_guard.py` | `test_exact_fqdn_match_allows_knowledge_service_as_a_hint_not_live_proof` | 112 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_signal_service_identity_guard.py` | `test_doc_without_explicit_fqdn_cannot_claim_service_from_generic_alarm` | 126 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_storage_reliability_engine.py` | `metric` | 11 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_storage_reliability_engine.py` | `telemetry` | 25 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_storage_reliability_engine.py` | `analyze` | 37 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
