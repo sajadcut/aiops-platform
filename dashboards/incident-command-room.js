@@ -14,8 +14,18 @@
     fa: {
       brandDetail:'فضای تصمیم‌گیری عملیاتی',dashboard:'داشبورد',incidents:'رخدادها',thisIncident:'این رخداد',
       refresh:'↻ تازه‌سازی',back:'بازگشت به رخدادها',loading:'در حال خواندن گزارش مستند از داده‌های ثبت‌شده رخداد…',
-      heroKicker:'اتاق بررسی و تصمیم‌گیری',navOverview:'خلاصه تصمیم',navReview:'قبل از تأیید',
+      heroKicker:'اتاق بررسی و تصمیم‌گیری',navOverview:'خلاصه تصمیم',navReceived:'آلارم دریافتی',navReview:'قبل از تأیید',
       navAnalysis:'تحلیل Agentها',navEvidence:'شواهد و MCP',navKnowledge:'دانش و تجربه',navOutcome:'نتیجه اجرا',navHistory:'تاریخچه',
+      receivedTitle:'آلارم دریافتی',receivedSubtitle:'آنچه واقعاً از سیستم مانیتورینگ دریافت شده',
+      receivedNote:'متن و اطلاعات اصلی ثبت‌شده در زمان دریافت آلارم را می‌بینی. اطلاعات محرمانه پنهان شده‌اند. موارد قدیمی ممکن است قبل از ذخیره‌سازی نرمال شده باشند.',
+      receivedLoading:'در حال دریافت آلارم ثبت‌شده…',receivedEmpty:'برای این رخداد، پیام اولیه‌ای از منابع ثبت‌شده پیدا نشد.',
+      receivedOriginal:'ساختار پیام دریافتی، پس از پنهان‌سازی اطلاعات محرمانه',receivedNormalized:'نسخه ثبت‌شده و نرمال‌شده؛ بدنه دقیق اولیه در پایگاه داده موجود نیست',
+      receivedWhen:'زمان دریافت',receivedEventTime:'زمان وقوع از دید منبع',receivedIdentifier:'شناسه در منبع',
+      receivedMessage:'متن آلارم',receivedTags:'تگ‌های زبیکس',receivedLabels:'لیبل‌های Prometheus',
+      receivedAnnotations:'توضیحات Alertmanager',receivedPayload:'نمایش تمام فیلدهای ثبت‌شده (JSON)',
+      receivedCopy:'کپی اطلاعات آلارم',receivedCount:'تعداد سیگنال‌های ثبت‌شده',
+      receivedMore:'فقط بخشی از آلارم‌ها نمایش داده می‌شوند؛ از API برای صفحه‌بندی داده‌های بیشتر استفاده کن.',
+      receivedProblem:'آلارم مشکل',receivedRecovery:'اعلام رفع مشکل',receivedError:'دریافت آلارم اولیه ممکن نشد.',
       readFirst:'وضعیت رخداد به زبان ساده',overviewTitle:'خلاصه وضعیت و پیشنهاد AIOps',decisionSafety:'بررسی ریسک پیش از اقدام',
       reviewTitle:'اگر تأیید کنم، چه کاری انجام می‌شود؟',agentSubtitle:'نتیجه واقعی متخصص‌ها',
       agentsTitle:'هر ایجنت چه چیزی فهمیده است؟',sourceSubtitle:'فقط شواهد ثبت‌شده',evidenceTitle:'MCP و وضعیت منابع',
@@ -84,8 +94,18 @@
     en: {
       brandDetail:'Dedicated operational decision workspace',dashboard:'Dashboard',incidents:'Incidents',thisIncident:'This incident',
       refresh:'↻ Refresh',back:'Back to incidents',loading:'Loading durable evidence and incident state…',
-      heroKicker:'Incident command room',navOverview:'Quick brief',navReview:'Before approval',navAnalysis:'Agent analysis',
+      heroKicker:'Incident command room',navOverview:'Quick brief',navReceived:'Received alert',navReview:'Before approval',navAnalysis:'Agent analysis',
       navEvidence:'Evidence & MCP',navKnowledge:'Knowledge & memory',navOutcome:'Execution result',navHistory:'History',
+      receivedTitle:'Received alert',receivedSubtitle:'The notification actually sent by monitoring',
+      receivedNote:'Original stored notification data with secrets removed. Older notifications may have been normalized before storage.',
+      receivedLoading:'Loading recorded source notification…',receivedEmpty:'No stored ingress notification found for this Incident.',
+      receivedOriginal:'Original received JSON structure (with credentials redacted)',
+      receivedNormalized:'Normalized stored record; the precise original HTTP body is not retained',
+      receivedWhen:'Received at',receivedEventTime:'Source event time',receivedIdentifier:'Source ID',
+      receivedMessage:'Alert message',receivedTags:'Zabbix tags',receivedLabels:'Prometheus labels',
+      receivedAnnotations:'Alertmanager annotations',receivedPayload:'All recorded fields (JSON)',
+      receivedCopy:'Copy alert payload',receivedCount:'Stored signals',receivedMore:'Results limited; query the API for more.',
+      receivedProblem:'Problem alert',receivedRecovery:'Recovery event',receivedError:'Could not load the source notification.',
       readFirst:'Start here',overviewTitle:'Incident summary and recommendation',decisionSafety:'Risk review',
       reviewTitle:'What exactly am I authorizing?',agentSubtitle:'Recorded specialist findings',
       agentsTitle:'Agent analysis & RCA confidence',sourceSubtitle:'Durable observations only',evidenceTitle:'MCP and evidence health',
@@ -152,7 +172,8 @@
     language: (() => { try { return localStorage.getItem('aiops.decision-brief.language') === 'en' ? 'en' : 'fa'; } catch (_) {return 'fa';} })(),
     key: (() => { try {return localStorage.getItem('aiops_api_key') || '';} catch (_) {return '';} })(),
     report: null, lifecycle: null, narrative: null, historic: null, history: null,
-    loadingToken: 0, busy: false, reviewedSnapshot: null, rejectionVisible: false, error: null
+    loadingToken: 0, busy: false, reviewedSnapshot: null, rejectionVisible: false, error: null,
+    receivedSignals: null, receivedSignalsStatus: 'loading'
   };
   const tr = key => vocabulary[state.language][key] || key;
   const value = v => v === null || v === undefined || v === '' ? tr('unknown') : safe(v);
@@ -500,7 +521,7 @@
     const r=state.historic||state.report;
     $('#ic-archive-banner').hidden=!state.historic;
     renderHero(r);renderOverview(r);renderReview(r);renderAnalysis(r);renderEvidence(r);
-    renderKnowledge(r);renderOutcome(r);renderTimeline(r);renderDecision(r);
+    renderKnowledge(r);renderOutcome(r);renderTimeline(r);renderDecision(r);renderReceivedSignals();
     $('#ic-snapshot-label').textContent='Snapshot '+String(r.snapshot_id||'').slice(0,14);
   }
   async function loadNarrative() {
@@ -526,7 +547,7 @@
       if(!preserveHistory)state.historic=null;
       state.narrative=null;state.error=null;state.rejectionVisible=false;
       $('#ic-auth').hidden=true;$('#ic-loader').hidden=true;$('#ic-main').hidden=false;alert('');
-      render();void loadNarrative();
+      render();void loadNarrative();void loadReceivedSignals(token);
     }catch(e){
       if(token!==state.loadingToken)return;
       $('#ic-loader').hidden=true;
