@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 434 | Dashboard JS files scanned: 8 | Symbols indexed: 4055**
+**Python files scanned: 434 | Dashboard JS files scanned: 8 | Symbols indexed: 4059**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1672,17 +1672,21 @@
 | `dashboards/incident-command-room.js` | `renderKnowledge` | 440 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
 | `dashboards/incident-command-room.js` | `renderOutcome` | 457 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
 | `dashboards/incident-command-room.js` | `renderTimeline` | 470 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/incident-command-room.js` | `renderDecision` | 475 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/incident-command-room.js` | `render` | 519 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/incident-command-room.js` | `loadNarrative` | 527 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
-| `dashboards/incident-command-room.js` | `load` | 537 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
-| `dashboards/incident-command-room.js` | `returnLive` | 558 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/incident-command-room.js` | `loadHistory` | 559 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
-| `dashboards/incident-command-room.js` | `openHistory` | 569 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/incident-command-room.js` | `loadRaw` | 577 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
-| `dashboards/incident-command-room.js` | `approvalCurrent` | 585 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/incident-command-room.js` | `action` | 592 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/incident-command-room.js` | `bind` | 628 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/incident-command-room.js` | `receivedPairs` | 475 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/incident-command-room.js` | `renderReceivedSignals` | 484 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/incident-command-room.js` | `content` | 496 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/incident-command-room.js` | `loadReceivedSignals` | 525 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
+| `dashboards/incident-command-room.js` | `renderDecision` | 538 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/incident-command-room.js` | `render` | 582 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/incident-command-room.js` | `loadNarrative` | 590 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
+| `dashboards/incident-command-room.js` | `load` | 600 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
+| `dashboards/incident-command-room.js` | `returnLive` | 621 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/incident-command-room.js` | `loadHistory` | 622 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
+| `dashboards/incident-command-room.js` | `openHistory` | 632 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/incident-command-room.js` | `loadRaw` | 640 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
+| `dashboards/incident-command-room.js` | `approvalCurrent` | 648 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/incident-command-room.js` | `action` | 655 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/incident-command-room.js` | `bind` | 691 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
 | `dashboards/knowledge-review.js` | `el` | 10 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
 | `dashboards/knowledge-review.js` | `current` | 11 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
 | `dashboards/knowledge-review.js` | `notice` | 14 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
