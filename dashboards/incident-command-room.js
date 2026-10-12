@@ -472,6 +472,69 @@
     show('#ic-timeline',rows.length?rows.slice(0,70).map(e=>'<div class="ic-timeline-item"><strong>'+
       txt(status(e.event))+'</strong>'+pill(e.status)+'<p>'+txt(date(e.timestamp))+' · '+txt(e.actor)+'</p></div>').join(''):empty());
   }
+  function receivedPairs(data, label) {
+    const pairs = Array.isArray(data)
+      ? data.filter(x=>x&&typeof x==='object').map(x=>[x.tag||x.key||'',x.value??''])
+      : data && typeof data==='object' ? Object.entries(data) : [];
+    if(!pairs.length)return '';
+    return '<div class="ic-received-fields"><strong>'+esc(label)+'</strong><dl>'+
+      pairs.map(([key,val])=>'<div><dt dir="auto">'+txt(key)+'</dt><dd dir="auto">'+
+      txt(typeof val==='object'?JSON.stringify(val):val)+'</dd></div>').join('')+'</dl></div>';
+  }
+  function renderReceivedSignals() {
+    const target=$('#ic-received-signals');
+    if(!target)return;
+    target.setAttribute('aria-busy',String(state.receivedSignalsStatus==='loading'));
+    if(state.receivedSignalsStatus==='loading'){
+      show('#ic-received-signals',empty(tr('receivedLoading')));return;
+    }
+    if(state.receivedSignalsStatus==='failed'){
+      show('#ic-received-signals',empty(tr('receivedError')));return;
+    }
+    const records=arr(state.receivedSignals?.items);
+    if(!records.length){show('#ic-received-signals',empty(tr('receivedEmpty')));return;}
+    const content=records.map((item,index)=>{
+      const payload=item.payload && typeof item.payload==='object' ? item.payload:{};
+      const full=JSON.stringify(payload,null,2);
+      const name=item.source_name || item.source || tr('unknown');
+      const capture=item.capture_kind==='received_redacted'?tr('receivedOriginal'):tr('receivedNormalized');
+      const lifecycle=item.lifecycle==='recovery'?tr('receivedRecovery'):tr('receivedProblem');
+      const tags=item.source==='zabbix'?receivedPairs(payload.tags,tr('receivedTags')):'';
+      const labels=item.source==='prometheus'?receivedPairs(payload.labels,tr('receivedLabels')):'';
+      const annotations=item.source==='prometheus'?receivedPairs(payload.annotations,tr('receivedAnnotations')):'';
+      const ruleTags=item.source==='elasticsearch'?
+        receivedPairs(payload.rule?.tags?.map(tag=>({tag,value:'ثبت شده'})),state.language==='fa'?'تگ‌های قانون ELK':'ELK rule tags'):'';
+      return '<article class="ic-received-card"><div class="ic-received-heading"><h3>'+txt(name)+'</h3>'+
+        '<span class="ic-tag">'+esc(lifecycle)+'</span></div>'+
+        '<p class="ic-received-capture">'+esc(capture)+'</p>'+
+        '<div class="ic-received-details"><div><small>'+tr('receivedWhen')+'</small><b>'+txt(date(item.received_at))+'</b></div>'+
+        '<div><small>'+tr('receivedEventTime')+'</small><b>'+txt(date(item.occurred_at))+'</b></div>'+
+        '<div><small>'+tr('receivedIdentifier')+'</small><b dir="ltr">'+txt(item.source_id)+'</b></div></div>'+
+        '<div class="ic-received-message"><strong>'+tr('receivedMessage')+'</strong>'+
+        '<pre dir="auto">'+txt(item.message||tr('unknown'))+'</pre></div>'+
+        tags+labels+annotations+ruleTags+
+        '<details class="ic-received-raw"><summary>'+tr('receivedPayload')+'</summary>'+
+        '<pre dir="ltr">'+esc(full)+'</pre></details>'+
+        '<button type="button" class="ic-btn ic-btn-muted ic-received-copy" data-copy-received="'+index+'">'+
+        tr('receivedCopy')+'</button></article>';
+    }).join('');
+    show('#ic-received-signals',
+      '<p class="ic-received-total">'+tr('receivedCount')+': '+num(records.length)+'</p>'+content+
+      (state.receivedSignals?.has_more?'<p class="ic-warning">'+tr('receivedMore')+'</p>':''));
+  }
+  async function loadReceivedSignals(token) {
+    state.receivedSignalsStatus='loading';renderReceivedSignals();
+    try{
+      const result=await api(base+'/received-signals?limit=100');
+      if(token!==state.loadingToken)return;
+      state.receivedSignals=result;state.receivedSignalsStatus='loaded';
+    }catch(_){
+      if(token!==state.loadingToken)return;
+      state.receivedSignals=null;state.receivedSignalsStatus='failed';
+    }
+    renderReceivedSignals();
+  }
+
   function renderDecision(r) {
     const a=r.approval_readiness||{},x=r.remediation_recommendation||{},statusValue=low(a.approval_status);
     const archived=!!state.historic;
@@ -654,6 +717,15 @@
     $('#ic-key').addEventListener('keydown',e=>{if(e.key==='Enter')$('#ic-connect').click();});
     $('#ic-return-live').addEventListener('click',returnLive);
     $('#ic-fetch-raw').addEventListener('click',()=>{void loadRaw();});
+    document.addEventListener('click',e=>{
+      const button=e.target.closest('[data-copy-received]');
+      if(!button)return;
+      const index=Number(button.getAttribute('data-copy-received'));
+      const item=arr(state.receivedSignals?.items)[index];
+      if(!item)return;
+      void navigator.clipboard.writeText(JSON.stringify(item.payload,null,2))
+        .then(()=>notify(tr('copied'))).catch(()=>notify(tr('failure'),true));
+    });
     $('#ic-history-details').addEventListener('toggle',e=>{if(e.target.open)void loadHistory();});
     document.addEventListener('click',e=>{
       const h=e.target.closest('[data-snapshot-id]');
