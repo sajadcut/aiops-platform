@@ -2,6 +2,9 @@ const S = {
   key: localStorage.getItem('aiops_api_key') || '',
   summary: null,
   incidents: [],
+  archivedIncidents: [],
+  incidentPeriod: 'recent',
+  archiveLoaded: false,
   services: [],
   health: null,
   agents: [],
@@ -110,6 +113,32 @@ function syncGlobalSearch(v) {
   if ($('#serviceSearch')) $('#serviceSearch').value = v;
   renderIncidents();
   renderServices();
+}
+
+async function setIncidentPeriod(period) {
+  if (!['recent', 'archived'].includes(period)) return;
+  S.incidentPeriod = period;
+  if (period === 'recent') {
+    renderIncidents();
+    return;
+  }
+  S.archiveLoaded = false;
+  renderIncidents();
+  try {
+    // Archive is requested on demand and never replaces S.incidents.
+    // Live operator attention and KPI views must keep the rolling 24h set.
+    const result = await api('/api/v1/dashboard/incidents?limit=200&scope=archived');
+    if (S.incidentPeriod !== 'archived') return;
+    S.archivedIncidents = result.items || [];
+    S.archiveLoaded = true;
+    renderIncidents();
+  } catch (error) {
+    if (S.incidentPeriod === 'archived') {
+      showError('بارگذاری آرشیو رخدادها ناموفق بود: ' + error.message);
+      const list = $('#incidentRows');
+      if (list) list.innerHTML = '<div class="empty-state">آرشیو در دسترس نیست؛ دوباره تلاش کن.</div>';
+    }
+  }
 }
 
 function setView(v) {
@@ -517,6 +546,7 @@ async function loadAll() {
   }
 }
 
+window.setIncidentPeriod = setIncidentPeriod;
 window.saveKey = saveKey;
 window.setView = setView;
 window.syncGlobalSearch = syncGlobalSearch;
