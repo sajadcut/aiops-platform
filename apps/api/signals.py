@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field
 from apps.api.database_guard import require_database_ready
 from apps.security.auth import require_permission
 from apps.signal_gateway import OperationalSignal, SignalGateway, signal_from_elasticsearch, signal_from_prometheus
+from apps.signal_gateway.received_signal import capture_received_signal
 from apps.signal_gateway.elastic_anomaly import ElasticAnomalyWebhookPayload, ingest_elastic_anomaly_payload
 from apps.signal_gateway.prometheus_alertmanager import AlertmanagerWebhookPayload, ingest_alertmanager_payload
 from apps.signal_gateway.zabbix_lifecycle import ingest_zabbix_payload
@@ -114,8 +115,11 @@ async def _ingest_zabbix(payload: Dict[str, Any]) -> Dict[str, Any]:
         recovery_eventid=str(payload.get("recovery_eventid") or ""),
         raw_request=redact({"payload": payload}),
     )
+    received_payload = capture_received_signal(payload)
     try:
         payload = normalize_zabbix_payload(payload)
+        if received_payload is not None:
+            payload["_received_payload"] = received_payload
     except ValueError as exc:
         logger.warning(
             "zabbix_webhook_rejected",
