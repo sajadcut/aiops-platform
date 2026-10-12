@@ -106,7 +106,12 @@ class ServiceIdentityResolver:
 
         reconciliation["effective_asset"] = asset
         reconciliation["conflicts"] = conflicts
-        reconciliation["service_identity_basis"] = basis
+        # Preserve the auditable legacy topology reason separately from the
+        # canonical identity's (more general) unknown-state reason.
+        reconciliation["service_identity_basis"] = (
+            "unverified_knowledge_hint_blocked"
+            if basis == "no_verified_service_identity" and hint else basis
+        )
         reconciliation["requires_live_verification"] = (
             bool(reconciliation.get("requires_live_verification"))
             or status in {"suspected", "unknown"}
