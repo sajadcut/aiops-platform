@@ -35,6 +35,39 @@ class ServiceIdentityResolver:
         return KnowledgeTopologyResolver.extract_fqdns(text)
 
     @classmethod
+    def independently_verified(
+        cls,
+        *,
+        expected_service: str | None,
+        expected_target: str | None,
+        evidence: Iterable[Mapping[str, Any]],
+    ) -> bool:
+        """Require a direct successful read from the exact approved asset.
+
+        Excludes RAG, Agent prose, source alerts, arbitrary process lists,
+        unavailable MCP calls and checks made against unrelated VMs.
+        """
+        service = cls.known(expected_service)
+        target = cls.known(expected_target)
+        if not service or not target:
+            return False
+        for item in evidence:
+            if not isinstance(item, Mapping) or item.get("source") not in {"vm_mcp", "vm_ssh"}:
+                continue
+            raw = item.get("raw_data")
+            if not isinstance(raw, Mapping):
+                continue
+            if str(raw.get("diagnostic") or "") != "service_status":
+                continue
+            if raw.get("success") is False or raw.get("supported") is False or raw.get("error"):
+                continue
+            if str(raw.get("target") or "").strip().casefold() != target.casefold():
+                continue
+            if str(raw.get("service") or "").strip().casefold() == service.casefold():
+                return True
+        return False
+
+    @classmethod
     def resolve(
         cls,
         *,
