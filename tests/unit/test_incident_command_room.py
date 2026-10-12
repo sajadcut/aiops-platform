@@ -37,7 +37,10 @@ def test_dashboard_incident_queue_routes_attention_to_full_screen():
     assert "incident-queue-card" in html
     assert "needs-decision" in html
     assert "فهرست رخدادهای ثبت‌شده" in html
-    assert "S.incidents.filter" in html
+    assert "const sourceRows = archived ? S.archivedIncidents : S.incidents;" in html
+    assert "sourceRows.filter" in html
+    assert "S.incidents = incidents.items || []" in js
+    assert "S.archivedIncidents = result.items || []" in js
     assert "encodeURIComponent(i.id)" in html
     assert "selectIncident('${esc(i.id)}')" not in html
     assert "window.location.assign('/dashboard/incidents/'" in js
