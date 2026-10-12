@@ -48,6 +48,18 @@ class RemediationPlanner:
         if source not in cls.SIGNAL_SOURCES:
             return {**base, "reason": "trigger_source_not_auto_remediation_eligible"}
 
+        # The service name in an alert is part of the operational trust boundary.
+        # An unrelated stopped service discovered via MCP must not turn a CPU,
+        # memory or filesystem warning into a restart of that service.
+        identity = context.get("service_identity")
+        identity = identity if isinstance(identity, dict) else {}
+        identity_status = str(identity.get("status") or "").lower()
+        if identity:
+            if identity.get("conflicts"):
+                return {**base, "reason": "service_identity_conflict_requires_review"}
+            if identity_status in {"unknown", "observed"}:
+                return {**base, "reason": "service_identity_unverified_for_automatic_planning"}
+
         policy = cls._load_vm_service_policy()
         if policy is None:
             return {**base, "reason": "vm_service_recovery_runbook_unavailable"}
@@ -60,6 +72,13 @@ class RemediationPlanner:
             return {**base, "reason": "ambiguous_live_service_binding"}
 
         (target, service), binding_refs = next(iter(service_bindings.items()))
+        if identity:
+            named_service = str(identity.get("service") or "").strip()
+            if named_service and named_service.lower() not in {"unknown", "none", "null"} and service.casefold() != named_service.casefold():
+                return {
+                    **base, "reason": "live_service_mismatch_with_trigger_identity",
+                    "evidence_refs": binding_refs,
+                }
 
         # Guide v1.1: Zabbix HOST.IP/HOST.HOST/trigger prose cannot select a
         # remediation destination, even when read-only MCP discovery happened
