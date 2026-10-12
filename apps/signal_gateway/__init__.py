@@ -168,7 +168,10 @@ class SignalGateway:
             knowledge_results,
             expected_fqdns=expected_fqdns,
         )
-        topology_context = KnowledgeTopologyResolver.reconcile(live_asset, topology)
+        topology_context = KnowledgeTopologyResolver.constrain_trigger_service(
+            KnowledgeTopologyResolver.reconcile(live_asset, topology),
+            expected_fqdns=expected_fqdns,
+        )
         return {
             "asset_context": topology_context["effective_asset"],
             "live_asset_context": live_asset,
@@ -183,11 +186,13 @@ class SignalGateway:
         trigger_evidence = signal.to_evidence()
         discovery = await SignalGateway._knowledge_assisted_asset(signal, trigger_evidence)
         asset = dict(discovery.get("asset_context") or {})
-        resolved_service = str(
-            asset.get("service")
-            or signal.service
-            or asset.get("hostname")
-            or "unknown"
+        # The monitoring host is NOT the monitored application. A generic
+        # resource alert with no explicit service and no matching FQDN must
+        # remain service-unresolved, even when Cognia suggests nginx.
+        candidate_service = str(asset.get("service") or signal.service or "").strip()
+        resolved_service = (
+            candidate_service if candidate_service.lower() not in
+            {"", "unknown", "none", "null", "n/a", "unset"} else "unknown"
         )
         correlation = build_correlation_identity(
             service=resolved_service,
@@ -285,6 +290,8 @@ class SignalGateway:
             "severity": signal.severity,
             "service": resolved_service,
             "summary": signal.summary,
+            "service_identity_basis": discovery.get("topology_context", {}).get("service_identity_basis"),
+            "source_host": asset.get("hostname"),
             "signal_type": signal.signal_type,
             "correlation_key": correlation_key,
         }
