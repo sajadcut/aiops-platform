@@ -107,12 +107,26 @@
 
     <section class="view" data-view="incidents">
       <div class="view-toolbar">
-        <div class="filter-group"><input id="incidentSearch" placeholder="Search incidents, services or targets" oninput="renderIncidents()"><select id="severityFilter" onchange="renderIncidents()"><option value="">All severities</option><option value="critical">Critical</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select><select id="statusFilter" onchange="renderIncidents()"><option value="__active__" selected>Active only</option><option value="">All history</option><option value="open">Open</option><option value="analyzing">Analyzing</option><option value="escalated">Escalated</option><option value="resolved">Resolved</option><option value="closed">Closed</option></select></div>
-        <span id="incidentCount" class="badge neutral">0 incidents</span>
+        <div class="filter-group"><input id="incidentSearch" placeholder="Search incidents, services or targets" oninput="renderIncidents()"><select id="severityFilter" onchange="renderIncidents()"><option value="">All severities</option><option value="critical">Critical</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select><select id="statusFilter" onchange="renderIncidents()"><option value="__active__" selected>فقط رخدادهای فعال</option><option value="">همه رخدادها</option><option value="open">Open</option><option value="analyzing">Analyzing</option><option value="escalated">Escalated</option><option value="resolved">Resolved</option><option value="closed">Closed</option></select></div>
+        <div class="incident-display-toolbar" role="group" aria-label="مرتب‌سازی و شکل نمایش رخدادها">
+          <label for="incidentSort">مرتب‌سازی:</label>
+          <select id="incidentSort" aria-label="مرتب‌سازی رخدادها" onchange="setIncidentSort(this.value)">
+            <option value="newest">جدیدترین رخدادها</option>
+            <option value="oldest">قدیمی‌ترین رخدادها</option>
+            <option value="priority">نیازمند اقدام فوری</option>
+          </select>
+          <span class="incident-view-label">نمایش:</span>
+          <div class="incident-view-modes" role="group" aria-label="اندازه نمایش رخدادها">
+            <button type="button" data-incident-size="large" aria-pressed="false" onclick="setIncidentDisplayMode('large')" title="آیکون بزرگ">▦ <span>بزرگ</span></button>
+            <button type="button" data-incident-size="medium" aria-pressed="true" onclick="setIncidentDisplayMode('medium')" title="آیکون متوسط">▥ <span>متوسط</span></button>
+            <button type="button" data-incident-size="small" aria-pressed="false" onclick="setIncidentDisplayMode('small')" title="آیکون کوچک">☷ <span>کوچک</span></button>
+          </div>
+          <span id="incidentCount" class="badge neutral" aria-live="polite">0 رخداد</span>
+        </div>
       </div>
       <section class="panel incident-queue-panel" aria-labelledby="incidentQueueTitle">
-        <div class="panel-head incident-queue-heading"><div><span class="section-kicker">Incident Intelligence · Started (local)</span><h2 id="incidentQueueTitle">Incident Workbench</h2><p>روی هر رخداد بزنید تا گزارش، شواهد و تأیید ایمن را در یک صفحه تمام‌عرض ببینید.</p></div><span class="badge neutral">صفحه اختصاصی هر رخداد ↗</span></div>
-        <div id="incidentRows" class="incident-cards"></div>
+        <div class="panel-head incident-queue-heading"><div><span class="section-kicker">فهرست رخدادهای ثبت‌شده</span><h2 id="incidentQueueTitle">رخدادها</h2><p>رخدادها را بر اساس تاریخ مرتب کن، اندازه نمایش را تغییر بده و برای دیدن گزارش و تصمیم‌گیری روی هر مورد کلیک کن.</p></div><span class="badge neutral">صفحه اختصاصی هر رخداد ↗</span></div>
+        <div id="incidentRows" class="incident-cards" data-size="medium"></div>
       </section>
       <div id="detail" hidden aria-hidden="true"></div>
     </section>
@@ -211,40 +225,93 @@
     return !scope || lower(incident.status) === scope;
   }
 
+  const incidentSortKey = 'aiops.incidents.sort';
+  const incidentSizeKey = 'aiops.incidents.size';
+  const preference = (key, valid, fallback) => {
+    try { const stored = localStorage.getItem(key); return valid.includes(stored) ? stored : fallback; }
+    catch (_) { return fallback; }
+  };
+  let incidentSort = preference(incidentSortKey, ['newest','oldest','priority'], 'newest');
+  let incidentSize = preference(incidentSizeKey, ['large','medium','small'], 'medium');
+  const timestamp = i => {
+    // Incident start time takes precedence. Unknown or malformed times ALWAYS go last.
+    const input = i.started_at || i.created_at;
+    const value = input ? Date.parse(input) : NaN;
+    return Number.isFinite(value) ? value : null;
+  };
+  const priority = i => (lower(i.approval_status) === 'pending' ? 1000 :
+    lower(i.approval_status) === 'approved' ? 900 : 0) +
+    ({critical:200,high:100,medium:50,low:10}[lower(i.severity)] || 0);
+  function sortIncidents(rows) {
+    return [...rows].sort((a,b) => {
+      const x = timestamp(a), y = timestamp(b);
+      if (x === null && y !== null) return 1;
+      if (y === null && x !== null) return -1;
+      if (incidentSort === 'priority') {
+        const p = priority(b) - priority(a);
+        if (p) return p;
+      }
+      const difference = x === null ? 0 : incidentSort === 'oldest' ? x - y : y - x;
+      return difference || String(a.id || '').localeCompare(String(b.id || ''));
+    });
+  }
+  function updateIncidentDisplayControls() {
+    const list = $('#incidentRows');
+    if (list) list.dataset.size = incidentSize;
+    const select = $('#incidentSort');
+    if (select) select.value = incidentSort;
+    document.querySelectorAll('[data-incident-size]').forEach(btn =>
+      btn.setAttribute('aria-pressed', String(btn.dataset.incidentSize === incidentSize)));
+  }
+  function setIncidentSort(next) {
+    if (!['newest','oldest','priority'].includes(next)) return;
+    incidentSort = next;
+    try { localStorage.setItem(incidentSortKey, next); } catch (_) {}
+    renderIncidentsWithClearTime();
+  }
+  function setIncidentDisplayMode(next) {
+    if (!['large','medium','small'].includes(next)) return;
+    incidentSize = next;
+    try { localStorage.setItem(incidentSizeKey, next); } catch (_) {}
+    renderIncidentsWithClearTime();
+  }
   function renderIncidentsWithClearTime() {
     const q = lower($('#incidentSearch')?.value);
     const sev = $('#severityFilter')?.value || '';
     const status = $('#statusFilter')?.value || '__active__';
-    const rows = S.incidents.filter(i =>
+    const rows = sortIncidents(S.incidents.filter(i =>
       (!q || lower([i.id, i.service, i.summary, i.execution_target, i.execution_tool, i.runbook_id].join(' ')).includes(q)) &&
       (!sev || lower(i.severity) === sev) &&
       matchesIncidentStatusScope(i, status)
-    ).sort((a,b) => {
-      const priority = incident => (lower(incident.approval_status) === 'pending' ? 1000 : lower(incident.approval_status) === 'approved' ? 900 : 0) +
-        (lower(incident.severity) === 'critical' ? 200 : lower(incident.severity) === 'high' ? 100 : 0);
-      return priority(b) - priority(a) || Date.parse(b.started_at || b.created_at || 0) - Date.parse(a.started_at || a.created_at || 0);
-    });
-    if ($('#incidentCount')) $('#incidentCount').textContent = `${rows.length} shown · ${S.incidents.length} loaded`;
+    ));
+    updateIncidentDisplayControls();
+    if ($('#incidentCount')) $('#incidentCount').textContent = `${rows.length} از ${S.incidents.length} رخداد`;
     if (!$('#incidentRows')) return;
     $('#incidentRows').innerHTML = rows.map(i => {
       const started = incidentTimeInfo(i.started_at || i.created_at);
-      const created = incidentTimeInfo(i.created_at);
       const pending = ['pending','approved'].includes(lower(i.approval_status));
       const risk = ['critical','high'].includes(lower(i.severity));
       const path = '/dashboard/incidents/' + encodeURIComponent(i.id);
+      const state = lower(i.approval_status || i.status);
+      const stateLabel = state === 'pending' ? 'منتظر تأیید شما' : state === 'approved' ? 'تأیید شده، منتظر اجرا' :
+        ({analyzing:'در حال بررسی',open:'باز',resolved:'رفع شده',closed:'بسته شده',escalated:'ارجاع داده شده'}[state] || i.status || 'نامشخص');
+      const severityLabel = ({critical:'بحرانی',high:'زیاد',medium:'متوسط',low:'کم'}[lower(i.severity)] || i.severity || 'نامشخص');
       return `<a class="incident-queue-card ${pending ? 'needs-decision' : ''}" href="${path}" aria-label="گزارش کامل رخداد ${esc(i.service || i.id)}">
+        <span class="incident-queue-icon" aria-hidden="true">◈</span>
         <div class="incident-queue-main">
-          <div class="incident-queue-eyebrow">${pill(i.severity)}${pill(i.approval_status || i.status)}<span class="incident-queue-id">#${esc(String(i.id).slice(0,8))}</span></div>
-          <h3>${esc(i.service || 'Incident')}</h3>
-          <p>${esc(i.summary || 'شرح رخداد ثبت نشده است.')}</p>
-          <div class="incident-queue-meta"><span>شروع: ${esc(started.exact)} <small>${esc(started.zone)}</small></span><span>وضعیت: ${esc(i.status || '—')}</span><span>ریسک: ${esc(i.risk_level || '—')}</span></div>
+          <div class="incident-queue-eyebrow"><span class="incident-queue-severity">${esc(severityLabel)}</span><span class="incident-queue-state">${esc(stateLabel)}</span><span class="incident-queue-id">#${esc(String(i.id).slice(0,8))}</span></div>
+          <h3>${esc(i.service || 'رخداد بدون نام')}</h3>
+          <p>${esc(i.summary || 'شرح این رخداد ثبت نشده است.')}</p>
+          <div class="incident-queue-meta"><span>شروع: <time>${esc(started.exact)}</time> <small>${esc(started.zone)}</small></span><span>وضعیت: ${esc(stateLabel)}</span><span>ریسک: ${esc(i.risk_level || 'نامشخص')}</span></div>
         </div>
-        <div class="incident-queue-next">${pending ? '<span class="incident-queue-urgent">نیازمند تصمیم اپراتور</span>' : (risk ? '<span class="incident-queue-urgent">اولویت بررسی</span>' : '')}
-          <span class="incident-queue-open">باز کردن صفحه رخداد <b aria-hidden="true">←</b></span>
+        <div class="incident-queue-next">${pending ? '<span class="incident-queue-urgent">نیازمند تصمیم شما</span>' : (risk ? '<span class="incident-queue-urgent">اولویت بررسی</span>' : '')}
+          <span class="incident-queue-open">دیدن گزارش <b aria-hidden="true">←</b></span>
         </div>
       </a>`;
-    }).join('') || '<div class="empty-state">No active incidents match the current filters. Switch to All history to inspect resolved or closed incidents.</div>';
+    }).join('') || '<div class="empty-state">رخدادی با این فیلترها پیدا نشد. برای دیدن موارد بسته‌شده، گزینه «همه رخدادها» را انتخاب کن.</div>';
   }
+  window.setIncidentSort = setIncidentSort;
+  window.setIncidentDisplayMode = setIncidentDisplayMode;
 
   function patchAttentionIncidentTimes() {
     const incidents = S.incidents
