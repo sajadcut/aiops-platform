@@ -113,7 +113,9 @@ assert.match(elements.incidentRows.innerHTML,/هشدار سرور: APORSDTNKSA01
 elements.incidentSearch.value='APORSDTNKSA0101';
 ctx.setIncidentDisplayMode('small');
 assert.deepEqual(keys(),['host-alert']);
-assert.equal(ctx.incidentDisplayName({service:'nginx',source_host:'APORSDTNKSA0101'}),'nginx');
+elements.incidentSearch.value='';
+ctx.setIncidentDisplayMode('large');
+assert.match(elements.incidentRows.innerHTML,/<h3>nginx<\/h3>/);
 console.log('Incident Explorer ordering, source-host display and view sizes passed');
 """
     r = subprocess.run(
