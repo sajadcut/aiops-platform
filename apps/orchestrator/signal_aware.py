@@ -11,6 +11,7 @@ from agents.shared.domain_agent import DomainDiagnosticAgent
 from agents.shared.telemetry import AgentTelemetry
 from apps.context_service.asset_identity import AssetIdentityResolver
 from apps.context_service.knowledge_topology import KnowledgeTopologyResolver
+from apps.context_service.service_identity import ServiceIdentityResolver
 from apps.decision_engine import DecisionEngine
 from apps.execution_service.tools.registry import tool_registry
 from apps.orchestrator.e2e_graph import E2EOrchestrator, E2EState
@@ -133,27 +134,34 @@ class SignalAwareE2EOrchestrator(E2EOrchestrator):
         trigger_text = ""
         if isinstance(trigger_signal, dict):
             trigger_text = str(trigger_signal.get("summary") or "")
-        expected_fqdns = KnowledgeTopologyResolver.extract_fqdns(
-            f"{trigger_text} {state.get('evidence_summary') or ''}"
+        expected_fqdns = ServiceIdentityResolver.expected_fqdns(
+            summary=trigger_text or str(state.get("evidence_summary") or ""),
+            context=(
+                trigger_signal.get("raw_data")
+                if isinstance(trigger_signal, dict) and isinstance(trigger_signal.get("raw_data"), dict)
+                else (initial_context.get("incident") or {}).get("context")
+            ),
         )
         knowledge_topology = KnowledgeTopologyResolver.resolve(
             knowledge_by_id.values(),
             expected_fqdns=expected_fqdns,
         )
-        topology_context = KnowledgeTopologyResolver.constrain_trigger_service(
-            KnowledgeTopologyResolver.reconcile(
-                live_asset_context,
-                knowledge_topology,
-            ),
+        source_service = (
+            trigger_signal.get("service")
+            if isinstance(trigger_signal, dict)
+            else (initial_context.get("incident") or {}).get("service")
+        )
+        resolution = ServiceIdentityResolver.resolve(
+            source_service=source_service,
+            live_asset=live_asset_context,
+            knowledge_topology=knowledge_topology,
             expected_fqdns=expected_fqdns,
         )
-        asset_context = dict(topology_context.get("effective_asset") or live_asset_context)
-
-        resolved_service = asset_context.get("service") or service_hint
-        if str(resolved_service or "").strip().lower() in {"", "none", "null", "n/a"}:
-            resolved_service = "unknown"
-        state["service_name"] = str(resolved_service)
-        context["service"] = str(resolved_service)
+        topology_context = resolution["topology_context"]
+        asset_context = resolution["asset_context"]
+        state["service_name"] = resolution["service"]
+        context["service"] = resolution["service"]
+        context["service_identity"] = resolution["service_identity"]
 
         live = dict(state.get("live_evidence") or {})
         live["evidence"] = merged_evidence
