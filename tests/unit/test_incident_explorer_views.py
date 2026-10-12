@@ -103,7 +103,18 @@ const css=fs.readFileSync('dashboards/control-center.css','utf8');
 assert.match(css,/\.incident-cards\[data-size="list"\]/);
 assert.match(css,/grid-template-columns:minmax\(165px/);
 assert.match(html,/id="incidentSort"/);
-console.log('Incident Explorer ordering and view sizes passed');
+ctx.S.incidents.push({id:'host-alert',service:'unknown',source_host:'APORSDTNKSA0101',
+  status:'open',summary:'High memory utilization',created_at:'2026-10-12T08:00:00Z'});
+ctx.setIncidentDisplayMode('large');
+assert.match(elements.incidentRows.innerHTML,/هشدار سرور: APORSDTNKSA0101/);
+assert.doesNotMatch(elements.incidentRows.innerHTML,/سرویس نامشخص.*nginx/);
+ctx.setIncidentDisplayMode('list');
+assert.match(elements.incidentRows.innerHTML,/هشدار سرور: APORSDTNKSA0101/);
+elements.incidentSearch.value='APORSDTNKSA0101';
+ctx.setIncidentDisplayMode('small');
+assert.deepEqual(keys(),['host-alert']);
+assert.equal(ctx.incidentDisplayName({service:'nginx',source_host:'APORSDTNKSA0101'}),'nginx');
+console.log('Incident Explorer ordering, source-host display and view sizes passed');
 """
     r = subprocess.run(
         ["node", "-e", code], cwd=ROOT, capture_output=True,
