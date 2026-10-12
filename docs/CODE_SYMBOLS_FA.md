@@ -1326,15 +1326,15 @@
 | `apps/recommendation_translation.py` | `translate_recommendation` | 47 | async function | Translate existing analysis once per distinct snapshot, never invent new analysis. | module |
 | `apps/remediation_planner/__init__.py` | `RemediationPlanner` | 10 | class | Deterministically bind live operational Evidence to a governed write request. | module |
 | `apps/remediation_planner/__init__.py` | `RemediationPlanner.plan` | 30 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
-| `apps/remediation_planner/__init__.py` | `RemediationPlanner.revalidate_execution` | 171 | method | Fail closed if the approved write is stale immediately before execution. | RemediationPlanner |
-| `apps/remediation_planner/__init__.py` | `RemediationPlanner._recovery_action` | 214 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
-| `apps/remediation_planner/__init__.py` | `RemediationPlanner._load_vm_service_policy` | 229 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
-| `apps/remediation_planner/__init__.py` | `RemediationPlanner._evidence_items` | 242 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
-| `apps/remediation_planner/__init__.py` | `RemediationPlanner._service_states` | 251 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
-| `apps/remediation_planner/__init__.py` | `RemediationPlanner._unhealthy_service_bindings` | 279 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
-| `apps/remediation_planner/__init__.py` | `RemediationPlanner._configuration_precondition` | 309 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
-| `apps/remediation_planner/__init__.py` | `RemediationPlanner._target_port` | 336 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
-| `apps/remediation_planner/__init__.py` | `RemediationPlanner._dedupe` | 370 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
+| `apps/remediation_planner/__init__.py` | `RemediationPlanner.revalidate_execution` | 190 | method | Fail closed if the approved write is stale immediately before execution. | RemediationPlanner |
+| `apps/remediation_planner/__init__.py` | `RemediationPlanner._recovery_action` | 233 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
+| `apps/remediation_planner/__init__.py` | `RemediationPlanner._load_vm_service_policy` | 248 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
+| `apps/remediation_planner/__init__.py` | `RemediationPlanner._evidence_items` | 261 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
+| `apps/remediation_planner/__init__.py` | `RemediationPlanner._service_states` | 270 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
+| `apps/remediation_planner/__init__.py` | `RemediationPlanner._unhealthy_service_bindings` | 298 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
+| `apps/remediation_planner/__init__.py` | `RemediationPlanner._configuration_precondition` | 328 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
+| `apps/remediation_planner/__init__.py` | `RemediationPlanner._target_port` | 355 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
+| `apps/remediation_planner/__init__.py` | `RemediationPlanner._dedupe` | 389 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
 | `apps/runbook_service/executor.py` | `RunbookExecution` | 13 | class | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | module |
 | `apps/runbook_service/executor.py` | `RunbookExecutor` | 20 | class | Safe runtime boundary for registered runbooks. | module |
 | `apps/runbook_service/executor.py` | `RunbookExecutor.__init__` | 29 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RunbookExecutor |
