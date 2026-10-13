@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 from typing import List, Optional
 
 from agents.shared.base import AgentInput, AgentOutput, OperationalHypothesis
@@ -145,7 +146,15 @@ PEER_OPERATIONAL_CONTEXT={json.dumps(peer_context, default=str)}"""
         # guessed file age, size, role or retention. A future cleanup feature
         # needs an independent file-specific runbook and proof/approval gate.
         proposed_checks = self.normalize_list(result.get("immediate_checks"), settings.AGENT_MAX_RECOMMENDATIONS)
-        actions = [check for check in proposed_checks if not self.action_appears_mutating(check)]
+        dangerous = re.compile(
+            r"(?i)(?:\\b(?:rm|unlink|erase|wipe|clear|clean(?:up)?|prune|vacuum|shred|"
+            r"compress|archive|move|overwrite|expire)\\b|حذف|پاک(?:سازی|\\s*کردن)?|"
+            r"انتقال|آرشیو|فشرده\\s*سازی)"
+        )
+        actions = [
+            check for check in proposed_checks
+            if not self.action_appears_mutating(check) and not dangerous.search(check)
+        ]
         if len(actions) != len(proposed_checks):
             actions.append(
                 "Identify the exact file producer, growth/error cause, retention policy "
