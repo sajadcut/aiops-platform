@@ -121,6 +121,10 @@ def test_systemd_execstart_config_discovery_and_syntax_error_line_are_safe():
     )
     assert discover_config_path("haproxy", haproxy_exec) == "/opt/grouppayment/haproxy.cfg"
     assert discover_config_path("nginx", nginx_exec) == "/etc/nginx/custom.conf"
+    assert discover_config_path("nginx.service", nginx_exec) == "/etc/nginx/custom.conf"
+    multi = ("{ path=/usr/sbin/haproxy ; argv[]=/usr/sbin/haproxy -Ws "
+             "-f /etc/haproxy/main.cfg -f /etc/haproxy/extra.cfg ; }")
+    assert discover_config_path("haproxy", multi) is None
     assert "/opt/grouppayment/haproxy.cfg" in config_check_for_path("haproxy", "/opt/grouppayment/haproxy.cfg")
     assert "-t -c /etc/nginx/custom.conf" in config_check_for_path("nginx", "/etc/nginx/custom.conf")
 
