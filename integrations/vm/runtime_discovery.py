@@ -84,31 +84,34 @@ result = {"status": "unavailable", "syntax_valid": None, "files": [],
 try:
     if os.path.realpath(root) != root or not os.path.isdir(root):
         raise ValueError("unsafe_publish_directory")
-    names = sorted(os.listdir(root))[:500]
-    files = [
-        n for n in names
-        if re.fullmatch(r"appsettings(?:\.[A-Za-z0-9_-]{1,40})?\.json", n, re.I)
-        or re.fullmatch(r"[A-Za-z0-9_.+-]{1,100}\.runtimeconfig\.json", n, re.I)
-    ][:12]
-    if not files:
-        result["status"] = "not_found"
-    else:
-        failures = False
-        incomplete = False
+    directory_fd = os.open(root, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+    try:
+        names = sorted(os.listdir(directory_fd))
+        if len(names) > 500:
+            raise ValueError("too_many_directory_entries")
+        candidates = [
+            n for n in names
+            if re.fullmatch(r"appsettings(?:\.[A-Za-z0-9_-]{1,40})?\.json", n, re.I)
+            or re.fullmatch(r"[A-Za-z0-9_.+-]{1,100}\.runtimeconfig\.json", n, re.I)
+        ]
+        files = candidates[:12]
+        if not files:
+            result["status"] = "not_found"
+        else:
+            failures = False
+            incomplete = len(candidates) > len(files)
         for name in files:
             p = os.path.join(root, name)
             item = {"file": name, "status": "unavailable"}
             try:
-                meta = os.lstat(p)
+                fd = os.open(name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=directory_fd)
+                with os.fdopen(fd, "rb") as stream:
+                    meta = os.fstat(stream.fileno())
+                    content = stream.read(1048577) if stat.S_ISREG(meta.st_mode) and meta.st_size <= 1048576 else b""
                 if not stat.S_ISREG(meta.st_mode) or meta.st_size > 1048576:
                     item["reason"] = "non_regular_or_oversized"
                     incomplete = True
-                elif os.path.realpath(p) != p:
-                    item["reason"] = "symlink_not_followed"
-                    incomplete = True
                 else:
-                    with open(p, "rb") as stream:
-                        content = stream.read(1048577)
                     if len(content) > 1048576:
                         item["reason"] = "oversized"
                         incomplete = True
@@ -138,8 +141,10 @@ try:
                 item["reason"] = "file_not_readable"
                 incomplete = True
             result["files"].append(item)
-        result["status"] = "invalid" if failures else ("partial" if incomplete else "syntax_valid")
-        result["syntax_valid"] = False if failures else (None if incomplete else True)
+            result["status"] = "invalid" if failures else ("partial" if incomplete else "syntax_valid")
+            result["syntax_valid"] = False if failures else (None if incomplete else True)
+    finally:
+        os.close(directory_fd)
 except (ValueError, OSError):
     result["status"] = "unavailable"
 print(json.dumps(result, separators=(",", ":")))
