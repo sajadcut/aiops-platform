@@ -80,3 +80,27 @@ PostgreSQL acceptance uses the existing CI pgvector service:
     RUN_DB_DECISION_HISTORY_TEST=1 python -m pytest -q tests/integration/test_decision_brief_history_db.py
 
 The test exercises real database immutability, incident isolation, snapshot evolution, stale-approval denial and concurrent evidence/checkpoint locking. The test is not a live MCP/Cognia/LLM or production browser acceptance.
+
+
+## Unknown Operational Guidance (advisory only)
+
+When Incident Live Evidence cannot verify a diagnostic method (for example, no
+allowlisted `config_validate` adapter for an application), a VM tool is
+unsupported, a specialist fails or reports an explicit evidence gap, the
+SignalAware orchestrator consults the configured LLM once for bounded guidance.
+The request is redacted, limited to five knowledge gaps and time-limited.
+Responses are stored in `state.context.unknown_guidance` and surfaced under
+the operator summary and the Decision Brief's missing-evidence section.
+
+The LLM **does not execute or authorize a command**, select an SSH target,
+change service identity, install an adapter or claim that a configuration passed.
+Advice is marked unverified and is not Live Evidence or a remediation plan.
+Production recovery still requires an allowlisted real `config_validate` result
+with `supported=true` and `valid=true`, together with the existing runbook,
+Decision, Approval and fresh pre-execution verification. If the model is
+unavailable or returns malformed output the unknown remains unresolved; the
+workflow never assumes success.
+
+For services with an unknown config syntax, the model recommends how an
+engineer can identify an official read-only validation procedure. A reviewed,
+fixed diagnostic adapter must be implemented before AIOps can perform it.
