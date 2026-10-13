@@ -339,6 +339,11 @@ async def incident_chat_message(
                     "بررسی زنده انجام شد، اما LLM نتوانست نتیجه را خلاصه کند. "
                     "نتیجهٔ ثبت‌شدهٔ ابزار را در شواهد مشاهده کنید."
                 )
+                if intent == "service_status":
+                    answer = vm_status_answer(
+                        observation,
+                        persian=bool(re.search(r"[\u0600-\u06ff]", payload.message)),
+                    )
                 if intent == "nginx_config_inspect":
                     factual = nginx_inspection_answer(
                         observation,
