@@ -3,7 +3,7 @@
 > این فایل فهرست فایل‌به‌فایل repository است. توضیح معماری و flow در `CODEBASE_GUIDE_FA.md` آمده است.
 > این فایل با `scripts/generate_file_index_fa.py` ساخته و در CI کنترل می‌شود.
 
-**تعداد فایل‌های track‌شده و پوشش‌داده‌شده: 571**
+**تعداد فایل‌های track‌شده و پوشش‌داده‌شده: 574**
 
 | Path | Type | Purpose | Called By | Calls/Depends On | Runtime/Test/Docs | Notes |
 |---|---|---|---|---|---|---|
@@ -153,6 +153,7 @@
 | `apps/memory_service/telemetry.py` | Python | Memory: Operational Memory retrieval/write-back | Workflow/agents/API | pgvector/embeddings | Runtime | جای live evidence را نمی‌گیرد |
 | `apps/operator_summary.py` | Python | ماژول service لایه application | Runtime | domain/integrations | Runtime | جزء Control Plane |
 | `apps/orchestrator/a2a_gateway.py` | Python | Workflow: LangGraph orchestration، routing، resume و collaboration | API/signal gateway | agents/context/decision/approval | Runtime | مسیر E2E durable |
+| `apps/orchestrator/dynamic_investigation.py` | Python | Workflow: LangGraph orchestration، routing، resume و collaboration | API/signal gateway | agents/context/decision/approval | Runtime | مسیر E2E durable |
 | `apps/orchestrator/e2e_graph.py` | Python | Workflow: LangGraph orchestration، routing، resume و collaboration | API/signal gateway | agents/context/decision/approval | Runtime | مسیر E2E durable |
 | `apps/orchestrator/graph.py` | Python | Workflow: LangGraph orchestration، routing، resume و collaboration | API/signal gateway | agents/context/decision/approval | Runtime | مسیر E2E durable |
 | `apps/orchestrator/guardrails.py` | Python | Workflow: LangGraph orchestration، routing، resume و collaboration | API/signal gateway | agents/context/decision/approval | Runtime | مسیر E2E durable |
@@ -244,6 +245,7 @@
 | `docs/DEPLOYMENT.md` | Docs | مستند معماری/عملیات/وضعیت پروژه | تیم | کد و MASTER | Docs | SSoT نیست مگر MASTER root |
 | `docs/DISK_CAUSAL_FORENSICS.md` | Docs | مستند معماری/عملیات/وضعیت پروژه | تیم | کد و MASTER | Docs | SSoT نیست مگر MASTER root |
 | `docs/DOTIN_GENERAL_CHATBOT.md` | Docs | مستند معماری/عملیات/وضعیت پروژه | تیم | کد و MASTER | Docs | SSoT نیست مگر MASTER root |
+| `docs/DYNAMIC_INVESTIGATION_STATUS.md` | Docs | مستند معماری/عملیات/وضعیت پروژه | تیم | کد و MASTER | Docs | SSoT نیست مگر MASTER root |
 | `docs/ELASTIC_ANOMALY_INGESTION.md` | Docs | مستند معماری/عملیات/وضعیت پروژه | تیم | کد و MASTER | Docs | SSoT نیست مگر MASTER root |
 | `docs/ELASTIC_INTEGRATION_ACCEPTANCE.md` | Docs | مستند معماری/عملیات/وضعیت پروژه | تیم | کد و MASTER | Docs | SSoT نیست مگر MASTER root |
 | `docs/ELASTIC_MCP_CONNECTIVITY_TEST.md` | Docs | مستند معماری/عملیات/وضعیت پروژه | تیم | کد و MASTER | Docs | SSoT نیست مگر MASTER root |
@@ -478,6 +480,7 @@
 | `tests/unit/test_disk_causal_forensics.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_dotin_general_chatbot_llm.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_dual_logging.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
+| `tests/unit/test_dynamic_investigation.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_elastic_anomaly_ingestion.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_elastic_mcp_log_safety.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_elastic_mcp_wire_tool.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
