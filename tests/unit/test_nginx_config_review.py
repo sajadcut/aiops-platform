@@ -1,0 +1,145 @@
+"""Contract regression: nginx fatal location and strictly non-executing previews."""
+import json
+import re
+
+import pytest
+
+from integrations.vm.nginx_config_review import nginx_review_command
+from integrations.vm.service_adapters import parse_config_diagnostic
+from integrations.vm.ssh_connector import SSHVMConnector
+from apps.orchestrator.dynamic_investigation import DynamicInvestigationPlanner
+
+
+ERROR = (
+    '2026/10/13 17:49:43 [warn] 12#12: user directive ignored in /etc/nginx/nginx.conf:43\n'
+    '2026/10/13 17:49:43 [emerg] 12#12: unexpected "{" in /etc/nginx/nginx.conf:103\n'
+    'nginx: configuration file /etc/nginx/nginx.conf test failed'
+)
+
+
+def test_nginx_fatal_location_overrides_earlier_warning():
+    result = parse_config_diagnostic(ERROR)
+    assert result["config_file"] == "/etc/nginx/nginx.conf"
+    assert result["error_line"] == 103
+    assert 'unexpected "{"' in result["syntax_error"]
+
+
+@pytest.mark.parametrize("path,line", [
+    ("/tmp/nginx.conf", 103),
+    ("/etc/passwd", 103),
+    ("/etc/nginx/../passwd", 103),
+    ("/etc/nginx/nginx.conf;rm -rf /", 103),
+    ("/etc/nginx/nginx.conf", 0),
+    ("/etc/nginx/nginx.conf", True),
+])
+def test_nginx_preview_never_accepts_untrusted_remote_path_or_line(path,line):
+    with pytest.raises(ValueError):
+        nginx_review_command(path, line, 'unexpected "{"')
+
+
+def test_preview_command_only_contains_immutable_script_and_derived_line():
+    cmd = nginx_review_command("/etc/nginx/nginx.conf", 103, ERROR)
+    assert "python3 -I -c " in cmd
+    assert "unexpected_open_brace" in cmd
+    assert "nginx_config_review" not in cmd
+    assert "/etc/nginx/nginx.conf" in cmd
+
+
+@pytest.mark.asyncio
+async def test_preview_is_built_from_current_validator_and_redacts_remote_values(monkeypatch):
+    connector = SSHVMConnector()
+    # No mock of network or credential: explicitly monkeypatch the fixed read.
+    calls = []
+    async def validate(target, service):
+        return {
+            "success": True, "supported": True, "valid": False,
+            "config_file": "/etc/nginx/nginx.conf", "error_line": 103,
+            "syntax_error": 'unexpected "{" in /etc/nginx/nginx.conf:103',
+        }
+    async def run(target, command):
+        calls.append((target, command))
+        return {"success": True, "stdout": json.dumps({
+            "status": "candidate_proposed", "validation_status": "STAGED_PASS_NOT_ISOLATED",
+            "current_hash": "a" * 64, "candidate_hash": "b" * 64,
+            "current_excerpt": [{"line": 103, "content": "[structural] {"}],
+            "proposed_excerpt": [{"line": 103, "content": "[blank or comment]"}],
+            "diff": {"line": 103, "before": "[structural] {",
+                     "after": "[remove entire stray brace line]"},
+            "validator_executed_on_proposal": True,
+            "proposed_change": "remove_extra_opening_brace",
+            "test_scope": "staged_copy_with_live_dependencies_not_isolated",
+            "config_contents": "DO_NOT_LEAK",
+            "secret": "DO_NOT_LEAK",
+        })}
+    monkeypatch.setattr(connector, "_validate_service", lambda _: None)
+    monkeypatch.setattr(connector, "config_validate", validate)
+    monkeypatch.setattr(connector, "_run", run)
+    outcome = await connector.nginx_config_review("10.248.16.82", "nginx")
+    assert len(calls) == 1
+    assert outcome["config_file"] == "/etc/nginx/nginx.conf"
+    assert outcome["error_line"] == 103
+    assert outcome["candidate_hash"] == "b"*64
+    assert outcome["validation_status"] == "STAGED_PASS_NOT_ISOLATED"
+    assert outcome["execution_authority"] is False
+    assert outcome["config_contents_exposed"] is False
+    assert "DO_NOT_LEAK" not in json.dumps(outcome)
+
+
+@pytest.mark.asyncio
+async def test_review_never_claims_validated_when_staging_fails(monkeypatch):
+    connector = SSHVMConnector()
+    monkeypatch.setattr(connector, "_validate_service", lambda _: None)
+    async def validate(target,service):
+        return {"success": True, "supported": True, "valid": False,
+                "config_file": "/etc/nginx/nginx.conf", "error_line": 103,
+                "syntax_error": 'unexpected "{"'}
+    async def run(target,command):
+        return {"success": True,"stdout":json.dumps({
+            "status":"candidate_proposed", "current_hash":"a"*64,
+            "candidate_hash":"b"*64, "validation_status":"STAGED_FAILED",
+            "validator_executed_on_proposal":True,
+        })}
+    monkeypatch.setattr(connector, "config_validate", validate)
+    monkeypatch.setattr(connector, "_run", run)
+    outcome=await connector.nginx_config_review("10.248.16.82","nginx")
+    assert outcome["validation_status"]=="STAGED_FAILED"
+    assert not outcome.get("apply_eligible",False)
+    assert outcome["execution_authority"] is False
+
+
+@pytest.mark.asyncio
+async def test_dynamic_investigator_proposal_preserves_nonisolated_status_without_approval():
+    from types import SimpleNamespace
+    class Model:
+        async def generate_with_messages(self, *args, **kwargs):
+            return SimpleNamespace(content='{"checks":[],"question":""}',finish_reason="stop")
+    error = {
+        "source":"vm_mcp", "reference":"validator-103",
+        "raw_data":{"diagnostic":"config_validate","success":True,
+            "supported":True,"valid":False,"service":"nginx",
+            "config_file":"/etc/nginx/nginx.conf","error_line":103,
+            "syntax_error":'unexpected "{"'}
+    }
+    review = {
+        "source":"vm_mcp","reference":"review-103",
+        "raw_data":{"diagnostic":"nginx_config_review","success":True,"service":"nginx",
+             "config_file":"/etc/nginx/nginx.conf", "error_line":103,
+             "status":"candidate_proposed","validation_status":"STAGED_PASS_NOT_ISOLATED",
+             "current_hash":"a"*64,"candidate_hash":"b"*64,
+             "validator_executed_on_proposal":True,
+             "current_excerpt":[{"line":103,"content":"[structural] {"}],
+             "proposed_excerpt":[{"line":103,"content":"[blank or comment]"}],
+             "diff":{"line":103,"before":"[structural] {","after":"[remove entire stray brace line]"}}
+    }}
+    state={"service_name":"nginx","coordination":{"missing_evidence":[]},
+           "knowledge_results":[],"context":{"evidence":[error,review]}}
+    proposal=await DynamicInvestigationPlanner.propose(state, adapter=Model())
+    candidate=proposal["config_proposal"]
+    assert candidate["error_line"] == 103
+    assert candidate["validation_status"]=="STAGED_PASS_NOT_ISOLATED"
+    assert candidate["apply_eligible"] is False
+    assert candidate["execution_authority"] is False
+    assert candidate["original_sha256"]=="a"*64
+    assert candidate["candidate_sha256"]=="b"*64
+    assert candidate["redacted_diff"]["line"]==103
+    assert proposal["operator_questions"]
