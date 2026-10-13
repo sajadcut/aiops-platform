@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 474 | Dashboard JS files scanned: 8 | Symbols indexed: 4716**
+**Python files scanned: 475 | Dashboard JS files scanned: 8 | Symbols indexed: 4741**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1045,10 +1045,11 @@
 | `apps/context_service/llm_identity.py` | `consult_operational_unknowns` | 197 | async function | Ask the model what to verify, never run or trust its suggested command. | module |
 | `apps/context_service/normalizer.py` | `normalize_evidence` | 4 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
 | `apps/context_service/service_identity.py` | `ServiceIdentityResolver` | 20 | class | کلاس | module |
-| `apps/context_service/service_identity.py` | `ServiceIdentityResolver.known` | 22 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ServiceIdentityResolver |
-| `apps/context_service/service_identity.py` | `ServiceIdentityResolver.expected_fqdns` | 29 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ServiceIdentityResolver |
-| `apps/context_service/service_identity.py` | `ServiceIdentityResolver.independently_verified` | 38 | method | Require a direct successful read from the exact approved asset. | ServiceIdentityResolver |
-| `apps/context_service/service_identity.py` | `ServiceIdentityResolver.resolve` | 71 | method | Produce provenance plus a canonical service for non-executable display. | ServiceIdentityResolver |
+| `apps/context_service/service_identity.py` | `ServiceIdentityResolver.split_conflicts` | 22 | method | Keep Cognia disagreements as evidence, never as executable authority. | ServiceIdentityResolver |
+| `apps/context_service/service_identity.py` | `ServiceIdentityResolver.known` | 43 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ServiceIdentityResolver |
+| `apps/context_service/service_identity.py` | `ServiceIdentityResolver.expected_fqdns` | 50 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ServiceIdentityResolver |
+| `apps/context_service/service_identity.py` | `ServiceIdentityResolver.independently_verified` | 59 | method | Require a direct successful read from the exact approved asset. | ServiceIdentityResolver |
+| `apps/context_service/service_identity.py` | `ServiceIdentityResolver.resolve` | 92 | method | Produce provenance plus a canonical service for non-executable display. | ServiceIdentityResolver |
 | `apps/context_service/source_policy.py` | `EvidenceSourcePolicy` | 5 | class | کلاس | module |
 | `apps/context_service/source_policy.py` | `EvidenceSourcePolicy.allows` | 9 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | EvidenceSourcePolicy |
 | `apps/database/pgvector_contract.py` | `validate_pgvector` | 9 | async function | Validate pgvector strictly for Operational Memory, never Knowledge RAG. | module |
@@ -1159,18 +1160,18 @@
 | `apps/execution_service/tools/vm_telemetry.py` | `VMTelemetryTool.execute` | 50 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | VMTelemetryTool |
 | `apps/incident_copilot.py` | `merge_incident_evidence` | 25 | function | Supplement truncated DB evidence with the same Incident's checkpoint. | module |
 | `apps/incident_copilot.py` | `vm_binding` | 64 | function | Bind exactly one service/target using observed, consistent VM MCP facts. | module |
-| `apps/incident_copilot.py` | `asks_for_recorded_errors` | 138 | function | Distinguish 'what did you find?' from a request for a *new* MCP check. | module |
-| `apps/incident_copilot.py` | `recorded_error_facts` | 144 | function | Only facts already persisted by MCP; never present an Agent guess as proof. | module |
-| `apps/incident_copilot.py` | `recorded_error_facts.add` | 149 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | recorded_error_facts |
-| `apps/incident_copilot.py` | `recorded_error_answer` | 189 | function | Grounded fallback when LLM or current MCP is unavailable. | module |
-| `apps/incident_copilot.py` | `unsupported_security_exclusion_claim` | 225 | function | Prevent unverified negative auth claims from a fluent LLM response. | module |
-| `apps/incident_copilot.py` | `fallback_intent` | 243 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/incident_copilot.py` | `public_result` | 270 | function | Project known diagnostic keys; never forward arbitrary MCP payloads. | module |
-| `apps/incident_copilot.py` | `nginx_inspection_answer` | 344 | function | Deterministic user-visible facts from sanitized VM MCP inspection. | module |
-| `apps/incident_copilot.py` | `vm_read` | 390 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/incident_copilot.py` | `llm_plan` | 403 | async function | LLM may select a bounded enum but cannot set a target or authorize writes. | module |
-| `apps/incident_copilot.py` | `history` | 476 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/incident_copilot.py` | `append_turn` | 497 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/incident_copilot.py` | `asks_for_recorded_errors` | 141 | function | Distinguish 'what did you find?' from a request for a *new* MCP check. | module |
+| `apps/incident_copilot.py` | `recorded_error_facts` | 147 | function | Only facts already persisted by MCP; never present an Agent guess as proof. | module |
+| `apps/incident_copilot.py` | `recorded_error_facts.add` | 152 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | recorded_error_facts |
+| `apps/incident_copilot.py` | `recorded_error_answer` | 192 | function | Grounded fallback when LLM or current MCP is unavailable. | module |
+| `apps/incident_copilot.py` | `unsupported_security_exclusion_claim` | 228 | function | Prevent unverified negative auth claims from a fluent LLM response. | module |
+| `apps/incident_copilot.py` | `fallback_intent` | 246 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/incident_copilot.py` | `public_result` | 273 | function | Project known diagnostic keys; never forward arbitrary MCP payloads. | module |
+| `apps/incident_copilot.py` | `nginx_inspection_answer` | 347 | function | Deterministic user-visible facts from sanitized VM MCP inspection. | module |
+| `apps/incident_copilot.py` | `vm_read` | 393 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/incident_copilot.py` | `llm_plan` | 406 | async function | LLM may select a bounded enum but cannot set a target or authorize writes. | module |
+| `apps/incident_copilot.py` | `history` | 479 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/incident_copilot.py` | `append_turn` | 500 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/incident_elastic.py` | `is_elastic_question` | 13 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/incident_elastic.py` | `wants_live_elastic` | 19 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/incident_elastic.py` | `_iso` | 28 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
@@ -1196,13 +1197,13 @@
 | `apps/incident_service/repository.py` | `IncidentRepository._evidence_type` | 344 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentRepository |
 | `apps/incident_service/repository.py` | `IncidentRepository.add_evidence` | 351 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentRepository |
 | `apps/incident_service/repository.py` | `IncidentRepository.commit` | 382 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentRepository |
-| `apps/incident_vm_identity.py` | `normalized_service` | 18 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
-| `apps/incident_vm_identity.py` | `_safe_target` | 22 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/incident_vm_identity.py` | `incident_vm_context` | 33 | function | Merge incident context without suppressing contradictory trigger signals. | module |
-| `apps/incident_vm_identity.py` | `_trusted_signal` | 63 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/incident_vm_identity.py` | `vm_binding_diagnostic` | 89 | function | Coded reason for binding failure, usable in audit and dashboard. | module |
-| `apps/incident_vm_identity.py` | `resolve_vm_binding` | 151 | async function | Recheck the **candidate**, not a chat-supplied host; status may be failed. | module |
-| `apps/incident_vm_identity.py` | `vm_status_answer` | 210 | function | Only live service_status fields form a current-state assertion. | module |
+| `apps/incident_vm_identity.py` | `normalized_service` | 19 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
+| `apps/incident_vm_identity.py` | `_safe_target` | 23 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/incident_vm_identity.py` | `incident_vm_context` | 34 | function | Merge incident context without suppressing contradictory trigger signals. | module |
+| `apps/incident_vm_identity.py` | `_trusted_signal` | 74 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/incident_vm_identity.py` | `vm_binding_diagnostic` | 100 | function | Coded reason for binding failure, usable in audit and dashboard. | module |
+| `apps/incident_vm_identity.py` | `resolve_vm_binding` | 170 | async function | Recheck the **candidate**, not a chat-supplied host; status may be failed. | module |
+| `apps/incident_vm_identity.py` | `vm_status_answer` | 233 | function | Only live service_status fields form a current-state assertion. | module |
 | `apps/knowledge_review.py` | `content_digest` | 21 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/knowledge_review.py` | `validated_document` | 25 | function | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | module |
 | `apps/knowledge_review.py` | `memory_is_verified` | 36 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
@@ -3113,6 +3114,30 @@
 | `tests/unit/test_cognia_client.py` | `test_machine_client_does_not_expose_human_approval_decisions` | 407 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_cognia_client.py` | `test_machine_token_redirect_is_rejected_without_replaying_credentials` | 413 | async function | Cognia may redirect HTTP to HTTPS; the client must not forward secrets. | module |
 | `tests/unit/test_cognia_client.py` | `test_machine_token_redirect_is_rejected_without_replaying_credentials.handler` | 418 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_machine_token_redirect_is_rejected_without_replaying_credentials |
+| `tests/unit/test_cognia_gfpapi_identity_conflict.py` | `identity_with_cognia_conflict` | 37 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_cognia_gfpapi_identity_conflict.py` | `old_evidence` | 46 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_cognia_gfpapi_identity_conflict.py` | `test_oct_13_repro_keeps_nginx_cognia_disagreement_but_identity_is_verified` | 60 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_cognia_gfpapi_identity_conflict.py` | `test_original_and_checkpoint_cognia_disagreements_do_not_create_identity_conflict` | 78 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_cognia_gfpapi_identity_conflict.py` | `test_live_mcp_validates_gfpapi_despite_cognia_nginx_but_does_not_grant_restart` | 94 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_cognia_gfpapi_identity_conflict.py` | `test_live_mcp_validates_gfpapi_despite_cognia_nginx_but_does_not_grant_restart.VM` | 98 | class | کلاس | test_live_mcp_validates_gfpapi_despite_cognia_nginx_but_does_not_grant_restart |
+| `tests/unit/test_cognia_gfpapi_identity_conflict.py` | `test_live_mcp_validates_gfpapi_despite_cognia_nginx_but_does_not_grant_restart.VM.service_status` | 99 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_live_mcp_validates_gfpapi_despite_cognia_nginx_but_does_not_grant_restart.VM |
+| `tests/unit/test_cognia_gfpapi_identity_conflict.py` | `test_real_conflicts_remain_blocked_even_with_cognia_advisory` | 115 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_cognia_gfpapi_identity_conflict.py` | `test_multiple_live_hosts_and_source_mismatch_remain_blocked_with_cognia_advisory` | 133 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_cognia_gfpapi_identity_conflict.py` | `test_persian_operator_recovery_intents_work_with_llm_unavailable` | 156 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_cognia_gfpapi_identity_conflict.py` | `test_actual_chat_cognia_conflict_reaches_mcp_for_status_and_restart` | 161 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_cognia_gfpapi_identity_conflict.py` | `test_actual_chat_cognia_conflict_reaches_mcp_for_status_and_restart.DB` | 167 | class | کلاس | test_actual_chat_cognia_conflict_reaches_mcp_for_status_and_restart |
+| `tests/unit/test_cognia_gfpapi_identity_conflict.py` | `test_actual_chat_cognia_conflict_reaches_mcp_for_status_and_restart.DB.__aenter__` | 168 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_actual_chat_cognia_conflict_reaches_mcp_for_status_and_restart.DB |
+| `tests/unit/test_cognia_gfpapi_identity_conflict.py` | `test_actual_chat_cognia_conflict_reaches_mcp_for_status_and_restart.DB.__aexit__` | 169 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_actual_chat_cognia_conflict_reaches_mcp_for_status_and_restart.DB |
+| `tests/unit/test_cognia_gfpapi_identity_conflict.py` | `test_actual_chat_cognia_conflict_reaches_mcp_for_status_and_restart.Audit` | 170 | class | کلاس | test_actual_chat_cognia_conflict_reaches_mcp_for_status_and_restart |
+| `tests/unit/test_cognia_gfpapi_identity_conflict.py` | `test_actual_chat_cognia_conflict_reaches_mcp_for_status_and_restart.Audit.__init__` | 171 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_actual_chat_cognia_conflict_reaches_mcp_for_status_and_restart.Audit |
+| `tests/unit/test_cognia_gfpapi_identity_conflict.py` | `test_actual_chat_cognia_conflict_reaches_mcp_for_status_and_restart.Audit.list` | 172 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_actual_chat_cognia_conflict_reaches_mcp_for_status_and_restart.Audit |
+| `tests/unit/test_cognia_gfpapi_identity_conflict.py` | `test_actual_chat_cognia_conflict_reaches_mcp_for_status_and_restart.Audit.append` | 173 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_actual_chat_cognia_conflict_reaches_mcp_for_status_and_restart.Audit |
+| `tests/unit/test_cognia_gfpapi_identity_conflict.py` | `test_actual_chat_cognia_conflict_reaches_mcp_for_status_and_restart.scope` | 174 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_actual_chat_cognia_conflict_reaches_mcp_for_status_and_restart |
+| `tests/unit/test_cognia_gfpapi_identity_conflict.py` | `test_actual_chat_cognia_conflict_reaches_mcp_for_status_and_restart.brief` | 178 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_actual_chat_cognia_conflict_reaches_mcp_for_status_and_restart |
+| `tests/unit/test_cognia_gfpapi_identity_conflict.py` | `test_actual_chat_cognia_conflict_reaches_mcp_for_status_and_restart.llm` | 180 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_actual_chat_cognia_conflict_reaches_mcp_for_status_and_restart |
+| `tests/unit/test_cognia_gfpapi_identity_conflict.py` | `test_actual_chat_cognia_conflict_reaches_mcp_for_status_and_restart.append` | 183 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_actual_chat_cognia_conflict_reaches_mcp_for_status_and_restart |
+| `tests/unit/test_cognia_gfpapi_identity_conflict.py` | `test_actual_chat_cognia_conflict_reaches_mcp_for_status_and_restart.VM` | 186 | class | کلاس | test_actual_chat_cognia_conflict_reaches_mcp_for_status_and_restart |
+| `tests/unit/test_cognia_gfpapi_identity_conflict.py` | `test_actual_chat_cognia_conflict_reaches_mcp_for_status_and_restart.VM.service_status` | 187 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_actual_chat_cognia_conflict_reaches_mcp_for_status_and_restart.VM |
 | `tests/unit/test_cognia_only_rag_architecture.py` | `_join` | 4 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_cognia_only_rag_architecture.py` | `test_cognia_is_the_only_rag_runtime_contract` | 8 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_cognia_only_rag_architecture.py` | `test_historical_local_knowledge_table_is_retired_without_vector_retrieval` | 27 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
