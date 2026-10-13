@@ -242,3 +242,44 @@ async def test_storage_agent_exposes_deterministic_layers_before_llm_synthesis()
     assert "database_driven_storage_pressure" in {row["code"] for row in result.analysis_details["cause_candidates"]}
     assert result.analysis_details["execution_boundary"] == "analysis_only"
     assert all(action.read_only for action in result.recommended_actions)
+
+
+
+@pytest.mark.asyncio
+async def test_storage_agent_suppresses_llm_cleanup_suggestions_without_causal_evidence():
+    class CleanupSuggestingModel(CapturingStorageLLM):
+        async def generate(self, prompt, system_prompt=None, temperature=0.7, max_tokens=1000, **kwargs):
+            self.prompt = prompt
+            return LLMResponse(content=json.dumps({
+                "severity": "high", "health_status": "degraded",
+                "confidence": 0.75, "findings": ["filesystem is full"],
+                "hypotheses": [], "missing_evidence": [],
+                "immediate_checks": [
+                    "rm -rf /var/log/old",
+                    "پاکسازی فایل‌های قدیمی",
+                    "Delete old log files",
+                    "Inspect application error logs and identify the file writer",
+                ],
+                "handoff_agents": ["application"],
+            }), model="test-cleanup")
+
+    adapter = CleanupSuggestingModel()
+    agent = StorageAgent(adapter)
+    report = await agent.analyze(AgentInput(
+        incident_id="disk-incident", service_name="gfpapi",
+        evidence_summary="VM disk capacity is 98%",
+        context={"evidence": [{
+            "source": "vm_mcp", "type": "telemetry", "reference": "disk1",
+            "raw_data": {"diagnostic": "disk_forensics", "success": True,
+                         "mounts": [{"mount": "/var", "files": [
+                             {"path": "/var/log/gfpapi/errors.log", "size_bytes": 32000000000}
+                         ]}]}
+        }]},
+    ))
+    actions = [action.action for action in report.recommended_actions]
+    assert all(action.read_only for action in report.recommended_actions)
+    assert all("rm -rf" not in action and "Delete old" not in action and "پاکسازی" not in action
+               for action in actions)
+    assert any("Identify the exact file producer" in action for action in actions)
+    assert report.analysis_details["disk_file_causality"]["delete_recommendation_allowed"] is False
+    assert "NEVER infer ownership" in adapter.prompt
