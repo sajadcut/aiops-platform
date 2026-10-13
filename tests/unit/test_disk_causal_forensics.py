@@ -88,7 +88,7 @@ def test_file_inventory_is_not_proof_of_writer_growth_or_safe_deletion():
     evidence = [
         _file_evidence(),
         {"source": "elasticsearch", "reference": "elastic1",
-         "timestamp": "2026-10-13T12:05:00Z",
+         "timestamp": "2026-10-13T09:12:00Z",
          "raw_data": {"message": "backend request failed repeatedly"}},
         {"source": "zabbix", "reference": "zbx1",
          "timestamp": "2026-10-13T12:06:00Z",
@@ -108,6 +108,9 @@ def test_file_inventory_is_not_proof_of_writer_growth_or_safe_deletion():
     assert result["safe_cleanup_candidates"] == []
     assert result["growth_cause_confirmed"] is False
     assert result["related_error_log_observations"][0]["reference"] == "elastic1"
+    assert result["candidate_temporal_overlaps"][0]["file"] == "/var/log/gfpapi/error.log"
+    assert result["candidate_temporal_overlaps"][0]["delta_seconds"] == 120
+    assert result["candidate_temporal_overlaps"][0]["causality_confirmed"] is False
     assert result["zabbix_alert_refs"] == ["zbx1"]
     assert "retention" in result["missing_for_deletion"][2]
     summary = build_storage_reliability_analysis(evidence, service_name="gfpapi")
