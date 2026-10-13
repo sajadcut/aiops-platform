@@ -480,7 +480,7 @@ def _cause_candidates(
 
 
 
-def _disk_file_causality(items: Sequence[Mapping[str, Any]]) -> Dict[str, Any]:
+def correlate_disk_file_causality(items: Sequence[Mapping[str, Any]]) -> Dict[str, Any]:
     """Relate exact VM file metadata to monitoring/log evidence WITHOUT inventing cause.
 
     A single file snapshot cannot prove that a producer wrote the data or that
@@ -567,7 +567,7 @@ def build_storage_reliability_analysis(
     capacity = _capacity_analysis(rows)
     io = _io_analysis(rows)
     temporal = _temporal_correlation(items, rows, states, ctx)
-    file_causality = _disk_file_causality(items)
+    file_causality = correlate_disk_file_causality(items)
     candidates = _cause_candidates(rows, states, capacity, io, temporal)
 
     storage_origin = [row for row in candidates if row.get("causal_role") == "storage_origin_candidate"]
