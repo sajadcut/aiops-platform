@@ -24,6 +24,10 @@ from apps.incident_elastic import (
     elastic_live_read, elastic_answer, stored_elastic_observations,
 )
 from apps.orchestrator.workflow_store import WorkflowCheckpointStore
+from apps.incident_vm_identity import (
+    incident_vm_context, vm_binding_diagnostic, resolve_vm_binding,
+    vm_status_answer,
+)
 from apps.runbook_service.runtime_guard import RunbookRuntimeGuard
 from apps.security.auth import require_permission
 from database import AsyncSessionLocal
@@ -53,9 +57,22 @@ async def _scope(db, incident_id: UUID) -> tuple[Incident, dict, list[dict]]:
         select(Evidence).where(Evidence.incident_id == incident_id)
         .order_by(desc(Evidence.created_at)).limit(500)
     )).scalars().all()
-    evidence = [{"source": r.source, "raw_data": r.raw_data or {},
-                 "reference": r.reference, "created_at": str(r.created_at)}
-                for r in reversed(rows)]
+    vm_rows = (await db.execute(
+        select(Evidence).where(
+            Evidence.incident_id == incident_id, Evidence.source == "vm_mcp",
+        ).order_by(desc(Evidence.created_at)).limit(350)
+    )).scalars().all()
+    seen_ids = set()
+    evidence = []
+    for row in list(reversed(vm_rows)) + list(reversed(rows)):
+        if row.id in seen_ids:
+            continue
+        seen_ids.add(row.id)
+        evidence.append({
+            "source": row.source, "raw_data": row.raw_data or {},
+            "reference": row.reference, "created_at": str(row.created_at),
+            "id": str(row.id),
+        })
     return incident, checkpoint, merge_incident_evidence(evidence, checkpoint)
 
 
@@ -180,10 +197,15 @@ async def incident_chat_history(
                 for proposal_id, approval_id in requested.items()
                 if approval_id in status_by_id
             }
-    binding = vm_binding(incident.service, evidence, (checkpoint.get("state") or {}).get("context"))
+    ctx = incident_vm_context(incident.context, checkpoint)
+    binding = vm_binding(incident.service, evidence, ctx) if not ctx.get("_vm_identity_context_conflicts") else None
+    diagnosis = vm_binding_diagnostic(incident.service, evidence, ctx)
     return {"incident_id": str(incident_id), "service": incident.service,
             "items": history(events), "approvals": approvals,
-            "vm_bound": binding is not None, "status": "ready"}
+            "vm_bound": binding is not None,
+            "vm_binding_status": "verified" if binding else diagnosis["reason"],
+            "vm_live_recheck_possible": bool(diagnosis.get("candidate")),
+            "status": "ready"}
 
 
 @router.post(
@@ -198,7 +220,9 @@ async def incident_chat_message(
         incident, checkpoint, evidence = await _scope(db, incident_id)
         audit = PostgreSQLAuditStore(db)
         previous = history(await audit.list(str(incident_id), 200))
-        binding = vm_binding(incident.service, evidence, (checkpoint.get("state") or {}).get("context"))
+        vm_context = incident_vm_context(incident.context, checkpoint)
+        binding = vm_binding(incident.service, evidence, vm_context) if not vm_context.get("_vm_identity_context_conflicts") else None
+        binding_diagnosis = vm_binding_diagnostic(incident.service, evidence, vm_context)
         if _explicit_wrong_target(payload.message, binding):
             raise HTTPException(status_code=409, detail="chat_target_must_match_incident")
         brief = await load_decision_brief_for_incident(db, incident_id)
@@ -235,6 +259,15 @@ async def incident_chat_message(
             intent = requested
         elif requested != "answer" and intent == "answer":
             intent = requested
+        vm_actions = READ_ACTIONS - {"knowledge_search", "elastic_logs", "elastic_recorded"}
+        if intent in vm_actions or intent in WRITE_SUGGESTIONS:
+            binding, binding_diagnosis = await resolve_vm_binding(
+                incident.service, evidence, vm_context,
+                force_live=(intent in WRITE_SUGGESTIONS),
+            )
+            if _explicit_wrong_target(payload.message, binding):
+                raise HTTPException(status_code=409, detail="chat_target_must_match_incident")
+            summary["vm_binding"] = binding or {"status": binding_diagnosis["status"]}
         refs = (binding or {}).get("evidence_refs") or []
         if historical_errors:
             refs = list(dict.fromkeys(
@@ -260,7 +293,11 @@ async def incident_chat_message(
                     incident_id,
                 )
             elif binding is None:
-                observation = {"success": False, "status": "target_not_verified"}
+                observation = {"success": False, "status": "target_not_verified",
+                               "binding_reason": binding_diagnosis.get("status", "unverified")}
+            elif intent == "service_status" and binding_diagnosis.get("live_observation"):
+                from apps.incident_copilot import public_result
+                observation = public_result("service_status", binding_diagnosis["live_observation"])
             else:
                 try:
                     observation = await vm_read(intent, binding)
