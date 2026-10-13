@@ -254,7 +254,7 @@
     tcp_check:'تست اتصال به پورت',port_listener_status:'بررسی پورت باز',
     config_validate:'بررسی درستی تنظیمات',service_logs:'بررسی لاگ سرویس',
     collect_vm_metrics:'بررسی منابع سرور',source_observation:'اطلاعات ثبت‌شده ابزار',
-    host_info:'اطلاعات سرور',disk_status:'بررسی دیسک'};
+    host_info:'اطلاعات سرور',disk_status:'بررسی دیسک',disk_forensics:'شناسایی فایل‌های حجیم'};
   const humanAction = x => state.language === 'fa' && actionFa[low(x)]
     ? actionFa[low(x)] + ' (' + safe(x) + ')' : value(x);
   const humanAgent = x => state.language === 'fa' ? (agentFa[low(x)] || value(x)) : value(x);
@@ -540,7 +540,7 @@
     application:/config_validate|service_logs|process_status|port_listener_status|tcp_check/i,
     infrastructure:/cpu_usage|memory_usage|swap_usage|io_wait|disk_status|host_info|collect_vm_metrics/i,
     dependency:/tcp_check|dns_check|route_check|dependency|prometheus/i,
-    storage:/disk_status|io_wait|filesystem|storage|inode/i,
+    storage:/disk_status|disk_forensics|io_wait|filesystem|storage|inode/i,
     kubernetes:/pod|namespace|kubernetes|deployment/i,
     database:/database|db|connection_pool/i,
     recovery:/config_validate|service_status|process_status|port_listener_status/i,
@@ -548,7 +548,7 @@
     change:/config_validate|change|journal|audit/i
   };
   const agentEvidenceLabel = ref => {
-    const match=String(ref||'').match(/(?:^|:)(service_status|service_logs|process_status|config_validate|port_listener_status|tcp_check|host_info|disk_status|cpu_usage|memory_usage|swap_usage|io_wait|route_check|dns_check|firewall_status|collect_vm_metrics)(?::|$)/i);
+    const match=String(ref||'').match(/(?:^|:)(service_status|service_logs|process_status|config_validate|port_listener_status|tcp_check|host_info|disk_status|disk_forensics|cpu_usage|memory_usage|swap_usage|io_wait|route_check|dns_check|firewall_status|collect_vm_metrics)(?::|$)/i);
     if(match)return humanTool(match[1])+(match[1]==='cpu_usage'?' (CPU)':match[1]==='memory_usage'?' (RAM)':'');
     if(/zabbix/i.test(ref))return 'اطلاعات زبیکس';
     if(/prom/i.test(ref))return 'اطلاعات پرومتئوس';
