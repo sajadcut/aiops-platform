@@ -508,7 +508,9 @@
     const statusChanged=(newApproval && oldApproval && newApproval!==oldApproval) ||
       (snapshot.incident_status && oldIncident && snapshot.incident_status!==oldIncident);
     if(statusChanged && !state.busy && state.report && !state.historic &&
-       (snapshot.last_event_at!==prior.last_event_at||snapshot.approval_status!==prior.approval_status))
+       (snapshot.last_event_at!==prior.last_event_at||
+        snapshot.approval_status!==prior.approval_status||
+        snapshot.incident_status!==prior.incident_status))
       void load({preserveHistory:true});
   }
 
@@ -533,7 +535,7 @@
       while(!controller.signal.aborted) {
         const {done,value}=await reader.read();
         if(done)break;
-        buffer+=decoder.decode(value,{stream:true});
+        buffer=(buffer+decoder.decode(value,{stream:true})).replace(/\r/g,'');
         if(buffer.length>100000)throw new Error('oversized_progress_event');
         let pos;
         while((pos=buffer.indexOf('\n\n'))>=0) {
@@ -562,7 +564,7 @@
   // Use a lightweight durable lifecycle GET, not repeated heavy LLM narratives.
   // Reload the report only when a material workflow phase/version changes.
   async function pollLifecycle() {
-    if(state.lifecyclePolling || document.hidden || state.historic || state.busy ||
+    if(state.progressConnected || state.lifecyclePolling || document.hidden || state.historic || state.busy ||
        !state.report || !incidentId)return;
     state.lifecyclePolling=true;
     try {
@@ -1169,6 +1171,7 @@
       state.narrative=null;state.error=null;state.rejectionVisible=false;
       $('#ic-auth').hidden=true;$('#ic-loader').hidden=true;$('#ic-main').hidden=false;alert('');
       render();void loadNarrative();void loadReceivedSignals(token);
+      void connectProgressStream();
     }catch(e){
       if(token!==state.loadingToken)return;
       $('#ic-loader').hidden=true;
@@ -1304,8 +1307,18 @@
       if(e.key==='aiops.chatbot.theme'&&(e.newValue==='light'||e.newValue==='dark'))document.documentElement.dataset.theme=e.newValue;
     });
     window.addEventListener('pageshow',e=>{if(e.persisted)void load();});
-    document.addEventListener('visibilitychange',()=>{if(!document.hidden)void pollLifecycle();});
+    document.addEventListener('visibilitychange',()=>{
+      if(document.hidden){
+        state.progressAbort?.abort();
+        clearTimeout(progressRetryTimer);
+      }else{
+        void connectProgressStream();
+        if(!state.progressConnected)void pollLifecycle();
+      }
+    });
     const lifecycleTimer=setInterval(()=>{void pollLifecycle();},6000);
+    const durationTimer=setInterval(updateProgressClock,1000);
+    if(typeof durationTimer?.unref==='function')durationTimer.unref();
     // Node-based browser regression harnesses should not be kept alive by polling.
     if(typeof lifecycleTimer?.unref==='function')lifecycleTimer.unref();
     setLang(state.language);
