@@ -121,3 +121,54 @@ def test_decision_brief_report_does_not_serve_as_approval_authority():
     assert view["approval_readiness"]["status"] == "new_approval_required"
     assert view["approval_readiness"]["evidence_snapshot_binding"] == "drift_detected"
     assert view["source_policy"]["authorizes_execution"] is False
+
+
+
+@pytest.mark.parametrize("status", ["consumed", "rejected", "expired"])
+def test_terminal_approval_does_not_report_new_approval_required_after_execution(status):
+    from apps.decision_brief import build_decision_brief
+    report = build_decision_brief(
+        incident={"id": "incident-1", "service": "nginx", "status": "resolved"},
+        operator_summary={
+            "approval": {
+                "status": status, "decision_snapshot_status": "not_applicable",
+                "binding_complete": True, "approval_id": "approval-123",
+                "action": "start_service", "tool": "ssh_vm", "target": "10.248.16.82",
+            },
+            "execution_status": "success",
+            "verification_status": "success",
+        },
+        checkpoint={"state": {
+            "execution_result": {"success": True},
+            "verification_result": {"status": "success"},
+        }},
+        durable_evidence=[], findings=[], audit_events=[],
+    )
+    readiness = report["approval_readiness"]
+    assert readiness["status"] == "not_pending"
+    assert readiness["evidence_snapshot_binding"] == "not_applicable"
+    assert readiness["approval_status"] == status
+    assert report["execution_outcome"]["status"] == "success"
+    assert report["verification_result"]["status"] == "success"
+    assert report["source_policy"]["authorizes_execution"] is False
+
+
+def test_consumed_approval_cannot_turn_post_execution_snapshot_drift_into_new_approval():
+    from apps.decision_brief import build_decision_brief
+    report = build_decision_brief(
+        incident={"id": "incident-1", "service": "nginx"},
+        operator_summary={"approval": {
+            "status": "consumed", "decision_snapshot_status": "drift_detected",
+        }},
+        checkpoint={"state": {}}, durable_evidence=[], findings=[], audit_events=[],
+    )
+    assert report["approval_readiness"]["status"] == "not_pending"
+    assert report["approval_readiness"]["evidence_snapshot_binding"] != "drift_detected"
+
+
+def test_fullscreen_incident_renders_consumed_approval_without_false_drift():
+    from pathlib import Path
+    js = (Path(__file__).resolve().parents[2] / "dashboards" / "incident-command-room.js").read_text(encoding="utf-8")
+    assert "const snapshotBad=(pending||approved)&&" in js
+    assert "Approved execution or verification in progress" in js
+    assert "Service recovery verified" in js
