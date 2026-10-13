@@ -398,3 +398,52 @@ def test_decision_brief_exposes_llm_unknown_guidance_without_action_authority():
     assert brief["unknown_guidance"]["items"][0]["verified"] is False
     assert brief["unknown_guidance"]["config_validation_passed"] is False
     assert brief["source_policy"]["authorizes_execution"] is False
+
+
+def test_elapsed_incident_duration_does_not_invalidate_approval_snapshot():
+    """Approval preflight must accept the same material state minutes later."""
+    incident = {
+        "id": "i-approval", "service": "nginx",
+        "started_at": (NOW - timedelta(minutes=12)).isoformat(),
+        "status": "open", "severity": "high",
+    }
+    stable_approval = {
+        "approval_id": "ap-123", "status": "pending",
+        "binding_complete": True, "target": "10.248.16.82",
+        "tool": "ssh_vm", "action": "start_service",
+    }
+    def report(at):
+        return build_decision_brief(
+            incident=incident, operator_summary={"approval": stable_approval},
+            checkpoint={"state": {"approval": stable_approval}, "version": 7},
+            durable_evidence=[], findings=[], audit_events=[],
+            now=at,
+        )
+
+    first = report(NOW)
+    later = report(NOW + timedelta(seconds=43))
+    assert first["incident_summary"]["elapsed_seconds"] == 720
+    assert later["incident_summary"]["elapsed_seconds"] == 763
+    assert first["generated_at"] != later["generated_at"]
+    assert first["snapshot_id"] == later["snapshot_id"]
+    assert first["approval_readiness"] == later["approval_readiness"]
+
+
+def test_approval_snapshot_still_invalidates_on_material_action_change():
+    incident = {
+        "id": "i-approval", "service": "nginx",
+        "started_at": (NOW - timedelta(minutes=12)).isoformat(),
+    }
+    def report(action, at):
+        approval = {"approval_id": "ap-123", "status": "pending",
+                    "binding_complete": True, "action": action,
+                    "target": "10.248.16.82"}
+        return build_decision_brief(
+            incident=incident, operator_summary={"approval": approval},
+            checkpoint={"state": {"approval": approval}, "version": 7},
+            durable_evidence=[], findings=[], audit_events=[], now=at,
+        )
+
+    first = report("start_service", NOW)
+    changed = report("restart_service", NOW + timedelta(seconds=43))
+    assert first["snapshot_id"] != changed["snapshot_id"]
