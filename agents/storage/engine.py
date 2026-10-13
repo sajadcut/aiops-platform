@@ -540,8 +540,8 @@ def correlate_disk_file_causality(items: Sequence[Mapping[str, Any]]) -> Dict[st
                         "reason_to_delete": None, "evidence_refs": [reference],
                     })
         elif source in {"elasticsearch", "elastic", "elk"} or diagnostic in {"service_logs", "system_logs"}:
-            values = raw.get("entries") or raw.get("logs") or []
-            if not isinstance(values, list):
+            values = raw.get("entries") or raw.get("logs")
+            if not isinstance(values, list) or not values:
                 values = [raw.get("message") or raw.get("detail") or ""]
             joined = " ".join(str(x)[:350] for x in values[:20])[:1500]
             if any(token in joined.lower() for token in (
