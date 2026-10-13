@@ -140,31 +140,41 @@ def config_check_for_path(service: str, discovered_path: Optional[str]) -> str:
 
 
 def parse_config_diagnostic(output: str) -> dict:
-    """Extract bounded compiler-reported config file/line, never fetch secret files."""
+    """Extract a compiler-reported *fatal* config location, not an earlier warning.
+
+    Warnings frequently mention unrelated file locations (e.g. nginx user
+    directive on line 43 followed by unexpected '{' on line 103).
+    Parse the file/line from the chosen failure message first. Never infer a
+    correction from the diagnostic or return unverified config bytes.
+    """
     message = str(output or "")[:4000]
-    parsed = {"config_file": None, "error_line": None, "syntax_error": None}
+    result = {"config_file": None, "error_line": None, "syntax_error": None}
+    lines = [line.strip() for line in message.splitlines() if line.strip()]
+    fatal = next((
+        line for line in lines
+        if re.search(r"\\[(?:emerg|alert|crit|error|fatal)\\]|"
+                     r"syntax error|unexpected|unknown directive|"
+                     r"unknown keyword|error parsing|parsing.*error", line, re.I)
+    ), None)
+    # Do not mistake a harmless warning path for the error path.
+    selected = fatal or message
+    result["syntax_error"] = fatal[:500] if fatal else None
     for pattern in (_HAPROXY_ERROR, _NGINX_ERROR):
-        match = pattern.search(message)
+        match = pattern.search(selected)
         if match:
             path = _absolute_config_path(match.group(1))
             if path:
-                parsed["config_file"] = path
-                parsed["error_line"] = int(match.group(2))
-                break
-    if parsed["config_file"] is None:
-        match = _APACHE_ERROR.search(message)
-        if match:
-            path = _absolute_config_path(match.group(2))
-            if path:
-                parsed["config_file"] = path
-                parsed["error_line"] = int(match.group(1))
-    if parsed["config_file"] is None:
-        match = _NGINX_PATH_IN_OUTPUT.search(message)
-        if match:
-            parsed["config_file"] = _absolute_config_path(match.group(1))
-    for line in message.splitlines():
-        stripped = line.strip()
-        if re.search(r"emerg|alert|fatal|syntax error|unknown directive|unknown keyword|error parsing|parsing.*error", stripped, re.I):
-            parsed["syntax_error"] = stripped[:500]
-            break
-    return parsed
+                result["config_file"] = path
+                result["error_line"] = int(match.group(2))
+                return result
+    match = _APACHE_ERROR.search(selected)
+    if match:
+        path = _absolute_config_path(match.group(2))
+        if path:
+            result["config_file"] = path
+            result["error_line"] = int(match.group(1))
+            return result
+    match = _NGINX_PATH_IN_OUTPUT.search(selected)
+    if match:
+        result["config_file"] = _absolute_config_path(match.group(1))
+    return result
