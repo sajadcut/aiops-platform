@@ -193,7 +193,7 @@ class RemediationPlanner:
     ) -> Dict[str, Any]:
         """Fail closed if the approved write is stale immediately before execution."""
         action = str(execution_request.get("action") or "")
-        if str(execution_request.get("tool_name") or "") != "ssh_vm" or action not in {"start_service", "restart_service"}:
+        if str(execution_request.get("tool_name") or "") != "ssh_vm" or action not in {"start_service", "restart_service", "reload_service"}:
             return {"safe_to_execute": False, "reason": "unsupported_execution_binding", "evidence_refs": []}
         if str(execution_request.get("runbook_id") or "") != cls.VM_SERVICE_RUNBOOK:
             return {"safe_to_execute": False, "reason": "unrecognized_remediation_runbook", "evidence_refs": []}
@@ -207,13 +207,19 @@ class RemediationPlanner:
         states, status_refs = cls._service_states(evidence, target=target, service=service)
         if not states:
             return {"safe_to_execute": False, "reason": "fresh_service_status_missing", "evidence_refs": status_refs}
-        if states & cls.HEALTHY_SERVICE_STATES:
-            return {"safe_to_execute": False, "reason": "service_no_longer_unhealthy", "evidence_refs": status_refs}
-        fresh_action, action_reason = cls._recovery_action(states)
-        if fresh_action is None:
-            return {"safe_to_execute": False, "reason": action_reason, "evidence_refs": status_refs}
-        if fresh_action != action:
-            return {"safe_to_execute": False, "reason": "fresh_service_recovery_action_changed", "evidence_refs": status_refs}
+        if action == "reload_service":
+            # Reload is a configuration-sensitive operation on a currently
+            # active service, NEVER a recovery action for a failed one.
+            if states != {"active"}:
+                return {"safe_to_execute": False, "reason": "reload_requires_healthy_active_service", "evidence_refs": status_refs}
+        else:
+            if states & cls.HEALTHY_SERVICE_STATES:
+                return {"safe_to_execute": False, "reason": "service_no_longer_unhealthy", "evidence_refs": status_refs}
+            fresh_action, action_reason = cls._recovery_action(states)
+            if fresh_action is None:
+                return {"safe_to_execute": False, "reason": action_reason, "evidence_refs": status_refs}
+            if fresh_action != action:
+                return {"safe_to_execute": False, "reason": "fresh_service_recovery_action_changed", "evidence_refs": status_refs}
 
         config_ok, config_refs, config_reason = cls._configuration_precondition(
             evidence, target=target, service=service
