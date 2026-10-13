@@ -20,6 +20,7 @@ from apps.execution_service.tools.registry import tool_registry
 from apps.orchestrator.e2e_graph import E2EOrchestrator, E2EState
 from apps.remediation_planner import RemediationPlanner
 from apps.orchestrator.dynamic_investigation import DynamicInvestigationPlanner
+from apps.orchestrator.recovery_advice import build_vm_recovery_advisory
 from domain.contracts.config import settings
 from domain.contracts.logging import logger
 
@@ -339,6 +340,27 @@ class SignalAwareE2EOrchestrator(E2EOrchestrator):
             )
             if self.progress_emitter:
                 await self.progress_emitter(state.get("incident_id"), "investigation", "completed")
+
+        # Always produce a read-only, evidence-bound recovery suggestion even
+        # when evaluator consensus/config validation cannot authorize a write.
+        # This does NOT alter Decision/Approval/Execution safety gates.
+        context = state.setdefault("context", {})
+        recovery_advisory = build_vm_recovery_advisory(
+            evidence=context.get("evidence") or [],
+            service_name=state.get("service_name"),
+            context=context,
+        )
+        if recovery_advisory:
+            context["recovery_advisory"] = recovery_advisory
+            self._audit(
+                "vm_recovery_advisory_created", state,
+                service=recovery_advisory["service"],
+                target=recovery_advisory["target"],
+                action=recovery_advisory["suggested_action"],
+                evidence_refs=recovery_advisory["evidence_refs"],
+                configuration_validation=recovery_advisory["configuration_validation"],
+                execution_authority=False,
+            )
 
         # Global unknowns rule: ask LLM for bounded, advisory diagnostic guidance
         # when concrete gaps are found. The advice is NOT Live Evidence, cannot
