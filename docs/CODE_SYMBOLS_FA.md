@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 447 | Dashboard JS files scanned: 8 | Symbols indexed: 4214**
+**Python files scanned: 447 | Dashboard JS files scanned: 8 | Symbols indexed: 4217**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1018,6 +1018,9 @@
 | `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver._same_value` | 378 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeTopologyResolver |
 | `apps/context_service/llm_identity.py` | `diagnostic_candidates` | 20 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/context_service/llm_identity.py` | `suggest_from_llm` | 46 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/context_service/llm_identity.py` | `detect_operational_unknowns` | 110 | function | Find explicit knowledge gaps, not every empty metric or incidental service. | module |
+| `apps/context_service/llm_identity.py` | `detect_operational_unknowns.add` | 121 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | detect_operational_unknowns |
+| `apps/context_service/llm_identity.py` | `consult_operational_unknowns` | 163 | async function | Ask the model what to verify, never run or trust its suggested command. | module |
 | `apps/context_service/normalizer.py` | `normalize_evidence` | 4 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
 | `apps/context_service/service_identity.py` | `ServiceIdentityResolver` | 20 | class | کلاس | module |
 | `apps/context_service/service_identity.py` | `ServiceIdentityResolver.known` | 22 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ServiceIdentityResolver |
