@@ -69,7 +69,8 @@ LIVE EVIDENCE is authoritative. RAG/Memory and PEER OPERATIONAL CONTEXT are auxi
 STORAGE_ANALYSIS is deterministic pre-LLM analysis across capacity/inodes, I/O performance, filesystem/mount, device/SMART, multipath/PV, distributed storage and temporal correlation. Treat cause candidates as hypotheses requiring falsification, not automatic root-cause verdicts.
 Critical device-health rule: a SMART warning does not mean a disk is certainly or imminently failing. State the observed indicator, confidence and verification required. Stronger physical-device attribution requires corroborating media/I/O/NVMe/SCSI evidence.
 Explicitly distinguish disk full, inode full, I/O saturation, failing physical device, networked-storage latency, filesystem corruption symptoms, application write burst and database-driven storage pressure. A storage alert alone is not proof that storage is the primary cause.
-Use STORAGE_ANALYSIS.temporal_correlation to compare storage anomaly onset with application/database incident timing. Temporal ordering supports falsification but does not prove causality. If application/database write pressure precedes storage pressure, consider storage as a downstream stressed resource; if storage/device/path faults precede application/database symptoms, storage becomes a stronger cause candidate.
+Use STORAGE_ANALYSIS.temporal_correlation to compare storage anomaly onset with application/database incident timing. Temporal ordering supports falsification but does not prove causality.
+STORAGE_ANALYSIS.disk_file_causality lists read-only file metadata and any Elastic/Zabbix contextual observations; NEVER infer ownership, growth rate, cause of growth, or deletion safety from age/size alone. First identify exactly which file/producer consumes the mount, what error or job generates it, what retention/backup/legal hold policies apply, whether processes hold file handles, and how deletion affects services. No file deletion candidate or cleanup approval should be proposed when these facts are unknown. Prefer fixing the producer, retry loop or log rotation. Never issue an executable file-delete action. If application/database write pressure precedes storage pressure, consider storage as a downstream stressed resource; if storage/device/path faults precede application/database symptoms, storage becomes a stronger cause candidate.
 When Ceph evidence exists, inspect OSD state, PG health, degraded state, slow ops, recovery/backfill and replica health. When Kubernetes storage evidence exists, inspect PV/PVC state and attach/mount symptoms. Do not invent Ceph, SMART, multipath or PV state when absent.
 Focus areas: {json.dumps(self.spec.focus)}
 Return one JSON object with keys: severity, health_status, findings, affected_components,
@@ -179,6 +180,7 @@ PEER_OPERATIONAL_CONTEXT={json.dumps(peer_context, default=str)}"""
             analysis_details={
                 "focus": self.spec.focus,
                 "storage_analysis": storage_analysis,
+                "disk_file_causality": storage_analysis.get("disk_file_causality", {}),
                 "capacity_analysis": storage_analysis.get("capacity_analysis", {}),
                 "io_analysis": storage_analysis.get("io_analysis", {}),
                 "filesystem_analysis": storage_analysis.get("filesystem_analysis", {}),
