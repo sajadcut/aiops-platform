@@ -197,7 +197,7 @@ async def incident_chat_history(
                 for proposal_id, approval_id in requested.items()
                 if approval_id in status_by_id
             }
-    ctx = incident_vm_context(incident.context, checkpoint)
+    ctx = incident_vm_context(getattr(incident, "context", None), checkpoint)
     binding = vm_binding(incident.service, evidence, ctx) if not ctx.get("_vm_identity_context_conflicts") else None
     diagnosis = vm_binding_diagnostic(incident.service, evidence, ctx)
     return {"incident_id": str(incident_id), "service": incident.service,
@@ -220,7 +220,7 @@ async def incident_chat_message(
         incident, checkpoint, evidence = await _scope(db, incident_id)
         audit = PostgreSQLAuditStore(db)
         previous = history(await audit.list(str(incident_id), 200))
-        vm_context = incident_vm_context(incident.context, checkpoint)
+        vm_context = incident_vm_context(getattr(incident, "context", None), checkpoint)
         binding = vm_binding(incident.service, evidence, vm_context) if not vm_context.get("_vm_identity_context_conflicts") else None
         binding_diagnosis = vm_binding_diagnostic(incident.service, evidence, vm_context)
         if _explicit_wrong_target(payload.message, binding):
@@ -252,6 +252,9 @@ async def incident_chat_message(
         elif requested in {"elastic_logs", "elastic_recorded"}:
             # Never let a model convert an ELK question to a VM journal read
             # or invent an Elastic result from unrelated diagnostics.
+            intent = requested
+        elif requested in READ_ACTIONS and not historical_errors:
+            # Explicit read instructions outrank a mismatching model guess.
             intent = requested
         elif requested == "nginx_config_inspect" and not historical_errors:
             # An explicit request to inspect files must not become a vague
@@ -464,7 +467,7 @@ async def incident_chat_request_approval(
 ):
     async with AsyncSessionLocal() as db:
         incident, checkpoint, evidence = await _scope(db, incident_id)
-        context = incident_vm_context(incident.context, checkpoint)
+        context = incident_vm_context(getattr(incident, "context", None), checkpoint)
         binding, diagnosis = await resolve_vm_binding(
             incident.service, evidence, context, force_live=True,
         )
