@@ -70,7 +70,7 @@ def stored_elastic_observations(evidence: list[dict], *, service: str) -> dict:
     last = observations[-1] if observations else None
     return {
         "source": "elasticsearch",
-        "status": last["status"] if last else "not_recorded",
+        "status": last["status"] if last else "log_evidence_only" if rows else "not_recorded",
         "recorded_count": last["count"] if last else None,
         "sampled_log_evidence_count": sum(r["status"] == "log_record" for r in rows),
         "evidence_refs": list(dict.fromkeys(r["source_ref"] for r in rows if r["source_ref"]))[-8:],
@@ -179,6 +179,15 @@ def elastic_answer(observation: dict, *, persian: bool = True) -> str:
                     "محتوای کامل نتیجه در این خلاصه موجود نیست؛ برای بررسی دقیق، "
                     "استعلام زندهٔ Elasticsearch MCP درخواست کنید.")
         return "Saved evidence confirms an Elasticsearch query; reported result count: " + str(count) + ". Raw query findings are not established by this summary."
+    if status == "log_evidence_only":
+        count = observation.get("sampled_log_evidence_count", 0)
+        return (
+            f"{count} رکورد با منبع Elasticsearch در شواهد ذخیره شده، اما وضعیت و تعداد کل نتایج استعلام موجود نیست. "
+            "از این دادهٔ محدود نمی‌توان دربارهٔ نبود خطا یا سالم بودن سرویس نتیجه‌گیری کرد."
+            if persian else
+            f"{count} Elasticsearch-sourced log records were saved, but no query status or complete count is available. "
+            "Missing errors cannot be ruled out from this limited sample."
+        )
     if status in {"unavailable", "error", "skipped"}:
         return (
             f"در تحلیل ثبت‌شده، وضعیت Elasticsearch برابر {status} بوده؛ نتیجهٔ معتبری برای استنتاج دربارهٔ لاگ‌ها وجود ندارد."
