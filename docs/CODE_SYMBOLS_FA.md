@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 447 | Dashboard JS files scanned: 8 | Symbols indexed: 4192**
+**Python files scanned: 447 | Dashboard JS files scanned: 8 | Symbols indexed: 4207**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -2508,6 +2508,21 @@
 | `tests/security/test_vm_ssh_password_auth.py` | `test_password_auth_uses_asyncssh_and_not_subprocess` | 60 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/security/test_vm_ssh_password_auth.py` | `test_password_auth_uses_asyncssh_and_not_subprocess.fake_connect` | 64 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_password_auth_uses_asyncssh_and_not_subprocess |
 | `tests/security/test_vm_ssh_password_auth.py` | `test_password_auth_uses_asyncssh_and_not_subprocess.subprocess_must_not_run` | 69 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_password_auth_uses_asyncssh_and_not_subprocess |
+| `tests/security/test_vm_ssh_password_auth.py` | `test_password_sudo_retry_passes_ssh_secret_only_via_stdin` | 85 | async function | The same SSH password authenticates an allowlisted sudo operation securely. | module |
+| `tests/security/test_vm_ssh_password_auth.py` | `test_password_sudo_retry_passes_ssh_secret_only_via_stdin.Result` | 90 | class | کلاس | test_password_sudo_retry_passes_ssh_secret_only_via_stdin |
+| `tests/security/test_vm_ssh_password_auth.py` | `test_password_sudo_retry_passes_ssh_secret_only_via_stdin.Result.__init__` | 91 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_password_sudo_retry_passes_ssh_secret_only_via_stdin.Result |
+| `tests/security/test_vm_ssh_password_auth.py` | `test_password_sudo_retry_passes_ssh_secret_only_via_stdin.Connection` | 96 | class | کلاس | test_password_sudo_retry_passes_ssh_secret_only_via_stdin |
+| `tests/security/test_vm_ssh_password_auth.py` | `test_password_sudo_retry_passes_ssh_secret_only_via_stdin.Connection.run` | 97 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | test_password_sudo_retry_passes_ssh_secret_only_via_stdin.Connection |
+| `tests/security/test_vm_ssh_password_auth.py` | `test_password_sudo_retry_passes_ssh_secret_only_via_stdin.ConnectionContext` | 108 | class | کلاس | test_password_sudo_retry_passes_ssh_secret_only_via_stdin |
+| `tests/security/test_vm_ssh_password_auth.py` | `test_password_sudo_retry_passes_ssh_secret_only_via_stdin.ConnectionContext.__aenter__` | 109 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_password_sudo_retry_passes_ssh_secret_only_via_stdin.ConnectionContext |
+| `tests/security/test_vm_ssh_password_auth.py` | `test_password_sudo_retry_passes_ssh_secret_only_via_stdin.ConnectionContext.__aexit__` | 112 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_password_sudo_retry_passes_ssh_secret_only_via_stdin.ConnectionContext |
+| `tests/security/test_vm_ssh_password_auth.py` | `test_sudo_retry_never_passes_password_on_successful_nopasswd` | 130 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/security/test_vm_ssh_password_auth.py` | `test_sudo_retry_never_passes_password_on_successful_nopasswd.Result` | 134 | class | کلاس | test_sudo_retry_never_passes_password_on_successful_nopasswd |
+| `tests/security/test_vm_ssh_password_auth.py` | `test_sudo_retry_never_passes_password_on_successful_nopasswd.Connection` | 139 | class | کلاس | test_sudo_retry_never_passes_password_on_successful_nopasswd |
+| `tests/security/test_vm_ssh_password_auth.py` | `test_sudo_retry_never_passes_password_on_successful_nopasswd.Connection.run` | 140 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | test_sudo_retry_never_passes_password_on_successful_nopasswd.Connection |
+| `tests/security/test_vm_ssh_password_auth.py` | `test_sudo_retry_never_passes_password_on_successful_nopasswd.ConnectionContext` | 144 | class | کلاس | test_sudo_retry_never_passes_password_on_successful_nopasswd |
+| `tests/security/test_vm_ssh_password_auth.py` | `test_sudo_retry_never_passes_password_on_successful_nopasswd.ConnectionContext.__aenter__` | 145 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_sudo_retry_never_passes_password_on_successful_nopasswd.ConnectionContext |
+| `tests/security/test_vm_ssh_password_auth.py` | `test_sudo_retry_never_passes_password_on_successful_nopasswd.ConnectionContext.__aexit__` | 148 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_sudo_retry_never_passes_password_on_successful_nopasswd.ConnectionContext |
 | `tests/unit/test_agent_architecture_advanced.py` | `SequenceLLM` | 20 | class | کلاس | module |
 | `tests/unit/test_agent_architecture_advanced.py` | `SequenceLLM.__init__` | 21 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SequenceLLM |
 | `tests/unit/test_agent_architecture_advanced.py` | `SequenceLLM.provider_name` | 26 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SequenceLLM |
