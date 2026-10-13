@@ -341,6 +341,14 @@ def build_decision_brief(
     agents = _agents(state, findings)
     mcp, sources = _mcp(evidence, now)
     disk_file_causality = correlate_disk_file_causality(evidence)
+    from apps.orchestrator.recovery_advice import build_vm_recovery_advisory
+    # Rebuild from durable MCP observations; never trust a free-form LLM plan,
+    # a model-editable checkpoint field or a historical memory as evidence.
+    advisory = build_vm_recovery_advisory(
+        evidence=evidence,
+        service_name=incident.get("service") or state.get("service_name"),
+        context=obj(state.get("context")) or obj(incident.get("context")),
+    )
     knowledge = _knowledge(state, agents)
     memory = _memory(state, agents)
     approval = obj(summary.get("approval"))
@@ -472,6 +480,9 @@ def build_decision_brief(
             "start_requires_valid_config_and_approval": True,
         },
         "disk_file_causality": redact(disk_file_causality) if disk_file_causality.get("files") else None,
+        # Visible even when the dynamic LLM planner is disabled, and even if
+        # evaluator blocks a governed execution proposal. Read-only advice.
+        "recovery_advisory": redact(advisory) if advisory else None,
         "agent_findings": agents,
         "mcp_evidence": mcp,
         "monitoring_sources": sources,
