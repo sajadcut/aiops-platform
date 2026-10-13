@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 465 | Dashboard JS files scanned: 8 | Symbols indexed: 4478**
+**Python files scanned: 465 | Dashboard JS files scanned: 8 | Symbols indexed: 4480**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -3323,12 +3323,14 @@
 | `tests/unit/test_dotin_general_chatbot_llm.py` | `test_dotin_provider_does_not_retry_nontransient_400` | 277 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_dotin_general_chatbot_llm.py` | `test_dotin_provider_retries_transport_error_then_succeeds` | 302 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_dotnet_aiops_validator.py` | `encoded` | 13 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `tests/unit/test_dotnet_aiops_validator.py` | `test_parse_is_local_and_never_returns_credentials` | 23 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_dotnet_aiops_validator.py` | `test_safe_error_explains_location_and_possible_fix_without_source_line` | 33 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_dotnet_aiops_validator.py` | `test_target_needs_only_coreutils_no_python_or_dotnet_sdk` | 42 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_dotnet_aiops_validator.py` | `test_untrusted_file_names_cannot_be_read` | 54 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_dotnet_aiops_validator.py` | `test_symlinks_and_incomplete_listing_fail_closed` | 59 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_dotnet_aiops_validator.py` | `test_oversized_and_malformed_payloads_never_report_valid` | 69 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_dotnet_aiops_validator.py` | `test_parse_is_local_and_never_returns_credentials` | 26 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_dotnet_aiops_validator.py` | `test_safe_error_explains_location_and_possible_fix_without_source_line` | 36 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_dotnet_aiops_validator.py` | `test_target_needs_only_coreutils_no_python_or_dotnet_sdk` | 45 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_dotnet_aiops_validator.py` | `test_untrusted_file_names_cannot_be_read` | 57 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_dotnet_aiops_validator.py` | `test_symlinks_and_incomplete_listing_fail_closed` | 62 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_dotnet_aiops_validator.py` | `test_oversized_and_malformed_payloads_never_report_valid` | 72 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_dotnet_aiops_validator.py` | `test_dotnet_compatible_comments_and_trailing_commas_do_not_false_fail` | 80 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_dotnet_aiops_validator.py` | `test_dotnet_syntax_error_positions_survive_comment_normalization` | 87 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_dual_logging.py` | `_flush_root_handlers` | 10 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_dual_logging.py` | `_configure_file_logging` | 15 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_dual_logging.py` | `test_dual_format_logging_writes_human_and_json_files` | 32 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
