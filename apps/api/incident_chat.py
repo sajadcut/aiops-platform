@@ -24,6 +24,10 @@ from apps.incident_elastic import (
     elastic_live_read, elastic_answer, stored_elastic_observations,
 )
 from apps.orchestrator.workflow_store import WorkflowCheckpointStore
+from apps.incident_vm_identity import (
+    incident_vm_context, vm_binding_diagnostic, resolve_vm_binding,
+    vm_status_answer,
+)
 from apps.runbook_service.runtime_guard import RunbookRuntimeGuard
 from apps.security.auth import require_permission
 from database import AsyncSessionLocal
@@ -53,9 +57,22 @@ async def _scope(db, incident_id: UUID) -> tuple[Incident, dict, list[dict]]:
         select(Evidence).where(Evidence.incident_id == incident_id)
         .order_by(desc(Evidence.created_at)).limit(500)
     )).scalars().all()
-    evidence = [{"source": r.source, "raw_data": r.raw_data or {},
-                 "reference": r.reference, "created_at": str(r.created_at)}
-                for r in reversed(rows)]
+    vm_rows = (await db.execute(
+        select(Evidence).where(
+            Evidence.incident_id == incident_id, Evidence.source == "vm_mcp",
+        ).order_by(desc(Evidence.created_at)).limit(350)
+    )).scalars().all()
+    seen_ids = set()
+    evidence = []
+    for row in list(reversed(vm_rows)) + list(reversed(rows)):
+        if row.id in seen_ids:
+            continue
+        seen_ids.add(row.id)
+        evidence.append({
+            "source": row.source, "raw_data": row.raw_data or {},
+            "reference": row.reference, "created_at": str(row.created_at),
+            "id": str(row.id),
+        })
     return incident, checkpoint, merge_incident_evidence(evidence, checkpoint)
 
 
@@ -180,10 +197,15 @@ async def incident_chat_history(
                 for proposal_id, approval_id in requested.items()
                 if approval_id in status_by_id
             }
-    binding = vm_binding(incident.service, evidence, (checkpoint.get("state") or {}).get("context"))
+    ctx = incident_vm_context(getattr(incident, "context", None), checkpoint)
+    binding = vm_binding(incident.service, evidence, ctx) if not ctx.get("_vm_identity_context_conflicts") else None
+    diagnosis = vm_binding_diagnostic(incident.service, evidence, ctx)
     return {"incident_id": str(incident_id), "service": incident.service,
             "items": history(events), "approvals": approvals,
-            "vm_bound": binding is not None, "status": "ready"}
+            "vm_bound": binding is not None,
+            "vm_binding_status": "verified" if binding else diagnosis["reason"],
+            "vm_live_recheck_possible": bool(diagnosis.get("candidate")),
+            "status": "ready"}
 
 
 @router.post(
@@ -198,7 +220,9 @@ async def incident_chat_message(
         incident, checkpoint, evidence = await _scope(db, incident_id)
         audit = PostgreSQLAuditStore(db)
         previous = history(await audit.list(str(incident_id), 200))
-        binding = vm_binding(incident.service, evidence, (checkpoint.get("state") or {}).get("context"))
+        vm_context = incident_vm_context(getattr(incident, "context", None), checkpoint)
+        binding = vm_binding(incident.service, evidence, vm_context) if not vm_context.get("_vm_identity_context_conflicts") else None
+        binding_diagnosis = vm_binding_diagnostic(incident.service, evidence, vm_context)
         if _explicit_wrong_target(payload.message, binding):
             raise HTTPException(status_code=409, detail="chat_target_must_match_incident")
         brief = await load_decision_brief_for_incident(db, incident_id)
@@ -229,12 +253,24 @@ async def incident_chat_message(
             # Never let a model convert an ELK question to a VM journal read
             # or invent an Elastic result from unrelated diagnostics.
             intent = requested
+        elif requested in READ_ACTIONS and not historical_errors:
+            # Explicit read instructions outrank a mismatching model guess.
+            intent = requested
         elif requested == "nginx_config_inspect" and not historical_errors:
             # An explicit request to inspect files must not become a vague
             # no-access model answer or an unrelated diagnostic.
             intent = requested
         elif requested != "answer" and intent == "answer":
             intent = requested
+        vm_actions = READ_ACTIONS - {"knowledge_search", "elastic_logs", "elastic_recorded"}
+        if intent in vm_actions or intent in WRITE_SUGGESTIONS:
+            binding, binding_diagnosis = await resolve_vm_binding(
+                incident.service, evidence, vm_context,
+                force_live=(intent in WRITE_SUGGESTIONS),
+            )
+            if _explicit_wrong_target(payload.message, binding):
+                raise HTTPException(status_code=409, detail="chat_target_must_match_incident")
+            summary["vm_binding"] = binding or {"status": binding_diagnosis["status"]}
         refs = (binding or {}).get("evidence_refs") or []
         if historical_errors:
             refs = list(dict.fromkeys(
@@ -260,7 +296,11 @@ async def incident_chat_message(
                     incident_id,
                 )
             elif binding is None:
-                observation = {"success": False, "status": "target_not_verified"}
+                observation = {"success": False, "status": "target_not_verified",
+                               "binding_reason": binding_diagnosis.get("status", "unverified")}
+            elif intent == "service_status" and binding_diagnosis.get("live_observation"):
+                from apps.incident_copilot import public_result
+                observation = public_result("service_status", binding_diagnosis["live_observation"])
             else:
                 try:
                     observation = await vm_read(intent, binding)
@@ -302,6 +342,11 @@ async def incident_chat_message(
                     "بررسی زنده انجام شد، اما LLM نتوانست نتیجه را خلاصه کند. "
                     "نتیجهٔ ثبت‌شدهٔ ابزار را در شواهد مشاهده کنید."
                 )
+                if intent == "service_status":
+                    answer = vm_status_answer(
+                        observation,
+                        persian=bool(re.search(r"[\u0600-\u06ff]", payload.message)),
+                    )
                 if intent == "nginx_config_inspect":
                     factual = nginx_inspection_answer(
                         observation,
@@ -317,6 +362,8 @@ async def incident_chat_message(
                         answer = factual
             else:
                 reason = str(observation.get("status") or "mcp_unavailable")[:70]
+                if observation.get("binding_reason"):
+                    reason += "/" + str(observation["binding_reason"])[:65]
                 if intent == "nginx_config_inspect":
                     answer = nginx_inspection_answer(
                         observation,
@@ -335,15 +382,28 @@ async def incident_chat_message(
             kind = "action_proposal"
             action = WRITE_SUGGESTIONS[intent]
             if binding is not None:
+                original_action = action
+                if action == "start_service" and binding.get("active_state") == "failed":
+                    # The registered runbook maps failed units to Restart.
+                    # Present the changed action for deliberate operator review.
+                    action = "restart_service"
+                    explanation = (
+                        "وضعیت زنده سرویس failed است. Runbook برای این حالت Restart "
+                        "را تعریف کرده، نه Start؛ برای ادامه درخواست تأیید Restart را انتخاب کنید."
+                    )
+                else:
+                    explanation = f"درخواست {action} برای همین سرویس آمادهٔ بررسی است."
                 proposal = {
-                    "action": action, "service": binding["service"],
-                    "target": binding["target"], "risk_level": "high",
+                    "action": action, "requested_action": original_action,
+                    "service": binding["service"], "target": binding["target"],
+                    "risk_level": "high",
                     "status": "requires_preflight_and_approval",
                     "execution_authority": False,
                 }
-                answer = (
-                    plan["answer"] or f"پیشنهاد {action} برای سرویس این رخداد آماده بررسی است."
-                ) + "\nهیچ عملیات اجرایی انجام نشده است. درخواست تأیید تنها پس از بررسی زنده شرایط ایمنی ساخته می‌شود."
+                answer = explanation + (
+                    "\nهنوز عملیاتی اجرا نشده است. برای ایجاد درخواست تأیید، "
+                    "باید پیش‌شرط‌های زندهٔ Runbook نیز عبور کنند."
+                )
             else:
                 answer = "مقصد و سرویس این رخداد با شواهد MCP تأیید نشده است؛ امکان درخواست عملیات وجود ندارد."
         else:
@@ -407,10 +467,15 @@ async def incident_chat_request_approval(
 ):
     async with AsyncSessionLocal() as db:
         incident, checkpoint, evidence = await _scope(db, incident_id)
-        context = (checkpoint.get("state") or {}).get("context") or {}
-        binding = vm_binding(incident.service, evidence, context)
+        context = incident_vm_context(getattr(incident, "context", None), checkpoint)
+        binding, diagnosis = await resolve_vm_binding(
+            incident.service, evidence, context, force_live=True,
+        )
         if binding is None:
-            raise HTTPException(status_code=409, detail="incident_vm_identity_unverified")
+            raise HTTPException(status_code=409, detail={
+                "code": "incident_vm_identity_unverified",
+                "reason": diagnosis.get("status"),
+            })
         # Lock the proposal scope transactionally, rejecting duplicate requests
         # even if two operator browser tabs send simultaneously.
         await db.execute(text("SELECT pg_advisory_xact_lock(hashtext(:key))"),
