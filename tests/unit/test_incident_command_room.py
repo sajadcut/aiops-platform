@@ -128,6 +128,14 @@ const assert = require('node:assert/strict');
       why:'Collected state says inactive'},
     localized_narrative:{fa:'سرویس از دسترس خارج شده است.',en:'Service is offline.'},
     rca_assessment:{rca_confidence:0.72,evaluator_confidence:0.67,agent_agreement:0.7},
+    operator_explanation:{
+      headline_fa:'خطای معتبر در کانفیگ JSON پیدا شد؛ هنوز Start مجاز نیست.',
+      confirmed_findings:[{text_fa:'JSON فایل appsettings.json خط ۳۲ نامعتبر است.',
+        evidence_refs:['ev-config']}],
+      uncertainties_fa:['علت توقف اولیه هنوز اثبات نشده است.'],
+      next_steps_fa:['بررسی خط ۳۲؛ اصلاح کنترل‌شده، سپس تست مجدد و تأیید مستقل.'],
+      approval_explanation_fa:'در حال حاضر هیچ اقدام اجرایی قابل تأیید ثبت نشده است.'
+    },
     configuration_diagnostic:{status:'invalid',config_file:'/etc/nginx/nginx.conf',
       error_line:42,syntax_error:'unknown directive on config line',evidence_refs:['ev-config'],
       repair_then_revalidate:true,start_requires_valid_config_and_approval:true},
@@ -204,6 +212,13 @@ const assert = require('node:assert/strict');
   assert.match(el('#ic-flow-steps').innerHTML,/تریاژ آلارم/);
   assert.match(el('#ic-flow-caution').textContent,/تخمین زمان باقی‌مانده نیست/);
   assert.match(el('#ic-brief-lead').innerHTML,/سرویس از دسترس/);
+  const briefing=el('#ic-operator-explanation').innerHTML;
+  assert.match(briefing,/خطای معتبر در کانفیگ JSON/);
+  assert.match(briefing,/چه چیزهایی واقعاً بررسی و تأیید شده/);
+  assert.match(briefing,/appsettings.json خط ۳۲/);
+  assert.match(briefing,/چه چیزهایی هنوز نامشخص است/);
+  assert.match(briefing,/قدم بعدی پیشنهادی AIOps/);
+  assert.match(briefing,/هیچ اقدام اجرایی قابل تأیید/);
   assert.match(el('#ic-sources').innerHTML,/Prometheus/);
   assert.match(el('#ic-agent-summary').innerHTML,/ایجنت‌های ثبت‌شده/);
   const configCard=el('#ic-config-diagnostic').innerHTML;
