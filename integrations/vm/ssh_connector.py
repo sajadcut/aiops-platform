@@ -852,9 +852,9 @@ class SSHVMConnector:
             return {**base, "status": "preview_malformed"}
         # No raw configuration or arbitrary tool-returned keys cross the MCP.
         structure = re.compile(
-            r"(?:[A-Za-z_][A-Za-z0-9_]{0,40}(?: \\[arguments redacted\\])?"
-            r"(?: [\\{\\}]{1,8})?|\\[structural\\](?: [\\{\\}]{1,8})?"
-            r"|\\[blank or comment\\]|\\[remove entire stray brace line\\])"
+            r"(?:[A-Za-z_][A-Za-z0-9_]{0,40}(?: \[arguments redacted\])?"
+            r"(?: [{}]{1,8})?|\[structural\](?: [{}]{1,8})?"
+            r"|\[blank or comment\]|\[remove entire stray brace line\])"
         )
         def safe_preview_text(value: Any) -> str:
             text = str(value or "")[:125]
