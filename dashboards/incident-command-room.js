@@ -546,7 +546,15 @@
   function renderOutcome(r) {
     const o=r.execution_outcome||{},v=r.verification_result||{},learn=r.knowledge_learning_status||{},a=r.approval_readiness||{};
     const performed=o.status && !['not_executed','not_recorded','unknown'].includes(low(o.status));
+    const consumed=low(a.approval_status)==='consumed';
+    const running=consumed && state.lifecycle?.analysis_in_progress===true;
     const first=performed?'<div class="ic-outcome-heading"><strong>'+tr('execute')+'</strong>'+pill(o.status)+'</div>':
+      running?'<div class="ic-analysis-progress" role="status"><span class="ic-analysis-spinner" aria-hidden="true"></span><div><strong>'+
+        (state.language==='fa'?'عملیات تأییدشده در حال اجرا یا راستی‌آزمایی است…':'Approved execution or verification in progress…')+
+        '</strong><small>'+(state.language==='fa'?'در انتظار ثبت نتیجهٔ نهایی؛ از اجرای مجدد خودداری کنید.':'Awaiting a final durable result; do not retry the action.')+'</small></div></div>':
+      consumed?'<p class="ic-empty">'+
+        (state.language==='fa'?'مجوز قبلاً مصرف شده ولی نتیجهٔ اجرای نهایی در این گزارش موجود نیست؛ Audit و وضعیت Workflow را بررسی کنید.':'Approval has been consumed but no final outcome is recorded; check audit and workflow status.')+
+        '</p>':
       '<p class="ic-empty">'+tr('noExecution')+'</p>';
     show('#ic-outcome-view',first+'<div class="ic-proposal">'+
       fact('action',humanAction(o.action))+fact('tool',humanTool(o.tool))+fact('target',o.target)+fact('approvalId',o.approval_id||a.approval_id)+
@@ -627,13 +635,28 @@
   function renderDecision(r) {
     const a=r.approval_readiness||{},x=r.remediation_recommendation||{},statusValue=low(a.approval_status);
     const archived=!!state.historic;
-    const snapshotBad=a.evidence_snapshot_binding==='drift_detected'||a.status==='new_approval_required';
-    const binding=Boolean(a.binding_complete)&&!snapshotBad;
     const pending=statusValue==='pending', approved=statusValue==='approved';
-    let heading=pending?tr('approvalPending'):approved?tr('approvalApproved'):tr('approvalFinished');
+    // A consumed approval is intentionally one-time. Snapshot changes from
+    // actual execution/verification must never be shown as a NEW approval drift.
+    const snapshotBad=(pending||approved)&&
+      (a.evidence_snapshot_binding==='drift_detected'||a.status==='new_approval_required');
+    const binding=Boolean(a.binding_complete)&&!snapshotBad;
+    const executed=low(r.execution_outcome?.status)==='success';
+    const verified=['success','verified','succeeded'].includes(low(r.verification_result?.status));
+    const executing=statusValue==='consumed' && state.lifecycle?.analysis_in_progress===true;
+    let heading=pending?tr('approvalPending'):approved?tr('approvalApproved'):
+      executing?(state.language==='fa'?'در حال اجرای عملیات تأییدشده':'Approved execution in progress'):
+      statusValue==='consumed' && executed && verified
+        ?(state.language==='fa'?'بازیابی سرویس تأیید شد':'Service recovery verified'):
+      statusValue==='consumed'
+        ?(state.language==='fa'?'مجوز مصرف شده؛ نتیجهٔ عملیات را بررسی کنید':'Approval consumed; review execution outcome'):
+      tr('approvalFinished');
     if(archived)heading=tr('historical');
+    const detail=archived?tr('archiveHint'):statusValue==='consumed'
+      ?(state.language==='fa'?'این مجوز یک‌بار مصرف شده و اجرای مجدد فقط با مجوز جدید ممکن است.':'This approval has already been consumed and cannot authorize a second execution.')
+      :pending?tr('approvalSeparate'):tr('execBound');
     show('#ic-action-state','<div class="ic-decision-status"><strong>'+esc(heading)+'</strong><p>'+
-      esc(archived?tr('archiveHint'):pending?tr('approvalSeparate'):tr('execBound'))+'</p>'+
+      esc(detail)+'</p>'+
       pill(statusValue)+'</div><div class="ic-mini-facts">'+
       mini('action',humanAction(a.action||x.action))+mini('target',a.target||x.target)+mini('risk',status(x.risk_level))+
       mini('tool',humanTool(a.tool||x.tool))+mini('freshness',status(a.data_freshness))+
