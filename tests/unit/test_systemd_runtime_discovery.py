@@ -111,11 +111,11 @@ async def test_connector_discovery_and_json_diagnostic_are_read_only(monkeypatch
         if command.startswith("systemctl show "):
             return {"success": True, "stdout": SYSTEMD}
         if " find " in command:
-            return {"success": True, "stdout": "appsettings.Production.json\\tf\\n"}
+            return {"success": True, "stdout": "appsettings.Production.json\tf\n"}
         if "base64 -w 0" in command:
             import base64
             return {"success": True, "stdout": base64.b64encode(
-                b'{\\n  "Logging": true,\\n  "Bad": }\\n'
+                b'{\n  "Logging": true,\n  "Bad": }\n'
             ).decode()}
         raise AssertionError("Unexpected command")
     monkeypatch.setattr(connector, "_run", fake_run)
