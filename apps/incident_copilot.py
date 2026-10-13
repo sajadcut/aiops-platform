@@ -250,7 +250,7 @@ def fallback_intent(message: str) -> str:
         return "elastic_logs" if wants_live_elastic(text) else "elastic_recorded"
     if re.search(r"ریلود|رِیلود|بارگذاری مجدد|\breload\b", text):
         return "propose_reload"
-    if re.search(r"ری[\s\u200c]*استارت|راه اندازی مجدد|\brestart\b", text):
+    if re.search(r"ری(?:[\s\u200c]*ا)?ستارت|راه اندازی مجدد|\brestart\b", text):
         return "propose_restart"
     if re.search(r"استارت|راه انداز|\bstart\b", text):
         return "propose_start"
