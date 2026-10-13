@@ -131,6 +131,18 @@ class MCPClient:
             return {"omitted": "payload_too_large", "size_bytes": len(encoded)}
         return safe
 
+    def _safe_mcp_log(self, payload: Any, *, method: str, tool_name: Optional[str]) -> Any:
+        # ES|QL can return confidential log records. Redaction based only on
+        # field names or payload size is insufficient; omit query and result.
+        if self.server_name == "elastic-agent-builder" and tool_name == "platform_core_execute_esql":
+            if isinstance(payload, dict):
+                return {"omitted": "elastic_esql_payload", "isError": bool(
+                    payload.get("isError")
+                    or (isinstance(payload.get("result"), dict) and payload["result"].get("isError"))
+                )}
+            return {"omitted": "elastic_esql_payload"}
+        return self._bounded_for_log(payload)
+
     @staticmethod
     def _incident_id_from_payload(payload: Dict[str, Any]) -> Optional[str]:
         params = payload.get("params")
@@ -170,7 +182,7 @@ class MCPClient:
                 method=method,
                 tool=tool_name,
                 attempt=attempt,
-                request=self._bounded_for_log(payload),
+                request=self._safe_mcp_log(payload, method=method, tool_name=tool_name),
             )
             log_workflow_step(
                 incident_id=incident_id,
@@ -222,7 +234,7 @@ class MCPClient:
                     tool=tool_name,
                     status=response.status_code,
                     duration_ms=duration_ms,
-                    response=self._bounded_for_log(decoded),
+                    response=self._safe_mcp_log(decoded, method=method, tool_name=tool_name),
                 )
                 tool_result = decoded.get("result")
                 tool_failed = (
@@ -236,7 +248,7 @@ class MCPClient:
                         server=self.server_name,
                         tool=tool_name,
                         status=response.status_code,
-                        response=self._bounded_for_log(tool_result),
+                        response=self._safe_mcp_log(tool_result, method=method, tool_name=tool_name),
                     )
                     log_workflow_step(
                         incident_id=incident_id,
@@ -383,7 +395,7 @@ class MCPClient:
             tool_name=tool_name,
         )
         if result.get("error"):
-            logger.warning("mcp_remote_error", server=self.server_name, method=method, tool=tool_name, response=self._bounded_for_log(result))
+            logger.warning("mcp_remote_error", server=self.server_name, method=method, tool=tool_name, response=self._safe_mcp_log(result, method=method, tool_name=tool_name))
             remote_error = result.get("error")
             remote_message = (
                 str(remote_error.get("message") or "").strip()
@@ -401,7 +413,7 @@ class MCPClient:
                 "mcp_tool_error",
                 server=self.server_name,
                 tool=tool_name,
-                response=self._bounded_for_log(payload),
+                response=self._safe_mcp_log(payload, method=method, tool_name=tool_name),
             )
             raise RuntimeError(f"mcp_tool_error:{self.server_name}:{tool_name or 'unknown'}")
         return payload if isinstance(payload, dict) else {}
