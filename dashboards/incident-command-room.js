@@ -869,12 +869,12 @@
         Number.isInteger(config.error_column)?(fa?'ستون '+num(config.error_column):'column '+num(config.error_column)):null]
         .filter(Boolean).join(' — ');
       items.push('<article class="ic-config-check" data-config-status="invalid"><h3>'+
-        esc(fa?'خطای واقعی در کانفیگ سرویس شناسایی شد':'Service configuration validation failed')+'</h3>'+
+        esc(fa?'آخرین تست ثبت‌شده، خطای کانفیگ را نشان می‌دهد':'Recorded configuration syntax check failed')+'</h3>'+
         '<p><b>'+esc(fa?'محل خطا:':'Reported location:')+'</b> <span dir="auto">'+txt(location)+'</span></p>'+
         (config.syntax_error?'<p><b>'+esc(fa?'پیام ابزار بررسی سینتکس:':'Validator error:')+
           '</b> <span dir="auto">'+txt(config.syntax_error)+'</span></p>':'')+
         '<p>'+esc(fa?
-          'کانفیگ فعلی تست معتبر را رد کرده است. ابتدا خطای گزارش‌شده با فرایند تغییرات مجاز اصلاح شود، سپس کانفیگ دوباره تست شود. فقط بعد از موفقیت تست، Start سرویس برای تأیید اپراتور پیشنهاد می‌شود. علت توقف اولیه هنوز مشخص نیست.':
+          'در زمان ثبت این شواهد، تست سینتکس کانفیگ ناموفق بوده است. قبل از تغییر، وضعیت فایل و نسخه فعلی دوباره بررسی شود؛ سپس اصلاح کنترل‌شده و تست مجدد انجام شود. فقط بعد از موفقیت تست و گذر از گیت‌های ایمنی، Start سرویس برای تأیید اپراتور پیشنهاد می‌شود. علت توقف اولیه هنوز قطعی نیست.':
           'The current syntax check failed. Repair under change control, revalidate, and only then propose an operator-approved start. The original stop cause remains unknown.')+'</p>'+
         refs(config.evidence_refs)+'</article>');
     } else if(kind==='valid') {
