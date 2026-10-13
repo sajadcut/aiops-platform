@@ -77,3 +77,25 @@ async def test_config_validate_reports_real_syntax_failure_as_invalid(monkeypatc
     assert result["supported"] is True
     assert result["valid"] is False
     assert result["exit_code"] == 1
+
+
+@pytest.mark.asyncio
+async def test_system_logs_fall_back_to_sudo_when_journal_denied(monkeypatch):
+    monkeypatch.setattr(settings, "APP_ENV", "test")
+    connector = SSHVMConnector()
+    calls = []
+
+    async def fake_run(target, command):
+        calls.append(command)
+        if command.startswith("journalctl "):
+            return {"success": False, "exit_code": 1, "stderr": "permission denied"}
+        if command.startswith("sudo -n journalctl "):
+            return {"success": True, "exit_code": 0, "stdout": "service stopped by systemd", "stderr": ""}
+        raise AssertionError("unexpected diagnostic command")
+
+    monkeypatch.setattr(connector, "_run", fake_run)
+    result = await connector.system_logs("10.100.6.199", limit=20)
+    assert result["success"] is True
+    assert result["access_mode"] == "sudo"
+    assert result["logs"] == ["service stopped by systemd"]
+    assert len(calls) == 2
