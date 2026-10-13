@@ -145,6 +145,7 @@ async def test_focused_rag_rejects_wrong_service_and_scrubs_old_knowledge():
                 "source": "vm_mcp", "reference": "runtime-1",
                 "raw_data": {
                     "diagnostic": "service_runtime_discovery",
+                    "success": True,
                     "runtime": "dotnet", "service": "gfpapi",
                     "entrypoint": "/data/gfp/gfpapi/GFP.Endpoints.API.dll",
                 },
