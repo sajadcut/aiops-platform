@@ -96,21 +96,33 @@ class E2EOrchestrator:
             vm=vm_connector,
             kubernetes=kubernetes,
         )
+        self.progress_emitter = None  # optional async, durable and read-only
         self.graph = self._build_graph()
 
     def _build_graph(self):
         w = StateGraph(E2EState)
-        w.add_node("context", self._context_node)
-        w.add_node("triage", self._triage_node)
-        w.add_node("parallel_agents", self._parallel_agents_node)
-        w.add_node("rca", self._rca_node)
-        w.add_node("evaluator", self._evaluator_node)
-        w.add_node("decision", self._decision_node)
-        w.add_node("approval", self._approval_node)
-        w.add_node("execution", self._execution_node)
-        w.add_node("verification", self._verification_node)
-        w.add_node("memory", self._memory_node)
-        w.add_node("end", self._end_node)
+        # Actual Node begin/end events, never a timer-based simulated progress.
+        # The observer writes to a separate short DB transaction and cannot
+        # change LangGraph state or any Approval/Execution authorization gate.
+        for stage in ("context", "triage", "parallel_agents", "rca", "evaluator",
+                      "decision", "approval", "execution", "verification", "memory", "end"):
+            handler = getattr(self, f"_{stage}_node")
+
+            async def observed(state, _stage=stage, _handler=handler):
+                observer = self.progress_emitter
+                if observer:
+                    await observer(state.get("incident_id"), _stage, "started")
+                try:
+                    result = await _handler(state)
+                except Exception:
+                    if observer:
+                        await observer(state.get("incident_id"), _stage, "failed")
+                    raise
+                if observer:
+                    await observer(state.get("incident_id"), _stage, "completed")
+                return result
+
+            w.add_node(stage, observed)
         w.set_entry_point("context")
         w.add_edge("context", "triage")
         w.add_edge("triage", "parallel_agents")
