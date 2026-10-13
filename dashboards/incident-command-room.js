@@ -1050,15 +1050,38 @@
     show('#ic-agents',cards.length?cards.join(''):empty(fa?'هنوز خروجی ایجنتی ثبت نشده است.':'No specialist result recorded.'));
   }
   function renderEvidence(r) {
-    const sources=arr(r.monitoring_sources),mcp=arr(r.mcp_evidence);
+    const sources=arr(r.monitoring_sources),mcp=arr(r.mcp_evidence),fa=state.language==='fa';
     show('#ic-sources',sources.length?sources.map(x=>'<article class="ic-source-card"><strong>'+txt(x.source)+'</strong>'+pill(x.status)+
       '<p>'+tr('freshness')+': '+txt(status(x.freshness))+'</p>'+
       (['error','unavailable'].includes(low(x.status))?'<p class="ic-warning">'+tr('sourceUnavailable')+'</p>':'')+'</article>').join(''):empty());
-    show('#ic-mcp',mcp.length?mcp.map(x=>'<article class="ic-detail-card"><div class="ic-detail-head"><h4>'+
-      txt(humanTool(x.server))+' / '+txt(humanTool(x.tool))+'</h4>'+pill(x.status)+'</div>'+
-      '<p>'+txt(plain(x.finding))+'</p>'+original(x.finding)+'<div class="ic-meta">'+tr('sampleTime')+': '+txt(date(x.collected_at))+
-      ' · '+tr('freshness')+': '+txt(status(x.freshness))+' · '+tr('phase')+': '+txt(x.phase)+'</div>'+
-      refs(x.evidence_ref?[x.evidence_ref]:[])+'</article>').join(''):empty());
+    const observations=mcp.map(x=>{
+      const semantic=low(x.semantic_result);
+      const label=semantic==='configuration_invalid'?(fa?'خطای کانفیگ تأیید شده':'Invalid configuration'):
+        semantic==='configuration_valid_syntax_only'?(fa?'فقط سینتکس فایل معتبر است':'JSON syntax passed only'):null;
+      return '<article class="ic-detail-card"><div class="ic-detail-head"><h4>'+
+        txt(humanTool(x.server))+' / '+txt(humanTool(x.tool))+'</h4>'+
+        (label?'<strong class="ic-semantic-diagnostic" data-invalid="'+(semantic==='configuration_invalid')+'">'+
+          esc(label)+'</strong>':pill(x.status))+'</div>'+
+        '<p>'+txt(plain(x.finding))+'</p>'+original(x.finding)+
+        (label?'<p class="ic-agent-disclaimer">'+esc(fa?
+          'موفق بودن فراخوانی MCP، سالم بودن تنظیمات سرویس را ثابت نمی‌کند.':
+          'Tool call success is not evidence that application configuration is valid.')+'</p>':'')+
+        '<div class="ic-meta">'+tr('sampleTime')+': '+txt(date(x.collected_at))+
+        ' · '+tr('freshness')+': '+txt(status(x.freshness))+
+        ' · '+tr('phase')+': '+txt(x.phase)+'</div>'+
+        refs(x.evidence_ref?[x.evidence_ref]:[])+'</article>';
+    });
+    const important=[],remaining=[];
+    mcp.forEach((x,i)=>{
+      const priority=low(x.semantic_result)==='configuration_invalid' ||
+        ['failed','error'].includes(low(x.status)) ||
+        ['service_status','dotnet_config_syntax','config_validate','service_runtime_discovery'].includes(low(x.tool));
+      (priority&&important.length<7?important:remaining).push(observations[i]);
+    });
+    const extra=remaining.length?'<details class="ic-evidence-rest"><summary>'+
+      esc(fa?'مشاهدهٔ '+num(remaining.length)+' بررسی فنی دیگر':'Show '+remaining.length+' more technical results')+
+      '</summary><div class="ic-evidence-rest-content">'+remaining.join('')+'</div></details>':'';
+    show('#ic-mcp',mcp.length?important.join('')+extra:empty());
   }
   function renderKnowledge(r) {
     const k=r.cognia_knowledge||{},m=r.operational_memory||{};
