@@ -508,11 +508,19 @@ class SSHVMConnector:
 
     async def system_logs(self, target: str, limit: int = 100) -> Dict[str, Any]:
         bounded = self._bounded_limit(limit)
-        result = await self._run(target, f"journalctl --no-pager -n {bounded} -o short-iso 2>/dev/null")
+        command = f"journalctl --no-pager -n {bounded} -o short-iso"
+        result = await self._run(target, command)
+        mode = "user"
         if not result.get("success"):
-            return {"success": False, "target": target, "logs": [], "error": "system_logs_failed"}
-        lines = [line for line in str(result.get("stdout") or "").splitlines() if line.strip()]
-        return {"success": True, "target": target, "logs": lines[-bounded:], "count": len(lines[-bounded:])}
+            failure = (str(result.get("stderr") or "") + " " + str(result.get("stdout") or "")).lower()
+            if any(word in failure for word in ("permission", "access denied", "not permitted", "insufficient")):
+                mode = "sudo"
+                result = await self._sudo(target, command)
+        if not result.get("success"):
+            return {"success": False, "target": target, "logs": [], "error": "system_logs_failed",
+                    "access_mode": mode, "detail": str(result.get("stderr") or result.get("error") or "")[:500]}
+        lines = [redact_text(line[:1200]) for line in str(result.get("stdout") or "").splitlines() if line.strip()]
+        return {"success": True, "target": target, "logs": lines[-bounded:], "count": len(lines[-bounded:]), "access_mode": mode}
 
     async def tcp_check(self, target: str, host: str, port: int) -> Dict[str, Any]:
         self._validate_remote_host(host)
