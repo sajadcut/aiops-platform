@@ -105,3 +105,14 @@
 .ic-agent-en-name{display:inline;font-size:13px;line-height:1.5;font-weight:650;color:var(--muted);white-space:nowrap;unicode-bidi:isolate}
 .ic-agent-source-label{display:block;font-size:12px;font-weight:700;line-height:1.8;color:var(--muted);margin-bottom:3px}
 .ic-agent-source-text{display:block;white-space:pre-wrap;overflow-wrap:anywhere;unicode-bidi:plaintext;text-align:start;font-size:13px;line-height:1.85;color:var(--text);background:var(--bg2);padding:8px 10px;border-radius:8px;margin-top:3px}
+
+/* Section 03: trustworthy configuration diagnostics and LLM advisory. */
+.ic-config-diagnostic{display:grid;gap:12px;margin:16px 0 18px}
+.ic-config-check{border:1px solid var(--line);border-radius:13px;background:var(--raised);padding:16px 18px;min-width:0}
+.ic-config-check[data-config-status="invalid"]{border-inline-start:4px solid var(--danger,#c73b4b)}
+.ic-config-check[data-config-status="valid"]{border-inline-start:4px solid var(--ok,#259c77)}
+.ic-config-check[data-config-status="unknown"],.ic-config-check[data-config-status="advisory"]{border-inline-start:4px solid var(--accent)}
+.ic-config-check h3{font-size:15px;font-weight:800;color:var(--text);margin:0 0 10px;line-height:1.6}
+.ic-config-check p{font-size:13px;line-height:1.9;margin:5px 0;color:var(--text);overflow-wrap:anywhere}
+.ic-config-check b{font-weight:750}
+.ic-config-check [dir="auto"]{unicode-bidi:plaintext;overflow-wrap:anywhere}
