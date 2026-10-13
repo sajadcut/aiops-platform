@@ -1483,6 +1483,8 @@
         (fa?'بررسی زنده ناموفق؛ شواهد قبلی':'Live check unavailable; prior evidence'):
         m.answer_basis==='live_mcp'?
         (fa?'بررسی زنده VM MCP':'Live VM MCP'):
+        m.answer_basis==='stored_analysis_guarded'?
+        (fa?'ادعای بدون شاهد LLM کنار گذاشته شد':'Unsupported LLM claim rejected'):
         m.answer_basis==='stored_elasticsearch_evidence'?
         (fa?'گزارش ثبت‌شده Elasticsearch':'Saved Elasticsearch evidence'):
         m.answer_basis==='live_elasticsearch_mcp'?
