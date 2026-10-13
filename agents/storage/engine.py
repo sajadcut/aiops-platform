@@ -506,10 +506,30 @@ def correlate_disk_file_causality(items: Sequence[Mapping[str, Any]]) -> Dict[st
                     size = file.get("size_bytes")
                     if not path.startswith("/") or not isinstance(size, int):
                         continue
+                    handles = []
+                    for h in (file.get("open_handles") or [])[:5]:
+                        if not isinstance(h, Mapping):
+                            continue
+                        pid = h.get("pid")
+                        if not isinstance(pid, int) or pid <= 0:
+                            continue
+                        handles.append({
+                            "pid": pid, "process_name": str(h.get("process_name") or "")[:90],
+                            "writable_handle_observed": h.get("writable_handle_observed") is True,
+                            "writer_causality_verified": False,
+                        })
+                    measured = file.get("growth_measured") is True
                     inventories.append({
                         "path": path, "size_bytes": size, "mount": str(mount.get("mount") or "")[:160],
                         "mtime_epoch": file.get("mtime_epoch"),
-                        "owner_service": None, "growth_confirmed": False,
+                        "owner_service": None,
+                        "growth_measured": measured,
+                        "growth_confirmed": measured and file.get("growth_confirmed") is True,
+                        "growth_bytes_over_2_seconds": (
+                            max(0, int(file.get("growth_bytes_over_2_seconds") or 0))
+                            if measured else None
+                        ),
+                        "open_handles": handles,
                         "causal_attribution": "unknown", "safe_to_delete": False,
                         "reason_to_delete": None, "evidence_refs": [reference],
                     })
@@ -535,7 +555,9 @@ def correlate_disk_file_causality(items: Sequence[Mapping[str, Any]]) -> Dict[st
         "files": inventories[:30],
         "related_error_log_observations": candidate_logs[:12],
         "zabbix_alert_refs": [x["reference"] for x in zabbix[:10]],
-        "correlation_level": "unverified_temporal_context" if candidate_logs else "not_established",
+        "correlation_level": "unverified_cross_source_context" if candidate_logs else "not_established",
+        "measured_growing_files": sum(1 for f in inventories if f["growth_confirmed"]),
+        "files_with_open_handles": sum(1 for f in inventories if f["open_handles"]),
         "growth_cause_confirmed": False,
         "safe_cleanup_candidates": [],
         "delete_recommendation_allowed": False,
