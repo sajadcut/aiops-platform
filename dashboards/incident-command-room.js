@@ -686,11 +686,12 @@
         '</td></tr>';
     }).join('');
     const logs=arr(data.related_error_log_observations),alerts=arr(data.zabbix_alert_refs);
+    const overlaps=arr(data.candidate_temporal_overlaps);
     const correlation=fa?
-      'شواهد خطای مرتبط یافت‌شده: '+num(logs.length)+' مورد؛ آلارم‌های زبیکس: '+num(alerts.length)+
-      ' مورد. این موارد صرفاً برای بررسی همبستگی هستند؛ تولیدکنندهٔ فایل یا علت رشد هنوز ثابت نشده است.':
+      'شواهد خطای قابل‌بررسی: '+num(logs.length)+' مورد؛ آلارم‌های زبیکس: '+num(alerts.length)+
+      ' مورد؛ هم‌زمانی نزدیک تغییر فایل با خطا: '+num(overlaps.length)+' مورد. این‌ها فقط سرنخ هستند؛ تولیدکنندهٔ فایل یا علت رشد هنوز ثابت نشده است.':
       'Potential log observations: '+logs.length+', Zabbix alerts: '+alerts.length+
-      '. Temporal evidence is not sufficient to attribute file production.';
+      ', file/error time overlaps: '+overlaps.length+'. Correlation never establishes the file producer.';
     show('#ic-disk-forensics','<article class="ic-config-check" data-config-status="advisory">'+
       '<h3>'+esc(title)+'</h3><p>'+esc(notice)+'</p>'+
       '<div class="ic-disk-file-wrap"><table class="ic-disk-file-table"><thead><tr>'+
