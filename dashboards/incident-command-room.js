@@ -612,7 +612,51 @@
   const agentDetail = (title, body, count) =>
     '<details class="ic-agent-fold"><summary>'+esc(title)+(count===undefined?'':' ('+num(count)+')')+'</summary><div class="ic-agent-fold-body">'+body+'</div></details>';
 
+  function renderConfigDiagnostic(r) {
+    const config=r.configuration_diagnostic||{};
+    const advice=r.unknown_guidance||{},fa=state.language==='fa';
+    const kind=low(config.status);
+    const items=[];
+    if(kind==='invalid') {
+      const location=[config.config_file || (fa?'مسیر فایل ثبت نشده':'File not recorded'),
+        Number.isInteger(config.error_line)?(fa?'خط '+num(config.error_line):'line '+num(config.error_line)):null]
+        .filter(Boolean).join(' — ');
+      items.push('<article class="ic-config-check" data-config-status="invalid"><h3>'+
+        esc(fa?'خطای واقعی در کانفیگ سرویس شناسایی شد':'Service configuration validation failed')+'</h3>'+
+        '<p><b>'+esc(fa?'محل خطا:':'Reported location:')+'</b> <span dir="auto">'+txt(location)+'</span></p>'+
+        (config.syntax_error?'<p><b>'+esc(fa?'پیام ابزار بررسی سینتکس:':'Validator error:')+
+          '</b> <span dir="auto">'+txt(config.syntax_error)+'</span></p>':'')+
+        '<p>'+esc(fa?
+          'کانفیگ فعلی تست معتبر را رد کرده است. ابتدا خطای گزارش‌شده با فرایند تغییرات مجاز اصلاح شود، سپس کانفیگ دوباره تست شود. فقط بعد از موفقیت تست، Start سرویس برای تأیید اپراتور پیشنهاد می‌شود. علت توقف اولیه هنوز مشخص نیست.':
+          'The current syntax check failed. Repair under change control, revalidate, and only then propose an operator-approved start. The original stop cause remains unknown.')+'</p>'+
+        refs(config.evidence_refs)+'</article>');
+    } else if(kind==='valid') {
+      items.push('<article class="ic-config-check" data-config-status="valid"><h3>'+
+        esc(fa?'تست سینتکس کانفیگ موفق بوده است':'Configuration syntax check passed')+'</h3><p>'+
+        esc(fa?'این نتیجه سلامت اجرای سرویس یا تمام وابستگی‌های آن را تضمین نمی‌کند.':'This does not guarantee service health or dependencies.')+
+        '</p>'+(config.config_file?'<p>'+esc(fa?'فایل بررسی‌شده:':'Checked file:')+' <span dir="ltr">'+
+          txt(config.config_file)+'</span></p>':'')+refs(config.evidence_refs)+'</article>');
+    }
+    if(arr(advice.items).length) {
+      items.push('<article class="ic-config-check" data-config-status="advisory"><h3>'+
+        esc(fa?'استعلام موارد نامشخص از LLM':'LLM consultation for unknown diagnostics')+'</h3><p>'+
+        esc(fa?'این پاسخ‌ها فقط روش پیشنهادی بررسی هستند؛ هیچ فرمانی از LLM اجرا نشده و کانفیگ تأیید نشده است.':
+          'These are advisory suggestions only; no LLM-generated command has been executed or validated.')+
+        '</p><ul class="ic-agent-bullets">'+arr(advice.items).slice(0,5).map(x=>
+          '<li><b>'+txt(x.subject||x.topic)+'</b> — '+txt(x.validation_approach||x.explanation)+
+          '</li>').join('')+'</ul></article>');
+    } else if(kind==='unverified') {
+      items.push('<article class="ic-config-check" data-config-status="unknown"><h3>'+
+        esc(fa?'روش یا نتیجهٔ معتبر تست کانفیگ هنوز مشخص نیست':'Config validation is unverified')+
+        '</h3><p>'+esc(fa?
+          'AIOps نباید سالم بودن کانفیگ یا امکان Start ایمن را حدس بزند. در صورت نامشخص بودن روش بررسی، استعلام از LLM فقط راهنمای اپراتور است.':
+          'Do not guess that the configuration is valid. LLM guidance cannot replace a real check.')+'</p></article>');
+    }
+    show('#ic-config-diagnostic',items.join(''));
+  }
+
   function renderAnalysis(r) {
+    renderConfigDiagnostic(r);
     const c=r.rca_assessment||{},agents=arr(r.agent_findings);
     const fa=state.language==='fa';
     const metrics=[
