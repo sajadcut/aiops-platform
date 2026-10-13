@@ -281,6 +281,8 @@ class E2EOrchestrator:
                         "externalSubjectId": external_subject_id,
                     }
 
+        if self.progress_emitter:
+            await self.progress_emitter(state.get("incident_id"), "knowledge", "started")
         if subject_error:
             state["knowledge_status"] = {
                 "provider": "cognia",
@@ -309,6 +311,13 @@ class E2EOrchestrator:
                     status=state["knowledge_status"].get("status"),
                     code=state["knowledge_status"].get("code"),
                 )
+        if self.progress_emitter:
+            knowledge_status = str(state.get("knowledge_status", {}).get("status") or "")
+            await self.progress_emitter(
+                state.get("incident_id"), "knowledge",
+                "completed" if knowledge_status in {"available", "empty"}
+                else "skipped" if knowledge_status == "invalid_scope" else "failed",
+            )
         try:
             since = datetime.now(timezone.utc) - timedelta(seconds=settings.AGENT_INITIAL_EVIDENCE_WINDOW_SECONDS)
             state["live_evidence"] = await self.evidence_collector.collect(service, since)
