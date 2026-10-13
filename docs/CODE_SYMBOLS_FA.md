@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 449 | Dashboard JS files scanned: 8 | Symbols indexed: 4323**
+**Python files scanned: 450 | Dashboard JS files scanned: 8 | Symbols indexed: 4328**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1285,6 +1285,11 @@
 | `apps/orchestrator/guardrails.py` | `OrchestrationGuardrails.can_enter_decision` | 13 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OrchestrationGuardrails |
 | `apps/orchestrator/learning_runtime.py` | `LearningDurableWorkflowRuntime` | 6 | class | Backward-compatible alias for the canonical durable Memory-v2 runtime. | module |
 | `apps/orchestrator/learning_signal_aware.py` | `LearningSignalAwareE2EOrchestrator` | 6 | class | Backward-compatible alias for the canonical Memory-v2 signal workflow. | module |
+| `apps/orchestrator/progress.py` | `progress_record` | 25 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/orchestrator/progress.py` | `emit_progress` | 36 | async function | Best-effort progress, NOT durable operational decision evidence. | module |
+| `apps/orchestrator/progress.py` | `_safe_event` | 56 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/orchestrator/progress.py` | `summarize_progress` | 72 | function | Only completed actual stages move the bar; no ETA or time-derived percent. | module |
+| `apps/orchestrator/progress.py` | `load_progress` | 128 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
 | `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime` | 17 | class | PostgreSQL-backed runtime around the governed collaborative LangGraph workflow. | module |
 | `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime.__init__` | 20 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
 | `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime._orchestrator_type` | 28 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
