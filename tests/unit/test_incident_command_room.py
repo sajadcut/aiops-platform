@@ -190,7 +190,7 @@ const assert = require('node:assert/strict');
     }
     if(method==='GET'&&url.endsWith('/decision-brief'))data=brief();
     else if(method==='GET'&&url.endsWith('/lifecycle'))
-      data={approval:{approval_id:'22222222-2222-4222-8222-222222222222',status:approvalStatus,risk_level:'high'}};
+      data={checkpoint_status:'paused',approval:{approval_id:'22222222-2222-4222-8222-222222222222',status:approvalStatus,risk_level:'high'}};
     else if(method==='GET'&&url.includes('/narrative?'))
       data={snapshot_id:brief().snapshot_id,language:'fa',status:'fallback',sections:[]};
     else if(method==='GET'&&url.includes('/history?'))data={items:[]};
@@ -308,7 +308,7 @@ def test_completed_chat_incident_routes_execute_to_approved_api_not_workflow_res
     patterns = (
         ("let approvalStatus='pending', version=0;",
          "let approvalStatus='pending', version=0;"),
-        ("data={approval:{approval_id:'22222222-2222-4222-8222-222222222222',status:approvalStatus,risk_level:'high'}};",
+        ("data={checkpoint_status:'paused',approval:{approval_id:'22222222-2222-4222-8222-222222222222',status:approvalStatus,risk_level:'high'}};",
          "data={checkpoint_status:'completed',approval:{approval_id:'22222222-2222-4222-8222-222222222222',status:approvalStatus,risk_level:'high'}};"),
         ("else if(method==='POST'&&url.includes('/resume')){approvalStatus='consumed';version++;data={status:'completed'};}",
          "else if(method==='POST'&&url.endsWith('/execute')){approvalStatus='consumed';version++;data={status:'completed'};}"),
