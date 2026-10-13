@@ -94,7 +94,14 @@ class DurableWorkflowRuntime:
         await self.incidents.add_evidence(incident_id, state.get("live_evidence", {}).get("evidence", []))
         await self.incidents.commit()
 
-        result = await self._orchestrator_type()(db=self.session).run(state)
+        orchestrator = self._orchestrator_type()(db=self.session)
+        from apps.orchestrator.progress import emit_progress
+        if hasattr(orchestrator, "progress_emitter"):
+            orchestrator.progress_emitter = emit_progress
+            if hasattr(orchestrator, "evidence_collector"):
+                orchestrator.evidence_collector.progress_emitter = emit_progress
+                orchestrator.evidence_collector.progress_incident_id = incident_id
+        result = await orchestrator.run(state)
         await self.incidents.add_findings(incident_id, result.get("findings", []))
         await self.incidents.add_evidence(incident_id, result.get("live_evidence", {}).get("evidence", []))
 
@@ -382,12 +389,20 @@ class DurableWorkflowRuntime:
         state["current_node"] = "execution"
 
         orchestrator = self._orchestrator_type()(db=self.session)
+        from apps.orchestrator.progress import emit_progress
+        if hasattr(orchestrator, "progress_emitter"):
+            orchestrator.progress_emitter = emit_progress
+            if hasattr(orchestrator, "evidence_collector"):
+                orchestrator.evidence_collector.progress_emitter = emit_progress
+                orchestrator.evidence_collector.progress_incident_id = incident_id
+        await emit_progress(incident_id, "execution", "started")
         execution_tokens = self._bind_execution_context(execution_request)
         try:
             result = await orchestrator._execution_node(state)
         finally:
             self._reset_execution_context(execution_tokens)
         execution_result = result.get("execution_result") or {}
+        await emit_progress(incident_id, "execution", "completed" if execution_result.get("success") else "failed")
         if not execution_result.get("success"):
             result["terminal_reason"] = execution_result.get("reason") or "execution_failed"
             # Negative governed outcomes are still durable Operational Memory.
@@ -407,6 +422,7 @@ class DurableWorkflowRuntime:
             await self.incidents.commit()
             return result
 
+        await emit_progress(incident_id, "verification", "started")
         verification_tokens = self._bind_execution_context(execution_request)
         try:
             result = await orchestrator._verification_node(result)
@@ -414,10 +430,13 @@ class DurableWorkflowRuntime:
             self._reset_execution_context(verification_tokens)
         verification = result.get("verification_result") or {}
         verification_status = str(verification.get("status") or "inconclusive").lower()
+        await emit_progress(incident_id, "verification", "completed" if verification_status == "success" else "failed")
+        await emit_progress(incident_id, "memory", "started")
         if verification_status != "success":
             result["terminal_reason"] = f"verification_{verification_status}"
 
         result = await orchestrator._memory_node(result)
+        await emit_progress(incident_id, "memory", "completed")
         result = await orchestrator._end_node(result)
         if verification_status == "success":
             await self.checkpoints.mark_completed(incident_id, result)
