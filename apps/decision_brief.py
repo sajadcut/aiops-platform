@@ -11,6 +11,7 @@ from datetime import datetime, timezone
 from typing import Any, Iterable
 
 from domain.contracts.redaction import redact
+from agents.storage.engine import correlate_disk_file_causality
 
 CONTRACT_VERSION = "decision-brief.v1"
 FRESHNESS_SECONDS = 900  # UI warning threshold, not an execution policy
@@ -339,6 +340,7 @@ def build_decision_brief(
     evidence = [e for e in durable_evidence if isinstance(e, dict)]
     agents = _agents(state, findings)
     mcp, sources = _mcp(evidence, now)
+    disk_file_causality = correlate_disk_file_causality(evidence)
     knowledge = _knowledge(state, agents)
     memory = _memory(state, agents)
     approval = obj(summary.get("approval"))
@@ -469,6 +471,7 @@ def build_decision_brief(
             "repair_then_revalidate": obj(observed.get("config_validate")).get("valid") is False,
             "start_requires_valid_config_and_approval": True,
         },
+        "disk_file_causality": redact(disk_file_causality) if disk_file_causality.get("files") else None,
         "agent_findings": agents,
         "mcp_evidence": mcp,
         "monitoring_sources": sources,
