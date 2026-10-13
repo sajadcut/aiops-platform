@@ -91,6 +91,14 @@ def test_elasticsearch_facts_cannot_be_inferred_from_vm_journal():
     missing = stored_elastic_observations(mixed[:1], service="gfpapi")
     assert missing["status"] == "not_recorded"
     assert "systemd" in elastic_answer(missing)
+    log_only = stored_elastic_observations([{
+        "source": "elasticsearch", "reference": "log:1", "raw_data": {
+            "service": "gfpapi", "message": "application timeout",
+        },
+    }], service="gfpapi")
+    assert log_only["status"] == "log_evidence_only"
+    assert log_only["sampled_log_evidence_count"] == 1
+    assert "تعداد کل" in elastic_answer(log_only)
 
 
 @pytest.mark.asyncio
