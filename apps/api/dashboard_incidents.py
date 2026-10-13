@@ -27,6 +27,7 @@ async def dashboard_incidents(
                         SELECT i.id, i.service, i.status, i.severity, i.summary, i.started_at, i.created_at,
                                i.context #>> '{incident,source_host}' AS source_host,
                                i.context #>> '{incident,service_identity_basis}' AS service_identity_basis,
+                               (SELECT wc.status FROM workflow_checkpoints wc WHERE wc.incident_id=i.id) AS checkpoint_status,
                                COALESCE((SELECT AVG(f.confidence) FROM findings f WHERE f.incident_id=i.id),0) AS confidence,
                                (SELECT a.approval_id FROM approvals a WHERE a.incident_id=i.id ORDER BY a.created_at DESC LIMIT 1) AS approval_id,
                                (SELECT a.status FROM approvals a WHERE a.incident_id=i.id ORDER BY a.created_at DESC LIMIT 1) AS approval_status,
@@ -78,6 +79,18 @@ async def dashboard_incidents(
                         else (str(row["approval_status"]) if row["approval_status"] is not None else None)
                     ),
                     "confidence": float(row["confidence"] or 0.0),
+                    "analysis_in_progress": (
+                        str(row["status"]).lower().split(".")[-1] == "analyzing"
+                        and (
+                            str(row["approval_status"] or "").lower().split(".")[-1] == "consumed"
+                            or (
+                                str(row["approval_status"] or "").lower().split(".")[-1]
+                                not in {"pending", "approved", "rejected"}
+                                and str(row["checkpoint_status"] or "").lower()
+                                not in {"paused", "completed", "failed"}
+                            )
+                        )
+                    ),
                     "verification_confidence": (
                         float(row["verification_confidence"])
                         if row["verification_confidence"] not in (None, "")
