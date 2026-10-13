@@ -123,10 +123,34 @@ async def incident_chat_history(
     async with AsyncSessionLocal() as db:
         incident, checkpoint, evidence = await _scope(db, incident_id)
         events = await PostgreSQLAuditStore(db).list(str(incident_id), 200)
+        requested = {
+            str((event.get("metadata") or {}).get("proposal_id")):
+                str((event.get("metadata") or {}).get("approval_id"))
+            for event in events
+            if event.get("event_type") == "incident_copilot_approval_requested"
+            and isinstance(event.get("metadata"), dict)
+        }
+        approvals = {}
+        if requested:
+            rows = (await db.execute(
+                text("SELECT approval_id,status,action FROM approvals "
+                     "WHERE incident_id=:incident_id ORDER BY created_at DESC LIMIT 100"),
+                {"incident_id": str(incident_id)}
+            )).mappings().all()
+            status_by_id = {str(row["approval_id"]): row for row in rows}
+            approvals = {
+                proposal_id: {
+                    "approval_id": approval_id,
+                    "status": str(status_by_id[approval_id]["status"]),
+                    "action": str(status_by_id[approval_id]["action"]),
+                }
+                for proposal_id, approval_id in requested.items()
+                if approval_id in status_by_id
+            }
     binding = vm_binding(incident.service, evidence, (checkpoint.get("state") or {}).get("context"))
     return {"incident_id": str(incident_id), "service": incident.service,
-            "items": history(events), "vm_bound": binding is not None,
-            "status": "ready"}
+            "items": history(events), "approvals": approvals,
+            "vm_bound": binding is not None, "status": "ready"}
 
 
 @router.post(
