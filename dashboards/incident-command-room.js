@@ -712,8 +712,18 @@
     const deterministic=plainLead(r);
     const n=state.narrative;
     const matched=n && n.snapshot_id===r.snapshot_id && n.language===state.language && !state.historic && n.status==='available';
-    const narrative=matched?'<details class="ic-reveal"><summary>'+esc(tr('narrative'))+'</summary><div class="ic-reveal-content">'+arr(n.sections).map(s=>
-      '<article class="ic-detail-card"><h4>'+txt(s.heading)+'</h4><p>'+txt(s.text)+'</p>'+refs(s.citations)+'</article>').join('')+'</div></details>':'';
+    const narrative=matched?(
+      '<div class="ic-grounded-narrative"><h3>'+esc(state.language==='fa'?
+        'توضیح تکمیلی مبتنی بر شواهد (AI)':'Evidence-grounded AI explanation')+'</h3>'+
+      arr(n.sections).filter(x=>['cause','evidence_gaps','advice'].includes(x.key)).map(x=>
+        '<div class="ic-grounded-para"><strong>'+txt(x.heading)+'</strong><p>'+
+          txt(x.text)+'</p>'+refs(x.citations)+'</div>').join('')+
+      '<details class="ic-reveal"><summary>'+esc(state.language==='fa'?
+        'مشاهدهٔ کل تحلیل و استنادها':'Full explanation and citations')+'</summary><div class="ic-reveal-content">'+
+      arr(n.sections).filter(x=>!['cause','evidence_gaps','advice'].includes(x.key)).map(x=>
+        '<article class="ic-detail-card"><h4>'+txt(x.heading)+'</h4><p>'+txt(x.text)+
+        '</p>'+refs(x.citations)+'</article>').join('')+'</div></details></div>'
+    ):'';
     show('#ic-brief-lead','<p>'+txt(deterministic)+'</p>'+original(i.likely_cause,'شرح علت احتمالی در گزارش اصلی')+narrative);
     show('#ic-key-answer',[
       fact('cause',humanCause(i.likely_cause)),fact('causeStatus',status(i.cause_status)),
