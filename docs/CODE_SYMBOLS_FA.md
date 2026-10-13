@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 448 | Dashboard JS files scanned: 8 | Symbols indexed: 4275**
+**Python files scanned: 448 | Dashboard JS files scanned: 8 | Symbols indexed: 4279**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -2113,8 +2113,12 @@
 | `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.restart_service` | 83 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
 | `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.reload_service` | 86 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
 | `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.start_service` | 89 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/service_adapters.py` | `ServiceDiagnosticAdapter` | 8 | class | Fixed, allowlisted service-specific diagnostic commands. | module |
-| `integrations/vm/service_adapters.py` | `get_service_adapter` | 54 | function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
+| `integrations/vm/service_adapters.py` | `ServiceDiagnosticAdapter` | 10 | class | Fixed, allowlisted service-specific diagnostic commands. | module |
+| `integrations/vm/service_adapters.py` | `get_service_adapter` | 56 | function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
+| `integrations/vm/service_adapters.py` | `_absolute_config_path` | 74 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `integrations/vm/service_adapters.py` | `discover_config_path` | 83 | function | Discover an explicit config argument from the installed systemd unit. | module |
+| `integrations/vm/service_adapters.py` | `config_check_for_path` | 121 | function | Use only an existing fixed allowlisted validator with a safe config path. | module |
+| `integrations/vm/service_adapters.py` | `parse_config_diagnostic` | 139 | function | Extract bounded compiler-reported config file/line, never fetch secret files. | module |
 | `integrations/vm/ssh_connector.py` | `SSHVMConnector` | 21 | class | Controlled Linux VM adapter used only behind the VM MCP server. | module |
 | `integrations/vm/ssh_connector.py` | `SSHVMConnector.__init__` | 32 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
 | `integrations/vm/ssh_connector.py` | `SSHVMConnector._auth_mode` | 37 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
