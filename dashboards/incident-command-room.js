@@ -401,7 +401,7 @@
        !state.report || !incidentId)return;
     state.lifecyclePolling=true;
     try {
-      const latest=await api(base+'/lifecycle');
+      const latest=await api(base+'/analysis-status');
       if(state.busy || state.historic)return;
       const previous=state.lifecycle||{};
       const changed=latest.incident_status!==previous.incident_status ||
@@ -412,11 +412,17 @@
         latest.current_node!==previous.current_node ||
         latest.approval?.approval_id!==previous.approval?.approval_id ||
         latest.approval?.status!==previous.approval?.status;
-      state.lifecycle=latest;
       state.lastLiveCheck=Date.now();
       state.lifecyclePollError=false;
-      renderAnalysisProgress();
-      if(changed)await load({preserveHistory:true});
+      if(changed) {
+        await load({preserveHistory:true});
+      } else {
+        // Keep full lifecycle details for the report and approval controls;
+        // the lightweight status response must never replace those fields.
+        state.lifecycle={...previous,analysis_in_progress:latest.analysis_in_progress,
+          analysis_phase:latest.analysis_phase,incident_status:latest.incident_status};
+        renderAnalysisProgress();
+      }
     }catch(_){
       state.lifecyclePollError=true;
       renderAnalysisProgress();
