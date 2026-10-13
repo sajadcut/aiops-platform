@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 447 | Dashboard JS files scanned: 8 | Symbols indexed: 4232**
+**Python files scanned: 447 | Dashboard JS files scanned: 8 | Symbols indexed: 4236**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -3095,6 +3095,10 @@
 | `tests/unit/test_decision_brief.py` | `test_vm_mcp_uses_allowlisted_tool_facts_not_raw_logs` | 362 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_decision_brief.py` | `test_monitoring_provider_failure_creates_missing_evidence_warning` | 379 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_decision_brief.py` | `test_decision_brief_exposes_llm_unknown_guidance_without_action_authority` | 388 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_decision_brief.py` | `test_elapsed_incident_duration_does_not_invalidate_approval_snapshot` | 403 | function | Approval preflight must accept the same material state minutes later. | module |
+| `tests/unit/test_decision_brief.py` | `test_elapsed_incident_duration_does_not_invalidate_approval_snapshot.report` | 415 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_elapsed_incident_duration_does_not_invalidate_approval_snapshot |
+| `tests/unit/test_decision_brief.py` | `test_approval_snapshot_still_invalidates_on_material_action_change` | 432 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_decision_brief.py` | `test_approval_snapshot_still_invalidates_on_material_action_change.report` | 437 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_approval_snapshot_still_invalidates_on_material_action_change |
 | `tests/unit/test_decision_brief_browser_runtime.py` | `test_decision_brief_renders_real_llm_sections_and_language_switch` | 10 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_decision_brief_narrative.py` | `sample_brief` | 10 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_decision_brief_narrative.py` | `valid_rows` | 32 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
