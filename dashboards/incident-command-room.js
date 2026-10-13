@@ -421,7 +421,7 @@
     : (state.language==='fa'?progressStageFa:progressStageEn)[key] || String(key||'');
   function updateProgressClock() {
     const element=$('#ic-flow-elapsed');
-    if(!element || !state.progress?.started_at || !element.closest || state.historic)return;
+    if(!element || !state.progress?.started_at || state.historic)return;
     const seconds=Math.max(0,Math.floor((Date.now()-new Date(state.progress.started_at).getTime())/1000));
     if(Number.isFinite(seconds))element.textContent=num(Math.floor(seconds/60))+
       (state.language==='fa'?' دقیقه ':'m ')+num(seconds%60)+(state.language==='fa'?' ثانیه':'s');
