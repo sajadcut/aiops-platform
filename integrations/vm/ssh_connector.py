@@ -657,6 +657,16 @@ class SSHVMConnector:
             "exit_code": result.get("exit_code"),
             "detail": detail,
         }
+        if not result.get("success") and any(
+            marker in detail.lower() for marker in (
+                "permission denied", "access denied", "operation not permitted",
+                "sudo: a password is required",
+            )
+        ):
+            return {
+                **common, "success": False, "supported": True, "valid": None,
+                "error": "config_validation_access_denied",
+            }
         if not result.get("success") and result.get("exit_code") in {1, 2} and (
             parsed["syntax_error"]
             or any(marker in detail.lower() for marker in (
