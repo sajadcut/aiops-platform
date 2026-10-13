@@ -399,3 +399,42 @@ def test_stopped_service_recovery_recommendation_is_generic_and_does_not_attribu
         # If syntax checking did not actually succeed, no recovery-ready verdict.
         evidence[2]["raw_data"]["valid"] = None
         assert classify_vm_service_fault(evidence, service) is None
+
+
+
+def test_invalid_service_configuration_returns_repair_before_start_without_write_authority():
+    from agents.vm.deterministic import classify_vm_service_fault
+    for service, file, line in (
+        ("nginx", "/etc/nginx/nginx.conf", 42),
+        ("haproxy", "/opt/apps/haproxy.cfg", 23),
+        ("gfpapi", "/opt/gfpapi/settings.yml", 11),
+    ):
+        observations = [
+            {"reference": "svc", "source": "vm_mcp", "raw_data": {
+                "diagnostic": "service_status", "service": service,
+                "active_state": "inactive", "sub_state": "dead",
+            }},
+            {"reference": "cfg", "source": "vm_mcp", "raw_data": {
+                "diagnostic": "config_validate", "service": service,
+                "success": True, "supported": True, "valid": False,
+                "config_file": file, "error_line": line,
+                "syntax_error": "unknown directive",
+            }},
+        ]
+        report = classify_vm_service_fault(observations, service)
+        assert report is not None
+        assert report["fault_code"] == "service_configuration_invalid"
+        assert report["stop_attribution"] == "unknown"
+        assert report["config_file"] == file
+        assert report["error_line"] == line
+        assert "re-run validation" in report["remediation_candidate"]
+        assert "propose start_service" in report["remediation_candidate"]
+        assert report["suggested_action"] is None
+        assert report["requires_operator_review"] is True
+        assert set(report["evidence_ids"]) == {"svc", "cfg"}
+        # An unverified config check is not a confirmed syntax problem.
+        observations[1]["raw_data"]["success"] = False
+        assert classify_vm_service_fault(observations, service) is None
+        observations[1]["raw_data"]["success"] = True
+        observations[1]["raw_data"]["valid"] = None
+        assert classify_vm_service_fault(observations, service) is None
