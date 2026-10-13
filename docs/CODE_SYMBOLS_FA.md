@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 465 | Dashboard JS files scanned: 8 | Symbols indexed: 4480**
+**Python files scanned: 465 | Dashboard JS files scanned: 8 | Symbols indexed: 4479**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -2185,7 +2185,6 @@
 | `integrations/vm/nginx_config_review.py` | `nginx_review_command` | 141 | function | The inputs originate exclusively from a verified, failed VM validator. | module |
 | `integrations/vm/runtime_discovery.py` | `safe_absolute_path` | 19 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `integrations/vm/runtime_discovery.py` | `parse_systemd_runtime` | 28 | function | Extract only allowlisted non-secret fields; no ExecStart/env value returned. | module |
-| `integrations/vm/runtime_discovery.py` | `dotnet_json_syntax_command` | 154 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `integrations/vm/service_adapters.py` | `ServiceDiagnosticAdapter` | 10 | class | Fixed, allowlisted service-specific diagnostic commands. | module |
 | `integrations/vm/service_adapters.py` | `get_service_adapter` | 56 | function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
 | `integrations/vm/service_adapters.py` | `_absolute_config_path` | 76 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
