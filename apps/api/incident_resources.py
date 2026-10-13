@@ -698,12 +698,20 @@ async def load_decision_brief_for_incident(db, incident_id: UUID) -> dict:
 
     approval_metadata = dict(approval_row["metadata"] or {}) if approval_row else {}
     bound_snapshot = approval_metadata.get("decision_snapshot_digest")
-    if bound_snapshot:
+    approval_status = operator_summary["approval"]["status"]
+    if bound_snapshot and approval_status in {"pending", "approved"}:
+        # Approval is still actionable: compare the immutable pre-execution
+        # evidence/plan digest. Runtime authorization performs its own check.
         current_inventory = await IncidentRepository(db).evidence_inventory_digest(str(incident_id))
         current_digest = decision_snapshot_digest(
             checkpoint.get("state") or {}, current_inventory,
         )
         snapshot_status = "matched" if current_digest == bound_snapshot else "drift_detected"
+    elif approval_status in {"consumed", "rejected", "expired"}:
+        # The old approval cannot authorize another operation. New evidence
+        # and execution results legitimately change the snapshot afterwards;
+        # calling that "approval drift" is a misleading operator warning.
+        snapshot_status = "not_applicable"
     else:
         snapshot_status = "legacy_unbound"
     operator_summary["approval"]["decision_snapshot_status"] = snapshot_status
