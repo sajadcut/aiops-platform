@@ -1042,6 +1042,9 @@
         esc(fa?scope[1]:(a.mission||'Specialist scope; no additional mission description recorded'))+
         (a.analysis_at?' · '+esc(fa?'زمان ثبت تحلیل:':'Analysis recorded:')+' '+txt(date(a.analysis_at)):'')+'</div>'+
         metric+
+        '<p class="ic-agent-peek">'+(directFindings.length?agentLine(directFindings[0]):
+          a.finding?agentLine(a.finding):
+          esc(fa?'یافتهٔ اختصاصی ثبت نشده است.':'No specific finding recorded.'))+'</p>'+
         '<details class="ic-agent-investigation"><summary>'+esc(fa?
           'نمایش بررسی‌ها، فرضیه‌ها و شواهد این ایجنت':'Show agent checks, hypotheses and evidence')+
         '</summary><div class="ic-agent-investigation-body">'+
