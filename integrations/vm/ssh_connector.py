@@ -591,19 +591,23 @@ class SSHVMConnector:
         """
         self._validate_service(service)
         adapter = get_service_adapter(service)
-        if adapter is None or not adapter.config_check_command:
-            return {
-                "success": True, "supported": False, "target": target,
-                "service": service, "valid": None,
-                "detail": "config_validation_adapter_unavailable",
-            }
-        # systemctl show reads the concrete unit definition, including
-        # ExecStart overrides. Never eval/execute systemd's ExecStart text.
+        # Read ONLY the unit's metadata. For an unknown allowlisted service,
+        # expose a potential config path for the LLM advisory to reason about,
+        # but never run LLM-generated scripts or label this path validated.
         meta = await self._run(
             target, f"systemctl show --no-pager --property=ExecStart --value {service}"
         )
         discovered = discover_config_path(service, meta.get("stdout") or "") if meta.get("success") else None
         path_source = "systemd_execstart" if discovered else "not_verified"
+        if adapter is None or not adapter.config_check_command:
+            return {
+                "success": True, "supported": False, "target": target,
+                "service": service, "valid": None,
+                "config_file": discovered, "config_path_source": (
+                    "systemd_execstart_unvalidated" if discovered else path_source
+                ),
+                "detail": "config_validation_adapter_unavailable",
+            }
         if adapter.canonical_name == "haproxy" and not discovered:
             # HAProxy may use -f /opt/... or a config directory. Testing the
             # default path could give a false "valid" for a different config.
