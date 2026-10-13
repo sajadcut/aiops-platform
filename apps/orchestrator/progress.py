@@ -115,7 +115,12 @@ def summarize_progress(events: list[Mapping[str, Any]], *, incident_status: str 
     execution_done = sum(phases.get(step, {}).get("status") == "completed" for step in EXECUTION_STAGES)
     approval_waiting = approval_status in {"pending", "approved"}
     terminal = checkpoint_status in {"completed", "failed"}
-    if approval_waiting:
+    precheck_status = phases.get("pre_execution_check", {}).get("status")
+    if approval_waiting and precheck_status == "started":
+        current = "pre_execution_check"
+    elif approval_waiting and precheck_status == "failed":
+        current = None
+    elif approval_waiting:
         current = "approval"
     elif approval_status == "consumed" and not terminal:
         current = current or "execution"
