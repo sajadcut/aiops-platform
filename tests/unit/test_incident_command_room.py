@@ -178,7 +178,7 @@ const assert = require('node:assert/strict');
   assert.match(configCard,/nginx.conf/);
   assert.match(configCard,/خط ۴۲/);
   assert.match(configCard,/اصلاح/);
-  assert.match(configCard,/پیشنهاد Start/);
+  assert.match(configCard,/Start سرویس برای تأیید اپراتور پیشنهاد/);
   assert.match(configCard,/استعلام موارد نامشخص از LLM/);
   assert.match(configCard,/هیچ فرمانی از LLM اجرا نشده/);
   const agentHtml=el('#ic-agents').innerHTML;
