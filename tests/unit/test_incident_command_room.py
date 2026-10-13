@@ -164,6 +164,22 @@ const assert = require('node:assert/strict');
   global.fetch = async (url,options={})=>{
     const method=options.method||'GET'; events.push([method,url,options]);
     let data;
+    if(method==='GET'&&url.endsWith('/progress/stream')) {
+      assert.equal(options.headers['X-API-Key'],'ci-test-key');
+      const live={schema:'incident_progress.v1',analysis_percent:17,
+        analysis_completed:1,analysis_total:6,execution_percent:0,execution_total:3,
+        incident_status:'escalated',approval_status:'pending',checkpoint_status:'paused',
+        current_stage:'triage',started_at:'2026-10-13T12:00:00Z',
+        last_event_at:'2026-10-13T12:00:20Z',
+        stages:{context:{status:'completed',at:'2026-10-13T12:00:10Z'},
+          triage:{status:'started',at:'2026-10-13T12:00:20Z'}},
+        providers:{zabbix:{status:'completed',at:'2026-10-13T12:00:06Z'},
+          vm_mcp:{status:'completed',at:'2026-10-13T12:00:09Z'}}};
+      const message='event: progress\ndata: '+JSON.stringify(live)+'\n\n';
+      return {ok:true,body:new ReadableStream({start(controller){
+        controller.enqueue(new TextEncoder().encode(message));controller.close();
+      }})};
+    }
     if(method==='GET'&&url.endsWith('/decision-brief'))data=brief();
     else if(method==='GET'&&url.endsWith('/lifecycle'))
       data={approval:{approval_id:'22222222-2222-4222-8222-222222222222',status:approvalStatus,risk_level:'high'}};
@@ -181,6 +197,12 @@ const assert = require('node:assert/strict');
   await settle();
   assert.equal(el('#ic-main').hidden,false);
   assert.match(el('#ic-title').textContent,/nginx/);
+  assert.match(el('#ic-flow-percent').textContent,/۱۷٪/);
+  assert.equal(el('#ic-flow-bar').value,17);
+  assert.match(el('#ic-flow-steps').innerHTML,/Zabbix MCP/);
+  assert.match(el('#ic-flow-steps').innerHTML,/VM MCP/);
+  assert.match(el('#ic-flow-steps').innerHTML,/تریاژ آلارم/);
+  assert.match(el('#ic-flow-caution').textContent,/تخمین زمان باقی‌مانده نیست/);
   assert.match(el('#ic-brief-lead').innerHTML,/سرویس از دسترس/);
   assert.match(el('#ic-sources').innerHTML,/Prometheus/);
   assert.match(el('#ic-agent-summary').innerHTML,/ایجنت‌های ثبت‌شده/);
