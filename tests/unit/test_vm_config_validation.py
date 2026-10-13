@@ -217,3 +217,29 @@ async def test_unknown_service_config_is_advisory_not_a_generated_ssh_command(mo
     assert result["detail"] == "config_validation_adapter_unavailable"
     assert result["config_file"] == "/opt/gfpapi/app.yml"
     assert result["config_path_source"] == "systemd_execstart_unvalidated"
+
+
+
+@pytest.mark.asyncio
+async def test_config_permission_error_is_not_reported_as_syntax_failure(monkeypatch):
+    monkeypatch.setattr(settings, "APP_ENV", "test")
+    monkeypatch.setattr(settings, "SSH_AUTH_MODE", "key")
+    monkeypatch.setattr(settings, "SSH_ALLOWED_SERVICES", ["nginx"])
+    connector = SSHVMConnector()
+
+    async def fake_run(target, command):
+        if command.startswith("systemctl show "):
+            return {"success": True, "stdout": "argv[]=/usr/sbin/nginx -c /etc/nginx/nginx.conf ;"}
+        return {"success": False, "exit_code": 1,
+                "stderr": "nginx: [emerg] open() /etc/nginx/secret.conf failed (13: Permission denied)"}
+
+    async def fake_sudo(target, command):
+        return {"success": False, "exit_code": 1,
+                "stderr": "nginx: [emerg] open() /etc/nginx/secret.conf failed (13: Permission denied)"}
+
+    monkeypatch.setattr(connector, "_run", fake_run)
+    monkeypatch.setattr(connector, "_sudo", fake_sudo)
+    result = await connector.config_validate("10.100.6.199", "nginx")
+    assert result["success"] is False
+    assert result["valid"] is None
+    assert result["error"] == "config_validation_access_denied"
