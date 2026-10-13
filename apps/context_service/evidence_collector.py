@@ -34,6 +34,13 @@ class EvidenceCollector:
         self.prometheus = prometheus
         self.vm = vm
         self.kubernetes = kubernetes
+        self.progress_emitter = None
+        self.progress_incident_id = None
+
+    async def _progress(self, provider: str, status: str) -> None:
+        if self.progress_emitter and self.progress_incident_id:
+            await self.progress_emitter(self.progress_incident_id, provider, status,
+                                        provider=provider)
 
     @classmethod
     def _known_service(cls, value: Optional[str]) -> Optional[str]:
@@ -238,6 +245,7 @@ class EvidenceCollector:
             self.vm and fast_target and requested_service and needs_service_status
             and not vm_probes_blocked()
         ):
+            await self._progress("vm_mcp", "started")
             method = getattr(self.vm, "service_status", None)
             if callable(method):
                 early_vm_actions.add("service_status")
@@ -284,6 +292,7 @@ class EvidenceCollector:
                     ))
 
         if self.zabbix and (wants_all or "alert" in wants):
+            await self._progress("zabbix", "started")
             if await self._healthy(self.zabbix):
                 try:
                     alerts = await self.zabbix.get_alerts(since=since, service=requested_service)
@@ -294,7 +303,10 @@ class EvidenceCollector:
             else:
                 evidence.append(self._observation("zabbix", f"zabbix-unavailable:{since.isoformat()}", status="unavailable", service=requested_service))
 
+        if self.zabbix and (wants_all or "alert" in wants):
+            await self._progress("zabbix", "completed")
         if self.prometheus and (wants_all or "alert" in wants):
+            await self._progress("prometheus", "started")
             get_alerts = getattr(self.prometheus, "get_alerts", None)
             if callable(get_alerts):
                 if await self._healthy(self.prometheus):
@@ -325,6 +337,8 @@ class EvidenceCollector:
                         service=requested_service,
                     ))
 
+        if self.prometheus and (wants_all or "alert" in wants):
+            await self._progress("prometheus", "completed")
         partial_asset = AssetIdentityResolver.resolve(evidence, requested_service)
         effective_service = self._known_service(partial_asset.get("service")) or self._known_service(partial_asset.get("hostname")) or requested_service
         query_service = effective_service or service
@@ -333,6 +347,7 @@ class EvidenceCollector:
         metrics: List[Any] = []
         elastic_logs_available = False
         if self.elasticsearch and (wants_all or "log" in wants):
+            await self._progress("elasticsearch", "started")
             if not effective_service:
                 evidence.append(self._observation("elasticsearch", f"elastic-skipped:{since.isoformat()}", status="skipped", detail="asset_service_unresolved"))
             elif await self._healthy(self.elasticsearch):
@@ -345,7 +360,10 @@ class EvidenceCollector:
             else:
                 evidence.append(self._observation("elasticsearch", f"elastic-unavailable:{since.isoformat()}", status="unavailable", service=effective_service))
 
+        if self.elasticsearch and (wants_all or "log" in wants):
+            await self._progress("elasticsearch", "completed")
         if self.prometheus and (wants_all or "metric" in wants):
+            await self._progress("prometheus", "started")
             if not effective_service:
                 evidence.append(self._observation("prometheus", f"prom-skipped:{since.isoformat()}", status="skipped", detail="asset_service_unresolved"))
             elif await self._healthy(self.prometheus):
@@ -357,6 +375,8 @@ class EvidenceCollector:
             else:
                 evidence.append(self._observation("prometheus", f"prom-unavailable:{since.isoformat()}", status="unavailable", service=effective_service))
 
+        if self.prometheus and (wants_all or "metric" in wants):
+            await self._progress("prometheus", "completed")
         for item in logs:
             evidence.append({"type": "log", "source": getattr(item, "source", "elasticsearch"), "reference": f"log:{getattr(item, 'timestamp', '')}", "timestamp": getattr(item, "timestamp", None), "raw_data": getattr(item, "raw_data", {})})
         for item in metrics:
@@ -370,6 +390,7 @@ class EvidenceCollector:
         effective_service = self._known_service(asset.get("service")) or self._known_service(asset.get("hostname")) or effective_service
 
         if self.kubernetes and getattr(self.kubernetes, "enabled", False) and (wants_all or "event" in wants):
+            await self._progress("kubernetes_api", "started")
             if not effective_service:
                 evidence.append(self._observation("kubernetes_api", f"k8s-skipped:{since.isoformat()}", status="skipped", detail="asset_service_unresolved"))
             else:
@@ -398,7 +419,11 @@ class EvidenceCollector:
             and asset_type not in {"network", "application"}
             and not asset_type.startswith("kubernetes_")
         )
+        if self.kubernetes and getattr(self.kubernetes, "enabled", False) and (wants_all or "event" in wants):
+            await self._progress("kubernetes_api", "completed")
         if self.vm and vm_target and linux_candidate:
+            if not early_vm_actions:
+                await self._progress("vm_mcp", "started")
             actions = self._vm_actions_for_requests(requests, service=effective_service, port=vm_port, elastic_logs_available=elastic_logs_available)
             for action in actions:
                 if action in early_vm_actions:
@@ -451,6 +476,8 @@ class EvidenceCollector:
                 except Exception as exc:
                     evidence.append(self._observation("vm_mcp", f"vm-error:{vm_target}:{action}:{since.isoformat()}", status="error", service=effective_service, detail=str(exc)))
 
+        if self.vm and vm_target and linux_candidate:
+            await self._progress("vm_mcp", "completed")
         final_asset = AssetIdentityResolver.resolve(evidence, effective_service)
         return {
             "service": effective_service or query_service, "requested_service": service,
