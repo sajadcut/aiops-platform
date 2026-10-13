@@ -128,6 +128,7 @@
             <button type="button" data-incident-size="list" aria-pressed="false" onclick="setIncidentDisplayMode('list')" title="نمایش لیستی، هر رخداد در یک ردیف">☰ <span>لیستی</span></button>
           </div>
           <span id="incidentCount" class="badge neutral" aria-live="polite">0 رخداد</span>
+          <span id="incidentLiveSync" class="incident-live-sync" role="status" aria-live="polite">به‌روزرسانی خودکار هر ۶ ثانیه</span>
         </div>
       </div>
       <section class="panel incident-queue-panel" aria-labelledby="incidentQueueTitle">
@@ -290,6 +291,15 @@
     try { localStorage.setItem(incidentSizeKey, next); } catch (_) {}
     renderIncidentsWithClearTime();
   }
+  const incidentAnalyzing = i => i.analysis_in_progress === true ||
+    (i.analysis_in_progress == null && lower(i.status) === 'analyzing' &&
+      !['pending','approved','rejected'].includes(lower(i.approval_status)));
+  function incidentStatusHtml(i, label) {
+    return incidentAnalyzing(i) ?
+      '<span class="incident-analysis-indicator" role="status" aria-label="در حال بررسی و تحلیل">' +
+        '<span class="incident-activity-spinner" aria-hidden="true"></span>در حال بررسی و تحلیل</span>' :
+      esc(label);
+  }
   function renderIncidentsWithClearTime() {
     const q = lower($('#incidentSearch')?.value);
     const sev = $('#severityFilter')?.value || '';
@@ -331,13 +341,13 @@
         })[lower(i.severity)] || i.severity || 'نامشخص';
         const needsDecision = ['pending','approved'].includes(approval);
         const path = '/dashboard/incidents/' + encodeURIComponent(i.id);
-        return `<a class="incident-list-row ${needsDecision ? 'needs-decision' : ''}" href="${path}"
+        return `<a class="incident-list-row ${needsDecision ? 'needs-decision' : ''} ${incidentAnalyzing(i) ? 'is-analyzing' : ''}" href="${path}"
           aria-label="مشاهده گزارش ${esc(incidentDisplayName(i))}، ${esc(statusLabel)}، ${esc(approvalLabel)}">
           <span class="incident-list-service"><span class="incident-list-symbol" aria-hidden="true">◈</span><span>
             <strong>${esc(incidentDisplayName(i))}</strong><small>#${esc(String(i.id).slice(0,8))}</small></span></span>
           <span class="incident-list-summary" title="${esc(i.summary || '')}">${esc(i.summary || 'شرحی ثبت نشده')}</span>
           <span><span class="incident-queue-severity">${esc(severityLabel)}</span></span>
-          <span class="incident-list-status">${esc(statusLabel)}</span>
+          <span class="incident-list-status">${incidentStatusHtml(i,statusLabel)}</span>
           <time class="incident-list-date" datetime="${esc(i.started_at || i.created_at || '')}">${esc(started.exact)} <small>${esc(started.zone)}</small></time>
           <span class="incident-list-approval ${needsDecision ? 'attention' : ''}">${esc(approvalLabel)}</span>
           <span class="incident-list-open">مشاهده ←</span>
@@ -356,13 +366,13 @@
       const stateLabel = state === 'pending' ? 'منتظر تأیید شما' : state === 'approved' ? 'تأیید شده، منتظر اجرا' :
         ({analyzing:'در حال بررسی',open:'باز',resolved:'رفع شده',closed:'بسته شده',escalated:'ارجاع داده شده'}[state] || i.status || 'نامشخص');
       const severityLabel = ({critical:'بحرانی',high:'زیاد',medium:'متوسط',low:'کم'}[lower(i.severity)] || i.severity || 'نامشخص');
-      return `<a class="incident-queue-card ${pending ? 'needs-decision' : ''}" href="${path}" aria-label="گزارش کامل رخداد ${esc(incidentDisplayName(i))}">
+      return `<a class="incident-queue-card ${pending ? 'needs-decision' : ''} ${incidentAnalyzing(i) ? 'is-analyzing' : ''}" href="${path}" aria-label="گزارش کامل رخداد ${esc(incidentDisplayName(i))}">
         <span class="incident-queue-icon" aria-hidden="true">◈</span>
         <div class="incident-queue-main">
-          <div class="incident-queue-eyebrow"><span class="incident-queue-severity">${esc(severityLabel)}</span><span class="incident-queue-state">${esc(stateLabel)}</span><span class="incident-queue-id">#${esc(String(i.id).slice(0,8))}</span></div>
+          <div class="incident-queue-eyebrow"><span class="incident-queue-severity">${esc(severityLabel)}</span><span class="incident-queue-state">${incidentStatusHtml(i,stateLabel)}</span><span class="incident-queue-id">#${esc(String(i.id).slice(0,8))}</span></div>
           <h3>${esc(incidentDisplayName(i))}</h3>
           <p>${esc(i.summary || 'شرح این رخداد ثبت نشده است.')}</p>
-          <div class="incident-queue-meta"><span>شروع: <time>${esc(started.exact)}</time> <small>${esc(started.zone)}</small></span><span>وضعیت: ${esc(stateLabel)}</span><span>ریسک: ${esc(i.risk_level || 'نامشخص')}</span></div>
+          <div class="incident-queue-meta"><span>شروع: <time>${esc(started.exact)}</time> <small>${esc(started.zone)}</small></span><span>وضعیت: ${incidentStatusHtml(i,stateLabel)}</span><span>ریسک: ${esc(i.risk_level || 'نامشخص')}</span></div>
         </div>
         <div class="incident-queue-next">${pending ? '<span class="incident-queue-urgent">نیازمند تصمیم شما</span>' : (risk ? '<span class="incident-queue-urgent">اولویت بررسی</span>' : '')}
           <span class="incident-queue-open">دیدن گزارش <b aria-hidden="true">←</b></span>
