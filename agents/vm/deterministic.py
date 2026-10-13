@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Any, Dict, Iterable, Optional
 
+from integrations.vm.service_adapters import enrich_legacy_config_diagnostic
+
 
 def _evidence_ref(item: Dict[str, Any]) -> str:
     return str(
@@ -49,7 +51,11 @@ def classify_vm_service_fault(
         if evidence_service and diagnostic in {"service_status", "process_status", "config_validate"}:
             if evidence_service != service_name:
                 continue
-        diagnostics[diagnostic] = raw
+        diagnostics[diagnostic] = (
+            enrich_legacy_config_diagnostic(raw)
+            if diagnostic == "config_validate" and item.get("source") == "vm_mcp"
+            else raw
+        )
         ref = _evidence_ref(item)
         if ref:
             references[diagnostic] = ref
