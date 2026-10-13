@@ -9,7 +9,7 @@ def test_provider_tool_names_match_control_plane_clients():
     assert set(_TOOL_SCHEMAS["prometheus"]) == {"query_metrics", "get_prometheus_alerts"}
     assert set(_TOOL_SCHEMAS["kubernetes"]) == {"collect_kubernetes_evidence"}
     assert set(_TOOL_SCHEMAS["vm"]) == {
-        "collect_vm_metrics", "host_info", "disk_status", "network_status",
+        "collect_vm_metrics", "host_info", "disk_status", "disk_forensics", "network_status",
         "service_status", "service_logs", "system_logs", "process_snapshot",
         "process_status", "tcp_check", "port_listener_status", "dns_check",
         "route_check", "firewall_status", "config_validate",
@@ -45,3 +45,13 @@ def test_mcp_server_does_not_expose_arbitrary_execution_tools():
     assert "execute_shell" not in all_tools
     assert "powershell" not in all_tools
     assert "execute_command" not in all_tools
+
+
+def test_disk_file_forensics_never_exposes_mutating_delete_tool():
+    from integrations.vm.mcp_client import VMEdgeMCPClient
+    vm = _TOOL_SCHEMAS["vm"]
+    assert "disk_forensics" in vm
+    assert "disk_forensics" in VMEdgeMCPClient.READ_TOOLS
+    assert "disk_forensics" not in _WRITE_TOOLS
+    assert "delete_file" not in vm and "cleanup_files" not in vm
+    assert vm["disk_forensics"]["inputSchema"]["additionalProperties"] is False
