@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 475 | Dashboard JS files scanned: 8 | Symbols indexed: 4741**
+**Python files scanned: 477 | Dashboard JS files scanned: 8 | Symbols indexed: 4759**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -724,9 +724,9 @@
 | `apps/api/incident_chat.py` | `_safe_brief` | 79 | function | Keep actual DecisionBrief field names; use bounded persisted facts only. | module |
 | `apps/api/incident_chat.py` | `_explicit_wrong_target` | 130 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/incident_chat.py` | `_read_cognia` | 145 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/incident_chat.py` | `incident_chat_history` | 169 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/incident_chat.py` | `incident_chat_message` | 215 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/incident_chat.py` | `incident_chat_request_approval` | 464 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/incident_chat.py` | `incident_chat_history` | 178 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/incident_chat.py` | `incident_chat_message` | 224 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/incident_chat.py` | `incident_chat_request_approval` | 473 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/incident_resources.py` | `MemoryLifecycleRequest` | 30 | class | کلاس | module |
 | `apps/api/incident_resources.py` | `_require_current_database_schema` | 35 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/incident_resources.py` | `get_context` | 40 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
@@ -984,12 +984,12 @@
 | `apps/chatbot/tools.py` | `_bounded_int` | 182 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/chatbot/tools.py` | `parse_tool_call` | 196 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/chatbot/tools.py` | `normalize_tool_intent` | 216 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
-| `apps/context_service/__init__.py` | `ContextBuilder` | 23 | class | Build knowledge-assisted operational context through governed boundaries. | module |
-| `apps/context_service/__init__.py` | `ContextBuilder.__init__` | 38 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ContextBuilder |
-| `apps/context_service/__init__.py` | `ContextBuilder._known` | 58 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ContextBuilder |
-| `apps/context_service/__init__.py` | `ContextBuilder._knowledge_failure_status` | 65 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ContextBuilder |
-| `apps/context_service/__init__.py` | `ContextBuilder.build_context` | 92 | async method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | ContextBuilder |
-| `apps/context_service/__init__.py` | `ContextBuilder.build_context.avg` | 187 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ContextBuilder.build_context |
+| `apps/context_service/__init__.py` | `ContextBuilder` | 24 | class | Build knowledge-assisted operational context through governed boundaries. | module |
+| `apps/context_service/__init__.py` | `ContextBuilder.__init__` | 39 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ContextBuilder |
+| `apps/context_service/__init__.py` | `ContextBuilder._known` | 59 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ContextBuilder |
+| `apps/context_service/__init__.py` | `ContextBuilder._knowledge_failure_status` | 66 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ContextBuilder |
+| `apps/context_service/__init__.py` | `ContextBuilder.build_context` | 93 | async method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | ContextBuilder |
+| `apps/context_service/__init__.py` | `ContextBuilder.build_context.avg` | 204 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ContextBuilder.build_context |
 | `apps/context_service/asset_identity.py` | `AssetContext` | 10 | class | کلاس | module |
 | `apps/context_service/asset_identity.py` | `AssetIdentityResolver` | 35 | class | Deterministically derives one asset identity from live-source metadata. | module |
 | `apps/context_service/asset_identity.py` | `AssetIdentityResolver.resolve` | 46 | method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | AssetIdentityResolver |
@@ -1023,21 +1023,23 @@
 | `apps/context_service/evidence_collector.py` | `EvidenceCollector._healthy` | 205 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | EvidenceCollector |
 | `apps/context_service/evidence_collector.py` | `EvidenceCollector._vm_evidence` | 217 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | EvidenceCollector |
 | `apps/context_service/evidence_collector.py` | `EvidenceCollector._collect` | 249 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | EvidenceCollector |
+| `apps/context_service/knowledge_relevance.py` | `_service` | 17 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/context_service/knowledge_relevance.py` | `filter_service_knowledge` | 21 | function | Drop documents whose *declared owner service* contradicts the incident. | module |
 | `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver` | 9 | class | Deterministic bridge from Cognia Knowledge chunks to asset-discovery hints. | module |
 | `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver.build_discovery_query` | 71 | method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | KnowledgeTopologyResolver |
 | `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver.constrain_trigger_service` | 102 | method | Do not turn an unrelated RAG hit into a source-alert service identity. | KnowledgeTopologyResolver |
 | `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver.extract_fqdns` | 151 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeTopologyResolver |
 | `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver.resolve` | 160 | method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | KnowledgeTopologyResolver |
-| `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver.reconcile` | 221 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeTopologyResolver |
-| `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver._parse_content` | 282 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeTopologyResolver |
-| `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver._parse_json` | 307 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeTopologyResolver |
-| `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver._collect_mapping_fields` | 319 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeTopologyResolver |
-| `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver._canonical_key` | 331 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeTopologyResolver |
-| `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver._normalize_key` | 335 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeTopologyResolver |
-| `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver._clean` | 339 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeTopologyResolver |
-| `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver._normalize_field` | 346 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeTopologyResolver |
-| `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver._normalize_fqdn` | 366 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeTopologyResolver |
-| `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver._same_value` | 378 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeTopologyResolver |
+| `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver.reconcile` | 239 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeTopologyResolver |
+| `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver._parse_content` | 300 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeTopologyResolver |
+| `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver._parse_json` | 325 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeTopologyResolver |
+| `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver._collect_mapping_fields` | 337 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeTopologyResolver |
+| `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver._canonical_key` | 349 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeTopologyResolver |
+| `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver._normalize_key` | 353 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeTopologyResolver |
+| `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver._clean` | 357 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeTopologyResolver |
+| `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver._normalize_field` | 364 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeTopologyResolver |
+| `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver._normalize_fqdn` | 384 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeTopologyResolver |
+| `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver._same_value` | 396 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeTopologyResolver |
 | `apps/context_service/llm_identity.py` | `diagnostic_candidates` | 20 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/context_service/llm_identity.py` | `suggest_from_llm` | 46 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/context_service/llm_identity.py` | `detect_operational_unknowns` | 110 | function | Find explicit knowledge gaps, not every empty metric or incidental service. | module |
@@ -1302,16 +1304,16 @@
 | `apps/orchestrator/a2a_gateway.py` | `A2AGateway` | 11 | class | Compatibility gateway for structured multi-agent analysis. | module |
 | `apps/orchestrator/a2a_gateway.py` | `A2AGateway.__init__` | 18 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | A2AGateway |
 | `apps/orchestrator/a2a_gateway.py` | `A2AGateway.process_incident` | 24 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | A2AGateway |
-| `apps/orchestrator/dynamic_investigation.py` | `_bounded` | 46 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner` | 50 | class | Propose the next read-only investigation; never authorize writes. | module |
-| `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner.confirmed_config_failure` | 54 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DynamicInvestigationPlanner |
-| `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner.config_review_evidence` | 88 | method | Use a registered VM MCP review only for the matching live failure. | DynamicInvestigationPlanner |
-| `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner.runtime_evidence` | 107 | method | Use only MCP observations bound to the same service, not free text. | DynamicInvestigationPlanner |
-| `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner.search_query` | 124 | method | داده را بدون تغییر state بازیابی/فهرست می‌کند | DynamicInvestigationPlanner |
-| `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner._scope` | 168 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DynamicInvestigationPlanner |
-| `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner.enrich_knowledge` | 185 | async method | Query Cognia again with a verified error, preserving access scope. | DynamicInvestigationPlanner |
-| `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner.propose` | 244 | async method | LLM chooses from read-only capabilities, never arbitrary code. | DynamicInvestigationPlanner |
-| `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner.evidence_requests` | 446 | method | Convert validated enum members, never LLM text, to connector requests. | DynamicInvestigationPlanner |
+| `apps/orchestrator/dynamic_investigation.py` | `_bounded` | 47 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner` | 51 | class | Propose the next read-only investigation; never authorize writes. | module |
+| `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner.confirmed_config_failure` | 55 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DynamicInvestigationPlanner |
+| `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner.config_review_evidence` | 89 | method | Use a registered VM MCP review only for the matching live failure. | DynamicInvestigationPlanner |
+| `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner.runtime_evidence` | 108 | method | Use only MCP observations bound to the same service, not free text. | DynamicInvestigationPlanner |
+| `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner.search_query` | 125 | method | داده را بدون تغییر state بازیابی/فهرست می‌کند | DynamicInvestigationPlanner |
+| `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner._scope` | 169 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DynamicInvestigationPlanner |
+| `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner.enrich_knowledge` | 186 | async method | Query Cognia again with a verified error, preserving access scope. | DynamicInvestigationPlanner |
+| `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner.propose` | 259 | async method | LLM chooses from read-only capabilities, never arbitrary code. | DynamicInvestigationPlanner |
+| `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner.evidence_requests` | 466 | method | Convert validated enum members, never LLM text, to connector requests. | DynamicInvestigationPlanner |
 | `apps/orchestrator/e2e_graph.py` | `E2EState` | 48 | class | کلاس | module |
 | `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator` | 78 | class | کلاس | module |
 | `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator.__init__` | 79 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
@@ -1452,19 +1454,19 @@
 | `apps/security/token_validator.py` | `OIDCTokenValidator.__init__` | 18 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OIDCTokenValidator |
 | `apps/security/token_validator.py` | `OIDCTokenValidator.validate` | 24 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | OIDCTokenValidator |
 | `apps/security/token_validator.py` | `discover_jwks` | 57 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/signal_gateway/__init__.py` | `OperationalSignal` | 27 | class | کلاس | module |
-| `apps/signal_gateway/__init__.py` | `OperationalSignal.normalize_source` | 40 | method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | OperationalSignal |
-| `apps/signal_gateway/__init__.py` | `OperationalSignal.normalize_severity` | 47 | method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | OperationalSignal |
-| `apps/signal_gateway/__init__.py` | `OperationalSignal.to_evidence` | 52 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalSignal |
-| `apps/signal_gateway/__init__.py` | `SignalGateway` | 81 | class | Source-agnostic, race-safe entry point for operational signals. | module |
-| `apps/signal_gateway/__init__.py` | `SignalGateway._append_trigger_to_checkpoint` | 90 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalGateway |
-| `apps/signal_gateway/__init__.py` | `SignalGateway._existing_state` | 102 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalGateway |
-| `apps/signal_gateway/__init__.py` | `SignalGateway._knowledge_assisted_asset` | 109 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalGateway |
-| `apps/signal_gateway/__init__.py` | `SignalGateway.ingest` | 181 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalGateway |
-| `apps/signal_gateway/__init__.py` | `signal_from_elasticsearch` | 326 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/signal_gateway/__init__.py` | `signal_from_prometheus` | 345 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/signal_gateway/__init__.py` | `_zabbix_service_from_tags` | 360 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/signal_gateway/__init__.py` | `signal_from_zabbix` | 371 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/__init__.py` | `OperationalSignal` | 28 | class | کلاس | module |
+| `apps/signal_gateway/__init__.py` | `OperationalSignal.normalize_source` | 41 | method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | OperationalSignal |
+| `apps/signal_gateway/__init__.py` | `OperationalSignal.normalize_severity` | 48 | method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | OperationalSignal |
+| `apps/signal_gateway/__init__.py` | `OperationalSignal.to_evidence` | 53 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalSignal |
+| `apps/signal_gateway/__init__.py` | `SignalGateway` | 82 | class | Source-agnostic, race-safe entry point for operational signals. | module |
+| `apps/signal_gateway/__init__.py` | `SignalGateway._append_trigger_to_checkpoint` | 91 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalGateway |
+| `apps/signal_gateway/__init__.py` | `SignalGateway._existing_state` | 103 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalGateway |
+| `apps/signal_gateway/__init__.py` | `SignalGateway._knowledge_assisted_asset` | 110 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalGateway |
+| `apps/signal_gateway/__init__.py` | `SignalGateway.ingest` | 197 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalGateway |
+| `apps/signal_gateway/__init__.py` | `signal_from_elasticsearch` | 342 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/__init__.py` | `signal_from_prometheus` | 361 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/__init__.py` | `_zabbix_service_from_tags` | 376 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/__init__.py` | `signal_from_zabbix` | 387 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/signal_gateway/correlation.py` | `CorrelationIdentity` | 20 | class | خروجی canonical correlation شامل fingerprint و scope قابل audit. | module |
 | `apps/signal_gateway/correlation.py` | `_token` | 30 | function | مقادیر vendor-specific را به token پایدار و قابل hash تبدیل می‌کند. | module |
 | `apps/signal_gateway/correlation.py` | `signal_family` | 36 | function | نام‌های alert مختلف را محافظه‌کارانه به symptom family مشترک نگاشت می‌کند. | module |
@@ -3138,6 +3140,22 @@
 | `tests/unit/test_cognia_gfpapi_identity_conflict.py` | `test_actual_chat_cognia_conflict_reaches_mcp_for_status_and_restart.append` | 183 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_actual_chat_cognia_conflict_reaches_mcp_for_status_and_restart |
 | `tests/unit/test_cognia_gfpapi_identity_conflict.py` | `test_actual_chat_cognia_conflict_reaches_mcp_for_status_and_restart.VM` | 186 | class | کلاس | test_actual_chat_cognia_conflict_reaches_mcp_for_status_and_restart |
 | `tests/unit/test_cognia_gfpapi_identity_conflict.py` | `test_actual_chat_cognia_conflict_reaches_mcp_for_status_and_restart.VM.service_status` | 187 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_actual_chat_cognia_conflict_reaches_mcp_for_status_and_restart.VM |
+| `tests/unit/test_cognia_incident_relevance.py` | `RAG` | 34 | class | کلاس | module |
+| `tests/unit/test_cognia_incident_relevance.py` | `RAG.__init__` | 35 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RAG |
+| `tests/unit/test_cognia_incident_relevance.py` | `RAG.search` | 38 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | RAG |
+| `tests/unit/test_cognia_incident_relevance.py` | `Collector` | 43 | class | Evidence/داده موردنیاز را از منبع مربوط جمع می‌کند | module |
+| `tests/unit/test_cognia_incident_relevance.py` | `Collector.__init__` | 44 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | Collector |
+| `tests/unit/test_cognia_incident_relevance.py` | `Collector.collect` | 46 | async method | Evidence/داده موردنیاز را از منبع مربوط جمع می‌کند | Collector |
+| `tests/unit/test_cognia_incident_relevance.py` | `test_service_bound_filter_disallows_high_score_foreign_owner_and_keeps_generic` | 57 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_cognia_incident_relevance.py` | `test_non_scoped_incidents_still_allow_discovery_from_service_hint` | 73 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_cognia_incident_relevance.py` | `test_topology_defense_in_depth_blocks_wrong_service_and_generic_owner_promotion` | 81 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_cognia_incident_relevance.py` | `test_context_builder_mixed_kb_returns_gfpapi_only_not_nginx` | 94 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_cognia_incident_relevance.py` | `test_signal_gateway_filters_nginx_before_correlation` | 117 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_cognia_incident_relevance.py` | `test_signal_gateway_filters_nginx_before_correlation.search` | 120 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | test_signal_gateway_filters_nginx_before_correlation |
+| `tests/unit/test_cognia_incident_relevance.py` | `test_focused_rag_rejects_wrong_service_and_scrubs_old_knowledge` | 139 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_cognia_incident_relevance.py` | `test_incident_copilot_cognia_read_is_service_scoped` | 165 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_cognia_incident_relevance.py` | `test_incident_copilot_cognia_read_is_service_scoped.search` | 168 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | test_incident_copilot_cognia_read_is_service_scoped |
+| `tests/unit/test_cognia_incident_relevance.py` | `test_all_foreign_service_hits_are_explicitly_reported_as_filtered_empty` | 182 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_cognia_only_rag_architecture.py` | `_join` | 4 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_cognia_only_rag_architecture.py` | `test_cognia_is_the_only_rag_runtime_contract` | 8 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_cognia_only_rag_architecture.py` | `test_historical_local_knowledge_table_is_retired_without_vector_retrieval` | 27 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
