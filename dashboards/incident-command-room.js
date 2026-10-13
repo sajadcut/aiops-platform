@@ -1363,9 +1363,14 @@
   }
 
   function renderDecision(r) {
-    const a=r.approval_readiness||{},x=r.remediation_recommendation||{},statusValue=low(a.approval_status);
+    const a=r.approval_readiness||{},x=r.remediation_recommendation||{};
+    const durable=state.lifecycle?.approval||{};
+    const statusValue=low(durable.status||a.approval_status);
     const archived=!!state.historic;
     const pending=statusValue==='pending', approved=statusValue==='approved';
+    const completed=low(state.lifecycle?.checkpoint_status)==='completed';
+    const durableBound=durable.metadata?.binding_complete===true||
+      low(durable.metadata?.binding_complete)==='true';
     // A consumed approval is intentionally one-time. Snapshot changes from
     // actual execution/verification must never be shown as a NEW approval drift.
     const snapshotBad=(pending||approved)&&
@@ -1390,7 +1395,7 @@
       pill(statusValue)+'</div><div class="ic-mini-facts">'+
       mini('action',humanAction(a.action||x.action))+mini('target',a.target||x.target)+mini('risk',status(x.risk_level))+
       mini('tool',humanTool(a.tool||x.tool))+mini('freshness',status(a.data_freshness))+
-      mini('approvalId',a.approval_id)+'</div>');
+      mini('approvalId',durable.approval_id||a.approval_id)+'</div>');
     if(archived) {
       show('#ic-action-checks','');
       show('#ic-action-controls','<p class="ic-warning critical">'+tr('archiveHint')+'</p>'+
@@ -1400,7 +1405,13 @@
     const liveSnapshot=state.report?.snapshot_id===r.snapshot_id;
     const acknowledged=state.reviewedSnapshot===r.snapshot_id;
     const canAct=Boolean(a.approval_id&&binding&&liveSnapshot);
-    show('#ic-action-checks',pending||approved?'<label class="ic-checkbox-row"><input id="ic-check" type="checkbox"'+
+    // A standalone approval on a completed incident is distinct from the
+    // completed analysis snapshot. Execution remains bound to a durable
+    // approved intent and undergoes fresh server-side safety checks.
+    const canExecute=completed
+      ?Boolean(approved&&UUID.test(String(durable.approval_id||''))&&durableBound&&!state.busy)
+      :Boolean(canAct&&acknowledged&&!state.busy);
+    show('#ic-action-checks',pending||(approved&&!completed)?'<label class="ic-checkbox-row"><input id="ic-check" type="checkbox"'+
       (acknowledged?' checked':'')+(state.busy?' disabled':'')+'><span>'+
       esc(pending?tr('reviewCheckbox'):tr('resumeCheckbox'))+'</span></label>':'');
     let controls='';
@@ -1416,7 +1427,6 @@
     }else if(approved){
       // A chat/manual approval can be created after incident analysis is
       // completed. It must execute by approval ID, never resume that graph.
-      const completed=low(state.lifecycle?.checkpoint_status)==='completed';
       const executeLabel=completed
         ?(state.language==='fa'?'اجرای واقعی '+humanAction(a.action||x.action)
           :'Execute approved '+humanAction(a.action||x.action))
@@ -1425,7 +1435,7 @@
         ?'مجوز تأیید شده اما هنوز هیچ فرمانی روی سرور اجرا نشده است. اجرای عملیات یک مرحلهٔ مستقل با بررسی زندهٔ مجدد است.'
         :'Approval was granted but no server command has run. Execution is a separate, freshly verified step.')+'</p>'+
         '<div class="ic-action-buttons"><button type="button" id="ic-resume" class="ic-btn ic-btn-primary"'+
-      (!canAct||!acknowledged||state.busy?' disabled':'')+'>'+esc(state.busy?tr('processing'):executeLabel)+'</button></div>';
+      (!canExecute?' disabled':'')+'>'+esc(state.busy?tr('processing'):executeLabel)+'</button></div>';
     }else {
       controls+='<p class="ic-empty">'+tr('approvalNoRecord')+'</p>';
     }
@@ -1691,14 +1701,22 @@
       a.binding_complete&&a.evidence_snapshot_binding!=='drift_detected';
   }
   async function action(kind) {
-    if(state.busy||state.historic||!state.report||!approvalCurrent()) {
+    const completedRequest=kind==='resume'&&
+      low(state.lifecycle?.checkpoint_status)==='completed';
+    if(state.busy||state.historic||!state.report||
+      (!completedRequest&&!approvalCurrent())) {
       notify(tr('rereview'),true);await load();return;
     }
     const approval=state.lifecycle.approval;
     const id=approval.approval_id,snapshot=state.report.snapshot_id;
     const pending=kind==='approve'||kind==='reject';
-    if(low(approval.status)!==(pending?'pending':'approved'))return;
-    if(kind!=='reject'&&state.reviewedSnapshot!==snapshot){notify(tr('needReview'),true);return;}
+    const completedExecute=kind==='resume'&&low(state.lifecycle?.checkpoint_status)==='completed';
+    if(low(approval.status)!==(pending?'pending':'approved')){
+      notify(tr('rereview'),true);return;
+    }
+    if(!completedExecute&&kind!=='reject'&&state.reviewedSnapshot!==snapshot){
+      notify(tr('needReview'),true);return;
+    }
     const reason=kind==='reject'?String($('#ic-reject-reason')?.value||'').trim():'';
     if(kind==='reject'&&!reason){notify(tr('reasonMissing'),true);$('#ic-reject-reason')?.focus();return;}
     if(!confirm(tr(kind==='approve'?'firstApprove':kind==='resume'?'firstResume':'firstReject')))return;
@@ -1708,9 +1726,19 @@
       // Do not trust an old tab or long-lived approval card.
       // Compare exact persisted snapshot and durable approval ID before POST.
       const [latest,live]=await Promise.all([api(base+'/decision-brief'),api(base+'/lifecycle')]);
-      if(latest.snapshot_id!==snapshot||live.approval?.approval_id!==id||
-        low(live.approval?.status)!==(pending?'pending':'approved')||
-        latest.approval_readiness?.evidence_snapshot_binding==='drift_detected'){
+      const sameApproval=String(live.approval?.approval_id||'')===String(id)&&
+        low(live.approval?.status)===(pending?'pending':'approved');
+      const durableBinding=live.approval?.metadata?.binding_complete===true||
+        low(live.approval?.metadata?.binding_complete)==='true';
+      const sameIntent=live.approval?.action===approval.action&&
+        String(live.approval?.metadata?.target||'')===
+          String(approval.metadata?.target||'')&&
+        String(live.approval?.metadata?.binding_digest||'')===
+          String(approval.metadata?.binding_digest||'');
+      if(!sameApproval||(completedExecute
+          ?(!durableBinding||!sameIntent||low(live.checkpoint_status)!=='completed')
+          :(latest.snapshot_id!==snapshot||
+            latest.approval_readiness?.evidence_snapshot_binding==='drift_detected'))){
         state.busy=false;await load();notify(tr('rereview'),true);return;
       }
       if(kind==='approve'){

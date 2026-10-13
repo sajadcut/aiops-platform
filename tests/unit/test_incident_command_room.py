@@ -309,9 +309,15 @@ def test_completed_chat_incident_routes_execute_to_approved_api_not_workflow_res
         ("let approvalStatus='pending', version=0;",
          "let approvalStatus='pending', version=0;"),
         ("data={checkpoint_status:'paused',approval:{approval_id:'22222222-2222-4222-8222-222222222222',status:approvalStatus,risk_level:'high'}};",
-         "data={checkpoint_status:'completed',approval:{approval_id:'22222222-2222-4222-8222-222222222222',status:approvalStatus,risk_level:'high'}};"),
+         "data={checkpoint_status:'completed',approval:{approval_id:'22222222-2222-4222-8222-222222222222',status:approvalStatus,risk_level:'high',action:'start_service',metadata:{binding_complete:true,target:'vm-01',binding_digest:'tested-digest'}}};"),
         ("else if(method==='POST'&&url.includes('/resume')){approvalStatus='consumed';version++;data={status:'completed'};}",
          "else if(method==='POST'&&url.endsWith('/execute')){approvalStatus='consumed';version++;data={status:'completed'};}"),
+        ("assert.match(el('#ic-action-controls').innerHTML,/ic-resume/);\n  listeners.change({target:{id:'ic-check',checked:true}});\n  click('#ic-resume');",
+         "assert.match(el('#ic-action-controls').innerHTML,/ic-resume/);\n"
+         "  assert.doesNotMatch(el('#ic-action-controls').innerHTML.match(/id=\\\"ic-resume\\\"[^>]*>/)[0],/disabled/);\n"
+         "  assert.doesNotMatch(el('#ic-action-checks').innerHTML,/ic-check/);\n"
+         "  version++; // Decision-brief changes without invalidating bound approval.\n"
+         "  click('#ic-resume');"),
         ("assert.equal(events.filter(x=>x[0]==='POST'&&x[1].includes('/resume')).length,1);",
          "assert.equal(events.filter(x=>x[0]==='POST'&&x[1].endsWith('/execute')).length,1);\n"
          "  assert.equal(events.filter(x=>x[0]==='POST'&&x[1].includes('/resume')).length,0);"),
@@ -338,3 +344,12 @@ def test_completed_incident_execution_route_matches_governed_backend():
         assert "/api/v1/workflow/e2e/" in source and "/resume" in source
     assert '@router.post("/approvals/{approval_id}/execute")' in api
     assert 'require_permission("execute:approved")' in api
+
+
+def test_completed_chat_approval_does_not_require_ephemeral_checkbox():
+    js = (ROOT / "dashboards/incident-command-room.js").read_text(encoding="utf-8")
+    assert "const canExecute=completed" in js
+    assert "pending||(approved&&!completed)" in js
+    assert "const completedRequest=kind==='resume'" in js
+    assert "if(!completedExecute&&kind!=='reject'&&state.reviewedSnapshot!==snapshot)" in js
+    assert "const sameIntent=live.approval?.action===approval.action" in js
