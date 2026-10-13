@@ -390,7 +390,11 @@ async def get_incident_lifecycle(incident_id: UUID):
     incident_status = str(incident.status.value if hasattr(incident.status, "value") else incident.status).lower()
     checkpoint_status = str((checkpoint or {}).get("status") or "").lower()
     approval_row = dict(approval) if approval else state.get("approval")
-    approval_status = str((approval_row or {}).get("status") or "").lower()
+    approval_status_value = (approval_row or {}).get("status")
+    approval_status = str(
+        approval_status_value.value if hasattr(approval_status_value, "value")
+        else approval_status_value or ""
+    ).lower()
     # A paused workflow awaiting approval is NOT actively analyzing.
     # A consumed approval may be executing until the incident reaches a terminal status.
     analysis_in_progress = incident_status == "analyzing" and (
