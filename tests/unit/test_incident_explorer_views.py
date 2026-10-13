@@ -95,6 +95,22 @@ assert.equal(storage['aiops.incidents.sort'],'newest');
 ctx.setIncidentDisplayMode('invalid');
 assert.equal(elements.incidentRows.dataset.size,'large');
 assert.match(elements.incidentRows.innerHTML,/نیازمند تصمیم شما/);
+// A real running analysis must show the spinner in every size, including list.
+ctx.S.incidents.push({id:'running',service:'haproxy',status:'analyzing',
+  analysis_in_progress:true,severity:'high',created_at:'2026-10-12T09:00:00Z'});
+ctx.setIncidentDisplayMode('large');
+assert.match(elements.incidentRows.innerHTML,/incident-activity-spinner/);
+assert.match(elements.incidentRows.innerHTML,/در حال بررسی و تحلیل/);
+ctx.setIncidentDisplayMode('list');
+assert.match(elements.incidentRows.innerHTML,/incident-activity-spinner/);
+// Approval-pending is not an actively spinning analysis, even if the Incident
+// itself still has the historical status "analyzing".
+ctx.S.incidents[ctx.S.incidents.length-1] = {id:'running',service:'haproxy',
+  status:'analyzing',analysis_in_progress:false,approval_status:'pending',
+  severity:'high',created_at:'2026-10-12T09:00:00Z'};
+ctx.setIncidentDisplayMode('large');
+assert.doesNotMatch(elements.incidentRows.innerHTML,/incident-activity-spinner/);
+ctx.S.incidents.pop();
 assert.match(html,/data-incident-size="large"/);
 assert.match(html,/data-incident-size="medium"/);
 assert.match(html,/data-incident-size="small"/);
