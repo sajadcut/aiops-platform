@@ -487,6 +487,45 @@ def build_decision_brief(
         "evidence_conflicts": conflict_refs,
         "missing_evidence": missing,
         "unknown_guidance": redact(obj(obj(state.get("context")).get("unknown_guidance"))),
+        # Proposal-only; do not construct any approval or execution binding.
+        # Raw file contents or unreviewed patches must never be inserted here.
+        "dynamic_investigation": {
+            "status": safe(obj(obj(state.get("context")).get("dynamic_investigation")).get("status"), 40)
+                or "not_available",
+            "model_status": safe(obj(obj(state.get("context")).get("dynamic_investigation")).get("model_status"), 45),
+            "checks": [
+                safe(x, 60)
+                for x in arr(obj(obj(state.get("context")).get("dynamic_investigation")).get("checks"))[:3]
+            ],
+            "questions": [
+                {
+                    "question": safe(q.get("question"), 320),
+                    "reason": safe(q.get("reason"), 250),
+                    "evidence_refs": refs(q.get("evidence_refs")),
+                }
+                for q in arr(obj(obj(state.get("context")).get("dynamic_investigation")).get("operator_questions"))[:5]
+                if isinstance(q, dict)
+            ],
+            "knowledge_followup": {
+                "status": safe(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("knowledge_followup")).get("status"), 50),
+                "query": safe(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("knowledge_followup")).get("query"), 430),
+                "source_refs": refs(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("knowledge_followup")).get("source_refs")),
+                "count": obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("knowledge_followup")).get("count", 0),
+            },
+            "config_proposal": {
+                "status": safe(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("config_proposal")).get("status"), 70),
+                "config_file": safe(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("config_proposal")).get("config_file"), 250),
+                "error_line": obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("config_proposal")).get("error_line"),
+                "validation_status": "UNVERIFIED",
+                "current_configuration": None,
+                "proposed_configuration": None,
+                "unified_diff": None,
+                "validator_executed_on_proposal": False,
+                "execution_authority": False,
+            },
+            "execution_authority": False,
+            "counts_as_live_evidence": False,
+        },
         "remediation_recommendation": {
             "action": safe(recommendation.get("action") or approval.get("action"), 120),
             "tool": safe(recommendation.get("tool") or approval.get("tool"), 120),
