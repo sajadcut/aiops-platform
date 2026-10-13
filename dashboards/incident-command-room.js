@@ -567,6 +567,15 @@
     if(state.language!=='fa'||isFaText(x))return x;
     const findings=signalFacts(x);
     if(findings.length)return findings.join('؛ ')+'.';
+    if(/Incident triaged to/i.test(x)) {
+      const target=(x.match(/triaged to\s+([\w-]+)/i)||[])[1];
+      const layer=(x.match(/affected_layer\s*=\s*([\w-]+)/i)||[])[1];
+      const severity=(x.match(/severity\s*=\s*([\w-]+)/i)||[])[1];
+      return 'بررسی اولیه: هشدار برای بررسی تخصصی به '+(target?humanAgent(target):'متخصص مربوط')+
+        ' ارجاع شده'+(layer?'؛ لایهٔ گزارش‌شده: '+(layer==='vm'?'ماشین مجازی':layer):'')+
+        (severity?'؛ شدت برآوردی این مرحله: '+status(severity):'')+
+        (/no customer impact.*evidenced/i.test(x)?'؛ شواهد کافی از اثر بر مشتری ثبت نشده است':'')+'.';
+    }
     if(/no confirmed domain fault yet/i.test(x))return 'با شواهد فعلی خرابی مستقلی در این حوزه تأیید نشده است.';
     if(/configuration (?:validation|check|syntax).*(?:success|passed|valid)/i.test(x))return 'تست ساختار تنظیمات سرویس با موفقیت انجام شده است.';
     if(/(?:agent|analysis).*timed out|readtimeout|timeout/i.test(x))return 'تحلیل این متخصص به دلیل پایان مهلت پاسخ کامل نشده است.';
@@ -576,7 +585,8 @@
     const translated=agentFindingFa(raw);
     return translated?'<span>'+esc(translated)+'</span>':
       '<span>'+(state.language==='fa'?'شرح فارسی تأییدشده برای این یافته موجود نیست.':'Original specialist observation:')+
-      '</span><span class="ic-agent-raw" dir="auto">'+txt(raw)+'</span>';
+      '</span><details class="ic-technical"><summary>'+(state.language==='fa'?'دیدن متن اصلی یافته':'View original finding')+
+      '</summary><p dir="ltr">'+txt(raw)+'</p></details>';
   };
   const agentBullets = (items, mapper=agentLine, max=6) =>
     '<ul class="ic-agent-bullets">'+items.slice(0,max).map(x=>'<li>'+mapper(x)+'</li>').join('')+'</ul>';
@@ -659,7 +669,7 @@
         '</h3><p>'+esc(fa?scope[0]:a.agent)+'</p></div></div>'+
         '<div class="ic-agent-status">'+pill(a.status)+'</div></header>'+
         '<div class="ic-agent-mission"><b>'+esc(fa?'حوزهٔ مسئولیت:':'Responsibility:')+'</b> '+
-        esc(fa?scope[1]:(a.mission||scope[1]))+'</div>'+
+        esc(fa?scope[1]:(a.mission||'Specialist scope; no additional mission description recorded'))+'</div>'+
         metric+
         '<div class="ic-agent-subsection"><h4>'+esc(fa?'یافته‌ها و نتیجهٔ ثبت‌شده':'Recorded findings and outcome')+'</h4>'+summary+'</div>'+
         '<div class="ic-agent-subsection"><h4>'+esc(fa?'شواهدی که در تحلیل به آنها ارجاع شده':'Evidence referenced in the analysis')+'</h4>'+
