@@ -95,6 +95,84 @@ def remote_file_read_command(publish: str, filename: str) -> str:
     )
 
 
+class DotnetJsonCommentError(ValueError):
+    def __init__(self, source: str, index: int):
+        self.line = source.count("\n", 0, index) + 1
+        self.column = index - source.rfind("\n", 0, index)
+        super().__init__("unclosed_json_comment")
+
+
+def normalize_dotnet_json(source: str) -> str:
+    """Ignore JSON comments and trailing commas accepted by .NET configuration.
+
+    Replace syntax-only portions with whitespace of identical length so Python
+    JSONDecodeError line and column still refer to the actual original file.
+    Quoted strings, escapes, values, secret material and keys are NOT modified.
+    """
+    chars = list(source)
+    i, quoted, escaped = 0, False, False
+    while i < len(chars):
+        ch = chars[i]
+        if quoted:
+            if escaped:
+                escaped = False
+            elif ch == "\\":
+                escaped = True
+            elif ch == '"':
+                quoted = False
+            i += 1
+            continue
+        if ch == '"':
+            quoted = True
+            i += 1
+            continue
+        if ch == "/" and i + 1 < len(chars) and chars[i + 1] == "/":
+            while i < len(chars) and chars[i] not in "\r\n":
+                chars[i] = " "
+                i += 1
+            continue
+        if ch == "/" and i + 1 < len(chars) and chars[i + 1] == "*":
+            begin = i
+            chars[i] = " "
+            chars[i + 1] = " "
+            i += 2
+            found_end = False
+            while i < len(chars):
+                if i + 1 < len(chars) and chars[i] == "*" and chars[i + 1] == "/":
+                    chars[i] = chars[i + 1] = " "
+                    i += 2
+                    found_end = True
+                    break
+                if chars[i] not in "\r\n":
+                    chars[i] = " "
+                i += 1
+            if not found_end:
+                raise DotnetJsonCommentError(source, begin)
+            continue
+        i += 1
+    # Find trailing commas, again respecting string literals.
+    i, quoted, escaped = 0, False, False
+    while i < len(chars):
+        ch = chars[i]
+        if quoted:
+            if escaped:
+                escaped = False
+            elif ch == "\\":
+                escaped = True
+            elif ch == '"':
+                quoted = False
+        elif ch == '"':
+            quoted = True
+        elif ch == ",":
+            j = i + 1
+            while j < len(chars) and chars[j].isspace():
+                j += 1
+            if j < len(chars) and chars[j] in "]}":
+                chars[i] = " "
+        i += 1
+    return "".join(chars)
+
+
 def _reject_constant(_value: str) -> None:
     raise ValueError("nonstandard_json_constant")
 
@@ -122,9 +200,17 @@ def validate_encoded_file(filename: str, encoded: str) -> dict:
             row["reason"] = "oversized"
             return row
         text_value = content.decode("utf-8-sig")
-        json.loads(text_value, parse_constant=_reject_constant,
+        json.loads(normalize_dotnet_json(text_value),
+                   parse_constant=_reject_constant,
                    object_pairs_hook=_reject_duplicate_keys)
         row["status"] = "valid_json_syntax"
+    except DotnetJsonCommentError as error:
+        row.update({
+            "status": "invalid_json_syntax", "reason": "unclosed_json_comment",
+            "error_code": "json_unclosed_comment", "line": error.line,
+            "column": error.column,
+            "explanation_fa": "کامنت /* در فایل بسته نشده است.",
+        })
     except (UnicodeDecodeError, binascii.Error):
         row.update({"status": "invalid_json_syntax", "reason": "invalid_encoding",
                     "error_code": "json_invalid_encoding",
