@@ -27,7 +27,7 @@
       receivedMore:'فقط بخشی از آلارم‌ها نمایش داده می‌شوند؛ از API برای صفحه‌بندی داده‌های بیشتر استفاده کن.',
       receivedProblem:'آلارم مشکل',receivedRecovery:'اعلام رفع مشکل',receivedError:'دریافت آلارم اولیه ممکن نشد.',
       readFirst:'وضعیت رخداد به زبان ساده',overviewTitle:'خلاصه وضعیت و پیشنهاد AIOps',decisionSafety:'بررسی ریسک پیش از اقدام',
-      reviewTitle:'اگر تأیید کنم، چه کاری انجام می‌شود؟',agentSubtitle:'گزارش قابل ممیزی عملکرد متخصص‌ها',
+      reviewTitle:'اگر تأیید کنم، چه کاری انجام می‌شود؟',agentSubtitle:'گزارش قابل ممیزی عملکرد ایجنت‌ها',
       agentsTitle:'هر Agent چه چیزی بررسی کرد و به چه نتیجه‌ای رسید؟',sourceSubtitle:'فقط شواهد ثبت‌شده',evidenceTitle:'MCP و وضعیت منابع',
       knowledgeSubtitle:'دانش بازیابی‌شده، نه واقعیت قطعی',knowledgeTitle:'Cognia و تجربیات قبلی',cognia:'دانش سازمانی Cognia',
       memory:'Operational Memory',afterSubtitle:'بعد از تأیید چه اتفاقی افتاد؟',outcomeTitle:'اجرا، راستی‌آزمایی و یادگیری',
@@ -234,7 +234,20 @@
     reload_service:'بارگذاری دوباره تنظیمات سرویس',stop_service:'متوقف کردن سرویس'};
   const agentFa = {triage:'بررسی اولیه',network:'بررسی شبکه',vm:'بررسی ماشین مجازی',
     application:'بررسی برنامه',infrastructure:'بررسی زیرساخت',dependency:'بررسی وابستگی‌ها',
+    storage:'بررسی ذخیره‌سازی',kubernetes:'بررسی کوبرنتیز',database:'بررسی پایگاه داده',
+    recovery:'بررسی بازیابی',security:'بررسی امنیت',identity:'بررسی هویت',
+    messaging:'بررسی پیام‌رسانی',change:'بررسی تغییرات',
     rca:'بررسی علت خرابی',evaluator:'ارزیابی پیشنهاد'};
+  const agentNamesEN = {
+    triage:'TriageAgent',network:'NetworkAgent',vm:'VMAgent',
+    application:'ApplicationAgent',infrastructure:'InfrastructureAgent',
+    dependency:'DependencyAgent',storage:'StorageAgent',
+    kubernetes:'KubernetesAgent',database:'DatabaseAgent',
+    recovery:'RecoveryAgent',security:'SecurityAgent',identity:'IdentityAgent',
+    messaging:'MessagingAgent',change:'ChangeAgent',
+    rca:'RCA',evaluator:'Evaluator'
+  };
+  const agentNameEN = key => agentNamesEN[low(key)] || String(key||'Unknown Agent');
   const toolFa = {ssh_vm:'اتصال به سرور با SSH',vm_mcp:'ابزار بررسی ماشین مجازی',
     zabbix:'زبیکس',prometheus:'پرومتئوس',elasticsearch:'جست‌وجوی لاگ‌ها',
     service_status:'بررسی وضعیت سرویس',process_status:'بررسی پردازش',
@@ -505,7 +518,7 @@
   // Specialized display is strictly informational. "Referenced evidence" is
   // NOT an audit claim that the specialist itself called an MCP/SSH tool.
   const agentScopes = {
-    triage:['دسته‌بندی هشدار و تعیین مسیر بررسی','هویت سرویس، شدت گزارش‌شده و انتخاب متخصص‌ها'],
+    triage:['دسته‌بندی هشدار و تعیین مسیر بررسی','هویت سرویس، شدت گزارش‌شده و انتخاب ایجنت‌ها'],
     network:['شبکه و مسیر ارتباطی','پورت، اتصال TCP، DNS و مسیر شبکه'],
     vm:['وضعیت ماشین مجازی و سرویس','systemd، پردازش، منابع و کانفیگ'],
     application:['سلامت برنامه','لاگ برنامه، کانفیگ، پردازش و پاسخ سرویس'],
@@ -555,7 +568,7 @@
       [/distributed trace/i,'ردیابی درخواست‌ها میان سرویس‌ها'],
       [/local TCP|connectivity|port/i,'بررسی اتصال و پورت سرویس از میزبان'],
       [/configuration|config.*test/i,'تأیید اعتبار کانفیگ سرویس'],
-      [/structured.*analysis/i,'خروجی معتبر و ساختاریافتهٔ تحلیل متخصص'],
+      [/structured.*analysis/i,'خروجی معتبر و ساختاریافتهٔ تحلیل ایجنت'],
       [/fresh evidence/i,'جمع‌آوری شواهد تازه'],
       [/permission|sudo/i,'بررسی دسترسی لازم برای ابزار تشخیصی'],
     ];
@@ -571,7 +584,7 @@
       const target=(x.match(/triaged to\s+([\w-]+)/i)||[])[1];
       const layer=(x.match(/affected_layer\s*=\s*([\w-]+)/i)||[])[1];
       const severity=(x.match(/severity\s*=\s*([\w-]+)/i)||[])[1];
-      return 'بررسی اولیه: هشدار برای بررسی تخصصی به '+(target?humanAgent(target):'متخصص مربوط')+
+      return 'بررسی اولیه: هشدار برای بررسی تخصصی به '+(target?humanAgent(target):'ایجنت مربوط')+
         ' ارجاع شده'+(layer?'؛ لایهٔ گزارش‌شده: '+(layer==='vm'?'ماشین مجازی':layer):'')+
         (severity?'؛ شدت برآوردی این مرحله: '+status(severity):'')+
         (/no customer impact.*evidenced/i.test(x)?'؛ شواهد کافی از اثر بر مشتری ثبت نشده است':'')+'.';
@@ -580,15 +593,19 @@
       return 'توقف دستی سرویس یک فرضیه است؛ عامل توقف و عمدی‌بودن آن هنوز تأیید نشده است.';
     if(/no confirmed domain fault yet/i.test(x))return 'با شواهد فعلی خرابی مستقلی در این حوزه تأیید نشده است.';
     if(/configuration (?:validation|check|syntax).*(?:success|passed|valid)/i.test(x))return 'تست ساختار تنظیمات سرویس با موفقیت انجام شده است.';
-    if(/(?:agent|analysis).*timed out|readtimeout|timeout/i.test(x))return 'تحلیل این متخصص به دلیل پایان مهلت پاسخ کامل نشده است.';
+    if(/(?:agent|analysis).*timed out|readtimeout|timeout/i.test(x))return 'تحلیل این ایجنت به دلیل پایان مهلت پاسخ کامل نشده است.';
     return null;
   };
   const agentLine = raw => {
-    const translated=agentFindingFa(raw);
-    return translated?'<span>'+esc(translated)+'</span>':
-      '<span>'+(state.language==='fa'?'شرح فارسی تأییدشده برای این یافته موجود نیست.':'Original specialist observation:')+
-      '</span><details class="ic-technical"><summary>'+(state.language==='fa'?'دیدن متن اصلی یافته':'View original finding')+
-      '</summary><p dir="ltr">'+txt(raw)+'</p></details>';
+    const originalText=String(raw||'').trim();
+    if(!originalText)return '<span>'+esc(state.language==='fa'?'شرحی در خروجی این ایجنت ثبت نشده است.':'No finding was recorded.')+'</span>';
+    const translated=agentFindingFa(originalText);
+    if(translated)return '<span>'+esc(translated)+'</span>';
+    // Unknown phrases are NOT invalid findings. Show their exact, escaped
+    // source text instead of an alarming "no verified Persian" placeholder.
+    return '<span class="ic-agent-source-label">'+esc(state.language==='fa'?
+        'متن اصلی ثبت‌شده توسط ایجنت (ترجمه نشده):':'Original agent finding:')+'</span>'+
+      '<span class="ic-agent-source-text" dir="auto">'+txt(originalText)+'</span>';
   };
   const agentBullets = (items, mapper=agentLine, max=6) =>
     '<ul class="ic-agent-bullets">'+items.slice(0,max).map(x=>'<li>'+mapper(x)+'</li>').join('')+'</ul>';
@@ -603,7 +620,7 @@
         fa?'چقدر از علت اصلی خرابی اطمینان داریم؛ نه درصد پیشرفت تحلیل.':'Confidence in the root cause, not completion.'],
       [fa?'اطمینان ارزیاب تصمیم':'Decision evaluator confidence',c.evaluator_confidence,
         fa?'ارزیابی کیفیت تصمیم؛ الزاماً برابر اطمینان به علت خرابی نیست.':'Quality of the decision evaluation; distinct from RCA.'],
-      [fa?'توافق متخصص‌ها':'Specialist agreement',c.agent_agreement,
+      [fa?'توافق ایجنت‌ها':'Specialist agreement',c.agent_agreement,
         fa?'میزان هم‌نظر بودن Agentها؛ با صحت نتیجه یکسان نیست.':'Agreement among agents, not a proof of correctness.'],
     ];
     show('#ic-confidence',metrics.map(([label,note,description]) =>
@@ -614,17 +631,17 @@
     const failed=agents.filter(a=>['failed','error'].includes(low(a.status))).length;
     const missing=agents.filter(a=>['unknown','skipped'].includes(low(a.status))).length;
     const intro=fa?
-      'هر کارت نشان می‌دهد متخصص چه داده‌ای دریافت کرده، چه نتیجه‌ای نوشته، چه فرضیه‌ای داشته و چه چیزی هنوز معلوم نیست. استناد به شواهد به معنی اجرای مستقیم ابزار توسط آن Agent نیست.':
+      'هر کارت نشان می‌دهد ایجنت چه داده‌ای دریافت کرده، چه نتیجه‌ای نوشته، چه فرضیه‌ای داشته و چه چیزی هنوز معلوم نیست. استناد به شواهد به معنی اجرای مستقیم ابزار توسط آن Agent نیست.':
       'Each card distinguishes the specialist’s recorded findings, cited evidence, open hypotheses and suggested next checks. Citing evidence does not mean the agent itself executed a tool.';
     show('#ic-agent-summary','<div class="ic-agent-overview"><p>'+esc(intro)+'</p>'+
-      '<div class="ic-agent-totals"><span>'+esc(fa?'متخصص‌های ثبت‌شده':'Recorded agents')+' <b>'+num(agents.length)+'</b></span>'+
+      '<div class="ic-agent-totals"><span>'+esc(fa?'ایجنت‌های ثبت‌شده':'Recorded agents')+' <b>'+num(agents.length)+'</b></span>'+
       '<span>'+esc(fa?'تحلیل کامل':'Complete')+' <b>'+num(success)+'</b></span>'+
       '<span>'+esc(fa?'تحلیل ناقص':'Partial')+' <b>'+num(partial)+'</b></span>'+
       '<span>'+esc(fa?'ناموفق':'Failed')+' <b>'+num(failed)+'</b></span>'+
       (missing?'<span>'+esc(fa?'نامشخص/اجرا نشده':'Unknown / skipped')+' <b>'+num(missing)+'</b></span>':'')+'</div></div>');
     const cards=agents.map((a,i)=>{
       const agent=low(a.agent);
-      const scope=agentScopes[agent]||[humanAgent(a.agent),fa?'محدودهٔ بررسی این متخصص در داده‌ها توضیح داده نشده است.':'Scope not recorded'];
+      const scope=agentScopes[agent]||[humanAgent(a.agent),fa?'محدودهٔ بررسی این ایجنت در داده‌ها توضیح داده نشده است.':'Scope not recorded'];
       const coverage=a.evidence_coverage;
       const directFindings=arr(a.findings).filter(x=>typeof x==='string'&&x.trim());
       const hypotheses=arr(a.hypotheses).filter(x=>x&&x.text);
@@ -637,11 +654,10 @@
       const linkedNames=[...new Set(relevant.map(agentEvidenceLabel).filter(Boolean))].slice(0,6);
       const summary=directFindings.length?
         agentBullets(directFindings):(
-          agentFindingFa(a.finding)?
-            '<p>'+esc(agentFindingFa(a.finding))+'</p>':
+          a.finding?'<p>'+agentLine(a.finding)+'</p>':
             '<p class="ic-agent-empty">'+esc(fa?
-              'یافتهٔ اختصاصی و قابل‌توضیح به فارسی در خروجی ذخیره نشده؛ متن تخصصی در جزئیات قابل مشاهده است.':
-              'No separately explainable specialist finding was recorded.')+'</p>');
+              'یافته‌ای در خروجی این ایجنت ثبت نشده است.':
+              'No finding was recorded by this agent.')+'</p>');
       const evidenceHtml=linkedNames.length?
         '<p>'+esc(fa?'شواهد ارجاع‌شده مرتبط با حوزهٔ این Agent:':'Relevant evidence available to this specialist:')+
         '</p><div class="ic-agent-chips">'+linkedNames.map(x=>'<span>'+esc(x)+'</span>').join('')+'</div>':
@@ -653,7 +669,7 @@
       const metric='<div class="ic-agent-scores"><div><span>'+esc(fa?'اطمینان به نتیجهٔ این Agent':'Agent confidence')+'</span><strong>'+
         esc(numberPct(a.confidence))+'</strong></div><div><span>'+esc(fa?'پوشش شواهد':'Evidence coverage')+
         '</span><strong>'+esc(numberPct(coverage))+'</strong></div></div>';
-      const candidates=hypotheses.length?agentDetail(fa?'فرضیه‌های این متخصص؛ هنوز اثبات‌نشده':'Unverified hypotheses',
+      const candidates=hypotheses.length?agentDetail(fa?'فرضیه‌های این ایجنت؛ هنوز اثبات‌نشده':'Unverified hypotheses',
         '<ol class="ic-agent-bullets">'+hypotheses.map(h=>'<li><strong>'+esc(numberPct(h.probability))+'</strong> '+
           agentLine(h.text)+(arr(h.falsification_checks).length?
           '<p>'+esc(fa?'روش رد یا تأیید فرضیه (پیشنهادی):':'Suggested falsification checks:')+' '+
@@ -672,7 +688,8 @@
           refs(a.conflicting_evidence_refs):'');
       return '<article class="ic-agent-card" data-agent="'+esc(agent)+'"><header class="ic-agent-head">'+
         '<div class="ic-agent-name"><span class="ic-agent-index">'+num(i+1)+'</span><div><h3>'+txt(humanAgent(a.agent))+
-        '</h3><p>'+esc(fa?scope[0]:a.agent)+'</p></div></div>'+
+        ' <span class="ic-agent-en-name" dir="ltr">('+txt(agentNameEN(a.agent))+')</span></h3>'+
+        '<p>'+esc(fa?scope[0]:a.agent)+'</p></div></div>'+
         '<div class="ic-agent-status">'+pill(a.status)+'</div></header>'+
         '<div class="ic-agent-mission"><b>'+esc(fa?'حوزهٔ مسئولیت:':'Responsibility:')+'</b> '+
         esc(fa?scope[1]:(a.mission||'Specialist scope; no additional mission description recorded'))+
@@ -687,13 +704,13 @@
         (a.uncertainty_reason?'<p class="ic-agent-uncertainty"><b>'+
           esc(fa?'دلیل عدم قطعیت:':'Uncertainty:')+'</b> '+txt(agentMissingFa(a.uncertainty_reason))+'</p>':'')+
         (a.requires_human_review?'<p class="ic-agent-review">'+esc(fa?
-          'این متخصص بررسی انسانی را لازم دانسته است.':'Human review required by this specialist.')+'</p>':'')+
+          'این ایجنت بررسی انسانی را لازم دانسته است.':'Human review required by this specialist.')+'</p>':'')+
         candidates+pending+nextChecks+proposed+
         agentDetail(fa?'متن اصلی و شناسه‌های قابل ممیزی':'Original details and references',
           originalReport||empty(fa?'اطلاعات فنی بیشتری ثبت نشده است.':'No further details recorded'))+
         '</article>';
     });
-    show('#ic-agents',cards.length?cards.join(''):empty(fa?'هنوز خروجی متخصصی ثبت نشده است.':'No specialist result recorded.'));
+    show('#ic-agents',cards.length?cards.join(''):empty(fa?'هنوز خروجی ایجنتی ثبت نشده است.':'No specialist result recorded.'));
   }
   function renderEvidence(r) {
     const sources=arr(r.monitoring_sources),mcp=arr(r.mcp_evidence);
