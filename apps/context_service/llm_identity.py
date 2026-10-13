@@ -155,6 +155,17 @@ def detect_operational_unknowns(
                 location = f"{path}:{line}" if isinstance(line, int) else path
                 add("config_syntax_repair_guidance", service,
                     f"Verified failed configuration test at {location}: {message}", ref)
+        elif diagnostic == "disk_forensics" and raw.get("success") is True:
+            for mount in (raw.get("mounts") or [])[:2]:
+                if not isinstance(mount, Mapping):
+                    continue
+                files = mount.get("files") or []
+                if files:
+                    # Never present file age/size alone as a deletion justification.
+                    add("disk_file_growth_cause_unknown",
+                        str(mount.get("mount") or "filesystem")[:100],
+                        "Large files identified; writer, error-driven growth, retention, backup and safe cleanup are unverified. "
+                        "Suggest read-only correlation with Elastic, Zabbix and the producing service.", ref)
         elif diagnostic == "service_status" and raw.get("success") is False:
             add("service_state_unknown", service or "service", "The service state could not be verified", ref)
         elif str(item.get("type") or "") == "source_observation":
@@ -208,6 +219,8 @@ async def consult_operational_unknowns(
         "human-reviewed repair and re-validation, without assuming the cause of the original stop. "
         "Never claim that a correction was applied or a test has passed. "
         "Never invent proof of stop actor, permissions, root cause or system state. "
+        "For disk pressure, identify the producing service and error pattern from live evidence; "
+        "never recommend deleting merely old or large files without verified retention and safety. "
         "Do not provide executable shell snippets, destructive operations, writes, sudo, or restarts. "
         "Return only JSON: {\"items\":[{\"topic\":\"EXACT_INPUT_TOPIC\","
         "\"subject\":\"EXACT_INPUT_SUBJECT\",\"explanation\":\"...\","
