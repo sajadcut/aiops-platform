@@ -664,14 +664,27 @@
     if(!files.length){show('#ic-disk-forensics','');return;}
     const title=fa?'بررسی علت مصرف فضای دیسک':'Disk usage cause investigation';
     const notice=fa?
-      'فایل‌های زیر فقط بر اساس اندازه و محل قرارگیری شناسایی شده‌اند. علت تولید یا رشد، مالک برنامه، سیاست نگهداری و ایمنی حذف هنوز تأیید نشده است. هیچ درخواست حذف یا تأیید پاک‌سازی صادر نشده است.':
-      'File metadata is not proof of cause, growth or deletion safety. No cleanup approval or deletion is authorized.';
-    const top=files.slice(0,12).map(file=>
-      '<tr><td dir="auto">'+txt(file.path)+'</td><td>'+
-      esc(num(Math.round((Number(file.size_bytes)||0)/1048576)))+' MB</td><td>'+
-      esc(file.mount||'—')+'</td><td>'+
-      esc(fa?'علت نامشخص؛ حذف مجاز نیست':'Unknown; do not delete')+'</td></tr>'
-    ).join('');
+      'این اطلاعات از فایل‌های حجیم و در بعضی موارد نمونه‌برداری کوتاهِ رشد و پردازش‌های دارای فایل باز به‌دست آمده است. بازبودن فایل لزوماً به معنی ایجادکننده بودن پردازش نیست. علت تاریخی رشد، سیاست نگهداری و ایمنی حذف هنوز تأیید نشده و هیچ درخواست پاک‌سازی صادر نشده است.':
+      'File metadata, short-term growth and open handles cannot establish historical cause or deletion safety. No cleanup action is authorized.';
+    const top=files.slice(0,12).map(file=>{
+      const growth=file.growth_confirmed===true
+        ?(fa?'رشد مشاهده‌شده: ':'Observed growth: ')+
+          num(Math.round((Number(file.growth_bytes_over_2_seconds)||0)/1048576))+
+          ' MB / 2s'
+        :file.growth_measured===true
+          ?(fa?'در نمونه کوتاه رشد ثبت نشد':'No growth during short sample')
+          :(fa?'رشد اندازه‌گیری نشده':'Growth not measured');
+      const holders=arr(file.open_handles).slice(0,3).map(h=>
+        txt(h.process_name||'process')+' (PID '+esc(h.pid)+')'
+      ).join('، ');
+      const activity='<div>'+esc(growth)+'</div>'+
+        (holders?'<div>'+esc(fa?'فایل باز در: ':'Open file: ')+holders+'</div>':'');
+      return '<tr><td dir="auto">'+txt(file.path)+'</td><td>'+
+        esc(num(Math.round((Number(file.size_bytes)||0)/1048576)))+' MB</td><td>'+
+        esc(file.mount||'—')+'</td><td>'+activity+'</td><td>'+
+        esc(fa?'علت قطعی نامشخص؛ حذف مجاز نیست':'Cause unverified; do not delete')+
+        '</td></tr>';
+    }).join('');
     const logs=arr(data.related_error_log_observations),alerts=arr(data.zabbix_alert_refs);
     const correlation=fa?
       'شواهد خطای مرتبط یافت‌شده: '+num(logs.length)+' مورد؛ آلارم‌های زبیکس: '+num(alerts.length)+
@@ -683,6 +696,7 @@
       '<div class="ic-disk-file-wrap"><table class="ic-disk-file-table"><thead><tr>'+
       '<th>'+esc(fa?'مسیر فایل':'File')+'</th><th>'+esc(fa?'حجم تقریبی':'Size')+
       '</th><th>'+esc(fa?'فایل‌سیستم':'Mount')+'</th><th>'+
+      esc(fa?'شواهد فعالیت':'Observed activity')+'</th><th>'+
       esc(fa?'تصمیم فعلی':'Current decision')+'</th></tr></thead><tbody>'+top+
       '</tbody></table></div><p>'+esc(correlation)+'</p><p>'+
       esc(fa?'گام بعد: یافتن فرایند تولیدکننده، بررسی رشد در زمان و خطاهای Elastic/Zabbix، کنترل Log Rotation و سیاست نگهداری؛ سپس ارائهٔ اصلاح دقیق با شواهد.':
