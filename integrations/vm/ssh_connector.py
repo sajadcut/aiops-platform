@@ -16,6 +16,7 @@ from integrations.vm.service_adapters import (
     get_service_adapter, discover_config_path, config_check_for_path,
     parse_config_diagnostic,
 )
+from integrations.vm.runtime_discovery import parse_systemd_runtime, dotnet_json_syntax_command
 
 _SAFE_HOST = re.compile(r"^[A-Za-z0-9._:-]+$")
 _SAFE_SERVICE = re.compile(r"^[A-Za-z0-9@_.:-]+$")
@@ -737,6 +738,78 @@ class SSHVMConnector:
             provider = lines[0].split("=", 1)[1]
             lines = lines[1:]
         return {"success": True, "target": target, "supported": provider != "unavailable", "provider": provider, "rules": lines}
+
+    async def service_runtime_discovery(self, target: str, service: str) -> Dict[str, Any]:
+        """Read selected systemd properties; never return ExecStart argv or env values."""
+        self._validate_service(service)
+        result = await self._run(
+            target,
+            "systemctl show --no-pager "
+            "--property=ExecStart,WorkingDirectory,FragmentPath,Type,TimeoutStartUSec,Restart "
+            + shlex.quote(service),
+        )
+        if not result.get("success"):
+            return {
+                "success": False, "target": target, "service": service,
+                "runtime": "unknown", "error": "runtime_discovery_unavailable",
+            }
+        parsed = parse_systemd_runtime(str(result.get("stdout") or ""), service=service)
+        return {"success": True, "target": target, **parsed}
+
+    async def dotnet_config_syntax(self, target: str, service: str) -> Dict[str, Any]:
+        """Check discovered .NET JSON syntax only; no file contents reach AIOps."""
+        discovery = await self.service_runtime_discovery(target, service)
+        base = {
+            "target": target, "service": service, "runtime": discovery.get("runtime"),
+            "publish_directory": discovery.get("publish_directory"),
+            "environment_values_read": False, "config_contents_exposed": False,
+            "validator": "python3-json-syntax-only",
+        }
+        if not discovery.get("success") or discovery.get("runtime") != "dotnet":
+            return {
+                **base, "success": True, "supported": False,
+                "syntax_valid": None, "status": "runtime_not_verified",
+            }
+        command = dotnet_json_syntax_command(discovery["publish_directory"])
+        result = await self._run(target, command)
+        if not result.get("success"):
+            return {
+                **base, "success": False, "supported": False,
+                "syntax_valid": None, "status": "json_validator_unavailable",
+            }
+        try:
+            parsed = json.loads(str(result.get("stdout") or "")[:8000])
+        except (TypeError, ValueError, json.JSONDecodeError):
+            parsed = {}
+        if not isinstance(parsed, dict) or parsed.get("status") not in {
+            "syntax_valid", "invalid", "partial", "not_found", "unavailable",
+        }:
+            return {
+                **base, "success": False, "supported": False,
+                "syntax_valid": None, "status": "json_validator_malformed_response",
+            }
+        rows = []
+        for row in list(parsed.get("files") or [])[:12]:
+            if not isinstance(row, dict):
+                continue
+            rows.append({
+                "file": str(row.get("file") or "")[:125],
+                "status": str(row.get("status") or "unavailable")[:35],
+                "line": row.get("line") if type(row.get("line")) is int else None,
+                "column": row.get("column") if type(row.get("column")) is int else None,
+                "reason": str(row.get("reason") or "")[:45],
+            })
+        status = parsed["status"]
+        return {
+            **base, "success": True,
+            "supported": status in {"syntax_valid", "invalid", "partial"},
+            "syntax_valid": False if status == "invalid" else (
+                True if status == "syntax_valid" else None
+            ),
+            "status": status, "files": rows,
+            "validated_scope": "json_syntax_only",
+            "application_ready": None, "configuration_semantics_valid": None,
+        }
 
     async def config_validate(self, target: str, service: str) -> Dict[str, Any]:
         """Locate the running unit's config, run a fixed read-only syntax check.

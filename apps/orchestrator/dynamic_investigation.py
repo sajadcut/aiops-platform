@@ -23,6 +23,7 @@ READ_ONLY_CHECKS = frozenset({
     "service_status", "service_logs", "process_status", "config_validate",
     "collect_vm_metrics", "disk_status", "host_info", "network_status",
     "port_listener_status", "tcp_check",
+    "service_runtime_discovery", "dotnet_config_syntax",
 })
 _CHECK_TO_REQUEST = {
     "service_status": ("telemetry", "service status"),
@@ -35,6 +36,8 @@ _CHECK_TO_REQUEST = {
     "network_status": ("telemetry", "network status"),
     "port_listener_status": ("telemetry", "port listener"),
     "tcp_check": ("telemetry", "port local tcp reachability"),
+    "service_runtime_discovery": ("telemetry", "systemd unit runtime discovery"),
+    "dotnet_config_syntax": ("telemetry", "dotnet json syntax"),
 }
 
 
@@ -79,9 +82,45 @@ class DynamicInvestigationPlanner:
             }
         return None
 
+    @staticmethod
+    def runtime_evidence(evidence: list[dict]) -> dict:
+        """Use only MCP observations bound to the same service, not free text."""
+        result = {}
+        for item in evidence:
+            if item.get("source") != "vm_mcp":
+                continue
+            raw = item.get("raw_data")
+            if not isinstance(raw, dict) or raw.get("success") is not True:
+                continue
+            diagnostic = raw.get("diagnostic")
+            if diagnostic in {"service_runtime_discovery", "dotnet_config_syntax"}:
+                result[diagnostic] = {
+                    **raw, "evidence_ref": _bounded(item.get("reference"), 160),
+                }
+        return result
+
     @classmethod
     def search_query(cls, *, service: str, evidence: list[dict], findings: list[dict]) -> str:
         failure = cls.confirmed_config_failure(evidence)
+        runtime = cls.runtime_evidence(evidence)
+        unit = runtime.get("service_runtime_discovery") or {}
+        syntax = runtime.get("dotnet_config_syntax") or {}
+        if unit.get("runtime") == "dotnet":
+            if syntax.get("syntax_valid") is False:
+                invalid = next((row for row in syntax.get("files", [])
+                                if row.get("status") == "invalid_json_syntax"), {})
+                return _bounded(
+                    f"{service} .NET appsettings JSON syntax error file {invalid.get('file')} "
+                    f"line {invalid.get('line')} column {invalid.get('column')}; "
+                    "ASP.NET Core configuration troubleshooting and safe validated repair",
+                    430,
+                )
+            return _bounded(
+                f"{service} .NET systemd startup timeout, published DLL {unit.get('entrypoint')}; "
+                f"JSON syntax status {syntax.get('status', 'unavailable')}; "
+                "systemd Type, startup timeout, ASP.NET Core appsettings, service dependencies and journal diagnostics",
+                430,
+            )
         if failure:
             return _bounded(
                 f"{service} configuration syntax failure: {failure['error']} "
@@ -186,6 +225,9 @@ class DynamicInvestigationPlanner:
         context = state.get("context") or {}
         evidence = [e for e in context.get("evidence", []) if isinstance(e, dict)]
         failure = cls.confirmed_config_failure(evidence)
+        runtime = cls.runtime_evidence(evidence)
+        unit = runtime.get("service_runtime_discovery") or {}
+        syntax = runtime.get("dotnet_config_syntax") or {}
         missing = [
             _bounded(value, 130)
             for value in (state.get("coordination") or {}).get("missing_evidence", [])
@@ -219,17 +261,56 @@ class DynamicInvestigationPlanner:
                 "reason": "A compiler error identifies a fault, not the exact safe replacement. A historical healthy version is optional.",
                 "evidence_refs": [failure["evidence_ref"]] if failure["evidence_ref"] else [],
             })
-        if missing and not failure:
+        if unit.get("runtime") == "dotnet":
+            # Purely diagnostic: valid JSON is NOT proof that environment,
+            # dependencies, or the application startup are correct.
+            result["runtime_discovery"] = {
+                "runtime": "dotnet",
+                "entrypoint": _bounded(unit.get("entrypoint"), 250),
+                "publish_directory": _bounded(unit.get("publish_directory"), 250),
+                "unit_file": _bounded(unit.get("unit_file"), 250),
+                "service_type": _bounded(unit.get("service_type"), 32),
+                "timeout_start_usec": _bounded(unit.get("timeout_start_usec"), 45),
+                "runtime_evidence_ref": unit.get("evidence_ref"),
+                "syntax_status": _bounded(syntax.get("status"), 50) or "not_checked",
+                "syntax_valid": syntax.get("syntax_valid") if type(syntax.get("syntax_valid")) is bool else None,
+                "syntax_evidence_ref": syntax.get("evidence_ref"),
+                "files": [
+                    {
+                        "file": _bounded(row.get("file"), 125),
+                        "status": _bounded(row.get("status"), 40),
+                        "line": row.get("line") if type(row.get("line")) is int else None,
+                        "column": row.get("column") if type(row.get("column")) is int else None,
+                    }
+                    for row in (syntax.get("files") or [])[:12] if isinstance(row, dict)
+                ],
+                "values_exposed": False,
+                "application_ready": None,
+            }
+            if syntax.get("syntax_valid") is False:
+                result["operator_questions"].append({
+                    "question": "A .NET JSON syntax error was measured. Authorize a secret-safe configuration review and isolated patch validation before any service change.",
+                    "reason": "Invalid JSON is confirmed, but the correct replacement is not yet known.",
+                    "evidence_refs": [syntax.get("evidence_ref")] if syntax.get("evidence_ref") else [],
+                })
+            else:
+                result["operator_questions"].append({
+                    "question": "Review .NET startup journal, systemd unit Type/timeout, effective environment, and downstream dependencies before considering a governed restart.",
+                    "reason": "A systemd timeout does not prove whether JSON syntax or startup dependencies caused it.",
+                    "evidence_refs": [unit.get("evidence_ref")] if unit.get("evidence_ref") else [],
+                })
+        if missing and not failure and unit.get("runtime") != "dotnet":
             result["operator_questions"].append({
                 "question": f"Can you provide or authorize collection of: {missing[0]}?",
                 "reason": "Evidence gap was identified by the specialists; it is not proof of a fault.",
                 "evidence_refs": [],
             })
-        if not missing and not failure:
+        if not missing and not failure and unit.get("runtime") != "dotnet":
             return result
         context_data = {
             "service": _bounded(state.get("service_name"), 80),
             "confirmed_config_failure": failure,
+            "runtime_discovery": result.get("runtime_discovery"),
             "missing_evidence": missing,
             "available_read_only_checks": sorted(READ_ONLY_CHECKS),
             "knowledge": [
@@ -310,7 +391,7 @@ class DynamicInvestigationPlanner:
         for action in proposal.get("checks") or []:
             if action not in READ_ONLY_CHECKS:
                 continue
-            if not has_service and action in {"service_status", "service_logs", "process_status", "config_validate"}:
+            if not has_service and action in {"service_status", "service_logs", "process_status", "config_validate", "service_runtime_discovery", "dotnet_config_syntax"}:
                 continue
             if not has_port and action in {"port_listener_status", "tcp_check"}:
                 continue
