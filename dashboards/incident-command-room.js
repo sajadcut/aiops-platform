@@ -1052,6 +1052,27 @@
         '</h4><p>'+esc(fa?'هنوز تولید یا اعتبارسنجی نشده است.':'Not yet produced or validated.')+
         '</p><p>'+esc(fa?'نتیجهٔ Validator روی پیشنهاد: ':'Proposal validation: ')+
         txt(config.validation_status||'UNVERIFIED')+'</p></article></div>':'')+
+      (p.runtime_discovery?.runtime==='dotnet'?(()=>{
+        const d=p.runtime_discovery,files=arr(d.files);
+        return '<article class="ic-detail-card"><h4>'+esc(fa?'کشف ساختار برنامه و بررسی تنظیمات .NET':'Discovered .NET runtime & configuration checks')+'</h4>'+
+          '<div class="ic-meta">'+
+          esc(fa?'فناوری: .NET':'Technology: .NET')+
+          '</div><p>'+esc(fa?'فایل اجرایی: ':'Entrypoint: ')+txt(d.entrypoint)+'</p>'+
+          '<p>'+esc(fa?'مسیر Publish: ':'Publish directory: ')+txt(d.publish_directory)+'</p>'+
+          '<p>'+esc(fa?'فایل systemd: ':'Systemd unit: ')+txt(d.unit_file)+'</p>'+
+          '<p>'+esc(fa?'نوع سرویس: ':'Service Type: ')+txt(d.service_type)+
+          ' · '+esc(fa?'مهلت Start (µs): ':'Start timeout (µs): ')+txt(d.timeout_start_usec)+'</p>'+
+          '<p><strong>'+esc(fa?'وضعیت بررسی Syntax JSON: ':'JSON syntax check: ')+txt(d.syntax_status||'not_checked')+'</strong></p>'+
+          (files.length?'<ul class="ic-agent-bullets">'+files.map(f=>
+            '<li>'+txt(f.file)+' — '+txt(f.status)+
+            (Number.isInteger(f.line)?' · '+esc(fa?'خط ':'line ')+num(f.line):'')+
+            (Number.isInteger(f.column)?' · '+esc(fa?'ستون ':'column ')+num(f.column):'')+
+            '</li>').join('')+'</ul>':'')+
+          '<p class="ic-agent-disclaimer">'+esc(fa?
+            'فقط Syntax JSON بررسی شده؛ محتوای تنظیمات و Secretها منتقل نشده‌اند. صحت راه‌اندازی برنامه و تنظیمات معنایی هنوز تأیید نشده است.':
+            'JSON syntax only. No config contents or secrets were transferred. Startup readiness and semantic configuration are unverified.')+
+          '</p>'+refs([d.runtime_evidence_ref,d.syntax_evidence_ref].filter(Boolean))+'</article>';
+      })():'')+
       (kb.query?'<article class="ic-detail-card"><h4>'+esc(fa?'جست‌وجوی مجدد هدفمند در Cognia':'Focused Cognia re-query')+
         '</h4><p>'+txt(kb.query)+'</p><p>'+esc(fa?'وضعیت: ':'Status: ')+txt(kb.status||'unknown')+
         '</p><p>'+esc(fa?'منابع بازیابی‌شده:':'Retrieved sources:')+'</p>'+refs(kb.source_refs)+
