@@ -359,6 +359,8 @@ async def incident_chat_message(
                         answer = factual
             else:
                 reason = str(observation.get("status") or "mcp_unavailable")[:70]
+                if observation.get("binding_reason"):
+                    reason += "/" + str(observation["binding_reason"])[:65]
                 if intent == "nginx_config_inspect":
                     answer = nginx_inspection_answer(
                         observation,
