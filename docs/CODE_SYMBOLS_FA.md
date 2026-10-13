@@ -1033,22 +1033,22 @@
 | `apps/context_service/source_policy.py` | `EvidenceSourcePolicy.allows` | 9 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | EvidenceSourcePolicy |
 | `apps/database/pgvector_contract.py` | `validate_pgvector` | 9 | async function | Validate pgvector strictly for Operational Memory, never Knowledge RAG. | module |
 | `apps/database/vector_validation.py` | `validate_pgvector` | 7 | async function | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | module |
-| `apps/decision_brief.py` | `fa_status` | 31 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/decision_brief.py` | `obj` | 37 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/decision_brief.py` | `arr` | 41 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/decision_brief.py` | `safe` | 45 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/decision_brief.py` | `numeric` | 52 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/decision_brief.py` | `refs` | 60 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/decision_brief.py` | `freshness` | 64 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/decision_brief.py` | `elapsed_seconds` | 77 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/decision_brief.py` | `evidence_usable` | 89 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/decision_brief.py` | `tool_failed` | 100 | function | HTTP 200 alone does not prove nested tool success. | module |
-| `apps/decision_brief.py` | `_agents` | 115 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/decision_brief.py` | `tool_observation_summary` | 185 | function | Only bounded, whitelisted scalar facts: never dump journals or tool JSON. | module |
-| `apps/decision_brief.py` | `_mcp` | 209 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/decision_brief.py` | `_knowledge` | 264 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/decision_brief.py` | `_memory` | 300 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/decision_brief.py` | `build_decision_brief` | 325 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
+| `apps/decision_brief.py` | `fa_status` | 32 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/decision_brief.py` | `obj` | 38 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/decision_brief.py` | `arr` | 42 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/decision_brief.py` | `safe` | 46 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/decision_brief.py` | `numeric` | 53 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/decision_brief.py` | `refs` | 61 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/decision_brief.py` | `freshness` | 65 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/decision_brief.py` | `elapsed_seconds` | 78 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/decision_brief.py` | `evidence_usable` | 90 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/decision_brief.py` | `tool_failed` | 101 | function | HTTP 200 alone does not prove nested tool success. | module |
+| `apps/decision_brief.py` | `_agents` | 116 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/decision_brief.py` | `tool_observation_summary` | 186 | function | Only bounded, whitelisted scalar facts: never dump journals or tool JSON. | module |
+| `apps/decision_brief.py` | `_mcp` | 210 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/decision_brief.py` | `_knowledge` | 265 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/decision_brief.py` | `_memory` | 301 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/decision_brief.py` | `build_decision_brief` | 326 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
 | `apps/decision_brief_history.py` | `archive_decision_brief` | 22 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/decision_brief_history.py` | `list_decision_brief_history` | 62 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
 | `apps/decision_brief_history.py` | `read_decision_brief_snapshot` | 83 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
