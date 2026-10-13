@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 478 | Dashboard JS files scanned: 8 | Symbols indexed: 4773**
+**Python files scanned: 478 | Dashboard JS files scanned: 8 | Symbols indexed: 4783**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1414,14 +1414,15 @@
 | `apps/remediation_planner/__init__.py` | `RemediationPlanner` | 11 | class | Deterministically bind live operational Evidence to a governed write request. | module |
 | `apps/remediation_planner/__init__.py` | `RemediationPlanner.plan` | 31 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
 | `apps/remediation_planner/__init__.py` | `RemediationPlanner.revalidate_execution` | 191 | method | Fail closed if the approved write is stale immediately before execution. | RemediationPlanner |
-| `apps/remediation_planner/__init__.py` | `RemediationPlanner._recovery_action` | 240 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
-| `apps/remediation_planner/__init__.py` | `RemediationPlanner._load_vm_service_policy` | 255 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
-| `apps/remediation_planner/__init__.py` | `RemediationPlanner._evidence_items` | 268 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
-| `apps/remediation_planner/__init__.py` | `RemediationPlanner._service_states` | 277 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
-| `apps/remediation_planner/__init__.py` | `RemediationPlanner._unhealthy_service_bindings` | 305 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
-| `apps/remediation_planner/__init__.py` | `RemediationPlanner._configuration_precondition` | 335 | method | Only a completed, real config validation may justify a service start. | RemediationPlanner |
-| `apps/remediation_planner/__init__.py` | `RemediationPlanner._target_port` | 394 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
-| `apps/remediation_planner/__init__.py` | `RemediationPlanner._dedupe` | 428 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
+| `apps/remediation_planner/__init__.py` | `RemediationPlanner._recovery_action` | 250 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
+| `apps/remediation_planner/__init__.py` | `RemediationPlanner._load_vm_service_policy` | 265 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
+| `apps/remediation_planner/__init__.py` | `RemediationPlanner._evidence_items` | 278 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
+| `apps/remediation_planner/__init__.py` | `RemediationPlanner._service_states` | 287 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
+| `apps/remediation_planner/__init__.py` | `RemediationPlanner._unhealthy_service_bindings` | 315 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
+| `apps/remediation_planner/__init__.py` | `RemediationPlanner._configuration_precondition` | 345 | method | Only a completed, real config validation may justify a service start. | RemediationPlanner |
+| `apps/remediation_planner/__init__.py` | `RemediationPlanner._dotnet_syntax_precondition` | 419 | method | Constrained manual .NET recovery validation; never claim app readiness. | RemediationPlanner |
+| `apps/remediation_planner/__init__.py` | `RemediationPlanner._target_port` | 488 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
+| `apps/remediation_planner/__init__.py` | `RemediationPlanner._dedupe` | 522 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RemediationPlanner |
 | `apps/runbook_service/executor.py` | `RunbookExecution` | 13 | class | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | module |
 | `apps/runbook_service/executor.py` | `RunbookExecutor` | 20 | class | Safe runtime boundary for registered runbooks. | module |
 | `apps/runbook_service/executor.py` | `RunbookExecutor.__init__` | 29 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RunbookExecutor |
@@ -1440,9 +1441,9 @@
 | `apps/runbook_service/runtime_guard.py` | `RunbookRuntimeGuard` | 10 | class | Live precondition and verification adapter for executable runbooks. | module |
 | `apps/runbook_service/runtime_guard.py` | `RunbookRuntimeGuard._vm_read` | 24 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RunbookRuntimeGuard |
 | `apps/runbook_service/runtime_guard.py` | `RunbookRuntimeGuard.collect_snapshot` | 44 | async method | Evidence/داده موردنیاز را از منبع مربوط جمع می‌کند | RunbookRuntimeGuard |
-| `apps/runbook_service/runtime_guard.py` | `RunbookRuntimeGuard.preflight` | 147 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RunbookRuntimeGuard |
-| `apps/runbook_service/runtime_guard.py` | `RunbookRuntimeGuard.approval_should_be_revoked` | 178 | method | Return True only when fresh evidence proves the approved intent is stale. | RunbookRuntimeGuard |
-| `apps/runbook_service/runtime_guard.py` | `RunbookRuntimeGuard.verify` | 193 | async method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | RunbookRuntimeGuard |
+| `apps/runbook_service/runtime_guard.py` | `RunbookRuntimeGuard.preflight` | 163 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RunbookRuntimeGuard |
+| `apps/runbook_service/runtime_guard.py` | `RunbookRuntimeGuard.approval_should_be_revoked` | 194 | method | Return True only when fresh evidence proves the approved intent is stale. | RunbookRuntimeGuard |
+| `apps/runbook_service/runtime_guard.py` | `RunbookRuntimeGuard.verify` | 209 | async method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | RunbookRuntimeGuard |
 | `apps/security/auth.py` | `_identity_from_api_key` | 21 | function | Internal API key را به یک Identity با role محدودشده در runtime تبدیل می‌کند. | module |
 | `apps/security/auth.py` | `_cached_oidc_validator` | 34 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/security/auth.py` | `require_permission` | 40 | function | OIDC/API-key را authenticate و سپس permission مشخص endpoint را enforce می‌کند. | module |
@@ -4195,23 +4196,28 @@
 | `tests/unit/test_release_rendering.py` | `test_release_renderer_uses_same_immutable_artifact_for_api_migration_and_memory_jobs` | 18 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_release_rendering.py` | `test_raw_templates_are_fail_closed_and_never_mutable` | 29 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_release_rendering.py` | `test_memory_maintenance_cronjobs_are_non_overlapping_and_console_only` | 43 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_remediation_planner.py` | `_evidence` | 8 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `tests/unit/test_remediation_planner.py` | `_state` | 17 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `tests/unit/test_remediation_planner.py` | `_healthy_config` | 45 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `tests/unit/test_remediation_planner.py` | `test_planner_builds_restart_for_failed_service_only_from_live_vm_evidence` | 56 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_remediation_planner.py` | `test_planner_uses_start_for_inactive_dead_service` | 98 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_remediation_planner.py` | `test_planner_never_turns_llm_recommendation_into_write_without_live_binding` | 136 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_remediation_planner.py` | `test_planner_blocks_invalid_configuration` | 144 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_remediation_planner.py` | `test_planner_blocks_ambiguous_live_service_bindings` | 169 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_remediation_planner.py` | `test_manual_trigger_is_not_eligible_for_automatic_remediation` | 183 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_remediation_planner.py` | `test_pre_execution_revalidation_blocks_restart_after_service_self_recovers` | 195 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_remediation_planner.py` | `test_pre_execution_revalidation_allows_start_only_while_service_remains_inactive` | 220 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_remediation_planner.py` | `test_pre_execution_revalidation_fails_closed_without_fresh_config_check` | 246 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_remediation_planner.py` | `test_durable_resume_restores_persisted_vm_target_and_port_context` | 270 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_remediation_planner.py` | `test_zabbix_automatic_remediation_requires_explicit_matching_target_ip` | 288 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_remediation_planner.py` | `test_non_vm_zabbix_alert_cannot_plan_vm_restart_even_with_matching_vm_evidence` | 320 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_remediation_planner.py` | `test_unavailable_or_unknown_config_validator_never_authorizes_start` | 348 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_remediation_planner.py` | `test_after_fix_newer_successful_check_replaces_older_syntax_error` | 369 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_remediation_planner.py` | `_evidence` | 10 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_remediation_planner.py` | `_state` | 19 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_remediation_planner.py` | `_healthy_config` | 47 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_remediation_planner.py` | `test_planner_builds_restart_for_failed_service_only_from_live_vm_evidence` | 58 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_remediation_planner.py` | `test_planner_uses_start_for_inactive_dead_service` | 100 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_remediation_planner.py` | `test_planner_never_turns_llm_recommendation_into_write_without_live_binding` | 138 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_remediation_planner.py` | `test_planner_blocks_invalid_configuration` | 146 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_remediation_planner.py` | `test_planner_blocks_ambiguous_live_service_bindings` | 171 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_remediation_planner.py` | `test_manual_trigger_is_not_eligible_for_automatic_remediation` | 185 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_remediation_planner.py` | `test_pre_execution_revalidation_blocks_restart_after_service_self_recovers` | 197 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_remediation_planner.py` | `test_pre_execution_revalidation_allows_start_only_while_service_remains_inactive` | 222 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_remediation_planner.py` | `test_pre_execution_revalidation_fails_closed_without_fresh_config_check` | 248 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_remediation_planner.py` | `test_durable_resume_restores_persisted_vm_target_and_port_context` | 272 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_remediation_planner.py` | `test_zabbix_automatic_remediation_requires_explicit_matching_target_ip` | 290 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_remediation_planner.py` | `test_non_vm_zabbix_alert_cannot_plan_vm_restart_even_with_matching_vm_evidence` | 322 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_remediation_planner.py` | `test_unavailable_or_unknown_config_validator_never_authorizes_start` | 350 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_remediation_planner.py` | `test_after_fix_newer_successful_check_replaces_older_syntax_error` | 371 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_remediation_planner.py` | `_dotnet_config_evidence` | 401 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_remediation_planner.py` | `test_dotnet_syntax_does_not_authorize_automatic_planning` | 422 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_remediation_planner.py` | `test_scoped_dotnet_recovery_preflight_only_for_approved_recovery` | 435 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_remediation_planner.py` | `test_bad_or_partial_dotnet_validator_remains_blocked` | 465 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_remediation_planner.py` | `test_runtime_service_target_mismatch_cannot_be_used_for_dotnet_preflight` | 481 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_remediation_runtime_guard.py` | `_Session` | 11 | class | کلاس | module |
 | `tests/unit/test_remediation_runtime_guard.py` | `_Session.__aenter__` | 12 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Session |
 | `tests/unit/test_remediation_runtime_guard.py` | `_Session.__aexit__` | 15 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Session |
@@ -4319,6 +4325,10 @@
 | `tests/unit/test_runbook_runtime_guard.py` | `test_runtime_guard_preflight_blocks_recovered_service` | 78 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_runbook_runtime_guard.py` | `test_runtime_guard_preflight_allows_live_stopped_service_with_valid_config` | 117 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_runbook_runtime_guard.py` | `test_runtime_guard_verify_uses_registered_runbook_objectives` | 157 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_runbook_runtime_guard.py` | `test_unsupported_generic_config_collects_dotnet_specific_live_checks` | 217 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_runbook_runtime_guard.py` | `test_unsupported_generic_config_collects_dotnet_specific_live_checks.fake_vm_read` | 219 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_unsupported_generic_config_collects_dotnet_specific_live_checks |
+| `tests/unit/test_runbook_runtime_guard.py` | `test_unsupported_generic_config_without_dotnet_does_not_auto_pass` | 274 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_runbook_runtime_guard.py` | `test_unsupported_generic_config_without_dotnet_does_not_auto_pass.fake_vm_read` | 276 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_unsupported_generic_config_without_dotnet_does_not_auto_pass |
 | `tests/unit/test_runbook_validation.py` | `test_runbook_requires_governance_fields` | 3 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_runbook_validation.py` | `test_runbook_valid_shape` | 8 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_runbook_verification_objectives.py` | `_context` | 7 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
