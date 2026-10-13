@@ -512,7 +512,7 @@
     infrastructure:['زیرساخت میزبان','منابع میزبان، دیسک، ظرفیت و پایداری'],
     dependency:['وابستگی‌های سرویس','اتصال و سلامت سرویس‌های وابسته'],
     storage:['ذخیره‌سازی','ظرفیت، دیسک، I/O و فایل‌سیستم'],
-    kubernetes:['کوبـرنیتیز','Pod، Namespace، Deployment و وضعیت کلاستر'],
+    kubernetes:['کوبرنتیز','Pod، Namespace، Deployment و وضعیت کلاستر'],
     database:['پایگاه داده','اتصالات، درخواست‌ها و وضعیت دیتابیس'],
     recovery:['بازیابی خدمت','پیش‌شرط‌های ایمن و بررسی‌های بعد از بازیابی'],
     security:['امنیت','نشانه‌های دسترسی غیرعادی و شواهد امنیتی'],
@@ -576,6 +576,8 @@
         (severity?'؛ شدت برآوردی این مرحله: '+status(severity):'')+
         (/no customer impact.*evidenced/i.test(x)?'؛ شواهد کافی از اثر بر مشتری ثبت نشده است':'')+'.';
     }
+    if(/(?:manual stop possible|manual(?:ly)? stop(?:ped)?(?: service)? is possible|A manual stop is possible but not proven)/i.test(x))
+      return 'توقف دستی سرویس یک فرضیه است؛ عامل توقف و عمدی‌بودن آن هنوز تأیید نشده است.';
     if(/no confirmed domain fault yet/i.test(x))return 'با شواهد فعلی خرابی مستقلی در این حوزه تأیید نشده است.';
     if(/configuration (?:validation|check|syntax).*(?:success|passed|valid)/i.test(x))return 'تست ساختار تنظیمات سرویس با موفقیت انجام شده است.';
     if(/(?:agent|analysis).*timed out|readtimeout|timeout/i.test(x))return 'تحلیل این متخصص به دلیل پایان مهلت پاسخ کامل نشده است.';
