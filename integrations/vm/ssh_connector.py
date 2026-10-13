@@ -446,7 +446,7 @@ class SSHVMConnector:
             if files:
                 selected_files = files[:4]
                 paths = " ".join(shlex.quote(item["path"]) for item in selected_files)
-                stat_cmd = "LC_ALL=C stat -c '%i\\t%s\\t%n' -- " + paths + " 2>/dev/null"
+                stat_cmd = "LC_ALL=C stat --printf='%i\\t%s\\t%n\\n' -- " + paths + " 2>/dev/null"
                 watch_cmd = (
                     stat_cmd + "; printf '\\n__AIOPS_STAT_SECOND__\\n'; sleep 2; "
                     + stat_cmd + "; printf '\\n__AIOPS_LSOF__\\n'; "
