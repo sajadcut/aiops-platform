@@ -726,13 +726,13 @@
 | `apps/api/incident_resources.py` | `get_verification` | 356 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
 | `apps/api/incident_resources.py` | `get_incident_audit` | 364 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
 | `apps/api/incident_resources.py` | `get_incident_lifecycle` | 371 | async function | Return durable governance plus structured agent routing/collaboration state. | module |
-| `apps/api/incident_resources.py` | `get_operator_recommendation_fa` | 412 | async function | Translate the durable English recommendation solely for Persian display. | module |
-| `apps/api/incident_resources.py` | `get_operator_summary` | 454 | async function | Return a read-only Persian operator summary derived from current durable Incident state. | module |
-| `apps/api/incident_resources.py` | `load_decision_brief_for_incident` | 551 | async function | Internal builder; reads all contract sections in the caller's transaction. | module |
-| `apps/api/incident_resources.py` | `get_incident_decision_brief` | 660 | async function | Read-only, RBAC-protected latest version. No archive writes or side effects. | module |
-| `apps/api/incident_resources.py` | `get_decision_brief_history` | 670 | async function | Read only previously archived, immutable lifecycle reports. | module |
-| `apps/api/incident_resources.py` | `get_decision_brief_historical_snapshot` | 686 | async function | Exact archived report; never regenerated against current Incident state. | module |
-| `apps/api/incident_resources.py` | `get_incident_decision_brief_narrative` | 700 | async function | Optional display prose; approval and the deterministic brief stay authoritative. | module |
+| `apps/api/incident_resources.py` | `get_operator_recommendation_fa` | 431 | async function | Translate the durable English recommendation solely for Persian display. | module |
+| `apps/api/incident_resources.py` | `get_operator_summary` | 473 | async function | Return a read-only Persian operator summary derived from current durable Incident state. | module |
+| `apps/api/incident_resources.py` | `load_decision_brief_for_incident` | 570 | async function | Internal builder; reads all contract sections in the caller's transaction. | module |
+| `apps/api/incident_resources.py` | `get_incident_decision_brief` | 679 | async function | Read-only, RBAC-protected latest version. No archive writes or side effects. | module |
+| `apps/api/incident_resources.py` | `get_decision_brief_history` | 689 | async function | Read only previously archived, immutable lifecycle reports. | module |
+| `apps/api/incident_resources.py` | `get_decision_brief_historical_snapshot` | 705 | async function | Exact archived report; never regenerated against current Incident state. | module |
+| `apps/api/incident_resources.py` | `get_incident_decision_brief_narrative` | 719 | async function | Optional display prose; approval and the deterministic brief stay authoritative. | module |
 | `apps/api/incidents.py` | `simulate_incident` | 24 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/incidents.py` | `analyze_incident` | 48 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/incidents.py` | `RemediationRequest` | 109 | class | کلاس | module |
