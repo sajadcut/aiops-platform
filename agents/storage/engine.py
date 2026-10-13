@@ -551,8 +551,33 @@ def correlate_disk_file_causality(items: Sequence[Mapping[str, Any]]) -> Dict[st
             zabbix.append({"reference": reference,
                            "timestamp": str(item.get("timestamp") or "")[:50]})
     inventories.sort(key=lambda x: x["size_bytes"], reverse=True)
+    # A file's latest mtime and an error timestamp may coincide, but this is
+    # never proof that the error generated the file or that deleting helps.
+    temporal_pairs = []
+    for file in inventories[:20]:
+        try:
+            modified = datetime.fromtimestamp(float(file.get("mtime_epoch")), tz=timezone.utc)
+        except (TypeError, ValueError, OverflowError):
+            continue
+        for log in candidate_logs[:12]:
+            observed = _parse_time(log.get("timestamp"))
+            if observed is None:
+                continue
+            delta = abs((observed - modified).total_seconds())
+            if delta <= 3600:
+                temporal_pairs.append({
+                    "file": file["path"], "error_ref": log["reference"],
+                    "delta_seconds": int(delta),
+                    "meaning": "temporal_coincidence_only",
+                    "causality_confirmed": False,
+                })
+            if len(temporal_pairs) >= 20:
+                break
+        if len(temporal_pairs) >= 20:
+            break
     return {
         "files": inventories[:30],
+        "candidate_temporal_overlaps": temporal_pairs,
         "related_error_log_observations": candidate_logs[:12],
         "zabbix_alert_refs": [x["reference"] for x in zabbix[:10]],
         "correlation_level": "unverified_cross_source_context" if candidate_logs else "not_established",
