@@ -142,7 +142,7 @@ def vm_binding_diagnostic(service: str, evidence: list[dict],
 
 async def resolve_vm_binding(
     service: str, evidence: list[dict], context: dict | None,
-    *, connector: Any = None,
+    *, connector: Any = None, force_live: bool = False,
 ) -> tuple[dict | None, dict]:
     """Recheck the **candidate**, not a chat-supplied host; status may be failed.
 
@@ -152,7 +152,7 @@ async def resolve_vm_binding(
     ctx = context or {}
     bound = vm_binding(service, evidence, ctx) if not ctx.get("_vm_identity_context_conflicts") else None
     diagnosis = vm_binding_diagnostic(service, evidence, ctx)
-    if bound is not None and diagnosis["reason"] not in {
+    if bound is not None and not force_live and diagnosis["reason"] not in {
         "conflicting_vm_targets", "alert_vm_target_conflict",
         "service_identity_conflict", "incident_identity_context_conflict",
     }:
@@ -196,3 +196,22 @@ async def resolve_vm_binding(
             "result": str(fresh.get("result") or "")[:60],
         },
     }
+
+
+def vm_status_answer(observation: dict, *, persian: bool = True) -> str:
+    """Only live service_status fields form a current-state assertion."""
+    if observation.get("success") is not True:
+        return "استعلام زندهٔ وضعیت سرویس موفق نبود." if persian else "Live VM status read failed."
+    service = str(observation.get("service") or "unknown")[:80]
+    active = str(observation.get("active_state") or "unknown")[:40]
+    sub = str(observation.get("sub_state") or "unknown")[:40]
+    result = str(observation.get("result") or "unknown")[:50]
+    target = str(observation.get("target") or "unknown")[:120]
+    if persian:
+        return (f"نتیجهٔ زندهٔ VM MCP برای سرویس {service} روی میزبان {target}: "
+                f"ActiveState={active}، SubState={sub}، Result={result}. "
+                "این مشاهده فقط وضعیت فعلی را نشان می‌دهد؛ اجرای Start/Restart "
+                "نیازمند بررسی پیش‌شرط‌ها و تأیید جداگانه است.")
+    return (f"Live VM MCP status for {service} on {target}: "
+            f"ActiveState={active}, SubState={sub}, Result={result}. "
+            "This observation does not grant permission to start or restart the service.")
