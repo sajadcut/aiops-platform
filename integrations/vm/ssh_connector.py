@@ -17,6 +17,7 @@ from integrations.vm.service_adapters import (
     parse_config_diagnostic,
 )
 from integrations.vm.runtime_discovery import parse_systemd_runtime, dotnet_json_syntax_command
+from integrations.vm.nginx_config_review import nginx_review_command
 
 _SAFE_HOST = re.compile(r"^[A-Za-z0-9._:-]+$")
 _SAFE_SERVICE = re.compile(r"^[A-Za-z0-9@_.:-]+$")
@@ -809,6 +810,79 @@ class SSHVMConnector:
             "status": status, "files": rows,
             "validated_scope": "json_syntax_only",
             "application_ready": None, "configuration_semantics_valid": None,
+        }
+
+    async def nginx_config_review(self, target: str, service: str) -> Dict[str, Any]:
+        """Generate a non-executable, bounded review from current validator proof."""
+        self._validate_service(service)
+        if service.lower() not in {"nginx", "nginx.service"}:
+            return {
+                "success": True, "supported": False, "target": target,
+                "service": service, "status": "unsupported_service",
+                "validation_status": "UNVERIFIED", "execution_authority": False,
+            }
+        validator = await self.config_validate(target, service)
+        base = {
+            "target": target, "service": service, "success": True,
+            "supported": False, "status": "not_applicable",
+            "validation_status": "UNVERIFIED", "execution_authority": False,
+            "config_contents_exposed": False,
+        }
+        if not (validator.get("success") is True and validator.get("supported") is True
+                and validator.get("valid") is False):
+            return {**base, "status": "no_confirmed_syntax_failure"}
+        try:
+            command = nginx_review_command(
+                validator.get("config_file"),
+                validator.get("error_line"),
+                validator.get("syntax_error") or validator.get("detail") or "",
+            )
+        except ValueError:
+            return {**base, "status": "unsafe_or_unknown_error_location"}
+        response = await self._run(target, command)
+        if not response.get("success"):
+            return {**base, "status": "preview_unavailable"}
+        try:
+            raw = json.loads(str(response.get("stdout") or "")[:18000])
+        except (ValueError, TypeError):
+            return {**base, "status": "preview_malformed"}
+        if not isinstance(raw, dict) or raw.get("status") not in {
+            "observed", "candidate_proposed", "unavailable",
+        }:
+            return {**base, "status": "preview_malformed"}
+        # No raw configuration or arbitrary tool-returned keys cross the MCP.
+        safe_rows = lambda rows: [
+            {"line": row["line"], "content": str(row.get("content") or "")[:120]}
+            for row in (rows if isinstance(rows, list) else [])[:7]
+            if isinstance(row, dict) and type(row.get("line")) is int
+        ]
+        digest = lambda key: str(raw.get(key)) if isinstance(raw.get(key), str) and re.fullmatch(r"[0-9a-f]{64}", raw[key]) else None
+        diff = raw.get("diff") if isinstance(raw.get("diff"), dict) else {}
+        status = str(raw.get("validation_status") or "UNVERIFIED")
+        if status not in {"UNVERIFIED", "STAGED_PASS_NOT_ISOLATED", "STAGED_FAILED"}:
+            status = "UNVERIFIED"
+        return {
+            **base, "supported": raw.get("status") != "unavailable",
+            "status": raw["status"],
+            "config_file": validator.get("config_file"),
+            "error_line": validator.get("error_line"),
+            "syntax_error": str(validator.get("syntax_error") or "")[:280],
+            "current_hash": digest("current_hash"),
+            "candidate_hash": digest("candidate_hash"),
+            "current_excerpt": safe_rows(raw.get("current_excerpt")),
+            "proposed_excerpt": safe_rows(raw.get("proposed_excerpt")),
+            "diff": {
+                "line": diff.get("line") if type(diff.get("line")) is int else None,
+                "before": str(diff.get("before") or "")[:120],
+                "after": str(diff.get("after") or "")[:120],
+                "redacted": True,
+            } if diff else None,
+            "proposed_change": "remove_extra_opening_brace" if raw.get("proposed_change") == "remove_extra_opening_brace" else None,
+            "validation_status": status,
+            "validator_executed_on_proposal": raw.get("validator_executed_on_proposal") is True,
+            "test_scope": str(raw.get("test_scope") or "")[:90],
+            "execution_authority": False,
+            "requires_approval": True,
         }
 
     async def config_validate(self, target: str, service: str) -> Dict[str, Any]:
