@@ -175,7 +175,8 @@
     key: (() => { try {return localStorage.getItem('aiops_api_key') || '';} catch (_) {return '';} })(),
     report: null, lifecycle: null, narrative: null, historic: null, history: null,
     loadingToken: 0, busy: false, reviewedSnapshot: null, rejectionVisible: false, error: null,
-    receivedSignals: null, receivedSignalsStatus: 'loading'
+    receivedSignals: null, receivedSignalsStatus: 'loading',
+    lifecyclePolling: false, lastLiveCheck: null, lifecyclePollError: false
   };
   const tr = key => vocabulary[state.language][key] || key;
   const value = v => v === null || v === undefined || v === '' ? tr('unknown') : safe(v);
@@ -361,6 +362,67 @@
     render();
     if(state.report && !state.historic) void loadNarrative();
   }
+  function renderAnalysisProgress() {
+    const box=$('#ic-analysis-progress');
+    if(!box)return;
+    const l=state.lifecycle||{},r=state.report||{};
+    const approval=low(l.approval?.status || r.approval_readiness?.approval_status);
+    const statusValue=low(l.incident_status || r.incident_summary?.status);
+    const running=l.analysis_in_progress === true ||
+      (l.analysis_in_progress == null && statusValue==='analyzing' &&
+       !['pending','approved','rejected'].includes(approval) &&
+       !['paused','completed','failed'].includes(low(l.checkpoint_status)));
+    const awaiting=!running && ['pending','approved'].includes(approval);
+    if(state.historic || (!running && !awaiting)){box.hidden=true;return;}
+    box.hidden=false;
+    const spinner=$('#ic-analysis-spinner');
+    if(spinner)spinner.hidden=!running;
+    const title=$('#ic-analysis-title'),detail=$('#ic-analysis-detail');
+    const fa=state.language==='fa';
+    if(title)title.textContent=running
+      ? (l.analysis_phase==='executing'
+        ? (fa?'در حال اجرای عملیات تأییدشده…':'Executing approved operation…')
+        : (fa?'در حال بررسی و تحلیل رخداد…':'Incident investigation in progress…'))
+      : (fa?'تحلیل به مرحلهٔ تأیید انسانی رسیده است':'Analysis is awaiting human approval');
+    const phase=String(l.current_node||'').replace(/_/g,' ').slice(0,70);
+    const checked=state.lastLiveCheck ? new Date(state.lastLiveCheck).toLocaleTimeString(fa?'fa-IR':'en-US') : '';
+    if(detail)detail.textContent=state.lifecyclePollError
+      ? (fa?'ارتباط موقتاً قطع شده؛ آخرین وضعیت معتبر نمایش داده می‌شود.':'Temporarily unable to refresh; showing last known state.')
+      : (running
+        ? (fa?'به‌روزرسانی خودکار هر ۶ ثانیه':'Auto-updating every 6 seconds')
+        : (fa?'منتظر تصمیم اپراتور؛ تحلیل فعال نیست.':'Waiting for operator; analysis is not running.')) +
+          (phase?' · '+phase:'') + (checked?' · '+checked:'');
+  }
+
+  // Use a lightweight durable lifecycle GET, not repeated heavy LLM narratives.
+  // Reload the report only when a material workflow phase/version changes.
+  async function pollLifecycle() {
+    if(state.lifecyclePolling || document.hidden || state.historic || state.busy ||
+       !state.report || !incidentId)return;
+    state.lifecyclePolling=true;
+    try {
+      const latest=await api(base+'/lifecycle');
+      if(state.busy || state.historic)return;
+      const previous=state.lifecycle||{};
+      const changed=latest.incident_status!==previous.incident_status ||
+        latest.analysis_in_progress!==previous.analysis_in_progress ||
+        latest.analysis_phase!==previous.analysis_phase ||
+        latest.checkpoint_status!==previous.checkpoint_status ||
+        latest.checkpoint_version!==previous.checkpoint_version ||
+        latest.current_node!==previous.current_node ||
+        latest.approval?.approval_id!==previous.approval?.approval_id ||
+        latest.approval?.status!==previous.approval?.status;
+      state.lifecycle=latest;
+      state.lastLiveCheck=Date.now();
+      state.lifecyclePollError=false;
+      renderAnalysisProgress();
+      if(changed)await load({preserveHistory:true});
+    }catch(_){
+      state.lifecyclePollError=true;
+      renderAnalysisProgress();
+    }finally{state.lifecyclePolling=false;}
+  }
+
   function renderHero(r) {
     const i=r.incident_summary||{},a=r.approval_readiness||{},action=r.remediation_recommendation||{};
     const identity=i.service_identity||{};
@@ -601,6 +663,7 @@
     $('#ic-archive-banner').hidden=!state.historic;
     renderHero(r);renderOverview(r);renderReview(r);renderAnalysis(r);renderEvidence(r);
     renderKnowledge(r);renderOutcome(r);renderTimeline(r);renderDecision(r);renderReceivedSignals();
+    renderAnalysisProgress();
     $('#ic-snapshot-label').textContent='Snapshot '+String(r.snapshot_id||'').slice(0,14);
   }
   async function loadNarrative() {
@@ -622,6 +685,7 @@
       if(token!==state.loadingToken)return;
       const prev=state.report?.snapshot_id, prevApproval=state.lifecycle?.approval?.approval_id;
       state.report=report;state.lifecycle=lifecycle;
+      state.lastLiveCheck=Date.now();state.lifecyclePollError=false;
       if(prev!==report.snapshot_id||prevApproval!==lifecycle?.approval?.approval_id)state.reviewedSnapshot=null;
       if(!preserveHistory)state.historic=null;
       state.narrative=null;state.error=null;state.rejectionVisible=false;
@@ -762,6 +826,10 @@
       if(e.key==='aiops.chatbot.theme'&&(e.newValue==='light'||e.newValue==='dark'))document.documentElement.dataset.theme=e.newValue;
     });
     window.addEventListener('pageshow',e=>{if(e.persisted)void load();});
+    document.addEventListener('visibilitychange',()=>{if(!document.hidden)void pollLifecycle();});
+    const lifecycleTimer=setInterval(()=>{void pollLifecycle();},6000);
+    // Node-based browser regression harnesses should not be kept alive by polling.
+    if(typeof lifecycleTimer?.unref==='function')lifecycleTimer.unref();
     setLang(state.language);
     void load();
   }
