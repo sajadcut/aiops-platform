@@ -147,9 +147,9 @@ PEER_OPERATIONAL_CONTEXT={json.dumps(peer_context, default=str)}"""
         # needs an independent file-specific runbook and proof/approval gate.
         proposed_checks = self.normalize_list(result.get("immediate_checks"), settings.AGENT_MAX_RECOMMENDATIONS)
         dangerous = re.compile(
-            r"(?i)(?:\\b(?:rm|unlink|erase|wipe|clear|clean(?:up)?|prune|vacuum|shred|"
-            r"compress|archive|move|overwrite|expire)\\b|حذف|پاک(?:سازی|\\s*کردن)?|"
-            r"انتقال|آرشیو|فشرده\\s*سازی)"
+            r"(?i)(?:\b(?:rm|unlink|erase|wipe|clear|clean(?:up)?|prune|vacuum|shred|"
+            r"compress|archive|move|overwrite|expire)\b|حذف|پاک(?:سازی|\s*کردن)?|"
+            r"انتقال|آرشیو|فشرده\s*سازی)"
         )
         actions = [
             check for check in proposed_checks
