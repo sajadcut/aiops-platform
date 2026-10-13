@@ -1028,9 +1028,39 @@
   function renderInvestigation(r) {
     const p=r.dynamic_investigation||{},kb=p.knowledge_followup||{};
     const config=p.config_proposal||{},fa=state.language==='fa';
+    const recovery=r.recovery_advisory||{};
+    // Recovery suggestion is NOT a pending approval. Never expose execution
+    // controls here, even if the model calls an action "approved".
+    const recoveryMarkup=recovery.status?
+      '<article class="ic-detail-card ic-recovery-advice"><h3>'+
+      esc(fa?'پیشنهاد بازیابی مشروط سرویس':'Conditional service recovery advice')+'</h3>'+
+      '<p><strong>'+esc(fa?'اقدام پیشنهادی: ':'Suggested action: ')+
+      '</strong>'+esc(recovery.suggested_action ?
+        (recovery.suggested_action==='restart_service'?
+          (fa?'Restart سرویس':'Restart service'):(fa?'Start سرویس':'Start service')) :
+        (fa?'ابتدا اصلاح کانفیگ':'Repair configuration first'))+'</p>'+
+      '<div class="ic-proposal">'+
+        '<div>'+esc(fa?'سرویس':'Service')+': '+txt(recovery.service)+'</div>'+
+        '<div>'+esc(fa?'مقصد':'Target')+': '+txt(recovery.target)+'</div>'+
+        '<div>'+esc(fa?'وضعیت مشاهده‌شده':'Observed status')+': '+txt(recovery.observed_state)+'</div>'+
+        '<div>'+esc(fa?'نتیجه systemd':'systemd result')+': '+txt(recovery.systemd_result)+'</div>'+
+        '<div>'+esc(fa?'اعتبارسنجی کانفیگ':'Configuration check')+': '+txt(recovery.configuration_validation)+'</div>'+
+      '</div>'+
+      '<p>'+esc(fa?
+        'این پیشنهاد صرفاً برای بررسی است. اختلاف نظر Agentها یا نبود Validator مانع نمایش راهکار نمی‌شود، اما اجرای عملی همچنان به پیش‌شرط‌های مستقل و Approval نیاز دارد.':
+        'This is review-only advice. Agent disagreement or an unavailable validator does not suppress it, but execution still requires independent prechecks and approval.')+'</p>'+
+      '<h4>'+esc(fa?'بررسی‌های لازم پیش از اجرا':'Required checks before execution')+'</h4>'+
+      '<ul class="ic-agent-bullets">'+arr(recovery.prerequisite_checks).slice(0,6).map(check=>
+        '<li>'+txt(check)+'</li>').join('')+'</ul>'+
+      '<p>'+txt(recovery.operator_question)+'</p>'+
+      refs(recovery.evidence_refs)+
+      '<p class="ic-agent-disclaimer">'+esc(fa?
+        'مجوز اجرای این پیشنهاد صادر نشده است؛ دکمهٔ تأیید اجرا تا ایجاد درخواست اجرایی معتبر فعال نمی‌شود.':
+        'No execution authority has been granted. Only a separately generated, properly validated request may enter the approval workflow.')+
+      '</p></article>':'';
     const hasPlan=p.status && p.status!=='not_available';
     if(!hasPlan) {
-      show('#ic-proposed-fix',empty(fa?
+      show('#ic-proposed-fix',recoveryMarkup || empty(fa?
         'تحقیق پویای مرحله‌ای برای این رخداد ثبت نشده است. این قابلیت باید در Backend فعال و اجرا شود.':
         'No dynamic investigation was recorded for this incident. The backend capability must be enabled.'));
       return;
@@ -1071,7 +1101,7 @@
       '<p class="ic-empty">'+esc(fa?
         'تأیید اجرای تغییر غیرفعال است: Patch معتبر، Diff، تست ایزوله و قرارداد اجرایی هنوز موجود نیستند.':
         'Execution approval is unavailable: no verified patch, diff, isolated test or execution contract exists.')+'</p>';
-    show('#ic-proposed-fix',body);
+    show('#ic-proposed-fix',recoveryMarkup+body);
   }
 
   function renderOutcome(r) {
