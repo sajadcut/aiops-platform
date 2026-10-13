@@ -190,7 +190,7 @@ def tool_observation_summary(raw: dict) -> str | None:
         "process_status": ("running", "count"),
         "port_listener_status": ("supported", "listening", "target_port"),
         "tcp_check": ("supported", "reachable", "target_port"),
-        "config_validate": ("supported", "valid"),
+        "config_validate": ("supported", "valid", "config_file", "error_line", "syntax_error"),
         "collect_vm_metrics": ("name", "value"),
         "disk_status": ("used_percent", "free_bytes"),
         "service_logs": ("count", "access_mode"),
@@ -450,6 +450,23 @@ def build_decision_brief(
             ),
             "observed_sources": len({str(row.get("source") or "")
                 for row in evidence if row.get("source")}),
+        },
+        "configuration_diagnostic": {
+            "status": (
+                "invalid" if obj(observed.get("config_validate")).get("valid") is False
+                else "valid" if obj(observed.get("config_validate")).get("valid") is True
+                else "unverified"
+            ),
+            "config_file": safe(obj(observed.get("config_validate")).get("config_file"), 300),
+            "root_config_file": safe(obj(observed.get("config_validate")).get("root_config_file"), 300),
+            "path_source": safe(obj(observed.get("config_validate")).get("config_path_source"), 80),
+            "error_line": obj(observed.get("config_validate")).get("error_line"),
+            "syntax_error": safe(obj(observed.get("config_validate")).get("syntax_error"), 500),
+            "evidence_refs": refs([
+                obj(observed.get("config_validate")).get("evidence_id")
+            ] if obj(observed.get("config_validate")).get("evidence_id") else []),
+            "repair_then_revalidate": obj(observed.get("config_validate")).get("valid") is False,
+            "start_requires_valid_config_and_approval": True,
         },
         "agent_findings": agents,
         "mcp_evidence": mcp,
