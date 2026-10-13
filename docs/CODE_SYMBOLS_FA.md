@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 448 | Dashboard JS files scanned: 8 | Symbols indexed: 4303**
+**Python files scanned: 448 | Dashboard JS files scanned: 8 | Symbols indexed: 4304**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -3512,6 +3512,7 @@
 | `tests/unit/test_mcp_server_contract.py` | `test_internal_mcp_server_has_no_native_zabbix_provider` | 21 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_mcp_server_contract.py` | `test_mcp_server_is_the_only_place_remaining_native_provider_connectors_are_composed` | 28 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_mcp_server_contract.py` | `test_mcp_server_does_not_expose_arbitrary_execution_tools` | 42 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_mcp_server_contract.py` | `test_disk_file_forensics_never_exposes_mutating_delete_tool` | 50 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_memory_negative_writeback.py` | `_Memory` | 7 | class | کلاس | module |
 | `tests/unit/test_memory_negative_writeback.py` | `_Memory.__init__` | 10 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Memory |
 | `tests/unit/test_memory_negative_writeback.py` | `_Memory.add_episode` | 13 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Memory |
