@@ -134,7 +134,8 @@ const assert = require('node:assert/strict');
        hypotheses:[{text:'Possibly stopped manually',probability:0.34,falsification_checks:['Read auditd events']}],
        missing_evidence:['auditd logs for systemctl commands'],recommended_checks:['Read system journal']},
       {agent:'network',status:'success',confidence:0.32,evidence_coverage:0.6,
-       finding:'No network failure confirmed',findings:['Port 8080 is not listening'],
+       finding:'No network failure confirmed',findings:['Port 8080 is not listening',
+         'Custom BGP neighbor anomaly requires correlation'],
        evidence_refs:['vm:vm01:tcp_check:2026']},
     ],
     monitoring_sources:[{source:'Prometheus',status:'unavailable'}],
@@ -165,11 +166,17 @@ const assert = require('node:assert/strict');
   assert.match(el('#ic-title').textContent,/nginx/);
   assert.match(el('#ic-brief-lead').innerHTML,/سرویس از دسترس/);
   assert.match(el('#ic-sources').innerHTML,/Prometheus/);
-  assert.match(el('#ic-agent-summary').innerHTML,/متخصص‌های ثبت‌شده/);
+  assert.match(el('#ic-agent-summary').innerHTML,/ایجنت‌های ثبت‌شده/);
   const agentHtml=el('#ic-agents').innerHTML;
   assert.equal((agentHtml.match(/class="ic-agent-card"/g)||[]).length,2);
   assert.match(agentHtml,/بررسی ماشین مجازی/);
   assert.match(agentHtml,/بررسی شبکه/);
+  assert.match(agentHtml,/VMAgent/);
+  assert.match(agentHtml,/NetworkAgent/);
+  assert.match(agentHtml,/متن اصلی ثبت‌شده توسط ایجنت \(ترجمه نشده\)/);
+  assert.match(agentHtml,/Custom BGP neighbor anomaly requires correlation/);
+  assert.doesNotMatch(agentHtml,/شرح فارسی تأییدشده برای این یافته موجود نیست/);
+  assert.doesNotMatch(agentHtml,/متخصص/);
   assert.match(agentHtml,/۹۳٪/);
   assert.match(agentHtml,/۳۲٪/);
   assert.match(agentHtml,/۷۱٪/);
