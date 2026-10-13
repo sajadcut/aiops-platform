@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 455 | Dashboard JS files scanned: 8 | Symbols indexed: 4392**
+**Python files scanned: 457 | Dashboard JS files scanned: 8 | Symbols indexed: 4414**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -992,22 +992,22 @@
 | `apps/context_service/builder.py` | `ContextBuilder` | 4 | class | Normalizes an incoming incident context and preserves evidence refs. | module |
 | `apps/context_service/builder.py` | `ContextBuilder.build` | 7 | method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | ContextBuilder |
 | `apps/context_service/evidence_collector.py` | `EvidenceCollector` | 12 | class | Read-only cross-source Evidence boundary used by orchestration. | module |
-| `apps/context_service/evidence_collector.py` | `EvidenceCollector.__init__` | 31 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | EvidenceCollector |
-| `apps/context_service/evidence_collector.py` | `EvidenceCollector._progress` | 40 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | EvidenceCollector |
-| `apps/context_service/evidence_collector.py` | `EvidenceCollector._source_progress_status` | 46 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | EvidenceCollector |
-| `apps/context_service/evidence_collector.py` | `EvidenceCollector._known_service` | 61 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | EvidenceCollector |
-| `apps/context_service/evidence_collector.py` | `EvidenceCollector._vm_target_from_asset` | 66 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | EvidenceCollector |
-| `apps/context_service/evidence_collector.py` | `EvidenceCollector._observation` | 75 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | EvidenceCollector |
-| `apps/context_service/evidence_collector.py` | `EvidenceCollector._is_non_material_observation` | 83 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | EvidenceCollector |
-| `apps/context_service/evidence_collector.py` | `EvidenceCollector._normalize_requests` | 91 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | EvidenceCollector |
-| `apps/context_service/evidence_collector.py` | `EvidenceCollector._vm_actions_for_requests` | 112 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | EvidenceCollector |
-| `apps/context_service/evidence_collector.py` | `EvidenceCollector._vm_actions_for_requests.add` | 117 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | EvidenceCollector._vm_actions_for_requests |
-| `apps/context_service/evidence_collector.py` | `EvidenceCollector.collect` | 167 | async method | Evidence/داده موردنیاز را از منبع مربوط جمع می‌کند | EvidenceCollector |
-| `apps/context_service/evidence_collector.py` | `EvidenceCollector.collect_requested` | 170 | async method | Evidence/داده موردنیاز را از منبع مربوط جمع می‌کند | EvidenceCollector |
-| `apps/context_service/evidence_collector.py` | `EvidenceCollector._alert_evidence` | 189 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | EvidenceCollector |
-| `apps/context_service/evidence_collector.py` | `EvidenceCollector._healthy` | 196 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | EvidenceCollector |
-| `apps/context_service/evidence_collector.py` | `EvidenceCollector._vm_evidence` | 208 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | EvidenceCollector |
-| `apps/context_service/evidence_collector.py` | `EvidenceCollector._collect` | 240 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | EvidenceCollector |
+| `apps/context_service/evidence_collector.py` | `EvidenceCollector.__init__` | 32 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | EvidenceCollector |
+| `apps/context_service/evidence_collector.py` | `EvidenceCollector._progress` | 41 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | EvidenceCollector |
+| `apps/context_service/evidence_collector.py` | `EvidenceCollector._source_progress_status` | 47 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | EvidenceCollector |
+| `apps/context_service/evidence_collector.py` | `EvidenceCollector._known_service` | 62 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | EvidenceCollector |
+| `apps/context_service/evidence_collector.py` | `EvidenceCollector._vm_target_from_asset` | 67 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | EvidenceCollector |
+| `apps/context_service/evidence_collector.py` | `EvidenceCollector._observation` | 76 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | EvidenceCollector |
+| `apps/context_service/evidence_collector.py` | `EvidenceCollector._is_non_material_observation` | 84 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | EvidenceCollector |
+| `apps/context_service/evidence_collector.py` | `EvidenceCollector._normalize_requests` | 92 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | EvidenceCollector |
+| `apps/context_service/evidence_collector.py` | `EvidenceCollector._vm_actions_for_requests` | 113 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | EvidenceCollector |
+| `apps/context_service/evidence_collector.py` | `EvidenceCollector._vm_actions_for_requests.add` | 118 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | EvidenceCollector._vm_actions_for_requests |
+| `apps/context_service/evidence_collector.py` | `EvidenceCollector.collect` | 172 | async method | Evidence/داده موردنیاز را از منبع مربوط جمع می‌کند | EvidenceCollector |
+| `apps/context_service/evidence_collector.py` | `EvidenceCollector.collect_requested` | 175 | async method | Evidence/داده موردنیاز را از منبع مربوط جمع می‌کند | EvidenceCollector |
+| `apps/context_service/evidence_collector.py` | `EvidenceCollector._alert_evidence` | 194 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | EvidenceCollector |
+| `apps/context_service/evidence_collector.py` | `EvidenceCollector._healthy` | 201 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | EvidenceCollector |
+| `apps/context_service/evidence_collector.py` | `EvidenceCollector._vm_evidence` | 213 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | EvidenceCollector |
+| `apps/context_service/evidence_collector.py` | `EvidenceCollector._collect` | 245 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | EvidenceCollector |
 | `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver` | 9 | class | Deterministic bridge from Cognia Knowledge chunks to asset-discovery hints. | module |
 | `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver.build_discovery_query` | 71 | method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | KnowledgeTopologyResolver |
 | `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver.constrain_trigger_service` | 102 | method | Do not turn an unrelated RAG hit into a source-alert service identity. | KnowledgeTopologyResolver |
@@ -1166,15 +1166,15 @@
 | `apps/knowledge_review.py` | `create_from_memory` | 116 | async function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
 | `apps/knowledge_review.py` | `get_locked_review` | 166 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
 | `apps/mcp_server/main.py` | `JsonRpcRequest` | 20 | class | کلاس | module |
-| `apps/mcp_server/main.py` | `_provider` | 86 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/mcp_server/main.py` | `_parse_dt` | 93 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/mcp_server/main.py` | `_limit` | 99 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/mcp_server/main.py` | `_authorize` | 103 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/mcp_server/main.py` | `_call` | 116 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/mcp_server/main.py` | `_validate_production_server` | 192 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/mcp_server/main.py` | `startup_event` | 211 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/mcp_server/main.py` | `health` | 217 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/mcp_server/main.py` | `mcp` | 223 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/mcp_server/main.py` | `_provider` | 88 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/mcp_server/main.py` | `_parse_dt` | 95 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/mcp_server/main.py` | `_limit` | 101 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/mcp_server/main.py` | `_authorize` | 105 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/mcp_server/main.py` | `_call` | 118 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/mcp_server/main.py` | `_validate_production_server` | 196 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/mcp_server/main.py` | `startup_event` | 215 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/mcp_server/main.py` | `health` | 221 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/mcp_server/main.py` | `mcp` | 227 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/memory_service/__init__.py` | `OperationalMemoryService` | 32 | class | کلاس | module |
 | `apps/memory_service/__init__.py` | `OperationalMemoryService.__init__` | 37 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryService |
 | `apps/memory_service/__init__.py` | `OperationalMemoryService.add_entry` | 40 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryService |
@@ -1255,14 +1255,15 @@
 | `apps/orchestrator/a2a_gateway.py` | `A2AGateway` | 11 | class | Compatibility gateway for structured multi-agent analysis. | module |
 | `apps/orchestrator/a2a_gateway.py` | `A2AGateway.__init__` | 18 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | A2AGateway |
 | `apps/orchestrator/a2a_gateway.py` | `A2AGateway.process_incident` | 24 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | A2AGateway |
-| `apps/orchestrator/dynamic_investigation.py` | `_bounded` | 41 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner` | 45 | class | Propose the next read-only investigation; never authorize writes. | module |
-| `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner.confirmed_config_failure` | 49 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DynamicInvestigationPlanner |
-| `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner.search_query` | 83 | method | داده را بدون تغییر state بازیابی/فهرست می‌کند | DynamicInvestigationPlanner |
-| `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner._scope` | 108 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DynamicInvestigationPlanner |
-| `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner.enrich_knowledge` | 125 | async method | Query Cognia again with a verified error, preserving access scope. | DynamicInvestigationPlanner |
-| `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner.propose` | 184 | async method | LLM chooses from read-only capabilities, never arbitrary code. | DynamicInvestigationPlanner |
-| `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner.evidence_requests` | 307 | method | Convert validated enum members, never LLM text, to connector requests. | DynamicInvestigationPlanner |
+| `apps/orchestrator/dynamic_investigation.py` | `_bounded` | 44 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner` | 48 | class | Propose the next read-only investigation; never authorize writes. | module |
+| `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner.confirmed_config_failure` | 52 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DynamicInvestigationPlanner |
+| `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner.runtime_evidence` | 86 | method | Use only MCP observations bound to the same service, not free text. | DynamicInvestigationPlanner |
+| `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner.search_query` | 103 | method | داده را بدون تغییر state بازیابی/فهرست می‌کند | DynamicInvestigationPlanner |
+| `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner._scope` | 147 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DynamicInvestigationPlanner |
+| `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner.enrich_knowledge` | 164 | async method | Query Cognia again with a verified error, preserving access scope. | DynamicInvestigationPlanner |
+| `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner.propose` | 223 | async method | LLM chooses from read-only capabilities, never arbitrary code. | DynamicInvestigationPlanner |
+| `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner.evidence_requests` | 388 | method | Convert validated enum members, never LLM text, to connector requests. | DynamicInvestigationPlanner |
 | `apps/orchestrator/e2e_graph.py` | `E2EState` | 48 | class | کلاس | module |
 | `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator` | 78 | class | کلاس | module |
 | `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator.__init__` | 79 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
@@ -1741,24 +1742,24 @@
 | `dashboards/incident-command-room.js` | `renderEvidence` | 1000 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
 | `dashboards/incident-command-room.js` | `renderKnowledge` | 1011 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
 | `dashboards/incident-command-room.js` | `renderInvestigation` | 1028 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/incident-command-room.js` | `renderOutcome` | 1107 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/incident-command-room.js` | `renderTimeline` | 1128 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/incident-command-room.js` | `receivedPairs` | 1133 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/incident-command-room.js` | `renderReceivedSignals` | 1142 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/incident-command-room.js` | `content` | 1154 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/incident-command-room.js` | `loadReceivedSignals` | 1183 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
-| `dashboards/incident-command-room.js` | `renderDecision` | 1196 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/incident-command-room.js` | `render` | 1255 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/incident-command-room.js` | `loadNarrative` | 1264 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
-| `dashboards/incident-command-room.js` | `load` | 1274 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
-| `dashboards/incident-command-room.js` | `returnLive` | 1297 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/incident-command-room.js` | `loadHistory` | 1301 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
-| `dashboards/incident-command-room.js` | `openHistory` | 1311 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/incident-command-room.js` | `loadRaw` | 1320 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
-| `dashboards/incident-command-room.js` | `approvalCurrent` | 1328 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/incident-command-room.js` | `action` | 1335 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/incident-command-room.js` | `bind` | 1371 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/incident-command-room.js` | `lifecycleTimer` | 1439 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/incident-command-room.js` | `renderOutcome` | 1128 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/incident-command-room.js` | `renderTimeline` | 1149 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/incident-command-room.js` | `receivedPairs` | 1154 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/incident-command-room.js` | `renderReceivedSignals` | 1163 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/incident-command-room.js` | `content` | 1175 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/incident-command-room.js` | `loadReceivedSignals` | 1204 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
+| `dashboards/incident-command-room.js` | `renderDecision` | 1217 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/incident-command-room.js` | `render` | 1276 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/incident-command-room.js` | `loadNarrative` | 1285 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
+| `dashboards/incident-command-room.js` | `load` | 1295 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
+| `dashboards/incident-command-room.js` | `returnLive` | 1318 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/incident-command-room.js` | `loadHistory` | 1322 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
+| `dashboards/incident-command-room.js` | `openHistory` | 1332 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/incident-command-room.js` | `loadRaw` | 1341 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
+| `dashboards/incident-command-room.js` | `approvalCurrent` | 1349 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/incident-command-room.js` | `action` | 1356 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/incident-command-room.js` | `bind` | 1392 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/incident-command-room.js` | `lifecycleTimer` | 1460 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
 | `dashboards/knowledge-review.js` | `el` | 10 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
 | `dashboards/knowledge-review.js` | `current` | 11 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
 | `dashboards/knowledge-review.js` | `notice` | 14 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
@@ -2126,77 +2127,84 @@
 | `integrations/prometheus/mcp_client.py` | `PrometheusMCPClient.get_alerts` | 282 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | PrometheusMCPClient |
 | `integrations/prometheus/mcp_client.py` | `PrometheusMCPClient.health_check` | 333 | async method | Check the upstream Prometheus backend readiness through the official tool. | PrometheusMCPClient |
 | `integrations/vm/mcp_client.py` | `VMEdgeMCPClient` | 9 | class | MCP-only connector for VM/Edge diagnostics and governed remediation. | module |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.__init__` | 22 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.initialize` | 36 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient._invoke` | 50 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.collect_vm_metrics` | 58 | async method | Evidence/داده موردنیاز را از منبع مربوط جمع می‌کند | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.collect_metrics` | 59 | async method | Evidence/داده موردنیاز را از منبع مربوط جمع می‌کند | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.host_info` | 60 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.disk_status` | 61 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.disk_forensics` | 62 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.network_status` | 63 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.service_status` | 64 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.service_logs` | 65 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.system_logs` | 66 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.process_snapshot` | 67 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.process_status` | 68 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.tcp_check` | 69 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.port_listener_status` | 70 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.dns_check` | 71 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.route_check` | 72 | async method | بر اساس state/capability مسیر یا handler مناسب را انتخاب می‌کند | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.firewall_status` | 73 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.config_validate` | 74 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient._write_context` | 77 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.restart_service` | 84 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.reload_service` | 87 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.start_service` | 90 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.__init__` | 23 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.initialize` | 37 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient._invoke` | 51 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.collect_vm_metrics` | 59 | async method | Evidence/داده موردنیاز را از منبع مربوط جمع می‌کند | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.collect_metrics` | 60 | async method | Evidence/داده موردنیاز را از منبع مربوط جمع می‌کند | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.host_info` | 61 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.disk_status` | 62 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.disk_forensics` | 63 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.network_status` | 64 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.service_status` | 65 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.service_logs` | 66 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.system_logs` | 67 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.process_snapshot` | 68 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.process_status` | 69 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.tcp_check` | 70 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.port_listener_status` | 71 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.dns_check` | 72 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.route_check` | 73 | async method | بر اساس state/capability مسیر یا handler مناسب را انتخاب می‌کند | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.firewall_status` | 74 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.config_validate` | 75 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.service_runtime_discovery` | 76 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.dotnet_config_syntax` | 77 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient._write_context` | 80 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.restart_service` | 87 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.reload_service` | 90 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.start_service` | 93 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/runtime_discovery.py` | `safe_absolute_path` | 19 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `integrations/vm/runtime_discovery.py` | `parse_systemd_runtime` | 28 | function | Extract only allowlisted non-secret fields; no ExecStart/env value returned. | module |
+| `integrations/vm/runtime_discovery.py` | `dotnet_json_syntax_command` | 154 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `integrations/vm/service_adapters.py` | `ServiceDiagnosticAdapter` | 10 | class | Fixed, allowlisted service-specific diagnostic commands. | module |
 | `integrations/vm/service_adapters.py` | `get_service_adapter` | 56 | function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
 | `integrations/vm/service_adapters.py` | `_absolute_config_path` | 76 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `integrations/vm/service_adapters.py` | `discover_config_path` | 85 | function | Discover an explicit config argument from the installed systemd unit. | module |
 | `integrations/vm/service_adapters.py` | `config_check_for_path` | 124 | function | Use only an existing fixed allowlisted validator with a safe config path. | module |
 | `integrations/vm/service_adapters.py` | `parse_config_diagnostic` | 142 | function | Extract bounded compiler-reported config file/line, never fetch secret files. | module |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector` | 24 | class | Controlled Linux VM adapter used only behind the VM MCP server. | module |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.__init__` | 35 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector._auth_mode` | 40 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector._password` | 44 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector._validate_runtime_security` | 48 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector._validate_target` | 84 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector._validate_remote_host` | 92 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector._validate_service` | 96 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector._validate_port` | 104 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector._bounded_limit` | 111 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector._base_ssh_args` | 114 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector._run_key` | 131 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector._run_password` | 170 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector._run_password.execute` | 184 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | SSHVMConnector._run_password |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector._run` | 241 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector._sudo_requires_password` | 249 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector._sudo` | 257 | async method | Run only platform-owned commands; retry sudo using SSH password via stdin. | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.health_check` | 272 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector._parse_cpu_counters` | 277 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector._cpu_interval_percentages` | 287 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.collect_metrics` | 304 | async method | Evidence/داده موردنیاز را از منبع مربوط جمع می‌کند | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.host_info` | 340 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.disk_status` | 361 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.disk_status.parse_df` | 367 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector.disk_status |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.disk_forensics` | 377 | async method | Bounded read-only inventory; never read file contents or delete files. | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.network_status` | 532 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.service_status` | 548 | async method | Read structured systemd properties and bounded 'systemctl status'. | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.service_status.numeric` | 574 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector.service_status |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.process_status` | 608 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.process_snapshot` | 623 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.service_logs` | 637 | async method | Collect bounded journald history; retry read-only via sudo -n if denied. | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.system_logs` | 667 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.tcp_check` | 683 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.port_listener_status` | 697 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.dns_check` | 709 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.route_check` | 721 | async method | بر اساس state/capability مسیر یا handler مناسب را انتخاب می‌کند | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.firewall_status` | 729 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.config_validate` | 741 | async method | Locate the running unit's config, run a fixed read-only syntax check. | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.start_service` | 839 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.restart_service` | 846 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.reload_service` | 853 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector` | 25 | class | Controlled Linux VM adapter used only behind the VM MCP server. | module |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.__init__` | 36 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector._auth_mode` | 41 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector._password` | 45 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector._validate_runtime_security` | 49 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector._validate_target` | 85 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector._validate_remote_host` | 93 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector._validate_service` | 97 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector._validate_port` | 105 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector._bounded_limit` | 112 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector._base_ssh_args` | 115 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector._run_key` | 132 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector._run_password` | 171 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector._run_password.execute` | 185 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | SSHVMConnector._run_password |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector._run` | 242 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector._sudo_requires_password` | 250 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector._sudo` | 258 | async method | Run only platform-owned commands; retry sudo using SSH password via stdin. | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.health_check` | 273 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector._parse_cpu_counters` | 278 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector._cpu_interval_percentages` | 288 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.collect_metrics` | 305 | async method | Evidence/داده موردنیاز را از منبع مربوط جمع می‌کند | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.host_info` | 341 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.disk_status` | 362 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.disk_status.parse_df` | 368 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector.disk_status |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.disk_forensics` | 378 | async method | Bounded read-only inventory; never read file contents or delete files. | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.network_status` | 533 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.service_status` | 549 | async method | Read structured systemd properties and bounded 'systemctl status'. | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.service_status.numeric` | 575 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector.service_status |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.process_status` | 609 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.process_snapshot` | 624 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.service_logs` | 638 | async method | Collect bounded journald history; retry read-only via sudo -n if denied. | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.system_logs` | 668 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.tcp_check` | 684 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.port_listener_status` | 698 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.dns_check` | 710 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.route_check` | 722 | async method | بر اساس state/capability مسیر یا handler مناسب را انتخاب می‌کند | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.firewall_status` | 730 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.service_runtime_discovery` | 742 | async method | Read selected systemd properties; never return ExecStart argv or env values. | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.dotnet_config_syntax` | 759 | async method | Check discovered .NET JSON syntax only; no file contents reach AIOps. | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.config_validate` | 814 | async method | Locate the running unit's config, run a fixed read-only syntax check. | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.start_service` | 912 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.restart_service` | 919 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.reload_service` | 926 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
 | `integrations/vm/target_context.py` | `bind_vm_probe_blocked` | 22 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `integrations/vm/target_context.py` | `reset_vm_probe_blocked` | 26 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `integrations/vm/target_context.py` | `vm_probes_blocked` | 30 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
@@ -3583,10 +3591,10 @@
 | `tests/unit/test_mcp_external_boundary.py` | `test_mcp_does_not_expose_arbitrary_remote_error_text` | 164 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_mcp_external_boundary.py` | `test_mcp_does_not_expose_arbitrary_remote_error_text.unsafe_post` | 168 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_mcp_does_not_expose_arbitrary_remote_error_text |
 | `tests/unit/test_mcp_server_contract.py` | `test_provider_tool_names_match_control_plane_clients` | 6 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_mcp_server_contract.py` | `test_internal_mcp_server_has_no_native_zabbix_provider` | 21 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_mcp_server_contract.py` | `test_mcp_server_is_the_only_place_remaining_native_provider_connectors_are_composed` | 28 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_mcp_server_contract.py` | `test_mcp_server_does_not_expose_arbitrary_execution_tools` | 42 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_mcp_server_contract.py` | `test_disk_file_forensics_never_exposes_mutating_delete_tool` | 50 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_mcp_server_contract.py` | `test_internal_mcp_server_has_no_native_zabbix_provider` | 22 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_mcp_server_contract.py` | `test_mcp_server_is_the_only_place_remaining_native_provider_connectors_are_composed` | 29 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_mcp_server_contract.py` | `test_mcp_server_does_not_expose_arbitrary_execution_tools` | 43 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_mcp_server_contract.py` | `test_disk_file_forensics_never_exposes_mutating_delete_tool` | 51 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_memory_negative_writeback.py` | `_Memory` | 7 | class | کلاس | module |
 | `tests/unit/test_memory_negative_writeback.py` | `_Memory.__init__` | 10 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Memory |
 | `tests/unit/test_memory_negative_writeback.py` | `_Memory.add_episode` | 13 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Memory |
@@ -4133,6 +4141,20 @@
 | `tests/unit/test_structured_agent_resilience.py` | `FakeMCPHTTPClient.delete` | 346 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeMCPHTTPClient |
 | `tests/unit/test_structured_agent_resilience.py` | `FakeMCPHTTPClient.aclose` | 350 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeMCPHTTPClient |
 | `tests/unit/test_structured_agent_resilience.py` | `test_generic_mcp_tool_is_error_is_failed_not_completed` | 355 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_systemd_runtime_discovery.py` | `test_service_runtime_discovery_extracts_dotnet_from_systemd_without_secrets` | 31 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_systemd_runtime_discovery.py` | `test_untrusted_unit_is_never_executed_or_accepted_as_publish_root` | 48 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_systemd_runtime_discovery.py` | `test_dotnet_syntax_probe_reports_only_structure_no_application_secrets` | 54 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_systemd_runtime_discovery.py` | `test_symlink_and_overflow_do_not_create_false_valid_configuration` | 82 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_systemd_runtime_discovery.py` | `test_connector_discovery_and_json_diagnostic_are_read_only` | 101 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_systemd_runtime_discovery.py` | `test_connector_discovery_and_json_diagnostic_are_read_only.fake_run` | 108 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_connector_discovery_and_json_diagnostic_are_read_only |
+| `tests/unit/test_systemd_runtime_discovery.py` | `test_collector_escalates_unsupported_validator_to_dotnet_runtime` | 136 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_systemd_runtime_discovery.py` | `test_collector_escalates_unsupported_validator_to_dotnet_runtime.VM` | 139 | class | کلاس | test_collector_escalates_unsupported_validator_to_dotnet_runtime |
+| `tests/unit/test_systemd_runtime_discovery.py` | `test_collector_escalates_unsupported_validator_to_dotnet_runtime.VM.config_validate` | 140 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_collector_escalates_unsupported_validator_to_dotnet_runtime.VM |
+| `tests/unit/test_systemd_runtime_discovery.py` | `test_collector_escalates_unsupported_validator_to_dotnet_runtime.VM.service_runtime_discovery` | 143 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_collector_escalates_unsupported_validator_to_dotnet_runtime.VM |
+| `tests/unit/test_systemd_runtime_discovery.py` | `test_collector_escalates_unsupported_validator_to_dotnet_runtime.VM.dotnet_config_syntax` | 148 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_collector_escalates_unsupported_validator_to_dotnet_runtime.VM |
+| `tests/unit/test_systemd_runtime_discovery.py` | `test_dynamic_planner_grounds_cognia_and_operator_guidance_in_dotnet_evidence` | 169 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_systemd_runtime_discovery.py` | `test_dynamic_planner_grounds_cognia_and_operator_guidance_in_dotnet_evidence.LLM` | 191 | class | کلاس | test_dynamic_planner_grounds_cognia_and_operator_guidance_in_dotnet_evidence |
+| `tests/unit/test_systemd_runtime_discovery.py` | `test_dynamic_planner_grounds_cognia_and_operator_guidance_in_dotnet_evidence.LLM.generate_with_messages` | 192 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_dynamic_planner_grounds_cognia_and_operator_guidance_in_dotnet_evidence.LLM |
 | `tests/unit/test_triage_production_engine.py` | `StaticTriageLLM` | 13 | class | کلاس | module |
 | `tests/unit/test_triage_production_engine.py` | `StaticTriageLLM.__init__` | 14 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | StaticTriageLLM |
 | `tests/unit/test_triage_production_engine.py` | `StaticTriageLLM.provider_name` | 19 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | StaticTriageLLM |

@@ -3,7 +3,7 @@
 > این فایل فهرست فایل‌به‌فایل repository است. توضیح معماری و flow در `CODEBASE_GUIDE_FA.md` آمده است.
 > این فایل با `scripts/generate_file_index_fa.py` ساخته و در CI کنترل می‌شود.
 
-**تعداد فایل‌های track‌شده و پوشش‌داده‌شده: 576**
+**تعداد فایل‌های track‌شده و پوشش‌داده‌شده: 579**
 
 | Path | Type | Purpose | Called By | Calls/Depends On | Runtime/Test/Docs | Notes |
 |---|---|---|---|---|---|---|
@@ -246,6 +246,7 @@
 | `docs/DEPLOYMENT.md` | Docs | مستند معماری/عملیات/وضعیت پروژه | تیم | کد و MASTER | Docs | SSoT نیست مگر MASTER root |
 | `docs/DISK_CAUSAL_FORENSICS.md` | Docs | مستند معماری/عملیات/وضعیت پروژه | تیم | کد و MASTER | Docs | SSoT نیست مگر MASTER root |
 | `docs/DOTIN_GENERAL_CHATBOT.md` | Docs | مستند معماری/عملیات/وضعیت پروژه | تیم | کد و MASTER | Docs | SSoT نیست مگر MASTER root |
+| `docs/DOTNET_SYSTEMD_DISCOVERY.md` | Docs | مستند معماری/عملیات/وضعیت پروژه | تیم | کد و MASTER | Docs | SSoT نیست مگر MASTER root |
 | `docs/DYNAMIC_INVESTIGATION_STATUS.md` | Docs | مستند معماری/عملیات/وضعیت پروژه | تیم | کد و MASTER | Docs | SSoT نیست مگر MASTER root |
 | `docs/ELASTIC_ANOMALY_INGESTION.md` | Docs | مستند معماری/عملیات/وضعیت پروژه | تیم | کد و MASTER | Docs | SSoT نیست مگر MASTER root |
 | `docs/ELASTIC_INTEGRATION_ACCEPTANCE.md` | Docs | مستند معماری/عملیات/وضعیت پروژه | تیم | کد و MASTER | Docs | SSoT نیست مگر MASTER root |
@@ -332,6 +333,7 @@
 | `integrations/prometheus/mcp_client.py` | Python | MCP client برای ارتباط governed با ابزار بیرونی | Evidence/Tool layer | MCP transport/.env | Runtime | canonical external-tool path |
 | `integrations/vm/__init__.py` | Python | Adapter provider/read-only integration | MCP server/test helper | external API/.env | Runtime/Helper | Control Plane production ترجیحاً MCP |
 | `integrations/vm/mcp_client.py` | Python | MCP client برای ارتباط governed با ابزار بیرونی | Evidence/Tool layer | MCP transport/.env | Runtime | canonical external-tool path |
+| `integrations/vm/runtime_discovery.py` | Python | Adapter provider/read-only integration | MCP server/test helper | external API/.env | Runtime/Helper | Control Plane production ترجیحاً MCP |
 | `integrations/vm/service_adapters.py` | Python | Adapter provider/read-only integration | MCP server/test helper | external API/.env | Runtime/Helper | Control Plane production ترجیحاً MCP |
 | `integrations/vm/ssh_connector.py` | Python | Adapter provider/read-only integration | MCP server/test helper | external API/.env | Runtime/Helper | Control Plane production ترجیحاً MCP |
 | `integrations/vm/target_context.py` | Python | Adapter provider/read-only integration | MCP server/test helper | external API/.env | Runtime/Helper | Control Plane production ترجیحاً MCP |
@@ -563,6 +565,7 @@
 | `tests/unit/test_signal_service_identity_guard.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_storage_reliability_engine.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_structured_agent_resilience.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
+| `tests/unit/test_systemd_runtime_discovery.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_triage_production_engine.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_upstream_mcp_contracts.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_verification_gate.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
