@@ -374,6 +374,88 @@ class SSHVMConnector:
             return rows
         return {"success": True, "target": target, "filesystems": parse_df(disk_text), "inodes": parse_df(inode_text)}
 
+    async def disk_forensics(self, target: str) -> Dict[str, Any]:
+        """Bounded read-only inventory; never read file contents or delete files.
+
+        The scanner only inspects mounted filesystem roots taken from df, not
+        LLM/alert-supplied paths. It skips virtual mounts and is time limited.
+        Results are hints for cross-source causality, not deletion approval.
+        """
+        # Includes size, inode pressure, mount point; stderr is not returned.
+        inventory = await self.disk_status(target)
+        if not inventory.get("success"):
+            return {"success": False, "target": target, "error": "disk_inventory_failed"}
+        from domain.contracts.redaction import redact_text
+        candidates = []
+        for row in inventory.get("filesystems") or []:
+            try:
+                used = int(str(row.get("use_percent") or "").rstrip("%"))
+                mount = str(row.get("mount") or "")
+                if used < 80 or not (mount == "/" or mount.startswith("/")):
+                    continue
+                if mount.startswith(("/proc", "/sys", "/dev", "/run", "/snap")):
+                    continue
+                if mount != "/" and (not re.fullmatch(r"/[A-Za-z0-9_./+-]{1,180}", mount)
+                                     or ".." in mount.split("/")):
+                    continue
+                candidates.append((used, mount))
+            except (ValueError, TypeError):
+                continue
+        candidates.sort(reverse=True)
+        selected = []
+        for used, mount in candidates[:2]:
+            # Scanning the full / tree can be costly: use bounded high-value
+            # directories on root, and the explicit df mount for other disks.
+            roots = ["/var/log", "/var/lib", "/opt", "/tmp"] if mount == "/" else [mount]
+            # Quote only paths obtained from df and accepted by the strict
+            # whitelist; no arbitrary commands or filenames enter the shell.
+            roots = [root for root in roots if re.fullmatch(r"/[A-Za-z0-9_./+-]{1,180}", root)]
+            if not roots:
+                continue
+            command = (
+                "LC_ALL=C timeout 12s find " + " ".join(shlex.quote(root) for root in roots)
+                + " -xdev -type f -size +20M -printf '%s\\t%T@\\t%p\\n' 2>/dev/null"
+                + " | sort -nr | head -n 25"
+            )
+            output = await self._run(target, command)
+            files = []
+            if output.get("success"):
+                for line in str(output.get("stdout") or "").splitlines()[:25]:
+                    parts = line.split("\t", 2)
+                    if len(parts) != 3:
+                        continue
+                    try:
+                        size = int(parts[0])
+                        changed = float(parts[1])
+                        path = parts[2]
+                    except (TypeError, ValueError):
+                        continue
+                    if size < 20 * 1024 * 1024 or not path.startswith("/"):
+                        continue
+                    # A path may contain control chars; only return safe,
+                    # bounded paths, and never include file contents.
+                    if len(path) > 300 or any(ord(ch) < 32 for ch in path):
+                        continue
+                    files.append({"path": redact_text(path), "size_bytes": size,
+                                  "mtime_epoch": changed,
+                                  "owner_service": None, "growth_confirmed": False,
+                                  "retention_policy_verified": False})
+            selected.append({"mount": mount, "used_percent": used,
+                             "files": files, "scan_success": bool(output.get("success")),
+                             "scan_scope": roots})
+        return {
+            "success": True, "target": target,
+            "diagnostic": "disk_forensics",
+            "mounts": selected, "files_examined": sum(len(x["files"]) for x in selected),
+            "delete_authorized": False, "file_age_proves_safe_to_delete": False,
+            "growth_measured": False, "content_inspected": False,
+            "limitations": [
+                "Bounded single snapshot cannot prove continuous growth, process ownership or causality",
+                "Other mountpoints and small files may be unexamined",
+                "Elastic/Zabbix temporal correlation and retention policy are required before proposing cleanup",
+            ],
+        }
+
     async def network_status(self, target: str) -> Dict[str, Any]:
         command = "if ! command -v ip >/dev/null 2>&1; then printf '__AIOPS_UNSUPPORTED__'; exit 0; fi; ip -j address 2>/dev/null; printf '\\n__AIOPS_ROUTES__\\n'; ip -j route 2>/dev/null"
         result = await self._run(target, command)
