@@ -79,3 +79,77 @@ async def test_password_auth_uses_asyncssh_and_not_subprocess(monkeypatch):
     assert captured["password"] == "test-only-password"
     assert captured["client_keys"] == []
     assert captured["known_hosts"] is None
+
+
+@pytest.mark.asyncio
+async def test_password_sudo_retry_passes_ssh_secret_only_via_stdin(monkeypatch):
+    """The same SSH password authenticates an allowlisted sudo operation securely."""
+    _configure_password_mode(monkeypatch)
+    captured = []
+
+    class Result:
+        def __init__(self, code, stdout="", stderr=""):
+            self.exit_status = code
+            self.stdout = stdout
+            self.stderr = stderr
+
+    class Connection:
+        async def run(self, command, *, check=False, input=None):
+            captured.append((command, input))
+            if command.startswith("journalctl "):
+                return Result(1, stderr="permission denied")
+            if command.startswith("sudo -n journalctl "):
+                return Result(1, stderr="sudo: a password is required")
+            if command.startswith("sudo -S -p '' journalctl "):
+                assert input == "test-only-password\\n".replace("\\\\n", "\\n")
+                return Result(0, stdout="log line\\ntest-only-password")
+            raise AssertionError(f"unexpected command: {command}")
+
+    class ConnectionContext:
+        async def __aenter__(self):
+            return Connection()
+
+        async def __aexit__(self, exc_type, exc, tb):
+            return False
+
+    monkeypatch.setattr(ssh_module.asyncssh, "connect", lambda *args, **kwargs: ConnectionContext())
+    connector = SSHVMConnector()
+    result = await connector.service_logs("vm01", "haproxy", limit=10)
+
+    assert result["success"] is True
+    assert result["access_mode"] == "sudo"
+    assert all("test-only-password" not in command for command, _ in captured)
+    assert captured[0][1] is None
+    assert captured[1][1] is None
+    assert captured[2][1] == "test-only-password\\n".replace("\\\\n", "\\n")
+    assert "test-only-password" not in str(result)
+    assert any("[REDACTED]" in log for log in result["logs"])
+
+
+@pytest.mark.asyncio
+async def test_sudo_retry_never_passes_password_on_successful_nopasswd(monkeypatch):
+    _configure_password_mode(monkeypatch)
+    sent = []
+
+    class Result:
+        exit_status = 0
+        stdout = ""
+        stderr = ""
+
+    class Connection:
+        async def run(self, command, *, check=False, input=None):
+            sent.append((command, input))
+            return Result()
+
+    class ConnectionContext:
+        async def __aenter__(self):
+            return Connection()
+
+        async def __aexit__(self, exc_type, exc, tb):
+            return False
+
+    monkeypatch.setattr(ssh_module.asyncssh, "connect", lambda *args, **kwargs: ConnectionContext())
+    connector = SSHVMConnector()
+    result = await connector.start_service("vm01", "haproxy")
+    assert result["success"] is True
+    assert sent == [("sudo -n systemctl start haproxy", None)]
