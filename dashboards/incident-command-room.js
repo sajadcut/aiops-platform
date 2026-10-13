@@ -176,7 +176,9 @@
     report: null, lifecycle: null, narrative: null, historic: null, history: null,
     loadingToken: 0, busy: false, reviewedSnapshot: null, rejectionVisible: false, error: null,
     receivedSignals: null, receivedSignalsStatus: 'loading',
-    lifecyclePolling: false, lastLiveCheck: null, lifecyclePollError: false
+    lifecyclePolling: false, lastLiveCheck: null, lifecyclePollError: false,
+    progress: null, progressConnected: false, progressAbort: null,
+    progressStreamRunning: false, progressRetries: 0, progressFailure: false
   };
   const tr = key => vocabulary[state.language][key] || key;
   const value = v => v === null || v === undefined || v === '' ? tr('unknown') : safe(v);
@@ -375,38 +377,188 @@
     render();
     if(state.report && !state.historic) void loadNarrative();
   }
+  const progressStageFa={
+    context:'جمع‌آوری شواهد و اطلاعات دارایی',
+    triage:'تریاژ آلارم و انتخاب ایجنت‌ها',
+    parallel_agents:'تحلیل ایجنت‌ها و جمع‌بندی یافته‌ها',
+    rca:'بررسی علت ریشه‌ای با LLM',
+    evaluator:'ارزیابی شواهد و کیفیت نتیجه',
+    decision:'تهیه پیشنهاد و تصمیم AIOps',
+    approval:'در انتظار تصمیم اپراتور',
+    execution:'اجرای عملیات تأییدشده',
+    verification:'راستی‌آزمایی اثر عملیات',
+    memory:'ثبت نتیجه در حافظه عملیاتی',
+    end:'اتمام پردازش Workflow',
+    knowledge:'بررسی دانش سازمانی Cognia',
+    zabbix:'دریافت اطلاعات از Zabbix MCP',
+    vm_mcp:'بررسی سرور با VM MCP',
+    elasticsearch:'بررسی خطاها در Elastic MCP',
+    prometheus:'بررسی Prometheus MCP',
+    kubernetes_api:'بررسی Kubernetes MCP',
+  };
+  const progressStageEn={
+    context:'Collecting live evidence and asset context',
+    triage:'Triage and agent selection',
+    parallel_agents:'Running specialist agents',
+    rca:'LLM root-cause analysis',
+    evaluator:'Evaluating evidence and decision quality',
+    decision:'Preparing the operational decision',
+    approval:'Waiting for operator approval',
+    execution:'Executing approved remediation',
+    verification:'Verifying recovery',
+    memory:'Recording operational experience',
+    end:'Workflow finished',
+    knowledge:'Consulting Cognia knowledge',
+    zabbix:'Checking Zabbix MCP',
+    vm_mcp:'Inspecting VM MCP',
+    elasticsearch:'Checking Elastic MCP logs',
+    prometheus:'Checking Prometheus MCP',
+    kubernetes_api:'Checking Kubernetes MCP',
+  };
+  const phaseName = key => (state.language==='fa'?progressStageFa:progressStageEn)[key] || String(key||'');
+  function updateProgressClock() {
+    const element=$('#ic-flow-elapsed');
+    if(!element || !state.progress?.started_at || !element.closest || state.historic)return;
+    const seconds=Math.max(0,Math.floor((Date.now()-new Date(state.progress.started_at).getTime())/1000));
+    if(Number.isFinite(seconds))element.textContent=num(Math.floor(seconds/60))+
+      (state.language==='fa'?' دقیقه ':'m ')+num(seconds%60)+(state.language==='fa'?' ثانیه':'s');
+  }
   function renderAnalysisProgress() {
     const box=$('#ic-analysis-progress');
     if(!box)return;
-    const l=state.lifecycle||{},r=state.report||{};
-    const approval=low(l.approval?.status || r.approval_readiness?.approval_status);
-    const statusValue=low(l.incident_status || r.incident_summary?.status);
-    const running=l.analysis_in_progress === true ||
-      (l.analysis_in_progress == null && statusValue==='analyzing' &&
+    const l=state.lifecycle||{},r=state.report||{},p=state.progress||{};
+    const approval=low(p.approval_status||l.approval?.status||r.approval_readiness?.approval_status);
+    const statusValue=low(p.incident_status||l.incident_status||r.incident_summary?.status);
+    const running=l.analysis_in_progress===true ||
+      (l.analysis_in_progress==null && statusValue==='analyzing' &&
        !['pending','approved','rejected'].includes(approval) &&
        !['paused','completed','failed'].includes(low(l.checkpoint_status)));
-    const awaiting=!running && ['pending','approved'].includes(approval);
-    if(state.historic || (!running && !awaiting)){box.hidden=true;return;}
+    const awaiting=['pending','approved'].includes(approval);
+    const terminal=['completed','failed'].includes(low(p.checkpoint_status));
+    const hasEvents=Boolean(p.last_event_at);
+    if(state.historic || (!running && !awaiting && !hasEvents)){box.hidden=true;return;}
     box.hidden=false;
-    const spinner=$('#ic-analysis-spinner');
-    if(spinner)spinner.hidden=!running;
-    const title=$('#ic-analysis-title'),detail=$('#ic-analysis-detail');
     const fa=state.language==='fa';
-    if(title)title.textContent=running
-      ? (l.analysis_phase==='executing'
-        ? (fa?'در حال اجرای عملیات تأییدشده…':'Executing approved operation…')
-        : (fa?'در حال بررسی و تحلیل رخداد…':'Incident investigation in progress…'))
-      : (fa?'تحلیل به مرحلهٔ تأیید انسانی رسیده است':'Analysis is awaiting human approval');
-    const phase=String(l.current_node||'').replace(/_/g,' ').slice(0,70);
-    const checked=state.lastLiveCheck ? new Date(state.lastLiveCheck).toLocaleTimeString(fa?'fa-IR':'en-US') : '';
-    if(detail)detail.textContent=state.lifecyclePollError
-      ? (fa?'ارتباط موقتاً قطع شده؛ آخرین وضعیت معتبر نمایش داده می‌شود.':'Temporarily unable to refresh; showing last known state.')
-      : (running
-        ? (fa?'به‌روزرسانی خودکار هر ۶ ثانیه':'Auto-updating every 6 seconds')
-        : (fa?'منتظر تصمیم اپراتور؛ تحلیل فعال نیست.':'Waiting for operator; analysis is not running.')) +
-          (phase?' · '+phase:'') + (checked?' · '+checked:'');
+    const execution=approval==='consumed' &&
+      (p.current_stage==='execution'||p.current_stage==='verification'||p.current_stage==='memory' ||
+       (l.analysis_phase==='executing'&&!terminal));
+    const currentStage=awaiting?'approval':p.current_stage||
+      (execution?'execution':running?'context':null);
+    const activeProvider=Object.entries(p.providers||{})
+      .filter(([_,v])=>v?.status==='started')
+      .sort((a,b)=>String(b[1].at).localeCompare(String(a[1].at)))[0];
+    const activeLabel=activeProvider && currentStage==='context' ?
+      phaseName(activeProvider[0]):phaseName(currentStage);
+    const spinner=$('#ic-analysis-spinner');
+    if(spinner)spinner.hidden=awaiting||terminal||!running&&!(execution&&currentStage);
+    const title=$('#ic-analysis-title'),detail=$('#ic-analysis-detail');
+    if(title)title.textContent=activeLabel||
+      (terminal?(fa?'بررسی رخداد تکمیل شده است':'Incident analysis finished'):
+        fa?'در حال دریافت وضعیت تحلیل…':'Loading analysis progress…');
+    if(detail)detail.textContent=awaiting?
+      (fa?'تحلیل متوقف است؛ منتظر تصمیم انسانی':'Analysis is paused for human approval'):
+      terminal?(fa?'گزارش مراحل واقعی ثبت‌شده':'Recorded workflow milestones'):
+      state.progressFailure?(fa?'ارتباط زنده موقتاً قطع شده؛ تلاش برای اتصال مجدد…':'Live connection lost; reconnecting…'):
+      (fa?'رویدادهای واقعی از سرور دریافت می‌شوند':'Receiving actual events from the server');
+    const percent=execution?p.execution_percent:p.analysis_percent;
+    const bar=$('#ic-flow-bar'),pct=$('#ic-flow-percent');
+    if(bar) {
+      if(hasEvents && Number.isFinite(percent)){bar.value=Math.max(0,Math.min(100,percent));}
+      else bar.removeAttribute?.('value');
+    }
+    if(pct)pct.textContent=hasEvents&&Number.isFinite(percent)?num(percent)+'٪':'—';
+    const caption=$('#ic-flow-caption');
+    if(caption)caption.textContent=execution?
+      (fa?'پیشرفت مراحل اجرا و راستی‌آزمایی':'Execution and verification milestones'):
+      (fa?'پیشرفت مراحل تحلیل':'Analysis milestones');
+    const caution=$('#ic-flow-caution');
+    if(caution)caution.textContent=fa?
+      'درصد فقط از مراحل واقعاً تکمیل‌شده است، نه تخمین زمان باقی‌مانده.':
+      'Percentage is based on verified stage completion, not time remaining.';
+    const timeline=[...Object.entries(p.stages||{}),...Object.entries(p.providers||{})]
+      .filter(([_,v])=>v&&v.at)
+      .sort((x,y)=>String(x[1].at).localeCompare(String(y[1].at))).slice(-8);
+    show('#ic-flow-steps',timeline.map(([key,v])=>{
+      const status=low(v.status),icon=status==='completed'?'✓':status==='failed'?'!':
+        status==='skipped'?'–':'';
+      const suffix=status==='completed'?(fa?' · بررسی انجام شد':' · checked'):
+        status==='failed'?(fa?' · ناموفق':' · failed'):'';
+      return '<li data-state="'+esc(status)+'"><span class="ic-flow-step-icon" aria-hidden="true">'+
+        esc(icon)+'</span><span>'+esc(phaseName(key)+suffix)+'</span></li>';
+    }).join(''));
+    const connection=$('#ic-flow-connection');
+    if(connection)connection.textContent=state.progressConnected?
+      (fa?'● اتصال زنده برقرار است · SSE':'● Live SSE connected'):
+      (fa?'○ تلاش برای اتصال زنده؛ وضعیت قبلی حفظ شده است':'○ Reconnecting; last state preserved');
+    updateProgressClock();
   }
 
+  function updateProgressSnapshot(snapshot) {
+    if(!snapshot || snapshot.schema!=='incident_progress.v1'||state.historic)return;
+    const prior=state.progress||{};
+    state.progress=snapshot;
+    state.progressFailure=false;
+    state.lastLiveCheck=Date.now();
+    renderAnalysisProgress();
+    // Only material lifecycle changes cause a full report refresh. Progress
+    // events alone must never reset the operator's review/approval checkbox.
+    const oldApproval=low(state.lifecycle?.approval?.status||state.report?.approval_readiness?.approval_status);
+    const newApproval=low(snapshot.approval_status);
+    const oldIncident=low(state.lifecycle?.incident_status||state.report?.incident_summary?.status);
+    const statusChanged=(newApproval && oldApproval && newApproval!==oldApproval) ||
+      (snapshot.incident_status && oldIncident && snapshot.incident_status!==oldIncident);
+    if(statusChanged && !state.busy && state.report && !state.historic &&
+       (snapshot.last_event_at!==prior.last_event_at||snapshot.approval_status!==prior.approval_status))
+      void load({preserveHistory:true});
+  }
+
+  let progressRetryTimer=null;
+  async function connectProgressStream() {
+    if(state.progressStreamRunning||document.hidden||state.historic||!incidentId||!state.report)return;
+    state.progressStreamRunning=true;
+    const controller=new AbortController();
+    state.progressAbort=controller;
+    try{
+      const headers={'Accept':'text/event-stream','Cache-Control':'no-cache'};
+      if(state.key)headers['X-API-Key']=state.key;
+      const response=await fetch(base+'/progress/stream',{
+        method:'GET',headers,credentials:'same-origin',signal:controller.signal
+      });
+      if(!response.ok||!response.body||typeof response.body.getReader!=='function')
+        throw new Error('progress_stream_unavailable');
+      state.progressConnected=true;state.progressRetries=0;state.progressFailure=false;
+      renderAnalysisProgress();
+      const reader=response.body.getReader(),decoder=new TextDecoder();
+      let buffer='';
+      while(!controller.signal.aborted) {
+        const {done,value}=await reader.read();
+        if(done)break;
+        buffer+=decoder.decode(value,{stream:true});
+        if(buffer.length>100000)throw new Error('oversized_progress_event');
+        let pos;
+        while((pos=buffer.indexOf('\n\n'))>=0) {
+          const packet=buffer.slice(0,pos).replace(/\r/g,'');
+          buffer=buffer.slice(pos+2);
+          const message=packet.split('\n').find(line=>line.startsWith('data: '));
+          if(!message)continue;
+          if(packet.includes('event: unavailable')){state.progressFailure=true;continue;}
+          if(!packet.includes('event: progress'))continue;
+          try{updateProgressSnapshot(JSON.parse(message.slice(6)));}catch(_){}
+        }
+      }
+    }catch(_){
+      if(!controller.signal.aborted)state.progressFailure=true;
+    }finally{
+      if(state.progressAbort===controller)state.progressAbort=null;
+      state.progressConnected=false;state.progressStreamRunning=false;
+      renderAnalysisProgress();
+      if(!controller.signal.aborted && !document.hidden && !state.historic){
+        const retry=Math.min(20000,1500*Math.pow(2,Math.min(4,++state.progressRetries)));
+        progressRetryTimer=setTimeout(()=>{void connectProgressStream();},retry);
+        if(typeof progressRetryTimer?.unref==='function')progressRetryTimer.unref();
+      }
+    }
+  }
   // Use a lightweight durable lifecycle GET, not repeated heavy LLM narratives.
   // Reload the report only when a material workflow phase/version changes.
   async function pollLifecycle() {
