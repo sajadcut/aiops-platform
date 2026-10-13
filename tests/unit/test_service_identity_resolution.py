@@ -9,7 +9,9 @@ import pytest
 from apps.context_service import ContextBuilder
 from apps.context_service.knowledge_topology import KnowledgeTopologyResolver
 from apps.context_service.service_identity import ServiceIdentityResolver
-from apps.context_service.llm_identity import suggest_from_llm
+from apps.context_service.llm_identity import (
+    consult_operational_unknowns, detect_operational_unknowns, suggest_from_llm,
+)
 from apps.remediation_planner import RemediationPlanner
 from domain.contracts.config import settings
 from domain.schemas import IncidentCreate
@@ -283,3 +285,87 @@ def test_identity_has_bounded_provenance_in_snapshot_and_persian_ui():
     assert "suspectedService:'سرویس احتمالی (تأیید نشده)'" in ui
     assert "source_declared_service:'Tag یا فیلد معتبر آلارم'" in ui
     assert "status(i.service_identity?.status)" in ui
+
+
+def test_operational_unknown_detector_handles_any_unverified_service_config():
+    evidence = [
+        {"source": "vm_mcp", "reference": "config-1", "raw_data": {
+            "diagnostic": "config_validate", "service": "gfpapi",
+            "supported": False, "valid": None,
+            "detail": "config_validation_adapter_unavailable",
+        }},
+        {"source": "vm_mcp", "reference": "config-2", "raw_data": {
+            "diagnostic": "config_validate", "service": "nginx",
+            "supported": True, "valid": True,
+        }},
+    ]
+    gaps = detect_operational_unknowns(evidence)
+    assert len(gaps) == 1
+    assert gaps[0]["topic"] == "config_validation_method"
+    assert gaps[0]["subject"] == "gfpapi"
+    assert gaps[0]["evidence_refs"] == ["config-1"]
+
+
+@pytest.mark.asyncio
+async def test_unknown_guidance_consults_llm_but_never_verifies_or_executes(monkeypatch):
+    import json
+    monkeypatch.setattr(settings, "LLM_PROVIDER", "openai-compatible")
+    monkeypatch.setattr(settings, "LLM_BASE_URL", "http://example.invalid")
+    monkeypatch.setattr(settings, "LLM_MODEL", "test-model")
+    calls = []
+
+    class FakeAdapter:
+        async def generate_with_messages(self, messages, **kwargs):
+            calls.append((messages, kwargs))
+            return SimpleNamespace(finish_reason="stop", content=json.dumps({"items": [
+                {"topic": "config_validation_method", "subject": "gfpapi",
+                 "explanation": "Vendor config test is unknown",
+                 "validation_approach": "Read the official service runbook and identify a read-only config test",
+                 "uncertainty": "not yet verified"},
+                {"topic": "unexpected_extra", "subject": "nginx",
+                 "explanation": "unsafe", "validation_approach": "restart the host"},
+            ]}))
+
+    gaps = [{"topic": "config_validation_method", "subject": "gfpapi",
+             "reason": "config_validation_adapter_unavailable", "evidence_refs": ["cfg-1"]}]
+    result = await consult_operational_unknowns(unknowns=gaps, adapter=FakeAdapter())
+
+    assert result["status"] == "suggested"
+    assert result["execution_authority"] is False
+    assert result["counts_as_evidence"] is False
+    assert result["config_validation_passed"] is False
+    assert len(result["items"]) == 1
+    assert result["items"][0]["verified"] is False
+    assert "read-only" in result["items"][0]["validation_approach"]
+    assert calls[0][1]["stage"] == "operational_unknown_guidance"
+    assert "Do not provide executable shell snippets" in calls[0][0][0]["content"]
+
+
+@pytest.mark.asyncio
+async def test_unknown_guidance_fails_closed_if_model_unavailable(monkeypatch):
+    monkeypatch.setattr(settings, "LLM_PROVIDER", "openai-compatible")
+    monkeypatch.setattr(settings, "LLM_BASE_URL", "http://example.invalid")
+    monkeypatch.setattr(settings, "LLM_MODEL", "test-model")
+
+    class BrokenAdapter:
+        async def generate_with_messages(self, *args, **kwargs):
+            raise RuntimeError("simulated LLM timeout")
+
+    gap = {"topic": "config_validation_method", "subject": "unknown-app",
+           "reason": "no adapter", "evidence_refs": []}
+    response = await consult_operational_unknowns(unknowns=[gap], adapter=BrokenAdapter())
+    assert response["status"] == "unavailable"
+    assert response["execution_authority"] is False
+    assert response["config_validation_passed"] is False
+    assert response["items"] == []
+
+
+@pytest.mark.asyncio
+async def test_no_gaps_does_not_call_llm():
+    class ShouldNeverCall:
+        async def generate_with_messages(self, *args, **kwargs):
+            raise AssertionError("LLM must be consulted only for explicit gaps")
+
+    result = await consult_operational_unknowns(unknowns=[], adapter=ShouldNeverCall())
+    assert result["status"] == "not_needed"
+    assert result["items"] == []
