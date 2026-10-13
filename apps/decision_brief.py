@@ -460,6 +460,7 @@ def build_decision_brief(
             "event_id": safe(row.get("event_id"), 180),
         }
         for row in audit_events if isinstance(row, dict)
+        and str(row.get("event_type") or "") != "workflow_progress"
     ][:100]
     recorded = {
         "incident_summary": {
