@@ -150,22 +150,29 @@ Incident={input_data.incident_id}\nVM/Service={input_data.service_name}\nSummary
             confidence = max(confidence, deterministic_confidence)
         immediate = self.normalize_list(result.get("immediate_checks"), settings.AGENT_MAX_RECOMMENDATIONS)
         remediation = self.normalize_list(result.get("remediation_candidates"), settings.AGENT_MAX_RECOMMENDATIONS)
+        config_invalid = bool(deterministic_fault and deterministic_fault.get("fault_code") == "service_configuration_invalid")
+        if config_invalid:
+            # Model text cannot turn invalid live config into an executable write.
+            # Keep only the bounded deterministic repair-and-revalidate advisory.
+            remediation = [deterministic_fault["remediation_candidate"]]
         severity = str(result.get("severity", "unknown")).lower()
         reachability = str(result.get("reachability", "unknown")).lower()
         write_risk = "high" if reachability in {"unreachable", "stopped"} or severity in {"critical", "high"} else "medium"
         recommended_actions = self.analysis_only_actions(immediate, suggested_tool="vm_telemetry")
-        recommended_actions.extend([
-            RecommendedAction(
-                action=action,
-                purpose="remediation_candidate",
-                risk_level="high",
-                requires_approval=True,
-                read_only=False,
-                suggested_tool="ssh_vm",
-            )
-            for action in remediation
-        ])
-        if deterministic_fault and not any(action.action == deterministic_fault["suggested_action"] for action in recommended_actions):
+        if not config_invalid:
+            recommended_actions.extend([
+                RecommendedAction(
+                    action=action,
+                    purpose="remediation_candidate",
+                    risk_level="high",
+                    requires_approval=True,
+                    read_only=False,
+                    suggested_tool="ssh_vm",
+                )
+                for action in remediation
+            ])
+        if (deterministic_fault and deterministic_fault.get("suggested_action")
+                and not any(action.action == deterministic_fault["suggested_action"] for action in recommended_actions)):
             recommended_actions.append(RecommendedAction(
                 action=deterministic_fault["suggested_action"],
                 purpose="deterministic_remediation_candidate",
@@ -250,6 +257,9 @@ Incident={input_data.incident_id}\nVM/Service={input_data.service_name}\nSummary
                 "prompt_evidence_count": len(prompt_evidence),
                 "deterministic_evidence_count": len(deterministic_evidence),
                 "deterministic_fault": deterministic_fault.get("fault_code") if deterministic_fault else None,
+                "config_diagnostic": {
+                    key: deterministic_fault.get(key) for key in ("config_file", "error_line", "syntax_error")
+                } if config_invalid else None,
                 "structured_analysis_failed": structured_failed,
                 "execution_boundary": "analysis_only",
             },
