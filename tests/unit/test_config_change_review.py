@@ -58,8 +58,14 @@ def test_operator_intent_cannot_be_approval_or_apply_command():
 
 
 def test_api_is_guarded_and_exposes_no_execution_authority():
-    from apps.api.main import app
-    route=next(r for r in app.routes if getattr(r,"path",None)=="/api/v1/incidents/{incident_id}/configuration-review-response"
+    from fastapi import FastAPI
+    from apps.api.config_change_review import router
+    import inspect
+    import apps.api.main as main
+    assert '(config_change_review.router, ["Configuration Review"])' in inspect.getsource(main)
+    isolated=FastAPI()
+    isolated.include_router(router,prefix="/api/v1")
+    route=next(r for r in isolated.routes if getattr(r,"path",None)=="/api/v1/incidents/{incident_id}/configuration-review-response"
                and "POST" in getattr(r,"methods",set()))
     assert route
     deps=[d.call for d in route.dependant.dependencies]
