@@ -1,0 +1,149 @@
+"""Persisted, read-only workflow activity feed for Incident Room.
+
+Never changes workflow checkpoints, approvals, targets or execution decisions.
+A dedicated short database transaction allows visibility while the orchestrator
+is waiting on external MCP/LLM calls in another transaction/process.
+"""
+from __future__ import annotations
+
+from datetime import datetime, timezone
+from typing import Any, Mapping
+from uuid import uuid4
+
+from sqlalchemy import text
+from apps.audit_service.postgres import PostgreSQLAuditStore
+from database import AsyncSessionLocal
+from domain.contracts.logging import logger
+
+ANALYSIS_STAGES = ("context", "triage", "parallel_agents", "rca", "evaluator", "decision")
+EXECUTION_STAGES = ("execution", "verification", "memory")
+STAGES = ANALYSIS_STAGES + ("approval",) + EXECUTION_STAGES + ("end",)
+PROVIDERS = {"vm_mcp", "zabbix", "elasticsearch", "prometheus", "kubernetes_api"}
+_STATUSES = {"started", "completed", "failed", "skipped", "waiting"}
+
+
+def progress_record(stage: str, status: str, *, detail: str = "", provider: str = "") -> dict:
+    if stage not in STAGES and stage not in PROVIDERS and stage != "knowledge":
+        raise ValueError("invalid_progress_stage")
+    if status not in _STATUSES:
+        raise ValueError("invalid_progress_status")
+    if provider and provider not in PROVIDERS:
+        raise ValueError("invalid_progress_provider")
+    return {"stage": stage, "status": status, "provider": provider,
+            "detail": detail[:100] if detail in {"queried", "unavailable", "error", "skipped", "not_configured"} else ""}
+
+
+async def emit_progress(incident_id: str | None, stage: str, status: str,
+                        *, detail: str = "", provider: str = "") -> None:
+    """Best-effort progress, NOT durable operational decision evidence."""
+    if not incident_id:
+        return
+    record = progress_record(stage, status, detail=detail, provider=provider)
+    try:
+        event = {
+            "event_id": str(uuid4()), "event_type": "workflow_progress",
+            "actor": "progress_observer", "incident_id": str(incident_id),
+            "action": None, "status": status, "metadata": record,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+        }
+        async with AsyncSessionLocal() as db:
+            await PostgreSQLAuditStore(db).append(event)
+    except Exception as exc:
+        logger.warning("workflow_progress_record_failed", incident_id=str(incident_id),
+                       stage=stage, error_type=type(exc).__name__)
+
+
+def _safe_event(event: Mapping[str, Any]) -> dict | None:
+    metadata = event.get("metadata")
+    if not isinstance(metadata, Mapping):
+        return None
+    try:
+        record = progress_record(str(metadata.get("stage") or ""),
+                                 str(metadata.get("status") or ""),
+                                 provider=str(metadata.get("provider") or ""),
+                                 detail=str(metadata.get("detail") or ""))
+    except ValueError:
+        return None
+    created = event.get("created_at")
+    record["at"] = created.isoformat() if hasattr(created, "isoformat") else str(created or "")
+    return record
+
+
+def summarize_progress(events: list[Mapping[str, Any]], *, incident_status: str = "",
+                       checkpoint_status: str = "", approval_status: str = "") -> dict:
+    """Only completed actual stages move the bar; no ETA or time-derived percent.
+
+    Filtered events are already isolated by Incident ID on the database query.
+    Statuses in this method are display-only. Execution authority ignores it.
+    """
+    ordered = sorted((v for v in (_safe_event(e) for e in events) if v),
+                     key=lambda r: r["at"])
+    phases = {}
+    providers = {}
+    current = None
+    for item in ordered:
+        stage = item["stage"]
+        if stage in PROVIDERS or stage == "knowledge":
+            providers[stage] = item
+        else:
+            phases[stage] = item
+            if item["status"] == "started":
+                current = stage
+            elif current == stage:
+                current = None
+    analysis_done = sum(phases.get(step, {}).get("status") == "completed" for step in ANALYSIS_STAGES)
+    execution_done = sum(phases.get(step, {}).get("status") == "completed" for step in EXECUTION_STAGES)
+    approval_waiting = approval_status in {"pending", "approved"}
+    terminal = checkpoint_status in {"completed", "failed"}
+    if approval_waiting:
+        current = "approval"
+    elif approval_status == "consumed" and not terminal:
+        current = current or "execution"
+    elif terminal:
+        current = None
+    # A paused, fully reviewed approval is a finished analysis (not a stalled 90% bar).
+    if approval_waiting:
+        analysis_percent = 100
+    else:
+        analysis_percent = round(100 * analysis_done / len(ANALYSIS_STAGES))
+    analysis_percent = min(analysis_percent, 100)
+    return {
+        "schema": "incident_progress.v1", "incident_status": incident_status,
+        "checkpoint_status": checkpoint_status,
+        "approval_status": approval_status,
+        "analysis_percent": analysis_percent,
+        "analysis_completed": analysis_done, "analysis_total": len(ANALYSIS_STAGES),
+        "execution_percent": round(100 * execution_done / len(EXECUTION_STAGES)),
+        "execution_completed": execution_done, "execution_total": len(EXECUTION_STAGES),
+        "current_stage": current,
+        "stages": {k: phases[k] for k in STAGES if k in phases},
+        "providers": {k: providers[k] for k in ("knowledge", *sorted(PROVIDERS)) if k in providers},
+        "started_at": next((x["at"] for x in ordered if x["stage"] == "context" and x["status"] == "started"), None),
+        "last_event_at": ordered[-1]["at"] if ordered else None,
+        "time_estimate_available": False,
+        "percent_represents": "observed_stage_completion_not_elapsed_time",
+    }
+
+
+async def load_progress(incident_id: str) -> dict:
+    async with AsyncSessionLocal() as db:
+        rows = (await db.execute(text("""
+            SELECT event_id, metadata, created_at FROM (
+              SELECT event_id, metadata, created_at FROM audit_events
+              WHERE incident_id=:incident_id AND event_type='workflow_progress'
+              ORDER BY created_at DESC, event_id DESC LIMIT 180
+            ) e ORDER BY created_at, event_id
+        """), {"incident_id": incident_id})).mappings().all()
+        status = (await db.execute(text("""
+            SELECT i.status::text AS incident_status, w.status AS checkpoint_status,
+                   (SELECT a.status::text FROM approvals a WHERE a.incident_id=i.id
+                    ORDER BY a.created_at DESC LIMIT 1) AS approval_status
+            FROM incidents i LEFT JOIN workflow_checkpoints w ON w.incident_id=i.id
+            WHERE i.id=:incident_id
+        """), {"incident_id": incident_id})).mappings().first()
+    if not status:
+        return {}
+    return summarize_progress([dict(row) for row in rows],
+                              incident_status=str(status["incident_status"] or ""),
+                              checkpoint_status=str(status["checkpoint_status"] or ""),
+                              approval_status=str(status["approval_status"] or ""))
