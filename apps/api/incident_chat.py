@@ -16,7 +16,7 @@ from apps.audit_service.postgres import PostgreSQLAuditStore
 from apps.incident_copilot import (
     READ_ACTIONS, WRITE_SUGGESTIONS, append_turn, fallback_intent, history,
     llm_plan, vm_binding, vm_read, asks_for_recorded_errors, recorded_error_facts,
-    recorded_error_answer,
+    recorded_error_answer, nginx_inspection_answer,
 )
 from apps.orchestrator.dynamic_investigation import DynamicInvestigationPlanner
 from apps.orchestrator.workflow_store import WorkflowCheckpointStore
@@ -214,7 +214,11 @@ async def incident_chat_message(
         intent = "answer" if historical_errors else plan["intent"]
         # Explicit action/read requests must not be ignored by a model's
         # free-form answer; model suggestions are otherwise advisory only.
-        if requested != "answer" and intent == "answer":
+        if requested == "nginx_config_inspect" and not historical_errors:
+            # An explicit request to inspect files must not become a vague
+            # no-access model answer or an unrelated diagnostic.
+            intent = requested
+        elif requested != "answer" and intent == "answer":
             intent = requested
         refs = (binding or {}).get("evidence_refs") or []
         if historical_errors:
@@ -259,9 +263,32 @@ async def incident_chat_message(
                     "بررسی زنده انجام شد، اما LLM نتوانست نتیجه را خلاصه کند. "
                     "نتیجهٔ ثبت‌شدهٔ ابزار را در شواهد مشاهده کنید."
                 )
+                if intent == "nginx_config_inspect":
+                    factual = nginx_inspection_answer(
+                        observation,
+                        persian=bool(re.search(r"[\u0600-\u06ff]", payload.message)),
+                    )
+                    if (followup["model_status"] == "structured" and
+                        followup["answer"] and not re.search(
+                            r"دسترسی.{0,65}ندار|امکان.{0,65}نیست|"
+                            r"cannot access|no filesystem access|unable to read", answer, re.I
+                        )):
+                        answer = factual + "\n\nتفسیر LLM: " + answer
+                    else:
+                        answer = factual
             else:
                 reason = str(observation.get("status") or "mcp_unavailable")[:70]
-                answer = recorded_error_answer(
+                if intent == "nginx_config_inspect":
+                    answer = nginx_inspection_answer(
+                        observation,
+                        persian=bool(re.search(r"[\u0600-\u06ff]", payload.message)),
+                    ) + "\n\n" + recorded_error_answer(
+                        summary,
+                        persian=bool(re.search(r"[\u0600-\u06ff]", payload.message)),
+                        live_failure=reason,
+                    )
+                else:
+                    answer = recorded_error_answer(
                     summary, persian=bool(re.search(r"[\u0600-\u06ff]", payload.message)),
                     live_failure=reason,
                 )
