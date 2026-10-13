@@ -221,10 +221,25 @@
       (knowledgeCards || '<p class="db-subtle">' + t('none') + '</p>');
     const memorySection = '<p class="db-notice">' + t('explain') + '</p>' +
       (memoryCards || '<p class="db-subtle">' + t('none') + '</p>');
+    const guidance = b.unknown_guidance || {};
+    const guidanceCards = (guidance.items || []).map(x =>
+      '<div class="db-record"><b>' + html(x.subject) + ' / ' + html(x.topic) + '</b>' +
+      '<p>' + html(x.explanation) + '</p><p>' + html(x.validation_approach) + '</p>' +
+      '<p class="db-notice">' + (language === 'fa' ?
+        'پیشنهاد LLM تأیید نشده و هیچ دستوری اجرا نشده است.' :
+        'Unverified LLM guidance; no command was executed.') + '</p></div>'
+    ).join('');
     const gapsSection = '<h4>' + (language === 'fa' ? 'شواهد ناقص' : 'Missing evidence') +
       '</h4>' + list(b.missing_evidence) + '<h4>' +
       (language === 'fa' ? 'ارجاعات متناقض' : 'Conflicting evidence refs') +
-      '</h4>' + list(b.evidence_conflicts);
+      '</h4>' + list(b.evidence_conflicts) +
+      ((guidance.status && guidance.status !== 'not_needed') ?
+        '<h4>' + (language === 'fa' ? 'استعلام موارد نامشخص از LLM' : 'LLM guidance for unknowns') + '</h4>' +
+        '<p class="db-warning">' + (language === 'fa' ?
+          'فقط راهنمای بررسی است؛ جایگزین Evidence، تست کانفیگ یا Approval نیست.' :
+          'Advisory only: not evidence, a config test, or execution approval.') +
+        '</p>' + (guidanceCards || '<p class="db-subtle">' + html(guidance.status) + '</p>')
+        : '');
     const actionSection = '<div class="db-fields">' + field(t('tool'), r.tool) +
       field(t('target'), r.target) + field('Action', r.action) +
       field(t('risk'), r.risk_level) + field('Blast radius', r.blast_radius) +
