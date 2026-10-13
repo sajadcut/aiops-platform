@@ -502,7 +502,7 @@
       (fa?'پیشرفت مراحل تحلیل':'Analysis milestones');
     const caution=$('#ic-flow-caution');
     if(caution)caution.textContent=fa?
-      'درصد فقط از مراحل واقعاً تکمیل‌شده است، نه تخمین زمان باقی‌مانده.':
+      'این درصد فقط از مراحل واقعاً تکمیل‌شده است و تخمین زمان باقی‌مانده نیست.':
       'Percentage is based on verified stage completion, not time remaining.';
     const timeline=[...Object.entries(p.stages||{}),...Object.entries(p.providers||{}),
       ...Object.entries(p.agents||{}).map(([key,v])=>['agent:'+key,v])]
