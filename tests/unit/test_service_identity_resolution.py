@@ -369,3 +369,28 @@ async def test_no_gaps_does_not_call_llm():
     result = await consult_operational_unknowns(unknowns=[], adapter=ShouldNeverCall())
     assert result["status"] == "not_needed"
     assert result["items"] == []
+
+
+def test_general_unknown_detector_captures_specialist_failure_and_missing_evidence():
+    findings = [
+        {"agent_name": "application", "finding_type": "application_error",
+         "health_status": "unknown", "missing_evidence": ["valid specialist output"]},
+    ]
+    found = detect_operational_unknowns([], findings)
+    assert {x["topic"] for x in found} == {
+        "specialist_analysis_unknown", "missing_evidence",
+    }
+    assert all(x["subject"] == "application" for x in found)
+
+
+def test_general_unknown_detector_handles_unsupported_vm_diagnostic():
+    evidence = [{
+        "source": "vm_mcp", "type": "source_observation",
+        "reference": "missing-diagnostic",
+        "raw_data": {"status": "skipped", "service": "custom-app",
+                     "detail": "diagnostic_not_supported"},
+    }]
+    result = detect_operational_unknowns(evidence)
+    assert len(result) == 1
+    assert result[0]["topic"] == "diagnostic_method_unknown"
+    assert result[0]["evidence_refs"] == ["missing-diagnostic"]
