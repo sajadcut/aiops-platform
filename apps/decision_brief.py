@@ -516,9 +516,16 @@ def build_decision_brief(
         }),
         "checkpoint_version": checkpoint.get("version"),
     }
-    # Snapshot fingerprint excludes generated_at; the same durable state produces
-    # the same binding for audit and staleness inspection, never authorization.
-    canonical = json.dumps(redact(recorded), sort_keys=True, ensure_ascii=False, default=str)
+    # The approval/review snapshot must bind operational facts, not the wall
+    # clock. Elapsed duration is a display-only derived value that changes on
+    # every GET; hashing it makes a pending approval impossible to confirm.
+    # Keep it in the response but omit it ONLY from the snapshot input.
+    # Material changes (evidence, action, approval, freshness category, etc.)
+    # still invalidate the review and require a fresh authorization.
+    snapshot_payload = redact(recorded)
+    snapshot_payload["incident_summary"] = dict(snapshot_payload["incident_summary"])
+    snapshot_payload["incident_summary"].pop("elapsed_seconds", None)
+    canonical = json.dumps(snapshot_payload, sort_keys=True, ensure_ascii=False, default=str)
     snapshot = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
     return {
         "contract_version": CONTRACT_VERSION,
