@@ -385,6 +385,7 @@
     evaluator:'ارزیابی شواهد و کیفیت نتیجه',
     decision:'تهیه پیشنهاد و تصمیم AIOps',
     approval:'در انتظار تصمیم اپراتور',
+    pre_execution_check:'بررسی ایمنی و شواهد تازه پیش از اجرا',
     execution:'اجرای عملیات تأییدشده',
     verification:'راستی‌آزمایی اثر عملیات',
     memory:'ثبت نتیجه در حافظه عملیاتی',
@@ -404,6 +405,7 @@
     evaluator:'Evaluating evidence and decision quality',
     decision:'Preparing the operational decision',
     approval:'Waiting for operator approval',
+    pre_execution_check:'Fresh evidence and safety checks before execution',
     execution:'Executing approved remediation',
     verification:'Verifying recovery',
     memory:'Recording operational experience',
@@ -451,11 +453,12 @@
     if(state.historic || (!running && !awaiting && !hasEvents)){box.hidden=true;return;}
     box.hidden=false;
     const fa=state.language==='fa';
-    const execution=approval==='consumed' &&
-      (p.current_stage==='execution'||p.current_stage==='verification'||p.current_stage==='memory' ||
+    const execution=(approval==='approved'||approval==='consumed') &&
+      (p.current_stage==='pre_execution_check'||p.current_stage==='execution'||
+       p.current_stage==='verification'||p.current_stage==='memory' ||
        (l.analysis_phase==='executing'&&!terminal));
     const currentStage=awaiting?'approval':
-      (execution&&!['execution','verification','memory'].includes(p.current_stage))?
+      (execution&&!['pre_execution_check','execution','verification','memory'].includes(p.current_stage))?
         'execution':p.current_stage||(execution?'execution':running?'context':null);
     const activeAgent=Object.entries(p.agents||{})
       .filter(([_,v])=>v?.status==='started')
