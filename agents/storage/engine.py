@@ -479,6 +479,81 @@ def _cause_candidates(
     return candidates[:18]
 
 
+
+def _disk_file_causality(items: Sequence[Mapping[str, Any]]) -> Dict[str, Any]:
+    """Relate exact VM file metadata to monitoring/log evidence WITHOUT inventing cause.
+
+    A single file snapshot cannot prove that a producer wrote the data or that
+    deleting it is safe. Elastic and Zabbix observations are context only,
+    unless separate direct producer/retention provenance is available.
+    """
+    inventories = []
+    candidate_logs = []
+    zabbix = []
+    for index, item in enumerate(items):
+        raw = _raw(item)
+        source = str(item.get("source") or "").lower()
+        diagnostic = str(raw.get("diagnostic") or "").lower()
+        reference = _eid(item, index)
+        if source == "vm_mcp" and diagnostic == "disk_forensics" and raw.get("success") is True:
+            for mount in (raw.get("mounts") or [])[:2]:
+                if not isinstance(mount, Mapping):
+                    continue
+                for file in (mount.get("files") or [])[:25]:
+                    if not isinstance(file, Mapping):
+                        continue
+                    path = str(file.get("path") or "")[:300]
+                    size = file.get("size_bytes")
+                    if not path.startswith("/") or not isinstance(size, int):
+                        continue
+                    inventories.append({
+                        "path": path, "size_bytes": size, "mount": str(mount.get("mount") or "")[:160],
+                        "mtime_epoch": file.get("mtime_epoch"),
+                        "owner_service": None, "growth_confirmed": False,
+                        "causal_attribution": "unknown", "safe_to_delete": False,
+                        "reason_to_delete": None, "evidence_refs": [reference],
+                    })
+        elif source in {"elasticsearch", "elastic", "elk"} or diagnostic in {"service_logs", "system_logs"}:
+            values = raw.get("entries") or raw.get("logs") or []
+            if not isinstance(values, list):
+                values = [raw.get("message") or raw.get("detail") or ""]
+            joined = " ".join(str(x)[:350] for x in values[:20])[:1500]
+            if any(token in joined.lower() for token in (
+                "exception", "failed", "retry", "error", "no space left", "disk full", "write failed",
+            )):
+                candidate_logs.append({
+                    "source": source, "reference": reference,
+                    "error_observed": True,
+                    "timestamp": str(item.get("timestamp") or "")[:50],
+                    "file_producer_confirmed": False,
+                })
+        elif source == "zabbix":
+            zabbix.append({"reference": reference,
+                           "timestamp": str(item.get("timestamp") or "")[:50]})
+    inventories.sort(key=lambda x: x["size_bytes"], reverse=True)
+    return {
+        "files": inventories[:30],
+        "related_error_log_observations": candidate_logs[:12],
+        "zabbix_alert_refs": [x["reference"] for x in zabbix[:10]],
+        "correlation_level": "unverified_temporal_context" if candidate_logs else "not_established",
+        "growth_cause_confirmed": False,
+        "safe_cleanup_candidates": [],
+        "delete_recommendation_allowed": False,
+        "missing_for_deletion": [
+            "verified file producer and workload",
+            "measured file growth interval and time-correlated fault",
+            "retention or legal-hold policy and backup requirements",
+            "file activity/open handles and service impact",
+            "exact bounded deletion target plus independent operator approval",
+        ],
+        "recommended_investigation": (
+            "Identify the writer/process, correlate growth with actual Elastic/Zabbix errors, "
+            "fix the underlying producer or rotation and verify retention; "
+            "do not suggest deleting files solely by size or age"
+        ),
+    }
+
+
 def build_storage_reliability_analysis(
     evidence: Iterable[Mapping[str, Any]],
     *,
@@ -492,6 +567,7 @@ def build_storage_reliability_analysis(
     capacity = _capacity_analysis(rows)
     io = _io_analysis(rows)
     temporal = _temporal_correlation(items, rows, states, ctx)
+    file_causality = _disk_file_causality(items)
     candidates = _cause_candidates(rows, states, capacity, io, temporal)
 
     storage_origin = [row for row in candidates if row.get("causal_role") == "storage_origin_candidate"]
@@ -527,12 +603,15 @@ def build_storage_reliability_analysis(
         gaps.append({"evidence": "multipath/remote-storage path state when networked storage is used", "information_gain": 0.73})
     if not states["persistent_volume"]:
         gaps.append({"evidence": "PV/PVC attach and mount state when persistent volumes are involved", "information_gain": 0.72})
+    if file_causality["files"] and not file_causality["growth_cause_confirmed"]:
+        gaps.append({"evidence": "file producer, confirmed growth trend, Elastic/Zabbix error correlation and retention policy before any cleanup", "information_gain": 0.99})
     if not temporal.get("storage_anomaly_start"):
         gaps.append({"evidence": "timestamped storage anomaly plus application/database incident start", "information_gain": 0.84})
     gaps.sort(key=lambda row: float(row["information_gain"]), reverse=True)
 
     return {
-        "policy": "storage alerts are symptoms until cross-layer evidence distinguishes storage-originated failure from workload-driven pressure",
+        "policy": "storage alerts are symptoms until cross-layer evidence distinguishes storage-originated failure from workload-driven pressure; file age or size cannot authorize deletion",
+        "disk_file_causality": file_causality,
         "smart_policy": "SMART warnings are probabilistic risk evidence and never proof that a device is certainly or imminently failing",
         "service": service_name,
         "time_window": _window(items, ctx),
