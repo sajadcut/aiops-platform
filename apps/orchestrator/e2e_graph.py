@@ -104,25 +104,25 @@ class E2EOrchestrator:
         # Actual Node begin/end events, never a timer-based simulated progress.
         # The observer writes to a separate short DB transaction and cannot
         # change LangGraph state or any Approval/Execution authorization gate.
-        for stage in ("context", "triage", "parallel_agents", "rca", "evaluator",
-                      "decision", "approval", "execution", "verification", "memory", "end"):
-            handler = getattr(self, f"_{stage}_node")
-
-            async def observed(state, _stage=stage, _handler=handler):
+        def observed_node(stage, handler):
+            async def observed(state: E2EState) -> E2EState:
                 observer = self.progress_emitter
                 if observer:
-                    await observer(state.get("incident_id"), _stage, "started")
+                    await observer(state.get("incident_id"), stage, "started")
                 try:
-                    result = await _handler(state)
+                    result = await handler(state)
                 except Exception:
                     if observer:
-                        await observer(state.get("incident_id"), _stage, "failed")
+                        await observer(state.get("incident_id"), stage, "failed")
                     raise
                 if observer:
-                    await observer(state.get("incident_id"), _stage, "completed")
+                    await observer(state.get("incident_id"), stage, "completed")
                 return result
+            return observed
 
-            w.add_node(stage, observed)
+        for stage in ("context", "triage", "parallel_agents", "rca", "evaluator",
+                      "decision", "approval", "execution", "verification", "memory", "end"):
+            w.add_node(stage, observed_node(stage, getattr(self, f"_{stage}_node")))
         w.set_entry_point("context")
         w.add_edge("context", "triage")
         w.add_edge("triage", "parallel_agents")
