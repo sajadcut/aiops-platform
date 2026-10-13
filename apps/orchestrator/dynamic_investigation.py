@@ -23,7 +23,7 @@ READ_ONLY_CHECKS = frozenset({
     "service_status", "service_logs", "process_status", "config_validate",
     "collect_vm_metrics", "disk_status", "host_info", "network_status",
     "port_listener_status", "tcp_check",
-    "service_runtime_discovery", "dotnet_config_syntax",
+    "service_runtime_discovery", "dotnet_config_syntax", "nginx_config_review",
 })
 _CHECK_TO_REQUEST = {
     "service_status": ("telemetry", "service status"),
@@ -38,6 +38,7 @@ _CHECK_TO_REQUEST = {
     "tcp_check": ("telemetry", "port local tcp reachability"),
     "service_runtime_discovery": ("telemetry", "systemd unit runtime discovery"),
     "dotnet_config_syntax": ("telemetry", "dotnet json syntax"),
+    "nginx_config_review": ("telemetry", "nginx config review"),
 }
 
 
@@ -81,6 +82,25 @@ class DynamicInvestigationPlanner:
                 "evidence_ref": _bounded(item.get("reference") or item.get("id"), 160),
             }
         return None
+
+    @staticmethod
+    def config_review_evidence(evidence: list[dict], failure: dict | None) -> dict:
+        """Use a registered VM MCP review only for the matching live failure."""
+        if not failure:
+            return {}
+        for item in reversed(evidence):
+            if not isinstance(item, dict) or item.get("source") != "vm_mcp":
+                continue
+            raw = item.get("raw_data")
+            if not isinstance(raw, dict) or raw.get("diagnostic") != "nginx_config_review":
+                continue
+            if (raw.get("service") != failure.get("service")
+                    or raw.get("config_file") != failure.get("config_file")
+                    or raw.get("error_line") != failure.get("error_line")
+                    or raw.get("success") is not True):
+                continue
+            return {**raw, "evidence_ref": _bounded(item.get("reference"), 160)}
+        return {}
 
     @staticmethod
     def runtime_evidence(evidence: list[dict]) -> dict:
@@ -225,6 +245,7 @@ class DynamicInvestigationPlanner:
         context = state.get("context") or {}
         evidence = [e for e in context.get("evidence", []) if isinstance(e, dict)]
         failure = cls.confirmed_config_failure(evidence)
+        review = cls.config_review_evidence(evidence, failure)
         runtime = cls.runtime_evidence(evidence)
         unit = runtime.get("service_runtime_discovery") or {}
         syntax = runtime.get("dotnet_config_syntax") or {}
@@ -240,26 +261,62 @@ class DynamicInvestigationPlanner:
             "execution_authority": False, "counts_as_live_evidence": False,
         }
         if failure:
-            # No config bytes have been read. Never pretend to have a patch,
-            # preview, successful syntax test, or a verified rollback.
+            # A redacted structural excerpt and candidate from a registered
+            # MCP action remain advisory. Staged nginx -t reads live includes;
+            # it cannot count as isolated validation or deployment authority.
+            validation = str(review.get("validation_status") or "UNVERIFIED")
+            if validation not in {"UNVERIFIED", "STAGED_PASS_NOT_ISOLATED", "STAGED_FAILED"}:
+                validation = "UNVERIFIED"
             result["config_proposal"] = {
-                "status": "needs_read_only_config",
+                "status": str(review.get("status") or "needs_read_only_config")[:60],
                 "service": failure["service"],
                 "config_file": failure["config_file"],
                 "error_line": failure["error_line"],
-                "source_evidence_refs": [failure["evidence_ref"]] if failure["evidence_ref"] else [],
+                "source_evidence_refs": [x for x in (
+                    failure["evidence_ref"], review.get("evidence_ref")
+                ) if x],
                 "current_configuration": None,
                 "proposed_configuration": None,
                 "unified_diff": None,
-                "validation_status": "UNVERIFIED",
-                "validator_executed_on_proposal": False,
+                "current_excerpt": [
+                    {"line": row["line"], "content": _bounded(row.get("content"), 125)}
+                    for row in (review.get("current_excerpt") or [])[:7]
+                    if isinstance(row, dict) and type(row.get("line")) is int
+                ],
+                "proposed_excerpt": [
+                    {"line": row["line"], "content": _bounded(row.get("content"), 125)}
+                    for row in (review.get("proposed_excerpt") or [])[:7]
+                    if isinstance(row, dict) and type(row.get("line")) is int
+                ],
+                "redacted_diff": {
+                    "line": (review.get("diff") or {}).get("line"),
+                    "before": _bounded((review.get("diff") or {}).get("before"), 125),
+                    "after": _bounded((review.get("diff") or {}).get("after"), 125),
+                } if isinstance(review.get("diff"), dict) else None,
+                "original_sha256": str(review.get("current_hash") or "")[:64],
+                "candidate_sha256": str(review.get("candidate_hash") or "")[:64],
+                "proposed_change": _bounded(review.get("proposed_change"), 90),
+                "test_scope": _bounded(review.get("test_scope"), 100),
+                "validation_status": validation,
+                "validator_executed_on_proposal": review.get("validator_executed_on_proposal") is True,
+                "isolated_validation": False,
                 "requires_approval": True,
+                "apply_eligible": False,
                 "execution_authority": False,
             }
             result["operator_questions"].append({
-                "question": "Provide or authorize a secret-safe read of the affected configuration and its includes, or identify a trusted version-control revision for comparison.",
-                "reason": "A compiler error identifies a fault, not the exact safe replacement. A historical healthy version is optional.",
-                "evidence_refs": [failure["evidence_ref"]] if failure["evidence_ref"] else [],
+                "question": (
+                    "Would you like to submit this candidate for isolated validation and separate change approval? No change will be applied yet."
+                    if review.get("status") == "candidate_proposed"
+                    else "Allow secure diagnosis of the precise nginx configuration line/includes before proposing a fix?"
+                ),
+                "reason": (
+                    "A staged nginx -t is not isolated from the live include tree. "
+                    "No production write is allowed without isolated validation and hash-bound approval."
+                ),
+                "evidence_refs": [x for x in (
+                    failure.get("evidence_ref"), review.get("evidence_ref")
+                ) if x],
             })
         if unit.get("runtime") == "dotnet":
             # Purely diagnostic: valid JSON is NOT proof that environment,
@@ -391,7 +448,7 @@ class DynamicInvestigationPlanner:
         for action in proposal.get("checks") or []:
             if action not in READ_ONLY_CHECKS:
                 continue
-            if not has_service and action in {"service_status", "service_logs", "process_status", "config_validate", "service_runtime_discovery", "dotnet_config_syntax"}:
+            if not has_service and action in {"service_status", "service_logs", "process_status", "config_validate", "service_runtime_discovery", "dotnet_config_syntax", "nginx_config_review"}:
                 continue
             if not has_port and action in {"port_listener_status", "tcp_check"}:
                 continue
