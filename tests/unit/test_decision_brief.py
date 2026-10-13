@@ -20,7 +20,7 @@ def make_brief(*, state=None, evidence=None, approval=None, verification="not_re
         "knowledge_status": {"status": "available"},
         "knowledge_results": [{
             "source_id": "cognia:1:2:3:4", "knowledge_base_id": 1, "knowledge_id": 2,
-            "revision_id": 3, "relevance": 0.93, "content": "nginx troubleshooting",
+            "revision_id": 3, "relevance": 0.93, "content": "Service: nginx\nnginx troubleshooting",
         }],
         "memory_results": [{"id": "mem-1", "incident_id": "old-incident", "action": "restart",
                             "verification_result": "success", "vector_similarity": 0.89}],
@@ -351,6 +351,7 @@ def test_retrieved_cognia_document_exposes_source_title_without_inventing_use():
     state = {
         "knowledge_status": {"status": "available"},
         "knowledge_results": [{"source_id": "src-1", "title": "nginx playbook",
+                               "content": "Service: nginx\nNginx playbook",
                                "knowledge_id": "k-2", "relevance": 0.82}],
     }
     result = make_brief(state=state)

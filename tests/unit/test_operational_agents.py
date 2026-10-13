@@ -39,7 +39,9 @@ def incident_input():
                 {"id": "metric-1", "type": "metric", "source": "prometheus", "name": "latency", "value": 2.1},
                 {"id": "alert-1", "type": "alert", "source": "zabbix", "severity": "high"},
             ],
-            "knowledge_results": [{"source_id": "rag-1", "title": "Authentication runbook", "relevance": 0.91}],
+            "knowledge_results": [{"source_id": "rag-1", "title": "Authentication runbook",
+                                   "content": "Service: payments-api\nAuthentication troubleshooting",
+                                   "relevance": 0.91}],
             "memory_results": [{"id": "memory-1", "pattern": "past auth latency incident", "outcome": "verified"}],
         },
     )

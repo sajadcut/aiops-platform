@@ -162,6 +162,15 @@ class SignalAwareE2EOrchestrator(E2EOrchestrator):
         state["knowledge_results"] = applicable
         context["knowledge_results"] = applicable
         context["knowledge_relevance_merged"] = relevance
+        previous_status = dict(state.get("knowledge_status") or {})
+        state["knowledge_status"] = {
+            **previous_status,
+            "status": ("filtered_empty" if relevance["rejected_count"] and not applicable
+                       else "available" if applicable else "empty"),
+            "count": len(applicable),
+            "merged_relevance": relevance,
+        }
+        context["knowledge_status"] = state["knowledge_status"]
         knowledge_topology = KnowledgeTopologyResolver.resolve(
             applicable, expected_fqdns=expected_fqdns,
             expected_service=source_service or state.get("service_name"),

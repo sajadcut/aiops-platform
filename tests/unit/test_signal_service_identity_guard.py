@@ -45,12 +45,11 @@ async def test_unrelated_memory_and_filesystem_alerts_do_not_become_nginx(monkey
     assert signal.service is None
 
     discovery = await SignalGateway._knowledge_assisted_asset(signal, signal.to_evidence())
-    assert discovery["knowledge_status"]["status"] == "available"
-    assert discovery["knowledge_results"] == [NGINX_DOCUMENT]
-    assert discovery["topology_context"]["unverified_knowledge_service_hint"] == "nginx"
-    assert discovery["topology_context"]["service_identity_basis"] == "unverified_knowledge_hint_blocked"
+    assert discovery["knowledge_status"]["status"] == "filtered_empty"
+    assert discovery["knowledge_results"] == []
+    assert discovery["knowledge_status"]["relevance"]["rejected_count"] == 1
+    assert "unverified_knowledge_service_hint" not in discovery["topology_context"]
     assert discovery["asset_context"]["service"] is None
-    assert discovery["asset_context"]["requires_live_verification"] is True
 
 
 @pytest.mark.asyncio
@@ -102,7 +101,7 @@ async def test_gateway_stores_unknown_service_instead_of_host_or_nginx(monkeypat
     assert observed["context"]["incident"]["source_host"] == "apeirdtnksa0101"
     assert observed["context"]["trigger_signal"]["service"] is None
     assert observed["context"]["asset_context"]["service"] is None
-    assert observed["context"]["topology_context"]["unverified_knowledge_service_hint"] == "nginx"
+    assert "unverified_knowledge_service_hint" not in observed["context"]["topology_context"]
 
 
 async def _return_none():

@@ -286,8 +286,14 @@ def _mcp(rows: Iterable[dict], now: datetime) -> tuple[list[dict], list[dict]]:
 
 
 def _knowledge(state: dict, agents: list[dict]) -> dict:
+    from apps.context_service.knowledge_relevance import filter_service_knowledge
     retrieval = obj(state.get("knowledge_status"))
-    documents = arr(state.get("knowledge_results"))
+    raw_documents = arr(state.get("knowledge_results"))
+    documents, relevance = filter_service_knowledge(
+        raw_documents, expected_service=state.get("service_name")
+        or (state.get("context") or {}).get("service"),
+        purpose="decision_brief",
+    )
     cited = {ref for a in agents for ref in a["knowledge_source_ids"]}
     entries = []
     for doc in documents[:30]:
@@ -310,11 +316,16 @@ def _knowledge(state: dict, agents: list[dict]) -> dict:
             "use_status": "cited_by_agent" if source_id and source_id in cited else "not_verified",
         })
     status = str(retrieval.get("status") or "not_queried").lower()
-    if status not in {"available", "empty", "not_queried"}:
+    if status not in {"available", "empty", "not_queried", "filtered_empty"}:
         status = "failed"
+    if status == "available" and not documents and relevance["rejected_count"]:
+        status = "filtered_empty"
     return {
         "status": status,
-        "retrieved_count": len(documents),
+        "retrieved_count": len(raw_documents),
+        "accepted_count": len(documents),
+        "rejected_count": relevance["rejected_count"],
+        "relevance": relevance,
         "use_status": "cited_by_agent" if any(d["use_status"] == "cited_by_agent" for d in entries) else "not_verified",
         "items": entries,
         "error_code": safe(retrieval.get("code"), 100),
