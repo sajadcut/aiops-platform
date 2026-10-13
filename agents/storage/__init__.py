@@ -148,7 +148,8 @@ PEER_OPERATIONAL_CONTEXT={json.dumps(peer_context, default=str)}"""
         proposed_checks = self.normalize_list(result.get("immediate_checks"), settings.AGENT_MAX_RECOMMENDATIONS)
         dangerous = re.compile(
             r"(?i)(?:\b(?:rm|unlink|erase|wipe|clear|clean(?:up)?|prune|vacuum|shred|"
-            r"compress|archive|move|overwrite|expire)\b|حذف|پاک(?:سازی|\s*کردن)?|"
+            r"compress|archive|move|overwrite|expire|chmod|chown|mkfs|wipefs|"
+            r"lvremove|fstrim|rsync|unlink|fix|edit|rename|sed|dd|mv)\b|حذف|پاک(?:سازی|\s*کردن)?|"
             r"انتقال|آرشیو|فشرده\s*سازی)"
         )
         actions = [
