@@ -25,7 +25,7 @@ async def test_config_validate_propagates_ssh_failure(monkeypatch):
     assert result["success"] is False
     assert result["valid"] is None
     assert result["exit_code"] == 255
-    assert result["error"] == "config_validation_transport_failed"
+    assert result["error"] == "config_validation_access_denied"
     assert "Permission denied" in result["detail"]
 
 
