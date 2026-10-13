@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 448 | Dashboard JS files scanned: 8 | Symbols indexed: 4271**
+**Python files scanned: 448 | Dashboard JS files scanned: 8 | Symbols indexed: 4273**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -3123,6 +3123,8 @@
 | `tests/unit/test_decision_brief.py` | `test_elapsed_incident_duration_does_not_invalidate_approval_snapshot.report` | 415 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_elapsed_incident_duration_does_not_invalidate_approval_snapshot |
 | `tests/unit/test_decision_brief.py` | `test_approval_snapshot_still_invalidates_on_material_action_change` | 432 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_decision_brief.py` | `test_approval_snapshot_still_invalidates_on_material_action_change.report` | 437 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_approval_snapshot_still_invalidates_on_material_action_change |
+| `tests/unit/test_decision_brief.py` | `test_agent_audit_preserves_distinct_findings_hypotheses_and_evidence_coverage` | 452 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_decision_brief.py` | `test_agent_audit_is_backward_compatible_when_specialist_details_are_missing` | 502 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_decision_brief_browser_runtime.py` | `test_decision_brief_renders_real_llm_sections_and_language_switch` | 10 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_decision_brief_narrative.py` | `sample_brief` | 10 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_decision_brief_narrative.py` | `valid_rows` | 32 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
