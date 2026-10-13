@@ -191,7 +191,13 @@ async def incident_chat_message(
         kind = "answer"
         proposal = None
         if intent in READ_ACTIONS:
-            if binding is None:
+            if intent == "knowledge_search":
+                observation = await _read_cognia(
+                    payload.message, str(incident.service),
+                    (checkpoint.get("state") or {}).get("context") or {},
+                    incident_id,
+                )
+            elif binding is None:
                 observation = {"success": False, "status": "target_not_verified"}
             else:
                 try:
