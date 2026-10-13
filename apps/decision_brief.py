@@ -340,6 +340,14 @@ def build_decision_brief(
     evidence = [e for e in durable_evidence if isinstance(e, dict)]
     agents = _agents(state, findings)
     mcp, sources = _mcp(evidence, now)
+    from apps.incident_explanation import explain_incident
+    explanation = explain_incident(
+        evidence=evidence,
+        service=incident.get("service") or state.get("service_name") or "service",
+        evaluation=obj(state.get("evaluation")),
+        decision=obj(state.get("decision")),
+    )
+    dotnet_config = obj(explanation.get("configuration"))
     disk_file_causality = correlate_disk_file_causality(evidence)
     from apps.orchestrator.recovery_advice import build_vm_recovery_advisory
     # Rebuild from durable MCP observations; never trust a free-form LLM plan,
@@ -458,27 +466,42 @@ def build_decision_brief(
             "valid_evidence_count": sum(
                 1 for row, age in zip(evidence, freshnesses) if evidence_usable(row, age)
             ),
+            "total_evidence_count": len(evidence),
+            "fresh_evidence_note_fa": "شواهد معتبر و تازه برای تصمیم اجرایی؛ صفر به معنی نبود همهٔ شواهد تاریخی نیست.",
             "observed_sources": len({str(row.get("source") or "")
                 for row in evidence if row.get("source")}),
         },
+        # A specialized .NET syntax failure takes precedence over a generic
+        # config_validate "unsupported", which is NOT a successful check.
         "configuration_diagnostic": {
             "status": (
-                "invalid" if obj(observed.get("config_validate")).get("valid") is False
-                else "valid" if obj(observed.get("config_validate")).get("valid") is True
-                else "unverified" if observed.get("config_validate")
-                else "not_checked"
+                "invalid" if dotnet_config.get("status") == "invalid" else
+                "invalid" if obj(observed.get("config_validate")).get("valid") is False else
+                "valid" if obj(observed.get("config_validate")).get("valid") is True else
+                "json_syntax_valid" if dotnet_config.get("status") == "json_syntax_valid" else
+                "unverified" if observed.get("config_validate") or dotnet_config else
+                "not_checked"
             ),
-            "config_file": safe(obj(observed.get("config_validate")).get("config_file"), 300),
+            "config_file": safe(dotnet_config.get("config_file") or
+                                obj(observed.get("config_validate")).get("config_file"), 300),
             "root_config_file": safe(obj(observed.get("config_validate")).get("root_config_file"), 300),
-            "path_source": safe(obj(observed.get("config_validate")).get("config_path_source"), 80),
-            "error_line": obj(observed.get("config_validate")).get("error_line"),
-            "syntax_error": safe(obj(observed.get("config_validate")).get("syntax_error"), 500),
-            "evidence_refs": refs([
-                obj(observed.get("config_validate")).get("evidence_id")
-            ] if obj(observed.get("config_validate")).get("evidence_id") else []),
-            "repair_then_revalidate": obj(observed.get("config_validate")).get("valid") is False,
+            "path_source": "dotnet_config_syntax" if dotnet_config else
+                           safe(obj(observed.get("config_validate")).get("config_path_source"), 80),
+            "error_line": dotnet_config.get("error_line") if dotnet_config.get("status") == "invalid"
+                          else obj(observed.get("config_validate")).get("error_line"),
+            "error_column": dotnet_config.get("error_column") if dotnet_config else None,
+            "error_code": safe(dotnet_config.get("error_code"), 60),
+            "syntax_error": safe(dotnet_config.get("syntax_error_fa") or
+                                 obj(observed.get("config_validate")).get("syntax_error"), 500),
+            "evidence_refs": refs(dotnet_config.get("evidence_refs") or
+                ([obj(observed.get("config_validate")).get("evidence_id")]
+                 if obj(observed.get("config_validate")).get("evidence_id") else [])),
+            "validated_scope": safe(dotnet_config.get("validated_scope"), 60),
+            "repair_then_revalidate": dotnet_config.get("status") == "invalid"
+                or obj(observed.get("config_validate")).get("valid") is False,
             "start_requires_valid_config_and_approval": True,
         },
+        "operator_explanation": redact(explanation),
         "disk_file_causality": redact(disk_file_causality) if disk_file_causality.get("files") else None,
         # Visible even when the dynamic LLM planner is disabled, and even if
         # evaluator blocks a governed execution proposal. Read-only advice.
@@ -527,6 +550,8 @@ def build_decision_brief(
                     "status": safe(row.get("status"), 45),
                     "line": row.get("line") if type(row.get("line")) is int else None,
                     "column": row.get("column") if type(row.get("column")) is int else None,
+                    "error_code": safe(row.get("error_code") or row.get("reason"), 50),
+                    "explanation_fa": safe(row.get("explanation_fa"), 240),
                 } for row in arr(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("runtime_discovery")).get("files"))[:12]
                    if isinstance(row, dict)],
                 "values_exposed": False,
