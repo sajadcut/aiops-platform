@@ -33,7 +33,7 @@ class VMTelemetryTool(BaseTool):
         if not input_data.target or input_data.action not in self._ACTIONS:
             return False
         params = input_data.parameters or {}
-        if input_data.action in {"service_status", "service_logs", "config_validate"}:
+        if input_data.action in {"service_status", "service_logs", "config_validate", "nginx_config_review", "service_runtime_discovery", "dotnet_config_syntax"}:
             return bool(str(params.get("service", "")).strip())
         if input_data.action == "process_status":
             return bool(str(params.get("process", "")).strip())
@@ -67,5 +67,8 @@ class VMTelemetryTool(BaseTool):
         elif action == "route_check": result = await connector.route_check(target, str(params["destination"]))
         elif action == "firewall_status": result = await connector.firewall_status(target)
         elif action == "config_validate": result = await connector.config_validate(target, str(params["service"]))
+        elif action == "nginx_config_review": result = await connector.nginx_config_review(target, str(params["service"]))
+        elif action == "service_runtime_discovery": result = await connector.service_runtime_discovery(target, str(params["service"]))
+        elif action == "dotnet_config_syntax": result = await connector.dotnet_config_syntax(target, str(params["service"]))
         else: result = {"success": False, "error": "unsupported_action"}
         return ToolOutput(success=bool(result.get("success")), result=result, error=result.get("error"))
