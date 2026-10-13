@@ -98,6 +98,14 @@ def vm_binding_diagnostic(service: str, evidence: list[dict],
     name = normalized_service(service)
     if not name or name == "unknown":
         return {"reason": "service_identity_missing", "candidate": None}
+    for field in ("trigger_signal", "incident"):
+        outer = ctx.get(field)
+        if isinstance(outer, dict):
+            payload = outer.get("payload") or outer
+            if isinstance(payload, dict):
+                reported = normalized_service(payload.get("service"))
+                if reported and reported != name:
+                    return {"reason": "incident_service_conflict", "candidate": None}
     vm_targets: set[str] = set()
     refs: list[str] = []
     supported = {"service_status", "process_status", "config_validate",
@@ -155,6 +163,7 @@ async def resolve_vm_binding(
     if bound is not None and not force_live and diagnosis["reason"] not in {
         "conflicting_vm_targets", "alert_vm_target_conflict",
         "service_identity_conflict", "incident_identity_context_conflict",
+        "incident_service_conflict",
     }:
         return bound, {"status": "verified_from_saved_vm_evidence",
                        "verification": bound.get("verification"),
