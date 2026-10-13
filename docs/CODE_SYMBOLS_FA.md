@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 449 | Dashboard JS files scanned: 8 | Symbols indexed: 4319**
+**Python files scanned: 449 | Dashboard JS files scanned: 8 | Symbols indexed: 4322**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -4049,6 +4049,9 @@
 | `tests/unit/test_storage_reliability_engine.py` | `CapturingStorageLLM.generate` | 196 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CapturingStorageLLM |
 | `tests/unit/test_storage_reliability_engine.py` | `CapturingStorageLLM.generate_with_messages` | 221 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CapturingStorageLLM |
 | `tests/unit/test_storage_reliability_engine.py` | `test_storage_agent_exposes_deterministic_layers_before_llm_synthesis` | 226 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_storage_reliability_engine.py` | `test_storage_agent_suppresses_llm_cleanup_suggestions_without_causal_evidence` | 249 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_storage_reliability_engine.py` | `test_storage_agent_suppresses_llm_cleanup_suggestions_without_causal_evidence.CleanupSuggestingModel` | 250 | class | کلاس | test_storage_agent_suppresses_llm_cleanup_suggestions_without_causal_evidence |
+| `tests/unit/test_storage_reliability_engine.py` | `test_storage_agent_suppresses_llm_cleanup_suggestions_without_causal_evidence.CleanupSuggestingModel.generate` | 251 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_storage_agent_suppresses_llm_cleanup_suggestions_without_causal_evidence.CleanupSuggestingModel |
 | `tests/unit/test_structured_agent_resilience.py` | `FakeLLM` | 13 | class | کلاس | module |
 | `tests/unit/test_structured_agent_resilience.py` | `FakeLLM.__init__` | 14 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeLLM |
 | `tests/unit/test_structured_agent_resilience.py` | `FakeLLM.provider_name` | 19 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeLLM |
