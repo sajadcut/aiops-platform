@@ -16,9 +16,13 @@ from apps.audit_service.postgres import PostgreSQLAuditStore
 from apps.incident_copilot import (
     READ_ACTIONS, WRITE_SUGGESTIONS, append_turn, fallback_intent, history,
     llm_plan, vm_binding, vm_read, asks_for_recorded_errors, recorded_error_facts,
-    recorded_error_answer, nginx_inspection_answer,
+    recorded_error_answer, nginx_inspection_answer, merge_incident_evidence,
+    unsupported_security_exclusion_claim,
 )
 from apps.orchestrator.dynamic_investigation import DynamicInvestigationPlanner
+from apps.incident_elastic import (
+    elastic_live_read, elastic_answer, stored_elastic_observations,
+)
 from apps.orchestrator.workflow_store import WorkflowCheckpointStore
 from apps.runbook_service.runtime_guard import RunbookRuntimeGuard
 from apps.security.auth import require_permission
@@ -47,12 +51,12 @@ async def _scope(db, incident_id: UUID) -> tuple[Incident, dict, list[dict]]:
         raise HTTPException(status_code=409, detail="incident_analysis_not_finished")
     rows = (await db.execute(
         select(Evidence).where(Evidence.incident_id == incident_id)
-        .order_by(desc(Evidence.created_at)).limit(180)
+        .order_by(desc(Evidence.created_at)).limit(500)
     )).scalars().all()
     evidence = [{"source": r.source, "raw_data": r.raw_data or {},
                  "reference": r.reference, "created_at": str(r.created_at)}
                 for r in reversed(rows)]
-    return incident, checkpoint, evidence
+    return incident, checkpoint, merge_incident_evidence(evidence, checkpoint)
 
 
 def _safe_brief(brief: dict) -> dict:
@@ -201,6 +205,9 @@ async def incident_chat_message(
         summary = _safe_brief(brief)
         summary["service"] = incident.service
         summary["vm_binding"] = binding or {"status": "not_verified"}
+        summary["elastic_recorded"] = stored_elastic_observations(
+            evidence, service=str(incident.service or ""),
+        )
         summary["previous_tool_observations"] = [
             (row.get("metadata") or {}).get("observation")
             for row in (await audit.list(str(incident_id), 60))
@@ -214,7 +221,15 @@ async def incident_chat_message(
         intent = "answer" if historical_errors else plan["intent"]
         # Explicit action/read requests must not be ignored by a model's
         # free-form answer; model suggestions are otherwise advisory only.
-        if requested == "nginx_config_inspect" and not historical_errors:
+        if requested in WRITE_SUGGESTIONS:
+            # An explicit operator Start/Restart/Reload always takes
+            # precedence over a different action proposed by an LLM.
+            intent = requested
+        elif requested in {"elastic_logs", "elastic_recorded"}:
+            # Never let a model convert an ELK question to a VM journal read
+            # or invent an Elastic result from unrelated diagnostics.
+            intent = requested
+        elif requested == "nginx_config_inspect" and not historical_errors:
             # An explicit request to inspect files must not become a vague
             # no-access model answer or an unrelated diagnostic.
             intent = requested
@@ -232,7 +247,13 @@ async def incident_chat_message(
         kind = "answer"
         proposal = None
         if intent in READ_ACTIONS:
-            if intent == "knowledge_search":
+            if intent == "elastic_recorded":
+                observation = summary["elastic_recorded"]
+            elif intent == "elastic_logs":
+                observation = await elastic_live_read(
+                    str(incident.service or ""), incident_started_at=incident.started_at,
+                )
+            elif intent == "knowledge_search":
                 observation = await _read_cognia(
                     payload.message, str(incident.service),
                     (checkpoint.get("state") or {}).get("context") or {},
@@ -254,8 +275,26 @@ async def incident_chat_message(
                 "created_at": datetime.now(timezone.utc).isoformat(),
             })
             kind = "tool_result"
-            answer_basis = "live_mcp" if observation.get("success") else "stored_analysis_live_unavailable"
-            if observation.get("success"):
+            answer_basis = (
+                "stored_elasticsearch_evidence" if intent == "elastic_recorded" else
+                "live_elasticsearch_mcp" if intent == "elastic_logs" and observation.get("success") else
+                "elastic_mcp_unavailable" if intent == "elastic_logs" else
+                "live_mcp" if observation.get("success") else
+                "stored_analysis_live_unavailable"
+            )
+            if intent in {"elastic_recorded", "elastic_logs"}:
+                # The structured observation, not model fluency, establishes
+                # whether a query ran and what results were actually returned.
+                answer = elastic_answer(
+                    observation, persian=bool(re.search(r"[\u0600-\u06ff]", payload.message)),
+                )
+                refs = list(dict.fromkeys(refs + (observation.get("evidence_refs") or [])))[:12]
+                if intent == "elastic_logs" and observation.get("success"):
+                    followup = await llm_plan(payload.message, summary, previous, observation=observation)
+                    final_model_status = followup["model_status"]
+                    # No ungated LLM claims about absence of errors or health
+                    # are appended to a bounded log result.
+            elif observation.get("success"):
                 followup = await llm_plan(payload.message, summary, previous,
                                           observation=observation)
                 final_model_status = followup["model_status"]
@@ -322,6 +361,28 @@ async def incident_chat_message(
                     plan["model_status"] == "structured" and summary["recorded_error_facts"]
                     and plan["answer"]
                 ) else grounded
+        if (
+            kind == "answer" and
+            unsupported_security_exclusion_claim(answer)
+        ):
+            # Without verified, complete authentication event coverage, an
+            # LLM cannot conclude there were no 401/403 responses. Surface
+            # the stored diagnostics instead of asserting a false negative.
+            answer = (
+                recorded_error_answer(
+                    summary,
+                    persian=bool(re.search(r"[\u0600-\u06ff]", payload.message)),
+                )
+                + "\n\n"
+                + (
+                    "نبود خطای احراز هویت از لاگ‌های محدود اثبات نمی‌شود؛ "
+                    "برای بررسی، استعلام زندهٔ Elasticsearch MCP را درخواست کنید."
+                    if re.search(r"[\u0600-\u06ff]", payload.message)
+                    else "A bounded log sample cannot rule out authentication failures. "
+                         "Request a live Elasticsearch MCP query for more evidence."
+                )
+            )
+            answer_basis = "stored_analysis_guarded"
         answer = redact_text(answer)[:3500]
         event_id = await append_turn(
             audit, incident_id=str(incident_id), actor=identity.subject,
