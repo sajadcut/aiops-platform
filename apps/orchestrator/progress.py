@@ -15,6 +15,7 @@ from sqlalchemy import text
 from apps.audit_service.postgres import PostgreSQLAuditStore
 from database import AsyncSessionLocal
 from domain.contracts.logging import logger
+from domain.contracts.config import settings
 
 ANALYSIS_STAGES = ("context", "triage", "parallel_agents", "rca", "evaluator", "decision")
 EXECUTION_STAGES = ("execution", "verification", "memory")
@@ -43,6 +44,10 @@ async def emit_progress(incident_id: str | None, stage: str, status: str,
                         *, detail: str = "", provider: str = "") -> None:
     """Best-effort progress, NOT durable operational decision evidence."""
     if not incident_id:
+        return
+    # Unit tests use fake workflow/session objects; never attempt an unrelated
+    # production audit DB connection from those simulations.
+    if settings.APP_ENV == "test":
         return
     record = progress_record(stage, status, detail=detail, provider=provider)
     try:
