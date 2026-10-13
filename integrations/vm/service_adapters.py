@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Optional
+import re
+import shlex
 
 
 @dataclass(frozen=True)
@@ -57,3 +59,109 @@ def get_service_adapter(service: str) -> Optional[ServiceDiagnosticAdapter]:
         if name == adapter.canonical_name or name in adapter.aliases:
             return adapter
     return None
+
+
+# Service metadata is observed from systemd on the target VM. It is NOT a
+# command supplied by an alarm, model or operator. Paths must be absolute,
+# normalized and bounded before they can be quoted into a fixed check adapter.
+_SAFE_CONFIG_PATH = re.compile(r"^/(?:[A-Za-z0-9_.+-]+/)*[A-Za-z0-9_.+-]+$")
+_NGINX_PATH_IN_OUTPUT = re.compile(r"(?:configuration file|in)\s+(/[\w.+/-]+\.conf)(?::\d+|\s)", re.I)
+_HAPROXY_ERROR = re.compile(r"\[(/[\w.+/-]+):(\d+)\]")
+_NGINX_ERROR = re.compile(r"(?:in\s+)?(/[\w.+/-]+):(\d+)")
+_APACHE_ERROR = re.compile(r"(?:Syntax error on line\s+(\d+)\s+of\s+)(/[\w.+/-]+)", re.I)
+
+
+def _absolute_config_path(path: str) -> Optional[str]:
+    path = str(path or "").strip()
+    if len(path) > 300 or not _SAFE_CONFIG_PATH.fullmatch(path):
+        return None
+    if any(segment in {".", ".."} for segment in path.split("/")):
+        return None
+    return path
+
+
+def discover_config_path(service: str, systemd_exec_start: str) -> Optional[str]:
+    """Discover an explicit config argument from the installed systemd unit.
+
+    No config filename found is preferable to guessing the wrong one.
+    Never interpret arbitrary ExecStart text as a shell command.
+    """
+    adapter = get_service_adapter(service)
+    if not adapter:
+        return None
+    value = str(systemd_exec_start or "")[:3000]
+    # systemctl show ExecStart is structured: "{ path=... ; argv[]=... ; ... }".
+    match = re.search(r"argv\[\]=(.*?)(?:\s;\s|})", value, re.S)
+    command = (match.group(1) if match else value).strip()
+    try:
+        argv = shlex.split(command)
+    except ValueError:
+        return None
+    # Only take paths supplied to the expected config flags.
+    flags = {"nginx": ("-c", "--conf-path="),
+             "haproxy": ("-f", "--config="),
+             "apache": ("-f",)}.get(adapter.canonical_name, ())
+    for index, arg in enumerate(argv):
+        for flag in flags:
+            if arg == flag and index + 1 < len(argv):
+                path = _absolute_config_path(argv[index + 1])
+                if path:
+                    return path
+            elif flag.endswith("=") and arg.startswith(flag):
+                path = _absolute_config_path(arg[len(flag):])
+                if path:
+                    return path
+            elif flag in ("-c", "-f") and arg.startswith(flag) and len(arg) > 2:
+                path = _absolute_config_path(arg[2:])
+                if path:
+                    return path
+    return None
+
+
+def config_check_for_path(service: str, discovered_path: Optional[str]) -> str:
+    """Use only an existing fixed allowlisted validator with a safe config path."""
+    adapter = get_service_adapter(service)
+    if adapter is None or not adapter.config_check_command:
+        raise ValueError("config_validation_adapter_unavailable")
+    path = _absolute_config_path(discovered_path) if discovered_path else None
+    if not path:
+        return adapter.config_check_command
+    quoted = shlex.quote(path)
+    if adapter.canonical_name == "haproxy":
+        return adapter.config_check_command.replace("/etc/haproxy/haproxy.cfg", quoted)
+    if adapter.canonical_name == "nginx":
+        return adapter.config_check_command.replace("nginx -t", f"nginx -t -c {quoted}")
+    if adapter.canonical_name == "apache":
+        return adapter.config_check_command.replace("configtest", f"configtest -f {quoted}").replace("httpd -t", f"httpd -t -f {quoted}")
+    return adapter.config_check_command
+
+
+def parse_config_diagnostic(output: str) -> dict:
+    """Extract bounded compiler-reported config file/line, never fetch secret files."""
+    message = str(output or "")[:4000]
+    parsed = {"config_file": None, "error_line": None, "syntax_error": None}
+    for pattern in (_HAPROXY_ERROR, _NGINX_ERROR):
+        match = pattern.search(message)
+        if match:
+            path = _absolute_config_path(match.group(1))
+            if path:
+                parsed["config_file"] = path
+                parsed["error_line"] = int(match.group(2))
+                break
+    if parsed["config_file"] is None:
+        match = _APACHE_ERROR.search(message)
+        if match:
+            path = _absolute_config_path(match.group(2))
+            if path:
+                parsed["config_file"] = path
+                parsed["error_line"] = int(match.group(1))
+    if parsed["config_file"] is None:
+        match = _NGINX_PATH_IN_OUTPUT.search(message)
+        if match:
+            parsed["config_file"] = _absolute_config_path(match.group(1))
+    for line in message.splitlines():
+        stripped = line.strip()
+        if re.search(r"emerg|alert|fatal|syntax error|unknown directive|unknown keyword|error parsing|parsing.*error", stripped, re.I):
+            parsed["syntax_error"] = stripped[:500]
+            break
+    return parsed
