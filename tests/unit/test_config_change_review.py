@@ -65,9 +65,14 @@ def test_api_is_guarded_and_exposes_no_execution_authority():
     assert '(config_change_review.router, ["Configuration Review"])' in inspect.getsource(main)
     isolated=FastAPI()
     isolated.include_router(router,prefix="/api/v1")
+    matching=[
+        (getattr(r,"path",None), sorted(getattr(r,"methods",set()) or ()))
+        for r in isolated.routes if "configuration-review" in str(getattr(r,"path",""))
+    ]
+    assert any(path=="/api/v1/incidents/{incident_id}/configuration-review-response"
+               and "POST" in methods for path,methods in matching), matching
     route=next(r for r in isolated.routes if getattr(r,"path",None)=="/api/v1/incidents/{incident_id}/configuration-review-response"
                and "POST" in getattr(r,"methods",set()))
-    assert route
     deps=[d.call for d in route.dependant.dependencies]
     assert deps
     # API handler enforces a second explicit high-risk permission, beyond
