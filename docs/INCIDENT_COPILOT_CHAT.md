@@ -29,6 +29,27 @@ generic free-form shell or an alternative execution permission model.
    Chat text and returned LLM JSON cannot approve, execute, select commands,
    override the target or invent a PASS.
 
+## .NET service recovery preflight (approved Start/Restart only)
+
+When generic `config_validate` reports `config_validation_adapter_unavailable`,
+the runtime guard re-checks the exact bound VM/service via
+`service_runtime_discovery`. Only an independently discovered .NET DLL
+runtime triggers `dotnet_config_syntax`, which parses bounded files locally
+on the **AIOps** server (remote Python is not installed). For **start/restart
+only**, a successful, supported, complete `json_syntax_only` validator can
+satisfy the limited preflight if its provenance, runtime binding and every
+file status agree. This is **not** proof that application settings or
+dependencies are valid or that the service will start. It never enables
+automatic remediation planning, reload, auto-approval or direct execution.
+
+Any unavailable/partial/invalid JSON check, missing runtime identity,
+mismatched target/service, or contradictory evidence blocks preflight.
+Approved operations still re-read live VM evidence immediately before
+execution, consume the normal Approval and undergo post-execution verification.
+The approval Audit records `preflight_validation_scope=dotnet_json_syntax_only`
+and `configuration_semantics_valid=null`. The operator must explicitly
+review the runtime/startup timeout and application dependency risks.
+
 ## Reload-specific policy
 
 The VM recovery runbook now lists Reload as a high-risk, governed action.

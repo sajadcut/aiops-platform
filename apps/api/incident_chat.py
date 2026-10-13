@@ -531,6 +531,12 @@ async def incident_chat_request_approval(
             raise HTTPException(status_code=409, detail={
                 "code": "chat_live_preflight_blocked",
                 "reason": preflight.get("reason") or snapshot.get("error"),
+                "diagnostics_checked": [
+                    item.get("raw_data", {}).get("diagnostic")
+                    for item in snapshot.get("evidence") or []
+                    if isinstance(item, dict) and isinstance(item.get("raw_data"), dict)
+                ],
+                "validation_scope": preflight.get("validation_scope"),
             })
         # Existing protected remediation API creates a separate, bound pending
         # Approval. This route never approves, executes or reloads any service.
@@ -551,6 +557,8 @@ async def incident_chat_request_approval(
                 "action": action, "target": binding["target"],
                 "service": binding["service"],
                 "preflight_refs": preflight.get("evidence_refs", []),
+                "preflight_validation_scope": preflight.get("validation_scope"),
+                "configuration_semantics_valid": preflight.get("configuration_semantics_valid"),
                 "execution_authority": False,
             },
             "created_at": datetime.now(timezone.utc).isoformat(),

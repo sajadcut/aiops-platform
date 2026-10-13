@@ -211,3 +211,90 @@ async def test_runtime_guard_verify_uses_registered_runbook_objectives():
         "service_active",
         "port_listening",
     }
+
+
+@pytest.mark.asyncio
+async def test_unsupported_generic_config_collects_dotnet_specific_live_checks(monkeypatch):
+    calls = []
+    async def fake_vm_read(*, action, target, parameters, incident_id):
+        calls.append(action)
+        rows = {
+            "service_status": {"success": True, "active_state": "failed"},
+            "config_validate": {
+                "success": True, "supported": False, "valid": None,
+                "detail": "config_validation_adapter_unavailable",
+            },
+            "service_runtime_discovery": {
+                "success": True, "runtime": "dotnet",
+                "entrypoint": "/data/service/Api.dll",
+                "publish_directory": "/data/service",
+            },
+            "dotnet_config_syntax": {
+                "success": True, "supported": True, "runtime": "dotnet",
+                "validator": "aiops-local-python-json-syntax-only",
+                "validated_scope": "json_syntax_only",
+                "syntax_valid": True, "status": "syntax_valid",
+                "config_contents_exposed": False,
+                "config_values_persisted": False,
+                "environment_values_read": False,
+                "files": [{"file": "appsettings.json", "status": "valid_json_syntax"}],
+            },
+        }
+        return _execution_result(action, rows[action])
+    monkeypatch.setattr(RunbookRuntimeGuard, "_vm_read", staticmethod(fake_vm_read))
+    snap = await RunbookRuntimeGuard.collect_snapshot(
+        runbook_id="vm-service-recovery", target="10.100.6.199",
+        parameters={"service": "gfpapi"}, incident_id="incident-1",
+        phase="chat_preapproval",
+    )
+    assert calls == ["service_status", "config_validate",
+                     "service_runtime_discovery", "dotnet_config_syntax"]
+    gate = RunbookRuntimeGuard.preflight(
+        runbook_id="vm-service-recovery", tool_name="ssh_vm",
+        action="restart_service", target="10.100.6.199",
+        parameters={"service": "gfpapi"}, incident_id="incident-1",
+        evidence=snap["evidence"],
+    )
+    assert gate["safe_to_execute"] is True
+    assert gate["validation_scope"] == "dotnet_json_syntax_only"
+    assert gate["configuration_semantics_valid"] is None
+    assert len(gate["evidence_refs"]) == 4
+    for action in ("reload_service", "start_service"):
+        status = gate if action == "restart_service" else RunbookRuntimeGuard.preflight(
+            runbook_id="vm-service-recovery", tool_name="ssh_vm",
+            action=action, target="10.100.6.199",
+            parameters={"service": "gfpapi"}, incident_id="incident-1",
+            evidence=snap["evidence"],
+        )
+        if action != "restart_service":
+            assert status["safe_to_execute"] is False
+
+
+@pytest.mark.asyncio
+async def test_unsupported_generic_config_without_dotnet_does_not_auto_pass(monkeypatch):
+    calls = []
+    async def fake_vm_read(*, action, target, parameters, incident_id):
+        calls.append(action)
+        rows = {
+            "service_status": {"success": True, "active_state": "failed"},
+            "config_validate": {
+                "success": True, "supported": False, "valid": None,
+                "detail": "config_validation_adapter_unavailable",
+            },
+            "service_runtime_discovery": {"success": True, "runtime": "unknown"},
+        }
+        return _execution_result(action, rows[action])
+    monkeypatch.setattr(RunbookRuntimeGuard, "_vm_read", staticmethod(fake_vm_read))
+    snap = await RunbookRuntimeGuard.collect_snapshot(
+        runbook_id="vm-service-recovery", target="10.100.6.199",
+        parameters={"service": "unknown-api"}, incident_id="incident-1",
+        phase="chat_preapproval",
+    )
+    assert calls == ["service_status", "config_validate", "service_runtime_discovery"]
+    gate = RunbookRuntimeGuard.preflight(
+        runbook_id="vm-service-recovery", tool_name="ssh_vm", action="restart_service",
+        target="10.100.6.199", parameters={"service": "unknown-api"},
+        incident_id="incident-1", evidence=snap["evidence"],
+    )
+    assert gate["safe_to_execute"] is False
+    assert gate["reason"] == "dotnet_runtime_identity_unverified"
