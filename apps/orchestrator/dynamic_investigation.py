@@ -8,12 +8,13 @@ from __future__ import annotations
 
 import asyncio
 import json
+import re
 from typing import Any, Mapping
 
 from apps.rag_service import KnowledgeRAGService
 from domain.contracts.config import settings
 from domain.contracts.redaction import redact_text
-from integrations.vm.service_adapters import enrich_legacy_config_diagnostic
+from integrations.vm.service_adapters import parse_config_diagnostic
 
 
 # This is an intentionally small subset of existing EvidenceCollector probes.
@@ -57,7 +58,18 @@ class DynamicInvestigationPlanner:
             if (raw.get("success") is not True or raw.get("supported") is not True
                     or raw.get("valid") is not False):
                 return None
-            parsed = enrich_legacy_config_diagnostic(raw)
+            parsed = dict(raw)
+            # Older MCP results have only 'detail'; select the fatal compiler
+            # line rather than an unrelated warning emitted first.
+            detail = str(raw.get("detail") or "")[:4000]
+            serious_lines = [
+                line for line in detail.splitlines()
+                if re.search(r"\\[(?:emerg|alert|crit|error|fatal)\\]|syntax error|unknown directive|unexpected", line, re.I)
+            ]
+            compiler = parse_config_diagnostic("\\n".join(serious_lines) if serious_lines else detail)
+            for key in ("config_file", "error_line", "syntax_error"):
+                if parsed.get(key) in (None, "") and compiler.get(key) is not None:
+                    parsed[key] = compiler[key]
             return {
                 "service": _bounded(parsed.get("service"), 80),
                 "config_file": _bounded(parsed.get("config_file"), 260),
