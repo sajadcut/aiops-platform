@@ -447,3 +447,67 @@ def test_approval_snapshot_still_invalidates_on_material_action_change():
     first = report("start_service", NOW)
     changed = report("restart_service", NOW + timedelta(seconds=43))
     assert first["snapshot_id"] != changed["snapshot_id"]
+
+
+def test_agent_audit_preserves_distinct_findings_hypotheses_and_evidence_coverage():
+    state = {
+        "analysis_results": [
+            {
+                "agent_name": "vm", "finding_type": "service_stopped",
+                "statement": "VM evidence: nginx inactive, configuration valid",
+                "status": "partial", "confidence": 0.93,
+                "evidence_count": 30, "evidence_coverage": 0.71,
+                "evidence_quality": 0.85,
+                "findings": ["active_state=inactive", "valid=true"],
+                "hypotheses": [{
+                    "hypothesis": "A manual stop is possible but not proven",
+                    "probability": 0.34, "evidence_ids": ["ev1"],
+                    "conflicting_evidence_ids": [],
+                    "falsification_checks": ["Read auditd events"],
+                }],
+                "recommended_checks": ["Read system journal"],
+                "missing_evidence": ["auditd logs for systemctl commands"],
+                "uncertainty_reason": "actor_unknown",
+                "requires_human_review": True,
+                "evidence_ids": ["ev1", "ev2"],
+                "analysis_details": {"focus": ["systemd", "process"],
+                                     "private_prompt": "MUST_NOT_DISPLAY"},
+            },
+            {
+                "agent_name": "network", "finding_type": "network_check",
+                "statement": "Network check: tcp port 8080 not listening",
+                "status": "success", "confidence": 0.32,
+                "findings": ["No listener on target port"],
+                "evidence_ids": ["ev3"],
+            },
+        ],
+    }
+    report = make_brief(state=state)
+    vm, network = report["agent_findings"]
+    assert vm["findings"] == ["active_state=inactive", "valid=true"]
+    assert network["findings"] == ["No listener on target port"]
+    assert vm["evidence_coverage"] == 0.71
+    assert vm["evidence_quality"] == 0.85
+    assert vm["evidence_count"] == 30
+    assert vm["hypotheses"][0]["probability"] == 0.34
+    assert vm["hypotheses"][0]["evidence_refs"] == ["ev1"]
+    assert vm["hypotheses"][0]["falsification_checks"] == ["Read auditd events"]
+    assert vm["recommended_checks"] == ["Read system journal"]
+    assert vm["requires_human_review"] is True
+    assert vm["focus"] == ["systemd", "process"]
+    assert "MUST_NOT_DISPLAY" not in str(report)
+    assert report["source_policy"]["authorizes_execution"] is False
+
+
+def test_agent_audit_is_backward_compatible_when_specialist_details_are_missing():
+    report = make_brief(state={"analysis_results": [{
+        "agent_name": "application",
+        "statement": "unknown",
+        "confidence": 0.12,
+    }]})
+    one = report["agent_findings"][0]
+    assert one["findings"] == []
+    assert one["hypotheses"] == []
+    assert one["recommended_checks"] == []
+    assert one["evidence_coverage"] is None
+    assert one["evidence_count"] is None
