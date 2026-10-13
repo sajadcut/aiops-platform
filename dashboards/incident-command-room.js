@@ -1042,6 +1042,9 @@
         esc(fa?scope[1]:(a.mission||'Specialist scope; no additional mission description recorded'))+
         (a.analysis_at?' · '+esc(fa?'زمان ثبت تحلیل:':'Analysis recorded:')+' '+txt(date(a.analysis_at)):'')+'</div>'+
         metric+
+        '<details class="ic-agent-investigation"><summary>'+esc(fa?
+          'نمایش بررسی‌ها، فرضیه‌ها و شواهد این ایجنت':'Show agent checks, hypotheses and evidence')+
+        '</summary><div class="ic-agent-investigation-body">'+
         '<div class="ic-agent-subsection"><h4>'+esc(fa?'یافته‌ها و نتیجهٔ ثبت‌شده':'Recorded findings and outcome')+'</h4>'+summary+'</div>'+
         '<div class="ic-agent-subsection"><h4>'+esc(fa?'شواهدی که در تحلیل به آنها ارجاع شده':'Evidence referenced in the analysis')+'</h4>'+
         evidenceHtml+recordedTools+
@@ -1055,7 +1058,7 @@
         candidates+pending+nextChecks+proposed+
         agentDetail(fa?'متن اصلی و شناسه‌های قابل ممیزی':'Original details and references',
           originalReport||empty(fa?'اطلاعات فنی بیشتری ثبت نشده است.':'No further details recorded'))+
-        '</article>';
+        '</div></details></article>';
     });
     show('#ic-agents',cards.length?cards.join(''):empty(fa?'هنوز خروجی ایجنتی ثبت نشده است.':'No specialist result recorded.'));
   }
