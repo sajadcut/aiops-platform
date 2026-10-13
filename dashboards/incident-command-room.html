@@ -95,6 +95,7 @@
   <nav class="ic-section-nav" aria-label="بخش‌های گزارش">
     <a href="#ic-overview" data-i18n="navOverview">خلاصه تصمیم</a>
     <a href="#ic-received" data-i18n="navReceived">آلارم دریافتی</a>
+    <a href="#ic-chat" data-i18n="navChat">چت رخداد</a>
     <a href="#ic-review" data-i18n="navReview">قبل از تأیید</a>
     <a href="#ic-analysis" data-i18n="navAnalysis">تحلیل Agentها</a>
     <a href="#ic-evidence" data-i18n="navEvidence">شواهد و MCP</a>
@@ -128,6 +129,27 @@
         <div id="ic-received-signals" class="ic-received-signals" aria-live="polite" aria-busy="true">
           <p class="ic-empty" data-i18n="receivedLoading">در حال دریافت آلارم ثبت‌شده…</p>
         </div>
+      </section>
+
+      <section class="ic-section ic-section-featured" id="ic-chat" aria-labelledby="ic-chat-heading">
+        <div class="ic-section-heading"><span class="ic-section-number">AI</span><div>
+          <p class="ic-overline" data-i18n="chatSubtitle">گفت‌وگوی متصل به شواهد و مجوزهای همین رخداد</p>
+          <h2 id="ic-chat-heading" data-i18n="chatTitle">دستیار تعاملی رخداد</h2>
+        </div></div>
+        <p class="ic-received-note" data-i18n="chatNote">بعد از تحلیل می‌توانی درباره خطا سؤال کنی، وضعیت زنده یا کانفیگ را بررسی کنی و برای عملیات درخواست تأیید ثبت کنی. هیچ دستور اجرایی صرفاً با پیام چت انجام نمی‌شود.</p>
+        <div class="ic-chat-quick" id="ic-chat-suggestions">
+          <button class="ic-btn ic-btn-muted" type="button" data-incident-chat-prompt="error" data-i18n="chatError">علت خطا چیست؟</button>
+          <button class="ic-btn ic-btn-muted" type="button" data-incident-chat-prompt="config" data-i18n="chatConfig">کانفیگ را بررسی کن</button>
+          <button class="ic-btn ic-btn-muted" type="button" data-incident-chat-prompt="status" data-i18n="chatStatus">وضعیت سرویس را بررسی کن</button>
+          <button class="ic-btn ic-btn-muted" type="button" data-incident-chat-prompt="reload" data-i18n="chatReload">ریلود سرویس را پیشنهاد بده</button>
+        </div>
+        <div id="ic-chat-thread" class="ic-chat-thread" aria-live="polite" role="log" aria-label="گفت‌وگوی این رخداد"></div>
+        <form id="ic-chat-form" class="ic-chat-form">
+          <label for="ic-chat-message" class="ic-chat-label" data-i18n="chatMessageLabel">پیام شما برای این Incident</label>
+          <textarea id="ic-chat-message" rows="3" maxlength="4000" required placeholder="مثلاً بررسی کن nginx -t چه خطایی می‌دهد؛ اگر مناسب است پیشنهاد reload بده"></textarea>
+          <button id="ic-chat-send" type="submit" class="ic-btn ic-btn-primary" data-i18n="chatSend">ارسال پیام</button>
+        </form>
+        <p id="ic-chat-status" role="status" aria-live="polite" class="ic-chat-caption"></p>
       </section>
 
       <section class="ic-section" id="ic-review">
