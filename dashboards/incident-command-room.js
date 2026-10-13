@@ -442,13 +442,16 @@
     const l=state.lifecycle||{},r=state.report||{},p=state.progress||{};
     const approval=low(l.approval?.status||p.approval_status||r.approval_readiness?.approval_status);
     const statusValue=low(l.incident_status||p.incident_status||r.incident_summary?.status);
-    const running=l.analysis_in_progress===true ||
+    const precheckStatus=p.stages?.pre_execution_check?.status;
+    const precheckActive=precheckStatus==='started';
+    const precheckFailed=precheckStatus==='failed';
+    const running=precheckActive||l.analysis_in_progress===true ||
       (l.analysis_in_progress==null && statusValue==='analyzing' &&
        !['pending','approved','rejected'].includes(approval) &&
        !['paused','completed','failed'].includes(low(l.checkpoint_status)));
-    const awaiting=['pending','approved'].includes(approval);
+    const awaiting=!precheckActive&&!precheckFailed&&['pending','approved'].includes(approval);
     const terminal=['completed','failed'].includes(low(p.checkpoint_status));
-    const crashed=Boolean(p.failed_stage&&!p.current_stage&&!awaiting&&!terminal);
+    const crashed=Boolean((precheckFailed||p.failed_stage&&!p.current_stage)&&!awaiting&&!terminal);
     const hasEvents=Boolean(p.last_event_at);
     if(state.historic || (!running && !awaiting && !hasEvents)){box.hidden=true;return;}
     box.hidden=false;
