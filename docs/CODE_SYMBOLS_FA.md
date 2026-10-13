@@ -563,9 +563,9 @@
 | `agents/shared/telemetry.py` | `AgentTelemetry.record_collaboration` | 81 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | AgentTelemetry |
 | `agents/shared/telemetry.py` | `AgentTelemetry.snapshot` | 97 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | AgentTelemetry |
 | `agents/shared/telemetry.py` | `AgentTelemetry.clear` | 122 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | AgentTelemetry |
-| `agents/storage/__init__.py` | `StorageAgent` | 15 | class | کلاس | module |
-| `agents/storage/__init__.py` | `StorageAgent.__init__` | 35 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | StorageAgent |
-| `agents/storage/__init__.py` | `StorageAgent.analyze` | 38 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | StorageAgent |
+| `agents/storage/__init__.py` | `StorageAgent` | 16 | class | کلاس | module |
+| `agents/storage/__init__.py` | `StorageAgent.__init__` | 36 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | StorageAgent |
+| `agents/storage/__init__.py` | `StorageAgent.analyze` | 39 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | StorageAgent |
 | `agents/storage/engine.py` | `_raw` | 7 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/storage/engine.py` | `_labels` | 12 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/storage/engine.py` | `_eid` | 19 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
