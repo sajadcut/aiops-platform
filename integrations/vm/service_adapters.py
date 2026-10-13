@@ -150,7 +150,7 @@ def parse_config_diagnostic(output: str) -> dict:
     severe = [
         line for line in lines
         if re.search(
-            r"\\[(?:emerg|alert|crit|error|fatal)\\]|syntax error|"
+            r"\[(?:emerg|alert|crit|error|fatal)\]|syntax error|"
             r"unknown (?:directive|keyword)|unexpected|error parsing",
             line, re.I,
         )
