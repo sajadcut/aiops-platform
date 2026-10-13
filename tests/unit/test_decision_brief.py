@@ -544,7 +544,7 @@ def test_historical_unrelated_cognia_item_is_suppressed_in_live_brief():
         "service_name": "gfpapi",
         "knowledge_status": {"status": "available"},
         "knowledge_results": [{
-            "source_id": "wrong-nginx", "content": "Service: nginx\\nNginx unit recovery",
+            "source_id": "wrong-nginx", "content": "Service: nginx\nNginx unit recovery",
             "relevance": 0.99,
         }],
     }
