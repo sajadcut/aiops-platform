@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 477 | Dashboard JS files scanned: 8 | Symbols indexed: 4759**
+**Python files scanned: 478 | Dashboard JS files scanned: 8 | Symbols indexed: 4773**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -474,45 +474,45 @@
 | `agents/shared/a2a_agent.py` | `A2AAgent._validate_target` | 46 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | A2AAgent |
 | `agents/shared/a2a_agent.py` | `A2AAgent.send_request` | 53 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | A2AAgent |
 | `agents/shared/a2a_agent.py` | `A2AAgent.close` | 73 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | A2AAgent |
-| `agents/shared/base.py` | `_coerce_unit_interval_score` | 65 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `agents/shared/base.py` | `AgentInput` | 83 | class | کلاس | module |
-| `agents/shared/base.py` | `OperationalHypothesis` | 91 | class | کلاس | module |
-| `agents/shared/base.py` | `OperationalHypothesis.normalize_probability` | 102 | method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | OperationalHypothesis |
-| `agents/shared/base.py` | `RecommendedAction` | 106 | class | کلاس | module |
-| `agents/shared/base.py` | `EvidenceRequest` | 116 | class | Bounded read-only request for the Context/Evidence layer. | module |
-| `agents/shared/base.py` | `AgentOutput` | 128 | class | کلاس | module |
-| `agents/shared/base.py` | `AgentOutput.normalize_confidence` | 167 | method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | AgentOutput |
-| `agents/shared/base.py` | `AgentOutput.derive_operational_fields` | 171 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | AgentOutput |
-| `agents/shared/base.py` | `StructuredAgentResponseError` | 202 | class | کلاس | module |
-| `agents/shared/base.py` | `_unique` | 206 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `agents/shared/base.py` | `_canonical_evidence_request` | 215 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `agents/shared/base.py` | `BaseAgent` | 230 | class | Evidence-first, analysis-only base contract for operational specialists. | module |
-| `agents/shared/base.py` | `BaseAgent.__init__` | 233 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
-| `agents/shared/base.py` | `BaseAgent.name` | 239 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
-| `agents/shared/base.py` | `BaseAgent.description` | 244 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
-| `agents/shared/base.py` | `BaseAgent.allowed_tools` | 248 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
-| `agents/shared/base.py` | `BaseAgent.analyze` | 252 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
-| `agents/shared/base.py` | `BaseAgent.validate_input` | 255 | async method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | BaseAgent |
-| `agents/shared/base.py` | `BaseAgent.generate_structured` | 258 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
-| `agents/shared/base.py` | `BaseAgent._parse_json_object` | 348 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
-| `agents/shared/base.py` | `BaseAgent._validate_structured_shape` | 358 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
-| `agents/shared/base.py` | `BaseAgent._parse_evidence_timestamp` | 387 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
-| `agents/shared/base.py` | `BaseAgent.evidence_is_stale` | 402 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
-| `agents/shared/base.py` | `BaseAgent.evidence_items` | 410 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
-| `agents/shared/base.py` | `BaseAgent.stale_evidence_ids` | 437 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
-| `agents/shared/base.py` | `BaseAgent.knowledge_items` | 451 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
-| `agents/shared/base.py` | `BaseAgent.memory_items` | 458 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
-| `agents/shared/base.py` | `BaseAgent.memory_items.bounded_text` | 463 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent.memory_items |
-| `agents/shared/base.py` | `BaseAgent.memory_items.bounded_joined` | 475 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent.memory_items |
-| `agents/shared/base.py` | `BaseAgent.auxiliary_context` | 623 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
-| `agents/shared/base.py` | `BaseAgent.evidence_ids` | 646 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
-| `agents/shared/base.py` | `BaseAgent.evidence_coverage` | 655 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
-| `agents/shared/base.py` | `BaseAgent.safe_confidence` | 660 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
-| `agents/shared/base.py` | `BaseAgent.normalize_list` | 676 | method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | BaseAgent |
-| `agents/shared/base.py` | `BaseAgent.missing_evidence_for` | 693 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
-| `agents/shared/base.py` | `BaseAgent.human_review_required` | 701 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
-| `agents/shared/base.py` | `BaseAgent.action_appears_mutating` | 705 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
-| `agents/shared/base.py` | `BaseAgent.analysis_only_actions` | 709 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
+| `agents/shared/base.py` | `_coerce_unit_interval_score` | 66 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/shared/base.py` | `AgentInput` | 84 | class | کلاس | module |
+| `agents/shared/base.py` | `OperationalHypothesis` | 92 | class | کلاس | module |
+| `agents/shared/base.py` | `OperationalHypothesis.normalize_probability` | 103 | method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | OperationalHypothesis |
+| `agents/shared/base.py` | `RecommendedAction` | 107 | class | کلاس | module |
+| `agents/shared/base.py` | `EvidenceRequest` | 117 | class | Bounded read-only request for the Context/Evidence layer. | module |
+| `agents/shared/base.py` | `AgentOutput` | 129 | class | کلاس | module |
+| `agents/shared/base.py` | `AgentOutput.normalize_confidence` | 168 | method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | AgentOutput |
+| `agents/shared/base.py` | `AgentOutput.derive_operational_fields` | 172 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | AgentOutput |
+| `agents/shared/base.py` | `StructuredAgentResponseError` | 203 | class | کلاس | module |
+| `agents/shared/base.py` | `_unique` | 207 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/shared/base.py` | `_canonical_evidence_request` | 216 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `agents/shared/base.py` | `BaseAgent` | 231 | class | Evidence-first, analysis-only base contract for operational specialists. | module |
+| `agents/shared/base.py` | `BaseAgent.__init__` | 234 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
+| `agents/shared/base.py` | `BaseAgent.name` | 240 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
+| `agents/shared/base.py` | `BaseAgent.description` | 245 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
+| `agents/shared/base.py` | `BaseAgent.allowed_tools` | 249 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
+| `agents/shared/base.py` | `BaseAgent.analyze` | 253 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
+| `agents/shared/base.py` | `BaseAgent.validate_input` | 256 | async method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | BaseAgent |
+| `agents/shared/base.py` | `BaseAgent.generate_structured` | 259 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
+| `agents/shared/base.py` | `BaseAgent._parse_json_object` | 349 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
+| `agents/shared/base.py` | `BaseAgent._validate_structured_shape` | 359 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
+| `agents/shared/base.py` | `BaseAgent._parse_evidence_timestamp` | 388 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
+| `agents/shared/base.py` | `BaseAgent.evidence_is_stale` | 403 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
+| `agents/shared/base.py` | `BaseAgent.evidence_items` | 411 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
+| `agents/shared/base.py` | `BaseAgent.stale_evidence_ids` | 438 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
+| `agents/shared/base.py` | `BaseAgent.knowledge_items` | 452 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
+| `agents/shared/base.py` | `BaseAgent.memory_items` | 463 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
+| `agents/shared/base.py` | `BaseAgent.memory_items.bounded_text` | 468 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent.memory_items |
+| `agents/shared/base.py` | `BaseAgent.memory_items.bounded_joined` | 480 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent.memory_items |
+| `agents/shared/base.py` | `BaseAgent.auxiliary_context` | 628 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
+| `agents/shared/base.py` | `BaseAgent.evidence_ids` | 651 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
+| `agents/shared/base.py` | `BaseAgent.evidence_coverage` | 660 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
+| `agents/shared/base.py` | `BaseAgent.safe_confidence` | 665 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
+| `agents/shared/base.py` | `BaseAgent.normalize_list` | 681 | method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | BaseAgent |
+| `agents/shared/base.py` | `BaseAgent.missing_evidence_for` | 698 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
+| `agents/shared/base.py` | `BaseAgent.human_review_required` | 706 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
+| `agents/shared/base.py` | `BaseAgent.action_appears_mutating` | 710 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
+| `agents/shared/base.py` | `BaseAgent.analysis_only_actions` | 714 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
 | `agents/shared/coordinator.py` | `IncidentCoordinator` | 8 | class | Deterministic coordinator for routing and multi-agent synthesis. | module |
 | `agents/shared/coordinator.py` | `IncidentCoordinator.select_agents` | 33 | method | بر اساس state/capability مسیر یا handler مناسب را انتخاب می‌کند | IncidentCoordinator |
 | `agents/shared/coordinator.py` | `IncidentCoordinator.select_agents.add` | 43 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentCoordinator.select_agents |
@@ -727,32 +727,32 @@
 | `apps/api/incident_chat.py` | `incident_chat_history` | 178 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/incident_chat.py` | `incident_chat_message` | 224 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/incident_chat.py` | `incident_chat_request_approval` | 473 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/incident_resources.py` | `MemoryLifecycleRequest` | 30 | class | کلاس | module |
-| `apps/api/incident_resources.py` | `_require_current_database_schema` | 35 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/incident_resources.py` | `get_context` | 40 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
-| `apps/api/incident_resources.py` | `get_evidence` | 57 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
-| `apps/api/incident_resources.py` | `get_received_signals` | 83 | async function | Original source notifications from durable Evidence; read-only and RBAC-guarded. | module |
-| `apps/api/incident_resources.py` | `get_knowledge` | 128 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
-| `apps/api/incident_resources.py` | `get_memory` | 160 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
-| `apps/api/incident_resources.py` | `get_memory_health` | 253 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
-| `apps/api/incident_resources.py` | `get_memory_summary` | 265 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
-| `apps/api/incident_resources.py` | `invalidate_memory` | 290 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/incident_resources.py` | `validate_memory` | 317 | async function | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | module |
-| `apps/api/incident_resources.py` | `get_plan` | 337 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
-| `apps/api/incident_resources.py` | `get_verification` | 362 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
-| `apps/api/incident_resources.py` | `get_incident_audit` | 370 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
-| `apps/api/incident_resources.py` | `get_incident_progress` | 378 | async function | Read-only actual workflow steps; never advances or creates an Incident. | module |
-| `apps/api/incident_resources.py` | `stream_incident_progress` | 388 | async function | Authenticated SSE with initial state + changes; no browser page reload. | module |
-| `apps/api/incident_resources.py` | `stream_incident_progress.generate` | 400 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | stream_incident_progress |
-| `apps/api/incident_resources.py` | `get_incident_analysis_status` | 429 | async function | Small, read-only polling contract; never starts or resumes a workflow. | module |
-| `apps/api/incident_resources.py` | `get_incident_lifecycle` | 482 | async function | Return durable governance plus structured agent routing/collaboration state. | module |
-| `apps/api/incident_resources.py` | `get_operator_recommendation_fa` | 546 | async function | Translate the durable English recommendation solely for Persian display. | module |
-| `apps/api/incident_resources.py` | `get_operator_summary` | 588 | async function | Return a read-only Persian operator summary derived from current durable Incident state. | module |
-| `apps/api/incident_resources.py` | `load_decision_brief_for_incident` | 685 | async function | Internal builder; reads all contract sections in the caller's transaction. | module |
-| `apps/api/incident_resources.py` | `get_incident_decision_brief` | 802 | async function | Read-only, RBAC-protected latest version. No archive writes or side effects. | module |
-| `apps/api/incident_resources.py` | `get_decision_brief_history` | 812 | async function | Read only previously archived, immutable lifecycle reports. | module |
-| `apps/api/incident_resources.py` | `get_decision_brief_historical_snapshot` | 828 | async function | Exact archived report; never regenerated against current Incident state. | module |
-| `apps/api/incident_resources.py` | `get_incident_decision_brief_narrative` | 842 | async function | Optional display prose; approval and the deterministic brief stay authoritative. | module |
+| `apps/api/incident_resources.py` | `MemoryLifecycleRequest` | 31 | class | کلاس | module |
+| `apps/api/incident_resources.py` | `_require_current_database_schema` | 36 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/incident_resources.py` | `get_context` | 41 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
+| `apps/api/incident_resources.py` | `get_evidence` | 58 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
+| `apps/api/incident_resources.py` | `get_received_signals` | 84 | async function | Original source notifications from durable Evidence; read-only and RBAC-guarded. | module |
+| `apps/api/incident_resources.py` | `get_knowledge` | 129 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
+| `apps/api/incident_resources.py` | `get_memory` | 168 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
+| `apps/api/incident_resources.py` | `get_memory_health` | 261 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
+| `apps/api/incident_resources.py` | `get_memory_summary` | 273 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
+| `apps/api/incident_resources.py` | `invalidate_memory` | 298 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/incident_resources.py` | `validate_memory` | 325 | async function | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | module |
+| `apps/api/incident_resources.py` | `get_plan` | 345 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
+| `apps/api/incident_resources.py` | `get_verification` | 370 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
+| `apps/api/incident_resources.py` | `get_incident_audit` | 378 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
+| `apps/api/incident_resources.py` | `get_incident_progress` | 386 | async function | Read-only actual workflow steps; never advances or creates an Incident. | module |
+| `apps/api/incident_resources.py` | `stream_incident_progress` | 396 | async function | Authenticated SSE with initial state + changes; no browser page reload. | module |
+| `apps/api/incident_resources.py` | `stream_incident_progress.generate` | 408 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | stream_incident_progress |
+| `apps/api/incident_resources.py` | `get_incident_analysis_status` | 437 | async function | Small, read-only polling contract; never starts or resumes a workflow. | module |
+| `apps/api/incident_resources.py` | `get_incident_lifecycle` | 490 | async function | Return durable governance plus structured agent routing/collaboration state. | module |
+| `apps/api/incident_resources.py` | `get_operator_recommendation_fa` | 554 | async function | Translate the durable English recommendation solely for Persian display. | module |
+| `apps/api/incident_resources.py` | `get_operator_summary` | 596 | async function | Return a read-only Persian operator summary derived from current durable Incident state. | module |
+| `apps/api/incident_resources.py` | `load_decision_brief_for_incident` | 693 | async function | Internal builder; reads all contract sections in the caller's transaction. | module |
+| `apps/api/incident_resources.py` | `get_incident_decision_brief` | 810 | async function | Read-only, RBAC-protected latest version. No archive writes or side effects. | module |
+| `apps/api/incident_resources.py` | `get_decision_brief_history` | 820 | async function | Read only previously archived, immutable lifecycle reports. | module |
+| `apps/api/incident_resources.py` | `get_decision_brief_historical_snapshot` | 836 | async function | Exact archived report; never regenerated against current Incident state. | module |
+| `apps/api/incident_resources.py` | `get_incident_decision_brief_narrative` | 850 | async function | Optional display prose; approval and the deterministic brief stay authoritative. | module |
 | `apps/api/incidents.py` | `simulate_incident` | 24 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/incidents.py` | `analyze_incident` | 48 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/incidents.py` | `RemediationRequest` | 109 | class | کلاس | module |
@@ -989,7 +989,7 @@
 | `apps/context_service/__init__.py` | `ContextBuilder._known` | 59 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ContextBuilder |
 | `apps/context_service/__init__.py` | `ContextBuilder._knowledge_failure_status` | 66 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ContextBuilder |
 | `apps/context_service/__init__.py` | `ContextBuilder.build_context` | 93 | async method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | ContextBuilder |
-| `apps/context_service/__init__.py` | `ContextBuilder.build_context.avg` | 204 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ContextBuilder.build_context |
+| `apps/context_service/__init__.py` | `ContextBuilder.build_context.avg` | 205 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ContextBuilder.build_context |
 | `apps/context_service/asset_identity.py` | `AssetContext` | 10 | class | کلاس | module |
 | `apps/context_service/asset_identity.py` | `AssetIdentityResolver` | 35 | class | Deterministically derives one asset identity from live-source metadata. | module |
 | `apps/context_service/asset_identity.py` | `AssetIdentityResolver.resolve` | 46 | method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | AssetIdentityResolver |
@@ -1023,8 +1023,11 @@
 | `apps/context_service/evidence_collector.py` | `EvidenceCollector._healthy` | 205 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | EvidenceCollector |
 | `apps/context_service/evidence_collector.py` | `EvidenceCollector._vm_evidence` | 217 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | EvidenceCollector |
 | `apps/context_service/evidence_collector.py` | `EvidenceCollector._collect` | 249 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | EvidenceCollector |
-| `apps/context_service/knowledge_relevance.py` | `_service` | 17 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/context_service/knowledge_relevance.py` | `filter_service_knowledge` | 21 | function | Drop documents whose *declared owner service* contradicts the incident. | module |
+| `apps/context_service/knowledge_relevance.py` | `_service` | 18 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/context_service/knowledge_relevance.py` | `_metadata` | 22 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/context_service/knowledge_relevance.py` | `_declared_services` | 27 | function | Read explicit ownership only; never guess from free-text mentions. | module |
+| `apps/context_service/knowledge_relevance.py` | `_generic` | 39 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/context_service/knowledge_relevance.py` | `filter_service_knowledge` | 51 | function | Fail closed for unowned and mismatched knowledge across ALL services. | module |
 | `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver` | 9 | class | Deterministic bridge from Cognia Knowledge chunks to asset-discovery hints. | module |
 | `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver.build_discovery_query` | 71 | method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | KnowledgeTopologyResolver |
 | `apps/context_service/knowledge_topology.py` | `KnowledgeTopologyResolver.constrain_trigger_service` | 102 | method | Do not turn an unrelated RAG hit into a source-alert service identity. | KnowledgeTopologyResolver |
@@ -1070,8 +1073,8 @@
 | `apps/decision_brief.py` | `tool_observation_summary` | 186 | function | Only bounded, whitelisted scalar facts: never dump journals or tool JSON. | module |
 | `apps/decision_brief.py` | `_mcp` | 225 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/decision_brief.py` | `_knowledge` | 288 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/decision_brief.py` | `_memory` | 324 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/decision_brief.py` | `build_decision_brief` | 349 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
+| `apps/decision_brief.py` | `_memory` | 335 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/decision_brief.py` | `build_decision_brief` | 360 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
 | `apps/decision_brief_history.py` | `archive_decision_brief` | 22 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/decision_brief_history.py` | `list_decision_brief_history` | 62 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
 | `apps/decision_brief_history.py` | `read_decision_brief_snapshot` | 83 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
@@ -1314,36 +1317,36 @@
 | `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner.enrich_knowledge` | 186 | async method | Query Cognia again with a verified error, preserving access scope. | DynamicInvestigationPlanner |
 | `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner.propose` | 259 | async method | LLM chooses from read-only capabilities, never arbitrary code. | DynamicInvestigationPlanner |
 | `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner.evidence_requests` | 466 | method | Convert validated enum members, never LLM text, to connector requests. | DynamicInvestigationPlanner |
-| `apps/orchestrator/e2e_graph.py` | `E2EState` | 48 | class | کلاس | module |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator` | 78 | class | کلاس | module |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator.__init__` | 79 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._build_graph` | 102 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._build_graph.observed_node` | 107 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator._build_graph |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._build_graph.observed_node.observed` | 108 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator._build_graph.observed_node |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator.run` | 140 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._audit` | 147 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._knowledge_failure_status` | 158 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._operational_memory_query` | 188 | method | Build a bounded symptom query without copying raw logs or credentials. | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._context_node` | 248 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._triage_node` | 399 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._agent_input` | 428 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._run_specialists` | 436 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._run_specialists.observed_agent` | 441 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator._run_specialists |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._additional_evidence_round` | 501 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._parallel_agents_node` | 540 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._rca_node` | 602 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._live_evidence_ids` | 637 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._evaluator_node` | 660 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._route_after_evaluation` | 678 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._decision_node` | 686 | async method | Evaluate the concrete execution binding, never RCA prose alone. | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._route_after_decision` | 726 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._approval_node` | 739 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._route_after_approval` | 752 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._execution_node` | 759 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._verification_node` | 768 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._memory_node` | 875 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._end_node` | 965 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._average_confidence` | 972 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EState` | 50 | class | کلاس | module |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator` | 80 | class | کلاس | module |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator.__init__` | 81 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._build_graph` | 104 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._build_graph.observed_node` | 109 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator._build_graph |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._build_graph.observed_node.observed` | 110 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator._build_graph.observed_node |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator.run` | 142 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._audit` | 149 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._knowledge_failure_status` | 160 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._operational_memory_query` | 190 | method | Build a bounded symptom query without copying raw logs or credentials. | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._context_node` | 250 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._triage_node` | 420 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._agent_input` | 449 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._run_specialists` | 457 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._run_specialists.observed_agent` | 462 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator._run_specialists |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._additional_evidence_round` | 522 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._parallel_agents_node` | 561 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._rca_node` | 623 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._live_evidence_ids` | 658 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._evaluator_node` | 681 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._route_after_evaluation` | 699 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._decision_node` | 707 | async method | Evaluate the concrete execution binding, never RCA prose alone. | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._route_after_decision` | 747 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._approval_node` | 760 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._route_after_approval` | 773 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._execution_node` | 780 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._verification_node` | 789 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._memory_node` | 896 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._end_node` | 986 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._average_confidence` | 993 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
 | `apps/orchestrator/graph.py` | `WorkflowOrchestrator` | 16 | class | Backward-compatible facade; not a second orchestration implementation. | module |
 | `apps/orchestrator/graph.py` | `WorkflowOrchestrator.__init__` | 19 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | WorkflowOrchestrator |
 | `apps/orchestrator/graph.py` | `WorkflowOrchestrator.run` | 23 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | WorkflowOrchestrator |
@@ -1377,16 +1380,16 @@
 | `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime._reset_execution_context` | 222 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
 | `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime._preconsume_execution_guard` | 229 | async method | Revalidate supported write intent before consuming approval authority. | DurableWorkflowRuntime |
 | `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime.resume_after_approval` | 347 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
-| `apps/orchestrator/signal_aware.py` | `SignalAwareE2EOrchestrator` | 28 | class | Collaborative E2E workflow for source-triggered and API-triggered incidents. | module |
-| `apps/orchestrator/signal_aware.py` | `SignalAwareE2EOrchestrator._context_node` | 37 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalAwareE2EOrchestrator |
-| `apps/orchestrator/signal_aware.py` | `SignalAwareE2EOrchestrator._publish_peer_context` | 231 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalAwareE2EOrchestrator |
-| `apps/orchestrator/signal_aware.py` | `SignalAwareE2EOrchestrator._parallel_agents_node` | 253 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalAwareE2EOrchestrator |
-| `apps/orchestrator/signal_aware.py` | `SignalAwareE2EOrchestrator._deterministic_rca_fallback` | 409 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalAwareE2EOrchestrator |
-| `apps/orchestrator/signal_aware.py` | `SignalAwareE2EOrchestrator._rca_auxiliary_context` | 441 | method | Expose bounded governed auxiliary context to RCA without bypassing attribution. | SignalAwareE2EOrchestrator |
-| `apps/orchestrator/signal_aware.py` | `SignalAwareE2EOrchestrator._rca_node` | 473 | async method | Bound RCA context so provider token limits cannot erase deterministic recovery. | SignalAwareE2EOrchestrator |
-| `apps/orchestrator/signal_aware.py` | `SignalAwareE2EOrchestrator._decision_node` | 546 | async method | Bind deterministic policy to the concrete tool/action/target request. | SignalAwareE2EOrchestrator |
-| `apps/orchestrator/signal_aware.py` | `SignalAwareE2EOrchestrator._execution_node` | 616 | async method | Refresh and revalidate live preconditions immediately before execution. | SignalAwareE2EOrchestrator |
-| `apps/orchestrator/signal_aware.py` | `SignalAwareE2EOrchestrator._memory_node` | 701 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalAwareE2EOrchestrator |
+| `apps/orchestrator/signal_aware.py` | `SignalAwareE2EOrchestrator` | 29 | class | Collaborative E2E workflow for source-triggered and API-triggered incidents. | module |
+| `apps/orchestrator/signal_aware.py` | `SignalAwareE2EOrchestrator._context_node` | 38 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalAwareE2EOrchestrator |
+| `apps/orchestrator/signal_aware.py` | `SignalAwareE2EOrchestrator._publish_peer_context` | 250 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalAwareE2EOrchestrator |
+| `apps/orchestrator/signal_aware.py` | `SignalAwareE2EOrchestrator._parallel_agents_node` | 272 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalAwareE2EOrchestrator |
+| `apps/orchestrator/signal_aware.py` | `SignalAwareE2EOrchestrator._deterministic_rca_fallback` | 428 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalAwareE2EOrchestrator |
+| `apps/orchestrator/signal_aware.py` | `SignalAwareE2EOrchestrator._rca_auxiliary_context` | 460 | method | Expose bounded governed auxiliary context to RCA without bypassing attribution. | SignalAwareE2EOrchestrator |
+| `apps/orchestrator/signal_aware.py` | `SignalAwareE2EOrchestrator._rca_node` | 492 | async method | Bound RCA context so provider token limits cannot erase deterministic recovery. | SignalAwareE2EOrchestrator |
+| `apps/orchestrator/signal_aware.py` | `SignalAwareE2EOrchestrator._decision_node` | 565 | async method | Bind deterministic policy to the concrete tool/action/target request. | SignalAwareE2EOrchestrator |
+| `apps/orchestrator/signal_aware.py` | `SignalAwareE2EOrchestrator._execution_node` | 635 | async method | Refresh and revalidate live preconditions immediately before execution. | SignalAwareE2EOrchestrator |
+| `apps/orchestrator/signal_aware.py` | `SignalAwareE2EOrchestrator._memory_node` | 720 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalAwareE2EOrchestrator |
 | `apps/orchestrator/workflow_store.py` | `WorkflowCheckpointStore` | 18 | class | State قابل resume را با version افزایشی برای هر Incident ذخیره می‌کند. | module |
 | `apps/orchestrator/workflow_store.py` | `WorkflowCheckpointStore.__init__` | 21 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | WorkflowCheckpointStore |
 | `apps/orchestrator/workflow_store.py` | `WorkflowCheckpointStore.save` | 24 | async method | state یا داده را به‌صورت durable ذخیره/به‌روزرسانی می‌کند | WorkflowCheckpointStore |
@@ -1396,12 +1399,12 @@
 | `apps/rag_service/__init__.py` | `KnowledgeRAGService` | 11 | class | Cognia-only governed Knowledge RAG boundary. | module |
 | `apps/rag_service/__init__.py` | `KnowledgeRAGService.search` | 19 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | KnowledgeRAGService |
 | `apps/rag_service/__init__.py` | `KnowledgeRAGService._search_cognia` | 102 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeRAGService |
-| `apps/rag_service/__init__.py` | `KnowledgeRAGService._ensure_configured_kb` | 186 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeRAGService |
-| `apps/rag_service/__init__.py` | `KnowledgeRAGService.register_knowledge` | 194 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeRAGService |
-| `apps/rag_service/__init__.py` | `KnowledgeRAGService.get_knowledge_detail` | 221 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | KnowledgeRAGService |
-| `apps/rag_service/__init__.py` | `KnowledgeRAGService.create_revision` | 234 | async method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | KnowledgeRAGService |
-| `apps/rag_service/__init__.py` | `KnowledgeRAGService.get_processing_status` | 259 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | KnowledgeRAGService |
-| `apps/rag_service/__init__.py` | `KnowledgeRAGService.generate_context` | 270 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeRAGService |
+| `apps/rag_service/__init__.py` | `KnowledgeRAGService._ensure_configured_kb` | 194 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeRAGService |
+| `apps/rag_service/__init__.py` | `KnowledgeRAGService.register_knowledge` | 202 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeRAGService |
+| `apps/rag_service/__init__.py` | `KnowledgeRAGService.get_knowledge_detail` | 229 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | KnowledgeRAGService |
+| `apps/rag_service/__init__.py` | `KnowledgeRAGService.create_revision` | 242 | async method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | KnowledgeRAGService |
+| `apps/rag_service/__init__.py` | `KnowledgeRAGService.get_processing_status` | 267 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | KnowledgeRAGService |
+| `apps/rag_service/__init__.py` | `KnowledgeRAGService.generate_context` | 278 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | KnowledgeRAGService |
 | `apps/received_signal_view.py` | `_dict` | 24 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/received_signal_view.py` | `_as_timestamp` | 28 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/received_signal_view.py` | `project_received_signal` | 32 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
@@ -1462,11 +1465,11 @@
 | `apps/signal_gateway/__init__.py` | `SignalGateway._append_trigger_to_checkpoint` | 91 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalGateway |
 | `apps/signal_gateway/__init__.py` | `SignalGateway._existing_state` | 103 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalGateway |
 | `apps/signal_gateway/__init__.py` | `SignalGateway._knowledge_assisted_asset` | 110 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalGateway |
-| `apps/signal_gateway/__init__.py` | `SignalGateway.ingest` | 197 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalGateway |
-| `apps/signal_gateway/__init__.py` | `signal_from_elasticsearch` | 342 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/signal_gateway/__init__.py` | `signal_from_prometheus` | 361 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/signal_gateway/__init__.py` | `_zabbix_service_from_tags` | 376 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/signal_gateway/__init__.py` | `signal_from_zabbix` | 387 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/__init__.py` | `SignalGateway.ingest` | 198 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalGateway |
+| `apps/signal_gateway/__init__.py` | `signal_from_elasticsearch` | 343 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/__init__.py` | `signal_from_prometheus` | 362 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/__init__.py` | `_zabbix_service_from_tags` | 377 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/__init__.py` | `signal_from_zabbix` | 388 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/signal_gateway/correlation.py` | `CorrelationIdentity` | 20 | class | خروجی canonical correlation شامل fingerprint و scope قابل audit. | module |
 | `apps/signal_gateway/correlation.py` | `_token` | 30 | function | مقادیر vendor-specific را به token پایدار و قابل hash تبدیل می‌کند. | module |
 | `apps/signal_gateway/correlation.py` | `signal_family` | 36 | function | نام‌های alert مختلف را محافظه‌کارانه به symptom family مشترک نگاشت می‌کند. | module |
@@ -3140,22 +3143,22 @@
 | `tests/unit/test_cognia_gfpapi_identity_conflict.py` | `test_actual_chat_cognia_conflict_reaches_mcp_for_status_and_restart.append` | 183 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_actual_chat_cognia_conflict_reaches_mcp_for_status_and_restart |
 | `tests/unit/test_cognia_gfpapi_identity_conflict.py` | `test_actual_chat_cognia_conflict_reaches_mcp_for_status_and_restart.VM` | 186 | class | کلاس | test_actual_chat_cognia_conflict_reaches_mcp_for_status_and_restart |
 | `tests/unit/test_cognia_gfpapi_identity_conflict.py` | `test_actual_chat_cognia_conflict_reaches_mcp_for_status_and_restart.VM.service_status` | 187 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_actual_chat_cognia_conflict_reaches_mcp_for_status_and_restart.VM |
-| `tests/unit/test_cognia_incident_relevance.py` | `RAG` | 34 | class | کلاس | module |
-| `tests/unit/test_cognia_incident_relevance.py` | `RAG.__init__` | 35 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RAG |
-| `tests/unit/test_cognia_incident_relevance.py` | `RAG.search` | 38 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | RAG |
-| `tests/unit/test_cognia_incident_relevance.py` | `Collector` | 43 | class | Evidence/داده موردنیاز را از منبع مربوط جمع می‌کند | module |
-| `tests/unit/test_cognia_incident_relevance.py` | `Collector.__init__` | 44 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | Collector |
-| `tests/unit/test_cognia_incident_relevance.py` | `Collector.collect` | 46 | async method | Evidence/داده موردنیاز را از منبع مربوط جمع می‌کند | Collector |
-| `tests/unit/test_cognia_incident_relevance.py` | `test_service_bound_filter_disallows_high_score_foreign_owner_and_keeps_generic` | 57 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_cognia_incident_relevance.py` | `test_non_scoped_incidents_still_allow_discovery_from_service_hint` | 73 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_cognia_incident_relevance.py` | `test_topology_defense_in_depth_blocks_wrong_service_and_generic_owner_promotion` | 81 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_cognia_incident_relevance.py` | `test_context_builder_mixed_kb_returns_gfpapi_only_not_nginx` | 94 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_cognia_incident_relevance.py` | `test_signal_gateway_filters_nginx_before_correlation` | 117 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_cognia_incident_relevance.py` | `test_signal_gateway_filters_nginx_before_correlation.search` | 120 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | test_signal_gateway_filters_nginx_before_correlation |
-| `tests/unit/test_cognia_incident_relevance.py` | `test_focused_rag_rejects_wrong_service_and_scrubs_old_knowledge` | 139 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_cognia_incident_relevance.py` | `test_incident_copilot_cognia_read_is_service_scoped` | 165 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_cognia_incident_relevance.py` | `test_incident_copilot_cognia_read_is_service_scoped.search` | 168 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | test_incident_copilot_cognia_read_is_service_scoped |
-| `tests/unit/test_cognia_incident_relevance.py` | `test_all_foreign_service_hits_are_explicitly_reported_as_filtered_empty` | 182 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_cognia_incident_relevance.py` | `RAG` | 35 | class | کلاس | module |
+| `tests/unit/test_cognia_incident_relevance.py` | `RAG.__init__` | 36 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RAG |
+| `tests/unit/test_cognia_incident_relevance.py` | `RAG.search` | 39 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | RAG |
+| `tests/unit/test_cognia_incident_relevance.py` | `Collector` | 44 | class | Evidence/داده موردنیاز را از منبع مربوط جمع می‌کند | module |
+| `tests/unit/test_cognia_incident_relevance.py` | `Collector.__init__` | 45 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | Collector |
+| `tests/unit/test_cognia_incident_relevance.py` | `Collector.collect` | 47 | async method | Evidence/داده موردنیاز را از منبع مربوط جمع می‌کند | Collector |
+| `tests/unit/test_cognia_incident_relevance.py` | `test_service_bound_filter_disallows_high_score_foreign_owner_and_keeps_generic` | 58 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_cognia_incident_relevance.py` | `test_non_scoped_incidents_reject_unlinked_service_hint` | 74 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_cognia_incident_relevance.py` | `test_topology_defense_in_depth_blocks_wrong_service_and_generic_owner_promotion` | 83 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_cognia_incident_relevance.py` | `test_context_builder_mixed_kb_returns_gfpapi_only_not_nginx` | 96 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_cognia_incident_relevance.py` | `test_signal_gateway_filters_nginx_before_correlation` | 119 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_cognia_incident_relevance.py` | `test_signal_gateway_filters_nginx_before_correlation.search` | 122 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | test_signal_gateway_filters_nginx_before_correlation |
+| `tests/unit/test_cognia_incident_relevance.py` | `test_focused_rag_rejects_wrong_service_and_scrubs_old_knowledge` | 141 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_cognia_incident_relevance.py` | `test_incident_copilot_cognia_read_is_service_scoped` | 167 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_cognia_incident_relevance.py` | `test_incident_copilot_cognia_read_is_service_scoped.search` | 170 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | test_incident_copilot_cognia_read_is_service_scoped |
+| `tests/unit/test_cognia_incident_relevance.py` | `test_all_foreign_service_hits_are_explicitly_reported_as_filtered_empty` | 184 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_cognia_only_rag_architecture.py` | `_join` | 4 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_cognia_only_rag_architecture.py` | `test_cognia_is_the_only_rag_runtime_contract` | 8 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_cognia_only_rag_architecture.py` | `test_historical_local_knowledge_table_is_retired_without_vector_retrieval` | 27 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
@@ -3178,8 +3181,17 @@
 | `tests/unit/test_cognia_rag_service.py` | `test_get_knowledge_detail_stays_inside_configured_cognia_kb` | 173 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_cognia_rag_service.py` | `test_get_knowledge_detail_rejects_unconfigured_kb` | 187 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_cognia_rag_service.py` | `test_context_generation_uses_configured_profile` | 196 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_cognia_rag_service.py` | `test_explicit_ownership_metadata_is_preserved_but_arbitrary_keys_omitted` | 210 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_cognia_scope_guard.py` | `test_public_workflow_context_allows_non_scope_metadata` | 7 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_cognia_scope_guard.py` | `test_public_workflow_context_rejects_untrusted_external_subject` | 12 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_cognia_service_relevance_gate.py` | `doc` | 10 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_cognia_service_relevance_gate.py` | `test_cross_service_owned_knowledge_is_quarantined` | 18 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_cognia_service_relevance_gate.py` | `test_scope_visibility_and_high_semantic_score_do_not_prove_applicability` | 34 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_cognia_service_relevance_gate.py` | `test_author_declared_generic_metadata_is_allowed_but_owner_conflict_wins` | 41 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_cognia_service_relevance_gate.py` | `test_source_fqdn_discovery_preserved_only_for_exact_match` | 51 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_cognia_service_relevance_gate.py` | `test_unknown_host_does_not_inherit_any_service_runbook` | 63 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_cognia_service_relevance_gate.py` | `test_agent_prompt_removes_legacy_unrelated_checkpoint_knowledge` | 72 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_cognia_service_relevance_gate.py` | `test_multiple_contradictory_service_owners_are_not_accepted` | 84 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_config_change_review.py` | `proposal` | 10 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_config_change_review.py` | `response` | 21 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_config_change_review.py` | `test_operator_response_binds_both_config_hashes_to_server_checkpoint` | 29 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
@@ -3295,16 +3307,18 @@
 | `tests/unit/test_decision_brief.py` | `test_source_health_query_is_not_counted_as_confirmed_evidence` | 314 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_decision_brief.py` | `test_recorded_execution_failure_verification_and_approver_are_distinct` | 323 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_decision_brief.py` | `test_retrieved_cognia_document_exposes_source_title_without_inventing_use` | 350 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_decision_brief.py` | `test_vm_mcp_uses_allowlisted_tool_facts_not_raw_logs` | 362 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_decision_brief.py` | `test_monitoring_provider_failure_creates_missing_evidence_warning` | 379 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_decision_brief.py` | `test_decision_brief_exposes_llm_unknown_guidance_without_action_authority` | 388 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_decision_brief.py` | `test_elapsed_incident_duration_does_not_invalidate_approval_snapshot` | 403 | function | Approval preflight must accept the same material state minutes later. | module |
-| `tests/unit/test_decision_brief.py` | `test_elapsed_incident_duration_does_not_invalidate_approval_snapshot.report` | 415 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_elapsed_incident_duration_does_not_invalidate_approval_snapshot |
-| `tests/unit/test_decision_brief.py` | `test_approval_snapshot_still_invalidates_on_material_action_change` | 432 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_decision_brief.py` | `test_approval_snapshot_still_invalidates_on_material_action_change.report` | 437 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_approval_snapshot_still_invalidates_on_material_action_change |
-| `tests/unit/test_decision_brief.py` | `test_agent_audit_preserves_distinct_findings_hypotheses_and_evidence_coverage` | 452 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_decision_brief.py` | `test_agent_audit_is_backward_compatible_when_specialist_details_are_missing` | 502 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_decision_brief.py` | `test_decision_brief_projects_compiler_error_for_incident_config_diagnostics` | 517 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_decision_brief.py` | `test_vm_mcp_uses_allowlisted_tool_facts_not_raw_logs` | 363 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_decision_brief.py` | `test_monitoring_provider_failure_creates_missing_evidence_warning` | 380 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_decision_brief.py` | `test_decision_brief_exposes_llm_unknown_guidance_without_action_authority` | 389 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_decision_brief.py` | `test_elapsed_incident_duration_does_not_invalidate_approval_snapshot` | 404 | function | Approval preflight must accept the same material state minutes later. | module |
+| `tests/unit/test_decision_brief.py` | `test_elapsed_incident_duration_does_not_invalidate_approval_snapshot.report` | 416 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_elapsed_incident_duration_does_not_invalidate_approval_snapshot |
+| `tests/unit/test_decision_brief.py` | `test_approval_snapshot_still_invalidates_on_material_action_change` | 433 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_decision_brief.py` | `test_approval_snapshot_still_invalidates_on_material_action_change.report` | 438 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_approval_snapshot_still_invalidates_on_material_action_change |
+| `tests/unit/test_decision_brief.py` | `test_agent_audit_preserves_distinct_findings_hypotheses_and_evidence_coverage` | 453 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_decision_brief.py` | `test_agent_audit_is_backward_compatible_when_specialist_details_are_missing` | 503 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_decision_brief.py` | `test_decision_brief_projects_compiler_error_for_incident_config_diagnostics` | 518 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_decision_brief.py` | `test_historical_unrelated_cognia_item_is_suppressed_in_live_brief` | 542 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_decision_brief.py` | `test_unowned_cognia_item_is_not_reported_as_verified` | 556 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_decision_brief_browser_runtime.py` | `test_decision_brief_renders_real_llm_sections_and_language_switch` | 10 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_decision_brief_narrative.py` | `sample_brief` | 10 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_decision_brief_narrative.py` | `valid_rows` | 32 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
@@ -3425,22 +3439,22 @@
 | `tests/unit/test_dual_logging.py` | `test_time_rotation_uses_timed_handlers` | 89 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_dynamic_investigation.py` | `config_evidence` | 17 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_dynamic_investigation.py` | `incident` | 28 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `tests/unit/test_dynamic_investigation.py` | `RAG` | 38 | class | کلاس | module |
-| `tests/unit/test_dynamic_investigation.py` | `RAG.__init__` | 39 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RAG |
-| `tests/unit/test_dynamic_investigation.py` | `RAG.search` | 42 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | RAG |
-| `tests/unit/test_dynamic_investigation.py` | `LLM` | 50 | class | کلاس | module |
-| `tests/unit/test_dynamic_investigation.py` | `LLM.__init__` | 51 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | LLM |
-| `tests/unit/test_dynamic_investigation.py` | `LLM.generate_with_messages` | 55 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | LLM |
-| `tests/unit/test_dynamic_investigation.py` | `test_focused_requery_after_live_error_not_just_alert_title` | 61 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_dynamic_investigation.py` | `test_requery_respects_subject_scoping_and_never_falls_back_to_unscoped` | 80 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_dynamic_investigation.py` | `test_live_valid_config_supersedes_old_error` | 90 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_dynamic_investigation.py` | `test_proposal_questions_need_actual_config_and_cannot_claim_patch_or_validation` | 100 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_dynamic_investigation.py` | `test_malicious_llm_tool_selection_is_rejected_and_targets_not_delegated` | 119 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_dynamic_investigation.py` | `test_cognia_snippets_influence_plan_without_inventing_source_usage` | 142 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_dynamic_investigation.py` | `test_missing_evidence_prompts_operator_when_model_is_unavailable` | 158 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_dynamic_investigation.py` | `test_truncated_model_retries_with_bounded_tokens_not_silent_zero` | 168 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_dynamic_investigation.py` | `test_double_model_failure_keeps_operator_question_without_faking_fix` | 182 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_dynamic_investigation.py` | `test_only_explicit_vm_read_only_capabilities_are_requested` | 194 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_dynamic_investigation.py` | `RAG` | 39 | class | کلاس | module |
+| `tests/unit/test_dynamic_investigation.py` | `RAG.__init__` | 40 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | RAG |
+| `tests/unit/test_dynamic_investigation.py` | `RAG.search` | 43 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | RAG |
+| `tests/unit/test_dynamic_investigation.py` | `LLM` | 51 | class | کلاس | module |
+| `tests/unit/test_dynamic_investigation.py` | `LLM.__init__` | 52 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | LLM |
+| `tests/unit/test_dynamic_investigation.py` | `LLM.generate_with_messages` | 56 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | LLM |
+| `tests/unit/test_dynamic_investigation.py` | `test_focused_requery_after_live_error_not_just_alert_title` | 62 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_dynamic_investigation.py` | `test_requery_respects_subject_scoping_and_never_falls_back_to_unscoped` | 81 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_dynamic_investigation.py` | `test_live_valid_config_supersedes_old_error` | 91 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_dynamic_investigation.py` | `test_proposal_questions_need_actual_config_and_cannot_claim_patch_or_validation` | 101 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_dynamic_investigation.py` | `test_malicious_llm_tool_selection_is_rejected_and_targets_not_delegated` | 120 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_dynamic_investigation.py` | `test_cognia_snippets_influence_plan_without_inventing_source_usage` | 143 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_dynamic_investigation.py` | `test_missing_evidence_prompts_operator_when_model_is_unavailable` | 159 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_dynamic_investigation.py` | `test_truncated_model_retries_with_bounded_tokens_not_silent_zero` | 169 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_dynamic_investigation.py` | `test_double_model_failure_keeps_operator_question_without_faking_fix` | 183 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_dynamic_investigation.py` | `test_only_explicit_vm_read_only_capabilities_are_requested` | 195 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_elastic_anomaly_ingestion.py` | `_active_payload` | 11 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_elastic_anomaly_ingestion.py` | `test_official_anomaly_payload_becomes_first_class_alert_signal` | 41 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_elastic_anomaly_ingestion.py` | `test_elastic_anomaly_source_id_is_stable_without_alert_uuid` | 56 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
@@ -4019,10 +4033,10 @@
 | `tests/unit/test_operational_agents.py` | `StaticLLM.generate` | 23 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | StaticLLM |
 | `tests/unit/test_operational_agents.py` | `StaticLLM.generate_with_messages` | 26 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | StaticLLM |
 | `tests/unit/test_operational_agents.py` | `incident_input` | 30 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `tests/unit/test_operational_agents.py` | `test_specialized_agents_preserve_evidence_and_operational_contract` | 59 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_operational_agents.py` | `test_security_write_recommendation_is_never_direct_execution` | 75 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_operational_agents.py` | `test_triage_routes_specialists_and_exposes_evidence_gaps` | 90 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_operational_agents.py` | `test_agent_source_does_not_hardcode_mock_provider_or_fake_vm_os` | 106 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_operational_agents.py` | `test_specialized_agents_preserve_evidence_and_operational_contract` | 61 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_operational_agents.py` | `test_security_write_recommendation_is_never_direct_execution` | 77 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_operational_agents.py` | `test_triage_routes_specialists_and_exposes_evidence_gaps` | 92 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_operational_agents.py` | `test_agent_source_does_not_hardcode_mock_provider_or_fake_vm_os` | 108 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_operational_memory_v2.py` | `_state` | 8 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_operational_memory_v2.py` | `test_builder_preserves_uncertain_root_cause_and_actual_execution` | 96 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_operational_memory_v2.py` | `test_builder_redacts_compound_secret_keys_before_storage_and_embedding` | 114 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
@@ -4401,44 +4415,44 @@
 | `tests/unit/test_service_identity_resolution.py` | `FakeCollector.__init__` | 41 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeCollector |
 | `tests/unit/test_service_identity_resolution.py` | `FakeCollector.collect` | 45 | async method | Evidence/داده موردنیاز را از منبع مربوط جمع می‌کند | FakeCollector |
 | `tests/unit/test_service_identity_resolution.py` | `test_general_memory_alert_does_not_inherit_incidental_nginx_from_cognia` | 57 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_service_identity_resolution.py` | `test_unrelated_mcp_nginx_on_host_does_not_rename_memory_alert` | 77 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_service_identity_resolution.py` | `test_conflicting_mcp_name_and_exact_cognia_fqdn_stays_unknown` | 96 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_service_identity_resolution.py` | `test_exact_source_fqdn_still_enables_service_scoped_diagnostics_but_is_not_verified` | 112 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_service_identity_resolution.py` | `test_explicit_service_beats_unrelated_cognia_and_is_reported_not_verified` | 129 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_service_identity_resolution.py` | `test_live_mcp_verifies_only_source_declared_service_at_exact_source_target` | 144 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_service_identity_resolution.py` | `test_disagreement_between_source_and_mcp_is_explicit_and_blocks_write` | 166 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_service_identity_resolution.py` | `test_generic_alert_even_with_unrelated_inactive_nginx_cannot_auto_plan` | 193 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_service_identity_resolution.py` | `test_llm_can_only_suggest_candidate_from_actual_mcp_and_never_change_identity` | 219 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_service_identity_resolution.py` | `test_llm_can_only_suggest_candidate_from_actual_mcp_and_never_change_identity.Provider` | 225 | class | کلاس | test_llm_can_only_suggest_candidate_from_actual_mcp_and_never_change_identity |
-| `tests/unit/test_service_identity_resolution.py` | `test_llm_can_only_suggest_candidate_from_actual_mcp_and_never_change_identity.Provider.generate_with_messages` | 226 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_llm_can_only_suggest_candidate_from_actual_mcp_and_never_change_identity.Provider |
-| `tests/unit/test_service_identity_resolution.py` | `test_llm_hallucination_and_no_diagnostic_candidates_are_rejected` | 259 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_service_identity_resolution.py` | `test_llm_hallucination_and_no_diagnostic_candidates_are_rejected.Provider` | 264 | class | کلاس | test_llm_hallucination_and_no_diagnostic_candidates_are_rejected |
-| `tests/unit/test_service_identity_resolution.py` | `test_llm_hallucination_and_no_diagnostic_candidates_are_rejected.Provider.generate_with_messages` | 265 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_llm_hallucination_and_no_diagnostic_candidates_are_rejected.Provider |
-| `tests/unit/test_service_identity_resolution.py` | `test_identity_has_bounded_provenance_in_snapshot_and_persian_ui` | 280 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_service_identity_resolution.py` | `test_operational_unknown_detector_handles_any_unverified_service_config` | 290 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_service_identity_resolution.py` | `test_unknown_guidance_consults_llm_but_never_verifies_or_executes` | 310 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_service_identity_resolution.py` | `test_unknown_guidance_consults_llm_but_never_verifies_or_executes.FakeAdapter` | 317 | class | کلاس | test_unknown_guidance_consults_llm_but_never_verifies_or_executes |
-| `tests/unit/test_service_identity_resolution.py` | `test_unknown_guidance_consults_llm_but_never_verifies_or_executes.FakeAdapter.generate_with_messages` | 318 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_unknown_guidance_consults_llm_but_never_verifies_or_executes.FakeAdapter |
-| `tests/unit/test_service_identity_resolution.py` | `test_unknown_guidance_fails_closed_if_model_unavailable` | 345 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_service_identity_resolution.py` | `test_unknown_guidance_fails_closed_if_model_unavailable.BrokenAdapter` | 350 | class | کلاس | test_unknown_guidance_fails_closed_if_model_unavailable |
-| `tests/unit/test_service_identity_resolution.py` | `test_unknown_guidance_fails_closed_if_model_unavailable.BrokenAdapter.generate_with_messages` | 351 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_unknown_guidance_fails_closed_if_model_unavailable.BrokenAdapter |
-| `tests/unit/test_service_identity_resolution.py` | `test_no_gaps_does_not_call_llm` | 364 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_service_identity_resolution.py` | `test_no_gaps_does_not_call_llm.ShouldNeverCall` | 365 | class | کلاس | test_no_gaps_does_not_call_llm |
-| `tests/unit/test_service_identity_resolution.py` | `test_no_gaps_does_not_call_llm.ShouldNeverCall.generate_with_messages` | 366 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_no_gaps_does_not_call_llm.ShouldNeverCall |
-| `tests/unit/test_service_identity_resolution.py` | `test_general_unknown_detector_captures_specialist_failure_and_missing_evidence` | 374 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_service_identity_resolution.py` | `test_general_unknown_detector_handles_unsupported_vm_diagnostic` | 386 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_service_identity_resolution.py` | `test_verified_invalid_config_requests_only_advisory_llm_repair_guidance` | 400 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_service_identity_resolution.py` | `test_unknown_config_method_includes_systemd_candidate_without_validating_it` | 420 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_service_identity_resolution.py` | `test_unrelated_mcp_nginx_on_host_does_not_rename_memory_alert` | 78 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_service_identity_resolution.py` | `test_conflicting_mcp_name_and_exact_cognia_fqdn_stays_unknown` | 97 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_service_identity_resolution.py` | `test_exact_source_fqdn_still_enables_service_scoped_diagnostics_but_is_not_verified` | 113 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_service_identity_resolution.py` | `test_explicit_service_beats_unrelated_cognia_and_is_reported_not_verified` | 130 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_service_identity_resolution.py` | `test_live_mcp_verifies_only_source_declared_service_at_exact_source_target` | 145 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_service_identity_resolution.py` | `test_disagreement_between_source_and_mcp_is_explicit_and_blocks_write` | 167 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_service_identity_resolution.py` | `test_generic_alert_even_with_unrelated_inactive_nginx_cannot_auto_plan` | 194 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_service_identity_resolution.py` | `test_llm_can_only_suggest_candidate_from_actual_mcp_and_never_change_identity` | 220 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_service_identity_resolution.py` | `test_llm_can_only_suggest_candidate_from_actual_mcp_and_never_change_identity.Provider` | 226 | class | کلاس | test_llm_can_only_suggest_candidate_from_actual_mcp_and_never_change_identity |
+| `tests/unit/test_service_identity_resolution.py` | `test_llm_can_only_suggest_candidate_from_actual_mcp_and_never_change_identity.Provider.generate_with_messages` | 227 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_llm_can_only_suggest_candidate_from_actual_mcp_and_never_change_identity.Provider |
+| `tests/unit/test_service_identity_resolution.py` | `test_llm_hallucination_and_no_diagnostic_candidates_are_rejected` | 260 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_service_identity_resolution.py` | `test_llm_hallucination_and_no_diagnostic_candidates_are_rejected.Provider` | 265 | class | کلاس | test_llm_hallucination_and_no_diagnostic_candidates_are_rejected |
+| `tests/unit/test_service_identity_resolution.py` | `test_llm_hallucination_and_no_diagnostic_candidates_are_rejected.Provider.generate_with_messages` | 266 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_llm_hallucination_and_no_diagnostic_candidates_are_rejected.Provider |
+| `tests/unit/test_service_identity_resolution.py` | `test_identity_has_bounded_provenance_in_snapshot_and_persian_ui` | 281 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_service_identity_resolution.py` | `test_operational_unknown_detector_handles_any_unverified_service_config` | 291 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_service_identity_resolution.py` | `test_unknown_guidance_consults_llm_but_never_verifies_or_executes` | 311 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_service_identity_resolution.py` | `test_unknown_guidance_consults_llm_but_never_verifies_or_executes.FakeAdapter` | 318 | class | کلاس | test_unknown_guidance_consults_llm_but_never_verifies_or_executes |
+| `tests/unit/test_service_identity_resolution.py` | `test_unknown_guidance_consults_llm_but_never_verifies_or_executes.FakeAdapter.generate_with_messages` | 319 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_unknown_guidance_consults_llm_but_never_verifies_or_executes.FakeAdapter |
+| `tests/unit/test_service_identity_resolution.py` | `test_unknown_guidance_fails_closed_if_model_unavailable` | 346 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_service_identity_resolution.py` | `test_unknown_guidance_fails_closed_if_model_unavailable.BrokenAdapter` | 351 | class | کلاس | test_unknown_guidance_fails_closed_if_model_unavailable |
+| `tests/unit/test_service_identity_resolution.py` | `test_unknown_guidance_fails_closed_if_model_unavailable.BrokenAdapter.generate_with_messages` | 352 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_unknown_guidance_fails_closed_if_model_unavailable.BrokenAdapter |
+| `tests/unit/test_service_identity_resolution.py` | `test_no_gaps_does_not_call_llm` | 365 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_service_identity_resolution.py` | `test_no_gaps_does_not_call_llm.ShouldNeverCall` | 366 | class | کلاس | test_no_gaps_does_not_call_llm |
+| `tests/unit/test_service_identity_resolution.py` | `test_no_gaps_does_not_call_llm.ShouldNeverCall.generate_with_messages` | 367 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_no_gaps_does_not_call_llm.ShouldNeverCall |
+| `tests/unit/test_service_identity_resolution.py` | `test_general_unknown_detector_captures_specialist_failure_and_missing_evidence` | 375 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_service_identity_resolution.py` | `test_general_unknown_detector_handles_unsupported_vm_diagnostic` | 387 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_service_identity_resolution.py` | `test_verified_invalid_config_requests_only_advisory_llm_repair_guidance` | 401 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_service_identity_resolution.py` | `test_unknown_config_method_includes_systemd_candidate_without_validating_it` | 421 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_signal_service_identity_guard.py` | `test_unrelated_memory_and_filesystem_alerts_do_not_become_nginx` | 37 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_signal_service_identity_guard.py` | `test_unrelated_memory_and_filesystem_alerts_do_not_become_nginx.search` | 40 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | test_unrelated_memory_and_filesystem_alerts_do_not_become_nginx |
-| `tests/unit/test_signal_service_identity_guard.py` | `test_trusted_zabbix_tag_wins_over_unrelated_rag_identity` | 57 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_signal_service_identity_guard.py` | `test_trusted_zabbix_tag_wins_over_unrelated_rag_identity.search` | 60 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | test_trusted_zabbix_tag_wins_over_unrelated_rag_identity |
-| `tests/unit/test_signal_service_identity_guard.py` | `test_gateway_stores_unknown_service_instead_of_host_or_nginx` | 74 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_signal_service_identity_guard.py` | `test_gateway_stores_unknown_service_instead_of_host_or_nginx.search` | 79 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | test_gateway_stores_unknown_service_instead_of_host_or_nginx |
-| `tests/unit/test_signal_service_identity_guard.py` | `test_gateway_stores_unknown_service_instead_of_host_or_nginx.fake_start` | 89 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_gateway_stores_unknown_service_instead_of_host_or_nginx |
-| `tests/unit/test_signal_service_identity_guard.py` | `_return_none` | 108 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `tests/unit/test_signal_service_identity_guard.py` | `test_exact_fqdn_match_allows_knowledge_service_as_a_hint_not_live_proof` | 112 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_signal_service_identity_guard.py` | `test_doc_without_explicit_fqdn_cannot_claim_service_from_generic_alarm` | 126 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_signal_service_identity_guard.py` | `test_trusted_zabbix_tag_wins_over_unrelated_rag_identity` | 56 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_signal_service_identity_guard.py` | `test_trusted_zabbix_tag_wins_over_unrelated_rag_identity.search` | 59 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | test_trusted_zabbix_tag_wins_over_unrelated_rag_identity |
+| `tests/unit/test_signal_service_identity_guard.py` | `test_gateway_stores_unknown_service_instead_of_host_or_nginx` | 73 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_signal_service_identity_guard.py` | `test_gateway_stores_unknown_service_instead_of_host_or_nginx.search` | 78 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | test_gateway_stores_unknown_service_instead_of_host_or_nginx |
+| `tests/unit/test_signal_service_identity_guard.py` | `test_gateway_stores_unknown_service_instead_of_host_or_nginx.fake_start` | 88 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_gateway_stores_unknown_service_instead_of_host_or_nginx |
+| `tests/unit/test_signal_service_identity_guard.py` | `_return_none` | 107 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_signal_service_identity_guard.py` | `test_exact_fqdn_match_allows_knowledge_service_as_a_hint_not_live_proof` | 111 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_signal_service_identity_guard.py` | `test_doc_without_explicit_fqdn_cannot_claim_service_from_generic_alarm` | 125 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_storage_reliability_engine.py` | `metric` | 11 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_storage_reliability_engine.py` | `telemetry` | 25 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_storage_reliability_engine.py` | `analyze` | 37 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
