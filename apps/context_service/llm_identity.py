@@ -146,13 +146,25 @@ def detect_operational_unknowns(
                     str(raw.get("detail") or "No verified service configuration test is available"), ref)
         elif diagnostic == "service_status" and raw.get("success") is False:
             add("service_state_unknown", service or "service", "The service state could not be verified", ref)
+        elif str(item.get("type") or "") == "source_observation":
+            observation = str(raw.get("status") or "").lower()
+            if observation in {"skipped", "unavailable", "error"} and str(raw.get("detail") or "") == "diagnostic_not_supported":
+                add("diagnostic_method_unknown", service or "service",
+                    "The requested diagnostic tool is not supported by the connected provider", ref)
 
     for finding in findings:
         if not isinstance(finding, Mapping):
             continue
         agent = str(finding.get("agent_name") or "specialist")[:60]
+        if (str(finding.get("finding_type") or "").endswith("_error")
+                or str(finding.get("health_status") or "").lower() == "unknown"):
+            add("specialist_analysis_unknown", agent,
+                "The specialist could not establish a verified operational assessment")
         # Missing evidence is not proof of an operational condition.
-        for gap in (finding.get("missing_evidence") or [])[:2]:
+        missing = finding.get("missing_evidence")
+        if not isinstance(missing, (list, tuple)):
+            missing = []
+        for gap in missing[:2]:
             if isinstance(gap, str) and gap.strip() and len(result) < 5:
                 add("missing_evidence", agent, gap[:180])
         if len(result) >= 5:
