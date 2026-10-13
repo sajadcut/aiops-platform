@@ -29,9 +29,19 @@ async def test_vm_disk_forensics_is_read_only_and_bounded(monkeypatch):
 
     async def fake_run(target, command):
         called.append(command)
+        assert not any(word in command for word in (" rm ", "unlink ", "truncate ", "delete "))
+        if "stat --printf" in command:
+            assert "sleep 2" in command
+            assert "lsof -nP" in command
+            return {"success": True, "stdout": (
+                "123\t36000000000\t/var/log/gfpapi/error.log\n"
+                "__AIOPS_STAT_SECOND__\n"
+                "123\t36700160000\t/var/log/gfpapi/error.log\n"
+                "__AIOPS_LSOF__\n"
+                "p2020\ncgfpapi\nf2w\nn/var/log/gfpapi/error.log\n"
+            )}
         assert "find" in command and "-xdev" in command
         assert "timeout 12s" in command
-        assert not any(word in command for word in (" rm ", "unlink ", "truncate ", "delete "))
         return {"success": True, "stdout": "36700160000\t1791882600.0\t/var/log/gfpapi/error.log\n"}
 
     monkeypatch.setattr(connector, "disk_status", disk_status)
@@ -39,11 +49,17 @@ async def test_vm_disk_forensics_is_read_only_and_bounded(monkeypatch):
     result = await connector.disk_forensics("10.100.6.199")
     assert result["success"] is True
     assert result["delete_authorized"] is False
-    assert result["growth_measured"] is False
+    assert result["growth_measured"] is True
     assert result["content_inspected"] is False
-    assert len(called) == 2
+    assert len(called) == 4
     assert not any("/proc" in command or "/backup" in command for command in called)
     assert len(result["mounts"]) == 2
+    sampled = result["mounts"][0]["files"][0]
+    assert sampled["growth_confirmed"] is True
+    assert sampled["growth_bytes_over_2_seconds"] == 700160000
+    assert sampled["open_handles"][0]["pid"] == 2020
+    assert sampled["open_handles"][0]["writable_handle_observed"] is True
+    assert sampled["open_handles"][0]["writer_causality_verified"] is False
     assert all(file["safe_to_delete"] is not True if "safe_to_delete" in file else True
                for mount in result["mounts"] for file in mount["files"])
     assert all(file["retention_policy_verified"] is False for mount in result["mounts"]
