@@ -64,9 +64,9 @@ class DynamicInvestigationPlanner:
             detail = str(raw.get("detail") or "")[:4000]
             serious_lines = [
                 line for line in detail.splitlines()
-                if re.search(r"\\[(?:emerg|alert|crit|error|fatal)\\]|syntax error|unknown directive|unexpected", line, re.I)
+                if re.search(r"\[(?:emerg|alert|crit|error|fatal)\]|syntax error|unknown directive|unexpected", line, re.I)
             ]
-            compiler = parse_config_diagnostic("\\n".join(serious_lines) if serious_lines else detail)
+            compiler = parse_config_diagnostic("\n".join(serious_lines) if serious_lines else detail)
             for key in ("config_file", "error_line", "syntax_error"):
                 if parsed.get(key) in (None, "") and compiler.get(key) is not None:
                     parsed[key] = compiler[key]
