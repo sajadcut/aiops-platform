@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 447 | Dashboard JS files scanned: 8 | Symbols indexed: 4217**
+**Python files scanned: 447 | Dashboard JS files scanned: 8 | Symbols indexed: 4227**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -3905,27 +3905,37 @@
 | `tests/unit/test_security_incident_engine.py` | `StaticSecurityLLM.generate_with_messages` | 204 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | StaticSecurityLLM |
 | `tests/unit/test_security_incident_engine.py` | `test_agent_blocks_llm_compromise_upgrade_and_keeps_containment_approval_required` | 209 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_security_incident_engine.py` | `test_identity_network_application_peer_findings_are_auxiliary_and_require_live_link` | 241 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_service_identity_resolution.py` | `FakeRAG` | 30 | class | کلاس | module |
-| `tests/unit/test_service_identity_resolution.py` | `FakeRAG.__init__` | 31 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeRAG |
-| `tests/unit/test_service_identity_resolution.py` | `FakeRAG.search` | 34 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | FakeRAG |
-| `tests/unit/test_service_identity_resolution.py` | `FakeCollector` | 38 | class | کلاس | module |
-| `tests/unit/test_service_identity_resolution.py` | `FakeCollector.__init__` | 39 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeCollector |
-| `tests/unit/test_service_identity_resolution.py` | `FakeCollector.collect` | 43 | async method | Evidence/داده موردنیاز را از منبع مربوط جمع می‌کند | FakeCollector |
-| `tests/unit/test_service_identity_resolution.py` | `test_general_memory_alert_does_not_inherit_incidental_nginx_from_cognia` | 55 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_service_identity_resolution.py` | `test_unrelated_mcp_nginx_on_host_does_not_rename_memory_alert` | 75 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_service_identity_resolution.py` | `test_conflicting_mcp_name_and_exact_cognia_fqdn_stays_unknown` | 94 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_service_identity_resolution.py` | `test_exact_source_fqdn_still_enables_service_scoped_diagnostics_but_is_not_verified` | 110 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_service_identity_resolution.py` | `test_explicit_service_beats_unrelated_cognia_and_is_reported_not_verified` | 127 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_service_identity_resolution.py` | `test_live_mcp_verifies_only_source_declared_service_at_exact_source_target` | 142 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_service_identity_resolution.py` | `test_disagreement_between_source_and_mcp_is_explicit_and_blocks_write` | 164 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_service_identity_resolution.py` | `test_generic_alert_even_with_unrelated_inactive_nginx_cannot_auto_plan` | 191 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_service_identity_resolution.py` | `test_llm_can_only_suggest_candidate_from_actual_mcp_and_never_change_identity` | 217 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_service_identity_resolution.py` | `test_llm_can_only_suggest_candidate_from_actual_mcp_and_never_change_identity.Provider` | 223 | class | کلاس | test_llm_can_only_suggest_candidate_from_actual_mcp_and_never_change_identity |
-| `tests/unit/test_service_identity_resolution.py` | `test_llm_can_only_suggest_candidate_from_actual_mcp_and_never_change_identity.Provider.generate_with_messages` | 224 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_llm_can_only_suggest_candidate_from_actual_mcp_and_never_change_identity.Provider |
-| `tests/unit/test_service_identity_resolution.py` | `test_llm_hallucination_and_no_diagnostic_candidates_are_rejected` | 257 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_service_identity_resolution.py` | `test_llm_hallucination_and_no_diagnostic_candidates_are_rejected.Provider` | 262 | class | کلاس | test_llm_hallucination_and_no_diagnostic_candidates_are_rejected |
-| `tests/unit/test_service_identity_resolution.py` | `test_llm_hallucination_and_no_diagnostic_candidates_are_rejected.Provider.generate_with_messages` | 263 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_llm_hallucination_and_no_diagnostic_candidates_are_rejected.Provider |
-| `tests/unit/test_service_identity_resolution.py` | `test_identity_has_bounded_provenance_in_snapshot_and_persian_ui` | 278 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_service_identity_resolution.py` | `FakeRAG` | 32 | class | کلاس | module |
+| `tests/unit/test_service_identity_resolution.py` | `FakeRAG.__init__` | 33 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeRAG |
+| `tests/unit/test_service_identity_resolution.py` | `FakeRAG.search` | 36 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | FakeRAG |
+| `tests/unit/test_service_identity_resolution.py` | `FakeCollector` | 40 | class | کلاس | module |
+| `tests/unit/test_service_identity_resolution.py` | `FakeCollector.__init__` | 41 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeCollector |
+| `tests/unit/test_service_identity_resolution.py` | `FakeCollector.collect` | 45 | async method | Evidence/داده موردنیاز را از منبع مربوط جمع می‌کند | FakeCollector |
+| `tests/unit/test_service_identity_resolution.py` | `test_general_memory_alert_does_not_inherit_incidental_nginx_from_cognia` | 57 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_service_identity_resolution.py` | `test_unrelated_mcp_nginx_on_host_does_not_rename_memory_alert` | 77 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_service_identity_resolution.py` | `test_conflicting_mcp_name_and_exact_cognia_fqdn_stays_unknown` | 96 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_service_identity_resolution.py` | `test_exact_source_fqdn_still_enables_service_scoped_diagnostics_but_is_not_verified` | 112 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_service_identity_resolution.py` | `test_explicit_service_beats_unrelated_cognia_and_is_reported_not_verified` | 129 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_service_identity_resolution.py` | `test_live_mcp_verifies_only_source_declared_service_at_exact_source_target` | 144 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_service_identity_resolution.py` | `test_disagreement_between_source_and_mcp_is_explicit_and_blocks_write` | 166 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_service_identity_resolution.py` | `test_generic_alert_even_with_unrelated_inactive_nginx_cannot_auto_plan` | 193 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_service_identity_resolution.py` | `test_llm_can_only_suggest_candidate_from_actual_mcp_and_never_change_identity` | 219 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_service_identity_resolution.py` | `test_llm_can_only_suggest_candidate_from_actual_mcp_and_never_change_identity.Provider` | 225 | class | کلاس | test_llm_can_only_suggest_candidate_from_actual_mcp_and_never_change_identity |
+| `tests/unit/test_service_identity_resolution.py` | `test_llm_can_only_suggest_candidate_from_actual_mcp_and_never_change_identity.Provider.generate_with_messages` | 226 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_llm_can_only_suggest_candidate_from_actual_mcp_and_never_change_identity.Provider |
+| `tests/unit/test_service_identity_resolution.py` | `test_llm_hallucination_and_no_diagnostic_candidates_are_rejected` | 259 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_service_identity_resolution.py` | `test_llm_hallucination_and_no_diagnostic_candidates_are_rejected.Provider` | 264 | class | کلاس | test_llm_hallucination_and_no_diagnostic_candidates_are_rejected |
+| `tests/unit/test_service_identity_resolution.py` | `test_llm_hallucination_and_no_diagnostic_candidates_are_rejected.Provider.generate_with_messages` | 265 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_llm_hallucination_and_no_diagnostic_candidates_are_rejected.Provider |
+| `tests/unit/test_service_identity_resolution.py` | `test_identity_has_bounded_provenance_in_snapshot_and_persian_ui` | 280 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_service_identity_resolution.py` | `test_operational_unknown_detector_handles_any_unverified_service_config` | 290 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_service_identity_resolution.py` | `test_unknown_guidance_consults_llm_but_never_verifies_or_executes` | 310 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_service_identity_resolution.py` | `test_unknown_guidance_consults_llm_but_never_verifies_or_executes.FakeAdapter` | 317 | class | کلاس | test_unknown_guidance_consults_llm_but_never_verifies_or_executes |
+| `tests/unit/test_service_identity_resolution.py` | `test_unknown_guidance_consults_llm_but_never_verifies_or_executes.FakeAdapter.generate_with_messages` | 318 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_unknown_guidance_consults_llm_but_never_verifies_or_executes.FakeAdapter |
+| `tests/unit/test_service_identity_resolution.py` | `test_unknown_guidance_fails_closed_if_model_unavailable` | 345 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_service_identity_resolution.py` | `test_unknown_guidance_fails_closed_if_model_unavailable.BrokenAdapter` | 350 | class | کلاس | test_unknown_guidance_fails_closed_if_model_unavailable |
+| `tests/unit/test_service_identity_resolution.py` | `test_unknown_guidance_fails_closed_if_model_unavailable.BrokenAdapter.generate_with_messages` | 351 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_unknown_guidance_fails_closed_if_model_unavailable.BrokenAdapter |
+| `tests/unit/test_service_identity_resolution.py` | `test_no_gaps_does_not_call_llm` | 364 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_service_identity_resolution.py` | `test_no_gaps_does_not_call_llm.ShouldNeverCall` | 365 | class | کلاس | test_no_gaps_does_not_call_llm |
+| `tests/unit/test_service_identity_resolution.py` | `test_no_gaps_does_not_call_llm.ShouldNeverCall.generate_with_messages` | 366 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_no_gaps_does_not_call_llm.ShouldNeverCall |
 | `tests/unit/test_signal_service_identity_guard.py` | `test_unrelated_memory_and_filesystem_alerts_do_not_become_nginx` | 37 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_signal_service_identity_guard.py` | `test_unrelated_memory_and_filesystem_alerts_do_not_become_nginx.search` | 40 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | test_unrelated_memory_and_filesystem_alerts_do_not_become_nginx |
 | `tests/unit/test_signal_service_identity_guard.py` | `test_trusted_zabbix_tag_wins_over_unrelated_rag_identity` | 57 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
