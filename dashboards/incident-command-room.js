@@ -1023,6 +1023,51 @@
         ' · '+tr('result')+': '+txt(status(x.outcome))+' · '+tr('confidence')+': '+esc(numberPct(x.similarity))+'</div>'+
         refs(x.previous_incident_id?[x.previous_incident_id]:[])+'</article>').join(''):empty()));
   }
+  function renderInvestigation(r) {
+    const p=r.dynamic_investigation||{},kb=p.knowledge_followup||{};
+    const config=p.config_proposal||{},fa=state.language==='fa';
+    const hasPlan=p.status && p.status!=='not_available';
+    if(!hasPlan) {
+      show('#ic-proposed-fix',empty(fa?
+        'تحقیق پویای مرحله‌ای برای این رخداد ثبت نشده است. این قابلیت باید در Backend فعال و اجرا شود.':
+        'No dynamic investigation was recorded for this incident. The backend capability must be enabled.'));
+      return;
+    }
+    const questions=arr(p.questions);
+    const checks=arr(p.checks);
+    const body='<div class="ic-callout"><strong>'+
+      esc(fa?'وضعیت: صرفاً پیشنهاد تحقیق، بدون اجازه تغییر':'Status: investigation proposal, no change authority')+
+      '</strong><p>'+esc(fa?
+        'تا زمانی که کانفیگ فعلی و نسخه پیشنهادی از منبع معتبر جمع‌آوری و نسخه پیشنهادی واقعاً اعتبارسنجی نشده باشد، هیچ Patch یا تأیید اجرا وجود ندارد.':
+        'No patch or executable approval exists until source material is collected and the proposed version passes a real validation.')+
+      '</p></div>'+
+      (config.status?'<div class="ic-fix-grid">'+
+        '<article class="ic-detail-card"><h4>'+esc(fa?'کانفیگ موجود':'Current configuration')+'</h4>'+
+        '<p>'+txt(config.config_file||'—')+'</p><p>'+esc(fa?
+          'محتوای فایل هنوز به شکل امن دریافت نشده است.':'Configuration bytes have not been safely captured.')+'</p>'+
+        (Number.isInteger(config.error_line)?'<p>'+esc(fa?'خط خطا: ':'Error line: ')+num(config.error_line)+'</p>':'')+'</article>'+
+        '<article class="ic-detail-card"><h4>'+esc(fa?'کانفیگ پیشنهادی و Diff':'Proposed configuration & Diff')+
+        '</h4><p>'+esc(fa?'هنوز تولید یا اعتبارسنجی نشده است.':'Not yet produced or validated.')+
+        '</p><p>'+esc(fa?'نتیجهٔ Validator روی پیشنهاد: ':'Proposal validation: ')+
+        txt(config.validation_status||'UNVERIFIED')+'</p></article></div>':'')+
+      (kb.query?'<article class="ic-detail-card"><h4>'+esc(fa?'جست‌وجوی مجدد هدفمند در Cognia':'Focused Cognia re-query')+
+        '</h4><p>'+txt(kb.query)+'</p><p>'+esc(fa?'وضعیت: ':'Status: ')+txt(kb.status||'unknown')+
+        '</p>'+refs(kb.source_refs)+'</article>':'')+
+      (checks.length?'<article class="ic-detail-card"><h4>'+esc(fa?'بررسی‌های Read-only پیشنهادی':'Proposed read-only checks')+
+        '</h4><p>'+checks.map(txt).join('، ')+'</p></article>':'')+
+      (questions.length?'<article class="ic-detail-card"><h4>'+esc(fa?'سؤال یا اطلاعات موردنیاز از اپراتور':'Information requested from operator')+
+        '</h4><ul class="ic-agent-bullets">'+questions.map(q=>
+        '<li>'+txt(q.question)+'<p>'+txt(q.reason)+'</p>'+refs(q.evidence_refs)+'</li>').join('')+
+        '</ul><p class="ic-agent-disclaimer">'+esc(fa?
+          'این درخواست‌ها هنوز به گردش‌کار پاسخ تعاملی و Resume متصل نیستند. برای ثبت پاسخ، از فرایند مجاز رخداد استفاده کنید.':
+          'Operator replies and resume are not yet wired to this proposal interface.')+
+        '</p></article>':'')+
+      '<p class="ic-empty">'+esc(fa?
+        'تأیید اجرای تغییر غیرفعال است: Patch معتبر، Diff، تست ایزوله و قرارداد اجرایی هنوز موجود نیستند.':
+        'Execution approval is unavailable: no verified patch, diff, isolated test or execution contract exists.')+'</p>';
+    show('#ic-proposed-fix',body);
+  }
+
   function renderOutcome(r) {
     const o=r.execution_outcome||{},v=r.verification_result||{},learn=r.knowledge_learning_status||{},a=r.approval_readiness||{};
     const performed=o.status && !['not_executed','not_recorded','unknown'].includes(low(o.status));
@@ -1176,7 +1221,7 @@
     const r=state.historic||state.report;
     $('#ic-archive-banner').hidden=!state.historic;
     renderHero(r);renderOverview(r);renderReview(r);renderAnalysis(r);renderEvidence(r);
-    renderKnowledge(r);renderOutcome(r);renderTimeline(r);renderDecision(r);renderReceivedSignals();
+    renderKnowledge(r);renderInvestigation(r);renderOutcome(r);renderTimeline(r);renderDecision(r);renderReceivedSignals();
     renderAnalysisProgress();
     $('#ic-snapshot-label').textContent='Snapshot '+String(r.snapshot_id||'').slice(0,14);
   }
