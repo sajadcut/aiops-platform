@@ -153,6 +153,10 @@ print(json.dumps(result, separators=(",", ":")))
 
 def dotnet_json_syntax_command(publish_directory: str) -> str:
     directory = safe_absolute_path(publish_directory)
-    if not directory or directory in {"/tmp", "/opt", "/srv", "/data", "/home", "/var"}:
+    if (
+        not directory or len(directory.split("/")) < 3
+        or directory.startswith(("/proc/", "/sys/", "/dev/", "/etc/"))
+        or directory in {"/tmp", "/opt", "/srv", "/data", "/home", "/var"}
+    ):
         raise ValueError("invalid_publish_directory")
     return "python3 -I -c " + shlex.quote(_DOTNET_JSON_CHECK) + " " + shlex.quote(directory)
