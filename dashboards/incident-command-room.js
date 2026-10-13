@@ -648,7 +648,10 @@
     } else if(kind==='unverified') {
       items.push('<article class="ic-config-check" data-config-status="unknown"><h3>'+
         esc(fa?'روش یا نتیجهٔ معتبر تست کانفیگ هنوز مشخص نیست':'Config validation is unverified')+
-        '</h3><p>'+esc(fa?
+        '</h3>'+(config.config_file?'<p>'+
+          esc(fa?'مسیر احتمالی کانفیگ از تعریف systemd (هنوز تست نشده):':'Systemd config candidate (not validated):')+
+          ' <span dir="ltr">'+txt(config.config_file)+'</span></p>':'')+
+        '<p>'+esc(fa?
           'AIOps نباید سالم بودن کانفیگ یا امکان Start ایمن را حدس بزند. در صورت نامشخص بودن روش بررسی، استعلام از LLM فقط راهنمای اپراتور است.':
           'Do not guess that the configuration is valid. LLM guidance cannot replace a real check.')+'</p></article>');
     }
