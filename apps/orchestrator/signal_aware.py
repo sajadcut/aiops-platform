@@ -346,6 +346,21 @@ class SignalAwareE2EOrchestrator(E2EOrchestrator):
             if not isinstance(finding, dict):
                 continue
             details = finding.get("analysis_details") or {}
+            if isinstance(details, dict) and details.get("deterministic_fault") == "service_configuration_invalid":
+                service = str(state.get("service_name") or "service")
+                diagnostic = details.get("config_diagnostic") or {}
+                config_file = str(diagnostic.get("config_file") or "unknown file")[:250]
+                line = diagnostic.get("error_line")
+                error = str(diagnostic.get("syntax_error") or "syntax validation failed")[:400]
+                return (
+                    f"Live config validation for {service} FAILED at {config_file}"
+                    f"{(' line ' + str(line)) if isinstance(line, int) else ''}: {error}. "
+                    "Configuration correction requires separate authorized change control; "
+                    "repeat config_validate afterwards. Only once valid, propose start_service "
+                    "through the normal Decision/Approval/Execution process. "
+                    "This error does not establish who stopped the service or prove that "
+                    "configuration repair alone restores dependent systems."
+                )
             if isinstance(details, dict) and details.get("deterministic_fault") == "service_stopped":
                 service = str(state.get("service_name") or "service")
                 return (
