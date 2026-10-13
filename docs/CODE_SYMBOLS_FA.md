@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 447 | Dashboard JS files scanned: 8 | Symbols indexed: 4240**
+**Python files scanned: 447 | Dashboard JS files scanned: 8 | Symbols indexed: 4241**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -725,14 +725,15 @@
 | `apps/api/incident_resources.py` | `get_plan` | 331 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
 | `apps/api/incident_resources.py` | `get_verification` | 356 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
 | `apps/api/incident_resources.py` | `get_incident_audit` | 364 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
-| `apps/api/incident_resources.py` | `get_incident_lifecycle` | 371 | async function | Return durable governance plus structured agent routing/collaboration state. | module |
-| `apps/api/incident_resources.py` | `get_operator_recommendation_fa` | 435 | async function | Translate the durable English recommendation solely for Persian display. | module |
-| `apps/api/incident_resources.py` | `get_operator_summary` | 477 | async function | Return a read-only Persian operator summary derived from current durable Incident state. | module |
-| `apps/api/incident_resources.py` | `load_decision_brief_for_incident` | 574 | async function | Internal builder; reads all contract sections in the caller's transaction. | module |
-| `apps/api/incident_resources.py` | `get_incident_decision_brief` | 683 | async function | Read-only, RBAC-protected latest version. No archive writes or side effects. | module |
-| `apps/api/incident_resources.py` | `get_decision_brief_history` | 693 | async function | Read only previously archived, immutable lifecycle reports. | module |
-| `apps/api/incident_resources.py` | `get_decision_brief_historical_snapshot` | 709 | async function | Exact archived report; never regenerated against current Incident state. | module |
-| `apps/api/incident_resources.py` | `get_incident_decision_brief_narrative` | 723 | async function | Optional display prose; approval and the deterministic brief stay authoritative. | module |
+| `apps/api/incident_resources.py` | `get_incident_analysis_status` | 372 | async function | Small, read-only polling contract; never starts or resumes a workflow. | module |
+| `apps/api/incident_resources.py` | `get_incident_lifecycle` | 425 | async function | Return durable governance plus structured agent routing/collaboration state. | module |
+| `apps/api/incident_resources.py` | `get_operator_recommendation_fa` | 489 | async function | Translate the durable English recommendation solely for Persian display. | module |
+| `apps/api/incident_resources.py` | `get_operator_summary` | 531 | async function | Return a read-only Persian operator summary derived from current durable Incident state. | module |
+| `apps/api/incident_resources.py` | `load_decision_brief_for_incident` | 628 | async function | Internal builder; reads all contract sections in the caller's transaction. | module |
+| `apps/api/incident_resources.py` | `get_incident_decision_brief` | 737 | async function | Read-only, RBAC-protected latest version. No archive writes or side effects. | module |
+| `apps/api/incident_resources.py` | `get_decision_brief_history` | 747 | async function | Read only previously archived, immutable lifecycle reports. | module |
+| `apps/api/incident_resources.py` | `get_decision_brief_historical_snapshot` | 763 | async function | Exact archived report; never regenerated against current Incident state. | module |
+| `apps/api/incident_resources.py` | `get_incident_decision_brief_narrative` | 777 | async function | Optional display prose; approval and the deterministic brief stay authoritative. | module |
 | `apps/api/incidents.py` | `simulate_incident` | 24 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/incidents.py` | `analyze_incident` | 48 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/incidents.py` | `RemediationRequest` | 109 | class | کلاس | module |
