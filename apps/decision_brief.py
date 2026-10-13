@@ -285,12 +285,12 @@ def _mcp(rows: Iterable[dict], now: datetime) -> tuple[list[dict], list[dict]]:
     return items[:100], list(sources.values())[:50]
 
 
-def _knowledge(state: dict, agents: list[dict]) -> dict:
+def _knowledge(state: dict, agents: list[dict], incident_service: str | None = None) -> dict:
     from apps.context_service.knowledge_relevance import filter_service_knowledge
     retrieval = obj(state.get("knowledge_status"))
     raw_documents = arr(state.get("knowledge_results"))
     documents, relevance = filter_service_knowledge(
-        raw_documents, expected_service=state.get("service_name")
+        raw_documents, expected_service=incident_service or state.get("service_name")
         or (state.get("context") or {}).get("service"),
         purpose="decision_brief",
     )
@@ -391,7 +391,7 @@ def build_decision_brief(
         service_name=incident.get("service") or state.get("service_name"),
         context=obj(state.get("context")) or obj(incident.get("context")),
     )
-    knowledge = _knowledge(state, agents)
+    knowledge = _knowledge(state, agents, incident_service=incident.get("service"))
     memory = _memory(state, agents)
     approval = obj(summary.get("approval"))
     observed = obj(summary.get("observed_state"))
