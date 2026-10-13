@@ -19,6 +19,27 @@ _EMPTY = frozenset({"", "unknown", "unknown-service", "none", "null", "n/a", "na
 
 class ServiceIdentityResolver:
     @staticmethod
+    def split_conflicts(conflicts: Any) -> tuple[list[dict], list[dict]]:
+        """Keep Cognia disagreements as evidence, never as executable authority.
+
+        A Knowledge-only mismatch is a hypothesis about topology, not
+        conflicting live/service-alert identity. Unknown conflict kinds and
+        source-vs-live disagreements remain blocking (fail closed).
+        """
+        blocking: list[dict] = []
+        advisory: list[dict] = []
+        if not isinstance(conflicts, list):
+            return ([{"kind": "identity_conflicts_malformed"}], []) if conflicts else ([], [])
+        for item in conflicts:
+            if not isinstance(item, dict):
+                blocking.append({"kind": "identity_conflict_malformed"})
+            elif item.get("kind") in {"live_vs_knowledge", "knowledge_vs_knowledge"}:
+                advisory.append(item)
+            else:
+                blocking.append(item)
+        return blocking, advisory
+
+    @staticmethod
     def known(value: Any) -> str | None:
         if not isinstance(value, str):
             return None
@@ -157,8 +178,11 @@ class ServiceIdentityResolver:
                 hypothesis = {"service": label, "origin": "llm_hypothesis", "verified": False}
                 break
 
+        blocking_conflicts, advisory_conflicts = cls.split_conflicts(conflicts)
         reconciliation["effective_asset"] = asset
         reconciliation["conflicts"] = conflicts
+        reconciliation["blocking_identity_conflicts"] = blocking_conflicts
+        reconciliation["advisory_knowledge_conflicts"] = advisory_conflicts
         if name == "unknown" and observed:
             provenance = dict(reconciliation.get("field_provenance") or {})
             provenance["service"] = "unlinked_live_observation"
@@ -177,7 +201,7 @@ class ServiceIdentityResolver:
         )
         asset["service_identity_status"] = status
         asset["service_identity_basis"] = basis
-        asset["service_identity_unverified"] = status not in {"verified", "reported"} or bool(conflicts)
+        asset["service_identity_unverified"] = status not in {"verified", "reported"} or bool(blocking_conflicts)
         asset["requires_live_verification"] = reconciliation["requires_live_verification"]
         identity = {
             "service": name,
@@ -186,8 +210,10 @@ class ServiceIdentityResolver:
             "basis": basis,
             "suspected_service": hypothesis["service"] if hypothesis else None,
             "suspected_service_source": hypothesis["origin"] if hypothesis else None,
-            "requires_more_evidence": status != "verified" or bool(conflicts),
+            "requires_more_evidence": status != "verified" or bool(blocking_conflicts),
             "conflicts": conflicts,
+            "blocking_conflicts": blocking_conflicts,
+            "advisory_knowledge_conflicts": advisory_conflicts,
             "source_host": cls.known(live.get("hostname")),
             "knowledge_service_hint_blocked": bool(hint),
             # Confidence is intentionally not fabricated from a tag or LLM.
