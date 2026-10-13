@@ -500,6 +500,27 @@ def build_decision_brief(
             "used_knowledge_refs": refs(
                 obj(obj(state.get("context")).get("dynamic_investigation")).get("used_knowledge_refs")
             ),
+            "runtime_discovery": {
+                "runtime": safe(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("runtime_discovery")).get("runtime"), 50),
+                "entrypoint": safe(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("runtime_discovery")).get("entrypoint"), 250),
+                "publish_directory": safe(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("runtime_discovery")).get("publish_directory"), 250),
+                "unit_file": safe(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("runtime_discovery")).get("unit_file"), 250),
+                "service_type": safe(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("runtime_discovery")).get("service_type"), 40),
+                "timeout_start_usec": safe(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("runtime_discovery")).get("timeout_start_usec"), 50),
+                "runtime_evidence_ref": safe(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("runtime_discovery")).get("runtime_evidence_ref"), 160),
+                "syntax_status": safe(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("runtime_discovery")).get("syntax_status"), 60),
+                "syntax_valid": obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("runtime_discovery")).get("syntax_valid"),
+                "syntax_evidence_ref": safe(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("runtime_discovery")).get("syntax_evidence_ref"), 160),
+                "files": [{
+                    "file": safe(row.get("file"), 125),
+                    "status": safe(row.get("status"), 45),
+                    "line": row.get("line") if type(row.get("line")) is int else None,
+                    "column": row.get("column") if type(row.get("column")) is int else None,
+                } for row in arr(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("runtime_discovery")).get("files"))[:12]
+                   if isinstance(row, dict)],
+                "values_exposed": False,
+                "application_ready": None,
+            },
             "questions": [
                 {
                     "question": safe(q.get("question"), 320),
