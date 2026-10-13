@@ -1052,7 +1052,11 @@
         txt(config.validation_status||'UNVERIFIED')+'</p></article></div>':'')+
       (kb.query?'<article class="ic-detail-card"><h4>'+esc(fa?'جست‌وجوی مجدد هدفمند در Cognia':'Focused Cognia re-query')+
         '</h4><p>'+txt(kb.query)+'</p><p>'+esc(fa?'وضعیت: ':'Status: ')+txt(kb.status||'unknown')+
-        '</p>'+refs(kb.source_refs)+'</article>':'')+
+        '</p><p>'+esc(fa?'منابع بازیابی‌شده:':'Retrieved sources:')+'</p>'+refs(kb.source_refs)+
+        '<p>'+esc(fa?'منابعی که LLM صریحاً در برنامهٔ تحقیق استفاده کرده:':'Source refs explicitly used by LLM planning:')+
+        '</p>'+(arr(p.used_knowledge_refs).length?refs(p.used_knowledge_refs):
+          '<p>'+esc(fa?'استفادهٔ مستند ثبت نشده است.':'No evidenced use reported.')+'</p>')+
+        '</article>':'')+
       (checks.length?'<article class="ic-detail-card"><h4>'+esc(fa?'بررسی‌های Read-only پیشنهادی':'Proposed read-only checks')+
         '</h4><p>'+checks.map(txt).join('، ')+'</p></article>':'')+
       (questions.length?'<article class="ic-detail-card"><h4>'+esc(fa?'سؤال یا اطلاعات موردنیاز از اپراتور':'Information requested from operator')+
