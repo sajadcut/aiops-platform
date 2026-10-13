@@ -375,3 +375,27 @@ def test_evaluator_rejects_high_probability_hypothesis_citing_non_live_id(monkey
         "historical-memory-id"
     ]
     assert "hypothesis_non_live_evidence_reference" in evaluation["blockers"]
+
+
+def test_stopped_service_recovery_recommendation_is_generic_and_does_not_attribute_actor():
+    from agents.vm.deterministic import classify_vm_service_fault
+
+    for service in ("nginx", "haproxy", "gfpapi"):
+        evidence = [
+            {"reference": "svc", "raw_data": {"diagnostic": "service_status", "service": service, "active_state": "inactive", "sub_state": "dead"}},
+            {"reference": "proc", "raw_data": {"diagnostic": "process_status", "process": service, "running": False}},
+            {"reference": "cfg", "raw_data": {"diagnostic": "config_validate", "service": service, "supported": True, "valid": True}},
+        ]
+        finding = classify_vm_service_fault(evidence, service)
+        assert finding is not None
+        assert finding["fault_code"] == "service_stopped"
+        assert finding["stop_attribution"] == "unknown"
+        assert finding["requires_operator_review"] is True
+        assert finding["suggested_action"] == "start_service"
+        assert set(finding["evidence_ids"]) == {"svc", "proc", "cfg"}
+        assert "operator approval" in finding["remediation_candidate"]
+        assert any("actor are unverified" in line for line in finding["findings"])
+
+        # If syntax checking did not actually succeed, no recovery-ready verdict.
+        evidence[2]["raw_data"]["valid"] = None
+        assert classify_vm_service_fault(evidence, service) is None
