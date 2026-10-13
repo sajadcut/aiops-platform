@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+
 from apps.orchestrator.runtime import DurableWorkflowRuntime
 from apps.remediation_planner import RemediationPlanner
 from integrations.vm.target_context import current_vm_port, current_vm_target
