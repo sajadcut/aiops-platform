@@ -19,6 +19,9 @@ def encoded(value):
     ('{"A":1,}', "invalid_json_syntax"),
     ('{\n "Logging": true,\n "Bad": }\n', "invalid_json_syntax"),
     ('{"x": 1, "x": 2}', "invalid_json_syntax"),
+    ('{ /* .NET permits comments */ "Enabled": true, }', "valid_json_syntax"),
+    ('{ "endpoint": "https://example.net/a//b", // comment\n "ok": true, }', "valid_json_syntax"),
+    ('{ /* never ends ', "invalid_json_syntax"),
 ])
 def test_parse_is_local_and_never_returns_credentials(content, expected):
     result = validate_encoded_file("appsettings.json", encoded(content))
@@ -71,3 +74,21 @@ def test_oversized_and_malformed_payloads_never_report_valid():
     assert row["status"] == "unavailable"
     row = validate_encoded_file("appsettings.json", "this is not base64?")
     assert row["status"] != "valid_json_syntax"
+
+
+
+def test_dotnet_compatible_comments_and_trailing_commas_do_not_false_fail():
+    result = validate_encoded_file("appsettings.json", encoded(
+        '{\n // valid ASP.NET Core comment\n "k": "http://example/x",\n "nested": [1, 2,],\n}'
+    ))
+    assert result["status"] == "valid_json_syntax"
+
+
+def test_dotnet_syntax_error_positions_survive_comment_normalization():
+    result = validate_encoded_file("appsettings.json", encoded(
+        '{\n /* first line comment */\n "Broken": }\n'
+    ))
+    assert result["status"] == "invalid_json_syntax"
+    assert result["error_code"] == "json_value_missing"
+    assert result["line"] == 3
+    assert result["column"] == 12
