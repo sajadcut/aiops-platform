@@ -2087,7 +2087,7 @@
 | `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.reload_service` | 86 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
 | `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.start_service` | 89 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
 | `integrations/vm/service_adapters.py` | `ServiceDiagnosticAdapter` | 8 | class | Fixed, allowlisted service-specific diagnostic commands. | module |
-| `integrations/vm/service_adapters.py` | `get_service_adapter` | 43 | function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
+| `integrations/vm/service_adapters.py` | `get_service_adapter` | 54 | function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
 | `integrations/vm/ssh_connector.py` | `SSHVMConnector` | 21 | class | Controlled Linux VM adapter used only behind the VM MCP server. | module |
 | `integrations/vm/ssh_connector.py` | `SSHVMConnector.__init__` | 32 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
 | `integrations/vm/ssh_connector.py` | `SSHVMConnector._auth_mode` | 37 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
