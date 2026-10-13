@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 448 | Dashboard JS files scanned: 8 | Symbols indexed: 4304**
+**Python files scanned: 449 | Dashboard JS files scanned: 8 | Symbols indexed: 4319**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -3202,6 +3202,21 @@
 | `tests/unit/test_direct_execution_runtime_guard.py` | `test_direct_execute_returns_verified_only_after_post_action_verification.verify` | 245 | async method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | test_direct_execute_returns_verified_only_after_post_action_verification |
 | `tests/unit/test_direct_execution_runtime_guard.py` | `test_direct_execute_returns_verified_only_after_post_action_verification.record_memory` | 252 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_direct_execute_returns_verified_only_after_post_action_verification |
 | `tests/unit/test_direct_execution_runtime_guard.py` | `test_direct_execute_returns_verified_only_after_post_action_verification.execute` | 258 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | test_direct_execute_returns_verified_only_after_post_action_verification |
+| `tests/unit/test_disk_causal_forensics.py` | `test_vm_disk_forensics_is_read_only_and_bounded` | 16 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_disk_causal_forensics.py` | `test_vm_disk_forensics_is_read_only_and_bounded.disk_status` | 22 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_vm_disk_forensics_is_read_only_and_bounded |
+| `tests/unit/test_disk_causal_forensics.py` | `test_vm_disk_forensics_is_read_only_and_bounded.fake_run` | 30 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_vm_disk_forensics_is_read_only_and_bounded |
+| `tests/unit/test_disk_causal_forensics.py` | `_file_evidence` | 53 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_disk_causal_forensics.py` | `test_file_inventory_is_not_proof_of_writer_growth_or_safe_deletion` | 67 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_disk_causal_forensics.py` | `test_llm_is_asked_about_unknown_disk_growth_not_automatic_cleanup` | 92 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_disk_causal_forensics.py` | `test_disk_pressure_triggers_forensics_but_lower_pressure_does_not` | 100 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_disk_causal_forensics.py` | `test_disk_pressure_triggers_forensics_but_lower_pressure_does_not.VM` | 101 | class | کلاس | test_disk_pressure_triggers_forensics_but_lower_pressure_does_not |
+| `tests/unit/test_disk_causal_forensics.py` | `test_disk_pressure_triggers_forensics_but_lower_pressure_does_not.VM.__init__` | 102 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_disk_pressure_triggers_forensics_but_lower_pressure_does_not.VM |
+| `tests/unit/test_disk_causal_forensics.py` | `test_disk_pressure_triggers_forensics_but_lower_pressure_does_not.VM.disk_status` | 105 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_disk_pressure_triggers_forensics_but_lower_pressure_does_not.VM |
+| `tests/unit/test_disk_causal_forensics.py` | `test_disk_pressure_triggers_forensics_but_lower_pressure_does_not.VM.disk_forensics` | 110 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_disk_pressure_triggers_forensics_but_lower_pressure_does_not.VM |
+| `tests/unit/test_disk_causal_forensics.py` | `test_disk_pressure_triggers_forensics_but_lower_pressure_does_not.VM.host_info` | 113 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_disk_pressure_triggers_forensics_but_lower_pressure_does_not.VM |
+| `tests/unit/test_disk_causal_forensics.py` | `test_disk_pressure_triggers_forensics_but_lower_pressure_does_not.VM.collect_vm_metrics` | 115 | async method | Evidence/داده موردنیاز را از منبع مربوط جمع می‌کند | test_disk_pressure_triggers_forensics_but_lower_pressure_does_not.VM |
+| `tests/unit/test_disk_causal_forensics.py` | `test_disk_pressure_triggers_forensics_but_lower_pressure_does_not.VM.collect_metrics` | 117 | async method | Evidence/داده موردنیاز را از منبع مربوط جمع می‌کند | test_disk_pressure_triggers_forensics_but_lower_pressure_does_not.VM |
+| `tests/unit/test_disk_causal_forensics.py` | `test_disk_report_makes_no_cleanup_approval_or_write_authority` | 134 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_dotin_general_chatbot_llm.py` | `FakeResponse` | 14 | class | کلاس | module |
 | `tests/unit/test_dotin_general_chatbot_llm.py` | `FakeResponse.__init__` | 15 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeResponse |
 | `tests/unit/test_dotin_general_chatbot_llm.py` | `FakeResponse.raise_for_status` | 19 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeResponse |
