@@ -1,7 +1,6 @@
 """Contract and safety tests for technology-aware GFPAPI investigation."""
+import base64
 import json
-import shlex
-import subprocess
 from datetime import datetime, timezone
 from types import SimpleNamespace
 
@@ -10,8 +9,9 @@ import pytest
 from apps.context_service.evidence_collector import EvidenceCollector
 from apps.orchestrator.dynamic_investigation import DynamicInvestigationPlanner
 from domain.contracts.config import settings
-from integrations.vm.runtime_discovery import (
-    parse_systemd_runtime, dotnet_json_syntax_command, safe_absolute_path,
+from integrations.vm.runtime_discovery import parse_systemd_runtime, safe_absolute_path
+from integrations.vm.dotnet_local_validator import (
+    validate_encoded_file, safe_json_files, remote_file_listing_command,
 )
 from integrations.vm.ssh_connector import SSHVMConnector
 from integrations.vm.target_context import bind_vm_target, reset_vm_target
@@ -59,24 +59,22 @@ def test_dotnet_syntax_probe_reports_only_structure_no_application_secrets(tmp_p
         encoding="utf-8",
     )
     (publish / "appsettings.Production.json").write_text(
-        '{\n  "Logging": true,\n  "Bad": }\n',
-        encoding="utf-8",
+        '{\n  "Logging": true,\n  "Bad": }\n', encoding="utf-8",
     )
     (publish / "GFP.Endpoints.API.runtimeconfig.json").write_text(
         '{"runtimeOptions":{"tfm":"net8.0"}}', encoding="utf-8"
     )
-    command = dotnet_json_syntax_command(str(publish))
-    result = subprocess.run(shlex.split(command), capture_output=True, text=True, timeout=8, check=True)
-    parsed = json.loads(result.stdout)
-    assert parsed["status"] == "invalid"
-    assert parsed["syntax_valid"] is False
-    assert parsed["values_exposed"] is False
-    by_file = {row["file"]: row for row in parsed["files"]}
+    rows = [
+        validate_encoded_file(path.name, base64.b64encode(path.read_bytes()).decode())
+        for path in sorted(publish.glob("*.json"))
+    ]
+    by_file = {row["file"]: row for row in rows}
     assert by_file["appsettings.json"]["status"] == "valid_json_syntax"
     assert by_file["appsettings.Production.json"]["status"] == "invalid_json_syntax"
     assert by_file["appsettings.Production.json"]["line"] == 3
-    assert "SECRET_SHOULD_NOT_LEAK" not in result.stdout
-    assert "my-password" not in result.stdout
+    assert by_file["appsettings.Production.json"]["error_code"] == "json_value_missing"
+    assert "SECRET_SHOULD_NOT_LEAK" not in json.dumps(rows)
+    assert "my-password" not in json.dumps(rows)
 
 
 def test_symlink_and_overflow_do_not_create_false_valid_configuration(tmp_path):
@@ -85,15 +83,12 @@ def test_symlink_and_overflow_do_not_create_false_valid_configuration(tmp_path):
     outside = tmp_path / "outside.json"
     outside.write_text('{"secret":"kept private"}', encoding="utf-8")
     (publish / "appsettings.json").symlink_to(outside)
-    parsed = json.loads(subprocess.run(
-        shlex.split(dotnet_json_syntax_command(str(publish))),
-        capture_output=True, text=True, timeout=8, check=True,
-    ).stdout)
-    assert parsed["status"] == "partial"
-    assert parsed["syntax_valid"] is None
-    assert "kept private" not in json.dumps(parsed)
+    rows, partial = safe_json_files("appsettings.json\tl\n")
+    assert rows == []
+    assert partial is True
+    assert "kept private" not in json.dumps(rows)
     with pytest.raises(ValueError):
-        dotnet_json_syntax_command("/etc")
+        remote_file_listing_command("/etc")
     assert safe_absolute_path("/data/../etc/secret") is None
 
 
