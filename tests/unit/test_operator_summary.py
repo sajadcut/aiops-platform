@@ -306,3 +306,31 @@ def test_operator_summary_shows_unknown_guidance_only_as_unverified_advice():
     assert summary["unknown_guidance"] == guidance
     assert summary["source_policy"]["execution_authority"] is False
     assert summary["recommended_action"] is None
+
+
+
+def test_verified_config_syntax_error_takes_precedence_over_unsupported_manual_stop_guess():
+    evidence = [
+        _service_status(),
+        {
+            "id": "ev-conf-42",
+            "reference": "ev-conf-42", "type": "telemetry", "source": "vm_mcp",
+            "raw_data": {
+                "diagnostic": "config_validate", "target": "10.100.6.199",
+                "service": "nginx", "success": True, "supported": True,
+                "valid": False, "config_file": "/etc/nginx/nginx.conf",
+                "root_config_file": "/etc/nginx/nginx.conf",
+                "error_line": 42,
+                "syntax_error": "nginx: [emerg] unknown directive at /etc/nginx/nginx.conf:42",
+            },
+        },
+    ]
+    summary = _base_summary(evidence)
+    assert summary["observed_state"]["config_validate"]["valid"] is False
+    assert summary["observed_state"]["config_validate"]["error_line"] == 42
+    assert "nginx.conf" in summary["likely_cause"]
+    assert "خط 42" in summary["likely_cause"]
+    assert "اصلاح و آزمایش مجدد" in summary["likely_cause"]
+    assert "علت توقف اولیه هنوز مشخص نیست" in summary["likely_cause"]
+    assert "ev-conf-42" in summary["cause_evidence_ids"]
+    assert summary["human_action_indicator"]["status"] != "confirmed"
