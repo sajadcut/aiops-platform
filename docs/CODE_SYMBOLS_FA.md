@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 447 | Dashboard JS files scanned: 8 | Symbols indexed: 4211**
+**Python files scanned: 447 | Dashboard JS files scanned: 8 | Symbols indexed: 4212**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -3584,6 +3584,7 @@
 | `tests/unit/test_operational_resilience_regressions.py` | `test_total_specialist_failure_still_fails_closed` | 289 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_operational_resilience_regressions.py` | `test_evaluator_rejects_historical_or_unknown_ids_as_live_evidence` | 305 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_operational_resilience_regressions.py` | `test_evaluator_rejects_high_probability_hypothesis_citing_non_live_id` | 346 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_operational_resilience_regressions.py` | `test_stopped_service_recovery_recommendation_is_generic_and_does_not_attribute_actor` | 380 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_operator_recommendation_translation.py` | `summary_for` | 12 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_operator_recommendation_translation.py` | `test_freeform_english_json_is_never_falsely_labeled_as_persian` | 19 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_operator_recommendation_translation.py` | `test_governed_action_persian_label_is_real_persian_not_english_command` | 31 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
