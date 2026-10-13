@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 450 | Dashboard JS files scanned: 8 | Symbols indexed: 4337**
+**Python files scanned: 450 | Dashboard JS files scanned: 8 | Symbols indexed: 4339**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1258,6 +1258,8 @@
 | `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator` | 78 | class | کلاس | module |
 | `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator.__init__` | 79 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
 | `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._build_graph` | 102 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._build_graph.observed_node` | 107 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator._build_graph |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._build_graph.observed_node.observed` | 108 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator._build_graph.observed_node |
 | `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator.run` | 140 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | E2EOrchestrator |
 | `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._audit` | 147 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
 | `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._knowledge_failure_status` | 158 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
