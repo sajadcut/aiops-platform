@@ -3,7 +3,7 @@
 > این فایل فهرست فایل‌به‌فایل repository است. توضیح معماری و flow در `CODEBASE_GUIDE_FA.md` آمده است.
 > این فایل با `scripts/generate_file_index_fa.py` ساخته و در CI کنترل می‌شود.
 
-**تعداد فایل‌های track‌شده و پوشش‌داده‌شده: 585**
+**تعداد فایل‌های track‌شده و پوشش‌داده‌شده: 586**
 
 | Path | Type | Purpose | Called By | Calls/Depends On | Runtime/Test/Docs | Notes |
 |---|---|---|---|---|---|---|
@@ -140,6 +140,7 @@
 | `apps/execution_service/tools/registry.py` | Python | Execution: مرز اجرای governed، tool registry، idempotency و policy | API/workflow | Approval/tools/MCP | Runtime | write boundary؛ fail-closed |
 | `apps/execution_service/tools/ssh_vm.py` | Python | Execution: مرز اجرای governed، tool registry، idempotency و policy | API/workflow | Approval/tools/MCP | Runtime | write boundary؛ fail-closed |
 | `apps/execution_service/tools/vm_telemetry.py` | Python | Execution: مرز اجرای governed، tool registry، idempotency و policy | API/workflow | Approval/tools/MCP | Runtime | write boundary؛ fail-closed |
+| `apps/incident_explanation.py` | Python | ماژول service لایه application | Runtime | domain/integrations | Runtime | جزء Control Plane |
 | `apps/incident_service/repository.py` | Python | Persistence: Repository durable Incident/Evidence/Finding | signal/workflow/dashboard | SQLAlchemy/PostgreSQL | Runtime | هسته persistence incident |
 | `apps/knowledge_review.py` | Python | ماژول service لایه application | Runtime | domain/integrations | Runtime | جزء Control Plane |
 | `apps/mcp_server/__init__.py` | Python | MCP: MCP server داخلی برای expose ابزارهای کنترل‌شده | MCP clients | provider adapters/security | Runtime | capability boundary |
