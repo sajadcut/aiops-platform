@@ -292,3 +292,17 @@ def test_persian_free_text_plan_is_not_misrepresented_as_english_translation():
 def test_english_free_text_plan_remains_readable_in_english_option():
     summary = _base_summary([], state={"final_plan": "Review service logs before remediation."})
     assert summary["recommended_action"]["text_en"] == "Review service logs before remediation."
+
+
+def test_operator_summary_shows_unknown_guidance_only_as_unverified_advice():
+    guidance = {
+        "status": "suggested", "execution_authority": False,
+        "counts_as_evidence": False, "config_validation_passed": False,
+        "items": [{"topic": "config_validation_method", "subject": "gfpapi",
+                   "explanation": "config check is not known",
+                   "validation_approach": "Consult official runbook", "verified": False}],
+    }
+    summary = _base_summary([], state={"context": {"unknown_guidance": guidance}})
+    assert summary["unknown_guidance"] == guidance
+    assert summary["source_policy"]["execution_authority"] is False
+    assert summary["recommended_action"] is None
