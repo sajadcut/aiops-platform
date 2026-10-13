@@ -100,47 +100,47 @@ try:
         else:
             failures = False
             incomplete = len(candidates) > len(files)
-        for name in files:
-            p = os.path.join(root, name)
-            item = {"file": name, "status": "unavailable"}
-            try:
-                fd = os.open(name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=directory_fd)
-                with os.fdopen(fd, "rb") as stream:
-                    meta = os.fstat(stream.fileno())
-                    content = stream.read(1048577) if stat.S_ISREG(meta.st_mode) and meta.st_size <= 1048576 else b""
-                if not stat.S_ISREG(meta.st_mode) or meta.st_size > 1048576:
-                    item["reason"] = "non_regular_or_oversized"
-                    incomplete = True
-                else:
-                    if len(content) > 1048576:
-                        item["reason"] = "oversized"
+            for name in files:
+                p = os.path.join(root, name)
+                item = {"file": name, "status": "unavailable"}
+                try:
+                    fd = os.open(name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=directory_fd)
+                    with os.fdopen(fd, "rb") as stream:
+                        meta = os.fstat(stream.fileno())
+                        content = stream.read(1048577) if stat.S_ISREG(meta.st_mode) and meta.st_size <= 1048576 else b""
+                    if not stat.S_ISREG(meta.st_mode) or meta.st_size > 1048576:
+                        item["reason"] = "non_regular_or_oversized"
                         incomplete = True
                     else:
-                        def reject_constant(_):
-                            raise ValueError("nonstandard_json_constant")
-                        def reject_duplicates(pairs):
-                            seen = set()
-                            for key, _ in pairs:
-                                if key in seen:
-                                    raise ValueError("duplicate_json_key")
-                                seen.add(key)
-                            return dict(pairs)
-                        json.loads(content.decode("utf-8-sig"),
-                                   parse_constant=reject_constant,
-                                   object_pairs_hook=reject_duplicates)
-                        item["status"] = "valid_json_syntax"
-            except json.JSONDecodeError as exc:
-                item.update({"status": "invalid_json_syntax",
-                             "line": exc.lineno, "column": exc.colno})
-                failures = True
-            except (ValueError, UnicodeError) as exc:
-                item.update({"status": "invalid_json_syntax",
-                             "reason": type(exc).__name__})
-                failures = True
-            except OSError:
-                item["reason"] = "file_not_readable"
-                incomplete = True
-            result["files"].append(item)
+                        if len(content) > 1048576:
+                            item["reason"] = "oversized"
+                            incomplete = True
+                        else:
+                            def reject_constant(_):
+                                raise ValueError("nonstandard_json_constant")
+                            def reject_duplicates(pairs):
+                                seen = set()
+                                for key, _ in pairs:
+                                    if key in seen:
+                                        raise ValueError("duplicate_json_key")
+                                    seen.add(key)
+                                return dict(pairs)
+                            json.loads(content.decode("utf-8-sig"),
+                                       parse_constant=reject_constant,
+                                       object_pairs_hook=reject_duplicates)
+                            item["status"] = "valid_json_syntax"
+                except json.JSONDecodeError as exc:
+                    item.update({"status": "invalid_json_syntax",
+                                 "line": exc.lineno, "column": exc.colno})
+                    failures = True
+                except (ValueError, UnicodeError) as exc:
+                    item.update({"status": "invalid_json_syntax",
+                                 "reason": type(exc).__name__})
+                    failures = True
+                except OSError:
+                    item["reason"] = "file_not_readable"
+                    incomplete = True
+                result["files"].append(item)
             result["status"] = "invalid" if failures else ("partial" if incomplete else "syntax_valid")
             result["syntax_valid"] = False if failures else (None if incomplete else True)
     finally:
