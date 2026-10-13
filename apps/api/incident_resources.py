@@ -387,8 +387,27 @@ async def get_incident_lifecycle(incident_id: UUID):
         audits = await PostgreSQLAuditStore(db).list(str(incident_id), 200)
 
     state = (checkpoint or {}).get("state") or {}
+    incident_status = str(incident.status.value if hasattr(incident.status, "value") else incident.status).lower()
+    checkpoint_status = str((checkpoint or {}).get("status") or "").lower()
+    approval_row = dict(approval) if approval else state.get("approval")
+    approval_status = str((approval_row or {}).get("status") or "").lower()
+    # A paused workflow awaiting approval is NOT actively analyzing.
+    # A consumed approval may be executing until the incident reaches a terminal status.
+    analysis_in_progress = incident_status == "analyzing" and (
+        approval_status == "consumed"
+        or (approval_status not in {"pending", "approved", "rejected"}
+            and checkpoint_status not in {"paused", "completed", "failed"})
+    )
     return {
         "incident_id": str(incident_id),
+        "incident_status": incident_status,
+        "analysis_in_progress": analysis_in_progress,
+        "analysis_phase": (
+            "executing" if analysis_in_progress and approval_status == "consumed"
+            else "analyzing" if analysis_in_progress
+            else "awaiting_approval" if approval_status in {"pending", "approved"}
+            else "completed"
+        ),
         "checkpoint_status": (checkpoint or {}).get("status"),
         "checkpoint_version": (checkpoint or {}).get("version"),
         "current_node": state.get("current_node"),
@@ -400,7 +419,7 @@ async def get_incident_lifecycle(incident_id: UUID):
         "final_plan": state.get("final_plan"),
         "decision": state.get("decision"),
         "evaluation": state.get("evaluation") or {},
-        "approval": dict(approval) if approval else state.get("approval"),
+        "approval": approval_row,
         "execution": state.get("execution_result"),
         "verification": state.get("verification_result"),
         "terminal_reason": state.get("terminal_reason"),
