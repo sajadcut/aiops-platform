@@ -104,3 +104,105 @@ async def test_system_logs_fall_back_to_sudo_when_journal_denied(monkeypatch):
     assert result["access_mode"] == "sudo"
     assert result["logs"] == ["service stopped by systemd"]
     assert len(calls) == 2
+
+
+
+def test_systemd_execstart_config_discovery_and_syntax_error_line_are_safe():
+    from integrations.vm.service_adapters import (
+        config_check_for_path, discover_config_path, parse_config_diagnostic,
+    )
+    haproxy_exec = (
+        "{ path=/usr/sbin/haproxy ; argv[]=/usr/sbin/haproxy -Ws "
+        "-f /opt/grouppayment/haproxy.cfg -p /run/haproxy.pid ; ignore_errors=no ; }"
+    )
+    nginx_exec = (
+        "{ path=/usr/sbin/nginx ; argv[]=/usr/sbin/nginx "
+        "-c /etc/nginx/custom.conf -g 'daemon on; master_process on;' ; }"
+    )
+    assert discover_config_path("haproxy", haproxy_exec) == "/opt/grouppayment/haproxy.cfg"
+    assert discover_config_path("nginx", nginx_exec) == "/etc/nginx/custom.conf"
+    assert "/opt/grouppayment/haproxy.cfg" in config_check_for_path("haproxy", "/opt/grouppayment/haproxy.cfg")
+    assert "-t -c /etc/nginx/custom.conf" in config_check_for_path("nginx", "/etc/nginx/custom.conf")
+
+    parsed = parse_config_diagnostic(
+        "nginx: [emerg] unknown directive 'bad_directive' in /etc/nginx/custom.conf:42"
+    )
+    assert parsed["config_file"] == "/etc/nginx/custom.conf"
+    assert parsed["error_line"] == 42
+    assert "unknown directive" in parsed["syntax_error"]
+    proxy = parse_config_diagnostic(
+        "[ALERT] config : parsing [/opt/grouppayment/haproxy.cfg:13] : unknown keyword 'bad'"
+    )
+    assert proxy["config_file"] == "/opt/grouppayment/haproxy.cfg"
+    assert proxy["error_line"] == 13
+
+
+def test_discovered_config_path_rejects_untrusted_shell_syntax():
+    from integrations.vm.service_adapters import discover_config_path, config_check_for_path
+    assert discover_config_path("haproxy", "argv[]=/usr/sbin/haproxy -f '/tmp/file.cfg;touch /tmp/hack' ;") is None
+    assert discover_config_path("nginx", "argv[]=/usr/sbin/nginx -c ../../etc/nginx.conf ;") is None
+    # No supplied path can insert a semicolon into the executed check command.
+    assert ";touch" not in config_check_for_path("nginx", "/tmp/a.conf;touch /tmp/hack")
+    assert "-t -c" not in config_check_for_path("nginx", "/tmp/a.conf;touch /tmp/hack")
+
+
+@pytest.mark.asyncio
+async def test_haproxy_config_validation_uses_systemd_override_and_reports_exact_error(monkeypatch):
+    monkeypatch.setattr(settings, "APP_ENV", "test")
+    monkeypatch.setattr(settings, "SSH_ALLOWED_SERVICES", ["haproxy"])
+    connector = SSHVMConnector()
+    commands = []
+
+    async def fake_run(target, command):
+        commands.append(command)
+        if command.startswith("systemctl show "):
+            return {"success": True,
+                    "stdout": "{ path=/usr/sbin/haproxy ; argv[]=/usr/sbin/haproxy -Ws -f /opt/apps/haproxy.cfg ; }",
+                    "exit_code": 0}
+        return {
+            "success": False, "exit_code": 1,
+            "stderr": "[ALERT] config : parsing [/opt/apps/haproxy.cfg:23] : unknown keyword 'invalid_line'",
+            "stdout": "",
+        }
+
+    monkeypatch.setattr(connector, "_run", fake_run)
+    result = await connector.config_validate("10.100.6.199", "haproxy")
+    assert result["success"] is True
+    assert result["supported"] is True
+    assert result["valid"] is False
+    assert result["config_file"] == "/opt/apps/haproxy.cfg"
+    assert result["root_config_file"] == "/opt/apps/haproxy.cfg"
+    assert result["error_line"] == 23
+    assert "unknown keyword" in result["syntax_error"]
+    assert "-f /opt/apps/haproxy.cfg" in commands[-1]
+
+
+@pytest.mark.asyncio
+async def test_unknown_haproxy_config_path_does_not_claim_default_file_is_valid(monkeypatch):
+    monkeypatch.setattr(settings, "APP_ENV", "test")
+    monkeypatch.setattr(settings, "SSH_ALLOWED_SERVICES", ["haproxy"])
+    connector = SSHVMConnector()
+    commands = []
+
+    async def fake_run(target, command):
+        commands.append(command)
+        return {"success": True, "stdout": "argv[]=/usr/sbin/haproxy -Ws ;", "exit_code": 0}
+
+    monkeypatch.setattr(connector, "_run", fake_run)
+    result = await connector.config_validate("10.100.6.199", "haproxy")
+    assert result["supported"] is False
+    assert result["valid"] is None
+    assert result["detail"] == "running_config_path_unverified"
+    assert len(commands) == 1  # No speculative check of /etc/haproxy/haproxy.cfg.
+
+
+@pytest.mark.asyncio
+async def test_unknown_service_config_is_advisory_not_a_generated_ssh_command(monkeypatch):
+    monkeypatch.setattr(settings, "APP_ENV", "test")
+    monkeypatch.setattr(settings, "SSH_ALLOWED_SERVICES", ["gfpapi"])
+    connector = SSHVMConnector()
+    result = await connector.config_validate("10.100.6.199", "gfpapi")
+    assert result["success"] is True
+    assert result["supported"] is False
+    assert result["valid"] is None
+    assert result["detail"] == "config_validation_adapter_unavailable"
