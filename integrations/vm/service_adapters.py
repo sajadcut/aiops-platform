@@ -21,18 +21,29 @@ _ADAPTERS = (
     ServiceDiagnosticAdapter(
         canonical_name="haproxy",
         aliases=("haproxy",),
-        config_check_command="haproxy -c -f /etc/haproxy/haproxy.cfg",
+        config_check_command=(
+            "if [ -x /usr/sbin/haproxy ]; then /usr/sbin/haproxy -c -f /etc/haproxy/haproxy.cfg; "
+            "elif command -v haproxy >/dev/null 2>&1; then haproxy -c -f /etc/haproxy/haproxy.cfg; "
+            "else exit 127; fi"
+        ),
     ),
     ServiceDiagnosticAdapter(
         canonical_name="nginx",
         aliases=("nginx",),
-        config_check_command="nginx -t",
+        config_check_command=(
+            "if [ -x /usr/sbin/nginx ]; then /usr/sbin/nginx -t; "
+            "elif [ -x /usr/local/nginx/sbin/nginx ]; then /usr/local/nginx/sbin/nginx -t; "
+            "elif command -v nginx >/dev/null 2>&1; then nginx -t; "
+            "else exit 127; fi"
+        ),
     ),
     ServiceDiagnosticAdapter(
         canonical_name="apache",
         aliases=("apache", "apache2", "httpd"),
         config_check_command=(
-            "if command -v apachectl >/dev/null 2>&1; then apachectl configtest; "
+            "if [ -x /usr/sbin/apachectl ]; then /usr/sbin/apachectl configtest; "
+            "elif [ -x /usr/sbin/httpd ]; then /usr/sbin/httpd -t; "
+            "elif command -v apachectl >/dev/null 2>&1; then apachectl configtest; "
             "elif command -v httpd >/dev/null 2>&1; then httpd -t; "
             "else exit 127; fi"
         ),
