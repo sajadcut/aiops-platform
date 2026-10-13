@@ -518,6 +518,32 @@ function renderAudit() {
   $('#auditList').innerHTML = a.map(timelineItem).join('') || '<div class="empty-state">No audit events recorded.</div>';
 }
 
+let incidentQueueRefreshBusy = false;
+
+// Poll only the small incident list while its view is visible. Never reload
+// the document, drop filters, reset selected view or overlap requests.
+async function refreshIncidentQueue() {
+  if (incidentQueueRefreshBusy || document.hidden || S.view !== 'incidents' ||
+      S.incidentPeriod === 'archived') return;
+  incidentQueueRefreshBusy = true;
+  const indicator = $('#incidentLiveSync');
+  try {
+    const response = await api('/api/v1/dashboard/incidents?limit=100');
+    const next = response.items || [];
+    if (JSON.stringify(next) !== JSON.stringify(S.incidents)) {
+      S.incidents = next;
+      renderIncidents();
+    }
+    if (indicator) indicator.textContent =
+      'به‌روزرسانی خودکار · آخرین بررسی ' + new Date().toLocaleTimeString('fa-IR');
+  } catch (_) {
+    // Preserve last known data and clearly expose stale connectivity.
+    if (indicator) indicator.textContent = 'به‌روزرسانی خودکار ناموفق؛ تلاش مجدد تا ۶ ثانیه دیگر';
+  } finally {
+    incidentQueueRefreshBusy = false;
+  }
+}
+
 async function loadAll() {
   showError();
   $('#apiKey').value = S.key;
@@ -575,4 +601,8 @@ window.addEventListener('DOMContentLoaded', () => {
   if (['incidents', 'knowledge', 'audit', 'services'].includes(requestedView)) setView(requestedView);
   loadAll();
   setInterval(loadAll, 60000);
+  setInterval(() => { void refreshIncidentQueue(); }, 6000);
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) void refreshIncidentQueue();
+  });
 });
