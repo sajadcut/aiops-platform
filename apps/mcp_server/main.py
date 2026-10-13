@@ -63,6 +63,7 @@ _TOOL_SCHEMAS: Dict[str, Dict[str, Dict[str, Any]]] = {
         "collect_vm_metrics": {"description": "Collect allowlisted Linux VM CPU/memory/swap/load/IO metrics", "inputSchema": {"type": "object", "required": ["target"], "properties": dict(_TARGET)}},
         "host_info": {"description": "Read hostname, OS, kernel, uptime and timezone", "inputSchema": {"type": "object", "required": ["target"], "properties": dict(_TARGET)}},
         "disk_status": {"description": "Read filesystem capacity, inode usage and mount status", "inputSchema": {"type": "object", "required": ["target"], "properties": dict(_TARGET)}},
+        "disk_forensics": {"description": "Read-only bounded high-pressure mount and large-file metadata; never delete or read contents", "inputSchema": {"type": "object", "required": ["target"], "additionalProperties": False, "properties": dict(_TARGET)}},
         "network_status": {"description": "Read interface addresses and routing table", "inputSchema": {"type": "object", "required": ["target"], "properties": dict(_TARGET)}},
         "service_status": {"description": "Read normalized systemd service state", "inputSchema": {"type": "object", "required": ["target", "service"], "properties": {**_TARGET, **_SERVICE}}},
         "service_logs": {"description": "Read bounded journal logs for an allowlisted service", "inputSchema": {"type": "object", "required": ["target", "service"], "properties": {**_TARGET, **_SERVICE, "limit": {"type": "integer", "minimum": 1, "maximum": 200}}}},
@@ -154,6 +155,7 @@ async def _call(provider: str, tool: str, args: Dict[str, Any]) -> Any:
     if tool == "collect_vm_metrics": return await connector.collect_metrics(target)
     if tool == "host_info": return await connector.host_info(target)
     if tool == "disk_status": return await connector.disk_status(target)
+    if tool == "disk_forensics": return await connector.disk_forensics(target)
     if tool == "network_status": return await connector.network_status(target)
     if tool == "process_snapshot": return await connector.process_snapshot(target)
     if tool == "system_logs": return await connector.system_logs(target, _limit(args.get("limit"), 100, 200))
