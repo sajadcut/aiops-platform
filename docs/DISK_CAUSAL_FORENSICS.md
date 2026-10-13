@@ -10,9 +10,15 @@ requirements, user impact, and a narrowly scoped safe recovery procedure.
 1. Read current target mount and inode pressure from Zabbix and VM MCP disk_status.
 2. At 90% or higher, ask VM MCP disk_forensics for bounded read-only large-file
    metadata. It searches no more than two pressured mounts and limits scans.
-3. Correlate the returned paths, sizes and modification timestamps with current
-   Elasticsearch error observations and Zabbix alert chronology.
-4. Treat co-occurrence as a hypothesis, not proof of the process that produced
+3. The VM tool optionally performs two read-only size observations about
+   two seconds apart and a bounded lsof inspection of open file handles. A
+   writable handle is evidence of a process holding the file, NOT proof that
+   this process caused its historical growth. A short sample with no growth
+   does not establish that the file has stopped growing.
+4. Compare file modification times, current observed growth and open handles
+   with the existing Elasticsearch error observations and Zabbix alert
+   chronology. Time proximity is a hypothesis, not a causal conclusion.
+5. Treat co-occurrence as a hypothesis, not proof of the process that produced
    the file or of causation.
 5. Seek stronger evidence of process ownership, growth trend, error/retry loops,
    log rotation, business/data retention policy and open handles.
