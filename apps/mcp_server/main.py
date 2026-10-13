@@ -76,6 +76,7 @@ _TOOL_SCHEMAS: Dict[str, Dict[str, Dict[str, Any]]] = {
         "route_check": {"description": "Read the route selected for a validated destination", "inputSchema": {"type": "object", "required": ["target", "destination"], "properties": {**_TARGET, "destination": {"type": "string"}}}},
         "firewall_status": {"description": "Read bounded local nftables/firewalld/iptables state", "inputSchema": {"type": "object", "required": ["target"], "properties": dict(_TARGET)}},
         "config_validate": {"description": "Validate configuration through a fixed service diagnostic adapter", "inputSchema": {"type": "object", "required": ["target", "service"], "properties": {**_TARGET, **_SERVICE}}},
+        "nginx_config_review": {"description": "Read-only structural nginx config excerpt and bounded candidate staging test; never apply", "inputSchema": {"type": "object", "additionalProperties": False, "required": ["target", "service"], "properties": {**_TARGET, **_SERVICE}}},
         "service_runtime_discovery": {"description": "Read non-secret systemd properties and identify service runtime/entrypoint", "inputSchema": {"type": "object", "additionalProperties": False, "required": ["target", "service"], "properties": {**_TARGET, **_SERVICE}}},
         "dotnet_config_syntax": {"description": "Validate bounded appsettings and runtimeconfig JSON syntax without returning config contents", "inputSchema": {"type": "object", "additionalProperties": False, "required": ["target", "service"], "properties": {**_TARGET, **_SERVICE}}},
         "start_service": {"description": "Start one validated service through approved Execution Service", "inputSchema": {"type": "object", "required": ["target", "service", "approval_id", "incident_id"], "properties": {**_TARGET, **_SERVICE, **_APPROVAL_CONTEXT}}},
@@ -173,11 +174,12 @@ async def _call(provider: str, tool: str, args: Dict[str, Any]) -> Any:
         return await connector.process_status(target, process)
 
     service = str(args.get("service") or "").strip()
-    if tool in {"service_status", "service_logs", "config_validate", "service_runtime_discovery", "dotnet_config_syntax", "start_service", "restart_service", "reload_service"} and not service:
+    if tool in {"service_status", "service_logs", "config_validate", "nginx_config_review", "service_runtime_discovery", "dotnet_config_syntax", "start_service", "restart_service", "reload_service"} and not service:
         raise ValueError("service_required")
     if tool == "service_status": return await connector.service_status(target, service)
     if tool == "service_logs": return await connector.service_logs(target, service, _limit(args.get("limit"), 100, 200))
     if tool == "config_validate": return await connector.config_validate(target, service)
+    if tool == "nginx_config_review": return await connector.nginx_config_review(target, service)
     if tool == "service_runtime_discovery": return await connector.service_runtime_discovery(target, service)
     if tool == "dotnet_config_syntax": return await connector.dotnet_config_syntax(target, service)
 
