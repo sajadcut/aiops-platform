@@ -273,3 +273,42 @@ def test_incident_ui_distinguishes_elastic_sources():
     assert "stored_elasticsearch_evidence" in ui
     assert "live_elasticsearch_mcp" in ui
     assert "elastic_mcp_unavailable" in ui
+
+
+@pytest.mark.asyncio
+async def test_llm_cannot_claim_no_401_or_403_on_unverified_elastic_evidence(monkeypatch):
+    import apps.api.incident_chat as api
+    incident_id = UUID("11111111-1111-4111-8111-111111111111")
+    class DB:
+        async def __aenter__(self):return self
+        async def __aexit__(self,*a):return False
+    class Audit:
+        def __init__(self, db):pass
+        async def list(self,*a):return []
+    async def scope(db,iid):
+        return SimpleNamespace(service="gfpapi",started_at=datetime.now(timezone.utc)), {"state":{"context":{}}}, [vm_row(active_state="failed")]
+    async def brief(db,iid):
+        return {"incident_summary":{"service":"gfpapi"}, "mcp_evidence":[{
+            "tool":"service_status","status":"success",
+            "finding":"active_state=failed; result=timeout","evidence_ref":"vm:service:1",
+        }]}
+    async def model(*args,**kwargs):
+        return {"intent":"answer",
+                "answer":"هیچ خطای HTTP 401 یا 403 در لاگ‌ها مشاهده نشده و مشکل احراز هویت رد شده است.",
+                "model_status":"structured"}
+    async def append(*args,**kwargs):return "turn-id"
+    monkeypatch.setattr(api,"AsyncSessionLocal",DB)
+    monkeypatch.setattr(api,"_scope",scope)
+    monkeypatch.setattr(api,"PostgreSQLAuditStore",Audit)
+    monkeypatch.setattr(api,"load_decision_brief_for_incident",brief)
+    monkeypatch.setattr(api,"llm_plan",model)
+    monkeypatch.setattr(api,"append_turn",append)
+    output=await api.incident_chat_message(
+        incident_id, api.IncidentChatMessage(message="مشکل چیه"),
+        identity=SimpleNamespace(subject="operator"),
+    )
+    assert output["answer_basis"]=="stored_analysis_guarded"
+    assert "مشاهده نشده" not in output["message"]
+    assert "رد شده است" not in output["message"]
+    assert "اثبات نمی‌شود" in output["message"]
+    assert "active_state=failed" in output["message"]
