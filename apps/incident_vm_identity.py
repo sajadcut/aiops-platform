@@ -12,6 +12,7 @@ import re
 from typing import Any
 
 from apps.incident_copilot import vm_binding
+from apps.context_service.service_identity import ServiceIdentityResolver
 from integrations.vm.mcp_client import VMEdgeMCPClient
 
 
@@ -52,8 +53,18 @@ def incident_vm_context(incident_context: dict | None, checkpoint: dict | None) 
                     for field in ("target_ip", "host_ip", "service"):
                         if a.get(field) and b.get(field) and str(a[field]).lower() != str(b[field]).lower():
                             conflicting.append(field)
-            elif lhs.get("conflicts") or rhs.get("conflicts"):
-                conflicting.append("service_identity")
+            else:
+                blocking_left, _ = ServiceIdentityResolver.split_conflicts(
+                    lhs.get("conflicts"))
+                blocking_right, _ = ServiceIdentityResolver.split_conflicts(
+                    rhs.get("conflicts"))
+                # A persisted RAG disagreement with a verified live name is
+                # still useful evidence, but it is NOT a new identity.
+                lhs_name = normalized_service(lhs.get("service"))
+                rhs_name = normalized_service(rhs.get("service"))
+                if (blocking_left or blocking_right or
+                    (lhs_name and rhs_name and lhs_name != rhs_name)):
+                    conflicting.append("service_identity")
     ctx.update(current)
     if conflicting:
         ctx["_vm_identity_context_conflicts"] = conflicting
@@ -93,8 +104,15 @@ def vm_binding_diagnostic(service: str, evidence: list[dict],
     if ctx.get("_vm_identity_context_conflicts"):
         return {"reason": "incident_identity_context_conflict", "candidate": None}
     identity = ctx.get("service_identity") or {}
-    if isinstance(identity, dict) and identity.get("conflicts"):
-        return {"reason": "service_identity_conflict", "candidate": None}
+    if isinstance(identity, dict):
+        blocking, advisory = ServiceIdentityResolver.split_conflicts(
+            identity.get("conflicts"))
+        if blocking:
+            return {"reason": "service_identity_conflict", "candidate": None,
+                    "blocking_kinds": [str(x.get("kind") or "unknown")[:50]
+                                       for x in blocking[:5]]}
+    else:
+        advisory = []
     name = normalized_service(service)
     if not name or name == "unknown":
         return {"reason": "service_identity_missing", "candidate": None}
@@ -145,6 +163,7 @@ def vm_binding_diagnostic(service: str, evidence: list[dict],
         "reason": "live_service_identity_check_required",
         "candidate": next(iter(targets)),
         "evidence_refs": list(dict.fromkeys(refs + signal_refs))[:8],
+        "advisory_knowledge_conflict_count": len(advisory),
     }
 
 
@@ -167,7 +186,9 @@ async def resolve_vm_binding(
     }:
         return bound, {"status": "verified_from_saved_vm_evidence",
                        "verification": bound.get("verification"),
-                       "evidence_refs": bound["evidence_refs"]}
+                       "evidence_refs": bound["evidence_refs"],
+                       "advisory_knowledge_conflict_count": diagnosis.get(
+                           "advisory_knowledge_conflict_count", 0)}
     if diagnosis.get("candidate") is None:
         return None, {"status": diagnosis["reason"], "evidence_refs": []}
     target = diagnosis["candidate"]
@@ -197,6 +218,8 @@ async def resolve_vm_binding(
     }, {
         "status": "verified_from_live_vm_mcp",
         "service_state": status,
+        "advisory_knowledge_conflict_count": diagnosis.get(
+            "advisory_knowledge_conflict_count", 0),
         "evidence_refs": diagnosis.get("evidence_refs", []),
         "live_observation": {
             "success": True, "target": target, "service": name,
