@@ -206,7 +206,8 @@ def _observed(incident: Dict[str, Any], state: Dict[str, Any], rows: List[Dict[s
         "process_status": view("process_status", ["running", "count"]),
         "port_listener_status": view("port_listener_status", ["supported", "listening"]),
         "tcp_check": view("tcp_check", ["supported", "reachable"]),
-        "config_validate": view("config_validate", ["supported", "valid"]),
+        "config_validate": view("config_validate", ["supported", "valid", "config_file",
+                               "root_config_file", "config_path_source", "error_line", "syntax_error"]),
         "metrics": metrics,
     }
 
@@ -215,6 +216,20 @@ def _cause(observed: Dict[str, Any], human: Dict[str, Any], state: Dict[str, Any
     status, service = _d(observed.get("service_status")), _t(observed.get("service")) or "سرویس"
     active, sub, result = _low(status.get("active_state")), _low(status.get("sub_state")), _low(status.get("result"))
     ref = _t(status.get("evidence_id"))
+    config = _d(observed.get("config_validate"))
+    if active in {"inactive", "failed"} and config.get("supported") is True and config.get("valid") is False:
+        config_file = _t(config.get("config_file")) or "نامشخص"
+        error_line = config.get("error_line")
+        line = f" خط {error_line}" if isinstance(error_line, int) else ""
+        message = _t(config.get("syntax_error"))[:230]
+        refs = [x for x in (config.get("evidence_id"), ref) if x]
+        return (
+            f"آزمایش کانفیگ سرویس ناموفق است؛ فایل {config_file}{line}."
+            + (f" خطای ابزار: {message}." if message else "")
+            + " اصلاح و آزمایش مجدد کانفیگ قبل از پیشنهاد Start ضروری است."
+            + " علت توقف اولیه هنوز مشخص نیست.",
+            "confirmed", refs,
+        )
     if active == "inactive" and human.get("type") == "manual_stop" and human.get("status") == "confirmed":
         refs = list(human.get("evidence_ids") or [])
         if ref and ref not in refs:
@@ -253,7 +268,12 @@ def _evidence_summary(item: Dict[str, Any]) -> str:
     if diag in DIRECT_LOG_DIAGNOSTICS:
         entries = _l(raw.get("entries") or raw.get("logs")); tail = _t(entries[-1])[:220] if entries else ""
         return f"{diag}: count={raw.get('count', len(entries))}" + (f", latest={tail}" if tail else "")
-    if diag == "config_validate": return f"config_validate: supported={raw.get('supported')}, valid={raw.get('valid')}"
+    if diag == "config_validate":
+        return (
+            f"config_validate: supported={raw.get('supported')}, valid={raw.get('valid')}"
+            f", config_file={raw.get('config_file')}, error_line={raw.get('error_line')}, "
+            f"syntax_error={_t(raw.get('syntax_error'))[:220]}"
+        )
     if diag == "collect_vm_metrics" or _low(item.get("type")) == "metric": return f"{_t(raw.get('name')) or 'metric'}={raw.get('value')}"
     return _t(item.get("reference")) or f"{item.get('source')} {item.get('type')}"
 
