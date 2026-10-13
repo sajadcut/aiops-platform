@@ -282,7 +282,7 @@
       section('narrative', narrativeSection, true) +
       section('agents', agentsSection, true) + section('sources', sourcesSection, true) +
       section('knowledge', cSection) + section('memory', memorySection) +
-      section('risks', gapsSection, (b.missing_evidence || []).length > 0) +
+      section('risks', gapsSection, (b.missing_evidence || []).length > 0 || (guidance.items || []).length > 0) +
       section('action', actionSection, true) + section('before', beforeSection, true) +
       section('execution', postSection) + section('timeline', timelineSection) + '</div>';
   }
