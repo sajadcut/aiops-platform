@@ -113,7 +113,7 @@ async def test_another_target_or_service_is_never_used_for_live_probe():
         "gfpapi", [vm_fact()], incident_context(service="nginx"), connector=VM(),
     )
     assert bound is None
-    assert reason["status"] == "verified_target_not_in_incident_evidence" or reason["status"] == "alert_vm_target_conflict"
+    assert reason["status"] == "incident_service_conflict"
 
 
 @pytest.mark.asyncio
