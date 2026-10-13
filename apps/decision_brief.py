@@ -435,6 +435,7 @@ def build_decision_brief(
         },
         "evidence_conflicts": conflict_refs,
         "missing_evidence": missing,
+        "unknown_guidance": redact(obj(obj(state.get("context")).get("unknown_guidance"))),
         "remediation_recommendation": {
             "action": safe(recommendation.get("action") or approval.get("action"), 120),
             "tool": safe(recommendation.get("tool") or approval.get("tool"), 120),
