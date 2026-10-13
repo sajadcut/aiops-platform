@@ -134,6 +134,17 @@ const assert = require('node:assert/strict');
     unknown_guidance:{status:'suggested',execution_authority:false,
       items:[{topic:'config_syntax_repair_guidance',subject:'nginx',
         validation_approach:'Inspect offending directive in vendor documentation'}]},
+    disk_file_causality:{
+      files:[{path:'/var/log/gfpapi/error.log',size_bytes:37000000000,mount:'/var',
+        growth_measured:true,growth_confirmed:true,growth_bytes_over_2_seconds:700160000,
+        open_handles:[{pid:2020,process_name:'gfpapi',writable_handle_observed:true,
+          writer_causality_verified:false}],safe_to_delete:false,causal_attribution:'unknown'}],
+      related_error_log_observations:[{reference:'elastic1'}],
+      zabbix_alert_refs:['zbx1'],
+      candidate_temporal_overlaps:[{file:'/var/log/gfpapi/error.log',error_ref:'elastic1',
+        meaning:'temporal_coincidence_only',causality_confirmed:false}],
+      delete_recommendation_allowed:false,
+    },
     agent_findings:[
       {agent:'VM',status:'partial',finding:'systemd inactive',confidence:0.93,evidence_coverage:0.71,
        findings:['active_state=inactive','valid=true'],evidence_refs:['vm:vm01:service_status:2026','vm:vm01:config_validate:2026'],
@@ -181,6 +192,14 @@ const assert = require('node:assert/strict');
   assert.match(configCard,/Start سرویس برای تأیید اپراتور پیشنهاد/);
   assert.match(configCard,/استعلام موارد نامشخص از LLM/);
   assert.match(configCard,/هیچ فرمانی از LLM اجرا نشده/);
+  const diskCard=el('#ic-disk-forensics').innerHTML;
+  assert.match(diskCard,/gfpapi\/error.log/);
+  assert.match(diskCard,/رشد مشاهده‌شده/);
+  assert.match(diskCard,/gfpapi/);
+  assert.match(diskCard,/PID/);
+  assert.match(diskCard,/هم‌زمانی نزدیک تغییر فایل با خطا/);
+  assert.match(diskCard,/حذف مجاز نیست/);
+  assert.match(diskCard,/هیچ درخواست پاک‌سازی صادر نشده/);
   const agentHtml=el('#ic-agents').innerHTML;
   assert.equal((agentHtml.match(/class="ic-agent-card"/g)||[]).length,2);
   assert.match(agentHtml,/بررسی ماشین مجازی/);
@@ -197,7 +216,7 @@ const assert = require('node:assert/strict');
   assert.match(agentHtml,/سرویس متوقف است/);
   assert.match(agentHtml,/بررسی درستی تنظیمات/);
   assert.match(agentHtml,/اطلاعات موردنیاز برای قطعیت بیشتر/);
-  assert.match(agentHtml,/فرضیه‌های این متخصص/);
+  assert.match(agentHtml,/فرضیه‌های این ایجنت/);
   assert.match(agentHtml,/اجرای مستقیم SSH یا MCP/);
   assert.match(el('#ic-action-controls').innerHTML,/disabled/);
   assert.equal(events.filter(x=>x[0]==='POST').length,0);
