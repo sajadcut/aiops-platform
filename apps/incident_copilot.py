@@ -70,8 +70,11 @@ def vm_binding(service: str, evidence: list[dict], context: dict | None = None) 
     """
     ctx = context if isinstance(context, dict) else {}
     identity = ctx.get("service_identity") or {}
-    if isinstance(identity, dict) and identity.get("conflicts"):
-        return None
+    if isinstance(identity, dict):
+        from apps.context_service.service_identity import ServiceIdentityResolver
+        blocking, _ = ServiceIdentityResolver.split_conflicts(identity.get("conflicts"))
+        if blocking:
+            return None
     name = str(service or "").strip().lower().removesuffix(".service")
     if not name:
         return None
