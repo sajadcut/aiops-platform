@@ -66,11 +66,26 @@
         <h1 id="ic-title" tabindex="-1">—</h1>
         <p id="ic-description" class="ic-hero-description"></p>
         <div id="ic-hero-badges" class="ic-hero-badges"></div>
-        <div id="ic-analysis-progress" class="ic-analysis-progress" role="status" aria-live="polite" aria-atomic="true" hidden>
-          <span id="ic-analysis-spinner" class="ic-analysis-spinner" aria-hidden="true"></span>
-          <div><strong id="ic-analysis-title">در حال بررسی و تحلیل رخداد…</strong>
-          <small id="ic-analysis-detail">وضعیت به‌صورت خودکار به‌روزرسانی می‌شود.</small></div>
-        </div>
+        <section id="ic-analysis-progress" class="ic-analysis-progress ic-live-flow" role="region" aria-label="پیشرفت زنده بررسی این رخداد" hidden>
+          <div class="ic-flow-heading">
+            <span id="ic-analysis-spinner" class="ic-analysis-spinner" aria-hidden="true"></span>
+            <div class="ic-flow-heading-text">
+              <strong id="ic-analysis-title" aria-live="polite">در حال بررسی و تحلیل رخداد…</strong>
+              <small id="ic-analysis-detail">در انتظار رویدادهای واقعی Workflow</small>
+            </div>
+            <span id="ic-flow-elapsed" class="ic-flow-clock" aria-label="زمان سپری‌شده"></span>
+          </div>
+          <div class="ic-flow-progress">
+            <div class="ic-flow-progress-meta">
+              <span id="ic-flow-caption">پیشرفت مراحل تأییدشده</span>
+              <strong id="ic-flow-percent">—</strong>
+            </div>
+            <progress id="ic-flow-bar" max="100" value="0" aria-label="درصد مراحل واقعی تکمیل‌شده"></progress>
+            <small id="ic-flow-caution">درصد بر اساس پایان مراحل واقعی است؛ تخمین زمان باقی‌مانده نیست.</small>
+          </div>
+          <ol id="ic-flow-steps" class="ic-flow-steps" aria-live="off"></ol>
+          <small id="ic-flow-connection" class="ic-flow-connection">اتصال زنده در حال برقراری است…</small>
+        </section>
       </div>
       <div id="ic-decision-pulse" class="ic-pulse" aria-live="polite"></div>
     </div>
