@@ -142,8 +142,10 @@ def detect_operational_unknowns(
         service = str(raw.get("service") or "").strip()
         if diagnostic == "config_validate" and service:
             if raw.get("supported") is False or raw.get("valid") is None:
+                location = str(raw.get("config_file") or "")[:120]
                 add("config_validation_method", service,
-                    str(raw.get("detail") or "No verified service configuration test is available"), ref)
+                    (str(raw.get("detail") or "No verified service configuration test is available")[:110]
+                     + (f"; systemd config candidate (unvalidated): {location}" if location else "")), ref)
             elif raw.get("success") is True and raw.get("valid") is False:
                 # The validator establishes the observed error. LLM may suggest
                 # how to investigate it but cannot invent a corrected config.
