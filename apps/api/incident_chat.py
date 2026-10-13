@@ -379,15 +379,28 @@ async def incident_chat_message(
             kind = "action_proposal"
             action = WRITE_SUGGESTIONS[intent]
             if binding is not None:
+                original_action = action
+                if action == "start_service" and binding.get("active_state") == "failed":
+                    # The registered runbook maps failed units to Restart.
+                    # Present the changed action for deliberate operator review.
+                    action = "restart_service"
+                    explanation = (
+                        "وضعیت زنده سرویس failed است. Runbook برای این حالت Restart "
+                        "را تعریف کرده، نه Start؛ برای ادامه درخواست تأیید Restart را انتخاب کنید."
+                    )
+                else:
+                    explanation = f"درخواست {action} برای همین سرویس آمادهٔ بررسی است."
                 proposal = {
-                    "action": action, "service": binding["service"],
-                    "target": binding["target"], "risk_level": "high",
+                    "action": action, "requested_action": original_action,
+                    "service": binding["service"], "target": binding["target"],
+                    "risk_level": "high",
                     "status": "requires_preflight_and_approval",
                     "execution_authority": False,
                 }
-                answer = (
-                    plan["answer"] or f"پیشنهاد {action} برای سرویس این رخداد آماده بررسی است."
-                ) + "\nهیچ عملیات اجرایی انجام نشده است. درخواست تأیید تنها پس از بررسی زنده شرایط ایمنی ساخته می‌شود."
+                answer = explanation + (
+                    "\nهنوز عملیاتی اجرا نشده است. برای ایجاد درخواست تأیید، "
+                    "باید پیش‌شرط‌های زندهٔ Runbook نیز عبور کنند."
+                )
             else:
                 answer = "مقصد و سرویس این رخداد با شواهد MCP تأیید نشده است؛ امکان درخواست عملیات وجود ندارد."
         else:
