@@ -35,9 +35,11 @@
         </div>
       </div>`;
     } else if (approved) {
+      const complete = lower(lifecycle.checkpoint_status)==='completed';
+      const executeLabel = complete ? 'Execute approved action' : 'Resume & Execute';
       controls = `<div class="execution-controls">
-        <div class="execution-ready"><span class="dot green"></span><div><strong>Approval granted — execution not started</strong><small>The workflow is paused at the one-time authorization boundary. Resume validates the binding, issues a short-lived signed capability, consumes this approval exactly once, executes through the governed MCP boundary, then verifies recovery.</small></div></div>
-        <button id="resumeExecutionBtn" class="approval-btn execute" onclick="resumeCurrentWorkflow()" ${binding ? '' : 'disabled'}>Resume & Execute</button>
+        <div class="execution-ready"><span class="dot green"></span><div><strong>Approval granted — execution not started</strong><small>Approval is separate from execution. A completed analysis executes by approved ID; a paused analysis resumes its workflow. Both routes require fresh checks, a one-time authorization and verification.</small></div></div>
+        <button id="resumeExecutionBtn" class="approval-btn execute" onclick="resumeCurrentWorkflow()" ${binding ? '' : 'disabled'}>${executeLabel}</button>
         ${binding ? '' : '<p class="approval-warning">Execution binding is incomplete; resume is intentionally disabled.</p>'}
       </div>`;
     } else if (consumed) {
@@ -405,9 +407,26 @@
     }
     showError();
     try {
-      const result = await api(`/api/v1/workflow/e2e/${encodeURIComponent(id)}/resume`, {method: 'POST'});
-      const verification = result.verification_result?.status || 'not recorded';
-      toast(`Execution completed · verification ${verification}`);
+      // Never send a completed incident to the pause-only resume endpoint.
+      // Re-read the durable approval and checkpoint immediately before POST.
+      const fresh = await api(`/api/v1/incidents/${encodeURIComponent(id)}/lifecycle`);
+      const liveApproval = fresh.approval || {};
+      const liveBinding = liveApproval.metadata?.binding_complete === true ||
+        lower(liveApproval.metadata?.binding_complete) === 'true';
+      if (String(liveApproval.approval_id || '') !== String(approval.approval_id) ||
+          lower(liveApproval.status) !== 'approved' || !liveBinding) {
+        throw new Error('approval_changed_or_binding_unverified');
+      }
+      const checkpoint = lower(fresh.checkpoint_status);
+      const endpoint = checkpoint === 'completed'
+        ? `/api/v1/approvals/${encodeURIComponent(approval.approval_id)}/execute`
+        : checkpoint === 'paused'
+          ? `/api/v1/workflow/e2e/${encodeURIComponent(id)}/resume`
+          : null;
+      if (!endpoint) throw new Error('checkpoint_not_executable: '+(checkpoint||'unknown'));
+      const result = await api(endpoint, {method: 'POST'});
+      const verification = result.verification_result?.status || result.verification?.status || 'not recorded';
+      toast(`Execution response received · verification ${verification}`);
       await loadAll();
       await refreshIncidentDecision();
     } catch (error) {
