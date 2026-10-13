@@ -184,3 +184,7 @@
 .ic-grounded-para{font-size:13px;line-height:1.9;color:var(--text)}
 .ic-grounded-para strong{color:var(--accent);font-weight:750}
 .ic-grounded-para p{margin:3px 0}
+
+.ic-agent-investigation{border-top:1px solid var(--line);margin-top:9px;padding-top:9px}
+.ic-agent-investigation>summary{cursor:pointer;font-size:13px;line-height:1.8;font-weight:750;color:var(--accent)}
+.ic-agent-investigation-body{padding-top:6px}
