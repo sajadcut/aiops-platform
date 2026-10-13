@@ -294,3 +294,47 @@ const assert = require('node:assert/strict');
     )
     assert proc.returncode == 0, proc.stderr
     assert "safe approval runtime PASS" in proc.stdout
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="Node required for browser runtime regression")
+def test_completed_chat_incident_routes_execute_to_approved_api_not_workflow_resume():
+    # Reuse the realistic browser harness above with a *completed* checkpoint,
+    # exactly as reproduced by GFPAPI on 2026-10-13. This verifies the actual
+    # click handler, not just the existence of endpoint strings.
+    source = Path(__file__).read_text(encoding="utf-8")
+    start = source.index('    script = r"""') + len('    script = r"""')
+    end = source.index('"""', start)
+    script = source[start:end]
+    patterns = (
+        ("let approvalStatus='pending', version=0;",
+         "let approvalStatus='pending', version=0;"),
+        ("data={approval:{approval_id:'22222222-2222-4222-8222-222222222222',status:approvalStatus,risk_level:'high'}};",
+         "data={checkpoint_status:'completed',approval:{approval_id:'22222222-2222-4222-8222-222222222222',status:approvalStatus,risk_level:'high'}};"),
+        ("else if(method==='POST'&&url.includes('/resume')){approvalStatus='consumed';version++;data={status:'completed'};}",
+         "else if(method==='POST'&&url.endsWith('/execute')){approvalStatus='consumed';version++;data={status:'completed'};}"),
+        ("assert.equal(events.filter(x=>x[0]==='POST'&&x[1].includes('/resume')).length,1);",
+         "assert.equal(events.filter(x=>x[0]==='POST'&&x[1].endsWith('/execute')).length,1);\n"
+         "  assert.equal(events.filter(x=>x[0]==='POST'&&x[1].includes('/resume')).length,0);"),
+    )
+    for before, after in patterns:
+        assert before in script, before
+        script = script.replace(before, after, 1)
+    proc = subprocess.run(
+        [shutil.which("node"), "-e", script],
+        cwd=ROOT, capture_output=True, text=True, timeout=20,
+    )
+    assert proc.returncode == 0, proc.stderr
+    assert "safe approval runtime PASS" in proc.stdout
+
+
+def test_completed_incident_execution_route_matches_governed_backend():
+    room = (ROOT / "dashboards/incident-command-room.js").read_text(encoding="utf-8")
+    dashboard = (ROOT / "dashboards/approval-actions.js").read_text(encoding="utf-8")
+    api = (ROOT / "apps/api/remediation.py").read_text(encoding="utf-8")
+    for source in (room, dashboard):
+        assert "checkpoint==='completed'" in source or "checkpoint === 'completed'" in source
+        assert "checkpoint==='paused'" in source or "checkpoint === 'paused'" in source
+        assert "/api/v1/approvals/" in source and "/execute" in source
+        assert "/api/v1/workflow/e2e/" in source and "/resume" in source
+    assert '@router.post("/approvals/{approval_id}/execute")' in api
+    assert 'require_permission("execute:approved")' in api

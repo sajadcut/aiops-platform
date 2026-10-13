@@ -42,3 +42,11 @@ def test_critical_risk_requires_secondary_confirmation_before_approval_and_resum
     source = Path("dashboards/approval-actions.js").read_text(encoding="utf-8")
     assert "['high', 'critical'].includes(risk)" in source
     assert "['high', 'critical'].includes(lower(approval.risk_level))" in source
+
+def test_operator_dashboard_does_not_resume_a_completed_incident():
+    js = (ROOT / "dashboards/approval-actions.js").read_text(encoding="utf-8")
+    assert "const fresh = await api(" in js
+    assert "checkpoint === 'completed'" in js
+    assert "checkpoint === 'paused'" in js
+    assert "/approvals/${encodeURIComponent(approval.approval_id)}/execute" in js
+    assert "approval_changed_or_binding_unverified" in js

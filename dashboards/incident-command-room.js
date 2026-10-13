@@ -1414,8 +1414,18 @@
         '</label><textarea id="ic-reject-reason" placeholder="'+esc(tr('rejectHint'))+'" maxlength="1000"></textarea>'+
         '<button type="button" id="ic-confirm-reject" class="ic-btn ic-btn-danger"'+(state.busy?' disabled':'')+'>'+tr('confirmReject')+'</button></div>':'');
     }else if(approved){
-      controls+='<div class="ic-action-buttons"><button type="button" id="ic-resume" class="ic-btn ic-btn-primary"'+
-      (!canAct||!acknowledged||state.busy?' disabled':'')+'>'+esc(state.busy?tr('processing'):tr('resume'))+'</button></div>';
+      // A chat/manual approval can be created after incident analysis is
+      // completed. It must execute by approval ID, never resume that graph.
+      const completed=low(state.lifecycle?.checkpoint_status)==='completed';
+      const executeLabel=completed
+        ?(state.language==='fa'?'اجرای واقعی '+humanAction(a.action||x.action)
+          :'Execute approved '+humanAction(a.action||x.action))
+        :tr('resume');
+      controls+='<p class="ic-warning">'+esc(state.language==='fa'
+        ?'مجوز تأیید شده اما هنوز هیچ فرمانی روی سرور اجرا نشده است. اجرای عملیات یک مرحلهٔ مستقل با بررسی زندهٔ مجدد است.'
+        :'Approval was granted but no server command has run. Execution is a separate, freshly verified step.')+'</p>'+
+        '<div class="ic-action-buttons"><button type="button" id="ic-resume" class="ic-btn ic-btn-primary"'+
+      (!canAct||!acknowledged||state.busy?' disabled':'')+'>'+esc(state.busy?tr('processing'):executeLabel)+'</button></div>';
     }else {
       controls+='<p class="ic-empty">'+tr('approvalNoRecord')+'</p>';
     }
@@ -1553,9 +1563,13 @@
       else if(kind==='approve')response=await api('/api/v1/approvals/'+encodeURIComponent(id)+'/approve',{method:'POST'});
       else response=await api('/api/v1/approvals/'+encodeURIComponent(id)+'/execute',{method:'POST'});
       state.chatLastResult=kind==='execute'?
-        (fa?'نتیجه اجرا و راستی‌آزمایی را در بخش نتیجه اجرا بررسی کنید.':
-            'Review execution and verification outcome in the execution section.'):
-        (fa?'درخواست ثبت شد؛ اجرای خودکار انجام نشده است.':'Request recorded. No automatic execution was performed.');
+        (fa?'درخواست اجرای مجاز ارسال شد. نتیجه اجرا و راستی‌آزمایی را در بخش نتیجه اجرا بررسی کنید.':
+            'Authorized execution submitted. Review the execution and verification results.'):
+        kind==='approve'?
+        (fa?'مجوز تأیید شد، ولی سرویس هنوز Restart نشده است؛ اکنون دکمهٔ «اجرای عملیات تأییدشده» را بزنید.':
+            'Approval granted; the service has NOT restarted. Press Execute approved operation.'):
+        (fa?'درخواست تأیید ثبت شد؛ سرویس هنوز تغییر نکرده است.':
+            'Approval requested; no service change has occurred.');
       await load();
       await loadIncidentChat();
       if(kind==='execute')notify(state.chatLastResult);
@@ -1706,7 +1720,17 @@
           method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({reason})
         });
       }else{
-        await api('/api/v1/workflow/e2e/'+encodeURIComponent(incidentId)+'/resume',{method:'POST'});
+        // Workflow resume only accepts paused checkpoints. Incident Chat
+        // creates its own approval on an already completed analysis graph.
+        // Use the independent governed execution route for that case.
+        const checkpoint=low(live.checkpoint_status);
+        if(checkpoint==='completed'){
+          await api('/api/v1/approvals/'+encodeURIComponent(id)+'/execute',{method:'POST'});
+        }else if(checkpoint==='paused'){
+          await api('/api/v1/workflow/e2e/'+encodeURIComponent(incidentId)+'/resume',{method:'POST'});
+        }else{
+          throw new Error('checkpoint_not_executable: '+(checkpoint||'unknown'));
+        }
       }
       notify(tr(kind==='approve'?'successApprove':kind==='reject'?'successReject':'successResume'));
     }catch(e){notify(tr('failure')+' · '+e.message,true);alert(e.message);}
