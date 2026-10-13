@@ -201,8 +201,15 @@ async def test_unknown_service_config_is_advisory_not_a_generated_ssh_command(mo
     monkeypatch.setattr(settings, "APP_ENV", "test")
     monkeypatch.setattr(settings, "SSH_ALLOWED_SERVICES", ["gfpapi"])
     connector = SSHVMConnector()
+    async def fake_run(target, command):
+        assert command.startswith("systemctl show ")
+        return {"success": True, "exit_code": 0,
+                "stdout": "{ path=/usr/local/bin/gfpapi ; argv[]=/usr/local/bin/gfpapi --config=/opt/gfpapi/app.yml ; }"}
+    monkeypatch.setattr(connector, "_run", fake_run)
     result = await connector.config_validate("10.100.6.199", "gfpapi")
     assert result["success"] is True
     assert result["supported"] is False
     assert result["valid"] is None
     assert result["detail"] == "config_validation_adapter_unavailable"
+    assert result["config_file"] == "/opt/gfpapi/app.yml"
+    assert result["config_path_source"] == "systemd_execstart_unvalidated"
