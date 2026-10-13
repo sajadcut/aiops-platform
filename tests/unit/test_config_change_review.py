@@ -70,8 +70,12 @@ def test_api_is_guarded_and_exposes_no_execution_authority():
     assert "ExecutionRequest" not in source
     probe=subprocess.run(
         [sys.executable, "-c",
+         "import apps.api.config_change_review as cr; "
          "from apps.api.main import app; "
-         "print([(r.path, sorted(r.methods or [])) for r in app.routes "
+         "print('MODULE',cr.__file__,'DIRECT',len(cr.router.routes)); "
+         "print('DIRECT_ROUTES',[(r.path,list(r.methods or [])) for r in cr.router.routes]); "
+         "print('APP',len(app.routes),'EXAMPLE',[r.path for r in app.routes][:8]); "
+         "print('MATCH',[(r.path, sorted(r.methods or [])) for r in app.routes "
          "if 'configuration-review-response' in str(getattr(r,'path',''))])"],
         capture_output=True, text=True, timeout=20, check=False,
     )
