@@ -104,3 +104,33 @@ workflow never assumes success.
 For services with an unknown config syntax, the model recommends how an
 engineer can identify an official read-only validation procedure. A reviewed,
 fixed diagnostic adapter must be implemented before AIOps can perform it.
+
+
+## Stopped VM service: configuration diagnosis
+
+For an allowlisted VM service reported stopped, the VM MCP first queries
+`systemctl show --property=ExecStart --value` to locate the configuration
+used by the installed service unit. For known Nginx, HAProxy and Apache
+adapters it runs a fixed, read-only vendor syntax validator; compiler output
+is redacted and the reported configuration path, line number and error
+message are stored as live diagnostic evidence. HAProxy with multiple `-f`
+files or no trustworthy path is not marked as validated.
+
+The Incident Decision Brief shows those observations in Persian, including
+the file and line when reported. A failed syntax check yields an advisory
+`repair configuration → revalidate → consider operator-approved start`.
+It does **not** prove that the syntax error was the cause of the original
+stop or that fixing it alone resolves every symptom. It does not create
+an executable start request.
+
+Unknown services may expose a tentative config path from systemd metadata;
+the configured LLM is asked for advisory validation or repair guidance.
+The LLM cannot register or execute an SSH command, declare the configuration
+healthy or bypass the normal runbook and approval process. To make it
+executable a reviewed allowlisted adapter is required.
+
+RemediationPlanner accepts only a real `supported=true`, `valid=true`
+config check; `supported=false` or an inconclusive result is never a valid
+precondition. A newer successful test can supersede an older failed test,
+provided the evidence is ordered and nonconflicting. Approval and
+fresh pre-execution verification still apply.
