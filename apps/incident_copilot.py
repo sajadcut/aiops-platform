@@ -70,8 +70,11 @@ def vm_binding(service: str, evidence: list[dict], context: dict | None = None) 
     """
     ctx = context if isinstance(context, dict) else {}
     identity = ctx.get("service_identity") or {}
-    if isinstance(identity, dict) and identity.get("conflicts"):
-        return None
+    if isinstance(identity, dict):
+        from apps.context_service.service_identity import ServiceIdentityResolver
+        blocking, _ = ServiceIdentityResolver.split_conflicts(identity.get("conflicts"))
+        if blocking:
+            return None
     name = str(service or "").strip().lower().removesuffix(".service")
     if not name:
         return None
@@ -247,7 +250,7 @@ def fallback_intent(message: str) -> str:
         return "elastic_logs" if wants_live_elastic(text) else "elastic_recorded"
     if re.search(r"ریلود|رِیلود|بارگذاری مجدد|\breload\b", text):
         return "propose_reload"
-    if re.search(r"ریستارت|راه اندازی مجدد|\brestart\b", text):
+    if re.search(r"ری(?:[\s\u200c]*ا)?ستارت|راه اندازی مجدد|\brestart\b", text):
         return "propose_restart"
     if re.search(r"استارت|راه انداز|\bstart\b", text):
         return "propose_start"
