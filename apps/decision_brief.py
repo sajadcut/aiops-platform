@@ -197,6 +197,21 @@ def tool_observation_summary(raw: dict) -> str | None:
         "service_logs": ("count", "access_mode"),
         "system_logs": ("count", "access_mode"),
     }.get(diagnostic, ())
+    if diagnostic == "dotnet_config_syntax":
+        files = []
+        for row in arr(raw.get("files"))[:12]:
+            if not isinstance(row, dict):
+                continue
+            name = safe(row.get("file"), 120)
+            if not name:
+                continue
+            status = safe(row.get("status"), 40)
+            line = row.get("line") if type(row.get("line")) is int else None
+            column = row.get("column") if type(row.get("column")) is int else None
+            code = safe(row.get("error_code") or row.get("reason"), 45)
+            location = (f" line={line} column={column}" if line is not None else "")
+            files.append(f"{name}: {status}{location}" + (f" ({code})" if code else ""))
+        return safe("; ".join(files), 380) if files else "No .NET config JSON syntax results"
     details = [
         f"{name}={safe(raw.get(name), 80)}" for name in fields
         if isinstance(raw.get(name), (str, bool, int, float))
@@ -253,6 +268,14 @@ def _mcp(rows: Iterable[dict], now: datetime) -> tuple[list[dict], list[dict]]:
             "tool": safe(raw.get("tool_name") or raw.get("tool") or raw.get("diagnostic"), 120)
                     or ("source_observation" if is_source_observation else None),
             "status": status,
+            "semantic_result": (
+                "configuration_invalid" if str(raw.get("diagnostic") or "") == "dotnet_config_syntax"
+                and raw.get("syntax_valid") is False else
+                "configuration_invalid" if str(raw.get("diagnostic") or "") == "config_validate"
+                and raw.get("valid") is False else
+                "configuration_valid_syntax_only" if str(raw.get("diagnostic") or "") == "dotnet_config_syntax"
+                and raw.get("syntax_valid") is True else None
+            ),
             "collected_at": safe(collected, 55),
             "time_basis": "source_observed" if explicit_time else "evidence_persisted",
             "freshness": age,
