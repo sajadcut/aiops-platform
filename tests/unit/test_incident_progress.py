@@ -106,3 +106,20 @@ def test_each_sse_stream_route_uses_read_permission_and_never_runs_workflow():
     assert 'await load_progress(str(incident_id))' in source
     assert "resume_after_approval" not in source
     assert "execute_tool(" not in source
+
+
+def test_individual_agents_are_live_observations_not_auto_incremented_percent():
+    rows = [event("context", "completed", 1), event("triage", "completed", 2),
+            event("parallel_agents", "started", 3),
+            event("agent:vm", "started", 4), event("agent:network", "started", 5),
+            event("agent:network", "completed", 12), event("agent:storage", "failed", 13)]
+    progress = summarize_progress(rows)
+    assert progress["current_stage"] == "parallel_agents"
+    assert progress["analysis_percent"] == 33
+    assert progress["agents"]["vm"]["status"] == "started"
+    assert progress["agents"]["network"]["status"] == "completed"
+    assert progress["agents"]["storage"]["status"] == "failed"
+    assert progress["analysis_completed"] == 2
+    # An arbitrary registry/model string cannot control UI markup or stage map.
+    with pytest.raises(ValueError):
+        progress_record("agent:<script>alert(1)</script>", "started")
