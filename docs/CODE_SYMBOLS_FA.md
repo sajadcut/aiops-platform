@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 448 | Dashboard JS files scanned: 8 | Symbols indexed: 4300**
+**Python files scanned: 448 | Dashboard JS files scanned: 8 | Symbols indexed: 4301**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -589,7 +589,8 @@
 | `agents/storage/engine.py` | `_temporal_correlation` | 329 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/storage/engine.py` | `_cause_candidates` | 367 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/storage/engine.py` | `_cause_candidates.add` | 376 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _cause_candidates |
-| `agents/storage/engine.py` | `build_storage_reliability_analysis` | 482 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
+| `agents/storage/engine.py` | `_disk_file_causality` | 483 | function | Relate exact VM file metadata to monitoring/log evidence WITHOUT inventing cause. | module |
+| `agents/storage/engine.py` | `build_storage_reliability_analysis` | 557 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
 | `agents/triage/__init__.py` | `TriageAgent` | 12 | class | کلاس | module |
 | `agents/triage/__init__.py` | `TriageAgent.__init__` | 13 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | TriageAgent |
 | `agents/triage/__init__.py` | `TriageAgent.name` | 17 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | TriageAgent |
