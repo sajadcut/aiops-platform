@@ -70,6 +70,55 @@ def classify_vm_service_fault(
     tcp_down = tcp_status.get("supported") is not False and tcp_status.get("reachable") is False
     symptom_down = listener_down or tcp_down
 
+    # A failed compiler-style syntax check is actionable diagnosis even though
+    # it is NOT proof of why somebody stopped the service. It must NEVER
+    # authorize start/restart until the actual config is fixed and rechecked.
+    if (service_stopped and config_supported
+            and config_status.get("success") is True
+            and config_status.get("valid") is False):
+        path = str(config_status.get("config_file") or "نامشخص")[:300]
+        line = config_status.get("error_line")
+        line_number = line if isinstance(line, int) and 0 < line < 1000000 else None
+        syntax_message = str(config_status.get("syntax_error") or config_status.get("detail") or "configuration syntax check failed")[:450]
+        used = [
+            references[key] for key in ("service_status", "config_validate", "process_status")
+            if references.get(key)
+        ]
+        where = f"{path}:{line_number}" if line_number else path
+        return {
+            "fault_code": "service_configuration_invalid",
+            "stop_attribution": "unknown",
+            "requires_operator_review": True,
+            "confidence": 0.95,
+            "severity": "high",
+            "health_status": "unhealthy",
+            "config_file": path, "error_line": line_number,
+            "syntax_error": syntax_message,
+            "findings": [
+                f"{service_name} is stopped; config test failed in {where}",
+                f"Reported syntax error: {syntax_message}",
+                "This configuration failure may prevent starting the service; the original stop cause remains unknown",
+                "Do NOT start before correcting and successfully revalidating the configuration",
+            ],
+            "evidence_ids": used,
+            "hypothesis": {
+                "hypothesis": f"{service_name} cannot be safely started with the current invalid configuration",
+                "probability": 0.95, "evidence_ids": used,
+                "conflicting_evidence_ids": [],
+                "falsification_checks": [
+                    "After authorized configuration repair, run the fixed syntax validator again",
+                    "Only if valid, consider an operator-approved start and verify health",
+                ],
+                "impacted_components": [service_name],
+                "recommended_next_evidence": [f"Re-run config_validate for {service_name} after an authorized fix"],
+            },
+            "remediation_candidate": (
+                f"Correct {service_name} configuration at {where}, re-run validation; "
+                "if valid, propose start_service for separate operator approval"
+            ),
+            "suggested_action": None,
+        }
+
     if not (service_stopped and process_absent and config_supported and config_valid):
         return None
 
