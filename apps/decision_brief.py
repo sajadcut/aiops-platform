@@ -455,7 +455,8 @@ def build_decision_brief(
             "status": (
                 "invalid" if obj(observed.get("config_validate")).get("valid") is False
                 else "valid" if obj(observed.get("config_validate")).get("valid") is True
-                else "unverified"
+                else "unverified" if observed.get("config_validate")
+                else "not_checked"
             ),
             "config_file": safe(obj(observed.get("config_validate")).get("config_file"), 300),
             "root_config_file": safe(obj(observed.get("config_validate")).get("root_config_file"), 300),
