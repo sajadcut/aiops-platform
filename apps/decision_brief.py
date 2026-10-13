@@ -133,6 +133,23 @@ def _agents(state: dict, findings: Iterable[dict]) -> list[dict]:
                   "skipped" if explicit_status == "skipped" else
                   "partial" if explicit_status == "partial" or missing or conflict_refs else
                   "success" if explicit_status in {"success", "completed"} or result.get("statement") else "unknown")
+        # Preserve each specialist's OWN output. The previous brief exposed
+        # only a generic statement, making unrelated agents look identical.
+        # These items are interpretations and proposed checks, NOT proof that
+        # this agent executed any diagnostic command.
+        hypotheses = []
+        for hypothesis in arr(result.get("hypotheses"))[:5]:
+            if not isinstance(hypothesis, dict):
+                continue
+            hypotheses.append({
+                "text": safe(hypothesis.get("hypothesis"), 350),
+                "probability": numeric(hypothesis.get("probability")),
+                "evidence_refs": refs(hypothesis.get("evidence_ids"))[:8],
+                "contradiction_refs": refs(hypothesis.get("conflicting_evidence_ids"))[:8],
+                "falsification_checks": [
+                    safe(x, 180) for x in arr(hypothesis.get("falsification_checks"))[:5]
+                ],
+            })
         items.append({
             "agent": safe(result.get("agent_name") or result.get("agent") or "unknown", 90),
             "status": status,
@@ -143,6 +160,16 @@ def _agents(state: dict, findings: Iterable[dict]) -> list[dict]:
             "finding_type": safe(result.get("finding_type"), 95),
             "health_status": safe(result.get("health_status"), 60),
             "confidence": numeric(result.get("confidence")),
+            "evidence_count": result.get("evidence_count") if isinstance(result.get("evidence_count"), int) else None,
+            "evidence_coverage": numeric(result.get("evidence_coverage")),
+            "evidence_quality": numeric(result.get("evidence_quality")),
+            "findings": [safe(x, 350) for x in arr(result.get("findings"))[:10] if isinstance(x, str)],
+            "hypotheses": hypotheses,
+            "recommended_checks": [safe(x, 240) for x in arr(result.get("recommended_checks"))[:8] if isinstance(x, str)],
+            "recommendations": [safe(x, 240) for x in arr(result.get("recommendations"))[:6] if isinstance(x, str)],
+            "uncertainty_reason": safe(result.get("uncertainty_reason"), 280),
+            "requires_human_review": result.get("requires_human_review") is True,
+            "focus": [safe(x, 160) for x in arr(details.get("focus"))[:5] if isinstance(x, str)],
             "evidence_refs": refs(result.get("evidence_ids")),
             "conflicting_evidence_refs": conflict_refs,
             "missing_evidence": missing,
