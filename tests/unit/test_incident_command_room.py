@@ -128,6 +128,12 @@ const assert = require('node:assert/strict');
       why:'Collected state says inactive'},
     localized_narrative:{fa:'سرویس از دسترس خارج شده است.',en:'Service is offline.'},
     rca_assessment:{rca_confidence:0.72,evaluator_confidence:0.67,agent_agreement:0.7},
+    configuration_diagnostic:{status:'invalid',config_file:'/etc/nginx/nginx.conf',
+      error_line:42,syntax_error:'unknown directive on config line',evidence_refs:['ev-config'],
+      repair_then_revalidate:true,start_requires_valid_config_and_approval:true},
+    unknown_guidance:{status:'suggested',execution_authority:false,
+      items:[{topic:'config_syntax_repair_guidance',subject:'nginx',
+        validation_approach:'Inspect offending directive in vendor documentation'}]},
     agent_findings:[
       {agent:'VM',status:'partial',finding:'systemd inactive',confidence:0.93,evidence_coverage:0.71,
        findings:['active_state=inactive','valid=true'],evidence_refs:['vm:vm01:service_status:2026','vm:vm01:config_validate:2026'],
@@ -167,6 +173,14 @@ const assert = require('node:assert/strict');
   assert.match(el('#ic-brief-lead').innerHTML,/سرویس از دسترس/);
   assert.match(el('#ic-sources').innerHTML,/Prometheus/);
   assert.match(el('#ic-agent-summary').innerHTML,/ایجنت‌های ثبت‌شده/);
+  const configCard=el('#ic-config-diagnostic').innerHTML;
+  assert.match(configCard,/خطای واقعی در کانفیگ سرویس/);
+  assert.match(configCard,/nginx.conf/);
+  assert.match(configCard,/خط ۴۲/);
+  assert.match(configCard,/اصلاح/);
+  assert.match(configCard,/پیشنهاد Start/);
+  assert.match(configCard,/استعلام موارد نامشخص از LLM/);
+  assert.match(configCard,/هیچ فرمانی از LLM اجرا نشده/);
   const agentHtml=el('#ic-agents').innerHTML;
   assert.equal((agentHtml.match(/class="ic-agent-card"/g)||[]).length,2);
   assert.match(agentHtml,/بررسی ماشین مجازی/);
