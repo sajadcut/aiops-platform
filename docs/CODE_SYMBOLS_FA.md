@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 465 | Dashboard JS files scanned: 8 | Symbols indexed: 4475**
+**Python files scanned: 465 | Dashboard JS files scanned: 8 | Symbols indexed: 4478**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -2148,9 +2148,12 @@
 | `integrations/vm/dotnet_local_validator.py` | `safe_json_files` | 42 | function | Parse untrusted remote directory names. Excess is NOT a full validation. | module |
 | `integrations/vm/dotnet_local_validator.py` | `remote_file_listing_command` | 61 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `integrations/vm/dotnet_local_validator.py` | `remote_file_read_command` | 76 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `integrations/vm/dotnet_local_validator.py` | `_reject_constant` | 98 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `integrations/vm/dotnet_local_validator.py` | `_reject_duplicate_keys` | 102 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `integrations/vm/dotnet_local_validator.py` | `validate_encoded_file` | 111 | function | Parse bytes only in worker memory; return bounded, secret-free metadata. | module |
+| `integrations/vm/dotnet_local_validator.py` | `DotnetJsonCommentError` | 98 | class | کلاس | module |
+| `integrations/vm/dotnet_local_validator.py` | `DotnetJsonCommentError.__init__` | 99 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DotnetJsonCommentError |
+| `integrations/vm/dotnet_local_validator.py` | `normalize_dotnet_json` | 105 | function | Ignore JSON comments and trailing commas accepted by .NET configuration. | module |
+| `integrations/vm/dotnet_local_validator.py` | `_reject_constant` | 176 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `integrations/vm/dotnet_local_validator.py` | `_reject_duplicate_keys` | 180 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `integrations/vm/dotnet_local_validator.py` | `validate_encoded_file` | 189 | function | Parse bytes only in worker memory; return bounded, secret-free metadata. | module |
 | `integrations/vm/mcp_client.py` | `VMEdgeMCPClient` | 9 | class | MCP-only connector for VM/Edge diagnostics and governed remediation. | module |
 | `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.__init__` | 23 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
 | `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.initialize` | 37 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
