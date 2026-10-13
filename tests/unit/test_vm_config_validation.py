@@ -41,6 +41,11 @@ async def test_config_validate_retries_sudo_with_ssh_password_when_permission_de
 
     async def fake_run(target, command, *, stdin_data=None):
         commands.append((target, command, stdin_data))
+        if command.startswith("systemctl show "):
+            config = "/etc/nginx/nginx.conf" if command.endswith("nginx") else "/etc/haproxy/haproxy.cfg"
+            opt = "-c" if command.endswith("nginx") else "-f"
+            return {"success": True, "exit_code": 0,
+                    "stdout": f"{{ path=/usr/sbin/service ; argv[]=/usr/sbin/service {opt} {config} ; }}"}
         if command.startswith("sudo -S "):
             return {"success": True, "exit_code": 0, "stdout": "configuration ok", "stderr": ""}
         if command.startswith("sudo -n "):
@@ -52,7 +57,7 @@ async def test_config_validate_retries_sudo_with_ssh_password_when_permission_de
         result = await connector.config_validate("10.100.6.199", service)
         assert result["success"] is True
         assert result["valid"] is True
-    assert len(commands) == 6
+    assert len(commands) == 8
     assert all("test-password" not in command for _, command, _ in commands)
     assert all(stdin is None for _, _, stdin in commands if stdin != "test-password\n")
     assert len([stdin for _, _, stdin in commands if stdin == "test-password\n"]) == 2
