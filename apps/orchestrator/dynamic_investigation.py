@@ -52,9 +52,11 @@ class DynamicInvestigationPlanner:
             raw = item.get("raw_data")
             if not isinstance(raw, dict) or raw.get("diagnostic") != "config_validate":
                 continue
+            # The newest config check supersedes an older error. An unknown or
+            # failed transport cannot establish current invalid/valid syntax.
             if (raw.get("success") is not True or raw.get("supported") is not True
                     or raw.get("valid") is not False):
-                continue
+                return None
             parsed = enrich_legacy_config_diagnostic(raw)
             return {
                 "service": _bounded(parsed.get("service"), 80),
