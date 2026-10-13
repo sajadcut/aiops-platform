@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 450 | Dashboard JS files scanned: 8 | Symbols indexed: 4329**
+**Python files scanned: 450 | Dashboard JS files scanned: 8 | Symbols indexed: 4332**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -712,29 +712,32 @@
 | `apps/api/http_logging.py` | `HTTPTransactionLoggingMiddleware.__call__` | 84 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | HTTPTransactionLoggingMiddleware |
 | `apps/api/http_logging.py` | `HTTPTransactionLoggingMiddleware.__call__.logging_receive` | 126 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | HTTPTransactionLoggingMiddleware.__call__ |
 | `apps/api/http_logging.py` | `HTTPTransactionLoggingMiddleware.__call__.logging_send` | 140 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | HTTPTransactionLoggingMiddleware.__call__ |
-| `apps/api/incident_resources.py` | `MemoryLifecycleRequest` | 24 | class | کلاس | module |
-| `apps/api/incident_resources.py` | `_require_current_database_schema` | 29 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/incident_resources.py` | `get_context` | 34 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
-| `apps/api/incident_resources.py` | `get_evidence` | 51 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
-| `apps/api/incident_resources.py` | `get_received_signals` | 77 | async function | Original source notifications from durable Evidence; read-only and RBAC-guarded. | module |
-| `apps/api/incident_resources.py` | `get_knowledge` | 122 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
-| `apps/api/incident_resources.py` | `get_memory` | 154 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
-| `apps/api/incident_resources.py` | `get_memory_health` | 247 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
-| `apps/api/incident_resources.py` | `get_memory_summary` | 259 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
-| `apps/api/incident_resources.py` | `invalidate_memory` | 284 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/incident_resources.py` | `validate_memory` | 311 | async function | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | module |
-| `apps/api/incident_resources.py` | `get_plan` | 331 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
-| `apps/api/incident_resources.py` | `get_verification` | 356 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
-| `apps/api/incident_resources.py` | `get_incident_audit` | 364 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
-| `apps/api/incident_resources.py` | `get_incident_analysis_status` | 372 | async function | Small, read-only polling contract; never starts or resumes a workflow. | module |
-| `apps/api/incident_resources.py` | `get_incident_lifecycle` | 425 | async function | Return durable governance plus structured agent routing/collaboration state. | module |
-| `apps/api/incident_resources.py` | `get_operator_recommendation_fa` | 489 | async function | Translate the durable English recommendation solely for Persian display. | module |
-| `apps/api/incident_resources.py` | `get_operator_summary` | 531 | async function | Return a read-only Persian operator summary derived from current durable Incident state. | module |
-| `apps/api/incident_resources.py` | `load_decision_brief_for_incident` | 628 | async function | Internal builder; reads all contract sections in the caller's transaction. | module |
-| `apps/api/incident_resources.py` | `get_incident_decision_brief` | 745 | async function | Read-only, RBAC-protected latest version. No archive writes or side effects. | module |
-| `apps/api/incident_resources.py` | `get_decision_brief_history` | 755 | async function | Read only previously archived, immutable lifecycle reports. | module |
-| `apps/api/incident_resources.py` | `get_decision_brief_historical_snapshot` | 771 | async function | Exact archived report; never regenerated against current Incident state. | module |
-| `apps/api/incident_resources.py` | `get_incident_decision_brief_narrative` | 785 | async function | Optional display prose; approval and the deterministic brief stay authoritative. | module |
+| `apps/api/incident_resources.py` | `MemoryLifecycleRequest` | 30 | class | کلاس | module |
+| `apps/api/incident_resources.py` | `_require_current_database_schema` | 35 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/incident_resources.py` | `get_context` | 40 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
+| `apps/api/incident_resources.py` | `get_evidence` | 57 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
+| `apps/api/incident_resources.py` | `get_received_signals` | 83 | async function | Original source notifications from durable Evidence; read-only and RBAC-guarded. | module |
+| `apps/api/incident_resources.py` | `get_knowledge` | 128 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
+| `apps/api/incident_resources.py` | `get_memory` | 160 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
+| `apps/api/incident_resources.py` | `get_memory_health` | 253 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
+| `apps/api/incident_resources.py` | `get_memory_summary` | 265 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
+| `apps/api/incident_resources.py` | `invalidate_memory` | 290 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/incident_resources.py` | `validate_memory` | 317 | async function | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | module |
+| `apps/api/incident_resources.py` | `get_plan` | 337 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
+| `apps/api/incident_resources.py` | `get_verification` | 362 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
+| `apps/api/incident_resources.py` | `get_incident_audit` | 370 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
+| `apps/api/incident_resources.py` | `get_incident_progress` | 378 | async function | Read-only actual workflow steps; never advances or creates an Incident. | module |
+| `apps/api/incident_resources.py` | `stream_incident_progress` | 388 | async function | Authenticated SSE with initial state + changes; no browser page reload. | module |
+| `apps/api/incident_resources.py` | `stream_incident_progress.generate` | 400 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | stream_incident_progress |
+| `apps/api/incident_resources.py` | `get_incident_analysis_status` | 429 | async function | Small, read-only polling contract; never starts or resumes a workflow. | module |
+| `apps/api/incident_resources.py` | `get_incident_lifecycle` | 482 | async function | Return durable governance plus structured agent routing/collaboration state. | module |
+| `apps/api/incident_resources.py` | `get_operator_recommendation_fa` | 546 | async function | Translate the durable English recommendation solely for Persian display. | module |
+| `apps/api/incident_resources.py` | `get_operator_summary` | 588 | async function | Return a read-only Persian operator summary derived from current durable Incident state. | module |
+| `apps/api/incident_resources.py` | `load_decision_brief_for_incident` | 685 | async function | Internal builder; reads all contract sections in the caller's transaction. | module |
+| `apps/api/incident_resources.py` | `get_incident_decision_brief` | 802 | async function | Read-only, RBAC-protected latest version. No archive writes or side effects. | module |
+| `apps/api/incident_resources.py` | `get_decision_brief_history` | 812 | async function | Read only previously archived, immutable lifecycle reports. | module |
+| `apps/api/incident_resources.py` | `get_decision_brief_historical_snapshot` | 828 | async function | Exact archived report; never regenerated against current Incident state. | module |
+| `apps/api/incident_resources.py` | `get_incident_decision_brief_narrative` | 842 | async function | Optional display prose; approval and the deterministic brief stay authoritative. | module |
 | `apps/api/incidents.py` | `simulate_incident` | 24 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/incidents.py` | `analyze_incident` | 48 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/incidents.py` | `RemediationRequest` | 109 | class | کلاس | module |
