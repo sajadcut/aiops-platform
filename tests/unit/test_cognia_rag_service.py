@@ -205,3 +205,18 @@ async def test_context_generation_uses_configured_profile(monkeypatch):
     assert result["isSufficient"] is False
     assert result["context_profile_id"] == 501
     assert result["subject"] == {"namespace": "service", "externalSubjectId": "payments"}
+
+@pytest.mark.asyncio
+async def test_explicit_ownership_metadata_is_preserved_but_arbitrary_keys_omitted(monkeypatch):
+    monkeypatch.setattr(settings, "COGNIA_KNOWLEDGE_BASE_IDS", [10])
+    monkeypatch.setattr(rag_module, "CogniaClient", FakeCogniaClient)
+    FakeCogniaClient.search_payload = {"items": [{
+        "knowledgeBaseId": 10, "knowledgeId": 1, "revisionId": 2,
+        "revisionNumber": 1, "chunkId": 3, "chunkText": "Systemd",
+        "relevanceScore": 0.9,
+        "metadata": {"service": "gfpapi", "unrelated_secret": "redacted",
+                     "applicability": "general"},
+    }]}
+    rows = await KnowledgeRAGService().search("systemd")
+    assert rows[0]["metadata"] == {"service": "gfpapi", "applicability": "general"}
+    assert "unrelated_secret" not in str(rows)

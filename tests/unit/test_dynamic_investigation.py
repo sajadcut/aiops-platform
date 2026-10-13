@@ -30,7 +30,8 @@ def incident(*, evidence=None):
         "incident_id": "incident-123", "service_name": "nginx",
         "analysis_results": [{"agent_name": "vm", "finding_type": "vm_analysis"}],
         "coordination": {"missing_evidence": ["Current config excerpt"]},
-        "knowledge_results": [{"source_id": "cognia:previous", "content": "historical syntax notes"}],
+        "knowledge_results": [{"source_id": "cognia:previous",
+                               "content": "Service: nginx\nhistorical syntax notes"}],
         "context": {"evidence": evidence if evidence is not None else [config_evidence()]},
     }
 
@@ -43,7 +44,7 @@ class RAG:
         self.calls.append((query, kwargs))
         return [{
             "source_id": "cognia:focused", "relevance": 0.77,
-            "content": "Vendor documentation is advisory; validate actual proposed changes",
+            "content": "Applicability: general\nVendor documentation is advisory; validate actual proposed changes",
         }]
 
 
