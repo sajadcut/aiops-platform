@@ -394,3 +394,41 @@ def test_general_unknown_detector_handles_unsupported_vm_diagnostic():
     assert len(result) == 1
     assert result[0]["topic"] == "diagnostic_method_unknown"
     assert result[0]["evidence_refs"] == ["missing-diagnostic"]
+
+
+
+def test_verified_invalid_config_requests_only_advisory_llm_repair_guidance():
+    evidence = [{
+        "source": "vm_mcp", "reference": "cfg42",
+        "raw_data": {
+            "diagnostic": "config_validate", "service": "haproxy",
+            "success": True, "supported": True, "valid": False,
+            "config_file": "/opt/apps/haproxy.cfg", "error_line": 42,
+            "syntax_error": "unknown keyword 'foobar'",
+        },
+    }]
+    gaps = detect_operational_unknowns(evidence)
+    assert len(gaps) == 1
+    assert gaps[0]["topic"] == "config_syntax_repair_guidance"
+    assert gaps[0]["subject"] == "haproxy"
+    assert "/opt/apps/haproxy.cfg:42" in gaps[0]["reason"]
+    # No invented config errors when the VM validator has not been executed.
+    evidence[0]["raw_data"]["success"] = False
+    assert detect_operational_unknowns(evidence) == []
+
+
+def test_unknown_config_method_includes_systemd_candidate_without_validating_it():
+    evidence = [{
+        "source": "vm_mcp", "reference": "cfgUnknown",
+        "raw_data": {
+            "diagnostic": "config_validate", "service": "gfpapi",
+            "success": True, "supported": False, "valid": None,
+            "config_file": "/opt/gfpapi/app.yml",
+            "config_path_source": "systemd_execstart_unvalidated",
+            "detail": "config_validation_adapter_unavailable",
+        },
+    }]
+    gaps = detect_operational_unknowns(evidence)
+    assert len(gaps) == 1
+    assert gaps[0]["topic"] == "config_validation_method"
+    assert "/opt/gfpapi/app.yml" in gaps[0]["reason"]
