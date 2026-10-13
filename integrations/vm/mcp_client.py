@@ -16,6 +16,7 @@ class VMEdgeMCPClient(MCPClient):
         "service_status", "service_logs", "system_logs", "process_snapshot",
         "process_status", "tcp_check", "port_listener_status", "dns_check",
         "route_check", "firewall_status", "config_validate",
+        "service_runtime_discovery", "dotnet_config_syntax",
     }
     WRITE_TOOLS = {"restart_service", "reload_service", "start_service"}
 
@@ -72,6 +73,8 @@ class VMEdgeMCPClient(MCPClient):
     async def route_check(self, target: str, destination: str) -> Dict[str, Any]: return await self._invoke("route_check", target, destination=destination)
     async def firewall_status(self, target: str) -> Dict[str, Any]: return await self._invoke("firewall_status", target)
     async def config_validate(self, target: str, service: str) -> Dict[str, Any]: return await self._invoke("config_validate", target, service=service)
+    async def service_runtime_discovery(self, target: str, service: str) -> Dict[str, Any]: return await self._invoke("service_runtime_discovery", target, service=service)
+    async def dotnet_config_syntax(self, target: str, service: str) -> Dict[str, Any]: return await self._invoke("dotnet_config_syntax", target, service=service)
 
     @staticmethod
     def _write_context(approval_id: str, incident_id: str) -> Dict[str, str]:
