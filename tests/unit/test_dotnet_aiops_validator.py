@@ -16,7 +16,9 @@ def encoded(value):
 
 @pytest.mark.parametrize(("content", "expected"), [
     ('{"Enabled": true, "ApiKey": "SECRET_PASSWORD"}', "valid_json_syntax"),
-    ('{"A":1,}', "invalid_json_syntax"),
+    # ASP.NET Core accepts a trailing comma without requiring a comment.
+    ('{"A":1,}', "valid_json_syntax"),
+    ('{"A":1,,}', "invalid_json_syntax"),
     ('{\n "Logging": true,\n "Bad": }\n', "invalid_json_syntax"),
     ('{"x": 1, "x": 2}', "invalid_json_syntax"),
     ('{ /* .NET permits comments */ "Enabled": true, }', "valid_json_syntax"),
