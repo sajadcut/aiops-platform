@@ -46,7 +46,7 @@ def test_vm_recovery_contract_rejects_action_outside_runbook_allowlist():
         _runbook_contract(
             "vm-service-recovery",
             {
-                "action": "reload_service",
+                "action": "stop_service",
                 "target": "10.100.6.199",
                 "parameters": {"service": "nginx"},
             },
@@ -85,7 +85,7 @@ async def test_runbook_executor_enforces_contract_even_when_called_without_api()
         await executor.execute(
             "vm-service-recovery",
             tool_name="ssh_vm",
-            action="reload_service",
+            action="stop_service",
             target="10.100.6.199",
             parameters={"service": "nginx"},
             dry_run=True,
