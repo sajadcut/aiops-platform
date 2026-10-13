@@ -851,11 +851,20 @@ class SSHVMConnector:
         }:
             return {**base, "status": "preview_malformed"}
         # No raw configuration or arbitrary tool-returned keys cross the MCP.
-        safe_rows = lambda rows: [
-            {"line": row["line"], "content": str(row.get("content") or "")[:120]}
-            for row in (rows if isinstance(rows, list) else [])[:7]
-            if isinstance(row, dict) and type(row.get("line")) is int
-        ]
+        structure = re.compile(
+            r"(?:[A-Za-z_][A-Za-z0-9_]{0,40}(?: \\[arguments redacted\\])?"
+            r"(?: [\\{\\}]{1,8})?|\\[structural\\](?: [\\{\\}]{1,8})?"
+            r"|\\[blank or comment\\]|\\[remove entire stray brace line\\])"
+        )
+        def safe_preview_text(value: Any) -> str:
+            text = str(value or "")[:125]
+            return text if structure.fullmatch(text) else "[unavailable/redacted]"
+        def safe_rows(rows: Any) -> list[dict]:
+            return [
+                {"line": row["line"], "content": safe_preview_text(row.get("content"))}
+                for row in (rows if isinstance(rows, list) else [])[:7]
+                if isinstance(row, dict) and type(row.get("line")) is int
+            ]
         digest = lambda key: str(raw.get(key)) if isinstance(raw.get(key), str) and re.fullmatch(r"[0-9a-f]{64}", raw[key]) else None
         diff = raw.get("diff") if isinstance(raw.get("diff"), dict) else {}
         status = str(raw.get("validation_status") or "UNVERIFIED")
@@ -873,8 +882,8 @@ class SSHVMConnector:
             "proposed_excerpt": safe_rows(raw.get("proposed_excerpt")),
             "diff": {
                 "line": diff.get("line") if type(diff.get("line")) is int else None,
-                "before": str(diff.get("before") or "")[:120],
-                "after": str(diff.get("after") or "")[:120],
+                "before": safe_preview_text(diff.get("before")),
+                "after": safe_preview_text(diff.get("after")),
                 "redacted": True,
             } if diff else None,
             "proposed_change": "remove_extra_opening_brace" if raw.get("proposed_change") == "remove_extra_opening_brace" else None,
