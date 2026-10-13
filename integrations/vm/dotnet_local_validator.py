@@ -41,12 +41,21 @@ _MESSAGES = {
 
 def safe_json_files(output: str) -> tuple[list[str], bool]:
     """Parse untrusted remote directory names. Excess is NOT a full validation."""
-    names = sorted(set(str(output or "").splitlines()))
-    # Any unsafe or excessive directory listing fails closed.
-    if len(names) > 500 or any(len(n) > 180 for n in names):
+    records = sorted(set(str(output or "").splitlines()))
+    if len(records) > 500 or any(len(row) > 200 for row in records):
         return [], True
-    allowed = [name for name in names if _NAME.fullmatch(name)]
-    return allowed[:MAX_FILES], len(allowed) > MAX_FILES
+    allowed = []
+    incomplete = False
+    for item in records:
+        name, tab, file_type = item.partition("\t")
+        if not tab or len(file_type) != 1:
+            return [], True
+        if _NAME.fullmatch(name):
+            if file_type == "f":
+                allowed.append(name)
+            else:
+                incomplete = True
+    return allowed[:MAX_FILES], incomplete or len(allowed) > MAX_FILES
 
 
 def remote_file_listing_command(publish: str) -> str:
@@ -60,7 +69,7 @@ def remote_file_listing_command(publish: str) -> str:
         "test -d " + quoted + " && test ! -L " + quoted
         + " && test \"$(readlink -f -- " + quoted + ")\" = " + quoted
         + " && LC_ALL=C find " + quoted
-        + " -mindepth 1 -maxdepth 1 -type f -printf '%f\\n' 2>/dev/null"
+        + " -mindepth 1 -maxdepth 1 -printf '%f\\t%y\\n' 2>/dev/null"
     )
 
 
