@@ -312,11 +312,11 @@ def test_completed_chat_incident_routes_execute_to_approved_api_not_workflow_res
          "data={checkpoint_status:'completed',approval:{approval_id:'22222222-2222-4222-8222-222222222222',status:approvalStatus,risk_level:'high',action:'start_service',metadata:{binding_complete:true,target:'vm-01',binding_digest:'tested-digest'}}};"),
         ("else if(method==='POST'&&url.includes('/resume')){approvalStatus='consumed';version++;data={status:'completed'};}",
          "else if(method==='POST'&&url.endsWith('/execute')){approvalStatus='consumed';version++;data={status:'completed'};}"),
-        ("assert.match(el('#ic-action-controls').innerHTML,/ic-resume/);\\n  listeners.change({target:{id:'ic-check',checked:true}});\\n  click('#ic-resume');",
-         "assert.match(el('#ic-action-controls').innerHTML,/ic-resume/);\\n"
-         "  assert.doesNotMatch(el('#ic-action-controls').innerHTML.match(/id=\\\"ic-resume\\\"[^>]*>/)[0],/disabled/);\\n"
-         "  assert.doesNotMatch(el('#ic-action-checks').innerHTML,/ic-check/);\\n"
-         "  version++; // Decision-brief changes without invalidating bound approval.\\n"
+        ("assert.match(el('#ic-action-controls').innerHTML,/ic-resume/);\n  listeners.change({target:{id:'ic-check',checked:true}});\n  click('#ic-resume');",
+         "assert.match(el('#ic-action-controls').innerHTML,/ic-resume/);\n"
+         "  assert.doesNotMatch(el('#ic-action-controls').innerHTML.match(/id=\\\"ic-resume\\\"[^>]*>/)[0],/disabled/);\n"
+         "  assert.doesNotMatch(el('#ic-action-checks').innerHTML,/ic-check/);\n"
+         "  version++; // Decision-brief changes without invalidating bound approval.\n"
          "  click('#ic-resume');"),
         ("assert.equal(events.filter(x=>x[0]==='POST'&&x[1].includes('/resume')).length,1);",
          "assert.equal(events.filter(x=>x[0]==='POST'&&x[1].endsWith('/execute')).length,1);\n"
