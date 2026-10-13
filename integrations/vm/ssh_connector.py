@@ -440,17 +440,90 @@ class SSHVMConnector:
                                   "mtime_epoch": changed,
                                   "owner_service": None, "growth_confirmed": False,
                                   "retention_policy_verified": False})
+            # A second metadata sample and open-FD lookup help distinguish
+            # active growth from an old/static file. Never open file contents.
+            # Limit to four files per mount, one bounded extra SSH roundtrip.
+            if files:
+                selected_files = files[:4]
+                paths = " ".join(shlex.quote(item["path"]) for item in selected_files)
+                stat_cmd = "LC_ALL=C stat -c '%i\\t%s\\t%n' -- " + paths + " 2>/dev/null"
+                watch_cmd = (
+                    stat_cmd + "; printf '\\n__AIOPS_STAT_SECOND__\\n'; sleep 2; "
+                    + stat_cmd + "; printf '\\n__AIOPS_LSOF__\\n'; "
+                    + "if command -v lsof >/dev/null 2>&1; then "
+                    + "timeout 3s lsof -nP -Fpcfn -- " + paths
+                    + " 2>/dev/null | head -n 80; fi"
+                )
+                observed = await self._run(target, watch_cmd)
+                if observed.get("success"):
+                    first_text, marker, tail = str(observed.get("stdout") or "").partition(
+                        "__AIOPS_STAT_SECOND__"
+                    )
+                    second_text, lsof_marker, open_text = tail.partition("__AIOPS_LSOF__")
+                    def parse_stats(value: str) -> dict[str, tuple[int, int]]:
+                        result: dict[str, tuple[int, int]] = {}
+                        for line in value.splitlines()[:8]:
+                            fields = line.split("\t", 2)
+                            if len(fields) != 3:
+                                continue
+                            try:
+                                result[fields[2]] = (int(fields[0]), int(fields[1]))
+                            except (TypeError, ValueError):
+                                continue
+                        return result
+
+                    if marker:
+                        first, second = parse_stats(first_text), parse_stats(second_text)
+                        for item in selected_files:
+                            before, after = first.get(item["path"]), second.get(item["path"])
+                            if not before or not after or before[0] != after[0]:
+                                continue
+                            item["growth_measured"] = True
+                            item["growth_bytes_over_2_seconds"] = max(after[1] - before[1], 0)
+                            item["growth_confirmed"] = after[1] > before[1]
+                    if lsof_marker:
+                        pid = None
+                        command_name = None
+                        fd = None
+                        selected_by_path = {item["path"]: item for item in selected_files}
+                        for line in open_text.splitlines()[:80]:
+                            if len(line) < 2:
+                                continue
+                            tag, value = line[0], line[1:]
+                            if tag == "p" and value.isdigit():
+                                pid = int(value)
+                                command_name, fd = None, None
+                            elif tag == "c":
+                                command_name = redact_text(value[:90])
+                            elif tag == "f":
+                                fd = value[:30]
+                            elif tag == "n" and value in selected_by_path and pid is not None:
+                                item = selected_by_path[value]
+                                item.setdefault("open_handles", [])
+                                if len(item["open_handles"]) < 5:
+                                    item["open_handles"].append({
+                                        "pid": pid, "process_name": command_name,
+                                        "file_descriptor": fd,
+                                        "writable_handle_observed": bool(
+                                            fd and ("w" in fd or "u" in fd)
+                                        ),
+                                        "writer_causality_verified": False,
+                                    })
             selected.append({"mount": mount, "used_percent": used,
                              "files": files, "scan_success": bool(output.get("success")),
-                             "scan_scope": roots})
+                             "scan_scope": roots, "scan_complete_verified": False})
         return {
             "success": True, "target": target,
             "diagnostic": "disk_forensics",
             "mounts": selected, "files_examined": sum(len(x["files"]) for x in selected),
             "delete_authorized": False, "file_age_proves_safe_to_delete": False,
-            "growth_measured": False, "content_inspected": False,
+            "growth_measured": any(
+                file.get("growth_measured") is True
+                for mount in selected for file in mount["files"]
+            ), "content_inspected": False,
             "limitations": [
-                "Bounded single snapshot cannot prove continuous growth, process ownership or causality",
+                "Short two-point samples do not establish historical growth or root cause; absent growth does not prove a static file",
+                "Open file handles do not prove which process originally wrote a file",
                 "Other mountpoints and small files may be unexamined",
                 "Elastic/Zabbix temporal correlation and retention policy are required before proposing cleanup",
             ],
