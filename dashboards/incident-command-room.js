@@ -416,8 +416,7 @@
     kubernetes_api:'Checking Kubernetes MCP',
   };
   const phaseName = key => String(key||'').startsWith('agent:')
-    ? (state.language==='fa'?'در حال تحلیل توسط ':'Analyzing with ')+
-      humanAgent(key.slice(6))+' ('+agentNameEN(key.slice(6))+')'
+    ? humanAgent(key.slice(6))+' ('+agentNameEN(key.slice(6))+')'
     : (state.language==='fa'?progressStageFa:progressStageEn)[key] || String(key||'');
   function updateProgressClock() {
     const element=$('#ic-flow-elapsed');
@@ -460,7 +459,9 @@
     const spinner=$('#ic-analysis-spinner');
     if(spinner)spinner.hidden=awaiting||terminal||!running&&!(execution&&currentStage);
     const title=$('#ic-analysis-title'),detail=$('#ic-analysis-detail');
-    if(title)title.textContent=activeLabel||
+    if(title)title.textContent=(activeAgent&&currentStage==='parallel_agents'&&activeLabel
+      ?(fa?'در حال تحلیل: ':'Analyzing: ')+activeLabel
+      :activeLabel)||
       (terminal?(fa?'بررسی رخداد تکمیل شده است':'Incident analysis finished'):
         fa?'در حال دریافت وضعیت تحلیل…':'Loading analysis progress…');
     if(detail)detail.textContent=awaiting?
@@ -516,8 +517,11 @@
     const oldIncident=low(state.lifecycle?.incident_status||state.report?.incident_summary?.status);
     const statusChanged=(newApproval && oldApproval && newApproval!==oldApproval) ||
       (snapshot.incident_status && oldIncident && snapshot.incident_status!==oldIncident);
-    if(statusChanged && !state.busy && state.report && !state.historic &&
-       (snapshot.last_event_at!==prior.last_event_at||
+    const checkpointChanged=Number.isInteger(snapshot.checkpoint_version) &&
+      Number.isInteger(state.lifecycle?.checkpoint_version) &&
+      snapshot.checkpoint_version!==state.lifecycle.checkpoint_version;
+    if((statusChanged||checkpointChanged) && !state.busy && state.report && !state.historic &&
+       (checkpointChanged || snapshot.last_event_at!==prior.last_event_at||
         snapshot.approval_status!==prior.approval_status||
         snapshot.incident_status!==prior.incident_status))
       void load({preserveHistory:true});
