@@ -191,3 +191,12 @@
 .incident-list-approval.attention{font-weight:750;color:var(--amber)}
 .incident-list-open{color:var(--blue);font-weight:750;white-space:nowrap}
 @media(max-width:750px){.incident-cards[data-size="list"]{display:block;overflow-x:auto}.incident-list-header,.incident-list-row{min-width:1050px}.incident-list-row{min-height:56px}}
+
+/* Live Incident analysis: visible in cards, compact view and row layout. */
+.incident-live-sync{font-size:12px;color:var(--muted);align-self:center}
+.incident-analysis-indicator{display:inline-flex;align-items:center;gap:7px;color:var(--blue);font-weight:750;white-space:normal}
+.incident-activity-spinner{display:inline-block;flex:none;width:15px;height:15px;border:2px solid color-mix(in srgb,var(--blue) 24%,transparent);border-top-color:var(--blue);border-radius:50%;animation:incident-activity-spin .85s linear infinite}
+.incident-queue-card.is-analyzing,.incident-list-row.is-analyzing{border-inline-start:3px solid var(--blue)}
+.incident-queue-card.is-analyzing .incident-queue-state{border-color:var(--blue)}
+@keyframes incident-activity-spin{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.incident-activity-spinner{animation:none;border-style:dashed}}
