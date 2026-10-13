@@ -658,7 +658,40 @@
     show('#ic-config-diagnostic',items.join(''));
   }
 
+  function renderDiskFileCausality(r) {
+    const data=r.disk_file_causality||{},fa=state.language==='fa';
+    const files=arr(data.files);
+    if(!files.length){show('#ic-disk-forensics','');return;}
+    const title=fa?'بررسی علت مصرف فضای دیسک':'Disk usage cause investigation';
+    const notice=fa?
+      'فایل‌های زیر فقط بر اساس اندازه و محل قرارگیری شناسایی شده‌اند. علت تولید یا رشد، مالک برنامه، سیاست نگهداری و ایمنی حذف هنوز تأیید نشده است. هیچ درخواست حذف یا تأیید پاک‌سازی صادر نشده است.':
+      'File metadata is not proof of cause, growth or deletion safety. No cleanup approval or deletion is authorized.';
+    const top=files.slice(0,12).map(file=>
+      '<tr><td dir="auto">'+txt(file.path)+'</td><td>'+
+      esc(num(Math.round((Number(file.size_bytes)||0)/1048576)))+' MB</td><td>'+
+      esc(file.mount||'—')+'</td><td>'+
+      esc(fa?'علت نامشخص؛ حذف مجاز نیست':'Unknown; do not delete')+'</td></tr>'
+    ).join('');
+    const logs=arr(data.related_error_log_observations),alerts=arr(data.zabbix_alert_refs);
+    const correlation=fa?
+      'شواهد خطای مرتبط یافت‌شده: '+num(logs.length)+' مورد؛ آلارم‌های زبیکس: '+num(alerts.length)+
+      ' مورد. این موارد صرفاً برای بررسی همبستگی هستند؛ تولیدکنندهٔ فایل یا علت رشد هنوز ثابت نشده است.':
+      'Potential log observations: '+logs.length+', Zabbix alerts: '+alerts.length+
+      '. Temporal evidence is not sufficient to attribute file production.';
+    show('#ic-disk-forensics','<article class="ic-config-check" data-config-status="advisory">'+
+      '<h3>'+esc(title)+'</h3><p>'+esc(notice)+'</p>'+
+      '<div class="ic-disk-file-wrap"><table class="ic-disk-file-table"><thead><tr>'+
+      '<th>'+esc(fa?'مسیر فایل':'File')+'</th><th>'+esc(fa?'حجم تقریبی':'Size')+
+      '</th><th>'+esc(fa?'فایل‌سیستم':'Mount')+'</th><th>'+
+      esc(fa?'تصمیم فعلی':'Current decision')+'</th></tr></thead><tbody>'+top+
+      '</tbody></table></div><p>'+esc(correlation)+'</p><p>'+
+      esc(fa?'گام بعد: یافتن فرایند تولیدکننده، بررسی رشد در زمان و خطاهای Elastic/Zabbix، کنترل Log Rotation و سیاست نگهداری؛ سپس ارائهٔ اصلاح دقیق با شواهد.':
+        'Next: identify producing process, confirm growth/error correlation, retention and log rotation before proposing a scoped repair.')+
+      '</p></article>');
+  }
+
   function renderAnalysis(r) {
+    renderDiskFileCausality(r);
     renderConfigDiagnostic(r);
     const c=r.rca_assessment||{},agents=arr(r.agent_findings);
     const fa=state.language==='fa';
