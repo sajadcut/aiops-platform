@@ -98,8 +98,11 @@ def test_remediation_request_allows_only_actions_in_executable_vm_runbook_contra
     assert start_request.action == "start_service"
     assert restart_request.action == "restart_service"
     assert start_request.target_port == 8800
+    # Reload is now an explicitly registered high-risk action; execution
+    # still requires an active service and a fresh valid configuration.
+    assert RemediationRequest(target="10.100.6.199", service="haproxy", action="reload_service").action == "reload_service"
 
-    for unsupported in ("reload_service", "shell"):
+    for unsupported in ("stop_service", "shell"):
         with pytest.raises(Exception):
             RemediationRequest(
                 target="10.100.6.199",

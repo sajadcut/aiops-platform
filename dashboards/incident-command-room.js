@@ -14,7 +14,7 @@
     fa: {
       brandDetail:'فضای تصمیم‌گیری عملیاتی',dashboard:'داشبورد',incidents:'رخدادها',thisIncident:'این رخداد',
       refresh:'↻ تازه‌سازی',back:'بازگشت به رخدادها',loading:'در حال خواندن گزارش مستند از داده‌های ثبت‌شده رخداد…',
-      heroKicker:'اتاق بررسی و تصمیم‌گیری',navOverview:'خلاصه تصمیم',navReceived:'آلارم دریافتی',navReview:'قبل از تأیید',
+      heroKicker:'اتاق بررسی و تصمیم‌گیری',navOverview:'خلاصه تصمیم',navReceived:'آلارم دریافتی',navChat:'چت رخداد',navReview:'قبل از تأیید',
       navAnalysis:'تحلیل Agentها',navEvidence:'شواهد و MCP',navKnowledge:'دانش و تجربه',navOutcome:'نتیجه اجرا',navHistory:'تاریخچه',
       receivedTitle:'آلارم دریافتی',receivedSubtitle:'آنچه واقعاً از سیستم مانیتورینگ دریافت شده',
       receivedNote:'متن و اطلاعات اصلی ثبت‌شده در زمان دریافت آلارم را می‌بینی. اطلاعات محرمانه پنهان شده‌اند. موارد قدیمی ممکن است قبل از ذخیره‌سازی نرمال شده باشند.',
@@ -24,6 +24,11 @@
       receivedMessage:'متن آلارم',receivedTags:'تگ‌های زبیکس',receivedLabels:'لیبل‌های Prometheus',
       receivedAnnotations:'توضیحات Alertmanager',receivedPayload:'نمایش تمام فیلدهای ثبت‌شده (JSON)',
       receivedCopy:'کپی اطلاعات آلارم',receivedCount:'تعداد سیگنال‌های ثبت‌شده',
+      chatSubtitle:'گفت‌وگوی متصل به شواهد و مجوزهای همین رخداد',
+      chatTitle:'دستیار تعاملی رخداد',
+      chatNote:'بعد از تحلیل می‌توانی درباره خطا سؤال کنی، وضعیت زنده یا کانفیگ را بررسی کنی و برای عملیات درخواست تأیید ثبت کنی. هیچ دستور اجرایی صرفاً با پیام چت انجام نمی‌شود.',
+      chatError:'علت خطا چیست؟',chatConfig:'کانفیگ را بررسی کن',chatStatus:'وضعیت سرویس را بررسی کن',
+      chatReload:'ریلود سرویس را پیشنهاد بده',chatMessageLabel:'پیام شما برای این Incident',chatSend:'ارسال پیام',
       receivedMore:'فقط بخشی از آلارم‌ها نمایش داده می‌شوند؛ از API برای صفحه‌بندی داده‌های بیشتر استفاده کن.',
       receivedProblem:'آلارم مشکل',receivedRecovery:'اعلام رفع مشکل',receivedError:'دریافت آلارم اولیه ممکن نشد.',
       readFirst:'وضعیت رخداد به زبان ساده',overviewTitle:'خلاصه وضعیت و پیشنهاد AIOps',decisionSafety:'بررسی ریسک پیش از اقدام',
@@ -95,7 +100,7 @@
     en: {
       brandDetail:'Dedicated operational decision workspace',dashboard:'Dashboard',incidents:'Incidents',thisIncident:'This incident',
       refresh:'↻ Refresh',back:'Back to incidents',loading:'Loading durable evidence and incident state…',
-      heroKicker:'Incident command room',navOverview:'Quick brief',navReceived:'Received alert',navReview:'Before approval',navAnalysis:'Agent analysis',
+      heroKicker:'Incident command room',navOverview:'Quick brief',navReceived:'Received alert',navChat:'Incident chat',navReview:'Before approval',navAnalysis:'Agent analysis',
       navEvidence:'Evidence & MCP',navKnowledge:'Knowledge & memory',navOutcome:'Execution result',navHistory:'History',
       receivedTitle:'Received alert',receivedSubtitle:'The notification actually sent by monitoring',
       receivedNote:'Original stored notification data with secrets removed. Older notifications may have been normalized before storage.',
@@ -105,7 +110,12 @@
       receivedWhen:'Received at',receivedEventTime:'Source event time',receivedIdentifier:'Source ID',
       receivedMessage:'Alert message',receivedTags:'Zabbix tags',receivedLabels:'Prometheus labels',
       receivedAnnotations:'Alertmanager annotations',receivedPayload:'All recorded fields (JSON)',
-      receivedCopy:'Copy alert payload',receivedCount:'Stored signals',receivedMore:'Results limited; query the API for more.',
+      receivedCopy:'Copy alert payload',receivedCount:'Stored signals',
+      chatSubtitle:'Conversation grounded in this incident and its approvals',
+      chatTitle:'Incident investigation copilot',
+      chatNote:'Ask about root causes, request live read-only checks and initiate governed action approval. Chat messages never directly execute changes.',
+      chatError:'What caused this error?',chatConfig:'Check configuration',chatStatus:'Check service status',
+      chatReload:'Propose service reload',chatMessageLabel:'Your message about this incident',chatSend:'Send message',receivedMore:'Results limited; query the API for more.',
       receivedProblem:'Problem alert',receivedRecovery:'Recovery event',receivedError:'Could not load the source notification.',
       readFirst:'Start here',overviewTitle:'Incident summary and recommendation',decisionSafety:'Risk review',
       reviewTitle:'What exactly am I authorizing?',agentSubtitle:'Auditable specialist activity report',
@@ -177,6 +187,7 @@
     loadingToken: 0, busy: false, reviewedSnapshot: null, rejectionVisible: false, error: null,
     receivedSignals: null, receivedSignalsStatus: 'loading',
     configResponse: null, configResponseStatus: 'loading',
+    chat: null, chatStatus: 'loading', chatBusy: false, chatLastResult: null,
     lifecyclePolling: false, lastLiveCheck: null, lifecyclePollError: false,
     progress: null, progressConnected: false, progressAbort: null,
     progressStreamRunning: false, progressRetries: 0, progressFailure: false
@@ -1416,8 +1427,120 @@
     $('#ic-archive-banner').hidden=!state.historic;
     renderHero(r);renderOverview(r);renderReview(r);renderAnalysis(r);renderEvidence(r);
     renderKnowledge(r);renderInvestigation(r);renderOutcome(r);renderTimeline(r);renderDecision(r);renderReceivedSignals();
+    renderIncidentChat();
     renderAnalysisProgress();
     $('#ic-snapshot-label').textContent='Snapshot '+String(r.snapshot_id||'').slice(0,14);
+  }
+  function renderIncidentChat() {
+    const fa=state.language==='fa';
+    const zone=$('#ic-chat-thread'),form=$('#ic-chat-form'),statusNode=$('#ic-chat-status');
+    if(!zone||!form||!statusNode)return;
+    const archive=Boolean(state.historic),loading=state.chatBusy||state.chatStatus==='loading';
+    const blocked=archive||state.lifecycle?.analysis_in_progress;
+    $('#ic-chat-message').disabled=Boolean(blocked||state.chatBusy);
+    $('#ic-chat-send').disabled=Boolean(blocked||state.chatBusy||state.chatStatus==='failed');
+    form.setAttribute('aria-busy',String(loading));
+    const items=arr(state.chat?.items),approvals=state.chat?.approvals||{};
+    const head=state.chatStatus==='loading'?
+      empty(fa?'در حال بارگذاری تاریخچه همین رخداد…':'Loading incident conversation…'):
+      state.chatStatus==='failed'?
+      empty(fa?'چت فعلاً در دسترس نیست یا تحلیل تمام نشده است.':'Incident chat is unavailable or analysis has not finished.'):
+      items.length?'':empty(fa?'برای شروع، درباره شواهد همین رخداد سؤال کن.':'Ask about this incident to start a conversation.');
+    const lines=items.map(m=>{
+      const assistant=m.role==='assistant',prop=m.proposal||{},approval=approvals[m.id]||{};
+      let control='';
+      if(assistant&&prop.status==='requires_preflight_and_approval'){
+        control='<div class="ic-chat-action">'+
+          '<p><strong>'+esc(fa?'اقدام پیشنهادی':'Suggested action')+': </strong>'+
+            txt(prop.action)+' · '+txt(prop.service)+' @ '+txt(prop.target)+'</p>'+
+          '<p>'+esc(fa?
+            'قبل از ایجاد درخواست Approval، وضعیت سرویس و کانفیگ به‌صورت زنده دوباره بررسی می‌شوند.':
+            'Live service/configuration preflight is required before creating an approval.')+'</p>'+
+          (!approval.approval_id?
+            '<button class="ic-btn ic-btn-primary" type="button" data-chat-request="'+txt(m.id)+'"'+
+            (blocked||state.chatBusy?' disabled':'')+'>'+
+              esc(fa?'درخواست تأیید این اقدام':'Request approval for this action')+'</button>':
+            '<p>'+esc(fa?'وضعیت مجوز: ':'Approval status: ')+txt(approval.status)+
+            ' · '+txt(approval.approval_id)+'</p>'+
+            (low(approval.status)==='pending'?
+              '<button class="ic-btn ic-btn-primary" type="button" data-chat-approve="'+txt(approval.approval_id)+'"'+
+              (blocked||state.chatBusy?' disabled':'')+'>'+esc(fa?'تأیید مجوز (بدون اجرا)':'Approve (no execution)')+'</button>':'')+
+            (low(approval.status)==='approved'?
+              '<button class="ic-btn ic-btn-danger" type="button" data-chat-execute="'+txt(approval.approval_id)+'"'+
+              (blocked||state.chatBusy?' disabled':'')+'>'+esc(fa?'اجرای عملیات تأییدشده':'Execute approved operation')+'</button>':''))+
+          '<p class="ic-agent-disclaimer">'+esc(fa?
+            'دستور اجرا فقط با مجوز مستقل، احراز هویت و بررسی مجدد پیش‌شرط‌ها انجام می‌شود.':
+            'Execution requires separate authentication, approval and fresh live preconditions.')+'</p>'+
+          '</div>';
+      }
+      return '<article class="ic-chat-bubble '+(assistant?'ic-chat-assistant':'ic-chat-user')+'">'+
+        '<div class="ic-chat-bubble-head"><strong>'+esc(assistant?(fa?'دستیار AIOps':'AIOps copilot'):(fa?'اپراتور':'Operator'))+
+        '</strong><small>'+txt(date(m.created_at))+'</small></div>'+
+        '<p dir="auto">'+txt(m.message)+'</p>'+
+        (arr(m.source_refs).length?refs(m.source_refs):'')+control+'</article>';
+    }).join('');
+    zone.innerHTML=head+lines;
+    statusNode.textContent=archive?
+      (fa?'نسخه تاریخی فقط قابل مشاهده است؛ برای چت به نسخه فعلی برگردید.':'Archived version: return to current to chat.'):
+      state.lifecycle?.analysis_in_progress?
+      (fa?'چت بعد از پایان تحلیل فعال می‌شود.':'Chat is enabled once analysis finishes.'):
+      state.chatBusy?(fa?'در حال بررسی و ثبت پاسخ…':'Investigating and recording response…'):
+      state.chatLastResult || (fa?'پاسخ‌ها در تاریخچه ممیزی همین رخداد ثبت می‌شوند.':
+                                    'Conversation turns are retained in this incident audit.');
+  }
+  async function loadIncidentChat(token=state.loadingToken) {
+    state.chatStatus='loading';renderIncidentChat();
+    try{
+      const data=await api(base+'/chat');
+      if(token!==state.loadingToken)return;
+      state.chat=data;state.chatStatus='ready';
+    }catch(e){
+      if(token!==state.loadingToken)return;
+      state.chatStatus='failed';
+    }
+    renderIncidentChat();
+  }
+  async function submitIncidentChat(value) {
+    const message=String(value||'').trim();
+    if(!message||state.chatBusy||state.historic||state.lifecycle?.analysis_in_progress)return;
+    state.chatBusy=true;state.chatLastResult=null;renderIncidentChat();
+    try {
+      await api(base+'/chat',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({message})});
+      $('#ic-chat-message').value='';
+      await loadIncidentChat();
+    }catch(e){notify(tr('failure')+' · '+e.message,true);state.chatLastResult=e.message;}
+    finally{state.chatBusy=false;renderIncidentChat();}
+  }
+  async function incidentChatApproval(kind,id) {
+    if(state.chatBusy||state.historic||!UUID.test(id))return;
+    const fa=state.language==='fa';
+    const caution=kind==='request'?
+      (fa?'برای ایجاد درخواست Approval، بررسی زنده اجرا می‌شود؛ هنوز سرویس تغییر نمی‌کند. ادامه؟':
+          'Fresh preflight precedes approval creation. No operation executes yet. Continue?'):
+      kind==='approve'?
+      (fa?'آیا مجوز این اقدام با ریسک بالا را تأیید می‌کنید؟ هنوز اجرا نمی‌شود.':
+          'Approve this high-risk change authorization? Nothing executes yet.'):
+      (fa?'این دکمه ممکن است سرویس Production را تغییر دهد. آیا اجرای اقدام تأییدشده را می‌پذیرید؟':
+          'This may change a production service. Execute the approved action now?');
+    if(!confirm(caution))return;
+    state.chatBusy=true;renderIncidentChat();
+    try{
+      let response;
+      if(kind==='request')response=await api(base+'/chat/request-approval',{
+        method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({proposal_id:id})
+      });
+      else if(kind==='approve')response=await api('/api/v1/approvals/'+encodeURIComponent(id)+'/approve',{method:'POST'});
+      else response=await api('/api/v1/approvals/'+encodeURIComponent(id)+'/execute',{method:'POST'});
+      state.chatLastResult=kind==='execute'?
+        (fa?'نتیجه اجرا و راستی‌آزمایی را در بخش نتیجه اجرا بررسی کنید.':
+            'Review execution and verification outcome in the execution section.'):
+        (fa?'درخواست ثبت شد؛ اجرای خودکار انجام نشده است.':'Request recorded. No automatic execution was performed.');
+      await load();
+      await loadIncidentChat();
+      if(kind==='execute')notify(state.chatLastResult);
+    }catch(e){state.chatLastResult=e.message;notify(tr('failure')+' · '+e.message,true);}
+    finally{state.chatBusy=false;renderIncidentChat();}
   }
   async function loadConfigResponse(token) {
     state.configResponse=null;state.configResponseStatus='loading';
@@ -1486,6 +1609,7 @@
       $('#ic-auth').hidden=true;$('#ic-loader').hidden=true;$('#ic-main').hidden=false;alert('');
       render();void loadNarrative();void loadReceivedSignals(token);
       void loadConfigResponse(token);
+      void loadIncidentChat(token);
       void connectProgressStream();
     }catch(e){
       if(token!==state.loadingToken)return;
@@ -1597,6 +1721,33 @@
     $('#ic-key').addEventListener('keydown',e=>{if(e.key==='Enter')$('#ic-connect').click();});
     $('#ic-return-live').addEventListener('click',returnLive);
     $('#ic-fetch-raw').addEventListener('click',()=>{void loadRaw();});
+    $('#ic-chat-form').addEventListener('submit',e=>{
+      e.preventDefault();void submitIncidentChat($('#ic-chat-message').value);
+    });
+    $('#ic-chat-message').addEventListener('keydown',e=>{
+      if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)){
+        e.preventDefault();$('#ic-chat-form').requestSubmit();
+      }
+    });
+    document.addEventListener('click',e=>{
+      const prompt=e.target.closest('[data-incident-chat-prompt]');
+      if(prompt){
+        const suggestions={
+          fa:{error:'علت اصلی این رخداد از شواهد و تحلیل Agentها چیست؟',config:'کانفیگ همین سرویس را از VM MCP بررسی کن و خطا را بگو.',
+              status:'وضعیت زنده سرویس این رخداد را بررسی کن.',reload:'برای سرویس همین رخداد Reload پیشنهاد بده و پیش‌شرط‌های امنیتی را بگو.'},
+          en:{error:'What does the incident evidence establish about the root cause?',config:'Run a read-only configuration check for the incident service.',
+              status:'Check the live service status for this incident.',reload:'Propose reloading the incident service and explain the safety gates.'}
+        };
+        $('#ic-chat-message').value=suggestions[state.language][prompt.dataset.incidentChatPrompt]||'';
+        $('#ic-chat-message').focus();return;
+      }
+      const request=e.target.closest('[data-chat-request]');
+      if(request){void incidentChatApproval('request',request.dataset.chatRequest);return;}
+      const approve=e.target.closest('[data-chat-approve]');
+      if(approve){void incidentChatApproval('approve',approve.dataset.chatApprove);return;}
+      const execute=e.target.closest('[data-chat-execute]');
+      if(execute){void incidentChatApproval('execute',execute.dataset.chatExecute);return;}
+    });
     document.addEventListener('click',e=>{
       const button=e.target.closest('[data-copy-received]');
       if(!button)return;

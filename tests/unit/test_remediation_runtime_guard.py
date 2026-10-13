@@ -106,7 +106,7 @@ def test_remediation_request_rejects_action_without_executable_runbook_contract(
         api.RemediationRequest(
             target="10.100.6.199",
             service="nginx",
-            action="reload_service",
+            action="stop_service",
         )
 
 
