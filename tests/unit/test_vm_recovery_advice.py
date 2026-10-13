@@ -89,6 +89,7 @@ def test_observed_invalid_config_blocks_start_and_restart_advice():
 def test_no_advice_for_other_service_or_unverified_status_or_recovered_service():
     rows = gfpapi_rows()
     assert advisory(rows, {"trigger_signal": {"source": "zabbix", "payload": {"service": "nginx"}}}) is None
+    assert advisory(rows, {"trigger_signal": {"source": "zabbix", "payload": {"service": SERVICE, "target_ip": "10.10.10.10"}}}) is None
     assert advisory(rows, {"service_identity": {"conflicts": ["service_mismatch"]}}) is None
     assert advisory(rows + [
         row("service_status", "healthy", service=SERVICE, active_state="active", status="active"),
