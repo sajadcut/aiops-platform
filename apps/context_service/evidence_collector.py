@@ -22,7 +22,7 @@ class EvidenceCollector:
     _UNKNOWN_SERVICE_VALUES = {"", "unknown", "unknown-service", "none", "null"}
     _NON_MATERIAL_OBSERVATION_STATUSES = {"unavailable", "error", "skipped"}
     _VM_ACTIONS = {
-        "collect_vm_metrics", "host_info", "disk_status", "network_status",
+        "collect_vm_metrics", "host_info", "disk_status", "disk_forensics", "network_status",
         "service_status", "service_logs", "system_logs", "process_snapshot",
         "process_status", "tcp_check", "port_listener_status", "dns_check",
         "route_check", "firewall_status", "config_validate",
@@ -422,6 +422,18 @@ class EvidenceCollector:
                         rows = self._vm_evidence(action, vm_target, effective_service, vm_port, result, since)
                         evidence.extend(rows)
                         evidence.append(self._observation("vm_mcp", f"vm-observation:{vm_target}:{action}:{since.isoformat()}", status="queried", result_count=len(rows), service=effective_service, detail=f"target={vm_target};diagnostic={action}"))
+                        # Disk-pressure drill-down only after current host evidence
+                        # confirms a filesystem or inode is near capacity.
+                        # This avoids expensive file-tree scans for every alert.
+                        if action == "disk_status" and "disk_forensics" not in actions:
+                            pressure = False
+                            for entry in (result.get("filesystems") or []) + (result.get("inodes") or []):
+                                try:
+                                    pressure = pressure or int(str(entry.get("use_percent") or "0").rstrip("%")) >= 90
+                                except (TypeError, ValueError, AttributeError):
+                                    continue
+                            if pressure:
+                                actions.append("disk_forensics")
                         # Incident-time deterministic diagnostics, not an LLM
                         # suggestion: fetch the journal immediately after a
                         # failed/inactive systemd state. Do this even if Elastic,
