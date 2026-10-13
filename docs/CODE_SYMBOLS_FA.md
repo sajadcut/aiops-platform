@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 443 | Dashboard JS files scanned: 8 | Symbols indexed: 4141**
+**Python files scanned: 444 | Dashboard JS files scanned: 8 | Symbols indexed: 4146**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1890,13 +1890,13 @@
 | `integrations/elasticsearch/client.py` | `ElasticsearchClient.get_logs` | 78 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | ElasticsearchClient |
 | `integrations/elasticsearch/client.py` | `ElasticsearchClient.get_metrics` | 109 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | ElasticsearchClient |
 | `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient` | 13 | class | Canonical Elastic Agent Builder MCP adapter for Elastic Stack >= 9.2. | module |
-| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient.__init__` | 24 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ElasticsearchMCPClient |
-| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient._configured_authorization_header` | 41 | method | Resolve Elastic MCP auth without exposing raw Basic credentials to the generic client. | ElasticsearchMCPClient |
-| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient._with_namespace` | 55 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ElasticsearchMCPClient |
-| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient._esql_string` | 65 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ElasticsearchMCPClient |
-| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient._rows_from_payload` | 71 | method | Normalize Agent Builder execute_esql output into row dictionaries. | ElasticsearchMCPClient |
-| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient.health_check` | 112 | async method | Require the exact allowlisted Agent Builder tool, not just a live MCP route. | ElasticsearchMCPClient |
-| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient.get_logs` | 120 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | ElasticsearchMCPClient |
+| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient.__init__` | 27 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ElasticsearchMCPClient |
+| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient._configured_authorization_header` | 44 | method | Resolve Elastic MCP auth without exposing raw Basic credentials to the generic client. | ElasticsearchMCPClient |
+| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient._with_namespace` | 58 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ElasticsearchMCPClient |
+| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient._esql_string` | 68 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ElasticsearchMCPClient |
+| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient._rows_from_payload` | 74 | method | Normalize Agent Builder execute_esql output into row dictionaries. | ElasticsearchMCPClient |
+| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient.health_check` | 115 | async method | Require the exact allowlisted Agent Builder tool, not just a live MCP route. | ElasticsearchMCPClient |
+| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient.get_logs` | 123 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | ElasticsearchMCPClient |
 | `integrations/http_transport.py` | `insecure_ssl_context` | 13 | function | Create a TLS context that does not validate server certificates or hostnames. | module |
 | `integrations/http_transport.py` | `_safe_destination` | 21 | function | Return log-safe destination fields without query strings, credentials or bodies. | module |
 | `integrations/http_transport.py` | `_log_completed` | 39 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
@@ -2876,6 +2876,7 @@
 | `tests/unit/test_check_elastic_mcp.py` | `test_tools_list_failure_preserves_stage_and_http_status` | 88 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_check_elastic_mcp.py` | `test_missing_allowlisted_tool_is_not_a_pass` | 97 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_check_elastic_mcp.py` | `test_http_status_not_in_unrelated_errors` | 105 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_check_elastic_mcp.py` | `test_dotted_logical_tool_name_does_not_pass_wire_discovery` | 108 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_cognia_client.py` | `_search_response` | 10 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_cognia_client.py` | `test_machine_token_is_opaque_cached_and_search_contract_is_exact` | 35 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_cognia_client.py` | `test_machine_token_is_opaque_cached_and_search_contract_is_exact.handler` | 39 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_machine_token_is_opaque_cached_and_search_contract_is_exact |
@@ -3132,6 +3133,10 @@
 | `tests/unit/test_elastic_anomaly_ingestion.py` | `test_recovery_reuses_problem_identity_and_has_stable_recovery_reference` | 76 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_elastic_anomaly_ingestion.py` | `test_json_encoded_action_variables_are_normalized` | 91 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_elastic_anomaly_ingestion.py` | `test_native_json_arrays_from_asjson_webhook_are_normalized` | 98 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_elastic_mcp_wire_tool_allowlist_and_discovery` | 12 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_elastic_mcp_wire_tool_allowlist_and_discovery.fake_request` | 16 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_elastic_mcp_wire_tool_allowlist_and_discovery |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_elastic_get_logs_calls_actual_esql_wire_tool` | 48 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_elastic_get_logs_calls_actual_esql_wire_tool.fake_call_tool` | 52 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_elastic_get_logs_calls_actual_esql_wire_tool |
 | `tests/unit/test_evaluator.py` | `test_rejects_empty_plan` | 4 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_evaluator.py` | `test_accepts_evidence_backed_plan` | 10 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_evaluator_live_evidence_binding.py` | `test_orchestrator_evaluator_passes_authoritative_live_evidence_ids` | 8 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
