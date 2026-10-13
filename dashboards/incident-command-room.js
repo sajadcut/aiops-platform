@@ -1329,6 +1329,47 @@
     renderAnalysisProgress();
     $('#ic-snapshot-label').textContent='Snapshot '+String(r.snapshot_id||'').slice(0,14);
   }
+  async function loadConfigResponse(token) {
+    state.configResponse=null;state.configResponseStatus='loading';
+    try {
+      const response=await api(base+'/configuration-review-response');
+      if(token!==state.loadingToken)return;
+      state.configResponse=response;state.configResponseStatus='loaded';
+    } catch(_) {
+      if(token!==state.loadingToken)return;
+      state.configResponseStatus='failed';
+    }
+    if(state.report)renderInvestigation(state.historic||state.report);
+  }
+  async function respondToConfigProposal(decision) {
+    const c=state.report?.dynamic_investigation?.config_proposal||{};
+    if(state.historic||state.busy||state.configResponseStatus!=='loaded'||
+       state.configResponse?.status!=='not_responded'||
+       c.status!=='candidate_proposed'||!c.candidate_sha256||!c.original_sha256)return;
+    const fa=state.language==='fa';
+    if(!confirm(fa?
+      'این کار فقط نظر شما را ثبت می‌کند؛ هیچ فایل یا سرویسی تغییر نمی‌کند. ادامه می‌دهید؟':
+      'This only records your response. No file or service changes. Continue?'))return;
+    state.busy=true;renderInvestigation(state.report);
+    try {
+      const fresh=await api(base+'/decision-brief');
+      const v=fresh.dynamic_investigation?.config_proposal||{};
+      if(v.original_sha256!==c.original_sha256||v.candidate_sha256!==c.candidate_sha256){
+        notify(tr('rereview'),true);await load();return;
+      }
+      const response=await api(base+'/configuration-review-response',{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          decision,expected_original_sha256:c.original_sha256,
+          expected_candidate_sha256:c.candidate_sha256
+        })
+      });
+      state.configResponse=response;state.configResponseStatus='loaded';
+      notify(fa?'پاسخ ثبت شد؛ تغییری در کانفیگ اعمال نشده است.':
+                'Response recorded; no configuration was applied.');
+    }catch(e){notify(tr('failure')+' · '+e.message,true);}
+    finally{state.busy=false;if(state.report)renderInvestigation(state.report);}
+  }
   async function loadNarrative() {
     if(!state.report||state.historic)return;
     const snapshot=state.report.snapshot_id,lang=state.language;
@@ -1354,6 +1395,7 @@
       state.narrative=null;state.error=null;state.rejectionVisible=false;
       $('#ic-auth').hidden=true;$('#ic-loader').hidden=true;$('#ic-main').hidden=false;alert('');
       render();void loadNarrative();void loadReceivedSignals(token);
+      void loadConfigResponse(token);
       void connectProgressStream();
     }catch(e){
       if(token!==state.loadingToken)return;
@@ -1479,6 +1521,8 @@
       const h=e.target.closest('[data-snapshot-id]');
       if(h){void openHistory(h.dataset.snapshotId);return;}
       if(e.target.closest('#ic-archive-action-return')){returnLive();return;}
+      const intent=e.target.closest('[data-config-intent]');
+      if(intent){void respondToConfigProposal(intent.dataset.configIntent);return;}
       if(e.target.closest('#ic-toggle-reject')){state.rejectionVisible=!state.rejectionVisible;renderDecision(state.report);return;}
       if(e.target.closest('#ic-approve')){void action('approve');return;}
       if(e.target.closest('#ic-confirm-reject')){void action('reject');return;}
