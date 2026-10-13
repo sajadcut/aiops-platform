@@ -101,8 +101,8 @@ async def test_password_sudo_retry_passes_ssh_secret_only_via_stdin(monkeypatch)
             if command.startswith("sudo -n journalctl "):
                 return Result(1, stderr="sudo: a password is required")
             if command.startswith("sudo -S -p '' journalctl "):
-                assert input == "test-only-password\\n".replace("\\\\n", "\\n")
-                return Result(0, stdout="log line\\ntest-only-password")
+                assert input == "test-only-password\n"
+                return Result(0, stdout="log line\ntest-only-password")
             raise AssertionError(f"unexpected command: {command}")
 
     class ConnectionContext:
@@ -121,7 +121,7 @@ async def test_password_sudo_retry_passes_ssh_secret_only_via_stdin(monkeypatch)
     assert all("test-only-password" not in command for command, _ in captured)
     assert captured[0][1] is None
     assert captured[1][1] is None
-    assert captured[2][1] == "test-only-password\\n".replace("\\\\n", "\\n")
+    assert captured[2][1] == "test-only-password\n"
     assert "test-only-password" not in str(result)
     assert any("[REDACTED]" in log for log in result["logs"])
 
