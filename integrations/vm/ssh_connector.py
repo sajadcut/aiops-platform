@@ -16,7 +16,11 @@ from integrations.vm.service_adapters import (
     get_service_adapter, discover_config_path, config_check_for_path,
     parse_config_diagnostic,
 )
-from integrations.vm.runtime_discovery import parse_systemd_runtime, dotnet_json_syntax_command
+from integrations.vm.runtime_discovery import parse_systemd_runtime
+from integrations.vm.dotnet_local_validator import (
+    remote_file_listing_command, remote_file_read_command,
+    safe_json_files, validate_encoded_file, MAX_FILES,
+)
 from integrations.vm.nginx_config_review import nginx_review_command
 
 _SAFE_HOST = re.compile(r"^[A-Za-z0-9._:-]+$")
@@ -758,58 +762,64 @@ class SSHVMConnector:
         return {"success": True, "target": target, **parsed}
 
     async def dotnet_config_syntax(self, target: str, service: str) -> Dict[str, Any]:
-        """Check discovered .NET JSON syntax only; no file contents reach AIOps."""
+        """Remote Linux coreutils read; *local AIOps Python* JSON syntax check.
+
+        No python, SDK or additional binaries are installed on the VM. Config
+        bytes traverse authenticated SSH only to this trusted AIOps VM connector.
+        They NEVER enter returned tool results, logs, DB, HTTP API or LLM prompt.
+        """
         discovery = await self.service_runtime_discovery(target, service)
         base = {
             "target": target, "service": service, "runtime": discovery.get("runtime"),
             "publish_directory": discovery.get("publish_directory"),
             "environment_values_read": False, "config_contents_exposed": False,
-            "validator": "python3-json-syntax-only",
-        }
-        if not discovery.get("success") or discovery.get("runtime") != "dotnet":
-            return {
-                **base, "success": True, "supported": False,
-                "syntax_valid": None, "status": "runtime_not_verified",
-            }
-        command = dotnet_json_syntax_command(discovery["publish_directory"])
-        result = await self._run(target, command)
-        if not result.get("success"):
-            return {
-                **base, "success": False, "supported": False,
-                "syntax_valid": None, "status": "json_validator_unavailable",
-            }
-        try:
-            parsed = json.loads(str(result.get("stdout") or "")[:8000])
-        except (TypeError, ValueError, json.JSONDecodeError):
-            parsed = {}
-        if not isinstance(parsed, dict) or parsed.get("status") not in {
-            "syntax_valid", "invalid", "partial", "not_found", "unavailable",
-        }:
-            return {
-                **base, "success": False, "supported": False,
-                "syntax_valid": None, "status": "json_validator_malformed_response",
-            }
-        rows = []
-        for row in list(parsed.get("files") or [])[:12]:
-            if not isinstance(row, dict):
-                continue
-            rows.append({
-                "file": str(row.get("file") or "")[:125],
-                "status": str(row.get("status") or "unavailable")[:35],
-                "line": row.get("line") if type(row.get("line")) is int else None,
-                "column": row.get("column") if type(row.get("column")) is int else None,
-                "reason": str(row.get("reason") or "")[:45],
-            })
-        status = parsed["status"]
-        return {
-            **base, "success": True,
-            "supported": status in {"syntax_valid", "invalid", "partial"},
-            "syntax_valid": False if status == "invalid" else (
-                True if status == "syntax_valid" else None
-            ),
-            "status": status, "files": rows,
+            "validator": "aiops-local-python-json-syntax-only",
+            "remote_python_required": False,
+            "config_values_persisted": False,
             "validated_scope": "json_syntax_only",
             "application_ready": None, "configuration_semantics_valid": None,
+        }
+        if not discovery.get("success") or discovery.get("runtime") != "dotnet":
+            return {**base, "success": True, "supported": False,
+                    "syntax_valid": None, "status": "runtime_not_verified"}
+        directory = discovery["publish_directory"]
+        try:
+            listing = await self._run(target, remote_file_listing_command(directory))
+        except (ValueError, TypeError):
+            return {**base, "success": False, "supported": False,
+                    "syntax_valid": None, "status": "unsafe_publish_directory"}
+        if not listing.get("success"):
+            return {**base, "success": False, "supported": False,
+                    "syntax_valid": None, "status": "config_inventory_unavailable"}
+        names, incomplete = safe_json_files(str(listing.get("stdout") or "")[:120000])
+        if not names:
+            return {**base, "success": True, "supported": False,
+                    "syntax_valid": None, "status": "partial" if incomplete else "not_found",
+                    "files": []}
+        rows = []
+        for name in names[:MAX_FILES]:
+            try:
+                fetched = await self._run(target, remote_file_read_command(directory, name))
+            except ValueError:
+                fetched = {"success": False}
+            if not fetched.get("success"):
+                rows.append({"file": name, "status": "unavailable",
+                             "reason": "file_not_readable_or_oversized"})
+                incomplete = True
+                continue
+            # IMPORTANT: 'stdout' is encoded config containing secrets.
+            # Do NOT log, redact into a persisted artifact, or return it.
+            # A bounded decoder parses entirely on the AIOps worker.
+            row = validate_encoded_file(name, str(fetched.get("stdout") or ""))
+            rows.append(row)
+            if row["status"] == "unavailable":
+                incomplete = True
+        failures = any(item.get("status") == "invalid_json_syntax" for item in rows)
+        final_status = "invalid" if failures else "partial" if incomplete else "syntax_valid"
+        return {
+            **base, "success": True, "supported": True,
+            "syntax_valid": False if failures else None if incomplete else True,
+            "status": final_status, "files": rows,
         }
 
     async def nginx_config_review(self, target: str, service: str) -> Dict[str, Any]:
