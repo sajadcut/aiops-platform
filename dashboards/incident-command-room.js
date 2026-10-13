@@ -629,6 +629,7 @@
       const directFindings=arr(a.findings).filter(x=>typeof x==='string'&&x.trim());
       const hypotheses=arr(a.hypotheses).filter(x=>x&&x.text);
       const advice=arr(a.recommended_checks).filter(x=>typeof x==='string'&&x.trim());
+      const recommendations=arr(a.recommendations).filter(x=>typeof x==='string'&&x.trim());
       const missingEvidence=arr(a.missing_evidence);
       const linked=arr(a.evidence_refs).filter(x=>typeof x==='string'&&x);
       const focusPattern=agentEvidenceFocus[agent];
@@ -657,6 +658,9 @@
           agentLine(h.text)+(arr(h.falsification_checks).length?
           '<p>'+esc(fa?'روش رد یا تأیید فرضیه (پیشنهادی):':'Suggested falsification checks:')+' '+
           arr(h.falsification_checks).slice(0,3).map(x=>txt(agentMissingFa(x))).join('، ')+'</p>':'')+'</li>').join('')+'</ol>',hypotheses.length):'';
+      const proposed=recommendations.length?agentDetail(
+        fa?'توصیه‌های این Agent؛ به‌معنی مجوز اجرا نیست':'Specialist recommendations (not authorized)',
+        agentBullets(recommendations,x=>agentLine(x),6),recommendations.length):'';
       const pending=missingEvidence.length?agentDetail(fa?'اطلاعات موردنیاز برای قطعیت بیشتر':'Missing evidence',
         agentBullets(missingEvidence,x=>'<span>'+esc(agentMissingFa(x))+'</span>',10),missingEvidence.length):'';
       const nextChecks=advice.length?agentDetail(fa?'بررسی‌های پیشنهادی؛ اجرای آنها تأیید نشده':'Suggested checks (not executed)',
@@ -671,7 +675,8 @@
         '</h3><p>'+esc(fa?scope[0]:a.agent)+'</p></div></div>'+
         '<div class="ic-agent-status">'+pill(a.status)+'</div></header>'+
         '<div class="ic-agent-mission"><b>'+esc(fa?'حوزهٔ مسئولیت:':'Responsibility:')+'</b> '+
-        esc(fa?scope[1]:(a.mission||'Specialist scope; no additional mission description recorded'))+'</div>'+
+        esc(fa?scope[1]:(a.mission||'Specialist scope; no additional mission description recorded'))+
+        (a.analysis_at?' · '+esc(fa?'زمان ثبت تحلیل:':'Analysis recorded:')+' '+txt(date(a.analysis_at)):'')+'</div>'+
         metric+
         '<div class="ic-agent-subsection"><h4>'+esc(fa?'یافته‌ها و نتیجهٔ ثبت‌شده':'Recorded findings and outcome')+'</h4>'+summary+'</div>'+
         '<div class="ic-agent-subsection"><h4>'+esc(fa?'شواهدی که در تحلیل به آنها ارجاع شده':'Evidence referenced in the analysis')+'</h4>'+
@@ -683,7 +688,7 @@
           esc(fa?'دلیل عدم قطعیت:':'Uncertainty:')+'</b> '+txt(agentMissingFa(a.uncertainty_reason))+'</p>':'')+
         (a.requires_human_review?'<p class="ic-agent-review">'+esc(fa?
           'این متخصص بررسی انسانی را لازم دانسته است.':'Human review required by this specialist.')+'</p>':'')+
-        candidates+pending+nextChecks+
+        candidates+pending+nextChecks+proposed+
         agentDetail(fa?'متن اصلی و شناسه‌های قابل ممیزی':'Original details and references',
           originalReport||empty(fa?'اطلاعات فنی بیشتری ثبت نشده است.':'No further details recorded'))+
         '</article>';
