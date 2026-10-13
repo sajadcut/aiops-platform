@@ -1213,7 +1213,10 @@
       else {state.error=e.message;alert(tr('failure')+' · '+e.message);if(!state.report)$('#ic-main').hidden=true;}
     }
   }
-  function returnLive(){state.historic=null;state.reviewedSnapshot=null;render();}
+  function returnLive(){
+    state.historic=null;state.reviewedSnapshot=null;render();
+    void connectProgressStream();
+  }
   async function loadHistory() {
     show('#ic-snapshots','<p>'+tr('loadingHistory')+'</p>');
     try{
@@ -1228,6 +1231,7 @@
     if(!UUID.test(snapshotId))return;
     try{
       const previous=await api(base+'/decision-brief/history/'+encodeURIComponent(snapshotId));
+      state.progressAbort?.abort();clearTimeout(progressRetryTimer);
       state.historic=previous;state.reviewedSnapshot=null;render();
       window.scrollTo({top:0,behavior:'smooth'});
     }catch(e){notify(tr('loadHistoryError')+' · '+e.message,true);}
@@ -1341,6 +1345,7 @@
       if(e.key==='aiops.chatbot.theme'&&(e.newValue==='light'||e.newValue==='dark'))document.documentElement.dataset.theme=e.newValue;
     });
     window.addEventListener('pageshow',e=>{if(e.persisted)void load();});
+    window.addEventListener('pagehide',()=>{state.progressAbort?.abort();clearTimeout(progressRetryTimer);});
     document.addEventListener('visibilitychange',()=>{
       if(document.hidden){
         state.progressAbort?.abort();
