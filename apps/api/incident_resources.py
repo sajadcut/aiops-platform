@@ -367,6 +367,60 @@ async def get_incident_audit(incident_id: UUID):
     return {"incident_id": str(incident_id), "items": items}
 
 
+
+@router.get("/incidents/{incident_id}/analysis-status")
+async def get_incident_analysis_status(incident_id: UUID):
+    """Small, read-only polling contract; never starts or resumes a workflow.
+
+    Deliberately omits large audit/history/evidence records so multiple operator
+    tabs can observe a long-running analysis without invoking the LLM or MCP.
+    """
+    async with AsyncSessionLocal() as db:
+        row = (await db.execute(text("""
+            SELECT i.status::text AS incident_status,
+                   (SELECT wc.status::text FROM workflow_checkpoints wc
+                    WHERE wc.incident_id=i.id) AS checkpoint_status,
+                   (SELECT wc.version FROM workflow_checkpoints wc
+                    WHERE wc.incident_id=i.id) AS checkpoint_version,
+                   (SELECT wc.state->>'current_node' FROM workflow_checkpoints wc
+                    WHERE wc.incident_id=i.id) AS current_node,
+                   (SELECT a.status::text FROM approvals a
+                    WHERE a.incident_id=i.id ORDER BY a.created_at DESC LIMIT 1) AS approval_status,
+                   (SELECT a.approval_id FROM approvals a
+                    WHERE a.incident_id=i.id ORDER BY a.created_at DESC LIMIT 1) AS approval_id
+            FROM incidents i WHERE i.id=:id
+        """), {"id": str(incident_id)})).mappings().first()
+    if row is None:
+        raise HTTPException(status_code=404, detail="Incident not found")
+    status = str(row["incident_status"] or "").lower()
+    checkpoint = str(row["checkpoint_status"] or "").lower()
+    approval = str(row["approval_status"] or "").lower()
+    running = status == "analyzing" and (
+        approval == "consumed" or (
+            approval not in {"pending", "approved", "rejected"}
+            and checkpoint not in {"paused", "completed", "failed"}
+        )
+    )
+    return {
+        "incident_id": str(incident_id),
+        "incident_status": status,
+        "analysis_in_progress": running,
+        "analysis_phase": (
+            "executing" if running and approval == "consumed"
+            else "analyzing" if running
+            else "awaiting_approval" if approval in {"pending", "approved"}
+            else "completed"
+        ),
+        "checkpoint_status": row["checkpoint_status"],
+        "checkpoint_version": row["checkpoint_version"],
+        "current_node": row["current_node"],
+        "approval": {
+            "approval_id": str(row["approval_id"]) if row["approval_id"] else None,
+            "status": approval or None,
+        },
+    }
+
+
 @router.get("/incidents/{incident_id}/lifecycle")
 async def get_incident_lifecycle(incident_id: UUID):
     """Return durable governance plus structured agent routing/collaboration state."""
