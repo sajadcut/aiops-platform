@@ -12,7 +12,9 @@ from agents.shared.telemetry import AgentTelemetry
 from apps.context_service.asset_identity import AssetIdentityResolver
 from apps.context_service.knowledge_topology import KnowledgeTopologyResolver
 from apps.context_service.service_identity import ServiceIdentityResolver
-from apps.context_service.llm_identity import suggest_from_llm
+from apps.context_service.llm_identity import (
+    consult_operational_unknowns, detect_operational_unknowns, suggest_from_llm,
+)
 from apps.decision_engine import DecisionEngine
 from apps.execution_service.tools.registry import tool_registry
 from apps.orchestrator.e2e_graph import E2EOrchestrator, E2EState
@@ -294,6 +296,28 @@ class SignalAwareE2EOrchestrator(E2EOrchestrator):
         state["analysis_results"] = findings
         state["findings"] = [state.get("triage_result", {})] + findings
         state["coordination"] = coordination
+
+        # Global unknowns rule: ask LLM for bounded, advisory diagnostic guidance
+        # when concrete gaps are found. The advice is NOT Live Evidence, cannot
+        # validate configuration, and cannot create an execution request.
+        context = state.setdefault("context", {})
+        unknowns = detect_operational_unknowns(
+            context.get("evidence") or [], findings,
+        )
+        if unknowns:
+            guidance = await consult_operational_unknowns(
+                unknowns=unknowns, adapter=self.llm,
+            )
+            context["unknown_guidance"] = guidance
+            self._audit(
+                "operational_unknown_guidance_consulted",
+                state,
+                status=guidance["status"],
+                topics=[gap["topic"] for gap in unknowns],
+                suggestion_count=len(guidance.get("items") or []),
+                execution_authority=False,
+            )
+
         state["routing"] = {
             **routing,
             "selected": selected,
