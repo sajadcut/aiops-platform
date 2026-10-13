@@ -130,7 +130,7 @@ async def test_dynamic_investigator_proposal_preserves_nonisolated_status_withou
              "current_excerpt":[{"line":103,"content":"[structural] {"}],
              "proposed_excerpt":[{"line":103,"content":"[blank or comment]"}],
              "diff":{"line":103,"before":"[structural] {","after":"[remove entire stray brace line]"}}
-    }}
+    }
     state={"service_name":"nginx","coordination":{"missing_evidence":[]},
            "knowledge_results":[],"context":{"evidence":[error,review]}}
     proposal=await DynamicInvestigationPlanner.propose(state, adapter=Model())
