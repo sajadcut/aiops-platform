@@ -12,7 +12,10 @@ import asyncssh
 from domain.contracts.config import settings
 from domain.contracts.logging import logger
 from domain.contracts.redaction import redact_text
-from integrations.vm.service_adapters import get_service_adapter
+from integrations.vm.service_adapters import (
+    get_service_adapter, discover_config_path, config_check_for_path,
+    parse_config_diagnostic,
+)
 
 _SAFE_HOST = re.compile(r"^[A-Za-z0-9._:-]+$")
 _SAFE_SERVICE = re.compile(r"^[A-Za-z0-9@_.:-]+$")
@@ -581,41 +584,88 @@ class SSHVMConnector:
         return {"success": True, "target": target, "supported": provider != "unavailable", "provider": provider, "rules": lines}
 
     async def config_validate(self, target: str, service: str) -> Dict[str, Any]:
+        """Locate the running unit's config, run a fixed read-only syntax check.
+
+        The LLM cannot supply paths or commands. Syntax errors are extracted
+        from the validator's own output, not inferred from model prose.
+        """
         self._validate_service(service)
         adapter = get_service_adapter(service)
         if adapter is None or not adapter.config_check_command:
-            return {"success": True, "supported": False, "target": target, "service": service, "valid": None, "detail": "config_validation_adapter_unavailable"}
-        result = await self._run(target, adapter.config_check_command)
+            return {
+                "success": True, "supported": False, "target": target,
+                "service": service, "valid": None,
+                "detail": "config_validation_adapter_unavailable",
+            }
+        # systemctl show reads the concrete unit definition, including
+        # ExecStart overrides. Never eval/execute systemd's ExecStart text.
+        meta = await self._run(
+            target, f"systemctl show --no-pager --property=ExecStart --value {service}"
+        )
+        discovered = discover_config_path(service, meta.get("stdout") or "") if meta.get("success") else None
+        path_source = "systemd_execstart" if discovered else "not_verified"
+        if adapter.canonical_name == "haproxy" and not discovered:
+            # HAProxy may use -f /opt/... or a config directory. Testing the
+            # default path could give a false "valid" for a different config.
+            return {
+                "success": True, "supported": False, "target": target,
+                "service": service, "valid": None, "config_file": None,
+                "config_path_source": path_source,
+                "detail": "running_config_path_unverified",
+            }
+        check_command = config_check_for_path(service, discovered)
+        result = await self._run(target, check_command)
         diagnostic = (str(result.get("stderr") or "") + " " + str(result.get("stdout") or "")).lower()
         if not result.get("success") and any(
             marker in diagnostic
             for marker in ("permission denied", "access denied", "operation not permitted")
         ):
-            # The adapter is a fixed internal command, not arbitrary caller input.
-            result = await self._sudo(target, "sh -c " + shlex.quote(adapter.config_check_command))
+            # Only the fixed adapter command with a strictly validated path
+            # may use the governed password-sudo fallback.
+            result = await self._sudo(target, "sh -c " + shlex.quote(check_command))
         if result.get("exit_code") == 127:
-            return {"success": True, "supported": False, "target": target, "service": service, "valid": None, "detail": "config_validation_binary_unavailable"}
-        detail = "\n".join(part for part in (str(result.get("stdout") or "").strip(), str(result.get("stderr") or "").strip()) if part)
-        if not result.get("success") and result.get("exit_code") in {1, 2} and any(
-            marker in detail.lower()
-            for marker in ("nginx:", "haproxy:", "syntax error", "configuration file", "httpd:")
+            return {
+                "success": True, "supported": False, "target": target,
+                "service": service, "valid": None,
+                "config_file": discovered, "config_path_source": path_source,
+                "detail": "config_validation_binary_unavailable",
+            }
+        detail = redact_text("\n".join(
+            part for part in (
+                str(result.get("stdout") or "").strip(),
+                str(result.get("stderr") or "").strip(),
+            ) if part
+        ))[:4000]
+        parsed = parse_config_diagnostic(detail)
+        config_file = parsed["config_file"] or discovered
+        # A validator may point to an included file instead of the root config:
+        # keep BOTH the systemd-selected file and the file with the error.
+        common = {
+            "target": target, "service": service,
+            "adapter": adapter.canonical_name,
+            "config_file": config_file,
+            "root_config_file": discovered,
+            "config_path_source": (
+                "validator_output" if parsed["config_file"] else path_source
+            ),
+            "error_line": parsed["error_line"],
+            "syntax_error": parsed["syntax_error"],
+            "exit_code": result.get("exit_code"),
+            "detail": detail,
+        }
+        if not result.get("success") and result.get("exit_code") in {1, 2} and (
+            parsed["syntax_error"]
+            or any(marker in detail.lower() for marker in (
+                "nginx:", "haproxy:", "syntax error", "configuration file", "httpd:",
+            ))
         ):
-            return {"success": True, "supported": True, "target": target, "service": service,
-                    "adapter": adapter.canonical_name, "valid": False,
-                    "exit_code": result.get("exit_code"), "detail": detail[:4000]}
+            return {**common, "success": True, "supported": True, "valid": False}
         if not result.get("success"):
             return {
-                "success": False,
-                "supported": True,
-                "target": target,
-                "service": service,
-                "adapter": adapter.canonical_name,
-                "valid": None,
-                "exit_code": result.get("exit_code"),
+                **common, "success": False, "supported": True, "valid": None,
                 "error": "config_validation_transport_failed",
-                "detail": detail[:4000],
             }
-        return {"success": True, "supported": True, "target": target, "service": service, "adapter": adapter.canonical_name, "valid": True, "exit_code": result.get("exit_code"), "detail": detail[:4000]}
+        return {**common, "success": True, "supported": True, "valid": True}
 
     async def start_service(self, target: str, service: str) -> Dict[str, Any]:
         self._validate_service(service)
