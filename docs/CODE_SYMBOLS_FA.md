@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 447 | Dashboard JS files scanned: 8 | Symbols indexed: 4241**
+**Python files scanned: 448 | Dashboard JS files scanned: 8 | Symbols indexed: 4252**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -3284,6 +3284,17 @@
 | `tests/unit/test_identity_reliability_engine.py` | `CapturingIdentityLLM.generate` | 194 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CapturingIdentityLLM |
 | `tests/unit/test_identity_reliability_engine.py` | `CapturingIdentityLLM.generate_with_messages` | 219 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CapturingIdentityLLM |
 | `tests/unit/test_identity_reliability_engine.py` | `test_identity_agent_exposes_chain_and_never_prompts_full_credentials` | 224 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_analysis_live_status.py` | `FakeResult` | 10 | class | کلاس | module |
+| `tests/unit/test_incident_analysis_live_status.py` | `FakeResult.__init__` | 11 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeResult |
+| `tests/unit/test_incident_analysis_live_status.py` | `FakeResult.mappings` | 12 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeResult |
+| `tests/unit/test_incident_analysis_live_status.py` | `FakeResult.first` | 13 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeResult |
+| `tests/unit/test_incident_analysis_live_status.py` | `FakeSession` | 15 | class | کلاس | module |
+| `tests/unit/test_incident_analysis_live_status.py` | `FakeSession.__init__` | 16 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeSession |
+| `tests/unit/test_incident_analysis_live_status.py` | `FakeSession.__aenter__` | 17 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeSession |
+| `tests/unit/test_incident_analysis_live_status.py` | `FakeSession.__aexit__` | 18 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeSession |
+| `tests/unit/test_incident_analysis_live_status.py` | `FakeSession.execute` | 19 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | FakeSession |
+| `tests/unit/test_incident_analysis_live_status.py` | `test_live_analysis_status_distinguishes_running_from_approval` | 41 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_analysis_live_status.py` | `test_live_progress_polling_preserves_governed_approval_controls` | 59 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_incident_command_room.py` | `test_dedicated_page_is_a_real_deep_link_not_a_compressed_dashboard_side_panel` | 16 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_incident_command_room.py` | `test_dashboard_incident_queue_routes_attention_to_full_screen` | 33 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_incident_command_room.py` | `test_command_room_has_readable_mobile_layout_and_two_stage_actions` | 52 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
