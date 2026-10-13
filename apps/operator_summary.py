@@ -3,6 +3,8 @@ from __future__ import annotations
 import re
 from typing import Any, Dict, Iterable, List, Optional
 
+from integrations.vm.service_adapters import enrich_legacy_config_diagnostic
+
 CONFIDENCE_FA = {"confirmed": "تأیید شده", "probable": "محتمل", "unknown": "نامشخص"}
 AUTOMATION = re.compile(r"\b(aiops|execution_service|e2e_orchestrator|mcp|automation|bot)\b", re.I)
 HUMAN = re.compile(r"\bsudo:\s*[^:]+:.*\bcommand=|\bauid=\d+\b|\b(actor|user|username|initiated_by|requested_by)\s*[=:]\s*[\w.@-]+", re.I)
@@ -144,6 +146,9 @@ def _human_action(rows: List[Dict[str, Any]]) -> Dict[str, Any]:
 def _observed(incident: Dict[str, Any], state: Dict[str, Any], rows: List[Dict[str, Any]]) -> Dict[str, Any]:
     items = {name: _diag(rows, name) for name in ("service_status", "process_status", "port_listener_status", "tcp_check", "config_validate")}
     raw = {name: _d((item or {}).get("raw_data")) for name, item in items.items()}
+    config_item = items.get("config_validate") or {}
+    if _low(config_item.get("source")) == "vm_mcp":
+        raw["config_validate"] = enrich_legacy_config_diagnostic(raw["config_validate"])
     request, live, state_context = _d(state.get("execution_request")), _d(state.get("live_evidence")), _d(state.get("context"))
     incident_context = _d(incident.get("context"))
     context_target = _context_value(incident_context, ("vm_target", "target_ip", "ip_address", "ip", "hostname", "host", "target", "address"))
