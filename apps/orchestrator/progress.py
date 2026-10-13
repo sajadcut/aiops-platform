@@ -102,7 +102,14 @@ def summarize_progress(events: list[Mapping[str, Any]], *, incident_status: str 
     elif terminal:
         current = None
     # A paused, fully reviewed approval is a finished analysis (not a stalled 90% bar).
-    if approval_waiting:
+    # Never turn pending Approval into a fabricated 100% when earlier nodes
+    # are missing/failed. A normally completed analysis has six actual stages.
+    if approval_waiting and analysis_done == len(ANALYSIS_STAGES):
+        analysis_percent = 100
+    elif checkpoint_status == "completed" and phases.get("end", {}).get("status") == "completed":
+        # An evaluator can stop the graph before Decision, legitimately
+        # skipping that branch. The completed attempt is terminal, not 83%
+        # mysteriously stuck; count only stages that ran on that path.
         analysis_percent = 100
     else:
         analysis_percent = round(100 * analysis_done / len(ANALYSIS_STAGES))
@@ -112,7 +119,10 @@ def summarize_progress(events: list[Mapping[str, Any]], *, incident_status: str 
         "checkpoint_status": checkpoint_status,
         "approval_status": approval_status,
         "analysis_percent": analysis_percent,
-        "analysis_completed": analysis_done, "analysis_total": len(ANALYSIS_STAGES),
+        "analysis_completed": analysis_done,
+        "analysis_total": (analysis_done if checkpoint_status == "completed" and
+                           phases.get("end", {}).get("status") == "completed"
+                           else len(ANALYSIS_STAGES)),
         "execution_percent": round(100 * execution_done / len(EXECUTION_STAGES)),
         "execution_completed": execution_done, "execution_total": len(EXECUTION_STAGES),
         "current_stage": current,
