@@ -1,5 +1,11 @@
 from __future__ import annotations
 
+import asyncio
+import json
+
+from fastapi import Request
+from fastapi.responses import StreamingResponse
+
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
@@ -366,6 +372,57 @@ async def get_incident_audit(incident_id: UUID):
         items = await PostgreSQLAuditStore(db).list(str(incident_id), 200)
     return {"incident_id": str(incident_id), "items": items}
 
+
+
+@router.get("/incidents/{incident_id}/progress")
+async def get_incident_progress(incident_id: UUID):
+    """Read-only actual workflow steps; never advances or creates an Incident."""
+    from apps.orchestrator.progress import load_progress
+    result = await load_progress(str(incident_id))
+    if not result:
+        raise HTTPException(status_code=404, detail="Incident not found")
+    return result
+
+
+@router.get("/incidents/{incident_id}/progress/stream")
+async def stream_incident_progress(incident_id: UUID, request: Request):
+    """Authenticated SSE with initial state + changes; no browser page reload.
+
+    Fetch streaming, not native EventSource, is used on the frontend because the
+    existing API key is sent via X-API-Key header. Each refresh uses a fresh DB
+    session and supports workers on separate instances.
+    """
+    from apps.orchestrator.progress import load_progress
+    first = await load_progress(str(incident_id))
+    if not first:
+        raise HTTPException(status_code=404, detail="Incident not found")
+
+    async def generate():
+        last = None
+        tick = 0
+        snapshot = first
+        while not await request.is_disconnected():
+            serialized = json.dumps(snapshot, ensure_ascii=False, separators=(",", ":"))
+            if serialized != last:
+                yield "event: progress\ndata: " + serialized + "\n\n"
+                last = serialized
+                tick = 0
+            elif tick >= 8:
+                yield ": keepalive\n\n"
+                tick = 0
+            await asyncio.sleep(2)
+            tick += 1
+            try:
+                snapshot = await load_progress(str(incident_id))
+            except Exception:
+                # Recover on the next iteration without lying about progress.
+                yield "event: unavailable\ndata: {}\n\n"
+                await asyncio.sleep(2)
+
+    return StreamingResponse(
+        generate(), media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache, no-transform", "X-Accel-Buffering": "no"},
+    )
 
 
 @router.get("/incidents/{incident_id}/analysis-status")
