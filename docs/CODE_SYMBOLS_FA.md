@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 444 | Dashboard JS files scanned: 8 | Symbols indexed: 4146**
+**Python files scanned: 447 | Dashboard JS files scanned: 8 | Symbols indexed: 4190**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -2024,16 +2024,17 @@
 | `integrations/mcp_client.py` | `MCPClient._headers` | 87 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MCPClient |
 | `integrations/mcp_client.py` | `MCPClient._decode_response` | 99 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MCPClient |
 | `integrations/mcp_client.py` | `MCPClient._bounded_for_log` | 124 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MCPClient |
-| `integrations/mcp_client.py` | `MCPClient._incident_id_from_payload` | 135 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MCPClient |
-| `integrations/mcp_client.py` | `MCPClient._post` | 150 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MCPClient |
-| `integrations/mcp_client.py` | `MCPClient.initialize` | 352 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MCPClient |
-| `integrations/mcp_client.py` | `MCPClient._request` | 379 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MCPClient |
-| `integrations/mcp_client.py` | `MCPClient.call_tool` | 409 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MCPClient |
-| `integrations/mcp_client.py` | `MCPClient._call_tool` | 414 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MCPClient |
-| `integrations/mcp_client.py` | `MCPClient.list_tools` | 417 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | MCPClient |
-| `integrations/mcp_client.py` | `MCPClient.json_content` | 423 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MCPClient |
-| `integrations/mcp_client.py` | `MCPClient.health_check` | 450 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MCPClient |
-| `integrations/mcp_client.py` | `MCPClient.close` | 457 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MCPClient |
+| `integrations/mcp_client.py` | `MCPClient._safe_mcp_log` | 134 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MCPClient |
+| `integrations/mcp_client.py` | `MCPClient._incident_id_from_payload` | 147 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MCPClient |
+| `integrations/mcp_client.py` | `MCPClient._post` | 162 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MCPClient |
+| `integrations/mcp_client.py` | `MCPClient.initialize` | 364 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MCPClient |
+| `integrations/mcp_client.py` | `MCPClient._request` | 391 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MCPClient |
+| `integrations/mcp_client.py` | `MCPClient.call_tool` | 421 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MCPClient |
+| `integrations/mcp_client.py` | `MCPClient._call_tool` | 426 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MCPClient |
+| `integrations/mcp_client.py` | `MCPClient.list_tools` | 429 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | MCPClient |
+| `integrations/mcp_client.py` | `MCPClient.json_content` | 435 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MCPClient |
+| `integrations/mcp_client.py` | `MCPClient.health_check` | 462 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MCPClient |
+| `integrations/mcp_client.py` | `MCPClient.close` | 469 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MCPClient |
 | `integrations/prometheus/client.py` | `PrometheusClient` | 10 | class | Prometheus client preserving labels needed for deterministic asset identity. | module |
 | `integrations/prometheus/client.py` | `PrometheusClient.__init__` | 20 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | PrometheusClient |
 | `integrations/prometheus/client.py` | `PrometheusClient.source_name` | 25 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | PrometheusClient |
@@ -2165,6 +2166,20 @@
 | `scripts/check_database_migrations.py` | `inspect_migrations` | 14 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `scripts/check_database_migrations.py` | `migration_preflight_result` | 19 | function | Return 0 for matching heads, 3 for schema drift; print no credentials. | module |
 | `scripts/check_database_migrations.py` | `main` | 40 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `scripts/check_elastic_integration.py` | `_field` | 45 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `scripts/check_elastic_integration.py` | `_timestamp` | 53 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `scripts/check_elastic_integration.py` | `_rows` | 63 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `scripts/check_elastic_integration.py` | `_error` | 70 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `scripts/check_elastic_integration.py` | `Report` | 83 | class | کلاس | module |
+| `scripts/check_elastic_integration.py` | `Report.__init__` | 84 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | Report |
+| `scripts/check_elastic_integration.py` | `Report.pass_` | 88 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | Report |
+| `scripts/check_elastic_integration.py` | `Report.fail` | 91 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | Report |
+| `scripts/check_elastic_integration.py` | `Report.not_tested` | 95 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | Report |
+| `scripts/check_elastic_integration.py` | `Report.summary` | 99 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | Report |
+| `scripts/check_elastic_integration.py` | `check_anomaly_contract` | 111 | function | Dry-run active/recovered webhook payloads without a database write. | module |
+| `scripts/check_elastic_integration.py` | `check_api_route` | 149 | async function | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | module |
+| `scripts/check_elastic_integration.py` | `run_checks` | 174 | async function | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | module |
+| `scripts/check_elastic_integration.py` | `main` | 323 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `scripts/check_elastic_mcp.py` | `_http_status` | 23 | function | Recover the original HTTP status wrapped by MCPClient._post. | module |
 | `scripts/check_elastic_mcp.py` | `_safe_endpoint` | 35 | function | Display the MCP target without URL userinfo or arbitrary query secrets. | module |
 | `scripts/check_elastic_mcp.py` | `_failure` | 47 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
@@ -2861,6 +2876,32 @@
 | `tests/unit/test_chatbot_tools.py` | `test_tool_arguments_reject_command_injection_shapes` | 93 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_chatbot_tools.py` | `test_prompt_injection_text_cannot_create_capability` | 100 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_chatbot_user_message_copy.py` | `test_operator_messages_expose_copy_action_without_changing_message_text` | 4 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_check_elastic_integration.py` | `FakeClient` | 19 | class | کلاس | module |
+| `tests/unit/test_check_elastic_integration.py` | `FakeClient.__init__` | 24 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeClient |
+| `tests/unit/test_check_elastic_integration.py` | `FakeClient._headers` | 34 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeClient |
+| `tests/unit/test_check_elastic_integration.py` | `FakeClient.initialize` | 37 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeClient |
+| `tests/unit/test_check_elastic_integration.py` | `FakeClient.list_tools` | 41 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | FakeClient |
+| `tests/unit/test_check_elastic_integration.py` | `FakeClient.call_tool` | 44 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeClient |
+| `tests/unit/test_check_elastic_integration.py` | `FakeClient._esql_string` | 51 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeClient |
+| `tests/unit/test_check_elastic_integration.py` | `FakeClient.json_content` | 55 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeClient |
+| `tests/unit/test_check_elastic_integration.py` | `FakeClient._rows_from_payload` | 60 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeClient |
+| `tests/unit/test_check_elastic_integration.py` | `FakeClient.get_logs` | 69 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | FakeClient |
+| `tests/unit/test_check_elastic_integration.py` | `FakeClient.close` | 72 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeClient |
+| `tests/unit/test_check_elastic_integration.py` | `test_anomaly_active_recovery_contract_is_read_only` | 76 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_check_elastic_integration.py` | `test_parses_real_kibana_tabular_mcp_shape_without_printing_log` | 83 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_check_elastic_integration.py` | `test_log_entry_adapter_validates_message_service_and_time` | 99 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_check_elastic_integration.py` | `test_401_handshake_is_not_misreported_as_success` | 117 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_check_elastic_integration.py` | `test_no_credentials_skips_network` | 129 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_check_elastic_integration.py` | `test_timestamp_parser_requires_real_dates` | 138 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_check_elastic_integration.py` | `test_webhook_route_check_is_explicitly_not_tested_without_api_url` | 143 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_check_elastic_integration.py` | `test_webhook_route_openapi_read_only` | 150 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_check_elastic_integration.py` | `test_webhook_route_openapi_read_only.FakeResponse` | 151 | class | کلاس | test_webhook_route_openapi_read_only |
+| `tests/unit/test_check_elastic_integration.py` | `test_webhook_route_openapi_read_only.FakeResponse.raise_for_status` | 152 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_webhook_route_openapi_read_only.FakeResponse |
+| `tests/unit/test_check_elastic_integration.py` | `test_webhook_route_openapi_read_only.FakeResponse.json` | 154 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_webhook_route_openapi_read_only.FakeResponse |
+| `tests/unit/test_check_elastic_integration.py` | `test_webhook_route_openapi_read_only.FakeSession` | 158 | class | کلاس | test_webhook_route_openapi_read_only |
+| `tests/unit/test_check_elastic_integration.py` | `test_webhook_route_openapi_read_only.FakeSession.__aenter__` | 159 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_webhook_route_openapi_read_only.FakeSession |
+| `tests/unit/test_check_elastic_integration.py` | `test_webhook_route_openapi_read_only.FakeSession.__aexit__` | 161 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_webhook_route_openapi_read_only.FakeSession |
+| `tests/unit/test_check_elastic_integration.py` | `test_webhook_route_openapi_read_only.FakeSession.get` | 163 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_webhook_route_openapi_read_only.FakeSession |
 | `tests/unit/test_check_elastic_mcp.py` | `FakeElasticClient` | 12 | class | کلاس | module |
 | `tests/unit/test_check_elastic_mcp.py` | `FakeElasticClient.__init__` | 16 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeElasticClient |
 | `tests/unit/test_check_elastic_mcp.py` | `FakeElasticClient._headers` | 23 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeElasticClient |
@@ -3133,6 +3174,9 @@
 | `tests/unit/test_elastic_anomaly_ingestion.py` | `test_recovery_reuses_problem_identity_and_has_stable_recovery_reference` | 76 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_elastic_anomaly_ingestion.py` | `test_json_encoded_action_variables_are_normalized` | 91 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_elastic_anomaly_ingestion.py` | `test_native_json_arrays_from_asjson_webhook_are_normalized` | 98 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_elastic_mcp_log_safety.py` | `test_esql_mcp_query_is_not_in_application_log_payload` | 6 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_elastic_mcp_log_safety.py` | `test_esql_mcp_result_and_tool_errors_are_not_in_application_log_payload` | 22 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_elastic_mcp_log_safety.py` | `test_non_elastic_mcp_logging_contract_unchanged` | 38 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_elastic_mcp_wire_tool.py` | `test_elastic_mcp_wire_tool_allowlist_and_discovery` | 12 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_elastic_mcp_wire_tool.py` | `test_elastic_mcp_wire_tool_allowlist_and_discovery.fake_request` | 16 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_elastic_mcp_wire_tool_allowlist_and_discovery |
 | `tests/unit/test_elastic_mcp_wire_tool.py` | `test_elastic_get_logs_calls_actual_esql_wire_tool` | 48 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
