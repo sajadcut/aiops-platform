@@ -440,9 +440,14 @@
     $('#ic-short-id').textContent='#'+String(incidentId).slice(0,8);
     show('#ic-hero-badges',pill(i.severity)+pill(i.status)+pill(a.approval_status));
     const authStatus=low(a.approval_status);
-    const pulseTitle=authStatus==='pending'?tr('approvalPending'):authStatus==='approved'?tr('approvalApproved'):tr('approvalFinished');
+    const analyzing=state.lifecycle?.analysis_in_progress===true;
+    const pulseTitle=analyzing
+      ? (state.language==='fa'?'در حال بررسی و تحلیل':'Investigation in progress')
+      : authStatus==='pending'?tr('approvalPending'):authStatus==='approved'?tr('approvalApproved'):tr('approvalFinished');
     show('#ic-decision-pulse','<small>'+tr('decisionDesk')+'</small><strong>'+esc(pulseTitle)+'</strong><p>'+
-      txt(authStatus==='approved'?tr('approvalSeparate'):tr('backendGate'))+'</p>');
+      txt(analyzing
+        ? (state.language==='fa'?'Agentها در حال گردآوری شواهد و بررسی رخداد هستند.':'Agents are analyzing the incident and gathering evidence.')
+        : authStatus==='approved'?tr('approvalSeparate'):tr('backendGate'))+'</p>');
     const quick=[
       ['started',date(i.started_at)],['duration',i.elapsed_seconds==null?tr('unknown'):num(Math.max(0,Math.floor(i.elapsed_seconds/60)))+' '+(state.language==='fa'?'دقیقه':'min')],
       ['risk',status(action.risk_level)],['evidence',num(i.valid_evidence_count??r.source_references?.length??0)]
