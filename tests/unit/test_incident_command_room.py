@@ -222,7 +222,7 @@ const assert = require('node:assert/strict');
   assert.match(el('#ic-sources').innerHTML,/Prometheus/);
   assert.match(el('#ic-agent-summary').innerHTML,/ایجنت‌های ثبت‌شده/);
   const configCard=el('#ic-config-diagnostic').innerHTML;
-  assert.match(configCard,/خطای واقعی در کانفیگ سرویس/);
+  assert.match(configCard,/آخرین تست ثبت‌شده، خطای کانفیگ را نشان می‌دهد/);
   assert.match(configCard,/nginx.conf/);
   assert.match(configCard,/خط ۴۲/);
   assert.match(configCard,/اصلاح/);
