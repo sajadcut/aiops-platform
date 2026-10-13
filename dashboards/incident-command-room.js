@@ -421,7 +421,16 @@
   function updateProgressClock() {
     const element=$('#ic-flow-elapsed');
     if(!element || !state.progress?.started_at || state.historic)return;
-    const seconds=Math.max(0,Math.floor((Date.now()-new Date(state.progress.started_at).getTime())/1000));
+    const p=state.progress,execution=p.approval_status==='consumed' && p.stages?.execution?.started_at;
+    const start=execution?p.stages.execution.started_at:p.started_at;
+    const finish=execution?(
+      ['completed','failed'].includes(low(p.checkpoint_status))?p.stages?.end?.at||p.last_event_at:null
+    ):['pending','approved'].includes(low(p.approval_status))?
+      p.stages?.approval?.finished_at||p.stages?.approval?.at:
+      ['completed','failed'].includes(low(p.checkpoint_status))?p.stages?.end?.at||p.last_event_at:
+      p.failed_stage?p.stages?.[p.failed_stage]?.finished_at:null;
+    const seconds=Math.max(0,Math.floor(((finish?new Date(finish).getTime():Date.now())-
+      new Date(start).getTime())/1000));
     if(Number.isFinite(seconds))element.textContent=num(Math.floor(seconds/60))+
       (state.language==='fa'?' دقیقه ':'m ')+num(seconds%60)+(state.language==='fa'?' ثانیه':'s');
   }
@@ -437,6 +446,7 @@
        !['paused','completed','failed'].includes(low(l.checkpoint_status)));
     const awaiting=['pending','approved'].includes(approval);
     const terminal=['completed','failed'].includes(low(p.checkpoint_status));
+    const crashed=Boolean(p.failed_stage&&!p.current_stage&&!awaiting&&!terminal);
     const hasEvents=Boolean(p.last_event_at);
     if(state.historic || (!running && !awaiting && !hasEvents)){box.hidden=true;return;}
     box.hidden=false;
@@ -457,14 +467,18 @@
       phaseName(activeProvider[0]):activeAgent && currentStage==='parallel_agents'?
       phaseName('agent:'+activeAgent[0]):phaseName(currentStage);
     const spinner=$('#ic-analysis-spinner');
-    if(spinner)spinner.hidden=awaiting||terminal||!running&&!(execution&&currentStage);
+    if(spinner)spinner.hidden=awaiting||terminal||crashed||!running&&!(execution&&currentStage);
     const title=$('#ic-analysis-title'),detail=$('#ic-analysis-detail');
-    if(title)title.textContent=(activeAgent&&currentStage==='parallel_agents'&&activeLabel
+    if(title)title.textContent=crashed?
+      (fa?'تحلیل با خطا در مرحلهٔ ':'Analysis failed during ')+phaseName(p.failed_stage):
+      (activeAgent&&currentStage==='parallel_agents'&&activeLabel
       ?(fa?'در حال تحلیل: ':'Analyzing: ')+activeLabel
       :activeLabel)||
       (terminal?(fa?'بررسی رخداد تکمیل شده است':'Incident analysis finished'):
         fa?'در حال دریافت وضعیت تحلیل…':'Loading analysis progress…');
-    if(detail)detail.textContent=awaiting?
+    if(detail)detail.textContent=crashed?
+      (fa?'این مرحله ناموفق بوده و ادامهٔ بررسی باید از گزارش خطا پیگیری شود.':'This step failed; check the error report.'):
+      awaiting?
       (fa?'تحلیل متوقف است؛ منتظر تصمیم انسانی':'Analysis is paused for human approval'):
       terminal?(fa?'گزارش مراحل واقعی ثبت‌شده':'Recorded workflow milestones'):
       state.progressFailure?(fa?'ارتباط زنده موقتاً قطع شده؛ تلاش برای اتصال مجدد…':'Live connection lost; reconnecting…'):
@@ -492,7 +506,8 @@
       const status=low(v.status),icon=status==='completed'?'✓':status==='failed'?'!':
         status==='skipped'?'–':'';
       const suffix=status==='completed'?(fa?' · بررسی انجام شد':' · checked'):
-        status==='failed'?(fa?' · ناموفق':' · failed'):'';
+        status==='failed'?(fa?' · ناموفق':' · failed'):
+        status==='skipped'?(fa?' · انجام نشده':' · skipped'):'';
       return '<li data-state="'+esc(status)+'"><span class="ic-flow-step-icon" aria-hidden="true">'+
         esc(icon)+'</span><span>'+esc(phaseName(key)+suffix)+'</span></li>';
     }).join(''));
