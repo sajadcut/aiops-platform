@@ -496,10 +496,12 @@ def correlate_disk_file_causality(items: Sequence[Mapping[str, Any]]) -> Dict[st
         diagnostic = str(raw.get("diagnostic") or "").lower()
         reference = _eid(item, index)
         if source == "vm_mcp" and diagnostic == "disk_forensics" and raw.get("success") is True:
-            for mount in (raw.get("mounts") or [])[:2]:
+            mount_rows = raw.get("mounts")
+            for mount in (mount_rows[:2] if isinstance(mount_rows, (list, tuple)) else []):
                 if not isinstance(mount, Mapping):
                     continue
-                for file in (mount.get("files") or [])[:25]:
+                file_rows = mount.get("files")
+                for file in (file_rows[:25] if isinstance(file_rows, (list, tuple)) else []):
                     if not isinstance(file, Mapping):
                         continue
                     path = str(file.get("path") or "")[:300]
@@ -507,7 +509,8 @@ def correlate_disk_file_causality(items: Sequence[Mapping[str, Any]]) -> Dict[st
                     if not path.startswith("/") or not isinstance(size, int):
                         continue
                     handles = []
-                    for h in (file.get("open_handles") or [])[:5]:
+                    raw_handles = file.get("open_handles")
+                    for h in (raw_handles[:5] if isinstance(raw_handles, (list, tuple)) else []):
                         if not isinstance(h, Mapping):
                             continue
                         pid = h.get("pid")
@@ -519,16 +522,19 @@ def correlate_disk_file_causality(items: Sequence[Mapping[str, Any]]) -> Dict[st
                             "writer_causality_verified": False,
                         })
                     measured = file.get("growth_measured") is True
+                    growth_bytes = None
+                    if measured:
+                        try:
+                            growth_bytes = max(0, int(file.get("growth_bytes_over_2_seconds") or 0))
+                        except (TypeError, ValueError, OverflowError):
+                            measured = False
                     inventories.append({
                         "path": path, "size_bytes": size, "mount": str(mount.get("mount") or "")[:160],
                         "mtime_epoch": file.get("mtime_epoch"),
                         "owner_service": None,
                         "growth_measured": measured,
                         "growth_confirmed": measured and file.get("growth_confirmed") is True,
-                        "growth_bytes_over_2_seconds": (
-                            max(0, int(file.get("growth_bytes_over_2_seconds") or 0))
-                            if measured else None
-                        ),
+                        "growth_bytes_over_2_seconds": growth_bytes if measured else None,
                         "open_handles": handles,
                         "causal_attribution": "unknown", "safe_to_delete": False,
                         "reason_to_delete": None, "evidence_refs": [reference],
