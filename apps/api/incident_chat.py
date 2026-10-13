@@ -15,7 +15,8 @@ from apps.api.remediation import RemediationRequest, create_remediation_request
 from apps.audit_service.postgres import PostgreSQLAuditStore
 from apps.incident_copilot import (
     READ_ACTIONS, WRITE_SUGGESTIONS, append_turn, fallback_intent, history,
-    llm_plan, vm_binding, vm_read,
+    llm_plan, vm_binding, vm_read, asks_for_recorded_errors, recorded_error_facts,
+    recorded_error_answer,
 )
 from apps.orchestrator.dynamic_investigation import DynamicInvestigationPlanner
 from apps.orchestrator.workflow_store import WorkflowCheckpointStore
@@ -55,26 +56,54 @@ async def _scope(db, incident_id: UUID) -> tuple[Incident, dict, list[dict]]:
 
 
 def _safe_brief(brief: dict) -> dict:
+    """Keep actual DecisionBrief field names; use bounded persisted facts only."""
     summary = brief.get("incident_summary") or {}
-    return {
+    agents = brief.get("agent_findings") or []
+    mcp = brief.get("mcp_evidence") or []
+    config = brief.get("configuration_diagnostic") or {}
+    result = {
         "incident_summary": {
             "service": summary.get("service"),
             "title": redact_text(str(summary.get("summary") or ""))[:450],
             "likely_cause": redact_text(str(summary.get("likely_cause") or ""))[:650],
+            "cause_status": summary.get("cause_status"),
         },
-        "agents": [
-            {"agent": item.get("agent"), "confidence": item.get("confidence"),
-             "findings": redact(item.get("findings") or [])}
-            for item in (brief.get("agents") or [])[:8] if isinstance(item, dict)
-        ],
+        "agent_findings": [{
+            "agent": str(item.get("agent") or "")[:80],
+            "status": item.get("status"),
+            "confidence": item.get("confidence"),
+            "finding": redact_text(str(item.get("finding") or ""))[:340],
+            "findings": [
+                redact_text(str(finding))[:220]
+                for finding in (item.get("findings") or [])[:4]
+            ],
+            "evidence_refs": list(item.get("evidence_refs") or [])[:5],
+        } for item in agents[:12] if isinstance(item, dict)],
+        "mcp_evidence": [{
+            "tool": str(item.get("tool") or "")[:90],
+            "status": str(item.get("status") or "")[:50],
+            "semantic_result": item.get("semantic_result"),
+            "finding": redact_text(str(item.get("finding") or ""))[:380],
+            "evidence_ref": str(item.get("evidence_ref") or "")[:160],
+            "collected_at": item.get("collected_at"),
+        } for item in mcp[:65] if isinstance(item, dict)],
+        "configuration_diagnostic": redact({
+            key: config.get(key) for key in (
+                "status", "config_file", "error_line", "error_column",
+                "error_code", "syntax_error", "evidence_refs", "validated_scope"
+            )
+        }) if isinstance(config, dict) else {},
         "recovery_advisory": redact(brief.get("recovery_advisory") or {}),
-        "dynamic_investigation": redact(brief.get("dynamic_investigation") or {}),
+        "rca_assessment": redact(brief.get("rca_assessment") or {}),
         "missing_evidence": list(brief.get("missing_evidence") or [])[:8],
-        "knowledge": redact({
-            "cognia": (brief.get("knowledge") or {}).get("cognia"),
-            "memory": (brief.get("knowledge") or {}).get("memory"),
-        }),
+        "knowledge": {
+            "cognia_status": (brief.get("cognia_knowledge") or {}).get("status"),
+            "cognia_count": (brief.get("cognia_knowledge") or {}).get("retrieved_count"),
+            "memory_status": (brief.get("operational_memory") or {}).get("status"),
+        },
     }
+    result["recorded_error_facts"] = recorded_error_facts(result)
+    return result
 
 
 def _explicit_wrong_target(message: str, binding: dict | None) -> bool:
@@ -181,13 +210,21 @@ async def incident_chat_message(
                           actor=identity.subject, role="user", message=payload.message)
         plan = await llm_plan(payload.message, summary, previous)
         requested = fallback_intent(payload.message)
-        intent = plan["intent"]
+        historical_errors = asks_for_recorded_errors(payload.message)
+        intent = "answer" if historical_errors else plan["intent"]
         # Explicit action/read requests must not be ignored by a model's
         # free-form answer; model suggestions are otherwise advisory only.
         if requested != "answer" and intent == "answer":
             intent = requested
         refs = (binding or {}).get("evidence_refs") or []
+        if historical_errors:
+            refs = list(dict.fromkeys(
+                ref for fact in summary["recorded_error_facts"]
+                for ref in fact.get("source_refs", [])
+            ))[:10]
         observation = None
+        final_model_status = plan["model_status"]
+        answer_basis = "stored_analysis" if historical_errors else "model_narration"
         kind = "answer"
         proposal = None
         if intent in READ_ACTIONS:
@@ -212,13 +249,22 @@ async def incident_chat_message(
                                     "source_refs": refs}),
                 "created_at": datetime.now(timezone.utc).isoformat(),
             })
-            followup = await llm_plan(payload.message, summary, previous,
-                                      observation=observation)
             kind = "tool_result"
-            answer = followup["answer"] or (
-                "نتیجه بررسی زنده با MCP ثبت شد." if observation.get("success") else
-                "بررسی زنده انجام نشد؛ اتصال، مجوز یا هویت میزبان را بررسی کنید."
-            )
+            answer_basis = "live_mcp" if observation.get("success") else "stored_analysis_live_unavailable"
+            if observation.get("success"):
+                followup = await llm_plan(payload.message, summary, previous,
+                                          observation=observation)
+                final_model_status = followup["model_status"]
+                answer = followup["answer"] or (
+                    "بررسی زنده انجام شد، اما LLM نتوانست نتیجه را خلاصه کند. "
+                    "نتیجهٔ ثبت‌شدهٔ ابزار را در شواهد مشاهده کنید."
+                )
+            else:
+                reason = str(observation.get("status") or "mcp_unavailable")[:70]
+                answer = recorded_error_answer(
+                    summary, persian=bool(re.search(r"[\u0600-\u06ff]", payload.message)),
+                    live_failure=reason,
+                )
         elif intent in WRITE_SUGGESTIONS:
             kind = "action_proposal"
             action = WRITE_SUGGESTIONS[intent]
@@ -236,18 +282,30 @@ async def incident_chat_message(
                 answer = "مقصد و سرویس این رخداد با شواهد MCP تأیید نشده است؛ امکان درخواست عملیات وجود ندارد."
         else:
             answer = plan["answer"] or (
-                "بر اساس شواهد ثبت‌شده پاسخ قطعی ندارم. می‌توانید وضعیت سرویس، "
-                "لاگ‌ها یا اعتبار کانفیگ را برای بررسی زنده درخواست کنید."
+                "بر اساس گزارش فعلی برای پاسخ قطعی دادهٔ کافی وجود ندارد؛ "
+                "می‌توانید بررسی زندهٔ مشخصی درخواست کنید."
             )
+            if historical_errors:
+                grounded = recorded_error_answer(
+                    summary, persian=bool(re.search(r"[\u0600-\u06ff]", payload.message)),
+                )
+                # Always expose concrete persisted diagnostics, regardless of
+                # whether the model replies vaguely or selects a live tool.
+                answer = (answer + "\n\n" + grounded) if (
+                    plan["model_status"] == "structured" and summary["recorded_error_facts"]
+                    and plan["answer"]
+                ) else grounded
         answer = redact_text(answer)[:3500]
         event_id = await append_turn(
             audit, incident_id=str(incident_id), actor=identity.subject,
-            role="assistant", message=answer, kind=kind, proposal=proposal, refs=refs,
+            role="assistant", message=answer, kind=kind, proposal=proposal,
+            refs=refs, model_status=final_model_status, answer_basis=answer_basis,
         )
     return {
         "id": event_id, "incident_id": str(incident_id),
         "kind": kind, "message": answer, "proposal": proposal,
-        "source_refs": refs, "observation": observation, "model_status": plan["model_status"],
+        "source_refs": refs, "observation": observation,
+        "model_status": final_model_status, "answer_basis": answer_basis,
     }
 
 

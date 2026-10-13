@@ -1473,9 +1473,21 @@
             'Execution requires separate authentication, approval and fresh live preconditions.')+'</p>'+
           '</div>';
       }
+      const modelLabel=m.model_status==='structured'?
+        (fa?'LLM فعال':'LLM used'):
+        m.model_status==='unavailable'?
+        (fa?'پاسخ جایگزین؛ LLM ناموفق':'Fallback; LLM unavailable'):'';
+      const sourceLabel=m.answer_basis==='stored_analysis'?
+        (fa?'شواهد تحلیل ثبت‌شده':'Recorded incident evidence'):
+        m.answer_basis==='stored_analysis_live_unavailable'?
+        (fa?'بررسی زنده ناموفق؛ شواهد قبلی':'Live check unavailable; prior evidence'):
+        m.answer_basis==='live_mcp'?
+        (fa?'بررسی زنده MCP':'Live MCP'):'';
       return '<article class="ic-chat-bubble '+(assistant?'ic-chat-assistant':'ic-chat-user')+'">'+
         '<div class="ic-chat-bubble-head"><strong>'+esc(assistant?(fa?'دستیار AIOps':'AIOps copilot'):(fa?'اپراتور':'Operator'))+
         '</strong><small>'+txt(date(m.created_at))+'</small></div>'+
+        (assistant&&(modelLabel||sourceLabel)?
+          '<small class="ic-chat-provenance">'+esc([modelLabel,sourceLabel].filter(Boolean).join(' · '))+'</small>':'')+
         '<p dir="auto">'+txt(m.message)+'</p>'+
         (arr(m.source_refs).length?refs(m.source_refs):'')+control+'</article>';
     }).join('');

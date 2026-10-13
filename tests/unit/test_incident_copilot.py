@@ -188,3 +188,219 @@ def test_safe_brief_excludes_untrusted_raw_evidence_and_secret_fields():
     })
     assert "private-value" not in json.dumps(output)
     assert output["incident_summary"]["service"] == "nginx"
+
+
+def _recorded_brief():
+    return {
+        "incident_summary": {"service": "nginx", "summary": "nginx failed",
+                             "likely_cause": "not proven"},
+        "agent_findings": [
+            {"agent": "vm", "status": "partial",
+             "finding": "Could be an invalid include", "confidence": 0.25,
+             "evidence_refs": ["agent-vm-1"]},
+        ],
+        "mcp_evidence": [
+            {"tool": "config_validate", "status": "success",
+             "semantic_result": "configuration_invalid",
+             "finding": 'supported=True; valid=False; config_file=/etc/nginx/nginx.conf; error_line=103',
+             "evidence_ref": "mcp-conf-103"},
+            {"tool": "service_status", "status": "success",
+             "finding": "active_state=failed; sub_state=failed",
+             "evidence_ref": "mcp-service-failed"},
+        ],
+        "configuration_diagnostic": {
+            "status": "invalid", "config_file": "/etc/nginx/nginx.conf",
+            "error_line": 103, "syntax_error": 'unexpected "{"',
+            "evidence_refs": ["mcp-conf-103"],
+        },
+        "cognia_knowledge": {"status": "retrieved", "retrieved_count": 3},
+        "operational_memory": {"status": "available"},
+    }
+
+
+def test_recorded_analysis_uses_actual_decision_brief_keys_not_empty_agents_alias():
+    from apps.api.incident_chat import _safe_brief
+    from apps.incident_copilot import recorded_error_facts, recorded_error_answer
+    result = _safe_brief(_recorded_brief())
+    assert result["agent_findings"][0]["agent"] == "vm"
+    assert result["mcp_evidence"][0]["evidence_ref"] == "mcp-conf-103"
+    assert result["configuration_diagnostic"]["error_line"] == 103
+    assert result["knowledge"]["cognia_count"] == 3
+    facts = recorded_error_facts(result)
+    assert facts and all(x["basis"] == "stored_mcp_evidence" for x in facts)
+    assert any("103" in item["finding"] for item in facts)
+    assert "mcp-conf-103" in recorded_error_answer(result)
+    assert "فرضیه" in recorded_error_answer(result)
+
+
+@pytest.mark.parametrize("question", [
+    "چه خطاهایی دیدی", "چه خطاهایی مشاهده کردی؟",
+    "خطاهای ثبت شده در تحلیل رو بگو",
+    "what errors did you find?",
+])
+def test_previous_errors_are_not_a_request_for_live_reads(question):
+    from apps.incident_copilot import asks_for_recorded_errors
+    assert asks_for_recorded_errors(question)
+
+
+@pytest.mark.parametrize("question", [
+    "الان برو ببین چه خطاهایی دیدی", "خطاها رو دوباره چک کن",
+    "check live errors now",
+])
+def test_explicit_new_diagnostics_still_allowed(question):
+    from apps.incident_copilot import asks_for_recorded_errors
+    assert not asks_for_recorded_errors(question)
+
+
+@pytest.mark.asyncio
+async def test_screenshot_question_answers_stored_error_even_if_model_selects_mcp(monkeypatch):
+    import apps.api.incident_chat as api
+    from uuid import UUID
+    from types import SimpleNamespace
+
+    incident_id = UUID("11111111-1111-4111-8111-111111111111")
+    events = []
+    calls = {"llm": 0, "mcp": 0, "roles": []}
+
+    class Session:
+        async def __aenter__(self):
+            return self
+        async def __aexit__(self, *args):
+            return False
+
+    class Audit:
+        def __init__(self, db):
+            pass
+        async def list(self, incident, limit):
+            return []
+
+    async def scope(db, iid):
+        return SimpleNamespace(service="nginx"), {
+            "status": "completed", "state": {"context": {}}
+        }, [evidence(target="10.248.16.82", service="nginx")]
+
+    async def brief(db, iid):
+        return _recorded_brief()
+
+    async def model(message, summary, turns, **kwargs):
+        calls["llm"] += 1
+        assert summary["recorded_error_facts"]
+        return {"intent": "service_logs", "answer": "گزارش تحلیل ثبت‌شده بررسی شد.",
+                "reason": "", "model_status": "structured"}
+
+    async def fake_read(action, binding):
+        calls["mcp"] += 1
+        raise AssertionError("historical question must not invoke MCP")
+
+    async def append(audit, **kwargs):
+        calls["roles"].append(kwargs)
+        return "event-1"
+
+    monkeypatch.setattr(api, "AsyncSessionLocal", Session)
+    monkeypatch.setattr(api, "_scope", scope)
+    monkeypatch.setattr(api, "load_decision_brief_for_incident", brief)
+    monkeypatch.setattr(api, "PostgreSQLAuditStore", Audit)
+    monkeypatch.setattr(api, "llm_plan", model)
+    monkeypatch.setattr(api, "vm_read", fake_read)
+    monkeypatch.setattr(api, "append_turn", append)
+
+    outcome = await api.incident_chat_message(
+        incident_id, api.IncidentChatMessage(message="چه خطاهایی دیدی"),
+        identity=SimpleNamespace(subject="sre-1"),
+    )
+    assert calls["llm"] == 1
+    assert calls["mcp"] == 0
+    assert outcome["kind"] == "answer"
+    assert outcome["answer_basis"] == "stored_analysis"
+    assert outcome["model_status"] == "structured"
+    assert "103" in outcome["message"] and "mcp-conf-103" in outcome["message"]
+    assert "بررسی زنده انجام نشد" not in outcome["message"]
+    assert calls["roles"][-1]["model_status"] == "structured"
+
+
+@pytest.mark.asyncio
+async def test_historical_answer_remains_available_when_llm_fails(monkeypatch):
+    import apps.api.incident_chat as api
+    from uuid import UUID
+    from types import SimpleNamespace
+
+    class Session:
+        async def __aenter__(self):
+            return self
+        async def __aexit__(self, *args):
+            return False
+    class Audit:
+        def __init__(self, db):
+            pass
+        async def list(self, incident, limit):
+            return []
+    async def scope(db, iid):
+        return SimpleNamespace(service="nginx"), {"state": {"context": {}}}, []
+    async def brief(db, iid):
+        return _recorded_brief()
+    async def model(*args, **kwargs):
+        return {"intent": "answer", "answer": "", "model_status": "unavailable"}
+    async def append(*args, **kwargs):
+        return "audit-1"
+    monkeypatch.setattr(api, "AsyncSessionLocal", Session)
+    monkeypatch.setattr(api, "_scope", scope)
+    monkeypatch.setattr(api, "load_decision_brief_for_incident", brief)
+    monkeypatch.setattr(api, "PostgreSQLAuditStore", Audit)
+    monkeypatch.setattr(api, "llm_plan", model)
+    monkeypatch.setattr(api, "append_turn", append)
+    result = await api.incident_chat_message(
+        UUID("11111111-1111-4111-8111-111111111111"),
+        api.IncidentChatMessage(message="چه خطاهایی دیدی"),
+        identity=SimpleNamespace(subject="sre-1"),
+    )
+    assert result["model_status"] == "unavailable"
+    assert result["answer_basis"] == "stored_analysis"
+    assert "103" in result["message"]
+
+
+@pytest.mark.asyncio
+async def test_unavailable_mcp_preserves_old_diagnostics(monkeypatch):
+    import apps.api.incident_chat as api
+    from uuid import UUID
+    from types import SimpleNamespace
+
+    class Session:
+        async def __aenter__(self):
+            return self
+        async def __aexit__(self, *args):
+            return False
+    class Audit:
+        def __init__(self, db):
+            pass
+        async def list(self, incident, limit):
+            return []
+        async def append(self, event):
+            pass
+    async def scope(db, iid):
+        return SimpleNamespace(service="nginx"), {"state": {"context": {}}}, [
+            evidence(target="10.248.16.82", service="nginx"),
+        ]
+    async def brief(db, iid):
+        return _recorded_brief()
+    async def model(*args, **kwargs):
+        return {"intent": "service_logs", "answer": "", "model_status": "unavailable"}
+    async def read(*args):
+        raise ConnectionError("unavailable")
+    async def append(*args, **kwargs):
+        return "audit-1"
+    monkeypatch.setattr(api, "AsyncSessionLocal", Session)
+    monkeypatch.setattr(api, "_scope", scope)
+    monkeypatch.setattr(api, "load_decision_brief_for_incident", brief)
+    monkeypatch.setattr(api, "PostgreSQLAuditStore", Audit)
+    monkeypatch.setattr(api, "llm_plan", model)
+    monkeypatch.setattr(api, "vm_read", read)
+    monkeypatch.setattr(api, "append_turn", append)
+    result = await api.incident_chat_message(
+        UUID("11111111-1111-4111-8111-111111111111"),
+        api.IncidentChatMessage(message="الان لاگ سرویس را بررسی کن"),
+        identity=SimpleNamespace(subject="sre-1"),
+    )
+    assert result["kind"] == "tool_result"
+    assert result["answer_basis"] == "stored_analysis_live_unavailable"
+    assert "103" in result["message"]
+    assert "mcp_unavailable" in result["message"]
