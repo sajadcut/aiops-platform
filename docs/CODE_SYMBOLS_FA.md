@@ -2138,11 +2138,11 @@
 | `integrations/prometheus/mcp_client.py` | `PrometheusMCPClient.get_alerts` | 282 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | PrometheusMCPClient |
 | `integrations/prometheus/mcp_client.py` | `PrometheusMCPClient.health_check` | 333 | async method | Check the upstream Prometheus backend readiness through the official tool. | PrometheusMCPClient |
 | `integrations/vm/dotnet_local_validator.py` | `safe_json_files` | 42 | function | Parse untrusted remote directory names. Excess is NOT a full validation. | module |
-| `integrations/vm/dotnet_local_validator.py` | `remote_file_listing_command` | 52 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `integrations/vm/dotnet_local_validator.py` | `remote_file_read_command` | 67 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `integrations/vm/dotnet_local_validator.py` | `_reject_constant` | 89 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `integrations/vm/dotnet_local_validator.py` | `_reject_duplicate_keys` | 93 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `integrations/vm/dotnet_local_validator.py` | `validate_encoded_file` | 102 | function | Parse bytes only in worker memory; return bounded, secret-free metadata. | module |
+| `integrations/vm/dotnet_local_validator.py` | `remote_file_listing_command` | 61 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `integrations/vm/dotnet_local_validator.py` | `remote_file_read_command` | 76 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `integrations/vm/dotnet_local_validator.py` | `_reject_constant` | 98 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `integrations/vm/dotnet_local_validator.py` | `_reject_duplicate_keys` | 102 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `integrations/vm/dotnet_local_validator.py` | `validate_encoded_file` | 111 | function | Parse bytes only in worker memory; return bounded, secret-free metadata. | module |
 | `integrations/vm/mcp_client.py` | `VMEdgeMCPClient` | 9 | class | MCP-only connector for VM/Edge diagnostics and governed remediation. | module |
 | `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.__init__` | 23 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
 | `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.initialize` | 37 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
