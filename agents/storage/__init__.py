@@ -140,7 +140,17 @@ PEER_OPERATIONAL_CONTEXT={json.dumps(peer_context, default=str)}"""
                 str(row.get("code")) for row in storage_analysis.get("cause_candidates", [])
                 if isinstance(row, dict) and row.get("code")
             ][:10]
-        actions = self.normalize_list(result.get("immediate_checks"), settings.AGENT_MAX_RECOMMENDATIONS)
+        # LLM text is not a cleanup authorization. Suppress ALL mutating
+        # recommendations from the storage incident advice, regardless of
+        # guessed file age, size, role or retention. A future cleanup feature
+        # needs an independent file-specific runbook and proof/approval gate.
+        proposed_checks = self.normalize_list(result.get("immediate_checks"), settings.AGENT_MAX_RECOMMENDATIONS)
+        actions = [check for check in proposed_checks if not self.action_appears_mutating(check)]
+        if len(actions) != len(proposed_checks):
+            actions.append(
+                "Identify the exact file producer, growth/error cause, retention policy "
+                "and impact; remediation requires an independently governed runbook"
+            )
         coverage = self.evidence_coverage(len(evidence), all_missing)
         handoffs = self.normalize_list(result.get("handoff_agents"), 6)
         for target in storage_analysis.get("handoff_candidates", []):
