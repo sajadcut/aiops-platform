@@ -39,7 +39,7 @@ Canonical endpoint:
 
 The adapter scopes discovery with the MCP `namespace` query parameter and requires `platform.core`. The Elastic client pins the documented Agent Builder initialize baseline `2024-11-05` independently from the generic MCP setting.
 
-Canonical log Evidence -> `platform.core.execute_esql`. The adapter constructs bounded deterministic ES|QL from trusted service/time/level fields and a configured `ELASTIC_AGENT_BUILDER_INDEX_PATTERN`. Agents never supply arbitrary ES|QL, Query DSL, tool names or index patterns. Elastic's current guidance favors a custom parameterized ES|QL tool for stable repeatable retrieval patterns; that migration is intentionally treated as a separate provider-provisioning acceptance change rather than silently creating `manageTools` privileges in the runtime.
+Canonical log Evidence -> `platform_core_execute_esql` on the MCP wire (logical ID `platform.core.execute_esql`). The adapter constructs bounded deterministic ES|QL from trusted service/time/level fields and a configured `ELASTIC_AGENT_BUILDER_INDEX_PATTERN`. Agents never supply arbitrary ES|QL, Query DSL, tool names or index patterns. Elastic's current guidance favors a custom parameterized ES|QL tool for stable repeatable retrieval patterns; that migration is intentionally treated as a separate provider-provisioning acceptance change rather than silently creating `manageTools` privileges in the runtime.
 
 `platform.core.search` and `platform.core.generate_esql` are intentionally not used by the EvidenceCollector because they introduce an additional AI/query-generation layer inside evidence acquisition. They may be evaluated later only through a separate governed ADR and acceptance process.
 

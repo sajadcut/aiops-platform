@@ -16,10 +16,13 @@ class ElasticsearchMCPClient(MCPClient):
     The deprecated standalone ``elastic/mcp-server-elasticsearch`` contract is
     intentionally unsupported. The Control Plane connects to Kibana Agent
     Builder MCP and uses only the deterministic, read-only
-    ``platform.core.execute_esql`` capability for log Evidence collection.
+    ``platform_core_execute_esql`` wire tool (logical ``platform.core.execute_esql``)
+    for log Evidence collection.
     """
 
-    TOOL_EXECUTE_ESQL = "platform.core.execute_esql"
+    # Kibana Agent Builder exposes namespace separators as underscores in tools/list.
+    # Permit the exact MCP wire name, not the dotted logical identifier.
+    TOOL_EXECUTE_ESQL = "platform_core_execute_esql"
 
     def __init__(self, server_url: Optional[str] = None):
         base_url = server_url or settings.ELASTICSEARCH_MCP_URL

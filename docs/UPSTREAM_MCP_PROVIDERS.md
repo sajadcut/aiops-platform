@@ -93,7 +93,7 @@ Endpoints:
 
 The deprecated standalone `elastic/mcp-server-elasticsearch` is intentionally unsupported and must not be deployed as an AIOps production dependency.
 
-The Control Plane limits discovery to configured Agent Builder namespaces. `platform.core` is mandatory. Canonical log Evidence currently uses only `platform.core.execute_esql`; the adapter generates deterministic bounded ES|QL from trusted service/time/level inputs and the configured `ELASTIC_AGENT_BUILDER_INDEX_PATTERN`. For stable repeatable queries, Elastic recommends custom parameterized ES|QL tools; adopting one is a provisioning change and must be acceptance-tested before replacing this existing arbitrary-query execution path.
+The Control Plane limits discovery to configured Agent Builder namespaces. `platform.core` is mandatory. Canonical log Evidence currently uses only the MCP wire tool `platform_core_execute_esql` (logical Agent Builder tool ID `platform.core.execute_esql`); the adapter generates deterministic bounded ES|QL from trusted service/time/level inputs and the configured `ELASTIC_AGENT_BUILDER_INDEX_PATTERN`. For stable repeatable queries, Elastic recommends custom parameterized ES|QL tools; adopting one is a provisioning change and must be acceptance-tested before replacing this existing arbitrary-query execution path.
 
 The Evidence path intentionally does not use `platform.core.search` or `platform.core.generate_esql`, because those capabilities introduce an additional AI/query-generation step. Agent Builder remains a capability provider, not the reasoning authority for the AIOps incident workflow.
 

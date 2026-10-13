@@ -10,7 +10,7 @@ from scripts.check_elastic_mcp import _http_status, check_connection
 
 
 class FakeElasticClient:
-    TOOL_EXECUTE_ESQL = "platform.core.execute_esql"
+    TOOL_EXECUTE_ESQL = "platform_core_execute_esql"
     server_url = "http://user:secret@kibana.local:5601/api/agent_builder/mcp?namespace=platform.core&secret=hidden"
 
     def __init__(self, *, authorization="Basic NOT_A_REAL_SECRET", fail_stage=None, status=None, tools=None):
@@ -104,3 +104,10 @@ def test_missing_allowlisted_tool_is_not_a_pass():
 
 def test_http_status_not_in_unrelated_errors():
     assert _http_status(RuntimeError("offline")) is None
+
+def test_dotted_logical_tool_name_does_not_pass_wire_discovery():
+    client = FakeElasticClient(tools=[{"name": "platform.core.execute_esql"}])
+    code, output = run_check(client)
+    assert code == 6
+    assert "platform_core_execute_esql" in output
+    assert client.closed

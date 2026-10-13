@@ -20,7 +20,7 @@ docker compose exec <api-service-name> python -m scripts.check_elastic_mcp
 
 The script calls MCP initialize, sends the standard initialized notification
 through the existing client, and checks tools/list for the allowlisted
-platform.core.execute_esql tool. It does not execute ES|QL queries,
+platform_core_execute_esql wire tool (logical ID: platform.core.execute_esql). It does not execute ES|QL queries,
 mutate data, or print the Authorization header, password, URL userinfo, or
 server response body. It prints the effective authentication scheme and whether
 credential environment variables override local config files.

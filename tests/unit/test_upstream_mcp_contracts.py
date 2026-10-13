@@ -19,7 +19,7 @@ def test_prometheus_adapter_uses_upstream_tool_names():
 
 def test_elastic_adapter_uses_agent_builder_only():
     text = (ROOT / "integrations/elasticsearch/mcp_client.py").read_text(encoding="utf-8")
-    assert '"platform.core.execute_esql"' in text
+    assert 'TOOL_EXECUTE_ESQL = "platform_core_execute_esql"' in text
     assert "ELASTIC_AGENT_BUILDER_INDEX_PATTERN" in text
     assert "ELASTIC_AGENT_BUILDER_MCP_NAMESPACES" in text
     assert "ELASTICSEARCH_MCP_PROTOCOL_VERSION" in text
