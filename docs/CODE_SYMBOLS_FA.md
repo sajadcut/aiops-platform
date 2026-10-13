@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 447 | Dashboard JS files scanned: 8 | Symbols indexed: 4212**
+**Python files scanned: 447 | Dashboard JS files scanned: 8 | Symbols indexed: 4214**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -4020,6 +4020,8 @@
 | `tests/unit/test_vm_config_validation.py` | `test_config_validate_retries_sudo_with_ssh_password_when_permission_denied.fake_run` | 42 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_config_validate_retries_sudo_with_ssh_password_when_permission_denied |
 | `tests/unit/test_vm_config_validation.py` | `test_config_validate_reports_real_syntax_failure_as_invalid` | 62 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_vm_config_validation.py` | `test_config_validate_reports_real_syntax_failure_as_invalid.fake_run` | 68 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_config_validate_reports_real_syntax_failure_as_invalid |
+| `tests/unit/test_vm_config_validation.py` | `test_system_logs_fall_back_to_sudo_when_journal_denied` | 83 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_config_validation.py` | `test_system_logs_fall_back_to_sudo_when_journal_denied.fake_run` | 88 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_system_logs_fall_back_to_sudo_when_journal_denied |
 | `tests/unit/test_vm_current_cpu_metrics.py` | `_connector` | 7 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_vm_current_cpu_metrics.py` | `test_cpu_interval_percentages_use_delta_not_since_boot` | 13 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_vm_current_cpu_metrics.py` | `test_collect_metrics_returns_one_second_current_cpu` | 23 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
