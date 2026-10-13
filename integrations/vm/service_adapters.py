@@ -143,14 +143,30 @@ def parse_config_diagnostic(output: str) -> dict:
     """Extract bounded compiler-reported config file/line, never fetch secret files."""
     message = str(output or "")[:4000]
     parsed = {"config_file": None, "error_line": None, "syntax_error": None}
-    for pattern in (_HAPROXY_ERROR, _NGINX_ERROR):
-        match = pattern.search(message)
-        if match:
-            path = _absolute_config_path(match.group(1))
-            if path:
-                parsed["config_file"] = path
-                parsed["error_line"] = int(match.group(2))
-                break
+    # Validators can report harmless warnings before the actual fatal error.
+    # Prefer error lines; otherwise /etc/nginx/nginx.conf:43 from a privilege
+    # warning can hide the real syntax error at line 103.
+    lines = message.splitlines()
+    severe = [
+        line for line in lines
+        if re.search(
+            r"\\[(?:emerg|alert|crit|error|fatal)\\]|syntax error|"
+            r"unknown (?:directive|keyword)|unexpected|error parsing",
+            line, re.I,
+        )
+    ]
+    candidates = severe + [line for line in lines if line not in severe]
+    for line in candidates:
+        for pattern in (_HAPROXY_ERROR, _NGINX_ERROR):
+            match = pattern.search(line)
+            if match:
+                path = _absolute_config_path(match.group(1))
+                if path:
+                    parsed["config_file"] = path
+                    parsed["error_line"] = int(match.group(2))
+                    break
+        if parsed["config_file"] is not None:
+            break
     if parsed["config_file"] is None:
         match = _APACHE_ERROR.search(message)
         if match:
@@ -168,3 +184,27 @@ def parse_config_diagnostic(output: str) -> dict:
             parsed["syntax_error"] = stripped[:500]
             break
     return parsed
+
+
+def enrich_legacy_config_diagnostic(raw: dict) -> dict:
+    """Recover structured compiler facts omitted by older VM MCP deployments.
+
+    This enriches an independently executed read-only validator result. It
+    cannot change validity, authorize a write, or turn arbitrary alert prose
+    into successful validation.
+    """
+    result = dict(raw)
+    if not (
+        result.get("success") is True
+        and result.get("supported") is True
+        and result.get("valid") is False
+        and isinstance(result.get("detail"), str)
+    ):
+        return result
+    parsed = parse_config_diagnostic(result["detail"])
+    for name in ("config_file", "error_line", "syntax_error"):
+        if result.get(name) in (None, "") and parsed.get(name) is not None:
+            result[name] = parsed[name]
+    if parsed.get("config_file") and not result.get("config_path_source"):
+        result["config_path_source"] = "validator_output"
+    return result
