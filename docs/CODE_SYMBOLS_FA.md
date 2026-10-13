@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 447 | Dashboard JS files scanned: 8 | Symbols indexed: 4230**
+**Python files scanned: 447 | Dashboard JS files scanned: 8 | Symbols indexed: 4232**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -3939,6 +3939,8 @@
 | `tests/unit/test_service_identity_resolution.py` | `test_no_gaps_does_not_call_llm` | 364 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_service_identity_resolution.py` | `test_no_gaps_does_not_call_llm.ShouldNeverCall` | 365 | class | کلاس | test_no_gaps_does_not_call_llm |
 | `tests/unit/test_service_identity_resolution.py` | `test_no_gaps_does_not_call_llm.ShouldNeverCall.generate_with_messages` | 366 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_no_gaps_does_not_call_llm.ShouldNeverCall |
+| `tests/unit/test_service_identity_resolution.py` | `test_general_unknown_detector_captures_specialist_failure_and_missing_evidence` | 374 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_service_identity_resolution.py` | `test_general_unknown_detector_handles_unsupported_vm_diagnostic` | 386 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_signal_service_identity_guard.py` | `test_unrelated_memory_and_filesystem_alerts_do_not_become_nginx` | 37 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_signal_service_identity_guard.py` | `test_unrelated_memory_and_filesystem_alerts_do_not_become_nginx.search` | 40 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | test_unrelated_memory_and_filesystem_alerts_do_not_become_nginx |
 | `tests/unit/test_signal_service_identity_guard.py` | `test_trusted_zabbix_tag_wins_over_unrelated_rag_identity` | 57 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
