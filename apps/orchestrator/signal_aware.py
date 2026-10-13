@@ -11,6 +11,7 @@ from agents.shared.domain_agent import DomainDiagnosticAgent
 from agents.shared.telemetry import AgentTelemetry
 from apps.context_service.asset_identity import AssetIdentityResolver
 from apps.context_service.knowledge_topology import KnowledgeTopologyResolver
+from apps.context_service.knowledge_relevance import filter_service_knowledge
 from apps.context_service.service_identity import ServiceIdentityResolver
 from apps.context_service.llm_identity import (
     consult_operational_unknowns, detect_operational_unknowns, suggest_from_llm,
@@ -147,14 +148,23 @@ class SignalAwareE2EOrchestrator(E2EOrchestrator):
                 else (initial_context.get("incident") or {}).get("context")
             ),
         )
-        knowledge_topology = KnowledgeTopologyResolver.resolve(
-            knowledge_by_id.values(),
-            expected_fqdns=expected_fqdns,
-        )
         source_service = (
             trigger_signal.get("service")
             if isinstance(trigger_signal, dict)
             else (initial_context.get("incident") or {}).get("service")
+        )
+        applicable, relevance = filter_service_knowledge(
+            knowledge_by_id.values(),
+            expected_service=source_service or state.get("service_name"),
+            expected_fqdns=expected_fqdns,
+            purpose="signal_aware_merge",
+        )
+        state["knowledge_results"] = applicable
+        context["knowledge_results"] = applicable
+        context["knowledge_relevance_merged"] = relevance
+        knowledge_topology = KnowledgeTopologyResolver.resolve(
+            applicable, expected_fqdns=expected_fqdns,
+            expected_service=source_service or state.get("service_name"),
         )
         declared_target = None
         if isinstance(trigger_signal, dict) and isinstance(trigger_signal.get("raw_data"), dict):

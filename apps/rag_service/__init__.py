@@ -165,6 +165,12 @@ class KnowledgeRAGService:
                 "approximate_token_count": raw.get("approximateTokenCount"),
                 "knowledge_type": raw.get("knowledgeType"),
                 "scope": raw.get("scope"),
+                # Only allowlisted authoring metadata is passed to the relevance gate.
+                "metadata": {
+                    key: value for key, value in (raw.get("metadata") or {}).items()
+                    if key in {"service", "service_name", "application", "services",
+                               "fqdn", "url", "applicability", "service_applicability"}
+                } if isinstance(raw.get("metadata"), dict) else {},
                 "rank": raw.get("rank"),
                 "relevance": relevance,
                 "retrieved_at": retrieved_at,

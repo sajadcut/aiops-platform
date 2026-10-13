@@ -22,6 +22,8 @@ from agents.triage import TriageAgent
 from apps.approval_service import ApprovalService
 from apps.audit_service import AuditService
 from apps.context_service.evidence_collector import EvidenceCollector
+from apps.context_service.knowledge_relevance import filter_service_knowledge
+from apps.context_service.service_identity import ServiceIdentityResolver
 from apps.evaluator.gate import EvaluationGate
 from apps.decision_engine import DecisionAction, DecisionEngine
 from apps.execution_service import ExecutionRequest, ExecutionService
@@ -292,15 +294,34 @@ class E2EOrchestrator:
             }
         else:
             try:
-                state["knowledge_results"] = await KnowledgeRAGService().search(
+                raw_knowledge = await KnowledgeRAGService().search(
                     query,
-                    limit=settings.AGENT_MAX_AUXILIARY_CONTEXT_ITEMS,
+                    limit=min(20, max(5, settings.AGENT_MAX_AUXILIARY_CONTEXT_ITEMS * 3)),
                     scope_context=scope_context,
                 )
+                source = context.get("trigger_signal") or {}
+                source_service = (source.get("service") if isinstance(source, dict) else None)
+                incident = context.get("incident") or {}
+                incident_service = incident.get("service") if isinstance(incident, dict) else None
+                expected_service = source_service or incident_service or service
+                source_raw = source.get("raw_data") if isinstance(source, dict) else None
+                expected_fqdns = ServiceIdentityResolver.expected_fqdns(
+                    summary=str(source.get("summary") or "") if isinstance(source, dict) else query,
+                    context=source_raw if isinstance(source_raw, dict) else (
+                        incident.get("context") if isinstance(incident, dict) else None
+                    ),
+                )
+                documents, relevance = filter_service_knowledge(
+                    raw_knowledge, expected_service=expected_service,
+                    expected_fqdns=expected_fqdns, purpose="e2e_context",
+                )
+                state["knowledge_results"] = documents[:settings.AGENT_MAX_AUXILIARY_CONTEXT_ITEMS]
                 state["knowledge_status"] = {
                     "provider": "cognia",
-                    "status": "available" if state["knowledge_results"] else "empty",
+                    "status": ("filtered_empty" if relevance["rejected_count"] and not documents
+                               else "available" if documents else "empty"),
                     "count": len(state["knowledge_results"]),
+                    "relevance": relevance,
                 }
             except Exception as exc:
                 state["knowledge_status"] = self._knowledge_failure_status(exc)
@@ -315,7 +336,7 @@ class E2EOrchestrator:
             knowledge_status = str(state.get("knowledge_status", {}).get("status") or "")
             await self.progress_emitter(
                 state.get("incident_id"), "knowledge",
-                "completed" if knowledge_status in {"available", "empty"}
+                "completed" if knowledge_status in {"available", "empty", "filtered_empty"}
                 else "skipped" if knowledge_status == "invalid_scope" else "failed",
             )
         try:
