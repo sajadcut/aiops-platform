@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import json
 import re
+import shlex
 import time
 from typing import Any, Dict, Optional
 
@@ -163,7 +164,7 @@ class SSHVMConnector:
             "stderr": stderr.decode(errors="replace").strip(), "execution_time": elapsed,
         }
 
-    async def _run_password(self, target: str, command: str) -> Dict[str, Any]:
+    async def _run_password(self, target: str, command: str, *, stdin_data: Optional[str] = None) -> Dict[str, Any]:
         self._validate_target(target)
         username = settings.SSH_USERNAME.strip()
         password = self._password()
@@ -182,7 +183,12 @@ class SSHVMConnector:
                 target, port=settings.SSH_PORT, username=username, password=password,
                 client_keys=[], known_hosts=known_hosts,
             ) as connection:
-                result = await connection.run(command, check=False)
+                # Only password-protected sudo receives stdin; never interpolate
+                # credentials into the command or create a PTY which might echo it.
+                if stdin_data is None:
+                    result = await connection.run(command, check=False)
+                else:
+                    result = await connection.run(command, check=False, input=stdin_data)
                 return {
                     "success": result.exit_status == 0, "exit_code": result.exit_status,
                     "stdout": str(result.stdout or "").strip(),
@@ -205,6 +211,10 @@ class SSHVMConnector:
                 duration_ms=duration_ms,
             )
             return {"success": False, "error": "ssh_command_failed", "execution_time": duration_ms / 1000.0}
+        # Remote programs may echo arbitrary stdin. Never return the SSH secret
+        # through MCP results, API responses, audit entries or error details.
+        for stream in ("stdout", "stderr"):
+            result[stream] = str(result.get(stream) or "").replace(password, "[REDACTED]")
         result["execution_time"] = time.perf_counter() - started
         duration_ms = round(float(result["execution_time"]) * 1000, 3)
         logger.info(
@@ -225,10 +235,36 @@ class SSHVMConnector:
             )
         return result
 
-    async def _run(self, target: str, command: str) -> Dict[str, Any]:
+    async def _run(self, target: str, command: str, *, stdin_data: Optional[str] = None) -> Dict[str, Any]:
         if self._auth_mode() == "password":
-            return await self._run_password(target, command)
+            return await self._run_password(target, command, stdin_data=stdin_data)
+        if stdin_data is not None:
+            raise RuntimeError("vm_ssh_stdin_requires_password_auth")
         return await self._run_key(target, command)
+
+    @staticmethod
+    def _sudo_requires_password(result: Dict[str, Any]) -> bool:
+        output = (str(result.get("stderr") or "") + " " + str(result.get("stdout") or "")).lower()
+        return not result.get("success") and (
+            "a password is required" in output
+            or "no tty present and no askpass program specified" in output
+            or "a terminal is required to read the password" in output
+        )
+
+    async def _sudo(self, target: str, fixed_command: str) -> Dict[str, Any]:
+        """Run only platform-owned commands; retry sudo using SSH password via stdin.
+
+        No credential appears in argv, shell text, logs or returned MCP payloads.
+        The OS still enforces the user's sudoers permissions. Write operations
+        remain behind the existing Incident/Approval/Execution policy gates.
+        """
+        result = await self._run(target, f"sudo -n {fixed_command}")
+        if not self._sudo_requires_password(result) or self._auth_mode() != "password":
+            return result
+        password = self._password()
+        if not password:
+            return result
+        return await self._run(target, f"sudo -S -p '' {fixed_command}", stdin_data=password + "\n")
 
     async def health_check(self, target: str) -> bool:
         result = await self._run(target, "printf connected")
@@ -455,7 +491,7 @@ class SSHVMConnector:
             failure = str(result.get("stderr") or "") + " " + str(result.get("stdout") or "")
             if any(word in failure.lower() for word in ("permission", "access denied", "not permitted", "insufficient")):
                 mode = "sudo"
-                result = await self._run(target, f"sudo -n {command}")
+                result = await self._sudo(target, command)
         if not result.get("success"):
             detail = str(result.get("stderr") or result.get("error") or "journalctl_failed")
             return {
@@ -542,9 +578,23 @@ class SSHVMConnector:
         if adapter is None or not adapter.config_check_command:
             return {"success": True, "supported": False, "target": target, "service": service, "valid": None, "detail": "config_validation_adapter_unavailable"}
         result = await self._run(target, adapter.config_check_command)
+        diagnostic = (str(result.get("stderr") or "") + " " + str(result.get("stdout") or "")).lower()
+        if not result.get("success") and any(
+            marker in diagnostic
+            for marker in ("permission denied", "access denied", "operation not permitted")
+        ):
+            # The adapter is a fixed internal command, not arbitrary caller input.
+            result = await self._sudo(target, "sh -c " + shlex.quote(adapter.config_check_command))
         if result.get("exit_code") == 127:
             return {"success": True, "supported": False, "target": target, "service": service, "valid": None, "detail": "config_validation_binary_unavailable"}
         detail = "\n".join(part for part in (str(result.get("stdout") or "").strip(), str(result.get("stderr") or "").strip()) if part)
+        if not result.get("success") and result.get("exit_code") in {1, 2} and any(
+            marker in detail.lower()
+            for marker in ("nginx:", "haproxy:", "syntax error", "configuration file", "httpd:")
+        ):
+            return {"success": True, "supported": True, "target": target, "service": service,
+                    "adapter": adapter.canonical_name, "valid": False,
+                    "exit_code": result.get("exit_code"), "detail": detail[:4000]}
         if not result.get("success"):
             return {
                 "success": False,
@@ -561,21 +611,21 @@ class SSHVMConnector:
 
     async def start_service(self, target: str, service: str) -> Dict[str, Any]:
         self._validate_service(service)
-        result = await self._run(target, f"sudo -n systemctl start {service}")
+        result = await self._sudo(target, f"systemctl start {service}")
         if not result.get("success"):
             logger.warning("vm_service_start_failed", target=target, service=service)
         return {"success": result.get("success", False), "service": service, "target": target, "error": None if result.get("success") else "service_start_failed"}
 
     async def restart_service(self, target: str, service: str) -> Dict[str, Any]:
         self._validate_service(service)
-        result = await self._run(target, f"sudo -n systemctl restart {service}")
+        result = await self._sudo(target, f"systemctl restart {service}")
         if not result.get("success"):
             logger.warning("vm_service_restart_failed", target=target, service=service)
         return {"success": result.get("success", False), "service": service, "target": target, "error": None if result.get("success") else "service_restart_failed"}
 
     async def reload_service(self, target: str, service: str) -> Dict[str, Any]:
         self._validate_service(service)
-        result = await self._run(target, f"sudo -n systemctl reload {service}")
+        result = await self._sudo(target, f"systemctl reload {service}")
         if not result.get("success"):
             logger.warning("vm_service_reload_failed", target=target, service=service)
         return {"success": result.get("success", False), "service": service, "target": target, "error": None if result.get("success") else "service_reload_failed"}
