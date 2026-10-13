@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field, field_validator
 
 from apps.context_service.asset_identity import AssetIdentityResolver
 from apps.context_service.knowledge_topology import KnowledgeTopologyResolver
+from apps.context_service.knowledge_relevance import filter_service_knowledge
 from apps.context_service.service_identity import ServiceIdentityResolver
 from apps.incident_service.repository import IncidentRepository
 from apps.orchestrator.learning_runtime import LearningDurableWorkflowRuntime
@@ -133,16 +134,30 @@ class SignalGateway:
             "phase": "signal_asset_discovery",
         }
         try:
-            knowledge_results = await KnowledgeRAGService().search(
+            raw_results = await KnowledgeRAGService().search(
                 query,
-                limit=settings.AGENT_MAX_AUXILIARY_CONTEXT_ITEMS,
+                limit=min(20, max(5, settings.AGENT_MAX_AUXILIARY_CONTEXT_ITEMS * 3))
+                    if signal.service else settings.AGENT_MAX_AUXILIARY_CONTEXT_ITEMS,
             )
+            knowledge_results, relevance_audit = filter_service_knowledge(
+                raw_results, expected_service=signal.service,
+                purpose="signal_asset_discovery",
+            )
+            knowledge_results = knowledge_results[:settings.AGENT_MAX_AUXILIARY_CONTEXT_ITEMS]
             knowledge_status = {
                 "provider": "cognia",
-                "status": "available" if knowledge_results else "empty",
+                "status": ("filtered_empty" if relevance_audit["rejected_count"] and not knowledge_results
+                           else "available" if knowledge_results else "empty"),
                 "count": len(knowledge_results),
                 "phase": "signal_asset_discovery",
+                "relevance": relevance_audit,
             }
+            if relevance_audit["rejected_count"]:
+                logger.info("cognia_service_relevance_filtered",
+                            service=signal.service, phase="signal_asset_discovery",
+                            accepted=len(knowledge_results),
+                            rejected=relevance_audit["rejected_count"],
+                            rejected_refs=[x["source_id"] for x in relevance_audit["rejected"]])
         except Exception as exc:
             knowledge_status = {
                 "provider": "cognia",
@@ -160,6 +175,7 @@ class SignalGateway:
         topology = KnowledgeTopologyResolver.resolve(
             knowledge_results,
             expected_fqdns=expected_fqdns,
+            expected_service=signal.service,
         )
         resolution = ServiceIdentityResolver.resolve(
             source_service=signal.service,
