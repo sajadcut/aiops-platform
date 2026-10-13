@@ -1482,7 +1482,13 @@
         m.answer_basis==='stored_analysis_live_unavailable'?
         (fa?'بررسی زنده ناموفق؛ شواهد قبلی':'Live check unavailable; prior evidence'):
         m.answer_basis==='live_mcp'?
-        (fa?'بررسی زنده MCP':'Live MCP'):'';
+        (fa?'بررسی زنده VM MCP':'Live VM MCP'):
+        m.answer_basis==='stored_elasticsearch_evidence'?
+        (fa?'گزارش ثبت‌شده Elasticsearch':'Saved Elasticsearch evidence'):
+        m.answer_basis==='live_elasticsearch_mcp'?
+        (fa?'استعلام واقعی Elasticsearch MCP':'Live Elasticsearch MCP'):
+        m.answer_basis==='elastic_mcp_unavailable'?
+        (fa?'Elasticsearch MCP ناموفق':'Elasticsearch MCP failed'):'';
       return '<article class="ic-chat-bubble '+(assistant?'ic-chat-assistant':'ic-chat-user')+'">'+
         '<div class="ic-chat-bubble-head"><strong>'+esc(assistant?(fa?'دستیار AIOps':'AIOps copilot'):(fa?'اپراتور':'Operator'))+
         '</strong><small>'+txt(date(m.created_at))+'</small></div>'+
