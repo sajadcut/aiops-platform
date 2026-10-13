@@ -42,6 +42,21 @@ class EvidenceCollector:
             await self.progress_emitter(self.progress_incident_id, provider, status,
                                         provider=provider)
 
+    @staticmethod
+    def _source_progress_status(provider: str, evidence: List[Dict[str, Any]]) -> str:
+        observations = [
+            str((item.get("raw_data") or {}).get("status") or "")
+            for item in evidence if isinstance(item, dict)
+            and item.get("source") == provider
+            and item.get("type") == "source_observation"
+            and isinstance(item.get("raw_data"), dict)
+        ]
+        if "queried" in observations:
+            return "completed"
+        if any(x in {"error", "unavailable"} for x in observations):
+            return "failed"
+        return "skipped"
+
     @classmethod
     def _known_service(cls, value: Optional[str]) -> Optional[str]:
         text = str(value or "").strip()
@@ -304,7 +319,7 @@ class EvidenceCollector:
                 evidence.append(self._observation("zabbix", f"zabbix-unavailable:{since.isoformat()}", status="unavailable", service=requested_service))
 
         if self.zabbix and (wants_all or "alert" in wants):
-            await self._progress("zabbix", "completed")
+            await self._progress("zabbix", self._source_progress_status("zabbix", evidence))
         if self.prometheus and (wants_all or "alert" in wants):
             await self._progress("prometheus", "started")
             get_alerts = getattr(self.prometheus, "get_alerts", None)
@@ -338,7 +353,7 @@ class EvidenceCollector:
                     ))
 
         if self.prometheus and (wants_all or "alert" in wants):
-            await self._progress("prometheus", "completed")
+            await self._progress("prometheus", self._source_progress_status("prometheus", evidence))
         partial_asset = AssetIdentityResolver.resolve(evidence, requested_service)
         effective_service = self._known_service(partial_asset.get("service")) or self._known_service(partial_asset.get("hostname")) or requested_service
         query_service = effective_service or service
@@ -361,7 +376,7 @@ class EvidenceCollector:
                 evidence.append(self._observation("elasticsearch", f"elastic-unavailable:{since.isoformat()}", status="unavailable", service=effective_service))
 
         if self.elasticsearch and (wants_all or "log" in wants):
-            await self._progress("elasticsearch", "completed")
+            await self._progress("elasticsearch", self._source_progress_status("elasticsearch", evidence))
         if self.prometheus and (wants_all or "metric" in wants):
             await self._progress("prometheus", "started")
             if not effective_service:
@@ -376,7 +391,7 @@ class EvidenceCollector:
                 evidence.append(self._observation("prometheus", f"prom-unavailable:{since.isoformat()}", status="unavailable", service=effective_service))
 
         if self.prometheus and (wants_all or "metric" in wants):
-            await self._progress("prometheus", "completed")
+            await self._progress("prometheus", self._source_progress_status("prometheus", evidence))
         for item in logs:
             evidence.append({"type": "log", "source": getattr(item, "source", "elasticsearch"), "reference": f"log:{getattr(item, 'timestamp', '')}", "timestamp": getattr(item, "timestamp", None), "raw_data": getattr(item, "raw_data", {})})
         for item in metrics:
@@ -420,7 +435,7 @@ class EvidenceCollector:
             and not asset_type.startswith("kubernetes_")
         )
         if self.kubernetes and getattr(self.kubernetes, "enabled", False) and (wants_all or "event" in wants):
-            await self._progress("kubernetes_api", "completed")
+            await self._progress("kubernetes_api", self._source_progress_status("kubernetes_api", evidence))
         if self.vm and vm_target and linux_candidate:
             if not early_vm_actions:
                 await self._progress("vm_mcp", "started")
@@ -477,7 +492,11 @@ class EvidenceCollector:
                     evidence.append(self._observation("vm_mcp", f"vm-error:{vm_target}:{action}:{since.isoformat()}", status="error", service=effective_service, detail=str(exc)))
 
         if self.vm and vm_target and linux_candidate:
-            await self._progress("vm_mcp", "completed")
+            vm_rows = [row for row in evidence if isinstance(row, dict) and row.get("source") == "vm_mcp"]
+            vm_has_data = any(
+                row.get("type") != "source_observation" for row in vm_rows
+            )
+            await self._progress("vm_mcp", "completed" if vm_has_data else "failed")
         final_asset = AssetIdentityResolver.resolve(evidence, effective_service)
         return {
             "service": effective_service or query_service, "requested_service": service,
