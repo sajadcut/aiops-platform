@@ -367,5 +367,6 @@ def build_operator_summary(*, incident: Dict[str, Any], durable_evidence: Iterab
         "decision": decision or None, "approval_status": approval_view["status"], "approver": approval_view.get("approver"), "approval": approval_view,
         "execution_status": execution_status, "execution": execution_view, "verification_status": verification_status, "verification": verification_view,
         "memory_status": memory_status, "memory": memory, "operator_next_step": next_step,
+        "unknown_guidance": _d(_d(state.get("context")).get("unknown_guidance")) or None,
         "source_policy": {"live_evidence_authoritative": True, "durable_state_only": True, "incident_context_is_fallback_only": True, "summary_is_decision_support": True, "execution_authority": False},
     }
