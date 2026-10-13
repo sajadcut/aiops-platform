@@ -19,11 +19,16 @@ ANALYSIS_STAGES = ("context", "triage", "parallel_agents", "rca", "evaluator", "
 EXECUTION_STAGES = ("execution", "verification", "memory")
 STAGES = ANALYSIS_STAGES + ("approval",) + EXECUTION_STAGES + ("end",)
 PROVIDERS = {"vm_mcp", "zabbix", "elasticsearch", "prometheus", "kubernetes_api"}
+AGENT_STAGES = {"agent:" + name for name in (
+    "network", "vm", "application", "infrastructure", "dependency",
+    "storage", "kubernetes", "database", "recovery", "security",
+    "identity", "messaging", "change", "triage",
+)}
 _STATUSES = {"started", "completed", "failed", "skipped", "waiting"}
 
 
 def progress_record(stage: str, status: str, *, detail: str = "", provider: str = "") -> dict:
-    if stage not in STAGES and stage not in PROVIDERS and stage != "knowledge":
+    if stage not in STAGES and stage not in PROVIDERS and stage not in AGENT_STAGES and stage != "knowledge":
         raise ValueError("invalid_progress_stage")
     if status not in _STATUSES:
         raise ValueError("invalid_progress_status")
@@ -80,10 +85,13 @@ def summarize_progress(events: list[Mapping[str, Any]], *, incident_status: str 
                      key=lambda r: r["at"])
     phases = {}
     providers = {}
+    agents = {}
     current = None
     for item in ordered:
         stage = item["stage"]
-        if stage in PROVIDERS or stage == "knowledge":
+        if stage in AGENT_STAGES:
+            agents[stage[6:]] = item
+        elif stage in PROVIDERS or stage == "knowledge":
             providers[stage] = item
         else:
             phases[stage] = item
@@ -128,6 +136,7 @@ def summarize_progress(events: list[Mapping[str, Any]], *, incident_status: str 
         "current_stage": current,
         "stages": {k: phases[k] for k in STAGES if k in phases},
         "providers": {k: providers[k] for k in ("knowledge", *sorted(PROVIDERS)) if k in providers},
+        "agents": {k: agents[k] for k in sorted(agents)},
         "started_at": next((x["at"] for x in ordered if x["stage"] == "context" and x["status"] == "started"), None),
         "last_event_at": ordered[-1]["at"] if ordered else None,
         "time_estimate_available": False,
