@@ -162,7 +162,11 @@ class KnowledgeTopologyResolver:
         knowledge_results: Iterable[Mapping[str, Any]],
         *,
         expected_fqdns: Optional[Iterable[str]] = None,
+        expected_service: Optional[str] = None,
     ) -> Dict[str, Any]:
+        service_scope = str(expected_service or "").strip().casefold().removesuffix(".service")
+        if service_scope in {"", "unknown", "none", "null"}:
+            service_scope = ""
         expected = {
             normalized
             for value in (expected_fqdns or [])
@@ -173,6 +177,8 @@ class KnowledgeTopologyResolver:
         conflicts: List[Dict[str, Any]] = []
         source_refs: List[str] = []
         skipped_mismatched_fqdns: List[str] = []
+        skipped_service_mismatch: List[str] = []
+        skipped_unscoped_topology: List[str] = []
 
         for item in knowledge_results:
             if not isinstance(item, Mapping):
@@ -181,11 +187,21 @@ class KnowledgeTopologyResolver:
             if not parsed:
                 continue
             candidate_fqdn = cls._normalize_field("fqdn", parsed.get("fqdn"))
+            source_ref = str(item.get("source_id") or item.get("id") or "cognia:unknown")
             if expected and candidate_fqdn and candidate_fqdn not in expected:
                 skipped_mismatched_fqdns.append(candidate_fqdn)
                 continue
+            if service_scope:
+                declared = str(parsed.get("service") or "").strip().casefold().removesuffix(".service")
+                if declared and declared != service_scope:
+                    skipped_service_mismatch.append(source_ref)
+                    continue
+                if not declared and not (candidate_fqdn and candidate_fqdn in expected):
+                    # Generic how-to docs may guide Agents, but can never
+                    # supply a concrete owner, platform or incident topology.
+                    skipped_unscoped_topology.append(source_ref)
+                    continue
 
-            source_ref = str(item.get("source_id") or item.get("id") or "cognia:unknown")
             if source_ref not in source_refs:
                 source_refs.append(source_ref)
 
@@ -215,6 +231,8 @@ class KnowledgeTopologyResolver:
             "source_refs": source_refs,
             "conflicts": conflicts,
             "skipped_mismatched_fqdns": skipped_mismatched_fqdns,
+            "skipped_service_mismatch": skipped_service_mismatch,
+            "skipped_unscoped_topology": skipped_unscoped_topology,
         }
 
     @classmethod
