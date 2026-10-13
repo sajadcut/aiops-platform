@@ -4040,10 +4040,10 @@
 | `tests/unit/test_vm_diagnostic_evidence.py` | `test_initial_vm_collection_proactively_checks_service_config_and_trigger_port` | 103 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_vm_diagnostic_evidence.py` | `test_target_port_resolution_accepts_only_explicit_valid_port` | 121 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_vm_diagnostic_evidence.py` | `test_service_adapter_uses_fixed_haproxy_validation_command` | 129 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_vm_diagnostic_evidence.py` | `test_structured_service_status_parses_systemd_properties` | 137 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_vm_diagnostic_evidence.py` | `test_structured_service_status_parses_systemd_properties.fake_run` | 140 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_structured_service_status_parses_systemd_properties |
-| `tests/unit/test_vm_diagnostic_evidence.py` | `test_reload_is_fixed_governed_service_command` | 161 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_vm_diagnostic_evidence.py` | `test_reload_is_fixed_governed_service_command.fake_run` | 165 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_reload_is_fixed_governed_service_command |
+| `tests/unit/test_vm_diagnostic_evidence.py` | `test_structured_service_status_parses_systemd_properties` | 140 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_diagnostic_evidence.py` | `test_structured_service_status_parses_systemd_properties.fake_run` | 143 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_structured_service_status_parses_systemd_properties |
+| `tests/unit/test_vm_diagnostic_evidence.py` | `test_reload_is_fixed_governed_service_command` | 164 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_diagnostic_evidence.py` | `test_reload_is_fixed_governed_service_command.fake_run` | 168 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_reload_is_fixed_governed_service_command |
 | `tests/unit/test_vm_execution_boundary.py` | `test_ssh_vm_tool_allows_only_governed_actions` | 9 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_vm_execution_boundary.py` | `test_telemetry_tool_is_read_only` | 27 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_vm_guest_engine.py` | `metric` | 4 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
