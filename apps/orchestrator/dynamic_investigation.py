@@ -380,6 +380,11 @@ class DynamicInvestigationPlanner:
             })
         if not missing and not failure and unit.get("runtime") != "dotnet":
             return result
+        safe_knowledge, _ = filter_service_knowledge(
+            state.get("knowledge_results") or [],
+            expected_service=str(state.get("service_name") or ""),
+            purpose="dynamic_planner_prompt",
+        )
         context_data = {
             "service": _bounded(state.get("service_name"), 80),
             "confirmed_config_failure": failure,
@@ -392,7 +397,7 @@ class DynamicInvestigationPlanner:
                     "excerpt": _bounded(item.get("content"), 330),
                     "relevance": item.get("relevance"),
                 }
-                for item in (state.get("knowledge_results") or [])[:3]
+                for item in safe_knowledge[:3]
                 if isinstance(item, dict) and item.get("source_id")
             ],
         }
