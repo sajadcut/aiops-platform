@@ -428,12 +428,34 @@ class E2EOrchestrator:
         inp = self._agent_input(state)
         tasks = []
         actual_names: List[str] = []
+
+        async def observed_agent(name, agent):
+            observer = self.progress_emitter
+            # Only trusted registry names can enter the visible progress feed.
+            safe_names = {
+                "network", "vm", "application", "infrastructure", "dependency",
+                "storage", "kubernetes", "database", "recovery", "security",
+                "identity", "messaging", "change", "triage",
+            }
+            stage = "agent:" + name if name in safe_names else None
+            if observer and stage:
+                await observer(state.get("incident_id"), stage, "started")
+            try:
+                output = await asyncio.wait_for(agent.analyze(inp), timeout=settings.AGENT_TIMEOUT_SECONDS + 2)
+            except Exception:
+                if observer and stage:
+                    await observer(state.get("incident_id"), stage, "failed")
+                raise
+            if observer and stage:
+                await observer(state.get("incident_id"), stage, "completed")
+            return output
+
         for name in names[: settings.AGENT_MAX_PARALLELISM]:
             agent = self.registry.get(name)
             if agent is None:
                 continue
             actual_names.append(name)
-            tasks.append(asyncio.wait_for(agent.analyze(inp), timeout=settings.AGENT_TIMEOUT_SECONDS + 2))
+            tasks.append(observed_agent(name, agent))
         results = await asyncio.gather(*tasks, return_exceptions=True)
         findings: List[Dict[str, Any]] = []
         for name, result in zip(actual_names, results):
