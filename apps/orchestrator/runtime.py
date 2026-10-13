@@ -363,14 +363,18 @@ class DurableWorkflowRuntime:
         execution_request = dict(state.get("execution_request") or {})
         if not execution_request:
             raise ValueError("execution_request_not_found_in_checkpoint")
-        self._assert_binding(durable, execution_request)
-        await self._assert_decision_snapshot(incident_id, str(approval_id), state, durable)
-        await self._preconsume_execution_guard(
-            incident_id,
-            str(approval_id),
-            execution_request,
-            state,
-        )
+        from apps.orchestrator.progress import emit_progress
+        await emit_progress(incident_id, "pre_execution_check", "started")
+        try:
+            self._assert_binding(durable, execution_request)
+            await self._assert_decision_snapshot(incident_id, str(approval_id), state, durable)
+            await self._preconsume_execution_guard(
+                incident_id, str(approval_id), execution_request, state,
+            )
+        except Exception:
+            await emit_progress(incident_id, "pre_execution_check", "failed")
+            raise
+        await emit_progress(incident_id, "pre_execution_check", "completed")
 
         consumed = await self.approvals.consume(str(approval_id), issue_claim=True)
         if not consumed or consumed.get("status") != "consumed":
@@ -409,8 +413,12 @@ class DurableWorkflowRuntime:
             # This does not resolve the incident; it records the failed/blocked
             # attempt and allows cited historical experience to receive negative
             # reuse feedback.
+            await emit_progress(incident_id, "memory", "started")
             result = await orchestrator._memory_node(result)
+            await emit_progress(incident_id, "memory", "completed")
+            await emit_progress(incident_id, "end", "started")
             result = await orchestrator._end_node(result)
+            await emit_progress(incident_id, "end", "completed")
             await self.checkpoints.mark_failed(incident_id, result)
             await self._set_incident_status(incident_id, "escalated")
             await self.incidents.add_findings(
@@ -437,7 +445,9 @@ class DurableWorkflowRuntime:
 
         result = await orchestrator._memory_node(result)
         await emit_progress(incident_id, "memory", "completed")
+        await emit_progress(incident_id, "end", "started")
         result = await orchestrator._end_node(result)
+        await emit_progress(incident_id, "end", "completed")
         if verification_status == "success":
             await self.checkpoints.mark_completed(incident_id, result)
             await self._set_incident_status(incident_id, "resolved")
