@@ -25,7 +25,7 @@ class EvidenceCollector:
         "collect_vm_metrics", "host_info", "disk_status", "disk_forensics", "network_status",
         "service_status", "service_logs", "system_logs", "process_snapshot",
         "process_status", "tcp_check", "port_listener_status", "dns_check",
-        "route_check", "firewall_status", "config_validate",
+        "route_check", "firewall_status", "config_validate", "nginx_config_review",
         "service_runtime_discovery", "dotnet_config_syntax",
     }
 
@@ -157,6 +157,8 @@ class EvidenceCollector:
                 add("tcp_check")
             if service and any(token in text for token in ("config", "configuration", "syntax validation")):
                 add("config_validate")
+            if service and "nginx config review" in text:
+                add("nginx_config_review")
             if service and any(token in text for token in ("runtime discovery", "systemd unit", "publish directory", "execstart")):
                 add("service_runtime_discovery")
             if service and any(token in text for token in ("dotnet json", ".net json", "appsettings", "json syntax")):
@@ -453,7 +455,7 @@ class EvidenceCollector:
                     evidence.append(self._observation("vm_mcp", f"vm-skipped:{vm_target}:{action}:{since.isoformat()}", status="skipped", service=effective_service, detail="diagnostic_not_supported"))
                     continue
                 try:
-                    if action in {"service_status", "service_logs", "config_validate", "service_runtime_discovery", "dotnet_config_syntax"}:
+                    if action in {"service_status", "service_logs", "config_validate", "nginx_config_review", "service_runtime_discovery", "dotnet_config_syntax"}:
                         result = await method(vm_target, effective_service)
                     elif action == "process_status":
                         result = await method(vm_target, effective_service)
@@ -467,6 +469,19 @@ class EvidenceCollector:
                         rows = self._vm_evidence(action, vm_target, effective_service, vm_port, result, since)
                         evidence.extend(rows)
                         evidence.append(self._observation("vm_mcp", f"vm-observation:{vm_target}:{action}:{since.isoformat()}", status="queried", result_count=len(rows), service=effective_service, detail=f"target={vm_target};diagnostic={action}"))
+                        # On confirmed nginx syntax failure, offer a strictly
+                        # bounded, non-executing structural patch candidate.
+                        # The preview can stage nginx -t on a temp copy, but
+                        # never treats this as isolated production validation.
+                        if (
+                            settings.AIOPS_DYNAMIC_INVESTIGATION_ENABLED
+                            and action == "config_validate"
+                            and effective_service in {"nginx", "nginx.service"}
+                            and result.get("supported") is True
+                            and result.get("valid") is False
+                            and "nginx_config_review" not in actions
+                        ):
+                            actions.append("nginx_config_review")
                         # Follow unsupported validators with systemd technology
                         # discovery; only confirmed .NET DLLs trigger bounded
                         # syntax checks. No LLM controls a remote filename.
