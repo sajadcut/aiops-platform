@@ -17,6 +17,7 @@ from integrations.kubernetes.mcp_client import KubernetesMCPClient
 
 from .evidence_collector import EvidenceCollector
 from .knowledge_topology import KnowledgeTopologyResolver
+from .knowledge_relevance import filter_service_knowledge
 from .service_identity import ServiceIdentityResolver
 
 
@@ -99,6 +100,7 @@ class ContextBuilder:
         )
 
         knowledge_results = []
+        relevance_audit: Dict[str, Any] = {}
         knowledge_status: Dict[str, Any] = {
             "provider": "cognia",
             "status": "not_queried",
@@ -106,16 +108,30 @@ class ContextBuilder:
             "phase": "asset_discovery",
         }
         try:
-            knowledge_results = await self.rag_service.search(
+            raw_results = await self.rag_service.search(
                 discovery_query,
-                limit=settings.AGENT_MAX_AUXILIARY_CONTEXT_ITEMS,
+                limit=min(20, max(5, settings.AGENT_MAX_AUXILIARY_CONTEXT_ITEMS * 3))
+                    if explicit_service else settings.AGENT_MAX_AUXILIARY_CONTEXT_ITEMS,
             )
+            knowledge_results, relevance_audit = filter_service_knowledge(
+                raw_results, expected_service=explicit_service,
+                purpose="context_asset_discovery",
+            )
+            knowledge_results = knowledge_results[:settings.AGENT_MAX_AUXILIARY_CONTEXT_ITEMS]
             knowledge_status = {
                 "provider": "cognia",
-                "status": "available" if knowledge_results else "empty",
+                "status": ("filtered_empty" if relevance_audit["rejected_count"] and not knowledge_results
+                           else "available" if knowledge_results else "empty"),
                 "count": len(knowledge_results),
                 "phase": "asset_discovery",
+                "relevance": relevance_audit,
             }
+            if relevance_audit["rejected_count"]:
+                logger.info("cognia_service_relevance_filtered",
+                            service=explicit_service, phase="asset_discovery",
+                            accepted=len(knowledge_results),
+                            rejected=relevance_audit["rejected_count"],
+                            rejected_refs=[x["source_id"] for x in relevance_audit["rejected"]])
         except Exception as exc:
             knowledge_status = {
                 **self._knowledge_failure_status(exc),
@@ -131,6 +147,7 @@ class ContextBuilder:
         knowledge_topology = KnowledgeTopologyResolver.resolve(
             knowledge_results,
             expected_fqdns=expected_fqdns,
+            expected_service=explicit_service,
         )
         initial_resolution = ServiceIdentityResolver.resolve(
             source_service=explicit_service,
