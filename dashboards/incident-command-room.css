@@ -175,3 +175,6 @@
 .ic-evidence-rest summary{cursor:pointer;color:var(--accent);font-weight:750}
 .ic-evidence-rest-content{display:grid;gap:12px;margin-top:12px}
 @media(max-width:650px){.ic-explain{padding:13px}.ic-explain h3{font-size:16px}}
+
+.ic-semantic-diagnostic{display:inline-flex;align-items:center;padding:5px 10px;border-radius:10px;font-size:12px;color:var(--muted);background:var(--raised);border:1px solid var(--line)}
+.ic-semantic-diagnostic[data-invalid="true"]{color:var(--red);border-color:color-mix(in srgb,var(--red) 50%,var(--line));background:color-mix(in srgb,var(--red) 9%,var(--surface))}
