@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 448 | Dashboard JS files scanned: 8 | Symbols indexed: 4252**
+**Python files scanned: 448 | Dashboard JS files scanned: 8 | Symbols indexed: 4255**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -3070,6 +3070,9 @@
 | `tests/unit/test_decision_approval_snapshot_binding.py` | `test_runtime_allows_unchanged_bound_decision_to_resume.ApprovalStore` | 96 | class | کلاس | test_runtime_allows_unchanged_bound_decision_to_resume |
 | `tests/unit/test_decision_approval_snapshot_binding.py` | `test_runtime_allows_unchanged_bound_decision_to_resume.ApprovalStore.get` | 97 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_runtime_allows_unchanged_bound_decision_to_resume.ApprovalStore |
 | `tests/unit/test_decision_approval_snapshot_binding.py` | `test_decision_brief_report_does_not_serve_as_approval_authority` | 111 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_decision_approval_snapshot_binding.py` | `test_terminal_approval_does_not_report_new_approval_required_after_execution` | 128 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_decision_approval_snapshot_binding.py` | `test_consumed_approval_cannot_turn_post_execution_snapshot_drift_into_new_approval` | 156 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_decision_approval_snapshot_binding.py` | `test_fullscreen_incident_renders_consumed_approval_without_false_drift` | 169 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_decision_brief.py` | `make_brief` | 9 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
 | `tests/unit/test_decision_brief.py` | `test_brief_is_versioned_read_only_and_snapshot_is_stable` | 62 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_decision_brief.py` | `test_agreement_rca_and_evaluator_are_not_conflated` | 74 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
