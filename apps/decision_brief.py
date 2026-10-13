@@ -451,7 +451,7 @@ def build_decision_brief(
         },
         "approval_readiness": {
             "status": (
-                "new_approval_required" if approval.get("decision_snapshot_status") == "drift_detected" else
+                "new_approval_required" if approval.get("status") in {"pending", "approved"} and approval.get("decision_snapshot_status") == "drift_detected" else
                 "human_review_required" if approval.get("status") == "pending" else "not_pending"
             ),
             "approval_id": safe(approval.get("approval_id"), 180),
@@ -469,7 +469,8 @@ def build_decision_brief(
             "timeout_seconds": approval.get("timeout_seconds"),
             "evidence_snapshot_binding": (
                 "matched_at_read" if approval.get("decision_snapshot_status") == "matched" else
-                "drift_detected" if approval.get("decision_snapshot_status") == "drift_detected" else
+                "drift_detected" if approval.get("status") in {"pending", "approved"} and approval.get("decision_snapshot_status") == "drift_detected" else
+                "not_applicable" if approval.get("decision_snapshot_status") == "not_applicable" else
                 "not_verified"
             ),
             "decision_snapshot_version": approval.get("decision_snapshot_version"),
