@@ -372,7 +372,7 @@
           <div class="incident-queue-eyebrow"><span class="incident-queue-severity">${esc(severityLabel)}</span><span class="incident-queue-state">${incidentStatusHtml(i,stateLabel)}</span><span class="incident-queue-id">#${esc(String(i.id).slice(0,8))}</span></div>
           <h3>${esc(incidentDisplayName(i))}</h3>
           <p>${esc(i.summary || 'شرح این رخداد ثبت نشده است.')}</p>
-          <div class="incident-queue-meta"><span>شروع: <time>${esc(started.exact)}</time> <small>${esc(started.zone)}</small></span><span>وضعیت: ${incidentStatusHtml(i,stateLabel)}</span><span>ریسک: ${esc(i.risk_level || 'نامشخص')}</span></div>
+          <div class="incident-queue-meta"><span>شروع: <time>${esc(started.exact)}</time> <small>${esc(started.zone)}</small></span><span>وضعیت: ${esc(incidentAnalyzing(i) ? 'در حال بررسی و تحلیل' : stateLabel)}</span><span>ریسک: ${esc(i.risk_level || 'نامشخص')}</span></div>
         </div>
         <div class="incident-queue-next">${pending ? '<span class="incident-queue-urgent">نیازمند تصمیم شما</span>' : (risk ? '<span class="incident-queue-urgent">اولویت بررسی</span>' : '')}
           <span class="incident-queue-open">دیدن گزارش <b aria-hidden="true">←</b></span>
