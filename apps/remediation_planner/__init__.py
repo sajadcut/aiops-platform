@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from datetime import datetime, timezone
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 from apps.runbook_service.registry import RunbookRegistry
@@ -328,7 +329,14 @@ class RemediationPlanner:
     def _configuration_precondition(
         evidence: Iterable[Dict[str, Any]], *, target: str, service: str
     ) -> Tuple[bool, List[str], str]:
-        matching: List[Tuple[Dict[str, Any], str]] = []
+        """Only a completed, real config validation may justify a service start.
+
+        An unavailable validator, LLM suggestion, empty response or HTTP 200
+        without semantic success is never an acceptable execution precondition.
+        When a config is actually repaired, a *newer* checked result supersedes
+        the old failure. Unordered or conflicting evidence still fails closed.
+        """
+        matching: List[Tuple[Dict[str, Any], str, Optional[datetime]]] = []
         for item in evidence:
             if str(item.get("source") or "").strip().lower() != "vm_mcp":
                 continue
@@ -337,19 +345,44 @@ class RemediationPlanner:
                 continue
             if str(raw.get("target") or "").strip() != target or str(raw.get("service") or "").strip() != service:
                 continue
-            matching.append((raw, str(item.get("reference") or "").strip()))
+            time_value = (
+                raw.get("collected_at") or raw.get("observed_at")
+                or item.get("timestamp") or item.get("created_at")
+            )
+            timestamp = None
+            if time_value:
+                try:
+                    timestamp = datetime.fromisoformat(str(time_value).replace("Z", "+00:00"))
+                    if timestamp.tzinfo is None:
+                        timestamp = None
+                    else:
+                        timestamp = timestamp.astimezone(timezone.utc)
+                except (TypeError, ValueError, OverflowError):
+                    pass
+            matching.append((raw, str(item.get("reference") or "").strip(), timestamp))
 
-        refs = [ref for _, ref in matching if ref]
         if not matching:
-            return False, refs, "configuration_validation_evidence_missing"
-
-        for raw, _ in matching:
-            if raw.get("supported") is True and raw.get("valid") is not True:
+            return False, [], "configuration_validation_evidence_missing"
+        dated = [stamp for _, _, stamp in matching if stamp is not None]
+        if dated and len(dated) != len(matching):
+            # Do not let undated contradictory evidence be silently overridden.
+            active = matching
+        elif dated:
+            latest = max(dated)
+            active = [(raw, ref, stamp) for raw, ref, stamp in matching if stamp == latest]
+        else:
+            active = matching
+        refs = [ref for _, ref, _ in active if ref]
+        for raw, _, _ in active:
+            if raw.get("supported") is not True:
+                return False, refs, "configuration_validation_unavailable"
+            if raw.get("valid") is False:
                 return False, refs, "service_configuration_invalid"
-
-        if any(raw.get("valid") is True or raw.get("supported") is False for raw, _ in matching):
-            return True, refs, "configuration_precondition_satisfied"
-        return False, refs, "configuration_validation_inconclusive"
+            if raw.get("valid") is not True:
+                return False, refs, "configuration_validation_inconclusive"
+            if raw.get("success") is False:
+                return False, refs, "configuration_validation_failed"
+        return True, refs, "configuration_precondition_satisfied"
 
     @staticmethod
     def _target_port(
