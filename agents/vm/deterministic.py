@@ -83,6 +83,7 @@ def classify_vm_service_fault(
         f"{service_name} service is {active_state or 'inactive'} with sub-state {sub_state or 'unknown'}",
         f"{service_name} process is not running",
         f"{service_name} configuration validation succeeded",
+        "Stop cause and actor are unverified; manual, automated or maintenance stop remains possible",
     ]
     if listener_down:
         findings.append("expected local TCP listener is absent")
@@ -91,6 +92,8 @@ def classify_vm_service_fault(
 
     return {
         "fault_code": "service_stopped",
+        "stop_attribution": "unknown",
+        "requires_operator_review": True,
         "confidence": confidence,
         # Operational severity is intentionally kept separate from write risk.
         # The start action is still high-risk/governed, while this confirmed
@@ -110,6 +113,6 @@ def classify_vm_service_fault(
             "impacted_components": [service_name],
             "recommended_next_evidence": [f"{service_name} service logs around the stop event"],
         },
-        "remediation_candidate": f"Start {service_name} service",
+        "remediation_candidate": f"Propose starting {service_name} after operator approval; investigate stop origin separately",
         "suggested_action": "start_service",
     }
