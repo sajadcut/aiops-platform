@@ -322,7 +322,10 @@
     const subject=unknownService?'این هشدار سرور':'سرویس '+safe(i.service);
     const host=identity.source_host||i.host||i.target||x.target;
     const where=host?' '+(unknownService?'':'روی سرور ')+safe(host):'';
-    const situation=facts.length?'بررسی ابزارها نشان می‌دهد: '+facts.join('؛ ')+'.' :
+    const explanation=r.operator_explanation||{};
+    const situation=explanation.headline_fa?
+      explanation.headline_fa:
+      facts.length?'بررسی ابزارها نشان می‌دهد: '+facts.join('؛ ')+'.' :
       'هنوز اطلاعات کافی برای توضیح دقیق وضعیت سرویس نداریم.';
     const stored=String(r.localized_narrative?.fa || '').trim();
     const storedNote=isFaText(stored) && stored.length <= 280 &&
@@ -654,7 +657,7 @@
         : authStatus==='approved'?tr('approvalSeparate'):tr('backendGate'))+'</p>');
     const quick=[
       ['started',date(i.started_at)],['duration',i.elapsed_seconds==null?tr('unknown'):num(Math.max(0,Math.floor(i.elapsed_seconds/60)))+' '+(state.language==='fa'?'دقیقه':'min')],
-      ['risk',status(action.risk_level)],['evidence',num(i.valid_evidence_count??r.source_references?.length??0)]
+      ['risk',status(action.risk_level)],['evidence',num(i.total_evidence_count??r.source_references?.length??0)]
     ];
     show('#ic-quick-facts',quick.map(([k,v])=>'<div><small>'+esc(tr(k))+'</small><strong>'+esc(v)+'</strong></div>').join(''));
   }
@@ -669,8 +672,43 @@
     if(Number(c.retrieved_count)>0 && arr(c.items).every(x=>x.use_status!=='cited_by_agent'))messages.push({text:tr('notUsed')});
     return messages;
   }
+  function renderOperatorExplanation(r) {
+    const op=r.operator_explanation||{},fa=state.language==='fa';
+    if(!op.headline_fa){show('#ic-operator-explanation','');return;}
+    const confirmed=arr(op.confirmed_findings);
+    const unknown=arr(op.uncertainties_fa),next=arr(op.next_steps_fa);
+    const rows=(items,withRefs)=>'<ul class="ic-explain-list">'+items.slice(0,6).map(x=>
+      '<li>'+txt(withRefs?x.text_fa:x)+(withRefs?refs(x.evidence_refs):'')+'</li>'
+    ).join('')+'</ul>';
+    const heading=(title,body,label)=>'<section class="ic-explain-part"><h4>'+esc(title)+
+      '</h4>'+body+'</section>';
+    const faHeadline=op.headline_fa;
+    const enHeadline=confirmed.length?
+      'Evidence-backed diagnostic findings are available; see source details below.':
+      'The recorded investigation does not yet establish the root cause.';
+    const analysis=heading(fa?'چه چیزهایی واقعاً بررسی و تأیید شده؟':'Confirmed observations',
+      confirmed.length?rows(confirmed,true):'<p>'+esc(fa?'شاهد قطعی کافی ثبت نشده است.':'No sufficient confirmed evidence.')+'</p>');
+    const caution=heading(fa?'چه چیزهایی هنوز نامشخص است؟':'Open questions',
+      rows(unknown,false));
+    const nextSteps=heading(fa?'قدم بعدی پیشنهادی AIOps':'Suggested next steps',
+      rows(next,false));
+    const approval='<p class="ic-explain-gate">'+esc(fa?op.approval_explanation_fa:
+      'This report is read-only and cannot approve or execute a configuration change.')+'</p>';
+    const total=r.incident_summary?.total_evidence_count;
+    const count=Number.isInteger(total)?
+      '<p class="ic-explain-count">'+esc(fa?
+        'شواهد ثبت‌شده: '+num(total)+' مورد · شواهد تازه و قابل اتکا برای تصمیم اجرایی: '+
+          num(r.incident_summary.valid_evidence_count||0)+' مورد':
+        'Recorded evidence: '+total+' · fresh execution-grade: '+
+          (r.incident_summary.valid_evidence_count||0))+'</p>':'';
+    show('#ic-operator-explanation','<article class="ic-explain">'+
+      '<h3>'+esc(fa?faHeadline:enHeadline)+'</h3>'+count+
+      analysis+caution+nextSteps+approval+'</article>');
+  }
+
   function renderOverview(r) {
     const i=r.incident_summary||{},act=r.remediation_recommendation||{},a=r.approval_readiness||{};
+    renderOperatorExplanation(r);
     const deterministic=plainLead(r);
     const n=state.narrative;
     const matched=n && n.snapshot_id===r.snapshot_id && n.language===state.language && !state.historic && n.status==='available';
@@ -783,8 +821,15 @@
     if(/(?:manual stop possible|manual(?:ly)? stop(?:ped)?(?: service)? is possible|A manual stop is possible but not proven)/i.test(x))
       return 'توقف دستی سرویس یک فرضیه است؛ عامل توقف و عمدی‌بودن آن هنوز تأیید نشده است.';
     if(/no confirmed domain fault yet/i.test(x))return 'با شواهد فعلی خرابی مستقلی در این حوزه تأیید نشده است.';
-    if(/configuration (?:validation|check|syntax).*(?:success|passed|valid)/i.test(x))return 'تست ساختار تنظیمات سرویس با موفقیت انجام شده است.';
-    if(/(?:agent|analysis).*timed out|readtimeout|timeout/i.test(x))return 'تحلیل این ایجنت به دلیل پایان مهلت پاسخ کامل نشده است.';
+    if(/invalid JSON syntax|JSON syntax (?:error|invalid)|invalid_json_syntax/i.test(x))
+      return 'ایجنت به خطای ساختار JSON در کانفیگ برنامه اشاره کرده است؛ جزئیات قطعی در گزارش Validator درج شده است.';
+    if(/configuration (?:validation|check|syntax).*(?:success|passed|valid)/i.test(x)){
+      if(state.report?.configuration_diagnostic?.status==='invalid')
+        return 'این ایجنت سالم بودن کانفیگ را مطرح کرده، اما با خطای ثبت‌شدهٔ Validator تطابق ندارد؛ نتیجهٔ قطعی باید از ابزار بررسی کانفیگ گرفته شود.';
+      return 'این ایجنت موفقیت تست کانفیگ را گزارش کرده است؛ نتیجه باید با خروجی مستقیم Validator مقایسه شود.';
+    }
+    if(/(?:agent|analysis|llm|model)\s+(?:response\s+)?(?:timed out|timeout|exceeded timeout)/i.test(x))
+      return 'پاسخ این ایجنت یا مدل به علت Timeout کامل نشده است.';
     return null;
   };
   const agentLine = raw => {
@@ -810,7 +855,8 @@
     const items=[];
     if(kind==='invalid') {
       const location=[config.config_file || (fa?'مسیر فایل ثبت نشده':'File not recorded'),
-        Number.isInteger(config.error_line)?(fa?'خط '+num(config.error_line):'line '+num(config.error_line)):null]
+        Number.isInteger(config.error_line)?(fa?'خط '+num(config.error_line):'line '+num(config.error_line)):null,
+        Number.isInteger(config.error_column)?(fa?'ستون '+num(config.error_column):'column '+num(config.error_column)):null]
         .filter(Boolean).join(' — ');
       items.push('<article class="ic-config-check" data-config-status="invalid"><h3>'+
         esc(fa?'خطای واقعی در کانفیگ سرویس شناسایی شد':'Service configuration validation failed')+'</h3>'+
@@ -836,6 +882,11 @@
         '</p><ul class="ic-agent-bullets">'+arr(advice.items).slice(0,5).map(x=>
           '<li><b>'+txt(x.subject||x.topic)+'</b> — '+txt(x.validation_approach||x.explanation)+
           '</li>').join('')+'</ul></article>');
+    } else if(kind==='json_syntax_valid') {
+      items.push('<article class="ic-config-check" data-config-status="valid"><h3>'+
+        esc(fa?'ساختار JSON فایل‌های دات‌نت بررسی شد':'Dotnet JSON syntax checked')+
+        '</h3><p>'+esc(fa?'سینتکس فایل‌های بررسی‌شده معتبر است، اما صحت مقادیر تنظیمات، سلامت سرویس و امکان Start هنوز تأیید نشده است.':
+          'Only selected JSON syntax passed; runtime semantics and safe start are still unverified.')+'</p></article>');
     } else if(kind==='unverified') {
       items.push('<article class="ic-config-check" data-config-status="unknown"><h3>'+
         esc(fa?'روش یا نتیجهٔ معتبر تست کانفیگ هنوز مشخص نیست':'Config validation is unverified')+
