@@ -27,7 +27,7 @@ GFPAPI_DOC = {
 GENERIC_DOC = {
     "source_id": "cognia:1:200:210:2200",
     "relevance": 0.95,
-    "content": "Diagnose ASP.NET Core systemd Type=notify readiness and startup timeout",
+    "content": "Diagnose ASP.NET Core systemd Type=notify readiness and startup timeout\nOwner: shared-runbooks",
 }
 
 
