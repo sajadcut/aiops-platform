@@ -110,12 +110,13 @@ async def test_connector_discovery_and_json_diagnostic_are_read_only(monkeypatch
         commands.append(command)
         if command.startswith("systemctl show "):
             return {"success": True, "stdout": SYSTEMD}
-        if command.startswith("python3 -I -c "):
-            return {"success": True, "stdout": json.dumps({
-                "status": "invalid", "syntax_valid": False,
-                "files": [{"file": "appsettings.Production.json",
-                           "status": "invalid_json_syntax", "line": 3, "column": 10}],
-            })}
+        if " find " in command:
+            return {"success": True, "stdout": "appsettings.Production.json\\tf\\n"}
+        if "base64 -w 0" in command:
+            import base64
+            return {"success": True, "stdout": base64.b64encode(
+                b'{\\n  "Logging": true,\\n  "Bad": }\\n'
+            ).decode()}
         raise AssertionError("Unexpected command")
     monkeypatch.setattr(connector, "_run", fake_run)
     runtime = await connector.service_runtime_discovery("10.248.16.82", "gfpapi")
@@ -126,8 +127,14 @@ async def test_connector_discovery_and_json_diagnostic_are_read_only(monkeypatch
     assert status["application_ready"] is None
     assert status["validated_scope"] == "json_syntax_only"
     assert status["config_contents_exposed"] is False
-    assert len(commands) == 3
-    assert all("systemctl start" not in c and "rm -rf" not in c for c in commands)
+    assert len(commands) == 4
+    assert all("python3 " not in c and "systemctl start" not in c and "rm -rf" not in c
+               for c in commands)
+    assert status["validator"] == "aiops-local-python-json-syntax-only"
+    assert status["remote_python_required"] is False
+    assert status["files"][0]["error_code"] == "json_value_missing"
+    assert status["files"][0]["explanation_fa"]
+    assert "Bad" not in json.dumps(status)
     with pytest.raises(PermissionError):
         await connector.service_runtime_discovery("10.248.16.82", "other-service")
 
