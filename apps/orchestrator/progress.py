@@ -75,7 +75,8 @@ def _safe_event(event: Mapping[str, Any]) -> dict | None:
 
 
 def summarize_progress(events: list[Mapping[str, Any]], *, incident_status: str = "",
-                       checkpoint_status: str = "", approval_status: str = "") -> dict:
+                       checkpoint_status: str = "", approval_status: str = "",
+                       checkpoint_version: int | None = None) -> dict:
     """Only completed actual stages move the bar; no ETA or time-derived percent.
 
     Filtered events are already isolated by Incident ID on the database query.
@@ -125,6 +126,7 @@ def summarize_progress(events: list[Mapping[str, Any]], *, incident_status: str 
     return {
         "schema": "incident_progress.v1", "incident_status": incident_status,
         "checkpoint_status": checkpoint_status,
+        "checkpoint_version": checkpoint_version,
         "approval_status": approval_status,
         "analysis_percent": analysis_percent,
         "analysis_completed": analysis_done,
@@ -155,6 +157,7 @@ async def load_progress(incident_id: str) -> dict:
         """), {"incident_id": incident_id})).mappings().all()
         status = (await db.execute(text("""
             SELECT i.status::text AS incident_status, w.status AS checkpoint_status,
+                   w.version AS checkpoint_version,
                    (SELECT a.status::text FROM approvals a WHERE a.incident_id=i.id
                     ORDER BY a.created_at DESC LIMIT 1) AS approval_status
             FROM incidents i LEFT JOIN workflow_checkpoints w ON w.incident_id=i.id
@@ -165,4 +168,5 @@ async def load_progress(incident_id: str) -> dict:
     return summarize_progress([dict(row) for row in rows],
                               incident_status=str(status["incident_status"] or ""),
                               checkpoint_status=str(status["checkpoint_status"] or ""),
+                              checkpoint_version=status["checkpoint_version"],
                               approval_status=str(status["approval_status"] or ""))
