@@ -238,9 +238,15 @@ async def llm_plan(message: str, summary: dict, turns: list[dict],
             "propose_reload, propose_restart, propose_start. All actions are "
             "incident-scoped. A proposal is not an authorization or an execution. "
             "Only state evidence-supported conclusions; say when uncertain, and "
-            "never invent a tool result or claim an action executed. If a new "
-            "read-only observation is present, summarize it rather than ask to "
-            "run the same tool again. Do not request secrets."
+            "never invent a tool result or claim an action executed. Questions "
+            "about errors already found or what agents observed MUST be answered "
+            "from the recorded incident evidence, not by selecting a new MCP read. "
+            "Only choose a read intent when the operator explicitly requests a "
+            "fresh live check. Distinguish confirmed MCP diagnostics from agent "
+            "hypotheses and include evidence refs when available. A failed live "
+            "check does not erase recorded diagnostic evidence. If a new read-only "
+            "observation is present, summarize it rather than repeat the tool. "
+            "Do not request secrets."
         )},
         {"role": "system", "content": "Bounded incident evidence: " +
          json.dumps(redact(summary), ensure_ascii=False, default=str)[:10500]},
