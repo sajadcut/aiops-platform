@@ -100,3 +100,8 @@
 .ic-agent-fold-body .ic-technical{margin:6px 0}
 .ic-agent-raw{display:block;color:var(--muted);font-size:12px;line-height:1.8;overflow-wrap:anywhere;margin-top:4px;unicode-bidi:plaintext}
 @media(max-width:650px){.ic-agent-scores{grid-template-columns:1fr}.ic-agent-card{padding:14px}.ic-agent-head{align-items:flex-start}.ic-agent-name h3{font-size:15px}.ic-agent-overview{padding:13px}}
+
+/* Keep English Agent class names next to their Persian operational titles. */
+.ic-agent-en-name{display:inline;font-size:13px;line-height:1.5;font-weight:650;color:var(--muted);white-space:nowrap;unicode-bidi:isolate}
+.ic-agent-source-label{display:block;font-size:12px;font-weight:700;line-height:1.8;color:var(--muted);margin-bottom:3px}
+.ic-agent-source-text{display:block;white-space:pre-wrap;overflow-wrap:anywhere;unicode-bidi:plaintext;text-align:start;direction:auto;font-size:13px;line-height:1.85;color:var(--text);background:var(--bg2);padding:8px 10px;border-radius:8px;margin-top:3px}
