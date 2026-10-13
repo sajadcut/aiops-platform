@@ -87,8 +87,6 @@ def discover_config_path(service: str, systemd_exec_start: str) -> Optional[str]
     Never interpret arbitrary ExecStart text as a shell command.
     """
     adapter = get_service_adapter(service)
-    if not adapter:
-        return None
     value = str(systemd_exec_start or "")[:3000]
     # systemctl show ExecStart is structured: "{ path=... ; argv[]=... ; ... }".
     match = re.search(r"argv\[\]=(.*?)(?:\s;\s|})", value, re.S)
@@ -100,7 +98,10 @@ def discover_config_path(service: str, systemd_exec_start: str) -> Optional[str]
     # Only take paths supplied to the expected config flags.
     flags = {"nginx": ("-c", "--conf-path="),
              "haproxy": ("-f", "--config="),
-             "apache": ("-f",)}.get(adapter.canonical_name, ())
+             "apache": ("-f",)}.get(adapter.canonical_name if adapter else "", (
+                 "--config", "--config=", "--config-file", "--config-file=",
+                 "--settings", "--settings=", "-c", "-f",
+             ))
     for index, arg in enumerate(argv):
         for flag in flags:
             if arg == flag and index + 1 < len(argv):
