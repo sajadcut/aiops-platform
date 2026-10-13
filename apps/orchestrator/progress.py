@@ -6,6 +6,7 @@ is waiting on external MCP/LLM calls in another transaction/process.
 """
 from __future__ import annotations
 
+import asyncio
 from datetime import datetime, timezone
 from typing import Any, Mapping
 from uuid import uuid4
@@ -51,8 +52,12 @@ async def emit_progress(incident_id: str | None, stage: str, status: str,
             "action": None, "status": status, "metadata": record,
             "created_at": datetime.now(timezone.utc).isoformat(),
         }
-        async with AsyncSessionLocal() as db:
-            await PostgreSQLAuditStore(db).append(event)
+        async def write_event():
+            async with AsyncSessionLocal() as db:
+                await PostgreSQLAuditStore(db).append(event)
+        # Progress is observational: a slow progress DB write must not delay
+        # MCP probes, an operator Approval or a governed execution.
+        await asyncio.wait_for(write_event(), timeout=1.5)
     except Exception as exc:
         logger.warning("workflow_progress_record_failed", incident_id=str(incident_id),
                        stage=stage, error_type=type(exc).__name__)
@@ -87,6 +92,7 @@ def summarize_progress(events: list[Mapping[str, Any]], *, incident_status: str 
     phases = {}
     providers = {}
     agents = {}
+    started_at = {}
     current = None
     for item in ordered:
         stage = item["stage"]
@@ -95,7 +101,12 @@ def summarize_progress(events: list[Mapping[str, Any]], *, incident_status: str 
         elif stage in PROVIDERS or stage == "knowledge":
             providers[stage] = item
         else:
-            phases[stage] = item
+            if item["status"] == "started":
+                started_at[stage] = item["at"]
+            phases[stage] = {
+                **item, "started_at": started_at.get(stage),
+                "finished_at": item["at"] if item["status"] in {"completed", "failed"} else None,
+            }
             if item["status"] == "started":
                 current = stage
             elif current == stage:
@@ -136,6 +147,10 @@ def summarize_progress(events: list[Mapping[str, Any]], *, incident_status: str 
         "execution_percent": round(100 * execution_done / len(EXECUTION_STAGES)),
         "execution_completed": execution_done, "execution_total": len(EXECUTION_STAGES),
         "current_stage": current,
+        "failed_stage": next(
+            (key for key, row in reversed(list(phases.items()))
+             if row["status"] == "failed"), None
+        ),
         "stages": {k: phases[k] for k in STAGES if k in phases},
         "providers": {k: providers[k] for k in ("knowledge", *sorted(PROVIDERS)) if k in providers},
         "agents": {k: agents[k] for k in sorted(agents)},
