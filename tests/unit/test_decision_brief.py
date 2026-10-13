@@ -511,3 +511,29 @@ def test_agent_audit_is_backward_compatible_when_specialist_details_are_missing(
     assert one["recommended_checks"] == []
     assert one["evidence_coverage"] is None
     assert one["evidence_count"] is None
+
+
+
+def test_decision_brief_projects_compiler_error_for_incident_config_diagnostics():
+    from apps.decision_brief import build_decision_brief
+    result = build_decision_brief(
+        incident={"id": "incident-config", "service": "haproxy"},
+        operator_summary={"observed_state": {"config_validate": {
+            "supported": True, "valid": False,
+            "config_file": "/opt/app/haproxy.cfg",
+            "root_config_file": "/opt/app/haproxy.cfg",
+            "config_path_source": "systemd_execstart",
+            "error_line": 23,
+            "syntax_error": "unknown keyword 'invalid_line'",
+            "evidence_id": "cfg-1",
+        }}},
+        checkpoint={"state": {}}, durable_evidence=[], findings=[], audit_events=[],
+    )
+    diag = result["configuration_diagnostic"]
+    assert diag["status"] == "invalid"
+    assert diag["config_file"] == "/opt/app/haproxy.cfg"
+    assert diag["error_line"] == 23
+    assert diag["evidence_refs"] == ["cfg-1"]
+    assert diag["repair_then_revalidate"] is True
+    assert diag["start_requires_valid_config_and_approval"] is True
+    assert result["source_policy"]["authorizes_execution"] is False
