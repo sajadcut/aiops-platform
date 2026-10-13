@@ -497,6 +497,9 @@ def build_decision_brief(
                 safe(x, 60)
                 for x in arr(obj(obj(state.get("context")).get("dynamic_investigation")).get("checks"))[:3]
             ],
+            "used_knowledge_refs": refs(
+                obj(obj(state.get("context")).get("dynamic_investigation")).get("used_knowledge_refs")
+            ),
             "questions": [
                 {
                     "question": safe(q.get("question"), 320),
