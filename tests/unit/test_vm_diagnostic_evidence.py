@@ -129,7 +129,10 @@ def test_target_port_resolution_accepts_only_explicit_valid_port():
 def test_service_adapter_uses_fixed_haproxy_validation_command():
     adapter = get_service_adapter("haproxy")
     assert adapter is not None
-    assert adapter.config_check_command == "haproxy -c -f /etc/haproxy/haproxy.cfg"
+    assert "/usr/sbin/haproxy -c -f /etc/haproxy/haproxy.cfg" in adapter.config_check_command
+    nginx = get_service_adapter("nginx")
+    assert nginx is not None
+    assert "/usr/sbin/nginx -t" in nginx.config_check_command
     assert get_service_adapter("anything;rm -rf /") is None
 
 
