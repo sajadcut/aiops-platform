@@ -72,7 +72,7 @@ def test_oct_13_repro_keeps_nginx_cognia_disagreement_but_identity_is_verified()
     assert ident["advisory_knowledge_conflicts"] == ident["conflicts"]
     assert ident["requires_more_evidence"] is False
     assert result["asset_context"]["service_identity_unverified"] is False
-    assert result["topology_context"]["topology_conflicts"] == ident["conflicts"]
+    assert result["topology_context"]["conflicts"] == ident["conflicts"]
 
 
 def test_original_and_checkpoint_cognia_disagreements_do_not_create_identity_conflict():
