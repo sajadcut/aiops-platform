@@ -3,7 +3,7 @@
 > این فایل فهرست فایل‌به‌فایل repository است. توضیح معماری و flow در `CODEBASE_GUIDE_FA.md` آمده است.
 > این فایل با `scripts/generate_file_index_fa.py` ساخته و در CI کنترل می‌شود.
 
-**تعداد فایل‌های track‌شده و پوشش‌داده‌شده: 597**
+**تعداد فایل‌های track‌شده و پوشش‌داده‌شده: 599**
 
 | Path | Type | Purpose | Called By | Calls/Depends On | Runtime/Test/Docs | Notes |
 |---|---|---|---|---|---|---|
@@ -145,6 +145,7 @@
 | `apps/incident_elastic.py` | Python | ماژول service لایه application | Runtime | domain/integrations | Runtime | جزء Control Plane |
 | `apps/incident_explanation.py` | Python | ماژول service لایه application | Runtime | domain/integrations | Runtime | جزء Control Plane |
 | `apps/incident_service/repository.py` | Python | Persistence: Repository durable Incident/Evidence/Finding | signal/workflow/dashboard | SQLAlchemy/PostgreSQL | Runtime | هسته persistence incident |
+| `apps/incident_vm_identity.py` | Python | ماژول service لایه application | Runtime | domain/integrations | Runtime | جزء Control Plane |
 | `apps/knowledge_review.py` | Python | ماژول service لایه application | Runtime | domain/integrations | Runtime | جزء Control Plane |
 | `apps/mcp_server/__init__.py` | Python | MCP: MCP server داخلی برای expose ابزارهای کنترل‌شده | MCP clients | provider adapters/security | Runtime | capability boundary |
 | `apps/mcp_server/main.py` | Python | MCP: MCP server داخلی برای expose ابزارهای کنترل‌شده | MCP clients | provider adapters/security | Runtime | capability boundary |
@@ -521,6 +522,7 @@
 | `tests/unit/test_incident_repository_json.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_incident_resource_migration_guard.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_incident_rid_logging.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
+| `tests/unit/test_incident_vm_identity_recovery.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_infrastructure_use_engine.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_internal_api_key_role.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_iransansx_assets.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
