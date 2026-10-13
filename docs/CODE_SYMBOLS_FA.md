@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 448 | Dashboard JS files scanned: 8 | Symbols indexed: 4288**
+**Python files scanned: 448 | Dashboard JS files scanned: 8 | Symbols indexed: 4289**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -4096,6 +4096,7 @@
 | `tests/unit/test_vm_config_validation.py` | `test_unknown_haproxy_config_path_does_not_claim_default_file_is_valid` | 181 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_vm_config_validation.py` | `test_unknown_haproxy_config_path_does_not_claim_default_file_is_valid.fake_run` | 187 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_unknown_haproxy_config_path_does_not_claim_default_file_is_valid |
 | `tests/unit/test_vm_config_validation.py` | `test_unknown_service_config_is_advisory_not_a_generated_ssh_command` | 200 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_config_validation.py` | `test_unknown_service_config_is_advisory_not_a_generated_ssh_command.fake_run` | 204 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_unknown_service_config_is_advisory_not_a_generated_ssh_command |
 | `tests/unit/test_vm_current_cpu_metrics.py` | `_connector` | 7 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_vm_current_cpu_metrics.py` | `test_cpu_interval_percentages_use_delta_not_since_boot` | 13 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_vm_current_cpu_metrics.py` | `test_collect_metrics_returns_one_second_current_cpu` | 23 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
