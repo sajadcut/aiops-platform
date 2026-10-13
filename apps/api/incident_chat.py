@@ -464,10 +464,15 @@ async def incident_chat_request_approval(
 ):
     async with AsyncSessionLocal() as db:
         incident, checkpoint, evidence = await _scope(db, incident_id)
-        context = (checkpoint.get("state") or {}).get("context") or {}
-        binding = vm_binding(incident.service, evidence, context)
+        context = incident_vm_context(incident.context, checkpoint)
+        binding, diagnosis = await resolve_vm_binding(
+            incident.service, evidence, context, force_live=True,
+        )
         if binding is None:
-            raise HTTPException(status_code=409, detail="incident_vm_identity_unverified")
+            raise HTTPException(status_code=409, detail={
+                "code": "incident_vm_identity_unverified",
+                "reason": diagnosis.get("status"),
+            })
         # Lock the proposal scope transactionally, rejecting duplicate requests
         # even if two operator browser tabs send simultaneously.
         await db.execute(text("SELECT pg_advisory_xact_lock(hashtext(:key))"),
