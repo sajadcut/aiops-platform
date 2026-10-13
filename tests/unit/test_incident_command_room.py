@@ -128,7 +128,15 @@ const assert = require('node:assert/strict');
       why:'Collected state says inactive'},
     localized_narrative:{fa:'سرویس از دسترس خارج شده است.',en:'Service is offline.'},
     rca_assessment:{rca_confidence:0.72,evaluator_confidence:0.67,agent_agreement:0.7},
-    agent_findings:[{agent:'VM',status:'success',finding:'systemd inactive',confidence:0.8,evidence_refs:['ev1']}],
+    agent_findings:[
+      {agent:'VM',status:'partial',finding:'systemd inactive',confidence:0.93,evidence_coverage:0.71,
+       findings:['active_state=inactive','valid=true'],evidence_refs:['vm:vm01:service_status:2026','vm:vm01:config_validate:2026'],
+       hypotheses:[{text:'Possibly stopped manually',probability:0.34,falsification_checks:['Read auditd events']}],
+       missing_evidence:['auditd logs for systemctl commands'],recommended_checks:['Read system journal']},
+      {agent:'network',status:'success',confidence:0.32,evidence_coverage:0.6,
+       finding:'No network failure confirmed',findings:['Port 8080 is not listening'],
+       evidence_refs:['vm:vm01:tcp_check:2026']},
+    ],
     monitoring_sources:[{source:'Prometheus',status:'unavailable'}],
     mcp_evidence:[{server:'VM Edge',tool:'service_status',status:'success',finding:'inactive',evidence_ref:'ev1'}],
     cognia_knowledge:{status:'empty',retrieved_count:0},operational_memory:{retrieved_count:0},
@@ -157,6 +165,19 @@ const assert = require('node:assert/strict');
   assert.match(el('#ic-title').textContent,/nginx/);
   assert.match(el('#ic-brief-lead').innerHTML,/سرویس از دسترس/);
   assert.match(el('#ic-sources').innerHTML,/Prometheus/);
+  assert.match(el('#ic-agent-summary').innerHTML,/متخصص‌های ثبت‌شده/);
+  const agentHtml=el('#ic-agents').innerHTML;
+  assert.equal((agentHtml.match(/class="ic-agent-card"/g)||[]).length,2);
+  assert.match(agentHtml,/بررسی ماشین مجازی/);
+  assert.match(agentHtml,/بررسی شبکه/);
+  assert.match(agentHtml,/۹۳٪/);
+  assert.match(agentHtml,/۳۲٪/);
+  assert.match(agentHtml,/۷۱٪/);
+  assert.match(agentHtml,/سرویس متوقف است/);
+  assert.match(agentHtml,/بررسی درستی تنظیمات/);
+  assert.match(agentHtml,/اطلاعات موردنیاز برای قطعیت بیشتر/);
+  assert.match(agentHtml,/فرضیه‌های این متخصص/);
+  assert.match(agentHtml,/اجرای مستقیم SSH یا MCP/);
   assert.match(el('#ic-action-controls').innerHTML,/disabled/);
   assert.equal(events.filter(x=>x[0]==='POST').length,0);
   listeners.change({target:{id:'ic-check',checked:true}});
