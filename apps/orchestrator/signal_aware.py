@@ -19,6 +19,7 @@ from apps.decision_engine import DecisionEngine
 from apps.execution_service.tools.registry import tool_registry
 from apps.orchestrator.e2e_graph import E2EOrchestrator, E2EState
 from apps.remediation_planner import RemediationPlanner
+from apps.orchestrator.dynamic_investigation import DynamicInvestigationPlanner
 from domain.contracts.config import settings
 from domain.contracts.logging import logger
 
@@ -296,6 +297,48 @@ class SignalAwareE2EOrchestrator(E2EOrchestrator):
         state["analysis_results"] = findings
         state["findings"] = [state.get("triage_result", {})] + findings
         state["coordination"] = coordination
+
+        # Optional investigation loop: read-only evidence, focused Cognia RAG,
+        # then an operator-facing proposal. Never creates an ExecutionRequest.
+        if settings.AIOPS_DYNAMIC_INVESTIGATION_ENABLED:
+            if self.progress_emitter:
+                await self.progress_emitter(state.get("incident_id"), "investigation", "started")
+            dynamic = DynamicInvestigationPlanner()
+            followup = await dynamic.enrich_knowledge(state)
+            proposal = await dynamic.propose(state, adapter=self.llm)
+            proposal["knowledge_followup"] = followup
+            context = state.setdefault("context", {})
+            context["dynamic_investigation"] = proposal
+            # A model can request a registered *read-only* check. Preserve the
+            # original coordinator budget, and never let model text choose a
+            # command, target, destination or write.
+            requests = dynamic.evidence_requests(
+                proposal,
+                has_service=bool(state.get("service_name")),
+                has_port=bool((state.get("live_evidence") or {}).get("vm_port")),
+            )
+            if requests and await self._additional_evidence_round(state, requests):
+                self._publish_peer_context(state, findings, coordination)
+                findings = await self._run_specialists(selected, state)
+                coordination = self.coordinator.synthesize(findings)
+                self._publish_peer_context(state, findings, coordination)
+                state["analysis_results"] = findings
+                state["findings"] = [state.get("triage_result", {})] + findings
+                state["coordination"] = coordination
+                proposal["read_only_recheck_performed"] = True
+            else:
+                proposal["read_only_recheck_performed"] = False
+            self._audit(
+                "dynamic_investigation_completed", state,
+                knowledge_status=followup.get("status"),
+                knowledge_refs=followup.get("source_refs", []),
+                check_count=len(proposal.get("checks") or []),
+                question_count=len(proposal.get("operator_questions") or []),
+                model_status=proposal.get("model_status"),
+                execution_authority=False,
+            )
+            if self.progress_emitter:
+                await self.progress_emitter(state.get("incident_id"), "investigation", "completed")
 
         # Global unknowns rule: ask LLM for bounded, advisory diagnostic guidance
         # when concrete gaps are found. The advice is NOT Live Evidence, cannot

@@ -72,11 +72,13 @@ async def test_disk_inode_exhaustion_is_grounded_and_delete_is_approval_bound():
     assert result.hypotheses[0].evidence_ids == ["disk-free-critical", "inode-free-zero", "write-enospc"]
     assert not result.missing_evidence
 
-    read_check, delete_action = result.recommended_actions
+    # Model-proposed deletion has no retention/producer provenance, therefore
+    # it must be filtered out, not converted into a writable approval request.
+    read_check, safe_followup = result.recommended_actions
     assert read_check.read_only is True
     assert read_check.requires_approval is False
-    assert delete_action.read_only is False
-    assert delete_action.requires_approval is True
-    assert delete_action.risk_level == "high"
-    assert delete_action.purpose == "untrusted_write_recommendation"
-    assert delete_action.suggested_tool is None
+    assert safe_followup.read_only is True
+    assert safe_followup.requires_approval is False
+    assert "producer" in safe_followup.action.lower()
+    assert all(action.read_only is True for action in result.recommended_actions)
+    assert all("delete" not in action.action.lower() for action in result.recommended_actions)

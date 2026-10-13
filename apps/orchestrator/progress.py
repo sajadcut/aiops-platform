@@ -19,7 +19,7 @@ from domain.contracts.config import settings
 
 ANALYSIS_STAGES = ("context", "triage", "parallel_agents", "rca", "evaluator", "decision")
 EXECUTION_STAGES = ("execution", "verification", "memory")
-STAGES = ANALYSIS_STAGES + ("approval", "pre_execution_check") + EXECUTION_STAGES + ("end",)
+STAGES = ANALYSIS_STAGES + ("investigation", "approval", "pre_execution_check") + EXECUTION_STAGES + ("end",)
 PROVIDERS = {"vm_mcp", "zabbix", "elasticsearch", "prometheus", "kubernetes_api"}
 AGENT_STAGES = {"agent:" + name for name in (
     "network", "vm", "application", "infrastructure", "dependency",

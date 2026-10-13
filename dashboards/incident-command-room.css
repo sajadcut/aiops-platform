@@ -151,3 +151,9 @@
 .ic-flow-connection{font-size:11px;color:var(--muted);line-height:1.8}
 @media(prefers-reduced-motion:reduce){.ic-flow-steps li[data-state="started"] .ic-flow-step-icon{animation:none;border-style:dashed}.ic-flow-progress progress::-webkit-progress-value{transition:none}}
 @media(max-width:650px){.ic-live-flow{padding:13px}.ic-flow-heading{flex-wrap:wrap}.ic-flow-clock{margin-inline-start:auto}}
+
+/* Investigation advice is deliberately distinct from approved execution. */
+.ic-fix-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:16px 0}
+#ic-proposed-fix{display:grid;gap:13px;min-width:0}
+#ic-proposed-fix .ic-detail-card p{overflow-wrap:anywhere}
+@media(max-width:750px){.ic-fix-grid{grid-template-columns:minmax(0,1fr)}}
