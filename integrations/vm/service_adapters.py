@@ -55,6 +55,8 @@ _ADAPTERS = (
 
 def get_service_adapter(service: str) -> Optional[ServiceDiagnosticAdapter]:
     name = str(service or "").strip().lower()
+    if name.endswith(".service"):
+        name = name[:-8]
     for adapter in _ADAPTERS:
         if name == adapter.canonical_name or name in adapter.aliases:
             return adapter
@@ -102,21 +104,21 @@ def discover_config_path(service: str, systemd_exec_start: str) -> Optional[str]
                  "--config", "--config=", "--config-file", "--config-file=",
                  "--settings", "--settings=", "-c", "-f",
              ))
+    matches: list[str] = []
     for index, arg in enumerate(argv):
         for flag in flags:
+            path = None
             if arg == flag and index + 1 < len(argv):
                 path = _absolute_config_path(argv[index + 1])
-                if path:
-                    return path
             elif flag.endswith("=") and arg.startswith(flag):
                 path = _absolute_config_path(arg[len(flag):])
-                if path:
-                    return path
             elif flag in ("-c", "-f") and arg.startswith(flag) and len(arg) > 2:
                 path = _absolute_config_path(arg[2:])
-                if path:
-                    return path
-    return None
+            if path and path not in matches:
+                matches.append(path)
+    # Multiple HAProxy -f files must all be checked together; returning one
+    # would incorrectly declare the running multi-file configuration valid.
+    return matches[0] if len(matches) == 1 else None
 
 
 def config_check_for_path(service: str, discovered_path: Optional[str]) -> str:
