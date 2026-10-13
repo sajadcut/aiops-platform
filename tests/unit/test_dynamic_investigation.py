@@ -139,6 +139,32 @@ async def test_malicious_llm_tool_selection_is_rejected_and_targets_not_delegate
 
 
 @pytest.mark.asyncio
+async def test_cognia_snippets_influence_plan_without_inventing_source_usage():
+    state = incident()
+    llm = LLM([SimpleNamespace(
+        content=json.dumps({
+            "checks": ["config_validate"], "question": "",
+            "used_knowledge_refs": ["cognia:previous", "cognia:invented"],
+        }), finish_reason="stop",
+    )])
+    result = await DynamicInvestigationPlanner.propose(state, adapter=llm)
+    supplied = llm.calls[0][0][1]["content"]
+    assert "historical syntax notes" in supplied
+    assert result["used_knowledge_refs"] == ["cognia:previous"]
+    assert "cognia:invented" not in result["used_knowledge_refs"]
+
+
+@pytest.mark.asyncio
+async def test_missing_evidence_prompts_operator_when_model_is_unavailable():
+    state = incident(evidence=[])
+    llm = LLM([SimpleNamespace(content="", finish_reason="length")] * 2)
+    proposal = await DynamicInvestigationPlanner.propose(state, adapter=llm)
+    assert proposal["operator_questions"]
+    assert "Current config excerpt" in proposal["operator_questions"][0]["question"]
+    assert proposal["execution_authority"] is False
+
+
+@pytest.mark.asyncio
 async def test_truncated_model_retries_with_bounded_tokens_not_silent_zero():
     llm = LLM([
         SimpleNamespace(content='{"checks":', finish_reason="length"),
