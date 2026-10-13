@@ -18,7 +18,7 @@ from domain.contracts.logging import logger
 
 ANALYSIS_STAGES = ("context", "triage", "parallel_agents", "rca", "evaluator", "decision")
 EXECUTION_STAGES = ("execution", "verification", "memory")
-STAGES = ANALYSIS_STAGES + ("approval",) + EXECUTION_STAGES + ("end",)
+STAGES = ANALYSIS_STAGES + ("approval", "pre_execution_check") + EXECUTION_STAGES + ("end",)
 PROVIDERS = {"vm_mcp", "zabbix", "elasticsearch", "prometheus", "kubernetes_api"}
 AGENT_STAGES = {"agent:" + name for name in (
     "network", "vm", "application", "infrastructure", "dependency",
@@ -57,7 +57,7 @@ async def emit_progress(incident_id: str | None, stage: str, status: str,
                 await PostgreSQLAuditStore(db).append(event)
         # Progress is observational: a slow progress DB write must not delay
         # MCP probes, an operator Approval or a governed execution.
-        await asyncio.wait_for(write_event(), timeout=1.5)
+        await asyncio.wait_for(write_event(), timeout=0.5)
     except Exception as exc:
         logger.warning("workflow_progress_record_failed", incident_id=str(incident_id),
                        stage=stage, error_type=type(exc).__name__)
