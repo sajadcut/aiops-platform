@@ -394,3 +394,99 @@ def test_after_fix_newer_successful_check_replaces_older_syntax_error():
         [success, error], target="10.100.6.199", service="nginx"
     )
     assert allowed is False
+
+
+def _dotnet_config_evidence(*, syntax_valid=True, status="syntax_valid",
+                           service="gfpapi", target="10.248.16.82"):
+    return [
+        _evidence("config_validate", "cfg-generic", target=target, service=service,
+                  supported=False, valid=None, success=True,
+                  detail="config_validation_adapter_unavailable"),
+        _evidence("service_runtime_discovery", "runtime", target=target,
+                  service=service, success=True, runtime="dotnet",
+                  entrypoint="/data/gfp/gfpapi/GFP.Endpoints.API.dll",
+                  publish_directory="/data/gfp/gfpapi"),
+        _evidence("dotnet_config_syntax", "json", target=target, service=service,
+                  success=True, supported=True, runtime="dotnet",
+                  validator="aiops-local-python-json-syntax-only",
+                  validated_scope="json_syntax_only", syntax_valid=syntax_valid,
+                  status=status, config_contents_exposed=False,
+                  config_values_persisted=False, environment_values_read=False,
+                  files=[{"file": "appsettings.json", "status":
+                          "valid_json_syntax" if syntax_valid else "invalid_json_syntax"}]),
+    ]
+
+
+def test_dotnet_syntax_does_not_authorize_automatic_planning():
+    rows = _dotnet_config_evidence()
+    good, refs, reason = RemediationPlanner._configuration_precondition(
+        rows, target="10.248.16.82", service="gfpapi",
+    )
+    assert not good and reason == "configuration_validation_unavailable"
+
+
+@pytest.mark.parametrize("action,states,expected", [
+    ("restart_service", "failed", True),
+    ("start_service", "inactive", True),
+    ("reload_service", "active", False),
+])
+def test_scoped_dotnet_recovery_preflight_only_for_approved_recovery(action, states, expected):
+    evidence = [
+        _evidence("service_status", "svc", target="10.248.16.82", service="gfpapi",
+                  active_state=states),
+        *_dotnet_config_evidence(),
+    ]
+    result = RemediationPlanner.revalidate_execution({
+        "tool_name": "ssh_vm", "runbook_id": RemediationPlanner.VM_SERVICE_RUNBOOK,
+        "action": action, "target": "10.248.16.82",
+        "parameters": {"service": "gfpapi"},
+    }, evidence)
+    assert result["safe_to_execute"] is expected
+    if expected:
+        assert result["validation_scope"] == "dotnet_json_syntax_only"
+        assert result["configuration_semantics_valid"] is None
+
+
+@pytest.mark.parametrize("alter,reason", [
+    ({"syntax_valid": False, "status": "invalid"},
+     "dotnet_json_syntax_invalid"),
+    ({"syntax_valid": None, "status": "partial"},
+     "dotnet_json_syntax_validation_inconclusive"),
+    ({"validator": "untrusted-checker"},
+     "dotnet_json_syntax_validation_inconclusive"),
+    ({"config_contents_exposed": True},
+     "dotnet_json_syntax_validation_inconclusive"),
+    ({"validated_scope": "unknown"},
+     "dotnet_json_syntax_validation_inconclusive"),
+    ({"files": []}, "dotnet_json_syntax_validation_inconclusive"),
+])
+def test_bad_or_partial_dotnet_validator_remains_blocked(alter, reason):
+    evidence = [
+        _evidence("service_status", "svc", target="10.248.16.82", service="gfpapi",
+                  active_state="failed"),
+        *_dotnet_config_evidence(),
+    ]
+    evidence[-1]["raw_data"].update(alter)
+    result = RemediationPlanner.revalidate_execution({
+        "tool_name": "ssh_vm", "runbook_id": RemediationPlanner.VM_SERVICE_RUNBOOK,
+        "action": "restart_service", "target": "10.248.16.82",
+        "parameters": {"service": "gfpapi"},
+    }, evidence)
+    assert not result["safe_to_execute"]
+    assert result["reason"] == reason
+
+
+def test_runtime_service_target_mismatch_cannot_be_used_for_dotnet_preflight():
+    evidence = [
+        _evidence("service_status", "svc", target="10.248.16.82",
+                  service="gfpapi", active_state="failed"),
+        *_dotnet_config_evidence(),
+    ]
+    evidence[-2]["raw_data"]["service"] = "nginx"
+    result = RemediationPlanner.revalidate_execution({
+        "tool_name": "ssh_vm", "runbook_id": RemediationPlanner.VM_SERVICE_RUNBOOK,
+        "action": "restart_service", "target": "10.248.16.82",
+        "parameters": {"service": "gfpapi"},
+    }, evidence)
+    assert result["safe_to_execute"] is False
+    assert result["reason"] == "dotnet_runtime_identity_unverified"

@@ -93,6 +93,10 @@ class RunbookRuntimeGuard:
         evidence: List[Dict[str, Any]] = []
         all_success = True
         errors: List[str] = []
+        # The service-specific .NET diagnostic is available in VM MCP, but the
+        # generic config_validate adapter only supports some runtimes. Probe
+        # the runtime only when that validator declares itself unsupported;
+        # never confuse a failed/invalid validator with an unsupported one.
         for action, read_parameters in reads:
             result = await cls._vm_read(
                 action=action,
@@ -122,6 +126,18 @@ class RunbookRuntimeGuard:
                 raw["collection_error"] = error
             else:
                 raw["collection_success"] = True
+                if (action == "config_validate"
+                        and raw.get("supported") is False
+                        and raw.get("valid") is None
+                        and raw.get("success") is True):
+                    reads.append(("service_runtime_discovery", {"service": service}))
+                elif (action == "service_runtime_discovery"
+                      and raw.get("runtime") == "dotnet"
+                      and raw.get("success") is True
+                      and str(raw.get("service") or "").casefold().removesuffix(".service")
+                          == service.casefold().removesuffix(".service")
+                      and str(raw.get("target") or "") == target):
+                    reads.append(("dotnet_config_syntax", {"service": service}))
 
             evidence.append(
                 {

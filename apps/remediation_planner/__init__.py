@@ -222,7 +222,11 @@ class RemediationPlanner:
                 return {"safe_to_execute": False, "reason": "fresh_service_recovery_action_changed", "evidence_refs": status_refs}
 
         config_ok, config_refs, config_reason = cls._configuration_precondition(
-            evidence, target=target, service=service
+            evidence, target=target, service=service,
+            # Only the explicitly approved/manual recovery workflow may use
+            # a runtime-scoped .NET syntax check in lieu of a generic adapter.
+            # Auto-planning still requires the full supported validator.
+            allow_dotnet_syntax_only=action in {"start_service", "restart_service"},
         )
         refs = cls._dedupe(status_refs + config_refs)
         if not config_ok:
@@ -230,6 +234,12 @@ class RemediationPlanner:
         return {
             "safe_to_execute": True,
             "reason": "fresh_execution_preconditions_satisfied",
+            "validation_scope": ("dotnet_json_syntax_only"
+                                 if config_reason == "dotnet_json_syntax_precondition_satisfied"
+                                 else "service_config_validator"),
+            "configuration_semantics_valid": (
+                None if config_reason == "dotnet_json_syntax_precondition_satisfied" else True
+            ),
             "action": action,
             "target": target,
             "service": service,
@@ -333,7 +343,8 @@ class RemediationPlanner:
 
     @staticmethod
     def _configuration_precondition(
-        evidence: Iterable[Dict[str, Any]], *, target: str, service: str
+        evidence: Iterable[Dict[str, Any]], *, target: str, service: str,
+        allow_dotnet_syntax_only: bool = False,
     ) -> Tuple[bool, List[str], str]:
         """Only a completed, real config validation may justify a service start.
 
@@ -342,6 +353,7 @@ class RemediationPlanner:
         When a config is actually repaired, a *newer* checked result supersedes
         the old failure. Unordered or conflicting evidence still fails closed.
         """
+        evidence = list(evidence)
         matching: List[Tuple[Dict[str, Any], str, Optional[datetime]]] = []
         for item in evidence:
             if str(item.get("source") or "").strip().lower() != "vm_mcp":
@@ -381,6 +393,18 @@ class RemediationPlanner:
         refs = [ref for _, ref, _ in active if ref]
         for raw, _, _ in active:
             if raw.get("supported") is not True:
+                # Only the supported, authenticated, read-only AIOps .NET
+                # JSON validator can substitute for an unavailable generic
+                # adapter, and ONLY for Start/Restart after human approval.
+                if (allow_dotnet_syntax_only and len(active) == 1
+                        and raw.get("supported") is False
+                        and raw.get("valid") is None
+                        and raw.get("success") is True
+                        and raw.get("detail") == "config_validation_adapter_unavailable"):
+                    return RemediationPlanner._dotnet_syntax_precondition(
+                        evidence, target=target, service=service,
+                        config_refs=refs,
+                    )
                 return False, refs, "configuration_validation_unavailable"
             if raw.get("valid") is False:
                 return False, refs, "service_configuration_invalid"
@@ -389,6 +413,76 @@ class RemediationPlanner:
             if raw.get("success") is False:
                 return False, refs, "configuration_validation_failed"
         return True, refs, "configuration_precondition_satisfied"
+
+
+    @classmethod
+    def _dotnet_syntax_precondition(
+        cls, evidence: Iterable[Dict[str, Any]], *, target: str, service: str,
+        config_refs: List[str],
+    ) -> Tuple[bool, List[str], str]:
+        """Constrained manual .NET recovery validation; never claim app readiness.
+
+        A syntactically valid appsettings file does NOT prove configuration
+        semantics, dependencies, or systemd readiness. This exception permits
+        *only* an approval-gated start/restart, never auto-planning or reload.
+        All diagnostics must originate from the same verified VM binding.
+        """
+        by_diagnostic: Dict[str, List[Tuple[Dict[str, Any], str]]] = {
+            "service_runtime_discovery": [], "dotnet_config_syntax": [],
+        }
+        normalized = service.casefold().removesuffix(".service")
+        for item in evidence:
+            if not isinstance(item, dict) or item.get("source") != "vm_mcp":
+                continue
+            raw = item.get("raw_data")
+            if not isinstance(raw, dict):
+                continue
+            kind = str(raw.get("diagnostic") or "").lower()
+            if kind not in by_diagnostic:
+                continue
+            if (str(raw.get("target") or "") != target
+                    or str(raw.get("service") or "").casefold().removesuffix(".service") != normalized):
+                continue
+            by_diagnostic[kind].append((
+                raw, str(item.get("reference") or "").strip(),
+            ))
+
+        runtime_rows = by_diagnostic["service_runtime_discovery"]
+        syntax_rows = by_diagnostic["dotnet_config_syntax"]
+        refs = cls._dedupe(config_refs + [
+            ref for rows in by_diagnostic.values() for _, ref in rows if ref
+        ])
+        # Unavailable or contradictory runtime checks cannot be overridden
+        # by a single successful JSON result.
+        if len(runtime_rows) != 1:
+            return False, refs, "dotnet_runtime_identity_unverified"
+        runtime = runtime_rows[0][0]
+        if (runtime.get("success") is not True
+                or runtime.get("runtime") != "dotnet"
+                or not str(runtime.get("entrypoint") or "").lower().endswith(".dll")
+                or not str(runtime.get("publish_directory") or "").startswith("/")):
+            return False, refs, "dotnet_runtime_identity_unverified"
+        if len(syntax_rows) != 1:
+            return False, refs, "dotnet_json_syntax_validation_missing"
+        syntax = syntax_rows[0][0]
+        if syntax.get("syntax_valid") is False or syntax.get("status") == "invalid":
+            return False, refs, "dotnet_json_syntax_invalid"
+        files = syntax.get("files")
+        if (syntax.get("success") is not True
+                or syntax.get("supported") is not True
+                or syntax.get("runtime") != "dotnet"
+                or syntax.get("validator") != "aiops-local-python-json-syntax-only"
+                or syntax.get("validated_scope") != "json_syntax_only"
+                or syntax.get("syntax_valid") is not True
+                or syntax.get("status") != "syntax_valid"
+                or syntax.get("config_contents_exposed") is not False
+                or syntax.get("config_values_persisted") is not False
+                or syntax.get("environment_values_read") is not False
+                or not isinstance(files, list) or not files
+                or any(not isinstance(f, dict)
+                       or f.get("status") != "valid_json_syntax" for f in files)):
+            return False, refs, "dotnet_json_syntax_validation_inconclusive"
+        return True, refs, "dotnet_json_syntax_precondition_satisfied"
 
     @staticmethod
     def _target_port(
