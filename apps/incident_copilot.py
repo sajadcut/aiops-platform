@@ -222,6 +222,24 @@ def recorded_error_answer(summary: dict, *, persian: bool = True,
     return intro + "\n" + "\n".join(lines)
 
 
+def unsupported_security_exclusion_claim(answer: str) -> bool:
+    """Prevent unverified negative auth claims from a fluent LLM response.
+
+    An incomplete ELK/log sample cannot prove 401/403 never occurred.
+    """
+    value = str(answer or "").lower().replace("\u200c", " ")
+    negative = re.search(
+        r"عدم\s*وجود|هیچ|رد\s*شده|مشاهده\s*نشده|وجود\s*ندار|نبوده|"
+        r"\b(?:no|none|not found|ruled out|absent)\b",
+        value, re.I,
+    )
+    security = re.search(
+        r"\b(?:401|403)\b|احراز\s*هویت|authentication|authorization",
+        value, re.I,
+    )
+    return bool(negative and security and abs(negative.start()-security.start()) < 240)
+
+
 def fallback_intent(message: str) -> str:
     text = message.lower().replace("\u200c", " ")
     from apps.incident_elastic import is_elastic_question, wants_live_elastic
