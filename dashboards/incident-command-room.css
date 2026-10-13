@@ -60,3 +60,43 @@
 .ic-analysis-spinner{width:21px;height:21px;flex:none;display:inline-block;border:3px solid color-mix(in srgb,var(--blue) 24%,transparent);border-top-color:var(--blue);border-radius:50%;animation:ic-analysis-spin .9s linear infinite}
 @keyframes ic-analysis-spin{to{transform:rotate(360deg)}}
 @media(prefers-reduced-motion:reduce){.ic-analysis-spinner{animation:none;border-style:dashed}}
+
+
+/* Section 03: specialist-by-specialist operational audit (read-only). */
+.ic-agent-overview{border:1px solid var(--line);background:var(--bg2);border-radius:15px;padding:16px 18px;margin:15px 0 18px}
+.ic-agent-overview>p{color:var(--text);line-height:1.9;font-size:13px;margin:0 0 13px}
+.ic-agent-totals{display:flex;flex-wrap:wrap;gap:8px}
+.ic-agent-totals>span{font-size:12px;display:inline-flex;align-items:center;gap:7px;padding:7px 11px;border:1px solid var(--line);border-radius:99px;background:var(--surface);color:var(--muted)}
+.ic-agent-totals b{font-size:14px;color:var(--text);font-variant-numeric:tabular-nums}
+.ic-agent-list{display:grid;gap:15px;min-width:0}
+.ic-agent-card{min-width:0;border:1px solid var(--line);border-radius:17px;padding:clamp(16px,1.7vw,23px);background:var(--surface);box-shadow:0 3px 10px rgba(0,0,0,.025)}
+.ic-agent-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.ic-agent-name{display:flex;align-items:center;gap:12px;min-width:0}
+.ic-agent-index{display:grid;place-items:center;flex:none;width:35px;height:35px;border-radius:11px;background:var(--bg2);border:1px solid var(--line);color:var(--accent);font-size:16px;font-weight:800}
+.ic-agent-name h3{font-size:17px;color:var(--text);line-height:1.5;margin:0 0 3px}
+.ic-agent-name p{font-size:12px;color:var(--muted);margin:0;line-height:1.6}
+.ic-agent-mission{color:var(--muted);font-size:13px;line-height:1.9;padding:9px 12px;border-radius:10px;background:var(--bg2)}
+.ic-agent-mission b{color:var(--text)}
+.ic-agent-scores{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:14px 0}
+.ic-agent-scores>div{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 13px;background:var(--raised);border:1px solid var(--line);border-radius:11px}
+.ic-agent-scores span{font-size:12px;line-height:1.7;color:var(--muted)}
+.ic-agent-scores strong{flex:none;color:var(--text);font-size:18px;font-weight:800;font-variant-numeric:tabular-nums}
+.ic-agent-subsection{margin:14px 0;padding-top:11px;border-top:1px solid var(--line)}
+.ic-agent-subsection h4{font-size:13px;font-weight:800;color:var(--text);margin:0 0 10px}
+.ic-agent-subsection>p{font-size:13px;line-height:1.9;color:var(--text);margin:5px 0}
+.ic-agent-bullets{margin:6px 0;padding:0 19px 0 0;font-size:13px;line-height:2;color:var(--text)}
+.ic-agent-bullets li{padding:3px 0;overflow-wrap:anywhere}
+.ic-agent-bullets li::marker{color:var(--accent)}
+.ic-agent-bullets li p{font-size:12px;color:var(--muted);margin:5px 0}
+.ic-agent-chips{display:flex;flex-wrap:wrap;gap:7px}
+.ic-agent-chips>span{padding:6px 10px;border-radius:8px;border:1px solid var(--line);background:var(--raised);font-size:12px;color:var(--text)}
+.ic-agent-disclaimer,.ic-agent-empty{font-size:12px!important;line-height:1.9!important;color:var(--muted)!important}
+.ic-agent-uncertainty{background:var(--bg2);border-inline-start:3px solid var(--accent);border-radius:9px;padding:9px 12px;font-size:12px;line-height:1.9;color:var(--text)}
+.ic-agent-review,.ic-agent-conflict{background:var(--bg2);padding:9px 12px;border-radius:9px;color:var(--text);font-size:12px;line-height:1.8}
+.ic-agent-fold{border-top:1px solid var(--line);padding:9px 0;margin-top:6px}
+.ic-agent-fold summary{cursor:pointer;color:var(--accent);font-size:13px;font-weight:750;line-height:1.8;padding:4px 0}
+.ic-agent-fold summary:hover{text-decoration:underline}
+.ic-agent-fold-body{padding:10px 12px;background:var(--bg2);border-radius:10px;min-width:0;overflow-wrap:anywhere}
+.ic-agent-fold-body .ic-technical{margin:6px 0}
+.ic-agent-raw{display:block;color:var(--muted);font-size:12px;line-height:1.8;overflow-wrap:anywhere;margin-top:4px;unicode-bidi:plaintext}
+@media(max-width:650px){.ic-agent-scores{grid-template-columns:1fr}.ic-agent-card{padding:14px}.ic-agent-head{align-items:flex-start}.ic-agent-name h3{font-size:15px}.ic-agent-overview{padding:13px}}
