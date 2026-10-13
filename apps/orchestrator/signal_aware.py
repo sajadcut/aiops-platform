@@ -328,7 +328,9 @@ class SignalAwareE2EOrchestrator(E2EOrchestrator):
                     f"Live Evidence confirms {service} is stopped while configuration validation is acceptable. "
                     "Use the governed start_service recovery path only after Decision/Approval, refresh execution "
                     "preconditions immediately before the write, and verify service state plus the original listener/TCP symptom afterward. "
-                    "Historical root cause remains under investigation and is not required to authorize the current-state recovery proposal."
+                    "The stop actor/cause is unknown: clean systemd shutdown does not prove a human or malicious stop. "
+                    "Manual or automated stops remain possibilities; preserve and review journal/audit evidence independently. "
+                    "This is a proposal for operator review, never permission to execute automatically."
                 )
         return "Manual investigation required: RCA generation failed."
 
