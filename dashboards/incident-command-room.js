@@ -176,6 +176,7 @@
     report: null, lifecycle: null, narrative: null, historic: null, history: null,
     loadingToken: 0, busy: false, reviewedSnapshot: null, rejectionVisible: false, error: null,
     receivedSignals: null, receivedSignalsStatus: 'loading',
+    configResponse: null, configResponseStatus: 'loading',
     lifecyclePolling: false, lastLiveCheck: null, lifecyclePollError: false,
     progress: null, progressConnected: false, progressAbort: null,
     progressStreamRunning: false, progressRetries: 0, progressFailure: false
@@ -1025,6 +1026,60 @@
         ' · '+tr('result')+': '+txt(status(x.outcome))+' · '+tr('confidence')+': '+esc(numberPct(x.similarity))+'</div>'+
         refs(x.previous_incident_id?[x.previous_incident_id]:[])+'</article>').join(''):empty()));
   }
+  function renderConfigProposal(config) {
+    const fa=state.language==='fa';
+    const source=arr(config.current_excerpt),target=arr(config.proposed_excerpt);
+    const diff=config.redacted_diff||{};
+    const snippets=rows=>'<pre dir="ltr" class="ic-config-excerpt">'+
+      rows.map(x=>esc(String(x.line).padStart(4,' ')+': '+safe(x.content))).join('\n')+'</pre>';
+    const sourceHtml=source.length?snippets(source):'<p>'+esc(fa?
+      'محتوای امن قابل نمایش هنوز دریافت نشده است.':'No safely displayable source excerpt is available.')+'</p>';
+    const targetHtml=target.length?snippets(target):'<p>'+esc(fa?
+      'نسخه پیشنهادی قطعی تولید نشده است.':'No deterministic patch candidate has been produced.')+'</p>';
+    let html='<div class="ic-fix-grid">'+
+      '<article class="ic-detail-card"><h4>'+esc(fa?'کانفیگ موجود (بخش ساختاری، محرمانه‌زدایی شده)':'Existing config (redacted structural excerpt)')+'</h4>'+
+      '<p>'+txt(config.config_file)+'</p>'+sourceHtml+
+      '<p>'+esc(fa?'خط واقعی خطا: ':'Fatal diagnostic line: ')+txt(config.error_line)+'</p>'+
+      '<p class="ic-meta">Source SHA-256: '+txt(config.original_sha256)+'</p></article>'+
+      '<article class="ic-detail-card"><h4>'+esc(fa?'پیشنهاد اصلاح کانفیگ':'Proposed configuration correction')+'</h4>'+
+      targetHtml+
+      '<p class="ic-meta">Candidate SHA-256: '+txt(config.candidate_sha256)+'</p></article></div>';
+    if(Number.isInteger(diff.line)){
+      html+='<article class="ic-detail-card"><h4>'+esc(fa?'Diff پیشنهادی (بدون مقادیر حساس)':'Proposed diff (secret-safe)')+'</h4>'+
+        '<pre dir="ltr" class="ic-config-excerpt">'+
+        esc('@@ line '+diff.line+' @@\n- '+safe(diff.before)+'\n+ '+safe(diff.after))+
+        '</pre></article>';
+    }
+    html+='<article class="ic-detail-card"><h4>'+esc(fa?'وضعیت آزمایش نسخه پیشنهادی':'Proposed-version validation')+'</h4>'+
+      '<p><strong>'+txt(config.validation_status||'UNVERIFIED')+'</strong></p>'+
+      '<p>'+txt(config.test_scope||'not_tested')+'</p>'+
+      '<p class="ic-agent-disclaimer">'+esc(fa?
+        'اجرای nginx -t روی کپی موقت می‌تواند Includeهای زنده را بخواند؛ پس تست ایزوله نیست و مجوز اعمال تولید نمی‌کند.':
+        'nginx -t on a temporary copy may access live includes. It is not isolated validation or production execution approval.')+
+      '</p></article>';
+    const candidate=config.status==='candidate_proposed'&&config.candidate_sha256&&config.original_sha256;
+    if(candidate){
+      const answered=state.configResponse?.status&&state.configResponse.status!=='not_responded';
+      const disabled=state.historic||state.busy||state.configResponseStatus!=='loaded';
+      html+='<article class="ic-detail-card"><h4>'+esc(fa?
+        'آیا می‌خواهید این پیشنهاد برای اعتبارسنجی مستقل بررسی شود؟':
+        'Would you like this proposal submitted for independent validation?')+'</h4>'+
+        '<p>'+esc(fa?
+          'پاسخ شما ثبت می‌شود؛ هیچ تغییری روی کانفیگ فعلی اعمال نمی‌شود.':
+          'Your response is recorded. The production configuration is not changed.')+'</p>'+
+        (answered?'<p><strong>'+txt(state.configResponse.status)+'</strong></p>':
+        '<div class="ic-action-buttons">'+
+        '<button type="button" class="ic-btn ic-btn-primary" data-config-intent="request_isolated_validation"'+(disabled?' disabled':'')+'>'+
+        esc(fa?'بله، درخواست بررسی و اعتبارسنجی':'Yes, request review and validation')+'</button>'+
+        '<button type="button" class="ic-btn ic-btn-muted" data-config-intent="reject"'+(disabled?' disabled':'')+'>'+
+        esc(fa?'خیر، رد پیشنهاد':'No, reject proposal')+'</button></div>')+
+        '<p class="ic-agent-disclaimer">'+esc(fa?
+          'این درخواست Approval اجرایی نیست؛ پس از اعتبارسنجی ایزوله، ثبت قرارداد اجرای امن و تأیید مستقل می‌توان گزینه اعمال را فعال کرد.':
+          'This is not execution approval. Actual Apply requires isolated validation, a registered change contract, and separate authorization.')+
+        '</p></article>';
+    }
+    return html;
+  }
   function renderInvestigation(r) {
     const p=r.dynamic_investigation||{},kb=p.knowledge_followup||{};
     const config=p.config_proposal||{},fa=state.language==='fa';
@@ -1073,15 +1128,7 @@
         'تا زمانی که کانفیگ فعلی و نسخه پیشنهادی از منبع معتبر جمع‌آوری و نسخه پیشنهادی واقعاً اعتبارسنجی نشده باشد، هیچ Patch یا تأیید اجرا وجود ندارد.':
         'No patch or executable approval exists until source material is collected and the proposed version passes a real validation.')+
       '</p></div>'+
-      (config.status?'<div class="ic-fix-grid">'+
-        '<article class="ic-detail-card"><h4>'+esc(fa?'کانفیگ موجود':'Current configuration')+'</h4>'+
-        '<p>'+txt(config.config_file||'—')+'</p><p>'+esc(fa?
-          'محتوای فایل هنوز به شکل امن دریافت نشده است.':'Configuration bytes have not been safely captured.')+'</p>'+
-        (Number.isInteger(config.error_line)?'<p>'+esc(fa?'خط خطا: ':'Error line: ')+num(config.error_line)+'</p>':'')+'</article>'+
-        '<article class="ic-detail-card"><h4>'+esc(fa?'کانفیگ پیشنهادی و Diff':'Proposed configuration & Diff')+
-        '</h4><p>'+esc(fa?'هنوز تولید یا اعتبارسنجی نشده است.':'Not yet produced or validated.')+
-        '</p><p>'+esc(fa?'نتیجهٔ Validator روی پیشنهاد: ':'Proposal validation: ')+
-        txt(config.validation_status||'UNVERIFIED')+'</p></article></div>':'')+
+      (config.status?renderConfigProposal(config):'')+
       (p.runtime_discovery?.runtime==='dotnet'?(()=>{
         const d=p.runtime_discovery,files=arr(d.files);
         return '<article class="ic-detail-card"><h4>'+esc(fa?'کشف ساختار برنامه و بررسی تنظیمات .NET':'Discovered .NET runtime & configuration checks')+'</h4>'+
