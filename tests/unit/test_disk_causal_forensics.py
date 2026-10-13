@@ -74,7 +74,11 @@ def _file_evidence():
             "diagnostic": "disk_forensics", "success": True,
             "mounts": [{"mount": "/var", "used_percent": 98, "files": [
                 {"path": "/var/log/gfpapi/error.log", "size_bytes": 37000000000,
-                 "mtime_epoch": 1791882600.0, "growth_confirmed": False},
+                 "mtime_epoch": 1791882600.0, "growth_measured": True,
+                 "growth_confirmed": True, "growth_bytes_over_2_seconds": 700160000,
+                 "open_handles": [{"pid": 2020, "process_name": "gfpapi",
+                                   "writable_handle_observed": True,
+                                   "writer_causality_verified": False}]},
             ]}],
         },
     }
@@ -93,6 +97,12 @@ def test_file_inventory_is_not_proof_of_writer_growth_or_safe_deletion():
     result = correlate_disk_file_causality(evidence)
     assert result["files"][0]["path"] == "/var/log/gfpapi/error.log"
     assert result["files"][0]["causal_attribution"] == "unknown"
+    assert result["files"][0]["growth_confirmed"] is True
+    assert result["files"][0]["growth_bytes_over_2_seconds"] == 700160000
+    assert result["files"][0]["open_handles"][0]["process_name"] == "gfpapi"
+    assert result["files"][0]["open_handles"][0]["writer_causality_verified"] is False
+    assert result["measured_growing_files"] == 1
+    assert result["files_with_open_handles"] == 1
     assert result["files"][0]["safe_to_delete"] is False
     assert result["delete_recommendation_allowed"] is False
     assert result["safe_cleanup_candidates"] == []
