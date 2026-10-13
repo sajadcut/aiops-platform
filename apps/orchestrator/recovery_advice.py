@@ -81,6 +81,14 @@ def build_vm_recovery_advisory(
     if len(targets) != 1:
         return None
     target = next(iter(targets))
+    if isinstance(trigger, Mapping):
+        payload = trigger.get("payload")
+        if not isinstance(payload, Mapping):
+            payload = trigger
+        expected_target = str(payload.get("target_ip") or payload.get("host_ip") or "").strip()
+        if expected_target and expected_target != target:
+            # No cross-host recovery suggestion even when service names match.
+            return None
     # A recovered or ambiguous status must not become a stale recovery
     # recommendation. Conflicting snapshots are shown as gaps elsewhere.
     states = {str(raw.get("active_state") or raw.get("status") or "").strip().lower()
