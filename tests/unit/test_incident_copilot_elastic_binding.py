@@ -164,6 +164,16 @@ async def test_explicit_gfpapi_start_proposes_same_incident_action_even_when_llm
     async def append(*a,**kw):
         calls.append(kw)
         return "turn-1"
+    # The fresh pre-proposal VM status is authoritative, not an old failed
+    # checkpoint. Here the service has become inactive, so Start is allowed
+    # as a candidate; a live *failed* state proposes Restart instead.
+    import apps.incident_vm_identity as vm_identity
+    class VM:
+        async def service_status(self, target, service):
+            assert target == "10.248.16.82" and service == "gfpapi"
+            return {"success": True, "target": target, "service": service,
+                    "load_state": "loaded", "active_state": "inactive"}
+    monkeypatch.setattr(vm_identity, "VMEdgeMCPClient", lambda: VM())
     monkeypatch.setattr(api,"AsyncSessionLocal",DB)
     monkeypatch.setattr(api,"_scope",scope)
     monkeypatch.setattr(api,"PostgreSQLAuditStore",Audit)
