@@ -157,3 +157,21 @@
 #ic-proposed-fix{display:grid;gap:13px;min-width:0}
 #ic-proposed-fix .ic-detail-card p{overflow-wrap:anywhere}
 @media(max-width:750px){.ic-fix-grid{grid-template-columns:minmax(0,1fr)}}
+
+
+/* Answer-first Incident briefing: operator sees facts and next steps before raw logs. */
+.ic-operator-explanation{margin:0 0 22px}
+.ic-explain{border:1px solid var(--line);border-radius:17px;padding:20px 22px;background:var(--raised);color:var(--text)}
+.ic-explain h3{font-size:18px;line-height:1.8;margin:0 0 10px;font-weight:800}
+.ic-explain-count{font-size:12px;color:var(--muted);margin:3px 0 16px}
+.ic-explain-part{border-top:1px solid var(--line);padding-top:12px;margin-top:12px}
+.ic-explain-part h4{font-size:14px;margin:0 0 6px;font-weight:800;line-height:1.7}
+.ic-explain-list{padding:0 23px 0 0;margin:4px 0;font-size:13px;line-height:2;color:var(--text)}
+.ic-explain-list li{padding:3px 0;overflow-wrap:anywhere}
+.ic-explain-list li::marker{color:var(--accent)}
+.ic-explain-list details{font-size:11px;margin-top:4px}
+.ic-explain-gate{font-size:12px;line-height:1.9;color:var(--muted);margin:15px 0 0;padding:12px;border-radius:10px;border:1px solid var(--line)}
+.ic-evidence-rest{margin-top:12px;border:1px solid var(--line);border-radius:12px;padding:12px}
+.ic-evidence-rest summary{cursor:pointer;color:var(--accent);font-weight:750}
+.ic-evidence-rest-content{display:grid;gap:12px;margin-top:12px}
+@media(max-width:650px){.ic-explain{padding:13px}.ic-explain h3{font-size:16px}}
