@@ -116,3 +116,10 @@
 .ic-config-check p{font-size:13px;line-height:1.9;margin:5px 0;color:var(--text);overflow-wrap:anywhere}
 .ic-config-check b{font-weight:750}
 .ic-config-check [dir="auto"]{unicode-bidi:plaintext;overflow-wrap:anywhere}
+
+/* Read-only storage forensics: file cause unknown until verified. */
+.ic-disk-file-wrap{width:100%;overflow-x:auto;margin:10px 0}
+.ic-disk-file-table{width:100%;border-collapse:collapse;min-width:560px;text-align:start;font-size:12px}
+.ic-disk-file-table th,.ic-disk-file-table td{padding:10px 12px;border-bottom:1px solid var(--line);line-height:1.7;vertical-align:top;text-align:start}
+.ic-disk-file-table th{color:var(--muted);font-weight:750}
+.ic-disk-file-table td:first-child{max-width:340px;overflow-wrap:anywhere;unicode-bidi:plaintext}
