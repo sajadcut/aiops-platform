@@ -12,6 +12,7 @@ import re
 from typing import Any, Mapping
 
 from apps.rag_service import KnowledgeRAGService
+from apps.context_service.knowledge_relevance import filter_service_knowledge
 from domain.contracts.config import settings
 from domain.contracts.redaction import redact_text
 from integrations.vm.service_adapters import parse_config_diagnostic
@@ -209,14 +210,20 @@ class DynamicInvestigationPlanner:
         context["knowledge_followup_queries"] = previous + [query]
         try:
             searcher = rag or KnowledgeRAGService()
-            docs = await asyncio.wait_for(
+            raw_docs = await asyncio.wait_for(
                 searcher.search(
-                    query, limit=min(3, settings.AGENT_MAX_AUXILIARY_CONTEXT_ITEMS),
+                    query, limit=min(12, max(3, settings.AGENT_MAX_AUXILIARY_CONTEXT_ITEMS * 2)),
                     scope_context=scope, incident_id=state.get("incident_id"),
                     phase="knowledge_rag_followup",
                 ),
                 timeout=8.0,
             )
+            docs, audit = filter_service_knowledge(
+                raw_docs, expected_service=str(state.get("service_name") or ""),
+                purpose="dynamic_investigation",
+            )
+            docs = docs[:min(3, settings.AGENT_MAX_AUXILIARY_CONTEXT_ITEMS)]
+            context["knowledge_relevance_followup"] = audit
         except Exception as exc:
             return {**result, "status": "unavailable", "error_type": type(exc).__name__}
         safe_docs = [row for row in docs if isinstance(row, dict) and row.get("source_id")]
@@ -235,8 +242,11 @@ class DynamicInvestigationPlanner:
         }
         state["knowledge_status"] = context["knowledge_status"]
         return {
-            **result, "status": "retrieved" if safe_docs else "empty",
+            **result, "status": ("retrieved" if safe_docs else
+                                 "filtered_empty" if context.get("knowledge_relevance_followup", {}).get("rejected_count")
+                                 else "empty"),
             "count": len(safe_docs),
+            "rejected_count": context.get("knowledge_relevance_followup", {}).get("rejected_count", 0),
             "source_refs": [_bounded(d["source_id"], 160) for d in safe_docs],
         }
 
