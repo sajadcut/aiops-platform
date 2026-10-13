@@ -26,6 +26,7 @@ class EvidenceCollector:
         "service_status", "service_logs", "system_logs", "process_snapshot",
         "process_status", "tcp_check", "port_listener_status", "dns_check",
         "route_check", "firewall_status", "config_validate",
+        "service_runtime_discovery", "dotnet_config_syntax",
     }
 
     def __init__(self, zabbix=None, elasticsearch=None, prometheus=None, vm=None, kubernetes=None):
@@ -156,6 +157,10 @@ class EvidenceCollector:
                 add("tcp_check")
             if service and any(token in text for token in ("config", "configuration", "syntax validation")):
                 add("config_validate")
+            if service and any(token in text for token in ("runtime discovery", "systemd unit", "publish directory", "execstart")):
+                add("service_runtime_discovery")
+            if service and any(token in text for token in ("dotnet json", ".net json", "appsettings", "json syntax")):
+                add("dotnet_config_syntax")
             if any(token in text for token in ("firewall", "iptables", "nftables", "firewalld", " acl")):
                 add("firewall_status")
             if evidence_type == "log" and service and (preferred in {"vm", "journal", "systemd"} or not elastic_logs_available):
@@ -448,7 +453,7 @@ class EvidenceCollector:
                     evidence.append(self._observation("vm_mcp", f"vm-skipped:{vm_target}:{action}:{since.isoformat()}", status="skipped", service=effective_service, detail="diagnostic_not_supported"))
                     continue
                 try:
-                    if action in {"service_status", "service_logs", "config_validate"}:
+                    if action in {"service_status", "service_logs", "config_validate", "service_runtime_discovery", "dotnet_config_syntax"}:
                         result = await method(vm_target, effective_service)
                     elif action == "process_status":
                         result = await method(vm_target, effective_service)
@@ -462,6 +467,23 @@ class EvidenceCollector:
                         rows = self._vm_evidence(action, vm_target, effective_service, vm_port, result, since)
                         evidence.extend(rows)
                         evidence.append(self._observation("vm_mcp", f"vm-observation:{vm_target}:{action}:{since.isoformat()}", status="queried", result_count=len(rows), service=effective_service, detail=f"target={vm_target};diagnostic={action}"))
+                        # Follow unsupported validators with systemd technology
+                        # discovery; only confirmed .NET DLLs trigger bounded
+                        # syntax checks. No LLM controls a remote filename.
+                        if (
+                            settings.AIOPS_DYNAMIC_INVESTIGATION_ENABLED
+                            and action == "config_validate"
+                            and result.get("supported") is False
+                            and "service_runtime_discovery" not in actions
+                        ):
+                            actions.append("service_runtime_discovery")
+                        if (
+                            settings.AIOPS_DYNAMIC_INVESTIGATION_ENABLED
+                            and action == "service_runtime_discovery"
+                            and result.get("runtime") == "dotnet"
+                            and "dotnet_config_syntax" not in actions
+                        ):
+                            actions.append("dotnet_config_syntax")
                         # Disk-pressure drill-down only after current host evidence
                         # confirms a filesystem or inode is near capacity.
                         # This avoids expensive file-tree scans for every alert.
