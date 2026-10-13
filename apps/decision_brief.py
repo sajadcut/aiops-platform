@@ -551,11 +551,30 @@ def build_decision_brief(
                 "status": safe(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("config_proposal")).get("status"), 70),
                 "config_file": safe(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("config_proposal")).get("config_file"), 250),
                 "error_line": obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("config_proposal")).get("error_line"),
-                "validation_status": "UNVERIFIED",
+                "validation_status": safe(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("config_proposal")).get("validation_status"), 50) or "UNVERIFIED",
                 "current_configuration": None,
                 "proposed_configuration": None,
                 "unified_diff": None,
-                "validator_executed_on_proposal": False,
+                "current_excerpt": [{
+                    "line": row["line"], "content": safe(row.get("content"), 125)
+                } for row in arr(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("config_proposal")).get("current_excerpt"))[:7]
+                   if isinstance(row, dict) and type(row.get("line")) is int],
+                "proposed_excerpt": [{
+                    "line": row["line"], "content": safe(row.get("content"), 125)
+                } for row in arr(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("config_proposal")).get("proposed_excerpt"))[:7]
+                   if isinstance(row, dict) and type(row.get("line")) is int],
+                "redacted_diff": {
+                    "line": obj(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("config_proposal")).get("redacted_diff")).get("line"),
+                    "before": safe(obj(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("config_proposal")).get("redacted_diff")).get("before"), 125),
+                    "after": safe(obj(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("config_proposal")).get("redacted_diff")).get("after"), 125),
+                } if isinstance(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("config_proposal")).get("redacted_diff"), dict) else None,
+                "original_sha256": safe(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("config_proposal")).get("original_sha256"), 64),
+                "candidate_sha256": safe(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("config_proposal")).get("candidate_sha256"), 64),
+                "proposed_change": safe(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("config_proposal")).get("proposed_change"), 90),
+                "test_scope": safe(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("config_proposal")).get("test_scope"), 100),
+                "validator_executed_on_proposal": obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("config_proposal")).get("validator_executed_on_proposal") is True,
+                "isolated_validation": False,
+                "apply_eligible": False,
                 "execution_authority": False,
             },
             "execution_authority": False,
