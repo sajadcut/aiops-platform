@@ -178,3 +178,9 @@
 
 .ic-semantic-diagnostic{display:inline-flex;align-items:center;padding:5px 10px;border-radius:10px;font-size:12px;color:var(--muted);background:var(--raised);border:1px solid var(--line)}
 .ic-semantic-diagnostic[data-invalid="true"]{color:var(--red);border-color:color-mix(in srgb,var(--red) 50%,var(--line));background:color-mix(in srgb,var(--red) 9%,var(--surface))}
+
+.ic-grounded-narrative{margin-top:16px;display:grid;gap:10px;border:1px solid var(--line);border-radius:13px;padding:16px}
+.ic-grounded-narrative>h3{font-size:14px;margin:0;line-height:1.8}
+.ic-grounded-para{font-size:13px;line-height:1.9;color:var(--text)}
+.ic-grounded-para strong{color:var(--accent);font-weight:750}
+.ic-grounded-para p{margin:3px 0}
