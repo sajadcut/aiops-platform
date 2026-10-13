@@ -70,18 +70,14 @@ def test_api_is_guarded_and_exposes_no_execution_authority():
     assert "ExecutionRequest" not in source
     probe=subprocess.run(
         [sys.executable, "-c",
-         "import apps.api.config_change_review as cr; "
-         "from apps.api.main import app; "
-         "print('MODULE',cr.__file__,'DIRECT',len(cr.router.routes)); "
-         "print('DIRECT_ROUTES',[(r.path,list(r.methods or [])) for r in cr.router.routes]); "
-         "print('APP',len(app.routes),'EXAMPLE',[r.path for r in app.routes][:8]); "
-         "print('MATCH',[(r.path, sorted(r.methods or [])) for r in app.routes "
-         "if 'configuration-review-response' in str(getattr(r,'path',''))])"],
+         "from fastapi.testclient import TestClient; from apps.api.main import app; "
+         "c=TestClient(app); "
+         "p='/api/v1/incidents/00000000-0000-4000-8000-000000000001/configuration-review-response'; "
+         "print('ROUTE_STATUS',c.get(p).status_code,c.post(p,json={}).status_code)"],
         capture_output=True, text=True, timeout=20, check=False,
     )
     assert probe.returncode==0, probe.stderr[-2000:]
-    assert "/api/v1/incidents/{incident_id}/configuration-review-response" in probe.stdout
-    assert "POST" in probe.stdout
+    assert "ROUTE_STATUS 401 401" in probe.stdout, probe.stdout[-2000:]
 
 def test_proposed_response_schema_does_not_accept_bogus_hash_types():
     with pytest.raises(ValidationError):
