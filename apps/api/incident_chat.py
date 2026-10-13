@@ -145,6 +145,7 @@ def _explicit_wrong_target(message: str, binding: dict | None) -> bool:
 async def _read_cognia(question: str, service: str, context: dict,
                        incident_id: UUID) -> dict:
     from apps.rag_service import KnowledgeRAGService
+    from apps.context_service.knowledge_relevance import filter_service_knowledge
     scope, allowed = DynamicInvestigationPlanner._scope(context)
     if not allowed:
         return {"success": False, "status": "knowledge_scope_unavailable"}
@@ -152,17 +153,25 @@ async def _read_cognia(question: str, service: str, context: dict,
     try:
         docs = await asyncio.wait_for(
             KnowledgeRAGService().search(
-                query, limit=3, scope_context=scope,
+                query, limit=12, scope_context=scope,
                 incident_id=str(incident_id), phase="incident_copilot_followup",
             ), timeout=8.0,
         )
     except Exception:
         return {"success": False, "status": "knowledge_unavailable"}
-    return {"success": True, "status": "retrieved", "documents": [
-        {"source_ref": str(item.get("source_id") or "")[:120],
-         "excerpt": redact_text(str(item.get("excerpt") or item.get("content") or ""))[:500]}
-        for item in docs[:3] if isinstance(item, dict) and item.get("source_id")
-    ]}
+    filtered, audit = filter_service_knowledge(
+        docs, expected_service=service, purpose="incident_copilot",
+    )
+    return {"success": True,
+            "status": "retrieved" if filtered else "filtered_empty" if audit["rejected_count"] else "empty",
+            "knowledge_relevance": {"accepted": min(len(filtered), 3),
+                                    "rejected": audit["rejected_count"],
+                                    "rejected_sources": audit["rejected"]},
+            "documents": [
+                {"source_ref": str(item.get("source_id") or "")[:120],
+                 "excerpt": redact_text(str(item.get("excerpt") or item.get("content") or ""))[:500]}
+                for item in filtered[:3] if isinstance(item, dict) and item.get("source_id")
+            ]}
 
 
 @router.get("/incidents/{incident_id}/chat")
