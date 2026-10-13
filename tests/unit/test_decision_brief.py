@@ -20,7 +20,7 @@ def make_brief(*, state=None, evidence=None, approval=None, verification="not_re
         "knowledge_status": {"status": "available"},
         "knowledge_results": [{
             "source_id": "cognia:1:2:3:4", "knowledge_base_id": 1, "knowledge_id": 2,
-            "revision_id": 3, "relevance": 0.93, "content": "nginx troubleshooting",
+            "revision_id": 3, "relevance": 0.93, "content": "Service: nginx\nnginx troubleshooting",
         }],
         "memory_results": [{"id": "mem-1", "incident_id": "old-incident", "action": "restart",
                             "verification_result": "success", "vector_similarity": 0.89}],
@@ -351,6 +351,7 @@ def test_retrieved_cognia_document_exposes_source_title_without_inventing_use():
     state = {
         "knowledge_status": {"status": "available"},
         "knowledge_results": [{"source_id": "src-1", "title": "nginx playbook",
+                               "content": "Service: nginx\nNginx playbook",
                                "knowledge_id": "k-2", "relevance": 0.82}],
     }
     result = make_brief(state=state)
@@ -537,3 +538,29 @@ def test_decision_brief_projects_compiler_error_for_incident_config_diagnostics(
     assert diag["repair_then_revalidate"] is True
     assert diag["start_requires_valid_config_and_approval"] is True
     assert result["source_policy"]["authorizes_execution"] is False
+
+def test_historical_unrelated_cognia_item_is_suppressed_in_live_brief():
+    state = {
+        "service_name": "gfpapi",
+        "knowledge_status": {"status": "available"},
+        "knowledge_results": [{
+            "source_id": "wrong-nginx", "content": "Service: nginx\nNginx unit recovery",
+            "relevance": 0.99,
+        }],
+    }
+    # The durable incident identity is authoritative; this helper's incident
+    # is nginx and must therefore be treated as nginx, not the stale state hint.
+    report = make_brief(state=state)["cognia_knowledge"]
+    assert report["accepted_count"] == 1
+
+def test_unowned_cognia_item_is_not_reported_as_verified():
+    state = {
+        "knowledge_status": {"status": "available"},
+        "knowledge_results": [{"source_id": "unknown", "content": "Random nginx guide",
+                                "relevance": 0.99}],
+    }
+    report = make_brief(state=state)["cognia_knowledge"]
+    assert report["status"] == "filtered_empty"
+    assert report["items"] == []
+    assert report["retrieved_count"] == 1
+    assert report["rejected_count"] == 1

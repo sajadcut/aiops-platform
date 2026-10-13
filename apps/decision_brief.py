@@ -285,9 +285,15 @@ def _mcp(rows: Iterable[dict], now: datetime) -> tuple[list[dict], list[dict]]:
     return items[:100], list(sources.values())[:50]
 
 
-def _knowledge(state: dict, agents: list[dict]) -> dict:
+def _knowledge(state: dict, agents: list[dict], incident_service: str | None = None) -> dict:
+    from apps.context_service.knowledge_relevance import filter_service_knowledge
     retrieval = obj(state.get("knowledge_status"))
-    documents = arr(state.get("knowledge_results"))
+    raw_documents = arr(state.get("knowledge_results"))
+    documents, relevance = filter_service_knowledge(
+        raw_documents, expected_service=incident_service or state.get("service_name")
+        or (state.get("context") or {}).get("service"),
+        purpose="decision_brief",
+    )
     cited = {ref for a in agents for ref in a["knowledge_source_ids"]}
     entries = []
     for doc in documents[:30]:
@@ -310,11 +316,16 @@ def _knowledge(state: dict, agents: list[dict]) -> dict:
             "use_status": "cited_by_agent" if source_id and source_id in cited else "not_verified",
         })
     status = str(retrieval.get("status") or "not_queried").lower()
-    if status not in {"available", "empty", "not_queried"}:
+    if status not in {"available", "empty", "not_queried", "filtered_empty"}:
         status = "failed"
+    if status == "available" and not documents and relevance["rejected_count"]:
+        status = "filtered_empty"
     return {
         "status": status,
-        "retrieved_count": len(documents),
+        "retrieved_count": len(raw_documents),
+        "accepted_count": len(documents),
+        "rejected_count": relevance["rejected_count"],
+        "relevance": relevance,
         "use_status": "cited_by_agent" if any(d["use_status"] == "cited_by_agent" for d in entries) else "not_verified",
         "items": entries,
         "error_code": safe(retrieval.get("code"), 100),
@@ -380,7 +391,7 @@ def build_decision_brief(
         service_name=incident.get("service") or state.get("service_name"),
         context=obj(state.get("context")) or obj(incident.get("context")),
     )
-    knowledge = _knowledge(state, agents)
+    knowledge = _knowledge(state, agents, incident_service=incident.get("service"))
     memory = _memory(state, agents)
     approval = obj(summary.get("approval"))
     observed = obj(summary.get("observed_state"))

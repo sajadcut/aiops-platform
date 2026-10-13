@@ -16,6 +16,7 @@ from domain.models import Incident, Evidence, Finding, MemoryEntry
 from domain.contracts.exceptions import AppException
 from apps.api.database_guard import require_database_ready
 from apps.rag_service import KnowledgeRAGService
+from apps.context_service.knowledge_relevance import filter_service_knowledge
 from apps.memory_service import OperationalMemoryService
 from apps.memory_service.consolidation import summarize_service
 from apps.audit_service.postgres import PostgreSQLAuditStore
@@ -132,7 +133,14 @@ async def get_knowledge(incident_id: UUID, limit: int = Query(default=5, le=20))
             raise HTTPException(status_code=404, detail="Incident not found")
         query = f"{incident.service or ''} {incident.summary or ''}".strip()
         try:
-            items = await KnowledgeRAGService().search(query, limit=limit)
+            raw_items = await KnowledgeRAGService().search(
+                query, limit=min(20, max(5, limit * 3)),
+            )
+            items, relevance = filter_service_knowledge(
+                raw_items, expected_service=incident.service,
+                purpose="incident_knowledge_api",
+            )
+            items = items[:limit]
         except CogniaAPIError as exc:
             exposed_status = 503 if exc.status_code in {429, 502, 503, 504} else 502
             raise AppException(
@@ -153,7 +161,7 @@ async def get_knowledge(incident_id: UUID, limit: int = Query(default=5, le=20))
                 error_code="COGNIA_RAG_CONTRACT_ERROR",
                 metadata={"provider": "cognia", "error_type": type(exc).__name__},
             ) from exc
-        return {"provider": "cognia", "items": items}
+        return {"provider": "cognia", "items": items, "relevance": relevance}
 
 
 @router.get("/incidents/{incident_id}/memory")

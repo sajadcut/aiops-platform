@@ -28,6 +28,7 @@ GENERIC_DOC = {
     "source_id": "cognia:1:200:210:2200",
     "relevance": 0.95,
     "content": "Diagnose ASP.NET Core systemd Type=notify readiness and startup timeout\nOwner: shared-runbooks",
+    "metadata": {"applicability": "general"},
 }
 
 
@@ -66,16 +67,17 @@ def test_service_bound_filter_disallows_high_score_foreign_owner_and_keeps_gener
     assert audit["status"] == "filtered"
     assert audit["rejected_count"] == 1
     assert audit["rejected"][0]["reason"] == "document_service_conflicts_with_incident"
-    assert audit["rejected"][0]["declared_service"] == "nginx"
+    assert audit["rejected"][0]["declared_services"] == ["nginx"]
     assert "nginx" not in "".join(doc["content"] for doc in documents).lower()
 
 
-def test_non_scoped_incidents_still_allow_discovery_from_service_hint():
+def test_non_scoped_incidents_reject_unlinked_service_hint():
     result, audit = filter_service_knowledge(
         [NGINX_DOC], expected_service=None
     )
-    assert result == [NGINX_DOC]
-    assert audit["rejected_count"] == 0
+    assert result == []
+    assert audit["rejected_count"] == 1
+    assert audit["rejected"][0]["reason"] == "unbound_service_without_source_fqdn"
 
 
 def test_topology_defense_in_depth_blocks_wrong_service_and_generic_owner_promotion():

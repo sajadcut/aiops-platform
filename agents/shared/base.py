@@ -12,6 +12,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from agents.shared.telemetry import AgentTelemetry
+from apps.context_service.knowledge_relevance import filter_service_knowledge
 from domain.contracts.config import settings
 from integrations.llm.base import LLMAdapter
 from integrations.llm.openai_compatible import configured_llm_adapter
@@ -452,7 +453,11 @@ class BaseAgent(ABC):
         raw = input_data.context.get("knowledge_results", []) if input_data.context else []
         if not isinstance(raw, list):
             return []
-        return [item for item in raw if isinstance(item, dict)][: settings.AGENT_MAX_AUXILIARY_CONTEXT_ITEMS]
+        accepted, _ = filter_service_knowledge(
+            raw, expected_service=input_data.service_name,
+            purpose="agent_prompt",
+        )
+        return accepted[:settings.AGENT_MAX_AUXILIARY_CONTEXT_ITEMS]
 
     @staticmethod
     def memory_items(input_data: AgentInput) -> List[Dict[str, Any]]:

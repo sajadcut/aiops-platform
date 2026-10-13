@@ -115,6 +115,7 @@ class ContextBuilder:
             )
             knowledge_results, relevance_audit = filter_service_knowledge(
                 raw_results, expected_service=explicit_service,
+                expected_fqdns=expected_fqdns,
                 purpose="context_asset_discovery",
             )
             knowledge_results = knowledge_results[:settings.AGENT_MAX_AUXILIARY_CONTEXT_ITEMS]

@@ -67,10 +67,11 @@ async def test_general_memory_alert_does_not_inherit_incidental_nginx_from_cogni
     assert context["service"] == "unknown"
     assert context["service_identity"]["status"] == "unknown"
     assert context["service_identity"]["verified"] is False
-    assert context["service_identity"]["suspected_service"] == "nginx"
+    assert context["service_identity"]["suspected_service"] is None
     assert context["asset_context"]["service"] is None
-    assert context["topology_context"]["unverified_knowledge_service_hint"] == "nginx"
-    assert context["knowledge_status"]["status"] == "available"
+    assert "unverified_knowledge_service_hint" not in context["topology_context"]
+    assert context["knowledge_status"]["status"] == "filtered_empty"
+    assert context["knowledge_status"]["relevance"]["rejected_count"] == 1
 
 
 @pytest.mark.asyncio
