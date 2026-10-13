@@ -1297,7 +1297,7 @@
 | `apps/orchestrator/progress.py` | `emit_progress` | 42 | async function | Best-effort progress, NOT durable operational decision evidence. | module |
 | `apps/orchestrator/progress.py` | `_safe_event` | 66 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/orchestrator/progress.py` | `summarize_progress` | 82 | function | Only completed actual stages move the bar; no ETA or time-derived percent. | module |
-| `apps/orchestrator/progress.py` | `load_progress` | 164 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
+| `apps/orchestrator/progress.py` | `load_progress` | 169 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
 | `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime` | 17 | class | PostgreSQL-backed runtime around the governed collaborative LangGraph workflow. | module |
 | `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime.__init__` | 20 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
 | `apps/orchestrator/runtime.py` | `DurableWorkflowRuntime._orchestrator_type` | 28 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DurableWorkflowRuntime |
