@@ -383,3 +383,18 @@ def test_monitoring_provider_failure_creates_missing_evidence_warning():
     ])
     assert "monitoring_source_unavailable:elasticsearch" in report["missing_evidence"]
     assert report["incident_summary"]["valid_evidence_count"] == 0
+
+
+def test_decision_brief_exposes_llm_unknown_guidance_without_action_authority():
+    guidance = {
+        "status": "suggested", "execution_authority": False,
+        "counts_as_evidence": False, "config_validation_passed": False,
+        "items": [{"topic": "config_validation_method", "subject": "gfpapi",
+                   "explanation": "unknown adapter",
+                   "validation_approach": "Find documented non-mutating config check",
+                   "verified": False}],
+    }
+    brief = make_brief(state={"context": {"unknown_guidance": guidance}})
+    assert brief["unknown_guidance"]["items"][0]["verified"] is False
+    assert brief["unknown_guidance"]["config_validation_passed"] is False
+    assert brief["source_policy"]["authorizes_execution"] is False
