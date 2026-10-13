@@ -17,6 +17,7 @@ from apps.incident_copilot import (
     READ_ACTIONS, WRITE_SUGGESTIONS, append_turn, fallback_intent, history,
     llm_plan, vm_binding, vm_read, asks_for_recorded_errors, recorded_error_facts,
     recorded_error_answer, nginx_inspection_answer, merge_incident_evidence,
+    unsupported_security_exclusion_claim,
 )
 from apps.orchestrator.dynamic_investigation import DynamicInvestigationPlanner
 from apps.incident_elastic import (
@@ -360,6 +361,28 @@ async def incident_chat_message(
                     plan["model_status"] == "structured" and summary["recorded_error_facts"]
                     and plan["answer"]
                 ) else grounded
+        if (
+            kind == "answer" and
+            unsupported_security_exclusion_claim(answer)
+        ):
+            # Without verified, complete authentication event coverage, an
+            # LLM cannot conclude there were no 401/403 responses. Surface
+            # the stored diagnostics instead of asserting a false negative.
+            answer = (
+                recorded_error_answer(
+                    summary,
+                    persian=bool(re.search(r"[\u0600-\u06ff]", payload.message)),
+                )
+                + "\n\n"
+                + (
+                    "نبود خطای احراز هویت از لاگ‌های محدود اثبات نمی‌شود؛ "
+                    "برای بررسی، استعلام زندهٔ Elasticsearch MCP را درخواست کنید."
+                    if re.search(r"[\u0600-\u06ff]", payload.message)
+                    else "A bounded log sample cannot rule out authentication failures. "
+                         "Request a live Elasticsearch MCP query for more evidence."
+                )
+            )
+            answer_basis = "stored_analysis_guarded"
         answer = redact_text(answer)[:3500]
         event_id = await append_turn(
             audit, incident_id=str(incident_id), actor=identity.subject,
