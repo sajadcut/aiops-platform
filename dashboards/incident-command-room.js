@@ -415,7 +415,10 @@
     prometheus:'Checking Prometheus MCP',
     kubernetes_api:'Checking Kubernetes MCP',
   };
-  const phaseName = key => (state.language==='fa'?progressStageFa:progressStageEn)[key] || String(key||'');
+  const phaseName = key => String(key||'').startsWith('agent:')
+    ? (state.language==='fa'?'در حال تحلیل توسط ':'Analyzing with ')+
+      humanAgent(key.slice(6))+' ('+agentNameEN(key.slice(6))+')'
+    : (state.language==='fa'?progressStageFa:progressStageEn)[key] || String(key||'');
   function updateProgressClock() {
     const element=$('#ic-flow-elapsed');
     if(!element || !state.progress?.started_at || !element.closest || state.historic)return;
@@ -427,8 +430,8 @@
     const box=$('#ic-analysis-progress');
     if(!box)return;
     const l=state.lifecycle||{},r=state.report||{},p=state.progress||{};
-    const approval=low(p.approval_status||l.approval?.status||r.approval_readiness?.approval_status);
-    const statusValue=low(p.incident_status||l.incident_status||r.incident_summary?.status);
+    const approval=low(l.approval?.status||p.approval_status||r.approval_readiness?.approval_status);
+    const statusValue=low(l.incident_status||p.incident_status||r.incident_summary?.status);
     const running=l.analysis_in_progress===true ||
       (l.analysis_in_progress==null && statusValue==='analyzing' &&
        !['pending','approved','rejected'].includes(approval) &&
@@ -442,13 +445,18 @@
     const execution=approval==='consumed' &&
       (p.current_stage==='execution'||p.current_stage==='verification'||p.current_stage==='memory' ||
        (l.analysis_phase==='executing'&&!terminal));
-    const currentStage=awaiting?'approval':p.current_stage||
-      (execution?'execution':running?'context':null);
+    const currentStage=awaiting?'approval':
+      (execution&&!['execution','verification','memory'].includes(p.current_stage))?
+        'execution':p.current_stage||(execution?'execution':running?'context':null);
+    const activeAgent=Object.entries(p.agents||{})
+      .filter(([_,v])=>v?.status==='started')
+      .sort((a,b)=>String(b[1].at).localeCompare(String(a[1].at)))[0];
     const activeProvider=Object.entries(p.providers||{})
       .filter(([_,v])=>v?.status==='started')
       .sort((a,b)=>String(b[1].at).localeCompare(String(a[1].at)))[0];
-    const activeLabel=activeProvider && currentStage==='context' ?
-      phaseName(activeProvider[0]):phaseName(currentStage);
+    const activeLabel=activeProvider && currentStage==='context'?
+      phaseName(activeProvider[0]):activeAgent && currentStage==='parallel_agents'?
+      phaseName('agent:'+activeAgent[0]):phaseName(currentStage);
     const spinner=$('#ic-analysis-spinner');
     if(spinner)spinner.hidden=awaiting||terminal||!running&&!(execution&&currentStage);
     const title=$('#ic-analysis-title'),detail=$('#ic-analysis-detail');
@@ -475,7 +483,8 @@
     if(caution)caution.textContent=fa?
       'درصد فقط از مراحل واقعاً تکمیل‌شده است، نه تخمین زمان باقی‌مانده.':
       'Percentage is based on verified stage completion, not time remaining.';
-    const timeline=[...Object.entries(p.stages||{}),...Object.entries(p.providers||{})]
+    const timeline=[...Object.entries(p.stages||{}),...Object.entries(p.providers||{}),
+      ...Object.entries(p.agents||{}).map(([key,v])=>['agent:'+key,v])]
       .filter(([_,v])=>v&&v.at)
       .sort((x,y)=>String(x[1].at).localeCompare(String(y[1].at))).slice(-8);
     show('#ic-flow-steps',timeline.map(([key,v])=>{
