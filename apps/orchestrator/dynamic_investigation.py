@@ -227,7 +227,12 @@ class DynamicInvestigationPlanner:
         except Exception as exc:
             return {**result, "status": "unavailable", "error_type": type(exc).__name__}
         safe_docs = [row for row in docs if isinstance(row, dict) and row.get("source_id")]
-        prior = list(state.get("knowledge_results") or [])
+        prior, prior_audit = filter_service_knowledge(
+            state.get("knowledge_results") or [],
+            expected_service=str(state.get("service_name") or ""),
+            purpose="dynamic_investigation_existing",
+        )
+        context["knowledge_relevance_followup"]["rejected_prior_count"] = prior_audit["rejected_count"]
         by_ref = {}
         for item in safe_docs + prior:
             if isinstance(item, dict) and item.get("source_id"):
