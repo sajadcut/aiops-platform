@@ -22,6 +22,7 @@ from integrations.vm.dotnet_local_validator import (
     safe_json_files, validate_encoded_file, MAX_FILES,
 )
 from integrations.vm.nginx_config_review import nginx_review_command
+from integrations.vm.nginx_config_inspection import nginx_inspection_command, parse_nginx_inspection
 
 _SAFE_HOST = re.compile(r"^[A-Za-z0-9._:-]+$")
 _SAFE_SERVICE = re.compile(r"^[A-Za-z0-9@_.:-]+$")
@@ -820,6 +821,52 @@ class SSHVMConnector:
             **base, "success": True, "supported": True,
             "syntax_valid": False if failures else None if incomplete else True,
             "status": final_status, "files": rows,
+        }
+
+    async def nginx_config_inspect(self, target: str, service: str) -> Dict[str, Any]:
+        """Inspect only allowlisted Nginx config structure; no raw file bytes.
+
+        The VM OS account must already have read access. No arbitrary sudo or
+        user/model-supplied file path is accepted.
+        """
+        self._validate_service(service)
+        if str(service).lower().removesuffix(".service") != "nginx":
+            return {
+                "success": False, "supported": False, "target": target,
+                "service": service, "status": "unsupported_service",
+                "execution_authority": False,
+            }
+        validator = await self.config_validate(target, service)
+        syntax_status = (
+            "valid" if validator.get("success") and validator.get("supported") and validator.get("valid") is True else
+            "invalid" if validator.get("success") and validator.get("supported") and validator.get("valid") is False else
+            "unverified"
+        )
+        # Compiler-derived paths only. nginx -t may identify an included
+        # site file, even when ExecStartPre prevents the service from starting.
+        error_file = validator.get("config_file") if syntax_status == "invalid" else None
+        error_line = validator.get("error_line") if syntax_status == "invalid" else None
+        inspected = await self._run(
+            target, nginx_inspection_command(error_file, error_line),
+        )
+        base = {
+            "target": target, "service": service, "supported": True,
+            "read_only": True, "execution_authority": False,
+            "validator_status": syntax_status,
+            "validator_error_file": error_file,
+            "validator_error_line": error_line,
+            "validator_error": str(validator.get("syntax_error") or "")[:350],
+            "root_config_file": validator.get("root_config_file"),
+        }
+        if not inspected.get("success"):
+            return {
+                **base, "success": False, "status": "ssh_or_inspection_unavailable",
+                "files": [], "config_contents_exposed": False,
+                "line_values_exposed": False,
+            }
+        result = parse_nginx_inspection(inspected.get("stdout") or "")
+        return {
+            **base, **result, "success": result.get("status") in {"inspected", "partial"},
         }
 
     async def nginx_config_review(self, target: str, service: str) -> Dict[str, Any]:

@@ -28,7 +28,7 @@
       chatTitle:'دستیار تعاملی رخداد',
       chatNote:'بعد از تحلیل می‌توانی درباره خطا سؤال کنی، وضعیت زنده یا کانفیگ را بررسی کنی و برای عملیات درخواست تأیید ثبت کنی. هیچ دستور اجرایی صرفاً با پیام چت انجام نمی‌شود.',
       chatError:'علت خطا چیست؟',chatConfig:'کانفیگ را بررسی کن',chatStatus:'وضعیت سرویس را بررسی کن',
-      chatReload:'ریلود سرویس را پیشنهاد بده',chatMessageLabel:'پیام شما برای این Incident',chatSend:'ارسال پیام',
+      chatReload:'ریلود سرویس را پیشنهاد بده',chatFiles:'بررسی فایل‌های Nginx',chatMessageLabel:'پیام شما برای این Incident',chatSend:'ارسال پیام',
       receivedMore:'فقط بخشی از آلارم‌ها نمایش داده می‌شوند؛ از API برای صفحه‌بندی داده‌های بیشتر استفاده کن.',
       receivedProblem:'آلارم مشکل',receivedRecovery:'اعلام رفع مشکل',receivedError:'دریافت آلارم اولیه ممکن نشد.',
       readFirst:'وضعیت رخداد به زبان ساده',overviewTitle:'خلاصه وضعیت و پیشنهاد AIOps',decisionSafety:'بررسی ریسک پیش از اقدام',
@@ -115,7 +115,7 @@
       chatTitle:'Incident investigation copilot',
       chatNote:'Ask about root causes, request live read-only checks and initiate governed action approval. Chat messages never directly execute changes.',
       chatError:'What caused this error?',chatConfig:'Check configuration',chatStatus:'Check service status',
-      chatReload:'Propose service reload',chatMessageLabel:'Your message about this incident',chatSend:'Send message',receivedMore:'Results limited; query the API for more.',
+      chatReload:'Propose service reload',chatFiles:'Inspect Nginx files',chatMessageLabel:'Your message about this incident',chatSend:'Send message',receivedMore:'Results limited; query the API for more.',
       receivedProblem:'Problem alert',receivedRecovery:'Recovery event',receivedError:'Could not load the source notification.',
       readFirst:'Start here',overviewTitle:'Incident summary and recommendation',decisionSafety:'Risk review',
       reviewTitle:'What exactly am I authorizing?',agentSubtitle:'Auditable specialist activity report',
@@ -1746,9 +1746,9 @@
       if(prompt){
         const suggestions={
           fa:{error:'علت اصلی این رخداد از شواهد و تحلیل Agentها چیست؟',config:'کانفیگ همین سرویس را از VM MCP بررسی کن و خطا را بگو.',
-              status:'وضعیت زنده سرویس این رخداد را بررسی کن.',reload:'برای سرویس همین رخداد Reload پیشنهاد بده و پیش‌شرط‌های امنیتی را بگو.'},
+              status:'وضعیت زنده سرویس این رخداد را بررسی کن.',files:'فایل‌های nginx.conf و sites-enabled همین سرویس را به صورت امن از VM MCP بخوان و خطای nginx -t و شماره خطوط را مشخص کن.',reload:'برای سرویس همین رخداد Reload پیشنهاد بده و پیش‌شرط‌های امنیتی را بگو.'},
           en:{error:'What does the incident evidence establish about the root cause?',config:'Run a read-only configuration check for the incident service.',
-              status:'Check the live service status for this incident.',reload:'Propose reloading the incident service and explain the safety gates.'}
+              status:'Check the live service status for this incident.',files:'Inspect nginx.conf and sites-enabled configuration structure for this incident via VM MCP and report nginx -t errors.',reload:'Propose reloading the incident service and explain the safety gates.'}
         };
         $('#ic-chat-message').value=suggestions[state.language][prompt.dataset.incidentChatPrompt]||'';
         $('#ic-chat-message').focus();return;
