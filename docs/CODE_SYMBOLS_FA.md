@@ -2116,10 +2116,10 @@
 | `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.start_service` | 89 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
 | `integrations/vm/service_adapters.py` | `ServiceDiagnosticAdapter` | 10 | class | Fixed, allowlisted service-specific diagnostic commands. | module |
 | `integrations/vm/service_adapters.py` | `get_service_adapter` | 56 | function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
-| `integrations/vm/service_adapters.py` | `_absolute_config_path` | 74 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `integrations/vm/service_adapters.py` | `discover_config_path` | 83 | function | Discover an explicit config argument from the installed systemd unit. | module |
-| `integrations/vm/service_adapters.py` | `config_check_for_path` | 122 | function | Use only an existing fixed allowlisted validator with a safe config path. | module |
-| `integrations/vm/service_adapters.py` | `parse_config_diagnostic` | 140 | function | Extract bounded compiler-reported config file/line, never fetch secret files. | module |
+| `integrations/vm/service_adapters.py` | `_absolute_config_path` | 76 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `integrations/vm/service_adapters.py` | `discover_config_path` | 85 | function | Discover an explicit config argument from the installed systemd unit. | module |
+| `integrations/vm/service_adapters.py` | `config_check_for_path` | 124 | function | Use only an existing fixed allowlisted validator with a safe config path. | module |
+| `integrations/vm/service_adapters.py` | `parse_config_diagnostic` | 142 | function | Extract bounded compiler-reported config file/line, never fetch secret files. | module |
 | `integrations/vm/ssh_connector.py` | `SSHVMConnector` | 24 | class | Controlled Linux VM adapter used only behind the VM MCP server. | module |
 | `integrations/vm/ssh_connector.py` | `SSHVMConnector.__init__` | 35 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
 | `integrations/vm/ssh_connector.py` | `SSHVMConnector._auth_mode` | 40 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
