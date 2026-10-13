@@ -600,7 +600,7 @@ def correlate_disk_file_causality(items: Sequence[Mapping[str, Any]]) -> Dict[st
             "exact bounded deletion target plus independent operator approval",
         ],
         "recommended_investigation": (
-            "Identify the writer/process, correlate growth with actual Elastic/Zabbix errors, "
+            "Identify the file producer/writer process, correlate growth with actual Elastic/Zabbix errors, "
             "fix the underlying producer or rotation and verify retention; "
             "do not suggest deleting files solely by size or age"
         ),
