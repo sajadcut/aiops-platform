@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 468 | Dashboard JS files scanned: 8 | Symbols indexed: 4518**
+**Python files scanned: 468 | Dashboard JS files scanned: 8 | Symbols indexed: 4562**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -718,15 +718,15 @@
 | `apps/api/http_logging.py` | `HTTPTransactionLoggingMiddleware.__call__` | 84 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | HTTPTransactionLoggingMiddleware |
 | `apps/api/http_logging.py` | `HTTPTransactionLoggingMiddleware.__call__.logging_receive` | 126 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | HTTPTransactionLoggingMiddleware.__call__ |
 | `apps/api/http_logging.py` | `HTTPTransactionLoggingMiddleware.__call__.logging_send` | 140 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | HTTPTransactionLoggingMiddleware.__call__ |
-| `apps/api/incident_chat.py` | `IncidentChatMessage` | 32 | class | کلاس | module |
-| `apps/api/incident_chat.py` | `IncidentChatActionRequest` | 36 | class | کلاس | module |
-| `apps/api/incident_chat.py` | `_scope` | 40 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/incident_chat.py` | `_safe_brief` | 57 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/incident_chat.py` | `_explicit_wrong_target` | 80 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/incident_chat.py` | `_read_cognia` | 95 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/incident_chat.py` | `incident_chat_history` | 119 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/incident_chat.py` | `incident_chat_message` | 160 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/incident_chat.py` | `incident_chat_request_approval` | 258 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/incident_chat.py` | `IncidentChatMessage` | 33 | class | کلاس | module |
+| `apps/api/incident_chat.py` | `IncidentChatActionRequest` | 37 | class | کلاس | module |
+| `apps/api/incident_chat.py` | `_scope` | 41 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/incident_chat.py` | `_safe_brief` | 58 | function | Keep actual DecisionBrief field names; use bounded persisted facts only. | module |
+| `apps/api/incident_chat.py` | `_explicit_wrong_target` | 109 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/incident_chat.py` | `_read_cognia` | 124 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/incident_chat.py` | `incident_chat_history` | 148 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/incident_chat.py` | `incident_chat_message` | 189 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/incident_chat.py` | `incident_chat_request_approval` | 316 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/incident_resources.py` | `MemoryLifecycleRequest` | 30 | class | کلاس | module |
 | `apps/api/incident_resources.py` | `_require_current_database_schema` | 35 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/incident_resources.py` | `get_context` | 40 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
@@ -1158,12 +1158,16 @@
 | `apps/execution_service/tools/vm_telemetry.py` | `VMTelemetryTool.validate` | 32 | async method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | VMTelemetryTool |
 | `apps/execution_service/tools/vm_telemetry.py` | `VMTelemetryTool.execute` | 50 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | VMTelemetryTool |
 | `apps/incident_copilot.py` | `vm_binding` | 24 | function | Corroborate exactly one VM service/target; never infer a host from an LLM. | module |
-| `apps/incident_copilot.py` | `fallback_intent` | 61 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/incident_copilot.py` | `public_result` | 80 | function | Project known diagnostic keys; never forward arbitrary MCP payloads. | module |
-| `apps/incident_copilot.py` | `vm_read` | 111 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/incident_copilot.py` | `llm_plan` | 124 | async function | LLM may select a bounded enum but cannot set a target or authorize writes. | module |
-| `apps/incident_copilot.py` | `history` | 179 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/incident_copilot.py` | `append_turn` | 198 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/incident_copilot.py` | `asks_for_recorded_errors` | 77 | function | Distinguish 'what did you find?' from a request for a *new* MCP check. | module |
+| `apps/incident_copilot.py` | `recorded_error_facts` | 83 | function | Only facts already persisted by MCP; never present an Agent guess as proof. | module |
+| `apps/incident_copilot.py` | `recorded_error_facts.add` | 88 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | recorded_error_facts |
+| `apps/incident_copilot.py` | `recorded_error_answer` | 128 | function | Grounded fallback when LLM or current MCP is unavailable. | module |
+| `apps/incident_copilot.py` | `fallback_intent` | 164 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/incident_copilot.py` | `public_result` | 183 | function | Project known diagnostic keys; never forward arbitrary MCP payloads. | module |
+| `apps/incident_copilot.py` | `vm_read` | 214 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/incident_copilot.py` | `llm_plan` | 227 | async function | LLM may select a bounded enum but cannot set a target or authorize writes. | module |
+| `apps/incident_copilot.py` | `history` | 288 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/incident_copilot.py` | `append_turn` | 309 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/incident_explanation.py` | `_ref` | 12 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/incident_explanation.py` | `_recent` | 17 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/incident_explanation.py` | `_dotnet` | 34 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
@@ -1785,21 +1789,21 @@
 | `dashboards/incident-command-room.js` | `render` | 1424 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
 | `dashboards/incident-command-room.js` | `renderIncidentChat` | 1434 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
 | `dashboards/incident-command-room.js` | `lines` | 1449 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/incident-command-room.js` | `loadIncidentChat` | 1491 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
-| `dashboards/incident-command-room.js` | `submitIncidentChat` | 1503 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/incident-command-room.js` | `incidentChatApproval` | 1515 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/incident-command-room.js` | `loadConfigResponse` | 1545 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
-| `dashboards/incident-command-room.js` | `respondToConfigProposal` | 1557 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/incident-command-room.js` | `loadNarrative` | 1586 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
-| `dashboards/incident-command-room.js` | `load` | 1596 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
-| `dashboards/incident-command-room.js` | `returnLive` | 1621 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/incident-command-room.js` | `loadHistory` | 1625 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
-| `dashboards/incident-command-room.js` | `openHistory` | 1635 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/incident-command-room.js` | `loadRaw` | 1644 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
-| `dashboards/incident-command-room.js` | `approvalCurrent` | 1652 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/incident-command-room.js` | `action` | 1659 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/incident-command-room.js` | `bind` | 1695 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/incident-command-room.js` | `lifecycleTimer` | 1792 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/incident-command-room.js` | `loadIncidentChat` | 1503 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
+| `dashboards/incident-command-room.js` | `submitIncidentChat` | 1515 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/incident-command-room.js` | `incidentChatApproval` | 1527 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/incident-command-room.js` | `loadConfigResponse` | 1557 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
+| `dashboards/incident-command-room.js` | `respondToConfigProposal` | 1569 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/incident-command-room.js` | `loadNarrative` | 1598 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
+| `dashboards/incident-command-room.js` | `load` | 1608 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
+| `dashboards/incident-command-room.js` | `returnLive` | 1633 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/incident-command-room.js` | `loadHistory` | 1637 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
+| `dashboards/incident-command-room.js` | `openHistory` | 1647 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/incident-command-room.js` | `loadRaw` | 1656 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
+| `dashboards/incident-command-room.js` | `approvalCurrent` | 1664 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/incident-command-room.js` | `action` | 1671 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/incident-command-room.js` | `bind` | 1707 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/incident-command-room.js` | `lifecycleTimer` | 1804 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
 | `dashboards/knowledge-review.js` | `el` | 10 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
 | `dashboards/knowledge-review.js` | `current` | 11 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
 | `dashboards/knowledge-review.js` | `notice` | 14 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
@@ -3493,6 +3497,46 @@
 | `tests/unit/test_incident_copilot.py` | `test_history_is_limited_to_matching_audit_events_and_role` | 148 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_incident_copilot.py` | `test_incident_chat_routes_have_auth_and_deployable_dashboard` | 163 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_incident_copilot.py` | `test_safe_brief_excludes_untrusted_raw_evidence_and_secret_fields` | 182 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_copilot.py` | `_recorded_brief` | 193 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_incident_copilot.py` | `test_recorded_analysis_uses_actual_decision_brief_keys_not_empty_agents_alias` | 221 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_copilot.py` | `test_previous_errors_are_not_a_request_for_live_reads` | 241 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_copilot.py` | `test_explicit_new_diagnostics_still_allowed` | 250 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_copilot.py` | `test_screenshot_question_answers_stored_error_even_if_model_selects_mcp` | 256 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_copilot.py` | `test_screenshot_question_answers_stored_error_even_if_model_selects_mcp.Session` | 265 | class | کلاس | test_screenshot_question_answers_stored_error_even_if_model_selects_mcp |
+| `tests/unit/test_incident_copilot.py` | `test_screenshot_question_answers_stored_error_even_if_model_selects_mcp.Session.__aenter__` | 266 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_screenshot_question_answers_stored_error_even_if_model_selects_mcp.Session |
+| `tests/unit/test_incident_copilot.py` | `test_screenshot_question_answers_stored_error_even_if_model_selects_mcp.Session.__aexit__` | 268 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_screenshot_question_answers_stored_error_even_if_model_selects_mcp.Session |
+| `tests/unit/test_incident_copilot.py` | `test_screenshot_question_answers_stored_error_even_if_model_selects_mcp.Audit` | 271 | class | کلاس | test_screenshot_question_answers_stored_error_even_if_model_selects_mcp |
+| `tests/unit/test_incident_copilot.py` | `test_screenshot_question_answers_stored_error_even_if_model_selects_mcp.Audit.__init__` | 272 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_screenshot_question_answers_stored_error_even_if_model_selects_mcp.Audit |
+| `tests/unit/test_incident_copilot.py` | `test_screenshot_question_answers_stored_error_even_if_model_selects_mcp.Audit.list` | 274 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_screenshot_question_answers_stored_error_even_if_model_selects_mcp.Audit |
+| `tests/unit/test_incident_copilot.py` | `test_screenshot_question_answers_stored_error_even_if_model_selects_mcp.scope` | 277 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_screenshot_question_answers_stored_error_even_if_model_selects_mcp |
+| `tests/unit/test_incident_copilot.py` | `test_screenshot_question_answers_stored_error_even_if_model_selects_mcp.brief` | 282 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_screenshot_question_answers_stored_error_even_if_model_selects_mcp |
+| `tests/unit/test_incident_copilot.py` | `test_screenshot_question_answers_stored_error_even_if_model_selects_mcp.model` | 285 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_screenshot_question_answers_stored_error_even_if_model_selects_mcp |
+| `tests/unit/test_incident_copilot.py` | `test_screenshot_question_answers_stored_error_even_if_model_selects_mcp.fake_read` | 291 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_screenshot_question_answers_stored_error_even_if_model_selects_mcp |
+| `tests/unit/test_incident_copilot.py` | `test_screenshot_question_answers_stored_error_even_if_model_selects_mcp.append` | 295 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_screenshot_question_answers_stored_error_even_if_model_selects_mcp |
+| `tests/unit/test_incident_copilot.py` | `test_historical_answer_remains_available_when_llm_fails` | 322 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_copilot.py` | `test_historical_answer_remains_available_when_llm_fails.Session` | 327 | class | کلاس | test_historical_answer_remains_available_when_llm_fails |
+| `tests/unit/test_incident_copilot.py` | `test_historical_answer_remains_available_when_llm_fails.Session.__aenter__` | 328 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_historical_answer_remains_available_when_llm_fails.Session |
+| `tests/unit/test_incident_copilot.py` | `test_historical_answer_remains_available_when_llm_fails.Session.__aexit__` | 330 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_historical_answer_remains_available_when_llm_fails.Session |
+| `tests/unit/test_incident_copilot.py` | `test_historical_answer_remains_available_when_llm_fails.Audit` | 332 | class | کلاس | test_historical_answer_remains_available_when_llm_fails |
+| `tests/unit/test_incident_copilot.py` | `test_historical_answer_remains_available_when_llm_fails.Audit.__init__` | 333 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_historical_answer_remains_available_when_llm_fails.Audit |
+| `tests/unit/test_incident_copilot.py` | `test_historical_answer_remains_available_when_llm_fails.Audit.list` | 335 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_historical_answer_remains_available_when_llm_fails.Audit |
+| `tests/unit/test_incident_copilot.py` | `test_historical_answer_remains_available_when_llm_fails.scope` | 337 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_historical_answer_remains_available_when_llm_fails |
+| `tests/unit/test_incident_copilot.py` | `test_historical_answer_remains_available_when_llm_fails.brief` | 339 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_historical_answer_remains_available_when_llm_fails |
+| `tests/unit/test_incident_copilot.py` | `test_historical_answer_remains_available_when_llm_fails.model` | 341 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_historical_answer_remains_available_when_llm_fails |
+| `tests/unit/test_incident_copilot.py` | `test_historical_answer_remains_available_when_llm_fails.append` | 343 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_historical_answer_remains_available_when_llm_fails |
+| `tests/unit/test_incident_copilot.py` | `test_unavailable_mcp_preserves_old_diagnostics` | 362 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_copilot.py` | `test_unavailable_mcp_preserves_old_diagnostics.Session` | 367 | class | کلاس | test_unavailable_mcp_preserves_old_diagnostics |
+| `tests/unit/test_incident_copilot.py` | `test_unavailable_mcp_preserves_old_diagnostics.Session.__aenter__` | 368 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_unavailable_mcp_preserves_old_diagnostics.Session |
+| `tests/unit/test_incident_copilot.py` | `test_unavailable_mcp_preserves_old_diagnostics.Session.__aexit__` | 370 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_unavailable_mcp_preserves_old_diagnostics.Session |
+| `tests/unit/test_incident_copilot.py` | `test_unavailable_mcp_preserves_old_diagnostics.Audit` | 372 | class | کلاس | test_unavailable_mcp_preserves_old_diagnostics |
+| `tests/unit/test_incident_copilot.py` | `test_unavailable_mcp_preserves_old_diagnostics.Audit.__init__` | 373 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_unavailable_mcp_preserves_old_diagnostics.Audit |
+| `tests/unit/test_incident_copilot.py` | `test_unavailable_mcp_preserves_old_diagnostics.Audit.list` | 375 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_unavailable_mcp_preserves_old_diagnostics.Audit |
+| `tests/unit/test_incident_copilot.py` | `test_unavailable_mcp_preserves_old_diagnostics.Audit.append` | 377 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_unavailable_mcp_preserves_old_diagnostics.Audit |
+| `tests/unit/test_incident_copilot.py` | `test_unavailable_mcp_preserves_old_diagnostics.scope` | 379 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_unavailable_mcp_preserves_old_diagnostics |
+| `tests/unit/test_incident_copilot.py` | `test_unavailable_mcp_preserves_old_diagnostics.brief` | 383 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_unavailable_mcp_preserves_old_diagnostics |
+| `tests/unit/test_incident_copilot.py` | `test_unavailable_mcp_preserves_old_diagnostics.model` | 385 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_unavailable_mcp_preserves_old_diagnostics |
+| `tests/unit/test_incident_copilot.py` | `test_unavailable_mcp_preserves_old_diagnostics.read` | 387 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_unavailable_mcp_preserves_old_diagnostics |
+| `tests/unit/test_incident_copilot.py` | `test_unavailable_mcp_preserves_old_diagnostics.append` | 389 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_unavailable_mcp_preserves_old_diagnostics |
 | `tests/unit/test_incident_explanation.py` | `sample_evidence` | 8 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_incident_explanation.py` | `test_operator_reads_exact_dotnet_error_without_server_logs_or_llm` | 31 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_incident_explanation.py` | `test_brief_prioritizes_specialized_invalid_json_over_generic_unsupported` | 46 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
