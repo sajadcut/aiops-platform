@@ -96,7 +96,9 @@ const fs=require('node:fs');
   vm.runInThisContext(fs.readFileSync('dashboards/incident-command-room.js','utf8'));
   for(let i=0;i<18;i++)await new Promise(resolve=>setImmediate(resolve));
   const page=el('#ic-technical-report').innerHTML;
-  assert.match(page,/Executive Incident Assessment/);
+  assert.match(page,/جمع‌بندی تخصصی اولیه/);
+  assert.match(page,/گزارش کامل فنی و ممیزی/);
+  assert.match(page,/<details class="ic-diagnosis-drilldown">/);
   assert.match(page,/سرویس و systemd/);
   assert.match(page,/Result=timeout/);
   assert.match(page,/evidence-systemd-123/);
@@ -122,6 +124,9 @@ def test_section_01_has_real_render_target_and_accessible_evidence_table():
     js = (ROOT / "dashboards/incident-command-room.js").read_text(encoding="utf-8")
     css = (ROOT / "dashboards/incident-command-room.css").read_text(encoding="utf-8")
     assert 'id="ic-technical-report"' in html
+    assert 'id="ic-diagnosis"' in html
+    assert "renderOperatorDiagnosis" in js
+    assert "ic-diagnosis-drilldown" in css
     assert "renderTechnicalInvestigation" in js
     assert "ic-sre-table" in css
     assert "ic-sre-drilldown" in js
