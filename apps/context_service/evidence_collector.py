@@ -22,7 +22,7 @@ class EvidenceCollector:
     _UNKNOWN_SERVICE_VALUES = {"", "unknown", "unknown-service", "none", "null"}
     _NON_MATERIAL_OBSERVATION_STATUSES = {"unavailable", "error", "skipped"}
     _VM_ACTIONS = {
-        "collect_vm_metrics", "host_info", "disk_status", "disk_forensics", "network_status",
+        "collect_vm_metrics", "memory_diagnostics", "host_info", "disk_status", "disk_forensics", "network_status",
         "service_status", "service_logs", "system_logs", "process_snapshot",
         "process_status", "tcp_check", "port_listener_status", "dns_check",
         "route_check", "firewall_status", "config_validate", "nginx_config_review", "nginx_config_inspect",
@@ -123,6 +123,10 @@ class EvidenceCollector:
             add("collect_vm_metrics")
             add("host_info")
             add("disk_status")
+            if not service:
+                # Host-level signals have no service, but can have a trusted VM target.
+                add("memory_diagnostics")
+                add("process_snapshot")
             if service:
                 add("service_status")
                 add("process_status")
@@ -140,6 +144,9 @@ class EvidenceCollector:
 
             if evidence_type == "metric" or any(token in text for token in ("cpu", "memory", "swap", "load", "io wait", "vm metric")):
                 add("collect_vm_metrics")
+            if any(token in text for token in ("memory", "ram", "swap", "oom", "rss", "meminfo")):
+                add("memory_diagnostics")
+                add("process_snapshot")
             if any(token in text for token in ("host info", "hostname", "kernel", "uptime", "operating system", " os ")):
                 add("host_info")
             if any(token in text for token in ("disk", "inode", "mount", "filesystem", "file system")):
