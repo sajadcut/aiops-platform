@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 495 | Dashboard JS files scanned: 8 | Symbols indexed: 5169**
+**Python files scanned: 495 | Dashboard JS files scanned: 8 | Symbols indexed: 5175**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -4328,6 +4328,12 @@
 | `tests/unit/test_nginx_config_review.py` | `test_failed_nginx_candidate_reaches_report_but_never_becomes_approval.Model.generate_with_messages` | 191 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_failed_nginx_candidate_reaches_report_but_never_becomes_approval.Model |
 | `tests/unit/test_nginx_config_review.py` | `test_nginx_stage_blocker_is_prominent_in_operator_diagnosis_script` | 244 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_nginx_config_review.py` | `test_nginx_repair_entrypoint_is_visible_near_incident_and_never_applies_unvalidated_patch` | 257 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_nginx_config_review.py` | `test_confirmed_nginx_validator_collects_preview_without_dynamic_llm_flag` | 283 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_nginx_config_review.py` | `test_confirmed_nginx_validator_collects_preview_without_dynamic_llm_flag.VM` | 292 | class | کلاس | test_confirmed_nginx_validator_collects_preview_without_dynamic_llm_flag |
+| `tests/unit/test_nginx_config_review.py` | `test_confirmed_nginx_validator_collects_preview_without_dynamic_llm_flag.VM.config_validate` | 293 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_confirmed_nginx_validator_collects_preview_without_dynamic_llm_flag.VM |
+| `tests/unit/test_nginx_config_review.py` | `test_confirmed_nginx_validator_collects_preview_without_dynamic_llm_flag.VM.nginx_config_review` | 300 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_confirmed_nginx_validator_collects_preview_without_dynamic_llm_flag.VM |
+| `tests/unit/test_nginx_config_review.py` | `test_confirmed_nginx_validator_collects_preview_without_dynamic_llm_flag.VM.nginx_config_inspect` | 311 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_confirmed_nginx_validator_collects_preview_without_dynamic_llm_flag.VM |
+| `tests/unit/test_nginx_config_review.py` | `test_existing_nginx_incident_can_request_read_only_preview_from_dashboard` | 335 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_oidc_auth.py` | `test_oidc_claims_map_to_identity` | 6 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_oidc_auth.py` | `test_oidc_rejects_wrong_issuer` | 18 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_operational_agents.py` | `StaticLLM` | 15 | class | کلاس | module |
