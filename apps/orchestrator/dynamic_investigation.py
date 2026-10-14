@@ -24,7 +24,7 @@ READ_ONLY_CHECKS = frozenset({
     "service_status", "service_logs", "process_status", "config_validate",
     "collect_vm_metrics", "memory_diagnostics", "process_snapshot", "disk_status", "host_info", "network_status",
     "port_listener_status", "tcp_check",
-    "service_runtime_discovery", "service_config_discovery", "dotnet_config_syntax", "nginx_config_review", "nginx_config_inspect",
+    "service_runtime_discovery", "service_config_discovery", "service_config_review", "dotnet_config_syntax", "nginx_config_review", "nginx_config_inspect",
 })
 _CHECK_TO_REQUEST = {
     "service_status": ("telemetry", "service status"),
@@ -42,6 +42,7 @@ _CHECK_TO_REQUEST = {
     "service_runtime_discovery": ("telemetry", "systemd unit runtime discovery"),
     "dotnet_config_syntax": ("telemetry", "dotnet json syntax"),
     "service_config_discovery": ("telemetry", "config discovery"),
+    "service_config_review": ("telemetry", "config review"),
     "nginx_config_review": ("telemetry", "nginx config review"),
     "nginx_config_inspect": ("telemetry", "nginx config inspect"),
 }
@@ -118,7 +119,7 @@ class DynamicInvestigationPlanner:
             if not isinstance(raw, dict) or raw.get("success") is not True:
                 continue
             diagnostic = raw.get("diagnostic")
-            if diagnostic in {"service_runtime_discovery", "service_config_discovery", "dotnet_config_syntax"}:
+            if diagnostic in {"service_runtime_discovery", "service_config_discovery", "service_config_review", "dotnet_config_syntax"}:
                 result[diagnostic] = {
                     **raw, "evidence_ref": _bounded(item.get("reference"), 160),
                 }
@@ -535,7 +536,7 @@ class DynamicInvestigationPlanner:
         for action in proposal.get("checks") or []:
             if action not in READ_ONLY_CHECKS:
                 continue
-            if not has_service and action in {"service_status", "service_logs", "process_status", "config_validate", "service_runtime_discovery", "service_config_discovery", "dotnet_config_syntax", "nginx_config_review", "nginx_config_inspect"}:
+            if not has_service and action in {"service_status", "service_logs", "process_status", "config_validate", "service_runtime_discovery", "service_config_discovery", "service_config_review", "dotnet_config_syntax", "nginx_config_review", "nginx_config_inspect"}:
                 continue
             if not has_port and action in {"port_listener_status", "tcp_check"}:
                 continue
