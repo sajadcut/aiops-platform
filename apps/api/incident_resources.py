@@ -791,6 +791,21 @@ async def load_decision_brief_for_incident(db, incident_id: UUID) -> dict:
                 ).order_by(desc(KnowledgeReview.created_at)).limit(1)
             )
         ).scalars().first()
+    # Incident Copilot evidence can create an unverified *review draft* even
+    # without an executed remediation or a verified Operational Memory episode.
+    # Never imply this draft was already published to Cognia.
+    if latest_review is None and (
+        ((checkpoint.get("state") or {}).get("followup_analysis") or {}).get("status")
+        == "reassessed_read_only"
+    ):
+        latest_review = (
+            await db.execute(
+                select(KnowledgeReview).where(
+                    KnowledgeReview.incident_id == incident_id,
+                    KnowledgeReview.source_type == "incident_followup",
+                ).order_by(desc(KnowledgeReview.created_at)).limit(1)
+            )
+        ).scalars().first()
 
     return build_decision_brief(
         incident=incident_data,
