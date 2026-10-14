@@ -52,11 +52,20 @@ def _structural_line(value: str) -> str:
         return "[blank or comment]"
     if trimmed.startswith("<"):
         match = re.match(r"</?([A-Za-z][A-Za-z0-9_.:-]{0,50})", trimmed)
-        return ("xml_tag:" + match.group(1) if match else "xml_structure") + (
+        known_tags = {
+            "server", "service", "connector", "engine", "host", "context",
+            "listener", "realm", "valve", "resource", "manager",
+        }
+        safe_tag = match.group(1) if match and match.group(1).lower() in known_tags else "unknown"
+        return "xml_tag:" + safe_tag + (
             ":closing" if trimmed.startswith("</") else ":opening"
         )
+    # Never echo arbitrary property names or YAML keys: some deployments use
+    # credential identifiers as keys. Expose only a tiny vendor directive set.
     word = re.match(r"[A-Za-z_][A-Za-z0-9_-]{0,50}", trimmed)
-    return ("directive:" + word.group(0)) if word else "structural_line"
+    allowed = {"global", "defaults", "frontend", "backend", "listen",
+               "bind", "server", "mode", "timeout", "option", "acl", "use_backend"}
+    return "directive:" + word.group(0) if word and word.group(0) in allowed else "structural_line"
 
 
 def _remove_trailing_json_commas(source: str) -> str:
