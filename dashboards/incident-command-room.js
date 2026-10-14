@@ -1441,6 +1441,14 @@
     // and the actual JSON syntax result as entirely separate concepts.
     if(/invalid JSON syntax|JSON syntax (?:error|invalid)|invalid_json_syntax/i.test(x))
       return 'ایجنت وجود خطای ساختاری JSON در کانفیگ برنامه را گزارش کرده است؛ فایل، خط و نوع خطای قطعی در نتیجهٔ Validator آمده است.';
+    // Contrary model statements are never shown as successful checks when a
+    // dedicated .NET validator has explicitly failed on appsettings.json.
+    if(low((state.historic||state.report)?.configuration_diagnostic?.status)==='invalid' &&
+       !/invalid|not valid|failed|unverified|only.*runtimeconfig/i.test(x) &&
+       (/\bvalid\s*=\s*true\b/i.test(x) ||
+        /configuration (?:validation|check|syntax).*(?:passed|success|valid)/i.test(x) ||
+        /(?:all|the|application) (?:config(?:uration)?|JSON) (?:files? )?(?:is |are )?(?:valid|correct|passed)/i.test(x)))
+      return 'ادعای این ایجنت دربارهٔ سلامت کانفیگ با نتیجهٔ Validator معتبر مطابقت ندارد؛ آزمون فایل خطادار ناموفق بوده است.';
     const findings=signalFacts(x);
     if(findings.length)return findings.join('؛ ')+'.';
     if(/Incident triaged to/i.test(x)) {
