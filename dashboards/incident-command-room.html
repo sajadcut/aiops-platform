@@ -150,6 +150,8 @@
         <p class="ic-received-note" data-i18n="chatNote">بعد از تحلیل می‌توانی درباره خطا سؤال کنی، وضعیت زنده یا کانفیگ را بررسی کنی و برای عملیات درخواست تأیید ثبت کنی. هیچ دستور اجرایی صرفاً با پیام چت انجام نمی‌شود.</p>
         <div class="ic-chat-quick" id="ic-chat-suggestions">
           <button class="ic-btn ic-btn-muted" type="button" data-incident-chat-prompt="error" data-i18n="chatError">علت خطا چیست؟</button>
+          <button class="ic-btn ic-btn-muted" type="button" data-incident-chat-prompt="plan">با LLM برنامهٔ حل مشکل بساز</button>
+          <button class="ic-btn ic-btn-muted" type="button" data-incident-chat-prompt="start">Start یا Restart؟</button>
           <button class="ic-btn ic-btn-muted" type="button" data-incident-chat-prompt="config" data-i18n="chatConfig">کانفیگ را بررسی کن</button>
           <button class="ic-btn ic-btn-muted" type="button" data-incident-chat-prompt="files" data-i18n="chatFiles">فایل‌های Nginx را بررسی کن</button>
           <button class="ic-btn ic-btn-muted" type="button" data-incident-chat-prompt="status" data-i18n="chatStatus">وضعیت سرویس را بررسی کن</button>
@@ -158,7 +160,7 @@
         <div id="ic-chat-thread" class="ic-chat-thread" aria-live="polite" role="log" aria-label="گفت‌وگوی این رخداد"></div>
         <form id="ic-chat-form" class="ic-chat-form">
           <label for="ic-chat-message" class="ic-chat-label" data-i18n="chatMessageLabel">پیام شما برای این Incident</label>
-          <textarea id="ic-chat-message" rows="3" maxlength="4000" required placeholder="مثلاً بررسی کن nginx -t چه خطایی می‌دهد؛ اگر مناسب است پیشنهاد reload بده"></textarea>
+          <textarea id="ic-chat-message" rows="3" maxlength="4000" required placeholder="مثلاً علت توقف این سرویس چیست؟ شواهد، بررسی بعدی و گزینه‌های Start/Restart را با دلیل توضیح بده"></textarea>
           <button id="ic-chat-send" type="submit" class="ic-btn ic-btn-primary" data-i18n="chatSend">ارسال پیام</button>
         </form>
         <p id="ic-chat-status" role="status" aria-live="polite" class="ic-chat-caption"></p>
