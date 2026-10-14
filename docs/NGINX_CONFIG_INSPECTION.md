@@ -6,7 +6,7 @@ The old Incident Chat sometimes responded that it had no access to `nginx.conf`
 or `sites-enabled`, despite the Incident's VM MCP already being able to run
 `nginx -t`. The previous `nginx_config_review` capability only previews one
 compiler-confirmed failure, and does not list the Nginx configuration tree.
-It also depends on target-side Python 3. This new capability does not.
+The former review-preview feature depended on target-side Python 3; both the current structural inspection and the revised worker-side repair preview now avoid that dependency.
 
 ## New MCP capability: `nginx_config_inspect`
 
