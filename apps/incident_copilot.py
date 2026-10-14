@@ -276,6 +276,15 @@ def fallback_intent(message: str) -> str:
         return "propose_start"
     if re.search(r"کاگنیا|cognia|دانش|experience|knowledge|تجربه", text, re.I):
         return "knowledge_search"
+    # Explicit incident-chat request to generate a safe, read-only Nginx
+    # correction preview (not a request to write configuration).
+    if re.search(
+        r"\bnginx_config_review\b|"
+        r"(?:ساخت|تولید|بازسازی|دریافت|پیش.?نمایش).*?(?:پیشنهاد اصلاح|اصلاح کانفیگ).*?(?:nginx|کانفیگ)|"
+        r"(?:پیشنهاد اصلاح|پیش.?نمایش اصلاح).*?(?:nginx|کانفیگ)",
+        text, re.I,
+    ):
+        return "nginx_config_review"
     if re.search(r"nginx\.conf|sites.enabled|sites.available|conf\.d|"
                  r"(?:فایل|ساختار|محتوای|مسیر|لیست).*?(?:کانفیگ|nginx)|"
                  r"(?:nginx|nginx\.conf).*?(?:files?|inspect|read|config files?)",
@@ -306,7 +315,10 @@ def public_result(action: str, value: Any) -> dict:
         "nginx_config_review": ("service", "target", "status", "config_file",
                                 "error_line", "validation_status", "proposed_change",
                                 "current_hash", "candidate_hash", "diff",
-                                "current_excerpt", "proposed_excerpt"),
+                                "current_excerpt", "proposed_excerpt",
+                                "stage_failure_reason", "test_scope",
+                                "validator_executed_on_proposal",
+                                "remote_python_required"),
         "service_runtime_discovery": ("service", "target", "runtime",
                                       "entrypoint", "publish_directory", "unit_file"),
         "dotnet_config_syntax": ("service", "target", "runtime",
