@@ -243,6 +243,26 @@ def unsupported_security_exclusion_claim(answer: str) -> bool:
     return bool(negative and security and abs(negative.start()-security.start()) < 240)
 
 
+def is_recovery_comparison_question(message: str) -> bool:
+    """A request to *explain* Start versus Restart is not a write request.
+
+    The LLM must not turn a comparison into a runnable proposal. Explicit
+    requests to prepare a recovery proposal still use the normal permission
+    and approval workflow.
+    """
+    normalized = str(message or "").lower().replace("\u200c", " ")
+    recovery = re.search(
+        r"استارت|ریستارت|بازیابی|راه اندازی|start|restart|recovery", normalized
+    )
+    explanation = re.search(
+        r"مقایسه|تفاوت|فرق|کدام|چه زمانی|کدوم|بهتر|"
+        r"فقط (?:تحلیل|توضیح)|compare|versus|difference|which|"
+        r"pros and cons|just explain|do not (?:execute|propose)",
+        normalized,
+    )
+    return bool(recovery and explanation)
+
+
 def fallback_intent(message: str) -> str:
     text = message.lower().replace("\u200c", " ")
     from apps.incident_elastic import is_elastic_question, wants_live_elastic
