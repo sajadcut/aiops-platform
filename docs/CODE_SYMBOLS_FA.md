@@ -731,7 +731,7 @@
 | `apps/api/incident_chat.py` | `recheck_incident_service_status` | 314 | async function | An explicit, authenticated read-only VM MCP status check (no LLM/write). | module |
 | `apps/api/incident_chat.py` | `incident_chat_history` | 355 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/incident_chat.py` | `incident_chat_message` | 401 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/incident_chat.py` | `incident_chat_request_approval` | 655 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/incident_chat.py` | `incident_chat_request_approval` | 659 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/incident_resources.py` | `MemoryLifecycleRequest` | 31 | class | کلاس | module |
 | `apps/api/incident_resources.py` | `_require_current_database_schema` | 36 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/incident_resources.py` | `get_context` | 41 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
