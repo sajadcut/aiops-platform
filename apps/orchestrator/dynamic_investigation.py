@@ -22,7 +22,7 @@ from integrations.vm.service_adapters import parse_config_diagnostic
 # MCP credentials, targets, schema and actual execution stay in that boundary.
 READ_ONLY_CHECKS = frozenset({
     "service_status", "service_logs", "process_status", "config_validate",
-    "collect_vm_metrics", "disk_status", "host_info", "network_status",
+    "collect_vm_metrics", "memory_diagnostics", "process_snapshot", "disk_status", "host_info", "network_status",
     "port_listener_status", "tcp_check",
     "service_runtime_discovery", "dotnet_config_syntax", "nginx_config_review", "nginx_config_inspect",
 })
@@ -32,6 +32,8 @@ _CHECK_TO_REQUEST = {
     "process_status": ("telemetry", "process status"),
     "config_validate": ("telemetry", "configuration syntax validation"),
     "collect_vm_metrics": ("metric", "VM metrics"),
+    "memory_diagnostics": ("telemetry", "RAM swap PSI top-process snapshot"),
+    "process_snapshot": ("telemetry", "top process snapshot"),
     "disk_status": ("telemetry", "disk filesystem"),
     "host_info": ("telemetry", "host info"),
     "network_status": ("telemetry", "network status"),
