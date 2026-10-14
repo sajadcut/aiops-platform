@@ -215,7 +215,7 @@ async def persist_and_reassess(
             },
             "created_at": datetime.now(timezone.utc).isoformat(),
         })
-        return await emit_status(status)
+        return status
 
     status = {
         "status": "evidence_recorded", "evidence_ref": evidence_ref,
