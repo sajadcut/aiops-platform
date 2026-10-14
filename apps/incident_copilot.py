@@ -406,6 +406,32 @@ async def vm_read(action: str, binding: dict, connector: Any = None) -> dict:
 async def llm_plan(message: str, summary: dict, turns: list[dict],
                    llm: Any = None, *, observation: dict | None = None) -> dict:
     """LLM may select a bounded enum but cannot set a target or authorize writes."""
+    # Give the model the most decision-relevant evidence first. Truncating a
+    # large arbitrary JSON serialization at 10k chars previously hid recovery,
+    # exact config results and stop-origin hypotheses behind repetitive logs.
+    prioritized = {
+        "incident_summary": summary.get("incident_summary"),
+        "configuration_diagnostic": summary.get("configuration_diagnostic"),
+        "recovery_advisory": summary.get("recovery_advisory"),
+        "technical_investigation": summary.get("technical_investigation"),
+        "rca_assessment": summary.get("rca_assessment"),
+        "missing_evidence": (summary.get("missing_evidence") or [])[:8],
+        "vm_binding": summary.get("vm_binding"),
+        "recorded_error_facts": (summary.get("recorded_error_facts") or [])[:6],
+        "agent_findings": (summary.get("agent_findings") or [])[:5],
+        "mcp_evidence": (summary.get("mcp_evidence") or [])[:12],
+        "elastic_recorded": summary.get("elastic_recorded"),
+        "knowledge": summary.get("knowledge"),
+    }
+    evidence_json = json.dumps(redact(prioritized), ensure_ascii=False, default=str)
+    # If the model budget is exceeded remove lower-priority MCP/agent rows,
+    # not the recovery, uncertainty, or safety fields.
+    for field, sizes in (("mcp_evidence", (7, 3, 0)), ("agent_findings", (3, 0))):
+        for size in sizes:
+            if len(evidence_json) <= 11800:
+                break
+            prioritized[field] = (prioritized.get(field) or [])[:size]
+            evidence_json = json.dumps(redact(prioritized), ensure_ascii=False, default=str)
     messages = [
         {"role": "system", "content": (
             "You are the incident-bound AIOps operations copilot. Respond in the "
@@ -423,6 +449,18 @@ async def llm_plan(message: str, summary: dict, turns: list[dict],
             "explicit new Elasticsearch MCP query. Do not invent the tool "
             "response or claim Elasticsearch was queried unless the scoped "
             "observation actually confirms it. "
+            "When asked to help resolve an incident, give a concrete ordered plan: "
+            "what is confirmed, key alternative causes, next safe read-only checks, "
+            "interpretation of positive/negative outcomes, conditional Start/Restart, "
+            "mandatory preflight and independent verification. Clearly label unknowns. "
+            "A failed systemd service can follow a timed-out Stop or Start; "
+            "manual intervention needs journal/audit correlation and cannot be "
+            "inferred from SIGKILL, Duration or TimeoutStop alone. "
+            "For failed state, Restart is the current runbook candidate and "
+            "Start is only an alternative if a registered policy permits it. "
+            "Do not recommend execution when explicit maintenance or human stop "
+            "has not been ruled out. The LLM may propose tests, not execute them "
+            "without the incident-scoped tool and explicit operator request. "
             "Only state evidence-supported conclusions; say when uncertain, and "
             "never invent a tool result or claim an action executed. Questions "
             "about errors already found or what agents observed MUST be answered "
@@ -440,7 +478,7 @@ async def llm_plan(message: str, summary: dict, turns: list[dict],
             "Do not request secrets."
         )},
         {"role": "system", "content": "Bounded incident evidence: " +
-         json.dumps(redact(summary), ensure_ascii=False, default=str)[:10500]},
+         evidence_json[:11800]},
     ]
     for t in turns[-8:]:
         if t.get("role") in {"user", "assistant"}:
@@ -452,7 +490,7 @@ async def llm_plan(message: str, summary: dict, turns: list[dict],
     try:
         response = await asyncio.wait_for(
             (llm or configured_llm_adapter()).generate_with_messages(
-                messages, temperature=0.1, max_tokens=850,
+                messages, temperature=0.1, max_tokens=1450,
                 stage="incident_copilot_chat",
             ), timeout=28.0,
         )
@@ -467,7 +505,7 @@ async def llm_plan(message: str, summary: dict, turns: list[dict],
             intent = "answer"
         return {
             "intent": intent,
-            "answer": redact_text(str(parsed.get("answer") or ""))[:2500],
+            "answer": redact_text(str(parsed.get("answer") or ""))[:3400],
             "reason": redact_text(str(parsed.get("reason") or ""))[:550],
             "model_status": "structured",
         }
