@@ -809,7 +809,9 @@
         '<div class="ic-correlation-observation"><strong>'+esc(name)+'</strong>'+
         '<span>'+esc(st)+'</span><small>'+esc(
         when?exactDate(when)+(basis==='source_event_minute_only'?
-          (fa?' · فقط دقت دقیقه':' · minute precision only'):''):
+          (fa?' · فقط دقت دقیقه':' · minute precision only'):
+          basis==='evidence_persisted'?
+          (fa?' · زمان ثبت Evidence، نه زمان قطعی مشاهده':' · Evidence persisted, not direct observation time'):''):
         (fa?'زمان وقوع از منبع ثبت نشده':'No source occurrence timestamp'))+
         '</small>'+refs(ids)+'</div>';
       const dateRelation=arr(c.contradictions).find(x=>
@@ -828,6 +830,11 @@
       const hypotheses=arr(c.hypotheses).slice(0,3).map(x=>
         '<li>'+esc(hypothesisNames[x.kind]||x.kind||'')+
         ' — '+esc(fa?'هنوز تأیید نشده':'Not yet verified')+'</li>').join('');
+      const sourceFindings=arr(c.cross_source_findings).slice(0,2).map(x=>
+        '<div class="ic-correlation-source"><p>'+txt(x.statement_fa)+'</p>'+
+        '<p class="ic-headline-meta">'+esc(fa?'نوع تطبیق: ':'Correlation: ')+
+        txt(x.status)+' · '+esc(fa?'محدودهٔ Query: ':'Query scope: ')+
+        txt(x.query_scope)+'</p>'+refs(x.evidence_refs)+'</div>').join('');
       const http=(!state.historic&&state.httpHealth?.checked_at)
         ?state.httpHealth:c.http_observation;
       const health=http?.status==='unhealthy'?
@@ -854,6 +861,9 @@
           'Receipt time is not the Zabbix event occurrence time.')+'</p>':'')+
         '<p>'+esc(explanation)+'</p>'+
         '<p class="ic-headline-caution">'+esc(health)+'</p>'+
+        (sourceFindings?'<h4>'+esc(fa?
+          'جمع‌بندی فنی Elasticsearch و Journal':'Elasticsearch / Journal evidence coverage')+
+          '</h4>'+sourceFindings:'')+
         (hypotheses?'<h4>'+esc(fa?'توضیح‌های احتمالی؛ نه علت تأییدشده':
           'Possible explanations, not established causes')+'</h4>'+
           '<ul>'+hypotheses+'</ul>':'')+
