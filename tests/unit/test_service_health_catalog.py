@@ -125,3 +125,22 @@ async def test_invalid_target_aborts_before_probe_or_lookup(monkeypatch):
             UUID("11111111-1111-4111-8111-111111111111"),
             identity=SimpleNamespace(subject="operator"))
     assert err.value.status_code == 409
+
+
+
+def test_only_sre_can_manage_service_profiles():
+    from apps.security.rbac import allowed
+    assert allowed("sre", "manage:service_profile")
+    assert not allowed("operator", "manage:service_profile")
+    assert not allowed("viewer", "manage:service_profile")
+
+
+def test_verified_http_factory_forces_certificate_validation(monkeypatch):
+    import integrations.http_transport as transport
+    calls = []
+    class Client:
+        def __init__(self, **kwargs):
+            calls.append(kwargs)
+    monkeypatch.setattr(transport.httpx, "AsyncClient", Client)
+    transport.verified_async_client(verify=False, timeout=2, component="test-health")
+    assert calls and calls[0]["verify"] is True
