@@ -188,6 +188,8 @@
     receivedSignals: null, receivedSignalsStatus: 'loading',
     configResponse: null, configResponseStatus: 'loading',
     chat: null, chatStatus: 'loading', chatBusy: false, chatLastResult: null,
+    serviceStatus: null, serviceStatusLoading: false, serviceStatusBusy: false,
+    serviceStatusToken: 0,
     lifecyclePolling: false, lastLiveCheck: null, lifecyclePollError: false,
     progress: null, progressConnected: false, progressAbort: null,
     progressStreamRunning: false, progressRetries: 0, progressFailure: false
@@ -647,6 +649,109 @@
     }finally{state.lifecyclePolling=false;}
   }
 
+
+  function renderServiceStatus() {
+    const node=$('#ic-service-status');
+    if(!node)return;
+    const fa=state.language==='fa',o=state.serviceStatus||{};
+    const busy=state.serviceStatusBusy,loading=state.serviceStatusLoading;
+    const status=low(o.status);
+    const authenticated=o.verified_systemd_only===true &&
+      ['running','active','stopped','transitioning'].includes(status);
+    const validTime=o.observed_at&&!Number.isNaN(new Date(o.observed_at).getTime());
+    const old=validTime&&(Date.now()-new Date(o.observed_at).getTime()>120000);
+    const label=busy?(fa?'در حال بررسی زنده…':'Checking live status…'):
+      authenticated?({
+        running:fa?'سرویس در حال اجراست · Running':'Service is running · Running',
+        active:fa?'سرویس فعال است · Active':'Service is active · Active',
+        stopped:fa?'سرویس متوقف است · Down':'Service is stopped · Down',
+        transitioning:fa?'وضعیت سرویس در حال تغییر است':'Service state is transitioning',
+      }[status]):loading?(fa?'در حال خواندن وضعیت…':'Loading recorded status…'):
+      (fa?'وضعیت فعلی نامشخص است':'Current status unknown');
+    const tone=!authenticated||old||busy?'warn':status==='stopped'?'danger':
+      status==='running'||status==='active'?'ok':'warn';
+    const source=o.source==='vm_mcp_chat'?(fa?'پاسخ زندهٔ ثبت‌شده در چت':'Recorded live chat VM MCP'):
+      o.source==='vm_mcp_recheck'?(fa?'بررسی زندهٔ مجدد VM MCP':'Fresh VM MCP recheck'):
+      o.source==='vm_mcp_recorded'?(fa?'شواهد ثبت‌شدهٔ VM MCP':'Recorded VM MCP evidence'):
+      o.source==='vm_mcp_recheck_failed'?(fa?'بررسی زنده ناموفق':'Failed live check'):
+      (fa?'مشاهدهٔ قابل‌تأیید وجود ندارد':'No verifiable observation');
+    const alertDown=/systemd service down|service down|inactive|failed/i.test(
+      String(state.report?.incident_summary?.summary||'')+' '+
+      String(state.report?.incident_summary?.title||''));
+    const conflict=authenticated&&status==='running'&&alertDown;
+    const reason=!authenticated&&o.reason?
+      '<p class="ic-service-health-conflict">'+esc(fa?
+        'بررسی زنده یا شناسایی مقصد تأیید نشد: ':'Live check or target binding failed: ')+
+        txt(o.reason)+'</p>':'';
+    const stateExplanation=authenticated?
+      (fa?'این نتیجه فقط وضعیت systemd را در زمان ثبت ثابت می‌کند؛ سلامت Endpoint و پاسخ واقعی API هنوز جداگانه باید بررسی شود.':
+        'This observation verifies only systemd at the recorded time; API readiness and endpoint health remain unverified.'):
+      (fa?'تا دریافت پاسخ معتبر از VM MCP، وضعیت سرویس را Running یا Down فرض نمی‌کنیم.':
+        'No Running/Down claim is made without valid VM MCP evidence.');
+    node.dataset.state=authenticated?status:'unknown';
+    show('#ic-service-status',
+      '<div class="ic-service-health-top"><strong>'+esc(fa?
+        'آخرین وضعیت تأییدشدهٔ سرویس':'Last verified service state')+'</strong>'+
+      '<span class="ic-service-health-state" data-tone="'+tone+'">'+esc(label)+'</span></div>'+
+      '<div class="ic-service-health-detail"><span>'+esc(fa?'سرویس: ':'Service: ')+
+        txt(o.service||state.report?.incident_summary?.service)+'</span><span>'+esc(fa?'میزبان: ':'Host: ')+
+        txt(o.target)+'</span><span>'+esc(fa?'منبع: ':'Source: ')+esc(source)+'</span>'+
+      '<span>'+esc(fa?'زمان مشاهده: ':'Observed at: ')+
+        txt(validTime?date(o.observed_at):null)+'</span></div>'+
+      (old?'<p class="ic-service-health-conflict">'+esc(fa?
+        'این مشاهده قدیمی است؛ برای اطلاع از وضعیت فعلی «بررسی مجدد» را بزنید.':
+        'This observation is stale. Use Recheck for the current state.')+'</p>':'')+
+      (conflict?'<p class="ic-service-health-conflict">'+esc(fa?
+        'آلارم اولیه وضعیت Down را گزارش کرده، اما شواهد جدیدتر systemd وضعیت Running را نشان می‌دهند.':
+        'The initial alert reports Down, while later systemd evidence reports Running.')+'</p>':'')+
+      reason+'<p class="ic-service-health-note">'+esc(stateExplanation)+'</p>'+
+      '<div class="ic-service-health-action"><button type="button" id="ic-service-recheck" class="ic-btn ic-btn-primary"'+
+      (busy||state.historic||state.lifecycle?.analysis_in_progress?' disabled':'')+'>'+
+      esc(busy?(fa?'در حال بررسی…':'Checking…'):(fa?'↻ بررسی مجدد وضعیت سرویس':'↻ Recheck service status'))+
+      '</button><small class="ic-service-health-note">'+esc(fa?
+        'این دکمه فقط استعلام Read-only انجام می‌دهد؛ هیچ Start یا Restart اجرا نمی‌کند.':
+        'Read-only VM check; never starts or restarts a service.')+'</small></div>');
+  }
+  async function loadServiceStatus() {
+    const token=++state.serviceStatusToken;
+    state.serviceStatusLoading=true;renderServiceStatus();
+    try {
+      const result=await api(base+'/service-status');
+      if(token!==state.serviceStatusToken)return;
+      state.serviceStatus=result;
+    }catch(e){
+      if(token!==state.serviceStatusToken)return;
+      state.serviceStatus={status:'unknown',source:'unavailable',
+        reason:e.status===409?'incident_analysis_not_finished':e.message,
+        verified_systemd_only:false};
+    }finally{
+      if(token===state.serviceStatusToken){
+        state.serviceStatusLoading=false;renderServiceStatus();
+      }
+    }
+  }
+  async function recheckServiceStatus() {
+    if(state.serviceStatusBusy||state.historic||state.lifecycle?.analysis_in_progress)return;
+    const token=++state.serviceStatusToken;
+    state.serviceStatusBusy=true;renderServiceStatus();
+    try {
+      const result=await api(base+'/service-status/recheck',{method:'POST'});
+      if(token!==state.serviceStatusToken)return;
+      state.serviceStatus=result;
+      if(result.status==='unknown')notify(state.language==='fa'?
+        'بررسی مجدد موفق نبود؛ نتیجهٔ قبلی به‌عنوان وضعیت فعلی نمایش داده نمی‌شود.':
+        'Live check unavailable; previous status is not treated as current.',true);
+    }catch(e){
+      if(token!==state.serviceStatusToken)return;
+      state.serviceStatus={status:'unknown',source:'vm_mcp_recheck_failed',
+        reason:e.message,verified_systemd_only:false};
+      notify((state.language==='fa'?'بررسی مجدد ناموفق: ':'Recheck failed: ')+e.message,true);
+    }finally{
+      if(token===state.serviceStatusToken){
+        state.serviceStatusBusy=false;state.serviceStatusLoading=false;renderServiceStatus();
+      }
+    }
+  }
   function renderHero(r) {
     const i=r.incident_summary||{},a=r.approval_readiness||{},action=r.remediation_recommendation||{};
     const identity=i.service_identity||{};
@@ -1445,7 +1550,7 @@
     if(!state.report)return;
     const r=state.historic||state.report;
     $('#ic-archive-banner').hidden=!state.historic;
-    renderHero(r);renderOverview(r);renderReview(r);renderAnalysis(r);renderEvidence(r);
+    renderHero(r);renderServiceStatus();renderOverview(r);renderReview(r);renderAnalysis(r);renderEvidence(r);
     renderKnowledge(r);renderInvestigation(r);renderOutcome(r);renderTimeline(r);renderDecision(r);renderReceivedSignals();
     renderIncidentChat();
     renderAnalysisProgress();
@@ -1651,7 +1756,7 @@
       if(!preserveHistory)state.historic=null;
       state.narrative=null;state.error=null;state.rejectionVisible=false;
       $('#ic-auth').hidden=true;$('#ic-loader').hidden=true;$('#ic-main').hidden=false;alert('');
-      render();void loadNarrative();void loadReceivedSignals(token);
+      render();void loadServiceStatus();void loadNarrative();void loadReceivedSignals(token);
       void loadConfigResponse(token);
       void loadIncidentChat(token);
       void connectProgressStream();
@@ -1789,6 +1894,9 @@
       catch(_){notify(tr('failure'),true);}
     });
     $('#ic-refresh').addEventListener('click',()=>{state.reviewedSnapshot=null;void load();});
+    $('#ic-service-status').addEventListener('click',e=>{
+      if(e.target.closest('#ic-service-recheck'))void recheckServiceStatus();
+    });
     $('#ic-connect').addEventListener('click',()=>{state.key=$('#ic-key').value.trim();try{localStorage.setItem('aiops_api_key',state.key);}catch(_){}void load();});
     $('#ic-key').addEventListener('keydown',e=>{if(e.key==='Enter')$('#ic-connect').click();});
     $('#ic-return-live').addEventListener('click',returnLive);
