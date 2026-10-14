@@ -109,6 +109,18 @@ def build_vm_recovery_advisory(
     else:
         checks.append("Recheck service process presence and service status using read-only VM MCP.")
 
+    # The process_status probe may search for the service string while the
+    # actual systemd main process is a generic runtime such as dotnet. A
+    # negative process_status is not independent proof of a stopped process.
+    process_presence = "not_independently_verified"
+    if processes and any(raw.get("running") is True for _, raw in processes):
+        process_presence = "observed_running"
+    elif processes:
+        process_presence = "negative_name_probe_only"
+    checks.append(
+        "Correlate MainPID/cgroup and actual runtime process (dotnet, java, etc.); "
+        "a process-name-only negative is not proof."
+    )
     config = _matching_vm_evidence(rows, service, "config_validate", target)
     if config:
         refs.extend(_reference(item) for item, _ in config)
@@ -133,6 +145,54 @@ def build_vm_recovery_advisory(
     else:
         disposition = "conditional_recovery"
 
+    syntax = _matching_vm_evidence(rows, service, "dotnet_config_syntax", target)
+    syntax_bad = any(
+        raw.get("syntax_valid") is False
+        or any(isinstance(item, Mapping) and item.get("status") == "invalid_json_syntax"
+               for item in (raw.get("files") or []))
+        for _, raw in syntax
+    )
+    if syntax:
+        refs.extend(_reference(item) for item, _ in syntax)
+    if syntax_bad:
+        action = None
+        disposition = "repair_configuration_first"
+        config_invalid = True
+        config_verified = False
+        checks.insert(0, "Correct directly observed .NET JSON syntax errors before any Start/Restart.")
+    # Failed/timeout can follow either a start job or a stop job. An
+    # earlier process runtime and TimeoutStop are *indicators*, not an actor.
+    recorded_status = str(status_raw.get("systemctl_status") or "")[:2200]
+    stop_indicators = (
+        "Duration:" in recorded_status or
+        "stop operation timed out" in recorded_status.lower()
+    )
+    stop_reason = (
+        "possible_stop_timeout" if state == "failed" and stop_indicators
+        else "stop_origin_unverified"
+    )
+    options: list[dict[str, str]] = []
+    if action:
+        options.append({
+            "action": action,
+            "status": "requires_fresh_preflight_and_separate_approval",
+            "reason": "Existing runbook recovery candidate for observed systemd state",
+        })
+        if state == "failed":
+            options.append({
+                "action": "start_service",
+                "status": "alternative_not_runbook_authorized_for_failed",
+                "reason": "Consider Start after stop-origin investigation; runbook for failed units currently maps to Restart",
+            })
+    if stop_indicators and state == "failed":
+        checks.insert(0,
+            "Compare systemd Stopping/Stopped, TimeoutStopSec, prior runtime "
+            "and audit/sudo stop/restart commands with failure timestamps.")
+    if action:
+        checks.append(
+            "Determine whether outage is an intended maintenance/manual stop; "
+            "obtain explicit permission to restore service before recovery."
+        )
     result = str(status_raw.get("result") or "")[:100].lower()
     if result == "timeout":
         checks.append(
@@ -149,6 +209,10 @@ def build_vm_recovery_advisory(
         "status": disposition,
         "service": service, "target": target, "observed_state": state,
         "systemd_result": result or "unknown", "suggested_action": action,
+        "alternative_actions": options,
+        "stop_origin_assessment": stop_reason,
+        "process_presence_basis": process_presence,
+        "model_role": "analysis_and_read_only_check_selection_not_execution_authority",
         "risk_level": "high", "configuration_validation": (
             "INVALID" if config_invalid else "VALID" if config_verified else "UNVERIFIED"
         ),
@@ -157,7 +221,7 @@ def build_vm_recovery_advisory(
             if state == "failed" and result == "timeout"
             else "systemd reported the service as " + state + "; the cause is not yet proven"
         ),
-        "prerequisite_checks": checks[:6],
+        "prerequisite_checks": list(dict.fromkeys(checks))[:9],
         "operator_question": (
             "Review the evidence and authorize the necessary read-only investigation; "
             "after service-specific safety checks, consider a separate approval-bound "
