@@ -253,6 +253,9 @@ async def test_incident_chat_explicit_file_read_overrides_model_no_access(monkey
         return "turn-1"
 
     monkeypatch.setattr(api, "AsyncSessionLocal", Session)
+    async def isolated_followup(*args, **kwargs):
+        return {"status": "isolated_test_no_database", "reassessed": False}
+    monkeypatch.setattr(api, "persist_and_reassess", isolated_followup)
     monkeypatch.setattr(api, "_scope", scope)
     monkeypatch.setattr(api, "PostgreSQLAuditStore", Audit)
     monkeypatch.setattr(api, "load_decision_brief_for_incident", brief)
