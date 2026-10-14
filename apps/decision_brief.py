@@ -86,13 +86,18 @@ def operator_presentation_context(
     This presentation metadata is intentionally outside the approval snapshot.
     """
     service = str(incident.get("service") or "").lower().removesuffix(".service")
-    host = str(obj(summary.get("observed_state")).get("target") or "")
+    observed_host = str(obj(summary.get("observed_state")).get("target") or "")
     context = obj(incident.get("context"))
     trigger = obj(context.get("trigger_signal"))
     signal = obj(trigger.get("payload") or trigger)
+    declared_host = str(signal.get("target_ip") or signal.get("host_ip") or "")
+    # Never mix service evidence from different VMs. An unexplained
+    # discrepancy disables attributed observations instead of choosing one.
+    conflict = bool(observed_host and declared_host and observed_host != declared_host)
+    host = "" if conflict else observed_host or declared_host
     platform = str(signal.get("platform") or signal.get("asset_type") or "").lower()
     collected = []
-    for row in evidence:
+    for row in ([] if conflict or not host else evidence):
         raw = obj(row.get("raw_data"))
         if row.get("source") != "vm_mcp" or raw.get("success") is not True:
             continue
