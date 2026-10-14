@@ -718,20 +718,20 @@
 | `apps/api/http_logging.py` | `HTTPTransactionLoggingMiddleware.__call__` | 84 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | HTTPTransactionLoggingMiddleware |
 | `apps/api/http_logging.py` | `HTTPTransactionLoggingMiddleware.__call__.logging_receive` | 126 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | HTTPTransactionLoggingMiddleware.__call__ |
 | `apps/api/http_logging.py` | `HTTPTransactionLoggingMiddleware.__call__.logging_send` | 140 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | HTTPTransactionLoggingMiddleware.__call__ |
-| `apps/api/incident_chat.py` | `IncidentChatMessage` | 41 | class | کلاس | module |
-| `apps/api/incident_chat.py` | `IncidentChatActionRequest` | 45 | class | کلاس | module |
-| `apps/api/incident_chat.py` | `_scope` | 49 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/incident_chat.py` | `_safe_brief` | 79 | function | Keep actual DecisionBrief field names; use bounded persisted facts only. | module |
-| `apps/api/incident_chat.py` | `_explicit_wrong_target` | 144 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/incident_chat.py` | `_read_cognia` | 159 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/incident_chat.py` | `_observed_status` | 199 | function | Newest attributable, read-only VM MCP observation; never trust Agent prose. | module |
-| `apps/api/incident_chat.py` | `_observed_status.append` | 208 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _observed_status |
-| `apps/api/incident_chat.py` | `_incident_status_scope` | 286 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/incident_chat.py` | `incident_service_status` | 294 | async function | Initial card state from durable VM/Audit evidence. Zero remote calls. | module |
-| `apps/api/incident_chat.py` | `recheck_incident_service_status` | 314 | async function | An explicit, authenticated read-only VM MCP status check (no LLM/write). | module |
-| `apps/api/incident_chat.py` | `incident_chat_history` | 355 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/incident_chat.py` | `incident_chat_message` | 401 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/incident_chat.py` | `incident_chat_request_approval` | 659 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/incident_chat.py` | `IncidentChatMessage` | 42 | class | کلاس | module |
+| `apps/api/incident_chat.py` | `IncidentChatActionRequest` | 46 | class | کلاس | module |
+| `apps/api/incident_chat.py` | `_scope` | 50 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/incident_chat.py` | `_safe_brief` | 80 | function | Keep actual DecisionBrief field names; use bounded persisted facts only. | module |
+| `apps/api/incident_chat.py` | `_explicit_wrong_target` | 145 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/incident_chat.py` | `_read_cognia` | 160 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/incident_chat.py` | `_observed_status` | 200 | function | Newest attributable, read-only VM MCP observation; never trust Agent prose. | module |
+| `apps/api/incident_chat.py` | `_observed_status.append` | 209 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _observed_status |
+| `apps/api/incident_chat.py` | `_incident_status_scope` | 287 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/incident_chat.py` | `incident_service_status` | 295 | async function | Initial card state from durable VM/Audit evidence. Zero remote calls. | module |
+| `apps/api/incident_chat.py` | `recheck_incident_service_status` | 315 | async function | An explicit, authenticated read-only VM MCP status check (no LLM/write). | module |
+| `apps/api/incident_chat.py` | `incident_chat_history` | 356 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/incident_chat.py` | `incident_chat_message` | 402 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/incident_chat.py` | `incident_chat_request_approval` | 696 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/incident_resources.py` | `MemoryLifecycleRequest` | 31 | class | کلاس | module |
 | `apps/api/incident_resources.py` | `_require_current_database_schema` | 36 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/incident_resources.py` | `get_context` | 41 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
