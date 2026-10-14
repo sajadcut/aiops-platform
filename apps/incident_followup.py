@@ -340,7 +340,7 @@ async def persist_and_reassess(
             try:
                 state["context"]["dynamic_investigation"] = (
                     await DynamicInvestigationPlanner.propose(
-                        state, adapter=getattr(orchestrator, "llm", None),
+                        state, adapter=None,
                     )
                 )
             except Exception:
