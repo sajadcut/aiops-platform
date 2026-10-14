@@ -344,7 +344,9 @@
     const where=host?' '+(unknownService?'':'روی سرور ')+safe(host):'';
     const explanation=r.operator_explanation||{};
     const config=r.configuration_diagnostic||{};
-    const situation=low(config.status)==='invalid'?
+    const situation=r.state_correlation?.conclusion_kind==='source_discrepancy'?
+      safe(r.state_correlation.conclusion_fa||r.state_correlation.headline_fa):
+      low(config.status)==='invalid'?
       'بررسی معتبر کانفیگ خطای سینتکس را در '+safe(config.config_file||'فایل تنظیمات')+
       (Number.isInteger(config.error_line)?'، خط '+num(config.error_line):'')+
       ' ثبت کرده است. تا اصلاح و تست مجدد، Start پیشنهاد نمی‌شود.':
@@ -785,6 +787,82 @@
   }
   function renderOperationalSummary(report=state.historic||state.report) {
     if(!report)return;
+    const c=report.state_correlation||{};
+    if(c.conclusion_kind==='source_discrepancy'){
+      const fa=state.language==='fa',alert=c.alert||{},vm=c.last_vm_observation||{};
+      const fresh=(!state.historic&&state.serviceStatus?.verified_systemd_only===true
+        && Number.isFinite(Date.parse(state.serviceStatus.observed_at||''))
+        && Date.now()-Date.parse(state.serviceStatus.observed_at)<120000);
+      const live=fresh?(fa?'آخرین استعلام مجدد VM MCP: ':'Latest VM MCP recheck: ')+
+        (state.serviceStatus.status==='running'?'Running':
+         state.serviceStatus.status==='stopped'?'Stopped':'Unverified')+
+        ' · '+date(state.serviceStatus.observed_at):'';
+      const exactDate=value=>{
+        const d=new Date(value);
+        return !value||Number.isNaN(d.getTime())?
+          (fa?'زمان نامعتبر':'Invalid timestamp'):
+          new Intl.DateTimeFormat(fa?'fa-IR':'en-US',{
+            dateStyle:'medium',timeStyle:'medium',hour12:false
+          }).format(d);
+      };
+      const observation=(name,st,when,basis,ids)=>
+        '<div class="ic-correlation-observation"><strong>'+esc(name)+'</strong>'+
+        '<span>'+esc(st)+'</span><small>'+esc(
+        when?exactDate(when)+(basis==='source_event_minute_only'?
+          (fa?' · فقط دقت دقیقه':' · minute precision only'):''):
+        (fa?'زمان وقوع از منبع ثبت نشده':'No source occurrence timestamp'))+
+        '</small>'+refs(ids)+'</div>';
+      const dateRelation=arr(c.contradictions).find(x=>
+        x.contradiction_type==='zabbix_down_vs_vm_systemd_running')?.temporal_relation;
+      const explanation=dateRelation==='alert_event_before_vm_observation'?
+        (fa?'در زمان‌بندی ثبت‌شده، Event زبیکس مقدم بر مشاهدهٔ VM بوده است؛ این ترتیب به‌تنهایی بازیابی واقعی یا False Positive را اثبات نمی‌کند.':
+        'Zabbix event precedes VM observation; this alone does not prove recovery or a false positive.'):
+        (fa?'ترتیب زمانی واقعی وضعیت‌ها هنوز اثبات نشده است؛ زمان دریافت هشدار جای زمان وقوع Event نیست.':
+        'The true state order is not established; receipt time is not source event time.');
+      const steps=arr(c.next_steps_fa).slice(0,3);
+      const hypothesisNames={
+        temporary_stop_and_recovery:fa?'توقف موقت و بازیابی احتمالی':'Possible temporary stop/recovery',
+        stale_or_incorrect_monitoring:fa?'تأخیر یا اشکال احتمالی در پایش':'Possible stale monitoring',
+        systemd_running_but_http_unhealthy:fa?'بالابودن systemd همراه ناسالم‌بودن HTTP':'systemd up but HTTP unhealthy'
+      };
+      const hypotheses=arr(c.hypotheses).slice(0,3).map(x=>
+        '<li>'+esc(hypothesisNames[x.kind]||x.kind||'')+
+        ' — '+esc(fa?'هنوز تأیید نشده':'Not yet verified')+'</li>').join('');
+      const http=(!state.historic&&state.httpHealth?.checked_at)
+        ?state.httpHealth:c.http_observation;
+      const health=http?.status==='unhealthy'?
+        (fa?'آخرین بررسی ثبت‌شدهٔ HTTP ناسالم بوده است.':'Last recorded HTTP check was unhealthy.'):
+        http?.status==='healthy'?(fa?'آخرین بررسی HTTP پاسخ موفق ثبت کرده است؛ زمان آن باید با وضعیت سرویس مقایسه شود.':
+          'Last HTTP check succeeded; compare its timestamp to service state.'):
+        (fa?'سلامت HTTP برنامه هنوز تأیید نشده است.':'Application HTTP health has not been verified.');
+      const approve=noProposedAction(report)?
+        (fa?'هیچ اقدام اجرایی تأییدشده‌ای ثبت نشده است؛ Start/Restart بدون مجوز انجام نشود.':
+          'No execution action is authorized; do not start or restart without governance.'):
+        (fa?'اجرای هر اقدام همچنان مشروط به گیت تأیید و بررسی زنده است.':
+          'Any action still requires authorization and live preflight.');
+      show('#ic-operational-summary','<h3>'+esc(fa?
+        'اختلاف وضعیت مانیتورینگ و systemd':'Monitoring / systemd state discrepancy')+'</h3>'+
+        '<p><strong>'+txt(c.headline_fa)+'</strong></p>'+
+        '<div class="ic-correlation-pair">'+
+          observation('Zabbix','Down / inactive',alert.observed_at,alert.time_basis,alert.evidence_refs)+
+          observation('VM MCP / systemd','Running',vm.observed_at,vm.time_basis,vm.evidence_refs)+
+        '</div>'+
+        (alert.received_at?'<p class="ic-headline-meta">'+esc(fa?
+          'زمان دریافت هشدار در AIOps: ':'Alert received at AIOps: ')+
+          txt(exactDate(alert.received_at))+' · '+esc(fa?
+          'این زمان، زمان وقوع قطعی Event در زبیکس نیست.':
+          'Receipt time is not the Zabbix event occurrence time.')+'</p>':'')+
+        '<p>'+esc(explanation)+'</p>'+
+        '<p class="ic-headline-caution">'+esc(health)+'</p>'+
+        (hypotheses?'<h4>'+esc(fa?'توضیح‌های احتمالی؛ نه علت تأییدشده':
+          'Possible explanations, not established causes')+'</h4>'+
+          '<ul>'+hypotheses+'</ul>':'')+
+        (live?'<p class="ic-headline-meta">'+esc(live)+'</p>':'')+
+        '<h4>'+esc(fa?'سه بررسی بعدی برای تعیین علت':'Three discriminating checks')+'</h4>'+
+        '<ol>'+steps.map(x=>'<li>'+txt(x)+'</li>').join('')+'</ol>'+
+        '<p class="ic-headline-meta">'+esc(approve)+'</p>');
+      return;
+    }
     if(report.technical_investigation){
       show('#ic-operational-summary',''); // section 01 uses the detailed evidence-bound assessment
       return;
@@ -1178,7 +1256,9 @@
       (Number.isInteger(config.error_column)?' · '+(fa?'ستون ':'column ')+num(config.error_column):'');
     const jsonConfig=low(config.path_source)==='dotnet_config_syntax' ||
       /\.json$/i.test(path);
-    const main=invalid?
+    const main=r.state_correlation?.conclusion_kind==='source_discrepancy'?
+      safe(r.state_correlation.headline_fa):
+      invalid?
       (jsonConfig?
         (fa?'خطای ساختار JSON در کانفیگ '+service+' تأیید شده است.':'Invalid JSON configuration was verified for '+service+'.'):
         (fa?'خطای سینتکس کانفیگ '+service+' تأیید شده است.':'Invalid configuration syntax was verified for '+service+'.')):

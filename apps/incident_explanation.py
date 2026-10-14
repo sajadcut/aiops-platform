@@ -17,12 +17,14 @@ def _ref(item: dict) -> str | None:
     return str(value)[:170] if value else None
 
 
-def _recent(evidence: Iterable[dict], diagnostic: str, service: str) -> tuple[dict, str | None]:
+def _recent(evidence: Iterable[dict], diagnostic: str, service: str,
+            target: str | None = None) -> tuple[dict, str | None]:
     matched = [
         item for item in evidence
         if isinstance(item, dict) and item.get("source") == "vm_mcp"
         and isinstance(item.get("raw_data"), dict)
         and item["raw_data"].get("diagnostic") == diagnostic
+        and (not target or str(item["raw_data"].get("target") or "") == target)
         and (not item["raw_data"].get("service") or
              str(item["raw_data"].get("service")).removesuffix(".service").lower() ==
              service.removesuffix(".service").lower())
@@ -34,8 +36,9 @@ def _recent(evidence: Iterable[dict], diagnostic: str, service: str) -> tuple[di
     return selected["raw_data"], _ref(selected)
 
 
-def _dotnet(evidence: list[dict], service: str) -> dict:
-    raw, ref = _recent(evidence, "dotnet_config_syntax", service)
+def _dotnet(evidence: list[dict], service: str,
+            target: str | None = None) -> dict:
+    raw, ref = _recent(evidence, "dotnet_config_syntax", service, target)
     if raw.get("success") is not True or raw.get("supported") is not True:
         return {}
     files = []
@@ -100,17 +103,28 @@ def _dotnet(evidence: list[dict], service: str) -> dict:
 
 def explain_incident(*, evidence: list[dict], service: str,
                      evaluation: Mapping[str, Any] | None = None,
-                     decision: Mapping[str, Any] | None = None) -> dict:
+                     decision: Mapping[str, Any] | None = None,
+                     correlation: Mapping[str, Any] | None = None) -> dict:
     service = str(service or "سرویس")[:100]
     confirmed: list[dict] = []
     uncertainties: list[str] = []
     suggested: list[str] = []
-    status, status_ref = _recent(evidence, "service_status", service)
-    config, config_ref = _recent(evidence, "config_validate", service)
-    process, process_ref = _recent(evidence, "process_status", service)
-    dotnet = _dotnet(evidence, service)
+    corr = correlation if isinstance(correlation, Mapping) else {}
+    bound_target = str(corr.get("host") or "").strip() or None
+    status, status_ref = _recent(evidence, "service_status", service, bound_target)
+    config, config_ref = _recent(evidence, "config_validate", service, bound_target)
+    process, process_ref = _recent(evidence, "process_status", service, bound_target)
+    dotnet = _dotnet(evidence, service, bound_target)
     service_state = str(status.get("active_state") or "").lower()
-    if status.get("success") is True and service_state in {"failed", "inactive"}:
+    if corr.get("conclusion_kind") == "source_discrepancy":
+        confirmed.extend({
+            "text_fa": str(fact["text_fa"])[:500],
+            "evidence_refs": list(fact.get("evidence_refs") or [])[:8],
+        } for fact in corr.get("confirmed_observations", [])[:5]
+          if isinstance(fact, Mapping) and fact.get("text_fa"))
+        uncertainties.extend(str(x)[:450] for x in corr.get("unknowns_fa", [])[:5])
+        suggested.extend(str(x)[:450] for x in corr.get("next_steps_fa", [])[:5])
+    elif status.get("success") is True and service_state in {"failed", "inactive"}:
         confirmed.append({
             "text_fa": f"سرویس {service} در systemd در وضعیت {service_state} قرار دارد.",
             "evidence_refs": [status_ref] if status_ref else [],
@@ -120,10 +134,21 @@ def explain_incident(*, evidence: list[dict], service: str,
                 "text_fa": "systemd برای این سرویس نتیجهٔ Timeout ثبت کرده است؛ این موضوع به‌تنهایی علت Timeout را ثابت نمی‌کند.",
                 "evidence_refs": [status_ref] if status_ref else [],
             })
-    if process.get("success") is True and process.get("running") is False:
+    if (process.get("success") is True and process.get("running") is False
+            and corr.get("conclusion_kind") != "source_discrepancy"):
         confirmed.append({
-            "text_fa": "فرایند مورد بررسی توسط ابزار VM در حال اجرا مشاهده نشده است.",
+            "text_fa": (
+                "Process Check پردازشی با نام انتخاب‌شده پیدا نکرده است؛ "
+                "این نتیجه توقف قطعی برنامه را ثابت نمی‌کند. برای سرویس .NET باید MainPID و پردازش dotnet بررسی شوند."
+            ) if service_state == "active" else
+            "Process Check پردازشی با نام انتخاب‌شده پیدا نکرده است؛ این نتیجه به‌تنهایی توقف قطعی Runtime را ثابت نمی‌کند.",
             "evidence_refs": [process_ref] if process_ref else [],
+        })
+    if (status.get("success") is True and service_state == "active"
+            and corr.get("conclusion_kind") != "source_discrepancy"):
+        confirmed.append({
+            "text_fa": f"systemd در زمان بررسی VM MCP سرویس {service} را active ثبت کرده است؛ سلامت HTTP از این نتیجه مشخص نمی‌شود.",
+            "evidence_refs": [status_ref] if status_ref else [],
         })
     if dotnet.get("status") == "invalid":
         loc = dotnet["config_file"]
@@ -156,7 +181,8 @@ def explain_incident(*, evidence: list[dict], service: str,
         ])
     elif config.get("supported") is False:
         uncertainties.append("روش عمومی اعتبارسنجی کانفیگ این سرویس پشتیبانی نشده است.")
-        suggested.append("شناسایی ابزار معتبر تست کانفیگ از systemd و مستندات Runtime؛ تا تأیید واقعی، Start خودکار پیشنهاد نشود.")
+        if not (corr.get("conclusion_kind") == "source_discrepancy"):
+            suggested.append("شناسایی ابزار معتبر تست کانفیگ از systemd و مستندات Runtime؛ تا تأیید واقعی، Start خودکار پیشنهاد نشود.")
 
     # Critical distinction: generic unsupported does NOT contradict a
     # specialized .NET JSON syntax check that has actually run and failed.
@@ -174,15 +200,20 @@ def explain_incident(*, evidence: list[dict], service: str,
         approval_text = "در حال حاضر اقدام اجرایی قابل تأیید ثبت نشده است؛ این گزارش پیشنهاد بررسی است، نه مجوز تغییر."
     else:
         approval_text = "فقط اقدام ثبت‌شده در Decision و پس از گذر از کنترل‌های ایمنی و Approval قابل اجرا است."
-    if dotnet.get("status") == "invalid":
+    if corr.get("conclusion_kind") == "source_discrepancy" and corr.get("headline_fa"):
+        headline = str(corr["headline_fa"])[:450]
+    elif dotnet.get("status") == "invalid":
         headline = f"خطای معتبر در کانفیگ JSON سرویس {service} پیدا شد؛ هنوز مجوز اصلاح یا Start صادر نشده است."
-    elif any("systemd" in x["text_fa"] for x in confirmed):
-        headline = f"توقف سرویس {service} تأیید شد؛ علت قطعی هنوز کامل نشده است."
+    elif service_state in {"failed", "inactive"} and status.get("success") is True:
+        headline = f"VM MCP وضعیت توقف سرویس {service} را از دید systemd ثبت کرده است؛ علت رخداد هنوز مستقل تأیید نشده است."
+    elif service_state == "active" and status.get("success") is True:
+        headline = f"VM MCP سرویس {service} را Running مشاهده کرده است؛ برای ارزیابی هشدار، تاریخچهٔ زبیکس و سلامت HTTP باید بررسی شوند."
     else:
         headline = f"تحلیل سرویس {service} به بررسی شواهد بیشتر نیاز دارد."
 
     return {
         "kind": "evidence_grounded_operator_explanation",
+        "correlation_kind": corr.get("conclusion_kind"),
         "headline_fa": headline,
         "confirmed_findings": confirmed[:8],
         "uncertainties_fa": uncertainties[:6],

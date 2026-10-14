@@ -506,12 +506,18 @@ def build_decision_brief(
     evidence = [e for e in durable_evidence if isinstance(e, dict)]
     agents = _agents(state, findings)
     mcp, sources = _mcp(evidence, now)
+    from apps.incident_evidence_correlation import correlate_incident_state
+    correlation = correlate_incident_state(
+        incident=incident, checkpoint=checkpoint, evidence=evidence,
+        audit_events=audit_events, now=now,
+    )
     from apps.incident_explanation import explain_incident
     explanation = explain_incident(
         evidence=evidence,
         service=incident.get("service") or state.get("service_name") or "service",
         evaluation=obj(state.get("evaluation")),
         decision=obj(state.get("decision")),
+        correlation=correlation,
     )
     dotnet_config = obj(explanation.get("configuration"))
     disk_file_causality = correlate_disk_file_causality(evidence)
@@ -694,6 +700,7 @@ def build_decision_brief(
             "start_requires_valid_config_and_approval": True,
         },
         "operator_explanation": redact(explanation),
+        "state_correlation": redact(correlation),
         "technical_investigation": build_technical_investigation(
             incident=incident, evidence=evidence, knowledge=knowledge,
             now=now, approval=approval,
