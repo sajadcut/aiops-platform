@@ -830,6 +830,8 @@ def build_decision_brief(
                 "candidate_sha256": safe(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("config_proposal")).get("candidate_sha256"), 64),
                 "proposed_change": safe(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("config_proposal")).get("proposed_change"), 90),
                 "test_scope": safe(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("config_proposal")).get("test_scope"), 100),
+                "format_validation_status": safe(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("config_proposal")).get("format_validation_status"), 80),
+                "vendor_validation_status": safe(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("config_proposal")).get("vendor_validation_status"), 80),
                 "validator_executed_on_proposal": obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("config_proposal")).get("validator_executed_on_proposal") is True,
                 "isolated_validation": False,
                 "apply_eligible": False,
