@@ -100,7 +100,7 @@ const fs=require('node:fs');
   assert.match(page,/سرویس و systemd/);
   assert.match(page,/Result=timeout/);
   assert.match(page,/evidence-systemd-123/);
-  assert.match(page,/queried_zero_results/);
+  assert.match(page,/استعلام شد؛ بدون نتیجه/);
   assert.match(page,/Journal جمع‌آوری نشده/);
   assert.match(page,/Root Cause Analysis/);
   assert.match(page,/Startup dependency/);
