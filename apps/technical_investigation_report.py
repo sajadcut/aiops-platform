@@ -396,16 +396,22 @@ def build_technical_investigation(*, incident: dict, evidence: list[dict],
                 if not path:
                     label += " (مسیر کامل نامشخص)"
                 checked.append(label + ": " + _text(file_row.get("status"), 45))
+            verified_json = (
+                special.get("syntax_valid") is True and bool(checked)
+                and all(isinstance(f, dict) and f.get("status") == "valid_json_syntax"
+                        for f in files)
+            )
             technical = (
                 "Generic Validator: " +
                 ("Unsupported" if generic.get("supported") is False else
                  "Valid" if generic.get("valid") is True else
                  "Invalid" if generic.get("valid") is False else "اجرا نشده یا بدون نتیجه") +
                 "؛ .NET JSON Syntax: " +
-                ("Valid" if special.get("syntax_valid") is True else
-                 "Invalid" if special.get("syntax_valid") is False else "ثبت نشده") +
+                ("Valid" if verified_json else
+                 "Invalid" if special.get("syntax_valid") is False else "تأیید نشده") +
                 (f"؛ Checked files={'; '.join(checked[:12])}" if checked else
-                 "؛ نام فایل بررسی‌شده در Evidence ثبت نشده است") +
+                 "؛ نام فایل JSON بررسی‌شده در Evidence ثبت نشده است" if special else
+                 "؛ بررسی اختصاصی JSON اجرا نشده است") +
                 "؛ Syntax Valid به معنی Semantic Valid یا Runtime Healthy نیست؛ سلامت Dependency و Startup نیز تأیید نمی‌شود."
             )
         elif key == "network":
