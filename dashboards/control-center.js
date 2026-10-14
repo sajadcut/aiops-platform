@@ -168,14 +168,25 @@ function faStatus(value) {
   const v = lower(value);
   return ({
     critical: 'بحرانی', high: 'زیاد', medium: 'متوسط', low: 'کم',
-    healthy: 'سالم', degraded: 'دچار اختلال', unhealthy: 'ناسالم',
+    healthy: 'سالم', degraded: 'دچار اختلال', unhealthy: 'ناسالم', unavailable: 'در دسترس نیست', not_configured: 'پیکربندی نشده',
     active: 'فعال', inactive: 'غیرفعال', open: 'باز', closed: 'بسته‌شده',
     analyzing: 'در حال تحلیل', escalated: 'ارجاع‌شده', resolved: 'رفع‌شده',
     pending: 'در انتظار تأیید', approved: 'تأییدشده', rejected: 'ردشده',
-    consumed: 'مصرف‌شده', failed: 'ناموفق', failure: 'ناموفق',
+    consumed: 'مصرف‌شده', failed: 'ناموفق', failure: 'ناموفق', not_persisted: 'ثبت‌نشده',
     blocked: 'مسدودشده', partial: 'ناقص', inconclusive: 'نامشخص',
     verified: 'راستی‌آزمایی‌شده', completed: 'تکمیل‌شده',
     success: 'موفق', running: 'در حال اجرا', warning: 'هشدار'
+  })[v] || String(value ?? 'نامشخص');
+}
+
+function faAction(value) {
+  const v = lower(value);
+  return ({
+    start_service: 'راه‌اندازی سرویس', stop_service: 'توقف سرویس',
+    restart_service: 'راه‌اندازی مجدد سرویس',
+    reload_service: 'بارگذاری مجدد سرویس',
+    approval_requested: 'درخواست تأیید',
+    approval_granted: 'تأیید اجرا'
   })[v] || String(value ?? 'نامشخص');
 }
 
@@ -326,13 +337,13 @@ function renderSeverity() {
 function auditSummary(a) {
   const m = a.metadata || {};
   const parts = [];
-  if (a.action) parts.push(a.action);
-  if (a.status) parts.push(a.status);
-  if (m.requested_action) parts.push(m.requested_action);
+  if (a.action) parts.push(faAction(a.action));
+  if (a.status) parts.push(faStatus(a.status));
+  if (m.requested_action) parts.push(faAction(m.requested_action));
   if (m.tool_name || m.tool) parts.push(m.tool_name || m.tool);
   if (m.target) parts.push(m.target);
-  if (m.verification_status) parts.push(`verify:${m.verification_status}`);
-  if (m.status && !parts.includes(m.status)) parts.push(m.status);
+  if (m.verification_status) parts.push(`راستی‌آزمایی: ${faStatus(m.verification_status)}`);
+  if (m.status && !parts.includes(faStatus(m.status))) parts.push(faStatus(m.status));
   if (typeof m.persisted === 'boolean') parts.push(`حافظه: ${m.persisted ? 'ثبت‌شده' : 'ثبت‌نشده'}`);
   return parts.join(' · ') || 'رویداد حاکمیتی ثبت شده است';
 }
@@ -595,9 +606,9 @@ async function loadAll() {
     renderAudit();
     // No implicit selection: operators explicitly open an Incident in its full-page workspace.
   } catch (e) {
-    showError(`Live dashboard unavailable: ${e.message}`);
+    showError(`اتصال به داشبورد زنده برقرار نشد: ${e.message}`);
     $('#liveDot').classList.remove('ok');
-    $('#platformState').textContent = 'Unavailable';
+    $('#platformState').textContent = 'در دسترس نیست';
   }
 }
 
