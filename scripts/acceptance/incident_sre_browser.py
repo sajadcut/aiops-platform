@@ -105,6 +105,7 @@ BRIEF = {
 def main() -> None:
     writes = []
     errors = []
+    brief_state = {"current": BRIEF}
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch(headless=True)
         page = browser.new_page(viewport={"width": 1420, "height": 950})
@@ -131,9 +132,11 @@ def main() -> None:
                                   body=file.read_bytes())
                     return
             if path.endswith("/decision-brief"):
-                data = BRIEF
+                data = brief_state["current"]
             elif path.endswith("/lifecycle"):
                 data = {"approval": {"status": "not_pending"}}
+            elif path.endswith("/configuration-review-response"):
+                data = {"status": "not_responded", "execution_authority": False}
             elif path.endswith("/progress/stream"):
                 route.fulfill(status=503, body="stream disabled in synthetic acceptance")
                 return
@@ -172,7 +175,47 @@ def main() -> None:
         assert "password=" not in visible_checks
         assert not writes, f"Opening section 01 executed a write: {writes}"
         assert not errors, f"Chromium console errors: {errors}"
-        print("PASS: real Chromium SRE report rendering, evidence drilldown and read-only boundary")
+        # Second read-only Chromium fixture: a real Nginx candidate exists
+        # but staging failed (as in the captured production-like log).
+        from copy import deepcopy
+        next_brief = deepcopy(BRIEF)
+        next_brief["snapshot_id"] = "nginx-stage-permission-denied"
+        next_brief["incident_summary"]["service"] = "nginx"
+        next_brief["configuration_diagnostic"] = {
+            "status": "invalid", "config_file": "/etc/nginx/nginx.conf",
+            "error_line": 103, "syntax_error": 'unexpected "{"',
+            "evidence_refs": ["validator-103"],
+        }
+        next_brief["dynamic_investigation"] = {
+            "status": "advisory", "checks": [], "questions": [],
+            "config_proposal": {
+                "status": "candidate_proposed", "config_file": "/etc/nginx/nginx.conf",
+                "error_line": 103, "validation_status": "STAGED_FAILED",
+                "stage_failure_reason": "permission_denied",
+                "original_sha256": "a" * 64, "candidate_sha256": "b" * 64,
+                "redacted_diff": {"line": 103, "before": "server [arguments redacted] {{",
+                                  "after": "server [arguments redacted] {"},
+                "source_evidence_refs": ["validator-103", "candidate-103"],
+                "execution_authority": False, "apply_eligible": False,
+            },
+        }
+        brief_state["current"] = next_brief
+        page.reload()
+        banner = page.locator("#ic-config-action-banner")
+        banner.wait_for(state="visible", timeout=15000)
+        preview = banner.inner_text()
+        assert "/etc/nginx/nginx.conf" in preview
+        assert "۱۰۳" in preview or "103" in preview
+        assert "permission_denied" in preview
+        assert "اعمال اصلاح روی سرور — غیرفعال" in preview
+        assert banner.locator("button[data-config-intent='request_isolated_validation']").is_enabled()
+        assert banner.locator("button:disabled").count() == 1
+        assert page.locator(".ic-section-nav a[href='#ic-ai-proposed-fix']").count() == 1
+        banner.locator("a[href='#ic-ai-proposed-fix']").click()
+        assert page.locator("#ic-ai-proposed-fix #ic-proposed-fix").is_visible()
+        assert not writes, f"Opening config proposal executed an unexpected write: {writes}"
+        assert not errors, f"Chromium page errors: {errors}"
+        print("PASS: SRE evidence and nginx config review visibility; unsafe file-apply disabled")
         browser.close()
 
 
