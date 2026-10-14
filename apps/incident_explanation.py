@@ -60,12 +60,22 @@ def _dotnet(evidence: list[dict], service: str) -> dict:
             "syntax_error_fa": invalid["explanation_fa"] or "ساختار JSON نامعتبر است؛ نوع دقیق خطا ثبت نشده است.",
             "files": files, "evidence_refs": [ref] if ref else [],
             "validated_scope": "json_syntax_only",
+            "remote_python_required": raw.get("remote_python_required")
+                if raw.get("remote_python_required") is False else None,
+            "validator_location": "aiops_worker"
+                if raw.get("validator") == "aiops-local-python-json-syntax-only"
+                else "not_recorded",
         }
     return {
         "status": "json_syntax_valid" if raw.get("syntax_valid") is True else "unverified",
         "kind": "dotnet_json", "config_file": None,
         "files": files, "evidence_refs": [ref] if ref else [],
         "validated_scope": "json_syntax_only",
+        "remote_python_required": raw.get("remote_python_required")
+            if raw.get("remote_python_required") is False else None,
+        "validator_location": "aiops_worker"
+            if raw.get("validator") == "aiops-local-python-json-syntax-only"
+            else "not_recorded",
     }
 
 
