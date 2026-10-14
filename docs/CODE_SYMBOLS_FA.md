@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 487 | Dashboard JS files scanned: 8 | Symbols indexed: 4976**
+**Python files scanned: 487 | Dashboard JS files scanned: 8 | Symbols indexed: 4977**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -3415,6 +3415,7 @@
 | `tests/unit/test_decision_brief_narrative.py` | `test_large_incident_calls_llm_instead_of_unconditional_size_fallback` | 187 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_decision_brief_narrative.py` | `test_large_incident_calls_llm_instead_of_unconditional_size_fallback.Provider` | 207 | class | کلاس | test_large_incident_calls_llm_instead_of_unconditional_size_fallback |
 | `tests/unit/test_decision_brief_narrative.py` | `test_large_incident_calls_llm_instead_of_unconditional_size_fallback.Provider.generate_with_messages` | 208 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_large_incident_calls_llm_instead_of_unconditional_size_fallback.Provider |
+| `tests/unit/test_decision_brief_narrative.py` | `test_llm_cannot_override_verified_invalid_appsettings_as_healthy` | 224 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_dependency_causal_engine.py` | `trace` | 11 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_dependency_causal_engine.py` | `metric` | 25 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_dependency_causal_engine.py` | `service_log` | 36 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
