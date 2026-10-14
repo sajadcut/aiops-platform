@@ -353,3 +353,71 @@ def test_completed_chat_approval_does_not_require_ephemeral_checkbox():
     assert "const completedRequest=kind==='resume'" in js
     assert "if(!completedExecute&&kind!=='reject'&&state.reviewedSnapshot!==snapshot)" in js
     assert "const sameIntent=live.approval?.action===approval.action" in js
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="Node required for live status card regression")
+def test_service_status_card_shows_recorded_running_and_real_readonly_recheck():
+    """Actual browser handler: GET returns last recorded; click POST returns stopped without reload."""
+    source = Path(__file__).read_text(encoding="utf-8")
+    start = source.index('    script = r"""') + len('    script = r"""')
+    end = source.index('"""', start)
+    script = source[start:end]
+    before = "    if(method==='GET'&&url.endsWith('/decision-brief'))data=brief();"
+    after = (
+        "    if(method==='GET'&&url.endsWith('/service-status'))\n"
+        "      data={status:'running',verified_systemd_only:true,service:'nginx',"
+        "target:'vm-01',active_state:'active',sub_state:'running',"
+        "source:'vm_mcp_recorded',observed_at:new Date().toISOString()};\n"
+        "    else if(method==='POST'&&url.endsWith('/service-status/recheck'))\n"
+        "      data={status:'stopped',verified_systemd_only:true,service:'nginx',"
+        "target:'vm-01',active_state:'failed',sub_state:'failed',"
+        "source:'vm_mcp_recheck',observed_at:new Date().toISOString()};\n"
+        "    else if(method==='GET'&&url.endsWith('/decision-brief'))data=brief();"
+    )
+    assert before in script
+    script = script.replace(before, after, 1)
+    check = "  assert.equal(el('#ic-main').hidden,false);"
+    assert check in script
+    script = script.replace(check, check + (
+        "\n  assert.match(el('#ic-service-status').innerHTML,/سرویس در حال اجراست/);"
+        "\n  assert.match(el('#ic-service-status').innerHTML,/vm-01/);"
+        "\n  assert.equal(events.filter(x=>x[0]==='POST').length,0);"
+        "\n  el('#ic-service-status').events.click({target:{closest(sel){"
+        "return sel==='#ic-service-recheck'?{}:null;}}});"
+        "\n  await settle();"
+        "\n  assert.equal(events.filter(x=>x[0]==='POST'&&"
+        "x[1].endsWith('/service-status/recheck')).length,1);"
+        "\n  assert.match(el('#ic-service-status').innerHTML,/سرویس متوقف است/);"
+        "\n  assert.match(el('#ic-service-status').innerHTML,/VM MCP/);"
+    ), 1)
+    # The pre-existing harness asserts no *write* operations; readonly recheck
+    # is a POST by design. Preserve those authorization assertions.
+    script = script.replace(
+        "assert.equal(events.filter(x=>x[0]==='POST').length,0);",
+        "assert.equal(events.filter(x=>x[0]==='POST'&&"
+        "!x[1].endsWith('/service-status/recheck')).length,0);",
+    )
+    proc = subprocess.run(
+        [shutil.which("node"), "-e", script],
+        cwd=ROOT, capture_output=True, text=True, timeout=20,
+    )
+    assert proc.returncode == 0, proc.stderr
+    assert "safe approval runtime PASS" in proc.stdout
+
+
+def test_service_status_card_exists_above_decision_brief_and_is_safe_readonly():
+    html = (ROOT / "dashboards/incident-command-room.html").read_text(encoding="utf-8")
+    js = (ROOT / "dashboards/incident-command-room.js").read_text(encoding="utf-8")
+    css = (ROOT / "dashboards/incident-command-room.css").read_text(encoding="utf-8")
+    api = (ROOT / "apps/api/incident_chat.py").read_text(encoding="utf-8")
+    assert html.index('id="ic-service-status"') < html.index('id="ic-overview"')
+    assert "ic-service-health" in css
+    assert "const status=low(o.status);" in js
+    assert "verified_systemd_only===true" in js
+    assert "state.serviceStatusBusy" in js
+    assert "state.historic||state.lifecycle?.analysis_in_progress" in js
+    assert "base+'/service-status/recheck',{method:'POST'}" in js
+    assert '@router.get("/incidents/{incident_id}/service-status")' in api
+    assert '"/incidents/{incident_id}/service-status/recheck"' in api
+    assert 'force_live=True' in api
+    assert 'require_permission("read:incident")' in api
