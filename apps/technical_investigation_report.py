@@ -33,12 +33,17 @@ SCALARS = {
     "target_port", "port", "cpu_usage", "memory_used_percent", "mem_available",
     "mem_available_kb", "swap_used_percent", "swap_total_kb", "swap_free_kb",
     "memory_psi", "used_percent", "free_bytes", "mount", "io_wait",
+    "total_mb", "available_mb", "cache_reclaimable_mb", "swap_used_mb",
+    "swap_total_mb", "psi_memory_some_avg10", "snapshot_only",
+    "reason_cannot_be_proven_from_single_snapshot", "query_service",
+    "query_since", "query_until", "host_filter_applied",
     "io_latency_ms", "oom_kills", "log_rotation", "growth_bytes",
     "status", "result_count", "detail",
 }
 LIST_FIELDS = {"filesystems", "inodes", "large_files", "top_processes", "processes", "files"}
 SAFE_LIST_KEYS = {
     "mount", "filesystem", "use_percent", "free_bytes", "avail_bytes",
+    "available", "used", "blocks", "ppid", "command", "rss_mb",
     "inodes_used_percent", "file", "path", "size_bytes", "pid", "name",
     "cpu_percent", "memory_percent", "rss_bytes", "status", "error_code",
     "line", "column", "reason",
@@ -179,6 +184,14 @@ def build_technical_investigation(*, incident: dict, evidence: list[dict],
     payload = signal.get("payload") if isinstance(signal.get("payload"), dict) else signal
     host = (payload.get("target_ip") or payload.get("host_ip")
             or context.get("host") or context.get("hostname"))
+    if not host:
+        # A single tool-attributed host is safer than inventing a host name.
+        vm_hosts = {str(row["raw_data"]["target"]) for row in evidence
+                    if isinstance(row, dict) and row.get("source") == "vm_mcp"
+                    and isinstance(row.get("raw_data"), dict)
+                    and row["raw_data"].get("target")
+                    and _service(row["raw_data"].get("service")) == service}
+        host = next(iter(vm_hosts)) if len(vm_hosts) == 1 else None
     # Do not silently merge observations across service/host identities.
     matching = [row for row in evidence if isinstance(row, dict) and
                 isinstance(row.get("raw_data"), dict) and _matches(row, service, str(host) if host else None)]
@@ -263,6 +276,32 @@ def build_technical_investigation(*, incident: dict, evidence: list[dict],
             proc = next((r["raw_data"] for r in domain_rows if r["raw_data"].get("diagnostic") == "process_status"), {})
             technical = ("Process running=" + str(proc.get("running", "ثبت نشده")) +
                          "؛ برای .NET، نام process به‌تنهایی کافی نیست؛ MainPID و dotnet باید تطبیق داده شوند.")
+        elif key == "resources" and domain_rows:
+            memory = next((r["raw_data"] for r in domain_rows
+                           if r["raw_data"].get("diagnostic") == "memory_diagnostics"
+                           and r["raw_data"].get("success") is True), {})
+            metrics = next((r["raw_data"].get("metrics") for r in domain_rows
+                            if r["raw_data"].get("diagnostic") == "collect_vm_metrics"
+                            and isinstance(r["raw_data"].get("metrics"), dict)), {})
+            technical = (f"CPU={metrics.get('cpu_usage', 'ثبت نشده')}؛ "
+                         f"RAM Used={memory.get('used_percent', 'ثبت نشده')}%؛ "
+                         f"MemAvailable={memory.get('available_mb', 'ثبت نشده')} MB؛ "
+                         f"Cache reclaimable={memory.get('cache_reclaimable_mb', 'ثبت نشده')} MB؛ "
+                         f"Swap Used={memory.get('swap_used_mb', 'ثبت نشده')} MB؛ "
+                         f"PSI avg10={memory.get('psi_memory_some_avg10', 'ثبت نشده')}؛ "
+                         "یک Snapshot، عامل رشد RAM یا علت Timeout را اثبات نمی‌کند.")
+        elif key == "disk" and domain_rows:
+            disk = next((r["raw_data"] for r in domain_rows
+                         if r["raw_data"].get("diagnostic") == "disk_status"
+                         and r["raw_data"].get("success") is True), {})
+            mounts = disk.get("filesystems") if isinstance(disk.get("filesystems"), list) else []
+            inode = disk.get("inodes") if isinstance(disk.get("inodes"), list) else []
+            snippets = [f"{_text(x.get('mount'), 60)}: used={_text(x.get('use_percent'), 10)} "
+                        f"free={_text(x.get('available'), 35)} bytes"
+                        for x in mounts[:7] if isinstance(x, dict)]
+            technical = ("Mounts: " + "؛ ".join(snippets) +
+                         f"؛ Inode mount records={len(inode)}. "
+                         "فایل حجیم یا اشباع Mount به‌تنهایی علت Timeout نیست؛ حذف لاگ مجاز نیست.")
         elif domain_rows:
             latest_facts = evidence_rows[0]["facts"]
             technical = "؛ ".join(f"{k}={v}" for k, v in latest_facts.items()
