@@ -738,6 +738,33 @@ def build_decision_brief(
             "used_knowledge_refs": refs(
                 obj(obj(state.get("context")).get("dynamic_investigation")).get("used_knowledge_refs")
             ),
+            "config_discovery": {
+                "service": safe(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("config_discovery")).get("service"), 100),
+                "runtime": safe(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("config_discovery")).get("runtime"), 55),
+                "status": safe(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("config_discovery")).get("status"), 75),
+                "systemd_unit": safe(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("config_discovery")).get("systemd_unit"), 250),
+                "files": [{
+                    "path": safe(f.get("path"), 240),
+                    "source": safe(f.get("source"), 90),
+                    "verified_exists": f.get("verified_exists") is True,
+                    "content_validated": False,
+                } for f in arr(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("config_discovery")).get("files"))[:10]
+                  if isinstance(f, dict)],
+                "unverified_candidates": [{
+                    "path": safe(f.get("path"), 240),
+                    "source": safe(f.get("source"), 90),
+                } for f in arr(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("config_discovery")).get("unverified_candidates"))[:10]
+                  if isinstance(f, dict)],
+                "llm_guidance_status": safe(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("config_discovery")).get("llm_guidance_status"), 60),
+                "requires_further_research": obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("config_discovery")).get("requires_further_research") is True,
+                "execution_authority": False,
+                "evidence_refs": refs(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("config_discovery")).get("evidence_refs")),
+            },
+            "llm_unknown_guidance": {
+                "status": safe(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("llm_unknown_guidance")).get("status"), 60),
+                "items": redact(arr(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("llm_unknown_guidance")).get("items"))[:5]),
+                "execution_authority": False,
+            },
             "runtime_discovery": {
                 "runtime": safe(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("runtime_discovery")).get("runtime"), 50),
                 "entrypoint": safe(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("runtime_discovery")).get("entrypoint"), 250),
