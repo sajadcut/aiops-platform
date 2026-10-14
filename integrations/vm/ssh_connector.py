@@ -851,6 +851,53 @@ class SSHVMConnector:
         parsed = parse_systemd_runtime(str(result.get("stdout") or ""), service=service)
         return {"success": True, "target": target, **parsed}
 
+    async def service_config_discovery(self, target: str, service: str) -> Dict[str, Any]:
+        """Read-only proof of config-path existence from systemd-derived paths.
+
+        No arbitrary LLM path is read. No config values/argv/environment leave
+        this VM MCP edge. This is existence, NOT content or syntax validation.
+        """
+        self._validate_service(service)
+        unit = await self.service_runtime_discovery(target, service)
+        base = {
+            "success": unit.get("success") is True, "target": target,
+            "service": service, "runtime": unit.get("runtime", "unknown"),
+            "unit_file": unit.get("unit_file"),
+            "config_contents_exposed": False, "environment_values_read": False,
+            "read_only": True, "execution_authority": False,
+            "files": [], "recommended_next_check": "consult_llm_for_unknown_configuration",
+        }
+        if not unit.get("success"):
+            return {**base, "status": "systemd_unavailable"}
+        from integrations.vm.runtime_discovery import _candidate_path
+        paths = (unit.get("config_candidates") or [])[:10]
+        for candidate in paths:
+            if not isinstance(candidate, dict):
+                continue
+            path = _candidate_path(candidate.get("path"))
+            if not path:
+                continue
+            quoted = shlex.quote(path)
+            command = (
+                "test -f " + quoted + " && test -r " + quoted
+                + " && test ! -L " + quoted
+                + " && test \"$(readlink -f -- " + quoted + ")\" = " + quoted
+            )
+            try:
+                result = await self._run(target, command)
+            except Exception:
+                result = {"success": False}
+            base["files"].append({
+                "path": path, "source": str(candidate.get("source") or "systemd")[:45],
+                "status": "exists_readable" if result.get("success") else "not_verified",
+                "verified_exists": result.get("success") is True,
+                "content_validated": False,
+            })
+        base["status"] = ("verified_candidates" if any(
+            item["verified_exists"] for item in base["files"]) else
+            "candidates_not_verified" if base["files"] else "no_systemd_config_candidates")
+        return base
+
     async def dotnet_config_syntax(self, target: str, service: str) -> Dict[str, Any]:
         """Remote Linux coreutils read; *local AIOps Python* JSON syntax check.
 
