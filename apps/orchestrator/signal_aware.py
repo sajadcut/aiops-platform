@@ -359,6 +359,16 @@ class SignalAwareE2EOrchestrator(E2EOrchestrator):
             )
             if self.progress_emitter:
                 await self.progress_emitter(state.get("incident_id"), "investigation", "completed")
+        elif str(state.get("service_name") or "").lower().removesuffix(".service") == "nginx":
+            # A deterministic, non-LLM config preview is a safety-critical
+            # diagnostic, not an optional speculative investigation. The
+            # collector already read the failed validator and safe MCP
+            # candidate; expose it even when the LLM experiment is off.
+            current_evidence = (state.get("context") or {}).get("evidence") or []
+            if DynamicInvestigationPlanner.confirmed_config_failure(current_evidence):
+                state.setdefault("context", {})["dynamic_investigation"] = (
+                    await DynamicInvestigationPlanner.propose(state, adapter=None)
+                )
 
         # Always produce a read-only, evidence-bound recovery suggestion even
         # when evaluator consensus/config validation cannot authorize a write.
