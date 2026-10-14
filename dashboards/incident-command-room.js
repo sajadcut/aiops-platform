@@ -1366,6 +1366,17 @@
         'Systemd was active at observation time; HTTP health is independent.'):
       (fa?'وضعیت فعلی سرویس باید دوباره با شواهد مستقیم بررسی شود.':
         'Current service state requires a fresh direct check.');
+    const stopOrigin=t.stop_origin||null;
+    const stopExplanation=stopOrigin?
+      '<div class="ic-ir-caution"><strong>'+esc(fa?
+        'آیا سرویس دستی Stop شده است؟':'Was the service manually stopped?')+
+      '</strong><p>'+txt(stopOrigin.note_fa)+'</p>'+
+      (arr(stopOrigin.indicators).length?'<ul class="ic-ir-list">'+
+        arr(stopOrigin.indicators).map(x=>'<li><code dir="auto">'+txt(x)+'</code></li>').join('')+
+      '</ul>':'')+
+      '<p><strong>'+esc(fa?'برای اثبات: ':'To verify: ')+
+      '</strong>'+txt(stopOrigin.next_check_fa)+'</p>'+
+      refs(stopOrigin.evidence_refs)+'</div>':'';
     const causeConfirmed=rca.cause_confirmed===true;
     const hasDirect=arr(sys.evidence).length>0;
     const snapshotNote=fa?
@@ -1511,6 +1522,7 @@
         '<p>'+esc(diagnosis)+'</p>'+list(validated)):'')+
       section(fa?'۵. علت قطعی است یا فرضیه؟':'5. RCA certainty',
         '<p class="ic-ir-caution">'+esc(decision)+'</p>'+
+        stopExplanation+
         (hypotheses.length?list(hypotheses):'<p>'+esc(fa?'فرضیهٔ مستند مستقلی ثبت نشده است.':'No supported independent hypothesis recorded.')+'</p>'))+
       section(fa?'۶. چه شواهدی کم داریم؟':'6. Missing evidence',
         list(unknowns.map(x=>txt(x.text))))+
