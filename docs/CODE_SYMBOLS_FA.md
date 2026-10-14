@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 491 | Dashboard JS files scanned: 8 | Symbols indexed: 5082**
+**Python files scanned: 491 | Dashboard JS files scanned: 8 | Symbols indexed: 5083**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1565,23 +1565,24 @@
 | `apps/signal_gateway/zabbix_lifecycle.py` | `_record_source_recovery` | 96 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/signal_gateway/zabbix_lifecycle.py` | `_audit_recovery` | 150 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/signal_gateway/zabbix_lifecycle.py` | `ingest_zabbix_payload` | 187 | async function | Ingest a Zabbix Problem or Recovery without turning Recovery into a new Incident. | module |
-| `apps/technical_investigation_report.py` | `_time` | 66 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/technical_investigation_report.py` | `_text` | 74 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/technical_investigation_report.py` | `_service` | 80 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/technical_investigation_report.py` | `_source` | 84 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/technical_investigation_report.py` | `_stamp` | 88 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/technical_investigation_report.py` | `_fact_fields` | 96 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/technical_investigation_report.py` | `_state` | 150 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/technical_investigation_report.py` | `_matches` | 155 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/technical_investigation_report.py` | `_domain_rows` | 166 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/technical_investigation_report.py` | `_provider_status` | 181 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/technical_investigation_report.py` | `_latest_metric` | 201 | function | Collector emits {name, value} rows, rather than a metrics dict. | module |
-| `apps/technical_investigation_report.py` | `_best_diagnostic` | 216 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/technical_investigation_report.py` | `_sample` | 222 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/technical_investigation_report.py` | `_journal_counts` | 226 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/technical_investigation_report.py` | `_bounded_files` | 252 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/technical_investigation_report.py` | `build_technical_investigation` | 277 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
-| `apps/technical_investigation_report.py` | `build_technical_investigation.high_mount_pressure` | 542 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | build_technical_investigation |
+| `apps/technical_investigation_report.py` | `_time` | 67 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/technical_investigation_report.py` | `_text` | 75 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/technical_investigation_report.py` | `_service` | 81 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/technical_investigation_report.py` | `_source` | 85 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/technical_investigation_report.py` | `_stamp` | 89 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/technical_investigation_report.py` | `_fact_fields` | 97 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/technical_investigation_report.py` | `_state` | 151 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/technical_investigation_report.py` | `_matches` | 156 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/technical_investigation_report.py` | `_domain_rows` | 167 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/technical_investigation_report.py` | `_provider_status` | 182 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/technical_investigation_report.py` | `_latest_metric` | 202 | function | Collector emits {name, value} rows, rather than a metrics dict. | module |
+| `apps/technical_investigation_report.py` | `_best_diagnostic` | 217 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/technical_investigation_report.py` | `_sample` | 223 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/technical_investigation_report.py` | `_journal_counts` | 227 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/technical_investigation_report.py` | `_stop_origin_assessment` | 253 | function | Distinguish confirmed termination from unproven *origin* of a stop job. | module |
+| `apps/technical_investigation_report.py` | `_bounded_files` | 346 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/technical_investigation_report.py` | `build_technical_investigation` | 371 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
+| `apps/technical_investigation_report.py` | `build_technical_investigation.high_mount_pressure` | 651 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | build_technical_investigation |
 | `apps/verification_service/__init__.py` | `VerificationStatus` | 11 | class | کلاس | module |
 | `apps/verification_service/__init__.py` | `VerificationResult` | 18 | class | کلاس | module |
 | `apps/verification_service/__init__.py` | `VerificationEngine` | 33 | class | Deterministic before/after verification over fresh operational Evidence. | module |
