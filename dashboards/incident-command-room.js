@@ -1343,6 +1343,150 @@
       '</p></article>');
   }
 
+  // Evidence-first, operator-readable report. Never treats an MCP HTTP success as a
+  // health assertion, a valid JSON file as working runtime, or coincidence as RCA.
+  // Every dynamic field is escaped; actions stay behind the existing approval flow.
+  function renderIntelligenceReport(r) {
+    const node=$('#ic-intelligence-report');
+    if(!node)return;
+    const fa=state.language==='fa', i=r.incident_summary||{},
+      t=r.technical_investigation||{},op=r.operator_explanation||{},
+      domains=arr(t.domains),rca=t.rca||{}, config=r.configuration_diagnostic||{};
+    const domain=key=>domains.find(x=>x.key===key)||{};
+    const sys=domain('systemd'),disk=domain('disk');
+    const statusEvidence=arr(sys.evidence).find(x=>x.tool==='service_status')||{};
+    const facts=statusEvidence.facts||{};
+    const stopped=['failed','inactive'].includes(low(facts.active_state));
+    const running=low(facts.active_state)==='active';
+    const sysFresh=statusEvidence.freshness==='fresh';
+    const title=stopped&&sysFresh?
+      (fa?'توقف سرویس از طریق Systemd تأیید شده است.':'Systemd confirmed the stopped service.'):
+      running&&sysFresh?
+      (fa?'سرویس هنگام بررسی Systemd فعال بوده است؛ سلامت HTTP هنوز مستقل است.':
+        'Systemd was active at observation time; HTTP health is independent.'):
+      (fa?'وضعیت فعلی سرویس باید دوباره با شواهد مستقیم بررسی شود.':
+        'Current service state requires a fresh direct check.');
+    const causeConfirmed=rca.cause_confirmed===true;
+    const hasDirect=arr(sys.evidence).length>0;
+    const snapshotNote=fa?
+      'این گزارش از شواهد ذخیره‌شدهٔ اینسیدنت ساخته شده، نه بررسی زندهٔ جدید. HTTP 200 یک MCP به‌تنهایی اثبات سلامت برنامه یا وجود نتیجه نیست.':
+      'This report uses persisted incident evidence, not a new live check. MCP HTTP 200 alone proves neither application health nor query results.';
+    const list=(items,kind='')=>items.length?
+      '<ul class="ic-ir-list '+esc(kind)+'">'+items.map(x=>'<li>'+x+'</li>').join('')+'</ul>':
+      '<p class="ic-ir-empty">'+esc(fa?'شواهد قابل استنادی در این بخش ثبت نشده است.':'No attributable evidence was recorded for this section.')+'</p>';
+    const unique=(rows,limit=6)=>{
+      const found=new Set();
+      return rows.filter(row=>{
+        if(!row||!row.text)return false;
+        const key=row.text.trim().toLowerCase();
+        if(found.has(key))return false;
+        found.add(key);return true;
+      }).slice(0,limit);
+    };
+    const confirmed=unique([
+      ...arr(op.confirmed_findings).filter(x=>x&&x.text_fa).map(x=>({text:x.text_fa,ids:x.evidence_refs})),
+      ...arr(rca.confirmed_facts).filter(x=>x&&x.text).map(x=>({text:x.text,ids:x.evidence_refs}))
+    ],6);
+    const factsHtml=list(confirmed.map(x=>'<span>'+txt(x.text)+'</span>'+refs(x.ids)));
+    const hypotheses=arr(rca.likely_hypotheses).slice(0,3).map(x=>
+      '<strong>'+txt(x.title)+'</strong><p>'+
+      txt(x.kind|| (fa?'فرضیه؛ تأیید نشده':'Unconfirmed hypothesis'))+'</p>'+
+      (x.check?'<small>'+esc(fa?'آزمایش لازم: ':'Required check: ')+txt(x.check)+'</small>':'')+
+      refs(x.supporting));
+    const unknowns=unique([
+      ...arr(op.uncertainties_fa).map(x=>({text:x})),
+      ...arr(rca.remaining_unknowns).map(x=>({text:[x.domain,x.reason].filter(Boolean).join(' — ')}))
+    ],5);
+    const steps=unique([
+      ...arr(op.next_steps_fa).map(x=>({text:x})),
+      ...arr(t.actions?.read_only).map(x=>({text:x.expected||x.goal}))
+    ],5);
+    const domainLabels={systemd:fa?'Systemd و وضعیت سرویس':'Systemd service',
+      disk:fa?'فضای ذخیره‌سازی':'Disk',journal:fa?'Journal و خطاهای سیستم':'System journal',
+      elastic:'Elasticsearch',monitoring:fa?'Prometheus / Zabbix':'Prometheus / Zabbix',
+      resources:'CPU / RAM',network:'Network / Port',config:fa?'فایل‌های تنظیمات':'Configuration'};
+    const labels={
+      investigated:fa?'بررسی‌شده':'Investigated',
+      queried_with_results:fa?'نتیجه ثبت شده':'Results recorded',
+      queried_zero_results:fa?'Query موفق؛ صفر نتیجه':'Query returned zero results',
+      not_queried:fa?'بدون شاهد ثبت‌شده':'No recorded evidence',
+      partial:fa?'بررسی ناقص':'Partial',query_failed:fa?'Query ناموفق':'Query failed',
+      stale:fa?'شواهد قدیمی':'Stale',not_applicable:fa?'قابل اعمال نیست':'Not applicable'};
+    const statuses=['systemd','disk','journal','elastic','monitoring','resources','network','config']
+      .map(key=>domain(key)).filter(d=>d.key).map(d=>{
+        const label=labels[d.status]||d.status||'not_recorded';
+        const evidenceIds=arr(d.evidence).map(e=>e.id).filter(Boolean);
+        return '<article class="ic-ir-source"><header><strong>'+esc(domainLabels[d.key]||d.title)+
+          '</strong><span class="ic-ir-source-state" data-result="'+esc(d.status||'unknown')+'">'+
+          esc(label)+'</span></header><p>'+txt(d.technical_result||d.missing_reason)+'</p>'+
+          (d.missing_reason?'<small>'+txt(d.missing_reason)+'</small>':'')+
+          (d.observed_at?'<small>'+esc(fa?'آخرین مشاهده: ':'Last observation: ')+esc(date(d.observed_at))+'</small>':'')+
+          refs(evidenceIds)+'</article>';
+      }).join('');
+    const checked=arr(config.files).filter(x=>x&&x.file);
+    const validated=checked.map(x=>{
+      const path=x.path_verified && x.path?x.path:x.file;
+      return '<li><code dir="ltr">'+esc(path)+'</code> — '+txt(x.status)+'</li>';
+    });
+    const diagnosis=low(config.status)==='invalid'?
+      (fa?'در فایل تنظیمات خطای سینتکس ثبت شده؛ ارتباط علّی با توقف سرویس نیازمند لاگ Startup است.':
+        'Configuration syntax error recorded; causality still requires startup logs.'):
+      checked.length?
+      (fa?'فقط ساختار JSON فایل‌های زیر بررسی شده؛ سلامت Runtime و صحت مقادیر کانفیگ تأیید نشده است.':
+        'Only JSON syntax was tested for the files below; runtime health and config semantics remain unverified.'):
+      '';
+    const knowledge=r.cognia_knowledge||{},accepted=Number(knowledge.accepted_count),
+      rejected=Number(knowledge.rejected_count);
+    const knowledgeLine=Number.isFinite(accepted)&&Number.isFinite(rejected)?
+      (fa?'اسناد مرتبط قابل استناد: '+num(accepted)+'؛ اسناد ردشده به‌دلیل نامرتبط بودن: '+num(rejected)+
+        '. بازیابی نتیجهٔ خام به معنی استفاده از آن در RCA نیست.':
+        'Relevant documents: '+accepted+'; rejected as unrelated: '+rejected+'. Retrieval does not prove RCA usage.'):
+      (fa?'اثر دانش Cognia در این نتیجه بدون استناد مستقل تأیید نشده است.':
+        'Cognia knowledge has no independently verified effect on this RCA.');
+    const decision=rca.cause_confirmed===true?
+      (fa?'علت ریشه‌ای در شواهد این گزارش تأیید شده است.':'The recorded report confirms a root cause.'):
+      (fa?'علت ریشه‌ای هنوز تأیید نشده است. علائم و مشکلات هم‌زمان نباید بدون شاهد وابستگی علّی به هم نسبت داده شوند.':
+        'Root cause remains unconfirmed. Coincident observations do not establish causality.');
+    const legacyNote=fa?'متن تخصصی و گزارش کامل Agentها در جزئیات پایین قابل مشاهده است.':
+      'Detailed findings and agent reports are available below.';
+    const section=(title,body,extra='')=>'<section class="ic-ir-section '+extra+'"><h3>'+
+      esc(title)+'</h3>'+body+'</section>';
+    node.innerHTML='<article class="ic-ir" data-report-version="evidence-narrative-v1">'+
+      '<header class="ic-ir-head"><span class="ic-ir-eyebrow">'+esc(fa?
+        'گزارش هوشمندِ مبتنی بر شواهد':'Evidence-first incident intelligence')+
+        '</span><h2>'+txt(title)+'</h2><p>'+esc(snapshotNote)+'</p>'+
+        '<div class="ic-ir-meta"><span>'+esc(fa?'سرویس: ':'Service: ')+
+        txt(i.service||t.service)+'</span><span>'+esc(fa?'میزبان: ':'Host: ')+
+        txt(t.host||i.host||i.target)+'</span><span>'+esc(fa?'نسخه شواهد: ':'Snapshot: ')+
+        '<code dir="ltr">'+txt(r.snapshot_id)+'</code></span></div></header>'+
+      section(fa?'۱. چه اتفاقی افتاده است؟':'1. What happened',
+        '<p>'+txt(op.headline_fa||i.summary||title)+'</p>'+
+        (hasDirect?'<p>'+esc(fa?'Systemd ثبت کرده: ':'Systemd recorded: ')+
+          '<code dir="ltr">'+esc('ActiveState='+String(facts.active_state??'?')+
+          '; Result='+String(facts.result??'?')+'; MainPID='+String(facts.main_pid??'?'))+
+          '</code>'+refs([statusEvidence.id].filter(Boolean))+'</p>':'')+
+        (r.state_correlation?.conclusion_kind==='source_discrepancy'?
+          '<p class="ic-ir-caution">'+txt(r.state_correlation.headline_fa)+'</p>':''))+
+      section(fa?'۲. چه شواهدی واقعاً تأیید شده‌اند؟':'2. Confirmed observations',factsHtml)+
+      section(fa?'۳. ابزارهای MCP دقیقاً چه نتیجه‌ای داده‌اند؟':'3. MCP result quality',
+        '<div class="ic-ir-sources">'+statuses+'</div>')+
+      (diagnosis?section(fa?'۴. دقیقاً کدام فایل تنظیمات بررسی شد؟':'4. Configuration check',
+        '<p>'+esc(diagnosis)+'</p>'+list(validated)):'')+
+      section(fa?'۵. علت قطعی است یا فرضیه؟':'5. RCA certainty',
+        '<p class="ic-ir-caution">'+esc(decision)+'</p>'+
+        (hypotheses.length?list(hypotheses):'<p>'+esc(fa?'فرضیهٔ مستند مستقلی ثبت نشده است.':'No supported independent hypothesis recorded.')+'</p>'))+
+      section(fa?'۶. چه شواهدی کم داریم؟':'6. Missing evidence',
+        list(unknowns.map(x=>txt(x.text))))+
+      section(fa?'۷. اقدام بعدی اپراتور':'7. Next operator checks',
+        list(steps.map(x=>txt(x.text)))+
+        '<p class="ic-ir-guard">'+esc(fa?
+        'این گزارش Read-only است. هیچ Restart، حذف فایل یا تغییر کانفیگ بدون Approval و Verification مجاز نیست.':
+        'Read-only: restart, file deletion and config changes require governed approval and verification.')+'</p>')+
+      section(fa?'۸. دانش سازمانی و میزان اتکا':'8. Knowledge provenance',
+        '<p>'+esc(knowledgeLine)+'</p>')+
+      '<footer class="ic-ir-footer">'+esc(legacyNote)+'</footer></article>';
+  }
+
   function renderTechnicalInvestigation(r) {
     const investigation=r.technical_investigation;
     if(!investigation){show('#ic-technical-report','');return false;}
@@ -1431,6 +1575,7 @@
 
   function renderOverview(r) {
     const i=r.incident_summary||{},act=r.remediation_recommendation||{},a=r.approval_readiness||{};
+    renderIntelligenceReport(r);
     renderOperationalSummary(r);
     renderOperatorDiagnosis(r);
     renderMemoryForensics(r);
