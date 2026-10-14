@@ -140,7 +140,7 @@ def test_agent_dashboard_and_lifecycle_contract_are_present():
     html = Path("dashboards/agents.html").read_text(encoding="utf-8")
     lifecycle = Path("apps/api/incident_resources.py").read_text(encoding="utf-8")
     graph = Path("apps/orchestrator/e2e_graph.py").read_text(encoding="utf-8")
-    for token in ["Evidence rounds", "Consensus confidence", "Missing evidence", "Handoffs", "Disagreement"]:
+    for token in ["شواهد", "میزان توافق", "شواهد ناقص", "ارجاع به متخصص", "اختلاف تحلیل‌ها"]:
         assert token in html
     for token in ['"routing"', '"coordination"', '"agents"', '"evidence_rounds"']:
         assert token in lifecycle
