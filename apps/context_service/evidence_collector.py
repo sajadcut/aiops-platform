@@ -22,7 +22,7 @@ class EvidenceCollector:
     _UNKNOWN_SERVICE_VALUES = {"", "unknown", "unknown-service", "none", "null"}
     _NON_MATERIAL_OBSERVATION_STATUSES = {"unavailable", "error", "skipped"}
     _VM_ACTIONS = {
-        "collect_vm_metrics", "host_info", "disk_status", "disk_forensics", "network_status",
+        "collect_vm_metrics", "memory_diagnostics", "host_info", "disk_status", "disk_forensics", "network_status",
         "service_status", "service_logs", "system_logs", "process_snapshot",
         "process_status", "tcp_check", "port_listener_status", "dns_check",
         "route_check", "firewall_status", "config_validate", "nginx_config_review", "nginx_config_inspect",
@@ -123,6 +123,10 @@ class EvidenceCollector:
             add("collect_vm_metrics")
             add("host_info")
             add("disk_status")
+            if not service:
+                # Host-level signals have no service, but can have a trusted VM target.
+                add("memory_diagnostics")
+                add("process_snapshot")
             if service:
                 add("service_status")
                 add("process_status")
@@ -140,6 +144,9 @@ class EvidenceCollector:
 
             if evidence_type == "metric" or any(token in text for token in ("cpu", "memory", "swap", "load", "io wait", "vm metric")):
                 add("collect_vm_metrics")
+            if any(token in text for token in ("memory", "ram", "swap", "oom", "rss", "meminfo")):
+                add("memory_diagnostics")
+                add("process_snapshot")
             if any(token in text for token in ("host info", "hostname", "kernel", "uptime", "operating system", " os ")):
                 add("host_info")
             if any(token in text for token in ("disk", "inode", "mount", "filesystem", "file system")):
@@ -364,8 +371,11 @@ class EvidenceCollector:
         if self.prometheus and (wants_all or "alert" in wants):
             await self._progress("prometheus", self._source_progress_status("prometheus", evidence))
         partial_asset = AssetIdentityResolver.resolve(evidence, requested_service)
-        effective_service = self._known_service(partial_asset.get("service")) or self._known_service(partial_asset.get("hostname")) or requested_service
-        query_service = effective_service or service
+        effective_service = self._known_service(partial_asset.get("service")) or requested_service
+        # The monitoring hostname is useful for queries, never a systemd service identity.
+        # Host-level RAM incidents must remain service-less.
+        monitoring_subject = effective_service or self._known_service(partial_asset.get("hostname"))
+        query_service = monitoring_subject or service
 
         logs: List[Any] = []
         metrics: List[Any] = []
@@ -411,7 +421,7 @@ class EvidenceCollector:
             })
 
         asset = AssetIdentityResolver.resolve(evidence, effective_service)
-        effective_service = self._known_service(asset.get("service")) or self._known_service(asset.get("hostname")) or effective_service
+        effective_service = self._known_service(asset.get("service")) or effective_service
 
         if self.kubernetes and getattr(self.kubernetes, "enabled", False) and (wants_all or "event" in wants):
             await self._progress("kubernetes_api", "started")
@@ -432,7 +442,12 @@ class EvidenceCollector:
                 except Exception as exc:
                     evidence.append(self._observation("kubernetes_api", f"k8s-error:{since.isoformat()}", status="error", service=effective_service, detail=str(exc)))
 
-        vm_target = current_vm_target() or self._vm_target_from_asset(asset)
+        # A host-only metric alert is not a named service. HOST.IP/hostname
+        # remain informational: only the explicit, already-bound Zabbix
+        # target_ip may authorize VM MCP probes for host-level incidents.
+        explicit_vm_target = current_vm_target()
+        vm_target = (explicit_vm_target if not effective_service else
+                     explicit_vm_target or self._vm_target_from_asset(asset))
         vm_port = current_vm_port()
         platform = str(asset.get("platform") or "unknown").lower()
         asset_type = str(asset.get("asset_type") or "unknown").lower()

@@ -475,3 +475,64 @@ def test_health_profile_html_is_present_and_never_auto_posts():
     assert "method:'PUT',headers:{'Content-Type':'application/json'}" in js
     assert 'Depends(require_permission("manage:service_profile"))' in api
     assert 'Depends(require_permission("read:incident"))' in api
+
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="Node required for RAM room regression")
+def test_host_ram_room_shows_causal_gaps_and_checks_without_service_unknown_card():
+    """Use the real browser renderer with a host-level memory incident."""
+    source = Path(__file__).read_text(encoding="utf-8")
+    start = source.index('    script = r"""') + len('    script = r"""')
+    end = source.index('"""', start)
+    script = source[start:end]
+    marker = "  const brief=()=>({"
+    assert marker in script
+    additions = (
+        "memory_investigation:{kind:'host_memory_investigation',"
+        "host:'APORSDTNKSA0101',alert_target_ip:null,"
+        "alert:{threshold_percent:90,duration_minutes:5,recovery_received:true},"
+        "root_cause_status:'not_proven',"
+        "measurements:{memory_used_percent:null,available_mb:null,"
+        "cache_reclaimable_mb:null,swap_used_mb:null,"
+        "psi_memory_some_avg10:null,top_processes:[]},"
+        "checks:[{code:'memory_diagnostics',title_fa:'RAM و Swap',"
+        "status:'not_collected',evidence_refs:[]}],"
+        "gaps:['هیچ فهرست معتبری از پردازش‌ها ثبت نشده'],"
+        "recommended_next_checks:[{title_fa:'بررسی پردازش‌ها',"
+        "detail_fa:'فهرست RSS و روند حافظه را جمع‌آوری کنید',"
+        "type:'read_only'}]},"
+    )
+    script = script.replace(marker, marker + "\n    " + additions, 1)
+    cut = "  assert.match(el('#ic-brief-lead').innerHTML,/سرویس از دسترس/);"
+    assert cut in script
+    script = script[:script.index(cut)] + r"""
+  assert.equal(el('#ic-service-status').hidden,true);
+  assert.equal(el('#ic-service-profile').hidden,true);
+  assert.match(el('#ic-memory-forensics').innerHTML,/چرا RAM بالا رفت/);
+  assert.match(el('#ic-memory-forensics').innerHTML,/RAM و Swap/);
+  assert.match(el('#ic-memory-forensics').innerHTML,/انجام نشده/);
+  assert.match(el('#ic-memory-forensics').innerHTML,/Recovery از Zabbix/);
+  assert.match(el('#ic-memory-forensics').innerHTML,/بررسی پردازش‌ها/);
+  assert.doesNotMatch(el('#ic-operational-summary').innerHTML,/systemd/);
+  assert.equal(events.filter(x=>x[0]==='POST').length,0);
+  console.log('host RAM forensic room PASS');
+})().catch(e=>{console.error(e);process.exitCode=1;});
+"""
+    proc = subprocess.run([shutil.which("node"), "-e", script], cwd=ROOT,
+                          capture_output=True, text=True, timeout=20)
+    assert proc.returncode == 0, proc.stderr
+    assert "host RAM forensic room PASS" in proc.stdout
+
+
+def test_host_ram_has_dedicated_ui_without_remote_write_capability():
+    html = (ROOT / "dashboards/incident-command-room.html").read_text(encoding="utf-8")
+    js = (ROOT / "dashboards/incident-command-room.js").read_text(encoding="utf-8")
+    server = (ROOT / "apps/mcp_server/main.py").read_text(encoding="utf-8")
+    vm = (ROOT / "integrations/vm/mcp_client.py").read_text(encoding="utf-8")
+    assert 'id="ic-memory-forensics"' in html
+    assert "function renderMemoryForensics(" in js
+    assert "if(report.memory_investigation)" in js
+    assert '"memory_diagnostics"' in server
+    assert 'connector.memory_diagnostics(target)' in server
+    assert '"memory_diagnostics"' in vm
+    assert "memory_diagnostics" in (ROOT / "apps/context_service/evidence_collector.py").read_text()

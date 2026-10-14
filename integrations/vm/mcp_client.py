@@ -12,7 +12,7 @@ class VMEdgeMCPClient(MCPClient):
     EXPECTED_SERVER_NAME = "aiops-vm-mcp"
 
     READ_TOOLS = {
-        "collect_vm_metrics", "host_info", "disk_status", "disk_forensics", "network_status",
+        "collect_vm_metrics", "memory_diagnostics", "host_info", "disk_status", "disk_forensics", "network_status",
         "service_status", "service_logs", "system_logs", "process_snapshot",
         "process_status", "tcp_check", "port_listener_status", "dns_check",
         "route_check", "firewall_status", "config_validate", "nginx_config_review", "nginx_config_inspect",
@@ -58,6 +58,7 @@ class VMEdgeMCPClient(MCPClient):
 
     async def collect_vm_metrics(self, target: str) -> Dict[str, Any]: return await self._invoke("collect_vm_metrics", target)
     async def collect_metrics(self, target: str) -> Dict[str, Any]: return await self.collect_vm_metrics(target)
+    async def memory_diagnostics(self, target: str) -> Dict[str, Any]: return await self._invoke("memory_diagnostics", target)
     async def host_info(self, target: str) -> Dict[str, Any]: return await self._invoke("host_info", target)
     async def disk_status(self, target: str) -> Dict[str, Any]: return await self._invoke("disk_status", target)
     async def disk_forensics(self, target: str) -> Dict[str, Any]: return await self._invoke("disk_forensics", target)

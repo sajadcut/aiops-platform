@@ -61,6 +61,7 @@ _TOOL_SCHEMAS: Dict[str, Dict[str, Dict[str, Any]]] = {
     },
     "vm": {
         "collect_vm_metrics": {"description": "Collect allowlisted Linux VM CPU/memory/swap/load/IO metrics", "inputSchema": {"type": "object", "required": ["target"], "properties": dict(_TARGET)}},
+        "memory_diagnostics": {"description": "Read-only bounded RAM/cache/swap/PSI and top resident processes; no remote Python", "inputSchema": {"type": "object", "required": ["target"], "additionalProperties": False, "properties": dict(_TARGET)}},
         "host_info": {"description": "Read hostname, OS, kernel, uptime and timezone", "inputSchema": {"type": "object", "required": ["target"], "properties": dict(_TARGET)}},
         "disk_status": {"description": "Read filesystem capacity, inode usage and mount status", "inputSchema": {"type": "object", "required": ["target"], "properties": dict(_TARGET)}},
         "disk_forensics": {"description": "Read-only bounded high-pressure mount and large-file metadata; never delete or read contents", "inputSchema": {"type": "object", "required": ["target"], "additionalProperties": False, "properties": dict(_TARGET)}},
@@ -157,6 +158,7 @@ async def _call(provider: str, tool: str, args: Dict[str, Any]) -> Any:
     if not target:
         raise ValueError("target_required")
     if tool == "collect_vm_metrics": return await connector.collect_metrics(target)
+    if tool == "memory_diagnostics": return await connector.memory_diagnostics(target)
     if tool == "host_info": return await connector.host_info(target)
     if tool == "disk_status": return await connector.disk_status(target)
     if tool == "disk_forensics": return await connector.disk_forensics(target)

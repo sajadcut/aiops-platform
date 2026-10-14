@@ -9,7 +9,7 @@ def test_provider_tool_names_match_control_plane_clients():
     assert set(_TOOL_SCHEMAS["prometheus"]) == {"query_metrics", "get_prometheus_alerts"}
     assert set(_TOOL_SCHEMAS["kubernetes"]) == {"collect_kubernetes_evidence"}
     assert set(_TOOL_SCHEMAS["vm"]) == {
-        "collect_vm_metrics", "host_info", "disk_status", "disk_forensics", "network_status",
+        "collect_vm_metrics", "memory_diagnostics", "host_info", "disk_status", "disk_forensics", "network_status",
         "service_status", "service_logs", "system_logs", "process_snapshot",
         "process_status", "tcp_check", "port_listener_status", "dns_check",
         "route_check", "firewall_status", "config_validate", "nginx_config_review", "nginx_config_inspect",

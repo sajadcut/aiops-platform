@@ -344,6 +344,95 @@ class SSHVMConnector:
             return {"success": False, "target": target, "error": "invalid_metric_payload"}
         return {"success": True, "target": target, "metrics": payload, "execution_time": result.get("execution_time")}
 
+    async def memory_diagnostics(self, target: str) -> Dict[str, Any]:
+        """Bounded, read-only RAM breakdown and top RSS consumers.
+
+        No remote Python, sudo, command arguments, memory dumps or environment
+        variables. One snapshot cannot establish which process caused a spike.
+        """
+        command = (
+            "LC_ALL=C; "
+            "printf 'MEMORY_BEGIN\n'; "
+            "awk '/^(MemTotal|MemAvailable|MemFree|Cached|Buffers|SReclaimable|SwapTotal|SwapFree):/ "
+            "{print $1,$2}' /proc/meminfo; "
+            "printf 'MEMORY_END\n'; "
+            "printf 'PROCESS_BEGIN\n'; "
+            "ps -eo pid=,ppid=,comm=,rss=,%mem= --sort=-rss | head -n 12; "
+            "printf 'PROCESS_END\n'; "
+            "printf 'PRESSURE_BEGIN\n'; "
+            "if [ -r /proc/pressure/memory ]; then "
+            "awk '/^some / {for(i=1;i<=NF;i++) if($i ~ /^avg10=/) print $i}' "
+            "/proc/pressure/memory; fi; "
+            "printf 'PRESSURE_END\n'"
+        )
+        result = await self._run(target, command)
+        if result.get("success") is not True:
+            return {"success": False, "target": target,
+                    "error": "memory_diagnostics_command_failed"}
+        lines = str(result.get("stdout") or "").splitlines()
+        section = None
+        kib = {}
+        processes = []
+        psi_avg10 = None
+        allowed = {"MemTotal", "MemAvailable", "MemFree", "Cached", "Buffers",
+                   "SReclaimable", "SwapTotal", "SwapFree"}
+        for line in lines[:70]:
+            word = line.strip()
+            if word == "MEMORY_BEGIN": section = "memory"; continue
+            if word == "MEMORY_END": section = None; continue
+            if word == "PROCESS_BEGIN": section = "process"; continue
+            if word == "PROCESS_END": section = None; continue
+            if word == "PRESSURE_BEGIN": section = "pressure"; continue
+            if word == "PRESSURE_END": section = None; continue
+            fields = word.split()
+            try:
+                if section == "memory" and len(fields) == 2:
+                    key = fields[0].removesuffix(":")
+                    if key in allowed:
+                        value = int(fields[1])
+                        if 0 <= value <= 2**53: kib[key] = value
+                elif section == "process" and len(fields) == 5 and len(processes) < 10:
+                    pid, ppid, comm, rss, pct = fields
+                    if not re.fullmatch(r"[a-zA-Z0-9@_.:+-]{1,80}", comm):
+                        comm = "redacted_process"
+                    row = {"pid": int(pid), "ppid": int(ppid),
+                           "command": comm[:80], "rss_mb": round(int(rss) / 1024, 1),
+                           "memory_percent": round(float(pct), 2)}
+                    if (row["pid"] > 0 and row["ppid"] >= 0
+                            and 0 <= row["rss_mb"] < 2**40
+                            and 0 <= row["memory_percent"] <= 100):
+                        processes.append(row)
+                elif section == "pressure" and word.startswith("avg10="):
+                    x = float(word.split("=", 1)[1])
+                    if 0 <= x <= 100: psi_avg10 = round(x, 2)
+            except (ValueError, OverflowError):
+                continue
+        total, available = kib.get("MemTotal"), kib.get("MemAvailable")
+        if not total or available is None or available > total:
+            return {"success": False, "target": target,
+                    "error": "memory_diagnostics_invalid_meminfo"}
+        swap_total = kib.get("SwapTotal")
+        swap_free = kib.get("SwapFree")
+        used_pct = round((total - available) * 100 / total, 2)
+        return {
+            "success": True, "target": target,
+            "total_mb": round(total / 1024, 1),
+            "available_mb": round(available / 1024, 1),
+            "used_percent": used_pct,
+            "cache_reclaimable_mb": round(
+                (kib.get("Cached", 0) + kib.get("SReclaimable", 0)) / 1024, 1),
+            "swap_used_mb": (
+                round((swap_total - swap_free) / 1024, 1)
+                if swap_total is not None and swap_free is not None
+                   and 0 <= swap_free <= swap_total else None),
+            "swap_total_mb": (
+                round(swap_total / 1024, 1) if swap_total is not None else None),
+            "psi_memory_some_avg10": psi_avg10,
+            "top_processes": processes,
+            "snapshot_only": True,
+            "reason_cannot_be_proven_from_single_snapshot": True,
+        }
+
     async def host_info(self, target: str) -> Dict[str, Any]:
         command = (
             "LC_ALL=C; printf 'hostname=%s\\n' \"$(hostname 2>/dev/null)\"; "
