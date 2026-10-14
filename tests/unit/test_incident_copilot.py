@@ -9,7 +9,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from apps.incident_copilot import (
-    vm_binding, fallback_intent, public_result, vm_read, llm_plan, history,
+    vm_binding, fallback_intent, is_recovery_comparison_question, public_result, vm_read, llm_plan, history,
 )
 from apps.api.incident_chat import _explicit_wrong_target, _safe_brief
 from apps.remediation_planner import RemediationPlanner
@@ -404,3 +404,49 @@ async def test_unavailable_mcp_preserves_old_diagnostics(monkeypatch):
     assert result["answer_basis"] == "stored_analysis_live_unavailable"
     assert "103" in result["message"]
     assert "mcp_unavailable" in result["message"]
+
+
+def test_recovery_comparison_stays_read_only_even_when_action_words_appear():
+    for question in (
+        "برای این رخداد مقایسه کن Start یا Restart کدام بهتر است؟",
+        "تفاوت استارت و ریستارت چیست و کدام ایمن‌تر است؟",
+        "Compare Start versus Restart before proposing any recovery.",
+    ):
+        assert is_recovery_comparison_question(question) is True
+    for request in (
+        "استارت سرویس را پیشنهاد بده",
+        "Restart this service after preflight",
+        "ریستارت سرویس را درخواست کن",
+    ):
+        assert is_recovery_comparison_question(request) is False
+
+
+@pytest.mark.asyncio
+async def test_llm_receives_conditional_recovery_and_stop_origin_before_mcp_bulk():
+    class Model:
+        async def generate_with_messages(self, messages, **kwargs):
+            context = next(m["content"] for m in messages
+                           if m["content"].startswith("Bounded incident evidence"))
+            assert "possible_unverified" in context
+            assert "start_service" in context
+            assert "restart_service" in context
+            assert "manual_stop_proven" in context
+            assert "authorizes_execution" in context
+            assert kwargs["max_tokens"] >= 1100
+            return SimpleNamespace(content=json.dumps({
+                "intent": "answer",
+                "answer": "هر دو روش مشروط هستند و باید ابتدا Journal و Audit بررسی شود.",
+                "reason": "systemd failed after a possible stop timeout",
+            }, ensure_ascii=False), finish_reason="stop")
+    summary = {
+        "incident_summary": {"service": "gfpapi", "target": "10.248.16.82"},
+        "recovery_advisory": {"suggested_action": "restart_service",
+            "alternative_actions": [{"action": "start_service"}],
+            "authorizes_execution": False},
+        "technical_investigation": {"stop_origin": {
+            "status": "possible_unverified", "manual_stop_proven": False}},
+        "mcp_evidence": [{"finding": "irrelevant repeated telemetry"}] * 65,
+    }
+    result = await llm_plan("Start و Restart را مقایسه کن", summary, [], llm=Model())
+    assert result["intent"] == "answer"
+    assert "Journal" in result["answer"]
