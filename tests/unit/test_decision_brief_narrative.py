@@ -218,3 +218,25 @@ async def test_large_incident_calls_llm_instead_of_unconditional_size_fallback(m
     assert outcome["authorizes_execution"] is False
     assert len(calls) == 1
     assert len(calls[0][1]["content"]) < 18500
+
+
+
+def test_llm_cannot_override_verified_invalid_appsettings_as_healthy():
+    brief = sample_brief()
+    brief["configuration_diagnostic"] = {
+        "status": "invalid", "config_file": "/data/gfp/gfpapi/appsettings.json",
+        "error_line": 32, "error_column": 3,
+        "error_code": "json_property_name",
+    }
+    fake = valid_rows()
+    fake["sections"][1]["text"] = (
+        "طبق بررسی، ساختار JSON سالم است و هیچ خطایی در appsettings وجود ندارد."
+    )
+    with pytest.raises(ValueError, match="narrative_conflicts_with_live_config_validator"):
+        service.validate_narrative(json.dumps(fake, ensure_ascii=False), brief, "fa")
+    # A truthful warning is not blocked just because it mentions validation.
+    fake["sections"][1]["text"] = (
+        "ساختار JSON معتبر نیست و فایل appsettings در خط ۳۲ باید بررسی شود."
+    )
+    assert len(service.validate_narrative(
+        json.dumps(fake, ensure_ascii=False), brief, "fa")) == len(service.SECTIONS)
