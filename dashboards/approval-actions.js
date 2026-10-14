@@ -48,7 +48,7 @@
 
     return `<div class="approval-card ${pending ? 'pending' : status}">
       <div class="approval-card-head">
-        <div><span class="section-kicker">مجوز تحت نظارت</span><h4>${esc(approval.action || decision.action || 'اصلاح پیشنهادی')}</h4></div>
+        <div><span class="section-kicker">مجوز تحت نظارت</span><h4>${esc(faAction(approval.action || decision.action || 'اصلاح پیشنهادی'))}</h4></div>
         ${pill(status)}
       </div>
       <div class="approval-facts">
@@ -57,7 +57,7 @@
         <div><label>اتصال مجوز</label><strong>${binding ? 'کامل' : 'ناقص'}</strong></div>
         <div><label>محیط</label><strong>${esc(meta.environment || '—')}</strong></div>
         <div><label>ابزار</label><strong>${esc(meta.tool_name || '—')}</strong></div>
-        <div><label>اقدام</label><strong>${esc(approval.action || decision.action || '—')}</strong></div>
+        <div><label>اقدام</label><strong>${esc(faAction(approval.action || decision.action || '—'))}</strong></div>
         <div><label>مقصد</label><strong>${esc(meta.target || '—')}</strong></div>
         <div><label>راهنمای اجرا</label><strong>${esc([meta.runbook_id, meta.runbook_version].filter(Boolean).join(' @ ') || '—')}</strong></div>
       </div>
@@ -129,11 +129,8 @@
 
   const RECOMMENDATION_LANGUAGE_KEY = 'aiops.operator.recommendation_language';
   function storedRecommendationLanguage() {
-    try {
-      return localStorage.getItem(RECOMMENDATION_LANGUAGE_KEY) === 'en' ? 'en' : 'fa';
-    } catch (_) {
-      return 'fa';
-    }
+    // Always open operator panels in Persian. Original English remains opt-in.
+    return 'fa';
   }
   S.recommendationLanguage = storedRecommendationLanguage();
 
@@ -266,7 +263,7 @@
     const approval = summary.approval || {};
     return `<div class="operator-summary-control-grid">
       <div><span>ریسک</span><strong>${esc(faStatus(summary.risk_level || 'unknown'))}</strong></div>
-      <div><span>تصمیم</span><strong>${esc(decision.action || decision.decision || '—')}</strong></div>
+      <div><span>تصمیم</span><strong>${esc(faAction(decision.action || decision.decision || '—'))}</strong></div>
       <div><span>تأیید</span><strong>${esc(faStatus(summary.approval_status || 'not_requested'))}</strong></div>
       <div><span>تأییدکننده</span><strong>${esc(summary.approver || '—')}</strong></div>
       <div><span>اتصال مجوز</span><strong>${approval.binding_complete ? 'کامل' : 'ناقص / ثبت نشده'}</strong></div>
@@ -426,7 +423,7 @@
       if (!endpoint) throw new Error('checkpoint_not_executable: '+(checkpoint||'unknown'));
       const result = await api(endpoint, {method: 'POST'});
       const verification = result.verification_result?.status || result.verification?.status || 'not recorded';
-      toast(`پاسخ اجرا دریافت شد · راستی‌آزمایی ${verification}`);
+      toast(`پاسخ اجرا دریافت شد · راستی‌آزمایی: ${faStatus(verification)}`);
       await loadAll();
       await refreshIncidentDecision();
     } catch (error) {
