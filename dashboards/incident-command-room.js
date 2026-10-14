@@ -2308,7 +2308,11 @@
       (fa?'اعتبارسنجی مستقل یا نسخهٔ اصلاحی تأییدشده موجود نیست.':
            'No independently verified repair is available.');
     const code=low(config.stage_failure_reason);
-    const reason=code==='permission_denied'?
+    const previewUnavailable=low(config.status)==='preview_unavailable';
+    const reason=previewUnavailable?
+      (fa?'VM MCP نتوانست فایل را برای ساخت پیش‌نمایش به‌طور امن بخواند؛ دسترسی خواندن حساب SSH، مسیر فایل و لاگ بررسی MCP را کنترل کنید.':
+        'VM MCP could not safely read the file; check authorized SSH read access and the MCP diagnostic audit.'):
+      code==='permission_denied'?
       (fa?'علت شکست تست: محدودیت مجوز دسترسی (permission_denied).':
            'Staged validation was blocked by permissions (permission_denied).'):
       code&& !['none','not_tested','not_recorded'].includes(code)?
@@ -2331,7 +2335,7 @@
     const regenerateButton=!candidate?
       '<button type="button" class="ic-btn ic-btn-primary" data-config-preview="nginx"'+
       (state.historic||state.busy||state.chatBusy||state.lifecycle?.analysis_in_progress||state.chatStatus==='failed'?' disabled':'')+'>'+
-      esc(fa?'ساخت پیش‌نمایش اصلاح با بررسی زنده MCP':'Generate live MCP repair preview')+
+      esc(fa?(previewUnavailable?'تلاش مجدد برای خواندن امن فایل':'ساخت پیش‌نمایش اصلاح با بررسی زنده MCP'):'Generate live MCP repair preview')+
       '</button>':'';
     node.hidden=false;
     node.innerHTML='<div class="ic-config-banner-copy"><strong>'+
