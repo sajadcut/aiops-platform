@@ -68,3 +68,44 @@ repair is **REAL ENV REQUIRED / NOT TESTED**.
   existing governed execution boundaries.
 - A possible patch cannot be represented as `VALIDATED` without real test
   evidence for those exact bytes and dependencies.
+
+
+## General VM config discovery and LLM research (October 2026)
+
+The configuration workflow is NOT restricted to nginx.
+
+Systemd discovery reads only nonsecret unit metadata: ExecStart,
+WorkingDirectory, FragmentPath and service Type. The parser recognizes Java,
+Tomcat/Catalina, .NET and unknown custom executables. It derives bounded
+configuration path hypotheses from explicit unit arguments, Spring options
+and Catalina base, without returning secrets, argv or environment values.
+
+The VM MCP can independently verify that unit-derived files exist and are
+readable, and inventory a bounded part of the unit's approved working
+directory. A path guessed by an LLM is never accepted as a remote read target.
+The registered vendor validators handle Nginx, HAProxy and Apache, while
+a worker-only reviewer covers bounded JSON, XML and structural excerpts.
+A tiny deterministic trailing-comma JSON correction may create a hash-bound,
+secret-safe candidate in memory; it is not a validated service configuration.
+
+Unknown runtime, file locations and unsupported validators trigger the
+existing LLM operational knowledge-gap consultation. Recommendations must
+name what is hypothetical, which registered read-only MCP check to try next,
+and what vendor guidance remains needed. Unavailable or unconfigured LLMs
+are explicitly reported as such, not hidden behind unsupported certainty.
+Optional multiround LLM investigation can remain disabled: basic systemd
+file discovery and LLM unknown consultation are independent.
+
+After a read-only Incident chat request, new MCP observations become durable
+Evidence and the specialist/evaluator analysis, config proposal and unknown
+guidance can be recomputed. Reusable knowledge is an unverified Cognia
+review draft until a human reviewer publishes it.
+
+No arbitrary file Apply exists. Each file type needs versioned change
+contracts, independent vendor validation, secret-safe candidate custody,
+hash-bound operator approval, rollback and post-change verification before
+any production write. All current generic repair output is advisory only.
+
+Deploy API/orchestrator, VM MCP and dashboard together. Target Linux hosts
+need no Python interpreter. Real permissions, unknown service layouts,
+full vendor semantics and production rollback remain REAL ENV REQUIRED.
