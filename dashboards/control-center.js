@@ -19,8 +19,8 @@ const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const lower = v => String(v ?? '').toLowerCase();
-const fmtDate = v => v ? new Date(v).toLocaleString() : '—';
-const fmtShortDate = v => v ? new Date(v).toLocaleString([], {month:'short',day:'2-digit',hour:'2-digit',minute:'2-digit'}) : '—';
+const fmtDate = v => v ? new Date(v).toLocaleString('fa-IR') : '—';
+const fmtShortDate = v => v ? new Date(v).toLocaleString('fa-IR', {month:'short',day:'2-digit',hour:'2-digit',minute:'2-digit'}) : '—';
 const pct = v => `${Math.round((Number(v) || 0) * 100)}%`;
 const isOpen = i => !['closed', 'resolved'].includes(lower(i.status));
 const THEME_STORAGE = 'aiops.chatbot.theme';
@@ -104,7 +104,7 @@ function toast(msg) {
 function saveKey() {
   S.key = $('#apiKey').value.trim();
   localStorage.setItem('aiops_api_key', S.key);
-  toast('API identity updated');
+  toast('کلید API به‌روزرسانی شد.');
   loadAll();
 }
 
@@ -146,13 +146,13 @@ function setView(v) {
   $$('.view').forEach(x => x.classList.toggle('active', x.dataset.view === v));
   $$('.nav button').forEach(x => x.classList.toggle('active', x.dataset.view === v));
   const titles = {
-    overview: ['Command Center', 'Prioritized live operational state across incidents, governed remediation and external dependencies.'],
-    incidents: ['Incident Workbench', 'Evidence, agent coordination, evaluator gate, approval binding, execution, verification and memory in one durable view.'],
-    services: ['Service Health', 'Service-centric impact derived only from durable incident and governance state.'],
-    agents: ['Agents & RCA', 'Analysis-only specialist agents, routing, collaboration and runtime quality signals.'],
-    mcp: ['MCP Fabric', 'Operational MCP connectivity plus the separate governed Cognia Knowledge boundary.'],
-    knowledge: ['Knowledge Review', 'Human-approved organizational learning and Cognia publication.'],
-    audit: ['Audit & Governance', 'Durable decision, approval, capability, execution, verification and learning history.']
+    overview: ['مرکز فرمان', 'نمای زنده و اولویت‌بندی‌شده رخدادها، بازیابی‌های تحت نظارت و وابستگی‌های سامانه.'],
+    incidents: ['مدیریت رخدادها', 'فهرست رخدادها، شواهد ثبت‌شده، تحلیل و روند رسیدگی.'],
+    services: ['سلامت سرویس‌ها', 'وضعیت و میزان اثرگذاری رخدادهای ثبت‌شده بر سرویس‌ها.'],
+    agents: ['ایجنت‌ها و تحلیل علت ریشه‌ای', 'عملکرد ایجنت‌های تخصصی، هماهنگی تحلیل‌ها و کیفیت خروجی‌ها.'],
+    mcp: ['زیرساخت MCP', 'وضعیت اتصال ابزارهای عملیاتی و مرز مستقل دانش سازمانی Cognia.'],
+    knowledge: ['بازبینی دانش', 'بازبینی تجربه‌های عملیاتی و انتشار دانش Cognia پس از تأیید انسانی.'],
+    audit: ['ممیزی و حاکمیت', 'سوابق تصمیم، تأیید، اجرا، راستی‌آزمایی و یادگیری عملیاتی.']
   };
   $('#pageTitle').textContent = titles[v][0];
   $('#pageSub').textContent = titles[v][1];
@@ -161,6 +161,35 @@ function setView(v) {
   if (v === 'mcp') renderMcp();
   if (v === 'audit') renderAudit();
   if (v === 'knowledge' && typeof window.loadKnowledgeReviews === 'function') window.loadKnowledgeReviews();
+}
+
+// Human-readable labels only. Never change provider status values used by gates.
+function faStatus(value) {
+  const v = lower(value);
+  return ({
+    critical: 'بحرانی', high: 'زیاد', medium: 'متوسط', low: 'کم',
+    healthy: 'سالم', degraded: 'دچار اختلال', unhealthy: 'ناسالم',
+    active: 'فعال', inactive: 'غیرفعال', open: 'باز', closed: 'بسته‌شده',
+    analyzing: 'در حال تحلیل', escalated: 'ارجاع‌شده', resolved: 'رفع‌شده',
+    pending: 'در انتظار تأیید', approved: 'تأییدشده', rejected: 'ردشده',
+    consumed: 'مصرف‌شده', failed: 'ناموفق', failure: 'ناموفق',
+    blocked: 'مسدودشده', partial: 'ناقص', inconclusive: 'نامشخص',
+    verified: 'راستی‌آزمایی‌شده', completed: 'تکمیل‌شده',
+    success: 'موفق', running: 'در حال اجرا', warning: 'هشدار'
+  })[v] || String(value ?? 'نامشخص');
+}
+
+function faEvent(value) {
+  const map = {
+    incident_created: 'ایجاد رخداد',
+    approval_requested: 'درخواست تأیید',
+    approval_approved: 'تأیید درخواست',
+    approval_rejected: 'رد درخواست',
+    execution_started: 'شروع اجرا',
+    execution_completed: 'پایان اجرا',
+    verification_completed: 'اتمام راستی‌آزمایی'
+  };
+  return map[lower(value)] || String(value ?? 'رویداد');
 }
 
 function serviceState(s) {
@@ -178,15 +207,15 @@ function serviceState(s) {
 
 function attentionReason(i) {
   const reasons = [];
-  if (lower(i.severity) === 'critical') reasons.push('critical severity');
-  else if (lower(i.severity) === 'high') reasons.push('high severity');
-  if (lower(i.approval_status) === 'pending') reasons.push('approval pending');
-  if (lower(i.approval_status) === 'approved') reasons.push('approved, awaiting execution');
-  if (/failed|failure|blocked/.test(lower(i.execution_status))) reasons.push(`execution ${lower(i.execution_status)}`);
-  if (/failed|failure/.test(lower(i.verification_status))) reasons.push('verification failed');
-  if (/partial|inconclusive/.test(lower(i.verification_status))) reasons.push(`verification ${lower(i.verification_status)}`);
-  if (lower(i.memory_status) === 'not_persisted' && /success|verified/.test(lower(i.verification_status))) reasons.push('memory not persisted');
-  if (Number(i.confidence || 0) > 0 && Number(i.confidence) < .5) reasons.push('low confidence');
+  if (lower(i.severity) === 'critical') reasons.push('شدت بحرانی');
+  else if (lower(i.severity) === 'high') reasons.push('شدت زیاد');
+  if (lower(i.approval_status) === 'pending') reasons.push('در انتظار تأیید');
+  if (lower(i.approval_status) === 'approved') reasons.push('تأییدشده و در انتظار اجرا');
+  if (/failed|failure|blocked/.test(lower(i.execution_status))) reasons.push(`اجرای ${faStatus(i.execution_status)}`);
+  if (/failed|failure/.test(lower(i.verification_status))) reasons.push('راستی‌آزمایی ناموفق');
+  if (/partial|inconclusive/.test(lower(i.verification_status))) reasons.push(`راستی‌آزمایی ${faStatus(i.verification_status)}`);
+  if (lower(i.memory_status) === 'not_persisted' && /success|verified/.test(lower(i.verification_status))) reasons.push('نتیجه در حافظه ثبت نشده');
+  if (Number(i.confidence || 0) > 0 && Number(i.confidence) < .5) reasons.push('اطمینان پایین تحلیل');
   return reasons;
 }
 
@@ -213,15 +242,15 @@ function dependencyEntries() {
   const h = S.health?.components || {};
   const ext = h.external || {};
   const rows = [
-    {name: 'PostgreSQL + pgvector', healthy: h.database?.status === 'healthy', kind: 'state', meta: h.database?.migration?.valid === false ? 'migration drift' : 'durable state + operational memory'},
-    {name: 'Zabbix MCP', healthy: ext.zabbix_mcp?.healthy, kind: 'mcp', meta: 'monitoring evidence'},
-    {name: 'Elastic Agent Builder MCP', healthy: ext.elasticsearch_mcp?.healthy, kind: 'mcp', meta: 'governed ES|QL evidence'},
-    {name: 'Prometheus MCP', healthy: ext.prometheus_mcp?.healthy, kind: 'mcp', meta: 'metrics evidence'}
+    {name: 'PostgreSQL + pgvector', healthy: h.database?.status === 'healthy', kind: 'state', meta: h.database?.migration?.valid === false ? 'ناسازگاری نسخه پایگاه‌داده' : 'اطلاعات پایدار و حافظه عملیاتی'},
+    {name: 'Zabbix MCP', healthy: ext.zabbix_mcp?.healthy, kind: 'mcp', meta: 'شواهد سامانه پایش'},
+    {name: 'Elastic Agent Builder MCP', healthy: ext.elasticsearch_mcp?.healthy, kind: 'mcp', meta: 'شواهد ES|QL با کنترل دسترسی'},
+    {name: 'Prometheus MCP', healthy: ext.prometheus_mcp?.healthy, kind: 'mcp', meta: 'شواهد متریک‌ها'}
   ];
-  if (Object.prototype.hasOwnProperty.call(ext, 'vm_mcp')) rows.push({name: 'VM Edge MCP', healthy: ext.vm_mcp?.healthy, kind: 'mcp-write', meta: 'VM telemetry + governed remediation'});
-  if (Object.prototype.hasOwnProperty.call(ext, 'kubernetes_mcp')) rows.push({name: 'Kubernetes MCP', healthy: ext.kubernetes_mcp?.healthy, kind: 'mcp-write', meta: 'optional Kubernetes boundary'});
-  if (Object.prototype.hasOwnProperty.call(ext, 'jenkins_mcp')) rows.push({name: 'Jenkins MCP', healthy: ext.jenkins_mcp?.healthy, kind: 'mcp-write', meta: 'optional delivery boundary'});
-  if (Object.prototype.hasOwnProperty.call(ext, 'cognia')) rows.push({name: 'Cognia Knowledge', healthy: ext.cognia?.healthy, kind: 'knowledge', meta: ext.cognia?.configured === false ? 'not configured' : 'governed Knowledge API'});
+  if (Object.prototype.hasOwnProperty.call(ext, 'vm_mcp')) rows.push({name: 'VM Edge MCP', healthy: ext.vm_mcp?.healthy, kind: 'mcp-write', meta: 'پایش ماشین مجازی و بازیابی تحت نظارت'});
+  if (Object.prototype.hasOwnProperty.call(ext, 'kubernetes_mcp')) rows.push({name: 'Kubernetes MCP', healthy: ext.kubernetes_mcp?.healthy, kind: 'mcp-write', meta: 'اتصال اختیاری Kubernetes'});
+  if (Object.prototype.hasOwnProperty.call(ext, 'jenkins_mcp')) rows.push({name: 'Jenkins MCP', healthy: ext.jenkins_mcp?.healthy, kind: 'mcp-write', meta: 'اتصال اختیاری فرایند انتشار'});
+  if (Object.prototype.hasOwnProperty.call(ext, 'cognia')) rows.push({name: 'Cognia Knowledge', healthy: ext.cognia?.healthy, kind: 'knowledge', meta: ext.cognia?.configured === false ? 'پیکربندی نشده' : 'رابط دانش با کنترل دسترسی'});
   return rows;
 }
 
@@ -241,10 +270,10 @@ function renderOverview() {
   const live = x.data_status === 'live';
   const platformHealthy = live && lower(S.health?.status) === 'ok';
   $('#liveDot').classList.toggle('ok', platformHealthy);
-  $('#platformState').textContent = !live ? 'Unavailable' : platformHealthy ? 'Live' : 'Degraded';
+  $('#platformState').textContent = !live ? 'در دسترس نیست' : platformHealthy ? 'فعال' : 'دچار اختلال';
   $('#platformState').classList.toggle('live', platformHealthy);
   $('#platformVersion').textContent = S.health?.version || '—';
-  $('#lastUpdated').textContent = live ? new Date().toLocaleTimeString() : '—';
+  $('#lastUpdated').textContent = live ? new Date().toLocaleTimeString('fa-IR') : '—';
 
   const attention = S.incidents.filter(i => isOpen(i) && attentionReason(i).length).sort((a, b) => attentionRank(b) - attentionRank(a));
   const atRisk = S.services.filter(s => serviceState(s) !== 'healthy');
@@ -252,19 +281,19 @@ function renderOverview() {
   $('#attentionCount').textContent = attention.length;
   $('#serviceRiskCount').textContent = atRisk.length;
   $('#dependencyRiskCount').textContent = degradedDeps.length;
-  $('#attentionBadge').textContent = `${attention.length} live`;
+  $('#attentionBadge').textContent = `${attention.length.toLocaleString('fa-IR')} مورد فعال`;
 
   $('#attentionQueue').innerHTML = attention.slice(0, 7).map(i => {
     const score = attentionRank(i);
     const level = attentionLevel(score);
     const critical = level === 'P0' ? 'critical' : '';
-    return `<a class="attention-item" href="/dashboard/incidents/${encodeURIComponent(i.id)}" aria-label="گزارش و تصمیم‌گیری رخداد ${esc(i.service || i.id)}"><i class="attention-marker ${critical}"></i><div><div class="attention-title">${esc(i.service || 'Unknown service')} · ${esc(i.summary || 'Incident')}</div><div class="attention-meta">${esc(attentionReason(i).join(' · '))} · ${fmtShortDate(i.created_at)}</div></div><div class="attention-score"><strong>${level}</strong><small>${esc(i.severity || '')}</small></div></a>`;
-  }).join('') || '<div class="empty-state">No active incident currently requires elevated operator attention.</div>';
+    return `<a class="attention-item" href="/dashboard/incidents/${encodeURIComponent(i.id)}" aria-label="گزارش و تصمیم‌گیری رخداد ${esc(i.service || i.id)}"><i class="attention-marker ${critical}"></i><div><div class="attention-title">${esc(i.service || 'سرویس نامشخص')} · ${esc(i.summary || 'رخداد')}</div><div class="attention-meta">${esc(attentionReason(i).join(' · '))} · ${fmtShortDate(i.created_at)}</div></div><div class="attention-score"><strong>${level}</strong><small>${esc(faStatus(i.severity || ''))}</small></div></a>`;
+  }).join('') || '<div class="empty-state">در حال حاضر رخداد فعالی نیازمند رسیدگی فوری اپراتور نیست.</div>';
 
   $('#servicePreview').innerHTML = S.services.slice(0, 6).map(s => {
     const state = serviceState(s);
-    return `<div class="service-row"><div><div class="service-name">${esc(s.service)}</div><div class="service-summary">${esc(s.latest_summary || 'No recent incident summary')}</div></div><div><div class="health-bar"><i class="${state}" style="width:${state === 'healthy' ? 100 : state === 'degraded' ? 58 : 28}%"></i></div></div><div class="service-counts"><b>${s.incidents_active}</b>active · ${esc(state)}</div></div>`;
-  }).join('') || '<div class="empty-state">No durable service incident history is available.</div>';
+    return `<div class="service-row"><div><div class="service-name">${esc(s.service)}</div><div class="service-summary">${esc(s.latest_summary || 'گزارش جدیدی ثبت نشده است')}</div></div><div><div class="health-bar"><i class="${state}" style="width:${state === 'healthy' ? 100 : state === 'degraded' ? 58 : 28}%"></i></div></div><div class="service-counts"><b>${s.incidents_active}</b>فعال · ${esc(faStatus(state))}</div></div>`;
+  }).join('') || '<div class="empty-state">هنوز سابقه مستندی از رخدادهای سرویس‌ها ثبت نشده است.</div>';
 
   renderLifecycleSummary();
   renderSeverity();
@@ -274,14 +303,14 @@ function renderOverview() {
 function renderLifecycleSummary() {
   const x = S.summary || {};
   const items = [
-    ['Pending approval', x.approvals_pending || 0, 'human gate'],
-    ['Approved', x.approvals_approved || 0, 'awaiting resume'],
-    ['Consumed', x.approvals_consumed || 0, 'one-time authorization used'],
-    ['Execution success', x.execution_success || 0, `${x.execution_failed || 0} failed · ${x.execution_blocked || 0} blocked`],
-    ['Verification success', x.verification_success || 0, `${x.verification_partial || 0} partial · ${x.verification_inconclusive || 0} inconclusive`],
-    ['Memory episodes', x.memory_entries_total || 0, `${x.memory_entries_active || 0} active`],
-    ['Embedding ready', x.memory_embedding_ready || 0, `${x.memory_embedding_backlog || 0} backlog · ${x.memory_embedding_contract_mismatch || 0} contract mismatch · ${x.memory_embedding_failed || 0} failed · ${x.memory_embedding_pending || 0} pending`],
-    ['Memory write-back audit', x.memory_persisted || 0, `${x.memory_not_persisted || 0} not persisted`]
+    ['در انتظار تأیید', x.approvals_pending || 0, 'نیازمند تأیید انسانی'],
+    ['تأییدشده', x.approvals_approved || 0, 'در انتظار ادامه اجرا'],
+    ['مجوز مصرف‌شده', x.approvals_consumed || 0, 'مجوز یک‌بارمصرف استفاده شده'],
+    ['اجرای موفق', x.execution_success || 0, `${x.execution_failed || 0} ناموفق · ${x.execution_blocked || 0} مسدودشده`],
+    ['راستی‌آزمایی موفق', x.verification_success || 0, `${x.verification_partial || 0} ناقص · ${x.verification_inconclusive || 0} نامشخص`],
+    ['تجربه‌های حافظه', x.memory_entries_total || 0, `${x.memory_entries_active || 0} فعال`],
+    ['بردارسازی آماده', x.memory_embedding_ready || 0, `${x.memory_embedding_backlog || 0} در صف · ${x.memory_embedding_contract_mismatch || 0} ناسازگار · ${x.memory_embedding_failed || 0} ناموفق · ${x.memory_embedding_pending || 0} منتظر`],
+    ['ثبت نتیجه در حافظه', x.memory_persisted || 0, `${x.memory_not_persisted || 0} ثبت‌نشده`]
   ];
   $('#automationLifecycle').innerHTML = items.map(([label, value, meta]) => `<div class="lifecycle-node"><span>${esc(label)}</span><strong>${esc(value)}</strong><small>${esc(meta)}</small></div>`).join('');
 }
@@ -291,7 +320,7 @@ function renderSeverity() {
   S.incidents.filter(isOpen).forEach(i => { const s = lower(i.severity); if (sev[s] != null) sev[s]++; });
   const total = Object.values(sev).reduce((a, b) => a + b, 0);
   const colors = {critical:'var(--red)', high:'var(--amber)', medium:'var(--blue)', low:'var(--green)'};
-  $('#severityBreakdown').innerHTML = total ? Object.entries(sev).map(([k, n]) => `<div class="severity-row"><span>${k}</span><div class="severity-bar"><i style="width:${n / total * 100}%;background:${colors[k]}"></i></div><b>${n}</b></div>`).join('') : '<div class="empty-state">No active incidents.</div>';
+  $('#severityBreakdown').innerHTML = total ? Object.entries(sev).map(([k, n]) => `<div class="severity-row"><span>${esc(faStatus(k))}</span><div class="severity-bar"><i style="width:${n / total * 100}%;background:${colors[k]}"></i></div><b>${n}</b></div>`).join('') : '<div class="empty-state">رخداد فعالی وجود ندارد.</div>';
 }
 
 function auditSummary(a) {
@@ -304,22 +333,22 @@ function auditSummary(a) {
   if (m.target) parts.push(m.target);
   if (m.verification_status) parts.push(`verify:${m.verification_status}`);
   if (m.status && !parts.includes(m.status)) parts.push(m.status);
-  if (typeof m.persisted === 'boolean') parts.push(`memory:${m.persisted ? 'persisted' : 'not persisted'}`);
-  return parts.join(' · ') || 'Governance event recorded';
+  if (typeof m.persisted === 'boolean') parts.push(`حافظه: ${m.persisted ? 'ثبت‌شده' : 'ثبت‌نشده'}`);
+  return parts.join(' · ') || 'رویداد حاکمیتی ثبت شده است';
 }
 
 function timelineItem(a) {
-  return `<div class="timeline-item"><div class="timeline-title">${esc(a.event_type || 'event')}</div><div class="timeline-meta">${fmtShortDate(a.created_at)} · ${esc(String(a.incident_id || 'no incident').slice(0, 8))}${a.actor ? ` · ${esc(a.actor)}` : ''}</div><div class="timeline-body">${esc(auditSummary(a))}</div></div>`;
+  return `<div class="timeline-item"><div class="timeline-title">${esc(faEvent(a.event_type || 'event'))}</div><div class="timeline-meta">${fmtShortDate(a.created_at)} · ${esc(String(a.incident_id || 'بدون رخداد').slice(0, 8))}${a.actor ? ` · ${esc(a.actor)}` : ''}</div><div class="timeline-body">${esc(auditSummary(a))}</div></div>`;
 }
 
 function renderAuditPreview() {
   const audit = S.summary?.recent_audit || [];
-  $('#auditPreview').innerHTML = audit.slice(0, 3).map(timelineItem).join('') || '<div class="empty-state">No audit events recorded.</div>';
+  $('#auditPreview').innerHTML = audit.slice(0, 3).map(timelineItem).join('') || '<div class="empty-state">رویداد ممیزی ثبت نشده است.</div>';
 }
 
 function renderHealth() {
   const defs = dependencyEntries();
-  $('#components').innerHTML = defs.map(x => `<div class="component"><div class="component-top"><span class="component-name">${esc(x.name)}</span><span class="dot ${x.healthy ? 'green' : ''}" style="${x.healthy ? '' : 'background:var(--red)'}"></span></div><div class="component-state ${x.healthy ? 'ok' : 'bad'}">${x.healthy ? 'Healthy' : 'Unavailable'}</div><small>${esc(x.meta)}</small></div>`).join('');
+  $('#components').innerHTML = defs.map(x => `<div class="component"><div class="component-top"><span class="component-name">${esc(x.name)}</span><span class="dot ${x.healthy ? 'green' : ''}" style="${x.healthy ? '' : 'background:var(--red)'}"></span></div><div class="component-state ${x.healthy ? 'ok' : 'bad'}">${x.healthy ? 'سالم' : 'در دسترس نیست'}</div><small>${esc(x.meta)}</small></div>`).join('');
 }
 
 function renderIncidents() {
