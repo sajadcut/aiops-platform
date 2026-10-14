@@ -1487,13 +1487,42 @@
       (fa?'علت ریشه‌ای در شواهد این گزارش تأیید شده است.':'The recorded report confirms a root cause.'):
       (fa?'علت ریشه‌ای هنوز تأیید نشده است. علائم و مشکلات هم‌زمان نباید بدون شاهد وابستگی علّی به هم نسبت داده شوند.':
         'Root cause remains unconfirmed. Coincident observations do not establish causality.');
+    const recovery=r.recovery_advisory||{};
+    const recoveryCandidate=recovery.suggested_action;
+    const recoveryMarkup=recovery.status?
+      '<div class="ic-ir-recovery"><h4>'+esc(fa?
+        'پیشنهاد بازیابی سرویس (بدون مجوز اجرا)':'Service recovery options (not authorized)')+
+        '</h4><p><strong>'+esc(fa?'اقدام پیشنهادی فعلی: ':'Current candidate: ')+
+        '</strong>'+esc(recoveryCandidate==='restart_service'?'Restart':
+          recoveryCandidate==='start_service'?'Start':
+          fa?'ابتدا اصلاح مشکل کانفیگ':'Fix configuration first')+'</p>'+
+        (arr(recovery.alternative_actions).length?
+          '<ul class="ic-ir-list">'+arr(recovery.alternative_actions).slice(0,3).map(x=>
+            '<li><strong>'+txt(x.action)+'</strong> — '+
+            esc(x.status==='alternative_not_runbook_authorized_for_failed'?
+              (fa?'گزینهٔ جایگزین؛ Runbook فعلی برای failed هنوز اجازهٔ Start نمی‌دهد.':
+                'Alternative only: current runbook does not authorize Start for failed state.'):
+              (fa?'مشروط به بررسی زنده و Approval جداگانه':'Requires fresh checks and separate approval'))+
+            '</li>').join('')+'</ul>':'')+
+        '<p>'+esc(fa?'کانفیگ: ':'Configuration: ')+txt(recovery.configuration_validation)+
+        ' · '+esc(fa?'وضعیت مشاهده‌شده: ':'Observed: ')+txt(recovery.observed_state)+'</p>'+
+        '<h4>'+esc(fa?'پیش‌شرط‌های بررسی و بازیابی':'Recovery preflight checklist')+'</h4>'+
+        list(arr(recovery.prerequisite_checks).slice(0,8).map(txt))+
+        '<p class="ic-ir-guard">'+esc(fa?
+          'برای Start یا Restart ابتدا باید توقف عمدی/نگهداری، سلامت کانفیگ و تأثیر روی سرویس‌های وابسته بررسی شود. هیچ اقدامی اجرا نشده است.':
+          'Confirm intent, configuration, dependencies and policy before restoring service. Nothing has been executed.')+
+        '</p>'+refs(recovery.evidence_refs)+
+        '<button type="button" class="ic-btn ic-btn-muted" data-incident-chat-prompt="plan">'+
+        esc(fa?'با LLM برنامهٔ عیب‌یابی بساز':'Ask AI for a diagnostic plan')+
+        '</button> <button type="button" class="ic-btn ic-btn-muted" data-incident-chat-prompt="start">'+
+        esc(fa?'گزینه‌های Start/Restart را بررسی کن':'Discuss Start / Restart options')+
+        '</button></div>':'';
     const enhanced=state.narrative, enhancedValid=!state.historic &&
       enhanced?.status==='available' && enhanced.snapshot_id===r.snapshot_id &&
       enhanced.language===state.language;
     const interpretation=enhancedValid?arr(enhanced.sections)
-      .filter(x=>['incident','confirmed','cause','evidence_gaps','advice'].includes(x.key) &&
-        typeof x.text==='string'&&x.text.trim()&&arr(x.citations).length)
-      .slice(0,5).map(x=>'<strong>'+txt(x.heading)+'</strong><p>'+
+      .filter(x=>typeof x.text==='string'&&x.text.trim())
+      .slice(0,11).map(x=>'<strong>'+txt(x.heading)+'</strong><p>'+
         txt(x.text)+'</p>'+refs(x.citations)):[];
     const legacyNote=fa?'متن تخصصی و گزارش کامل Agentها در جزئیات پایین قابل مشاهده است.':
       'Detailed findings and agent reports are available below.';
@@ -1527,7 +1556,7 @@
       section(fa?'۶. چه شواهدی کم داریم؟':'6. Missing evidence',
         list(unknowns.map(x=>txt(x.text))))+
       section(fa?'۷. اقدام بعدی اپراتور':'7. Next operator checks',
-        list(steps.map(x=>txt(x.text)))+
+        recoveryMarkup+list(steps.map(x=>txt(x.text)))+
         '<p class="ic-ir-guard">'+esc(fa?
         'این گزارش Read-only است. هیچ Restart، حذف فایل یا تغییر کانفیگ بدون Approval و Verification مجاز نیست.':
         'Read-only: restart, file deletion and config changes require governed approval and verification.')+'</p>')+
@@ -1537,7 +1566,13 @@
         '<p class="ic-ir-caution">'+esc(fa?
         'این بخش تفسیر مدل از شواهد است، نه تأیید مستقل علت؛ نتایج مستقیم MCP اولویت دارند.':
         'Model interpretation is not independent RCA confirmation; direct MCP evidence takes precedence.')+
-        '</p>'+list(interpretation)):'')+
+        '</p>'+list(interpretation)):
+        (state.narrative&&!state.historic?
+          section(fa?'۹. وضعیت تحلیل مدل':'9. AI analysis status',
+            '<p>'+esc(fa?
+            'مدل در این Snapshot خروجی ساخت‌یافته و قابل‌استناد تولید نکرده است. گزارش فنی و پیشنهاد مشروط بازیابی همچنان قابل‌استفاده‌اند.':
+            'The model did not return validated structured analysis for this snapshot. Evidence-based recovery advice remains visible.')+
+            ' · '+txt(state.narrative.reason||'model_unavailable')+'</p>'):'') )+
       '<footer class="ic-ir-footer">'+esc(legacyNote)+'</footer></article>';
   }
 
@@ -2897,9 +2932,9 @@
       const prompt=e.target.closest('[data-incident-chat-prompt]');
       if(prompt){
         const suggestions={
-          fa:{error:'علت اصلی این رخداد از شواهد و تحلیل Agentها چیست؟',config:'کانفیگ همین سرویس را از VM MCP بررسی کن و خطا را بگو.',
+          fa:{plan:'بر اساس شواهد همین رخداد، سه بررسی read-only بعدی را به ترتیب اولویت پیشنهاد بده؛ برای هرکدام توضیح بده چه چیزی را تأیید یا رد می‌کند و از کدام MCP باید استفاده شود. هیچ عملیاتی اجرا نکن.',start:'با توجه به وضعیت ثبت‌شده و احتمال Stop دستی، مقایسه کن Start یا Restart کدام منطقی‌تر است؛ پیش‌شرط‌ها، ناسازگاری با Runbook و Verification را بگو. فقط پیشنهاد بده، اجرا نکن.',error:'علت اصلی این رخداد از شواهد و تحلیل Agentها چیست؟',config:'کانفیگ همین سرویس را از VM MCP بررسی کن و خطا را بگو.',
               status:'وضعیت زنده سرویس این رخداد را بررسی کن.',files:'فایل‌های nginx.conf و sites-enabled همین سرویس را به صورت امن از VM MCP بخوان و خطای nginx -t و شماره خطوط را مشخص کن.',reload:'برای سرویس همین رخداد Reload پیشنهاد بده و پیش‌شرط‌های امنیتی را بگو.'},
-          en:{error:'What does the incident evidence establish about the root cause?',config:'Run a read-only configuration check for the incident service.',
+          en:{plan:'Suggest the next three prioritized read-only MCP checks based on this incident evidence; for each explain what it would confirm or rule out. Do not execute anything.',start:'Compare a conditional Start and Restart in light of a possible manual stop, the current runbook, required preflight and verification; do not execute.',error:'What does the incident evidence establish about the root cause?',config:'Run a read-only configuration check for the incident service.',
               status:'Check the live service status for this incident.',files:'Inspect nginx.conf and sites-enabled configuration structure for this incident via VM MCP and report nginx -t errors.',reload:'Propose reloading the incident service and explain the safety gates.'}
         };
         $('#ic-chat-message').value=suggestions[state.language][prompt.dataset.incidentChatPrompt]||'';
