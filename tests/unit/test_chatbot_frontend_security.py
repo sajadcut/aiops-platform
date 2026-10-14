@@ -246,7 +246,7 @@ def test_chatbot_tool_results_use_compact_operational_facts_and_raw_details_only
     css = _css()
     assert "addOperationalFacts" in script
     assert "addDetails" in script
-    for metric in ["CPU", "Memory", "Disk", "Load"]:
+    for metric in ["CPU", "حافظه", "دیسک", "بار سیستم"]:
         assert f'["{metric}"' in ui
     assert "tool-details" in ui
     assert ".operational-facts" in css
@@ -258,10 +258,10 @@ def test_chatbot_action_proposals_stay_backend_governed_and_show_risk_source_whe
     css = _css()
     assert "proposal.proposal_id" in script
     assert "proposal.risk_level" in script
-    assert '["Source", proposal.source || proposal.tool]' in script
+    assert '["منبع", proposal.source || proposal.tool]' in script
     assert "JSON.stringify({confirm: value})" in script
     assert "/decision" in script
-    assert "تأیید و اجرا" in script
+    assert "تأیید و اجرای کنترل‌شده" in script
     assert "رد کردن" in script
     assert ".risk-high" in css
     assert ".risk-critical" in css
@@ -275,7 +275,7 @@ def test_chatbot_error_ui_is_compact_retryable_and_never_renders_raw_exception_t
     assert "friendlyHttpError" in script
     assert "تلاش مجدد" in script
     assert "addErrorMeta" in script
-    assert "Request" in ui and "Component" in ui and "Code" in ui and "Timestamp" in ui
+    assert all(label in ui for label in ("درخواست", "مولفه", "کد", "زمان"))
     assert ".error-meta" in css
     assert "traceback" not in _frontend().lower()
 
