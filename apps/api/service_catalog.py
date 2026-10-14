@@ -110,7 +110,7 @@ async def get_service_profile(
 )
 async def upsert_service_profile(
     incident_id: UUID, payload: ServiceHealthProfile,
-    identity=Depends(require_permission("knowledge:review")),
+    identity=Depends(require_permission("manage:service_profile")),
 ):
     async with AsyncSessionLocal() as db:
         incident, target, diagnosis = await _bound_scope(db, incident_id)
