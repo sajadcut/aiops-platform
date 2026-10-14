@@ -343,7 +343,8 @@ def test_existing_nginx_incident_can_request_read_only_preview_from_dashboard():
     assert fallback_intent(
         "nginx_config_review: برای این رخداد فقط پیش‌نمایش امن اصلاح Nginx را بساز"
     ) == "nginx_config_review"
-    assert 'data-config-preview="nginx"' in js
+    assert 'data-config-preview="' in js
+    assert "service==='nginx'?'nginx':'generic'" in js
     assert "submitIncidentChat('nginx_config_review:" in js
     assert "اعمال اصلاح روی سرور — غیرفعال" in js
 
