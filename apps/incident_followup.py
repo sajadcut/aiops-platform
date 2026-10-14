@@ -83,8 +83,10 @@ def may_reassess(checkpoint: Mapping[str, Any], approval_status: str | None = No
     state = checkpoint.get("state") or {}
     if str(checkpoint.get("status") or "") not in {"completed", "failed"}:
         return False
-    if (state.get("approval") or state.get("execution_request")
-            or state.get("execution_result")):
+    # A blocked planner may have constructed an unapproved request; that
+    # is precisely the kind of no-action case where a read-only reassessment
+    # is useful. The request is discarded from the reassessment snapshot.
+    if state.get("approval") or state.get("execution_result"):
         return False
     if str(approval_status or "").lower() in {
         "pending", "approved", "consumed", "executing",
@@ -235,7 +237,7 @@ async def persist_and_reassess(
     ]
     state["incident_id"] = str(incident_id)
     state["service_name"] = incident_service
-    state.pop("execution_request", None)
+    previous_proposal_present = bool(state.pop("execution_request", None))
     state.pop("approval", None)
     try:
         orchestrator = SignalAwareE2EOrchestrator(db=db)
@@ -267,6 +269,7 @@ async def persist_and_reassess(
                                  "reevaluated_not_approved",
             "decision_status": "human_review_required_no_automatic_action",
             "execution_authority": False,
+            "previous_unapproved_proposal_present": previous_proposal_present,
             "updated_at": datetime.now(timezone.utc).isoformat(),
         }
         for finding in findings:
