@@ -38,9 +38,9 @@ def test_dashboard_html_css_and_js_are_actually_served_over_http():
     html = client.get("/dashboard/")
     assert html.status_code == 200
     assert "text/html" in html.headers.get("content-type", "")
-    assert "AIOps Control Center" in html.text
-    assert "Operator Attention Queue" in html.text
-    assert "Most Impacted Services" in html.text
+    assert "مرکز فرمان AIOps" in html.text
+    assert "موارد نیازمند اقدام اپراتور" in html.text
+    assert "سرویس‌های دارای بیشترین اختلال" in html.text
 
     css = client.get("/dashboard/control-center.css")
     assert css.status_code == 200
