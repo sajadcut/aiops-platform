@@ -46,7 +46,7 @@ def _down(text: Any) -> bool:
 
 def _up(raw: dict) -> bool:
     return str(raw.get("active_state") or "").lower() == "active" and str(
-        raw.get("sub_state") or "").lower() in {"running", "exited"}
+        raw.get("sub_state") or "").lower() == "running"
 
 
 def _stopped(raw: dict) -> bool:
@@ -174,7 +174,10 @@ def correlate_incident_state(*, incident: dict, checkpoint: dict,
     if target_conflict:
         rows = []
     host = target or (next(iter(hosts)) if len(hosts) == 1 else None)
-    last = rows[0] if rows and rows[0]["observed_at"] else None
+    # A single undated direct observation still confirms the *reported*
+    # state, but cannot establish chronology or freshness. Multiple undated
+    # observations are ambiguous: never choose a "latest" from list order.
+    last = rows[0] if rows and (rows[0]["observed_at"] or len(rows) == 1) else None
     http = _http_observation(audit_events, service, host)
     contradictions, hypotheses, confirmed, gaps, steps = [], [], [], [], []
     alert_matches = bool(trigger["valid"] and trigger["reported_down"]
@@ -290,8 +293,10 @@ def correlate_incident_state(*, incident: dict, checkpoint: dict,
         gaps.append("شواهد VM MCP به چند میزبان متفاوت اشاره دارند؛ وضعیت آن‌ها برای نتیجه‌گیری با هم ترکیب نشده است.")
     if not trigger["observed_at"] and alert_matches:
         gaps.append("زمان وقوع دقیق از دید Zabbix ثبت نشده است؛ زمان دریافت هشدار به‌جای زمان Event استفاده نمی‌شود.")
+    if last and not last["observed_at"]:
+        gaps.append("مشاهدهٔ VM MCP فاقد Timestamp معتبر است؛ ترتیب وقوع و تازگی آن قابل استنتاج نیست.")
     if not last and alert_matches:
-        gaps.append("مشاهدهٔ موفق و دارای زمان از VM MCP برای همین سرویس و میزبان ثبت نشده است.")
+        gaps.append("مشاهدهٔ موفق و قابل‌انتساب از VM MCP برای همین سرویس و میزبان ثبت نشده است.")
         steps.append("اجرای استعلام فقط خواندنی service_status روی مقصد مجاز و دارای هویت تأییدشده.")
     # Never turn ps -C <service> = no matches into proof MainPID is zero.
     process = next((r for r in evidence if isinstance(r, dict) and r.get("source")=="vm_mcp"
