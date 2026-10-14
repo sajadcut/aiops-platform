@@ -137,6 +137,8 @@ async def test_followup_reassessment_recalculates_agents_without_executing(monke
 
     class CheckpointStore:
         def __init__(self, db): pass
+        async def load(self, iid):
+            return None
         async def save(self, iid, state, status):
             calls.append("save_checkpoint")
             assert status == "completed"
