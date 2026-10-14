@@ -655,6 +655,9 @@
   function renderServiceStatus() {
     const node=$('#ic-service-status');
     if(!node)return;
+    const ram=Boolean((state.historic||state.report)?.memory_investigation);
+    node.hidden=ram;
+    if(ram)return;
     const fa=state.language==='fa',o=state.serviceStatus||{};
     const busy=state.serviceStatusBusy,loading=state.serviceStatusLoading;
     const status=low(o.status);
@@ -767,6 +770,25 @@
   }
   function renderOperationalSummary(report=state.historic||state.report) {
     if(!report)return;
+    if(report.memory_investigation){
+      const m=report.memory_investigation,fa=state.language==='fa';
+      const pct=m.measurements?.memory_used_percent;
+      show('#ic-operational-summary','<h3>'+esc(fa?
+        'بررسی هشدار مصرف بالای RAM سرور':'Host high-memory investigation')+'</h3>'+
+        '<p><strong>'+esc(fa?
+          'Zabbix هشدار مصرف بالای RAM را ثبت کرده است.':'Zabbix reported high RAM utilization.')+'</strong></p>'+
+        '<p>'+esc(m.alert?.recovery_received?
+          (fa?'پیام رفع هشدار در Zabbix ثبت شده است؛ علت رشد RAM و اثر اقدام عملیاتی هنوز ثابت نشده است.':
+            'Zabbix reported recovery, but root cause and any action effect are unproven.'):
+          (fa?'بازگشت حافظه به حالت عادی هنوز با شاهد مستقل اثبات نشده است.':
+            'Independent memory recovery is not yet demonstrated.'))+'</p>'+
+        (pct!==null&&pct!==undefined?'<p>'+esc(fa?'آخرین مقدار ثبت‌شدهٔ مستقیم VM MCP: ':'Recorded VM MCP RAM usage: ')+
+          '<strong>'+num(pct)+'%</strong></p>':'')+
+        '<p class="ic-headline-caution">'+esc(fa?
+          'هیچ پردازشی صرفاً با دیدن عنوان هشدار یا توافق Agentها به‌عنوان عامل رشد RAM معرفی نمی‌شود.':
+          'An alert title or Agent agreement cannot identify the memory spike culprit.')+'</p>');
+      return;
+    }
     const fa=state.language==='fa',i=report.incident_summary||{};
     const p=report.presentation_context||{},st=state.historic?null:state.serviceStatus;
     const active=st?.verified_systemd_only===true;
@@ -999,9 +1021,88 @@
       analysis+caution+nextSteps+approval+'</article>');
   }
 
+
+  function renderMemoryForensics(r) {
+    const node=$('#ic-memory-forensics');
+    if(!node)return;
+    const m=r.memory_investigation;
+    node.hidden=!m;
+    if(!m){show('#ic-memory-forensics','');return;}
+    const fa=state.language==='fa',q=m.measurements||{},a=m.alert||{};
+    const checked=arr(m.checks),next=arr(m.recommended_next_checks);
+    const label=(code,faText,enText)=>fa?faText:enText;
+    const number=x=>x===null||x===undefined?
+      (fa?'اندازه‌گیری نشده':'Not measured'):num(x);
+    const line=(key,v,unit)=>'<div class="ic-memory-measure"><small>'+
+      esc(key)+'</small><strong>'+esc(number(v))+
+      (v===null||v===undefined?'':esc(unit||''))+'</strong></div>';
+    const metrics='<div class="ic-memory-metrics">'+
+      line(label('ram','مصرف RAM از VM','VM RAM usage'),q.memory_used_percent,'%')+
+      line(label('avail','RAM قابل استفاده','Available RAM'),q.available_mb,' MB')+
+      line(label('cache','Cache قابل بازیابی','Reclaimable cache'),q.cache_reclaimable_mb,' MB')+
+      line(label('swap','Swap مصرف‌شده','Used Swap'),q.swap_used_mb,' MB')+
+      line(label('psi','فشار حافظه PSI','Memory PSI avg10'),q.psi_memory_some_avg10,'%')+
+      '</div>';
+    const processes=arr(q.top_processes).length?
+      '<h4>'+esc(fa?'پردازش‌های پرمصرف در زمان ثبت Snapshot':'Top consumers at snapshot time')+'</h4>'+
+      '<div class="ic-memory-processes">'+arr(q.top_processes).slice(0,8).map(p=>
+        '<div><span>'+code(p.name)+' · PID '+txt(p.pid)+'</span>'+
+        '<strong>'+num(p.percent)+'%'+(p.rss_mb!==null&&p.rss_mb!==undefined?
+        ' · '+num(p.rss_mb)+' MB RSS':'')+'</strong></div>').join('')+'</div>'+
+      '<p class="ic-memory-note">'+esc(fa?
+        'این پردازش‌ها در یک لحظه حافظه مصرف کرده‌اند؛ الزاماً عامل رشد حافظه در زمان هشدار نیستند.':
+        'Snapshot consumers are not automatically the historical root cause.')+'</p>':
+      '<p class="ic-memory-note">'+esc(fa?
+        'فهرست پردازش‌های پرمصرف در شواهد این رخداد ثبت نشده است.':
+        'No attributable top-process snapshot was recorded.')+'</p>';
+    const checks='<div class="ic-memory-checks">'+checked.map(x=>
+      '<div class="ic-memory-check"><span>'+
+      esc(x.status==='checked'?'✓ ':x.status==='failed'?'! ':'– ')+
+      txt(fa?x.title_fa:x.code)+'</span><strong>'+esc(
+        x.status==='checked'?(fa?'بررسی شده':'Checked'):
+        x.status==='failed'?(fa?'ناموفق':'Failed'):(fa?'انجام نشده':'Not collected'))+
+      '</strong>'+(x.observed_at?'<small>'+txt(date(x.observed_at))+'</small>':'')+
+      refs(x.evidence_refs)+'</div>').join('')+'</div>';
+    const steps='<ol class="ic-memory-steps">'+next.map(x=>
+      '<li><strong>'+txt(x.title_fa)+'</strong><p>'+txt(x.detail_fa)+'</p>'+
+      '<small>'+esc(x.type==='read_only'?(fa?'فقط خواندنی؛ بدون Restart':'Read-only'):
+       (fa?'نیازمند تصمیم و مجوز مستقل':'Separate governed decision required'))+
+      '</small></li>').join('')+'</ol>';
+    show('#ic-memory-forensics',
+      '<div class="ic-memory-header"><h3>'+esc(fa?'چرا RAM بالا رفت؟':'Why did RAM rise?')+'</h3>'+
+      '<span class="ic-tag">'+esc(fa?'علت ریشه‌ای هنوز تأیید نشده':'Root cause not proven')+
+      '</span></div>'+
+      '<p>'+esc(fa?'میزبان: ':'Host: ')+txt(m.host||r.incident_summary?.host)+
+      ' · '+esc(fa?'مقصد ثبت‌شده در آلارم: ':'Explicit alert target: ')+
+      txt(m.alert_target_ip)+'</p>'+
+      '<p>'+esc(fa?'هشدار اولیه: مصرف بالای ':'Initial threshold: above ')+
+      number(a.threshold_percent)+'%'+(a.duration_minutes?
+        ' · '+num(a.duration_minutes)+' '+esc(fa?'دقیقه':'minutes'):'')+'</p>'+
+      '<p>'+esc(a.recovery_received?
+        (fa?'✓ پیام Recovery از Zabbix دریافت شد؛ به معنی اجرای اصلاح توسط AIOps نیست.':
+        '✓ Zabbix recovery received; no AIOps repair is thereby proven.'):
+        (fa?'Recovery مستقل هنوز ثبت نشده است.':'Independent recovery not recorded.'))+
+      '</p>'+metrics+processes+
+      '<h4>'+esc(fa?'چه چیزهایی واقعاً بررسی شده؟':'What was actually checked?')+'</h4>'+
+      checks+
+      '<h4>'+esc(fa?'برای مشخص شدن علت چه شواهدی کم است؟':'What is still missing?')+'</h4>'+
+      '<ul>'+arr(m.gaps).map(x=>'<li>'+txt(x)+'</li>').join('')+'</ul>'+
+      '<h4>'+esc(fa?'اقدامات پیشنهادی به ترتیب اولویت':'Recommended investigation steps')+'</h4>'+
+      steps+'<p class="ic-memory-note">'+esc(fa?
+        'هیچ افزایش RAM، Kill، Restart یا پاک‌سازی Cache به‌صورت خودکار مجاز نیست.':
+        'No automatic RAM increase, Kill, Restart or cache clearing is authorized.')+'</p>');
+  }
   function renderOverview(r) {
     const i=r.incident_summary||{},act=r.remediation_recommendation||{},a=r.approval_readiness||{};
     renderOperationalSummary(r);
+    renderMemoryForensics(r);
+    if(r.memory_investigation){
+      show('#ic-brief-lead','');
+      show('#ic-operator-explanation','');
+      show('#ic-key-answer','');
+      show('#ic-warning-list','');
+      return;
+    }
     renderOperatorExplanation(r);
     const deterministic=plainLead(r);
     const n=state.narrative;
@@ -1490,6 +1591,15 @@
     return html;
   }
   function renderInvestigation(r) {
+    if(r.memory_investigation){
+      const m=r.memory_investigation;
+      show('#ic-proposed-fix','<article class="ic-detail-card"><h3>'+
+        esc(state.language==='fa?'مسیر تخصصی عیب‌یابی RAM':'RAM diagnostic track')+
+        '</h3><p>'+esc(state.language==='fa'?
+        'پیشنهادهای تخصصی Read-only و دلایل انجام‌نشدن هر بررسی در بخش «چرا RAM بالا رفت؟» بالای گزارش مشخص شده‌اند. تا تأیید علت، هیچ پیشنهاد Restart، Kill یا افزایش RAM مجوز اجرا ندارد.':
+        'Evidence-backed read-only investigation steps and gaps appear above. No restart, kill or RAM increase is authorized.')+
+        '</p></article>');return;
+    }
     const p=r.dynamic_investigation||{},kb=p.knowledge_followup||{};
     const config=p.config_proposal||{},fa=state.language==='fa';
     const recovery=r.recovery_advisory||{};
@@ -1586,6 +1696,16 @@
     const performed=o.status && !['not_executed','not_recorded','unknown'].includes(low(o.status));
     const consumed=low(a.approval_status)==='consumed';
     const running=consumed && state.lifecycle?.analysis_in_progress===true;
+    if(!o.action&&!performed&&!running&&!consumed&&r.memory_investigation){
+      const recovered=r.memory_investigation.alert?.recovery_received;
+      show('#ic-outcome-view','<p class="ic-empty">'+esc(state.language==='fa'?
+        'هیچ اقدامی توسط AIOps اجرا نشده است. '+(recovered?
+        'پیام Recovery زبیکس دریافت شده، اما علت کاهش RAM یا موفقیت یک اصلاح عملیاتی ثابت نشده است.':
+        'بازگشت مصرف RAM هنوز مستقل تأیید نشده است.'):
+        'No AIOps action was executed. '+(recovered?
+        'Zabbix recovery was received; root cause and operational repair remain unverified.':
+        'Independent recovery is unverified.'))+'</p>');return;
+    }
     if(!o.action&&!performed&&!running&&!consumed){
       show('#ic-outcome-view','<p class="ic-empty">'+esc(state.language==='fa'?
         'هیچ عملیاتی اجرا نشده است. بنابراین نتیجه اجرا، Verification و یادگیری پس از اجرا قابل اعمال نیستند.':
