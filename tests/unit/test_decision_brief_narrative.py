@@ -240,3 +240,55 @@ def test_llm_cannot_override_verified_invalid_appsettings_as_healthy():
     )
     assert len(service.validate_narrative(
         json.dumps(fake, ensure_ascii=False), brief, "fa")) == len(service.SECTIONS)
+
+
+def test_ai_narrative_receives_stop_attribution_and_conditional_start_options():
+    brief = sample_brief()
+    brief["incident_summary"]["service"] = "gfpapi"
+    brief["technical_investigation"] = {
+        "stop_origin": {
+            "status": "possible_unverified",
+            "note_fa": "Stop دستی یا خودکار؛ هنوز اثبات نشده",
+            "manual_stop_proven": False,
+            "indicators": ["Termination signal=SIGKILL", "TimeoutStop=90s"],
+            "evidence_refs": ["evidence-1"],
+            "next_check_fa": "مطابقت audit و journal",
+        },
+        "domains": [
+            {"key": "systemd", "technical_result": "ActiveState=failed; Result=timeout", "status": "investigated"},
+        ],
+        "rca": {"cause_confirmed": False, "likely_hypotheses": [
+            {"title": "Stop/Restart manual or automated", "check": "Review audit and journal",
+             "supporting": ["evidence-1"]},
+        ]},
+    }
+    brief["recovery_advisory"] = {
+        "suggested_action": "restart_service", "target": "10.248.16.82",
+        "configuration_validation": "UNVERIFIED", "authorizes_execution": False,
+        "alternative_actions": [
+            {"action": "start_service", "status": "alternative_not_runbook_authorized_for_failed"},
+        ],
+        "prerequisite_checks": ["Audit maintenance stop", "Validate runtime before any write"],
+        "evidence_refs": ["evidence-1"],
+    }
+    projected = service.projection(brief)
+    assert projected["technical_diagnosis"]["stop_origin"]["manual_stop_proven"] is False
+    assert projected["technical_diagnosis"]["stop_origin"]["indicators"][0] == "Termination signal=SIGKILL"
+    assert projected["conditional_recovery"]["suggested_action"] == "restart_service"
+    assert projected["conditional_recovery"]["authorizes_execution"] is False
+    assert projected["conditional_recovery"]["alternative_actions"][0]["action"] == "start_service"
+    assert len(service.bounded_projection_json(brief)) <= 18000
+
+
+def test_narrative_accepts_fenced_json_without_relaxing_citation_validation():
+    fenced = chr(96) * 3
+    raw = fenced + "json\n" + json.dumps(valid_rows(), ensure_ascii=False) + "\n" + fenced
+    parsed = service.validate_narrative(raw, sample_brief(), "fa")
+    assert len(parsed) == len(service.SECTIONS)
+    bad = valid_rows()
+    bad["sections"][0]["citations"] = ["fictional-ref"]
+    with pytest.raises(ValueError, match="narrative_reference"):
+        service.validate_narrative(
+            fenced + "json\n" + json.dumps(bad, ensure_ascii=False) + "\n" + fenced,
+            sample_brief(), "fa",
+        )
