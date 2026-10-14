@@ -61,19 +61,19 @@ def test_chatbot_api_key_is_not_placed_in_message_or_decision_payloads():
 def test_chatbot_product_identity_is_exact_and_prominent():
     html = _html()
     script = _script()
-    title = "NeoBanking Chatbot Operation Platform"
+    title = "دستیار هوشمند عملیات نئوبانکینگ"
     assert html.count(title) >= 3
     assert f"<title>{title}</title>" in html
     assert f'<div class="product-title">{title}</div>' in html
     assert title in script
-    assert "AI-Powered Operations Copilot" in html
-    assert '"Operations Copilot"' in script
+    assert "دستیار هوشمند عملیات" in html
+    assert '"دستیار عملیات"' in script
 
 
 def test_chatbot_empty_state_has_non_clickable_capability_badges_not_hardcoded_quick_actions():
     script = _script()
     html = _html()
-    for label in ["VM", "Kubernetes", "Zabbix", "Logs", "Service Health"]:
+    for label in ["VM", "Kubernetes", "Zabbix", "لاگ‌ها", "سلامت سرویس"]:
         assert f'"{label}"' in script
     assert "capability-chip" in script
     assert "quick-actions" not in html
@@ -168,7 +168,7 @@ def test_chatbot_preserves_persian_english_mixed_bidi_and_code_direction():
     assert 'dir="auto"' in html
     assert 'body.setAttribute("dir", "auto")' in script
     assert "فارسی" in html
-    assert "English" in html
+    assert "دستیار عملیات" in html
     assert "unicode-bidi: plaintext" in css
     assert 'code.setAttribute("dir", "ltr")' in ui
 
