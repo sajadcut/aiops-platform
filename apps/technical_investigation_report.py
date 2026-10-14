@@ -38,7 +38,7 @@ SCALARS = {
     "reason_cannot_be_proven_from_single_snapshot", "query_service",
     "query_since", "query_until", "host_filter_applied",
     "io_latency_ms", "oom_kills", "log_rotation", "growth_bytes",
-    "status", "result_count", "detail",
+    "status", "result_count", "detail", "name", "value",
 }
 LIST_FIELDS = {"filesystems", "inodes", "large_files", "top_processes", "processes", "files"}
 SAFE_LIST_KEYS = {
@@ -175,6 +175,78 @@ def _provider_status(rows: list[dict], status: str, now: datetime) -> str:
     return "partial"
 
 
+
+def _latest_metric(rows: list[dict], name: str) -> tuple[float | None, dict | None]:
+    """Collector emits {name, value} rows, rather than a metrics dict."""
+    for row in rows:  # already newest-first
+        raw = row["raw_data"]
+        if raw.get("diagnostic") != "collect_vm_metrics":
+            continue
+        value = (raw.get("value") if raw.get("name") == name else
+                 (raw.get("metrics") or {}).get(name) if isinstance(raw.get("metrics"), dict) else None)
+        if isinstance(value, (int, float)) and not isinstance(value, bool):
+            number = float(value)
+            if number == number and 0 <= number <= 100:
+                return round(number, 2), row
+    return None, None
+
+
+def _best_diagnostic(rows: list[dict], name: str) -> dict:
+    return next((r["raw_data"] for r in rows
+                 if r["raw_data"].get("diagnostic") == name
+                 and r["raw_data"].get("success") is True), {})
+
+
+def _sample(value: Any, suffix: str = "") -> str:
+    return (f"{value:g}" if isinstance(value, float) else str(value)) + suffix if value is not None else "ثبت نشده"
+
+
+def _journal_counts(rows: list[dict]) -> dict:
+    entries = []
+    for row in rows:
+        raw = row["raw_data"]
+        if (raw.get("diagnostic") not in {"service_logs", "system_logs"}
+                or not isinstance(raw.get("entries"), list)):
+            continue
+        entries.extend(str(x).lower() for x in raw["entries"][:150])
+    signatures = {
+        "oom": ("out of memory", "oom-kill", "killed process"),
+        "timeout": ("timed out", "timeout", "start operation timed"),
+        "dependency": ("dependency failed", "failed to start"),
+        "exception": ("exception", "traceback", "segmentation fault"),
+        "permission": ("permission denied", "access denied"),
+    }
+    return {"lines": len(entries), "signatures": {
+        label: sum(any(token in line for token in patterns) for line in entries)
+        for label, patterns in signatures.items()
+    }}
+
+
+def _bounded_files(rows: list[dict]) -> list[dict]:
+    files = []
+    for row in rows:
+        raw = row["raw_data"]
+        if raw.get("diagnostic") != "disk_forensics" or raw.get("success") is not True:
+            continue
+        for mount in (raw.get("mounts") or [])[:4]:
+            if not isinstance(mount, dict):
+                continue
+            for item in (mount.get("files") or [])[:12]:
+                if not isinstance(item, dict):
+                    continue
+                size, path = item.get("size_bytes"), item.get("path")
+                if not isinstance(size, (int, float)) or not isinstance(path, str):
+                    continue
+                files.append({
+                    "path": _text(path, 180),
+                    "size_mb": round(size / (1024 ** 2), 1),
+                    "growth_confirmed": item.get("growth_confirmed") is True,
+                    "growth_measured": item.get("growth_measured") is True,
+                    "evidence_ref": str(row.get("id") or row.get("reference") or ""),
+                })
+    return sorted(files, key=lambda x: -x["size_mb"])[:6]
+
+
 def build_technical_investigation(*, incident: dict, evidence: list[dict],
                                   knowledge: dict, now: datetime,
                                   approval: dict | None = None) -> dict:
@@ -248,66 +320,135 @@ def build_technical_investigation(*, incident: dict, evidence: list[dict],
                 d = runtime_record["raw_data"]
                 technical += f" Runtime={_text(d.get('runtime'))}; Entrypoint={_text(d.get('entrypoint'))}; TimeoutStart={_text(d.get('timeout_start_usec'))}."
         elif key == "journal" and domain_rows:
-            record = next((e for e in evidence_rows if "journal_lines" in e["facts"]), None)
-            if record:
-                f = record["facts"]
-                technical = f"Journal: {f['journal_lines']} سطر؛ Error={f['error_mentions']}، Timeout={f['timeout_mentions']}، OOM={f['oom_mentions']}، Dependency={f['dependency_mentions']} (شمارش امضا، نه اثبات علت)."
+            stats = _journal_counts(domain_rows)
+            sig = stats["signatures"]
+            if stats["lines"]:
+                technical = (f"Journal lines={stats['lines']}؛ "
+                             f"Timeout={sig['timeout']}؛ OOM={sig['oom']}؛ "
+                             f"Dependency={sig['dependency']}؛ "
+                             f"Exception={sig['exception']}؛ Permission={sig['permission']}. "
+                             "شمارش الگوها در لاگ محدود؛ این شمارش اثبات علت نیست.")
             else:
-                technical = "لاگ گردآوری شده ولی شمارش خطا در خروجی ابزار موجود نیست."
+                technical = ("Journal ثبت شده اما خط قابل‌تحلیل در Evidence موجود نیست؛ "
+                             "صفر خط به معنی سالم بودن سرویس نیست.")
         elif key in {"elastic", "monitoring"}:
-            q = [r["raw_data"] for r in domain_rows if "result_count" in r["raw_data"] and r["raw_data"].get("status") == "queried"]
-            matched_count = sum(int(x.get("result_count") or 0) for x in q)
-            records = [r["raw_data"] for r in domain_rows if "result_count" not in r["raw_data"]]
-            errors = sum(str(x.get("level") or x.get("severity") or "").lower() in {"error", "fatal", "critical"} for x in records)
-            warns = sum(str(x.get("level") or x.get("severity") or "").lower() in {"warn", "warning"} for x in records)
-            technical = f"Query موفق: {len(q)}؛ Match={matched_count}؛ رکورد Error={errors}، Warning={warns}. "
-            if key == "elastic" and q:
-                scope = q[0]
+            observations = [r["raw_data"] for r in domain_rows if "result_count" in r["raw_data"]]
+            succeeded = [o for o in observations if o.get("status") == "queried"]
+            failed_sources = [o for o in observations if o.get("status") in {"error", "unavailable", "skipped"}]
+            records = [r for r in domain_rows if "result_count" not in r["raw_data"]]
+            matched_count = sum(int(o.get("result_count") or 0) for o in succeeded)
+            errors = sum(str(r["raw_data"].get("level") or r["raw_data"].get("severity") or "").lower()
+                         in {"error", "fatal", "critical"} for r in records)
+            warns = sum(str(r["raw_data"].get("level") or r["raw_data"].get("severity") or "").lower()
+                        in {"warn", "warning"} for r in records)
+            if succeeded:
+                technical = (f"Query اجراشده={len(succeeded)}؛ Match={matched_count}؛ "
+                             f"Error={errors}؛ Warning={warns}.")
+            elif failed_sources:
+                codes = sorted({_text(o.get("status"), 20) for o in failed_sources})
+                technical = ("هیچ Query موفقی تأیید نشده؛ وضعیت منبع: " +
+                             ", ".join(codes) + "؛ تعداد نتیجه قابل استناد نیست.")
+            elif records:
+                technical = (f"{len(records)} رکورد ثبت شده؛ بدون مشاهدهٔ پاسخ Query، "
+                             "موفقیت جست‌وجو تأیید نیست.")
+            else:
+                technical = "هیچ Query یا نتیجهٔ قابل انتساب ثبت نشده است."
+            if key == "elastic" and succeeded:
+                scope = succeeded[0]
                 technical += (f" Query Service={_text(scope.get('query_service') or service)}"
                               f"؛ Since={_text(scope.get('query_since'), 45) or 'ثبت نشده'}"
                               f"؛ Until={_text(scope.get('query_until'), 45) or 'ثبت نشده'}"
                               f"؛ Host filter={'applied' if scope.get('host_filter_applied') is True else 'not_verified'}.")
+                if scope.get("host_filter_applied") is not True:
+                    technical += " Query فقط به سرویس مقید بوده و انتساب خطا به این VM مستقلاً تأیید نشده است."
+            if failed_sources and succeeded:
+                technical += " بخشی از استعلام‌ها ناموفق یا غیرقابل‌دسترس بوده‌اند."
             if status == "queried_zero_results":
-                technical += "صفر نتیجه، سلامت سرویس را ثابت نمی‌کند."
+                technical += " صفر نتیجه، سلامت سرویس را ثابت نمی‌کند."
         elif key == "config":
-            validations = {r["raw_data"].get("diagnostic"): r["raw_data"] for r in domain_rows}
-            generic = validations.get("config_validate") or {}
-            special = validations.get("dotnet_config_syntax") or {}
-            technical = ("Generic Validator: " + ("Unsupported" if generic.get("supported") is False else
-                         "Valid" if generic.get("valid") is True else "Invalid" if generic.get("valid") is False else "بررسی نشده") +
-                         "؛ .NET JSON Syntax: " + ("Valid" if special.get("syntax_valid") is True else
-                         "Invalid" if special.get("syntax_valid") is False else "بررسی نشده") +
-                         "؛ Syntax Valid به معنی Semantic Valid یا Runtime Healthy نیست.")
+            generic = _best_diagnostic(domain_rows, "config_validate")
+            special = _best_diagnostic(domain_rows, "dotnet_config_syntax")
+            files = special.get("files") if isinstance(special.get("files"), list) else []
+            checked = [_text(f.get("file"), 85) for f in files if isinstance(f, dict)
+                       and f.get("status") == "valid_json_syntax"]
+            technical = (
+                "Generic Validator: " +
+                ("Unsupported" if generic.get("supported") is False else
+                 "Valid" if generic.get("valid") is True else
+                 "Invalid" if generic.get("valid") is False else "اجرا نشده یا بدون نتیجه") +
+                "؛ .NET JSON Syntax: " +
+                ("Valid" if special.get("syntax_valid") is True else
+                 "Invalid" if special.get("syntax_valid") is False else "ثبت نشده") +
+                (f"؛ Files={', '.join(checked[:6])}" if checked else "") +
+                "؛ Syntax Valid به معنی Semantic Valid یا Runtime Healthy نیست؛ سلامت Dependency و Startup نیز تأیید نمی‌شود."
+            )
         elif key == "network":
-            proc = next((r["raw_data"] for r in domain_rows if r["raw_data"].get("diagnostic") == "process_status"), {})
-            technical = ("Process running=" + str(proc.get("running", "ثبت نشده")) +
-                         "؛ برای .NET، نام process به‌تنهایی کافی نیست؛ MainPID و dotnet باید تطبیق داده شوند.")
+            proc = _best_diagnostic(domain_rows, "process_status")
+            listener = _best_diagnostic(domain_rows, "port_listener_status")
+            tcp = _best_diagnostic(domain_rows, "tcp_check")
+            service_state = next((r["raw_data"] for r in matching
+                                  if r["raw_data"].get("diagnostic") == "service_status"
+                                  and r["raw_data"].get("success") is True), {})
+            runtime = _best_diagnostic(_domain_rows(matching, "systemd",
+                                                        ("service_runtime_discovery",)),
+                                       "service_runtime_discovery")
+            main_pid = service_state.get("main_pid")
+            technical = (
+                f"systemd MainPID={_sample(main_pid)}؛ "
+                f"process_status name match={_sample(proc.get('running'))}؛ "
+                f"Listener={_sample(listener.get('listening'))}؛ "
+                f"TCP reachable={_sample(tcp.get('reachable'))}؛ "
+                f"Runtime={_sample(runtime.get('runtime'))}."
+            )
+            if (runtime.get("runtime") == "dotnet"
+                    or str(runtime.get("entrypoint") or "").lower().endswith(".dll")
+                    or proc.get("running") is False):
+                technical += (
+                    " هشدار: ps -C بر اساس نام gfpapi ممکن است پردازش dotnet را "
+                    "نیابد؛ عدم تطبیق نام، دلیل توقف PID نیست. MainPID و Listener را جداگانه بررسی کنید."
+                )
+            if not listener and not tcp:
+                technical += " پورت یا TCP هدف در شواهد ثبت نشده است."
         elif key == "resources" and domain_rows:
-            memory = next((r["raw_data"] for r in domain_rows
-                           if r["raw_data"].get("diagnostic") == "memory_diagnostics"
-                           and r["raw_data"].get("success") is True), {})
-            metrics = next((r["raw_data"].get("metrics") for r in domain_rows
-                            if r["raw_data"].get("diagnostic") == "collect_vm_metrics"
-                            and isinstance(r["raw_data"].get("metrics"), dict)), {})
-            technical = (f"CPU={metrics.get('cpu_usage', 'ثبت نشده')}؛ "
-                         f"RAM Used={memory.get('used_percent', 'ثبت نشده')}%؛ "
-                         f"MemAvailable={memory.get('available_mb', 'ثبت نشده')} MB؛ "
-                         f"Cache reclaimable={memory.get('cache_reclaimable_mb', 'ثبت نشده')} MB؛ "
-                         f"Swap Used={memory.get('swap_used_mb', 'ثبت نشده')} MB؛ "
-                         f"PSI avg10={memory.get('psi_memory_some_avg10', 'ثبت نشده')}؛ "
-                         "یک Snapshot، عامل رشد RAM یا علت Timeout را اثبات نمی‌کند.")
+            memory = _best_diagnostic(domain_rows, "memory_diagnostics")
+            cpu, cpu_row = _latest_metric(domain_rows, "cpu_usage")
+            ram_pct, ram_row = _latest_metric(domain_rows, "memory_usage")
+            swap_pct, swap_row = _latest_metric(domain_rows, "swap_usage")
+            io_wait, io_row = _latest_metric(domain_rows, "io_wait")
+            ram = memory.get("used_percent")
+            ram = ram if ram is not None else ram_pct
+            technical = (f"CPU={_sample(cpu, '%')}؛ "
+                         f"RAM Used={_sample(ram, '%')}؛ "
+                         f"MemAvailable={_sample(memory.get('available_mb'), ' MB')}؛ "
+                         f"Cache reclaimable={_sample(memory.get('cache_reclaimable_mb'), ' MB')}؛ "
+                         f"Swap Used={_sample(memory.get('swap_used_mb'), ' MB')}؛ "
+                         f"Swap Usage={_sample(swap_pct, '%')}؛ "
+                         f"PSI avg10={_sample(memory.get('psi_memory_some_avg10'), '%')}؛ "
+                         f"IO Wait={_sample(io_wait, '%')}؛ "
+                         "این‌ها نمونه‌های لحظه‌ای هستند؛ بدون Time Series، علت Timeout را اثبات نمی‌کند.")
+            if not memory and ram_pct is not None:
+                technical += " MemAvailable، Cache و PSI در Snapshot ثبت نشده‌اند."
         elif key == "disk" and domain_rows:
-            disk = next((r["raw_data"] for r in domain_rows
-                         if r["raw_data"].get("diagnostic") == "disk_status"
-                         and r["raw_data"].get("success") is True), {})
+            disk = _best_diagnostic(domain_rows, "disk_status")
             mounts = disk.get("filesystems") if isinstance(disk.get("filesystems"), list) else []
-            inode = disk.get("inodes") if isinstance(disk.get("inodes"), list) else []
-            snippets = [f"{_text(x.get('mount'), 60)}: used={_text(x.get('use_percent'), 10)} "
-                        f"free={_text(x.get('available'), 35)} bytes"
-                        for x in mounts[:7] if isinstance(x, dict)]
-            technical = ("Mounts: " + "؛ ".join(snippets) +
-                         f"؛ Inode mount records={len(inode)}. "
-                         "فایل حجیم یا اشباع Mount به‌تنهایی علت Timeout نیست؛ حذف لاگ مجاز نیست.")
+            inodes = disk.get("inodes") if isinstance(disk.get("inodes"), list) else []
+            snippets = [
+                f"{_text(m.get('mount'), 60)}: used={_text(m.get('use_percent'), 10) or 'ثبت نشده'}؛ "
+                f"free={_text(m.get('available'), 35) or 'ثبت نشده'} bytes"
+                for m in mounts[:7] if isinstance(m, dict)
+            ]
+            files = _bounded_files(domain_rows)
+            file_text = "; ".join(
+                f"{item['path']}={item['size_mb']} MB"
+                + (" (رشد مشاهده شد)" if item["growth_confirmed"] else
+                   " (رشد مشاهده نشد)" if item["growth_measured"] else " (رشد سنجیده نشد)")
+                for item in files[:4]
+            )
+            technical = ("Mounts: " + ("؛ ".join(snippets) if snippets else "ثبت نشده") +
+                         f"؛ Inode samples={len(inodes)}." +
+                         (f" Files: {file_text}." if file_text else
+                          " فایل‌های حجیم در شواهد این رخداد ثبت نشده‌اند.") +
+                         " ظرفیت یا حجم لاگ به‌تنهایی علت Timeout نیست؛ حذف فایل مجاز نیست.")
         elif domain_rows:
             latest_facts = evidence_rows[0]["facts"]
             technical = "؛ ".join(f"{k}={v}" for k, v in latest_facts.items()

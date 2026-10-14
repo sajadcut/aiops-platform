@@ -244,3 +244,106 @@ def test_stale_failed_systemd_is_historical_not_current_confirmed_fact():
     assert domain(r, "systemd")["status"] == "stale"
     assert r["rca"]["confirmed_facts"] == []
     assert r["rca"]["cause_confirmed"] is False
+
+
+
+def test_real_vm_collector_metric_shape_is_visible_and_attributed():
+    """Do not expect one raw_data.metrics dictionary from the EvidenceCollector."""
+    rows = [
+        vm("collect_vm_metrics", {"name": "cpu_usage", "value": 44.5}, ref="cpu-obs"),
+        vm("collect_vm_metrics", {"name": "memory_usage", "value": 92.7}, ref="mem-obs"),
+        vm("collect_vm_metrics", {"name": "swap_usage", "value": 81.0}, ref="swap-obs"),
+        vm("collect_vm_metrics", {"name": "io_wait", "value": 12.3}, ref="io-obs"),
+    ]
+    result = domain(report(*rows), "resources")
+    assert "CPU=44.5%" in result["technical_result"]
+    assert "RAM Used=92.7%" in result["technical_result"]
+    assert "Swap Usage=81%" in result["technical_result"]
+    assert "IO Wait=12.3%" in result["technical_result"]
+    assert "MemAvailable=ثبت نشده" in result["technical_result"]
+    assert {row["id"] for row in result["evidence"]} == {
+        "cpu-obs", "mem-obs", "swap-obs", "io-obs"
+    }
+
+
+def test_failed_or_unavailable_elastic_cannot_claim_query_success():
+    failed = report(provider("elasticsearch", "error", 0))
+    for word in ("هیچ Query موفقی", "error"):
+        assert word in domain(failed, "elastic")["technical_result"]
+    assert "Query اجراشده=1" not in domain(failed, "elastic")["technical_result"]
+    unavailable = report(provider("elasticsearch", "unavailable", 0))
+    assert "هیچ Query موفقی" in domain(unavailable, "elastic")["technical_result"]
+    assert "Match=0" not in domain(unavailable, "elastic")["technical_result"]
+
+
+def test_elastic_success_is_not_host_attributed_if_provider_only_filtered_service():
+    row = provider("elasticsearch", "queried", 3)
+    row["raw_data"].update({
+        "query_service": "gfpapi", "query_since": "2026-10-14T09:50:00Z",
+        "query_until": "2026-10-14T10:00:00Z", "host_filter_applied": False,
+    })
+    report_row = domain(report(row), "elastic")
+    assert report_row["status"] == "queried_with_results"
+    assert "Match=3" in report_row["technical_result"]
+    assert "انتساب خطا به این VM مستقلاً تأیید نشده" in report_row["technical_result"]
+    assert report_row["evidence"][0]["id"] == "ev-elasticsearch"
+
+
+def test_actual_nested_disk_forensics_surfaces_top_file_sizes_and_growth_limits():
+    disk = vm("disk_status", {
+        "filesystems": [{"mount": "/var/log", "use_percent": "100%",
+                          "available": "0"}], "inodes": []
+    })
+    forensic = vm("disk_forensics", {
+        "mounts": [{"mount": "/var/log", "used_percent": 100,
+                    "files": [{"path": "/var/log/syslog.1", "size_bytes": 3_024_000_000,
+                               "growth_measured": True, "growth_confirmed": False},
+                              {"path": "/var/log/daemon.log.1", "size_bytes": 3_000_000_000,
+                               "growth_measured": False}]}]
+    })
+    result = report(disk, forensic)
+    disk_summary = domain(result, "disk")["technical_result"]
+    assert "/var/log: used=100%" in disk_summary
+    assert "/var/log/syslog.1" in disk_summary
+    assert "رشد مشاهده نشد" in disk_summary
+    assert "رشد سنجیده نشد" in disk_summary
+    assert "حذف فایل مجاز نیست" in disk_summary
+    assert result["rca"]["cause_confirmed"] is False
+
+
+def test_journal_signature_counts_do_not_expose_raw_sensitive_lines():
+    rows = [
+        vm("service_logs", {"entries": [
+            "Token=internalSecret timed out while starting gfpapi",
+            "Permission denied while opening socket",
+        ]}),
+        vm("system_logs", {"entries": [
+            "Kernel: oom-kill invoked", "Unhandled exception in module",
+        ]}),
+    ]
+    summary = domain(report(*rows), "journal")["technical_result"]
+    assert "Journal lines=4" in summary
+    assert "Timeout=1" in summary
+    assert "OOM=1" in summary
+    assert "Exception=1" in summary
+    assert "Permission=1" in summary
+    assert "internalSecret" not in str(report(*rows))
+
+
+def test_network_section_requires_pid_and_listener_correlation():
+    r = report(
+        vm("service_status", {"active_state": "active", "sub_state": "running",
+                              "main_pid": 420}),
+        vm("service_runtime_discovery", {"runtime": "dotnet",
+                                          "entrypoint": "/data/gfp/gfpapi/GFP.Endpoints.API.dll"}),
+        vm("process_status", {"running": False, "count": 0}),
+        vm("port_listener_status", {"listening": True, "port": 8080}),
+        vm("tcp_check", {"reachable": False, "port": 8080}),
+    )
+    net = domain(r, "network")["technical_result"]
+    assert "MainPID=420" in net
+    assert "Listener=True" in net
+    assert "TCP reachable=False" in net
+    assert "dotnet" in net
+    assert r["rca"]["cause_confirmed"] is False
+    assert not any("process" in x["text"].lower() for x in r["rca"]["confirmed_facts"])

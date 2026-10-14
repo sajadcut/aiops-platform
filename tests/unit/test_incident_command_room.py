@@ -511,7 +511,8 @@ def test_host_ram_room_shows_causal_gaps_and_checks_without_service_unknown_card
         "type:'read_only'}]},"
     )
     script = script.replace(marker, marker + "\n    " + additions, 1)
-    cut = "  assert.match(el('#ic-brief-lead').innerHTML,/سرویس از دسترس/);"
+    cut = "  assert.match(el('#ic-brief-lead').innerHTML,/خطای ساختار JSON/);
+  assert.match(el('#ic-brief-lead').innerHTML,/Start پیشنهاد نمی‌شود/);"
     assert cut in script
     script = script[:script.index(cut)] + r"""
   assert.equal(el('#ic-service-status').hidden,true);
