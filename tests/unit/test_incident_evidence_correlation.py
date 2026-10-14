@@ -207,3 +207,26 @@ def test_generic_config_unsupported_does_not_drown_out_source_discrepancy():
     assert "اختلاف وضعیت شناسایی شد" in exp["headline_fa"]
     assert "روش عمومی اعتبارسنجی" in " ".join(exp["uncertainties_fa"])
     assert "زمان" in " ".join(exp["next_steps_fa"])
+
+
+
+def test_minute_only_event_time_must_not_claim_temporal_order():
+    c = correlate(incident_data=incident(original_time="2026-10-14T14:00Z"))
+    assert c["alert"]["time_basis"] == "source_event_minute_only"
+    assert c["contradictions"][0]["temporal_relation"] == "undetermined"
+
+
+def test_normalized_zabbix_timestamp_is_not_original_occurrence():
+    x = incident()
+    trigger = x["context"]["trigger_signal"]
+    trigger["raw_data"].pop("_received_payload")
+    trigger["raw_data"]["timestamp"] = "2026-10-14T14:00:08Z"
+    c = correlate(incident_data=x)
+    assert c["alert"]["observed_at"] is None
+    assert c["alert"]["received_at"] == "2026-10-14T14:00:00+00:00"
+
+
+def test_observation_other_service_on_same_host_cannot_validate_trigger():
+    c = correlate(evidence=[vm(service="nginx")])
+    assert c["last_vm_observation"] is None
+    assert c["confirmed_vm_transition"] is None
