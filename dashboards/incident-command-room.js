@@ -2299,7 +2299,8 @@
     const validated=r?.configuration_diagnostic||{};
     const candidate=low(config.status)==='candidate_proposed';
     const invalid=low(validated.status)==='invalid'||Boolean(
-      config.status&&config.status!=='not_available'&&config.config_file);
+      config.error_line&&config.config_file&&
+      ['needs_read_only_config','preview_unavailable'].includes(low(config.status)));
     const discoveryAvailable=Boolean(
       discovery.files?.length||discovery.unverified_candidates?.length||
       (discovery.status&&!['unknown','—','not_available'].includes(low(discovery.status))));
@@ -2344,12 +2345,13 @@
       '</button>':'';
     const regenerateButton=!candidate?
       '<button type="button" class="ic-btn ic-btn-primary" data-config-preview="'+
-      (service==='nginx'?'nginx':'generic')+'"'+
+      (service==='nginx'?'nginx':verified.length?'review':'generic')+'"'+
       (state.historic||state.busy||state.chatBusy||state.lifecycle?.analysis_in_progress||state.chatStatus==='failed'?' disabled':'')+'>'+
       esc(fa?(service==='nginx'?
         (previewUnavailable?'تلاش مجدد برای خواندن امن فایل':'ساخت پیش‌نمایش اصلاح با بررسی زنده MCP'):
-        'کشف فایل کانفیگ با systemd و MCP') :
-        (service==='nginx'?'Generate live MCP repair preview':'Discover config via systemd & MCP'))+
+        (verified.length?'بررسی فایل‌های تأییدشده و پیشنهاد اصلاح':'کشف فایل کانفیگ با systemd و MCP')) :
+        (service==='nginx'?'Generate live MCP repair preview':
+         verified.length?'Review verified config & propose repair':'Discover config via systemd & MCP'))+
       '</button>':'';
     node.hidden=false;
     node.innerHTML='<div class="ic-config-banner-copy"><strong>'+
@@ -3182,6 +3184,8 @@
           void submitIncidentChat(
             preview.dataset.configPreview==='nginx'?
             'nginx_config_review: فقط پیش‌نمایش امن اصلاح nginx را از VM MCP بگیر و به شواهد و تحلیل همین رخداد اضافه کن. هیچ فایلی را تغییر نده.':
+            preview.dataset.configPreview==='review'?
+            'service_config_review: فایل کانفیگی که systemd و MCP وجودش را برای همین سرویس تأیید کرده‌اند با ابزار امن بررسی کن و در صورت امکان پیشنهاد اصلاح ساختاری ارائه بده؛ از LLM برای ناشناخته‌ها کمک بگیر ولی هیچ تغییری اجرا نکن.':
             'service_config_discovery: مسیر فایل‌های تنظیمات همین سرویس را از systemd و VM MCP به‌صورت read-only کشف و تأیید کن؛ بعد با کمک LLM درباره روش اعتبارسنجی و رفع مشکل تحقیق کن. دستور اجرایی یا تغییر فایل انجام نده.'
           );
         }
