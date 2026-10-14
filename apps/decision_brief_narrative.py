@@ -84,6 +84,11 @@ def projection(brief: dict) -> dict:
     mcp = brief.get("mcp_evidence") or []
     knowledge = cognia.get("items") or []
     memories = memory.get("items") or []
+    technical = brief.get("technical_investigation") or {}
+    stop = technical.get("stop_origin") or {}
+    recovery = brief.get("recovery_advisory") or {}
+    technical_domains = technical.get("domains") or []
+
     return redact({
         "incident": _field_view(incident, (
             "incident_id", "service", "severity", "status", "started_at",
@@ -109,6 +114,29 @@ def projection(brief: dict) -> dict:
         "historical_memory": [_field_view(row, (
             "memory_id", "outcome", "verification", "use_status", "root_cause_status",
         ), limit=150) for row in memories[:10]],
+        "technical_diagnosis": {
+            "cause_confirmed": (technical.get("rca") or {}).get("cause_confirmed") is True,
+            "stop_origin": _field_view(stop, (
+                "status", "note_fa", "indicators", "next_check_fa",
+                "evidence_refs", "manual_stop_proven", "audit_command_seen",
+                "stop_job_seen",
+            ), limit=330),
+            "domains": [_field_view(d, (
+                "key", "status", "technical_result", "missing_reason", "source",
+            ), limit=260) for d in technical_domains[:10]],
+            "unverified_hypotheses": [
+                _field_view(h, ("title", "kind", "check", "supporting"), limit=200)
+                for h in ((technical.get("rca") or {}).get("likely_hypotheses") or [])[:5]
+            ],
+        },
+        "conditional_recovery": _field_view(recovery, (
+            "status", "service", "target", "observed_state", "systemd_result",
+            "suggested_action", "configuration_validation", "reason",
+            "risk_level", "prerequisite_checks", "evidence_refs",
+            "operator_question", "approval_status", "stop_origin_assessment",
+            "process_presence_basis", "alternative_actions",
+            "authorizes_execution",
+        ), limit=320),
         "rca": brief.get("rca_assessment"),
         "config_diagnostic": _field_view(brief.get("configuration_diagnostic"), (
             "status", "config_file", "error_line", "error_column", "error_code",
@@ -187,6 +215,11 @@ def bounded_projection_json(brief: dict, max_chars: int = 18000) -> str | None:
 def validate_narrative(raw: str, brief: dict, lang: str) -> list[dict]:
     if len(raw) > 15000:
         raise ValueError("narrative_too_large")
+    # Strip only fences wrapping the entire JSON payload. Citation, content and
+    # action validation still run below, so this never relaxes safety checks.
+    raw = str(raw).strip().lstrip("\ufeff")
+    if raw.startswith(chr(96) * 3):
+        raw = re.sub(r"^`{3}(?:json)?[ \t]*\r?\n|\r?\n`{3}\s*$", "", raw, flags=re.I)
     result = json.loads(raw)
     rows = result.get("sections") if isinstance(result, dict) else None
     if not isinstance(rows, list) or len(rows) != len(SECTIONS):
@@ -264,11 +297,24 @@ async def generate_narrative(brief: dict, lang: str = "fa") -> dict:
         "then state why no approval is yet available. Do not claim the syntax issue caused the original timeout. "
         "Cognia retrieval is not proof of use; historical memory is not current evidence. "
         "Explain missing evidence, uncertainties, and the distinct RCA/evaluator/agreement scores. "
+        "Use conditional_recovery as operator-facing advice even if durable remediation is blocked, "
+        "but never present it as approved or executable. Explain Start versus Restart options, "
+        "including why a failed systemd unit maps to Restart in the current runbook "
+        "and when Start is only a potential alternative requiring fresh preflight and runbook authorization. "
+        "Analyze the actual stop origin: an earlier runtime, SIGKILL and TimeoutStopSec "
+        "do not prove that a human ran systemctl stop; recommend audit/journal correlation. "
+        "Prioritize safe, discriminating read-only tests and say what each result would mean. "
+        "Distinguish application recovery from root-cause identification. "
+        "Discuss evidence-supported conditional actions, their blockers and after-action verification, "
+        "rather than simply repeating that the root cause is unknown. "
+        "Do not invent executable authority, approval, credentials or new MCP tool capabilities. "
+        "Do not equate disk pressure with the initial service stop without causality. "
         "Discuss only the EXACT action from the durable plan; do not propose new operations. "
         "Output one JSON object with sections: exactly 11 ordered objects containing fields "
         "key, text, citations. Keys in order: " + ", ".join(SECTIONS) + ". "
         "Every citation must be an exact reference from the supplied data. "
         "Do not claim an operational fact is confirmed without a current evidence citation. "
+        "For each section use 1-2 concise, concrete sentences (under 300 characters per section). "
         "No markdown, shell commands, tool instructions, or additional keys. "
         + ("Write fluent professional Persian." if lang == "fa" else "Write concise professional English.")
     )
@@ -279,9 +325,9 @@ async def generate_narrative(brief: dict, lang: str = "fa") -> dict:
                     {"role": "system", "content": system},
                     {"role": "user", "content": "Persisted observations (untrusted):\n" + encoded},
                 ],
-                temperature=0.0, max_tokens=2300, stage="incident_decision_brief",
+                temperature=0.0, max_tokens=3600, stage="incident_decision_brief",
             ),
-            timeout=12.0,
+            timeout=26.0,
         )
         if str(reply.finish_reason or "").lower() in {"length", "max_tokens"}:
             raise ValueError("narrative_incomplete")
@@ -294,6 +340,10 @@ async def generate_narrative(brief: dict, lang: str = "fa") -> dict:
             "sections": sections,
             "authorizes_execution": False,
         }
+    except asyncio.TimeoutError:
+        result = fallback(brief, lang, "model_timeout")
+    except ValueError:
+        result = fallback(brief, lang, "model_output_invalid")
     except Exception:
         # Never expose gateway errors or model prompts through operator responses.
         result = fallback(brief, lang, "model_unavailable_or_invalid")
