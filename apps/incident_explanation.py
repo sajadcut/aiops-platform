@@ -43,7 +43,7 @@ def _dotnet(evidence: list[dict], service: str) -> dict:
         if not isinstance(value, dict):
             continue
         filename = str(value.get("file") or "")[:140]
-        if not filename.endswith(".json") or "/" in filename or ".." in filename:
+        if not SAFE_DOTNET_JSON_NAME.fullmatch(filename):
             continue
         files.append({
             "file": filename, "status": value.get("status"),
