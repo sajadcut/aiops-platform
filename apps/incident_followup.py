@@ -62,6 +62,13 @@ def followup_evidence(
                 or not binding.get("service") or not binding.get("target")
                 or str(binding["service"]).lower().removesuffix(".service") != service.lower().removesuffix(".service")):
             return None
+        # Reject a provider result for a different unit or VM instead of
+        # overwriting its source identity with the Incident binding.
+        returned_service = str(o.get("service") or "").lower().removesuffix(".service")
+        returned_target = str(o.get("target") or "").strip()
+        if (returned_service and returned_service != str(binding["service"]).lower().removesuffix(".service")
+                or returned_target and returned_target != str(binding["target"])):
+            return None
         # Binding comes from the VM identity verifier, not an LLM or a
         # user-selected cross-host destination.
         raw = redact(dict(o))
