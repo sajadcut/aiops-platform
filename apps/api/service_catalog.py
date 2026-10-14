@@ -20,6 +20,7 @@ from apps.api.incident_chat import _incident_status_scope
 from apps.audit_service.postgres import PostgreSQLAuditStore
 from apps.security.auth import require_permission
 from database import AsyncSessionLocal
+from integrations.http_transport import insecure_async_client
 from domain.contracts.rate_limit import rate_limiter_strict
 
 router = APIRouter()
@@ -222,7 +223,8 @@ async def recheck_http_health(
         http_code = None
         status = "unavailable"
         try:
-            async with httpx.AsyncClient(
+            async with insecure_async_client(
+                component="service_catalog:health_recheck",
                 timeout=httpx.Timeout(3.0), trust_env=False,
                 follow_redirects=False, headers={"Accept": "application/json"},
             ) as client:
