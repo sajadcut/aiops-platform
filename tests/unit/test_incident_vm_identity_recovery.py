@@ -168,6 +168,9 @@ async def test_screenshot_status_uses_authenticated_vm_mcp_and_not_stale_agent_i
                     "sub_state": "failed", "result": "timeout"}
     monkeypatch.setattr(identity_module, "VMEdgeMCPClient", lambda: VM())
     monkeypatch.setattr(api, "AsyncSessionLocal", Db)
+    async def isolated_followup(*args, **kwargs):
+        return {"status": "isolated_test_no_database", "reassessed": False}
+    monkeypatch.setattr(api, "persist_and_reassess", isolated_followup)
     monkeypatch.setattr(api, "_scope", fake_scope)
     monkeypatch.setattr(api, "PostgreSQLAuditStore", Audit)
     monkeypatch.setattr(api, "load_decision_brief_for_incident", brief)
@@ -211,6 +214,9 @@ async def test_operator_start_after_failed_live_check_requires_explicit_restart_
                     "load_state": "loaded", "active_state": "failed"}
     monkeypatch.setattr(identity_module, "VMEdgeMCPClient", lambda: VM())
     monkeypatch.setattr(api, "AsyncSessionLocal", Db)
+    async def isolated_followup(*args, **kwargs):
+        return {"status": "isolated_test_no_database", "reassessed": False}
+    monkeypatch.setattr(api, "persist_and_reassess", isolated_followup)
     monkeypatch.setattr(api, "_scope", fake_scope)
     monkeypatch.setattr(api, "PostgreSQLAuditStore", Audit)
     monkeypatch.setattr(api, "load_decision_brief_for_incident", brief)
@@ -310,6 +316,9 @@ async def test_click_recheck_calls_only_readonly_service_status_and_writes_audit
                                  "service": "gfpapi", "active_state": "active",
                                  "sub_state": "running", "result": "success"}}
     monkeypatch.setattr(api, "AsyncSessionLocal", Db)
+    async def isolated_followup(*args, **kwargs):
+        return {"status": "isolated_test_no_database", "reassessed": False}
+    monkeypatch.setattr(api, "persist_and_reassess", isolated_followup)
     monkeypatch.setattr(api, "_incident_status_scope", scope)
     monkeypatch.setattr(api, "resolve_vm_binding", read_status)
     monkeypatch.setattr(api, "PostgreSQLAuditStore", Audit)
@@ -338,6 +347,9 @@ async def test_recheck_refuses_ambiguous_target_and_makes_no_remote_call(monkeyp
     async def forbidden(*args, **kwargs):
         raise AssertionError("unsafe SSH call")
     monkeypatch.setattr(api, "AsyncSessionLocal", Db)
+    async def isolated_followup(*args, **kwargs):
+        return {"status": "isolated_test_no_database", "reassessed": False}
+    monkeypatch.setattr(api, "persist_and_reassess", isolated_followup)
     monkeypatch.setattr(api, "_incident_status_scope", scope)
     monkeypatch.setattr(api, "resolve_vm_binding", forbidden)
     from fastapi import HTTPException
