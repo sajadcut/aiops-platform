@@ -215,3 +215,32 @@ async def test_failed_service_triggers_bounded_read_only_vm_drilldown():
     assert all(call not in vm_client.calls for call in ("restart_service", "delete_logs", "kill_process"))
     assert any(row["raw_data"].get("diagnostic") == "dotnet_config_syntax"
                for row in result["evidence"])
+
+
+def test_conflicting_zabbix_problem_and_fresh_running_systemd_is_visible():
+    zabbix = {
+        "id": "zbx-problem", "type": "alert", "source": "zabbix",
+        "created_at": NOW.isoformat(),
+        "raw_data": {"service": SERVICE, "status": "problem"},
+    }
+    r = report(zabbix, vm("service_status", {"active_state": "active", "sub_state": "running"}))
+    assert len(r["conflicts"]) == 1
+    assert {"zbx-problem", "ev-service_status"} <= set(r["conflicts"][0]["evidence_refs"])
+    assert r["rca"]["cause_confirmed"] is False
+
+
+def test_normal_disk_use_does_not_create_pressure_hypothesis():
+    r = report(vm("disk_status", {
+        "filesystems": [{"mount": "/var", "use_percent": "22%", "available": "123456"}],
+        "inodes": [],
+    }))
+    assert not any("Disk" in h["title"] for h in r["rca"]["likely_hypotheses"])
+
+
+def test_stale_failed_systemd_is_historical_not_current_confirmed_fact():
+    r = report(vm("service_status", {
+        "active_state": "failed", "result": "timeout",
+    }, minutes=120))
+    assert domain(r, "systemd")["status"] == "stale"
+    assert r["rca"]["confirmed_facts"] == []
+    assert r["rca"]["cause_confirmed"] is False
