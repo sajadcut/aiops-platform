@@ -468,6 +468,11 @@ def build_decision_brief(
     )
     dotnet_config = obj(explanation.get("configuration"))
     disk_file_causality = correlate_disk_file_causality(evidence)
+    from apps.incident_memory_forensics import build_memory_investigation
+    memory_investigation = build_memory_investigation(
+        incident=incident, checkpoint=checkpoint,
+        evidence=evidence, audit_events=audit_events,
+    )
     from apps.orchestrator.recovery_advice import build_vm_recovery_advisory
     # Rebuild from durable MCP observations; never trust a free-form LLM plan,
     # a model-editable checkpoint field or a historical memory as evidence.
@@ -622,6 +627,7 @@ def build_decision_brief(
             "start_requires_valid_config_and_approval": True,
         },
         "operator_explanation": redact(explanation),
+        "memory_investigation": redact(memory_investigation) if memory_investigation else None,
         "disk_file_causality": redact(disk_file_causality) if disk_file_causality.get("files") else None,
         # Visible even when the dynamic LLM planner is disabled, and even if
         # evaluator blocks a governed execution proposal. Read-only advice.
