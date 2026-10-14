@@ -81,6 +81,7 @@ _TOOL_SCHEMAS: Dict[str, Dict[str, Dict[str, Any]]] = {
         "nginx_config_inspect": {"description": "Inspect read-only Nginx config file inventory and redacted directive structure including sites-enabled; no raw values, shell commands, or remote Python", "inputSchema": {"type": "object", "additionalProperties": False, "required": ["target", "service"], "properties": {**_TARGET, **_SERVICE}}},
         "service_runtime_discovery": {"description": "Read non-secret systemd properties and identify service runtime/entrypoint", "inputSchema": {"type": "object", "additionalProperties": False, "required": ["target", "service"], "properties": {**_TARGET, **_SERVICE}}},
         "service_config_discovery": {"description": "Read-only verification of safe config path candidates from systemd, without content/secret disclosure", "inputSchema": {"type": "object", "additionalProperties": False, "required": ["target", "service"], "properties": {**_TARGET, **_SERVICE}}},
+        "service_config_review": {"description": "Secret-safe read-only review of vendor-validated or verified systemd config; worker-only XML/JSON format checks and deterministic JSON candidate", "inputSchema": {"type": "object", "additionalProperties": False, "required": ["target", "service"], "properties": {**_TARGET, **_SERVICE}}},
         "dotnet_config_syntax": {"description": "Validate bounded appsettings and runtimeconfig JSON syntax without returning config contents", "inputSchema": {"type": "object", "additionalProperties": False, "required": ["target", "service"], "properties": {**_TARGET, **_SERVICE}}},
         "start_service": {"description": "Start one validated service through approved Execution Service", "inputSchema": {"type": "object", "required": ["target", "service", "approval_id", "incident_id"], "properties": {**_TARGET, **_SERVICE, **_APPROVAL_CONTEXT}}},
         "restart_service": {"description": "Restart one validated service through approved Execution Service", "inputSchema": {"type": "object", "required": ["target", "service", "approval_id", "incident_id"], "properties": {**_TARGET, **_SERVICE, **_APPROVAL_CONTEXT}}},
@@ -178,7 +179,7 @@ async def _call(provider: str, tool: str, args: Dict[str, Any]) -> Any:
         return await connector.process_status(target, process)
 
     service = str(args.get("service") or "").strip()
-    if tool in {"service_status", "service_logs", "config_validate", "nginx_config_review", "nginx_config_inspect", "service_runtime_discovery", "service_config_discovery", "dotnet_config_syntax", "start_service", "restart_service", "reload_service"} and not service:
+    if tool in {"service_status", "service_logs", "config_validate", "nginx_config_review", "nginx_config_inspect", "service_runtime_discovery", "service_config_discovery", "service_config_review", "dotnet_config_syntax", "start_service", "restart_service", "reload_service"} and not service:
         raise ValueError("service_required")
     if tool == "service_status": return await connector.service_status(target, service)
     if tool == "service_logs": return await connector.service_logs(target, service, _limit(args.get("limit"), 100, 200))
@@ -187,6 +188,7 @@ async def _call(provider: str, tool: str, args: Dict[str, Any]) -> Any:
     if tool == "nginx_config_inspect": return await connector.nginx_config_inspect(target, service)
     if tool == "service_runtime_discovery": return await connector.service_runtime_discovery(target, service)
     if tool == "service_config_discovery": return await connector.service_config_discovery(target, service)
+    if tool == "service_config_review": return await connector.service_config_review(target, service)
     if tool == "dotnet_config_syntax": return await connector.dotnet_config_syntax(target, service)
 
     approval_id = str(args.get("approval_id") or "").strip()
