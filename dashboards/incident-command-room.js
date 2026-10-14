@@ -1458,6 +1458,14 @@
       (fa?'علت ریشه‌ای در شواهد این گزارش تأیید شده است.':'The recorded report confirms a root cause.'):
       (fa?'علت ریشه‌ای هنوز تأیید نشده است. علائم و مشکلات هم‌زمان نباید بدون شاهد وابستگی علّی به هم نسبت داده شوند.':
         'Root cause remains unconfirmed. Coincident observations do not establish causality.');
+    const enhanced=state.narrative, enhancedValid=!state.historic &&
+      enhanced?.status==='available' && enhanced.snapshot_id===r.snapshot_id &&
+      enhanced.language===state.language;
+    const interpretation=enhancedValid?arr(enhanced.sections)
+      .filter(x=>['incident','confirmed','cause','evidence_gaps','advice'].includes(x.key) &&
+        typeof x.text==='string'&&x.text.trim()&&arr(x.citations).length)
+      .slice(0,5).map(x=>'<strong>'+txt(x.heading)+'</strong><p>'+
+        txt(x.text)+'</p>'+refs(x.citations)):[];
     const legacyNote=fa?'متن تخصصی و گزارش کامل Agentها در جزئیات پایین قابل مشاهده است.':
       'Detailed findings and agent reports are available below.';
     const section=(title,body,extra='')=>'<section class="ic-ir-section '+extra+'"><h3>'+
@@ -1495,6 +1503,11 @@
         'Read-only: restart, file deletion and config changes require governed approval and verification.')+'</p>')+
       section(fa?'۸. دانش سازمانی و میزان اتکا':'8. Knowledge provenance',
         '<p>'+esc(knowledgeLine)+'</p>')+
+      (interpretation.length?section(fa?'۹. تحلیل تکمیلی مدل با ارجاع':'9. Grounded AI explanation',
+        '<p class="ic-ir-caution">'+esc(fa?
+        'این بخش تفسیر مدل از شواهد است، نه تأیید مستقل علت؛ نتایج مستقیم MCP اولویت دارند.':
+        'Model interpretation is not independent RCA confirmation; direct MCP evidence takes precedence.')+
+        '</p>'+list(interpretation)):'')+
       '<footer class="ic-ir-footer">'+esc(legacyNote)+'</footer></article>';
   }
 
