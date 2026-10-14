@@ -927,10 +927,19 @@ class SSHVMConnector:
                                     "secret", "credential", "password", "private", ".key",
                                 ))):
                             continue
+                        # Verify each returned entry. A name from a
+                        # directory listing is not proof of read permission.
+                        candidate = shlex.quote(safe)
+                        probe = await self._run(
+                            target, "test -f " + candidate + " && test -r " + candidate
+                            + " && test ! -L " + candidate
+                            + " && test \"$(readlink -f -- " + candidate + ")\" = " + candidate,
+                        )
                         existing.add(safe)
                         base["files"].append({
                             "path": safe, "source": "systemd_working_directory_inventory",
-                            "status": "exists_readable", "verified_exists": True,
+                            "status": "exists_readable" if probe.get("success") else "not_verified",
+                            "verified_exists": probe.get("success") is True,
                             "content_validated": False,
                         })
                         if len(base["files"]) >= 16:
