@@ -32,7 +32,7 @@ Configuring a runbook name does **not** register, authorize or execute a runbook
 | Method | Endpoint | Permission | Behavior |
 | --- | --- | --- | --- |
 | GET | `/api/v1/incidents/{id}/service-profile` | `read:incident` | Read current SRE configuration; do not call VM |
-| PUT | `/api/v1/incidents/{id}/service-profile` | `knowledge:review` (SRE) | Validate and upsert catalog record, audit; no execution |
+| PUT | `/api/v1/incidents/{id}/service-profile` | `manage:service_profile` (SRE) | Validate and upsert catalog record, audit; no execution |
 | GET | `/api/v1/incidents/{id}/health-status` | `read:incident` | Read only the most recent matching audited probe |
 | POST | `/api/v1/incidents/{id}/health/recheck` | `read:incident` + strict rate limit | Explicit read-only HTTP GET with bounded 3-second timeout and audit |
 
