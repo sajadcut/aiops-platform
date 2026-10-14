@@ -98,7 +98,7 @@ async def test_recheck_http_is_explicit_with_no_proxy_redirect_or_credentials(mo
     monkeypatch.setattr(catalog, "_bound_scope", scope)
     monkeypatch.setattr(catalog, "_profile_row", profile)
     monkeypatch.setattr(catalog, "PostgreSQLAuditStore", FakeAudit)
-    monkeypatch.setattr(catalog, "insecure_async_client", FakeClient)
+    monkeypatch.setattr(catalog, "verified_async_client", FakeClient)
     result = await catalog.recheck_http_health(
         UUID("11111111-1111-4111-8111-111111111111"),
         identity=SimpleNamespace(subject="sre"))
