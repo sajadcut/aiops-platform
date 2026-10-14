@@ -1247,6 +1247,57 @@
       'Only listed files were syntax-checked; other files, configuration semantics and runtime health are not verified.')+'</p></div>';
   }
 
+
+  function nginxCandidateReadiness(r) {
+    const c=r?.dynamic_investigation?.config_proposal||{};
+    if(low(r?.incident_summary?.service).replace(/\.service$/,'')!=='nginx' ||
+       low(c.status)!=='candidate_proposed')return '';
+    const fa=state.language==='fa';
+    const status=low(c.validation_status);
+    const codes={
+      unexpected_open_brace_still_present:fa?'آکولاد باز اضافه همچنان در تست کاندید دیده شده است.':'Unexpected opening brace still present in staged test.',
+      unexpected_closing_brace:fa?'آکولاد بستهٔ اضافه در تست کاندید گزارش شده است.':'Unexpected closing brace in staged test.',
+      directive_context_invalid:fa?'دستور Nginx در بلوک نامعتبر قرار گرفته است.':'Nginx directive is in an invalid context.',
+      directive_arguments_invalid:fa?'تعداد پارامترهای یکی از دستورها نامعتبر است.':'A directive has invalid arguments.',
+      upstream_resolution_failed:fa?'Resolve یکی از Upstreamها در تست ناموفق بود.':'An upstream could not be resolved.',
+      permission_denied:fa?'مجوز خواندن یکی از منابع برای تست کافی نبود.':'Permission denied while staging.',
+      referenced_file_missing:fa?'یک فایل موردنیاز برای تست پیدا نشد.':'A referenced file was missing.',
+      stage_timeout:fa?'تست کاندید از مهلت تعیین‌شده عبور کرد.':'Staged check timed out.',
+      nginx_staging_unavailable:fa?'اجرای تست مرحله‌ای ممکن نشد.':'Staged validator unavailable.',
+      nginx_binary_not_found:fa?'باینری Nginx برای تست در دسترس نبود.':'Nginx binary unavailable for testing.',
+      nginx_staged_check_failed_unspecified:fa?'تست مرحله‌ای ناموفق بود؛ نوع خطا به‌صورت امن قابل استخراج نبود.':'Staged test failed; safe error category unavailable.',
+      not_recorded:fa?'نوع دقیق شکست تست مرحله‌ای در شواهد ثبت نشده است.':'The reason for staged-test failure was not recorded.'
+    };
+    const explanation=status==='staged_failed'?
+      (fa?'تغییر پیشنهادی ساخته شد، ولی nginx -t روی کپی موقت شکست خورد؛ این کاندید هنوز قابل‌اعمال نیست.':
+        'A candidate was generated, but nginx -t on the staged copy failed. It is not deployable.'):
+      status==='staged_pass_not_isolated'?
+      (fa?'تست کپی موقت موفق بود، ولی Includeها/وابستگی‌های زنده خوانده شده‌اند و تست ایزوله نیست.':
+        'The staged test passed but reads live dependencies/includes and is not isolated.'):
+      (fa?'تست معتبر کاندید انجام نشده یا نتیجه قطعی ثبت نشده است.':
+        'The candidate has no conclusive validated test.');
+    const diff=c.redacted_diff||{};
+    const change=Number.isInteger(diff.line)?
+      '<pre class="ic-config-excerpt" dir="ltr">'+
+      esc('@@ '+(c.config_file||'nginx config')+':'+diff.line+' @@\n- '+safe(diff.before)+'\n+ '+safe(diff.after))+
+      '</pre>':'';
+    const reason=status==='staged_failed'?
+      '<p>'+esc(codes[low(c.stage_failure_reason)]||
+        (fa?'دلیل جزئی شکست از نسخهٔ قبلی Validator ثبت نشده است.':'Older validator did not record a specific failure reason.'))+'</p>':'';
+    return '<article class="ic-config-check ic-nginx-remediation-state" data-validation="'+esc(status)+'">'+
+      '<h4>'+esc(fa?'چرا پیشنهاد اصلاح Nginx برای Approval اجرایی فعال نشد؟':
+        'Why the Nginx correction did not reach executable approval')+'</h4>'+
+      '<p><b>'+esc(fa?'فایل: ':'File: ')+'</b><code dir="ltr">'+txt(c.config_file||'not recorded')+'</code>'+
+      (Number.isInteger(c.error_line)?' · '+esc(fa?'خط ':'line ')+num(c.error_line):'')+'</p>'+
+      '<p>'+esc(fa?'وضعیت کاندید: ':'Candidate: ')+
+      '<strong>'+esc(c.validation_status||'UNVERIFIED')+'</strong></p>'+
+      change+'<p>'+esc(explanation)+'</p>'+reason+
+      '<p class="ic-diagnosis-gate">'+esc(fa?
+        'این مرحله فقط Preview است. دکمهٔ درخواست اعتبارسنجی، Approval اجرای تغییر نیست. بدون تست مستقل، قرارداد تغییر نسخه‌دار، تطبیق هش فایل اصلی و مجوز جداگانه، فایل سرور تغییر نمی‌کند.':
+        'This is preview only. Requesting validation is not execution approval. Independent verification, a versioned change contract, source-hash matching and separate approval are prerequisites to any write.')+'</p>'+
+      refs(c.source_evidence_refs)+'</article>';
+  }
+
   function renderOperatorDiagnosis(r) {
     const node=$('#ic-diagnosis');
     if(!node)return;
@@ -1327,7 +1378,7 @@
       '<div class="ic-diagnosis-head"><span class="ic-diagnosis-mark" aria-hidden="true">'+
       (invalid?'!':'i')+'</span><div><small>'+esc(fa?'نتیجهٔ اصلی بررسی AIOps':'AIOps investigation result')+
       '</small><h3>'+txt(main)+'</h3></div></div>'+
-      diagnostic+validatorNote+
+      diagnostic+validatorNote+nginxCandidateReadiness(r)+
       '<section><h4>'+esc(fa?'چه چیزی واقعاً بررسی و تأیید شده؟':'Confirmed from actual checks')+'</h4>'+
       (facts?'<ul class="ic-diagnosis-bullets">'+facts+'</ul>':
         '<p>'+esc(fa?'یافتهٔ مستقل کافی در این گزارش ثبت نشده است.':'No sufficient independent evidence.')+'</p>')+'</section>'+
@@ -2240,6 +2291,11 @@
     }
     html+='<article class="ic-detail-card"><h4>'+esc(fa?'وضعیت آزمایش نسخه پیشنهادی':'Proposed-version validation')+'</h4>'+
       '<p><strong>'+txt(config.validation_status||'UNVERIFIED')+'</strong></p>'+
+      (low(config.validation_status)==='staged_failed'?'<p class="ic-diagnosis-caution">'+esc(fa?
+        'nginx -t روی کپی موقت ناموفق بوده است. این پیشنهاد قابل اعمال نیست و تأیید بررسی، مجوز تغییر فایل نیست.':
+        'Staged nginx -t failed. This candidate is not deployable, and acknowledging the review never authorizes a file write.')+'</p>':'')+
+      (config.stage_failure_reason?'<p>'+esc(fa?'کد علت شکست/وضعیت تست: ':'Staging reason code: ')+
+        txt(config.stage_failure_reason)+'</p>':'')+
       '<p>'+txt(config.test_scope||'not_tested')+'</p>'+
       '<p class="ic-agent-disclaimer">'+esc(fa?
         'اجرای nginx -t روی کپی موقت می‌تواند Includeهای زنده را بخواند؛ پس تست ایزوله نیست و مجوز اعمال تولید نمی‌کند.':

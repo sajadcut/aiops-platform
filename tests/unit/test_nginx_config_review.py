@@ -143,3 +143,123 @@ async def test_dynamic_investigator_proposal_preserves_nonisolated_status_withou
     assert candidate["candidate_sha256"]=="b"*64
     assert candidate["redacted_diff"]["line"]==103
     assert proposal["operator_questions"]
+
+
+
+def test_nginx_stage_runner_classifies_failure_without_returning_stderr():
+    import ast
+    from integrations.vm.nginx_config_review import _FIXED_CHECK
+    ast.parse(_FIXED_CHECK)
+    assert "stderr=subprocess.PIPE" in _FIXED_CHECK
+    assert "stage_failure_class(check.stderr or b\"\")" in _FIXED_CHECK
+    assert "result[\"stage_failure_reason\"]" in _FIXED_CHECK
+    # The return object contains a fixed classifier rather than captured
+    # nginx output, which may contain server names and private paths.
+    assert 'result["stderr"]' not in _FIXED_CHECK
+    assert 'result["stage_error_text"]' not in _FIXED_CHECK
+
+
+@pytest.mark.asyncio
+async def test_nginx_mcp_stage_failure_classification_is_strictly_allowlisted(monkeypatch):
+    connector = SSHVMConnector()
+    monkeypatch.setattr(connector, "_validate_service", lambda _: None)
+    async def validate(target, service):
+        return {"success": True, "supported": True, "valid": False,
+                "config_file": "/etc/nginx/nginx.conf", "error_line": 103,
+                "syntax_error": 'unexpected "{" in /etc/nginx/nginx.conf:103'}
+    async def run(target, command):
+        return {"success": True, "stdout": json.dumps({
+            "status": "candidate_proposed", "current_hash": "a"*64,
+            "candidate_hash": "b"*64, "validation_status": "STAGED_FAILED",
+            "stage_failure_reason": "directive_context_invalid",
+            "raw_secret": "NEVER_SHOW",
+            "validator_executed_on_proposal": True,
+        })}
+    monkeypatch.setattr(connector, "config_validate", validate)
+    monkeypatch.setattr(connector, "_run", run)
+    response = await connector.nginx_config_review("10.248.16.82", "nginx")
+    assert response["stage_failure_reason"] == "directive_context_invalid"
+    assert response["execution_authority"] is False
+    assert "NEVER_SHOW" not in json.dumps(response)
+
+    async def inject_unknown(target, command):
+        return {"success": True, "stdout": json.dumps({
+            "status": "candidate_proposed", "validation_status": "STAGED_FAILED",
+            "stage_failure_reason": "user token=secret-value",
+        })}
+    monkeypatch.setattr(connector, "_run", inject_unknown)
+    unknown = await connector.nginx_config_review("10.248.16.82", "nginx")
+    assert unknown["stage_failure_reason"] == "not_recorded"
+    assert "secret-value" not in json.dumps(unknown)
+
+
+@pytest.mark.asyncio
+async def test_failed_nginx_candidate_reaches_report_but_never_becomes_approval():
+    from datetime import datetime, timezone
+    from types import SimpleNamespace
+    from apps.decision_brief import build_decision_brief
+
+    class Model:
+        async def generate_with_messages(self, *args, **kwargs):
+            return SimpleNamespace(content='{"checks":[],"question":""}', finish_reason="stop")
+
+    rows = [
+        {"id": "validator-103", "source": "vm_mcp",
+         "created_at": "2026-10-14T16:45:32+00:00",
+         "raw_data": {
+             "diagnostic": "config_validate", "service": "nginx",
+             "success": True, "supported": True, "valid": False,
+             "config_file": "/etc/nginx/nginx.conf", "error_line": 103,
+             "syntax_error": 'unexpected "{" in /etc/nginx/nginx.conf:103',
+         }},
+        {"id": "review-103", "source": "vm_mcp",
+         "created_at": "2026-10-14T16:45:39+00:00",
+         "raw_data": {
+             "diagnostic": "nginx_config_review", "service": "nginx",
+             "success": True, "status": "candidate_proposed",
+             "validation_status": "STAGED_FAILED",
+             "stage_failure_reason": "directive_context_invalid",
+             "current_hash": "a"*64, "candidate_hash": "b"*64,
+             "config_file": "/etc/nginx/nginx.conf", "error_line": 103,
+             "diff": {"line": 103, "before": "server [arguments redacted] {{",
+                      "after": "server [arguments redacted] {"},
+             "proposed_change": "remove_extra_opening_brace",
+             "validator_executed_on_proposal": True,
+         }},
+    ]
+    state = {"service_name": "nginx", "coordination": {"missing_evidence": []},
+             "knowledge_results": [], "context": {"evidence": rows}}
+    investigation = await DynamicInvestigationPlanner.propose(state, adapter=Model())
+    proposal = investigation["config_proposal"]
+    assert proposal["status"] == "candidate_proposed"
+    assert proposal["validation_status"] == "STAGED_FAILED"
+    assert proposal["stage_failure_reason"] == "directive_context_invalid"
+    assert proposal["apply_eligible"] is False
+    report = build_decision_brief(
+        incident={"id": "incident-nginx-103", "service": "nginx", "status": "analyzing"},
+        operator_summary={}, checkpoint={"state": {
+            "context": {"dynamic_investigation": investigation}}},
+        durable_evidence=rows, findings=[], audit_events=[],
+        now=datetime(2026, 10, 14, 16, 46, tzinfo=timezone.utc),
+    )
+    output = report["dynamic_investigation"]["config_proposal"]
+    assert output["config_file"] == "/etc/nginx/nginx.conf"
+    assert output["error_line"] == 103
+    assert output["validation_status"] == "STAGED_FAILED"
+    assert output["stage_failure_reason"] == "directive_context_invalid"
+    assert output["redacted_diff"]["line"] == 103
+    assert output["apply_eligible"] is False
+    assert output["execution_authority"] is False
+    assert report["source_policy"]["authorizes_execution"] is False
+
+
+def test_nginx_stage_blocker_is_prominent_in_operator_diagnosis_script():
+    from pathlib import Path
+    browser = (Path(__file__).resolve().parents[2] /
+               "dashboards/incident-command-room.js").read_text()
+    assert "function nginxCandidateReadiness(r)" in browser
+    assert "nginxCandidateReadiness(r)" in browser
+    assert "STAGED_FAILED" in browser or "staged_failed" in browser
+    assert "مرحله فقط Preview است" in browser
+    assert "stage_failure_reason" in browser
+    assert "source_evidence_refs" in browser

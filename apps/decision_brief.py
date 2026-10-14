@@ -779,8 +779,10 @@ def build_decision_brief(
             "config_proposal": {
                 "status": safe(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("config_proposal")).get("status"), 70),
                 "config_file": safe(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("config_proposal")).get("config_file"), 250),
+                "source_evidence_refs": refs(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("config_proposal")).get("source_evidence_refs")),
                 "error_line": obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("config_proposal")).get("error_line"),
                 "validation_status": safe(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("config_proposal")).get("validation_status"), 50) or "UNVERIFIED",
+                "stage_failure_reason": safe(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("config_proposal")).get("stage_failure_reason"), 75) or "not_recorded",
                 "current_configuration": None,
                 "proposed_configuration": None,
                 "unified_diff": None,

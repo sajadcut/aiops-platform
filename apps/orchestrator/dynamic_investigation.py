@@ -316,6 +316,17 @@ class DynamicInvestigationPlanner:
                 "proposed_change": _bounded(review.get("proposed_change"), 90),
                 "test_scope": _bounded(review.get("test_scope"), 100),
                 "validation_status": validation,
+                "stage_failure_reason": (
+                    str(review.get("stage_failure_reason"))
+                    if review.get("stage_failure_reason") in {
+                        "not_tested", "none", "unexpected_open_brace_still_present",
+                        "unexpected_closing_brace", "directive_context_invalid",
+                        "directive_arguments_invalid", "upstream_resolution_failed",
+                        "permission_denied", "referenced_file_missing",
+                        "nginx_staged_check_failed_unspecified", "stage_timeout",
+                        "nginx_staging_unavailable", "nginx_binary_not_found"
+                    } else "not_recorded"
+                ),
                 "validator_executed_on_proposal": review.get("validator_executed_on_proposal") is True,
                 "isolated_validation": False,
                 "requires_approval": True,

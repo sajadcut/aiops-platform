@@ -23,8 +23,29 @@ result = {
  "candidate_hash": None, "file": file_path, "error_line": int(error_number),
  "current_excerpt": [], "proposed_excerpt": [], "diff": None,
  "proposed_change": None, "test_scope": "not_tested",
+ "stage_failure_reason": "not_tested",
  "execution_authority": False, "config_contents_exposed": False,
 }
+def stage_failure_class(stderr):
+    # Only return fixed categories; never return raw stderr, file contents,
+    # directive arguments, upstream names, credentials or include paths.
+    info = stderr.decode("utf-8", "replace")[:4096].lower()
+    if 'unexpected "{"' in info or "unexpected '{'" in info:
+        return "unexpected_open_brace_still_present"
+    if 'unexpected "}"' in info or "unexpected '}'" in info:
+        return "unexpected_closing_brace"
+    if "directive is not allowed here" in info or "is not allowed here" in info:
+        return "directive_context_invalid"
+    if "invalid number of arguments" in info:
+        return "directive_arguments_invalid"
+    if "host not found in upstream" in info:
+        return "upstream_resolution_failed"
+    if "permission denied" in info:
+        return "permission_denied"
+    if "no such file or directory" in info:
+        return "referenced_file_missing"
+    return "nginx_staged_check_failed_unspecified"
+
 def visible_line(value):
     stripped = value.strip()
     if not stripped or stripped.startswith("#"):
@@ -119,7 +140,7 @@ try:
                        [binaries[0], "-t", "-c", candidate_path,
                         "-p", "/etc/nginx/" if file_path.startswith("/etc/nginx/") else "/usr/local/nginx/"],
                        stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
-                       stderr=subprocess.DEVNULL, timeout=8, check=False,
+                       stderr=subprocess.PIPE, timeout=8, check=False,
                        env={"PATH":"/usr/sbin:/usr/bin:/bin","LC_ALL":"C"}
                     )
                     result["validator_executed_on_proposal"] = True
@@ -128,10 +149,19 @@ try:
                       "STAGED_PASS_NOT_ISOLATED" if check.returncode == 0
                       else "STAGED_FAILED"
                     )
-                except (OSError, subprocess.TimeoutExpired):
+                    result["stage_failure_reason"] = (
+                      "none" if check.returncode == 0
+                      else stage_failure_class(check.stderr or b"")
+                    )
+                except subprocess.TimeoutExpired:
                     result["validation_status"] = "UNVERIFIED"
+                    result["stage_failure_reason"] = "stage_timeout"
+                except OSError:
+                    result["validation_status"] = "UNVERIFIED"
+                    result["stage_failure_reason"] = "nginx_staging_unavailable"
         else:
             result["validation_status"] = "UNVERIFIED"
+            result["stage_failure_reason"] = "nginx_binary_not_found"
 except (OSError, UnicodeError, ValueError):
     result["status"] = "unavailable"
 print(json.dumps(result, separators=(",",":")))

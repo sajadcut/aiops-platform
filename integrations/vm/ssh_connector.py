@@ -1016,6 +1016,17 @@ class SSHVMConnector:
         status = str(raw.get("validation_status") or "UNVERIFIED")
         if status not in {"UNVERIFIED", "STAGED_PASS_NOT_ISOLATED", "STAGED_FAILED"}:
             status = "UNVERIFIED"
+        known_stage_reasons = {
+            "not_tested", "none", "unexpected_open_brace_still_present",
+            "unexpected_closing_brace", "directive_context_invalid",
+            "directive_arguments_invalid", "upstream_resolution_failed",
+            "permission_denied", "referenced_file_missing",
+            "nginx_staged_check_failed_unspecified", "stage_timeout",
+            "nginx_staging_unavailable", "nginx_binary_not_found",
+        }
+        stage_reason = str(raw.get("stage_failure_reason") or "not_recorded")
+        if stage_reason not in known_stage_reasons:
+            stage_reason = "not_recorded"
         return {
             **base, "supported": raw.get("status") != "unavailable",
             "status": raw["status"],
@@ -1034,6 +1045,7 @@ class SSHVMConnector:
             } if diff else None,
             "proposed_change": "remove_extra_opening_brace" if raw.get("proposed_change") == "remove_extra_opening_brace" else None,
             "validation_status": status,
+            "stage_failure_reason": stage_reason,
             "validator_executed_on_proposal": raw.get("validator_executed_on_proposal") is True,
             "test_scope": str(raw.get("test_scope") or "")[:90],
             "execution_authority": False,
