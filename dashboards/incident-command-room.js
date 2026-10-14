@@ -286,7 +286,9 @@
     if(/running\s*=\s*false|process(?:es)? (?:are |is )?not running|process count (?:is )?0/i.test(x)) facts.push('پردازش سرویس اجرا نمی‌شود');
     if(/listening\s*=\s*false|not listening locally|port \d+ is not listening/i.test(x)) facts.push('پورت مورد انتظار باز نیست');
     if(/reachable\s*=\s*false|TCP connectivity check .*fails|TCP port .*unreachable/i.test(x)) facts.push('ارتباط با پورت برقرار نمی‌شود');
-    if(/valid\s*=\s*true|syntax (?:is )?(?:valid|OK)|configuration validation passed/i.test(x)) facts.push('تنظیمات سرویس از نظر ساختاری درست است');
+    if(!/invalid[_ ]json|invalid[_ ]syntax|syntax (?:error|failed|invalid)|valid\s*=\s*false|failed (?:config|json)|syntax check (?:failed|invalid)/i.test(x) &&
+       /valid\s*=\s*true|syntax (?:is )?(?:valid|OK)|configuration validation passed/i.test(x))
+      facts.push('در متن این شاهد، موفقیت تست ساختاری گزارش شده؛ نتیجه باید با Validator اختصاصی مقایسه شود');
     if(/clean stop|stopped cleanly|exit status 0\/SUCCESS/i.test(x)) facts.push('سرویس بدون خطای توقف بسته شده، ولی دلیل آن معلوم نیست');
     const cpu=x.match(/name=cpu_usage;\s*value=([\d.]+)/i);
     const memory=x.match(/name=memory_usage;\s*value=([\d.]+)/i);
@@ -341,7 +343,12 @@
     const host=identity.source_host||i.host||i.target||x.target;
     const where=host?' '+(unknownService?'':'روی سرور ')+safe(host):'';
     const explanation=r.operator_explanation||{};
-    const situation=explanation.headline_fa?
+    const config=r.configuration_diagnostic||{};
+    const situation=low(config.status)==='invalid'?
+      'بررسی معتبر کانفیگ خطای ساختار JSON را در '+safe(config.config_file||'فایل تنظیمات')+
+      (Number.isInteger(config.error_line)?'، خط '+num(config.error_line):'')+
+      ' ثبت کرده است. تا اصلاح و تست مجدد، Start پیشنهاد نمی‌شود.':
+      explanation.headline_fa?
       explanation.headline_fa:
       facts.length?'بررسی ابزارها نشان می‌دهد: '+facts.join('؛ ')+'.' :
       'هنوز اطلاعات کافی برای توضیح دقیق وضعیت سرویس نداریم.';
@@ -349,8 +356,11 @@
     const storedNote=isFaText(stored) && stored.length <= 280 &&
       !/^رخداد سرویس|^شواهد ثبت شده|^برای این رخداد/.test(stored) ? stored+' ' : '';
     const next=x.action?'پیشنهاد سیستم '+humanAction(x.action)+' است.':'هنوز کاری برای اجرا پیشنهاد نشده است.';
-    return 'برای '+subject+where+' رخداد ثبت شده. '+storedNote+situation+' '+next+
-      ' دلیل اصلی مشکل هنوز به‌طور قطعی روشن نشده است؛ تأیید و اجرای اقدام دو مرحله جدا هستند.';
+    return 'برای '+subject+where+' رخداد ثبت شده. '+(low(config.status)==='invalid'?'':storedNote)+
+      situation+' '+next+
+      (low(config.status)==='invalid'?
+        ' این خطا واقعی است؛ اما ارتباط قطعی آن با Timeout هنوز با لاگ شروع برنامه تأیید نشده است.':
+        ' دلیل اصلی مشکل هنوز به‌طور قطعی روشن نشده است؛ تأیید و اجرای اقدام دو مرحله جدا هستند.');
   }
 
   const refs = values => arr(values).length ?
