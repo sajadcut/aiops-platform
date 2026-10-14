@@ -250,7 +250,7 @@ const assert = require('node:assert/strict');
   assert.match(agentHtml,/۹۳٪/);
   assert.match(agentHtml,/۳۲٪/);
   assert.match(agentHtml,/۷۱٪/);
-  assert.match(agentHtml,/سرویس متوقف است/);
+  assert.match(agentHtml,/در زمان ثبت شواهد متوقف بوده است/);
   assert.match(agentHtml,/بررسی درستی تنظیمات/);
   assert.match(agentHtml,/اطلاعات موردنیاز برای قطعیت بیشتر/);
   assert.match(agentHtml,/فرضیه‌های این ایجنت/);
