@@ -75,6 +75,86 @@ def freshness(value: Any, now: datetime) -> str:
         return "unknown"
 
 
+
+def operator_presentation_context(
+    incident: dict, state: dict, evidence: list[dict], summary: dict,
+) -> dict:
+    """Explain missing execution fields without assigning execution authority.
+
+    Direct observations are read from attributed, successful VM MCP records;
+    historical Agent prose, alert titles, and guessed runtime are excluded.
+    This presentation metadata is intentionally outside the approval snapshot.
+    """
+    service = str(incident.get("service") or "").lower().removesuffix(".service")
+    host = str(obj(summary.get("observed_state")).get("target") or "")
+    context = obj(incident.get("context"))
+    trigger = obj(context.get("trigger_signal"))
+    signal = obj(trigger.get("payload") or trigger)
+    platform = str(signal.get("platform") or signal.get("asset_type") or "").lower()
+    collected = []
+    for row in evidence:
+        raw = obj(row.get("raw_data"))
+        if row.get("source") != "vm_mcp" or raw.get("success") is not True:
+            continue
+        if str(raw.get("service") or "").lower().removesuffix(".service") != service:
+            continue
+        if host and str(raw.get("target") or "") != host:
+            continue
+        diagnostic = str(raw.get("diagnostic") or raw.get("tool_name") or "")
+        if diagnostic not in {"service_status", "process_status", "dotnet_config_syntax",
+                              "config_validate", "disk_status", "port_listener_status",
+                              "service_runtime_discovery"}:
+            continue
+        keys = {
+            "service_status": ("active_state", "sub_state", "result", "main_pid"),
+            "process_status": ("running", "count"),
+            "dotnet_config_syntax": ("syntax_valid", "validated_scope"),
+            "config_validate": ("supported", "valid"),
+            "disk_status": ("used_percent", "free_bytes", "mount"),
+            "port_listener_status": ("listening", "target_port"),
+            "service_runtime_discovery": ("runtime", "entrypoint", "unit_file"),
+        }[diagnostic]
+        values = {key: raw[key] for key in keys
+                  if isinstance(raw.get(key), (str, int, float, bool))}
+        if values:
+            collected.append({
+                "diagnostic": diagnostic,
+                "values": values, "source": "vm_mcp",
+                "observed_at": safe(row.get("created_at"), 50),
+                "evidence_ref": safe(row.get("reference") or row.get("id"), 160),
+            })
+    # Newest per diagnostic; no fabricated metrics for absent tools.
+    latest = {}
+    for item in sorted(collected, key=lambda x: str(x.get("observed_at") or "")):
+        latest[item["diagnostic"]] = item
+    execution = obj(state.get("execution_request"))
+    approval = obj(summary.get("approval"))
+    evaluation = obj(state.get("evaluation"))
+    has_action = bool(execution.get("action") or approval.get("action"))
+    decision = obj(state.get("decision"))
+    terminal = str(state.get("terminal_reason") or "")
+    blocked = bool(
+        not has_action and (
+            terminal or evaluation.get("approved_for_decision") is False
+            or str(decision.get("action") or "").lower() in {"block", "escalate"}
+        )
+    )
+    return {
+        "service": service,
+        "host": host or None,
+        "platform": "vm_systemd" if platform in {"vm", "linux_vm"} or "service_status" in latest
+                    else "kubernetes" if platform in {"kubernetes", "k8s"} else None,
+        "observations": latest,
+        "action_disposition": (
+            "action_requested" if has_action else
+            "blocked_by_evaluator" if blocked else "no_action_proposed"
+        ),
+        "block_reason": safe(terminal or evaluation.get("reason"), 220) if blocked else None,
+        "no_action_authorized": not has_action,
+        "read_only": True,
+    }
+
+
 def elapsed_seconds(value: Any, now: datetime) -> int | None:
     if not value:
         return None
@@ -737,5 +817,8 @@ def build_decision_brief(
         "snapshot_id": snapshot,
         "generated_at": now.isoformat(),
         **redact(recorded),
+        "presentation_context": operator_presentation_context(
+            incident, state, evidence, summary,
+        ),
         "source_policy": {"durable_only": True, "read_only": True, "authorizes_execution": False},
     }
