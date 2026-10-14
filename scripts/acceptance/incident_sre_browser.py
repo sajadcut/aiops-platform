@@ -22,6 +22,28 @@ BRIEF = {
     "localized_narrative": {"fa": "توضیح مستند", "en": "Evidence-backed summary"},
     "approval_readiness": {"status": "not_pending", "binding_complete": False},
     "remediation_recommendation": {"risk_level": "high"},
+    "configuration_diagnostic": {
+        "status": "json_syntax_valid", "path_source": "dotnet_config_syntax",
+        "validator_location": "aiops_worker", "remote_python_required": False,
+        "evidence_refs": ["dotnet-syntax-evidence-01"],
+        "files": [
+            {"file": "appsettings.json", "path": "/data/gfp/gfpapi/appsettings.json",
+             "path_verified": True, "status": "valid_json_syntax",
+             "evidence_ref": "dotnet-syntax-evidence-01"},
+            {"file": "appsettings.Production.json",
+             "path": "/data/gfp/gfpapi/appsettings.Production.json",
+             "path_verified": True, "status": "valid_json_syntax",
+             "evidence_ref": "dotnet-syntax-evidence-01"},
+            {"file": "GFP.Endpoints.API.runtimeconfig.json",
+             "path": "/data/gfp/gfpapi/GFP.Endpoints.API.runtimeconfig.json",
+             "path_verified": True, "status": "valid_json_syntax",
+             "evidence_ref": "dotnet-syntax-evidence-01"},
+        ],
+    },
+    "operator_explanation": {
+        "headline_fa": "توقف سرویس gfpapi تأیید شد؛ علت قطعی هنوز کامل نشده است.",
+        "confirmed_findings": [], "uncertainties_fa": [], "next_steps_fa": [],
+    },
     "monitoring_sources": [], "mcp_evidence": [], "agent_findings": [],
     "timeline": [], "source_references": [], "rca_assessment": {"rca_confidence": 0.2},
     "technical_investigation": {
@@ -133,6 +155,18 @@ def main() -> None:
             assert expected in html, f"missing browser report content: {expected}"
         page.locator("#ic-technical-report .ic-sre-drilldown summary").first.click()
         assert page.get_by_text("sys-evidence-001").count() > 0
+        files = page.locator("#ic-diagnosis .ic-config-verified-files")
+        files.wait_for(timeout=10000)
+        visible_checks = files.inner_text()
+        for name in (
+            "/data/gfp/gfpapi/appsettings.json",
+            "/data/gfp/gfpapi/appsettings.Production.json",
+            "/data/gfp/gfpapi/GFP.Endpoints.API.runtimeconfig.json",
+            "dotnet-syntax-evidence-01",
+        ):
+            assert name in visible_checks, "Missing exact checked JSON file: " + name
+        assert "سینتکس معتبر" in visible_checks
+        assert "password=" not in visible_checks
         assert not writes, f"Opening section 01 executed a write: {writes}"
         assert not errors, f"Chromium console errors: {errors}"
         print("PASS: real Chromium SRE report rendering, evidence drilldown and read-only boundary")

@@ -827,11 +827,18 @@
       :(fa?'برای این رخداد اقدام اجرایی تأییدشده‌ای ثبت نشده است.':
         'No governed execution action has been registered for this incident.');
     const vm=p.observations||{};
+    const checkedJson=arr(report.configuration_diagnostic?.files).filter(
+      f=>f && low(f.status)==='valid_json_syntax');
     const dotnet=vm.dotnet_config_syntax?.values?.syntax_valid===true;
     const disk=vm.disk_status?.values||{};
     const full=Number(disk.used_percent)>=95;
-    const config=dotnet?(fa?'ساختار JSON فایل‌های بررسی‌شده معتبر بوده؛ این تست سلامت Runtime را ثابت نمی‌کند.':
-        'Checked JSON syntax passed; application readiness is not proven.'):
+    const paths=checkedJson.map(f=>f.path_verified && f.path?f.path:(f.file||'')).filter(Boolean);
+    const config=dotnet&&paths.length?
+      (fa?'سینتکس JSON فایل‌های ثبت‌شده ('+paths.join('، ')+') معتبر بوده؛ سلامت Runtime تأیید نشده است.':
+        'JSON syntax passed for '+paths.join(', ')+'; runtime health is unverified.'):
+      dotnet?
+        (fa?'Validator موفقیت سینتکس JSON را ثبت کرده اما نام فایل بررسی‌شده در شواهد این نسخه مشخص نیست.':
+          'JSON syntax success was recorded, but the checked filename is unavailable in this report.'):
       (fa?'صحت کانفیگ در همین جمع‌بندی به‌طور کامل تأیید نشده است.':
         'Complete configuration validation is not established here.');
     const health=state.httpHealth;
@@ -1117,6 +1124,41 @@
         'No automatic RAM increase, Kill, Restart or cache clearing is authorized.')+'</p>');
   }
 
+
+  // Exact, allowlisted filenames from the persisted dotnet_config_syntax
+  // observation. Never infer that appsettings.json exists or was validated.
+  function renderCheckedJsonFiles(config) {
+    const fa=state.language==='fa';
+    const files=arr(config?.files);
+    if(!files.length) {
+      return '<p class="ic-diagnosis-caution">'+esc(fa?
+        'نام فایل JSON بررسی‌شده در Evidence این رخداد ثبت نشده است؛ بنابراین مشخص نیست کدام فایل واقعاً تست شده است.':
+        'No checked JSON filename was recorded in this incident evidence; the tested file cannot be identified.')+'</p>';
+    }
+    const labels={
+      valid_json_syntax:fa?'سینتکس معتبر':'Syntax valid',
+      invalid_json_syntax:fa?'خطای سینتکس':'Syntax invalid',
+      unavailable:fa?'خواندن/بررسی ناموفق':'Not checked (unavailable)',
+    };
+    const items=files.map(file=>{
+      const filename=file.path_verified===true && file.path ? file.path : file.file;
+      const stateLabel=labels[low(file.status)]||(fa?'نتیجه نامشخص':'Unknown result');
+      const line=Number.isInteger(file.line)?(' · '+(fa?'خط ':'line ')+num(file.line)):'';
+      const column=Number.isInteger(file.column)?(' · '+(fa?'ستون ':'column ')+num(file.column)):'';
+      return '<li><code dir="ltr">'+txt(filename||'unknown')+'</code>'+
+        '<span class="ic-config-file-result">'+esc(stateLabel)+esc(line+column)+'</span>'+
+        (!file.path_verified?'<small>'+esc(fa?'مسیر کامل از شواهد تأیید نشده است.':
+          'Full absolute path is not verified in evidence.')+'</small>':'')+
+        (file.evidence_ref?'<small>Evidence ID: '+txt(file.evidence_ref)+'</small>':'')+'</li>';
+    }).join('');
+    return '<div class="ic-config-verified-files"><strong>'+esc(fa?
+      'فایل‌های JSON ثبت‌شده در نتیجهٔ Validator:':
+      'Exact JSON files checked by the validator:')+'</strong>'+
+      '<ul>'+items+'</ul><p>'+esc(fa?
+      'این فقط آزمون سینتکس فایل‌های فهرست‌شده است؛ سایر فایل‌ها، مقادیر تنظیمات و سلامت Runtime تأیید نشده‌اند.':
+      'Only listed files were syntax-checked; other files, configuration semantics and runtime health are not verified.')+'</p></div>';
+  }
+
   function renderOperatorDiagnosis(r) {
     const node=$('#ic-diagnosis');
     if(!node)return;
@@ -1153,10 +1195,12 @@
       '</b>'+txt(config.syntax_error)+'</p>':'')+
       '<p class="ic-diagnosis-caution">'+esc(fa?
         'این خطا در فایل بررسی‌شده ثبت شده است؛ ارتباط مستقیم آن با Timeout سرویس هنوز به بررسی لاگ راه‌اندازی برنامه نیاز دارد. علت نحوی فقط زمانی دقیق است که Validator کد/توضیح خطا را ثبت کرده باشد. هیچ تغییری در فایل انجام نشده است.':
-        'The syntax issue is recorded by the validator; its precise causal link to the service timeout is not yet proven. No file was modified.')+'</p>':
+        'The syntax issue is recorded by the validator; its precise causal link to the service timeout is not yet proven. No file was modified.')+'</p>'+
+      (jsonConfig?renderCheckedJsonFiles(config):''):
       validJson?'<p class="ic-diagnosis-caution">'+esc(fa?
-        'ساختار JSON بررسی‌شده معتبر است؛ این نتیجه سلامت Runtime یا وابستگی‌های برنامه را ثابت نمی‌کند.':
-        'Syntax passed; runtime behavior and dependencies remain unverified.')+'</p>':'';
+        'سینتکس فایل‌های JSON فهرست‌شده معتبر است؛ این نتیجه سلامت Runtime یا وابستگی‌های برنامه را ثابت نمی‌کند.':
+        'Syntax passed for the listed JSON files; runtime and dependencies remain unverified.')+'</p>'+
+        renderCheckedJsonFiles(config):'';
     const facts=output.slice(0,5).map(item=>'<li>'+txt(item.text_fa)+
       refs(item.evidence_refs)+'</li>').join('');
     const items=(rows,max)=>'<ul class="ic-diagnosis-bullets">'+rows.slice(0,max).map(x=>
@@ -1534,8 +1578,9 @@
     } else if(kind==='json_syntax_valid') {
       items.push('<article class="ic-config-check" data-config-status="valid"><h3>'+
         esc(fa?'ساختار JSON فایل‌های دات‌نت بررسی شد':'Dotnet JSON syntax checked')+
-        '</h3><p>'+esc(fa?'سینتکس فایل‌های بررسی‌شده معتبر است، اما صحت مقادیر تنظیمات، سلامت سرویس و امکان Start هنوز تأیید نشده است.':
-          'Only selected JSON syntax passed; runtime semantics and safe start are still unverified.')+'</p></article>');
+        '</h3><p>'+esc(fa?'سینتکس فایل‌های فهرست‌شده معتبر است، اما صحت مقادیر تنظیمات، سلامت سرویس و امکان Start هنوز تأیید نشده است.':
+          'Only listed JSON files passed syntax validation; runtime semantics and safe start remain unverified.')+
+        '</p>'+renderCheckedJsonFiles(config)+refs(config.evidence_refs)+'</article>');
     } else if(kind==='unverified') {
       items.push('<article class="ic-config-check" data-config-status="unknown"><h3>'+
         esc(fa?'روش یا نتیجهٔ معتبر تست کانفیگ هنوز مشخص نیست':'Config validation is unverified')+

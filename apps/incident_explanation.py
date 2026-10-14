@@ -8,6 +8,9 @@ from __future__ import annotations
 
 from typing import Any, Iterable, Mapping
 
+from integrations.vm.runtime_discovery import safe_absolute_path
+from integrations.vm.dotnet_local_validator import _NAME as SAFE_DOTNET_JSON_NAME
+
 
 def _ref(item: dict) -> str | None:
     value = item.get("id") or item.get("evidence_id") or item.get("reference")
@@ -40,7 +43,7 @@ def _dotnet(evidence: list[dict], service: str) -> dict:
         if not isinstance(value, dict):
             continue
         filename = str(value.get("file") or "")[:140]
-        if not filename.endswith(".json") or "/" in filename or ".." in filename:
+        if not SAFE_DOTNET_JSON_NAME.fullmatch(filename):
             continue
         files.append({
             "file": filename, "status": value.get("status"),
@@ -49,12 +52,23 @@ def _dotnet(evidence: list[dict], service: str) -> dict:
             "reason": str(value.get("error_code") or value.get("reason") or "")[:50],
             "explanation_fa": str(value.get("explanation_fa") or "")[:250],
         })
-    directory = str(raw.get("publish_directory") or "")[:260]
+    # Only report paths built from the directory and basename actually used
+    # by the allowlisted .NET syntax checker. Never guess appsettings.json.
+    directory = safe_absolute_path(raw.get("publish_directory"))
+    for item in files:
+        basename = item["file"]
+        trusted_name = bool(SAFE_DOTNET_JSON_NAME.fullmatch(basename))
+        item["path"] = (
+            safe_absolute_path(directory + "/" + basename)
+            if directory and trusted_name else None
+        )
+        item["path_verified"] = bool(item["path"])
+        item["evidence_ref"] = ref
     invalid = next((x for x in files if x["status"] == "invalid_json_syntax"), None)
     if invalid:
         return {
             "status": "invalid", "kind": "dotnet_json",
-            "config_file": (directory + "/" + invalid["file"]) if directory.startswith("/") else invalid["file"],
+            "config_file": invalid["path"] or invalid["file"],
             "error_line": invalid["line"], "error_column": invalid["column"],
             "error_code": invalid["reason"],
             "syntax_error_fa": invalid["explanation_fa"] or "ساختار JSON نامعتبر است؛ نوع دقیق خطا ثبت نشده است.",
@@ -66,9 +80,14 @@ def _dotnet(evidence: list[dict], service: str) -> dict:
                 if raw.get("validator") == "aiops-local-python-json-syntax-only"
                 else "not_recorded",
         }
+    all_files_passed = (
+        raw.get("syntax_valid") is True and bool(files)
+        and all(row["status"] == "valid_json_syntax" for row in files)
+    )
     return {
-        "status": "json_syntax_valid" if raw.get("syntax_valid") is True else "unverified",
-        "kind": "dotnet_json", "config_file": None,
+        "status": "json_syntax_valid" if all_files_passed else "unverified",
+        "kind": "dotnet_json",
+        "config_file": files[0]["path"] if all_files_passed and len(files) == 1 else None,
         "files": files, "evidence_refs": [ref] if ref else [],
         "validated_scope": "json_syntax_only",
         "remote_python_required": raw.get("remote_python_required")
