@@ -191,6 +191,8 @@ def validate_narrative(raw: str, brief: dict, lang: str) -> list[dict]:
     rows = result.get("sections") if isinstance(result, dict) else None
     if not isinstance(rows, list) or len(rows) != len(SECTIONS):
         raise ValueError("narrative_schema")
+    checked_config = brief.get("configuration_diagnostic") or {}
+    confirmed_bad_config = checked_config.get("status") == "invalid"
     allowed = set(brief.get("source_references") or [])
     allowed.update(x.get("source_id") for x in (brief.get("cognia_knowledge") or {}).get("items", [])
                    if isinstance(x, dict) and x.get("source_id"))
@@ -209,6 +211,16 @@ def validate_narrative(raw: str, brief: dict, lang: str) -> list[dict]:
             r"(?im)^\s*(?:sudo|kubectl|systemctl|ssh|rm\s+-|curl)\s+", prose
         ):
             raise ValueError("narrative_command")
+        if confirmed_bad_config and re.search(
+            r"(?:configuration|JSON|appsettings|config)\s+(?:syntax\s+)?(?:is\s+)?(?:valid|healthy|passed)\b"
+            r"|(?:ساختار\s+JSON|کانفیگ|تنظیمات)\s+(?:کاملاً\s+)?(?:سالم|معتبر)\s+است",
+            prose, flags=re.I,
+        ) and not re.search(
+            r"\b(?:not|isn't|never|invalid|unverified)\b.{0,40}(?:valid|passed)"
+            r"|(?:نیست|نامعتبر|تأیید\s+نشده|نمی‌شود)",
+            prose, flags=re.I,
+        ):
+            raise ValueError("narrative_conflicts_with_live_config_validator")
         if not isinstance(refs, list) or len(refs) > 12 or any(
             not isinstance(ref, str) or ref not in allowed for ref in refs
         ):
