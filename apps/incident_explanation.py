@@ -17,12 +17,14 @@ def _ref(item: dict) -> str | None:
     return str(value)[:170] if value else None
 
 
-def _recent(evidence: Iterable[dict], diagnostic: str, service: str) -> tuple[dict, str | None]:
+def _recent(evidence: Iterable[dict], diagnostic: str, service: str,
+            target: str | None = None) -> tuple[dict, str | None]:
     matched = [
         item for item in evidence
         if isinstance(item, dict) and item.get("source") == "vm_mcp"
         and isinstance(item.get("raw_data"), dict)
         and item["raw_data"].get("diagnostic") == diagnostic
+        and (not target or str(item["raw_data"].get("target") or "") == target)
         and (not item["raw_data"].get("service") or
              str(item["raw_data"].get("service")).removesuffix(".service").lower() ==
              service.removesuffix(".service").lower())
@@ -34,8 +36,9 @@ def _recent(evidence: Iterable[dict], diagnostic: str, service: str) -> tuple[di
     return selected["raw_data"], _ref(selected)
 
 
-def _dotnet(evidence: list[dict], service: str) -> dict:
-    raw, ref = _recent(evidence, "dotnet_config_syntax", service)
+def _dotnet(evidence: list[dict], service: str,
+            target: str | None = None) -> dict:
+    raw, ref = _recent(evidence, "dotnet_config_syntax", service, target)
     if raw.get("success") is not True or raw.get("supported") is not True:
         return {}
     files = []
@@ -106,12 +109,13 @@ def explain_incident(*, evidence: list[dict], service: str,
     confirmed: list[dict] = []
     uncertainties: list[str] = []
     suggested: list[str] = []
-    status, status_ref = _recent(evidence, "service_status", service)
-    config, config_ref = _recent(evidence, "config_validate", service)
-    process, process_ref = _recent(evidence, "process_status", service)
-    dotnet = _dotnet(evidence, service)
-    service_state = str(status.get("active_state") or "").lower()
     corr = correlation if isinstance(correlation, Mapping) else {}
+    bound_target = str(corr.get("host") or "").strip() or None
+    status, status_ref = _recent(evidence, "service_status", service, bound_target)
+    config, config_ref = _recent(evidence, "config_validate", service, bound_target)
+    process, process_ref = _recent(evidence, "process_status", service, bound_target)
+    dotnet = _dotnet(evidence, service, bound_target)
+    service_state = str(status.get("active_state") or "").lower()
     if corr.get("conclusion_kind") == "source_discrepancy":
         confirmed.extend({
             "text_fa": str(fact["text_fa"])[:500],
