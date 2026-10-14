@@ -870,6 +870,17 @@ def build_decision_brief(
             "changes": [safe(item, 200) for item in arr(verification.get("changes"))[:12]],
             "metrics": redact(obj(verification.get("comparable_metrics"))),
         },
+        "followup_analysis": {
+            "status": safe(obj(state.get("followup_analysis")).get("status"), 80) or "not_requested",
+            "evidence_ref": safe(obj(state.get("followup_analysis")).get("evidence_ref"), 180),
+            "diagnostic": safe(obj(state.get("followup_analysis")).get("diagnostic"), 100),
+            "agent_count": obj(state.get("followup_analysis")).get("agent_count", 0),
+            "evaluation_status": safe(obj(state.get("followup_analysis")).get("evaluation_status"), 180),
+            "decision_status": safe(obj(state.get("followup_analysis")).get("decision_status"), 120),
+            "execution_authority": False,
+            "knowledge_review_id": safe(obj(knowledge_review).get("id"), 180),
+            "knowledge_review_status": safe(obj(knowledge_review).get("status"), 80),
+        },
         "knowledge_learning_status": {
             "memory_id": safe(obj(summary.get("memory")).get("memory_entry_id"), 180),
             "review_id": safe(obj(knowledge_review).get("id"), 180),
@@ -877,6 +888,9 @@ def build_decision_brief(
             "review_available": (
                 str(summary.get("verification_status")).lower() in {"success", "verified", "succeeded"}
                 and bool(obj(summary.get("memory")).get("memory_entry_id"))
+                and bool(obj(knowledge_review).get("id"))
+            ) or (
+                obj(state.get("followup_analysis")).get("status") == "reassessed_read_only"
                 and bool(obj(knowledge_review).get("id"))
             ),
         },
