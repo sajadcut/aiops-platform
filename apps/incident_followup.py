@@ -331,6 +331,23 @@ async def persist_and_reassess(
         state["analysis_results"] = findings
         state["findings"] = [state.get("triage_result") or {}] + findings
         state["coordination"] = orchestrator.coordinator.synthesize(findings)
+        # Chat-driven reads must update LLM knowledge-gap research as well,
+        # not just the original Agent findings. Only registered diagnostics
+        # may subsequently run; model advice can never choose shell or paths.
+        if action in {
+            "service_runtime_discovery", "service_config_discovery",
+            "service_config_review", "config_validate", "dotnet_config_syntax",
+            "nginx_config_review", "nginx_config_inspect",
+        }:
+            from apps.context_service.llm_identity import (
+                detect_operational_unknowns, consult_operational_unknowns,
+            )
+            gaps = detect_operational_unknowns(state["context"]["evidence"], findings)
+            if gaps:
+                advice = await consult_operational_unknowns(
+                    unknowns=gaps, adapter=orchestrator.llm,
+                )
+                state["context"]["unknown_guidance"] = advice
         # Every read-only service configuration probe refreshes the durable
         # diagnostic proposal, not only Nginx. Nothing here may execute.
         if action in {
