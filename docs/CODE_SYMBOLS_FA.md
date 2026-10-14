@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 497 | Dashboard JS files scanned: 8 | Symbols indexed: 5199**
+**Python files scanned: 497 | Dashboard JS files scanned: 8 | Symbols indexed: 5202**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -4954,6 +4954,9 @@
 | `tests/unit/test_universal_service_config_discovery.py` | `test_tomcat_xml_format_check_is_not_service_health` | 119 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_universal_service_config_discovery.py` | `test_haproxy_vendor_validation_is_not_faked_by_file_read` | 130 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_universal_service_config_discovery.py` | `test_incident_chat_supports_general_config_discovery_and_review` | 142 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_universal_service_config_discovery.py` | `test_llm_research_is_required_for_unknown_config_but_cannot_verify_a_guess` | 148 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_universal_service_config_discovery.py` | `test_llm_research_is_required_for_unknown_config_but_cannot_verify_a_guess.LLM` | 161 | class | کلاس | test_llm_research_is_required_for_unknown_config_but_cannot_verify_a_guess |
+| `tests/unit/test_universal_service_config_discovery.py` | `test_llm_research_is_required_for_unknown_config_but_cannot_verify_a_guess.LLM.generate_with_messages` | 162 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_llm_research_is_required_for_unknown_config_but_cannot_verify_a_guess.LLM |
 | `tests/unit/test_upstream_mcp_contracts.py` | `test_prometheus_adapter_uses_upstream_tool_names` | 8 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_upstream_mcp_contracts.py` | `test_elastic_adapter_uses_agent_builder_only` | 20 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_upstream_mcp_contracts.py` | `test_elastic_agent_builder_config_is_canonical` | 35 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
