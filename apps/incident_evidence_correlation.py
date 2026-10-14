@@ -309,6 +309,72 @@ def correlate_incident_state(*, incident: dict, checkpoint: dict,
     if process and last and last["active_state"] == "active":
         gaps.append("Process Check تطبیق نام سرویس را پیدا نکرده، اما systemd فعال است؛ برای .NET باید MainPID و فرایند dotnet/CGroup تطبیق داده شوند.")
         steps.append("بررسی Read-only MainPID و Process Executable/CGroup؛ نتیجهٔ ps -C به‌تنهایی دلیل توقف برنامه نیست.")
+    # A recovery notification is a monitoring-source statement, not proof
+    # that AIOps executed a restart or independently verified HTTP readiness.
+    recovery_rows = [
+        event for event in audit_events
+        if isinstance(event, dict)
+        and event.get("event_type") == "verification_source_recovery_received"
+        and str(event.get("actor") or "").lower() in {"zabbix", "zabbix_webhook"}
+        and _timestamp(event.get("created_at"))
+    ]
+    if recovery_rows and alert_matches:
+        latest_recovery = max(recovery_rows, key=lambda x: _timestamp(x["created_at"]))
+        confirmed.append({
+            "text_fa": "پیام Recovery زبیکس برای این Incident دریافت شده است؛ این پیام نه علت توقف و نه اجرای اصلاح توسط AIOps را ثابت می‌کند.",
+            "source": "zabbix", "observed_at": _timestamp(latest_recovery["created_at"]),
+            "time_basis": "ingestion_time",
+            "evidence_refs": [str(latest_recovery.get("event_id"))[:160]]
+                             if latest_recovery.get("event_id") else [],
+        })
+        if str(incident.get("status") or "").lower() in {"open", "analyzing"}:
+            gaps.append("باوجود ثبت Recovery در منبع مانیتورینگ، وضعیت چرخهٔ Incident هنوز باز است؛ Closure و Application Health باید مستقل کنترل شوند.")
+    # A process-name hit cannot establish ownership of the systemd unit
+    # without a PID/cgroup match. Label the apparent conflict explicitly.
+    running_process = next((
+        item for item in evidence
+        if isinstance(item, dict) and item.get("source") == "vm_mcp"
+        and isinstance(item.get("raw_data"), dict)
+        and item["raw_data"].get("diagnostic") == "process_status"
+        and item["raw_data"].get("success") is True
+        and item["raw_data"].get("running") is True
+        and _name(item["raw_data"].get("service")) == service
+        and host and str(item["raw_data"].get("target") or "") == host
+    ), None)
+    if running_process and last and _stopped(last):
+        contradictions.append({
+            "contradiction_type": "systemd_failed_vs_named_process_running",
+            "affected_service": service, "host": host,
+            "source_a": {"source": "vm_mcp", "reported_state": "systemd_failed",
+                         "observed_at": last["observed_at"]},
+            "source_b": {"source": "vm_mcp", "reported_state": "matching_process_name_present",
+                         "observed_at": _timestamp(running_process.get("created_at"))},
+            "observed_at": last["observed_at"],
+            "evidence_refs": last["evidence_refs"] + (
+                [_ref(running_process)] if _ref(running_process) else []),
+            "interpretation": "process_ownership_and_time_not_verified",
+            "possible_explanations": ["unrelated_same_named_process", "stale_systemd_observation"],
+            "required_checks": ["mainpid", "cgroup_membership", "process_executable"],
+            "confidence": None, "operational_impact": "no_restart_without_direct_correlation",
+        })
+        gaps.append("systemd وضعیت Failed و Process Check وجود پردازش هم‌نام را ثبت کرده‌اند؛ بدون تطبیق PID/CGroup، تعارض به معنی سلامت یا توقف قطعی برنامه نیست.")
+        steps.append("تطبیق MainPID و CGroup سرویس با PID/Executable پردازش مشاهده‌شده، به‌صورت فقط خواندنی.")
+    # Syntax passing and systemd failing are NOT competing observations:
+    # syntax validation never tests dependencies or application readiness.
+    if last and _stopped(last):
+        config_valid = next((
+            item for item in evidence
+            if isinstance(item, dict) and item.get("source") == "vm_mcp"
+            and isinstance(item.get("raw_data"), dict)
+            and item["raw_data"].get("diagnostic") == "dotnet_config_syntax"
+            and item["raw_data"].get("success") is True
+            and item["raw_data"].get("syntax_valid") is True
+            and _name(item["raw_data"].get("service")) == service
+            and host and str(item["raw_data"].get("target") or "") == host
+        ), None)
+        if config_valid:
+            gaps.append("Syntax JSON معتبر گزارش شده ولی systemd در وضعیت توقف است؛ اعتبار Syntax نه سلامت Startup/Dependency را ثابت می‌کند و نه خطای زمان اجرای برنامه را رد می‌کند.")
+            steps.append("هم‌بسته‌سازی Journal Startup، Exit Status و Dependencyها با فایل JSON واقعاً بررسی‌شده.")
     if not steps and alert_matches:
         steps.append("استعلام read-only وضعیت systemd و مقایسه با Event History زبیکس، بدون اجرای تغییر.")
     return {
