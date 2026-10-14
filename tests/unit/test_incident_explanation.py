@@ -87,3 +87,43 @@ def test_json_syntax_valid_cannot_grant_start_or_semantic_health():
     assert result["configuration"]["status"] == "json_syntax_valid"
     assert result["does_not_authorize_execution"] is True
     assert "در حال حاضر" in result["approval_explanation_fa"]
+
+
+
+def test_dotnet_validator_explanation_confirms_local_aiops_parsing_not_python_on_vm():
+    evidence = sample_evidence()
+    evidence[-1]["raw_data"].update({
+        "remote_python_required": False,
+        "validator": "aiops-local-python-json-syntax-only",
+        "config_contents_exposed": False,
+        "config_values_persisted": False,
+    })
+    explained = explain_incident(evidence=evidence, service="gfpapi")
+    config = explained["configuration"]
+    assert config["remote_python_required"] is False
+    assert config["validator_location"] == "aiops_worker"
+    assert config["error_line"] == 32 and config["error_column"] == 3
+    assert "کوتیشن" in config["syntax_error_fa"]
+    assert explained["does_not_authorize_execution"] is True
+    report = build_decision_brief(
+        incident={"id": "incident-dotnet", "service": "gfpapi"},
+        operator_summary={}, checkpoint={"state": {}},
+        durable_evidence=evidence, findings=[], audit_events=[],
+    )
+    diagnostic = report["configuration_diagnostic"]
+    assert diagnostic["validator_location"] == "aiops_worker"
+    assert diagnostic["remote_python_required"] is False
+    assert diagnostic["error_code"] == "json_property_name"
+    assert report["source_policy"]["authorizes_execution"] is False
+
+
+def test_old_dotnet_evidence_does_not_invent_error_type_or_remote_python_claim():
+    evidence = sample_evidence()
+    bad = evidence[-1]["raw_data"]["files"][0]
+    bad.pop("error_code")
+    bad.pop("explanation_fa")
+    diagnostic = explain_incident(evidence=evidence, service="gfpapi")["configuration"]
+    assert diagnostic["error_code"] == ""
+    assert "نوع دقیق خطا ثبت نشده" in diagnostic["syntax_error_fa"]
+    assert diagnostic["remote_python_required"] is None
+    assert diagnostic["validator_location"] == "not_recorded"
