@@ -206,9 +206,19 @@ async def recheck_http_health(
     Unapproved health values cannot grant Restart approval.
     """
     async with AsyncSessionLocal() as db:
-        incident, target, diagnosis = await _bound_scope(db, incident_id)
+        # A Zabbix alert's target_ip is only a candidate, never sufficient
+        # authorization for an outbound HTTP check. Validate against an
+        # authenticated, fresh VM MCP response before using any catalog port.
+        from apps.incident_vm_identity import resolve_vm_binding
+        incident, evidence, context, diagnosis = await _incident_status_scope(db, incident_id)
+        target = diagnosis.get("candidate")
         if not target or not _safe_health_target(target):
             raise HTTPException(status_code=409, detail="health_probe_target_not_allowed")
+        binding, proof = await resolve_vm_binding(
+            incident.service, evidence, context, force_live=True,
+        )
+        if not binding or binding.get("target") != target or not binding.get("read_only_verified"):
+            raise HTTPException(status_code=409, detail="health_probe_vm_identity_not_verified")
         row = await _profile_row(db, str(incident.service or "").lower().removesuffix(".service"), target)
         profile = (row or {}).get("profile") or {}
         path = profile.get("health_path")
