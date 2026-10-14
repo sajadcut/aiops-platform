@@ -845,6 +845,9 @@
   function renderServiceProfile() {
     const node=$('#ic-service-profile');
     if(!node)return;
+    const ram=Boolean((state.historic||state.report)?.memory_investigation);
+    node.hidden=ram;
+    if(ram)return;
     const fa=state.language==='fa';
     const row=state.serviceProfile||{},p=row.profile||{};
     const h=state.httpHealth||{};
@@ -2085,7 +2088,9 @@
       if(!preserveHistory)state.historic=null;
       state.narrative=null;state.error=null;state.rejectionVisible=false;
       $('#ic-auth').hidden=true;$('#ic-loader').hidden=true;$('#ic-main').hidden=false;alert('');
-      render();void loadServiceStatus();void loadServiceProfile();void loadNarrative();void loadReceivedSignals(token);
+      render();
+      if(!report.memory_investigation){void loadServiceStatus();void loadServiceProfile();}
+      void loadNarrative();void loadReceivedSignals(token);
       void loadConfigResponse(token);
       void loadIncidentChat(token);
       void connectProgressStream();
