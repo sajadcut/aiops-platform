@@ -71,14 +71,14 @@ def test_agent_analysis_details_reach_incident_dashboard_without_domain_whitelis
     # structured view. No network/storage/database/etc. allow-list is required.
     assert "(l.agents || []).map" in dashboard_js
     assert "JSON.stringify(a, null, 2)" in dashboard_js
-    assert "a.agent_name || a.agent || 'agent'" in dashboard_js
+    assert "a.agent_name || a.agent || 'ایجنت'" in dashboard_js
     assert "key.endsWith('_analysis')" in actions_js
     assert "analyzer_telemetry" in actions_js
     assert "missing_evidence" in actions_js
     assert "stale_evidence_ids" in actions_js
     assert "next_best_evidence" in actions_js
     assert "handoff_agents" in actions_js
-    assert "Full structured analysis" in actions_js
+    assert "مشاهدهٔ کل تحلیل ساختاریافته" in actions_js
     assert "dashboard preview truncated" in actions_js
 
 
