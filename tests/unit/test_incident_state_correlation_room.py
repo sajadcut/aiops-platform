@@ -33,6 +33,13 @@ def test_section01_displays_source_discrepancy_timing_and_safe_read_only_steps()
         "confirmed_observations":[
             {"text_fa":"Zabbix Down گزارش کرده است.","evidence_refs":["alert-01"]},
             {"text_fa":"VM MCP Running مشاهده کرده است.","evidence_refs":["vm-01"]}],
+        "cross_source_findings":[{
+            "status":"scope_mismatch_not_a_contradiction",
+            "statement_fa":"Elasticsearch برای سرویس نتیجهٔ صفر ثبت کرده، ولی Journal همین VM دو خطای مرتبط دارد؛ صفر نتیجهٔ Elastic سلامت OS نیست.",
+            "query_scope":"service_only_or_host_filter_unverified",
+            "evidence_refs":["elastic-observation-01","vm-journal-02"],
+            "journal_signatures":{"error":2,"timeout":1},
+            "cause_confirmed":False}],
         "hypotheses":[],"authorizes_execution":False
     }
     assert "  const report={" in script
@@ -52,6 +59,12 @@ def test_section01_displays_source_discrepancy_timing_and_safe_read_only_steps()
   }
   assert.match(card,/alert-01/);
   assert.match(card,/vm-01/);
+  assert.match(card,/Elasticsearch برای سرویس نتیجهٔ صفر/);
+  assert.match(card,/Journal همین VM/);
+  assert.match(card,/elastic-observation-01/);
+  assert.match(card,/vm-journal-02/);
+  assert.match(card,/service_only_or_host_filter_unverified/);
+  assert.doesNotMatch(card,/خطایی در سیستم‌عامل وجود ندارد/);
   assert.match(main,/اختلاف وضعیت شناسایی شد/);
   assert.match(lead,/بازیابی واقعی ثابت نشده/);
   assert.doesNotMatch(card,/False Positive تأیید شد/);

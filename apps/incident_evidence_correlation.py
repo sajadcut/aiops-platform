@@ -117,15 +117,19 @@ def _vm_records(evidence: Iterable[dict], service: str, target: str | None) -> l
         host = str(raw.get("target") or "").strip()
         if not host or (target and host != target):
             continue
-        observed = _timestamp(raw.get("collected_at") or raw.get("observed_at")
-                              or raw.get("timestamp") or row.get("created_at"))
+        tool_time = _timestamp(raw.get("collected_at") or raw.get("observed_at")
+                               or raw.get("timestamp"))
+        stored_time = _timestamp(row.get("created_at") or row.get("timestamp"))
+        observed = tool_time or stored_time
         rows.append({
             "source": "vm_mcp", "service": service, "target": host,
             "active_state": str(raw.get("active_state") or "").lower(),
             "sub_state": str(raw.get("sub_state") or "").lower(),
             "main_pid": raw.get("main_pid") if type(raw.get("main_pid")) is int else None,
             "result": str(raw.get("result") or "")[:40] or None,
-            "observed_at": observed, "time_basis": "vm_mcp_collection" if observed else "not_recorded",
+            "observed_at": observed,
+            "time_basis": ("vm_mcp_collection" if tool_time else
+                           "evidence_persisted" if stored_time else "not_recorded"),
             "evidence_refs": [_ref(row)] if _ref(row) else [],
         })
     # Do not choose "latest" based on insertion order if timestamps missing.
@@ -151,6 +155,116 @@ def _http_observation(events: Iterable[dict], service: str, target: str | None) 
                             "evidence_refs": [str(event.get("event_id"))[:160]]
                             if event.get("event_id") else []})
     return max(matches, key=lambda x: x["observed_at"]) if matches else None
+
+
+
+def _provider_journal_correlation(evidence: Iterable[dict], service: str,
+                                  target: str | None) -> list[dict]:
+    """Compare query *coverage* with scoped OS logs; never infer a shared cause.
+
+    Elasticsearch currently queries by service only. Its zero result is not
+    a negative host-level finding; a failed query is not a zero result.
+    """
+    elastic, journal = [], []
+    for row in evidence:
+        if not isinstance(row, dict):
+            continue
+        raw = _obj(row.get("raw_data"))
+        source = str(row.get("source") or "").lower()
+        named = _name(raw.get("service") or raw.get("query_service"))
+        if named != service:
+            continue
+        if (source == "elasticsearch" and
+                isinstance(raw.get("result_count"), int) and
+                raw.get("status") in {"queried", "error", "unavailable"}):
+            elastic.append((row, raw))
+        elif (source == "vm_mcp" and target
+              and str(raw.get("target") or "") == target
+              and raw.get("diagnostic") in {"service_logs", "system_logs"}
+              and isinstance(raw.get("entries"), list)):
+            journal.append((row, raw))
+    if not elastic and not journal:
+        return []
+    status_rows = sorted(elastic, key=lambda r: _timestamp(
+        r[0].get("created_at") or r[0].get("timestamp")) or "", reverse=True)
+    queried = [(row, raw) for row, raw in status_rows if raw.get("status") == "queried"]
+    failed = [(row, raw) for row, raw in status_rows if raw.get("status") in {"error", "unavailable"}]
+    # Bound runtime and never expose raw Journal entries or provider exception detail.
+    signatures = {"error": 0, "timeout": 0, "oom": 0, "dependency": 0}
+    journal_refs = []
+    for row, raw in journal[:6]:
+        if _ref(row):
+            journal_refs.append(_ref(row))
+        for entry in raw.get("entries", [])[:150]:
+            text = str(entry).lower()[:2500]
+            signatures["error"] += any(token in text for token in
+                                        ("error", "exception", "failed"))
+            signatures["timeout"] += any(token in text for token in
+                                          ("timeout", "timed out"))
+            signatures["oom"] += any(token in text for token in
+                                      ("out of memory", "oom-kill", "killed process"))
+            signatures["dependency"] += any(token in text for token in
+                                             ("dependency failed", "failed to start"))
+    refs = list(dict.fromkeys(
+        [_ref(row) for row, _ in status_rows[:6] if _ref(row)] + journal_refs
+    ))[:12]
+    observed_errors = sum(signatures.values())
+    # Query results and Journal errors are distinct observation types.
+    if queried:
+        total = sum(raw["result_count"] for _, raw in queried)
+        scope = ("host_filtered_reported" if all(
+            raw.get("host_filter_applied") is True for _, raw in queried)
+                 else "service_only_or_host_filter_unverified")
+        if total == 0 and observed_errors:
+            status = "scope_mismatch_not_a_contradiction"
+            explanation = ("Elasticsearch برای سرویس نتیجهٔ صفر ثبت کرده، ولی Journal همین VM "
+                           "الگوهای خطا/Timeout/OOM ثبت کرده است. صفر نتیجهٔ Elastic به معنی "
+                           "نبود خطای OS نیست؛ دامنهٔ Query و بازهٔ زمانی را تطبیق دهید.")
+        elif total == 0:
+            status = "queried_zero_not_proof_of_health"
+            explanation = ("Elasticsearch نتیجهٔ صفر ثبت کرده است؛ نبود Log یا سلامت برنامه "
+                           "و OS از این نتیجه قابل اثبات نیست.")
+        else:
+            status = "elastic_results_not_host_causality"
+            explanation = (f"Elasticsearch تعداد {total} رکورد بازیابی کرده؛ "
+                           "تعلق آن‌ها به این VM و ارتباط با علت Incident بدون "
+                           "فیلتر میزبان و تطبیق زمانی قابل تأیید نیست.")
+        if failed:
+            status = "partial_queries_failed"
+            explanation += " تعدادی Query نیز ناموفق بوده‌اند."
+    elif failed:
+        scope = "unverified"
+        status = "query_failed_not_zero"
+        explanation = ("استعلام Elasticsearch ناموفق یا غیرقابل‌دسترس بوده است؛ "
+                       "تعداد Match نامعلوم است و نباید صفر گزارش شود.")
+    else:
+        scope = "not_queried"
+        status = "journal_only"
+        explanation = ("Journal سیستم‌عامل دادهٔ ثبت‌شده دارد اما نتیجهٔ مستند Query "
+                       "Elasticsearch برای همین سرویس وجود ندارد.")
+    if observed_errors:
+        explanation += (
+            f" در خروجی محدود Journal: Error={signatures['error']}، "
+            f"Timeout={signatures['timeout']}، OOM={signatures['oom']}، "
+            f"Dependency={signatures['dependency']}. این شمارش به‌تنهایی RCA نیست."
+        )
+    if scope == "service_only_or_host_filter_unverified":
+        explanation += " جست‌وجوی Elastic به میزبان مشخص محدود نشده است."
+    return [{
+        "kind": "elastic_vs_host_journal_coverage",
+        "status": status,
+        "service": service,
+        "host": target,
+        "source_a": "elasticsearch",
+        "source_b": "vm_mcp_journal",
+        "statement_fa": explanation,
+        "query_scope": scope,
+        "journal_signatures": signatures,
+        "evidence_refs": refs,
+        "required_checks": ["verify_elastic_query_window_and_host_filter",
+                            "compare_vm_journal_event_timestamps"],
+        "cause_confirmed": False,
+    }]
 
 
 def correlate_incident_state(*, incident: dict, checkpoint: dict,
@@ -204,14 +318,16 @@ def correlate_incident_state(*, incident: dict, checkpoint: dict,
                       if r["observed_at"] and r["observed_at"] < last["observed_at"]
                       and r["target"] == last["target"]
                       and _stopped(r)), None)
-        if prior and _up(last):
+        if (prior and _up(last) and last["time_basis"] == "vm_mcp_collection"
+                and prior["time_basis"] == "vm_mcp_collection"):
             vm_transition = {"from": prior, "to": last, "kind": "direct_vm_state_transition"}
     if has_discrepancy:
         # A timestamped alert is still a *different source*; do not pretend
         # Zabbix alone proves a prior real systemd stop.
         relation = "undetermined"
         if (trigger["time_basis"] == "source_event" and
-                trigger["observed_at"] and last["observed_at"]):
+                last["time_basis"] == "vm_mcp_collection"
+                and trigger["observed_at"] and last["observed_at"]):
             if trigger["observed_at"] < last["observed_at"]:
                 relation = "alert_event_before_vm_observation"
             elif trigger["observed_at"] > last["observed_at"]:
@@ -295,6 +411,8 @@ def correlate_incident_state(*, incident: dict, checkpoint: dict,
         gaps.append("زمان وقوع دقیق از دید Zabbix ثبت نشده است؛ زمان دریافت هشدار به‌جای زمان Event استفاده نمی‌شود.")
     if last and not last["observed_at"]:
         gaps.append("مشاهدهٔ VM MCP فاقد Timestamp معتبر است؛ ترتیب وقوع و تازگی آن قابل استنتاج نیست.")
+    elif last and last["time_basis"] == "evidence_persisted":
+        gaps.append("Timestamp مشاهدهٔ مستقیم VM موجود نیست؛ زمان ثبت Evidence در AIOps به‌تنهایی ترتیب وقوع واقعی سرویس را ثابت نمی‌کند.")
     if not last and alert_matches:
         gaps.append("مشاهدهٔ موفق و قابل‌انتساب از VM MCP برای همین سرویس و میزبان ثبت نشده است.")
         steps.append("اجرای استعلام فقط خواندنی service_status روی مقصد مجاز و دارای هویت تأییدشده.")
@@ -377,8 +495,10 @@ def correlate_incident_state(*, incident: dict, checkpoint: dict,
             steps.append("هم‌بسته‌سازی Journal Startup، Exit Status و Dependencyها با فایل JSON واقعاً بررسی‌شده.")
     if not steps and alert_matches:
         steps.append("استعلام read-only وضعیت systemd و مقایسه با Event History زبیکس، بدون اجرای تغییر.")
+    source_correlations = _provider_journal_correlation(evidence, service, host)
     return {
         "kind": "incident_state_correlation",
+        "cross_source_findings": source_correlations,
         "service": service, "host": host,
         "alert": trigger, "last_vm_observation": last, "http_observation": http,
         "headline_fa": headline,
