@@ -1103,6 +1103,86 @@
         'No automatic RAM increase, Kill, Restart or cache clearing is authorized.')+'</p>');
   }
 
+  function renderOperatorDiagnosis(r) {
+    const node=$('#ic-diagnosis');
+    if(!node)return;
+    const fa=state.language==='fa',config=r.configuration_diagnostic||{},
+      op=r.operator_explanation||{},summary=r.incident_summary||{},
+      action=r.remediation_recommendation||{},agents=arr(r.agent_findings);
+    const invalid=low(config.status)==='invalid';
+    const validJson=low(config.status)==='json_syntax_valid';
+    const kind=invalid?'invalid':validJson?'syntax_only':'unknown';
+    const output=arr(op.confirmed_findings).filter(x=>x&&x.text_fa);
+    const unresolved=arr(op.uncertainties_fa).filter(Boolean);
+    const next=arr(op.next_steps_fa).filter(Boolean);
+    if(!output.length && !invalid && !op.headline_fa){show('#ic-diagnosis','');return;}
+    const service=safe(summary.service||'service');
+    const path=safe(config.config_file||'');
+    const loc=path+(Number.isInteger(config.error_line)?' · '+(fa?'خط ':'line ')+num(config.error_line):'')+
+      (Number.isInteger(config.error_column)?' · '+(fa?'ستون ':'column ')+num(config.error_column):'');
+    const main=invalid?
+      (fa?'خطای ساختار JSON در کانفیگ '+service+' تأیید شده است.':'Invalid JSON configuration was verified for '+service+'.'):
+      op.headline_fa||'';
+    const diagnostic=invalid?
+      '<p class="ic-diagnosis-location"><b>'+esc(fa?'محل خطای ثبت‌شده: ':'Recorded error: ')+
+      '</b><span dir="auto">'+txt(loc)+'</span></p>'+
+      (config.syntax_error?'<p><b>'+esc(fa?'نوع خطای JSON: ':'JSON syntax error: ')+
+      '</b>'+txt(config.syntax_error)+'</p>':'')+
+      '<p class="ic-diagnosis-caution">'+esc(fa?
+        'این یافته از Validator روی فایل واقعی ثبت شده است؛ ارتباط دقیق آن با Timeout سرویس هنوز نیاز به تطبیق با لاگ شروع برنامه دارد. هیچ تغییری در فایل انجام نشده است.':
+        'The syntax issue is recorded by the validator; its precise causal link to the service timeout is not yet proven. No file was modified.')+'</p>':
+      validJson?'<p class="ic-diagnosis-caution">'+esc(fa?
+        'ساختار JSON بررسی‌شده معتبر است؛ این نتیجه سلامت Runtime یا وابستگی‌های برنامه را ثابت نمی‌کند.':
+        'Syntax passed; runtime behavior and dependencies remain unverified.')+'</p>':'';
+    const facts=output.slice(0,5).map(item=>'<li>'+txt(item.text_fa)+
+      refs(item.evidence_refs)+'</li>').join('');
+    const items=(rows,max)=>'<ul class="ic-diagnosis-bullets">'+rows.slice(0,max).map(x=>
+      '<li>'+txt(x)+'</li>').join('')+'</ul>';
+    // Old LLM interpretations can contradict a newer, real config validator.
+    // Never elevate those interpretations above a verified syntax failure.
+    const conflicting=invalid?agents.filter(agent=>{
+      const texts=[agent.finding,...arr(agent.findings)].filter(x=>typeof x==='string');
+      return texts.some(sentence=>
+        /(?:configuration|config|JSON).{0,85}(?:fully valid|is valid|has passed|passed|successfully validated|healthy)|(?:all|the|application) (?:config(?:uration)?|JSON) (?:files? )?(?:is |are )?(?:valid|correct|passed)/i.test(sentence) &&
+        !/invalid|not valid|failed|unverified|cannot|only.*runtimeconfig/i.test(sentence));
+    }):[];
+    const conflicts=conflicting.length?
+      '<p class="ic-diagnosis-conflict"><strong>'+esc(fa?'تناقض در تحلیل ایجنت‌ها: ':'Agent analysis conflict: ')+
+      '</strong>'+esc(fa?
+        'بعضی ایجنت‌ها سالم‌بودن کانفیگ را مطرح کرده‌اند، ولی تست مستقیم JSON نامعتبر است. تشخیص معتبر ابزار بر تحلیل ایجنت اولویت دارد.':
+        'Some agents claimed configuration success, but the direct JSON validation failed. Live validator evidence takes precedence.')+
+      '</p>':'';
+    const blocked=noProposedAction(r);
+    const decision=blocked?
+      (fa?'در حال حاضر هیچ عملیات اجرایی برای تأیید ایجاد نشده است. ابتدا باید کانفیگ با فرایند مجاز اصلاح و دوباره اعتبارسنجی شود.':
+        'No executable action is authorized. Repair and revalidate under an approved change process first.'):
+      (fa?'یک اقدام مشروط پیشنهاد شده است؛ برای اجرا همچنان کنترل‌های ایمنی و تأیید اپراتور ضروری است.':
+        'A conditional action exists, subject to preflight and operator approval.');
+    const existing=invalid ? [
+      fa?'بررسی خط گزارش‌شده و خط قبل، بدون نمایش Secretها و مقادیر کانفیگ.':'Inspect the reported line and preceding structure without exposing secrets.',
+      fa?'اصلاح کنترل‌شده، سپس تست دوبارهٔ JSON و بررسی لاگ Startup.':'Governed repair, JSON revalidation and startup log check.',
+      fa?'بعد از تست موفق و بررسی پیش‌شرط‌ها، پیشنهاد Start سرویس با Approval جداگانه.':'Only after validation, consider separately approved Start.',
+    ]:next;
+    show('#ic-diagnosis','<article class="ic-diagnosis-report" data-state="'+esc(kind)+'">'+
+      '<div class="ic-diagnosis-head"><span class="ic-diagnosis-mark" aria-hidden="true">'+
+      (invalid?'!':'i')+'</span><div><small>'+esc(fa?'نتیجهٔ اصلی بررسی AIOps':'AIOps investigation result')+
+      '</small><h3>'+txt(main)+'</h3></div></div>'+
+      diagnostic+
+      '<section><h4>'+esc(fa?'چه چیزی واقعاً بررسی و تأیید شده؟':'Confirmed from actual checks')+'</h4>'+
+      (facts?'<ul class="ic-diagnosis-bullets">'+facts+'</ul>':
+        '<p>'+esc(fa?'یافتهٔ مستقل کافی در این گزارش ثبت نشده است.':'No sufficient independent evidence.')+'</p>')+'</section>'+
+      conflicts+
+      (unresolved.length?'<section><h4>'+esc(fa?'چه چیزی هنوز قطعی نیست؟':'What is still uncertain?')+
+        '</h4>'+items(unresolved,3)+'</section>':'')+
+      '<section><h4>'+esc(fa?'AIOps پیشنهاد می‌کند چه کار کنیم؟':'Recommended next checks')+
+      '</h4>'+items(existing,4)+'</section>'+
+      '<p class="ic-diagnosis-gate">'+esc(decision)+'</p>'+
+      '<p class="ic-diagnosis-source">'+esc(fa?
+        'این گزارش از شواهد ذخیره‌شدهٔ همین رخداد تهیه شده است؛ نمایش آن به معنی بررسی زندهٔ جدید یا اجرای تغییر نیست.':
+        'This explanation uses recorded evidence, not a new live check or execution.')+
+      '</p></article>');
+  }
+
   function renderTechnicalInvestigation(r) {
     const investigation=r.technical_investigation;
     if(!investigation){show('#ic-technical-report','');return false;}
@@ -1188,18 +1268,14 @@
   function renderOverview(r) {
     const i=r.incident_summary||{},act=r.remediation_recommendation||{},a=r.approval_readiness||{};
     renderOperationalSummary(r);
+    renderOperatorDiagnosis(r);
     renderMemoryForensics(r);
-    if(renderTechnicalInvestigation(r)){
-      show('#ic-brief-lead','');show('#ic-operator-explanation','');
-      show('#ic-key-answer','');show('#ic-warning-list','');
-      return;
-    }
+    // Technical artifacts are supplementary. They must never hide the
+    // plain-language verdict when a structured report is present.
+    renderTechnicalInvestigation(r);
     if(r.memory_investigation){
-      show('#ic-brief-lead','');
-      show('#ic-operator-explanation','');
-      show('#ic-key-answer','');
-      show('#ic-warning-list','');
-      return;
+      // Keep the RAM-specialized investigation, but retain the clear
+      // operator explanation and the status/decision summary above it.
     }
     renderOperatorExplanation(r);
     const deterministic=plainLead(r);
