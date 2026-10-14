@@ -523,7 +523,7 @@ async def incident_chat_message(
                     incident_service=str(incident.service or ""),
                     checkpoint=checkpoint, action=intent,
                     observation=observation, binding=binding,
-                    actor=identity.subject,
+                    actor=identity.subject, incident_evidence=evidence,
                 )
                 if followup_integration.get("evidence_ref"):
                     refs = list(dict.fromkeys(
