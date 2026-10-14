@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 import re
 from datetime import datetime, timezone, timedelta
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
@@ -172,6 +172,169 @@ async def _read_cognia(question: str, service: str, context: dict,
                  "excerpt": redact_text(str(item.get("excerpt") or item.get("content") or ""))[:500]}
                 for item in filtered[:3] if isinstance(item, dict) and item.get("source_id")
             ]}
+
+
+
+# The Incident Room service-status card deliberately does not use an LLM or
+# a Decision Brief snapshot. It separates *observed systemd state* from the
+# original monitoring alert and from application-level readiness.
+_STATUS_STATES = {"active", "failed", "inactive", "activating",
+                  "deactivating", "reloading"}
+
+
+def _observed_status(
+    service: str, target: str, evidence: list[dict], events: list[dict],
+) -> dict:
+    """Newest attributable, read-only VM MCP observation; never trust Agent prose."""
+    from apps.incident_vm_identity import normalized_service, _safe_target
+
+    candidates = []
+    expected = normalized_service(service)
+
+    def append(raw, when, source, reference):
+        if not isinstance(raw, dict) or raw.get("success") is not True:
+            return
+        if normalized_service(raw.get("service")) != expected:
+            return
+        if _safe_target(raw.get("target")) != target:
+            return
+        active = str(raw.get("active_state") or "").lower().strip()
+        if active not in _STATUS_STATES:
+            return
+        sub = str(raw.get("sub_state") or "").lower().strip()[:60]
+        result = str(raw.get("result") or "")[:60]
+        if isinstance(when, datetime):
+            at = when if when.tzinfo else when.replace(tzinfo=timezone.utc)
+        else:
+            try:
+                at = datetime.fromisoformat(str(when or "").replace("Z", "+00:00"))
+                if not at.tzinfo:
+                    at = at.replace(tzinfo=timezone.utc)
+            except (TypeError, ValueError):
+                return
+        state = ("running" if active == "active" and sub == "running"
+                 else "active" if active == "active"
+                 else "stopped" if active in {"failed", "inactive"}
+                 else "transitioning")
+        candidates.append((at, {
+            "status": state, "active_state": active, "sub_state": sub,
+            "result": result, "target": target, "service": expected,
+            "observed_at": at.astimezone(timezone.utc).isoformat(),
+            "source": source, "evidence_ref": str(reference or "")[:160],
+            "verified_systemd_only": True,
+        }))
+
+    for row in evidence:
+        if row.get("source") != "vm_mcp":
+            continue
+        raw = row.get("raw_data") or {}
+        if isinstance(raw, dict) and raw.get("diagnostic") == "service_status":
+            append(raw, row.get("created_at"), "vm_mcp_recorded", row.get("reference"))
+
+    for event in events:
+        metadata = event.get("metadata") or {}
+        if not isinstance(metadata, dict):
+            continue
+        kind = event.get("event_type")
+        if kind == "incident_copilot_read" and event.get("action") == "service_status":
+            append(metadata.get("observation"), event.get("created_at"),
+                   "vm_mcp_chat", "audit:" + str(event.get("event_id") or ""))
+        elif kind == "incident_service_status_rechecked":
+            if event.get("status") != "success":
+                # Failed explicit recheck supersedes old success in the visible
+                # card. Never show yesterday's Running as a successful recheck.
+                try:
+                    at = event["created_at"]
+                    at = at if isinstance(at, datetime) else datetime.fromisoformat(
+                        str(at).replace("Z", "+00:00"))
+                    if not at.tzinfo:
+                        at = at.replace(tzinfo=timezone.utc)
+                except (ValueError, TypeError, KeyError):
+                    continue
+                candidates.append((at, {
+                    "status": "unknown", "service": expected, "target": target,
+                    "observed_at": at.astimezone(timezone.utc).isoformat(),
+                    "source": "vm_mcp_recheck_failed",
+                    "reason": str(metadata.get("reason") or "vm_mcp_unavailable")[:100],
+                    "verified_systemd_only": False,
+                }))
+            else:
+                append(metadata.get("observation"), event.get("created_at"),
+                       "vm_mcp_recheck", "audit:" + str(event.get("event_id") or ""))
+
+    if not candidates:
+        return {"status": "unknown", "service": expected, "target": target,
+                "observed_at": None, "source": "no_verified_observation",
+                "verified_systemd_only": False}
+    return max(candidates, key=lambda candidate: candidate[0])[1]
+
+
+async def _incident_status_scope(db, incident_id):
+    incident, checkpoint, evidence = await _scope(db, incident_id)
+    context = incident_vm_context(getattr(incident, "context", None), checkpoint)
+    diagnosis = vm_binding_diagnostic(incident.service, evidence, context)
+    return incident, evidence, context, diagnosis
+
+
+@router.get("/incidents/{incident_id}/service-status")
+async def incident_service_status(
+    incident_id: UUID,
+    identity=Depends(require_permission("read:incident")),
+):
+    """Initial card state from durable VM/Audit evidence. Zero remote calls."""
+    async with AsyncSessionLocal() as db:
+        incident, evidence, _, diagnosis = await _incident_status_scope(db, incident_id)
+        target = diagnosis.get("candidate")
+        if not target:
+            return {"status": "unknown", "service": str(incident.service or ""),
+                    "observed_at": None, "source": "identity_unverified",
+                    "reason": diagnosis["reason"], "verified_systemd_only": False}
+        events = await PostgreSQLAuditStore(db).list(str(incident_id), 200)
+        return _observed_status(incident.service, target, evidence, events)
+
+
+@router.post(
+    "/incidents/{incident_id}/service-status/recheck",
+    dependencies=[Depends(rate_limiter_strict)],
+)
+async def recheck_incident_service_status(
+    incident_id: UUID,
+    identity=Depends(require_permission("read:incident")),
+):
+    """An explicit, authenticated read-only VM MCP status check (no LLM/write)."""
+    async with AsyncSessionLocal() as db:
+        incident, evidence, context, diagnosis = await _incident_status_scope(db, incident_id)
+        if not diagnosis.get("candidate"):
+            raise HTTPException(status_code=409, detail={
+                "code": "service_status_identity_unverified",
+                "reason": diagnosis.get("reason"),
+            })
+        binding, live = await resolve_vm_binding(
+            incident.service, evidence, context, force_live=True,
+        )
+        observation = live.get("live_observation") if binding else None
+        success = isinstance(observation, dict) and observation.get("success") is True
+        when = datetime.now(timezone.utc)
+        record = {
+            "event_id": str(uuid4()), "event_type": "incident_service_status_rechecked",
+            "actor": identity.subject, "incident_id": str(incident_id),
+            "action": "service_status",
+            "status": "success" if success else "unavailable",
+            "metadata": redact({
+                "observation": observation if success else None,
+                "reason": None if success else str(live.get("status") or "vm_mcp_unavailable"),
+                "source_refs": (binding or {}).get("evidence_refs") or [],
+            }),
+            "created_at": when.isoformat(),
+        }
+        await PostgreSQLAuditStore(db).append(record)
+        if success:
+            return _observed_status(incident.service, binding["target"], [], [record])
+        return {"status": "unknown", "service": str(incident.service or ""),
+                "target": diagnosis["candidate"], "observed_at": when.isoformat(),
+                "source": "vm_mcp_recheck_failed",
+                "reason": str(live.get("status") or "vm_mcp_unavailable"),
+                "verified_systemd_only": False}
 
 
 @router.get("/incidents/{incident_id}/chat")
