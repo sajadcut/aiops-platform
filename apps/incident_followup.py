@@ -331,11 +331,13 @@ async def persist_and_reassess(
         state["analysis_results"] = findings
         state["findings"] = [state.get("triage_result") or {}] + findings
         state["coordination"] = orchestrator.coordinator.synthesize(findings)
-        # A successful read-only Nginx preview must also update the
-        # investigation proposal, not just Agent/Evaluator prose. This
-        # deterministic step is crucial for previously completed Incidents.
-        if (incident_service.lower().removesuffix(".service") == "nginx"
-                and action in {"nginx_config_review", "config_validate"}):
+        # Every read-only service configuration probe refreshes the durable
+        # diagnostic proposal, not only Nginx. Nothing here may execute.
+        if action in {
+            "nginx_config_review", "config_validate", "dotnet_config_syntax",
+            "service_runtime_discovery", "service_config_discovery",
+            "service_config_review",
+        }:
             from apps.orchestrator.dynamic_investigation import DynamicInvestigationPlanner
             try:
                 state["context"]["dynamic_investigation"] = (
