@@ -567,6 +567,16 @@ class EvidenceCollector:
                             and "service_config_review" not in actions
                         ):
                             actions.append("service_config_review")
+                        if (
+                            action == "service_config_discovery"
+                            and any(
+                                row.get("verified_exists") is True
+                                for row in (result.get("files") or [])[:10]
+                                if isinstance(row, dict)
+                            )
+                            and "service_config_review" not in actions
+                        ):
+                            actions.append("service_config_review")
                         # Disk-pressure drill-down only after current host evidence
                         # confirms a filesystem or inode is near capacity.
                         # This avoids expensive file-tree scans for every alert.
