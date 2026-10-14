@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 491 | Dashboard JS files scanned: 8 | Symbols indexed: 5078**
+**Python files scanned: 491 | Dashboard JS files scanned: 8 | Symbols indexed: 5079**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -4819,6 +4819,7 @@
 | `tests/unit/test_technical_investigation_report.py` | `test_journal_signature_counts_do_not_expose_raw_sensitive_lines` | 314 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_technical_investigation_report.py` | `test_network_section_requires_pid_and_listener_correlation` | 333 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_technical_investigation_report.py` | `test_disk_forensics_reports_file_sizes_without_contents_or_delete_claims` | 352 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_technical_investigation_report.py` | `test_journal_enospc_is_evidence_from_logs_or_entries_not_confirmed_rca` | 376 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_triage_production_engine.py` | `StaticTriageLLM` | 13 | class | کلاس | module |
 | `tests/unit/test_triage_production_engine.py` | `StaticTriageLLM.__init__` | 14 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | StaticTriageLLM |
 | `tests/unit/test_triage_production_engine.py` | `StaticTriageLLM.provider_name` | 19 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | StaticTriageLLM |
