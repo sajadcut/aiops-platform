@@ -84,7 +84,7 @@ def _trigger(incident: dict, checkpoint: dict) -> dict:
         or raw.get("event_time") or raw.get("occurred_at")
         or payload.get("event_time") or payload.get("occurred_at")
     )
-    precise = bool(event_time and re.search(r"T\\d{2}:\\d{2}:\\d{2}", str(event_time)))
+    precise = bool(event_time and re.search(r"T\d{2}:\d{2}:\d{2}", str(event_time)))
     # Signal timestamp is ingestion/receipt in many workflows; it is NOT
     # a verified Zabbix event timestamp without explicit source provenance.
     named = _name(raw.get("service") or payload.get("service") or view.get("service")
