@@ -202,6 +202,21 @@ async def persist_and_reassess(
     )).scalar_one()
     evidence_ref = str(evidence_row.id)
     audit = PostgreSQLAuditStore(db)
+    async def emit_status(status: dict) -> dict:
+        await audit.append({
+            "event_id": str(uuid4()),
+            "event_type": "incident_copilot_followup_integrated",
+            "actor": actor, "incident_id": str(incident_id),
+            "action": action, "status": status["status"],
+            "metadata": {
+                "evidence_ref": evidence_ref, "reassessed": status["reassessed"],
+                "knowledge": status.get("knowledge", {"status": "not_created"}),
+                "execution_authority": False,
+            },
+            "created_at": datetime.now(timezone.utc).isoformat(),
+        })
+        return await emit_status(status)
+
     status = {
         "status": "evidence_recorded", "evidence_ref": evidence_ref,
         "reassessed": False, "published_to_cognia": False,
@@ -216,7 +231,7 @@ async def persist_and_reassess(
     current = await WorkflowCheckpointStore(db).load(str(incident_id)) or checkpoint
     if not may_reassess(current, str(approval or "")):
         status["status"] = "evidence_recorded_reanalysis_requires_workflow_review"
-        return status
+        return await emit_status(status)
 
     # Copy checkpoint; never call Decision / Approval / Execution nodes.
     state = json.loads(json.dumps(current.get("state") or {}, default=str))
@@ -265,11 +280,11 @@ async def persist_and_reassess(
                         if name in orchestrator.registry.enabled_names()][:settings.AGENT_MAX_PARALLELISM]
         if not selected:
             status["status"] = "evidence_recorded_no_specialists_available"
-            return status
+            return await emit_status(status)
         findings = await orchestrator._run_specialists(selected, state)
         if not any(f.get("evidence_ids") or f.get("evidence_count") for f in findings):
             status["status"] = "evidence_recorded_specialists_inconclusive"
-            return status
+            return await emit_status(status)
         state["analysis_results"] = findings
         state["findings"] = [state.get("triage_result") or {}] + findings
         state["coordination"] = orchestrator.coordinator.synthesize(findings)
@@ -302,11 +317,11 @@ async def persist_and_reassess(
                 and newest.get("version") != current.get("version")):
             status["status"] = "evidence_recorded_concurrent_reanalysis"
             await db.rollback()
-            return status
+            return await emit_status(status)
         if not may_reassess(newest, str(approval or "")):
             status["status"] = "evidence_recorded_workflow_changed"
             await db.rollback()
-            return status
+            return await emit_status(status)
         await repository.add_findings(str(incident_id), findings)
         await WorkflowCheckpointStore(db).save(
             str(incident_id), state, status=str(current.get("status")),
@@ -329,15 +344,4 @@ async def persist_and_reassess(
                      incident_id=str(incident_id), error_type=type(exc).__name__)
         status["status"] = "evidence_recorded_reassessment_failed"
         await db.rollback()
-    await audit.append({
-        "event_id": str(uuid4()), "event_type": "incident_copilot_followup_integrated",
-        "actor": actor, "incident_id": str(incident_id),
-        "action": action, "status": status["status"],
-        "metadata": {
-            "evidence_ref": evidence_ref, "reassessed": status["reassessed"],
-            "knowledge": status.get("knowledge", {"status": "not_created"}),
-            "execution_authority": False,
-        },
-        "created_at": datetime.now(timezone.utc).isoformat(),
-    })
-    return status
+    return await emit_status(status)
