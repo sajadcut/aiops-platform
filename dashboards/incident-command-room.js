@@ -1416,6 +1416,23 @@
       .map(key=>domain(key)).filter(d=>d.key).map(d=>{
         const label=labels[d.status]||d.status||'not_recorded';
         const evidenceIds=arr(d.evidence).map(e=>e.id).filter(Boolean);
+        const monitoringBreakdown=d.key==='monitoring'
+          ?['prometheus','zabbix'].map(source=>{
+            const subset=arr(d.evidence).filter(e=>low(e.source)===source);
+            const queries=subset.filter(e=>e.facts?.status==='queried' &&
+              Number.isFinite(Number(e.facts?.result_count)));
+            const matched=queries.reduce((count,e)=>count+Number(e.facts.result_count),0);
+            if(!subset.length)return '';
+            const message=queries.length?
+              (fa?num(queries.length)+' استعلام ثبت‌شده؛ '+num(matched)+' نتیجه. '+
+                (matched===0?'صفر نتیجه نشانهٔ سلامت سرویس نیست.':'نتایج باید از نظر ارتباط با سرویس بررسی شوند.'):
+                queries.length+' queries, '+matched+' results. Zero results do not prove health.'):
+              (fa?num(subset.length)+' شاهد ثبت‌شده؛ نتیجهٔ Query به‌طور مستقل مشخص نیست.':
+                subset.length+' records; query results not independently established.');
+            return '<p class="ic-ir-provider"><strong>'+esc(source==='prometheus'?'Prometheus':'Zabbix')+
+              ':</strong> '+esc(message)+'</p>';
+          }).join('')
+          :'';
         const bigFiles=d.key==='disk'
           ?arr(d.evidence).flatMap(e=>arr(e.facts?.largest_log_files)).slice(0,6)
           :[];
@@ -1430,6 +1447,7 @@
           '</strong><span class="ic-ir-source-state" data-result="'+esc(d.status||'unknown')+'">'+
           esc(label)+'</span></header><p>'+txt(d.technical_result||d.missing_reason)+'</p>'+
           (d.missing_reason?'<small>'+txt(d.missing_reason)+'</small>':'')+
+          monitoringBreakdown+
           largest+
           (d.observed_at?'<small>'+esc(fa?'آخرین مشاهده: ':'Last observation: ')+esc(date(d.observed_at))+'</small>':'')+
           refs(evidenceIds)+'</article>';
@@ -2820,7 +2838,9 @@
       const r=state.historic||state.report;
       if(!r)return;
       const i=r.incident_summary||{},a=r.approval_readiness||{},x=r.remediation_recommendation||{};
+      const readableReport=$('#ic-intelligence-report')?.innerText?.trim();
       const summary=[
+        ...(readableReport?[readableReport,'---']:[]),
         tr('service')+': '+value(i.service),
         tr('status')+': '+status(i.status),
         tr('cause')+': '+value(i.likely_cause),
