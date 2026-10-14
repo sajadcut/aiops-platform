@@ -21,7 +21,7 @@ from integrations.vm.dotnet_local_validator import (
     remote_file_listing_command, remote_file_read_command,
     safe_json_files, validate_encoded_file, MAX_FILES,
 )
-from integrations.vm.nginx_config_review import nginx_review_command
+from integrations.vm.nginx_config_review import nginx_review_command, local_nginx_review
 from integrations.vm.nginx_config_inspection import nginx_inspection_command, parse_nginx_inspection
 
 _SAFE_HOST = re.compile(r"^[A-Za-z0-9._:-]+$")
@@ -985,17 +985,25 @@ class SSHVMConnector:
             )
         except ValueError:
             return {**base, "status": "unsafe_or_unknown_error_location"}
+        # The remote endpoint has no Python requirement. Encoded source
+        # bytes stay in this VM MCP worker process; never return/log them.
         response = await self._run(target, command)
         if not response.get("success"):
-            return {**base, "status": "preview_unavailable"}
-        try:
-            raw = json.loads(str(response.get("stdout") or "")[:18000])
-        except (ValueError, TypeError):
-            return {**base, "status": "preview_malformed"}
-        if not isinstance(raw, dict) or raw.get("status") not in {
-            "observed", "candidate_proposed", "unavailable",
-        }:
-            return {**base, "status": "preview_malformed"}
+            return {
+                **base, "status": "preview_unavailable",
+                "remote_python_required": False,
+            }
+        raw = local_nginx_review(
+            encoded=str(response.get("stdout") or ""),
+            file_path=str(validator.get("config_file")),
+            error_line=validator.get("error_line"),
+            syntax_error=str(validator.get("syntax_error") or validator.get("detail") or ""),
+        )
+        if raw.get("status") not in {"observed", "candidate_proposed"}:
+            return {
+                **base, "status": "preview_unavailable",
+                "remote_python_required": False,
+            }
         # No raw configuration or arbitrary tool-returned keys cross the MCP.
         structure = re.compile(
             r"(?:[A-Za-z_][A-Za-z0-9_]{0,40}(?: \[arguments redacted\])?"
@@ -1013,22 +1021,8 @@ class SSHVMConnector:
             ]
         digest = lambda key: str(raw.get(key)) if isinstance(raw.get(key), str) and re.fullmatch(r"[0-9a-f]{64}", raw[key]) else None
         diff = raw.get("diff") if isinstance(raw.get("diff"), dict) else {}
-        status = str(raw.get("validation_status") or "UNVERIFIED")
-        if status not in {"UNVERIFIED", "STAGED_PASS_NOT_ISOLATED", "STAGED_FAILED"}:
-            status = "UNVERIFIED"
-        known_stage_reasons = {
-            "not_tested", "none", "unexpected_open_brace_still_present",
-            "unexpected_closing_brace", "directive_context_invalid",
-            "directive_arguments_invalid", "upstream_resolution_failed",
-            "permission_denied", "referenced_file_missing",
-            "nginx_staged_check_failed_unspecified", "stage_timeout",
-            "nginx_staging_unavailable", "nginx_binary_not_found",
-        }
-        stage_reason = str(raw.get("stage_failure_reason") or "not_recorded")
-        if stage_reason not in known_stage_reasons:
-            stage_reason = "not_recorded"
         return {
-            **base, "supported": raw.get("status") != "unavailable",
+            **base, "supported": True,
             "status": raw["status"],
             "config_file": validator.get("config_file"),
             "error_line": validator.get("error_line"),
@@ -1044,11 +1038,13 @@ class SSHVMConnector:
                 "redacted": True,
             } if diff else None,
             "proposed_change": "remove_extra_opening_brace" if raw.get("proposed_change") == "remove_extra_opening_brace" else None,
-            "validation_status": status,
-            "stage_failure_reason": stage_reason,
-            "validator_executed_on_proposal": raw.get("validator_executed_on_proposal") is True,
-            "test_scope": str(raw.get("test_scope") or "")[:90],
-            "execution_authority": False,
+            "validation_status": "UNVERIFIED",
+            "stage_failure_reason": "isolated_validation_not_available",
+            "validator_executed_on_proposal": False,
+            "test_scope": "worker_preview_unvalidated",
+            "remote_python_required": False,
+            "config_contents_exposed": False,
+            "execution_authority": False, "apply_eligible": False,
             "requires_approval": True,
         }
 
