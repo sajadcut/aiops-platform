@@ -7,6 +7,7 @@ different semantics. All displays are redacted and evidence-attributed.
 from __future__ import annotations
 
 from datetime import datetime, timezone
+import re
 from typing import Any
 
 from domain.contracts.redaction import redact
@@ -247,6 +248,99 @@ def _journal_counts(rows: list[dict]) -> dict:
         label: sum(any(token in line for token in patterns) for line in entries)
         for label, patterns in signatures.items()
     }}
+
+
+def _stop_origin_assessment(rows: list[dict], service: str, systemd: dict | None) -> dict | None:
+    """Distinguish confirmed termination from unproven *origin* of a stop job.
+
+    SIGKILL and Result=timeout are compatible with a stop timeout but cannot
+    identify a human actor. A journal "Stopping" event alone cannot identify
+    one either: automation and dependencies also issue stop jobs. Never expose
+    raw journal lines or attach an identity without a matching audit command.
+    """
+    if not systemd:
+        return None
+    raw = systemd.get("raw_data") or {}
+    if raw.get("active_state") not in {"failed", "inactive"} or raw.get("result") != "timeout":
+        return None
+    sid = str(systemd.get("id") or systemd.get("reference") or "")
+    refs = [sid] if sid else []
+    command_refs, stop_refs, stop_timeout_refs, start_timeout_refs = [], [], [], []
+    unit = re.escape(service)
+    command = re.compile(
+        rf"\bCOMMAND\s*=\s*(?:/[a-zA-Z0-9_./-]+/)?systemctl\s+"
+        rf"(?:--[a-zA-Z-]+\s+)*stop\s+{unit}(?:\.service)?(?:\s|$)",
+        re.IGNORECASE
+    )
+    stopping = re.compile(rf"\bStopping\s+{unit}(?:\.service)?(?:\b|\s)", re.IGNORECASE)
+    for row in rows:
+        data = row.get("raw_data") or {}
+        if (row.get("source") != "vm_mcp"
+                or data.get("diagnostic") not in {"service_logs", "system_logs"}):
+            continue
+        lines = data.get("entries")
+        if not isinstance(lines, list):
+            lines = data.get("logs")
+        if not isinstance(lines, list):
+            continue
+        evidence_id = str(row.get("id") or row.get("reference") or "")
+        for entry in lines[:150]:
+            if not isinstance(entry, str):
+                continue
+            lower = entry.lower()
+            if command.search(entry):
+                command_refs.append(evidence_id)
+            if stopping.search(entry):
+                stop_refs.append(evidence_id)
+            if "stop operation timed out" in lower:
+                stop_timeout_refs.append(evidence_id)
+            if "start operation timed out" in lower:
+                start_timeout_refs.append(evidence_id)
+    cmd = bool(command_refs)
+    observed_stop = bool(stop_refs or stop_timeout_refs)
+    # Do not promote a command logged after the failure or from another
+    # service into an attributed cause. This is a signal for correlation.
+    status = ("audit_stop_command_observed" if cmd
+              else "stop_job_observed" if observed_stop
+              else "possible_unverified")
+    note = (
+        "دستور systemctl stop در لاگ Audit/Sudo ثبت شده، اما تطبیق زمان آن با پایان "
+        "پردازش و هویت اجراکننده هنوز لازم است."
+        if cmd else
+        "رویداد Stop در Journal دیده شده، اما دستی یا خودکار بودن آن معلوم نیست."
+        if observed_stop else
+        "Timeout و خاتمهٔ پردازش با توقف دستی یا خودکارِ طول‌کشیده سازگارند؛ "
+        "اما هیچ دستور Stop یا رویداد آغاز توقف به‌صورت قابل‌استناد مشاهده نشده است."
+    )
+    if start_timeout_refs:
+        note += " همچنین نشانه‌ای از Timeout شروع سرویس ثبت شده و باید تفکیک شود."
+    indicators = [
+        f"Systemd Result={raw.get('result')}",
+        f"ExecMainStatus={raw.get('exec_main_status') if raw.get('exec_main_status') is not None else 'unknown'}",
+        f"TimeoutStop={_text(raw.get('timeout_stop_usec'), 40) or 'unknown'}",
+    ]
+    status_text = str(raw.get("systemctl_status") or "")[:2000]
+    duration = re.search(r"(?m)^\s*Duration:\s*([0-9a-zA-Z .]+)$", status_text)
+    if duration:
+        indicators.append("Previous runtime duration=" + _text(duration.group(1).strip(), 45))
+    if "signal=KILL" in status_text:
+        indicators.append("Termination signal=SIGKILL")
+    evidence_refs = list(dict.fromkeys(refs + command_refs + stop_refs +
+                                       stop_timeout_refs + start_timeout_refs))
+    return {
+        "status": status, "note_fa": note,
+        "indicators": indicators,
+        "evidence_refs": evidence_refs,
+        "next_check_fa": (
+            "Journal بازهٔ شروع Stop و auditd/sudo برای systemctl stop/restart، "
+            "همراه زمان اجرای دستور و تطبیق آن با FailedSince را بررسی کنید."
+        ),
+        "manual_stop_proven": False,
+        "execution_origin_verified": False,
+        "audit_command_seen": cmd,
+        "stop_job_seen": observed_stop,
+        "start_timeout_seen": bool(start_timeout_refs),
+    }
 
 
 def _bounded_files(rows: list[dict]) -> list[dict]:
@@ -530,7 +624,22 @@ def build_technical_investigation(*, incident: dict, evidence: list[dict],
         by_key[key] = domain
     sys = next((e for e in by_key["systemd"]["evidence"] if e["tool"] == "service_status"), None)
     sysfacts = sys["facts"] if sys else {}
+    state_record = next(
+        (row for row in matching
+         if row.get("source") == "vm_mcp"
+         and row["raw_data"].get("diagnostic") == "service_status"
+         and row["raw_data"].get("success") is True),
+        None,
+    )
+    stop_origin = _stop_origin_assessment(matching, service, state_record)
     hypotheses = []
+    if stop_origin:
+        hypotheses.append({
+            "title": "Stop/Restart دستی یا خودکار؛ عامل آغاز هنوز اثبات نشده",
+            "supporting": stop_origin["evidence_refs"], "opposing": [],
+            "check": stop_origin["next_check_fa"],
+            "confidence": None, "kind": "فرضیهٔ مستقل؛ Stop و SIGKILL به‌تنهایی اثبات دستور انسانی نیستند",
+        })
     if sysfacts.get("result") == "timeout":
         hypotheses.append({
             "title": "تأخیر Startup یا Dependency خارجی",
@@ -607,6 +716,7 @@ def build_technical_investigation(*, incident: dict, evidence: list[dict],
     header = [
         f"سرویس {service or 'نامشخص'} روی میزبان {_text(host) or 'تأییدنشده'}؛ شروع رخداد: {_text(incident.get('started_at'), 55) or 'ثبت نشده'}.",
         by_key["systemd"]["technical_result"],
+        "Stop attribution: " + (stop_origin["note_fa"] if stop_origin else "no stop-timeout hypothesis"),
         "ELK: " + by_key["elastic"]["technical_result"],
         "Journal: " + by_key["journal"]["technical_result"],
         "CPU/RAM: " + by_key["resources"]["technical_result"],
@@ -616,6 +726,7 @@ def build_technical_investigation(*, incident: dict, evidence: list[dict],
     return redact({
         "version": "technical-investigation.v1", "read_only": True,
         "service": service, "host": _text(host) or None,
+        "stop_origin": stop_origin,
         "executive_lines": header, "domains": domains,
         "rca": {"confirmed_facts": confirmed, "likely_hypotheses": hypotheses,
                 "ruled_out": [], "remaining_unknowns": unknowns,
