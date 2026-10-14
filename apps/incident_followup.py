@@ -121,6 +121,25 @@ def knowledge_candidate(
             continue
         raw = item.get("raw_data") or {}
         if isinstance(raw, dict):
+            if raw.get("diagnostic") == "service_config_discovery":
+                for file in (raw.get("files") or [])[:4]:
+                    if (isinstance(file, dict) and file.get("verified_exists") is True
+                            and isinstance(file.get("path"), str)):
+                        selected_facts.append(
+                            "systemd_verified_config_path=" +
+                            redact_text(file["path"])[:180]
+                        )
+            if raw.get("diagnostic") == "service_config_review":
+                if isinstance(raw.get("config_file"), str):
+                    selected_facts.append(
+                        "reviewed_config_path=" + redact_text(raw["config_file"])[:180]
+                    )
+                if isinstance(raw.get("validation_status"), str):
+                    selected_facts.append(
+                        "format_validation=" + raw["validation_status"][:65]
+                    )
+                if raw.get("proposed_change") == "remove_trailing_json_comma":
+                    selected_facts.append("preview_only=json_trailing_comma")
             for key in ("active_state", "sub_state", "result", "main_pid",
                         "status", "valid", "syntax_valid", "error_line",
                         "result_count"):
