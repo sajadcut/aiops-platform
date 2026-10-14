@@ -147,6 +147,23 @@ class DynamicInvestigationPlanner:
                 "systemd Type, startup timeout, ASP.NET Core appsettings, service dependencies and journal diagnostics",
                 430,
             )
+        discovery = runtime.get("service_config_discovery") or {}
+        if unit.get("runtime") in {"java", "tomcat"}:
+            return _bounded(
+                f"{service} {unit.get('runtime')} service on systemd; "
+                "vendor configuration discovery Catalina base conf/server.xml "
+                "Spring Boot spring.config.location application.yaml application.properties "
+                "read-only file verification and syntax validation procedures", 430,
+            )
+        if discovery.get("status") in {
+            "no_systemd_config_candidates", "candidates_not_verified",
+            "systemd_unavailable",
+        }:
+            return _bounded(
+                f"{service} unknown service systemd ExecStart WorkingDirectory "
+                "vendor documentation configuration file locations and read-only "
+                "configuration validator discovery", 430,
+            )
         if failure:
             return _bounded(
                 f"{service} configuration syntax failure: {failure['error']} "
