@@ -1135,13 +1135,18 @@
     const main=invalid?
       (fa?'خطای ساختار JSON در کانفیگ '+service+' تأیید شده است.':'Invalid JSON configuration was verified for '+service+'.'):
       op.headline_fa||'';
+    const validatorNote=config.remote_python_required===false &&
+      config.validator_location==='aiops_worker'?
+      '<p class="ic-diagnosis-validator">'+esc(fa?
+        'بررسی JSON روی سرور AIOps انجام شده است؛ نیازی به نصب Python روی VM برنامه نیست.':
+        'JSON syntax was checked on the AIOps worker. No Python installation on the target VM is needed.')+'</p>':'';
     const diagnostic=invalid?
       '<p class="ic-diagnosis-location"><b>'+esc(fa?'محل خطای ثبت‌شده: ':'Recorded error: ')+
       '</b><span dir="auto">'+txt(loc)+'</span></p>'+
       (config.syntax_error?'<p><b>'+esc(fa?'نوع خطای JSON: ':'JSON syntax error: ')+
       '</b>'+txt(config.syntax_error)+'</p>':'')+
       '<p class="ic-diagnosis-caution">'+esc(fa?
-        'این یافته از Validator روی فایل واقعی ثبت شده است؛ ارتباط دقیق آن با Timeout سرویس هنوز نیاز به تطبیق با لاگ شروع برنامه دارد. هیچ تغییری در فایل انجام نشده است.':
+        'این خطا در فایل بررسی‌شده ثبت شده است؛ ارتباط مستقیم آن با Timeout سرویس هنوز به بررسی لاگ راه‌اندازی برنامه نیاز دارد. علت نحوی فقط زمانی دقیق است که Validator کد/توضیح خطا را ثبت کرده باشد. هیچ تغییری در فایل انجام نشده است.':
         'The syntax issue is recorded by the validator; its precise causal link to the service timeout is not yet proven. No file was modified.')+'</p>':
       validJson?'<p class="ic-diagnosis-caution">'+esc(fa?
         'ساختار JSON بررسی‌شده معتبر است؛ این نتیجه سلامت Runtime یا وابستگی‌های برنامه را ثابت نمی‌کند.':
@@ -1179,7 +1184,7 @@
       '<div class="ic-diagnosis-head"><span class="ic-diagnosis-mark" aria-hidden="true">'+
       (invalid?'!':'i')+'</span><div><small>'+esc(fa?'نتیجهٔ اصلی بررسی AIOps':'AIOps investigation result')+
       '</small><h3>'+txt(main)+'</h3></div></div>'+
-      diagnostic+
+      diagnostic+validatorNote+
       '<section><h4>'+esc(fa?'چه چیزی واقعاً بررسی و تأیید شده؟':'Confirmed from actual checks')+'</h4>'+
       (facts?'<ul class="ic-diagnosis-bullets">'+facts+'</ul>':
         '<p>'+esc(fa?'یافتهٔ مستقل کافی در این گزارش ثبت نشده است.':'No sufficient independent evidence.')+'</p>')+'</section>'+
