@@ -2293,11 +2293,19 @@
     const node=$('#ic-config-action-banner');
     if(!node)return;
     const service=low(r?.incident_summary?.service).replace(/\.service$/,'');
-    const config=r?.dynamic_investigation?.config_proposal||{};
+    const proposal=r?.dynamic_investigation||{};
+    const config=proposal.config_proposal||{};
+    const discovery=proposal.config_discovery||{};
     const validated=r?.configuration_diagnostic||{};
-    const candidate=service==='nginx'&&low(config.status)==='candidate_proposed';
-    const invalid=service==='nginx'&&low(validated.status)==='invalid';
-    if(!candidate&&!invalid){node.hidden=true;node.innerHTML='';return;}
+    const candidate=low(config.status)==='candidate_proposed';
+    const invalid=low(validated.status)==='invalid'||Boolean(
+      config.status&&config.status!=='not_available'&&config.config_file);
+    const discoveryAvailable=Boolean(
+      discovery.files?.length||discovery.unverified_candidates?.length||
+      (discovery.status&&!['unknown','—','not_available'].includes(low(discovery.status))));
+    if(!service||(!candidate&&!invalid&&!discoveryAvailable)){
+      node.hidden=true;node.innerHTML='';return;
+    }
     const fa=state.language==='fa',stage=low(config.validation_status);
     const stageText=stage==='staged_failed'?
       (fa?'نسخه پیشنهادی ساخته شد؛ تست Nginx روی کپی موقت شکست خورد.':
@@ -2321,7 +2329,9 @@
     const ready=Boolean(candidate && config.original_sha256 && config.candidate_sha256 &&
       !state.historic && !state.busy && state.configResponseStatus==='loaded' &&
       !responded);
-    const path=config.config_file||validated.config_file||'';
+    const verified=arr(discovery.files).filter(f=>f.verified_exists===true);
+    const path=config.config_file||validated.config_file||
+      verified[0]?.path||discovery.unverified_candidates?.[0]?.path||'';
     const line=Number.isInteger(config.error_line)?config.error_line:
       Number.isInteger(validated.error_line)?validated.error_line:null;
     const responseLabel=responded?
@@ -2333,20 +2343,32 @@
       esc(fa?'درخواست بازبینی و اعتبارسنجی اصلاح':'Request correction review & validation')+
       '</button>':'';
     const regenerateButton=!candidate?
-      '<button type="button" class="ic-btn ic-btn-primary" data-config-preview="nginx"'+
+      '<button type="button" class="ic-btn ic-btn-primary" data-config-preview="'+
+      (service==='nginx'?'nginx':'generic')+'"'+
       (state.historic||state.busy||state.chatBusy||state.lifecycle?.analysis_in_progress||state.chatStatus==='failed'?' disabled':'')+'>'+
-      esc(fa?(previewUnavailable?'تلاش مجدد برای خواندن امن فایل':'ساخت پیش‌نمایش اصلاح با بررسی زنده MCP'):'Generate live MCP repair preview')+
+      esc(fa?(service==='nginx'?
+        (previewUnavailable?'تلاش مجدد برای خواندن امن فایل':'ساخت پیش‌نمایش اصلاح با بررسی زنده MCP'):
+        'کشف فایل کانفیگ با systemd و MCP') :
+        (service==='nginx'?'Generate live MCP repair preview':'Discover config via systemd & MCP'))+
       '</button>':'';
     node.hidden=false;
     node.innerHTML='<div class="ic-config-banner-copy"><strong>'+
-      esc(fa?'اصلاح پیشنهادی فایل کانفیگ Nginx':'Nginx configuration correction proposal')+
+      esc(fa?'بررسی و اصلاح کانفیگ '+service:'Configuration discovery & correction · '+service)+
       '</strong><p>'+esc(candidate?stageText:
-      (fa?'خطای کانفیگ ثبت شده؛ هنوز پیشنهاد اصلاح معتبر به دست نیامده است.':
-          'Config failure recorded; no safe repair candidate was produced.'))+
+      (fa?(invalid?
+        'خطای کانفیگ ثبت شده؛ هنوز نسخه اصلاحی معتبر موجود نیست.':
+        'فایل و روش اعتبارسنجی از systemd و MCP در حال شناسایی است؛ مسیر حدسی معتبر نیست.'):
+        (invalid?'Config failure recorded; no safe correction yet.':
+        'Discovering config files and validation methods; a guessed path is not verified.')))+
       '</p>'+(path?'<p><code dir="ltr">'+txt(path)+'</code>'+
         (line!==null?' · '+esc(fa?'خط ':'line ')+num(line):'')+'</p>':'')+
       (reason?'<p class="ic-config-banner-warning">'+esc(reason)+'</p>':'')+
       responseLabel+
+      '<p>'+esc(fa?'کشف فایل: ':'File discovery: ')+
+      txt(discovery.status||'not_recorded')+' · '+
+      esc(fa?'فایل‌های تأییدشده: ':'Verified files: ')+num(verified.length)+
+      ' · '+esc(fa?'مشورت LLM: ':'LLM consultation: ')+
+      txt(discovery.llm_guidance_status||'not_consulted')+'</p>'+
       '<p class="ic-config-banner-warning">'+esc(fa?
         'اعمال روی سرور فعلاً غیرفعال است: اعتبارسنجی مستقل، قرارداد تغییر نسخه‌دار و Approval اجرایی وجود ندارد. ثبت درخواست اعتبارسنجی خودش فایل را اصلاح نمی‌کند.':
         'Apply is disabled: isolated validation, a versioned change contract and executable approval are missing. A validation request does not modify the file.')+
@@ -3126,7 +3148,11 @@
       const preview=e.target.closest('[data-config-preview]');
       if(preview){
         if(!state.historic&&!state.chatBusy&&!state.busy){
-          void submitIncidentChat('nginx_config_review: برای این رخداد، از VM MCP فقط پیش‌نمایش امن اصلاح Nginx را بساز و آن را به تحلیل رخداد اضافه کن. هیچ تغییری در فایل یا سرویس اجرا نکن.');
+          void submitIncidentChat(
+            preview.dataset.configPreview==='nginx'?
+            'nginx_config_review: فقط پیش‌نمایش امن اصلاح nginx را از VM MCP بگیر و به شواهد و تحلیل همین رخداد اضافه کن. هیچ فایلی را تغییر نده.':
+            'service_config_discovery: مسیر فایل‌های تنظیمات همین سرویس را از systemd و VM MCP به‌صورت read-only کشف و تأیید کن؛ بعد با کمک LLM درباره روش اعتبارسنجی و رفع مشکل تحقیق کن. دستور اجرایی یا تغییر فایل انجام نده.'
+          );
         }
         return;
       }
