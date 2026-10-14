@@ -608,8 +608,26 @@ def build_decision_brief(
                 "unverified" if observed.get("config_validate") or dotnet_config else
                 "not_checked"
             ),
-            "config_file": safe(dotnet_config.get("config_file") or
-                                obj(observed.get("config_validate")).get("config_file"), 300),
+            # A generic unverified path is not the file that the specialized
+            # .NET checker validated. Keep checked paths independent.
+            "config_file": (
+                safe(dotnet_config.get("config_file"), 300) if dotnet_config
+                else safe(obj(observed.get("config_validate")).get("config_file"), 300)
+            ),
+            "files": [
+                {
+                    "file": safe(row.get("file"), 140),
+                    "path": safe(row.get("path"), 300),
+                    "path_verified": row.get("path_verified") is True,
+                    "status": safe(row.get("status"), 45),
+                    "line": row.get("line") if type(row.get("line")) is int else None,
+                    "column": row.get("column") if type(row.get("column")) is int else None,
+                    "error_code": safe(row.get("reason"), 60),
+                    "evidence_ref": safe(row.get("evidence_ref"), 180),
+                }
+                for row in arr(dotnet_config.get("files"))[:12]
+                if isinstance(row, dict) and row.get("file")
+            ],
             "root_config_file": safe(obj(observed.get("config_validate")).get("root_config_file"), 300),
             "path_source": "dotnet_config_syntax" if dotnet_config else
                            safe(obj(observed.get("config_validate")).get("config_path_source"), 80),
