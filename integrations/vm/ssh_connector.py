@@ -893,6 +893,48 @@ class SSHVMConnector:
                 "verified_exists": result.get("success") is True,
                 "content_validated": False,
             })
+        # If systemd has no explicit config flags, inspect ONLY the
+        # unit-owned working directory, never a path suggested by an LLM.
+        # Inventory returns filenames, not file contents or environment.
+        if not any(item["verified_exists"] for item in base["files"]):
+            from integrations.vm.runtime_discovery import safe_absolute_path, _candidate_path
+            working = safe_absolute_path(unit.get("working_directory"))
+            if (working and len(working) <= 210
+                    and working.startswith(("/opt/", "/srv/", "/data/", "/usr/local/etc/"))
+                    and len(working.strip("/").split("/")) >= 2):
+                q = shlex.quote(working)
+                inventory_command = (
+                    "test -d " + q + " && test ! -L " + q
+                    + " && test \"$(readlink -f -- " + q + ")\" = " + q
+                    + " && LC_ALL=C find " + q
+                    + " -mindepth 1 -maxdepth 2 -type f "
+                    + "\\( -name '*.conf' -o -name '*.cfg' -o -name '*.xml' "
+                    + "-o -name '*.properties' -o -name '*.yaml' -o -name '*.yml' "
+                    + "-o -name '*.json' -o -name '*.ini' \\)"
+                    + " -print 2>/dev/null | head -n 24"
+                )
+                try:
+                    inventory = await self._run(target, inventory_command)
+                except Exception:
+                    inventory = {"success": False}
+                if inventory.get("success"):
+                    existing = {x["path"] for x in base["files"]}
+                    for path in str(inventory.get("stdout") or "").splitlines()[:24]:
+                        safe = _candidate_path(path)
+                        if (not safe or safe in existing or
+                                not safe.startswith(working.rstrip("/") + "/") or
+                                any(word in safe.lower() for word in (
+                                    "secret", "credential", "password", "private", ".key",
+                                ))):
+                            continue
+                        existing.add(safe)
+                        base["files"].append({
+                            "path": safe, "source": "systemd_working_directory_inventory",
+                            "status": "exists_readable", "verified_exists": True,
+                            "content_validated": False,
+                        })
+                        if len(base["files"]) >= 16:
+                            break
         base["status"] = ("verified_candidates" if any(
             item["verified_exists"] for item in base["files"]) else
             "candidates_not_verified" if base["files"] else "no_systemd_config_candidates")
