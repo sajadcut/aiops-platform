@@ -100,7 +100,12 @@ const fs=require('node:fs');
     let data={};
     if(url.endsWith('/decision-brief'))data=report;
     else if(url.endsWith('/lifecycle'))data={approval:{status:'not_pending'}};
-    else if(url.includes('/narrative?'))data={snapshot_id:report.snapshot_id,language:'fa',status:'fallback',sections:[]};
+    else if(url.includes('/narrative?'))data={snapshot_id:report.snapshot_id,language:'fa',
+      status:'available',sections:[
+        {key:'cause',heading:'تحلیل هوشمند علت',text:'خطای JSON در appsettings تأیید شده؛ علت Timeout هنوز قطعی نیست.',citations:['evidence-config-32']},
+        {key:'evidence_gaps',heading:'شواهد موردنیاز',text:'لاگ شروع برنامه را باید با خطای کانفیگ تطبیق داد.',citations:['evidence-config-32']},
+        {key:'advice',heading:'پیشنهاد بررسی',text:'ابتدا بررسی و اصلاح مجاز، سپس تست مجدد و درخواست مجوز جداگانه.',citations:['evidence-config-32']},
+      ]};
     return {ok:true,status:200,json:async()=>data};
   };
   vm.runInThisContext(fs.readFileSync('dashboards/incident-command-room.js','utf8'));
@@ -116,6 +121,9 @@ const fs=require('node:fs');
   assert.match(diagnosis,/چه چیزی هنوز قطعی نیست/);
   assert.match(diagnosis,/AIOps پیشنهاد می‌کند چه کار کنیم/);
   assert.match(diagnosis,/Start ایمن تأیید نشده/);
+  assert.match(el('#ic-brief-lead').innerHTML,/توضیح تکمیلی مبتنی بر شواهد/);
+  assert.match(el('#ic-brief-lead').innerHTML,/تحلیل هوشمند علت/);
+  assert.match(el('#ic-brief-lead').innerHTML,/لاگ شروع برنامه/);
   assert.doesNotMatch(diagnosis,/اجرای عملیات.*موفق/);
   assert.match(page,/جمع‌بندی تخصصی اولیه/);
   assert.match(page,/گزارش کامل فنی و ممیزی/);
