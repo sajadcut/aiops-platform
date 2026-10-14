@@ -78,6 +78,12 @@ def test_cognia_candidate_is_marked_unverified_and_cites_incident():
         incident_id=incident, service=SERVICE, evidence_ref="evidence-123",
         diagnostic="service_logs", state={
             "followup_analysis": {"status": "reassessed_read_only"},
+            "context": {"evidence": [
+                {"id": "evidence-123", "raw_data": {
+                    "active_state": "failed", "result": "timeout",
+                    "logs": ["password=NEVER_STORE_RAW_LOGS"],
+                }},
+            ]},
             "analysis_results": [
                 {"statement": "Stop timeout is a hypothesis; audit not checked"},
             ],
@@ -86,6 +92,9 @@ def test_cognia_candidate_is_marked_unverified_and_cites_incident():
     assert SERVICE in title
     assert str(incident) in content
     assert "evidence-123" in content
+    assert "active_state=failed" in content
+    assert "result=timeout" in content
+    assert "NEVER_STORE_RAW_LOGS" not in content
     assert "تأییدشده یا نتیجه بازیابی نیست" in content
     assert "راستی‌آزمایی" in content
     assert "تأیید" in content
