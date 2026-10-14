@@ -7,7 +7,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <meta name="theme-color" content="#0B0F14">
-  <title>NeoBanking Chatbot Operation Platform</title>
+  <title>دستیار هوشمند عملیات نئوبانکینگ</title>
   <link rel="stylesheet" href="/chatbot/chatbot.css?v=8">
   <!-- Load typography last so application CSS cannot override the Persian font. -->
   <link rel="stylesheet" href="/dashboard/fonts.css?v=2">
@@ -17,41 +17,41 @@
     <section id="loginView" class="login-view" aria-labelledby="loginTitle">
       <div class="login-card">
         <div class="login-brand">
-          <div class="product-mark" aria-hidden="true"><span>N</span></div>
+          <div class="product-mark" aria-hidden="true"><span>ن</span></div>
           <div class="login-brand-copy">
-            <div class="eyebrow">NEOBANKING · OPERATIONS</div>
-            <h1 id="loginTitle">NeoBanking Chatbot Operation Platform</h1>
+            <div class="eyebrow">نئوبانکینگ · عملیات</div>
+            <h1 id="loginTitle">دستیار هوشمند عملیات نئوبانکینگ</h1>
           </div>
         </div>
 
         <p class="login-lead">
-          AI-Powered Operations Copilot با پشتیبانی فارسی و English برای بررسی زنده زیرساخت، تحلیل رخداد و اجرای کنترل‌شده عملیات.
+          دستیار عملیات هوشمند با پشتیبانی فارسی برای بررسی زنده زیرساخت، تحلیل رخداد و اجرای کنترل‌شده عملیات.
         </p>
 
         <form id="loginForm" class="login-form" autocomplete="off">
-          <label for="apiKey">API Key</label>
+          <label for="apiKey">کلید دسترسی API</label>
           <div class="field-shell">
             <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 7.5a4.5 4.5 0 1 1-8.2 2.6L3 14.4V18h3.6v-2.1h2.1v-2.1h2.1l1.4-1.4a4.5 4.5 0 0 1 3.3-4.9Zm2.2 3.1a1.1 1.1 0 1 0 0-2.2 1.1 1.1 0 0 0 0 2.2Z"/></svg>
             <input id="apiKey" name="apiKey" type="password" autocomplete="off" required maxlength="4096" placeholder="X-API-Key" aria-describedby="apiKeyHelp">
             <button id="apiKeyToggle" class="field-action" type="button" aria-label="نمایش کلید دسترسی" aria-pressed="false">نمایش</button>
           </div>
-          <p id="apiKeyHelp" class="field-help">کلید فقط در sessionStorage همین تب نگه‌داری می‌شود و وارد پیام‌ها یا تاریخچه نمی‌شود.</p>
+          <p id="apiKeyHelp" class="field-help">کلید فقط در حافظهٔ نشست همین برگه نگه‌داری می‌شود و وارد پیام‌ها یا تاریخچه نمی‌شود.</p>
           <button type="submit" class="button button-primary login-submit">ورود امن</button>
         </form>
 
-        <div class="login-trust"><span class="status-dot" aria-hidden="true"></span><span>Governed access · RBAC · Approval protected</span></div>
+        <div class="login-trust"><span class="status-dot" aria-hidden="true"></span><span>دسترسی کنترل‌شده · مجوزهای نقش‌محور · تأیید انسانی</span></div>
         <div id="loginError" class="inline-error" role="alert" aria-live="assertive"></div>
       </div>
     </section>
 
-    <section id="chatView" class="workspace hidden" aria-label="NeoBanking Chatbot Operation Platform workspace">
-      <aside id="sidebar" class="sidebar" aria-label="تاریخچه گفت‌وگوها">
+    <section id="chatView" class="workspace hidden" aria-label="محیط کاری دستیار هوشمند عملیات نئوبانکینگ">
+      <aside id="sidebar" class="sidebar" aria-label="تاریخچهٔ گفت‌وگوها">
         <div class="sidebar-header">
           <div class="sidebar-brand">
-            <div class="product-mark compact" aria-hidden="true"><span>N</span></div>
+            <div class="product-mark compact" aria-hidden="true"><span>ن</span></div>
             <div class="sidebar-brand-copy">
-              <strong>NeoBanking</strong>
-              <span>Operations Copilot</span>
+              <strong>نئوبانکینگ</strong>
+              <span>دستیار عملیات</span>
             </div>
           </div>
           <div class="sidebar-header-actions">
@@ -79,14 +79,14 @@
           <span id="sessionCount" class="count-badge" aria-label="تعداد گفت‌وگوها">0</span>
         </div>
 
-        <nav id="sessionList" class="session-list" aria-label="Conversation history"></nav>
+        <nav id="sessionList" class="session-list" aria-label="تاریخچهٔ گفت‌وگوها"></nav>
 
         <div class="sidebar-footer">
-          <a href="/dashboard" class="button sidebar-utility" title="Dashboard">
+          <a href="/dashboard" class="button sidebar-utility" title="داشبورد">
             <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"/></svg>
-            <span class="sidebar-label">Dashboard</span>
+            <span class="sidebar-label">داشبورد</span>
           </a>
-          <p class="sidebar-governance sidebar-label">عملیات تغییردهنده فقط از مسیر Approval و ابزارهای مجاز اجرا می‌شوند.</p>
+          <p class="sidebar-governance sidebar-label">عملیات تغییردهنده فقط از مسیر تأیید انسانی و ابزارهای مجاز اجرا می‌شوند.</p>
         </div>
       </aside>
 
@@ -99,11 +99,11 @@
               <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
             </button>
             <div class="topbar-copy">
-              <div class="product-title">NeoBanking Chatbot Operation Platform</div>
+              <div class="product-title">دستیار هوشمند عملیات نئوبانکینگ</div>
               <div class="product-context">
                 <span id="conversationTitle" class="conversation-title" dir="auto">گفت‌وگوی جدید</span>
                 <span class="context-separator" aria-hidden="true">•</span>
-                <span>AI-Powered Operations Copilot</span>
+                <span>دستیار هوشمند عملیات</span>
               </div>
             </div>
           </div>
@@ -111,7 +111,7 @@
           <div class="topbar-actions">
             <div id="apiStatus" class="status-chip hidden" role="status" aria-live="polite">
               <span class="status-dot" aria-hidden="true"></span>
-              <span>API Connected</span>
+              <span>اتصال API برقرار است</span>
             </div>
             <div id="identity" class="identity" dir="auto" aria-label="کاربر فعلی"></div>
             <button id="themeToggle" class="theme-toggle" type="button" aria-label="تغییر پوسته" title="تغییر پوسته">
@@ -125,7 +125,7 @@
           </div>
         </header>
 
-        <section id="messages" class="messages" aria-label="Conversation" aria-live="polite" aria-relevant="additions text" aria-busy="false"></section>
+        <section id="messages" class="messages" aria-label="گفت‌وگو" aria-live="polite" aria-relevant="additions text" aria-busy="false"></section>
 
         <button id="scrollToBottom" class="scroll-latest hidden" type="button" aria-label="رفتن به آخر گفت‌وگو" title="آخرین پیام">
           <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
@@ -140,10 +140,10 @@
           </div>
 
           <form id="chatForm" class="composer">
-            <label class="sr-only" for="messageInput">پیام برای Operations Copilot</label>
+            <label class="sr-only" for="messageInput">پیام برای دستیار عملیات</label>
             <textarea id="messageInput" rows="1" maxlength="4000" dir="auto" placeholder="درباره وضعیت زیرساخت یا سرویس‌ها سؤال کنید…" required></textarea>
             <div class="composer-toolbar">
-              <span class="composer-hint">Enter ارسال · Shift+Enter خط جدید</span>
+              <span class="composer-hint">Enter: ارسال · Shift+Enter: سطر جدید</span>
               <div class="composer-actions">
                 <span id="charCount" class="char-count">0 / 4000</span>
                 <button id="sendButton" class="send-button" type="submit" aria-label="ارسال پیام" disabled>
@@ -154,7 +154,7 @@
             </div>
           </form>
 
-          <div class="composer-disclaimer">پاسخ‌ها را بررسی کنید؛ عملیات تغییردهنده فقط با Approval معتبر اجرا می‌شوند.</div>
+          <div class="composer-disclaimer">پاسخ‌ها را بررسی کنید؛ عملیات تغییردهنده فقط با تأیید معتبر اجرا می‌شوند.</div>
         </div>
       </section>
     </section>
@@ -182,7 +182,7 @@
         <h2 id="deleteTitle">این گفتگو حذف شود؟</h2>
         <button type="button" class="icon-button" data-close-dialog="deleteDialog" aria-label="بستن">×</button>
       </div>
-      <p>این کار تاریخچه گفتگو را از رابط کاربری حذف می‌کند. رکوردهای Audit و governance مرتبط با عملیات طبق سیاست backend حفظ می‌شوند.</p>
+      <p>این کار تاریخچه گفتگو را از رابط کاربری حذف می‌کند. سوابق ممیزی و حاکمیت مرتبط با عملیات طبق سیاست‌های سرور حفظ می‌شوند.</p>
       <div class="modal-actions">
         <button id="deleteCancel" type="button" class="button button-secondary" data-close-dialog="deleteDialog" autofocus>انصراف</button>
         <button type="submit" class="button button-danger">حذف گفتگو</button>
