@@ -302,7 +302,7 @@ function addProposalControls(view, proposal) {
   async function decide(value) {
     confirm.disabled = true;
     reject.disabled = true;
-    showStatus(value ? "در حال بررسی و اجرای کنترل‌شدهٔ درخواست…" : "در حال رد کردن درخواست…", "تأیید انسانی");
+    showStatus(value ? "در حال بررسی و اجرای کنترل‌شدهٔ درخواست…" : "در حال رد کردن درخواست…", "approval");
 
     try {
       const result = await api(
@@ -357,7 +357,8 @@ function renderTerminalError(data = {}, retryMessage = "") {
 
 function showStatus(message, meta = "") {
   dom.statusText.textContent = String(message || "در حال پردازش…");
-  dom.statusMeta.textContent = String(meta || "");
+  const metaLabels = {approval: "تأیید انسانی", history: "تاریخچه", cancel: "لغو", loading: "در حال بارگذاری"};
+  dom.statusMeta.textContent = metaLabels[String(meta || "")] || String(meta || "");
   dom.runtimeStatus.classList.remove("hidden");
   dom.messages.setAttribute("aria-busy", "true");
 }
@@ -511,7 +512,7 @@ async function loadHistory() {
     return;
   }
 
-  showStatus("در حال بارگذاری تاریخچه…", "تاریخچه");
+  showStatus("در حال بارگذاری تاریخچه…", "history");
 
   try {
     const history = await api(
@@ -611,7 +612,7 @@ function setStreaming(active) {
 function stopGeneration(reason = "user") {
   if (!state.activeController) return;
   state.stopReason = reason;
-  if (reason === "user") showStatus("در حال توقف پاسخ…", "لغو");
+  if (reason === "user") showStatus("در حال توقف پاسخ…", "cancel");
   state.activeController.abort();
 }
 
