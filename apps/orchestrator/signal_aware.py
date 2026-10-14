@@ -417,6 +417,23 @@ class SignalAwareE2EOrchestrator(E2EOrchestrator):
                 }
                 if isinstance(proposal.get("config_discovery"), dict):
                     proposal["config_discovery"]["llm_guidance_status"] = guidance.get("status", "unavailable")
+            if (
+                not settings.AIOPS_DYNAMIC_INVESTIGATION_ENABLED
+                and any(gap.get("topic") in {
+                    "config_validation_method", "service_configuration_discovery",
+                    "service_configuration_location",
+                } for gap in unknowns)
+            ):
+                # LLM general knowledge is advisory; try organization-scoped
+                # Cognia for documented vendor procedure, with the same
+                # evidence/subject-scope and bounded query budget.
+                try:
+                    research = await DynamicInvestigationPlanner.enrich_knowledge(state)
+                except Exception as exc:
+                    research = {"status": "unavailable", "error_type": type(exc).__name__}
+                proposal = context.get("dynamic_investigation")
+                if isinstance(proposal, dict):
+                    proposal["knowledge_followup"] = research
             self._audit(
                 "operational_unknown_guidance_consulted",
                 state,
