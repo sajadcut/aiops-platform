@@ -66,7 +66,7 @@ function pill(v = '') {
   else if (/success|approved|resolved|healthy|ready|verified|completed|persisted|consumed/.test(s)) c = 'green';
   else if (/pending|high|warning|degraded|partial|inconclusive|not_persisted/.test(s)) c = 'amber';
   else if (/analyz|running|medium|current/.test(s)) c = 'violet';
-  return `<span class="pill ${c}">${esc(v || '—')}</span>`;
+  return `<span class="pill ${c}">${esc(faStatus(v || '—'))}</span>`;
 }
 
 function headers() {
@@ -175,7 +175,17 @@ function faStatus(value) {
     consumed: 'مصرف‌شده', failed: 'ناموفق', failure: 'ناموفق', not_persisted: 'ثبت‌نشده',
     blocked: 'مسدودشده', partial: 'ناقص', inconclusive: 'نامشخص',
     verified: 'راستی‌آزمایی‌شده', completed: 'تکمیل‌شده',
-    success: 'موفق', running: 'در حال اجرا', warning: 'هشدار'
+    success: 'موفق', running: 'در حال اجرا', warning: 'هشدار',
+    unknown: 'نامشخص', not_recorded: 'ثبت نشده', not_requested: 'درخواست نشده',
+    not_persisted: 'در حافظه ثبت نشده', persisted: 'در حافظه ثبت شده',
+    enabled: 'فعال', disabled: 'غیرفعال', ready: 'آماده', queued: 'در صف',
+    in_progress: 'در حال انجام', skipped: 'انجام نشده', timeout: 'پایان مهلت',
+    awaiting_approval: 'در انتظار تأیید', awaiting_execution: 'در انتظار اجرا',
+    not_applicable: 'قابل اعمال نیست', pending_review: 'در انتظار بازبینی',
+    published: 'منتشرشده', submitted: 'ارسال‌شده', publishing: 'در حال انتشار',
+    publish_failed: 'انتشار ناموفق', approved_pending_execution: 'تأییدشده، منتظر اجرا',
+    passed: 'موفق', error: 'خطا', stale: 'قدیمی', fresh: 'تازه',
+    unreachable: 'غیرقابل دسترس', healthy_verified: 'سلامت تأیید شد'
   })[v] || String(value ?? 'نامشخص');
 }
 
@@ -367,9 +377,9 @@ function renderIncidents() {
   const sev = $('#severityFilter')?.value || '';
   const status = $('#statusFilter')?.value || '';
   const rows = S.incidents.filter(i => (!q || lower([i.id, i.service, i.summary, i.execution_target, i.execution_tool, i.runbook_id].join(' ')).includes(q)) && (!sev || lower(i.severity) === sev) && (!status || lower(i.status) === status));
-  if ($('#incidentCount')) $('#incidentCount').textContent = `${rows.length} incidents`;
+  if ($('#incidentCount')) $('#incidentCount').textContent = `${rows.length} رخداد`;
   if (!$('#incidentRows')) return;
-  $('#incidentRows').innerHTML = rows.map(i => `<tr class="${S.selected === i.id ? 'selected' : ''}" onclick="selectIncident('${esc(i.id)}')"><td><div class="incident-main">${esc(String(i.id).slice(0, 8))}</div><div class="incident-sub">${esc(i.summary || '')}</div></td><td>${esc(i.service || '—')}</td><td>${pill(i.severity)}</td><td>${pill(i.status)}</td><td>${pct(i.confidence)}</td><td>${pill(i.risk_level || '—')}</td><td>${pill(i.approval_status || '—')}</td><td>${pill(i.execution_status || '—')}</td><td>${pill(i.verification_status || '—')}</td><td>${pill(i.memory_status || '—')}</td><td>${fmtShortDate(i.created_at)}</td></tr>`).join('') || '<tr><td colspan="11"><div class="empty-state">No incidents match the current filters.</div></td></tr>';
+  $('#incidentRows').innerHTML = rows.map(i => `<tr class="${S.selected === i.id ? 'selected' : ''}" onclick="selectIncident('${esc(i.id)}')"><td><div class="incident-main">${esc(String(i.id).slice(0, 8))}</div><div class="incident-sub">${esc(i.summary || '')}</div></td><td>${esc(i.service || '—')}</td><td>${pill(i.severity)}</td><td>${pill(i.status)}</td><td>${pct(i.confidence)}</td><td>${pill(i.risk_level || '—')}</td><td>${pill(i.approval_status || '—')}</td><td>${pill(i.execution_status || '—')}</td><td>${pill(i.verification_status || '—')}</td><td>${pill(i.memory_status || '—')}</td><td>${fmtShortDate(i.created_at)}</td></tr>`).join('') || '<tr><td colspan="11"><div class="empty-state">هیچ رخدادی با فیلترهای انتخاب‌شده مطابقت ندارد.</div></td></tr>';
 }
 
 function renderServices() {
@@ -377,11 +387,11 @@ function renderServices() {
   const q = lower($('#serviceSearch')?.value);
   const risk = $('#serviceRiskFilter')?.value || '';
   const rows = S.services.filter(s => (!q || lower([s.service, s.latest_summary].join(' ')).includes(q)) && (!risk || serviceState(s) === risk));
-  $('#serviceCount').textContent = `${rows.length} services`;
+  $('#serviceCount').textContent = `${rows.length} سرویس`;
   $('#serviceGrid').innerHTML = rows.map(s => {
     const state = serviceState(s);
-    return `<article class="panel service-card"><div class="service-card-top"><div><span class="section-kicker">Service</span><h3>${esc(s.service)}</h3></div>${pill(state)}</div><p>${esc(s.latest_summary || 'No incident summary available.')}</p><div class="service-metrics"><div class="service-metric"><label>Active</label><strong>${s.incidents_active}</strong></div><div class="service-metric"><label>Critical / High</label><strong>${s.critical_active} / ${s.high_active}</strong></div><div class="service-metric"><label>Confidence</label><strong>${pct(s.mean_active_confidence)}</strong></div><div class="service-metric"><label>Awaiting approval/exec</label><strong>${Number(s.approvals_pending || 0) + Number(s.approvals_approved || 0)}</strong></div><div class="service-metric"><label>Verified</label><strong>${s.successful_verifications || 0}</strong></div><div class="service-metric"><label>Learned</label><strong>${s.memory_persisted || 0}</strong></div></div><div class="service-footer"><span>${s.failed_executions || 0} execution failures · ${s.failed_verifications || 0} verification failures · ${Number(s.partial_verifications || 0) + Number(s.inconclusive_verifications || 0)} uncertain</span><span>${fmtShortDate(s.last_incident_at)}</span></div></article>`;
-  }).join('') || '<div class="panel empty-state">No services match the current filter.</div>';
+    return `<article class="panel service-card"><div class="service-card-top"><div><span class="section-kicker">سرویس</span><h3>${esc(s.service)}</h3></div>${pill(state)}</div><p>${esc(s.latest_summary || 'خلاصه‌ای از رخداد ثبت نشده است.')}</p><div class="service-metrics"><div class="service-metric"><label>رخداد فعال</label><strong>${s.incidents_active}</strong></div><div class="service-metric"><label>بحرانی / زیاد</label><strong>${s.critical_active} / ${s.high_active}</strong></div><div class="service-metric"><label>میزان اطمینان</label><strong>${pct(s.mean_active_confidence)}</strong></div><div class="service-metric"><label>منتظر تأیید یا اجرا</label><strong>${Number(s.approvals_pending || 0) + Number(s.approvals_approved || 0)}</strong></div><div class="service-metric"><label>راستی‌آزمایی‌شده</label><strong>${s.successful_verifications || 0}</strong></div><div class="service-metric"><label>ثبت‌شده در حافظه</label><strong>${s.memory_persisted || 0}</strong></div></div><div class="service-footer"><span>${s.failed_executions || 0} اجرای ناموفق · ${s.failed_verifications || 0} راستی‌آزمایی ناموفق · ${Number(s.partial_verifications || 0) + Number(s.inconclusive_verifications || 0)} نامشخص</span><span>${fmtShortDate(s.last_incident_at)}</span></div></article>`;
+  }).join('') || '<div class="panel empty-state">هیچ سرویسی با فیلتر انتخاب‌شده مطابقت ندارد.</div>';
 }
 
 function openIncident(id) {
@@ -393,7 +403,7 @@ async function selectIncident(id) {
   S.selected = id;
   S.memoryLoadingFor = null;
   renderIncidents();
-  $('#detail').innerHTML = '<div class="empty-state tall">Loading durable incident state…</div>';
+  $('#detail').innerHTML = '<div class="empty-state tall">در حال دریافت وضعیت ثبت‌شدهٔ رخداد…</div>';
   try {
     const [context, evidence, lifecycle, verification] = await Promise.all([
       api(`/api/v1/incidents/${id}/context`),
@@ -451,7 +461,7 @@ function workflowStages(l) {
     if (name === 'approval' && approvalStatus === 'rejected') cls = 'failed';
     if (name === 'verification' && /failed|failure/.test(verificationStatus)) cls = 'failed';
     if (name === 'memory' && mem === 'not_persisted') cls = 'warning';
-    return `<div class="stage ${cls}">${name}</div>`;
+    return `<div class="stage ${cls}">${esc(({signal:'سیگنال',evidence:'شواهد',triage:'دسته‌بندی',agents:'ایجنت‌ها',evaluator:'ارزیابی',decision:'تصمیم',approval:'تأیید انسانی',execution:'اجرا',verification:'راستی‌آزمایی',memory:'حافظه'})[name] || name)}</div>`;
   }).join('');
 }
 
@@ -474,50 +484,50 @@ function renderBinding(approval = {}) {
     runbook_version: m.runbook_version,
     rollback: m.rollback
   };
-  return `<div class="insight-card"><h4>Execution binding</h4><p>Approval is scoped to this immutable execution intent. The signed execution capability itself is intentionally not exposed in the dashboard.</p><div class="json">${esc(JSON.stringify(binding, null, 2))}</div></div>`;
+  return `<div class="insight-card"><h4>اتصال مجوز به عملیات</h4><p>تأیید فقط برای همین عملیاتِ ثبت‌شده معتبر است. مجوز امضاشدهٔ اجرا برای حفظ امنیت در داشبورد نمایش داده نمی‌شود.</p><div class="json">${esc(JSON.stringify(binding, null, 2))}</div></div>`;
 }
 
 function renderVerification(l, v, incident) {
   const result = l.verification || {};
   const status = result.status || incident.verification_status || v.items?.[0]?.metadata?.status || 'not_recorded';
   const changes = result.changes || [];
-  return `<div class="verification-hero"><div><span class="section-kicker">Independent verification</span><h3>${esc(status)}</h3><p>${esc(result.message || 'Verification is based on post-execution operational evidence, not command exit status alone.')}</p></div>${pill(status)}</div><div class="fact-grid verification-facts"><div class="fact"><label>Confidence</label><strong>${result.confidence != null ? pct(result.confidence) : '—'}</strong></div><div class="fact"><label>Comparable metrics</label><strong>${result.comparable_metrics ?? '—'}</strong></div><div class="fact"><label>Evidence refs</label><strong>${result.evidence_refs?.length ?? '—'}</strong></div><div class="fact"><label>Memory</label><strong>${esc(memoryState(l))}</strong></div></div>${changes.length ? `<div class="insight-card"><h4>Before → after</h4>${changes.map(x => `<div class="change-row">${esc(x)}</div>`).join('')}</div>` : ''}<div class="insight-card"><h4>Verification result</h4><div class="json">${esc(JSON.stringify(result, null, 2))}</div></div>${(v.items || []).map(x => `<div class="insight-card"><h4>${esc(x.event_type || 'verification audit')}</h4><div class="json">${esc(JSON.stringify(x, null, 2))}</div></div>`).join('')}`;
+  return `<div class="verification-hero"><div><span class="section-kicker">راستی‌آزمایی مستقل</span><h3>${esc(faStatus(status))}</h3><p>${esc(result.message || 'راستی‌آزمایی براساس شواهد عملیاتی پس از اجرا انجام می‌شود، نه صرفاً کد خروج دستور.')}</p></div>${pill(status)}</div><div class="fact-grid verification-facts"><div class="fact"><label>میزان اطمینان</label><strong>${result.confidence != null ? pct(result.confidence) : '—'}</strong></div><div class="fact"><label>متریک‌های قابل مقایسه</label><strong>${result.comparable_metrics ?? '—'}</strong></div><div class="fact"><label>ارجاعات شواهد</label><strong>${result.evidence_refs?.length ?? '—'}</strong></div><div class="fact"><label>حافظهٔ عملیاتی</label><strong>${esc(faStatus(memoryState(l)))}</strong></div></div>${changes.length ? `<div class="insight-card"><h4>قبل و بعد از اقدام</h4>${changes.map(x => `<div class="change-row">${esc(x)}</div>`).join('')}</div>` : ''}<div class="insight-card"><h4>نتیجهٔ راستی‌آزمایی</h4><div class="json">${esc(JSON.stringify(result, null, 2))}</div></div>${(v.items || []).map(x => `<div class="insight-card"><h4>${esc(x.event_type || 'ممیزی راستی‌آزمایی')}</h4><div class="json">${esc(JSON.stringify(x, null, 2))}</div></div>`).join('')}`;
 }
 
 function renderDetail(tab = 'overview') {
   if (!S.detail) return;
   const {context: c, evidence: e, lifecycle: l, verification: v, memory} = S.detail;
   const incident = S.incidents.find(x => x.id === S.selected) || {};
-  const approvalStatus = l.approval?.status || incident.approval_status || 'not requested';
-  const executionStatus = l.execution?.success === true ? 'success' : l.execution?.blocked === true ? 'blocked' : l.execution ? 'failed' : incident.execution_status || 'not recorded';
-  const verificationStatus = l.verification?.status || incident.verification_status || 'not recorded';
+  const approvalStatus = l.approval?.status || incident.approval_status || 'not_requested';
+  const executionStatus = l.execution?.success === true ? 'success' : l.execution?.blocked === true ? 'blocked' : l.execution ? 'failed' : incident.execution_status || 'not_recorded';
+  const verificationStatus = l.verification?.status || incident.verification_status || 'not_recorded';
 
-  $('#detail').innerHTML = `<div class="detail-head"><div class="detail-title-row"><div><div class="detail-title">${esc(c.service || incident.service || 'Incident')}</div><div class="detail-id">${esc(c.incident_id || S.selected)}</div></div>${pill(c.severity || incident.severity)}</div><div class="detail-summary">${esc(c.summary || incident.summary || 'No incident summary')}</div><div class="fact-grid"><div class="fact"><label>Status</label><strong>${esc(c.status || incident.status || '—')}</strong></div><div class="fact"><label>Current node</label><strong>${esc(l.current_node || l.checkpoint_status || '—')}</strong></div><div class="fact"><label>Risk</label><strong>${esc(incident.risk_level || l.decision?.risk || l.decision?.risk_level || '—')}</strong></div><div class="fact"><label>Evidence rounds</label><strong>${esc(l.evidence_rounds ?? 0)}</strong></div></div><div class="control-state-row">${pill(`approval: ${approvalStatus}`)}${pill(`execution: ${executionStatus}`)}${pill(`verification: ${verificationStatus}`)}${pill(`memory: ${memoryState(l)}`)}</div></div><div class="tabs">${['overview','evidence','agents','decision','verification','memory','audit'].map(t => `<button class="${t === tab ? 'active' : ''}" onclick="renderDetail('${t}')">${t}</button>`).join('')}</div><div id="detailPane" class="detail-pane"></div>`;
+  $('#detail').innerHTML = `<div class="detail-head"><div class="detail-title-row"><div><div class="detail-title">${esc(c.service || incident.service || 'رخداد')}</div><div class="detail-id">${esc(c.incident_id || S.selected)}</div></div>${pill(c.severity || incident.severity)}</div><div class="detail-summary">${esc(c.summary || incident.summary || 'خلاصهٔ رخداد ثبت نشده است')}</div><div class="fact-grid"><div class="fact"><label>وضعیت</label><strong>${esc(faStatus(c.status || incident.status || '—'))}</strong></div><div class="fact"><label>مرحلهٔ جاری</label><strong>${esc(l.current_node || l.checkpoint_status || '—')}</strong></div><div class="fact"><label>ریسک</label><strong>${esc(faStatus(incident.risk_level || l.decision?.risk || l.decision?.risk_level || '—'))}</strong></div><div class="fact"><label>دفعات جمع‌آوری شواهد</label><strong>${esc(l.evidence_rounds ?? 0)}</strong></div></div><div class="control-state-row">${pill(`تأیید: ${faStatus(approvalStatus)}`)}${pill(`اجرا: ${faStatus(executionStatus)}`)}${pill(`راستی‌آزمایی: ${faStatus(verificationStatus)}`)}${pill(`حافظه: ${faStatus(memoryState(l))}`)}</div></div><div class="tabs">${['overview','evidence','agents','decision','verification','memory','audit'].map(t => `<button class="${t === tab ? 'active' : ''}" onclick="renderDetail('${t}')">${({overview:'نمای کلی',evidence:'شواهد',agents:'ایجنت‌ها',decision:'تصمیم',verification:'راستی‌آزمایی',memory:'حافظهٔ عملیاتی',audit:'ممیزی'})[t] || t}</button>`).join('')}</div><div id="detailPane" class="detail-pane"></div>`;
 
   const pane = $('#detailPane');
   if (tab === 'overview') {
     const coord = l.coordination || {};
     const evaln = l.evaluation || {};
     const routing = l.routing || {};
-    pane.innerHTML = `<div class="workflow">${workflowStages(l)}</div>${confidenceBlock('Incident confidence', incident.confidence)}<div class="insight-card"><h4>Routing / RCA / evaluator</h4><p>${esc(coord.summary || coord.statement || l.terminal_reason || 'Structured coordination and evaluator state are available below.')}</p><div class="json">${esc(JSON.stringify({routing, triage:l.triage, coordination:coord, evaluation:evaln}, null, 2))}</div></div><div class="insight-card"><h4>Governed control state</h4><p>Decision ${esc(l.decision?.decision || incident.decision || 'pending')} · Approval ${esc(approvalStatus)} · Execution ${esc(executionStatus)} · Verification ${esc(verificationStatus)} · Memory ${esc(memoryState(l))}</p></div>`;
+    pane.innerHTML = `<div class="workflow">${workflowStages(l)}</div>${confidenceBlock('اطمینان تحلیل رخداد', incident.confidence)}<div class="insight-card"><h4>مسیریابی / تحلیل علت / ارزیاب</h4><p>${esc(coord.summary || coord.statement || l.terminal_reason || 'نتیجهٔ هماهنگی ایجنت‌ها و ارزیابی تصمیم در ادامه آمده است.')}</p><div class="json">${esc(JSON.stringify({routing, triage:l.triage, coordination:coord, evaluation:evaln}, null, 2))}</div></div><div class="insight-card"><h4>وضعیت کنترل و مجوز عملیات</h4><p>Decision ${esc(l.decision?.decision || incident.decision || 'pending')} · Approval ${esc(approvalStatus)} · Execution ${esc(executionStatus)} · Verification ${esc(verificationStatus)} · Memory ${esc(faStatus(memoryState(l)))}</p></div>`;
   }
-  if (tab === 'evidence') pane.innerHTML = (e.items || []).map(x => `<div class="evidence-card"><h4>${esc(x.source || 'evidence')} · ${esc(x.type || 'record')}</h4><p>${esc(x.reference || x.query || 'Durable production evidence')}</p><div class="json">${esc(JSON.stringify(x.raw_data || {}, null, 2))}</div></div>`).join('') || '<div class="empty-state">No evidence recorded.</div>';
-  if (tab === 'agents') pane.innerHTML = `<div class="insight-card"><h4>Specialist routing</h4><div class="json">${esc(JSON.stringify(l.routing || {}, null, 2))}</div></div>` + ((l.agents || []).map(a => `<div class="agent-card"><h4>${esc(a.agent_name || a.agent || 'agent')}</h4><p>${esc(a.statement || a.finding_type || 'Structured specialist analysis')}</p><div class="confidence-line"><div class="confidence-meter"><i style="width:${Math.max(0, Math.min(1, Number(a.confidence) || 0)) * 100}%"></i></div><b>${pct(a.confidence)}</b></div><div class="json">${esc(JSON.stringify(a, null, 2))}</div></div>`).join('') || '<div class="empty-state">No specialist findings recorded.</div>');
-  if (tab === 'decision') pane.innerHTML = `<div class="insight-card"><h4>Evaluator gate</h4><div class="json">${esc(JSON.stringify(l.evaluation || {}, null, 2))}</div></div><div class="insight-card"><h4>Decision / policy</h4><div class="json">${esc(JSON.stringify(l.decision || {}, null, 2))}</div></div><div class="insight-card"><h4>Final remediation plan</h4><p>${esc(l.final_plan || 'No final plan recorded.')}</p></div>${renderBinding(l.approval || {})}<div class="insight-card"><h4>Approval</h4><div class="json">${esc(JSON.stringify(l.approval || {}, null, 2))}</div></div><div class="insight-card"><h4>Execution receipt</h4><div class="json">${esc(JSON.stringify(l.execution || {}, null, 2))}</div></div>`;
+  if (tab === 'evidence') pane.innerHTML = (e.items || []).map(x => `<div class="evidence-card"><h4>${esc(x.source || 'evidence')} · ${esc(x.type || 'رکورد')}</h4><p>${esc(x.reference || x.query || 'شواهد ماندگار محیط عملیاتی')}</p><div class="json">${esc(JSON.stringify(x.raw_data || {}, null, 2))}</div></div>`).join('') || '<div class="empty-state">شواهدی ثبت نشده است.</div>';
+  if (tab === 'agents') pane.innerHTML = `<div class="insight-card"><h4>مسیریابی ایجنت‌های متخصص</h4><div class="json">${esc(JSON.stringify(l.routing || {}, null, 2))}</div></div>` + ((l.agents || []).map(a => `<div class="agent-card"><h4>${esc(a.agent_name || a.agent || 'agent')}</h4><p>${esc(a.statement || a.finding_type || 'تحلیل ساختاریافتهٔ متخصص')}</p><div class="confidence-line"><div class="confidence-meter"><i style="width:${Math.max(0, Math.min(1, Number(a.confidence) || 0)) * 100}%"></i></div><b>${pct(a.confidence)}</b></div><div class="json">${esc(JSON.stringify(a, null, 2))}</div></div>`).join('') || '<div class="empty-state">یافته‌ای از ایجنت‌های متخصص ثبت نشده است.</div>');
+  if (tab === 'decision') pane.innerHTML = `<div class="insight-card"><h4>کنترل ارزیاب</h4><div class="json">${esc(JSON.stringify(l.evaluation || {}, null, 2))}</div></div><div class="insight-card"><h4>تصمیم و سیاست‌ها</h4><div class="json">${esc(JSON.stringify(l.decision || {}, null, 2))}</div></div><div class="insight-card"><h4>برنامهٔ نهایی اصلاح</h4><p>${esc(l.final_plan || 'برنامهٔ نهایی ثبت نشده است.')}</p></div>${renderBinding(l.approval || {})}<div class="insight-card"><h4>تأیید انسانی</h4><div class="json">${esc(JSON.stringify(l.approval || {}, null, 2))}</div></div><div class="insight-card"><h4>رسید اجرا</h4><div class="json">${esc(JSON.stringify(l.execution || {}, null, 2))}</div></div>`;
   if (tab === 'verification') pane.innerHTML = renderVerification(l, v, incident);
   if (tab === 'memory') {
     if (!memory) {
-      pane.innerHTML = '<div class="empty-state">Loading historical Operational Memory on demand…</div>';
+      pane.innerHTML = '<div class="empty-state">در حال دریافت حافظهٔ عملیاتی تاریخی…</div>';
       loadIncidentMemory(S.selected);
       return;
     }
     const writeback = (l.audit || []).filter(a => lower(a.event_type).startsWith('memory_writeback'));
     const episode = memory?.current_episode || null;
     const policy = memory?.policy || {};
-    const episodeFacts = episode ? `<div class="fact-grid"><div class="fact"><label>Outcome</label><strong>${esc(episode.memory_outcome_class || '—')}</strong></div><div class="fact"><label>Root cause status</label><strong>${esc(episode.root_cause_status || '—')}</strong></div><div class="fact"><label>Embedding</label><strong>${esc(episode.embedding_status || '—')}</strong></div><div class="fact"><label>Reuse</label><strong>${esc(episode.reuse_count ?? 0)}</strong></div></div>` : '';
-    pane.innerHTML = `<div class="insight-card"><h4>Operational Memory policy</h4><p>${esc(policy.label || 'HISTORICAL OPERATIONAL EXPERIENCE')} · Historical memory is auxiliary context, never current Evidence, and every reused action requires fresh validation.</p></div><div class="insight-card"><h4>Current incident episode</h4>${episodeFacts}<div class="json">${esc(JSON.stringify(episode || {status:'not_recorded'}, null, 2))}</div></div><div class="insight-card"><h4>Memory write-back audit</h4><p>Successful, partial, failed and blocked outcomes may be retained as labeled historical experience. Cognia Knowledge remains a separate governed domain.</p><div class="json">${esc(JSON.stringify(writeback, null, 2))}</div></div><div class="insight-card"><h4>Historical Operational Memory ≠ Live Evidence</h4><p>Similar incidents, historical RCA, previous actions and failed attempts are advisory only.</p><div class="fact-grid"><div class="fact"><label>Similar incidents</label><strong>${esc((memory?.similar_incidents || memory?.items || []).length)}</strong></div><div class="fact"><label>Failed previous attempts</label><strong>${esc((memory?.failed_previous_attempts || []).length)}</strong></div></div>${memory?.error ? `<p>${esc(memory.error)}</p>` : ''}<div class="json">${esc(JSON.stringify({similar_incidents: memory?.similar_incidents || memory?.items || [], historical_rca: memory?.historical_rca || [], previous_actions: memory?.previous_actions || [], failed_previous_attempts: memory?.failed_previous_attempts || []}, null, 2))}</div></div>`;
+    const episodeFacts = episode ? `<div class="fact-grid"><div class="fact"><label>نتیجه</label><strong>${esc(episode.memory_outcome_class || '—')}</strong></div><div class="fact"><label>وضعیت علت ریشه‌ای</label><strong>${esc(episode.root_cause_status || '—')}</strong></div><div class="fact"><label>بردار دانش</label><strong>${esc(episode.embedding_status || '—')}</strong></div><div class="fact"><label>دفعات استفادهٔ مجدد</label><strong>${esc(episode.reuse_count ?? 0)}</strong></div></div>` : '';
+    pane.innerHTML = `<div class="insight-card"><h4>سیاست حافظهٔ عملیاتی</h4><p>${esc(policy.label || 'تجربهٔ عملیاتی تاریخی')} · حافظهٔ تاریخی فقط زمینهٔ کمکی است و هر اقدام برگرفته از آن نیاز به اعتبارسنجی تازه دارد.</p></div><div class="insight-card"><h4>سابقهٔ همین رخداد</h4>${episodeFacts}<div class="json">${esc(JSON.stringify(episode || {status:'not_recorded'}, null, 2))}</div></div><div class="insight-card"><h4>ممیزی ثبت در حافظه</h4><p>نتایج موفق، ناقص، ناموفق و مسدود ممکن است با برچسب مناسب در تجربه‌های تاریخی ثبت شوند. دانش کاگنیا مستقل است.</p><div class="json">${esc(JSON.stringify(writeback, null, 2))}</div></div><div class="insight-card"><h4>حافظهٔ تاریخی جایگزین شواهد زنده نیست</h4><p>رخدادهای مشابه، تحلیل علت تاریخی و اقدامات قبلی صرفاً راهنما هستند.</p><div class="fact-grid"><div class="fact"><label>رخدادهای مشابه</label><strong>${esc((memory?.similar_incidents || memory?.items || []).length)}</strong></div><div class="fact"><label>اقدامات ناموفق پیشین</label><strong>${esc((memory?.failed_previous_attempts || []).length)}</strong></div></div>${memory?.error ? `<p>${esc(memory.error)}</p>` : ''}<div class="json">${esc(JSON.stringify({similar_incidents: memory?.similar_incidents || memory?.items || [], historical_rca: memory?.historical_rca || [], previous_actions: memory?.previous_actions || [], failed_previous_attempts: memory?.failed_previous_attempts || []}, null, 2))}</div></div>`;
   }
-  if (tab === 'audit') pane.innerHTML = (l.audit || []).map(timelineItem).join('') || '<div class="empty-state">No incident audit events.</div>';
+  if (tab === 'audit') pane.innerHTML = (l.audit || []).map(timelineItem).join('') || '<div class="empty-state">رویداد ممیزی برای این رخداد ثبت نشده است.</div>';
 }
 
 async function loadAgents() {
@@ -529,8 +539,8 @@ async function loadAgents() {
     S.agentMetrics.forEach(x => metrics[x.agent_name || x.agent] = x);
     $('#agentsGrid').innerHTML = S.agents.map(a => {
       const met = metrics[a.name] || {};
-      return `<article class="panel agent-manifest"><div style="display:flex;justify-content:space-between">${pill(a.enabled ? 'enabled' : 'disabled')}<span class="muted" style="font-size:7px">${esc(a.version || '')}</span></div><h3>${esc(a.name)}</h3><p>${esc(a.description || a.responsibility || 'Analysis-only specialist')}</p><div class="tags">${(a.capabilities || a.read_capabilities || []).slice(0, 8).map(x => `<span>${esc(x)}</span>`).join('')}</div><div class="mini-metrics"><div><label>Invocations</label><strong>${met.invocations ?? 0}</strong></div><div><label>Avg confidence</label><strong>${pct(met.average_confidence || 0)}</strong></div></div></article>`;
-    }).join('') || '<div class="panel empty-state">No agents available.</div>';
+      return `<article class="panel agent-manifest"><div style="display:flex;justify-content:space-between">${pill(a.enabled ? 'enabled' : 'disabled')}<span class="muted" style="font-size:7px">${esc(a.version || '')}</span></div><h3>${esc(a.name)}</h3><p>${esc(a.description || a.responsibility || 'ایجنت متخصص تحلیل')}</p><div class="tags">${(a.capabilities || a.read_capabilities || []).slice(0, 8).map(x => `<span>${esc(x)}</span>`).join('')}</div><div class="mini-metrics"><div><label>دفعات فراخوانی</label><strong>${met.invocations ?? 0}</strong></div><div><label>میانگین اطمینان</label><strong>${pct(met.average_confidence || 0)}</strong></div></div></article>`;
+    }).join('') || '<div class="panel empty-state">ایجنتی در دسترس نیست.</div>';
   } catch (e) { showError(e.message); }
 }
 
@@ -538,24 +548,24 @@ function renderMcp() {
   if (!$('#mcpGrid')) return;
   const ext = S.health?.components?.external || {};
   const defs = [
-    ['Zabbix MCP', 'zabbix_mcp', 'Monitoring alerts, problems and host context', 'Operational Evidence'],
-    ['Elastic Agent Builder MCP', 'elasticsearch_mcp', 'Logs and governed ES|QL evidence', 'Operational Evidence'],
-    ['Prometheus MCP', 'prometheus_mcp', 'Metrics, series and alert evidence', 'Operational Evidence']
+    ['Zabbix MCP', 'zabbix_mcp', 'پایش هشدارها، مشکلات و اطلاعات میزبان', 'شواهد عملیاتی'],
+    ['Elastic Agent Builder MCP', 'elasticsearch_mcp', 'لاگ‌ها و شواهد ES|QL تحت نظارت', 'شواهد عملیاتی'],
+    ['Prometheus MCP', 'prometheus_mcp', 'متریک‌ها، سری‌های زمانی و شواهد هشدار', 'شواهد عملیاتی']
   ];
-  if (Object.prototype.hasOwnProperty.call(ext, 'vm_mcp')) defs.push(['VM Edge MCP', 'vm_mcp', 'VM telemetry plus governed service remediation', 'Execution Boundary']);
-  if (Object.prototype.hasOwnProperty.call(ext, 'kubernetes_mcp')) defs.push(['Kubernetes MCP', 'kubernetes_mcp', 'Optional Kubernetes operational boundary', 'Execution Boundary']);
-  if (Object.prototype.hasOwnProperty.call(ext, 'jenkins_mcp')) defs.push(['Jenkins MCP', 'jenkins_mcp', 'Optional governed delivery boundary', 'Execution Boundary']);
-  if (Object.prototype.hasOwnProperty.call(ext, 'cognia')) defs.push(['Cognia Knowledge API', 'cognia', 'Sole governed organizational Knowledge RAG; not an MCP operational tool', 'Knowledge Boundary']);
+  if (Object.prototype.hasOwnProperty.call(ext, 'vm_mcp')) defs.push(['VM Edge MCP', 'vm_mcp', 'پایش ماشین مجازی و اصلاح کنترل‌شدهٔ سرویس', 'مرز اجرا']);
+  if (Object.prototype.hasOwnProperty.call(ext, 'kubernetes_mcp')) defs.push(['Kubernetes MCP', 'kubernetes_mcp', 'مرز اختیاری عملیات کوبرنتیز', 'مرز اجرا']);
+  if (Object.prototype.hasOwnProperty.call(ext, 'jenkins_mcp')) defs.push(['Jenkins MCP', 'jenkins_mcp', 'مرز اختیاری انتشار تحت نظارت', 'مرز اجرا']);
+  if (Object.prototype.hasOwnProperty.call(ext, 'cognia')) defs.push(['Cognia Knowledge API', 'cognia', 'بازیابی دانش سازمانی تحت نظارت؛ ابزار عملیاتی MCP نیست', 'مرز دانش']);
   $('#mcpGrid').innerHTML = defs.map(([name, key, desc, boundary]) => {
     const x = ext[key] || {};
-    return `<article class="panel mcp-card"><div class="mcp-card-head"><div class="mcp-icon">◇</div>${pill(x.healthy ? 'healthy' : x.configured === false ? 'not configured' : 'unavailable')}</div><span class="section-kicker">${esc(boundary)}</span><h3>${esc(name)}</h3><p>${esc(desc)}</p><div class="mcp-status"><span>Connection</span><strong>${x.healthy ? 'Healthy' : 'Unavailable'}</strong></div>${x.error ? `<div class="dependency-error">${esc(x.error)}</div>` : ''}</article>`;
+    return `<article class="panel mcp-card"><div class="mcp-card-head"><div class="mcp-icon">◇</div>${pill(x.healthy ? 'healthy' : x.configured === false ? 'not_configured' : 'unavailable')}</div><span class="section-kicker">${esc(boundary)}</span><h3>${esc(name)}</h3><p>${esc(desc)}</p><div class="mcp-status"><span>اتصال</span><strong>${x.healthy ? 'سالم' : 'در دسترس نیست'}</strong></div>${x.error ? `<div class="dependency-error">${esc(x.error)}</div>` : ''}</article>`;
   }).join('');
 }
 
 function renderAudit() {
   if (!$('#auditList')) return;
   const a = S.summary?.recent_audit || [];
-  $('#auditList').innerHTML = a.map(timelineItem).join('') || '<div class="empty-state">No audit events recorded.</div>';
+  $('#auditList').innerHTML = a.map(timelineItem).join('') || '<div class="empty-state">رویداد ممیزی ثبت نشده است.</div>';
 }
 
 let incidentQueueRefreshBusy = false;
