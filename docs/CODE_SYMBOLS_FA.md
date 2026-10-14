@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 495 | Dashboard JS files scanned: 8 | Symbols indexed: 5168**
+**Python files scanned: 495 | Dashboard JS files scanned: 8 | Symbols indexed: 5172**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -2363,7 +2363,11 @@
 | `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.start_service` | 96 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
 | `integrations/vm/nginx_config_inspection.py` | `nginx_inspection_command` | 108 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `integrations/vm/nginx_config_inspection.py` | `parse_nginx_inspection` | 123 | function | Allowlist protocol fields; no remote byte contents can cross the MCP. | module |
-| `integrations/vm/nginx_config_review.py` | `nginx_review_command` | 171 | function | The inputs originate exclusively from a verified, failed VM validator. | module |
+| `integrations/vm/nginx_config_review.py` | `_checked_path` | 26 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `integrations/vm/nginx_config_review.py` | `nginx_review_command` | 33 | function | Fixed read-only remote command; never invokes remote Python or writes. | module |
+| `integrations/vm/nginx_config_review.py` | `_visible_line` | 57 | function | Whitelist directive name and structural braces; never output values. | module |
+| `integrations/vm/nginx_config_review.py` | `_repair_line` | 70 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `integrations/vm/nginx_config_review.py` | `local_nginx_review` | 86 | function | Bounded local-only deterministic preview. Never expose original bytes. | module |
 | `integrations/vm/runtime_discovery.py` | `safe_absolute_path` | 19 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `integrations/vm/runtime_discovery.py` | `parse_systemd_runtime` | 28 | function | Extract only allowlisted non-secret fields; no ExecStart/env value returned. | module |
 | `integrations/vm/service_adapters.py` | `ServiceDiagnosticAdapter` | 10 | class | Fixed, allowlisted service-specific diagnostic commands. | module |
