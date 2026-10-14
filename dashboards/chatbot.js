@@ -117,18 +117,18 @@ function renderEmptyState() {
 
   const logo = document.createElement("div");
   logo.className = "empty-logo";
-  logo.textContent = "N";
+  logo.textContent = "ن";
   logo.setAttribute("aria-hidden", "true");
 
   const title = document.createElement("h1");
-  title.textContent = "NeoBanking Chatbot Operation Platform";
+  title.textContent = "دستیار هوشمند عملیات نئوبانکینگ";
 
   const text = document.createElement("p");
-  text.textContent = "از وضعیت سرویس‌ها، VMها، Kubernetes یا رخدادهای عملیاتی سؤال کنید.";
+  text.textContent = "از وضعیت سرویس‌ها، ماشین‌های مجازی، کوبرنتیز یا رخدادهای عملیاتی سؤال کنید.";
 
   const chips = document.createElement("div");
   chips.className = "capability-row";
-  for (const label of ["VM", "Kubernetes", "Zabbix", "Logs", "Service Health"]) {
+  for (const label of ["VM", "Kubernetes", "Zabbix", "لاگ‌ها", "سلامت سرویس"]) {
     const chip = document.createElement("span");
     chip.className = "capability-chip";
     chip.textContent = label;
@@ -166,7 +166,7 @@ function addMessage(role, text, kind = "answer", options = {}) {
   const avatar = document.createElement("div");
   avatar.className = "message-avatar";
   avatar.setAttribute("aria-hidden", "true");
-  avatar.textContent = role === "user" ? "U" : kind === "tool_result" ? "M" : kind === "error" ? "!" : "N";
+  avatar.textContent = role === "user" ? "ک" : kind === "tool_result" ? "ا" : kind === "error" ? "!" : "ن";
 
   const wrap = document.createElement("div");
   wrap.className = "message-content-wrap";
@@ -178,8 +178,8 @@ function addMessage(role, text, kind = "answer", options = {}) {
   label.textContent = role === "user"
     ? "شما"
     : kind === "action_proposal"
-      ? "Action Proposal"
-      : "Operations Copilot";
+      ? "پیشنهاد اقدام"
+      : "دستیار عملیات";
   heading.appendChild(label);
 
   addBadge(heading, options.source);
@@ -242,18 +242,18 @@ function addProposalControls(view, proposal) {
   if (!proposal || !proposal.proposal_id) return;
 
   const entries = [
-    ["Action", proposal.action],
-    ["Target", proposal.target],
+    ["اقدام", proposal.action],
+    ["مقصد", proposal.target],
   ];
 
   if (proposal.parameters && proposal.parameters.service) {
-    entries.push(["Service", proposal.parameters.service]);
+    entries.push(["سرویس", proposal.parameters.service]);
   }
   if (proposal.risk_level) {
-    entries.push(["Risk", proposal.risk_level]);
+    entries.push(["ریسک", proposal.risk_level]);
   }
   if (proposal.source || proposal.tool) {
-    entries.push(["Source", proposal.source || proposal.tool]);
+    entries.push(["منبع", proposal.source || proposal.tool]);
   }
 
   const facts = document.createElement("div");
@@ -289,7 +289,7 @@ function addProposalControls(view, proposal) {
   const confirm = document.createElement("button");
   confirm.type = "button";
   confirm.className = "confirm";
-  confirm.textContent = "تأیید و اجرا";
+  confirm.textContent = "تأیید درخواست";
 
   const reject = document.createElement("button");
   reject.type = "button";
@@ -302,7 +302,7 @@ function addProposalControls(view, proposal) {
   async function decide(value) {
     confirm.disabled = true;
     reject.disabled = true;
-    showStatus(value ? "در حال اجرای کنترل‌شده عملیات…" : "در حال رد کردن درخواست…", "approval");
+    showStatus(value ? "در حال بررسی و اجرای کنترل‌شدهٔ درخواست…" : "در حال رد کردن درخواست…", "تأیید انسانی");
 
     try {
       const result = await api(
@@ -318,7 +318,7 @@ function addProposalControls(view, proposal) {
       renderTerminalError(
         {
           message: friendlyHttpError(error),
-          component: "approval",
+          component: "تأیید انسانی",
           code: error.status ? `HTTP_${error.status}` : "APPROVAL_FAILED",
         },
         "",
@@ -511,7 +511,7 @@ async function loadHistory() {
     return;
   }
 
-  showStatus("در حال بارگذاری تاریخچه…", "history");
+  showStatus("در حال بارگذاری تاریخچه…", "تاریخچه");
 
   try {
     const history = await api(
@@ -571,7 +571,7 @@ async function loadHistory() {
     renderTerminalError(
       {
         message: "تاریخچه بارگذاری نشد.",
-        component: "history",
+        component: "تاریخچه",
         code: error.status ? `HTTP_${error.status}` : "HISTORY_LOAD_FAILED",
       },
       "",
@@ -611,7 +611,7 @@ function setStreaming(active) {
 function stopGeneration(reason = "user") {
   if (!state.activeController) return;
   state.stopReason = reason;
-  if (reason === "user") showStatus("در حال توقف پاسخ…", "cancel");
+  if (reason === "user") showStatus("در حال توقف پاسخ…", "لغو");
   state.activeController.abort();
 }
 
