@@ -355,7 +355,9 @@
     const stored=String(r.localized_narrative?.fa || '').trim();
     const storedNote=isFaText(stored) && stored.length <= 280 &&
       !/^رخداد سرویس|^شواهد ثبت شده|^برای این رخداد/.test(stored) ? stored+' ' : '';
-    const next=x.action?'پیشنهاد سیستم '+humanAction(x.action)+' است.':'هنوز کاری برای اجرا پیشنهاد نشده است.';
+    const next=low(config.status)==='invalid'?
+      'Start سرویس با کانفیگ نامعتبر نباید اجرا شود؛ ابتدا اصلاح و تست دوباره لازم است.':
+      x.action?'پیشنهاد سیستم '+humanAction(x.action)+' است.':'هنوز کاری برای اجرا پیشنهاد نشده است.';
     return 'برای '+subject+where+' رخداد ثبت شده. '+(low(config.status)==='invalid'?'':storedNote)+
       situation+' '+next+
       (low(config.status)==='invalid'?
@@ -1174,9 +1176,12 @@
         'Some agents claimed configuration success, but the direct JSON validation failed. Live validator evidence takes precedence.')+
       '</p>':'';
     const blocked=noProposedAction(r);
-    const decision=blocked?
-      (fa?'در حال حاضر هیچ عملیات اجرایی برای تأیید ایجاد نشده است. ابتدا باید کانفیگ با فرایند مجاز اصلاح و دوباره اعتبارسنجی شود.':
-        'No executable action is authorized. Repair and revalidate under an approved change process first.'):
+    const decision=invalid?
+      (fa?'تا رفع خطای کانفیگ و موفقیت تست مجدد، Start ایمن تأیید نشده است؛ هر تغییر و اجرای بعدی نیازمند فرایند مجوز مستقل است.':
+        'A safe Start is not validated until configuration is repaired and rechecked; separate authorization is required.'):
+      blocked?
+      (fa?'در حال حاضر عملیات اجرایی قابل تأییدی ثبت نشده است؛ ابتدا باید بررسی‌های باقی‌مانده کامل شوند.':
+        'No executable action is currently available; outstanding checks are needed.'):
       (fa?'یک اقدام مشروط پیشنهاد شده است؛ برای اجرا همچنان کنترل‌های ایمنی و تأیید اپراتور ضروری است.':
         'A conditional action exists, subject to preflight and operator approval.');
     const existing=invalid ? [
