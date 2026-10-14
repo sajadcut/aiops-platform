@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 491 | Dashboard JS files scanned: 8 | Symbols indexed: 5098**
+**Python files scanned: 491 | Dashboard JS files scanned: 8 | Symbols indexed: 5099**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -3363,6 +3363,7 @@
 | `tests/unit/test_dashboard_control_center.py` | `test_incident_workbench_defaults_to_last_24h_including_resolved_and_shows_unambiguous_local_time` | 34 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_dashboard_control_center.py` | `test_dashboard_assets_and_agent_route_are_served_by_fastapi` | 49 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_dashboard_control_center.py` | `test_legacy_agent_url_has_compatibility_redirect_only` | 56 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_dashboard_control_center.py` | `test_command_center_is_fully_persian_rtl_without_changing_provider_keys` | 62 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_dashboard_javascript_syntax.py` | `_check_javascript` | 12 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_dashboard_javascript_syntax.py` | `test_dashboard_javascript_syntax` | 19 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_dashboard_persian_translation_flow.py` | `test_persian_tab_fetches_translation_only_once_and_ignores_stale_incident` | 11 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
