@@ -36,7 +36,7 @@ Configuring a runbook name does **not** register, authorize or execute a runbook
 | GET | `/api/v1/incidents/{id}/health-status` | `read:incident` | Read only the most recent matching audited probe |
 | POST | `/api/v1/incidents/{id}/health/recheck` | `read:incident` + strict rate limit | Explicit read-only HTTP GET with bounded 3-second timeout and audit |
 
-The health check restricts targets to the incident-bound **private IPv4**, denies loopback, public addresses, metadata/link-local destinations and user-provided URLs, and allows only a configured port and restricted absolute path. The client does not follow redirects, does not forward credentials or proxy configuration, and never displays response bodies. It only records HTTP status code, outcome, timestamp and source. The repository central HTTP transport factory is used. HTTPS policy depends on the project's centralized transport settings; health probes must not carry secrets.
+The health check restricts targets to the incident-bound **private IPv4**, denies loopback, public addresses, metadata/link-local destinations and user-provided URLs, and allows only a configured port and restricted absolute path. The client does not follow redirects, does not forward credentials or proxy configuration, and never displays response bodies. It only records HTTP status code, outcome, timestamp and source. The dedicated central **verified_async_client** factory enforces TLS certificate and hostname verification for HTTPS health checks; health probes must not carry secrets.
 
 **A successful HTTP status is only a health endpoint response**, not proof of full application correctness or completed incident recovery.
 
