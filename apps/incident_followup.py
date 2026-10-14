@@ -287,7 +287,27 @@ async def persist_and_reassess(
         eid = str(evidence.get("id") or evidence.get("reference") or "")
         if eid:
             merged[eid] = evidence
-    state["context"]["evidence"] = list(merged.values())[-max(1, settings.AGENT_MAX_EVIDENCE_ITEMS):]
+    # Keep the definitive failed validator alongside the new candidate.
+    # Otherwise a long 40+ evidence Incident can lose the exact fatal line
+    # when bounded to the most recent entries.
+    validator = next((
+        e for e in reversed(list(merged.values()))
+        if e.get("source") == "vm_mcp"
+        and isinstance(e.get("raw_data"), dict)
+        and e["raw_data"].get("diagnostic") == "config_validate"
+        and e["raw_data"].get("success") is True
+        and e["raw_data"].get("supported") is True
+        and e["raw_data"].get("valid") is False
+        and str(e["raw_data"].get("service") or "").lower().removesuffix(".service")
+            == incident_service.lower().removesuffix(".service")
+    ), None)
+    total_limit = max(2, settings.AGENT_MAX_EVIDENCE_ITEMS)
+    latest = list(merged.values())
+    state["context"]["evidence"] = (
+        latest[-total_limit:] if not validator else
+        [*[e for e in latest if e is not validator and e is not new_observation][-max(0, total_limit - 2):],
+         validator, new_observation]
+    )
     state["incident_id"] = str(incident_id)
     state["service_name"] = incident_service
     previous_proposal_present = bool(state.pop("execution_request", None))
@@ -311,6 +331,22 @@ async def persist_and_reassess(
         state["analysis_results"] = findings
         state["findings"] = [state.get("triage_result") or {}] + findings
         state["coordination"] = orchestrator.coordinator.synthesize(findings)
+        # A successful read-only Nginx preview must also update the
+        # investigation proposal, not just Agent/Evaluator prose. This
+        # deterministic step is crucial for previously completed Incidents.
+        if (incident_service.lower().removesuffix(".service") == "nginx"
+                and action in {"nginx_config_review", "config_validate"}):
+            from apps.orchestrator.dynamic_investigation import DynamicInvestigationPlanner
+            try:
+                state["context"]["dynamic_investigation"] = (
+                    await DynamicInvestigationPlanner.propose(
+                        state, adapter=getattr(orchestrator, "llm", None),
+                    )
+                )
+            except Exception:
+                # Evidence and agent analysis remain durable even if the
+                # optional LLM planner is unavailable.
+                pass
         await orchestrator._rca_node(state)
         await orchestrator._evaluator_node(state)
         state["followup_analysis"] = {
