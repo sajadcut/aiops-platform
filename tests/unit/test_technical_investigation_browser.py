@@ -44,6 +44,16 @@ const fs=require('node:fs');
     approval_readiness:{status:'not_pending',approval_status:null,binding_complete:false},
     rca_assessment:{rca_confidence:0.2},
     localized_narrative:{fa:'شواهد ثبت‌شده',en:'Recorded evidence'},
+    configuration_diagnostic:{status:'invalid',path_source:'dotnet_config_syntax',
+      config_file:'/data/gfp/gfpapi/appsettings.json',error_line:32,error_column:3,
+      syntax_error:'نام کلید باید داخل کوتیشن دوتایی باشد.',
+      remote_python_required:false,validator_location:'aiops_worker'},
+    operator_explanation:{headline_fa:'خطای ساختار JSON در کانفیگ GFPAPI تأیید شده است.',
+      confirmed_findings:[{text_fa:'بررسی appsettings.json خط ۳۲ ناموفق است.',
+        evidence_refs:['evidence-config-32']}],
+      uncertainties_fa:['ارتباط خطا با Timeout هنوز قطعی نیست.'],
+      next_steps_fa:['اصلاح فایل با فرایند مجاز، تست دوباره و درخواست Approval.'],
+      approval_explanation_fa:'هیچ اقدام اجرایی مجاز نیست.'},
     mcp_evidence:[],agent_findings:[],monitoring_sources:[],
     source_references:[],timeline:[],
     technical_investigation:{
@@ -96,6 +106,17 @@ const fs=require('node:fs');
   vm.runInThisContext(fs.readFileSync('dashboards/incident-command-room.js','utf8'));
   for(let i=0;i<18;i++)await new Promise(resolve=>setImmediate(resolve));
   const page=el('#ic-technical-report').innerHTML;
+  const diagnosis=el('#ic-diagnosis').innerHTML;
+  assert.match(diagnosis,/خطای ساختار JSON/);
+  assert.match(diagnosis,/appsettings.json/);
+  assert.match(diagnosis,/خط ۳۲/);
+  assert.match(diagnosis,/کوتیشن/);
+  assert.match(diagnosis,/نیازی به نصب Python روی VM/);
+  assert.match(diagnosis,/چه چیزی واقعاً بررسی و تأیید شده/);
+  assert.match(diagnosis,/چه چیزی هنوز قطعی نیست/);
+  assert.match(diagnosis,/AIOps پیشنهاد می‌کند چه کار کنیم/);
+  assert.match(diagnosis,/Start ایمن تأیید نشده/);
+  assert.doesNotMatch(diagnosis,/اجرای عملیات.*موفق/);
   assert.match(page,/جمع‌بندی تخصصی اولیه/);
   assert.match(page,/گزارش کامل فنی و ممیزی/);
   assert.match(page,/<details class="ic-diagnosis-drilldown">/);
