@@ -347,3 +347,27 @@ def test_network_section_requires_pid_and_listener_correlation():
     assert "dotnet" in net
     assert r["rca"]["cause_confirmed"] is False
     assert not any("process" in x["text"].lower() for x in r["rca"]["confirmed_facts"])
+
+
+def test_disk_forensics_reports_file_sizes_without_contents_or_delete_claims():
+    r = report(vm("disk_forensics", {
+        "mounts": [{"mount": "/var/log", "used_percent": 100, "files": [
+            {"path": "/var/log/syslog.1", "size_bytes": 3023907803, "owner_service": None},
+            {"path": "/var/log/daemon.log.1", "size_bytes": 3022947143},
+            {"path": "/etc/shadow", "size_bytes": 9000},
+            {"path": "/var/log/app.log", "size_bytes": 8, "content": "TOP_SECRET"},
+        ]}],
+        "content_inspected": False,
+        "delete_authorized": False,
+    }))
+    disk = domain(r, "disk")
+    facts = disk["evidence"][0]["facts"]
+    assert facts["largest_log_files"] == [
+        {"path": "/var/log/syslog.1", "size_bytes": 3023907803},
+        {"path": "/var/log/daemon.log.1", "size_bytes": 3022947143},
+        {"path": "/var/log/app.log", "size_bytes": 8},
+    ]
+    assert "/etc/shadow" not in str(facts)
+    assert "TOP_SECRET" not in str(facts)
+    assert "delete_authorized" not in facts
+    assert r["rca"]["cause_confirmed"] is False
