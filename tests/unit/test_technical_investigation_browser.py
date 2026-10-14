@@ -58,6 +58,11 @@ const fs=require('node:fs');
     source_references:[],timeline:[],
     technical_investigation:{
       service:'gfpapi',host:'10.248.16.82',
+      stop_origin:{status:'possible_unverified',manual_stop_proven:false,
+        note_fa:'Timeout با Stop دستی سازگار است، اما سندی برای عامل انسانی نداریم.',
+        evidence_refs:['evidence-systemd-123'],
+        indicators:['TimeoutStop=1min 30s','Termination signal=SIGKILL'],
+        next_check_fa:'Audit دستور systemctl stop و Journal بازه حادثه را بررسی کنید.'},
       executive_lines:['gfpapi failed on 10.248.16.82','systemd Result=timeout',
         'Elasticsearch queried: Match=0','Journal not collected',
         'RAM unknown','Disk unknown','Read-only: inspect journal'],
@@ -123,6 +128,10 @@ const fs=require('node:fs');
   assert.match(intelligence,/appsettings.json/);
   assert.match(intelligence,/در فایل تنظیمات خطای سینتکس ثبت شده/);
   assert.match(intelligence,/علت ریشه‌ای هنوز تأیید نشده است/);
+  assert.match(intelligence,/آیا سرویس دستی Stop شده است/);
+  assert.match(intelligence,/Timeout با Stop دستی سازگار است/);
+  assert.match(intelligence,/Audit دستور systemctl stop/);
+  assert.doesNotMatch(intelligence,/توقف دستی تأیید شده است/);
   assert.match(intelligence,/Approval/);
   assert.match(intelligence,/تحلیل تکمیلی مدل با ارجاع/);
   assert.match(intelligence,/evidence-config-32/);
