@@ -4786,7 +4786,7 @@
 | `tests/unit/test_systemd_runtime_discovery.py` | `test_dynamic_planner_grounds_cognia_and_operator_guidance_in_dotnet_evidence.LLM` | 193 | class | کلاس | test_dynamic_planner_grounds_cognia_and_operator_guidance_in_dotnet_evidence |
 | `tests/unit/test_systemd_runtime_discovery.py` | `test_dynamic_planner_grounds_cognia_and_operator_guidance_in_dotnet_evidence.LLM.generate_with_messages` | 194 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_dynamic_planner_grounds_cognia_and_operator_guidance_in_dotnet_evidence.LLM |
 | `tests/unit/test_technical_investigation_browser.py` | `test_section_01_shows_evidence_attributed_sre_report_without_commands` | 12 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_technical_investigation_browser.py` | `test_section_01_has_real_render_target_and_accessible_evidence_table` | 169 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_technical_investigation_browser.py` | `test_section_01_has_real_render_target_and_accessible_evidence_table` | 178 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_technical_investigation_report.py` | `vm` | 15 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_technical_investigation_report.py` | `provider` | 24 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_technical_investigation_report.py` | `report` | 32 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
