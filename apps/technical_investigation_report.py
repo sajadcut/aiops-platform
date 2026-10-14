@@ -10,6 +10,8 @@ from datetime import datetime, timezone
 from typing import Any
 
 from domain.contracts.redaction import redact
+from integrations.vm.runtime_discovery import safe_absolute_path
+from integrations.vm.dotnet_local_validator import _NAME as SAFE_DOTNET_JSON_NAME
 
 
 DOMAINS = (
@@ -380,8 +382,20 @@ def build_technical_investigation(*, incident: dict, evidence: list[dict],
             generic = _best_diagnostic(domain_rows, "config_validate")
             special = _best_diagnostic(domain_rows, "dotnet_config_syntax")
             files = special.get("files") if isinstance(special.get("files"), list) else []
-            checked = [_text(f.get("file"), 85) for f in files if isinstance(f, dict)
-                       and f.get("status") == "valid_json_syntax"]
+            # Distinguish exact validated files from candidate/unknown paths.
+            directory = safe_absolute_path(special.get("publish_directory"))
+            checked = []
+            for file_row in files[:12]:
+                if not isinstance(file_row, dict):
+                    continue
+                name = str(file_row.get("file") or "")
+                if not SAFE_DOTNET_JSON_NAME.fullmatch(name):
+                    continue
+                path = safe_absolute_path(directory + "/" + name) if directory else None
+                label = _text(path or name, 300)
+                if not path:
+                    label += " (مسیر کامل نامشخص)"
+                checked.append(label + ": " + _text(file_row.get("status"), 45))
             technical = (
                 "Generic Validator: " +
                 ("Unsupported" if generic.get("supported") is False else
@@ -390,7 +404,8 @@ def build_technical_investigation(*, incident: dict, evidence: list[dict],
                 "؛ .NET JSON Syntax: " +
                 ("Valid" if special.get("syntax_valid") is True else
                  "Invalid" if special.get("syntax_valid") is False else "ثبت نشده") +
-                (f"؛ Files={', '.join(checked[:6])}" if checked else "") +
+                (f"؛ Checked files={'; '.join(checked[:12])}" if checked else
+                 "؛ نام فایل بررسی‌شده در Evidence ثبت نشده است") +
                 "؛ Syntax Valid به معنی Semantic Valid یا Runtime Healthy نیست؛ سلامت Dependency و Startup نیز تأیید نمی‌شود."
             )
         elif key == "network":
