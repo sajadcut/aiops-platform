@@ -264,6 +264,7 @@ class EvidenceCollector:
         # obtain local systemd facts FIRST: never wait on failing Zabbix,
         # Prometheus, Elastic or RAG providers to read a failed service.
         early_vm_actions: set[str] = set()
+        early_failed_service = False
         fast_target = current_vm_target()
         needs_service_status = wants_all or (
             requests is not None and any(
@@ -289,6 +290,7 @@ class EvidenceCollector:
                         )
                         evidence.extend(rows)
                         if str(status_result.get("active_state") or "").lower() in {"failed", "inactive"}:
+                            early_failed_service = True
                             logs_method = getattr(self.vm, "service_logs", None)
                             if callable(logs_method):
                                 early_vm_actions.add("service_logs")
@@ -388,7 +390,17 @@ class EvidenceCollector:
                 try:
                     logs = await self.elasticsearch.get_logs(effective_service, since, until)
                     elastic_logs_available = True
-                    evidence.append(self._observation("elasticsearch", f"elastic-observation:{effective_service}:{since.isoformat()}", status="queried", result_count=len(logs), service=effective_service, detail="matching_logs"))
+                    observation = self._observation("elasticsearch", f"elastic-observation:{effective_service}:{since.isoformat()}", status="queried", result_count=len(logs), service=effective_service, detail="matching_logs")
+                    # The Elastic interface currently filters on service, not
+                    # explicitly on VM host. Preserve scope, never imply a host
+                    # correlation that the provider did not execute.
+                    observation["raw_data"].update({
+                        "query_service": effective_service,
+                        "query_since": since.isoformat(),
+                        "query_until": until.isoformat() if until else None,
+                        "host_filter_applied": False,
+                    })
+                    evidence.append(observation)
                 except Exception as exc:
                     evidence.append(self._observation("elasticsearch", f"elastic-error:{since.isoformat()}", status="error", service=effective_service, detail=str(exc)))
             else:
@@ -464,6 +476,13 @@ class EvidenceCollector:
             if not early_vm_actions:
                 await self._progress("vm_mcp", "started")
             actions = self._vm_actions_for_requests(requests, service=effective_service, port=vm_port, elastic_logs_available=elastic_logs_available)
+            if early_failed_service:
+                # Pre-approved read-only connector methods; these are diagnostics,
+                # never user/LLM-provided commands or remediation operations.
+                for diagnostic in ("service_runtime_discovery", "system_logs",
+                                   "memory_diagnostics", "process_snapshot"):
+                    if diagnostic not in actions:
+                        actions.append(diagnostic)
             for action in actions:
                 if action in early_vm_actions:
                     continue
@@ -512,15 +531,13 @@ class EvidenceCollector:
                         # discovery; only confirmed .NET DLLs trigger bounded
                         # syntax checks. No LLM controls a remote filename.
                         if (
-                            settings.AIOPS_DYNAMIC_INVESTIGATION_ENABLED
-                            and action == "config_validate"
+                            action == "config_validate"
                             and result.get("supported") is False
                             and "service_runtime_discovery" not in actions
                         ):
                             actions.append("service_runtime_discovery")
                         if (
-                            settings.AIOPS_DYNAMIC_INVESTIGATION_ENABLED
-                            and action == "service_runtime_discovery"
+                            action == "service_runtime_discovery"
                             and result.get("runtime") == "dotnet"
                             and "dotnet_config_syntax" not in actions
                         ):
@@ -548,6 +565,10 @@ class EvidenceCollector:
                             and "service_logs" not in actions
                         ):
                             actions.append("service_logs")
+                            for diagnostic in ("system_logs", "memory_diagnostics",
+                                               "process_snapshot", "service_runtime_discovery"):
+                                if diagnostic not in actions:
+                                    actions.append(diagnostic)
                     else:
                         detail = str((result or {}).get("error") if isinstance(result, dict) else "invalid_result")
                         evidence.append(self._observation("vm_mcp", f"vm-error:{vm_target}:{action}:{since.isoformat()}", status="error", service=effective_service, detail=detail))

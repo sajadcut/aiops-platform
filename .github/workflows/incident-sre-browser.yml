@@ -1,0 +1,36 @@
+name: incident-sre-browser
+
+on:
+  pull_request:
+    paths:
+      - 'apps/technical_investigation_report.py'
+      - 'apps/decision_brief.py'
+      - 'dashboards/incident-command-room.*'
+      - 'scripts/acceptance/incident_sre_browser.py'
+      - '.github/workflows/incident-sre-browser.yml'
+  push:
+    paths:
+      - 'apps/technical_investigation_report.py'
+      - 'apps/decision_brief.py'
+      - 'dashboards/incident-command-room.*'
+      - 'scripts/acceptance/incident_sre_browser.py'
+      - '.github/workflows/incident-sre-browser.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  chromium-acceptance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install Playwright Chromium and system dependencies
+        run: |
+          python -m pip install 'playwright>=1.54,<2'
+          python -m playwright install --with-deps chromium
+      - name: Render section 01 in a real browser and assert no write calls
+        run: python scripts/acceptance/incident_sre_browser.py

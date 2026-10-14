@@ -213,7 +213,10 @@
     critical:'بحرانی',high:'زیاد',medium:'متوسط',low:'کم',open:'باز',analyzing:'در حال تحلیل',
     escalated:'ارجاع‌شده',closed:'بسته‌شده',hypothesis:'فرضیه',confirmed:'تأییدشده',
     not_requested:'درخواست نشده',not_executed:'اجرا نشده',not_recorded:'ثبت نشده',
-    partial:'ناقص',inconclusive:'نامطمئن',queried:'پرس‌وجو انجام شده',not_queried:'پرس‌وجو نشده',
+    partial:'ناقص',inconclusive:'نامطمئن',queried:'پرس‌وجو انجام شده',not_queried:'جمع‌آوری نشده',
+    investigated:'بررسی شده',queried_with_results:'استعلام شد؛ دارای نتیجه',
+    queried_zero_results:'استعلام شد؛ بدون نتیجه',query_failed:'استعلام ناموفق',
+    not_applicable:'قابل اعمال نیست',
     cited_by_agent:'مورد استناد Agent',skipped:'اجرا نشده',error:'خطا',unknown:'نامشخص',
     unavailable:'در دسترس نیست',legacy_unbound:'بدون اتصال Snapshot',blocked:'مسدود',completed:'تکمیل شده',
     probable:'احتمالی، هنوز قطعی نیست',unconfirmed:'هنوز تأیید نشده',
@@ -770,6 +773,10 @@
   }
   function renderOperationalSummary(report=state.historic||state.report) {
     if(!report)return;
+    if(report.technical_investigation){
+      show('#ic-operational-summary',''); // section 01 uses the detailed evidence-bound assessment
+      return;
+    }
     if(report.memory_investigation){
       const m=report.memory_investigation,fa=state.language==='fa';
       const pct=m.measurements?.memory_used_percent;
@@ -1095,10 +1102,98 @@
         'هیچ افزایش RAM، Kill، Restart یا پاک‌سازی Cache به‌صورت خودکار مجاز نیست.':
         'No automatic RAM increase, Kill, Restart or cache clearing is authorized.')+'</p>');
   }
+
+  function renderTechnicalInvestigation(r) {
+    const investigation=r.technical_investigation;
+    if(!investigation){show('#ic-technical-report','');return false;}
+    const fa=state.language==='fa';
+    const h=(fa?'نتیجهٔ بررسی‌های تخصصی':'Technical investigation results');
+    const fmtFacts=facts=>Object.entries(facts||{}).map(([key,v])=>
+      '<div class="ic-sre-fact"><b>'+esc(key)+'</b><code dir="auto">'+
+      esc(typeof v==='object'?JSON.stringify(v):String(v))+'</code></div>').join('');
+    const evidences=items=>arr(items).map(e=>
+      '<article class="ic-sre-evidence"><div><strong>'+esc(e.tool||e.source)+'</strong> · '+
+      esc(e.observed_at?date(e.observed_at):'Timestamp unavailable')+
+      ' · '+esc(e.freshness||'unknown')+'</div>'+
+      '<small>Evidence ID: '+esc(e.id||'not recorded')+'</small>'+
+      '<div class="ic-sre-facts">'+fmtFacts(e.facts)+'</div></article>').join('');
+    const rows=arr(investigation.domains).map(d=>
+      '<tr><td><strong>'+esc(d.title)+'</strong><details class="ic-sre-drilldown"><summary>'+
+      esc(fa?'شناسه شواهد و خروجی فنی':'Evidence and technical facts')+
+      ' ('+num(arr(d.evidence).length)+')</summary>'+
+      (arr(d.evidence).length?evidences(d.evidence):'<p>'+
+      esc(d.missing_reason||d.collection_hint||'No recorded data')+'</p>')+
+      '</details></td><td>'+pill(d.status)+'</td><td><p>'+esc(d.technical_result)+'</p>'+
+      (d.missing_reason?'<small>'+esc(d.missing_reason)+'</small>':'')+
+      '</td><td>'+esc(d.importance)+'</td><td>'+
+      esc(d.observed_at?date(d.observed_at):'ثبت نشده')+'</td><td>'+
+      esc(d.source)+'</td></tr>').join('');
+    const rca=investigation.rca||{};
+    const facts=arr(rca.confirmed_facts).map(x=>
+      '<li>'+esc(x.text)+refs(x.evidence_refs)+'</li>').join('');
+    const theories=arr(rca.likely_hypotheses).map(x=>
+      '<article class="ic-sre-theory"><strong>'+esc(x.title)+'</strong>'+
+      '<p>'+esc(x.kind||'')+'</p>'+
+      '<p>'+esc(fa?'آزمایش تفکیکی: ':'Discriminating check: ')+esc(x.check)+'</p>'+
+      (arr(x.supporting).length?refs(x.supporting):'')+
+      '<small>'+esc(fa?'شواهد مخالف: ':'Opposing refs: ')+
+      esc(arr(x.opposing).length?x.opposing.join(', '):'ثبت نشده')+'</small></article>').join('');
+    const unknowns=arr(rca.remaining_unknowns).map(x=>
+      '<li><strong>'+esc(x.domain)+'</strong> — '+esc(x.reason)+
+      '<p>'+esc(x.next_check)+'</p></li>').join('');
+    const acts=investigation.actions||{};
+    const actionCards=items=>arr(items).map((a,index)=>
+      '<article class="ic-sre-action"><strong>'+num(index+1)+'. '+esc(a.title)+'</strong>'+
+      '<p>'+esc(a.goal)+'</p><p><b>Tool:</b> '+esc(a.tool)+
+      ' · <b>Prerequisite:</b> '+esc(a.prerequisite)+'</p>'+
+      '<p>'+esc(a.expected)+'</p><p>'+esc(a.if_positive)+
+      ' / '+esc(a.if_negative)+'</p>'+
+      '<small>'+esc(a.approval_required?'Approval REQUIRED':'Read-only — no execution')+
+      ' · '+esc(a.status)+'</small></article>').join('');
+    const lines=arr(investigation.executive_lines).slice(0,7).map(x=>'<li>'+esc(x)+'</li>').join('');
+    show('#ic-technical-report','<section class="ic-sre-assessment" aria-label="Executive Incident Assessment">'+
+      '<h3>Executive Incident Assessment</h3><ol>'+lines+'</ol>'+
+      '<p class="ic-headline-caution">'+esc(fa?
+      'این نتایج از Evidence ثبت‌شده استخراج شده‌اند؛ گزارش‌گیری به معنی بررسی زندهٔ مجدد نیست.':
+      'This is persisted evidence, not a fresh live check.')+'</p></section>'+
+      '<section class="ic-sre-audit"><h3>'+esc(h)+'</h3>'+
+      '<div class="ic-sre-table-wrap"><table class="ic-sre-table"><thead><tr>'+
+      ['حوزه','وضعیت بررسی','نتیجه فنی','اهمیت','زمان','منبع'].map(x=>'<th>'+esc(x)+'</th>').join('')+
+      '</tr></thead><tbody>'+rows+'</tbody></table></div></section>'+
+      '<section class="ic-sre-rca"><h3>Root Cause Analysis</h3>'+
+      '<h4>Confirmed Facts</h4>'+(facts?'<ul>'+facts+'</ul>':empty(fa?'علت ریشه‌ای تأییدنشده است.':'No root cause confirmed.'))+
+      '<h4>Likely Hypotheses &amp; Discriminating Checks</h4>'+
+      (theories||empty(fa?'فرضیهٔ مستند برای علت اصلی ثبت نشده است.':'No supported hypothesis.'))+
+      '<h4>Ruled-out Hypotheses</h4>'+
+      (arr(rca.ruled_out).length?arr(rca.ruled_out).map(x=>'<p>'+esc(x)+'</p>').join(''):
+      '<p>'+esc(fa?'فرضیه‌ای با شاهد مستقل رد نشده است.':'No hypothesis has been ruled out by independent evidence.')+'</p>')+
+      '<h4>Remaining Unknowns</h4>'+
+      (unknowns?'<ul>'+unknowns+'</ul>':empty(fa?'شکاف بررسی ثبت نشده است.':'No recorded gaps.'))+
+      (arr(investigation.conflicts).length?
+        '<h4>'+esc(fa?'تعارض بین منابع':'Source contradictions')+'</h4>'+
+        arr(investigation.conflicts).map(x=>
+          '<article class="ic-sre-theory"><strong>'+esc(x.description)+'</strong>'+
+          '<p>'+esc(x.resolution)+'</p>'+refs(x.evidence_refs)+'</article>').join(''):'')+
+      '<p class="ic-headline-caution">'+esc(rca.note)+'</p></section>'+
+      '<section class="ic-sre-actions"><h3>'+esc(fa?'الان SRE چه کاری انجام دهد؟':'SRE next actions')+'</h3>'+
+      '<h4>'+esc(fa?'فوری و Read-only':'Immediate read-only')+'</h4>'+
+      (actionCards(acts.read_only)||empty(fa?'اقدام Read-only جدیدی پیشنهاد نشده است.':'No additional read-only checks.'))+
+      '<h4>'+esc(fa?'مشروط و نیازمند Approval':'Conditional / Approval required')+'</h4>'+
+      actionCards(acts.conditional)+
+      '<h4>'+esc(fa?'ممنوع یا پرریسک':'Prohibited or high risk')+'</h4><ul>'+
+      arr(acts.prohibited).map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul></section>');
+    return true;
+  }
+
   function renderOverview(r) {
     const i=r.incident_summary||{},act=r.remediation_recommendation||{},a=r.approval_readiness||{};
     renderOperationalSummary(r);
     renderMemoryForensics(r);
+    if(renderTechnicalInvestigation(r)){
+      show('#ic-brief-lead','');show('#ic-operator-explanation','');
+      show('#ic-key-answer','');show('#ic-warning-list','');
+      return;
+    }
     if(r.memory_investigation){
       show('#ic-brief-lead','');
       show('#ic-operator-explanation','');

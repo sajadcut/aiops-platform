@@ -12,6 +12,7 @@ from typing import Any, Iterable
 
 from domain.contracts.redaction import redact
 from agents.storage.engine import correlate_disk_file_causality
+from apps.technical_investigation_report import build_technical_investigation
 
 CONTRACT_VERSION = "decision-brief.v1"
 FRESHNESS_SECONDS = 900  # UI warning threshold, not an execution policy
@@ -627,6 +628,10 @@ def build_decision_brief(
             "start_requires_valid_config_and_approval": True,
         },
         "operator_explanation": redact(explanation),
+        "technical_investigation": build_technical_investigation(
+            incident=incident, evidence=evidence, knowledge=knowledge,
+            now=now, approval=approval,
+        ),
         "memory_investigation": redact(memory_investigation) if memory_investigation else None,
         "disk_file_causality": redact(disk_file_causality) if disk_file_causality.get("files") else None,
         # Visible even when the dynamic LLM planner is disabled, and even if
