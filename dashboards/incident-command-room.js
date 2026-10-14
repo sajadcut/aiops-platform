@@ -1169,6 +1169,11 @@
       '<p>'+esc(fa?'فرضیه‌ای با شاهد مستقل رد نشده است.':'No hypothesis has been ruled out by independent evidence.')+'</p>')+
       '<h4>Remaining Unknowns</h4>'+
       (unknowns?'<ul>'+unknowns+'</ul>':empty(fa?'شکاف بررسی ثبت نشده است.':'No recorded gaps.'))+
+      (arr(investigation.conflicts).length?
+        '<h4>'+esc(fa?'تعارض بین منابع':'Source contradictions')+'</h4>'+
+        arr(investigation.conflicts).map(x=>
+          '<article class="ic-sre-theory"><strong>'+esc(x.description)+'</strong>'+
+          '<p>'+esc(x.resolution)+'</p>'+refs(x.evidence_refs)+'</article>').join(''):'')+
       '<p class="ic-headline-caution">'+esc(rca.note)+'</p></section>'+
       '<section class="ic-sre-actions"><h3>'+esc(fa?'الان SRE چه کاری انجام دهد؟':'SRE next actions')+'</h3>'+
       '<h4>'+esc(fa?'فوری و Read-only':'Immediate read-only')+'</h4>'+
