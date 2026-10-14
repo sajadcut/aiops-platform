@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 496 | Dashboard JS files scanned: 8 | Symbols indexed: 5189**
+**Python files scanned: 497 | Dashboard JS files scanned: 8 | Symbols indexed: 5199**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -4944,6 +4944,16 @@
 | `tests/unit/test_triage_production_engine.py` | `test_insufficient_evidence_produces_low_confidence_bounded_investigation` | 156 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_triage_production_engine.py` | `test_stale_alert_is_explicit_and_fresh_replacement_is_requested` | 166 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_triage_production_engine.py` | `test_coordinator_uses_new_confidence_band_for_adaptive_fanout` | 189 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_universal_service_config_discovery.py` | `_unit` | 18 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_universal_service_config_discovery.py` | `test_tomcat_catalina_base_is_path_hypothesis_not_validation` | 25 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_universal_service_config_discovery.py` | `test_java_spring_config_file_comes_from_unit_flag_not_model_guesses` | 39 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_universal_service_config_discovery.py` | `test_unknown_systemd_runtime_requires_followup_not_claimed_absence` | 53 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_universal_service_config_discovery.py` | `test_config_review_rejects_unverified_or_sensitive_path` | 82 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_universal_service_config_discovery.py` | `test_generic_remote_review_only_reads_bounded_fixed_file` | 87 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_universal_service_config_discovery.py` | `test_json_secret_safe_trailing_comma_correction_only_on_worker` | 96 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_universal_service_config_discovery.py` | `test_tomcat_xml_format_check_is_not_service_health` | 119 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_universal_service_config_discovery.py` | `test_haproxy_vendor_validation_is_not_faked_by_file_read` | 130 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_universal_service_config_discovery.py` | `test_incident_chat_supports_general_config_discovery_and_review` | 142 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_upstream_mcp_contracts.py` | `test_prometheus_adapter_uses_upstream_tool_names` | 8 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_upstream_mcp_contracts.py` | `test_elastic_adapter_uses_agent_builder_only` | 20 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_upstream_mcp_contracts.py` | `test_elastic_agent_builder_config_is_canonical` | 35 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
