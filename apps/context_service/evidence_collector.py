@@ -442,7 +442,12 @@ class EvidenceCollector:
                 except Exception as exc:
                     evidence.append(self._observation("kubernetes_api", f"k8s-error:{since.isoformat()}", status="error", service=effective_service, detail=str(exc)))
 
-        vm_target = current_vm_target() or self._vm_target_from_asset(asset)
+        # A host-only metric alert is not a named service. HOST.IP/hostname
+        # remain informational: only the explicit, already-bound Zabbix
+        # target_ip may authorize VM MCP probes for host-level incidents.
+        explicit_vm_target = current_vm_target()
+        vm_target = (explicit_vm_target if not effective_service else
+                     explicit_vm_target or self._vm_target_from_asset(asset))
         vm_port = current_vm_port()
         platform = str(asset.get("platform") or "unknown").lower()
         asset_type = str(asset.get("asset_type") or "unknown").lower()
