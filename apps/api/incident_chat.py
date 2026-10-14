@@ -451,7 +451,7 @@ async def incident_chat_message(
             # An explicit request to inspect files must not become a vague
             # no-access model answer or an unrelated diagnostic.
             intent = requested
-        elif requested != "answer" and intent == "answer":
+        elif requested != "answer" and intent == "answer" and not explanation_only:
             intent = requested
         vm_actions = READ_ACTIONS - {"knowledge_search", "elastic_logs", "elastic_recorded"}
         if intent in vm_actions or intent in WRITE_SUGGESTIONS:
