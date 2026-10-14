@@ -20,7 +20,7 @@ from apps.api.incident_chat import _incident_status_scope
 from apps.audit_service.postgres import PostgreSQLAuditStore
 from apps.security.auth import require_permission
 from database import AsyncSessionLocal
-from integrations.http_transport import insecure_async_client
+from integrations.http_transport import verified_async_client
 from domain.contracts.rate_limit import rate_limiter_strict
 
 router = APIRouter()
@@ -99,7 +99,7 @@ async def get_service_profile(
         if not target:
             return _profile_response(incident.service, None, None,
                                      diagnosis.get("reason") or "identity_unverified")
-        record = await _profile_row(db, incident.service, target)
+        record = await _profile_row(db, str(incident.service or "").lower().removesuffix(".service"), target)
         return _profile_response(incident.service, target, record,
                                  "not_configured" if not record else None)
 
@@ -174,7 +174,7 @@ async def service_http_health_status(
         if not target:
             return {"status": "unavailable", "reason": diagnosis.get("reason"),
                     "source": "identity_unverified"}
-        profile = await _profile_row(db, incident.service, target)
+        profile = await _profile_row(db, str(incident.service or "").lower().removesuffix(".service"), target)
         values = (profile or {}).get("profile") or {}
         if not values.get("expected_port") or not values.get("health_path"):
             return {"status": "not_configured", "source": "service_catalog"}
@@ -209,7 +209,7 @@ async def recheck_http_health(
         incident, target, diagnosis = await _bound_scope(db, incident_id)
         if not target or not _safe_health_target(target):
             raise HTTPException(status_code=409, detail="health_probe_target_not_allowed")
-        row = await _profile_row(db, incident.service, target)
+        row = await _profile_row(db, str(incident.service or "").lower().removesuffix(".service"), target)
         profile = (row or {}).get("profile") or {}
         path = profile.get("health_path")
         port = profile.get("expected_port")
@@ -223,7 +223,7 @@ async def recheck_http_health(
         http_code = None
         status = "unavailable"
         try:
-            async with insecure_async_client(
+            async with verified_async_client(
                 component="service_catalog:health_recheck",
                 timeout=httpx.Timeout(3.0), trust_env=False,
                 follow_redirects=False, headers={"Accept": "application/json"},
