@@ -434,6 +434,10 @@ async def incident_chat_message(
         explanation_only = is_recovery_comparison_question(payload.message)
         if explanation_only:
             intent = "answer"
+        elif intent in WRITE_SUGGESTIONS and requested not in WRITE_SUGGESTIONS:
+            # A model may discuss an action but cannot create an actionable
+            # proposal unless the operator deliberately requested that action.
+            intent = "answer"
         # Explicit action/read requests must not be ignored by a model's
         # free-form answer; model suggestions are otherwise advisory only.
         if requested in WRITE_SUGGESTIONS and not explanation_only:
