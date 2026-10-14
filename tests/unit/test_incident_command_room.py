@@ -439,6 +439,10 @@ def test_demo_uses_no_action_or_not_applicable_instead_of_wall_of_unknowns():
     script = script.replace(
         "remediation_recommendation:{action:'start_service'",
         "remediation_recommendation:{action:null", 1)
+    assert "target:'vm-01',action:'start_service',evidence_snapshot_binding:" in script
+    script = script.replace(
+        "target:'vm-01',action:'start_service',evidence_snapshot_binding:",
+        "target:'vm-01',action:null,evidence_snapshot_binding:", 1)
     # The original browser acceptance continues into the approval workflow;
     # stop after read-only incident rendering for this distinct scenario.
     end = script.index("  assert.match(el('#ic-action-controls').innerHTML,/disabled/);")
