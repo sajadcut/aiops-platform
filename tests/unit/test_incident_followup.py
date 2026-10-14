@@ -35,6 +35,8 @@ def test_no_free_form_ai_cached_elastic_knowledge_failed_or_cross_target_spoof()
         ("service_status", {"success": False}, BINDING),
         ("service_status", {"success": True}, {"service": "nginx", "target": "10.248.16.82"}),
         ("service_status", {"success": True}, None),
+        ("service_status", {"success": True, "service": "nginx"}, BINDING),
+        ("service_status", {"success": True, "target": "10.248.16.83"}, BINDING),
         ("elastic_logs", {"success": True, "is_live": False, "searched_service": SERVICE}, None),
         ("elastic_logs", {"success": True, "is_live": True, "searched_service": "nginx"}, None),
     ):
