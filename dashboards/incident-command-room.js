@@ -797,10 +797,19 @@
         (state.serviceStatus.status==='running'?'Running':
          state.serviceStatus.status==='stopped'?'Stopped':'Unverified')+
         ' · '+date(state.serviceStatus.observed_at):'';
+      const exactDate=value=>{
+        const d=new Date(value);
+        return !value||Number.isNaN(d.getTime())?
+          (fa?'زمان نامعتبر':'Invalid timestamp'):
+          new Intl.DateTimeFormat(fa?'fa-IR':'en-US',{
+            dateStyle:'medium',timeStyle:'medium',hour12:false
+          }).format(d);
+      };
       const observation=(name,st,when,basis,ids)=>
         '<div class="ic-correlation-observation"><strong>'+esc(name)+'</strong>'+
         '<span>'+esc(st)+'</span><small>'+esc(
-        when?date(when)+(basis==='not_recorded'?' · '+(fa?'زمان منبع نامعلوم':'Source event time unverified'):''):
+        when?exactDate(when)+(basis==='source_event_minute_only'?
+          (fa?' · فقط دقت دقیقه':' · minute precision only'):''):
         (fa?'زمان وقوع از منبع ثبت نشده':'No source occurrence timestamp'))+
         '</small>'+refs(ids)+'</div>';
       const dateRelation=arr(c.contradictions).find(x=>
@@ -811,6 +820,14 @@
         (fa?'ترتیب زمانی واقعی وضعیت‌ها هنوز اثبات نشده است؛ زمان دریافت هشدار جای زمان وقوع Event نیست.':
         'The true state order is not established; receipt time is not source event time.');
       const steps=arr(c.next_steps_fa).slice(0,3);
+      const hypothesisNames={
+        temporary_stop_and_recovery:fa?'توقف موقت و بازیابی احتمالی':'Possible temporary stop/recovery',
+        stale_or_incorrect_monitoring:fa?'تأخیر یا اشکال احتمالی در پایش':'Possible stale monitoring',
+        systemd_running_but_http_unhealthy:fa?'بالابودن systemd همراه ناسالم‌بودن HTTP':'systemd up but HTTP unhealthy'
+      };
+      const hypotheses=arr(c.hypotheses).slice(0,3).map(x=>
+        '<li>'+esc(hypothesisNames[x.kind]||x.kind||'')+
+        ' — '+esc(fa?'هنوز تأیید نشده':'Not yet verified')+'</li>').join('');
       const http=(!state.historic&&state.httpHealth?.checked_at)
         ?state.httpHealth:c.http_observation;
       const health=http?.status==='unhealthy'?
@@ -832,11 +849,14 @@
         '</div>'+
         (alert.received_at?'<p class="ic-headline-meta">'+esc(fa?
           'زمان دریافت هشدار در AIOps: ':'Alert received at AIOps: ')+
-          txt(date(alert.received_at))+' · '+esc(fa?
+          txt(exactDate(alert.received_at))+' · '+esc(fa?
           'این زمان، زمان وقوع قطعی Event در زبیکس نیست.':
           'Receipt time is not the Zabbix event occurrence time.')+'</p>':'')+
         '<p>'+esc(explanation)+'</p>'+
         '<p class="ic-headline-caution">'+esc(health)+'</p>'+
+        (hypotheses?'<h4>'+esc(fa?'توضیح‌های احتمالی؛ نه علت تأییدشده':
+          'Possible explanations, not established causes')+'</h4>'+
+          '<ul>'+hypotheses+'</ul>':'')+
         (live?'<p class="ic-headline-meta">'+esc(live)+'</p>':'')+
         '<h4>'+esc(fa?'سه بررسی بعدی برای تعیین علت':'Three discriminating checks')+'</h4>'+
         '<ol>'+steps.map(x=>'<li>'+txt(x)+'</li>').join('')+'</ol>'+
