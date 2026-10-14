@@ -137,8 +137,8 @@ def test_dashboard_review_is_real_ui_and_not_authorization_authority():
     html = (ROOT / "dashboards/index.html").read_text()
     js = (ROOT / "dashboards/knowledge-review.js").read_text()
     assert 'data-view="knowledge"' in html
-    assert "Pending Knowledge" in html
-    assert "Approve" in js and "Reject" in js and "Save Edit" in js
+    assert "دانش در انتظار بازبینی" in html
+    assert "تأیید و انتشار" in js and "رد درخواست" in js and "ذخیرهٔ تغییرات" in js
     assert "/api/v1/knowledge-reviews" in js
     assert "expected_revision" in js
     assert "never" not in js.lower() or "api(" in js
