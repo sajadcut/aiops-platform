@@ -16,7 +16,7 @@ class VMEdgeMCPClient(MCPClient):
         "service_status", "service_logs", "system_logs", "process_snapshot",
         "process_status", "tcp_check", "port_listener_status", "dns_check",
         "route_check", "firewall_status", "config_validate", "nginx_config_review", "nginx_config_inspect",
-        "service_runtime_discovery", "dotnet_config_syntax",
+        "service_runtime_discovery", "service_config_discovery", "dotnet_config_syntax",
     }
     WRITE_TOOLS = {"restart_service", "reload_service", "start_service"}
 
@@ -77,6 +77,7 @@ class VMEdgeMCPClient(MCPClient):
     async def nginx_config_review(self, target: str, service: str) -> Dict[str, Any]: return await self._invoke("nginx_config_review", target, service=service)
     async def nginx_config_inspect(self, target: str, service: str) -> Dict[str, Any]: return await self._invoke("nginx_config_inspect", target, service=service)
     async def service_runtime_discovery(self, target: str, service: str) -> Dict[str, Any]: return await self._invoke("service_runtime_discovery", target, service=service)
+    async def service_config_discovery(self, target: str, service: str) -> Dict[str, Any]: return await self._invoke("service_config_discovery", target, service=service)
     async def dotnet_config_syntax(self, target: str, service: str) -> Dict[str, Any]: return await self._invoke("dotnet_config_syntax", target, service=service)
 
     @staticmethod
