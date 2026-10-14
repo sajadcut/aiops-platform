@@ -425,6 +425,9 @@ class DynamicInvestigationPlanner:
             '"used_knowledge_refs":["exact supplied source_ref"]}. '
             "At most two checks and three cited refs. No explanatory prose."
         )
+        if adapter is None:
+            result["model_status"] = "skipped_deterministic_read_only"
+            return result
         model_status = "unavailable"
         for attempt in range(2):
             try:
