@@ -770,6 +770,10 @@
   }
   function renderOperationalSummary(report=state.historic||state.report) {
     if(!report)return;
+    if(report.technical_investigation){
+      show('#ic-operational-summary',''); // section 01 uses the detailed evidence-bound assessment
+      return;
+    }
     if(report.memory_investigation){
       const m=report.memory_investigation,fa=state.language==='fa';
       const pct=m.measurements?.memory_used_percent;
