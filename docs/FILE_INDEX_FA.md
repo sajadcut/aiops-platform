@@ -3,7 +3,7 @@
 > این فایل فهرست فایل‌به‌فایل repository است. توضیح معماری و flow در `CODEBASE_GUIDE_FA.md` آمده است.
 > این فایل با `scripts/generate_file_index_fa.py` ساخته و در CI کنترل می‌شود.
 
-**تعداد فایل‌های track‌شده و پوشش‌داده‌شده: 611**
+**تعداد فایل‌های track‌شده و پوشش‌داده‌شده: 616**
 
 | Path | Type | Purpose | Called By | Calls/Depends On | Runtime/Test/Docs | Notes |
 |---|---|---|---|---|---|---|
@@ -13,6 +13,7 @@
 | `.github/workflows/container-acceptance.yml` | CI | Workflow اتوماسیون GitHub Actions | GitHub Actions | repo/tests/deployment | CI | کیفیت، hygiene یا supply chain |
 | `.github/workflows/documentation-index.yml` | CI | Workflow اتوماسیون GitHub Actions | GitHub Actions | repo/tests/deployment | CI | کیفیت، hygiene یا supply chain |
 | `.github/workflows/image-signing.yml` | CI | Workflow اتوماسیون GitHub Actions | GitHub Actions | repo/tests/deployment | CI | کیفیت، hygiene یا supply chain |
+| `.github/workflows/incident-sre-browser.yml` | CI | Workflow اتوماسیون GitHub Actions | GitHub Actions | repo/tests/deployment | CI | کیفیت، hygiene یا supply chain |
 | `.github/workflows/quality.yml` | CI | Workflow اتوماسیون GitHub Actions | GitHub Actions | repo/tests/deployment | CI | کیفیت، hygiene یا supply chain |
 | `.github/workflows/repository-hygiene.yml` | CI | Workflow اتوماسیون GitHub Actions | GitHub Actions | repo/tests/deployment | CI | کیفیت، hygiene یا supply chain |
 | `.gitignore` | Git | قواعد عدم track فایل‌های generated/local | Git | repository hygiene | Tooling | رفتار runtime ندارد |
@@ -191,6 +192,7 @@
 | `apps/signal_gateway/prometheus_alertmanager.py` | Python | Signal: ورود، normalization، correlation و dedupe سیگنال | API/webhooks | incident repository/context | Runtime | ابتدای Incident flow |
 | `apps/signal_gateway/received_signal.py` | Python | Signal: ورود، normalization، correlation و dedupe سیگنال | API/webhooks | incident repository/context | Runtime | ابتدای Incident flow |
 | `apps/signal_gateway/zabbix_lifecycle.py` | Python | Signal: ورود، normalization، correlation و dedupe سیگنال | API/webhooks | incident repository/context | Runtime | ابتدای Incident flow |
+| `apps/technical_investigation_report.py` | Python | ماژول service لایه application | Runtime | domain/integrations | Runtime | جزء Control Plane |
 | `apps/verification_service/__init__.py` | Python | Verify: Verification مستقل پس از remediation | Workflow/execution | live evidence/audit | Runtime | tool success برابر recovery نیست |
 | `dashboards/__init__.py` | Python | package marker dashboard | Python | — | Tooling | رفتار مستقل ندارد |
 | `dashboards/agents.html` | HTML | پوسته و layout داشبورد | FastAPI static route | CSS/JS/API | Runtime UI | صفحه اپراتوری |
@@ -375,6 +377,7 @@
 | `runbooks/kubernetes_health.yml` | Runbook | تعریف عملیات allow-listed و verification/rollback | Runbook registry | execution policy | Runtime data | نباید arbitrary command باشد |
 | `runbooks/vm_service_recovery.yml` | Runbook | تعریف عملیات allow-listed و verification/rollback | Runbook registry | execution policy | Runtime data | نباید arbitrary command باشد |
 | `scripts/__init__.py` | Python | ابزار maintenance/validation/seed/build | Developer/CI | repo/database | Tooling | مسیر اپراتوری کمکی |
+| `scripts/acceptance/incident_sre_browser.py` | Python | ابزار maintenance/validation/seed/build | Developer/CI | repo/database | Tooling | مسیر اپراتوری کمکی |
 | `scripts/add_memory.py` | Python | ابزار maintenance/validation/seed/build | Developer/CI | repo/database | Tooling | مسیر اپراتوری کمکی |
 | `scripts/backfill_memory_embeddings.py` | Python | ابزار maintenance/validation/seed/build | Developer/CI | repo/database | Tooling | مسیر اپراتوری کمکی |
 | `scripts/check-ui-fonts.ps1` | Python | ابزار maintenance/validation/seed/build | Developer/CI | repo/database | Tooling | مسیر اپراتوری کمکی |
@@ -598,6 +601,8 @@
 | `tests/unit/test_storage_reliability_engine.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_structured_agent_resilience.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_systemd_runtime_discovery.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
+| `tests/unit/test_technical_investigation_browser.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
+| `tests/unit/test_technical_investigation_report.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_triage_production_engine.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_upstream_mcp_contracts.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_verification_gate.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
