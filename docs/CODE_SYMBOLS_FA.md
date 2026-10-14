@@ -2335,8 +2335,8 @@
 | `integrations/vm/general_config_review.py` | `checked_config_path` | 27 | function | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | module |
 | `integrations/vm/general_config_review.py` | `remote_config_read_command` | 35 | function | Fixed coreutils only; not a general-purpose remote file-read API. | module |
 | `integrations/vm/general_config_review.py` | `_structural_line` | 49 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `integrations/vm/general_config_review.py` | `_remove_trailing_json_commas` | 62 | function | Only a lexical trailing comma outside JSON strings; never change values. | module |
-| `integrations/vm/general_config_review.py` | `local_config_review` | 89 | function | Review a known config source and generate only a deterministic JSON fix. | module |
+| `integrations/vm/general_config_review.py` | `_remove_trailing_json_commas` | 71 | function | Only a lexical trailing comma outside JSON strings; never change values. | module |
+| `integrations/vm/general_config_review.py` | `local_config_review` | 98 | function | Review a known config source and generate only a deterministic JSON fix. | module |
 | `integrations/vm/mcp_client.py` | `VMEdgeMCPClient` | 9 | class | MCP-only connector for VM/Edge diagnostics and governed remediation. | module |
 | `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.__init__` | 23 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
 | `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.initialize` | 37 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
