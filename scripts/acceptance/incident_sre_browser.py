@@ -147,6 +147,9 @@ def main() -> None:
 
         page.route("**/*", respond)
         page.goto(f"http://aiops.test/dashboard/incidents/{INCIDENT_ID}")
+        # The detailed audit is intentionally behind progressive disclosure;
+        # confirm the operator can still open it deliberately in Chromium.
+        page.locator(".ic-overview-details > summary").click(timeout=15000)
         page.locator("#ic-technical-report > details > summary").click(timeout=15000)
         page.locator("#ic-technical-report .ic-sre-table tbody tr").first.wait_for(timeout=15000)
         html = page.locator("#ic-technical-report").inner_text()
