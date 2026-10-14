@@ -142,6 +142,9 @@ async def test_worker_preview_unavailable_if_remote_file_cannot_be_read(monkeypa
     monkeypatch.setattr(connector, "_run", run)
     outcome = await connector.nginx_config_review("10.248.16.82", "nginx")
     assert outcome["status"] == "preview_unavailable"
+    assert outcome["config_file"] == "/etc/nginx/nginx.conf"
+    assert outcome["error_line"] == 103
+    assert outcome["remote_python_required"] is False
     assert outcome["execution_authority"] is False
     assert "DO_NOT_LEAK" not in json.dumps(outcome)
 
@@ -343,3 +346,39 @@ def test_existing_nginx_incident_can_request_read_only_preview_from_dashboard():
     assert 'data-config-preview="nginx"' in js
     assert "submitIncidentChat('nginx_config_review:" in js
     assert "اعمال اصلاح روی سرور — غیرفعال" in js
+
+
+
+@pytest.mark.asyncio
+async def test_dynamic_nginx_config_preview_survives_llm_opt_out():
+    validator = {
+        "source": "vm_mcp", "reference": "failed-validator",
+        "raw_data": {
+            "diagnostic": "config_validate", "success": True,
+            "supported": True, "valid": False, "service": "nginx",
+            "config_file": "/etc/nginx/nginx.conf", "error_line": 103,
+            "syntax_error": 'unexpected "{"',
+        },
+    }
+    reviewed = {
+        "source": "vm_mcp", "reference": "safe-preview",
+        "raw_data": {
+            "diagnostic": "nginx_config_review", "success": True,
+            "service": "nginx", "config_file": "/etc/nginx/nginx.conf",
+            "error_line": 103, **local_nginx_review(
+                encoded=_ENCODED, file_path="/etc/nginx/nginx.conf",
+                error_line=103, syntax_error='unexpected "{"',
+            ),
+        },
+    }
+    state = {
+        "service_name": "nginx", "coordination": {"missing_evidence": []},
+        "knowledge_results": [], "context": {"evidence": [validator, reviewed]},
+    }
+    proposal = await DynamicInvestigationPlanner.propose(state, adapter=None)
+    assert proposal["model_status"] == "skipped_deterministic_read_only"
+    assert proposal["config_proposal"]["status"] == "candidate_proposed"
+    assert proposal["config_proposal"]["validator_executed_on_proposal"] is False
+    assert proposal["config_proposal"]["apply_eligible"] is False
+    assert proposal["config_proposal"]["original_sha256"]
+    assert proposal["config_proposal"]["candidate_sha256"]
