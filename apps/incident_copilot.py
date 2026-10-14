@@ -449,6 +449,8 @@ async def llm_plan(message: str, summary: dict, turns: list[dict],
     prioritized = {
         "incident_summary": summary.get("incident_summary"),
         "configuration_diagnostic": summary.get("configuration_diagnostic"),
+        "config_discovery": (summary.get("dynamic_investigation") or {}).get("config_discovery"),
+        "unknown_guidance": summary.get("unknown_guidance"),
         "recovery_advisory": summary.get("recovery_advisory"),
         "technical_investigation": summary.get("technical_investigation"),
         "rca_assessment": summary.get("rca_assessment"),
@@ -512,6 +514,16 @@ async def llm_plan(message: str, summary: dict, turns: list[dict],
             "nginx.conf and sites-enabled. If requested, use that tool; do NOT "
             "claim there is no Nginx file access when the tool succeeds. This "
             "does NOT reveal raw file values or authorize editing. "
+            "For any unknown VM service (including Java/Tomcat, HAProxy "
+            "or a custom systemd service), inspect non-secret systemd "
+            "runtime/discovery evidence, request the registered "
+            "service_config_discovery read-only tool, and use LLM knowledge "
+            "to distinguish plausible vendor paths from verified files. "
+            "Never claim no evidence before evaluating the recorded "
+            "discovery and attempting bounded LLM advice. "
+            "LLM-suggested paths/commands are hypotheses only; no "
+            "arbitrary systemd command or path can be executed. "
+            "A file that exists is not automatically validated or repairable. "
             "Do not request secrets."
         )},
         {"role": "system", "content": "Bounded incident evidence: " +
