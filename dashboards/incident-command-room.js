@@ -1597,7 +1597,7 @@
     if(r.memory_investigation){
       const m=r.memory_investigation;
       show('#ic-proposed-fix','<article class="ic-detail-card"><h3>'+
-        esc(state.language==='fa?'مسیر تخصصی عیب‌یابی RAM':'RAM diagnostic track')+
+        esc(state.language==='fa'?'مسیر تخصصی عیب‌یابی RAM':'RAM diagnostic track')+
         '</h3><p>'+esc(state.language==='fa'?
         'پیشنهادهای تخصصی Read-only و دلایل انجام‌نشدن هر بررسی در بخش «چرا RAM بالا رفت؟» بالای گزارش مشخص شده‌اند. تا تأیید علت، هیچ پیشنهاد Restart، Kill یا افزایش RAM مجوز اجرا ندارد.':
         'Evidence-backed read-only investigation steps and gaps appear above. No restart, kill or RAM increase is authorized.')+
