@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 487 | Dashboard JS files scanned: 8 | Symbols indexed: 4974**
+**Python files scanned: 487 | Dashboard JS files scanned: 8 | Symbols indexed: 4976**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -3786,6 +3786,8 @@
 | `tests/unit/test_incident_explanation.py` | `test_brief_prioritizes_specialized_invalid_json_over_generic_unsupported` | 46 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_incident_explanation.py` | `test_unverified_dotnet_result_is_not_said_to_be_valid_or_invalid` | 70 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_incident_explanation.py` | `test_json_syntax_valid_cannot_grant_start_or_semantic_health` | 79 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_explanation.py` | `test_dotnet_validator_explanation_confirms_local_aiops_parsing_not_python_on_vm` | 93 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_explanation.py` | `test_old_dotnet_evidence_does_not_invent_error_type_or_remote_python_claim` | 120 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_incident_explorer_views.py` | `test_incident_explorer_sort_filter_persistence_and_views` | 12 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_incident_explorer_views.py` | `test_incident_brief_has_clear_headline_and_expandable_originals` | 144 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_incident_operational_finalization.py` | `FakeSession` | 9 | class | کلاس | module |
