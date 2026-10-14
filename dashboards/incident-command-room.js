@@ -54,7 +54,7 @@
       criticalWarning:'پیش از تصمیم‌گیری به این هشدارها توجه کنید.',agents:'Agentهای اجراشده',
       mcp:'یافته‌های MCP',monitoring:'پایش زیرساخت',none:'اطلاعات قابل‌استنادی ثبت نشده است.',
       infoUnavailable:'اطلاعاتی برای این بخش ثبت نشده است؛ نتیجه‌گیری جدیدی ساخته نمی‌شود.',
-      notUsed:'کاگنیا تجربه‌های مشابهی پیدا کرده؛ اما هنوز معلوم نیست این تجربه‌ها در تصمیم نهایی اثر داشته‌اند یا نه.',
+      notUsed:'دانش مرتبط بازیابی شده است، اما هیچ Agent به آن استناد نکرده و اثر آن در تصمیم نهایی ثابت نشده است.',
       approvalPending:'در انتظار تصمیم شما',approvalApproved:'تأیید شده، منتظر اجرای جداگانه',
       approvalFinished:'مجوز دیگر در انتظار نیست',approvalNoRecord:'برای این رخداد مجوز فعالی ثبت نشده است.',
       reviewCheckbox:'بررسی کردم چه کاری، روی کدام سرور و با چه ریسکی انجام می‌شود.',
@@ -1010,7 +1010,7 @@
     if(r.data_freshness==='unknown')messages.push({text:tr('freshUnknown')});
     if(arr(r.monitoring_sources).some(s=>['error','unavailable'].includes(low(s.status)))) messages.push({text:tr('sourceUnavailable')});
     if(arr(r.missing_evidence).length||arr(r.evidence_conflicts).length)messages.push({text:tr('missing')});
-    if(Number(c.retrieved_count)>0 && arr(c.items).every(x=>x.use_status!=='cited_by_agent'))messages.push({text:tr('notUsed')});
+    if(arr(c.items).length>0 && arr(c.items).every(x=>x.use_status!=='cited_by_agent'))messages.push({text:tr('notUsed')});
     return messages;
   }
   function renderOperatorExplanation(r) {
@@ -1790,15 +1790,99 @@
     show('#ic-mcp',mcp.length?important.join('')+extra:empty());
   }
   function renderKnowledge(r) {
-    const k=r.cognia_knowledge||{},m=r.operational_memory||{};
-    $('#ic-cognia-count').textContent=num(k.retrieved_count||0);
+    const k=r.cognia_knowledge||{},m=r.operational_memory||{},fa=state.language==='fa';
+    const items=arr(k.items),accepted=items.length;
+    const rejected=Number(k.rejected_count)||0;
+    // Count admitted, attributable documents, not candidate chunks that
+    // failed service/FQDN relevance checks.
+    $('#ic-cognia-count').textContent=num(accepted)+(fa?' مرتبط':' matching');
     $('#ic-memory-count').textContent=num(m.retrieved_count||0);
-    show('#ic-cognia','<div class="ic-callout"><strong>'+txt(status(k.status))+'</strong><p>'+tr('notUsed')+'</p></div>'+
-      (arr(k.items).length?arr(k.items).map(x=>'<article class="ic-detail-card"><div class="ic-detail-head"><h4>'+
-        txt(state.language==='fa' ? (/Verified Incident Experience/.test(x.excerpt||'') ? 'تجربه حل مشکل مشابه' : 'دانش مرتبط بازیابی‌شده از کاگنیا') : (x.title||x.source_id))+'</h4>'+pill(x.use_status)+'</div>'+
-        '<p>'+txt(previousExperience(x,"cognia"))+'</p>'+original(truncate(x.excerpt,1600),"متن اصلی دانش کاگنیا")+'<div class="ic-meta">پایگاه دانش: '+txt(x.knowledge_base_id)+
-        ' · ID: '+txt(x.knowledge_id)+' · '+tr('confidence')+': '+esc(numberPct(x.relevance))+'</div>'+
-        refs(x.source_id?[x.source_id]:[])+'</article>').join(''):empty()));
+    let note='';
+    if(accepted){
+      const experiences=items.filter(x=>x.document_kind==='historical_incident_experience').length;
+      const cited=items.filter(x=>x.use_status==='cited_by_agent').length;
+      note=(fa?
+        'کاگنیا '+num(accepted)+' سند مرتبط برای این رخداد برگردانده است؛ '+num(experiences)+
+        ' مورد صراحتاً سابقهٔ Incident مستند هستند. '+
+        (cited?num(cited)+' سند در خروجی Agent مورد استناد قرار گرفته است. ':
+          'هیچ‌یک در خروجی Agent مورد استناد قرار نگرفته‌اند. ')+
+        'تأثیر این اسناد بر تصمیم نهایی بدون ردپای تصمیم‌گیری تأیید نیست.':
+        'Cognia returned '+accepted+' admitted relevant documents, '+experiences+
+        ' explicitly labeled historical incident records, and '+cited+
+        ' cited by agents. Impact on the final decision is not verified.');
+    }else if(low(k.status)==='filtered_empty'||rejected>0){
+      note=fa?'هیچ سند مرتبط و قابل‌قبولی باقی نمانده است. '+num(rejected)+
+        ' نتیجهٔ Cognia به دلیل عدم انطباق با سرویس یا محدودهٔ رخداد کنار گذاشته شده‌اند.':
+        'No admitted matching documents. '+rejected+
+        ' Cognia result(s) were excluded for service or incident scope mismatch.';
+    }else if(['failed','error','unavailable','authentication_failed','forbidden'].includes(low(k.status))){
+      note=fa?'جست‌وجوی Cognia ناموفق بوده است؛ این وضعیت به معنی نبود دانش مشابه نیست.':
+        'Cognia lookup failed. This does not mean there is no matching knowledge.';
+    }else if(low(k.status)==='not_queried'){
+      note=fa?'برای این رخداد جست‌وجوی ثبت‌شده‌ای در Cognia وجود ندارد.':
+        'No recorded Cognia search for this incident.';
+    }else{
+      note=fa?'جست‌وجوی Cognia نتیجهٔ مرتبط و قابل‌استنادی برای این رخداد ثبت نکرده است.':
+        'Cognia has no admitted matching result for this incident.';
+    }
+    const counts=(rejected>0?'<p class="ic-meta">'+esc(fa?
+      'اسناد ردشده در فیلتر ارتباط با رخداد: ':'Rejected by relevance gate: ')+num(rejected)+'</p>':'');
+    const rejectedExamples=!accepted&&rejected?arr(k.rejected_examples).slice(0,6).map(x=>
+      '<div class="ic-cognia-rejected"><strong>'+esc(fa?'سند کنارگذاشته‌شده':'Excluded result')+
+      '</strong> '+code(x.source_id)+
+      '<p>'+esc(fa?'علت: ':'Reason: ')+txt(x.reason)+
+      (arr(x.declared_services).length?' · '+esc(fa?'سرویس سند: ':'Document service: ')+
+        txt(arr(x.declared_services).join(', ')):'')+'</p></div>').join(''):'';
+    const summary='<div class="ic-callout"><strong>'+txt(status(k.status||'not_queried'))+
+      '</strong><p>'+esc(note)+'</p>'+counts+
+      (!accepted&&k.error_code?'<p class="ic-meta">'+esc(fa?'کد خطا: ':'Error code: ')+
+      code(k.error_code)+'</p>':'')+'</div>';
+    const docs=items.map(x=>{
+      const history=x.document_kind==='historical_incident_experience';
+      const name=x.title||(history?
+        (fa?'سابقهٔ رخداد '+(x.previous_incident_id||''):'Incident record '+(x.previous_incident_id||'')):
+        (fa?'سند Cognia #'+(x.knowledge_id||x.source_id||'بدون عنوان'):
+            'Cognia document #'+(x.knowledge_id||x.source_id||'untitled')));
+      const facts=[
+        [fa?'سرویس سند':'Document service',x.document_service],
+        ...(history?[
+          [fa?'رخداد قبلی':'Previous incident',x.previous_incident_id],
+          [fa?'الگوی علامت':'Observed symptom',x.symptom_pattern],
+          [fa?'وضعیت علت ریشه‌ای':'Historical RCA status',x.root_cause_status],
+          [fa?'اقدام انجام‌شده در گذشته':'Historical action',x.historical_action],
+          [fa?'راستی‌آزمایی گذشته':'Historical verification',x.verification_status],
+          [fa?'نتیجهٔ گذشته':'Historical outcome',x.historical_outcome],
+          [fa?'درس آموخته‌شده':'Reusable lesson',x.reusable_lesson],
+        ]:[])
+      ].filter(x=>x[1]!==null&&x[1]!==undefined&&x[1]!=='');
+      const lesson=facts.length?'<dl class="ic-cognia-details">'+facts.map(([label,v])=>
+        '<div><dt>'+esc(label)+'</dt><dd>'+txt(v)+'</dd></div>').join('')+'</dl>':'';
+      return '<article class="ic-detail-card ic-cognia-match"><div class="ic-detail-head"><h4>'+
+        txt(name)+'</h4><span class="ic-tag">'+esc(history?
+          (fa?'سابقهٔ Incident مستند':'Recorded incident experience'):
+          (fa?'مستند مرتبط':'Relevant knowledge document'))+'</span></div>'+
+        '<p>'+esc(fa?'نوع ارتباط: ':'Relevance: ')+
+        esc(history?(fa?'تجربهٔ قبلی منتشرشده؛ علت فعلی را ثابت نمی‌کند.':
+          'Published incident experience, not proof of current cause.'):
+          (fa?'سند دارای مالکیت یا محدودهٔ معتبر برای سرویس؛ لزوماً تجربهٔ حل مشکل نیست.':
+          'Service-scoped document; not necessarily a previous recovery experience.'))+'</p>'+
+        lesson+
+        '<p class="ic-cognia-excerpt">'+txt(truncate(x.excerpt,500))+'</p>'+
+        original(truncate(x.excerpt,1600),fa?'متن بازیابی‌شده از Cognia':'Original Cognia excerpt')+
+        '<p class="ic-meta">'+esc(fa?'امتیاز تطبیق جست‌وجو: ':'Retrieval relevance score: ')+
+        esc(numberPct(x.relevance))+
+        ' · KB '+txt(x.knowledge_base_id)+
+        ' · Knowledge '+txt(x.knowledge_id)+
+        ' · Revision '+txt(x.revision_id)+
+        ' · Chunk '+txt(x.chunk_id)+'</p>'+
+        '<p class="ic-meta">'+esc(fa?'زمان بازیابی: ':'Retrieved at: ')+txt(date(x.retrieved_at))+
+        ' · '+esc(x.use_status==='cited_by_agent'?
+          (fa?'Agent به این سند استناد کرده':'Cited by an agent'):
+          (fa?'استناد Agent ثبت نشده':'No agent citation recorded'))+
+        ' · '+esc(fa?'اثر بر تصمیم نهایی: تأییدنشده':'Final decision impact: not traced')+'</p>'+
+        refs(x.source_id?[x.source_id]:[])+'</article>';
+    }).join('');
+    show('#ic-cognia',summary+rejectedExamples+docs);
     show('#ic-memory','<div class="ic-callout"><strong>'+tr('knowledgeNotProof')+'</strong></div>'+
       (arr(m.items).length?arr(m.items).map(x=>'<article class="ic-detail-card"><div class="ic-detail-head"><h4>'+
         txt(state.language==='fa'?'تجربه رخداد قبلی':x.memory_id)+'</h4>'+pill(x.use_status)+'</div><p>'+txt(previousExperience(x,"memory"))+'</p>'+original(truncate(x.root_cause,1000))+
