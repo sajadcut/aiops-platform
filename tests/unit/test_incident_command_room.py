@@ -511,9 +511,11 @@ def test_host_ram_room_shows_causal_gaps_and_checks_without_service_unknown_card
         "type:'read_only'}]},"
     )
     script = script.replace(marker, marker + "\n    " + additions, 1)
-    cut = "  assert.match(el('#ic-brief-lead').innerHTML,/سرویس از دسترس/);"
+    # Preserve the incident identity and workflow checks; replace only the
+    # generic service-specific assertions with dedicated RAM assertions.
+    cut = "  assert.match(el('#ic-flow-caution').textContent,/تخمین زمان باقی‌مانده نیست/);"
     assert cut in script
-    script = script[:script.index(cut)] + r"""
+    script = script[:script.index(cut) + len(cut)] + r"""
   assert.equal(el('#ic-service-status').hidden,true);
   assert.equal(el('#ic-service-profile').hidden,true);
   assert.match(el('#ic-memory-forensics').innerHTML,/چرا RAM بالا رفت/);
