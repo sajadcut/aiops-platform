@@ -15,7 +15,7 @@
       brandDetail:'فضای تصمیم‌گیری عملیاتی',dashboard:'داشبورد',incidents:'رخدادها',thisIncident:'این رخداد',
       refresh:'↻ تازه‌سازی',back:'بازگشت به رخدادها',loading:'در حال خواندن گزارش مستند از داده‌های ثبت‌شده رخداد…',
       heroKicker:'اتاق بررسی و تصمیم‌گیری',navOverview:'خلاصه تصمیم',navReceived:'آلارم دریافتی',navChat:'چت رخداد',navReview:'قبل از تأیید',
-      navAnalysis:'تحلیل Agentها',navEvidence:'شواهد و MCP',navKnowledge:'دانش و تجربه',navOutcome:'نتیجه اجرا',navHistory:'تاریخچه',
+      navAnalysis:'تحلیل Agentها',navFix:'اصلاح کانفیگ',navEvidence:'شواهد و MCP',navKnowledge:'دانش و تجربه',navOutcome:'نتیجه اجرا',navHistory:'تاریخچه',
       receivedTitle:'آلارم دریافتی',receivedSubtitle:'آنچه واقعاً از سیستم مانیتورینگ دریافت شده',
       receivedNote:'متن و اطلاعات اصلی ثبت‌شده در زمان دریافت آلارم را می‌بینی. اطلاعات محرمانه پنهان شده‌اند. موارد قدیمی ممکن است قبل از ذخیره‌سازی نرمال شده باشند.',
       receivedLoading:'در حال دریافت آلارم ثبت‌شده…',receivedEmpty:'برای این رخداد، پیام اولیه‌ای از منابع ثبت‌شده پیدا نشد.',
@@ -101,7 +101,7 @@
       brandDetail:'Dedicated operational decision workspace',dashboard:'Dashboard',incidents:'Incidents',thisIncident:'This incident',
       refresh:'↻ Refresh',back:'Back to incidents',loading:'Loading durable evidence and incident state…',
       heroKicker:'Incident command room',navOverview:'Quick brief',navReceived:'Received alert',navChat:'Incident chat',navReview:'Before approval',navAnalysis:'Agent analysis',
-      navEvidence:'Evidence & MCP',navKnowledge:'Knowledge & memory',navOutcome:'Execution result',navHistory:'History',
+      navFix:'Config correction',navEvidence:'Evidence & MCP',navKnowledge:'Knowledge & memory',navOutcome:'Execution result',navHistory:'History',
       receivedTitle:'Received alert',receivedSubtitle:'The notification actually sent by monitoring',
       receivedNote:'Original stored notification data with secrets removed. Older notifications may have been normalized before storage.',
       receivedLoading:'Loading recorded source notification…',receivedEmpty:'No stored ingress notification found for this Incident.',
@@ -2287,6 +2287,70 @@
         ' · '+tr('result')+': '+txt(status(x.outcome))+' · '+tr('confidence')+': '+esc(numberPct(x.similarity))+'</div>'+
         refs(x.previous_incident_id?[x.previous_incident_id]:[])+'</article>').join(''):empty()));
   }
+  // The source proposal is evidence-bound and review-only. A browser may
+  // request an audit entry for separate validation; it cannot apply a patch.
+  function renderConfigActionBanner(r) {
+    const node=$('#ic-config-action-banner');
+    if(!node)return;
+    const service=low(r?.incident_summary?.service).replace(/\.service$/,'');
+    const config=r?.dynamic_investigation?.config_proposal||{};
+    const validated=r?.configuration_diagnostic||{};
+    const candidate=service==='nginx'&&low(config.status)==='candidate_proposed';
+    const invalid=service==='nginx'&&low(validated.status)==='invalid';
+    if(!candidate&&!invalid){node.hidden=true;node.innerHTML='';return;}
+    const fa=state.language==='fa',stage=low(config.validation_status);
+    const stageText=stage==='staged_failed'?
+      (fa?'نسخه پیشنهادی ساخته شد؛ تست Nginx روی کپی موقت شکست خورد.':
+           'Candidate generated; staging nginx -t failed.'):
+      stage==='staged_pass_not_isolated'?
+      (fa?'تست نسخه پیشنهادی موفق بود، اما ایزوله نبوده است.':
+           'Staging passed, but validation was not isolated.'):
+      (fa?'اعتبارسنجی مستقل یا نسخهٔ اصلاحی تأییدشده موجود نیست.':
+           'No independently verified repair is available.');
+    const code=low(config.stage_failure_reason);
+    const reason=code==='permission_denied'?
+      (fa?'علت شکست تست: محدودیت مجوز دسترسی (permission_denied).':
+           'Staged validation was blocked by permissions (permission_denied).'):
+      code&&code!=='none'&&code!=='not_tested'?
+      (fa?'علت/کد نتیجه: ':'Reason code: ')+code:'';
+    const responded=state.configResponse?.status&&state.configResponse.status!=='not_responded';
+    const ready=Boolean(candidate && config.original_sha256 && config.candidate_sha256 &&
+      !state.historic && !state.busy && state.configResponseStatus==='loaded' &&
+      !responded);
+    const path=config.config_file||validated.config_file||'';
+    const line=Number.isInteger(config.error_line)?config.error_line:
+      Number.isInteger(validated.error_line)?validated.error_line:null;
+    const responseLabel=responded?
+      '<p>'+esc(fa?'پاسخ قبلی ثبت شده: ':'Review response recorded: ')+
+      '<strong>'+txt(state.configResponse.status)+'</strong></p>':'';
+    const requestButton=candidate&&!responded?
+      '<button type="button" class="ic-btn ic-btn-primary" data-config-intent="request_isolated_validation"'+
+      (ready?'':' disabled')+'>'+
+      esc(fa?'درخواست بازبینی و اعتبارسنجی اصلاح':'Request correction review & validation')+
+      '</button>':'';
+    node.hidden=false;
+    node.innerHTML='<div class="ic-config-banner-copy"><strong>'+
+      esc(fa?'اصلاح پیشنهادی فایل کانفیگ Nginx':'Nginx configuration correction proposal')+
+      '</strong><p>'+esc(candidate?stageText:
+      (fa?'خطای کانفیگ ثبت شده؛ هنوز پیشنهاد اصلاح معتبر به دست نیامده است.':
+          'Config failure recorded; no safe repair candidate was produced.'))+
+      '</p>'+(path?'<p><code dir="ltr">'+txt(path)+'</code>'+
+        (line!==null?' · '+esc(fa?'خط ':'line ')+num(line):'')+'</p>':'')+
+      (reason?'<p class="ic-config-banner-warning">'+esc(reason)+'</p>':'')+
+      responseLabel+
+      '<p class="ic-config-banner-warning">'+esc(fa?
+        'اعمال روی سرور فعلاً غیرفعال است: اعتبارسنجی مستقل، قرارداد تغییر نسخه‌دار و Approval اجرایی وجود ندارد. ثبت درخواست اعتبارسنجی خودش فایل را اصلاح نمی‌کند.':
+        'Apply is disabled: isolated validation, a versioned change contract and executable approval are missing. A validation request does not modify the file.')+
+      '</p></div><div class="ic-config-banner-actions">'+requestButton+
+      '<a class="ic-btn ic-btn-muted" href="#ic-ai-proposed-fix">'+
+      esc(fa?'مشاهده خطا، Diff و پیشنهاد اصلاح':'View error, diff and proposal')+
+      '</a>'+
+      '<button type="button" class="ic-btn ic-btn-muted" disabled title="'+
+      esc(fa?'فعلاً مسیر ایمن اعمال فایل پیاده‌سازی نشده است':'No validated file-apply workflow exists')+'">'+
+      esc(fa?'اعمال اصلاح روی سرور — غیرفعال':'Apply correction — unavailable')+
+      '</button></div>';
+  }
+
   function renderConfigProposal(config) {
     const fa=state.language==='fa';
     const source=arr(config.current_excerpt),target=arr(config.proposed_excerpt);
@@ -2635,7 +2699,7 @@
     if(!state.report)return;
     const r=state.historic||state.report;
     $('#ic-archive-banner').hidden=!state.historic;
-    renderHero(r);renderServiceStatus();renderServiceProfile();renderOverview(r);renderReview(r);renderAnalysis(r);renderEvidence(r);
+    renderHero(r);renderServiceStatus();renderServiceProfile();renderConfigActionBanner(r);renderOverview(r);renderReview(r);renderAnalysis(r);renderEvidence(r);
     renderKnowledge(r);renderInvestigation(r);renderOutcome(r);renderTimeline(r);renderDecision(r);renderReceivedSignals();
     renderIncidentChat();
     renderAnalysisProgress();
@@ -2794,7 +2858,7 @@
       if(token!==state.loadingToken)return;
       state.configResponseStatus='failed';
     }
-    if(state.report)renderInvestigation(state.historic||state.report);
+    if(state.report){renderInvestigation(state.historic||state.report);renderConfigActionBanner(state.historic||state.report);}
   }
   async function respondToConfigProposal(decision) {
     const c=state.report?.dynamic_investigation?.config_proposal||{};
@@ -2823,7 +2887,7 @@
       notify(fa?'پاسخ ثبت شد؛ تغییری در کانفیگ اعمال نشده است.':
                 'Response recorded; no configuration was applied.');
     }catch(e){notify(tr('failure')+' · '+e.message,true);}
-    finally{state.busy=false;if(state.report)renderInvestigation(state.report);}
+    finally{state.busy=false;if(state.report){renderInvestigation(state.report);renderConfigActionBanner(state.report);}}
   }
   async function loadNarrative() {
     if(!state.report||state.historic)return;
