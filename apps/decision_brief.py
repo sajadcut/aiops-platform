@@ -623,6 +623,8 @@ def build_decision_brief(
                 ([obj(observed.get("config_validate")).get("evidence_id")]
                  if obj(observed.get("config_validate")).get("evidence_id") else [])),
             "validated_scope": safe(dotnet_config.get("validated_scope"), 60),
+            "remote_python_required": dotnet_config.get("remote_python_required"),
+            "validator_location": safe(dotnet_config.get("validator_location"), 40),
             "repair_then_revalidate": dotnet_config.get("status") == "invalid"
                 or obj(observed.get("config_validate")).get("valid") is False,
             "start_requires_valid_config_and_approval": True,
