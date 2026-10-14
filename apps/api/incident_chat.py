@@ -24,6 +24,7 @@ from apps.incident_elastic import (
     elastic_live_read, elastic_answer, stored_elastic_observations,
 )
 from apps.orchestrator.workflow_store import WorkflowCheckpointStore
+from apps.incident_followup import persist_and_reassess
 from apps.incident_vm_identity import (
     incident_vm_context, vm_binding_diagnostic, resolve_vm_binding,
     vm_status_answer,
@@ -477,6 +478,7 @@ async def incident_chat_message(
         answer_basis = "stored_analysis" if historical_errors else "model_narration"
         kind = "answer"
         proposal = None
+        followup_integration = None
         if intent in READ_ACTIONS:
             if intent == "elastic_recorded":
                 observation = summary["elastic_recorded"]
@@ -509,6 +511,24 @@ async def incident_chat_message(
                                     "source_refs": refs}),
                 "created_at": datetime.now(timezone.utc).isoformat(),
             })
+            # Only actual, authenticated, successful live MCP diagnostics
+            # qualify as new operational evidence. Historical Elastic results,
+            # Cognia retrieval and free-form LLM prose remain auxiliary.
+            if (
+                observation and observation.get("success") is True
+                and intent in (vm_actions | {"elastic_logs"})
+            ):
+                followup_integration = await persist_and_reassess(
+                    db, incident_id=incident_id,
+                    incident_service=str(incident.service or ""),
+                    checkpoint=checkpoint, action=intent,
+                    observation=observation, binding=binding,
+                    actor=identity.subject,
+                )
+                if followup_integration.get("evidence_ref"):
+                    refs = list(dict.fromkeys(
+                        refs + [followup_integration["evidence_ref"]]
+                    ))[:12]
             kind = "tool_result"
             answer_basis = (
                 "stored_elasticsearch_evidence" if intent == "elastic_recorded" else
@@ -638,6 +658,22 @@ async def incident_chat_message(
                 )
             )
             answer_basis = "stored_analysis_guarded"
+        if followup_integration and followup_integration.get("evidence_ref"):
+            phase = followup_integration.get("status")
+            if phase == "reassessed_read_only":
+                note = (
+                    "این نتیجه به شواهد رخداد اضافه و تحلیل ایجنت‌ها و ارزیابی تصمیم "
+                    "بدون اجرای عملیات دوباره محاسبه شد."
+                )
+            else:
+                note = (
+                    "شاهد جدید در تاریخچه پایدار رخداد ثبت شد؛ تحلیل مجدد هنوز "
+                    "تکمیل یا مجاز نشده است (" + str(phase)[:90] + ")."
+                )
+            kb = followup_integration.get("knowledge") or {}
+            if kb.get("status") == "pending_review":
+                note += " پیش‌نویس دانش Cognia در صف بازبینی انسانی ایجاد شد و هنوز منتشر نشده است."
+            answer += "\n\n" + note
         answer = redact_text(answer)[:3500]
         event_id = await append_turn(
             audit, incident_id=str(incident_id), actor=identity.subject,
@@ -649,6 +685,7 @@ async def incident_chat_message(
         "kind": kind, "message": answer, "proposal": proposal,
         "source_refs": refs, "observation": observation,
         "model_status": final_model_status, "answer_basis": answer_basis,
+        "followup_integration": followup_integration,
     }
 
 
