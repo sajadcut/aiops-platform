@@ -2410,6 +2410,12 @@
     }
     html+='<article class="ic-detail-card"><h4>'+esc(fa?'وضعیت آزمایش نسخه پیشنهادی':'Proposed-version validation')+'</h4>'+
       '<p><strong>'+txt(config.validation_status||'UNVERIFIED')+'</strong></p>'+
+      (config.format_validation_status?
+        '<p>'+esc(fa?'بررسی ساختار فایل در AIOps: ':'AIOps file-format check: ')+
+        txt(config.format_validation_status)+'</p>':'')+
+      (config.vendor_validation_status?
+        '<p>'+esc(fa?'وضعیت اعتبارسنج اختصاصی سرویس: ':'Vendor validator status: ')+
+        txt(config.vendor_validation_status)+'</p>':'')+
       (low(config.validation_status)==='staged_failed'?'<p class="ic-diagnosis-caution">'+esc(fa?
         'nginx -t روی کپی موقت ناموفق بوده است. این پیشنهاد قابل اعمال نیست و تأیید بررسی، مجوز تغییر فایل نیست.':
         'Staged nginx -t failed. This candidate is not deployable, and acknowledging the review never authorizes a file write.')+'</p>':'')+
