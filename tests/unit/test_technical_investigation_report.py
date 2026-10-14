@@ -386,3 +386,68 @@ def test_journal_enospc_is_evidence_from_logs_or_entries_not_confirmed_rca():
     assert "ENOSPC=2" in journal["technical_result"]
     assert r["rca"]["cause_confirmed"] is False
     assert "No space left on device" not in str(journal["evidence"])
+
+
+def test_stop_origin_is_plausible_not_manual_stop_proven():
+    r = report(vm("service_status", {
+        "active_state": "failed", "sub_state": "failed", "result": "timeout",
+        "exec_main_status": 9, "timeout_stop_usec": "1min 30s",
+        "systemctl_status": (
+            "Active: failed (Result: timeout) since Wed 2026-10-14 15:42:36 UTC\n"
+            "   Duration: 11min 4.416s\n"
+            "   Main PID: 310948 (code=killed, signal=KILL)"
+        ),
+    }))
+    origin = r["stop_origin"]
+    assert origin["status"] == "possible_unverified"
+    assert origin["manual_stop_proven"] is False
+    assert origin["audit_command_seen"] is False
+    assert "11min 4.416s" in origin["indicators"]
+    assert "Termination signal=SIGKILL" in origin["indicators"]
+    assert "Stop/Restart" in r["rca"]["likely_hypotheses"][0]["title"]
+    assert r["rca"]["cause_confirmed"] is False
+    assert origin["evidence_refs"] == ["ev-service_status"]
+
+
+def test_stop_job_log_is_not_operator_identity_and_journalctl_is_not_stop():
+    r = report(
+        vm("service_status", {"active_state": "failed", "result": "timeout", "exec_main_status": 9}),
+        vm("service_logs", {"logs": [
+            "systemd[1]: Stopping gfpapi.service - gfpapi",
+            "sudo[342]: admin : COMMAND=/usr/bin/journalctl -u gfpapi",
+            "systemd[1]: gfpapi.service: stop operation timed out. Killing.",
+            "sudo[343]: admin : COMMAND=/usr/bin/systemctl stop nginx",
+        ]}),
+    )
+    origin = r["stop_origin"]
+    assert origin["status"] == "stop_job_observed"
+    assert origin["stop_job_seen"] is True
+    assert origin["audit_command_seen"] is False
+    assert origin["manual_stop_proven"] is False
+    assert "sudo[343]" not in str(r)
+
+
+def test_audit_stop_command_requires_time_correlation_and_never_proves_cause():
+    r = report(
+        vm("service_status", {"active_state": "failed", "result": "timeout"}),
+        vm("system_logs", {"entries": [
+            "sudo[343]: admin : COMMAND=/usr/bin/systemctl stop gfpapi.service",
+        ]}),
+    )
+    origin = r["stop_origin"]
+    assert origin["status"] == "audit_stop_command_observed"
+    assert origin["audit_command_seen"] is True
+    assert origin["manual_stop_proven"] is False
+    assert origin["execution_origin_verified"] is False
+    assert r["rca"]["cause_confirmed"] is False
+    assert "sudo[343]" not in str(r)
+
+
+def test_healthy_or_other_failure_does_not_get_manual_stop_hypothesis():
+    for row in (
+        {"active_state": "active", "result": "success"},
+        {"active_state": "failed", "result": "exit-code"},
+    ):
+        r = report(vm("service_status", row))
+        assert r["stop_origin"] is None
+        assert not any("Stop/Restart" in x["title"] for x in r["rca"]["likely_hypotheses"])
