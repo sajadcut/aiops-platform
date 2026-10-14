@@ -898,6 +898,72 @@ class SSHVMConnector:
             "candidates_not_verified" if base["files"] else "no_systemd_config_candidates")
         return base
 
+    async def service_config_review(self, target: str, service: str) -> Dict[str, Any]:
+        """Read-only bounded review for a vendor error or verified unit file.
+
+        Never accepts a model-supplied path; no source configuration bytes
+        cross the VM MCP API. JSON candidate previews have no write authority.
+        """
+        self._validate_service(service)
+        from integrations.vm.general_config_review import (
+            checked_config_path, remote_config_read_command, local_config_review,
+        )
+        base = {
+            "success": True, "target": target, "service": service,
+            "status": "file_not_verified", "execution_authority": False,
+            "apply_eligible": False, "config_contents_exposed": False,
+        }
+        validator = await self.config_validate(target, service)
+        discovered = await self.service_config_discovery(target, service)
+        known = []
+        if (validator.get("success") is True
+                and validator.get("supported") is True
+                and validator.get("valid") is False
+                and validator.get("config_file")):
+            known.append((validator["config_file"], "confirmed_vendor_validator",
+                          validator.get("error_line")))
+        for row in (discovered.get("files") or [])[:10]:
+            if isinstance(row, dict) and row.get("verified_exists") is True:
+                known.append((row.get("path"), "verified_systemd_candidate", None))
+        safe = None
+        for path, path_source, error_line in known:
+            try:
+                command = remote_config_read_command(checked_config_path(path))
+            except (ValueError, TypeError):
+                continue
+            safe = (path, path_source, error_line, command)
+            break
+        if safe is None:
+            return {
+                **base, "status": "file_not_verified",
+                "discovery_status": discovered.get("status") or "unavailable",
+                "recommended_next_check": "llm_vendor_documentation_and_systemd_audit",
+            }
+        path, source, line, command = safe
+        response = await self._run(target, command)
+        if not response.get("success"):
+            return {
+                **base, "status": "file_read_unavailable",
+                "config_file": path, "path_source": source,
+                "recommended_next_check": "check_scoped_read_permissions",
+            }
+        outcome = local_config_review(
+            str(response.get("stdout") or ""), path=path,
+            validator_error_line=line,
+        )
+        return {
+            **base, **outcome, "target": target, "service": service,
+            "path_source": source,
+            "vendor_validation": (
+                "invalid" if validator.get("valid") is False
+                and validator.get("success") is True else
+                "valid" if validator.get("valid") is True
+                and validator.get("success") is True else "unavailable"
+            ),
+            "execution_authority": False, "apply_eligible": False,
+            "config_contents_exposed": False,
+        }
+
     async def dotnet_config_syntax(self, target: str, service: str) -> Dict[str, Any]:
         """Remote Linux coreutils read; *local AIOps Python* JSON syntax check.
 
