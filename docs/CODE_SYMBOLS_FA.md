@@ -1582,7 +1582,7 @@
 | `apps/technical_investigation_report.py` | `_stop_origin_assessment` | 253 | function | Distinguish confirmed termination from unproven *origin* of a stop job. | module |
 | `apps/technical_investigation_report.py` | `_bounded_files` | 346 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/technical_investigation_report.py` | `build_technical_investigation` | 371 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
-| `apps/technical_investigation_report.py` | `build_technical_investigation.high_mount_pressure` | 651 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | build_technical_investigation |
+| `apps/technical_investigation_report.py` | `build_technical_investigation.high_mount_pressure` | 654 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | build_technical_investigation |
 | `apps/verification_service/__init__.py` | `VerificationStatus` | 11 | class | کلاس | module |
 | `apps/verification_service/__init__.py` | `VerificationResult` | 18 | class | کلاس | module |
 | `apps/verification_service/__init__.py` | `VerificationEngine` | 33 | class | Deterministic before/after verification over fresh operational Evidence. | module |
@@ -4825,9 +4825,9 @@
 | `tests/unit/test_technical_investigation_report.py` | `test_disk_forensics_reports_file_sizes_without_contents_or_delete_claims` | 352 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_technical_investigation_report.py` | `test_journal_enospc_is_evidence_from_logs_or_entries_not_confirmed_rca` | 376 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_technical_investigation_report.py` | `test_stop_origin_is_plausible_not_manual_stop_proven` | 391 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_technical_investigation_report.py` | `test_stop_job_log_is_not_operator_identity_and_journalctl_is_not_stop` | 412 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_technical_investigation_report.py` | `test_audit_stop_command_requires_time_correlation_and_never_proves_cause` | 430 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_technical_investigation_report.py` | `test_healthy_or_other_failure_does_not_get_manual_stop_hypothesis` | 446 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_technical_investigation_report.py` | `test_stop_job_log_is_not_operator_identity_and_journalctl_is_not_stop` | 413 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_technical_investigation_report.py` | `test_audit_stop_command_requires_time_correlation_and_never_proves_cause` | 431 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_technical_investigation_report.py` | `test_healthy_or_other_failure_does_not_get_manual_stop_hypothesis` | 447 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_triage_production_engine.py` | `StaticTriageLLM` | 13 | class | کلاس | module |
 | `tests/unit/test_triage_production_engine.py` | `StaticTriageLLM.__init__` | 14 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | StaticTriageLLM |
 | `tests/unit/test_triage_production_engine.py` | `StaticTriageLLM.provider_name` | 19 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | StaticTriageLLM |
