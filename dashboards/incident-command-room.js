@@ -827,11 +827,18 @@
       :(fa?'برای این رخداد اقدام اجرایی تأییدشده‌ای ثبت نشده است.':
         'No governed execution action has been registered for this incident.');
     const vm=p.observations||{};
+    const checkedJson=arr(report.configuration_diagnostic?.files).filter(
+      f=>f && low(f.status)==='valid_json_syntax');
     const dotnet=vm.dotnet_config_syntax?.values?.syntax_valid===true;
     const disk=vm.disk_status?.values||{};
     const full=Number(disk.used_percent)>=95;
-    const config=dotnet?(fa?'ساختار JSON فایل‌های بررسی‌شده معتبر بوده؛ این تست سلامت Runtime را ثابت نمی‌کند.':
-        'Checked JSON syntax passed; application readiness is not proven.'):
+    const paths=checkedJson.map(f=>f.path_verified && f.path?f.path:(f.file||'')).filter(Boolean);
+    const config=dotnet&&paths.length?
+      (fa?'سینتکس JSON فایل‌های ثبت‌شده ('+paths.join('، ')+') معتبر بوده؛ سلامت Runtime تأیید نشده است.':
+        'JSON syntax passed for '+paths.join(', ')+'; runtime health is unverified.'):
+      dotnet?
+        (fa?'Validator موفقیت سینتکس JSON را ثبت کرده اما نام فایل بررسی‌شده در شواهد این نسخه مشخص نیست.':
+          'JSON syntax success was recorded, but the checked filename is unavailable in this report.'):
       (fa?'صحت کانفیگ در همین جمع‌بندی به‌طور کامل تأیید نشده است.':
         'Complete configuration validation is not established here.');
     const health=state.httpHealth;
@@ -1145,7 +1152,7 @@
         (file.evidence_ref?'<small>Evidence ID: '+txt(file.evidence_ref)+'</small>':'')+'</li>';
     }).join('');
     return '<div class="ic-config-verified-files"><strong>'+esc(fa?
-      'فایل‌های JSON که Validator واقعاً بررسی کرده است:':
+      'فایل‌های JSON ثبت‌شده در نتیجهٔ Validator:':
       'Exact JSON files checked by the validator:')+'</strong>'+
       '<ul>'+items+'</ul><p>'+esc(fa?
       'این فقط آزمون سینتکس فایل‌های فهرست‌شده است؛ سایر فایل‌ها، مقادیر تنظیمات و سلامت Runtime تأیید نشده‌اند.':
@@ -1188,7 +1195,8 @@
       '</b>'+txt(config.syntax_error)+'</p>':'')+
       '<p class="ic-diagnosis-caution">'+esc(fa?
         'این خطا در فایل بررسی‌شده ثبت شده است؛ ارتباط مستقیم آن با Timeout سرویس هنوز به بررسی لاگ راه‌اندازی برنامه نیاز دارد. علت نحوی فقط زمانی دقیق است که Validator کد/توضیح خطا را ثبت کرده باشد. هیچ تغییری در فایل انجام نشده است.':
-        'The syntax issue is recorded by the validator; its precise causal link to the service timeout is not yet proven. No file was modified.')+'</p>':
+        'The syntax issue is recorded by the validator; its precise causal link to the service timeout is not yet proven. No file was modified.')+'</p>'+
+      (jsonConfig?renderCheckedJsonFiles(config):''):
       validJson?'<p class="ic-diagnosis-caution">'+esc(fa?
         'سینتکس فایل‌های JSON فهرست‌شده معتبر است؛ این نتیجه سلامت Runtime یا وابستگی‌های برنامه را ثابت نمی‌کند.':
         'Syntax passed for the listed JSON files; runtime and dependencies remain unverified.')+'</p>'+
