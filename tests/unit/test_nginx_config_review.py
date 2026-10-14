@@ -263,3 +263,29 @@ def test_nginx_stage_blocker_is_prominent_in_operator_diagnosis_script():
     assert "مرحله فقط Preview است" in browser
     assert "stage_failure_reason" in browser
     assert "source_evidence_refs" in browser
+
+
+
+def test_nginx_repair_entrypoint_is_visible_near_incident_and_never_applies_unvalidated_patch():
+    from pathlib import Path
+    root = Path(__file__).resolve().parents[2]
+    html = (root / "dashboards/incident-command-room.html").read_text(encoding="utf-8")
+    js = (root / "dashboards/incident-command-room.js").read_text(encoding="utf-8")
+    css = (root / "dashboards/incident-command-room.css").read_text(encoding="utf-8")
+    assert html.index('id="ic-config-action-banner"') < html.index('id="ic-quick-facts"')
+    assert 'href="#ic-ai-proposed-fix" data-i18n="navFix"' in html
+    assert 'function renderConfigActionBanner(r)' in js
+    assert 'renderConfigActionBanner(r);renderOverview(r)' in js
+    assert 'ic-config-banner-actions' in css
+    assert 'permission_denied' in js
+    assert 'data-config-intent="request_isolated_validation"' in js
+    assert 'href="#ic-ai-proposed-fix"' in js
+    assert 'اعمال اصلاح روی سرور — غیرفعال' in js
+    assert 'ثبت درخواست اعتبارسنجی خودش فایل را اصلاح نمی‌کند' in js
+    assert 'state.configResponseStatus===\'loaded\'' in js
+    assert 'state.historic' in js
+    assert 'config.candidate_sha256' in js and 'config.original_sha256' in js
+    # The UI submits only the existing read-only review response, never a
+    # fabricated patch or a config-file execution request.
+    assert "base+'/configuration-review-response'" in js
+    assert 'data-config-intent="apply"' not in js
