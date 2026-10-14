@@ -285,6 +285,10 @@ def fallback_intent(message: str) -> str:
         text, re.I,
     ):
         return "nginx_config_review"
+    if "service_config_discovery" in text:
+        return "service_config_discovery"
+    if "service_config_review" in text:
+        return "service_config_review"
     if re.search(r"nginx\.conf|sites.enabled|sites.available|conf\.d|"
                  r"(?:فایل|ساختار|محتوای|مسیر|لیست).*?(?:کانفیگ|nginx)|"
                  r"(?:nginx|nginx\.conf).*?(?:files?|inspect|read|config files?)",
