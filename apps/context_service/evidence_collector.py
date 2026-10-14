@@ -371,8 +371,11 @@ class EvidenceCollector:
         if self.prometheus and (wants_all or "alert" in wants):
             await self._progress("prometheus", self._source_progress_status("prometheus", evidence))
         partial_asset = AssetIdentityResolver.resolve(evidence, requested_service)
-        effective_service = self._known_service(partial_asset.get("service")) or self._known_service(partial_asset.get("hostname")) or requested_service
-        query_service = effective_service or service
+        effective_service = self._known_service(partial_asset.get("service")) or requested_service
+        # The monitoring hostname is useful for queries, never a systemd service identity.
+        # Host-level RAM incidents must remain service-less.
+        monitoring_subject = effective_service or self._known_service(partial_asset.get("hostname"))
+        query_service = monitoring_subject or service
 
         logs: List[Any] = []
         metrics: List[Any] = []
@@ -418,7 +421,7 @@ class EvidenceCollector:
             })
 
         asset = AssetIdentityResolver.resolve(evidence, effective_service)
-        effective_service = self._known_service(asset.get("service")) or self._known_service(asset.get("hostname")) or effective_service
+        effective_service = self._known_service(asset.get("service")) or effective_service
 
         if self.kubernetes and getattr(self.kubernetes, "enabled", False) and (wants_all or "event" in wants):
             await self._progress("kubernetes_api", "started")
