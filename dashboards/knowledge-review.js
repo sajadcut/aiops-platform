@@ -25,17 +25,17 @@
         data-knowledge-select="${esc(r.id)}" aria-pressed="${r.id === selectedId}">
         <span class="knowledge-queue-title">${esc(r.title)}</span>
         <span>${pill(r.status)} · ${esc(r.source_type)} · KB #${esc(r.kb_id)}</span>
-      </button>`).join('') || '<div class="empty-state">No Knowledge Review candidates yet.</div>';
+      </button>`).join('') || '<div class="empty-state">هنوز موردی برای بازبینی دانش ثبت نشده است.</div>';
   }
 
   function renderSelection() {
     const r = current();
     const box = el('knowledgeReviewDetails');
     if (!box) return;
-    el('knowledgeReviewHeading').textContent = r ? r.title : 'Select a candidate';
-    el('knowledgeReviewStatus').textContent = r ? r.status : 'No selection';
+    el('knowledgeReviewHeading').textContent = r ? r.title : 'یک مورد را انتخاب کنید';
+    el('knowledgeReviewStatus').textContent = r ? faStatus(r.status) : 'موردی انتخاب نشده';
     if (!r) {
-      box.innerHTML = '<div class="empty-state">Choose a draft from the queue.</div>';
+      box.innerHTML = '<div class="empty-state">یک پیش‌نویس از صف انتخاب کنید.</div>';
       return;
     }
     const editable = ['pending_review', 'rejected', 'approved'].includes(r.status);
@@ -44,30 +44,30 @@
     const canRefresh = ['submitted', 'published'].includes(r.status);
     box.innerHTML = `
       <div class="knowledge-facts">
-        <div><label>Source</label><strong>${esc(r.source_type === 'incident' ? 'Verified Incident' : 'Manual Knowledge')}</strong></div>
-        <div><label>Destination</label><strong>Cognia KB #${esc(r.kb_id)}</strong></div>
-        <div><label>Revision</label><strong>${esc(r.revision)}</strong></div>
-        <div><label>Reviewer</label><strong>${esc(r.reviewed_by || 'Pending Review')}</strong></div>
-        <div><label>Incident</label><strong>${esc(r.incident_id || '—')}</strong></div>
-        <div><label>Operational Memory</label><strong>${esc(r.memory_id || '—')}</strong></div>
+        <div><label>منبع</label><strong>${esc(r.source_type === 'incident' ? 'رخداد تأییدشده' : 'دانش دستی')}</strong></div>
+        <div><label>مقصد</label><strong>Cognia KB #${esc(r.kb_id)}</strong></div>
+        <div><label>نسخه</label><strong>${esc(r.revision)}</strong></div>
+        <div><label>بازبین</label><strong>${esc(r.reviewed_by || 'در انتظار بازبینی')}</strong></div>
+        <div><label>رخداد</label><strong>${esc(r.incident_id || '—')}</strong></div>
+        <div><label>حافظهٔ عملیاتی</label><strong>${esc(r.memory_id || '—')}</strong></div>
       </div>
-      <p class="muted">Review supporting evidence, confirmed cause, real action, outcome and secrets before approval. Edits invalidate an earlier approval.</p>
-      ${r.incident_id ? `<button type="button" class="approval-btn" data-knowledge-incident="${esc(r.incident_id)}">Open Incident &amp; Evidence</button>` : ''}
-      <label for="knowledgeEditTitle">Knowledge title</label>
+      <p class="muted">پیش از تأیید، شواهد پشتیبان، علت تأییدشده، اقدام واقعی، نتیجه و اطلاعات حساس را بررسی کنید. هر ویرایش تأیید قبلی را باطل می‌کند.</p>
+      ${r.incident_id ? `<button type="button" class="approval-btn" data-knowledge-incident="${esc(r.incident_id)}">مشاهدهٔ رخداد و شواهد</button>` : ''}
+      <label for="knowledgeEditTitle">عنوان دانش</label>
       <input id="knowledgeEditTitle" maxlength="500" value="${esc(r.title)}" ${editable ? '' : 'readonly'}>
-      <label for="knowledgeEditContent">Reviewed content (the exact bytes sent to Cognia)</label>
+      <label for="knowledgeEditContent">محتوای بررسی‌شده (متن دقیق ارسالی به کاگنیا)</label>
       <textarea id="knowledgeEditContent" rows="15" ${editable ? '' : 'readonly'}>${esc(r.content)}</textarea>
       <div class="knowledge-actions">
-        ${editable ? '<button type="button" data-knowledge-op="edit">Save Edit</button>' : ''}
-        ${reviewable ? '<button type="button" class="approval-btn execute" data-knowledge-op="approve">Approve &amp; Publish</button><button type="button" class="approval-btn reject" data-knowledge-op="reject">Reject</button>' : ''}
-        ${publishable ? '<button type="button" class="approval-btn execute" data-knowledge-op="publish">Publish approved revision</button>' : ''}
-        ${canRefresh ? '<button type="button" data-knowledge-op="refresh">Check Cognia activation</button>' : ''}
+        ${editable ? '<button type="button" data-knowledge-op="edit">ذخیرهٔ تغییرات</button>' : ''}
+        ${reviewable ? '<button type="button" class="approval-btn execute" data-knowledge-op="approve">تأیید و انتشار</button><button type="button" class="approval-btn reject" data-knowledge-op="reject">رد درخواست</button>' : ''}
+        ${publishable ? '<button type="button" class="approval-btn execute" data-knowledge-op="publish">انتشار نسخهٔ تأییدشده</button>' : ''}
+        ${canRefresh ? '<button type="button" data-knowledge-op="refresh">بررسی فعال‌شدن دانش در کاگنیا</button>' : ''}
       </div>
-      ${r.publish_error_code ? `<p class="knowledge-alert">Publication failed: ${esc(r.publish_error_code)}</p>` : ''}
-      ${r.status === 'submitted' ? '<p class="muted">Cognia accepted registration; activation/indexing is not yet verified.</p>' : ''}
-      ${r.status === 'published' ? '<p class="knowledge-success">Cognia active revision verified. This knowledge is now eligible for RAG search.</p>' : ''}
-      ${r.cognia_knowledge_id ? `<p class="muted">Cognia Knowledge #${esc(r.cognia_knowledge_id)} · Revision #${esc(r.cognia_revision_id || '—')}</p>` : ''}
-      ${r.review_reason ? `<p class="muted">Review note: ${esc(r.review_reason)}</p>` : ''}
+      ${r.publish_error_code ? `<p class="knowledge-alert">انتشار ناموفق: ${esc(r.publish_error_code)}</p>` : ''}
+      ${r.status === 'submitted' ? '<p class="muted">کاگنیا ثبت دانش را پذیرفته است، اما فعال‌سازی یا نمایه‌سازی هنوز تأیید نشده است.</p>' : ''}
+      ${r.status === 'published' ? '<p class="knowledge-success">فعال‌شدن نسخهٔ دانش در کاگنیا تأیید شد؛ اکنون این نسخه می‌تواند در جست‌وجوی دانش استفاده شود.</p>' : ''}
+      ${r.cognia_knowledge_id ? `<p class="muted">دانش کاگنیا شمارهٔ ${esc(r.cognia_knowledge_id)} · نسخهٔ ${esc(r.cognia_revision_id || '—')}</p>` : ''}
+      ${r.review_reason ? `<p class="muted">یادداشت بازبینی: ${esc(r.review_reason)}</p>` : ''}
     `;
   }
 
@@ -83,7 +83,7 @@
         renderSelection();
       }
     } catch (err) {
-      notice('Cannot load review content: ' + err.message);
+      notice('دریافت محتوای بازبینی ناموفق بود: ' + err.message);
     }
   }
 
@@ -98,8 +98,8 @@
       await loadSelected();
     } catch (err) {
       const list = el('knowledgeReviewQueue');
-      if (list) list.textContent = 'Unable to load Knowledge Review: ' + err.message;
-      notice('Knowledge Review unavailable: ' + err.message);
+      if (list) list.textContent = 'بارگذاری بازبینی دانش ناموفق بود: ' + err.message;
+      notice('بازبینی دانش در دسترس نیست: ' + err.message);
     } finally {
       loading = false;
     }
@@ -117,12 +117,12 @@
         const content = el('knowledgeEditContent').value;
         await api(base, {method: 'PUT', headers: {'Content-Type': 'application/json'},
           body: JSON.stringify({title, content, expected_revision: row.revision})});
-        notice('Draft saved. Approval is required for the updated revision.');
+        notice('پیش‌نویس ذخیره شد. نسخهٔ اصلاح‌شده نیازمند تأیید تازه است.');
       } else if (op === 'approve' || op === 'reject') {
         const title = el('knowledgeEditTitle').value;
         const content = el('knowledgeEditContent').value;
         if (title !== row.title || content !== row.content) {
-          notice('Save your changes before reviewing this exact revision.');
+          notice('قبل از تأیید این نسخه، تغییرات را ذخیره کنید.');
           return;
         }
         const reason = window.prompt(op === 'approve' ? 'Reason for approving this exact knowledge revision:' : 'Reason for rejecting this knowledge:');
@@ -133,20 +133,20 @@
         if (op === 'approve') {
           notice('Approved; sending to Cognia...');
           await api(base + '/publish', {method: 'POST'});
-          notice('Submitted to Cognia. Check activation before counting it published.');
+          notice('به کاگنیا ارسال شد؛ پیش از اعلام انتشار موفق، فعال‌شدن آن را بررسی کنید.');
         } else {
-          notice('Knowledge rejected; no Cognia publication.');
+          notice('دانش رد شد و چیزی در کاگنیا منتشر نشد.');
         }
       } else if (op === 'publish') {
         if (!window.confirm('Retry approved, immutable revision to Cognia?')) return;
         await api(base + '/publish', {method: 'POST'});
-        notice('Cognia registration submitted.');
+        notice('درخواست ثبت دانش در کاگنیا ارسال شد.');
       } else if (op === 'refresh') {
         await api(base + '/refresh', {method: 'POST'});
-        notice('Cognia activation status refreshed.');
+        notice('وضعیت فعال‌سازی دانش در کاگنیا به‌روزرسانی شد.');
       }
     } catch (err) {
-      notice('Knowledge Review action failed: ' + err.message);
+      notice('اقدام بازبینی دانش ناموفق بود: ' + err.message);
     } finally {
       actionPending = false;
       await reload(row.id);
@@ -162,9 +162,9 @@
       });
       selectedId = row.id;
       await reload(row.id);
-      notice('Pending Review draft created. No knowledge was published.');
+      notice('پیش‌نویس در انتظار بازبینی ساخته شد؛ هنوز چیزی منتشر نشده است.');
     } catch (err) {
-      notice('Could not create draft: ' + err.message);
+      notice('ساخت پیش‌نویس ناموفق بود: ' + err.message);
     } finally {
       actionPending = false;
     }
