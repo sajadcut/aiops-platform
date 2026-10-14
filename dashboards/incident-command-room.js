@@ -1417,6 +1417,27 @@
         'Systemd was active at observation time; HTTP health is independent.'):
       (fa?'وضعیت فعلی سرویس باید دوباره با شواهد مستقیم بررسی شود.':
         'Current service state requires a fresh direct check.');
+    const followup=r.followup_analysis||{};
+    const followupMarkup=followup.status&&followup.status!=='not_requested'?
+      '<div class="ic-ir-recovery"><h4>'+
+      esc(fa?'نتیجهٔ بررسی‌های تکمیلی اپراتور':'Operator follow-up investigation')+
+      '</h4><p>'+esc(fa?
+        'این تحلیل پس از گفت‌وگوی رخداد با شواهد جدید به‌روزرسانی شده است؛ هیچ اقدام عملیاتی از این مسیر اجرا نمی‌شود.':
+        'Analysis was updated from operator-requested evidence; this path never executes operations.')+
+      '</p><p><strong>'+esc(fa?'وضعیت تحلیل: ':'Analysis: ')+
+      '</strong>'+txt(followup.status)+' · '+
+      esc(fa?'ایجنت‌های بازبینی‌کننده: ':'Specialists: ')+
+      num(followup.agent_count||0)+'</p>'+
+      '<p>'+txt(followup.decision_status||'')+'</p>'+
+      (followup.knowledge_review_id?
+        '<p>'+esc(fa?'دانش Cognia: پیش‌نویس در انتظار بررسی؛ هنوز منتشر نشده.':
+        'Cognia: review draft, not published.')+
+        ' <a href="/dashboard?view=knowledge&review='+
+        encodeURIComponent(followup.knowledge_review_id)+'">'+
+        esc(fa?'بازبینی دانش':'Review knowledge')+'</a></p>':
+        '<p>'+esc(fa?'پیش‌نویس Cognia هنوز ایجاد نشده یا پیکربندی آن کامل نیست.':
+        'Cognia review draft is not yet created or configured.')+'</p>')+
+      refs([followup.evidence_ref].filter(Boolean))+'</div>':'';
     const stopOrigin=t.stop_origin||null;
     const stopExplanation=stopOrigin?
       '<div class="ic-ir-caution"><strong>'+esc(fa?
@@ -1602,6 +1623,7 @@
         '<p>'+esc(diagnosis)+'</p>'+list(validated)):'')+
       section(fa?'۵. علت قطعی است یا فرضیه؟':'5. RCA certainty',
         '<p class="ic-ir-caution">'+esc(decision)+'</p>'+
+        followupMarkup+
         stopExplanation+
         (hypotheses.length?list(hypotheses):'<p>'+esc(fa?'فرضیهٔ مستند مستقلی ثبت نشده است.':'No supported independent hypothesis recorded.')+'</p>'))+
       section(fa?'۶. چه شواهدی کم داریم؟':'6. Missing evidence',
@@ -2713,10 +2735,18 @@
     if(!message||state.chatBusy||state.historic||state.lifecycle?.analysis_in_progress)return;
     state.chatBusy=true;state.chatLastResult=null;renderIncidentChat();
     try {
-      await api(base+'/chat',{method:'POST',headers:{'Content-Type':'application/json'},
+      const result=await api(base+'/chat',{method:'POST',headers:{'Content-Type':'application/json'},
         body:JSON.stringify({message})});
       $('#ic-chat-message').value='';
       await loadIncidentChat();
+      if(result.followup_integration?.evidence_ref){
+        state.chatLastResult=result.followup_integration.reassessed?
+          'شاهد جدید ثبت شد؛ تحلیل ایجنت‌ها و ارزیابی به‌روز شدند.':
+          'شاهد جدید ثبت شد؛ وضعیت تحلیل تکمیلی را در گزارش بررسی کنید.';
+        // Refresh the Decision Brief and lifecycle instead of showing a stale
+        // snapshot after new persisted Evidence changes the report digest.
+        await load();
+      }
     }catch(e){notify(tr('failure')+' · '+e.message,true);state.chatLastResult=e.message;}
     finally{state.chatBusy=false;renderIncidentChat();}
   }
