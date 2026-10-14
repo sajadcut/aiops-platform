@@ -124,6 +124,9 @@ const fs=require('node:fs');
   assert.match(intelligence,/در فایل تنظیمات خطای سینتکس ثبت شده/);
   assert.match(intelligence,/علت ریشه‌ای هنوز تأیید نشده است/);
   assert.match(intelligence,/Approval/);
+  assert.match(intelligence,/تحلیل تکمیلی مدل با ارجاع/);
+  assert.match(intelligence,/evidence-config-32/);
+  assert.match(intelligence,/این بخش تفسیر مدل از شواهد است/);
   assert.doesNotMatch(intelligence,/علت ریشه‌ای در شواهد این گزارش تأیید شده است/);
   assert.doesNotMatch(intelligence,/undefined/);
 
