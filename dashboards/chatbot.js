@@ -289,7 +289,7 @@ function addProposalControls(view, proposal) {
   const confirm = document.createElement("button");
   confirm.type = "button";
   confirm.className = "confirm";
-  confirm.textContent = "تأیید درخواست";
+  confirm.textContent = "تأیید و اجرای کنترل‌شده";
 
   const reject = document.createElement("button");
   reject.type = "button";
@@ -318,7 +318,7 @@ function addProposalControls(view, proposal) {
       renderTerminalError(
         {
           message: friendlyHttpError(error),
-          component: "تأیید انسانی",
+          component: "approval",
           code: error.status ? `HTTP_${error.status}` : "APPROVAL_FAILED",
         },
         "",
@@ -571,7 +571,7 @@ async function loadHistory() {
     renderTerminalError(
       {
         message: "تاریخچه بارگذاری نشد.",
-        component: "تاریخچه",
+        component: "history",
         code: error.status ? `HTTP_${error.status}` : "HISTORY_LOAD_FAILED",
       },
       "",
