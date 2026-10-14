@@ -125,6 +125,7 @@ def main() -> None:
 
         page.route("**/*", respond)
         page.goto(f"http://aiops.test/dashboard/incidents/{INCIDENT_ID}")
+        page.locator("#ic-technical-report > details > summary").click(timeout=15000)
         page.locator("#ic-technical-report .ic-sre-table tbody tr").first.wait_for(timeout=15000)
         html = page.locator("#ic-technical-report").inner_text()
         for expected in ("Result=timeout", "Elasticsearch / ELK", "Root Cause Analysis",
