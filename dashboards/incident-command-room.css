@@ -406,3 +406,16 @@
 .ic-overview-details>summary:focus-visible{outline:3px solid var(--accent);outline-offset:-3px}
 .ic-overview-details-body{padding:16px 22px 24px;border-top:1px solid var(--line)}
 @media(max-width:800px){.ic-ir-sources{grid-template-columns:1fr}.ic-ir-head,.ic-ir-section{padding:18px}.ic-overview-details-body{padding:12px}}
+
+
+/* Evidence-bound config review is visible near the Incident title, not buried
+   below the agent diagnostics. Disabled apply is an intentional safety state. */
+.ic-config-action-banner{margin-top:20px;padding:20px 23px;border:1px solid color-mix(in srgb,var(--amber) 40%,var(--line));border-radius:17px;background:color-mix(in srgb,var(--amber) 6%,var(--surface));display:flex;gap:22px;justify-content:space-between;align-items:flex-start;position:relative;flex-wrap:wrap}
+.ic-config-banner-copy{flex:2 1 310px;min-width:0}
+.ic-config-banner-copy>strong{font-size:16px;color:var(--text);font-weight:800}
+.ic-config-banner-copy p{margin:5px 0;color:var(--muted);font-size:13px;line-height:1.8}
+.ic-config-banner-copy code{direction:ltr;unicode-bidi:isolate;display:inline-block;color:var(--text);word-break:break-all}
+.ic-config-banner-copy .ic-config-banner-warning{color:var(--amber)}
+.ic-config-banner-actions{display:flex;align-items:stretch;flex-wrap:wrap;gap:9px;flex:1 1 260px}
+.ic-config-banner-actions .ic-btn{min-height:43px}
+@media(max-width:760px){.ic-config-action-banner{padding:16px;gap:12px}.ic-config-banner-actions{width:100%;flex-direction:column}.ic-config-banner-actions .ic-btn{width:100%}}
