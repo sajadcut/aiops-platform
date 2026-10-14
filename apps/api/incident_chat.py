@@ -115,6 +115,20 @@ def _safe_brief(brief: dict) -> dict:
             )
         }) if isinstance(config, dict) else {},
         "recovery_advisory": redact(brief.get("recovery_advisory") or {}),
+        "technical_investigation": {
+            "stop_origin": redact((brief.get("technical_investigation") or {}).get("stop_origin") or {}),
+            "cause_confirmed": ((brief.get("technical_investigation") or {}).get("rca") or {}).get("cause_confirmed") is True,
+            "hypotheses": [{
+                "title": redact_text(str(x.get("title") or ""))[:160],
+                "check": redact_text(str(x.get("check") or ""))[:220],
+                "evidence_refs": (x.get("supporting") or [])[:5],
+            } for x in (((brief.get("technical_investigation") or {}).get("rca") or {}).get("likely_hypotheses") or [])[:5]],
+            "domains": [{
+                "key": x.get("key"), "status": x.get("status"),
+                "result": redact_text(str(x.get("technical_result") or ""))[:230],
+            } for x in ((brief.get("technical_investigation") or {}).get("domains") or [])[:10]],
+        },
+
         "rca_assessment": redact(brief.get("rca_assessment") or {}),
         "missing_evidence": list(brief.get("missing_evidence") or [])[:8],
         "knowledge": {
