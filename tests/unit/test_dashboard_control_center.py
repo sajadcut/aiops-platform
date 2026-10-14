@@ -55,7 +55,7 @@ def test_dashboard_assets_and_agent_route_are_served_by_fastapi():
 
 def test_legacy_agent_url_has_compatibility_redirect_only():
     html = (ROOT / "dashboards/agents.html").read_text(encoding="utf-8")
-    assert "location.replace("/dashboard")" in html
+    assert 'location.replace("/dashboard")' in html
     assert "ایجنت‌ها و تحلیل علت" in html
 
 
