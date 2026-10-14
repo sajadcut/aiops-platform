@@ -352,7 +352,7 @@
     if (['high', 'critical'].includes(risk) && !window.confirm('تأیید پرریسک: مطمئن شوید مقصد، ابزار، شواهد، راهنمای اجرا و دامنهٔ تأثیر را بررسی کرده‌اید.')) return;
     try {
       await api(`/api/v1/approvals/${encodeURIComponent(approval.approval_id)}/approve`, {method: 'POST'});
-      toast('Approval granted. Workflow remains paused until ادامه و اجرا.');
+      toast('مجوز تأیید شد؛ گردش‌کار تا انتخاب «ادامه و اجرا» متوقف می‌ماند.');
       await refreshIncidentDecision();
     } catch (error) {
       showError(error.message);
@@ -537,9 +537,9 @@
         <div><span class="section-kicker">تحلیل ایجنت متخصص</span><h4>${esc(agent.agent_name || agent.agent || 'ایجنت')}</h4></div>
         ${pill(agent.health_status || agent.severity || 'analyzed')}
       </div>
-      <p>${esc(agent.statement || agent.finding_type || 'Structured specialist analysis')}</p>
+      <p>${esc(agent.statement || agent.finding_type || 'تحلیل ساختاریافتهٔ ایجنت متخصص')}</p>
       <div class="fact-grid">
-        <div class="fact"><label>Confidence</label><strong>${pct(agent.confidence)}</strong></div>
+        <div class="fact"><label>میزان اطمینان</label><strong>${pct(agent.confidence)}</strong></div>
         <div class="fact"><label>پوشش شواهد</label><strong>${pct(agent.evidence_coverage)}</strong></div>
         <div class="fact"><label>گزینه‌های بررسی‌شده</label><strong>${candidates}</strong></div>
         <div class="fact"><label>زمان تحلیل</label><strong>${esc(analyzerDuration)}</strong></div>
