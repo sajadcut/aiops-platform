@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 494 | Dashboard JS files scanned: 8 | Symbols indexed: 5159**
+**Python files scanned: 495 | Dashboard JS files scanned: 8 | Symbols indexed: 5166**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1222,11 +1222,11 @@
 | `apps/incident_explanation.py` | `_dotnet` | 39 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/incident_explanation.py` | `explain_incident` | 104 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/incident_followup.py` | `followup_evidence` | 31 | function | Allowlist real MCP responses, never a model answer or cached search. | module |
-| `apps/incident_followup.py` | `may_reassess` | 81 | function | Do not rewrite an active/approved/executed workflow checkpoint. | module |
-| `apps/incident_followup.py` | `knowledge_candidate` | 98 | function | Sanitized *unverified* learning note; never a claimed recovery. | module |
-| `apps/incident_followup.py` | `draft_cognia_review` | 126 | async function | Create an idempotent local review/outbox entry; do NOT publish to Cognia. | module |
-| `apps/incident_followup.py` | `persist_and_reassess` | 174 | async function | Durably append observation; redo specialists and evaluator if no-action. | module |
-| `apps/incident_followup.py` | `persist_and_reassess.emit_status` | 205 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | persist_and_reassess |
+| `apps/incident_followup.py` | `may_reassess` | 88 | function | Do not rewrite an active/approved/executed workflow checkpoint. | module |
+| `apps/incident_followup.py` | `knowledge_candidate` | 105 | function | Sanitized *unverified* learning note; never a claimed recovery. | module |
+| `apps/incident_followup.py` | `draft_cognia_review` | 149 | async function | Create an idempotent local review/outbox entry; do NOT publish to Cognia. | module |
+| `apps/incident_followup.py` | `persist_and_reassess` | 197 | async function | Durably append observation; redo specialists and evaluator if no-action. | module |
+| `apps/incident_followup.py` | `persist_and_reassess.emit_status` | 228 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | persist_and_reassess |
 | `apps/incident_memory_forensics.py` | `obj` | 15 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/incident_memory_forensics.py` | `stamp` | 19 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/incident_memory_forensics.py` | `metric` | 28 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
@@ -1604,43 +1604,45 @@
 | `apps/verification_service/__init__.py` | `VerificationEngine._canonical_metric_name` | 403 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VerificationEngine |
 | `apps/verification_service/__init__.py` | `VerificationEngine._evidence_refs` | 430 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VerificationEngine |
 | `apps/verification_service/__init__.py` | `VerificationEngine._dedupe_refs` | 442 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VerificationEngine |
-| `dashboards/approval-actions.js` | `approvalPanel` | 6 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `summaryBadge` | 74 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `causeBadge` | 78 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `approvalBadge` | 82 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `executionBadge` | 91 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `verificationBadge` | 98 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `memoryBadge` | 105 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `observedStateRows` | 112 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `evidenceRows` | 126 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `storedRecommendationLanguage` | 131 | JavaScript function | state یا داده را به‌صورت durable ذخیره/به‌روزرسانی می‌کند | browser module |
-| `dashboards/approval-actions.js` | `recommendationTranslationKey` | 143 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `translatedRecommendation` | 146 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `ensurePersianRecommendation` | 152 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `actionText` | 177 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `recommendationHasUntranslatedOriginal` | 217 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `recommendationArticle` | 221 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `controlRows` | 264 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `executionText` | 276 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `verificationText` | 284 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `operatorSummaryCard` | 294 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `injectOperatorSummary` | 318 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `refreshIncidentDecision` | 339 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `approveCurrentApproval` | 346 | JavaScript function | transition مربوط به Approval/Governance را اعمال می‌کند | browser module |
-| `dashboards/approval-actions.js` | `rejectCurrentApproval` | 363 | JavaScript function | transition مربوط به Approval/Governance را اعمال می‌کند | browser module |
-| `dashboards/approval-actions.js` | `resumeCurrentWorkflow` | 388 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `selectIncidentWithOperatorSummary` | 439 | JavaScript function | بر اساس state/capability مسیر یا handler مناسب را انتخاب می‌کند | browser module |
-| `dashboards/approval-actions.js` | `enhancedRenderDetail` | 456 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `loadAllWithCurrentIncidentSummary` | 466 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
-| `dashboards/approval-actions.js` | `list` | 483 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `uniqueText` | 484 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `safeJson` | 486 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `detailsFor` | 495 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `analyzerKeys` | 501 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `candidateCount` | 507 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `agentAnalysisCard` | 514 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `renderDetailWithAgentAnalysis` | 557 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/approval-actions.js` | `loadAgentsWithReliabilityContract` | 572 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
+| `dashboards/approval-actions.js` | `displayStatus` | 5 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `displayAction` | 7 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `approvalPanel` | 10 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `summaryBadge` | 78 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `causeBadge` | 82 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `approvalBadge` | 86 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `executionBadge` | 95 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `verificationBadge` | 102 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `memoryBadge` | 109 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `observedStateRows` | 116 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `evidenceRows` | 130 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `storedRecommendationLanguage` | 135 | JavaScript function | state یا داده را به‌صورت durable ذخیره/به‌روزرسانی می‌کند | browser module |
+| `dashboards/approval-actions.js` | `recommendationTranslationKey` | 144 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `translatedRecommendation` | 147 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `ensurePersianRecommendation` | 153 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `actionText` | 178 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `recommendationHasUntranslatedOriginal` | 218 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `recommendationArticle` | 222 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `controlRows` | 265 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `executionText` | 277 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `verificationText` | 285 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `operatorSummaryCard` | 295 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `injectOperatorSummary` | 319 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `refreshIncidentDecision` | 340 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `approveCurrentApproval` | 347 | JavaScript function | transition مربوط به Approval/Governance را اعمال می‌کند | browser module |
+| `dashboards/approval-actions.js` | `rejectCurrentApproval` | 364 | JavaScript function | transition مربوط به Approval/Governance را اعمال می‌کند | browser module |
+| `dashboards/approval-actions.js` | `resumeCurrentWorkflow` | 389 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `selectIncidentWithOperatorSummary` | 444 | JavaScript function | بر اساس state/capability مسیر یا handler مناسب را انتخاب می‌کند | browser module |
+| `dashboards/approval-actions.js` | `enhancedRenderDetail` | 461 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `loadAllWithCurrentIncidentSummary` | 471 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
+| `dashboards/approval-actions.js` | `list` | 488 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `uniqueText` | 489 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `safeJson` | 491 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `detailsFor` | 500 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `analyzerKeys` | 506 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `candidateCount` | 512 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `agentAnalysisCard` | 519 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `renderDetailWithAgentAnalysis` | 562 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/approval-actions.js` | `loadAgentsWithReliabilityContract` | 577 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
 | `dashboards/chatbot-transport.js` | `createTransport` | 1 | JavaScript function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | browser module |
 | `dashboards/chatbot-transport.js` | `authHeaders` | 2 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
 | `dashboards/chatbot-transport.js` | `api` | 8 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
@@ -1678,30 +1680,30 @@
 | `dashboards/chatbot.js` | `renderResponse` | 335 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
 | `dashboards/chatbot.js` | `renderTerminalError` | 342 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
 | `dashboards/chatbot.js` | `showStatus` | 358 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/chatbot.js` | `hideStatus` | 365 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/chatbot.js` | `activeSession` | 372 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/chatbot.js` | `formatSessionTime` | 376 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/chatbot.js` | `renderSessionSkeleton` | 389 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/chatbot.js` | `renderSessionList` | 401 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/chatbot.js` | `rows` | 405 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/chatbot.js` | `loadSessions` | 480 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
-| `dashboards/chatbot.js` | `draftKey` | 494 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/chatbot.js` | `saveDraft` | 498 | JavaScript function | state یا داده را به‌صورت durable ذخیره/به‌روزرسانی می‌کند | browser module |
-| `dashboards/chatbot.js` | `restoreDraft` | 502 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/chatbot.js` | `loadHistory` | 507 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
-| `dashboards/chatbot.js` | `selectSession` | 584 | JavaScript function | بر اساس state/capability مسیر یا handler مناسب را انتخاب می‌کند | browser module |
-| `dashboards/chatbot.js` | `setStreaming` | 600 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/chatbot.js` | `stopGeneration` | 611 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/chatbot.js` | `createStreamView` | 618 | JavaScript function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | browser module |
-| `dashboards/chatbot.js` | `finishStream` | 634 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/chatbot.js` | `sendMessage` | 654 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/chatbot.js` | `validateLogin` | 781 | JavaScript function | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | browser module |
-| `dashboards/chatbot.js` | `updateComposerMetrics` | 794 | JavaScript function | state یا داده را به‌صورت durable ذخیره/به‌روزرسانی می‌کند | browser module |
-| `dashboards/chatbot.js` | `openSidebar` | 801 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/chatbot.js` | `closeSidebar` | 808 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/chatbot.js` | `setSidebarCollapsed` | 814 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/chatbot.js` | `setTheme` | 826 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/chatbot.js` | `toggleApiKeyVisibility` | 835 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `hideStatus` | 366 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `activeSession` | 373 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `formatSessionTime` | 377 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `renderSessionSkeleton` | 390 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/chatbot.js` | `renderSessionList` | 402 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/chatbot.js` | `rows` | 406 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `loadSessions` | 481 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
+| `dashboards/chatbot.js` | `draftKey` | 495 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `saveDraft` | 499 | JavaScript function | state یا داده را به‌صورت durable ذخیره/به‌روزرسانی می‌کند | browser module |
+| `dashboards/chatbot.js` | `restoreDraft` | 503 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `loadHistory` | 508 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
+| `dashboards/chatbot.js` | `selectSession` | 585 | JavaScript function | بر اساس state/capability مسیر یا handler مناسب را انتخاب می‌کند | browser module |
+| `dashboards/chatbot.js` | `setStreaming` | 601 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `stopGeneration` | 612 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `createStreamView` | 619 | JavaScript function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | browser module |
+| `dashboards/chatbot.js` | `finishStream` | 635 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `sendMessage` | 655 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `validateLogin` | 782 | JavaScript function | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | browser module |
+| `dashboards/chatbot.js` | `updateComposerMetrics` | 795 | JavaScript function | state یا داده را به‌صورت durable ذخیره/به‌روزرسانی می‌کند | browser module |
+| `dashboards/chatbot.js` | `openSidebar` | 802 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `closeSidebar` | 809 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `setSidebarCollapsed` | 815 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `setTheme` | 827 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/chatbot.js` | `toggleApiKeyVisibility` | 836 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
 | `dashboards/control-center.js` | `$` | 18 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
 | `dashboards/control-center.js` | `$$` | 19 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
 | `dashboards/control-center.js` | `esc` | 20 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
@@ -1723,70 +1725,70 @@
 | `dashboards/control-center.js` | `setIncidentPeriod` | 118 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
 | `dashboards/control-center.js` | `setView` | 144 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
 | `dashboards/control-center.js` | `faStatus` | 167 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/control-center.js` | `faAction` | 182 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/control-center.js` | `faEvent` | 193 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/control-center.js` | `serviceState` | 206 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/control-center.js` | `attentionReason` | 219 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/control-center.js` | `attentionRank` | 233 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/control-center.js` | `attentionLevel` | 248 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/control-center.js` | `dependencyEntries` | 252 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/control-center.js` | `renderOverview` | 268 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/control-center.js` | `attention` | 289 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/control-center.js` | `atRisk` | 290 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/control-center.js` | `degradedDeps` | 291 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/control-center.js` | `renderLifecycleSummary` | 314 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/control-center.js` | `renderSeverity` | 329 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/control-center.js` | `total` | 332 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/control-center.js` | `auditSummary` | 337 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/control-center.js` | `timelineItem` | 351 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/control-center.js` | `renderAuditPreview` | 355 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/control-center.js` | `renderHealth` | 360 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/control-center.js` | `renderIncidents` | 365 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/control-center.js` | `rows` | 369 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/control-center.js` | `renderServices` | 375 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/control-center.js` | `faAction` | 192 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/control-center.js` | `faEvent` | 203 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/control-center.js` | `serviceState` | 216 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/control-center.js` | `attentionReason` | 229 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/control-center.js` | `attentionRank` | 243 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/control-center.js` | `attentionLevel` | 258 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/control-center.js` | `dependencyEntries` | 262 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/control-center.js` | `renderOverview` | 278 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/control-center.js` | `attention` | 299 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/control-center.js` | `atRisk` | 300 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/control-center.js` | `degradedDeps` | 301 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/control-center.js` | `renderLifecycleSummary` | 324 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/control-center.js` | `renderSeverity` | 339 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/control-center.js` | `total` | 342 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/control-center.js` | `auditSummary` | 347 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/control-center.js` | `timelineItem` | 361 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/control-center.js` | `renderAuditPreview` | 365 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/control-center.js` | `renderHealth` | 370 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/control-center.js` | `renderIncidents` | 375 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
 | `dashboards/control-center.js` | `rows` | 379 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/control-center.js` | `openIncident` | 387 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/control-center.js` | `selectIncident` | 392 | JavaScript function | بر اساس state/capability مسیر یا handler مناسب را انتخاب می‌کند | browser module |
-| `dashboards/control-center.js` | `loadIncidentMemory` | 411 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
-| `dashboards/control-center.js` | `memoryState` | 425 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/control-center.js` | `event` | 426 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/control-center.js` | `workflowStages` | 432 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/control-center.js` | `verificationStatus` | 435 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/control-center.js` | `confidenceBlock` | 458 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/control-center.js` | `renderBinding` | 463 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/control-center.js` | `renderVerification` | 480 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/control-center.js` | `renderDetail` | 487 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/control-center.js` | `incident` | 490 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/control-center.js` | `writeback` | 514 | JavaScript function | state یا داده را به‌صورت durable ذخیره/به‌روزرسانی می‌کند | browser module |
-| `dashboards/control-center.js` | `loadAgents` | 523 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
-| `dashboards/control-center.js` | `renderMcp` | 537 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/control-center.js` | `renderAudit` | 555 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/control-center.js` | `refreshIncidentQueue` | 565 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/control-center.js` | `loadAll` | 587 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
+| `dashboards/control-center.js` | `renderServices` | 385 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/control-center.js` | `rows` | 389 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/control-center.js` | `openIncident` | 397 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/control-center.js` | `selectIncident` | 402 | JavaScript function | بر اساس state/capability مسیر یا handler مناسب را انتخاب می‌کند | browser module |
+| `dashboards/control-center.js` | `loadIncidentMemory` | 421 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
+| `dashboards/control-center.js` | `memoryState` | 435 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/control-center.js` | `event` | 436 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/control-center.js` | `workflowStages` | 442 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/control-center.js` | `verificationStatus` | 445 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/control-center.js` | `confidenceBlock` | 468 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/control-center.js` | `renderBinding` | 473 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/control-center.js` | `renderVerification` | 490 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/control-center.js` | `renderDetail` | 497 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/control-center.js` | `incident` | 500 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/control-center.js` | `writeback` | 524 | JavaScript function | state یا داده را به‌صورت durable ذخیره/به‌روزرسانی می‌کند | browser module |
+| `dashboards/control-center.js` | `loadAgents` | 533 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
+| `dashboards/control-center.js` | `renderMcp` | 547 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/control-center.js` | `renderAudit` | 565 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/control-center.js` | `refreshIncidentQueue` | 575 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/control-center.js` | `loadAll` | 597 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
 | `dashboards/decision-brief.js` | `t` | 68 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/decision-brief.js` | `fmt` | 105 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/decision-brief.js` | `html` | 111 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/decision-brief.js` | `sClass` | 112 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/decision-brief.js` | `flag` | 118 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/decision-brief.js` | `field` | 119 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/decision-brief.js` | `linkRefs` | 120 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/decision-brief.js` | `originalText` | 123 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/decision-brief.js` | `list` | 126 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/decision-brief.js` | `confidence` | 131 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/decision-brief.js` | `body` | 133 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/decision-brief.js` | `agentCards` | 153 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/decision-brief.js` | `observedCards` | 161 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/decision-brief.js` | `facts` | 163 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/decision-brief.js` | `mcpCards` | 168 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/decision-brief.js` | `healthCards` | 172 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/decision-brief.js` | `knowledgeCards` | 173 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/decision-brief.js` | `memoryCards` | 177 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/decision-brief.js` | `guidanceCards` | 225 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/decision-brief.js` | `timelineSection` | 266 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/decision-brief.js` | `ensureNarrative` | 290 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/decision-brief.js` | `paint` | 325 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/decision-brief.js` | `selectWithDecisionBrief` | 371 | JavaScript function | بر اساس state/capability مسیر یا handler مناسب را انتخاب می‌کند | browser module |
-| `dashboards/decision-brief.js` | `renderWithDecisionBrief` | 395 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/decision-brief.js` | `fmt` | 111 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/decision-brief.js` | `html` | 117 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/decision-brief.js` | `sClass` | 118 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/decision-brief.js` | `flag` | 124 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/decision-brief.js` | `field` | 125 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/decision-brief.js` | `linkRefs` | 126 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/decision-brief.js` | `originalText` | 129 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/decision-brief.js` | `list` | 132 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/decision-brief.js` | `confidence` | 137 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/decision-brief.js` | `body` | 139 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/decision-brief.js` | `agentCards` | 159 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/decision-brief.js` | `observedCards` | 167 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/decision-brief.js` | `facts` | 169 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/decision-brief.js` | `mcpCards` | 174 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/decision-brief.js` | `healthCards` | 178 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/decision-brief.js` | `knowledgeCards` | 179 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/decision-brief.js` | `memoryCards` | 183 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/decision-brief.js` | `guidanceCards` | 231 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/decision-brief.js` | `timelineSection` | 272 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/decision-brief.js` | `ensureNarrative` | 296 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/decision-brief.js` | `paint` | 331 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/decision-brief.js` | `selectWithDecisionBrief` | 377 | JavaScript function | بر اساس state/capability مسیر یا handler مناسب را انتخاب می‌کند | browser module |
+| `dashboards/decision-brief.js` | `renderWithDecisionBrief` | 401 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
 | `dashboards/incident-command-room.js` | `$` | 7 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
 | `dashboards/incident-command-room.js` | `safe` | 8 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
 | `dashboards/incident-command-room.js` | `esc` | 9 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
@@ -2886,6 +2888,11 @@
 | `tests/unit/test_agent_failure_safety.py` | `test_parser_failure_is_counted_and_returns_low_confidence` | 66 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_agent_orchestrator_single_path.py` | `test_legacy_workflow_orchestrator_is_only_a_governed_facade` | 4 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_agent_orchestrator_single_path.py` | `test_agent_layer_has_no_hardcoded_legacy_a2a_endpoints` | 12 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_all_operator_pages_persian.py` | `read` | 12 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_all_operator_pages_persian.py` | `test_every_user_facing_html_entrypoint_is_persian_and_rtl` | 16 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_all_operator_pages_persian.py` | `test_all_control_center_subpages_show_persian_static_copy` | 23 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_all_operator_pages_persian.py` | `test_actions_and_knowledge_ui_use_persian_without_changing_governance` | 46 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_all_operator_pages_persian.py` | `test_chatbot_is_persian_first_but_preserves_api_keys_and_raw_evidence` | 71 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_api_workflow_runtime_symbol.py` | `test_workflow_api_modules_reference_the_imported_canonical_runtime_symbol` | 9 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_application_reliability_engine.py` | `StaticApplicationLLM` | 11 | class | کلاس | module |
 | `tests/unit/test_application_reliability_engine.py` | `StaticApplicationLLM.__init__` | 12 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | StaticApplicationLLM |
@@ -3912,36 +3919,36 @@
 | `tests/unit/test_incident_explorer_views.py` | `test_incident_brief_has_clear_headline_and_expandable_originals` | 144 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_incident_followup.py` | `test_only_real_live_vm_mcp_diagnostics_can_enter_canonical_evidence` | 12 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_incident_followup.py` | `test_no_free_form_ai_cached_elastic_knowledge_failed_or_cross_target_spoof` | 30 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_incident_followup.py` | `test_live_elastic_empty_is_evidence_of_query_not_absence_of_incident` | 47 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_incident_followup.py` | `test_reanalysis_only_on_terminal_no_action_checkpoint_without_approval` | 61 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_incident_followup.py` | `test_cognia_candidate_is_marked_unverified_and_cites_incident` | 73 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing` | 99 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.DatabaseResult` | 106 | class | کلاس | test_followup_reassessment_recalculates_agents_without_executing |
-| `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.DatabaseResult.__init__` | 107 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_followup_reassessment_recalculates_agents_without_executing.DatabaseResult |
-| `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.DatabaseResult.scalar_one` | 109 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_followup_reassessment_recalculates_agents_without_executing.DatabaseResult |
-| `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.DatabaseResult.scalar_one_or_none` | 111 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_followup_reassessment_recalculates_agents_without_executing.DatabaseResult |
-| `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.Database` | 114 | class | کلاس | test_followup_reassessment_recalculates_agents_without_executing |
-| `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.Database.execute` | 115 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | test_followup_reassessment_recalculates_agents_without_executing.Database |
-| `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.Database.commit` | 122 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_followup_reassessment_recalculates_agents_without_executing.Database |
-| `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.Database.rollback` | 124 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_followup_reassessment_recalculates_agents_without_executing.Database |
-| `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.Repo` | 127 | class | کلاس | test_followup_reassessment_recalculates_agents_without_executing |
-| `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.Repo.__init__` | 128 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_followup_reassessment_recalculates_agents_without_executing.Repo |
-| `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.Repo.add_evidence` | 129 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_followup_reassessment_recalculates_agents_without_executing.Repo |
-| `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.Repo.add_findings` | 132 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_followup_reassessment_recalculates_agents_without_executing.Repo |
-| `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.Repo.commit` | 135 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_followup_reassessment_recalculates_agents_without_executing.Repo |
-| `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.CheckpointStore` | 138 | class | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | test_followup_reassessment_recalculates_agents_without_executing |
-| `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.CheckpointStore.__init__` | 139 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_followup_reassessment_recalculates_agents_without_executing.CheckpointStore |
-| `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.CheckpointStore.load` | 140 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | test_followup_reassessment_recalculates_agents_without_executing.CheckpointStore |
-| `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.CheckpointStore.save` | 142 | async method | state یا داده را به‌صورت durable ذخیره/به‌روزرسانی می‌کند | test_followup_reassessment_recalculates_agents_without_executing.CheckpointStore |
-| `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.Audit` | 153 | class | کلاس | test_followup_reassessment_recalculates_agents_without_executing |
-| `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.Audit.__init__` | 154 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_followup_reassessment_recalculates_agents_without_executing.Audit |
-| `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.Audit.append` | 155 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_followup_reassessment_recalculates_agents_without_executing.Audit |
-| `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.Orchestrator` | 158 | class | کلاس | test_followup_reassessment_recalculates_agents_without_executing |
-| `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.Orchestrator.__init__` | 163 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_followup_reassessment_recalculates_agents_without_executing.Orchestrator |
-| `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.Orchestrator._run_specialists` | 164 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_followup_reassessment_recalculates_agents_without_executing.Orchestrator |
-| `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.Orchestrator._rca_node` | 171 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_followup_reassessment_recalculates_agents_without_executing.Orchestrator |
-| `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.Orchestrator._evaluator_node` | 174 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_followup_reassessment_recalculates_agents_without_executing.Orchestrator |
-| `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.knowledge_draft` | 179 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_followup_reassessment_recalculates_agents_without_executing |
+| `tests/unit/test_incident_followup.py` | `test_live_elastic_empty_is_evidence_of_query_not_absence_of_incident` | 49 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_followup.py` | `test_reanalysis_only_on_terminal_no_action_checkpoint_without_approval` | 63 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_followup.py` | `test_cognia_candidate_is_marked_unverified_and_cites_incident` | 75 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing` | 110 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.DatabaseResult` | 117 | class | کلاس | test_followup_reassessment_recalculates_agents_without_executing |
+| `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.DatabaseResult.__init__` | 118 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_followup_reassessment_recalculates_agents_without_executing.DatabaseResult |
+| `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.DatabaseResult.scalar_one` | 120 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_followup_reassessment_recalculates_agents_without_executing.DatabaseResult |
+| `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.DatabaseResult.scalar_one_or_none` | 122 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_followup_reassessment_recalculates_agents_without_executing.DatabaseResult |
+| `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.Database` | 125 | class | کلاس | test_followup_reassessment_recalculates_agents_without_executing |
+| `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.Database.execute` | 126 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | test_followup_reassessment_recalculates_agents_without_executing.Database |
+| `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.Database.commit` | 133 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_followup_reassessment_recalculates_agents_without_executing.Database |
+| `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.Database.rollback` | 135 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_followup_reassessment_recalculates_agents_without_executing.Database |
+| `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.Repo` | 138 | class | کلاس | test_followup_reassessment_recalculates_agents_without_executing |
+| `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.Repo.__init__` | 139 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_followup_reassessment_recalculates_agents_without_executing.Repo |
+| `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.Repo.add_evidence` | 140 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_followup_reassessment_recalculates_agents_without_executing.Repo |
+| `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.Repo.add_findings` | 143 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_followup_reassessment_recalculates_agents_without_executing.Repo |
+| `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.Repo.commit` | 146 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_followup_reassessment_recalculates_agents_without_executing.Repo |
+| `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.CheckpointStore` | 149 | class | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | test_followup_reassessment_recalculates_agents_without_executing |
+| `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.CheckpointStore.__init__` | 150 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_followup_reassessment_recalculates_agents_without_executing.CheckpointStore |
+| `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.CheckpointStore.load` | 151 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | test_followup_reassessment_recalculates_agents_without_executing.CheckpointStore |
+| `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.CheckpointStore.save` | 153 | async method | state یا داده را به‌صورت durable ذخیره/به‌روزرسانی می‌کند | test_followup_reassessment_recalculates_agents_without_executing.CheckpointStore |
+| `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.Audit` | 164 | class | کلاس | test_followup_reassessment_recalculates_agents_without_executing |
+| `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.Audit.__init__` | 165 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_followup_reassessment_recalculates_agents_without_executing.Audit |
+| `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.Audit.append` | 166 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_followup_reassessment_recalculates_agents_without_executing.Audit |
+| `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.Orchestrator` | 169 | class | کلاس | test_followup_reassessment_recalculates_agents_without_executing |
+| `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.Orchestrator.__init__` | 174 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_followup_reassessment_recalculates_agents_without_executing.Orchestrator |
+| `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.Orchestrator._run_specialists` | 175 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_followup_reassessment_recalculates_agents_without_executing.Orchestrator |
+| `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.Orchestrator._rca_node` | 182 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_followup_reassessment_recalculates_agents_without_executing.Orchestrator |
+| `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.Orchestrator._evaluator_node` | 185 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_followup_reassessment_recalculates_agents_without_executing.Orchestrator |
+| `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.knowledge_draft` | 190 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_followup_reassessment_recalculates_agents_without_executing |
 | `tests/unit/test_incident_operational_finalization.py` | `FakeSession` | 9 | class | کلاس | module |
 | `tests/unit/test_incident_operational_finalization.py` | `FakeSession.__init__` | 10 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeSession |
 | `tests/unit/test_incident_operational_finalization.py` | `FakeSession.get` | 13 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeSession |
