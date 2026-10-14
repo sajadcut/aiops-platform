@@ -14,16 +14,16 @@ def test_dashboard_exposes_governed_approval_and_resume_actions():
     assert '/api/v1/approvals/' in js
     assert '/approve' in js
     assert '/reject' in js
-    assert 'rejection reason' in js.lower()
+    assert 'دلیل رد درخواست' in js
     assert 'JSON.stringify({reason})' in js
-    assert 'HIGH-RISK approval' in js
-    assert 'does NOT execute it yet' in js
-    assert 'Resume & Execute' in js
+    assert 'تأیید پرریسک' in js
+    assert 'هنوز عملیاتی انجام نخواهد شد' in js
+    assert 'ادامه و اجرا' in js
     assert '/api/v1/workflow/e2e/' in js
     assert '/resume' in js
     assert 'binding_complete' in js
-    assert 'consumed exactly once' in js
-    assert 'signed capability' in js
+    assert 'فقط یک‌بار مصرف خواهد شد' in js
+    assert 'مجوز امضاشده' in js
     assert '/api/v1/execute' not in js  # Dashboard cannot bypass the durable workflow runtime.
     assert '.approval-btn.approve' in css
     assert '.approval-btn.reject' in css
