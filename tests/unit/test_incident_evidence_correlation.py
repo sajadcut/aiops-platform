@@ -31,7 +31,7 @@ def vm(status="active", *, at="2026-10-14T14:01:00+00:00",
        host="10.248.16.82", service="gfpapi", ref="vm-001"):
     return {"id": ref, "source": "vm_mcp", "created_at": at,
             "raw_data": {"diagnostic": "service_status", "success": True,
-                         "service": service, "target": host,
+                         "collected_at": at, "service": service, "target": host,
                          "active_state": status,
                          "sub_state": "running" if status == "active" else "failed",
                          "main_pid": 442 if status == "active" else 0}}
@@ -236,6 +236,7 @@ def test_observation_other_service_on_same_host_cannot_validate_trigger():
 def test_one_undated_vm_observation_can_conflict_without_claiming_chronology():
     source = vm()
     source["created_at"] = None
+    source["raw_data"].pop("collected_at")
     c = correlate(evidence=[source])
     assert c["conclusion_kind"] == "source_discrepancy"
     assert c["last_vm_observation"]["observed_at"] is None
@@ -292,3 +293,98 @@ def test_json_syntax_valid_does_not_overrule_failed_service_or_prove_dependencie
     assert "Syntax JSON معتبر" in " ".join(c["unknowns_fa"])
     assert "Startup" in " ".join(c["next_steps_fa"])
     assert c["root_cause_verified"] is False
+
+
+
+def elastic_query(status="queried", count=0, *,
+                  service="gfpapi", ref="elastic-q-01"):
+    return {"id": ref, "source": "elasticsearch",
+            "created_at": "2026-10-14T14:01:20Z",
+            "raw_data": {"service": service, "query_service": service,
+                         "status": status, "result_count": count,
+                         "query_since": "2026-10-14T13:45:00Z",
+                         "query_until": "2026-10-14T14:02:00Z",
+                         "host_filter_applied": False}}
+
+
+def vm_journal(host="10.248.16.82", *, service="gfpapi",
+               entries=None, ref="journal-01"):
+    return {"id": ref, "source": "vm_mcp",
+            "created_at": "2026-10-14T14:01:30Z",
+            "raw_data": {"diagnostic": "service_logs", "target": host,
+                         "service": service, "entries": entries or []}}
+
+
+def test_elastic_zero_and_os_errors_are_scope_mismatch_not_healthy_or_root_cause():
+    check = correlate(evidence=[
+        vm(), elastic_query(), vm_journal(entries=[
+            "dotnet ERROR database failed", "startup timed out",
+            "kernel: OOM-kill process", "dependency failed to start",
+        ])])["cross_source_findings"][0]
+    assert check["kind"] == "elastic_vs_host_journal_coverage"
+    assert check["status"] == "scope_mismatch_not_a_contradiction"
+    assert check["journal_signatures"] == {
+        "error": 2, "timeout": 1, "oom": 1, "dependency": 1,
+    }
+    assert "Elasticsearch برای سرویس نتیجهٔ صفر" in check["statement_fa"]
+    assert "Journal همین VM" in check["statement_fa"]
+    assert "نبود خطای OS نیست" in check["statement_fa"]
+    assert "جست‌وجوی Elastic به میزبان مشخص محدود نشده" in check["statement_fa"]
+    assert set(check["evidence_refs"]) == {"elastic-q-01", "journal-01"}
+    assert not check["cause_confirmed"]
+
+
+def test_failed_elastic_query_is_not_zero_hits_even_with_os_journal():
+    check = correlate(evidence=[
+        vm(), elastic_query("error"), vm_journal(entries=["Application exception"]),
+    ])["cross_source_findings"][0]
+    assert check["status"] == "query_failed_not_zero"
+    assert "تعداد Match نامعلوم" in check["statement_fa"]
+    assert "نتیجهٔ صفر ثبت کرده" not in check["statement_fa"]
+
+
+def test_elastic_matches_do_not_prove_host_scope_or_cause():
+    check = correlate(evidence=[
+        vm(), elastic_query("queried", 5),
+    ])["cross_source_findings"][0]
+    assert check["status"] == "elastic_results_not_host_causality"
+    assert check["query_scope"] == "service_only_or_host_filter_unverified"
+    assert "تعداد 5 رکورد" in check["statement_fa"]
+    assert check["cause_confirmed"] is False
+
+
+def test_provider_scope_does_not_combine_other_services_or_other_host_journal():
+    checks = correlate(evidence=[
+        vm(),
+        elastic_query(service="nginx", ref="wrong-service"),
+        vm_journal(host="10.248.16.83", entries=["ERROR nginx"], ref="wrong-host"),
+    ])["cross_source_findings"]
+    assert checks == []
+
+
+def test_database_persisted_timestamp_is_not_vm_tool_observed_time():
+    src=vm()
+    src["raw_data"].pop("collected_at")
+    result=correlate(incident_data=incident(original_time="2026-10-14T14:00:00Z"),
+                     evidence=[src])
+    assert result["last_vm_observation"]["time_basis"] == "evidence_persisted"
+    assert result["contradictions"][0]["temporal_relation"] == "undetermined"
+    assert "زمان ثبت Evidence" in " ".join(result["unknowns_fa"])
+
+
+def test_database_persisted_timestamp_cannot_confirm_vm_state_transition():
+    stop=vm("failed", at="2026-10-14T14:00:30Z", ref="vm-stopped")
+    up=vm("active", at="2026-10-14T14:01:00Z", ref="vm-active")
+    stop["raw_data"].pop("collected_at")
+    up["raw_data"].pop("collected_at")
+    assert correlate(evidence=[stop,up])["confirmed_vm_transition"] is None
+
+
+def test_provider_journal_comparison_is_not_triggered_by_unscoped_logs():
+    unscoped={"id":"unscoped-journal","source":"vm_mcp",
+              "raw_data":{"diagnostic":"service_logs","service":"gfpapi",
+                          "entries":["ERROR unrelated"]}}
+    c=correlate(evidence=[vm(),elastic_query(),unscoped])
+    check=c["cross_source_findings"][0]
+    assert check["journal_signatures"]["error"] == 0
+    assert check["status"]=="queried_zero_not_proof_of_health"
