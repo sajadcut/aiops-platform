@@ -1,10 +1,11 @@
-"""Contract regression: nginx fatal location and strictly non-executing previews."""
+"""Safe Nginx preview runs on the AIOps worker, without target Python/writes."""
+import base64
+import hashlib
 import json
-import re
 
 import pytest
 
-from integrations.vm.nginx_config_review import nginx_review_command
+from integrations.vm.nginx_config_review import nginx_review_command, local_nginx_review
 from integrations.vm.service_adapters import parse_config_diagnostic
 from integrations.vm.ssh_connector import SSHVMConnector
 from apps.orchestrator.dynamic_investigation import DynamicInvestigationPlanner
@@ -15,6 +16,14 @@ ERROR = (
     '2026/10/13 17:49:43 [emerg] 12#12: unexpected "{" in /etc/nginx/nginx.conf:103\n'
     'nginx: configuration file /etc/nginx/nginx.conf test failed'
 )
+_CONFIG = (
+    "events { worker_connections 1024; }\n"
+    + "# non-sensitive\n" * 101
+    + "server example.internal {{\n"
+    + "password=DO_NOT_LEAK\n"
+)
+_LINE = 103
+_ENCODED = base64.b64encode(_CONFIG.encode()).decode()
 
 
 def test_nginx_fatal_location_overrides_earlier_warning():
@@ -37,78 +46,108 @@ def test_nginx_preview_never_accepts_untrusted_remote_path_or_line(path,line):
         nginx_review_command(path, line, 'unexpected "{"')
 
 
-def test_preview_command_only_contains_immutable_script_and_derived_line():
+def test_nginx_preview_uses_only_remote_read_only_coreutils():
     cmd = nginx_review_command("/etc/nginx/nginx.conf", 103, ERROR)
-    assert "python3 -I -c " in cmd
-    assert "unexpected_open_brace" in cmd
-    assert "nginx_config_review" not in cmd
     assert "/etc/nginx/nginx.conf" in cmd
+    for expected in ("readlink -f", "stat -c", "head -c", "base64 -w 0", "test ! -L"):
+        assert expected in cmd
+    for forbidden in ("python3", "python -", "sed -i", "cp ", "mv ", "tee ", "nginx -s", "sudo ", "chmod ", "chown "):
+        assert forbidden not in cmd
+    assert "user directive ignored" not in cmd
+
+
+def test_nginx_local_worker_creates_bounded_redacted_candidate_without_staging():
+    result = local_nginx_review(
+        encoded=_ENCODED, file_path="/etc/nginx/nginx.conf",
+        error_line=_LINE, syntax_error='unexpected "{"',
+    )
+    assert result["status"] == "candidate_proposed"
+    assert result["validation_status"] == "UNVERIFIED"
+    assert result["stage_failure_reason"] == "isolated_validation_not_available"
+    assert result["validator_executed_on_proposal"] is False
+    assert result["remote_python_required"] is False
+    assert result["execution_authority"] is False
+    assert result["config_contents_exposed"] is False
+    assert result["current_hash"] == hashlib.sha256(_CONFIG.encode()).hexdigest()
+    assert result["candidate_hash"] != result["current_hash"]
+    assert result["diff"]["line"] == 103
+    assert "server" in result["diff"]["before"]
+    assert "{" in result["diff"]["after"]
+    for secret in ("DO_NOT_LEAK", "example.internal", "1024"):
+        assert secret not in json.dumps(result)
+
+
+@pytest.mark.parametrize("encoded,line,error", [
+    ("not-base64#", 103, 'unexpected "{"'),
+    (base64.b64encode(b"x" * 262145).decode(), 103, 'unexpected "{"'),
+    (_ENCODED, 999, 'unexpected "{"'),
+    (_ENCODED, 103, 'unknown directive "server"'),
+    (base64.b64encode(b"server {\r\n").decode(), 1, 'unexpected "{"'),
+    (base64.b64encode(b"server {\x00").decode(), 1, 'unexpected "{"'),
+])
+def test_nginx_preview_fails_closed_on_invalid_input_and_nonmatching_error(encoded,line,error):
+    result = local_nginx_review(
+        encoded=encoded, file_path="/etc/nginx/nginx.conf",
+        error_line=line, syntax_error=error,
+    )
+    assert result["status"] != "candidate_proposed"
+    assert not result["candidate_hash"]
+    assert not result["execution_authority"]
 
 
 @pytest.mark.asyncio
-async def test_preview_is_built_from_current_validator_and_redacts_remote_values(monkeypatch):
+async def test_mcp_review_uses_worker_preview_and_never_exports_encoded_configuration(monkeypatch):
     connector = SSHVMConnector()
-    # No mock of network or credential: explicitly monkeypatch the fixed read.
     calls = []
     async def validate(target, service):
         return {
             "success": True, "supported": True, "valid": False,
-            "config_file": "/etc/nginx/nginx.conf", "error_line": 103,
-            "syntax_error": 'unexpected "{" in /etc/nginx/nginx.conf:103',
+            "config_file": "/etc/nginx/nginx.conf", "error_line": _LINE,
+            "syntax_error": 'unexpected "{"',
         }
     async def run(target, command):
         calls.append((target, command))
-        return {"success": True, "stdout": json.dumps({
-            "status": "candidate_proposed", "validation_status": "STAGED_PASS_NOT_ISOLATED",
-            "current_hash": "a" * 64, "candidate_hash": "b" * 64,
-            "current_excerpt": [{"line": 103, "content": "[structural] {"}],
-            "proposed_excerpt": [{"line": 103, "content": "[blank or comment]"}],
-            "diff": {"line": 103, "before": "[structural] {",
-                     "after": "[remove entire stray brace line]"},
-            "validator_executed_on_proposal": True,
-            "proposed_change": "remove_extra_opening_brace",
-            "test_scope": "staged_copy_with_live_dependencies_not_isolated",
-            "config_contents": "DO_NOT_LEAK",
-            "secret": "DO_NOT_LEAK",
-        })}
+        return {"success": True, "stdout": _ENCODED}
     monkeypatch.setattr(connector, "_validate_service", lambda _: None)
     monkeypatch.setattr(connector, "config_validate", validate)
     monkeypatch.setattr(connector, "_run", run)
     outcome = await connector.nginx_config_review("10.248.16.82", "nginx")
     assert len(calls) == 1
+    assert "python" not in calls[0][1]
     assert outcome["config_file"] == "/etc/nginx/nginx.conf"
     assert outcome["error_line"] == 103
-    assert outcome["candidate_hash"] == "b"*64
-    assert outcome["validation_status"] == "STAGED_PASS_NOT_ISOLATED"
+    assert outcome["candidate_hash"]
+    assert outcome["validation_status"] == "UNVERIFIED"
+    assert outcome["stage_failure_reason"] == "isolated_validation_not_available"
     assert outcome["execution_authority"] is False
+    assert outcome["remote_python_required"] is False
     assert outcome["config_contents_exposed"] is False
+    for secret in ("DO_NOT_LEAK", "example.internal", _ENCODED):
+        assert secret not in json.dumps(outcome)
+
+
+@pytest.mark.asyncio
+async def test_worker_preview_unavailable_if_remote_file_cannot_be_read(monkeypatch):
+    connector = SSHVMConnector()
+    async def validate(target, service):
+        return {
+            "success": True, "supported": True, "valid": False,
+            "config_file": "/etc/nginx/nginx.conf", "error_line": _LINE,
+            "syntax_error": 'unexpected "{"',
+        }
+    async def run(target, command):
+        return {"success": False, "stderr": "PRIVATE:DO_NOT_LEAK"}
+    monkeypatch.setattr(connector, "_validate_service", lambda _: None)
+    monkeypatch.setattr(connector, "config_validate", validate)
+    monkeypatch.setattr(connector, "_run", run)
+    outcome = await connector.nginx_config_review("10.248.16.82", "nginx")
+    assert outcome["status"] == "preview_unavailable"
+    assert outcome["execution_authority"] is False
     assert "DO_NOT_LEAK" not in json.dumps(outcome)
 
 
 @pytest.mark.asyncio
-async def test_review_never_claims_validated_when_staging_fails(monkeypatch):
-    connector = SSHVMConnector()
-    monkeypatch.setattr(connector, "_validate_service", lambda _: None)
-    async def validate(target,service):
-        return {"success": True, "supported": True, "valid": False,
-                "config_file": "/etc/nginx/nginx.conf", "error_line": 103,
-                "syntax_error": 'unexpected "{"'}
-    async def run(target,command):
-        return {"success": True,"stdout":json.dumps({
-            "status":"candidate_proposed", "current_hash":"a"*64,
-            "candidate_hash":"b"*64, "validation_status":"STAGED_FAILED",
-            "validator_executed_on_proposal":True,
-        })}
-    monkeypatch.setattr(connector, "config_validate", validate)
-    monkeypatch.setattr(connector, "_run", run)
-    outcome=await connector.nginx_config_review("10.248.16.82","nginx")
-    assert outcome["validation_status"]=="STAGED_FAILED"
-    assert not outcome.get("apply_eligible",False)
-    assert outcome["execution_authority"] is False
-
-
-@pytest.mark.asyncio
-async def test_dynamic_investigator_proposal_preserves_nonisolated_status_without_approval():
+async def test_dynamic_investigator_uses_bounded_worker_candidate_not_approval():
     from types import SimpleNamespace
     class Model:
         async def generate_with_messages(self, *args, **kwargs):
@@ -124,73 +163,22 @@ async def test_dynamic_investigator_proposal_preserves_nonisolated_status_withou
         "source":"vm_mcp","reference":"review-103",
         "raw_data":{"diagnostic":"nginx_config_review","success":True,"service":"nginx",
              "config_file":"/etc/nginx/nginx.conf", "error_line":103,
-             "status":"candidate_proposed","validation_status":"STAGED_PASS_NOT_ISOLATED",
-             "current_hash":"a"*64,"candidate_hash":"b"*64,
-             "validator_executed_on_proposal":True,
-             "current_excerpt":[{"line":103,"content":"[structural] {"}],
-             "proposed_excerpt":[{"line":103,"content":"[blank or comment]"}],
-             "diff":{"line":103,"before":"[structural] {","after":"[remove entire stray brace line]"}}
+             **local_nginx_review(
+                 encoded=_ENCODED, file_path="/etc/nginx/nginx.conf",
+                 error_line=103, syntax_error='unexpected "{"',
+             )}
     }
     state={"service_name":"nginx","coordination":{"missing_evidence":[]},
            "knowledge_results":[],"context":{"evidence":[error,review]}}
     proposal=await DynamicInvestigationPlanner.propose(state, adapter=Model())
     candidate=proposal["config_proposal"]
     assert candidate["error_line"] == 103
-    assert candidate["validation_status"]=="STAGED_PASS_NOT_ISOLATED"
+    assert candidate["validation_status"]=="UNVERIFIED"
     assert candidate["apply_eligible"] is False
     assert candidate["execution_authority"] is False
-    assert candidate["original_sha256"]=="a"*64
-    assert candidate["candidate_sha256"]=="b"*64
+    assert candidate["original_sha256"] and candidate["candidate_sha256"]
     assert candidate["redacted_diff"]["line"]==103
     assert proposal["operator_questions"]
-
-
-
-def test_nginx_stage_runner_classifies_failure_without_returning_stderr():
-    import ast
-    from integrations.vm.nginx_config_review import _FIXED_CHECK
-    ast.parse(_FIXED_CHECK)
-    assert "stderr=subprocess.PIPE" in _FIXED_CHECK
-    assert "stage_failure_class(check.stderr or b\"\")" in _FIXED_CHECK
-    assert "result[\"stage_failure_reason\"]" in _FIXED_CHECK
-    # The return object contains a fixed classifier rather than captured
-    # nginx output, which may contain server names and private paths.
-    assert 'result["stderr"]' not in _FIXED_CHECK
-    assert 'result["stage_error_text"]' not in _FIXED_CHECK
-
-
-@pytest.mark.asyncio
-async def test_nginx_mcp_stage_failure_classification_is_strictly_allowlisted(monkeypatch):
-    connector = SSHVMConnector()
-    monkeypatch.setattr(connector, "_validate_service", lambda _: None)
-    async def validate(target, service):
-        return {"success": True, "supported": True, "valid": False,
-                "config_file": "/etc/nginx/nginx.conf", "error_line": 103,
-                "syntax_error": 'unexpected "{" in /etc/nginx/nginx.conf:103'}
-    async def run(target, command):
-        return {"success": True, "stdout": json.dumps({
-            "status": "candidate_proposed", "current_hash": "a"*64,
-            "candidate_hash": "b"*64, "validation_status": "STAGED_FAILED",
-            "stage_failure_reason": "directive_context_invalid",
-            "raw_secret": "NEVER_SHOW",
-            "validator_executed_on_proposal": True,
-        })}
-    monkeypatch.setattr(connector, "config_validate", validate)
-    monkeypatch.setattr(connector, "_run", run)
-    response = await connector.nginx_config_review("10.248.16.82", "nginx")
-    assert response["stage_failure_reason"] == "directive_context_invalid"
-    assert response["execution_authority"] is False
-    assert "NEVER_SHOW" not in json.dumps(response)
-
-    async def inject_unknown(target, command):
-        return {"success": True, "stdout": json.dumps({
-            "status": "candidate_proposed", "validation_status": "STAGED_FAILED",
-            "stage_failure_reason": "user token=secret-value",
-        })}
-    monkeypatch.setattr(connector, "_run", inject_unknown)
-    unknown = await connector.nginx_config_review("10.248.16.82", "nginx")
-    assert unknown["stage_failure_reason"] == "not_recorded"
-    assert "secret-value" not in json.dumps(unknown)
 
 
 @pytest.mark.asyncio
