@@ -112,6 +112,26 @@ def _fact_fields(raw: dict) -> dict:
                  and isinstance(v, (str, int, float, bool))}
                 for item in raw[key][:12] if isinstance(item, dict)
             ]
+    # A disk-forensics observation already contains the largest files.
+    # Persist only bounded path/size facts; never forward log contents or imply
+    # a file is safe to remove or that its writer caused the incident.
+    if raw.get("diagnostic") == "disk_forensics" and isinstance(raw.get("mounts"), list):
+        largest = []
+        for mount in raw["mounts"][:12]:
+            if not isinstance(mount, dict) or mount.get("mount") != "/var/log":
+                continue
+            for item in mount.get("files", [])[:25]:
+                if not isinstance(item, dict):
+                    continue
+                path = item.get("path")
+                size = item.get("size_bytes")
+                if (isinstance(path, str) and path.startswith("/var/log/")
+                        and isinstance(size, int) and size >= 0):
+                    largest.append({"path": _text(path, 160), "size_bytes": size})
+        if largest:
+            facts["largest_log_files"] = sorted(
+                largest, key=lambda item: item["size_bytes"], reverse=True
+            )[:6]
     if isinstance(raw.get("entries"), list):
         # Journal excerpts can contain access tokens; report signatures only,
         # never expose raw lines or claim OOM unless the text explicitly says so.
