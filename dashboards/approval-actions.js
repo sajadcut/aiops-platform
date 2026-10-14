@@ -2,6 +2,10 @@
   const baseSelectIncident = selectIncident;
   const baseRenderDetail = renderDetail;
   const baseLoadAll = loadAll;
+  const displayStatus = value =>
+    typeof faStatus === 'function' ? faStatus(value) : String(value ?? 'نامشخص');
+  const displayAction = value =>
+    typeof faAction === 'function' ? faAction(value) : String(value ?? 'نامشخص');
 
   function approvalPanel() {
     const lifecycle = S.detail?.lifecycle || {};
@@ -48,16 +52,16 @@
 
     return `<div class="approval-card ${pending ? 'pending' : status}">
       <div class="approval-card-head">
-        <div><span class="section-kicker">مجوز تحت نظارت</span><h4>${esc(faAction(approval.action || decision.action || 'اصلاح پیشنهادی'))}</h4></div>
+        <div><span class="section-kicker">مجوز تحت نظارت</span><h4>${esc(displayAction(approval.action || decision.action || 'اصلاح پیشنهادی'))}</h4></div>
         ${pill(status)}
       </div>
       <div class="approval-facts">
         <div><label>شناسهٔ تأیید</label><strong>${esc(String(approval.approval_id || '').slice(0, 12) || '—')}</strong></div>
-        <div><label>ریسک</label><strong>${esc(faStatus(risk))}</strong></div>
+        <div><label>ریسک</label><strong>${esc(displayStatus(risk))}</strong></div>
         <div><label>اتصال مجوز</label><strong>${binding ? 'کامل' : 'ناقص'}</strong></div>
         <div><label>محیط</label><strong>${esc(meta.environment || '—')}</strong></div>
         <div><label>ابزار</label><strong>${esc(meta.tool_name || '—')}</strong></div>
-        <div><label>اقدام</label><strong>${esc(faAction(approval.action || decision.action || '—'))}</strong></div>
+        <div><label>اقدام</label><strong>${esc(displayAction(approval.action || decision.action || '—'))}</strong></div>
         <div><label>مقصد</label><strong>${esc(meta.target || '—')}</strong></div>
         <div><label>راهنمای اجرا</label><strong>${esc([meta.runbook_id, meta.runbook_version].filter(Boolean).join(' @ ') || '—')}</strong></div>
       </div>
@@ -262,9 +266,9 @@
     const decision = summary.decision || {};
     const approval = summary.approval || {};
     return `<div class="operator-summary-control-grid">
-      <div><span>ریسک</span><strong>${esc(faStatus(summary.risk_level || 'unknown'))}</strong></div>
-      <div><span>تصمیم</span><strong>${esc(faAction(decision.action || decision.decision || '—'))}</strong></div>
-      <div><span>تأیید</span><strong>${esc(faStatus(summary.approval_status || 'not_requested'))}</strong></div>
+      <div><span>ریسک</span><strong>${esc(displayStatus(summary.risk_level || 'unknown'))}</strong></div>
+      <div><span>تصمیم</span><strong>${esc(displayAction(decision.action || decision.decision || '—'))}</strong></div>
+      <div><span>تأیید</span><strong>${esc(displayStatus(summary.approval_status || 'not_requested'))}</strong></div>
       <div><span>تأییدکننده</span><strong>${esc(summary.approver || '—')}</strong></div>
       <div><span>اتصال مجوز</span><strong>${approval.binding_complete ? 'کامل' : 'ناقص / ثبت نشده'}</strong></div>
     </div>`;
@@ -285,7 +289,7 @@
     if (verification.message) details.push(verification.message);
     if (verification.confidence != null) details.push(`اطمینان=${pct(verification.confidence)}`);
     if (verification.evidence_refs?.length) details.push(`تعداد شواهد=${verification.evidence_refs.length}`);
-    return details.join(' · ') || `وضعیت=${faStatus(verification.status || summary.verification_status)}`;
+    return details.join(' · ') || `وضعیت=${displayStatus(verification.status || summary.verification_status)}`;
   }
 
   function operatorSummaryCard(summary) {
@@ -423,7 +427,7 @@
       if (!endpoint) throw new Error('checkpoint_not_executable: '+(checkpoint||'unknown'));
       const result = await api(endpoint, {method: 'POST'});
       const verification = result.verification_result?.status || result.verification?.status || 'not recorded';
-      toast(`پاسخ اجرا دریافت شد · راستی‌آزمایی: ${faStatus(verification)}`);
+      toast(`پاسخ اجرا دریافت شد · راستی‌آزمایی: ${displayStatus(verification)}`);
       await loadAll();
       await refreshIncidentDecision();
     } catch (error) {
