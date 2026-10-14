@@ -1416,10 +1416,21 @@
       .map(key=>domain(key)).filter(d=>d.key).map(d=>{
         const label=labels[d.status]||d.status||'not_recorded';
         const evidenceIds=arr(d.evidence).map(e=>e.id).filter(Boolean);
+        const bigFiles=d.key==='disk'
+          ?arr(d.evidence).flatMap(e=>arr(e.facts?.largest_log_files)).slice(0,6)
+          :[];
+        const largest=bigFiles.length?
+          '<div class="ic-ir-large-files"><strong>'+esc(fa?
+          'بزرگ‌ترین فایل‌های ثبت‌شده (نه مجوز حذف):':'Largest recorded files (not safe-to-delete advice):')+
+          '</strong><ul>'+bigFiles.map(x=>'<li><code dir="ltr">'+
+          txt(x.path)+'</code> · '+num(x.size_bytes)+' bytes</li>').join('')+
+          '</ul></div>':'';
+
         return '<article class="ic-ir-source"><header><strong>'+esc(domainLabels[d.key]||d.title)+
           '</strong><span class="ic-ir-source-state" data-result="'+esc(d.status||'unknown')+'">'+
           esc(label)+'</span></header><p>'+txt(d.technical_result||d.missing_reason)+'</p>'+
           (d.missing_reason?'<small>'+txt(d.missing_reason)+'</small>':'')+
+          largest+
           (d.observed_at?'<small>'+esc(fa?'آخرین مشاهده: ':'Last observation: ')+esc(date(d.observed_at))+'</small>':'')+
           refs(evidenceIds)+'</article>';
       }).join('');
