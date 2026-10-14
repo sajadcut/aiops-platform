@@ -469,5 +469,5 @@ def test_health_profile_html_is_present_and_never_auto_posts():
     assert "function renderServiceProfile()" in js
     assert "state.httpHealth=await api(base+'/health/recheck',{method:'POST'})" in js
     assert "method:'PUT',headers:{'Content-Type':'application/json'}" in js
-    assert 'Depends(require_permission("knowledge:review"))' in api
+    assert 'Depends(require_permission("manage:service_profile"))' in api
     assert 'Depends(require_permission("read:incident"))' in api
