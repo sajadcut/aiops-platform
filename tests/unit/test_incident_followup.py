@@ -147,6 +147,8 @@ async def test_followup_reassessment_recalculates_agents_without_executing(monke
             assert not state.get("execution_request")
             assert any(x.get("id") == str(reference_id)
                        for x in state["context"]["evidence"])
+            assert any(x.get("id") == "previous-followup"
+                       for x in state["context"]["evidence"])
 
     class Audit:
         def __init__(self, db): pass
@@ -201,6 +203,11 @@ async def test_followup_reassessment_recalculates_agents_without_executing(monke
         action="service_status",
         observation={"success": True, "active_state": "failed", "result": "timeout"},
         binding=BINDING, actor="operator",
+        incident_evidence=[{
+            "id": "previous-followup", "source": "vm_mcp",
+            "raw_data": {"phase": "incident_copilot_followup",
+                         "diagnostic": "service_logs", "success": True},
+        }],
     )
     assert result["reassessed"] is True
     assert result["knowledge"]["status"] == "pending_review"
