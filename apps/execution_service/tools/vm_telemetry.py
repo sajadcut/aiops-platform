@@ -53,6 +53,7 @@ class VMTelemetryTool(BaseTool):
         action = input_data.action
         target = input_data.target
         if action == "collect_vm_metrics": result = await connector.collect_vm_metrics(target)
+        elif action == "memory_diagnostics": result = await connector.memory_diagnostics(target)
         elif action == "host_info": result = await connector.host_info(target)
         elif action == "disk_status": result = await connector.disk_status(target)
         elif action == "network_status": result = await connector.network_status(target)
