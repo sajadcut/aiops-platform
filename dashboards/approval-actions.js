@@ -415,7 +415,7 @@
         lower(liveApproval.metadata?.binding_complete) === 'true';
       if (String(liveApproval.approval_id || '') !== String(approval.approval_id) ||
           lower(liveApproval.status) !== 'approved' || !liveBinding) {
-        throw new Error('مجوز تغییر کرده یا اتصال آن تأیید نشده است');
+        throw new Error('approval_changed_or_binding_unverified');
       }
       const checkpoint = lower(fresh.checkpoint_status);
       const endpoint = checkpoint === 'completed'
@@ -423,14 +423,18 @@
         : checkpoint === 'paused'
           ? `/api/v1/workflow/e2e/${encodeURIComponent(id)}/resume`
           : null;
-      if (!endpoint) throw new Error('مرحلهٔ فعلی قابل اجرا نیست: '+(checkpoint||'unknown'));
+      if (!endpoint) throw new Error('checkpoint_not_executable: '+(checkpoint||'unknown'));
       const result = await api(endpoint, {method: 'POST'});
       const verification = result.verification_result?.status || result.verification?.status || 'not recorded';
       toast(`پاسخ اجرا دریافت شد · راستی‌آزمایی ${verification}`);
       await loadAll();
       await refreshIncidentDecision();
     } catch (error) {
-      showError(`ادامهٔ گردش‌کار/اجرا ناموفق: ${error.message}`);
+      const safeMessage = error.message === 'approval_changed_or_binding_unverified'
+        ? 'مجوز تغییر کرده یا اتصال آن تأیید نشده است.'
+        : error.message.startsWith('checkpoint_not_executable: ')
+          ? 'مرحلهٔ فعلی برای اجرا مجاز نیست.' : error.message;
+      showError(`ادامهٔ گردش‌کار/اجرا ناموفق: ${safeMessage}`);
       toast('اجرا کامل نشد');
       await refreshIncidentDecision();
     }
