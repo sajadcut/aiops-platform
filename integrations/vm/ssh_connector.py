@@ -977,6 +977,15 @@ class SSHVMConnector:
         if not (validator.get("success") is True and validator.get("supported") is True
                 and validator.get("valid") is False):
             return {**base, "status": "no_confirmed_syntax_failure"}
+        # Even when the bounded remote read is denied, return the exact
+        # compiler-proven file/line so UI can explain *why* no candidate
+        # exists instead of collapsing to the misleading not_recorded.
+        base.update({
+            "config_file": validator.get("config_file"),
+            "error_line": validator.get("error_line"),
+            "syntax_error": str(validator.get("syntax_error") or "")[:280],
+            "remote_python_required": False,
+        })
         try:
             command = nginx_review_command(
                 validator.get("config_file"),
