@@ -215,11 +215,10 @@ def validate_narrative(raw: str, brief: dict, lang: str) -> list[dict]:
             r"(?:configuration|JSON|appsettings|config)\s+(?:syntax\s+)?(?:is\s+)?(?:valid|healthy|passed)\b"
             r"|(?:ساختار\s+JSON|کانفیگ|تنظیمات)\s+(?:کاملاً\s+)?(?:سالم|معتبر)\s+است",
             prose, flags=re.I,
-        ) and not re.search(
-            r"\b(?:not|isn't|never|invalid|unverified)\b.{0,40}(?:valid|passed)"
-            r"|(?:نیست|نامعتبر|تأیید\s+نشده|نمی‌شود)",
-            prose, flags=re.I,
         ):
+            # Fail closed even if some other sentence contains a negation.
+            # A quoted contradictory claim should be explained by deterministic
+            # evidence instead of being displayed as an authoritative summary.
             raise ValueError("narrative_conflicts_with_live_config_validator")
         if not isinstance(refs, list) or len(refs) > 12 or any(
             not isinstance(ref, str) or ref not in allowed for ref in refs
