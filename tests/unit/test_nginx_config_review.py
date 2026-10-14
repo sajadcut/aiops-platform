@@ -344,7 +344,7 @@ def test_existing_nginx_incident_can_request_read_only_preview_from_dashboard():
         "nginx_config_review: برای این رخداد فقط پیش‌نمایش امن اصلاح Nginx را بساز"
     ) == "nginx_config_review"
     assert 'data-config-preview="' in js
-    assert "service==='nginx'?'nginx':'generic'" in js
+    assert "service==='nginx'?'nginx':verified.length?'review':'generic'" in js
     assert "nginx_config_review: فقط پیش‌نمایش" in js
     assert "service_config_discovery: مسیر فایل‌های تنظیمات" in js
     assert "اعمال اصلاح روی سرور — غیرفعال" in js
