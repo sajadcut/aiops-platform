@@ -640,7 +640,10 @@ def build_technical_investigation(*, incident: dict, evidence: list[dict],
             "check": stop_origin["next_check_fa"],
             "confidence": None, "kind": "فرضیهٔ مستقل؛ Stop و SIGKILL به‌تنهایی اثبات دستور انسانی نیستند",
         })
-    if sysfacts.get("result") == "timeout":
+    startup_timeout_plausible = not (stop_origin and
+        any(item.startswith("Previous runtime duration=") for item in stop_origin["indicators"])
+        and not stop_origin["start_timeout_seen"])
+    if sysfacts.get("result") == "timeout" and startup_timeout_plausible:
         hypotheses.append({
             "title": "تأخیر Startup یا Dependency خارجی",
             "supporting": [sys["id"]], "opposing": [],
