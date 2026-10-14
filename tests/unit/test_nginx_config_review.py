@@ -277,3 +277,69 @@ def test_nginx_repair_entrypoint_is_visible_near_incident_and_never_applies_unva
     # fabricated patch or a config-file execution request.
     assert "base+'/configuration-review-response'" in js
     assert 'data-config-intent="apply"' not in js
+
+
+@pytest.mark.asyncio
+async def test_confirmed_nginx_validator_collects_preview_without_dynamic_llm_flag(monkeypatch):
+    from datetime import datetime, timezone
+    from apps.context_service.evidence_collector import EvidenceCollector
+    from integrations.vm.target_context import bind_vm_target, reset_vm_target
+    from domain.contracts.config import settings
+
+    monkeypatch.setattr(settings, "AIOPS_DYNAMIC_INVESTIGATION_ENABLED", False)
+    actions = []
+
+    class VM:
+        async def config_validate(self, target, service):
+            actions.append("config_validate")
+            return {
+                "success": True, "supported": True, "valid": False,
+                "service": service, "config_file": "/etc/nginx/nginx.conf",
+                "error_line": 103, "syntax_error": 'unexpected "{"',
+            }
+        async def nginx_config_review(self, target, service):
+            actions.append("nginx_config_review")
+            return {
+                "success": True, "supported": True, "service": service,
+                "status": "candidate_proposed",
+                "config_file": "/etc/nginx/nginx.conf", "error_line": 103,
+                "current_hash": "a"*64, "candidate_hash": "b"*64,
+                "validation_status": "UNVERIFIED",
+                "remote_python_required": False,
+                "execution_authority": False,
+            }
+        async def nginx_config_inspect(self, target, service):
+            actions.append("nginx_config_inspect")
+            return {"success": True, "service": service, "status": "inspected",
+                    "files": [], "config_contents_exposed": False}
+    token = bind_vm_target("10.248.16.82")
+    try:
+        context = await EvidenceCollector(vm=VM()).collect_requested(
+            "nginx", datetime.now(timezone.utc),
+            [{"evidence_type": "telemetry", "reason": "configuration syntax validation",
+              "preferred_source": "vm"}],
+        )
+    finally:
+        reset_vm_target(token)
+    assert actions == ["config_validate", "nginx_config_review", "nginx_config_inspect"]
+    stored = [
+        row.get("raw_data", {}) for row in (context.get("evidence") or [])
+        if row.get("source") == "vm_mcp"
+    ]
+    assert any(row.get("diagnostic") == "nginx_config_review"
+               and row.get("status") == "candidate_proposed"
+               for row in stored)
+    assert all(row.get("execution_authority") is not True for row in stored)
+
+
+def test_existing_nginx_incident_can_request_read_only_preview_from_dashboard():
+    from pathlib import Path
+    from apps.incident_copilot import fallback_intent
+    js = (Path(__file__).resolve().parents[2] /
+          "dashboards/incident-command-room.js").read_text(encoding="utf-8")
+    assert fallback_intent(
+        "nginx_config_review: برای این رخداد فقط پیش‌نمایش امن اصلاح Nginx را بساز"
+    ) == "nginx_config_review"
+    assert 'data-config-preview="nginx"' in js
+    assert "submitIncidentChat('nginx_config_review:" in js
+    assert "اعمال اصلاح روی سرور — غیرفعال" in js
