@@ -230,3 +230,22 @@ def test_observation_other_service_on_same_host_cannot_validate_trigger():
     c = correlate(evidence=[vm(service="nginx")])
     assert c["last_vm_observation"] is None
     assert c["confirmed_vm_transition"] is None
+
+
+
+def test_one_undated_vm_observation_can_conflict_without_claiming_chronology():
+    source = vm()
+    source["created_at"] = None
+    c = correlate(evidence=[source])
+    assert c["conclusion_kind"] == "source_discrepancy"
+    assert c["last_vm_observation"]["observed_at"] is None
+    assert c["contradictions"][0]["temporal_relation"] == "undetermined"
+    assert "فاقد Timestamp" in " ".join(c["unknowns_fa"])
+
+
+def test_active_exited_systemd_is_not_conflated_with_running_service():
+    x = vm()
+    x["raw_data"]["sub_state"] = "exited"
+    c = correlate(evidence=[x])
+    assert c["last_vm_observation"] is None
+    assert not c["contradictions"]
