@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 491 | Dashboard JS files scanned: 8 | Symbols indexed: 5092**
+**Python files scanned: 491 | Dashboard JS files scanned: 8 | Symbols indexed: 5096**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -3776,6 +3776,10 @@
 | `tests/unit/test_incident_copilot.py` | `test_unavailable_mcp_preserves_old_diagnostics.model` | 385 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_unavailable_mcp_preserves_old_diagnostics |
 | `tests/unit/test_incident_copilot.py` | `test_unavailable_mcp_preserves_old_diagnostics.read` | 387 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_unavailable_mcp_preserves_old_diagnostics |
 | `tests/unit/test_incident_copilot.py` | `test_unavailable_mcp_preserves_old_diagnostics.append` | 389 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_unavailable_mcp_preserves_old_diagnostics |
+| `tests/unit/test_incident_copilot.py` | `test_recovery_comparison_stays_read_only_even_when_action_words_appear` | 409 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_copilot.py` | `test_llm_receives_conditional_recovery_and_stop_origin_before_mcp_bulk` | 425 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_copilot.py` | `test_llm_receives_conditional_recovery_and_stop_origin_before_mcp_bulk.Model` | 426 | class | کلاس | test_llm_receives_conditional_recovery_and_stop_origin_before_mcp_bulk |
+| `tests/unit/test_incident_copilot.py` | `test_llm_receives_conditional_recovery_and_stop_origin_before_mcp_bulk.Model.generate_with_messages` | 427 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_llm_receives_conditional_recovery_and_stop_origin_before_mcp_bulk.Model |
 | `tests/unit/test_incident_copilot_elastic_binding.py` | `vm_row` | 15 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_incident_copilot_elastic_binding.py` | `stored_elastic` | 26 | function | state یا داده را به‌صورت durable ذخیره/به‌روزرسانی می‌کند | module |
 | `tests/unit/test_incident_copilot_elastic_binding.py` | `test_vm_status_survives_recent_db_limit_via_same_incident_checkpoint` | 36 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
