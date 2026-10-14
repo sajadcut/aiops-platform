@@ -55,8 +55,8 @@ def test_dashboard_assets_and_agent_route_are_served_by_fastapi():
 
 def test_legacy_agent_url_has_compatibility_redirect_only():
     html = (ROOT / "dashboards/agents.html").read_text(encoding="utf-8")
-    assert "location.replace('/dashboard')" in html
-    assert "AIOps Agent Intelligence" in html
+    assert "location.replace("/dashboard")" in html
+    assert "ایجنت‌ها و تحلیل علت" in html
 
 
 def test_command_center_is_fully_persian_rtl_without_changing_provider_keys():
