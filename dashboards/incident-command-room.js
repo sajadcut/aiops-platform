@@ -1023,12 +1023,14 @@
           num(r.incident_summary.valid_evidence_count||0)+' مورد':
         'Recorded evidence: '+total+' · fresh execution-grade: '+
           (r.incident_summary.valid_evidence_count||0))+'</p>':'';
-    show('#ic-operator-explanation','<article class="ic-explain">'+
+    show('#ic-operator-explanation','<details class="ic-diagnosis-drilldown"><summary>'+
+      esc(fa?'دیدن گزارش تفصیلی یافته‌ها و شناسهٔ شواهد':'Detailed findings and evidence IDs')+
+      '</summary><div class="ic-diagnosis-drilldown-body"><article class="ic-explain">'+
       '<h3>'+esc(fa?faHeadline:enHeadline)+'</h3>'+
       '<p class="ic-headline-caution">'+esc(fa?
         'یافته‌های زیر متعلق به زمان انجام تحلیل هستند و ممکن است با آخرین بررسی مجدد سرویس تفاوت داشته باشند.':
         'These findings describe the investigation time and may differ from the most recent live recheck.')+'</p>'+count+
-      analysis+caution+nextSteps+approval+'</article>');
+      analysis+caution+nextSteps+approval+'</article></div></details>');
   }
 
 
@@ -1231,8 +1233,11 @@
       '<small>'+esc(a.approval_required?'Approval REQUIRED':'Read-only — no execution')+
       ' · '+esc(a.status)+'</small></article>').join('');
     const lines=arr(investigation.executive_lines).slice(0,7).map(x=>'<li>'+esc(x)+'</li>').join('');
-    show('#ic-technical-report','<section class="ic-sre-assessment" aria-label="Executive Incident Assessment">'+
-      '<h3>Executive Incident Assessment</h3><ol>'+lines+'</ol>'+
+    show('#ic-technical-report','<details class="ic-diagnosis-drilldown"><summary>'+
+      esc(fa?'گزارش کامل فنی و ممیزی (اختیاری)':'Full technical report and audit (optional)')+
+      '</summary><div class="ic-diagnosis-drilldown-body">'+
+      '<section class="ic-sre-assessment" aria-label="Executive Incident Assessment">'+
+      '<h3>'+esc(fa?'جمع‌بندی تخصصی اولیه':'Executive Incident Assessment')+'</h3><ol>'+lines+'</ol>'+
       '<p class="ic-headline-caution">'+esc(fa?
       'این نتایج از Evidence ثبت‌شده استخراج شده‌اند؛ گزارش‌گیری به معنی بررسی زندهٔ مجدد نیست.':
       'This is persisted evidence, not a fresh live check.')+'</p></section>'+
@@ -1261,7 +1266,8 @@
       '<h4>'+esc(fa?'مشروط و نیازمند Approval':'Conditional / Approval required')+'</h4>'+
       actionCards(acts.conditional)+
       '<h4>'+esc(fa?'ممنوع یا پرریسک':'Prohibited or high risk')+'</h4><ul>'+
-      arr(acts.prohibited).map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul></section>');
+      arr(acts.prohibited).map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul></section>'+
+      '</div></details>');
     return true;
   }
 
