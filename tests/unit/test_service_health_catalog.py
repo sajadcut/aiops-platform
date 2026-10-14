@@ -90,12 +90,17 @@ async def test_recheck_http_is_explicit_with_no_proxy_redirect_or_credentials(mo
         async def append(self, event):
             events.append(("audit", event))
     async def scope(db, incident_id):
-        return SimpleNamespace(service="gfpapi"), "10.248.16.82", {}
+        return SimpleNamespace(service="gfpapi"), [], {}, {"candidate": "10.248.16.82"}
+    async def verified_identity(service, evidence, context, *, force_live):
+        assert force_live is True
+        return {"target": "10.248.16.82", "read_only_verified": True}, {"status": "verified"}
     async def profile(db, service, target):
         return {"profile": {"health_scheme": "http", "expected_port": 8080,
                             "health_path": "/health"}}
     monkeypatch.setattr(catalog, "AsyncSessionLocal", FakeDb)
-    monkeypatch.setattr(catalog, "_bound_scope", scope)
+    monkeypatch.setattr(catalog, "_incident_status_scope", scope)
+    import apps.incident_vm_identity as vm
+    monkeypatch.setattr(vm, "resolve_vm_binding", verified_identity)
     monkeypatch.setattr(catalog, "_profile_row", profile)
     monkeypatch.setattr(catalog, "PostgreSQLAuditStore", FakeAudit)
     monkeypatch.setattr(catalog, "verified_async_client", FakeClient)
@@ -113,11 +118,11 @@ async def test_invalid_target_aborts_before_probe_or_lookup(monkeypatch):
         async def __aenter__(self): return self
         async def __aexit__(self, *args): return False
     async def scope(db, incident_id):
-        return SimpleNamespace(service="gfpapi"), "169.254.169.254", {}
+        return SimpleNamespace(service="gfpapi"), [], {}, {"candidate": "169.254.169.254"}
     async def impossible(*args, **kwargs):
         raise AssertionError("unsafe destination must not be fetched")
     monkeypatch.setattr(catalog, "AsyncSessionLocal", FakeDb)
-    monkeypatch.setattr(catalog, "_bound_scope", scope)
+    monkeypatch.setattr(catalog, "_incident_status_scope", scope)
     monkeypatch.setattr(catalog, "_profile_row", impossible)
     from fastapi import HTTPException
     with pytest.raises(HTTPException) as err:
@@ -144,3 +149,30 @@ def test_verified_http_factory_forces_certificate_validation(monkeypatch):
     monkeypatch.setattr(transport.httpx, "AsyncClient", Client)
     transport.verified_async_client(verify=False, timeout=2, component="test-health")
     assert calls and calls[0]["verify"] is True
+
+
+
+@pytest.mark.asyncio
+async def test_http_health_probe_rejects_unverified_vm_mcp_identity(monkeypatch):
+    import apps.incident_vm_identity as vm
+    class FakeDb:
+        async def __aenter__(self): return self
+        async def __aexit__(self, *args): return False
+    async def scope(db, incident_id):
+        return SimpleNamespace(service="gfpapi"), [], {}, {"candidate": "10.248.16.82"}
+    async def rejected(service, evidence, context, *, force_live):
+        assert force_live
+        return None, {"status": "vm_mcp_service_status_unavailable"}
+    async def no_db(*args, **kwargs):
+        raise AssertionError("health profile/probe must not be reached")
+    monkeypatch.setattr(catalog, "AsyncSessionLocal", FakeDb)
+    monkeypatch.setattr(catalog, "_incident_status_scope", scope)
+    monkeypatch.setattr(vm, "resolve_vm_binding", rejected)
+    monkeypatch.setattr(catalog, "_profile_row", no_db)
+    from fastapi import HTTPException
+    with pytest.raises(HTTPException) as error:
+        await catalog.recheck_http_health(
+            UUID("11111111-1111-4111-8111-111111111111"),
+            identity=SimpleNamespace(subject="operator"))
+    assert error.value.status_code == 409
+    assert error.value.detail == "health_probe_vm_identity_not_verified"
