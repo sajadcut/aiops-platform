@@ -274,3 +274,29 @@ async def test_generic_review_uses_only_verified_file_and_never_returns_ssh_raw_
     assert review["path_source"] == "verified_systemd_candidate"
     assert "PRIVATE_VALUE" not in json.dumps(review)
     assert "password" not in json.dumps(review)
+
+
+def test_unknown_config_search_asks_cognia_for_vendor_procedure_not_secret_bytes():
+    from apps.orchestrator.dynamic_investigation import DynamicInvestigationPlanner
+    samples = [
+        {"source": "vm_mcp", "reference": "unit-java-1", "raw_data": {
+            "diagnostic": "service_runtime_discovery", "success": True,
+            "runtime": "tomcat", "service": "tomcat-custom",
+            "config_candidates": [
+                {"path": "/opt/tomcat/conf/server.xml", "verified_exists": False},
+            ],
+        }},
+        {"source": "vm_mcp", "reference": "discover-1", "raw_data": {
+            "diagnostic": "service_config_discovery", "success": True,
+            "service": "tomcat-custom", "runtime": "tomcat",
+            "status": "candidates_not_verified", "files": [],
+        }},
+    ]
+    query = DynamicInvestigationPlanner.search_query(
+        service="tomcat-custom", evidence=samples, findings=[],
+    )
+    assert "tomcat" in query.lower()
+    assert "conf/server.xml" in query
+    assert "read-only" in query
+    assert "password" not in query
+    assert len(query) <= 430
