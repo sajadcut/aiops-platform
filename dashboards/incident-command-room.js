@@ -803,6 +803,10 @@
       (fa?'مشاهدهٔ systemd: ':'Systemd observed: ')+date(st.observed_at):'';
     const rca=report.rca_assessment?.rca_confidence;
     const rcaLabel=rca==null?'':(fa?' · اطمینان به علت ریشه‌ای: ':' · Root-cause confidence: ')+numberPct(rca);
+    const verifiedRefs=[...new Set([
+      st?.evidence_ref,
+      ...Object.values(vm).map(row=>row?.evidence_ref),
+    ].filter(Boolean))].slice(0,8);
     show('#ic-operational-summary',
       '<h3>'+esc(fa?'نتیجهٔ عملیاتی این رخداد':'Operational incident assessment')+'</h3>'+
       '<p><strong>'+esc(statusSentence)+'</strong></p>'+
@@ -813,7 +817,8 @@
       '<p>'+esc(action?reason:(fa?'اقدام پیشنهادی باید مطابق گیت مجوز بررسی شود.':
         'The proposed action requires governed authorization.'))+'</p>'+
       '<p class="ic-headline-meta">'+esc(observationTime+rcaLabel)+
-      (p.block_reason?' · '+txt(p.block_reason):'')+'</p>');
+      (p.block_reason?' · '+txt(p.block_reason):'')+'</p>'+
+      refs(verifiedRefs));
   }
   function renderServiceProfile() {
     const node=$('#ic-service-profile');
@@ -987,7 +992,10 @@
         'Recorded evidence: '+total+' · fresh execution-grade: '+
           (r.incident_summary.valid_evidence_count||0))+'</p>':'';
     show('#ic-operator-explanation','<article class="ic-explain">'+
-      '<h3>'+esc(fa?faHeadline:enHeadline)+'</h3>'+count+
+      '<h3>'+esc(fa?faHeadline:enHeadline)+'</h3>'+
+      '<p class="ic-headline-caution">'+esc(fa?
+        'یافته‌های زیر متعلق به زمان انجام تحلیل هستند و ممکن است با آخرین بررسی مجدد سرویس تفاوت داشته باشند.':
+        'These findings describe the investigation time and may differ from the most recent live recheck.')+'</p>'+count+
       analysis+caution+nextSteps+approval+'</article>');
   }
 
@@ -1289,7 +1297,7 @@
     const failed=agents.filter(a=>['failed','error'].includes(low(a.status))).length;
     const missing=agents.filter(a=>['unknown','skipped'].includes(low(a.status))).length;
     const intro=fa?
-      'هر کارت نشان می‌دهد ایجنت چه داده‌ای دریافت کرده، چه نتیجه‌ای نوشته، چه فرضیه‌ای داشته و چه چیزی هنوز معلوم نیست. استناد به شواهد به معنی اجرای مستقیم ابزار توسط آن Agent نیست.':
+      'این یافته‌ها مربوط به زمان تحلیل Incident هستند، نه لزوماً وضعیت فعلی سرویس. هر کارت نشان می‌دهد ایجنت چه داده‌ای دریافت کرده، چه نتیجه‌ای نوشته، چه فرضیه‌ای داشته و چه چیزی هنوز معلوم نیست. استناد به شواهد به معنی اجرای مستقیم ابزار توسط آن Agent نیست.':
       'Each card distinguishes the specialist’s recorded findings, cited evidence, open hypotheses and suggested next checks. Citing evidence does not mean the agent itself executed a tool.';
     show('#ic-agent-summary','<div class="ic-agent-overview"><p>'+esc(intro)+'</p>'+
       '<div class="ic-agent-totals"><span>'+esc(fa?'ایجنت‌های ثبت‌شده':'Recorded agents')+' <b>'+num(agents.length)+'</b></span>'+
