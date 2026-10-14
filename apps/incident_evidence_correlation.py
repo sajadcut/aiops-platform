@@ -74,11 +74,17 @@ def _trigger(incident: dict, checkpoint: dict) -> dict:
     view = original or nested or payload or raw
     text = str(sig.get("summary") or view.get("message") or view.get("name")
                or raw.get("signal_summary") or "")
+    # A generic normalized 'timestamp' can mean ingestion time. Only an
+    # original captured payload, or an explicitly named event field, may
+    # establish source occurrence time.
+    captured = original or nested
     event_time = (
-        view.get("event_time") or view.get("occurred_at")
-        or view.get("startsAt") or view.get("timestamp")
+        captured.get("event_time") or captured.get("occurred_at")
+        or captured.get("startsAt") or captured.get("timestamp")
         or raw.get("event_time") or raw.get("occurred_at")
+        or payload.get("event_time") or payload.get("occurred_at")
     )
+    precise = bool(event_time and re.search(r"T\\d{2}:\\d{2}:\\d{2}", str(event_time)))
     # Signal timestamp is ingestion/receipt in many workflows; it is NOT
     # a verified Zabbix event timestamp without explicit source provenance.
     named = _name(raw.get("service") or payload.get("service") or view.get("service")
@@ -91,7 +97,8 @@ def _trigger(incident: dict, checkpoint: dict) -> dict:
         "reported_down": _down(text) or _down(raw.get("trigger") or raw.get("name")),
         "service": named, "target": target,
         "observed_at": _timestamp(event_time),
-        "time_basis": "source_event" if _timestamp(event_time) else "not_recorded",
+        "time_basis": ("source_event" if _timestamp(event_time) and precise else
+                       "source_event_minute_only" if _timestamp(event_time) else "not_recorded"),
         "received_at": _timestamp(sig.get("timestamp") or sig.get("received_at")),
         "evidence_refs": [str(sig.get("evidence_id"))[:160]] if sig.get("evidence_id") else [],
     }
@@ -200,7 +207,8 @@ def correlate_incident_state(*, incident: dict, checkpoint: dict,
         # A timestamped alert is still a *different source*; do not pretend
         # Zabbix alone proves a prior real systemd stop.
         relation = "undetermined"
-        if (trigger["observed_at"] and last["observed_at"]):
+        if (trigger["time_basis"] == "source_event" and
+                trigger["observed_at"] and last["observed_at"]):
             if trigger["observed_at"] < last["observed_at"]:
                 relation = "alert_event_before_vm_observation"
             elif trigger["observed_at"] > last["observed_at"]:
