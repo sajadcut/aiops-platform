@@ -130,6 +130,22 @@ class DynamicInvestigationPlanner:
         runtime = cls.runtime_evidence(evidence)
         unit = runtime.get("service_runtime_discovery") or {}
         syntax = runtime.get("dotnet_config_syntax") or {}
+        if (
+            discovered_candidates or discovered_files
+            or discovery.get("status") in {"no_systemd_config_candidates", "candidates_not_verified"}
+            or unit.get("runtime") in {"java", "tomcat"}
+        ):
+            result["operator_questions"].append({
+                "question": (
+                    "Verify the systemd-derived configuration paths and consult the LLM "
+                    "about vendor-documented config locations/validation before claiming no evidence."
+                ),
+                "reason": (
+                    "Unit arguments are not file-existence proof, readable files are not "
+                    "syntax validation, and LLM advice cannot authorize arbitrary reads or changes."
+                ),
+                "evidence_refs": discovery_summary["evidence_refs"],
+            })
         if unit.get("runtime") == "dotnet":
             if syntax.get("syntax_valid") is False:
                 invalid = next((row for row in syntax.get("files", [])
@@ -273,8 +289,41 @@ class DynamicInvestigationPlanner:
             for value in (state.get("coordination") or {}).get("missing_evidence", [])
             if isinstance(value, str)
         ][:4]
+        discovery = runtime.get("service_config_discovery") or {}
+        discovered_candidates = list(unit.get("config_candidates") or [])[:10]
+        discovered_files = list(discovery.get("files") or [])[:10]
+        discovery_summary = {
+            "service": _bounded(state.get("service_name"), 90),
+            "runtime": _bounded(unit.get("runtime") or discovery.get("runtime") or "unknown", 50),
+            "status": _bounded(discovery.get("status") or (
+                "unit_candidates_unverified" if discovered_candidates else "unknown"), 65),
+            "systemd_unit": _bounded(unit.get("unit_file") or discovery.get("unit_file"), 220),
+            "files": [
+                {"path": _bounded(row.get("path"), 240),
+                 "source": _bounded(row.get("source"), 80),
+                 "verified_exists": row.get("verified_exists") is True,
+                 "content_validated": False}
+                for row in discovered_files if isinstance(row, dict)
+            ],
+            "unverified_candidates": [
+                {"path": _bounded(row.get("path"), 240),
+                 "source": _bounded(row.get("source"), 80)}
+                for row in discovered_candidates if isinstance(row, dict)
+            ],
+            "llm_guidance_status": _bounded(
+                (context.get("unknown_guidance") or {}).get("status") or "not_consulted", 70),
+            "requires_further_research": not any(
+                row.get("verified_exists") is True for row in discovered_files
+                if isinstance(row, dict)
+            ),
+            "execution_authority": False,
+            "evidence_refs": [x for x in (
+                unit.get("evidence_ref"), discovery.get("evidence_ref")
+            ) if x],
+        }
         result = {
             "status": "advisory", "model_status": "not_requested",
+            "config_discovery": discovery_summary,
             "checks": [], "operator_questions": [],
             "config_proposal": None,
             "execution_authority": False, "counts_as_live_evidence": False,
