@@ -180,3 +180,97 @@ async def test_llm_research_is_required_for_unknown_config_but_cannot_verify_a_g
     assert result["execution_authority"] is False
     assert result["counts_as_evidence"] is False
     assert result["config_validation_passed"] is False
+
+
+@pytest.mark.asyncio
+async def test_vm_mcp_verifies_tomcat_config_paths_without_running_unit_argv(monkeypatch):
+    from integrations.vm.ssh_connector import SSHVMConnector
+    connector = SSHVMConnector()
+    calls = []
+    async def discover(target, service):
+        return {
+            "success": True, "runtime": "tomcat",
+            "unit_file": "/etc/systemd/system/tomcat.service",
+            "config_candidates": [{
+                "path": "/opt/tomcat/conf/server.xml",
+                "source": "systemd_catalina_base",
+            }],
+            "working_directory": "/opt/tomcat",
+        }
+    async def read(target, command):
+        calls.append(command)
+        return {"success": True, "stdout": ""}
+    monkeypatch.setattr(connector, "_validate_service", lambda _: None)
+    monkeypatch.setattr(connector, "service_runtime_discovery", discover)
+    monkeypatch.setattr(connector, "_run", read)
+    res = await connector.service_config_discovery("192.0.2.10", "custom-tomcat")
+    assert res["success"] is True
+    assert res["status"] == "verified_candidates"
+    assert res["files"][0]["path"] == "/opt/tomcat/conf/server.xml"
+    assert res["files"][0]["verified_exists"] is True
+    assert res["files"][0]["content_validated"] is False
+    assert "readlink -f" in calls[0]
+    assert all("python" not in command and "java " not in command for command in calls)
+    assert res["execution_authority"] is False
+
+
+@pytest.mark.asyncio
+async def test_custom_unit_workdir_inventory_excludes_secret_file_names(monkeypatch):
+    from integrations.vm.ssh_connector import SSHVMConnector
+    connector = SSHVMConnector()
+    async def unit(target, service):
+        return {"success": True, "runtime": "unknown",
+                "config_candidates": [], "working_directory": "/srv/custom-service"}
+    commands = []
+    async def read(target, command):
+        commands.append(command)
+        if "find " in command:
+            return {"success": True, "stdout":
+                    "/srv/custom-service/config/app.yaml\n"
+                    "/srv/custom-service/password.properties\n"
+                    "/etc/shadow\n"
+                    "/srv/custom-service/config/service.xml"}
+        return {"success": True}
+    monkeypatch.setattr(connector, "_validate_service", lambda _: None)
+    monkeypatch.setattr(connector, "service_runtime_discovery", unit)
+    monkeypatch.setattr(connector, "_run", read)
+    result = await connector.service_config_discovery("192.0.2.10", "special")
+    names = [f["path"] for f in result["files"]]
+    assert names == ["/srv/custom-service/config/app.yaml",
+                     "/srv/custom-service/config/service.xml"]
+    assert all(row["verified_exists"] is True for row in result["files"])
+    assert all(row["content_validated"] is False for row in result["files"])
+    assert all("systemctl start" not in cmd and "sudo" not in cmd for cmd in commands)
+    assert "password" not in json.dumps(result)
+
+
+@pytest.mark.asyncio
+async def test_generic_review_uses_only_verified_file_and_never_returns_ssh_raw_content(monkeypatch):
+    from integrations.vm.ssh_connector import SSHVMConnector
+    connector = SSHVMConnector()
+    source = '<Server password="PRIVATE_VALUE"><Service/></Server>'
+    async def validate(target, service):
+        return {"success": True, "supported": False, "valid": None}
+    async def discovery(target, service):
+        return {"success": True, "status": "verified_candidates",
+                "runtime": "tomcat", "files": [{
+                    "path": "/opt/tomcat/conf/server.xml",
+                    "verified_exists": True,
+                }]}
+    async def read(target, command):
+        assert "head -c" in command and "base64" in command
+        return {"success": True, "stdout":
+                base64.b64encode(source.encode()).decode()}
+    monkeypatch.setattr(connector, "_validate_service", lambda _: None)
+    monkeypatch.setattr(connector, "config_validate", validate)
+    monkeypatch.setattr(connector, "service_config_discovery", discovery)
+    monkeypatch.setattr(connector, "_run", read)
+    review = await connector.service_config_review("192.0.2.10", "tomcat-custom")
+    assert review["status"] == "file_observed"
+    assert review["validation_status"] == "FORMAT_VALID"
+    assert review["execution_authority"] is False
+    assert review["apply_eligible"] is False
+    assert review["candidate_hash"] is None
+    assert review["path_source"] == "verified_systemd_candidate"
+    assert "PRIVATE_VALUE" not in json.dumps(review)
+    assert "password" not in json.dumps(review)
