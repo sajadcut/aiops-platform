@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 494 | Dashboard JS files scanned: 8 | Symbols indexed: 5157**
+**Python files scanned: 494 | Dashboard JS files scanned: 8 | Symbols indexed: 5159**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1226,6 +1226,7 @@
 | `apps/incident_followup.py` | `knowledge_candidate` | 98 | function | Sanitized *unverified* learning note; never a claimed recovery. | module |
 | `apps/incident_followup.py` | `draft_cognia_review` | 126 | async function | Create an idempotent local review/outbox entry; do NOT publish to Cognia. | module |
 | `apps/incident_followup.py` | `persist_and_reassess` | 174 | async function | Durably append observation; redo specialists and evaluator if no-action. | module |
+| `apps/incident_followup.py` | `persist_and_reassess.emit_status` | 205 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | persist_and_reassess |
 | `apps/incident_memory_forensics.py` | `obj` | 15 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/incident_memory_forensics.py` | `stamp` | 19 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/incident_memory_forensics.py` | `metric` | 28 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
@@ -3930,16 +3931,17 @@
 | `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.Repo.commit` | 135 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_followup_reassessment_recalculates_agents_without_executing.Repo |
 | `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.CheckpointStore` | 138 | class | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | test_followup_reassessment_recalculates_agents_without_executing |
 | `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.CheckpointStore.__init__` | 139 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_followup_reassessment_recalculates_agents_without_executing.CheckpointStore |
-| `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.CheckpointStore.save` | 140 | async method | state یا داده را به‌صورت durable ذخیره/به‌روزرسانی می‌کند | test_followup_reassessment_recalculates_agents_without_executing.CheckpointStore |
-| `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.Audit` | 149 | class | کلاس | test_followup_reassessment_recalculates_agents_without_executing |
-| `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.Audit.__init__` | 150 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_followup_reassessment_recalculates_agents_without_executing.Audit |
-| `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.Audit.append` | 151 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_followup_reassessment_recalculates_agents_without_executing.Audit |
-| `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.Orchestrator` | 154 | class | کلاس | test_followup_reassessment_recalculates_agents_without_executing |
-| `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.Orchestrator.__init__` | 159 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_followup_reassessment_recalculates_agents_without_executing.Orchestrator |
-| `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.Orchestrator._run_specialists` | 160 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_followup_reassessment_recalculates_agents_without_executing.Orchestrator |
-| `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.Orchestrator._rca_node` | 167 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_followup_reassessment_recalculates_agents_without_executing.Orchestrator |
-| `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.Orchestrator._evaluator_node` | 170 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_followup_reassessment_recalculates_agents_without_executing.Orchestrator |
-| `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.knowledge_draft` | 175 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_followup_reassessment_recalculates_agents_without_executing |
+| `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.CheckpointStore.load` | 140 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | test_followup_reassessment_recalculates_agents_without_executing.CheckpointStore |
+| `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.CheckpointStore.save` | 142 | async method | state یا داده را به‌صورت durable ذخیره/به‌روزرسانی می‌کند | test_followup_reassessment_recalculates_agents_without_executing.CheckpointStore |
+| `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.Audit` | 153 | class | کلاس | test_followup_reassessment_recalculates_agents_without_executing |
+| `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.Audit.__init__` | 154 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_followup_reassessment_recalculates_agents_without_executing.Audit |
+| `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.Audit.append` | 155 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_followup_reassessment_recalculates_agents_without_executing.Audit |
+| `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.Orchestrator` | 158 | class | کلاس | test_followup_reassessment_recalculates_agents_without_executing |
+| `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.Orchestrator.__init__` | 163 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_followup_reassessment_recalculates_agents_without_executing.Orchestrator |
+| `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.Orchestrator._run_specialists` | 164 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_followup_reassessment_recalculates_agents_without_executing.Orchestrator |
+| `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.Orchestrator._rca_node` | 171 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_followup_reassessment_recalculates_agents_without_executing.Orchestrator |
+| `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.Orchestrator._evaluator_node` | 174 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_followup_reassessment_recalculates_agents_without_executing.Orchestrator |
+| `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.knowledge_draft` | 179 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_followup_reassessment_recalculates_agents_without_executing |
 | `tests/unit/test_incident_operational_finalization.py` | `FakeSession` | 9 | class | کلاس | module |
 | `tests/unit/test_incident_operational_finalization.py` | `FakeSession.__init__` | 10 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeSession |
 | `tests/unit/test_incident_operational_finalization.py` | `FakeSession.get` | 13 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeSession |
