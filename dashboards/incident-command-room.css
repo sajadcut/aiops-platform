@@ -334,3 +334,14 @@
 .ic-diagnosis-drilldown-body{padding:10px 14px 16px;border-top:1px solid var(--line)}
 .ic-diagnosis-drilldown .ic-explain,.ic-diagnosis-drilldown .ic-sre-assessment{margin:0}
 @media(max-width:650px){.ic-diagnosis-report{padding:13px}.ic-diagnosis-head{gap:9px}.ic-diagnosis-bullets{font-size:12px}}
+
+
+/* Exact, source-attributed .NET JSON checks in the operator diagnosis. */
+.ic-config-verified-files{margin:13px 0;padding:13px 16px;border:1px solid var(--line);border-radius:12px;background:var(--raised)}
+.ic-config-verified-files>strong{display:block;margin-bottom:9px;font-size:13px}
+.ic-config-verified-files ul{list-style:disc;margin:0;padding-inline-start:20px;display:grid;gap:10px}
+.ic-config-verified-files li{font-size:13px;overflow-wrap:anywhere}
+.ic-config-verified-files code{display:block;font:12px/1.9 ui-monospace,Consolas,monospace;white-space:pre-wrap;overflow-wrap:anywhere;unicode-bidi:plaintext}
+.ic-config-verified-files small{display:block;color:var(--muted);font-size:11px}
+.ic-config-file-result{display:block;font-weight:650}
+.ic-config-verified-files>p{color:var(--muted);font-size:12px;line-height:1.8;margin:10px 0 0}
