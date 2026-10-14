@@ -1335,6 +1335,11 @@
   const agentFindingFa = raw => {
     const x=String(raw||'');
     if(state.language!=='fa'||isFaText(x))return x;
+    // A confirmed "invalid_json_syntax" must never be translated into a
+    // generic "configuration test passed" by signalFacts. Treat call success
+    // and the actual JSON syntax result as entirely separate concepts.
+    if(/invalid JSON syntax|JSON syntax (?:error|invalid)|invalid_json_syntax/i.test(x))
+      return 'ایجنت وجود خطای ساختاری JSON در کانفیگ برنامه را گزارش کرده است؛ فایل، خط و نوع خطای قطعی در نتیجهٔ Validator آمده است.';
     const findings=signalFacts(x);
     if(findings.length)return findings.join('؛ ')+'.';
     if(/Incident triaged to/i.test(x)) {
@@ -1349,9 +1354,8 @@
     if(/(?:manual stop possible|manual(?:ly)? stop(?:ped)?(?: service)? is possible|A manual stop is possible but not proven)/i.test(x))
       return 'توقف دستی سرویس یک فرضیه است؛ عامل توقف و عمدی‌بودن آن هنوز تأیید نشده است.';
     if(/no confirmed domain fault yet/i.test(x))return 'با شواهد فعلی خرابی مستقلی در این حوزه تأیید نشده است.';
-    if(/invalid JSON syntax|JSON syntax (?:error|invalid)|invalid_json_syntax/i.test(x))
-      return 'ایجنت به خطای ساختار JSON در کانفیگ برنامه اشاره کرده است؛ جزئیات قطعی در گزارش Validator درج شده است.';
-    if(/configuration (?:validation|check|syntax).*(?:success|passed|valid)/i.test(x)){
+    if(/configuration (?:validation|check|syntax).*(?:success|passed|valid)/i.test(x) ||
+       /(?:all|the|application) (?:config(?:uration)?|JSON) (?:files? )?(?:is |are )?(?:valid|correct|passed)/i.test(x)){
       if(state.report?.configuration_diagnostic?.status==='invalid')
         return 'این ایجنت سالم بودن کانفیگ را مطرح کرده، اما با خطای ثبت‌شدهٔ Validator تطابق ندارد؛ نتیجهٔ قطعی باید از ابزار بررسی کانفیگ گرفته شود.';
       return 'این ایجنت موفقیت تست کانفیگ را گزارش کرده است؛ نتیجه باید با خروجی مستقیم Validator مقایسه شود.';
