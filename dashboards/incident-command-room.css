@@ -306,3 +306,31 @@
 .ic-sre-rca li p{margin:3px 0;color:var(--muted);font-size:12px}
 .ic-sre-rca .ic-headline-caution{font-size:12px;margin-top:12px}
 @media(max-width:650px){.ic-technical-report{gap:12px}.ic-technical-report>section{padding:15px 12px}.ic-sre-assessment ol{padding-inline-start:20px}}
+
+/* Operator-first diagnosis: actual measured findings, not a dump of MCP/LLM records. */
+.ic-diagnosis{margin:0 0 18px;min-width:0}
+.ic-diagnosis-report{border:1px solid var(--line);border-radius:17px;background:var(--surface);padding:clamp(15px,2vw,24px);display:grid;gap:13px}
+.ic-diagnosis-report[data-state="invalid"]{border-inline-start:4px solid var(--danger,#c83d53)}
+.ic-diagnosis-head{display:flex;gap:13px;align-items:flex-start}
+.ic-diagnosis-head>div{flex:1;min-width:0}
+.ic-diagnosis-mark{flex:none;display:grid;place-items:center;width:32px;height:32px;border:1px solid var(--line);background:var(--bg2);border-radius:50%;font-weight:850}
+.ic-diagnosis-report[data-state="invalid"] .ic-diagnosis-mark{color:var(--danger,#c83d53)}
+.ic-diagnosis-head small{display:block;font-size:12px;color:var(--muted);margin-bottom:4px}
+.ic-diagnosis-head h3{font-size:clamp(16px,1.7vw,21px);margin:0;line-height:1.7;color:var(--text)}
+.ic-diagnosis-report section{border-top:1px solid var(--line);padding-top:12px}
+.ic-diagnosis-report h4{font-size:14px;font-weight:800;line-height:1.6;margin:0 0 8px;color:var(--text)}
+.ic-diagnosis-report p{margin:0;color:var(--text);font-size:13px;line-height:2;overflow-wrap:anywhere}
+.ic-diagnosis-location{background:var(--bg2);padding:10px 12px;border-radius:10px}
+.ic-diagnosis-location span{unicode-bidi:plaintext;overflow-wrap:anywhere}
+.ic-diagnosis-bullets{padding:0 18px 0 0;margin:0;color:var(--text);font-size:13px;line-height:2.05}
+.ic-diagnosis-bullets li{margin-bottom:5px;overflow-wrap:anywhere}
+.ic-diagnosis-caution,.ic-diagnosis-conflict{padding:10px 12px;background:var(--bg2);border-radius:10px}
+.ic-diagnosis-report .ic-diagnosis-conflict{border-inline-start:3px solid var(--danger,#c83d53)}
+.ic-diagnosis-report .ic-diagnosis-gate{border-top:1px solid var(--line);padding-top:12px;font-weight:750}
+.ic-diagnosis-report .ic-diagnosis-source{font-size:11px;line-height:1.8;color:var(--muted)}
+.ic-diagnosis-drilldown{margin:10px 0;border:1px solid var(--line);border-radius:12px;background:var(--surface);overflow:hidden}
+.ic-diagnosis-drilldown summary{cursor:pointer;list-style-position:inside;font-size:13px;font-weight:750;color:var(--muted);padding:11px 14px}
+.ic-diagnosis-drilldown summary:hover{color:var(--text)}
+.ic-diagnosis-drilldown-body{padding:10px 14px 16px;border-top:1px solid var(--line)}
+.ic-diagnosis-drilldown .ic-explain,.ic-diagnosis-drilldown .ic-sre-assessment{margin:0}
+@media(max-width:650px){.ic-diagnosis-report{padding:13px}.ic-diagnosis-head{gap:9px}.ic-diagnosis-bullets{font-size:12px}}
