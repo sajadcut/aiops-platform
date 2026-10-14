@@ -200,3 +200,60 @@
 .incident-queue-card.is-analyzing .incident-queue-state{border-color:var(--blue)}
 @keyframes incident-activity-spin{to{transform:rotate(360deg)}}
 @media(prefers-reduced-motion:reduce){.incident-activity-spinner{animation:none;border-style:dashed}}
+
+
+/* Persian Command Center interface */
+/* Scope legibility improvements to overview; other operational views keep
+   their own sizing. Logical borders and alignment work in both LTR and RTL. */
+:root[dir="rtl"] .app-shell{direction:rtl}
+:root[dir="rtl"] .sidebar{border-right:0;border-left:1px solid var(--line)}
+:root[dir="rtl"] .nav button,:root[dir="rtl"] .docs-link{text-align:right}
+:root[dir="rtl"] .nav button.active{box-shadow:inset -2px 0 var(--cyan)}
+:root[dir="rtl"] .topbar,:root[dir="rtl"] .top-actions{direction:rtl}
+:root[dir="rtl"] .search-box,:root[dir="rtl"] .auth-box{direction:rtl}
+:root[dir="rtl"] .status-ribbon>div{border-right:0;border-left:1px solid var(--line)}
+:root[dir="rtl"] .status-ribbon>div:last-child{border-left:0}
+:root[dir="rtl"] .attention-score,:root[dir="rtl"] .service-counts{text-align:left}
+:root[dir="rtl"] .timeline-item{padding:10px 17px 10px 10px}
+:root[dir="rtl"] .timeline-item:before{left:auto;right:2px}
+:root[dir="rtl"] .timeline.compact .timeline-item{border-right:0;border-left:1px solid var(--line)}
+:root[dir="rtl"] .timeline.compact .timeline-item:last-child{border-left:0}
+:root[dir="rtl"] .toast{right:auto;left:18px}
+:root[dir="rtl"] .dot{margin-right:0;margin-left:4px}
+:root[dir="rtl"] .nav button span{flex:none}
+:root[dir="rtl"] #globalSearch,:root[dir="rtl"] #apiKey{text-align:right}
+:root[dir="rtl"] .view[data-view="overview"] .panel-head h2{font-size:14px;line-height:1.8}
+:root[dir="rtl"] .view[data-view="overview"] .section-kicker{font-size:11px;letter-spacing:0;text-transform:none}
+:root[dir="rtl"] .view[data-view="overview"] .kpi-top{font-size:11px;letter-spacing:0;text-transform:none}
+:root[dir="rtl"] .view[data-view="overview"] .kpi small,
+:root[dir="rtl"] .view[data-view="overview"] .status-ribbon small{font-size:10px;line-height:1.8}
+:root[dir="rtl"] .view[data-view="overview"] .attention-title{font-size:12px;line-height:1.7;unicode-bidi:plaintext}
+:root[dir="rtl"] .view[data-view="overview"] .attention-meta{font-size:10px;line-height:1.9;unicode-bidi:plaintext}
+:root[dir="rtl"] .view[data-view="overview"] .attention-score small{font-size:10px}
+:root[dir="rtl"] .view[data-view="overview"] .service-name{font-size:12px;unicode-bidi:plaintext}
+:root[dir="rtl"] .view[data-view="overview"] .service-summary,
+:root[dir="rtl"] .view[data-view="overview"] .service-counts{font-size:10px}
+:root[dir="rtl"] .view[data-view="overview"] .component-name,
+:root[dir="rtl"] .view[data-view="overview"] .component small{font-size:10px;line-height:1.8}
+:root[dir="rtl"] .view[data-view="overview"] .component-state{font-size:12px}
+:root[dir="rtl"] .view[data-view="overview"] .severity-row{grid-template-columns:65px minmax(0,1fr) 28px;font-size:11px}
+:root[dir="rtl"] .view[data-view="overview"] .timeline-title{font-size:12px;overflow-wrap:anywhere}
+:root[dir="rtl"] .view[data-view="overview"] .timeline-meta,
+:root[dir="rtl"] .view[data-view="overview"] .timeline-body{font-size:10px;line-height:1.85;unicode-bidi:plaintext}
+:root[dir="rtl"] .view[data-view="overview"] .empty-state{font-size:12px;line-height:1.9}
+:root[dir="rtl"] .view[data-view="overview"] .lifecycle-node span{font-size:11px;line-height:1.7}
+:root[dir="rtl"] .view[data-view="overview"] .lifecycle-node small{font-size:10px;line-height:1.8}
+:root[dir="rtl"] .view[data-view="overview"] .badge{font-size:10px}
+:root[dir="rtl"] .nav button{font-size:12px}
+:root[dir="rtl"] .nav-label,:root[dir="rtl"] .eyebrow{letter-spacing:0;text-transform:none;font-size:10px}
+:root[dir="rtl"] .topbar p{font-size:12px;line-height:1.8}
+:root[dir="rtl"] .search-box input,:root[dir="rtl"] .auth-box input,
+:root[dir="rtl"] .auth-box button{font-size:11px}
+:root[dir="rtl"] .brand-title{font-size:13px}
+:root[dir="rtl"] .brand-sub{font-size:11px}
+:root[dir="rtl"] .trust-title,:root[dir="rtl"] .docs-link{font-size:11px}
+:root[dir="rtl"] .trust-card p{font-size:10px;line-height:1.9}
+@media(max-width:700px){
+  :root[dir="rtl"] .view[data-view="overview"] .service-row{grid-template-columns:minmax(0,1fr) 60px 62px}
+  :root[dir="rtl"] .view[data-view="overview"] .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
