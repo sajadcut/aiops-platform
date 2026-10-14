@@ -18,7 +18,7 @@ def test_dashboard_serves_persian_operator_summary_ui_and_structured_api_call():
     assert js.status_code == 200
     assert "/api/v1/incidents/${encodeURIComponent(id)}/operator-summary" in js.text
     assert "خلاصه فارسی رخداد" in js.text
-    assert "تأیید شده" in js.text
+    assert "تأیید صادر شده" in js.text
     assert "محتمل" in js.text
     assert "نامشخص" in js.text
     assert "نیازمند Approval" in js.text
