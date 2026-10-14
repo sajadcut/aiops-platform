@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 495 | Dashboard JS files scanned: 8 | Symbols indexed: 5176**
+**Python files scanned: 495 | Dashboard JS files scanned: 8 | Symbols indexed: 5179**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -2369,7 +2369,10 @@
 | `integrations/vm/nginx_config_review.py` | `_repair_line` | 70 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `integrations/vm/nginx_config_review.py` | `local_nginx_review` | 86 | function | Bounded local-only deterministic preview. Never expose original bytes. | module |
 | `integrations/vm/runtime_discovery.py` | `safe_absolute_path` | 19 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `integrations/vm/runtime_discovery.py` | `parse_systemd_runtime` | 28 | function | Extract only allowlisted non-secret fields; no ExecStart/env value returned. | module |
+| `integrations/vm/runtime_discovery.py` | `_candidate_path` | 33 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `integrations/vm/runtime_discovery.py` | `systemd_config_candidates` | 37 | function | Unit-sourced path hypotheses; neither presence nor validity implied. | module |
+| `integrations/vm/runtime_discovery.py` | `systemd_config_candidates.add` | 40 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | systemd_config_candidates |
+| `integrations/vm/runtime_discovery.py` | `parse_systemd_runtime` | 65 | function | Extract only allowlisted non-secret fields; no ExecStart/env value returned. | module |
 | `integrations/vm/service_adapters.py` | `ServiceDiagnosticAdapter` | 10 | class | Fixed, allowlisted service-specific diagnostic commands. | module |
 | `integrations/vm/service_adapters.py` | `get_service_adapter` | 56 | function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
 | `integrations/vm/service_adapters.py` | `_absolute_config_path` | 76 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
