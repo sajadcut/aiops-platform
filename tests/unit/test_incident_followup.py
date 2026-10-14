@@ -64,7 +64,7 @@ def test_reanalysis_only_on_terminal_no_action_checkpoint_without_approval():
     assert may_reassess({**safe, "status": "paused"}) is False
     assert may_reassess({**safe, "status": "running"}) is False
     assert may_reassess({"status": "completed", "state": {"approval": {"approval_id": "a"}}}) is False
-    assert may_reassess({"status": "completed", "state": {"execution_request": {"action": "restart"}}}) is False
+    assert may_reassess({"status": "completed", "state": {"execution_request": {"action": "restart"}}}) is True  # denied/unapproved plan
     assert may_reassess(safe, "approved") is False
     assert may_reassess(safe, "consumed") is False
     assert may_reassess(safe, "rejected") is True
