@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 495 | Dashboard JS files scanned: 8 | Symbols indexed: 5167**
+**Python files scanned: 495 | Dashboard JS files scanned: 8 | Symbols indexed: 5168**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -4326,6 +4326,7 @@
 | `tests/unit/test_nginx_config_review.py` | `test_failed_nginx_candidate_reaches_report_but_never_becomes_approval.Model` | 202 | class | کلاس | test_failed_nginx_candidate_reaches_report_but_never_becomes_approval |
 | `tests/unit/test_nginx_config_review.py` | `test_failed_nginx_candidate_reaches_report_but_never_becomes_approval.Model.generate_with_messages` | 203 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_failed_nginx_candidate_reaches_report_but_never_becomes_approval.Model |
 | `tests/unit/test_nginx_config_review.py` | `test_nginx_stage_blocker_is_prominent_in_operator_diagnosis_script` | 256 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_nginx_config_review.py` | `test_nginx_repair_entrypoint_is_visible_near_incident_and_never_applies_unvalidated_patch` | 269 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_oidc_auth.py` | `test_oidc_claims_map_to_identity` | 6 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_oidc_auth.py` | `test_oidc_rejects_wrong_issuer` | 18 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_operational_agents.py` | `StaticLLM` | 15 | class | کلاس | module |
