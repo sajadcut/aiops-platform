@@ -215,7 +215,28 @@ def main() -> None:
         assert page.locator("#ic-ai-proposed-fix #ic-proposed-fix").is_visible()
         assert not writes, f"Opening config proposal executed an unexpected write: {writes}"
         assert not errors, f"Chromium page errors: {errors}"
-        print("PASS: SRE evidence and nginx config review visibility; unsafe file-apply disabled")
+        # Third fixture: the user's actual screenshot had a failed nginx
+        # validator but NO candidate. A deliberate read-only MCP preview
+        # action must still be discoverable without executing on page load.
+        missing = deepcopy(next_brief)
+        missing["snapshot_id"] = "nginx-no-candidate-yet"
+        missing["dynamic_investigation"]["config_proposal"] = {
+            "status": "needs_read_only_config",
+            "config_file": "/etc/nginx/nginx.conf", "error_line": 103,
+            "validation_status": "UNVERIFIED", "stage_failure_reason": "not_recorded",
+            "execution_authority": False, "apply_eligible": False,
+        }
+        brief_state["current"] = missing
+        page.reload()
+        banner = page.locator("#ic-config-action-banner")
+        banner.wait_for(state="visible", timeout=15000)
+        assert banner.locator("button[data-config-preview='nginx']").is_enabled()
+        assert banner.locator("button[data-config-intent='request_isolated_validation']").count() == 0
+        assert "ساخت پیش‌نمایش اصلاح" in banner.inner_text()
+        assert "اعمال اصلاح روی سرور — غیرفعال" in banner.inner_text()
+        assert not writes, "Rendering missing candidate unexpectedly initiated a write"
+        assert not errors, f"Chromium page errors: {errors}"
+        print("PASS: SRE evidence, missing-candidate diagnostic, safe preview CTA and no automatic apply")
         browser.close()
 
 
