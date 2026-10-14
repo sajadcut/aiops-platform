@@ -359,13 +359,18 @@ class SignalAwareE2EOrchestrator(E2EOrchestrator):
             )
             if self.progress_emitter:
                 await self.progress_emitter(state.get("incident_id"), "investigation", "completed")
-        elif str(state.get("service_name") or "").lower().removesuffix(".service") == "nginx":
-            # A deterministic, non-LLM config preview is a safety-critical
-            # diagnostic, not an optional speculative investigation. The
-            # collector already read the failed validator and safe MCP
-            # candidate; expose it even when the LLM experiment is off.
+        else:
+            # Deterministic evidence-bound discovery and repair advisory must
+            # remain available for EVERY service even when optional multi-round
+            # LLM-driven investigation is disabled. No execution or new files.
             current_evidence = (state.get("context") or {}).get("evidence") or []
-            if DynamicInvestigationPlanner.confirmed_config_failure(current_evidence):
+            relevant = {"config_validate", "service_runtime_discovery",
+                        "service_config_discovery", "dotnet_config_syntax"}
+            if any(
+                isinstance(item, dict) and item.get("source") == "vm_mcp"
+                and (item.get("raw_data") or {}).get("diagnostic") in relevant
+                for item in current_evidence
+            ):
                 state.setdefault("context", {})["dynamic_investigation"] = (
                     await DynamicInvestigationPlanner.propose(state, adapter=None)
                 )
@@ -403,6 +408,15 @@ class SignalAwareE2EOrchestrator(E2EOrchestrator):
                 unknowns=unknowns, adapter=self.llm,
             )
             context["unknown_guidance"] = guidance
+            proposal = context.get("dynamic_investigation")
+            if isinstance(proposal, dict):
+                proposal["llm_unknown_guidance"] = {
+                    "status": guidance.get("status", "unavailable"),
+                    "items": list(guidance.get("items") or [])[:5],
+                    "execution_authority": False,
+                }
+                if isinstance(proposal.get("config_discovery"), dict):
+                    proposal["config_discovery"]["llm_guidance_status"] = guidance.get("status", "unavailable")
             self._audit(
                 "operational_unknown_guidance_consulted",
                 state,
