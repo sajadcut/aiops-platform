@@ -44,7 +44,7 @@
     const canRefresh = ['submitted', 'published'].includes(r.status);
     box.innerHTML = `
       <div class="knowledge-facts">
-        <div><label>Source</label><strong>${esc(r.source_type === 'incident' ? 'Verified Incident' : 'Manual Knowledge')}</strong></div>
+        <div><label>Source</label><strong>${esc(r.source_type === 'incident' ? 'رخداد بازیابی‌شده و تأییدشده' : r.source_type === 'incident_followup' ? 'بررسی تکمیلی رخداد (نیازمند بازبینی)' : 'دانش دستی')}</strong></div>
         <div><label>Destination</label><strong>Cognia KB #${esc(r.kb_id)}</strong></div>
         <div><label>Revision</label><strong>${esc(r.revision)}</strong></div>
         <div><label>Reviewer</label><strong>${esc(r.reviewed_by || 'Pending Review')}</strong></div>
