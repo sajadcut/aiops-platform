@@ -1452,6 +1452,9 @@
         (severity?'؛ شدت برآوردی این مرحله: '+status(severity):'')+
         (/no customer impact.*evidenced/i.test(x)?'؛ شواهد کافی از اثر بر مشتری ثبت نشده است':'')+'.';
     }
+    if(/\bvalid\s*=\s*true\b/i.test(x) &&
+       low((state.historic||state.report)?.configuration_diagnostic?.status)==='invalid')
+      return 'ایجنت مقدار valid=true را ثبت کرده، اما این مقدار تأیید سلامت فایل خطادار نیست؛ آزمون اختصاصی کانفیگ نامعتبر گزارش شده است.';
     if(/(?:manual stop possible|manual(?:ly)? stop(?:ped)?(?: service)? is possible|A manual stop is possible but not proven)/i.test(x))
       return 'توقف دستی سرویس یک فرضیه است؛ عامل توقف و عمدی‌بودن آن هنوز تأیید نشده است.';
     if(/no confirmed domain fault yet/i.test(x))return 'با شواهد فعلی خرابی مستقلی در این حوزه تأیید نشده است.';
@@ -1701,7 +1704,13 @@
         txt(humanTool(x.server))+' / '+txt(humanTool(x.tool))+'</h4>'+
         (label?'<strong class="ic-semantic-diagnostic" data-invalid="'+(semantic==='configuration_invalid')+'">'+
           esc(label)+'</strong>':pill(x.status))+'</div>'+
-        '<p>'+txt(plain(x.finding))+'</p>'+original(x.finding)+
+        '<p>'+txt(semantic==='configuration_invalid'?
+          (fa?'تست اختصاصی کانفیگ خطای سینتکس را تأیید کرده است؛ جزئیات فایل و خط در نتیجهٔ اصلی همین رخداد آمده است.':
+            'The specialized configuration validator recorded a syntax failure.'):
+          semantic==='configuration_valid_syntax_only'?
+          (fa?'این تست فقط ساختار JSON فایل بررسی‌شده را معتبر دانسته، نه سلامت سرویس را.':
+            'This validates only the checked JSON file syntax, not service health.'):
+          plain(x.finding))+'</p>'+original(x.finding)+
         (label?'<p class="ic-agent-disclaimer">'+esc(fa?
           'موفق بودن فراخوانی MCP، سالم بودن تنظیمات سرویس را ثابت نمی‌کند.':
           'Tool call success is not evidence that application configuration is valid.')+'</p>':'')+
