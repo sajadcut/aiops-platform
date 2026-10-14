@@ -386,32 +386,78 @@ def _knowledge(state: dict, agents: list[dict], incident_service: str | None = N
         if not isinstance(doc, dict):
             continue
         source_id = safe(doc.get("source_id") or doc.get("id"), 200)
+        # A Cognia semantic hit is a document, not automatically a successful
+        # historical incident. Only an explicit published incident marker
+        # justifies labeling it as a historical experience.
+        content = str(doc.get("content") or "")
+        fields = {}
+        allowed_fields = {
+            "type", "service", "incident reference",
+            "observed symptom pattern", "root cause status",
+            "root cause", "approved execution action (historical)",
+            "verification status", "outcome", "reusable lesson",
+        }
+        for line in content.splitlines()[:45]:
+            name, separator, value = line.partition(":")
+            key = name.strip().lower()
+            if separator and key in allowed_fields and value.strip():
+                fields[key] = safe(value.strip(), 240)
+        kind = ("historical_incident_experience"
+                if str(fields.get("type") or "").lower() == "verified incident experience"
+                and fields.get("incident reference") else "knowledge_document")
+        metadata = obj(doc.get("metadata"))
+        declared_service = (fields.get("service") or
+                            safe(metadata.get("service") or metadata.get("service_name"), 100))
         entries.append({
             "source_id": source_id,
             "knowledge_base_id": safe(doc.get("knowledge_base_id"), 90),
             "knowledge_id": safe(doc.get("knowledge_id"), 90),
             "revision_id": safe(doc.get("revision_id"), 90),
             "relevance": numeric(doc.get("relevance")),
-            "excerpt": safe(doc.get("content"), 450),
+            "excerpt": safe(doc.get("content"), 650),
             "retrieved_at": safe(doc.get("retrieved_at"), 55),
             "title": safe(doc.get("title") or doc.get("knowledge_title"), 180),
             "chunk_id": safe(doc.get("chunk_id"), 100),
             "knowledge_type": safe(doc.get("knowledge_type"), 80),
-            "previous_outcome": safe(doc.get("previous_outcome"), 140),
+            "document_kind": kind,
+            "document_service": declared_service,
+            "previous_incident_id": fields.get("incident reference") if kind == "historical_incident_experience" else None,
+            "symptom_pattern": fields.get("observed symptom pattern") if kind == "historical_incident_experience" else None,
+            "root_cause_status": fields.get("root cause status") if kind == "historical_incident_experience" else None,
+            "historical_action": fields.get("approved execution action (historical)") if kind == "historical_incident_experience" else None,
+            "verification_status": fields.get("verification status") if kind == "historical_incident_experience" else None,
+            "historical_outcome": fields.get("outcome") if kind == "historical_incident_experience" else None,
+            "reusable_lesson": fields.get("reusable lesson") if kind == "historical_incident_experience" else None,
             "conditions": safe(doc.get("conditions"), 240),
             "use_status": "cited_by_agent" if source_id and source_id in cited else "not_verified",
+            "decision_impact": "not_traced",
         })
     status = str(retrieval.get("status") or "not_queried").lower()
     if status not in {"available", "empty", "not_queried", "filtered_empty"}:
         status = "failed"
-    if status == "available" and not documents and relevance["rejected_count"]:
-        status = "filtered_empty"
+    # The final state can already be filtered by ContextBuilder/SignalAware.
+    # Preserve that provenance: zero accepted is not the same as zero returned.
+    upstream = obj(retrieval.get("merged_relevance") or retrieval.get("relevance"))
+    rejected_count = max(
+        int(relevance.get("rejected_count") or 0),
+        int(upstream.get("rejected_count") or 0),
+    )
+    if status in {"available", "empty", "filtered_empty"}:
+        status = ("available" if entries else
+                  "filtered_empty" if rejected_count else "empty")
     return {
         "status": status,
         "retrieved_count": len(raw_documents),
-        "accepted_count": len(documents),
-        "rejected_count": relevance["rejected_count"],
+        "accepted_count": len(entries),
+        "rejected_count": rejected_count,
         "relevance": relevance,
+        "rejected_examples": [
+            {"source_id": safe(x.get("source_id"), 160),
+             "reason": safe(x.get("reason"), 120),
+             "declared_services": [safe(name, 90) for name in arr(x.get("declared_services"))[:5]]}
+            for x in arr(upstream.get("rejected") or relevance.get("rejected"))[:6]
+            if isinstance(x, dict)
+        ],
         "use_status": "cited_by_agent" if any(d["use_status"] == "cited_by_agent" for d in entries) else "not_verified",
         "items": entries,
         "error_code": safe(retrieval.get("code"), 100),
