@@ -2311,7 +2311,7 @@
     const reason=code==='permission_denied'?
       (fa?'علت شکست تست: محدودیت مجوز دسترسی (permission_denied).':
            'Staged validation was blocked by permissions (permission_denied).'):
-      code&&code!=='none'&&code!=='not_tested'?
+      code&& !['none','not_tested','not_recorded'].includes(code)?
       (fa?'علت/کد نتیجه: ':'Reason code: ')+code:'';
     const responded=state.configResponse?.status&&state.configResponse.status!=='not_responded';
     const ready=Boolean(candidate && config.original_sha256 && config.candidate_sha256 &&
@@ -2388,10 +2388,13 @@
       (config.stage_failure_reason?'<p>'+esc(fa?'کد علت شکست/وضعیت تست: ':'Staging reason code: ')+
         txt(config.stage_failure_reason)+'</p>':'')+
       '<p>'+txt(config.test_scope||'not_tested')+'</p>'+
-      '<p class="ic-agent-disclaimer">'+esc(fa?
-        'اجرای nginx -t روی کپی موقت می‌تواند Includeهای زنده را بخواند؛ پس تست ایزوله نیست و مجوز اعمال تولید نمی‌کند.':
-        'nginx -t on a temporary copy may access live includes. It is not isolated validation or production execution approval.')+
-      '</p></article>';
+      '<p class="ic-agent-disclaimer">'+esc(
+        config.test_scope==='worker_preview_unvalidated'?
+          (fa?'پیشنهاد فقط در حافظهٔ AIOps ساخته شده است؛ هیچ فایل روی سرور تغییر نکرده و nginx -t برای نسخهٔ پیشنهادی اجرا نشده است. بدون اعتبارسنجی مستقل، اعمال مجاز نیست.':
+          'Only an in-memory AIOps preview exists. No target file was changed and the candidate has not passed nginx -t. Independent validation is still required.'):
+          (fa?'تست کپی موقت ممکن است Includeهای زنده را بخواند و اعتبارسنجی ایزوله نیست؛ مجوز اعمال صادر نمی‌شود.':
+          'Temporary staging may access live includes. It is not isolated validation and does not authorize Apply.')
+      )+'</p></article>';
     const candidate=config.status==='candidate_proposed'&&config.candidate_sha256&&config.original_sha256;
     if(candidate){
       const answered=state.configResponse?.status&&state.configResponse.status!=='not_responded';
