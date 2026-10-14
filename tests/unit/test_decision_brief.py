@@ -564,3 +564,124 @@ def test_unowned_cognia_item_is_not_reported_as_verified():
     assert report["items"] == []
     assert report["retrieved_count"] == 1
     assert report["rejected_count"] == 1
+
+
+def test_empty_cognia_has_no_retrieved_or_accepted_results():
+    knowledge = make_brief(state={"knowledge_status": {"status": "empty"}})["cognia_knowledge"]
+    assert knowledge["status"] == "empty"
+    assert knowledge["retrieved_count"] == 0
+    assert knowledge["accepted_count"] == 0
+    assert knowledge["items"] == []
+    assert knowledge["use_status"] == "not_verified"
+
+
+def test_cognia_rejected_nginx_is_not_a_matching_gfpapi_experience():
+    state = {
+        "knowledge_status": {
+            "status": "filtered_empty",
+            "relevance": {
+                "rejected_count": 1,
+                "rejected": [{
+                    "source_id": "cognia:1:11:12:13",
+                    "reason": "document_service_conflicts_with_incident",
+                    "declared_services": ["nginx"],
+                }],
+            },
+        },
+        "knowledge_results": [],
+    }
+    from apps.decision_brief import _knowledge
+    knowledge = _knowledge(state, [], incident_service="gfpapi")
+    assert knowledge["status"] == "filtered_empty"
+    assert knowledge["accepted_count"] == 0
+    assert knowledge["rejected_count"] == 1
+    assert knowledge["rejected_examples"][0]["declared_services"] == ["nginx"]
+    assert knowledge["items"] == []
+
+
+def test_generic_cognia_document_is_not_labeled_verified_incident_experience():
+    from apps.decision_brief import _knowledge
+    state = {
+        "knowledge_status": {"status": "available"},
+        "knowledge_results": [{
+            "source_id": "cognia:1:2:3:4", "knowledge_base_id": 1,
+            "knowledge_id": 2, "revision_id": 3, "chunk_id": 4,
+            "relevance": 0.87, "retrieved_at": NOW.isoformat(),
+            "content": "Service: gfpapi\nTroubleshooting systemd timeout",
+        }],
+    }
+    knowledge = _knowledge(state, [], incident_service="gfpapi")
+    assert knowledge["accepted_count"] == 1
+    assert knowledge["items"][0]["document_kind"] == "knowledge_document"
+    assert knowledge["items"][0]["document_service"] == "gfpapi"
+    assert knowledge["items"][0]["title"] is None
+    assert knowledge["items"][0]["decision_impact"] == "not_traced"
+    assert knowledge["items"][0]["use_status"] == "not_verified"
+
+
+def test_verified_prior_incident_displays_exact_record_and_agent_citation_not_decision_use():
+    from apps.decision_brief import _knowledge
+    source = "cognia:1:116:127:2500"
+    state = {
+        "knowledge_status": {"status": "available"},
+        "knowledge_results": [{
+            "source_id": source, "knowledge_base_id": 1, "knowledge_id": 116,
+            "revision_id": 127, "chunk_id": 2500, "relevance": 0.44,
+            "content": (
+                "Type: Verified Incident Experience\n"
+                "Service: gfpapi\n"
+                "Incident reference: incident-old-1\n"
+                "Observed symptom pattern: .NET startup timeout\n"
+                "Root cause status: unconfirmed\n"
+                "Approved execution action (historical): start_service\n"
+                "Verification status: success\n"
+                "Outcome: recovered\n"
+                "Reusable lesson: inspect appsettings before restart"
+            ),
+        }],
+    }
+    agents = [{"knowledge_source_ids": [source]}]
+    knowledge = _knowledge(state, agents, incident_service="gfpapi")
+    row = knowledge["items"][0]
+    assert row["document_kind"] == "historical_incident_experience"
+    assert row["previous_incident_id"] == "incident-old-1"
+    assert row["symptom_pattern"] == ".NET startup timeout"
+    assert row["root_cause_status"] == "unconfirmed"
+    assert row["historical_action"] == "start_service"
+    assert row["verification_status"] == "success"
+    assert row["historical_outcome"] == "recovered"
+    assert row["reusable_lesson"] == "inspect appsettings before restart"
+    assert row["use_status"] == "cited_by_agent"
+    assert row["decision_impact"] == "not_traced"
+
+
+def test_cognia_empty_status_does_not_hide_admitted_matching_record():
+    from apps.decision_brief import _knowledge
+    state = {
+        "knowledge_status": {"status": "empty"},
+        "knowledge_results": [{
+            "source_id": "cognia:1:30:31:32",
+            "content": "Service: gfpapi\nTroubleshooting known startup issue",
+        }],
+    }
+    report = _knowledge(state, [], incident_service="gfpapi")
+    assert report["status"] == "available"
+    assert report["accepted_count"] == 1
+
+
+def test_cognia_retrieved_foreign_service_is_dropped_even_with_high_similarity():
+    from apps.decision_brief import _knowledge
+    state = {
+        "knowledge_status": {"status": "available"},
+        "knowledge_results": [{
+            "source_id": "cognia:1:1:1:1",
+            "relevance": 0.99,
+            "content": "Service: nginx\nSystemd restart",
+        }],
+    }
+    report = _knowledge(state, [], incident_service="gfpapi")
+    assert report["status"] == "filtered_empty"
+    assert report["retrieved_count"] == 1
+    assert report["accepted_count"] == 0
+    assert report["rejected_count"] == 1
+    assert report["rejected_examples"][0]["declared_services"] == ["nginx"]
