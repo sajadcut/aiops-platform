@@ -26,7 +26,7 @@ class EvidenceCollector:
         "service_status", "service_logs", "system_logs", "process_snapshot",
         "process_status", "tcp_check", "port_listener_status", "dns_check",
         "route_check", "firewall_status", "config_validate", "nginx_config_review", "nginx_config_inspect",
-        "service_runtime_discovery", "dotnet_config_syntax",
+        "service_runtime_discovery", "service_config_discovery", "dotnet_config_syntax",
     }
 
     def __init__(self, zabbix=None, elasticsearch=None, prometheus=None, vm=None, kubernetes=None):
@@ -168,6 +168,8 @@ class EvidenceCollector:
                 add("nginx_config_review")
             if service and "nginx config inspect" in text:
                 add("nginx_config_inspect")
+            if service and any(token in text for token in ("config discovery", "find config", "configuration location", "config inventory", "tomcat config", "java config")):
+                add("service_config_discovery")
             if service and any(token in text for token in ("runtime discovery", "systemd unit", "publish directory", "execstart")):
                 add("service_runtime_discovery")
             if service and any(token in text for token in ("dotnet json", ".net json", "appsettings", "json syntax")):
@@ -491,7 +493,7 @@ class EvidenceCollector:
                     evidence.append(self._observation("vm_mcp", f"vm-skipped:{vm_target}:{action}:{since.isoformat()}", status="skipped", service=effective_service, detail="diagnostic_not_supported"))
                     continue
                 try:
-                    if action in {"service_status", "service_logs", "config_validate", "nginx_config_review", "nginx_config_inspect", "service_runtime_discovery", "dotnet_config_syntax"}:
+                    if action in {"service_status", "service_logs", "config_validate", "nginx_config_review", "nginx_config_inspect", "service_runtime_discovery", "service_config_discovery", "dotnet_config_syntax"}:
                         result = await method(vm_target, effective_service)
                     elif action == "process_status":
                         result = await method(vm_target, effective_service)
@@ -538,11 +540,23 @@ class EvidenceCollector:
                         ):
                             actions.append("service_runtime_discovery")
                         if (
+                            action == "config_validate"
+                            and (result.get("supported") is False or result.get("valid") is None)
+                            and "service_config_discovery" not in actions
+                        ):
+                            actions.append("service_config_discovery")
+                        if (
                             action == "service_runtime_discovery"
                             and result.get("runtime") == "dotnet"
                             and "dotnet_config_syntax" not in actions
                         ):
                             actions.append("dotnet_config_syntax")
+                        if (
+                            action == "service_runtime_discovery"
+                            and result.get("runtime") != "dotnet"
+                            and "service_config_discovery" not in actions
+                        ):
+                            actions.append("service_config_discovery")
                         # Disk-pressure drill-down only after current host evidence
                         # confirms a filesystem or inode is near capacity.
                         # This avoids expensive file-tree scans for every alert.
