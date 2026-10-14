@@ -142,3 +142,41 @@ def test_haproxy_vendor_validation_is_not_faked_by_file_read():
 def test_incident_chat_supports_general_config_discovery_and_review():
     assert fallback_intent("service_config_discovery: فایل کانفیگ همین سرویس را پیدا کن") == "service_config_discovery"
     assert fallback_intent("service_config_review: فایل کانفیگ این سرویس را بررسی کن") == "service_config_review"
+
+
+@pytest.mark.asyncio
+async def test_llm_research_is_required_for_unknown_config_but_cannot_verify_a_guess(monkeypatch):
+    from types import SimpleNamespace
+    from apps.context_service.llm_identity import consult_operational_unknowns
+    from domain.contracts.config import settings
+
+    monkeypatch.setattr(settings, "LLM_PROVIDER", "openai-compatible")
+    monkeypatch.setattr(settings, "LLM_BASE_URL", "https://llm.invalid/v1")
+    monkeypatch.setattr(settings, "LLM_MODEL", "example-model")
+    gap = {
+        "topic": "service_configuration_discovery", "subject": "custom-tomcat",
+        "reason": "Unit-derived path not confirmed", "evidence_refs": ["vm:unit:1"],
+    }
+
+    class LLM:
+        async def generate_with_messages(self, messages, **kwargs):
+            assert kwargs["stage"] == "operational_unknown_guidance"
+            assert "service_config_discovery" in messages[0]["content"]
+            assert "Unit-derived path not confirmed" in messages[1]["content"]
+            return SimpleNamespace(
+                content=json.dumps({"items": [{
+                    "topic": gap["topic"], "subject": gap["subject"],
+                    "explanation": "Tomcat usually resolves Catalina base/conf/server.xml",
+                    "validation_approach": "Check registered read-only service_config_discovery and vendor docs",
+                    "uncertainty": "Path presence and effective config not confirmed",
+                }]}),
+                finish_reason="stop",
+            )
+
+    result = await consult_operational_unknowns(unknowns=[gap], adapter=LLM())
+    assert result["status"] == "suggested"
+    assert result["items"][0]["verified"] is False
+    assert result["items"][0]["source"] == "llm_advisory"
+    assert result["execution_authority"] is False
+    assert result["counts_as_evidence"] is False
+    assert result["config_validation_passed"] is False
