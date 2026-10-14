@@ -345,7 +345,7 @@
     const explanation=r.operator_explanation||{};
     const config=r.configuration_diagnostic||{};
     const situation=low(config.status)==='invalid'?
-      'بررسی معتبر کانفیگ خطای ساختار JSON را در '+safe(config.config_file||'فایل تنظیمات')+
+      'بررسی معتبر کانفیگ خطای سینتکس را در '+safe(config.config_file||'فایل تنظیمات')+
       (Number.isInteger(config.error_line)?'، خط '+num(config.error_line):'')+
       ' ثبت کرده است. تا اصلاح و تست مجدد، Start پیشنهاد نمی‌شود.':
       explanation.headline_fa?
@@ -1132,8 +1132,12 @@
     const path=safe(config.config_file||'');
     const loc=path+(Number.isInteger(config.error_line)?' · '+(fa?'خط ':'line ')+num(config.error_line):'')+
       (Number.isInteger(config.error_column)?' · '+(fa?'ستون ':'column ')+num(config.error_column):'');
+    const jsonConfig=low(config.path_source)==='dotnet_config_syntax' ||
+      /\.json$/i.test(path);
     const main=invalid?
-      (fa?'خطای ساختار JSON در کانفیگ '+service+' تأیید شده است.':'Invalid JSON configuration was verified for '+service+'.'):
+      (jsonConfig?
+        (fa?'خطای ساختار JSON در کانفیگ '+service+' تأیید شده است.':'Invalid JSON configuration was verified for '+service+'.'):
+        (fa?'خطای سینتکس کانفیگ '+service+' تأیید شده است.':'Invalid configuration syntax was verified for '+service+'.')):
       op.headline_fa||'';
     const validatorNote=config.remote_python_required===false &&
       config.validator_location==='aiops_worker'?
