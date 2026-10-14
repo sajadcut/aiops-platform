@@ -192,6 +192,9 @@ async def test_actual_chat_cognia_conflict_reaches_mcp_for_status_and_restart(mo
                     "result": "timeout"}
     monkeypatch.setattr(identity_module, "VMEdgeMCPClient", lambda: VM())
     monkeypatch.setattr(api, "AsyncSessionLocal", DB)
+    async def isolated_followup(*args, **kwargs):
+        return {"status": "isolated_test_no_database", "reassessed": False}
+    monkeypatch.setattr(api, "persist_and_reassess", isolated_followup)
     monkeypatch.setattr(api, "_scope", scope)
     monkeypatch.setattr(api, "PostgreSQLAuditStore", Audit)
     monkeypatch.setattr(api, "load_decision_brief_for_incident", brief)
