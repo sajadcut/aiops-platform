@@ -209,3 +209,22 @@
 .ic-chat-form .ic-btn{justify-self:start;min-width:140px}
 .ic-chat-caption{font-size:12px;color:var(--muted);margin:10px 0 0}
 @media(max-width:650px){.ic-chat-bubble{max-width:100%}.ic-chat-quick{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.ic-chat-quick .ic-btn{padding:8px;white-space:normal}.ic-chat-action .ic-btn{width:100%}}
+
+/* Dedicated last-observed service state: deliberately separate from incident and Approval. */
+.ic-service-health{position:relative;margin-top:22px;border:1px solid var(--line);background:var(--bg2);border-radius:16px;padding:18px 22px;min-height:124px}
+.ic-service-health[data-state="running"]{border-color:color-mix(in srgb,var(--green) 45%,var(--line))}
+.ic-service-health[data-state="stopped"]{border-color:color-mix(in srgb,var(--red) 60%,var(--line))}
+.ic-service-health[data-state="unknown"],.ic-service-health[data-state="transitioning"]{border-color:color-mix(in srgb,var(--amber) 40%,var(--line))}
+.ic-service-health-top{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+.ic-service-health-top strong{font-size:15px}
+.ic-service-health-state{font-size:22px;font-weight:850;line-height:1.35;display:inline-flex;align-items:center;gap:8px}
+.ic-service-health-state[data-tone="ok"]{color:var(--green)}
+.ic-service-health-state[data-tone="danger"]{color:var(--red)}
+.ic-service-health-state[data-tone="warn"]{color:var(--amber)}
+.ic-service-health-detail{display:flex;align-items:center;gap:8px 20px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:9px}
+.ic-service-health-note{font-size:12px;color:var(--muted);margin:9px 0 0;line-height:1.85}
+.ic-service-health-conflict{margin:10px 0 0;padding:9px 12px;border-inline-start:3px solid var(--amber);background:color-mix(in srgb,var(--amber) 7%,var(--surface));border-radius:8px;font-size:12px}
+.ic-service-health-action{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:12px}
+.ic-service-health-action .ic-btn{min-height:44px}
+.ic-service-health-wait{color:var(--muted);font-size:13px}
+@media(max-width:650px){.ic-service-health{padding:16px}.ic-service-health-state{font-size:20px}.ic-service-health-action .ic-btn{width:100%}}
