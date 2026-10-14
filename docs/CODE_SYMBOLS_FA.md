@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 497 | Dashboard JS files scanned: 8 | Symbols indexed: 5212**
+**Python files scanned: 497 | Dashboard JS files scanned: 8 | Symbols indexed: 5213**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -4967,6 +4967,7 @@
 | `tests/unit/test_universal_service_config_discovery.py` | `test_generic_review_uses_only_verified_file_and_never_returns_ssh_raw_content.validate` | 252 | async method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | test_generic_review_uses_only_verified_file_and_never_returns_ssh_raw_content |
 | `tests/unit/test_universal_service_config_discovery.py` | `test_generic_review_uses_only_verified_file_and_never_returns_ssh_raw_content.discovery` | 254 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_generic_review_uses_only_verified_file_and_never_returns_ssh_raw_content |
 | `tests/unit/test_universal_service_config_discovery.py` | `test_generic_review_uses_only_verified_file_and_never_returns_ssh_raw_content.read` | 260 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_generic_review_uses_only_verified_file_and_never_returns_ssh_raw_content |
+| `tests/unit/test_universal_service_config_discovery.py` | `test_unknown_config_search_asks_cognia_for_vendor_procedure_not_secret_bytes` | 279 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_upstream_mcp_contracts.py` | `test_prometheus_adapter_uses_upstream_tool_names` | 8 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_upstream_mcp_contracts.py` | `test_elastic_adapter_uses_agent_builder_only` | 20 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_upstream_mcp_contracts.py` | `test_elastic_agent_builder_config_is_canonical` | 35 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
