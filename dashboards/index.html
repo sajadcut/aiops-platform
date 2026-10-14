@@ -107,7 +107,7 @@
 
     <section class="view" data-view="incidents">
       <div class="view-toolbar">
-        <div class="filter-group"><input id="incidentSearch" placeholder="Search incidents, services or targets" oninput="renderIncidents()"><select id="severityFilter" onchange="renderIncidents()"><option value="">All severities</option><option value="critical">Critical</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select><select id="statusFilter" onchange="renderIncidents()"><option value="__active__">فقط رخدادهای فعال</option><option value="" selected>همه رخدادها</option><option value="open">Open</option><option value="analyzing">Analyzing</option><option value="escalated">Escalated</option><option value="resolved">Resolved</option><option value="closed">Closed</option></select></div>
+        <div class="filter-group"><input id="incidentSearch" placeholder="جست‌وجوی رخداد، سرویس یا مقصد" oninput="renderIncidents()"><select id="severityFilter" onchange="renderIncidents()"><option value="">همه شدت‌ها</option><option value="critical">بحرانی</option><option value="high">زیاد</option><option value="medium">متوسط</option><option value="low">کم</option></select><select id="statusFilter" onchange="renderIncidents()"><option value="__active__">فقط رخدادهای فعال</option><option value="" selected>همه رخدادها</option><option value="open">باز</option><option value="analyzing">در حال تحلیل</option><option value="escalated">ارجاع‌شده</option><option value="resolved">رفع‌شده</option><option value="closed">بسته‌شده</option></select></div>
         <div class="incident-display-toolbar" role="group" aria-label="مرتب‌سازی و شکل نمایش رخدادها">
           <label for="incidentPeriod">بازه نمایش:</label>
           <select id="incidentPeriod" aria-label="بازه نمایش رخدادها" onchange="setIncidentPeriod(this.value)">
@@ -132,57 +132,57 @@
         </div>
       </div>
       <section class="panel incident-queue-panel" aria-labelledby="incidentQueueTitle">
-        <div class="panel-head incident-queue-heading"><div><span class="section-kicker">فهرست رخدادهای ثبت‌شده</span><h2 id="incidentQueueTitle">رخدادها</h2><p>هر هشدار تا ۲۴ ساعت پس از دریافت در نمای روزانه نمایش داده می‌شود؛ سپس فقط از این نما کنار می‌رود و سوابق آن در آرشیو و Audit باقی می‌ماند.</p></div><span class="badge neutral">صفحه اختصاصی هر رخداد ↗</span></div>
+        <div class="panel-head incident-queue-heading"><div><span class="section-kicker">فهرست رخدادهای ثبت‌شده</span><h2 id="incidentQueueTitle">رخدادها</h2><p>هر هشدار تا ۲۴ ساعت پس از دریافت در نمای روزانه نمایش داده می‌شود؛ سپس فقط از این نما کنار می‌رود و سوابق آن در آرشیو و سوابق ممیزی باقی می‌ماند.</p></div><span class="badge neutral">صفحه اختصاصی هر رخداد ↗</span></div>
         <div id="incidentRows" class="incident-cards" data-size="medium"></div>
       </section>
       <div id="detail" hidden aria-hidden="true"></div>
     </section>
 
     <section class="view" data-view="services">
-      <div class="view-toolbar"><div class="filter-group"><input id="serviceSearch" placeholder="Search services" oninput="renderServices()"><select id="serviceRiskFilter" onchange="renderServices()"><option value="">All health states</option><option value="critical">Critical</option><option value="degraded">Degraded</option><option value="healthy">Healthy</option></select></div><span id="serviceCount" class="badge neutral">0 services</span></div>
+      <div class="view-toolbar"><div class="filter-group"><input id="serviceSearch" placeholder="جست‌وجوی سرویس‌ها" oninput="renderServices()"><select id="serviceRiskFilter" onchange="renderServices()"><option value="">همه وضعیت‌های سلامت</option><option value="critical">بحرانی</option><option value="degraded">دچار اختلال</option><option value="healthy">سالم</option></select></div><span id="serviceCount" class="badge neutral">۰ سرویس</span></div>
       <div id="serviceGrid" class="service-grid"></div>
     </section>
 
     <section class="view" data-view="agents">
-      <div class="policy-banner"><div><span class="section-kicker">Safety boundary</span><h2>Agents analyze and recommend; they never own write authority.</h2></div><div class="policy-chips"><span>Evidence-first</span><span>Specialist routing</span><span>Peer coordination</span><span>Evaluator gate</span><span>Policy-gated execution</span></div></div>
+      <div class="policy-banner"><div><span class="section-kicker">مرز ایمنی</span><h2>ایجنت‌ها تحلیل و پیشنهاد ارائه می‌کنند؛ اجازهٔ تغییر مستقیم ندارند.</h2></div><div class="policy-chips"><span>شواهد در اولویت</span><span>ارجاع به متخصص</span><span>هماهنگی ایجنت‌ها</span><span>کنترل ارزیاب</span><span>اجرای مشروط به سیاست‌ها</span></div></div>
       <div id="agentsGrid" class="agent-grid"></div>
     </section>
 
     <section class="view" data-view="mcp">
-      <div class="policy-banner"><div><span class="section-kicker">External boundaries</span><h2>Operational tools are MCP-mediated; Cognia remains a separate governed Knowledge API boundary.</h2></div><div class="policy-chips"><span>Zabbix MCP</span><span>Elastic Agent Builder MCP</span><span>Prometheus MCP</span><span>VM Edge MCP</span><span>Optional K8s/Jenkins MCP</span><span>Cognia Knowledge</span></div></div>
+      <div class="policy-banner"><div><span class="section-kicker">مرز سامانه‌های بیرونی</span><h2>ابزارهای عملیاتی از طریق MCP فراخوانی می‌شوند؛ کاگنیا فقط در مرز مستقل و کنترل‌شدهٔ دانش سازمانی قرار دارد.</h2></div><div class="policy-chips"><span>Zabbix MCP</span><span>Elastic Agent Builder MCP</span><span>Prometheus MCP</span><span>VM Edge MCP</span><span>MCP اختیاری کوبرنتیز و جنکینز</span><span>دانش کاگنیا</span></div></div>
       <div id="mcpGrid" class="mcp-grid"></div>
     </section>
 
     <section class="view" data-view="knowledge">
-      <div class="policy-banner"><div><span class="section-kicker">Cognia governed knowledge</span><h2>Knowledge Review</h2><p>Verified incident experiences and manual runbooks remain drafts until approved. Knowledge approval never authorizes operational execution.</p></div><div class="policy-chips"><span>Pending Review</span><span>Evidence first</span><span>Human approval</span><span>Cognia KB #1</span></div></div>
+      <div class="policy-banner"><div><span class="section-kicker">دانش سازمانی تحت نظارت کاگنیا</span><h2>بازبینی دانش</h2><p>تجربه‌های معتبر رخداد و راهنماهای دستی تا زمان تأیید، پیش‌نویس می‌مانند. تأیید دانش به معنی مجوز اجرای عملیات نیست.</p></div><div class="policy-chips"><span>در انتظار بازبینی</span><span>اولویت با شواهد</span><span>تأیید انسانی</span><span>پایگاه دانش کاگنیا شمارهٔ ۱</span></div></div>
       <div class="knowledge-layout">
         <section class="panel">
-          <div class="panel-head"><div><span class="section-kicker">Review queue</span><h2>Pending Knowledge <span id="knowledgePendingCount" class="pill">—</span></h2></div><button type="button" class="approval-btn" onclick="loadKnowledgeReviews()">Refresh</button></div>
-          <div class="knowledge-source"><label for="knowledgeMemoryId">Verified Operational Memory ID</label><div class="knowledge-inline"><input id="knowledgeMemoryId" placeholder="Memory UUID"><button type="button" onclick="createKnowledgeFromMemory()">Create draft</button></div></div>
-          <div id="knowledgeReviewQueue" class="knowledge-queue"><div class="empty-state">The review queue will load here.</div></div>
+          <div class="panel-head"><div><span class="section-kicker">صف بررسی</span><h2>دانش در انتظار بازبینی <span id="knowledgePendingCount" class="pill">—</span></h2></div><button type="button" class="approval-btn" onclick="loadKnowledgeReviews()">به‌روزرسانی</button></div>
+          <div class="knowledge-source"><label for="knowledgeMemoryId">شناسهٔ حافظهٔ عملیاتی تأییدشده</label><div class="knowledge-inline"><input id="knowledgeMemoryId" placeholder="شناسهٔ حافظه (UUID)"><button type="button" onclick="createKnowledgeFromMemory()">ساخت پیش‌نویس</button></div></div>
+          <div id="knowledgeReviewQueue" class="knowledge-queue"><div class="empty-state">صف بازبینی در این بخش نمایش داده می‌شود.</div></div>
         </section>
         <section class="panel knowledge-editor">
-          <div class="panel-head"><div><span class="section-kicker">Human approval boundary</span><h2 id="knowledgeReviewHeading">Select a candidate</h2></div><span class="pill amber" id="knowledgeReviewStatus">No selection</span></div>
-          <div id="knowledgeReviewDetails" class="knowledge-review-details"><div class="empty-state">Select a draft and review its source, evidence and exact content.</div></div>
+          <div class="panel-head"><div><span class="section-kicker">مرز تأیید انسانی</span><h2 id="knowledgeReviewHeading">یک مورد را انتخاب کنید</h2></div><span class="pill amber" id="knowledgeReviewStatus">موردی انتخاب نشده</span></div>
+          <div id="knowledgeReviewDetails" class="knowledge-review-details"><div class="empty-state">یک پیش‌نویس انتخاب کنید و منبع، شواهد و محتوای دقیق آن را بررسی کنید.</div></div>
           <div class="knowledge-manual">
-            <h3>Manual Knowledge / Runbook</h3><p class="muted">Creates a draft only. Human approval is required to publish.</p>
-            <label for="knowledgeManualTitle">Title</label><input id="knowledgeManualTitle" maxlength="500" placeholder="Runbook title">
-            <label for="knowledgeManualContent">Knowledge</label><textarea id="knowledgeManualContent" rows="4" maxlength="1048576" placeholder="Validated operational knowledge"></textarea>
-            <button type="button" onclick="createManualKnowledgeDraft()">Create manual draft</button>
+            <h3>دانش دستی / راهنمای عملیاتی</h3><p class="muted">فقط یک پیش‌نویس ساخته می‌شود؛ انتشار آن نیاز به تأیید انسانی دارد.</p>
+            <label for="knowledgeManualTitle">عنوان</label><input id="knowledgeManualTitle" maxlength="500" placeholder="عنوان راهنمای عملیاتی">
+            <label for="knowledgeManualContent">محتوا</label><textarea id="knowledgeManualContent" rows="4" maxlength="1048576" placeholder="دانش عملیاتی اعتبارسنجی‌شده"></textarea>
+            <button type="button" onclick="createManualKnowledgeDraft()">ساخت پیش‌نویس دستی</button>
           </div>
         </section>
       </div>
     </section>
 
     <section class="view" data-view="audit">
-      <div class="audit-layout"><section class="panel"><div class="panel-head"><div><span class="section-kicker">Durable history</span><h2>Audit Timeline</h2></div><span class="badge neutral">PostgreSQL</span></div><div id="auditList" class="timeline"></div></section><aside class="panel governance-panel"><div class="panel-head"><div><span class="section-kicker">Invariants</span><h2>Governance Controls</h2></div></div><div class="governance-list">
-        <div><span>01</span><p><b>LLM is not authority</b><small>Policy and human approval authorize operational writes.</small></p></div>
-        <div><span>02</span><p><b>Live Evidence is authoritative</b><small>Cognia Knowledge and Operational Memory cannot override current production evidence.</small></p></div>
-        <div><span>03</span><p><b>MCP is the operational boundary</b><small>Control Plane agents do not receive native operational provider clients.</small></p></div>
-        <div><span>04</span><p><b>Cognia is Knowledge only</b><small>Governed Knowledge is separate from MCP operations and PostgreSQL/pgvector Operational Memory.</small></p></div>
-        <div><span>05</span><p><b>Approval is bound and one-time</b><small>Tool, action, target, parameters, runbook and environment are bound before execution; consumption is irreversible.</small></p></div>
-        <div><span>06</span><p><b>Execution capability is signed and short-lived</b><small>The execution boundary receives a scoped capability only after the approval and binding are validated.</small></p></div>
-        <div><span>07</span><p><b>Verification is independent</b><small>Command success is not equivalent to recovery; post-action operational symptoms must be verified before learning.</small></p></div>
+      <div class="audit-layout"><section class="panel"><div class="panel-head"><div><span class="section-kicker">سوابق ماندگار</span><h2>تاریخچهٔ ممیزی</h2></div><span class="badge neutral">PostgreSQL</span></div><div id="auditList" class="timeline"></div></section><aside class="panel governance-panel"><div class="panel-head"><div><span class="section-kicker">اصول ثابت ایمنی</span><h2>کنترل‌های حاکمیتی</h2></div></div><div class="governance-list">
+        <div><span>01</span><p><b>مدل زبانی مرجع صدور مجوز نیست</b><small>تغییرات عملیاتی فقط با سیاست‌ها و تأیید انسانی مجاز می‌شوند.</small></p></div>
+        <div><span>02</span><p><b>شواهد زنده مرجع اصلی‌اند</b><small>دانش کاگنیا و حافظهٔ عملیاتی نمی‌توانند جای شواهد فعلی محیط عملیاتی را بگیرند.</small></p></div>
+        <div><span>03</span><p><b>MCP مرز دسترسی عملیاتی است</b><small>ایجنت‌های کنترل‌پلین دسترسی مستقیم به کلاینت‌های عملیاتی ندارند.</small></p></div>
+        <div><span>04</span><p><b>کاگنیا فقط برای دانش سازمانی است</b><small>دانش تحت نظارت از عملیات MCP و حافظهٔ عملیاتی PostgreSQL/pgvector مستقل است.</small></p></div>
+        <div><span>05</span><p><b>تأیید به اقدام مشخص و یک‌بارمصرف محدود است</b><small>ابزار، اقدام، مقصد، پارامترها، راهنمای اجرا و محیط پیش از اجرا به مجوز متصل می‌شوند و مجوز مصرف‌شده قابل استفادهٔ دوباره نیست.</small></p></div>
+        <div><span>06</span><p><b>مجوز اجرا امضاشده و کوتاه‌مدت است</b><small>مرز اجرا تنها بعد از بررسی تأیید و اتصال مجوز، دسترسی محدود و امضاشده دریافت می‌کند.</small></p></div>
+        <div><span>07</span><p><b>راستی‌آزمایی مستقل است</b><small>موفقیت دستور به معنی بازیابی نیست؛ آثار واقعی اقدام باید مستقل بررسی شوند و سپس به حافظه افزوده شوند.</small></p></div>
       </div></aside></div>
     </section>
   </main>
