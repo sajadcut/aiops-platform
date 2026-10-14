@@ -113,6 +113,21 @@ def knowledge_candidate(
         redact_text(str(f.get("statement") or ""))[:270]
         for f in findings if isinstance(f, dict) and f.get("statement")
     ][:6]
+    # Cite small, non-secret operational facts, not raw logs or configuration
+    # values. A reference alone is not a useful reusable troubleshooting note.
+    selected_facts = []
+    for item in reversed(((state.get("context") or {}).get("evidence") or [])):
+        if not isinstance(item, dict) or str(item.get("id") or "") != evidence_ref:
+            continue
+        raw = item.get("raw_data") or {}
+        if isinstance(raw, dict):
+            for key in ("active_state", "sub_state", "result", "main_pid",
+                        "status", "valid", "syntax_valid", "error_line",
+                        "result_count"):
+                value = raw.get(key)
+                if isinstance(value, (str, int, float, bool)) and len(str(value)) <= 70:
+                    selected_facts.append(key + "=" + redact_text(str(value)))
+        break
     title = redact_text(f"بررسی تکمیلی رخداد {service} (نیازمند بازبینی)")[:500]
     content = "\n".join([
         "نوع: یادداشت تکمیلی رخداد؛ دانش تأییدشده یا نتیجه بازیابی نیست.",
@@ -120,6 +135,7 @@ def knowledge_candidate(
         f"شناسه رخداد: {incident_id}",
         f"شاهد جدید: {evidence_ref}",
         f"نوع بررسی انجام‌شده: {diagnostic}",
+        "مشاهدات محدود از ابزار: " + (", ".join(selected_facts) or "جزئیات در شناسهٔ شاهد"),
         f"وضعیت تحلیل: {followup.get('status', 'unknown')}",
         "یافته‌های ایجنت‌ها (تحلیل/فرضیه، نه اثبات علت):",
         *(("- " + item) for item in findings_text),
