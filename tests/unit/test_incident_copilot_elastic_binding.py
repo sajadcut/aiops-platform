@@ -175,6 +175,9 @@ async def test_explicit_gfpapi_start_proposes_same_incident_action_even_when_llm
                     "load_state": "loaded", "active_state": "inactive"}
     monkeypatch.setattr(vm_identity, "VMEdgeMCPClient", lambda: VM())
     monkeypatch.setattr(api,"AsyncSessionLocal",DB)
+    async def isolated_followup(*args, **kwargs):
+        return {"status": "isolated_test_no_database", "reassessed": False}
+    monkeypatch.setattr(api, "persist_and_reassess", isolated_followup)
     monkeypatch.setattr(api,"_scope",scope)
     monkeypatch.setattr(api,"PostgreSQLAuditStore",Audit)
     monkeypatch.setattr(api,"load_decision_brief_for_incident",brief)
@@ -215,6 +218,9 @@ async def test_incident_elastic_historical_answer_never_invokes_live_mcp(monkeyp
         raise AssertionError("Historical question must never call live Elastic")
     async def append(*a,**kw): return "audit-1"
     monkeypatch.setattr(api,"AsyncSessionLocal",DB)
+    async def isolated_followup(*args, **kwargs):
+        return {"status": "isolated_test_no_database", "reassessed": False}
+    monkeypatch.setattr(api, "persist_and_reassess", isolated_followup)
     monkeypatch.setattr(api,"_scope",scope)
     monkeypatch.setattr(api,"PostgreSQLAuditStore",Audit)
     monkeypatch.setattr(api,"load_decision_brief_for_incident",brief)
@@ -260,6 +266,9 @@ async def test_explicit_elastic_mcp_query_not_vm_and_model_fallback_has_facts(mo
         }
     async def append(*a,**kw):return "audit-2"
     monkeypatch.setattr(api,"AsyncSessionLocal",DB)
+    async def isolated_followup(*args, **kwargs):
+        return {"status": "isolated_test_no_database", "reassessed": False}
+    monkeypatch.setattr(api, "persist_and_reassess", isolated_followup)
     monkeypatch.setattr(api,"_scope",scope)
     monkeypatch.setattr(api,"PostgreSQLAuditStore",Audit)
     monkeypatch.setattr(api,"load_decision_brief_for_incident",brief)
@@ -308,6 +317,9 @@ async def test_llm_cannot_claim_no_401_or_403_on_unverified_elastic_evidence(mon
                 "model_status":"structured"}
     async def append(*args,**kwargs):return "turn-id"
     monkeypatch.setattr(api,"AsyncSessionLocal",DB)
+    async def isolated_followup(*args, **kwargs):
+        return {"status": "isolated_test_no_database", "reassessed": False}
+    monkeypatch.setattr(api, "persist_and_reassess", isolated_followup)
     monkeypatch.setattr(api,"_scope",scope)
     monkeypatch.setattr(api,"PostgreSQLAuditStore",Audit)
     monkeypatch.setattr(api,"load_decision_brief_for_incident",brief)
