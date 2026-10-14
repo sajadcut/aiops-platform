@@ -112,6 +112,21 @@ const fs=require('node:fs');
   for(let i=0;i<18;i++)await new Promise(resolve=>setImmediate(resolve));
   const page=el('#ic-technical-report').innerHTML;
   const diagnosis=el('#ic-diagnosis').innerHTML;
+  const intelligence=el('#ic-intelligence-report').innerHTML;
+  assert.match(intelligence,/گزارش هوشمندِ مبتنی بر شواهد/);
+  assert.match(intelligence,/توقف سرویس از طریق Systemd تأیید شده است/);
+  assert.match(intelligence,/ActiveState=failed; Result=timeout; MainPID=0/);
+  assert.match(intelligence,/evidence-systemd-123/);
+  assert.match(intelligence,/Elasticsearch/);
+  assert.match(intelligence,/Query موفق؛ صفر نتیجه/);
+  assert.match(intelligence,/صفر نتیجه، سلامت سرویس را ثابت نمی‌کند/);
+  assert.match(intelligence,/appsettings.json/);
+  assert.match(intelligence,/فقط ساختار JSON/);
+  assert.match(intelligence,/علت ریشه‌ای هنوز تأیید نشده است/);
+  assert.match(intelligence,/Approval/);
+  assert.doesNotMatch(intelligence,/علت ریشه‌ای در شواهد این گزارش تأیید شده است/);
+  assert.doesNotMatch(intelligence,/undefined/);
+
   assert.match(diagnosis,/خطای ساختار JSON/);
   assert.match(diagnosis,/appsettings.json/);
   assert.match(diagnosis,/خط ۳۲/);
@@ -153,10 +168,14 @@ def test_section_01_has_real_render_target_and_accessible_evidence_table():
     js = (ROOT / "dashboards/incident-command-room.js").read_text(encoding="utf-8")
     css = (ROOT / "dashboards/incident-command-room.css").read_text(encoding="utf-8")
     assert 'id="ic-technical-report"' in html
+    assert 'id="ic-intelligence-report"' in html
+    assert 'ic-overview-details' in html
     assert 'id="ic-diagnosis"' in html
     assert "renderOperatorDiagnosis" in js
     assert "ic-diagnosis-drilldown" in css
     assert "renderTechnicalInvestigation" in js
+    assert "renderIntelligenceReport" in js
+    assert 'data-report-version="evidence-narrative-v1"' in js
     assert "ic-sre-table" in css
     assert "ic-sre-drilldown" in js
     assert "details" in js
