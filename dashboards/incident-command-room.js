@@ -2188,6 +2188,14 @@
     });
     const lifecycleTimer=setInterval(()=>{void pollLifecycle();},6000);
     const durationTimer=setInterval(updateProgressClock,1000);
+    // Refresh age warnings locally; a previous Running observation must not
+    // appear fresh indefinitely when the operator leaves the page open.
+    const serviceAgeTimer=setInterval(()=>{
+      if(state.report&&!state.historic){
+        renderServiceStatus();renderOperationalSummary();
+      }
+    },30000);
+    if(typeof serviceAgeTimer?.unref==='function')serviceAgeTimer.unref();
     if(typeof durationTimer?.unref==='function')durationTimer.unref();
     // Node-based browser regression harnesses should not be kept alive by polling.
     if(typeof lifecycleTimer?.unref==='function')lifecycleTimer.unref();
