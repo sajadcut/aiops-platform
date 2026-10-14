@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 487 | Dashboard JS files scanned: 8 | Symbols indexed: 4977**
+**Python files scanned: 487 | Dashboard JS files scanned: 8 | Symbols indexed: 4988**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1561,8 +1561,13 @@
 | `apps/technical_investigation_report.py` | `_matches` | 133 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/technical_investigation_report.py` | `_domain_rows` | 144 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/technical_investigation_report.py` | `_provider_status` | 159 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/technical_investigation_report.py` | `build_technical_investigation` | 178 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
-| `apps/technical_investigation_report.py` | `build_technical_investigation.high_mount_pressure` | 344 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | build_technical_investigation |
+| `apps/technical_investigation_report.py` | `_latest_metric` | 179 | function | Collector emits {name, value} rows, rather than a metrics dict. | module |
+| `apps/technical_investigation_report.py` | `_best_diagnostic` | 194 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/technical_investigation_report.py` | `_sample` | 200 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/technical_investigation_report.py` | `_journal_counts` | 204 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/technical_investigation_report.py` | `_bounded_files` | 225 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/technical_investigation_report.py` | `build_technical_investigation` | 250 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
+| `apps/technical_investigation_report.py` | `build_technical_investigation.high_mount_pressure` | 496 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | build_technical_investigation |
 | `apps/verification_service/__init__.py` | `VerificationStatus` | 11 | class | کلاس | module |
 | `apps/verification_service/__init__.py` | `VerificationResult` | 18 | class | کلاس | module |
 | `apps/verification_service/__init__.py` | `VerificationEngine` | 33 | class | Deterministic before/after verification over fresh operational Evidence. | module |
@@ -3660,7 +3665,7 @@
 | `tests/unit/test_incident_command_room.py` | `test_demo_uses_no_action_or_not_applicable_instead_of_wall_of_unknowns` | 436 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_incident_command_room.py` | `test_health_profile_html_is_present_and_never_auto_posts` | 474 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_incident_command_room.py` | `test_host_ram_room_shows_causal_gaps_and_checks_without_service_unknown_card` | 490 | function | Use the real browser renderer with a host-level memory incident. | module |
-| `tests/unit/test_incident_command_room.py` | `test_host_ram_has_dedicated_ui_without_remote_write_capability` | 535 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_command_room.py` | `test_host_ram_has_dedicated_ui_without_remote_write_capability` | 537 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_incident_copilot.py` | `evidence` | 18 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_incident_copilot.py` | `test_binding_corroborated_with_one_incident_and_never_from_llm` | 25 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_incident_copilot.py` | `test_chat_cannot_redirect_vm_write_to_another_host_or_service` | 40 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
@@ -4718,6 +4723,12 @@
 | `tests/unit/test_technical_investigation_report.py` | `test_conflicting_zabbix_problem_and_fresh_running_systemd_is_visible` | 220 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_technical_investigation_report.py` | `test_normal_disk_use_does_not_create_pressure_hypothesis` | 232 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_technical_investigation_report.py` | `test_stale_failed_systemd_is_historical_not_current_confirmed_fact` | 240 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_technical_investigation_report.py` | `test_real_vm_collector_metric_shape_is_visible_and_attributed` | 250 | function | Do not expect one raw_data.metrics dictionary from the EvidenceCollector. | module |
+| `tests/unit/test_technical_investigation_report.py` | `test_failed_or_unavailable_elastic_cannot_claim_query_success` | 269 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_technical_investigation_report.py` | `test_elastic_success_is_not_host_attributed_if_provider_only_filtered_service` | 279 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_technical_investigation_report.py` | `test_actual_nested_disk_forensics_surfaces_top_file_sizes_and_growth_limits` | 292 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_technical_investigation_report.py` | `test_journal_signature_counts_do_not_expose_raw_sensitive_lines` | 314 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_technical_investigation_report.py` | `test_network_section_requires_pid_and_listener_correlation` | 333 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_triage_production_engine.py` | `StaticTriageLLM` | 13 | class | کلاس | module |
 | `tests/unit/test_triage_production_engine.py` | `StaticTriageLLM.__init__` | 14 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | StaticTriageLLM |
 | `tests/unit/test_triage_production_engine.py` | `StaticTriageLLM.provider_name` | 19 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | StaticTriageLLM |
