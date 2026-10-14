@@ -121,7 +121,7 @@ const fs=require('node:fs');
   assert.match(intelligence,/Query موفق؛ صفر نتیجه/);
   assert.match(intelligence,/صفر نتیجه، سلامت سرویس را ثابت نمی‌کند/);
   assert.match(intelligence,/appsettings.json/);
-  assert.match(intelligence,/فقط ساختار JSON/);
+  assert.match(intelligence,/در فایل تنظیمات خطای سینتکس ثبت شده/);
   assert.match(intelligence,/علت ریشه‌ای هنوز تأیید نشده است/);
   assert.match(intelligence,/Approval/);
   assert.doesNotMatch(intelligence,/علت ریشه‌ای در شواهد این گزارش تأیید شده است/);
