@@ -15,7 +15,7 @@ from apps.api.remediation import RemediationRequest, create_remediation_request
 from apps.audit_service.postgres import PostgreSQLAuditStore
 from apps.incident_copilot import (
     READ_ACTIONS, WRITE_SUGGESTIONS, append_turn, fallback_intent, history,
-    llm_plan, vm_binding, vm_read, asks_for_recorded_errors, recorded_error_facts,
+    llm_plan, vm_binding, vm_read, is_recovery_comparison_question, asks_for_recorded_errors, recorded_error_facts,
     recorded_error_answer, nginx_inspection_answer, merge_incident_evidence,
     unsupported_security_exclusion_claim,
 )
@@ -429,9 +429,14 @@ async def incident_chat_message(
         requested = fallback_intent(payload.message)
         historical_errors = asks_for_recorded_errors(payload.message)
         intent = "answer" if historical_errors else plan["intent"]
+        # A comparison or diagnostic question must remain non-executing even
+        # when the model/classifier notices the word "restart" or "start".
+        explanation_only = is_recovery_comparison_question(payload.message)
+        if explanation_only:
+            intent = "answer"
         # Explicit action/read requests must not be ignored by a model's
         # free-form answer; model suggestions are otherwise advisory only.
-        if requested in WRITE_SUGGESTIONS:
+        if requested in WRITE_SUGGESTIONS and not explanation_only:
             # An explicit operator Start/Restart/Reload always takes
             # precedence over a different action proposed by an LLM.
             intent = requested
