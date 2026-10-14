@@ -405,6 +405,7 @@ def test_stop_origin_is_plausible_not_manual_stop_proven():
     assert any("11min 4.416s" in item for item in origin["indicators"])
     assert "Termination signal=SIGKILL" in origin["indicators"]
     assert "Stop/Restart" in r["rca"]["likely_hypotheses"][0]["title"]
+    assert not any("Startup" in item["title"] for item in r["rca"]["likely_hypotheses"])
     assert r["rca"]["cause_confirmed"] is False
     assert origin["evidence_refs"] == ["ev-service_status"]
 
