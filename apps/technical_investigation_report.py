@@ -241,7 +241,7 @@ def build_technical_investigation(*, incident: dict, evidence: list[dict],
                     *[d.get(k, "ثبت نشده") for k in ("active_state", "sub_state", "result", "main_pid", "restart_count")])
                 if d.get("result") == "timeout":
                     technical += "؛ Timeout ثبت شده، اما مکانیسم ایجاد آن هنوز تأیید نشده است."
-                if d.get("active_state") in {"failed", "inactive"}:
+                if d.get("active_state") in {"failed", "inactive"} and _state(state_record, now) == "fresh":
                     confirmed.append({"text": f"systemd توقف سرویس {service} را گزارش کرده است.",
                                       "evidence_refs": [str(state_record.get("id") or state_record.get("reference") or "")]})
             if runtime_record:
@@ -261,6 +261,12 @@ def build_technical_investigation(*, incident: dict, evidence: list[dict],
             errors = sum(str(x.get("level") or x.get("severity") or "").lower() in {"error", "fatal", "critical"} for x in records)
             warns = sum(str(x.get("level") or x.get("severity") or "").lower() in {"warn", "warning"} for x in records)
             technical = f"Query موفق: {len(q)}؛ Match={matched_count}؛ رکورد Error={errors}، Warning={warns}. "
+            if key == "elastic" and q:
+                scope = q[0]
+                technical += (f" Query Service={_text(scope.get('query_service') or service)}"
+                              f"؛ Since={_text(scope.get('query_since'), 45) or 'ثبت نشده'}"
+                              f"؛ Until={_text(scope.get('query_until'), 45) or 'ثبت نشده'}"
+                              f"؛ Host filter={'applied' if scope.get('host_filter_applied') is True else 'not_verified'}.")
             if status == "queried_zero_results":
                 technical += "صفر نتیجه، سلامت سرویس را ثابت نمی‌کند."
         elif key == "config":
@@ -334,12 +340,38 @@ def build_technical_investigation(*, incident: dict, evidence: list[dict],
             "check": "Journal زمان Startup را با خطاهای برنامه و دسترسی Dependencyها تطبیق دهید.",
             "confidence": None, "kind": "فرضیه، نه RCA تأییدشده",
         })
-    if by_key["disk"]["status"] == "investigated":
+    disk_records = by_key["disk"]["evidence"]
+    def high_mount_pressure(item):
+        return any(
+            isinstance(m, dict) and str(m.get("use_percent") or "0").rstrip("%").isdigit()
+            and int(str(m.get("use_percent") or "0").rstrip("%")) >= 90
+            for m in item.get("facts", {}).get("filesystems", [])
+        )
+    if by_key["disk"]["status"] == "investigated" and any(
+        high_mount_pressure(record) and record.get("freshness") == "fresh"
+        for record in disk_records
+    ):
         hypotheses.append({
             "title": "فشار ظرفیت Disk یا I/O (صرفاً فرضیه بررسی)",
-            "supporting": [], "opposing": [],
+            "supporting": [record["id"] for record in disk_records
+                           if high_mount_pressure(record) and record.get("freshness") == "fresh"],
+            "opposing": [],
             "check": "Mount مرتبط، Inode، I/O Latency و زمان خطا را با Startup تطبیق دهید.",
             "confidence": None, "kind": "علت احتمالی تأیید نشده",
+        })
+    monitoring_alerts = [
+        row for row in matching if _source(row) == "zabbix"
+        and row.get("type") == "alert" and _state(row, now) == "fresh"
+        and str(row.get("raw_data", {}).get("status") or "").lower() in {"problem", "down"}
+    ]
+    conflicts = []
+    if sysfacts.get("active_state") == "active" and sys and sys.get("freshness") == "fresh" and monitoring_alerts:
+        conflicts.append({
+            "description": "Zabbix وضعیت Problem/Down و VM MCP وضعیت active گزارش کرده‌اند؛ زمان و نوع Health Check را مقایسه کنید.",
+            "evidence_refs": [sys["id"]] + [
+                str(item.get("id") or item.get("reference") or "") for item in monitoring_alerts[:3]
+            ],
+            "resolution": "بررسی مستقل HTTP Health و زمان آخرین Problem/Recovery؛ هیچ‌یک را خودکار صحیح فرض نکنید.",
         })
     unknowns = [{"domain": d["title"], "reason": d["missing_reason"],
                  "next_check": d["collection_hint"]}
@@ -392,6 +424,6 @@ def build_technical_investigation(*, incident: dict, evidence: list[dict],
                 "cause_confirmed": False,
                 "note": "Timeout و هم‌زمانی شواهد، علت ریشه‌ای یا مقصر بودن Process را اثبات نمی‌کنند."},
         "actions": actions,
-        "identity_mismatch_count": mismatched,
+        "identity_mismatch_count": mismatched, "conflicts": conflicts,
         "approval_status": str((approval or {}).get("status") or "not_recorded"),
     })
