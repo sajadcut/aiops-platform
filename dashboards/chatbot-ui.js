@@ -87,11 +87,11 @@ export function renderSafeMarkdown(node, value, notify = () => {}) {
       const head = document.createElement("div");
       head.className = "code-head";
       const language = document.createElement("span");
-      language.textContent = fence[1] || "code";
+      language.textContent = fence[1] || "کد";
       const copy = document.createElement("button");
       copy.type = "button";
       copy.className = "copy-code";
-      copy.textContent = "Copy";
+      copy.textContent = "کپی";
       copy.setAttribute("aria-label", "کپی کد");
 
       const text = codeLines.join("\n");
@@ -216,8 +216,8 @@ export function addBadge(parent, value) {
     kubernetes_mcp: "Kubernetes MCP",
     zabbix_mcp: "Zabbix MCP",
     prometheus_mcp: "Prometheus MCP",
-    execution_service: "Execution",
-    multiple_governed_tools: "Governed Tools",
+    execution_service: "سرویس اجرا",
+    multiple_governed_tools: "ابزارهای کنترل‌شده",
   };
 
   const node = document.createElement("span");
@@ -257,14 +257,14 @@ function operationalEntries(data) {
 
   const source = data.data && typeof data.data === "object" && !Array.isArray(data.data) ? data.data : data;
   const entries = [
-    ["Status", firstMetric(source, "status", "active_state", "active")],
-    ["SubState", firstMetric(source, "substate", "sub_state")],
+    ["وضعیت", firstMetric(source, "status", "active_state", "active")],
+    ["زیرحالت", firstMetric(source, "substate", "sub_state")],
     ["PID", firstMetric(source, "pid", "main_pid")],
     ["CPU", firstMetric(source, "cpu_usage", "cpu_percent", "cpu")],
-    ["Memory", firstMetric(source, "memory_usage", "memory_percent", "memory")],
-    ["Disk", firstMetric(source, "disk_usage", "disk_percent")],
-    ["Load", firstMetric(source, "load_avg", "load_average")],
-    ["Available", firstMetric(source, "available", "available_bytes")],
+    ["حافظه", firstMetric(source, "memory_usage", "memory_percent", "memory")],
+    ["دیسک", firstMetric(source, "disk_usage", "disk_percent")],
+    ["بار سیستم", firstMetric(source, "load_avg", "load_average")],
+    ["ظرفیت آزاد", firstMetric(source, "available", "available_bytes")],
   ];
 
   return entries.filter(([, value]) => value !== null).slice(0, 5);
@@ -283,8 +283,8 @@ export function addOperationalFacts(card, data) {
     const label = document.createElement("span");
     label.textContent = name;
     const value = document.createElement("strong");
-    const shouldAddPercent = ["CPU", "Memory", "Disk"].includes(name) && typeof rawValue === "number";
-    value.textContent = shouldAddPercent ? `${rawValue}%` : String(rawValue);
+    const shouldAddPercent = ["CPU", "حافظه", "دیسک"].includes(name) && typeof rawValue === "number";
+    value.textContent = shouldAddPercent ? `${rawValue}%` : ({active:"فعال",inactive:"غیرفعال",running:"در حال اجرا",failed:"ناموفق",healthy:"سالم",unhealthy:"ناسالم",pending:"در انتظار",stopped:"متوقف"})[String(rawValue).toLowerCase()] || String(rawValue);
     item.append(label, value);
     facts.appendChild(item);
   }
@@ -295,10 +295,10 @@ export function addOperationalFacts(card, data) {
 export function addErrorMeta(card, data = {}) {
   const timestamp = data.timestamp || new Date().toISOString();
   const values = [
-    ["Request", data.request_id],
-    ["Component", data.component],
-    ["Code", data.code],
-    ["Timestamp", timestamp],
+    ["درخواست", data.request_id],
+    ["مولفه", data.component],
+    ["کد", data.code],
+    ["زمان", timestamp],
   ].filter(([, value]) => Boolean(value));
 
   if (!values.length) return;
