@@ -2328,6 +2328,11 @@
       (ready?'':' disabled')+'>'+
       esc(fa?'درخواست بازبینی و اعتبارسنجی اصلاح':'Request correction review & validation')+
       '</button>':'';
+    const regenerateButton=!candidate?
+      '<button type="button" class="ic-btn ic-btn-primary" data-config-preview="nginx"'+
+      (state.historic||state.busy||state.chatBusy||state.lifecycle?.analysis_in_progress||state.chatStatus==='failed'?' disabled':'')+'>'+
+      esc(fa?'ساخت پیش‌نمایش اصلاح با بررسی زنده MCP':'Generate live MCP repair preview')+
+      '</button>':'';
     node.hidden=false;
     node.innerHTML='<div class="ic-config-banner-copy"><strong>'+
       esc(fa?'اصلاح پیشنهادی فایل کانفیگ Nginx':'Nginx configuration correction proposal')+
@@ -2341,7 +2346,7 @@
       '<p class="ic-config-banner-warning">'+esc(fa?
         'اعمال روی سرور فعلاً غیرفعال است: اعتبارسنجی مستقل، قرارداد تغییر نسخه‌دار و Approval اجرایی وجود ندارد. ثبت درخواست اعتبارسنجی خودش فایل را اصلاح نمی‌کند.':
         'Apply is disabled: isolated validation, a versioned change contract and executable approval are missing. A validation request does not modify the file.')+
-      '</p></div><div class="ic-config-banner-actions">'+requestButton+
+      '</p></div><div class="ic-config-banner-actions">'+regenerateButton+requestButton+
       '<a class="ic-btn ic-btn-muted" href="#ic-ai-proposed-fix">'+
       esc(fa?'مشاهده خطا، Diff و پیشنهاد اصلاح':'View error, diff and proposal')+
       '</a>'+
@@ -3111,6 +3116,13 @@
       const h=e.target.closest('[data-snapshot-id]');
       if(h){void openHistory(h.dataset.snapshotId);return;}
       if(e.target.closest('#ic-archive-action-return')){returnLive();return;}
+      const preview=e.target.closest('[data-config-preview]');
+      if(preview){
+        if(!state.historic&&!state.chatBusy&&!state.busy){
+          void submitIncidentChat('nginx_config_review: برای این رخداد، از VM MCP فقط پیش‌نمایش امن اصلاح Nginx را بساز و آن را به تحلیل رخداد اضافه کن. هیچ تغییری در فایل یا سرویس اجرا نکن.');
+        }
+        return;
+      }
       const intent=e.target.closest('[data-config-intent]');
       if(intent){void respondToConfigProposal(intent.dataset.configIntent);return;}
       if(e.target.closest('#ic-toggle-reject')){state.rejectionVisible=!state.rejectionVisible;renderDecision(state.report);return;}
