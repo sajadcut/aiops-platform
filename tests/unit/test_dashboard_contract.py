@@ -15,7 +15,7 @@ def test_dashboard_contains_required_operational_capabilities():
         "بازیابی‌های تأییدشده",
         "ناقص یا نامشخص",
         "تجربه‌های ثبت‌شده",
-        "Historical Operational Memory ≠ Live Evidence",
+        "حافظهٔ تاریخی جایگزین شواهد زنده نیست",
         "موفقیت خودکارسازی",
         "میانگین اطمینان",
         "مراحل رسیدگی و بازیابی",
@@ -26,9 +26,9 @@ def test_dashboard_contains_required_operational_capabilities():
         "سلامت سرویس‌ها",
         "زیرساخت MCP",
         "VM Edge MCP",
-        "Cognia Knowledge",
+        "دانش کاگنیا",
         "ممیزی و حاکمیت",
-        "Governance Controls",
+        "کنترل‌های حاکمیتی",
         "مجوز امضاشده",
         "X-API-Key",
         "/api/v1/dashboard/summary",
@@ -42,14 +42,14 @@ def test_dashboard_contains_required_operational_capabilities():
         "/api/v1/health",
         "/workflow/e2e/",
         "binding_complete",
-        "Resume & Execute",
+        "ادامه و اجرا",
     ]
     missing = [token for token in required if token not in combined]
     assert not missing, f"Dashboard contract missing: {missing}"
     assert "cognia" in combined.lower()
-    assert "operational memory" in combined.lower()
-    assert "agents analyze and recommend" in combined.lower()
-    assert "approval is bound and one-time" in combined.lower()
+    assert "حافظهٔ عملیاتی" in combined
+    assert "ایجنت‌ها تحلیل و پیشنهاد ارائه می‌کنند" in combined
+    assert "تأیید به اقدام مشخص و یک‌بارمصرف محدود است" in combined
 
 
 def test_dashboard_does_not_embed_demo_or_synthetic_operational_data():
@@ -97,7 +97,7 @@ def test_incident_refresh_lazy_loads_historical_memory():
     assert "const [context, evidence, lifecycle, verification] = await Promise.all" in js
     assert "memory: null" in js
     assert "async function loadIncidentMemory" in js
-    assert "Loading historical Operational Memory on demand" in js
+    assert "در حال دریافت حافظهٔ عملیاتی تاریخی" in js
     assert "loadIncidentMemory(S.selected)" in js
 
 def test_dashboard_assets_use_absolute_routes_without_client_redirect_race():

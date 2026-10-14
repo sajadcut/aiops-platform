@@ -74,7 +74,7 @@ vm.runInNewContext(source, context, {filename: 'approval-actions.js'});
 
 context.renderDetail('overview');
 assert.ok(lastMarkup.includes('>فارسی</button>'));
-assert.ok(lastMarkup.includes('>English</button>'));
+assert.ok(lastMarkup.includes('>انگلیسی</button>'));
 assert.ok(lastMarkup.includes('lang="fa" dir="rtl"'));
 assert.ok(lastMarkup.includes('شروع سرویس روی vm-01'));
 assert.strictEqual(state.recommendationLanguage, 'fa');

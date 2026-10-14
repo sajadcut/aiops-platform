@@ -16,30 +16,30 @@
   const narrativeCache = new Map();
   const storageKey = 'aiops.incident.decision_brief.language';
   let language = (() => {
-    try { return localStorage.getItem(storageKey) === 'en' ? 'en' : 'fa'; }
-    catch (_) { return 'fa'; }
+    // Persian is the site-wide default; explicit language toggles remain available.
+    return 'fa';
   })();
   const dict = {
     fa: {
-      tab:'گزارش تصمیم‌گیری', title:'گزارش تصمیم‌گیری Incident', lead:'خلاصه پیش از تأیید',
-      loading:'در حال خواندن شواهد ثبت‌شده…', unavailable:'گزارش در دسترس نیست؛ Approval بدون بازبینی شواهد توصیه نمی‌شود.',
+      tab:'گزارش تصمیم‌گیری', title:'گزارش تصمیم‌گیری رخداد', lead:'خلاصه پیش از تأیید',
+      loading:'در حال خواندن شواهد ثبت‌شده…', unavailable:'گزارش در دسترس نیست؛ بدون بررسی شواهد درخواست تأیید ندهید.',
       unknown:'نامشخص', noData:'اطلاعات تأییدشده‌ای ثبت نشده است.', sources:'شواهد معتبر / MCP',
-      agents:'عملکرد Agentها', knowledge:'دانش سازمانی Cognia', memory:'تجربه Incidentهای قبلی',
+      agents:'عملکرد ایجنت‌ها', knowledge:'دانش سازمانی Cognia', memory:'تجربهٔ رخدادهای قبلی',
       risks:'شواهد ناقص یا متناقض', action:'چرا این اقدام پیشنهاد شده؟',
-      before:'پیش از تأیید', execution:'اجرا و Verification', timeline:'خط زمانی',
-      raw:'مشاهده شواهد خام', approval:'رفتن به پنل Approval', copy:'کپی گزارش',
-      copyDone:'متن گزارش کپی شد.', readOnly:'این گزارش مجوز اجرا نیست؛ تأیید و Resume باید از مسیر امن موجود انجام شود.',
-      source:'متن منبع (ممکن است انگلیسی باشد)', retrieved:'بازیابی شده', cited:'استفاده مستند در Agent',
+      before:'پیش از تأیید', execution:'اجرا و راستی‌آزمایی', timeline:'خط زمانی',
+      raw:'مشاهده شواهد خام', approval:'رفتن به بخش تأیید انسانی', copy:'کپی گزارش',
+      copyDone:'متن گزارش کپی شد.', readOnly:'این گزارش مجوز اجرا نیست؛ تأیید و ادامهٔ گردش‌کار باید از مسیر امن انجام شود.',
+      source:'متن منبع (ممکن است انگلیسی باشد)', retrieved:'بازیابی شده', cited:'استناد ایجنت ثبت شده',
       notVerified:'تأثیر در تصمیم نهایی تأیید نشده', review:'مشاهده پیش‌نویس بازبینی دانش',
       older:'شواهد قدیمی هستند؛ پیش از تأیید دوباره بررسی کنید.', missing:'بررسی شواهد بیشتری لازم است.',
-      agreement:'موافقت Agentها', rca:'اطمینان RCA', evaluator:'اطمینان Evaluator',
+      agreement:'توافق ایجنت‌ها', rca:'اطمینان به علت ریشه‌ای', evaluator:'اطمینان ارزیاب',
       none:'هیچ موردی ثبت نشده', fresh:'تازه', stale:'قدیمی', status:'وضعیت',
       verified:'به‌صورت مستقل تأیید شود', explain:'بازیابی سابقه به‌تنهایی به معنی صحت RCA یا اجازه اجرا نیست.',
-      fail:'ناموفق', pending:'در انتظار ارزیابی اپراتور', actionSeparate:'Approve به‌تنهایی اجرا نمی‌کند؛ پس از آن Resume با کنترل‌های مجدد انجام می‌شود.',
+      fail:'ناموفق', pending:'در انتظار ارزیابی اپراتور', actionSeparate:'تأیید به‌تنهایی عملیات را اجرا نمی‌کند؛ ادامهٔ گردش‌کار با کنترل‌های تازه انجام می‌شود.',
       timestamp:'به‌روزرسانی', record:'شناسه سند', tool:'ابزار', target:'هدف', environment:'محیط',
-      risk:'ریسک', binding:'اتصال مجوز', freshness:'تازگی داده', verification:'نتیجه Verification', result:'نتیجه اجرا',
+      risk:'ریسک', binding:'اتصال مجوز', freshness:'تازگی داده', verification:'نتیجهٔ راستی‌آزمایی', result:'نتیجه اجرا',
       narrative:'جمع‌بندی AIOps برای تصمیم‌گیری اپراتور', generated:'تحلیل فارسی مبتنی بر شواهد',
-      narrativeFallback:'خلاصه ساختاریافته؛ تحلیل پیشرفته LLM در دسترس نیست.', citations:'استناد به شواهد',
+      narrativeFallback:'خلاصهٔ ساختاریافته؛ تحلیل تکمیلی مدل زبانی در دسترس نیست.', citations:'استناد به شواهد',
       providerMissing:'این منبع در دسترس نبود؛ نتیجه‌گیری بدون داده‌های آن انجام شده است.', mixed:'ترکیبی از شواهد تازه و قدیمی/نامشخص', approvalStale:'شواهد یا برنامه نسبت به زمان تأیید تغییر کرده است؛ مجوز قبلی معتبر نیست و تأیید جدید لازم است.'
     },
     en: {
@@ -100,7 +100,13 @@
     observed:'مشاهده شده', not_executed:'اجرا نشده',
     matched_at_read:'مطابق شواهد فعلی', drift_detected:'نامعتبر به علت تغییر شواهد',
     new_approval_required:'نیازمند تأیید جدید',
-    'Complete':'کامل', 'Recorded':'ثبت شده', 'Not verified':'تأیید نشده'
+    'Complete':'کامل', 'Recorded':'ثبت شده', 'Not verified':'تأیید نشده',
+    completed:'تکمیل‌شده', not_recorded:'ثبت نشده', not_requested:'درخواست نشده',
+    blocked:'مسدودشده', running:'در حال اجرا', analyzing:'در حال تحلیل',
+    awaiting_approval:'در انتظار تأیید', not_configured:'پیکربندی نشده',
+    healthy:'سالم', degraded:'دچار اختلال', verified:'تأییدشده',
+    enabled:'فعال', disabled:'غیرفعال', inconclusive:'نامشخص',
+    not_applicable:'قابل اعمال نیست', available:'در دسترس'
   };
   const fmt = value => {
     if (value == null || value === '') return t('unknown');
@@ -212,7 +218,7 @@
       field(t('agreement'), confidence(conf.agent_agreement)) + '</div>' +
       '<p class="db-notice">' + (language === 'fa' ?
         'اطمینان RCA احتمال درستی علت است؛ اطمینان Evaluator ارزیابی برنامه پیشنهادی است؛ توافق Agentها میزان هم‌نظر بودن تحلیل‌گران است. این سه معیار یکسان نیستند.' :
-        'RCA confidence assesses the suspected cause; evaluator confidence assesses the plan; agreement measures cross-agent consensus. These are different signals.') +
+        'اطمینان به علت ریشه‌ای، ارزیابی کیفیت برنامه و میزان توافق ایجنت‌ها سه شاخص مستقل هستند.') +
       '</p>' + agentCards;
     const sourcesSection = '<div class="db-fields">' + healthCards + '</div>' +
       observedCards + (mcpCards || '<p class="db-subtle">' + t('noData') + '</p>');
@@ -227,7 +233,7 @@
       '<p>' + html(x.explanation) + '</p><p>' + html(x.validation_approach) + '</p>' +
       '<p class="db-notice">' + (language === 'fa' ?
         'پیشنهاد LLM تأیید نشده و هیچ دستوری اجرا نشده است.' :
-        'Unverified LLM guidance; no command was executed.') + '</p></div>'
+        'راهنمای تأییدنشدهٔ مدل زبانی؛ هیچ دستوری اجرا نشده است.') + '</p></div>'
     ).join('');
     const gapsSection = '<h4>' + (language === 'fa' ? 'شواهد ناقص' : 'Missing evidence') +
       '</h4>' + list(b.missing_evidence) + '<h4>' +
@@ -237,7 +243,7 @@
         '<h4>' + (language === 'fa' ? 'استعلام موارد نامشخص از LLM' : 'LLM guidance for unknowns') + '</h4>' +
         '<p class="db-warning">' + (language === 'fa' ?
           'فقط راهنمای بررسی است؛ جایگزین Evidence، تست کانفیگ یا Approval نیست.' :
-          'Advisory only: not evidence, a config test, or execution approval.') +
+          'این راهنمایی شواهد فنی، تست کانفیگ یا مجوز اجرا محسوب نمی‌شود.') +
         '</p>' + (guidanceCards || '<p class="db-subtle">' + html(guidance.status) + '</p>')
         : '');
     const actionSection = '<div class="db-fields">' + field(t('tool'), r.tool) +
@@ -411,7 +417,7 @@
           historyRows = Array.isArray(res.items) ? res.items : [];
         } catch (_) {
           historyError = language === 'fa' ? 'خواندن نسخه‌های تاریخی ممکن نشد.' :
-            'Historical snapshots could not be loaded.';
+            'بارگذاری نسخه‌های تاریخی گزارش ناموفق بود.';
         }
       }
       window.renderDetail('brief');
@@ -474,7 +480,7 @@
     if (nav) {
       if (historicBrief && nav.getAttribute('data-db-nav') === 'decision') {
         toast(language === 'fa' ? 'برای تصمیم عملیاتی ابتدا به گزارش فعلی برگردید.' :
-          'Return to the current report before taking any operational decision.');
+          'پیش از هر تصمیم عملیاتی به نسخهٔ فعلی گزارش بازگردید.');
         return;
       }
       window.renderDetail(nav.getAttribute('data-db-nav'));
