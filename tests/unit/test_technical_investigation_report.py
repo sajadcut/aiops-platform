@@ -371,3 +371,18 @@ def test_disk_forensics_reports_file_sizes_without_contents_or_delete_claims():
     assert "TOP_SECRET" not in str(facts)
     assert "delete_authorized" not in facts
     assert r["rca"]["cause_confirmed"] is False
+
+
+def test_journal_enospc_is_evidence_from_logs_or_entries_not_confirmed_rca():
+    r = report(
+        vm("service_status", {"active_state": "failed", "result": "timeout"}),
+        vm("system_logs", {"logs": [
+            "systemd-journald: Failed to open system journal: No space left on device",
+            "systemd-journald: No space left on device",
+        ]}),
+    )
+    journal = domain(r, "journal")
+    assert "Journal lines=2" in journal["technical_result"]
+    assert "ENOSPC=2" in journal["technical_result"]
+    assert r["rca"]["cause_confirmed"] is False
+    assert "No space left on device" not in str(journal["evidence"])
