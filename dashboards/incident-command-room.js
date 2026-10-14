@@ -811,7 +811,8 @@
         (fa?'ترتیب زمانی واقعی وضعیت‌ها هنوز اثبات نشده است؛ زمان دریافت هشدار جای زمان وقوع Event نیست.':
         'The true state order is not established; receipt time is not source event time.');
       const steps=arr(c.next_steps_fa).slice(0,3);
-      const http=c.http_observation;
+      const http=(!state.historic&&state.httpHealth?.checked_at)
+        ?state.httpHealth:c.http_observation;
       const health=http?.status==='unhealthy'?
         (fa?'آخرین بررسی ثبت‌شدهٔ HTTP ناسالم بوده است.':'Last recorded HTTP check was unhealthy.'):
         http?.status==='healthy'?(fa?'آخرین بررسی HTTP پاسخ موفق ثبت کرده است؛ زمان آن باید با وضعیت سرویس مقایسه شود.':
@@ -829,6 +830,11 @@
           observation('Zabbix','Down / inactive',alert.observed_at,alert.time_basis,alert.evidence_refs)+
           observation('VM MCP / systemd','Running',vm.observed_at,vm.time_basis,vm.evidence_refs)+
         '</div>'+
+        (alert.received_at?'<p class="ic-headline-meta">'+esc(fa?
+          'زمان دریافت هشدار در AIOps: ':'Alert received at AIOps: ')+
+          txt(date(alert.received_at))+' · '+esc(fa?
+          'این زمان، زمان وقوع قطعی Event در زبیکس نیست.':
+          'Receipt time is not the Zabbix event occurrence time.')+'</p>':'')+
         '<p>'+esc(explanation)+'</p>'+
         '<p class="ic-headline-caution">'+esc(health)+'</p>'+
         (live?'<p class="ic-headline-meta">'+esc(live)+'</p>':'')+
