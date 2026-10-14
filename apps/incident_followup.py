@@ -175,6 +175,7 @@ async def persist_and_reassess(
     db, *, incident_id: UUID, incident_service: str,
     checkpoint: Mapping[str, Any], action: str, observation: Mapping[str, Any] | None,
     binding: Mapping[str, Any] | None, actor: str,
+    incident_evidence: list[dict] | None = None,
 ) -> dict:
     """Durably append observation; redo specialists and evaluator if no-action.
 
@@ -210,12 +211,15 @@ async def persist_and_reassess(
              "ORDER BY created_at DESC LIMIT 1"),
         {"id": str(incident_id)},
     )).scalar_one_or_none()
-    if not may_reassess(checkpoint, str(approval or "")):
+    # Another chat may have advanced this Incident while MCP was reading.
+    # Read the latest durable checkpoint, not only the snapshot at request start.
+    current = await WorkflowCheckpointStore(db).load(str(incident_id)) or checkpoint
+    if not may_reassess(current, str(approval or "")):
         status["status"] = "evidence_recorded_reanalysis_requires_workflow_review"
         return status
 
     # Copy checkpoint; never call Decision / Approval / Execution nodes.
-    state = json.loads(json.dumps(checkpoint.get("state") or {}, default=str))
+    state = json.loads(json.dumps(current.get("state") or {}, default=str))
     from apps.orchestrator.signal_aware import SignalAwareE2EOrchestrator
     from domain.contracts.config import settings
     from domain.contracts.logging import logger
@@ -230,11 +234,22 @@ async def persist_and_reassess(
     }
     # Bounded input for specialist re-analysis: original recent observations
     # plus the latest operator-requested source evidence.
-    state["context"]["evidence"] = [
-        *[e for e in context_evidence[-settings.AGENT_MAX_EVIDENCE_ITEMS + 1:]
-          if isinstance(e, dict)],
-        new_observation,
-    ]
+    # Re-include earlier successful Copilot probes for iterative reasoning.
+    # They came from the same Incident's durable Evidence table through _scope.
+    prior_followups = [
+        e for e in (incident_evidence or [])
+        if isinstance(e, dict)
+        and isinstance(e.get("raw_data"), dict)
+        and e["raw_data"].get("phase") == "incident_copilot_followup"
+    ][-32:]
+    merged = {}
+    for evidence in [*context_evidence, *prior_followups, new_observation]:
+        if not isinstance(evidence, dict):
+            continue
+        eid = str(evidence.get("id") or evidence.get("reference") or "")
+        if eid:
+            merged[eid] = evidence
+    state["context"]["evidence"] = list(merged.values())[-max(1, settings.AGENT_MAX_EVIDENCE_ITEMS):]
     state["incident_id"] = str(incident_id)
     state["service_name"] = incident_service
     previous_proposal_present = bool(state.pop("execution_request", None))
@@ -276,10 +291,25 @@ async def persist_and_reassess(
             if not isinstance(finding, dict):
                 continue
             finding["finding_type"] = "copilot_followup_" + str(finding.get("agent_name") or "agent")[:70]
+        # Serialize concurrent operator re-evaluations until the checkpoint
+        # commit. Do not overwrite a newer decision or another follow-up.
+        await db.execute(
+            text("SELECT pg_advisory_xact_lock(hashtext(:key))"),
+            {"key": "incident_followup:" + str(incident_id)},
+        )
+        newest = await WorkflowCheckpointStore(db).load(str(incident_id)) or current
+        if (current.get("version") is not None
+                and newest.get("version") != current.get("version")):
+            status["status"] = "evidence_recorded_concurrent_reanalysis"
+            await db.rollback()
+            return status
+        if not may_reassess(newest, str(approval or "")):
+            status["status"] = "evidence_recorded_workflow_changed"
+            await db.rollback()
+            return status
         await repository.add_findings(str(incident_id), findings)
-        await repository.commit()
         await WorkflowCheckpointStore(db).save(
-            str(incident_id), state, status=str(checkpoint.get("status")),
+            str(incident_id), state, status=str(current.get("status")),
         )
         status["status"] = "reassessed_read_only"
         status["reassessed"] = True
