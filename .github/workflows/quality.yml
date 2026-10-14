@@ -200,9 +200,29 @@ jobs:
                       'incidents','evidences','findings','memory_entries','memory_reuse_events','approvals',
                       'audit_events','workflow_checkpoints','runbooks','api_rate_limits',
                       'legacy_knowledge_documents_archive','knowledge_reviews','chat_sessions','chat_messages',
-                      'chat_action_proposals'
+                      'chat_action_proposals', 'service_health_profiles'
                   }
                   assert required <= tables, required - tables
+                  cur.execute("""
+                      INSERT INTO service_health_profiles
+                      (service,target,profile,updated_by)
+                      VALUES ('gfpapi','10.248.16.82',
+                              '{"platform":"vm_systemd","expected_port":8080,"health_path":"/health"}'::jsonb,
+                              'acceptance-sre')
+                      ON CONFLICT (service,target) DO UPDATE
+                      SET profile=EXCLUDED.profile
+                  """)
+                  cur.execute("""
+                      SELECT profile->>'health_path', updated_by
+                      FROM service_health_profiles
+                      WHERE service='gfpapi' AND target='10.248.16.82'
+                  """)
+                  assert cur.fetchone() == ('/health', 'acceptance-sre')
+                  cur.execute("""
+                      SELECT count(*) FROM service_health_profiles
+                      WHERE service='gfpapi' AND target='10.248.16.82'
+                  """)
+                  assert cur.fetchone()[0] == 1, 'service profile identity must be unique'
                   assert 'knowledge_documents' not in tables, 'active local Knowledge RAG table must be retired'
                   cur.execute("SELECT indexname FROM pg_indexes WHERE schemaname='public' AND tablename='knowledge_reviews'")
                   review_indexes = {row[0] for row in cur.fetchall()}
@@ -332,7 +352,7 @@ jobs:
                   cur.execute("SELECT to_regclass('public.chat_sessions'), to_regclass('public.chat_messages'), to_regclass('public.chat_action_proposals')")
                   assert cur.fetchone() == ('chat_sessions', 'chat_messages', 'chat_action_proposals'), 'chatbot persistence was not created during forward migration'
                   cur.execute("SELECT version_num FROM alembic_version")
-                  assert cur.fetchone()[0] == 'l9m0n1o2p3q4', 'forward migration must end at Decision Brief Snapshot head'
+                  assert cur.fetchone()[0] == 'm0n1o2p3q4r5', 'forward migration must end at Service Health Catalog head'
           PY
       - name: Migration downgrade and clean rebuild
         run: |

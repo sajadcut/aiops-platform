@@ -250,7 +250,7 @@ const assert = require('node:assert/strict');
   assert.match(agentHtml,/۹۳٪/);
   assert.match(agentHtml,/۳۲٪/);
   assert.match(agentHtml,/۷۱٪/);
-  assert.match(agentHtml,/سرویس متوقف است/);
+  assert.match(agentHtml,/در زمان ثبت شواهد متوقف بوده است/);
   assert.match(agentHtml,/بررسی درستی تنظیمات/);
   assert.match(agentHtml,/اطلاعات موردنیاز برای قطعیت بیشتر/);
   assert.match(agentHtml,/فرضیه‌های این ایجنت/);
@@ -421,3 +421,57 @@ def test_service_status_card_exists_above_decision_brief_and_is_safe_readonly():
     assert '"/incidents/{incident_id}/service-status/recheck"' in api
     assert 'force_live=True' in api
     assert 'require_permission("read:incident")' in api
+
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="Node required for demo UX regression")
+def test_demo_uses_no_action_or_not_applicable_instead_of_wall_of_unknowns():
+    source = Path(__file__).read_text(encoding="utf-8")
+    start = source.index('    script = r"""') + len('    script = r"""')
+    end = source.index('"""', start)
+    script = source[start:end]
+    # Simulate a real fully analyzed VM incident blocked by the Evaluator,
+    # rather than a pending, bound execution proposal.
+    assert "let approvalStatus='pending'" in script
+    script = script.replace(
+        "let approvalStatus='pending'", "let approvalStatus='not_requested'", 1)
+    assert "remediation_recommendation:{action:'start_service'" in script
+    script = script.replace(
+        "remediation_recommendation:{action:'start_service'",
+        "remediation_recommendation:{action:null", 1)
+    assert "target:'vm-01',action:'start_service',evidence_snapshot_binding:" in script
+    script = script.replace(
+        "target:'vm-01',action:'start_service',evidence_snapshot_binding:",
+        "target:'vm-01',action:null,evidence_snapshot_binding:", 1)
+    # The original browser acceptance continues into the approval workflow;
+    # stop after read-only incident rendering for this distinct scenario.
+    end = script.index("  assert.match(el('#ic-action-controls').innerHTML,/disabled/);")
+    script = script[:end] + r"""
+  assert.match(el('#ic-proposal').innerHTML,/هیچ اقدام اجرایی تأیید نشده است/);
+  assert.match(el('#ic-proposal').innerHTML,/قابل ارزیابی نیست/);
+  assert.match(el('#ic-key-answer').innerHTML,/عملیاتی پیشنهاد نشده/);
+  assert.match(el('#ic-operational-summary').innerHTML,/سلامت HTTP برنامه هنوز تأیید نشده/);
+  assert.match(el('#ic-outcome-view').innerHTML,/هیچ عملیاتی اجرا نشده است/);
+  assert.equal(events.filter(x=>x[0]==='POST').length,0);
+  console.log('Operator demo unambiguous no-action PASS');
+})().catch(e=>{console.error(e);process.exitCode=1;});
+"""
+    proc = subprocess.run(
+        [shutil.which("node"), "-e", script], cwd=ROOT,
+        capture_output=True, text=True, timeout=20)
+    assert proc.returncode == 0, proc.stderr
+    assert "Operator demo unambiguous no-action PASS" in proc.stdout
+
+
+def test_health_profile_html_is_present_and_never_auto_posts():
+    html=(ROOT / "dashboards/incident-command-room.html").read_text(encoding="utf-8")
+    js=(ROOT / "dashboards/incident-command-room.js").read_text(encoding="utf-8")
+    api=(ROOT / "apps/api/service_catalog.py").read_text(encoding="utf-8")
+    assert 'id="ic-operational-summary"' in html
+    assert 'id="ic-service-profile"' in html
+    assert "function renderOperationalSummary(" in js
+    assert "function renderServiceProfile()" in js
+    assert "state.httpHealth=await api(base+'/health/recheck',{method:'POST'})" in js
+    assert "method:'PUT',headers:{'Content-Type':'application/json'}" in js
+    assert 'Depends(require_permission("manage:service_profile"))' in api
+    assert 'Depends(require_permission("read:incident"))' in api

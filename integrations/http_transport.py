@@ -251,3 +251,15 @@ def insecure_sync_client(*, component: str = "outbound_http", **kwargs: Any) -> 
     kwargs["verify"] = False
     client = httpx.Client(**kwargs)  # nosec B501 - explicit project transport policy
     return _TimedSyncClient(client, component)
+
+
+
+def verified_async_client(*, component: str = "verified_health_probe", **kwargs: Any) -> Any:
+    """Use authenticated TLS for incident HTTP health probes.
+
+    Unlike the legacy internal MCP transport, a newly configured HTTPS health
+    check must validate the destination certificate and hostname.
+    """
+    kwargs["verify"] = True
+    client = httpx.AsyncClient(**kwargs)
+    return _TimedAsyncClient(client, component)

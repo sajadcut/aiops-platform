@@ -190,6 +190,7 @@
     chat: null, chatStatus: 'loading', chatBusy: false, chatLastResult: null,
     serviceStatus: null, serviceStatusLoading: false, serviceStatusBusy: false,
     serviceStatusToken: 0,
+    serviceProfile: null, httpHealth: null, httpHealthBusy: false, profileBusy: false,
     lifecyclePolling: false, lastLiveCheck: null, lifecyclePollError: false,
     progress: null, progressConnected: false, progressAbort: null,
     progressStreamRunning: false, progressRetries: 0, progressFailure: false
@@ -277,7 +278,8 @@
   const humanTool = x => state.language === 'fa' ? (toolFa[low(x)] || value(x)) : value(x);
   function signalFacts(raw) {
     const x=String(raw || ''),facts=[];
-    if(/active_state\s*=\s*inactive|service (?:is |was )?(?:inactive|stopped)|inactive \(dead\)/i.test(x)) facts.push('سرویس متوقف است');
+    if(/active_state\s*=\s*active(?:[;, ]|$)/i.test(x)&&/sub_state\s*=\s*running/i.test(x)) facts.push('سرویس طبق systemd در زمان ثبت شواهد در حال اجراست');
+    if(/active_state\s*=\s*(?:inactive|failed)|service (?:is |was )?(?:inactive|stopped)|inactive \(dead\)/i.test(x)) facts.push('سرویس طبق systemd در زمان ثبت شواهد متوقف بوده است');
     if(/running\s*=\s*false|process(?:es)? (?:are |is )?not running|process count (?:is )?0/i.test(x)) facts.push('پردازش سرویس اجرا نمی‌شود');
     if(/listening\s*=\s*false|not listening locally|port \d+ is not listening/i.test(x)) facts.push('پورت مورد انتظار باز نیست');
     if(/reachable\s*=\s*false|TCP connectivity check .*fails|TCP port .*unreachable/i.test(x)) facts.push('ارتباط با پورت برقرار نمی‌شود');
@@ -748,10 +750,181 @@
       notify((state.language==='fa'?'بررسی مجدد ناموفق: ':'Recheck failed: ')+e.message,true);
     }finally{
       if(token===state.serviceStatusToken){
-        state.serviceStatusBusy=false;state.serviceStatusLoading=false;renderServiceStatus();
+        state.serviceStatusBusy=false;state.serviceStatusLoading=false;
+        renderServiceStatus();renderOperationalSummary();
       }
     }
   }
+
+  function knownServicePlatform(report) {
+    const profile=state.serviceProfile?.profile||{};
+    if(state.serviceProfile?.configured)return profile.platform;
+    return report?.presentation_context?.platform||null;
+  }
+  function noProposedAction(report) {
+    return !report?.remediation_recommendation?.action &&
+      !report?.approval_readiness?.action;
+  }
+  function renderOperationalSummary(report=state.historic||state.report) {
+    if(!report)return;
+    const fa=state.language==='fa',i=report.incident_summary||{};
+    const p=report.presentation_context||{},st=state.historic?null:state.serviceStatus;
+    const active=st?.verified_systemd_only===true;
+    const old=st?.observed_at&&Date.now()-Date.parse(st.observed_at)>120000;
+    const fresh=active&&!old;
+    const statusSentence=fresh&&st.status==='running'?
+      (fa?'آخرین استعلام مستقیم VM MCP نشان می‌دهد سرویس از دید systemd در حال اجراست.':
+        'The latest VM MCP systemd observation shows the service is running.'):
+      fresh&&st.status==='stopped'?
+      (fa?'استعلام مستقیم VM MCP نشان می‌دهد سرویس متوقف است.':
+        'VM MCP directly observed the service stopped.'):
+      (fa?'وضعیت فعلی سرویس باید با VM MCP مجدداً بررسی شود؛ عنوان هشدار یا گزارش Agent جایگزین بررسی زنده نیست.':
+        'Current state needs a new VM MCP check. Alert headlines and agent summaries are not live checks.');
+    const action=noProposedAction(report);
+    const reason=p.action_disposition==='blocked_by_evaluator'
+      ?(fa?'Evaluator پیشنهاد تغییر را مجاز ندانسته است.':'The evaluator blocked an execution recommendation.')
+      :(fa?'برای این رخداد اقدام اجرایی تأییدشده‌ای ثبت نشده است.':
+        'No governed execution action has been registered for this incident.');
+    const vm=p.observations||{};
+    const dotnet=vm.dotnet_config_syntax?.values?.syntax_valid===true;
+    const disk=vm.disk_status?.values||{};
+    const full=Number(disk.used_percent)>=95;
+    const config=dotnet?(fa?'ساختار JSON فایل‌های بررسی‌شده معتبر بوده؛ این تست سلامت Runtime را ثابت نمی‌کند.':
+        'Checked JSON syntax passed; application readiness is not proven.'):
+      (fa?'صحت کانفیگ در همین جمع‌بندی به‌طور کامل تأیید نشده است.':
+        'Complete configuration validation is not established here.');
+    const health=state.httpHealth;
+    const healthLabel=health?.status==='healthy'?
+      (fa?'Endpoint سلامت HTTP در آخرین تست پاسخ موفق داده است.':'The configured HTTP health check last returned success.'):
+      health?.status==='unhealthy'?
+      (fa?'آخرین تست HTTP Health ناموفق بوده است.':'The latest HTTP health check was unhealthy.'):
+      (fa?'سلامت HTTP برنامه هنوز تأیید نشده است.':'Application HTTP health remains unverified.');
+    const observationTime=fresh&&st.observed_at?
+      (fa?'مشاهدهٔ systemd: ':'Systemd observed: ')+date(st.observed_at):'';
+    const rca=report.rca_assessment?.rca_confidence;
+    const rcaLabel=rca==null?'':(fa?' · اطمینان به علت ریشه‌ای: ':' · Root-cause confidence: ')+numberPct(rca);
+    const verifiedRefs=[...new Set([
+      st?.evidence_ref,
+      ...Object.values(vm).map(row=>row?.evidence_ref),
+    ].filter(Boolean))].slice(0,8);
+    show('#ic-operational-summary',
+      '<h3>'+esc(fa?'نتیجهٔ عملیاتی این رخداد':'Operational incident assessment')+'</h3>'+
+      '<p><strong>'+esc(statusSentence)+'</strong></p>'+
+      '<p>'+esc(healthLabel+' '+config)+'</p>'+
+      (full?'<p class="ic-headline-caution">'+esc(fa?
+        'فضای دیسک در زمان تحلیل به آستانه بحرانی رسیده بود؛ وضعیت فعلی ظرفیت باید بررسی شود.':
+        'Disk was at a critical threshold during analysis; recheck current storage capacity.')+'</p>':'')+
+      '<p>'+esc(action?reason:(fa?'اقدام پیشنهادی باید مطابق گیت مجوز بررسی شود.':
+        'The proposed action requires governed authorization.'))+'</p>'+
+      '<p class="ic-headline-meta">'+esc(observationTime+rcaLabel)+
+      (p.block_reason?' · '+txt(p.block_reason):'')+'</p>'+
+      refs(verifiedRefs));
+  }
+  function renderServiceProfile() {
+    const node=$('#ic-service-profile');
+    if(!node)return;
+    const fa=state.language==='fa';
+    const row=state.serviceProfile||{},p=row.profile||{};
+    const h=state.httpHealth||{};
+    const known=row.configured===true;
+    const label=(x)=>esc(x==null||x===''?(fa?'ثبت نشده':'Not configured'):String(x));
+    const healthLabel={
+      healthy:fa?'سالم در آخرین بررسی HTTP':'Healthy at last HTTP check',
+      unhealthy:fa?'ناسالم در آخرین بررسی HTTP':'Unhealthy at last HTTP check',
+      unavailable:fa?'بررسی HTTP ناموفق':'HTTP check unavailable',
+      not_checked:fa?'HTTP هنوز بررسی نشده':'HTTP not checked',
+      not_configured:fa?'پورت یا Health Endpoint ثبت نشده':'Health endpoint not configured'
+    }[h.status]||(fa?'بررسی نشده':'Not checked');
+    const ready=known&&p.expected_port&&p.health_path;
+    const item=(id,title,v,type='text')=>
+      '<label for="ic-profile-'+id+'">'+esc(title)+
+      '<input id="ic-profile-'+id+'" name="'+id+'" type="'+type+'" value="'+esc(v??'')+
+      '" maxlength="300"></label>';
+    const form='<details id="ic-profile-edit"><summary>'+esc(fa?
+      'ویرایش پروفایل سلامت (فقط SRE)':'Edit health profile (SRE only)')+'</summary>'+
+      '<form class="ic-profile-form" id="ic-profile-form">'+
+      '<label>'+esc(fa?'نوع سرویس':'Platform')+
+      '<select name="platform"><option value="vm_systemd"'+(p.platform==='vm_systemd'||!p.platform?' selected':'')+'>VM / systemd</option>'+
+      '<option value="windows_service"'+(p.platform==='windows_service'?' selected':'')+'>Windows Service</option>'+
+      '<option value="kubernetes"'+(p.platform==='kubernetes'?' selected':'')+'>Kubernetes</option></select></label>'+
+      item('owner',fa?'مالک سرویس':'Owner',p.owner)+
+      item('expected_port',fa?'پورت HTTP':'HTTP port',p.expected_port,'number')+
+      item('health_path',fa?'مسیر Health (مثل /health)':'Health path',p.health_path)+
+      '<label>HTTP / HTTPS<select name="health_scheme"><option value="http"'+(p.health_scheme!=='https'?' selected':'')+'>HTTP</option>'+
+      '<option value="https"'+(p.health_scheme==='https'?' selected':'')+'>HTTPS</option></select></label>'+
+      item('dependencies',fa?'وابستگی‌ها (با کاما)':'Dependencies (comma separated)',arr(p.dependencies).join(','))+
+      item('restart_runbook_id',fa?'شناسه Runbook (اطلاعاتی)':'Runbook ID (informational)',p.restart_runbook_id)+
+      item('verification_notes',fa?'قواعد راستی‌آزمایی':'Verification notes',p.verification_notes)+
+      '<button class="ic-btn ic-btn-primary" type="submit"'+(state.profileBusy?' disabled':'')+'>'+
+      esc(state.profileBusy?(fa?'در حال ذخیره…':'Saving…'):(fa?'ذخیره پروفایل سرویس':'Save service profile'))+
+      '</button></form></details>';
+    show('#ic-service-profile','<div class="ic-profile-summary"><strong>'+
+      esc(fa?'پروفایل و سلامت برنامه':'Service profile & application health')+'</strong>'+
+      '<span class="ic-status" data-tone="'+(known?'ok':'warn')+'">'+esc(known?
+      (fa?'ثبت‌شده توسط SRE':'SRE configured'):(fa?'نیازمند تکمیل':'Setup needed'))+'</span></div>'+
+      '<div class="ic-profile-facts"><span>'+esc(fa?'محیط: ':'Platform: ')+
+      label(p.platform||state.report?.presentation_context?.platform)+'</span>'+
+      '<span>'+esc(fa?'مالک: ':'Owner: ')+label(p.owner)+'</span>'+
+      '<span>'+esc(fa?'پورت: ':'Port: ')+label(p.expected_port)+'</span>'+
+      '<span>'+esc(fa?'مسیر سلامت: ':'Health: ')+label(p.health_path)+'</span>'+
+      '<span>'+esc(fa?'وابستگی‌ها: ':'Dependencies: ')+label(arr(p.dependencies).join(', '))+'</span></div>'+
+      '<div class="ic-http-health"><span>'+esc(fa?'وضعیت HTTP: ':'HTTP status: ')+'</span>'+
+      '<strong data-state="'+esc(h.status||'not_configured')+'">'+esc(healthLabel)+'</strong>'+
+      (h.checked_at?'<small>'+txt(date(h.checked_at))+'</small>':'')+
+      (h.http_code?'<small>HTTP '+txt(h.http_code)+'</small>':'')+
+      (ready?'<button type="button" class="ic-btn ic-btn-muted" id="ic-http-recheck"'+
+       (state.httpHealthBusy||state.historic?' disabled':'')+'>'+
+       esc(state.httpHealthBusy?(fa?'در حال بررسی…':'Checking…'):(fa?'بررسی زنده HTTP':'Recheck HTTP'))+
+       '</button>':'')+'</div>'+(!state.historic?form:''));
+  }
+  async function loadServiceProfile() {
+    try{
+      const values=await Promise.allSettled([
+        api(base+'/service-profile'),api(base+'/health-status')
+      ]);
+      state.serviceProfile=values[0].status==='fulfilled'?values[0].value:
+        {configured:false,reason:'catalog_unavailable'};
+      state.httpHealth=values[1].status==='fulfilled'?values[1].value:
+        {status:'unavailable'};
+    }catch(_){state.serviceProfile={configured:false};state.httpHealth={status:'unavailable'};}
+    renderServiceProfile();renderOperationalSummary();
+  }
+  async function recheckHttpHealth() {
+    if(state.httpHealthBusy||state.historic)return;
+    state.httpHealthBusy=true;renderServiceProfile();
+    try {
+      state.httpHealth=await api(base+'/health/recheck',{method:'POST'});
+    }catch(e){
+      state.httpHealth={status:'unavailable'};
+      notify((state.language==='fa'?'بررسی HTTP ناموفق: ':'HTTP check failed: ')+e.message,true);
+    }finally {
+      state.httpHealthBusy=false;renderServiceProfile();renderOperationalSummary();
+    }
+  }
+  async function saveServiceProfile(form) {
+    if(state.profileBusy||state.historic)return;
+    const field=name=>String(form.elements.namedItem(name)?.value||'').trim();
+    const port=field('expected_port'),deps=field('dependencies');
+    const payload={
+      platform:field('platform')||'vm_systemd',owner:field('owner')||null,
+      expected_port:port?Number(port):null,health_path:field('health_path')||null,
+      health_scheme:field('health_scheme')||'http',
+      dependencies:deps?deps.split(',').map(x=>x.trim()).filter(Boolean):[],
+      restart_runbook_id:field('restart_runbook_id')||null,
+      verification_notes:field('verification_notes')||null
+    };
+    state.profileBusy=true;
+    try{
+      state.serviceProfile=await api(base+'/service-profile',{
+        method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)
+      });
+      state.httpHealth={status:'not_checked'};
+      notify(state.language==='fa'?'پروفایل ذخیره شد؛ HTTP هنوز بررسی نشده است.':
+        'Profile saved; HTTP health has not been tested.');
+    }catch(e){notify((state.language==='fa'?'ذخیره پروفایل ناموفق: ':'Profile save failed: ')+e.message,true);}
+    finally{state.profileBusy=false;renderServiceProfile();renderOperationalSummary();}
+  }
+
   function renderHero(r) {
     const i=r.incident_summary||{},a=r.approval_readiness||{},action=r.remediation_recommendation||{};
     const identity=i.service_identity||{};
@@ -773,7 +946,8 @@
         : authStatus==='approved'?tr('approvalSeparate'):tr('backendGate'))+'</p>');
     const quick=[
       ['started',date(i.started_at)],['duration',i.elapsed_seconds==null?tr('unknown'):num(Math.max(0,Math.floor(i.elapsed_seconds/60)))+' '+(state.language==='fa'?'دقیقه':'min')],
-      ['risk',status(action.risk_level)],['evidence',num(i.total_evidence_count??r.source_references?.length??0)]
+      ['risk',noProposedAction(r)?(state.language==='fa'?'اقدام اجرایی پیشنهاد نشده':'No executable action'):status(action.risk_level)],
+      ['evidence',num(i.total_evidence_count??r.source_references?.length??0)]
     ];
     show('#ic-quick-facts',quick.map(([k,v])=>'<div><small>'+esc(tr(k))+'</small><strong>'+esc(v)+'</strong></div>').join(''));
   }
@@ -818,12 +992,16 @@
         'Recorded evidence: '+total+' · fresh execution-grade: '+
           (r.incident_summary.valid_evidence_count||0))+'</p>':'';
     show('#ic-operator-explanation','<article class="ic-explain">'+
-      '<h3>'+esc(fa?faHeadline:enHeadline)+'</h3>'+count+
+      '<h3>'+esc(fa?faHeadline:enHeadline)+'</h3>'+
+      '<p class="ic-headline-caution">'+esc(fa?
+        'یافته‌های زیر متعلق به زمان انجام تحلیل هستند و ممکن است با آخرین بررسی مجدد سرویس تفاوت داشته باشند.':
+        'These findings describe the investigation time and may differ from the most recent live recheck.')+'</p>'+count+
       analysis+caution+nextSteps+approval+'</article>');
   }
 
   function renderOverview(r) {
     const i=r.incident_summary||{},act=r.remediation_recommendation||{},a=r.approval_readiness||{};
+    renderOperationalSummary(r);
     renderOperatorExplanation(r);
     const deterministic=plainLead(r);
     const n=state.narrative;
@@ -846,8 +1024,10 @@
       fact('serviceIdentity',status(i.service_identity?.status)),
       (i.service_identity?.suspected_service?fact('suspectedService',i.service_identity.suspected_service):''),
       fact('identityBasis',status(i.service_identity?.basis)),
-      fact('action',humanAction(act.action)),fact('target',act.target),
-      fact('tool',humanTool(act.tool)),fact('freshness',status(r.data_freshness))
+      fact('action',noProposedAction(r)?(state.language==='fa'?'عملیاتی پیشنهاد نشده':'No proposed action'):humanAction(act.action)),
+      fact('target',noProposedAction(r)?(i.target||state.serviceStatus?.target):act.target),
+      ...(noProposedAction(r)?[]:[fact('tool',humanTool(act.tool))]),
+      fact('freshness',status(r.data_freshness))
     ].join(''));
     const warnings=warningMessages(r);
     show('#ic-warning-list',warnings.length?warnings.map(x=>'<div class="ic-warning'+(x.critical?' critical':'')+'">'+esc(x.text)+'</div>').join('') :
@@ -855,6 +1035,29 @@
   }
   function renderReview(r) {
     const i=r.incident_summary||{},a=r.approval_readiness||{},x=r.remediation_recommendation||{};
+    if(noProposedAction(r)){
+      const fa=state.language==='fa';
+      const disposition=r.presentation_context?.action_disposition;
+      const reason=disposition==='blocked_by_evaluator'?
+        (fa?'Evaluator به دلیل ناکافی‌بودن اطمینان یا شواهد، مجوز پیشنهاد اجرا صادر نکرده است.':
+            'Evaluator blocked the operational action because its evidence or confidence gate did not pass.'):
+        (fa?'در جریان تحلیل، اقدام اجرایی مشخصی پیشنهاد نشده است.':
+            'The analysis did not produce an executable recommendation.');
+      const isVm=knownServicePlatform(r)==='vm_systemd';
+      show('#ic-proposal','<div class="ic-callout"><strong>'+esc(fa?
+        'هیچ اقدام اجرایی تأیید نشده است':'No executable action authorized')+
+        '</strong><p>'+esc(reason)+'</p></div><div class="ic-proposal">'+
+        fact('host',i.target||state.serviceStatus?.target||i.host)+
+        fact('risk',fa?'قابل ارزیابی نیست؛ اقدامی پیشنهاد نشده':'Not applicable; no action proposed')+
+        fact('cluster',isVm?(fa?'قابل اعمال نیست؛ سرویس VM':'Not applicable to VM'):i.cluster)+
+        fact('namespace',isVm?(fa?'قابل اعمال نیست؛ سرویس VM':'Not applicable to VM'):i.namespace)+
+        fact('approval',fa?'درخواستی ثبت نشده':'Not requested')+'</div>');
+      show('#ic-preconditions','<div class="ic-callout"><strong>'+esc(fa?'قدم بعدی':'Next step')+
+        '</strong><p>'+esc(fa?
+        'ابتدا وضعیت واقعی سرویس، HTTP Health و شواهد ناقص را بررسی کنید؛ اجرای تغییر نیازمند درخواست مجزا و Approval است.':
+        'Review live service health and missing evidence; a change still requires a separate governed approval.')+
+        '</p></div>');return;
+    }
     show('#ic-proposal',[
       fact('action',humanAction(x.action)),fact('tool',humanTool(a.tool||x.tool)),fact('target',a.target||x.target),fact('risk',status(x.risk_level)),
       fact('host',i.host||i.target),fact('cluster',i.cluster),fact('namespace',i.namespace),
@@ -1094,7 +1297,7 @@
     const failed=agents.filter(a=>['failed','error'].includes(low(a.status))).length;
     const missing=agents.filter(a=>['unknown','skipped'].includes(low(a.status))).length;
     const intro=fa?
-      'هر کارت نشان می‌دهد ایجنت چه داده‌ای دریافت کرده، چه نتیجه‌ای نوشته، چه فرضیه‌ای داشته و چه چیزی هنوز معلوم نیست. استناد به شواهد به معنی اجرای مستقیم ابزار توسط آن Agent نیست.':
+      'این یافته‌ها مربوط به زمان تحلیل Incident هستند، نه لزوماً وضعیت فعلی سرویس. هر کارت نشان می‌دهد ایجنت چه داده‌ای دریافت کرده، چه نتیجه‌ای نوشته، چه فرضیه‌ای داشته و چه چیزی هنوز معلوم نیست. استناد به شواهد به معنی اجرای مستقیم ابزار توسط آن Agent نیست.':
       'Each card distinguishes the specialist’s recorded findings, cited evidence, open hypotheses and suggested next checks. Citing evidence does not mean the agent itself executed a tool.';
     show('#ic-agent-summary','<div class="ic-agent-overview"><p>'+esc(intro)+'</p>'+
       '<div class="ic-agent-totals"><span>'+esc(fa?'ایجنت‌های ثبت‌شده':'Recorded agents')+' <b>'+num(agents.length)+'</b></span>'+
@@ -1383,6 +1586,12 @@
     const performed=o.status && !['not_executed','not_recorded','unknown'].includes(low(o.status));
     const consumed=low(a.approval_status)==='consumed';
     const running=consumed && state.lifecycle?.analysis_in_progress===true;
+    if(!o.action&&!performed&&!running&&!consumed){
+      show('#ic-outcome-view','<p class="ic-empty">'+esc(state.language==='fa'?
+        'هیچ عملیاتی اجرا نشده است. بنابراین نتیجه اجرا، Verification و یادگیری پس از اجرا قابل اعمال نیستند.':
+        'No operation was executed. Execution result, verification and post-execution learning are not applicable.')+'</p>');
+      return;
+    }
     const first=performed?'<div class="ic-outcome-heading"><strong>'+tr('execute')+'</strong>'+pill(o.status)+'</div>':
       running?'<div class="ic-analysis-progress" role="status"><span class="ic-analysis-spinner" aria-hidden="true"></span><div><strong>'+
         (state.language==='fa'?'عملیات تأییدشده در حال اجرا یا راستی‌آزمایی است…':'Approved execution or verification in progress…')+
@@ -1550,7 +1759,7 @@
     if(!state.report)return;
     const r=state.historic||state.report;
     $('#ic-archive-banner').hidden=!state.historic;
-    renderHero(r);renderServiceStatus();renderOverview(r);renderReview(r);renderAnalysis(r);renderEvidence(r);
+    renderHero(r);renderServiceStatus();renderServiceProfile();renderOverview(r);renderReview(r);renderAnalysis(r);renderEvidence(r);
     renderKnowledge(r);renderInvestigation(r);renderOutcome(r);renderTimeline(r);renderDecision(r);renderReceivedSignals();
     renderIncidentChat();
     renderAnalysisProgress();
@@ -1756,7 +1965,7 @@
       if(!preserveHistory)state.historic=null;
       state.narrative=null;state.error=null;state.rejectionVisible=false;
       $('#ic-auth').hidden=true;$('#ic-loader').hidden=true;$('#ic-main').hidden=false;alert('');
-      render();void loadServiceStatus();void loadNarrative();void loadReceivedSignals(token);
+      render();void loadServiceStatus();void loadServiceProfile();void loadNarrative();void loadReceivedSignals(token);
       void loadConfigResponse(token);
       void loadIncidentChat(token);
       void connectProgressStream();
@@ -1897,6 +2106,14 @@
     $('#ic-service-status').addEventListener('click',e=>{
       if(e.target.closest('#ic-service-recheck'))void recheckServiceStatus();
     });
+    $('#ic-service-profile').addEventListener('click',e=>{
+      if(e.target.closest('#ic-http-recheck'))void recheckHttpHealth();
+    });
+    $('#ic-service-profile').addEventListener('submit',e=>{
+      if(e.target.id==='ic-profile-form'){
+        e.preventDefault();void saveServiceProfile(e.target);
+      }
+    });
     $('#ic-connect').addEventListener('click',()=>{state.key=$('#ic-key').value.trim();try{localStorage.setItem('aiops_api_key',state.key);}catch(_){}void load();});
     $('#ic-key').addEventListener('keydown',e=>{if(e.key==='Enter')$('#ic-connect').click();});
     $('#ic-return-live').addEventListener('click',returnLive);
@@ -1971,6 +2188,14 @@
     });
     const lifecycleTimer=setInterval(()=>{void pollLifecycle();},6000);
     const durationTimer=setInterval(updateProgressClock,1000);
+    // Refresh age warnings locally; a previous Running observation must not
+    // appear fresh indefinitely when the operator leaves the page open.
+    const serviceAgeTimer=setInterval(()=>{
+      if(state.report&&!state.historic){
+        renderServiceStatus();renderOperationalSummary();
+      }
+    },30000);
+    if(typeof serviceAgeTimer?.unref==='function')serviceAgeTimer.unref();
     if(typeof durationTimer?.unref==='function')durationTimer.unref();
     // Node-based browser regression harnesses should not be kept alive by polling.
     if(typeof lifecycleTimer?.unref==='function')lifecycleTimer.unref();
