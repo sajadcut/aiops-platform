@@ -2495,12 +2495,43 @@
     }
     const questions=arr(p.questions);
     const checks=arr(p.checks);
+    const disc=p.config_discovery||{};
+    const guidance=p.llm_unknown_guidance||{};
+    const found=arr(disc.files),hypotheses=arr(disc.unverified_candidates);
+    const fileItems=found.length?found:hypotheses;
+    const discoveryHtml=(fileItems.length||disc.runtime&&disc.runtime!=='—'||
+      disc.status&&disc.status!=='—')?
+      '<article class="ic-detail-card"><h3>'+
+      esc(fa?'کشف فایل کانفیگ از systemd و MCP':'Config file discovery via systemd & MCP')+
+      '</h3><p>'+esc(fa?'فناوری شناسایی‌شده: ':'Detected runtime: ')+txt(disc.runtime)+
+      ' · '+esc(fa?'وضعیت کشف: ':'Discovery: ')+txt(disc.status)+'</p>'+
+      (disc.systemd_unit&&disc.systemd_unit!=='—'?
+        '<p>'+esc(fa?'فایل سرویس systemd: ':'Systemd unit: ')+
+        '<code dir="ltr">'+txt(disc.systemd_unit)+'</code></p>':'')+
+      (fileItems.length?'<ul class="ic-agent-bullets">'+fileItems.slice(0,10).map(file=>
+        '<li><code dir="ltr">'+txt(file.path)+'</code> · '+
+        esc(file.verified_exists===true?
+          (fa?'وجود و خواندن فایل تأیید شده؛ سینتکس هنوز بررسی نشده':'Readable file verified; syntax not validated'):
+          (fa?'مسیر احتمالی از systemd؛ وجود فایل هنوز تأیید نشده':'Systemd path hypothesis; file not yet verified'))+
+        ' · '+txt(file.source)+'</li>').join('')+'</ul>':
+        '<p>'+esc(fa?'فایل مشخصی هنوز تأیید نشده؛ سامانه باید از LLM و روش کشف معتبر کمک بگیرد.':
+        'No verified file yet; consult LLM and vendor discovery guidance.')+'</p>')+
+      '<p>'+esc(fa?'وضعیت مشورت LLM: ':'LLM consultation: ')+
+      txt(disc.llm_guidance_status||guidance.status||'not_consulted')+'</p>'+
+      arr(guidance.items).slice(0,4).map(x=>
+        '<p><strong>'+txt(x.subject)+'</strong> — '+txt(x.explanation)+
+        ' · '+txt(x.validation_approach)+'</p>').join('')+
+      '<p class="ic-agent-disclaimer">'+esc(fa?
+        'پیشنهاد LLM و فایل حدسی مجوز خواندن مسیر دلخواه یا اجرای Validator نیستند؛ فقط مسیر تأییدشده و ابزار ثبت‌شده مجاز است.':
+        'LLM suggestions never authorize arbitrary path reads, validation commands or changes.')+
+      '</p>'+refs(disc.evidence_refs)+'</article>':'';
     const body='<div class="ic-callout"><strong>'+
       esc(fa?'وضعیت: صرفاً پیشنهاد تحقیق، بدون اجازه تغییر':'Status: investigation proposal, no change authority')+
       '</strong><p>'+esc(fa?
         'تا زمانی که کانفیگ فعلی و نسخه پیشنهادی از منبع معتبر جمع‌آوری و نسخه پیشنهادی واقعاً اعتبارسنجی نشده باشد، هیچ Patch یا تأیید اجرا وجود ندارد.':
         'No patch or executable approval exists until source material is collected and the proposed version passes a real validation.')+
       '</p></div>'+
+      discoveryHtml+
       (config.status?renderConfigProposal(config):'')+
       (p.runtime_discovery?.runtime==='dotnet'?(()=>{
         const d=p.runtime_discovery,files=arr(d.files);
