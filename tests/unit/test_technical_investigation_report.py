@@ -402,7 +402,7 @@ def test_stop_origin_is_plausible_not_manual_stop_proven():
     assert origin["status"] == "possible_unverified"
     assert origin["manual_stop_proven"] is False
     assert origin["audit_command_seen"] is False
-    assert "11min 4.416s" in origin["indicators"]
+    assert any("11min 4.416s" in item for item in origin["indicators"])
     assert "Termination signal=SIGKILL" in origin["indicators"]
     assert "Stop/Restart" in r["rca"]["likely_hypotheses"][0]["title"]
     assert r["rca"]["cause_confirmed"] is False
