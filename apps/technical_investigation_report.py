@@ -227,16 +227,21 @@ def _journal_counts(rows: list[dict]) -> dict:
     entries = []
     for row in rows:
         raw = row["raw_data"]
-        if (raw.get("diagnostic") not in {"service_logs", "system_logs"}
-                or not isinstance(raw.get("entries"), list)):
+        if raw.get("diagnostic") not in {"service_logs", "system_logs"}:
             continue
-        entries.extend(str(x).lower() for x in raw["entries"][:150])
+        collected = raw.get("entries")
+        if not isinstance(collected, list):
+            collected = raw.get("logs")
+        if not isinstance(collected, list):
+            continue
+        entries.extend(str(x).lower() for x in collected[:150])
     signatures = {
         "oom": ("out of memory", "oom-kill", "killed process"),
         "timeout": ("timed out", "timeout", "start operation timed"),
         "dependency": ("dependency failed", "failed to start"),
         "exception": ("exception", "traceback", "segmentation fault"),
         "permission": ("permission denied", "access denied"),
+        "disk_full": ("no space left on device", "enospc"),
     }
     return {"lines": len(entries), "signatures": {
         label: sum(any(token in line for token in patterns) for line in entries)
@@ -357,7 +362,7 @@ def build_technical_investigation(*, incident: dict, evidence: list[dict],
             sig = stats["signatures"]
             if stats["lines"]:
                 technical = (f"Journal lines={stats['lines']}؛ "
-                             f"Timeout={sig['timeout']}؛ OOM={sig['oom']}؛ "
+                             f"Timeout={sig['timeout']}؛ OOM={sig['oom']}؛ ENOSPC={sig['disk_full']}؛ "
                              f"Dependency={sig['dependency']}؛ "
                              f"Exception={sig['exception']}؛ Permission={sig['permission']}. "
                              "شمارش الگوها در لاگ محدود؛ این شمارش اثبات علت نیست.")
