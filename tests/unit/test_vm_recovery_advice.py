@@ -160,3 +160,40 @@ def test_incident_decision_brief_exposes_advice_despite_evaluation_blockers():
     assert result["approval_readiness"]["approval_status"] == "not_requested"
     assert result["source_policy"]["authorizes_execution"] is False
     assert result["rca_assessment"]["agent_agreement"] == 0.36
+
+
+def test_failed_stop_timeout_offers_start_as_non_authorized_alternative():
+    rows = gfpapi_rows()
+    rows[0]["raw_data"]["systemctl_status"] = (
+        "Active: failed (Result: timeout)\n"
+        " Duration: 11min 4.416s\n"
+        " Main PID: 310948 (code=killed, signal=KILL)"
+    )
+    proposal = advisory(rows)
+    assert proposal["suggested_action"] == "restart_service"
+    assert proposal["stop_origin_assessment"] == "possible_stop_timeout"
+    assert {a["action"] for a in proposal["alternative_actions"]} == {
+        "restart_service", "start_service"
+    }
+    assert next(a for a in proposal["alternative_actions"]
+                if a["action"] == "start_service")["status"] == (
+                    "alternative_not_runbook_authorized_for_failed"
+                )
+    assert "TimeoutStopSec" in " ".join(proposal["prerequisite_checks"])
+    assert "manual stop" in " ".join(proposal["prerequisite_checks"]).lower()
+    assert proposal["authorizes_execution"] is False
+    assert proposal["execution_authority"] is False
+
+
+def test_invalid_dotnet_json_overrides_generic_unavailable_config_and_blocks_recovery():
+    rows = gfpapi_rows() + [
+        row("dotnet_config_syntax", "ev-dotnet-bad", service=SERVICE,
+            supported=True, syntax_valid=False,
+            files=[{"file": "appsettings.json", "status": "invalid_json_syntax"}])
+    ]
+    result = advisory(rows)
+    assert result["status"] == "repair_configuration_first"
+    assert result["configuration_validation"] == "INVALID"
+    assert result["suggested_action"] is None
+    assert result["alternative_actions"] == []
+    assert result["execution_authority"] is False
