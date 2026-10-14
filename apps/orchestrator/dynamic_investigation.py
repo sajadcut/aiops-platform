@@ -147,6 +147,68 @@ class DynamicInvestigationPlanner:
                 ),
                 "evidence_refs": discovery_summary["evidence_refs"],
             })
+        if general_review.get("status") in {"file_observed", "candidate_proposed"}:
+            file_status = str(general_review.get("status") or "file_observed")
+            config_file = _bounded(general_review.get("config_file"), 240)
+            review_ref = _bounded(general_review.get("evidence_ref"), 160)
+            source_hash = _bounded(general_review.get("source_hash"), 64)
+            candidate_hash = _bounded(general_review.get("candidate_hash"), 64)
+            redacted_diff = general_review.get("redacted_diff") or {}
+            result["config_proposal"] = {
+                "status": file_status,
+                "service": _bounded(state.get("service_name"), 80),
+                "config_file": config_file,
+                "error_line": (general_review.get("observed_error_line")
+                               if type(general_review.get("observed_error_line")) is int
+                               else None),
+                "source_evidence_refs": [review_ref] if review_ref else [],
+                "current_configuration": None,
+                "proposed_configuration": None,
+                "unified_diff": None,
+                "current_excerpt": [
+                    {"line": row["line"], "content": _bounded(row.get("content"), 125)}
+                    for row in (general_review.get("current_excerpt") or [])[:7]
+                    if isinstance(row, dict) and type(row.get("line")) is int
+                ],
+                "proposed_excerpt": [
+                    {"line": row["line"], "content": _bounded(row.get("content"), 125)}
+                    for row in (general_review.get("proposed_excerpt") or [])[:7]
+                    if isinstance(row, dict) and type(row.get("line")) is int
+                ],
+                "redacted_diff": {
+                    "line": redacted_diff.get("line"),
+                    "before": _bounded(redacted_diff.get("before"), 125),
+                    "after": _bounded(redacted_diff.get("after"), 125),
+                } if isinstance(redacted_diff, dict) and redacted_diff else None,
+                "original_sha256": source_hash,
+                "candidate_sha256": candidate_hash,
+                "proposed_change": _bounded(general_review.get("proposed_change"), 90),
+                "format_validation_status": _bounded(
+                    general_review.get("validation_status"), 80),
+                "vendor_validation_status": _bounded(
+                    general_review.get("vendor_validation"), 50),
+                "validation_status": "UNVERIFIED",
+                "test_scope": _bounded(
+                    general_review.get("test_scope") or "worker_format_validation_only", 100),
+                "stage_failure_reason": "isolated_validation_not_available",
+                "validator_executed_on_proposal": (
+                    general_review.get("validator_executed_on_proposal") is True),
+                "isolated_validation": False,
+                "requires_approval": True,
+                "apply_eligible": False,
+                "execution_authority": False,
+            }
+            result["operator_questions"].append({
+                "question": (
+                    "Review the worker-side config findings and obtain vendor-specific "
+                    "isolated validation plus independent approval before any edit."
+                ),
+                "reason": (
+                    "File format syntax alone does not verify the installed "
+                    "application, include tree, environment, or service health."
+                ),
+                "evidence_refs": [review_ref] if review_ref else [],
+            })
         if unit.get("runtime") == "dotnet":
             if syntax.get("syntax_valid") is False:
                 invalid = next((row for row in syntax.get("files", [])
@@ -285,6 +347,7 @@ class DynamicInvestigationPlanner:
         runtime = cls.runtime_evidence(evidence)
         unit = runtime.get("service_runtime_discovery") or {}
         syntax = runtime.get("dotnet_config_syntax") or {}
+        general_review = runtime.get("service_config_review") or {}
         missing = [
             _bounded(value, 130)
             for value in (state.get("coordination") or {}).get("missing_evidence", [])
