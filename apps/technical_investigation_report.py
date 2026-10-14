@@ -27,7 +27,7 @@ DOMAINS = (
 SCALARS = {
     "active_state", "sub_state", "result", "exit_code", "exec_main_status",
     "main_pid", "restart_count", "n_restarts", "timeout_start_usec",
-    "timeout_start_sec", "service_type", "exec_start", "runtime", "entrypoint",
+    "timeout_start_sec", "service_type", "runtime", "entrypoint",
     "unit_file", "running", "count", "supported", "valid", "syntax_valid",
     "validated_scope", "publish_directory", "listening", "reachable",
     "target_port", "port", "cpu_usage", "memory_used_percent", "mem_available",
@@ -306,11 +306,17 @@ def build_technical_investigation(*, incident: dict, evidence: list[dict],
         if key == "systemd":
             state_record = next((r for r in domain_rows if r["raw_data"].get("diagnostic") == "service_status"
                                  and r["raw_data"].get("success") is True), None)
-            runtime_record = next((r for r in domain_rows if r["raw_data"].get("diagnostic") == "service_runtime_discovery"), None)
+            runtime_record = next((r for r in domain_rows
+                                   if r["raw_data"].get("diagnostic") == "service_runtime_discovery"
+                                   and r["raw_data"].get("success") is True), None)
             if state_record:
                 d = state_record["raw_data"]
-                technical = "systemd: ActiveState={}; SubState={}; Result={}; MainPID={}; RestartCount={}".format(
-                    *[d.get(k, "ثبت نشده") for k in ("active_state", "sub_state", "result", "main_pid", "restart_count")])
+                technical = ("systemd: ActiveState={}; SubState={}; Result={}; "
+                             "MainPID={}; ExecMainStatus={}; RestartCount={}").format(
+                    *[d.get(k, "ثبت نشده") for k in (
+                        "active_state", "sub_state", "result", "main_pid",
+                        "exec_main_status", "restart_count"
+                    )])
                 if d.get("result") == "timeout":
                     technical += "؛ Timeout ثبت شده، اما مکانیسم ایجاد آن هنوز تأیید نشده است."
                 if d.get("active_state") in {"failed", "inactive"} and _state(state_record, now) == "fresh":
@@ -318,7 +324,12 @@ def build_technical_investigation(*, incident: dict, evidence: list[dict],
                                       "evidence_refs": [str(state_record.get("id") or state_record.get("reference") or "")]})
             if runtime_record:
                 d = runtime_record["raw_data"]
-                technical += f" Runtime={_text(d.get('runtime'))}; Entrypoint={_text(d.get('entrypoint'))}; TimeoutStart={_text(d.get('timeout_start_usec'))}."
+                technical += (
+                    f" Runtime={_text(d.get('runtime'))}; "
+                    f"Entrypoint={_text(d.get('entrypoint'))}; "
+                    f"Type={_text(d.get('service_type')) or 'ثبت نشده'}; "
+                    f"TimeoutStart={_text(d.get('timeout_start_usec')) or 'ثبت نشده'}."
+                )
         elif key == "journal" and domain_rows:
             stats = _journal_counts(domain_rows)
             sig = stats["signatures"]
