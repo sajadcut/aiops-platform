@@ -249,3 +249,46 @@ def test_active_exited_systemd_is_not_conflated_with_running_service():
     c = correlate(evidence=[x])
     assert c["last_vm_observation"] is None
     assert not c["contradictions"]
+
+
+
+def test_zabbix_recovery_is_not_aiops_restart_and_does_not_close_open_incident():
+    a = {"event_type": "verification_source_recovery_received",
+         "event_id": "zabbix-recovery-01", "actor": "zabbix_webhook",
+         "created_at": "2026-10-14T14:02:00Z"}
+    c = correlate(events=[a])
+    assert any(x.get("source") == "zabbix" and
+               "نه اجرای اصلاح توسط AIOps" in x["text_fa"]
+               for x in c["confirmed_observations"])
+    assert c["root_cause_verified"] is False
+    assert c["confirmed_vm_transition"] is None
+    assert c["authorizes_execution"] is False
+    assert "Closure" in " ".join(c["unknowns_fa"])
+
+
+def test_failed_systemd_vs_named_process_running_requests_pid_cgroup_check():
+    row={"source":"vm_mcp","id":"proc-present",
+         "created_at":"2026-10-14T14:01:02Z",
+         "raw_data":{"diagnostic":"process_status", "success":True,
+                     "service":"gfpapi", "target":"10.248.16.82",
+                     "running":True, "count":1}}
+    c=correlate(evidence=[vm("failed"),row])
+    matching=[x for x in c["contradictions"]
+              if x["contradiction_type"]=="systemd_failed_vs_named_process_running"]
+    assert len(matching)==1
+    assert matching[0]["interpretation"]=="process_ownership_and_time_not_verified"
+    assert matching[0]["evidence_refs"]==["vm-001","proc-present"]
+    assert "MainPID" in " ".join(c["next_steps_fa"])
+    assert c["root_cause_verified"] is False
+
+
+def test_json_syntax_valid_does_not_overrule_failed_service_or_prove_dependencies():
+    config={"id":"dotnet-valid","source":"vm_mcp","created_at":"2026-10-14T14:01:20Z",
+            "raw_data":{"diagnostic":"dotnet_config_syntax","success":True,
+                        "service":"gfpapi","target":"10.248.16.82",
+                        "syntax_valid":True,
+                        "files":[{"file":"appsettings.json","status":"valid_json_syntax"}]}}
+    c=correlate(evidence=[vm("failed"),config])
+    assert "Syntax JSON معتبر" in " ".join(c["unknowns_fa"])
+    assert "Startup" in " ".join(c["next_steps_fa"])
+    assert c["root_cause_verified"] is False
