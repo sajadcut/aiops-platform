@@ -505,13 +505,15 @@ class EvidenceCollector:
                         rows = self._vm_evidence(action, vm_target, effective_service, vm_port, result, since)
                         evidence.extend(rows)
                         evidence.append(self._observation("vm_mcp", f"vm-observation:{vm_target}:{action}:{since.isoformat()}", status="queried", result_count=len(rows), service=effective_service, detail=f"target={vm_target};diagnostic={action}"))
+                        # Deterministic read-only follow-up after a confirmed
+                        # Nginx syntax failure. Does not depend on the optional
+                        # LLM investigation toggle and does not authorize writes.
                         # On confirmed nginx syntax failure, offer a strictly
                         # bounded, non-executing structural patch candidate.
                         # The preview can stage nginx -t on a temp copy, but
                         # never treats this as isolated production validation.
                         if (
-                            settings.AIOPS_DYNAMIC_INVESTIGATION_ENABLED
-                            and action == "config_validate"
+                            action == "config_validate"
                             and effective_service in {"nginx", "nginx.service"}
                             and result.get("supported") is True
                             and result.get("valid") is False
@@ -519,8 +521,7 @@ class EvidenceCollector:
                         ):
                             actions.append("nginx_config_review")
                         if (
-                            settings.AIOPS_DYNAMIC_INVESTIGATION_ENABLED
-                            and action == "config_validate"
+                            action == "config_validate"
                             and effective_service in {"nginx", "nginx.service"}
                             and result.get("supported") is True
                             and result.get("valid") is False
