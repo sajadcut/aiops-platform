@@ -127,3 +127,112 @@ def test_old_dotnet_evidence_does_not_invent_error_type_or_remote_python_claim()
     assert "نوع دقیق خطا ثبت نشده" in diagnostic["syntax_error_fa"]
     assert diagnostic["remote_python_required"] is None
     assert diagnostic["validator_location"] == "not_recorded"
+
+
+def test_successful_json_syntax_names_every_real_file_with_exact_absolute_path():
+    evidence = sample_evidence()
+    row = evidence[-1]["raw_data"]
+    row["syntax_valid"] = True
+    row["status"] = "syntax_valid"
+    row["files"] = [
+        {"file": "appsettings.json", "status": "valid_json_syntax"},
+        {"file": "appsettings.Production.json", "status": "valid_json_syntax"},
+        {"file": "GFP.Endpoints.API.runtimeconfig.json", "status": "valid_json_syntax"},
+    ]
+    result = explain_incident(evidence=evidence, service="gfpapi")["configuration"]
+    assert result["status"] == "json_syntax_valid"
+    assert result["config_file"] is None  # three checked files, no arbitrary first path
+    assert [(x["path"], x["status"]) for x in result["files"]] == [
+        ("/data/gfp/gfpapi/appsettings.json", "valid_json_syntax"),
+        ("/data/gfp/gfpapi/appsettings.Production.json", "valid_json_syntax"),
+        ("/data/gfp/gfpapi/GFP.Endpoints.API.runtimeconfig.json", "valid_json_syntax"),
+    ]
+    assert all(x["path_verified"] for x in result["files"])
+    assert all(x["evidence_ref"] == "dotnet-1" for x in result["files"])
+
+    report = build_decision_brief(
+        incident={"id": "incident-gfpapi", "service": "gfpapi", "status": "analyzing"},
+        operator_summary={"observed_state": {"config_validate": {
+            "valid": None, "supported": False, "config_file": "/etc/gfpapi/unknown.json",
+        }}},
+        checkpoint={"state": {}}, durable_evidence=evidence,
+        findings=[], audit_events=[],
+        now=datetime(2026, 10, 13, 14, 1, tzinfo=timezone.utc),
+    )
+    diagnostic = report["configuration_diagnostic"]
+    assert diagnostic["status"] == "json_syntax_valid"
+    assert diagnostic["config_file"] is None
+    assert [x["path"] for x in diagnostic["files"]] == [
+        "/data/gfp/gfpapi/appsettings.json",
+        "/data/gfp/gfpapi/appsettings.Production.json",
+        "/data/gfp/gfpapi/GFP.Endpoints.API.runtimeconfig.json",
+    ]
+    assert all(x["evidence_ref"] == "dotnet-1" for x in diagnostic["files"])
+    assert "/etc/gfpapi/unknown.json" not in str(diagnostic)
+    assert report["source_policy"]["authorizes_execution"] is False
+
+
+def test_single_validated_json_file_sets_its_exact_path():
+    evidence = sample_evidence()
+    evidence[-1]["raw_data"]["syntax_valid"] = True
+    evidence[-1]["raw_data"]["status"] = "syntax_valid"
+    evidence[-1]["raw_data"]["files"] = [
+        {"file": "appsettings.Development.json", "status": "valid_json_syntax"}
+    ]
+    item = explain_incident(evidence=evidence, service="gfpapi")["configuration"]
+    assert item["config_file"] == "/data/gfp/gfpapi/appsettings.Development.json"
+    assert item["files"][0]["path_verified"] is True
+
+
+def test_no_trusted_publish_directory_reports_basename_not_guessed_path():
+    evidence = sample_evidence()
+    evidence[-1]["raw_data"]["syntax_valid"] = True
+    evidence[-1]["raw_data"]["status"] = "syntax_valid"
+    evidence[-1]["raw_data"]["publish_directory"] = "../../fake"
+    evidence[-1]["raw_data"]["files"] = [
+        {"file": "appsettings.json", "status": "valid_json_syntax"}
+    ]
+    explanation = explain_incident(evidence=evidence, service="gfpapi")
+    item = explanation["configuration"]
+    assert item["status"] == "json_syntax_valid"
+    assert item["config_file"] is None
+    assert item["files"][0]["file"] == "appsettings.json"
+    assert item["files"][0]["path"] is None
+    assert item["files"][0]["path_verified"] is False
+
+
+def test_missing_file_metadata_does_not_claim_json_was_verified():
+    evidence = sample_evidence()
+    evidence[-1]["raw_data"]["syntax_valid"] = True
+    evidence[-1]["raw_data"]["status"] = "syntax_valid"
+    evidence[-1]["raw_data"]["files"] = []
+    item = explain_incident(evidence=evidence, service="gfpapi")["configuration"]
+    assert item["status"] == "unverified"
+    assert item["config_file"] is None
+    assert item["files"] == []
+
+
+def test_partial_or_unavailable_json_file_does_not_claim_all_valid():
+    evidence = sample_evidence()
+    evidence[-1]["raw_data"]["syntax_valid"] = True
+    evidence[-1]["raw_data"]["status"] = "partial"
+    evidence[-1]["raw_data"]["files"] = [
+        {"file": "appsettings.json", "status": "valid_json_syntax"},
+        {"file": "appsettings.Production.json", "status": "unavailable"},
+    ]
+    item = explain_incident(evidence=evidence, service="gfpapi")["configuration"]
+    assert item["status"] == "unverified"
+    assert [x["status"] for x in item["files"]] == ["valid_json_syntax", "unavailable"]
+    assert item["files"][1]["path"].endswith("appsettings.Production.json")
+
+
+def test_unallowlisted_filename_is_neither_shown_nor_claimed_valid():
+    evidence = sample_evidence()
+    evidence[-1]["raw_data"]["syntax_valid"] = True
+    evidence[-1]["raw_data"]["status"] = "syntax_valid"
+    evidence[-1]["raw_data"]["files"] = [
+        {"file": "passwords.json", "status": "valid_json_syntax"}
+    ]
+    item = explain_incident(evidence=evidence, service="gfpapi")["configuration"]
+    assert item["status"] == "unverified"
+    assert item["files"] == []
