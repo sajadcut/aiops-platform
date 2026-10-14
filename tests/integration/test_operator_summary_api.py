@@ -18,15 +18,15 @@ def test_dashboard_serves_persian_operator_summary_ui_and_structured_api_call():
     assert js.status_code == 200
     assert "/api/v1/incidents/${encodeURIComponent(id)}/operator-summary" in js.text
     assert "خلاصه فارسی رخداد" in js.text
-    assert "تأیید شده" in js.text
+    assert "تأیید صادر شده" in js.text
     assert "محتمل" in js.text
     assert "نامشخص" in js.text
-    assert "نیازمند Approval" in js.text
+    assert "نیازمند تأیید" in js.text
     assert "اجرا موفق" in js.text
     assert "اجرا ناموفق" in js.text
-    assert "Verification موفق" in js.text
-    assert "Verification ناقص" in js.text
-    assert "Decision Support" in js.text
+    assert "راستی‌آزمایی موفق" in js.text
+    assert "راستی‌آزمایی ناقص" in js.text
+    assert "کمک به تصمیم‌گیری" in js.text
 
     css = client.get("/dashboard/approval-actions.css")
     assert css.status_code == 200
