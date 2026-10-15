@@ -2542,13 +2542,13 @@
     const sourceHtml=source.length?snippets(source):'<p>'+esc(fa?
       'محتوای امن قابل نمایش هنوز دریافت نشده است.':'No safely displayable source excerpt is available.')+'</p>';
     const targetHtml=target.length?snippets(target):'<p>'+esc(fa?
-      (full.status==='llm_candidate_proposed'?
-        (config.candidate_stored?
+      (['llm_candidate_proposed','candidate_storage_unavailable'].includes(full.status)?
+        (full.candidate_stored?
           'نسخهٔ کامل اصلاحی به‌صورت رمزنگاری‌شده در VM MCP نگهداری شده؛ اعتبارسنجی مستقل قبل از Approval اجرا می‌شود.':
           'LLM فایل کامل را برگردانده ولی ذخیره‌سازی امن آن تأیید نشده است.') :
         'نسخه پیشنهادی قطعی تولید نشده است.'):
-      (full.status==='llm_candidate_proposed'?
-        (config.candidate_stored?
+      (['llm_candidate_proposed','candidate_storage_unavailable'].includes(full.status)?
+        (full.candidate_stored?
           'The full corrected file is encrypted in VM MCP; independent validation must pass before approval.':
           'The model returned a complete file, but durable secure storage is unverified.') :
         'No deterministic patch candidate has been produced.'))+'</p>';
@@ -2716,7 +2716,9 @@
       (fileItems.length?'<ul class="ic-agent-bullets">'+fileItems.slice(0,10).map(file=>
         '<li><code dir="ltr">'+txt(file.path)+'</code> · '+
         esc(file.verified_exists===true?
-          (fa?'وجود و خواندن فایل تأیید شده؛ سینتکس هنوز بررسی نشده':'Readable file verified; syntax not validated'):
+          (file.source==='vendor_validator'?
+            (fa?'مسیر فایل در خروجی Validator تأیید شده و تست سینتکس خطا دارد':'Validator identified this path and reported invalid syntax'):
+            (fa?'وجود فایل تأیید شده؛ وضعیت سینتکس را در نتیجهٔ Validator بررسی کنید':'File existence verified; consult vendor validation result')):
           (fa?'مسیر احتمالی از systemd؛ وجود فایل هنوز تأیید نشده':'Systemd path hypothesis; file not yet verified'))+
         ' · '+txt(file.source)+'</li>').join('')+'</ul>':
         '<p>'+esc(fa?'فایل مشخصی هنوز تأیید نشده؛ سامانه باید از LLM و روش کشف معتبر کمک بگیرد.':
