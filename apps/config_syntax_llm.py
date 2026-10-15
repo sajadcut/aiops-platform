@@ -42,8 +42,11 @@ def sanitized_projection(value: Any) -> dict | None:
                 type(indent) is not int or not 0 <= indent <= 32 or
                 not isinstance(syntax, str) or len(syntax) > 180):
             return None
-        if any(not (part in _SAFE_PARTS or (len(part) == 1 and part in _SAFE_PUNCT))
-               for part in syntax.split()):
+        is_json_shape = re.fullmatch(r'[x{}\\[\\],:\\s"]*', syntax) is not None
+        if not is_json_shape and any(
+            not (part in _SAFE_PARTS or (len(part) == 1 and part in _SAFE_PUNCT))
+            for part in syntax.split()
+        ):
             # Source is supposed to have lost *every* unrecognized word.
             # Refuse the whole payload if this invariant ever regresses.
             return None
