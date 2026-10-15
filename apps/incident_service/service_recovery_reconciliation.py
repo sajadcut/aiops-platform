@@ -26,6 +26,15 @@ def is_service_down_alert(source: str, summary: str, service: str) -> bool:
                           message))
 
 
+def can_finalize_independent_recovery(roles: Any) -> bool:
+    """Viewer access to incident status must never imply write authority."""
+    from apps.security.rbac import allowed
+    return bool(isinstance(roles, (tuple, list))
+                and any(isinstance(role, str)
+                        and allowed(role, "approve:low_risk")
+                        for role in roles))
+
+
 def local_recovery_decision(*, source: str, summary: str, service: str,
                             context: Mapping[str, Any] | None,
                             first: Mapping[str, Any] | None,
