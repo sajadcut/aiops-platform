@@ -78,7 +78,8 @@ def test_windows_candidate_directory_accepts_requested_drive_and_rejects_unsafe_
     from integrations.vm.config_candidate_vault import (
         _validate_windows_directory, CandidateUnavailable,
     )
-    for path in (r"D:\data\tempaips", "D:/data/tempaips", r"C:\ProgramData\AIOps\config-candidates"):
+    for path in (r"D:\data\tempaips", "D:/data/tempaips", r"C:\ProgramData\AIOps\config-candidates",
+                 r"D:\aiops-platform-new", r"D:\aiops-platform-new\config-candidates"):
         _validate_windows_directory(path)
     for path in (
         r"D:data\tempaips", r"\data\tempaips",
@@ -96,9 +97,9 @@ def test_env_parser_preserves_unquoted_windows_drive_path():
     from io import StringIO
     from dotenv import dotenv_values
     parsed = dotenv_values(
-        stream=StringIO(r"AIOPS_CONFIG_CANDIDATE_DIRECTORY=D:\data\tempaips" + "\n"),
+        stream=StringIO(r"AIOPS_CONFIG_CANDIDATE_DIRECTORY=D:\aiops-platform-new\config-candidates" + "\n"),
     )
-    assert parsed["AIOPS_CONFIG_CANDIDATE_DIRECTORY"] == r"D:\data\tempaips"
+    assert parsed["AIOPS_CONFIG_CANDIDATE_DIRECTORY"] == r"D:\aiops-platform-new\config-candidates"
 
 
 def test_windows_vault_auto_repairs_inherited_permissions_fail_closed(tmp_path, monkeypatch):
