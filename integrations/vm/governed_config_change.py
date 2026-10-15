@@ -225,6 +225,27 @@ async def run_governed_change(connector, *, action: str, target: str, service: s
                 target=target, service=service, path=path,
                 source_hash=original_sha256, candidate_hash=candidate_sha256,
             )
+            # Re-check immutable micro-fix policy on EVERY validation and
+            # approved apply. Candidates sealed before the policy upgrade
+            # must not bypass it merely because they have a valid hash or
+            # pass the staged vendor checker.
+            from integrations.vm.full_config_llm_repair import _candidate_preview
+            try:
+                source_text = source.decode("utf-8", "strict")
+            except UnicodeDecodeError:
+                return {"success": False, "status": "config_guard_candidate_not_minimal",
+                        "isolated_validation": False, "production_write_performed": False}
+            authoritative_line = (
+                observed.get("error_line") if nginx_profile
+                and type(observed.get("error_line")) is int else None
+            )
+            minimal_preview = _candidate_preview(
+                source_text, candidate, diagnostic_line=authoritative_line,
+            )
+            if (minimal_preview.get("status") != "llm_candidate_proposed"
+                    or minimal_preview.get("candidate_hash") != candidate_sha256):
+                return {"success": False, "status": "config_guard_candidate_not_minimal",
+                        "isolated_validation": False, "production_write_performed": False}
         elif nginx_profile:
             # Re-observe the exact nginx compiler failure and source hash.
             diagnostic = await connector.config_validate(target, service)
