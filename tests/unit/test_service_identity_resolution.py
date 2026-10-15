@@ -355,7 +355,8 @@ async def test_unknown_guidance_fails_closed_if_model_unavailable(monkeypatch):
     gap = {"topic": "config_validation_method", "subject": "unknown-app",
            "reason": "no adapter", "evidence_refs": []}
     response = await consult_operational_unknowns(unknowns=[gap], adapter=BrokenAdapter())
-    assert response["status"] == "unavailable"
+    assert response["status"] == "guidance_incomplete"
+    assert response["failure_reason"] == "guidance_request_failed"
     assert response["execution_authority"] is False
     assert response["config_validation_passed"] is False
     assert response["items"] == []
