@@ -7,12 +7,16 @@ validator; application of bytes needs a separate guarded implementation.
 from __future__ import annotations
 
 import re
-from uuid import UUID
+from datetime import datetime, timezone
+from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
-from sqlalchemy import select
+from sqlalchemy import select, text
 
+from apps.approval_service.binding import bind_metadata
+from apps.approval_service.postgres import PostgreSQLApprovalStore
+from apps.incident_vm_identity import incident_vm_context, vm_binding_diagnostic
 from apps.audit_service import AuditService
 from apps.audit_service.postgres import PostgreSQLAuditStore
 from apps.orchestrator.workflow_store import WorkflowCheckpointStore
@@ -45,11 +49,27 @@ def _hash(value: object) -> bool:
     return isinstance(value, str) and re.fullmatch(r"[0-9a-f]{64}", value) is not None
 
 
+_ALLOWED_CHANGES = frozenset({"remove_extra_opening_brace", "remove_trailing_json_comma"})
+
+
 def _matching_proposal(proposal: dict, payload: ConfigReviewResponse) -> bool:
-    """Never accept hashes taken solely from a browser or free-form LLM."""
+    """Accept only evidence-backed deterministic transformations."""
+    service = str(proposal.get("service") or "").strip().lower().removesuffix(".service")
+    filename = str(proposal.get("config_file") or "")
+    change = proposal.get("proposed_change")
+    compatible = (
+        change == "remove_extra_opening_brace" and service == "nginx"
+        and filename.endswith(".conf")
+    ) or (
+        change == "remove_trailing_json_comma" and filename.endswith(".json")
+    )
     return (
         proposal.get("status") == "candidate_proposed"
-        and proposal.get("service") in {"nginx", "nginx.service"}
+        and bool(re.fullmatch(r"[a-z0-9@_.:-]{1,100}", service))
+        and compatible and filename.startswith("/")
+        and ".." not in filename.split("/")
+        and change in _ALLOWED_CHANGES
+        and bool(proposal.get("source_evidence_refs"))
         and proposal.get("execution_authority") is False
         and proposal.get("apply_eligible") is False
         and _hash(proposal.get("original_sha256"))
@@ -59,16 +79,27 @@ def _matching_proposal(proposal: dict, payload: ConfigReviewResponse) -> bool:
     )
 
 
+def _approval_for_proposal(approval: dict, proposal: dict) -> bool:
+    meta = approval.get("metadata") or {}
+    return (approval.get("action") == "apply_configuration_change"
+            and isinstance(meta, dict)
+            and meta.get("original_sha256") == proposal.get("original_sha256")
+            and meta.get("candidate_sha256") == proposal.get("candidate_sha256")
+            and meta.get("service") == proposal.get("service")
+            and meta.get("config_file") == proposal.get("config_file"))
+
 
 def _review_progress(*, status: str, decision: str | None, proposal: dict,
-                     created_at: str | None = None) -> dict:
+                     created_at: str | None = None,
+                     approval: dict | None = None) -> dict:
     """Expose durable intent separately from executable Approval authority.
 
     A recorded request is NOT a scheduled validator job. Only an isolated
     successful validation and an independently registered apply contract
     could allow creation of an executable change Approval.
     """
-    requested = status == "awaiting_isolated_validation"
+    requested = status in {"awaiting_isolated_validation", "pending_validation"}
+    queue_status = str(approval.get("status")) if approval else "not_created"
     return {
         "status": status,
         "decision": decision,
@@ -81,9 +112,11 @@ def _review_progress(*, status: str, decision: str | None, proposal: dict,
         "validation_status": proposal.get("validation_status") or "UNVERIFIED",
         "validation_pipeline_status": "not_implemented",
         "change_contract_status": "not_implemented",
-        "approval_status": "not_created",
-        "approval_id": None,
+        "approval_status": queue_status,
+        "approval_id": str(approval["approval_id"]) if approval else None,
+        "approval_queue_registered": bool(approval),
         "approval_eligible": False,
+        "approval_actionable": False,
         "execution_authority": False,
         "production_write_performed": False,
         "blocking_reasons": [
@@ -104,6 +137,25 @@ async def get_config_review_response(
             raise HTTPException(status_code=404, detail="incident_not_found")
         checkpoint = await WorkflowCheckpointStore(db).load(str(incident_id)) or {}
         proposal = _proposal(checkpoint)
+        match = (await db.execute(text("""
+            SELECT approval_id FROM approvals
+            WHERE incident_id=:incident_id
+              AND action='apply_configuration_change'
+              AND metadata->>'original_sha256'=:source
+              AND metadata->>'candidate_sha256'=:candidate
+            LIMIT 1
+        """), {
+            "incident_id": str(incident_id),
+            "source": proposal.get("original_sha256") or "",
+            "candidate": proposal.get("candidate_sha256") or "",
+        })).scalar_one_or_none()
+        approval = await PostgreSQLApprovalStore(db).get(str(match)) if match else None
+        if approval and _approval_for_proposal(approval, proposal):
+            return _review_progress(
+                status=approval["status"], decision="request_change_approval",
+                proposal=proposal, created_at=str(approval.get("created_at")),
+                approval=approval,
+            )
         events = await PostgreSQLAuditStore(db).list(str(incident_id), 150)
     for event in events:
         if event.get("event_type") != "config_change_review_response":
