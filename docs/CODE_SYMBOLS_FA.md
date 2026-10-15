@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 526 | Dashboard JS files scanned: 8 | Symbols indexed: 5674**
+**Python files scanned: 526 | Dashboard JS files scanned: 8 | Symbols indexed: 5690**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -5526,19 +5526,35 @@
 | `tests/unit/test_vm_guest_engine.py` | `test_systemd_failed_dependencies_are_causal_and_handoff_to_dependency` | 157 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_vm_guest_engine.py` | `test_boot_and_reboot_history_correlates_with_incident_start` | 172 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_vm_guest_engine.py` | `test_missing_layers_are_exposed_as_next_best_evidence` | 184 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_vm_recovery_advice.py` | `row` | 12 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `tests/unit/test_vm_recovery_advice.py` | `gfpapi_rows` | 23 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `tests/unit/test_vm_recovery_advice.py` | `trigger` | 35 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `tests/unit/test_vm_recovery_advice.py` | `advisory` | 44 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `tests/unit/test_vm_recovery_advice.py` | `test_failed_dotnet_service_without_validator_has_conditional_restart_advice` | 51 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_vm_recovery_advice.py` | `test_stopped_inactive_proposes_start_but_only_as_reviewable_option` | 70 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_vm_recovery_advice.py` | `test_observed_invalid_config_blocks_start_and_restart_advice` | 79 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_vm_recovery_advice.py` | `test_no_advice_for_other_service_or_unverified_status_or_recovered_service` | 89 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_vm_recovery_advice.py` | `test_mixed_target_statuses_cannot_select_a_restart_target` | 108 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_vm_recovery_advice.py` | `test_model_hint_is_not_operational_evidence` | 115 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_vm_recovery_advice.py` | `test_incident_decision_brief_exposes_advice_despite_evaluation_blockers` | 124 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_vm_recovery_advice.py` | `test_failed_stop_timeout_offers_start_as_non_authorized_alternative` | 165 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_vm_recovery_advice.py` | `test_invalid_dotnet_json_overrides_generic_unavailable_config_and_blocks_recovery` | 188 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_recovery_advice.py` | `row` | 14 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_vm_recovery_advice.py` | `gfpapi_rows` | 25 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_vm_recovery_advice.py` | `trigger` | 37 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_vm_recovery_advice.py` | `advisory` | 46 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_vm_recovery_advice.py` | `test_failed_dotnet_service_without_validator_has_conditional_restart_advice` | 53 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_recovery_advice.py` | `test_stopped_inactive_proposes_start_but_only_as_reviewable_option` | 72 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_recovery_advice.py` | `test_observed_invalid_config_blocks_start_and_restart_advice` | 81 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_recovery_advice.py` | `test_no_advice_for_other_service_or_unverified_status_or_recovered_service` | 91 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_recovery_advice.py` | `test_mixed_target_statuses_cannot_select_a_restart_target` | 110 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_recovery_advice.py` | `test_model_hint_is_not_operational_evidence` | 117 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_recovery_advice.py` | `test_incident_decision_brief_exposes_advice_despite_evaluation_blockers` | 126 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_recovery_advice.py` | `test_failed_stop_timeout_offers_start_as_non_authorized_alternative` | 167 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_recovery_advice.py` | `test_invalid_dotnet_json_overrides_generic_unavailable_config_and_blocks_recovery` | 190 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_recovery_advice.py` | `test_recovery_advice_automatically_queues_only_bound_human_approval` | 205 | async function | Queueing a suggested restart cannot approve it or call VM restart. | module |
+| `tests/unit/test_vm_recovery_advice.py` | `test_recovery_advice_automatically_queues_only_bound_human_approval.DB` | 212 | class | کلاس | test_recovery_advice_automatically_queues_only_bound_human_approval |
+| `tests/unit/test_vm_recovery_advice.py` | `test_recovery_advice_automatically_queues_only_bound_human_approval.DB.__aenter__` | 213 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_recovery_advice_automatically_queues_only_bound_human_approval.DB |
+| `tests/unit/test_vm_recovery_advice.py` | `test_recovery_advice_automatically_queues_only_bound_human_approval.DB.__aexit__` | 214 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_recovery_advice_automatically_queues_only_bound_human_approval.DB |
+| `tests/unit/test_vm_recovery_advice.py` | `test_recovery_advice_automatically_queues_only_bound_human_approval.DB.execute` | 215 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | test_recovery_advice_automatically_queues_only_bound_human_approval.DB |
+| `tests/unit/test_vm_recovery_advice.py` | `test_recovery_approval_queue_fails_closed_on_changed_live_state` | 253 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_recovery_advice.py` | `test_recovery_approval_queue_fails_closed_on_changed_live_state.DB` | 260 | class | کلاس | test_recovery_approval_queue_fails_closed_on_changed_live_state |
+| `tests/unit/test_vm_recovery_advice.py` | `test_recovery_approval_queue_fails_closed_on_changed_live_state.DB.__aenter__` | 261 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_recovery_approval_queue_fails_closed_on_changed_live_state.DB |
+| `tests/unit/test_vm_recovery_advice.py` | `test_recovery_approval_queue_fails_closed_on_changed_live_state.DB.__aexit__` | 262 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_recovery_approval_queue_fails_closed_on_changed_live_state.DB |
+| `tests/unit/test_vm_recovery_advice.py` | `test_recovery_approval_queue_fails_closed_on_changed_live_state.DB.execute` | 263 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | test_recovery_approval_queue_fails_closed_on_changed_live_state.DB |
+| `tests/unit/test_vm_recovery_advice.py` | `test_dotnet_live_json_syntax_endpoint_reports_line_column_without_config` | 291 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_recovery_advice.py` | `test_dotnet_live_json_syntax_endpoint_reports_line_column_without_config.DB` | 297 | class | کلاس | test_dotnet_live_json_syntax_endpoint_reports_line_column_without_config |
+| `tests/unit/test_vm_recovery_advice.py` | `test_dotnet_live_json_syntax_endpoint_reports_line_column_without_config.DB.__aenter__` | 298 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_dotnet_live_json_syntax_endpoint_reports_line_column_without_config.DB |
+| `tests/unit/test_vm_recovery_advice.py` | `test_dotnet_live_json_syntax_endpoint_reports_line_column_without_config.DB.__aexit__` | 299 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_dotnet_live_json_syntax_endpoint_reports_line_column_without_config.DB |
+| `tests/unit/test_vm_recovery_advice.py` | `test_dotnet_live_json_syntax_endpoint_reports_line_column_without_config.MCP` | 311 | class | کلاس | test_dotnet_live_json_syntax_endpoint_reports_line_column_without_config |
+| `tests/unit/test_vm_recovery_advice.py` | `test_dotnet_live_json_syntax_endpoint_reports_line_column_without_config.MCP.dotnet_config_syntax` | 312 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_dotnet_live_json_syntax_endpoint_reports_line_column_without_config.MCP |
 | `tests/unit/test_vm_symptom_verification.py` | `_context` | 6 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_vm_symptom_verification.py` | `_telemetry` | 10 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_vm_symptom_verification.py` | `test_port_recovery_is_verified_from_fresh_operational_evidence` | 20 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
