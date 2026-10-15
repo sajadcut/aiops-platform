@@ -173,3 +173,17 @@ def test_approval_storage_does_not_upgrade_pending_validation_to_pending():
     approval_route = getsource(__import__(
         "apps.api.execution", fromlist=["approve"]).approve)
     assert "_require_pending(current)" in approval_route
+
+
+def test_pending_validation_cannot_be_approved_even_with_high_risk_permission():
+    from fastapi import HTTPException
+    from apps.api.execution import _require_pending
+    with pytest.raises(HTTPException) as exc:
+        _require_pending({"status": "pending_validation"})
+    assert exc.value.status_code == 409
+    assert exc.value.detail == "approval_not_pending"
+
+
+def test_configuration_apply_tool_is_not_registered_before_safe_execution_exists():
+    from apps.execution_service.tools.registry import tool_registry
+    assert tool_registry.get_tool("vm_config_change") is None
