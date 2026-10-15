@@ -111,7 +111,9 @@ async def assess_service_syntax(projection: Any, candidate_projection: Any = Non
         "If information is insufficient choose not_enough_information. "
         "This is advisory; it CANNOT assert syntax is valid."
     )
-    request = "FIRST REVIEW, source projection: " + json.dumps(source, ensure_ascii=True)
+    hint = file_type if file_type in {"conf", "cfg", "json", "xml", "yaml", "yml", "ini", "properties", "toml", "hcl", "cnf", "config"} else "unknown"
+    request = ("FIRST REVIEW, format=" + hint + ", source projection: "
+               + json.dumps(source, ensure_ascii=True))
     try:
         first = await asyncio.wait_for(
             llm.generate(request, system_prompt=instructions,
