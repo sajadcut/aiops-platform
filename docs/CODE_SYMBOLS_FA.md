@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 506 | Dashboard JS files scanned: 8 | Symbols indexed: 5345**
+**Python files scanned: 506 | Dashboard JS files scanned: 8 | Symbols indexed: 5357**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -3447,6 +3447,18 @@
 | `tests/unit/test_config_guard_validation_diagnostics.py` | `test_provisioned_helper_validation_can_advance_without_production_write.Edge._sudo` | 311 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_provisioned_helper_validation_can_advance_without_production_write.Edge |
 | `tests/unit/test_config_guard_validation_diagnostics.py` | `test_vm_provision_script_refuses_existing_helper_symlink` | 329 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_config_guard_validation_diagnostics.py` | `test_guard_logs_allowlisted_diagnostics_without_raw_stdout_or_credentials` | 335 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_config_guard_validation_diagnostics.py` | `test_missing_guard_probe_emits_safe_structured_vm_diagnostic` | 357 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_config_guard_validation_diagnostics.py` | `test_missing_guard_probe_emits_safe_structured_vm_diagnostic.FakeLogger` | 361 | class | کلاس | test_missing_guard_probe_emits_safe_structured_vm_diagnostic |
+| `tests/unit/test_config_guard_validation_diagnostics.py` | `test_missing_guard_probe_emits_safe_structured_vm_diagnostic.FakeLogger.info` | 362 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_missing_guard_probe_emits_safe_structured_vm_diagnostic.FakeLogger |
+| `tests/unit/test_config_guard_validation_diagnostics.py` | `test_missing_guard_probe_emits_safe_structured_vm_diagnostic.command` | 370 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_missing_guard_probe_emits_safe_structured_vm_diagnostic |
+| `tests/unit/test_config_guard_validation_diagnostics.py` | `test_config_validate_block_logs_stage_and_reason_without_candidate` | 388 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_config_guard_validation_diagnostics.py` | `test_config_validate_block_logs_stage_and_reason_without_candidate.FakeLogger` | 392 | class | کلاس | test_config_validate_block_logs_stage_and_reason_without_candidate |
+| `tests/unit/test_config_guard_validation_diagnostics.py` | `test_config_validate_block_logs_stage_and_reason_without_candidate.FakeLogger.warning` | 393 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_config_validate_block_logs_stage_and_reason_without_candidate.FakeLogger |
+| `tests/unit/test_config_guard_validation_diagnostics.py` | `test_config_validate_block_logs_stage_and_reason_without_candidate.Edge` | 398 | class | کلاس | test_config_validate_block_logs_stage_and_reason_without_candidate |
+| `tests/unit/test_config_guard_validation_diagnostics.py` | `test_config_validate_block_logs_stage_and_reason_without_candidate.Edge.config_validate` | 402 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_config_validate_block_logs_stage_and_reason_without_candidate.Edge |
+| `tests/unit/test_config_guard_validation_diagnostics.py` | `test_config_validate_block_logs_stage_and_reason_without_candidate.Edge._run` | 409 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_config_validate_block_logs_stage_and_reason_without_candidate.Edge |
+| `tests/unit/test_config_guard_validation_diagnostics.py` | `test_config_validate_block_logs_stage_and_reason_without_candidate.Edge.config_guard_preflight` | 412 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_config_validate_block_logs_stage_and_reason_without_candidate.Edge |
+| `tests/unit/test_config_guard_validation_diagnostics.py` | `test_config_validate_block_logs_stage_and_reason_without_candidate.Edge._sudo` | 415 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_config_validate_block_logs_stage_and_reason_without_candidate.Edge |
 | `tests/unit/test_config_review_button_runtime.py` | `test_config_buttons_dispatch_mcp_read_without_execution_and_refresh_report` | 11 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_container_image_contract.py` | `test_offline_runtime_uses_isolated_multistage_build` | 4 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_container_image_contract.py` | `test_container_acceptance_checks_final_filesystem_not_builder_layers` | 20 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
