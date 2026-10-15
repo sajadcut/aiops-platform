@@ -53,6 +53,54 @@ def get(**overrides):
     return load_candidate(**fields)
 
 
+def test_custom_candidate_directory_is_loaded_from_settings(tmp_path, monkeypatch):
+    from integrations.vm import config_candidate_vault as vault
+    custom = tmp_path / "data" / "tempaips"
+    monkeypatch.setenv("MCP_BEARER_TOKEN", "strong-test-bearer-with-at-least-thirty-two-bytes-v1")
+    monkeypatch.setattr(
+        vault.settings, "AIOPS_CONFIG_CANDIDATE_DIRECTORY", str(custom),
+    )
+    assert vault._default_directory() == custom
+    assert put()["candidate_stored"] is True
+    assert get() == CORRECTED
+    assert custom.exists()
+    assert len(list(custom.glob("*.sealed"))) == 1
+    assert not custom.stat().st_mode & 0o077
+    # A configured relative path is never used as a working-directory fallback.
+    monkeypatch.setattr(
+        vault.settings, "AIOPS_CONFIG_CANDIDATE_DIRECTORY", "data/tempaips",
+    )
+    with pytest.raises(CandidateUnavailable, match="candidate_directory_invalid"):
+        put()
+
+
+def test_windows_candidate_directory_accepts_requested_drive_and_rejects_unsafe_paths():
+    from integrations.vm.config_candidate_vault import (
+        _validate_windows_directory, CandidateUnavailable,
+    )
+    for path in (r"D:\data\tempaips", "D:/data/tempaips", r"C:\ProgramData\AIOps\config-candidates"):
+        _validate_windows_directory(path)
+    for path in (
+        r"D:data\tempaips", r"\data\tempaips",
+        r"\\server\share\tempaips", r"\\?\D:\data\tempaips",
+        r"D:\data\..\private", r"D:\data\.\tempaips",
+        r"D:\data\NUL", r"D:\data\wrong:stream",
+        r"D:\data\bad. ", r"D:\data\other?",
+        "D:\\data\\\x00bad", "D:\\",
+    ):
+        with pytest.raises(CandidateUnavailable, match="candidate_directory_invalid"):
+            _validate_windows_directory(path)
+
+
+def test_env_parser_preserves_unquoted_windows_drive_path():
+    from io import StringIO
+    from dotenv import dotenv_values
+    parsed = dotenv_values(
+        stream=StringIO(r"AIOPS_CONFIG_CANDIDATE_DIRECTORY=D:\data\tempaips" + "\n"),
+    )
+    assert parsed["AIOPS_CONFIG_CANDIDATE_DIRECTORY"] == r"D:\data\tempaips"
+
+
 def test_windows_vault_auto_repairs_inherited_permissions_fail_closed(tmp_path, monkeypatch):
     from integrations.vm import config_candidate_vault as vault
     path = tmp_path / "private"
