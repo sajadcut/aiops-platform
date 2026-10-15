@@ -221,8 +221,10 @@ async def run_governed_change(connector, *, action: str, target: str, service: s
                  else "jq empty (JSON syntax only; application semantics unverified)"
                  if json_profile else "xmllint --nonet --noout (XML syntax only)")
 
-    # No unrestricted SSH root command: sudoers may delegate only the pre-
-    # provisioned, root-owned guard. Never send config bytes in argv or logs.
+    # Never open an unrestricted root shell: invoke the pre-provisioned,
+    # root-owned guard with the SSH user's existing sudo authorization.
+    # _sudo tries -n, then password authentication with separate SSH stdin.
+    # Configuration bytes and credentials never appear in argv or logs.
     arguments = [action, profile, path, original_sha256, candidate_sha256]
     if action == "apply":
         if not execution_claims:
@@ -233,10 +235,10 @@ async def run_governed_change(connector, *, action: str, target: str, service: s
             execution_claims["target"], str(execution_claims["expires"]),
             sign_root_guard(execution_claims),
         ]
-    command = "sudo -n /usr/local/sbin/aiops-config-guard " + " ".join(
+    command = "/usr/local/sbin/aiops-config-guard " + " ".join(
         shlex.quote(part) for part in arguments
     )
-    observed = await connector._run(target, command, stdin_data=candidate)
+    observed = await connector._sudo(target, command, stdin_data=candidate)
     output = str(observed.get("stdout") or "")
     if action == "validate":
         success = observed.get("success") is True and output == "VALIDATED"
