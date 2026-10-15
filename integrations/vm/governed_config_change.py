@@ -53,7 +53,7 @@ def rebuild_json_candidate(*, encoded: str, path: str,
     if not 1 <= len(source) <= 262144 or hashlib.sha256(source).hexdigest() != original_sha256:
         raise ValueError("config_source_hash_drift")
     contents = source.decode("utf-8", errors="strict")
-    if "\\x00" in contents or "\\r" in contents:
+    if "\x00" in contents or "\r" in contents:
         raise ValueError("config_source_invalid_encoding")
     try:
         json.loads(contents)
@@ -101,7 +101,7 @@ async def run_governed_change(connector, *, action: str, target: str, service: s
                         "isolated_validation": False, "production_write_performed": False}
             line = diagnostic["error_line"]
             error = str(diagnostic.get("syntax_error") or diagnostic.get("detail") or "")
-            if not re.search(r'unexpected\\s+["“]?\\{', error, re.I):
+            if not re.search(r'unexpected\s+["“]?\{', error, re.I):
                 return {"success": False, "status": "vendor_error_changed",
                         "isolated_validation": False, "production_write_performed": False}
             read = await connector._run(target, nginx_review_command(path, line, error))
