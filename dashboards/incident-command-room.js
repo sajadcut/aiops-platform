@@ -2543,10 +2543,14 @@
       'محتوای امن قابل نمایش هنوز دریافت نشده است.':'No safely displayable source excerpt is available.')+'</p>';
     const targetHtml=target.length?snippets(target):'<p>'+esc(fa?
       (full.status==='llm_candidate_proposed'?
-        'LLM نسخهٔ کامل را برگردانده است، اما نسخهٔ بازسازی‌پذیر و تست‌شده برای مسیر اجرا ثبت نشده است.':
+        (config.candidate_stored?
+          'نسخهٔ کامل اصلاحی به‌صورت رمزنگاری‌شده در VM MCP نگهداری شده؛ اعتبارسنجی مستقل قبل از Approval اجرا می‌شود.':
+          'LLM فایل کامل را برگردانده ولی ذخیره‌سازی امن آن تأیید نشده است.') :
         'نسخه پیشنهادی قطعی تولید نشده است.'):
       (full.status==='llm_candidate_proposed'?
-        'The model returned a complete file, but no reproducible validated execution candidate is registered.':
+        (config.candidate_stored?
+          'The full corrected file is encrypted in VM MCP; independent validation must pass before approval.':
+          'The model returned a complete file, but durable secure storage is unverified.') :
         'No deterministic patch candidate has been produced.'))+'</p>';
     let html='<div class="ic-fix-grid">'+
       '<article class="ic-detail-card"><h4>'+esc(fa?'کانفیگ موجود (بخش ساختاری، محرمانه‌زدایی شده)':'Existing config (redacted structural excerpt)')+'</h4>'+
@@ -2556,10 +2560,16 @@
       '<article class="ic-detail-card"><h4>'+esc(fa?'پیشنهاد اصلاح کانفیگ':'Proposed configuration correction')+'</h4>'+
       targetHtml+
       '<p class="ic-meta">Candidate SHA-256: '+txt(config.candidate_sha256)+'</p></article></div>';
-    if(Number.isInteger(diff.line)){
-      html+='<article class="ic-detail-card"><h4>'+esc(fa?'Diff پیشنهادی (بدون مقادیر حساس)':'Proposed diff (secret-safe)')+'</h4>'+
+    const safeDiffs=arr(config.redacted_changes).filter(change=>
+      change&&Number.isInteger(change.line)).slice(0,12);
+    if(safeDiffs.length||Number.isInteger(diff.line)){
+      const changes=safeDiffs.length?safeDiffs:[diff];
+      html+='<article class="ic-detail-card"><h4>'+esc(fa?
+        'Diff تغییرات (مقادیر فایل پنهان شده‌اند)':
+        'Changed-line diff (values redacted)')+'</h4>'+
         '<pre dir="ltr" class="ic-config-excerpt">'+
-        esc('@@ line '+diff.line+' @@\n- '+safe(diff.before)+'\n+ '+safe(diff.after))+
+        esc(changes.map(change=>'@@ line '+change.line+' @@\n- '+
+            safe(change.before)+'\n+ '+safe(change.after)).join('\n'))+
         '</pre></article>';
     }
     html+='<article class="ic-detail-card"><h4>'+esc(fa?'وضعیت آزمایش نسخه پیشنهادی':'Proposed-version validation')+'</h4>'+
