@@ -2047,6 +2047,8 @@
           'Do not guess that the configuration is valid. LLM guidance cannot replace a real check.')+'</p></article>');
     }
     const model=r?.dynamic_investigation?.config_llm_review||{};
+    const fullRepair=r?.dynamic_investigation?.full_config_llm_repair||{};
+    const hasNewerFullFileReview=fullRepair.status==='llm_candidate_proposed';
     if(model.status&&model.status!=='—'&&model.status!=='not_requested') {
       const observations=[
         [fa?'تشخیص اولیه مدل':'First model diagnosis',model.model_diagnosis],
@@ -2063,8 +2065,12 @@
       items.push('<article class="ic-config-check" data-config-status="advisory">'+
         '<h3>'+esc(fa?'تحلیل و بازبینی کانفیگ با LLM':'LLM configuration syntax review')+
         '</h3><p>'+esc(fa?
-          'تحلیل LLM از نمای نحوی پالایش‌شده فایل واقعی است؛ مقادیر محرمانه ارسال نشده‌اند. این نتیجه جایگزین تست واقعی سرویس نیست و به‌تنهایی اجازهٔ Approval یا اعمال فایل نمی‌دهد.':
-          'LLM analyzed a value-free syntax projection of the live config. This does not replace vendor validation or permit Approval or apply.')+
+          (hasNewerFullFileReview?
+          'این نتیجهٔ قدیمی از نمای ساختاری محدود استخراج شده و مبنای اصلاح فایل کامل نیست؛ تشخیص‌هایی مانند تورفتگی ناهماهنگ در Nginx به‌تنهایی خطای نحوی را ثابت نمی‌کنند.':
+          'این تحلیل فقط از نمای نحوی پالایش‌شده است، نه فایل کامل؛ فرضیه‌ها باید با خطای واقعی Validator سنجیده شوند و اجازهٔ اعمال نمی‌دهند.'):
+        (hasNewerFullFileReview?
+          'This is older, grammar-only advice and not the basis of the complete-file repair. Nginx indentation alone is not a syntax fault.':
+          'The model analyzed only a value-free syntax projection. Its hypotheses require vendor validation and do not permit execution.'))+
         '</p>'+(rows?'<ul class="ic-agent-bullets">'+rows+'</ul>':
           '<p>'+txt(model.status)+'</p>')+'</article>');
     }
@@ -2632,6 +2638,32 @@
         'مجوز اجرای این پیشنهاد صادر نشده است؛ دکمهٔ تأیید اجرا تا ایجاد درخواست اجرایی معتبر فعال نمی‌شود.':
         'No execution authority has been granted. Only a separately generated, properly validated request may enter the approval workflow.')+
       '</p></article>':'';
+    const full=p.full_config_llm_repair||{};
+    const fullCandidate=full.status==='llm_candidate_proposed'&&
+      /^[a-f0-9]{64}$/.test(String(full.candidate_sha256||''))&&
+      full.llm_received_complete_file===true&&full.llm_returned_complete_file===true;
+    const fullRepairHtml=full.status&&full.status!=='—'?
+      '<article class="ic-detail-card ic-complete-config-llm">'+
+      '<h3>'+esc(fa?'نتیجهٔ بررسی فایل کامل توسط LLM':'Complete-file LLM repair result')+'</h3>'+
+      '<p>'+esc(fullCandidate?
+        (fa?'مدل تمام فایل انتخابی را دریافت و یک نسخهٔ کامل اصلاح‌شده برگردانده است. این نتیجه، مشاهدهٔ LLM است و اعتبارسنجی فایل اصلاحی نیست.':
+          'The model received the complete selected file and returned a complete revised version. This is a model result, not independent validation.'):
+        (fa?'نسخهٔ کامل اصلاح‌شدهٔ قابل‌قبول از LLM دریافت نشده است.':
+          'An acceptable complete-file candidate was not returned by the model.'))+'</p>'+
+      '<p><strong>'+esc(fa?'فایل: ':'File: ')+'</strong><code dir="ltr">'+txt(full.config_file||'')+'</code></p>'+
+      '<p>'+esc(fa?'وضعیت: ':'Status: ')+txt(full.status)+'</p>'+
+      (fullCandidate?
+        '<p>'+esc(fa?'تعداد خطوط تغییرکرده: ':'Changed lines: ')+num(full.changed_line_count||0)+
+        ' · '+esc(fa?'شماره خطوط: ':'Line numbers: ')+
+        arr(full.changed_line_numbers).slice(0,12).map(num).join(', ')+'</p>'+
+        '<p>Candidate SHA-256: <code dir="ltr">'+txt(full.candidate_sha256)+'</code></p>':'')+
+      (full.source_sha256?'<p>Source SHA-256: <code dir="ltr">'+txt(full.source_sha256)+'</code></p>':'')+
+      (full.rejection_reason?'<p>'+esc(fa?'دلیل رد: ':'Rejection reason: ')+
+        txt(full.rejection_reason)+'</p>':'')+
+      '<p class="ic-agent-disclaimer">'+esc(fa?
+        'فایل اصلاحی ذخیره نشده و هیچ تست مستقلی روی آن اجرا نشده است. خطوط تغییرکردهٔ LLM، شماره خط خطای Validator نیستند. این پیش‌نمایش بدون Diff محتواییِ بازبینی‌شده، امکان Approval یا Apply ندارد.':
+        'The revised file is not stored and has not passed independent validation. Model-changed lines are not validator error locations. This preview cannot be approved or applied without a reviewed diff and validation.')+'</p>'+
+      refs(full.source_evidence_refs)+'</article>':'';
     const hasPlan=p.status && p.status!=='not_available';
     if(!hasPlan) {
       show('#ic-proposed-fix',recoveryMarkup || empty(fa?
@@ -2678,6 +2710,7 @@
         'No patch or executable approval exists until source material is collected and the proposed version passes a real validation.')+
       '</p></div>'+
       discoveryHtml+
+      fullRepairHtml+
       (config.status?renderConfigProposal(config):'')+
       (p.runtime_discovery?.runtime==='dotnet'?(()=>{
         const d=p.runtime_discovery,files=arr(d.files);
