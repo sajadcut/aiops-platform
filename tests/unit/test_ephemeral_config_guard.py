@@ -95,7 +95,7 @@ async def test_direct_apply_without_valid_signed_claim_is_denied_before_ssh():
 
 @pytest.mark.asyncio
 async def test_approved_apply_still_requires_identical_signed_file_hashes(monkeypatch):
-    monkeypatch.setenv("AIOPS_CONFIG_APPLY_SIGNING_SECRET", "a-real-unique-secret-for-tests-1234567890")
+    monkeypatch.setenv("MCP_BEARER_TOKEN", "a-real-unique-secret-for-tests-1234567890")
     claims, signature = create_claim(
         approval_id="1b61f2a2-f9dd-4281-856f-d77ac85872be",
         incident_id="848420a5-3cad-48de-a1e1-e730f8ed8767",
@@ -126,7 +126,7 @@ async def test_approved_apply_still_requires_identical_signed_file_hashes(monkey
 
 @pytest.mark.asyncio
 async def test_signed_approved_apply_uses_fixed_root_script_and_reports_verification(monkeypatch):
-    monkeypatch.setenv("AIOPS_CONFIG_APPLY_SIGNING_SECRET", "a-real-unique-secret-for-tests-1234567890")
+    monkeypatch.setenv("MCP_BEARER_TOKEN", "a-real-unique-secret-for-tests-1234567890")
     claims, signature = create_claim(
         approval_id="1b61f2a2-f9dd-4281-856f-d77ac85872be",
         incident_id="848420a5-3cad-48de-a1e1-e730f8ed8767",
