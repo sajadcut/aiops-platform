@@ -1021,8 +1021,8 @@
 | `apps/config_change_authorization.py` | `verify_claim` | 39 | function | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | module |
 | `apps/config_change_authorization.py` | `sign_root_guard` | 60 | function | Ed25519 root guard signature; VM stores only its verification public key. | module |
 | `apps/config_syntax_llm.py` | `sanitized_projection` | 30 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/config_syntax_llm.py` | `_json_model_reply` | 56 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/config_syntax_llm.py` | `assess_service_syntax` | 83 | async function | Two sequential LLM passes; second pass never asserts a vendor PASS. | module |
+| `apps/config_syntax_llm.py` | `_json_model_reply` | 59 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/config_syntax_llm.py` | `assess_service_syntax` | 86 | async function | Two sequential LLM passes; second pass never asserts a vendor PASS. | module |
 | `apps/context_service/__init__.py` | `ContextBuilder` | 24 | class | Build knowledge-assisted operational context through governed boundaries. | module |
 | `apps/context_service/__init__.py` | `ContextBuilder.__init__` | 39 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ContextBuilder |
 | `apps/context_service/__init__.py` | `ContextBuilder._known` | 59 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ContextBuilder |
@@ -1215,9 +1215,9 @@
 | `apps/incident_copilot.py` | `public_result` | 310 | function | Project known diagnostic keys; never forward arbitrary MCP payloads. | module |
 | `apps/incident_copilot.py` | `nginx_inspection_answer` | 396 | function | Deterministic user-visible facts from sanitized VM MCP inspection. | module |
 | `apps/incident_copilot.py` | `vm_read` | 442 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/incident_copilot.py` | `llm_plan` | 455 | async function | LLM may select a bounded enum but cannot set a target or authorize writes. | module |
-| `apps/incident_copilot.py` | `history` | 578 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/incident_copilot.py` | `append_turn` | 599 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/incident_copilot.py` | `llm_plan` | 461 | async function | LLM may select a bounded enum but cannot set a target or authorize writes. | module |
+| `apps/incident_copilot.py` | `history` | 584 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/incident_copilot.py` | `append_turn` | 605 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/incident_elastic.py` | `is_elastic_question` | 13 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/incident_elastic.py` | `wants_live_elastic` | 19 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/incident_elastic.py` | `_iso` | 28 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
