@@ -62,7 +62,11 @@ async def emit_progress(incident_id: str | None, stage: str, status: str,
                 await PostgreSQLAuditStore(db).append(event)
         # Progress is observational: a slow progress DB write must not delay
         # MCP probes, an operator Approval or a governed execution.
-        await asyncio.wait_for(write_event(), timeout=0.5)
+        # A sub-second timeout routinely loses milestones during concurrent
+        # evidence writes (observed on Windows-hosted VM MCP incidents). Give
+        # the short audit transaction a bounded 2-second window; progress
+        # failure still never blocks or alters operational authority.
+        await asyncio.wait_for(write_event(), timeout=2.0)
     except Exception as exc:
         logger.warning("workflow_progress_record_failed", incident_id=str(incident_id),
                        stage=stage, error_type=type(exc).__name__)
