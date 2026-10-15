@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 519 | Dashboard JS files scanned: 8 | Symbols indexed: 5511**
+**Python files scanned: 519 | Dashboard JS files scanned: 8 | Symbols indexed: 5512**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1279,9 +1279,10 @@
 | `apps/incident_service/repository.py` | `IncidentRepository.add_evidence` | 364 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentRepository |
 | `apps/incident_service/repository.py` | `IncidentRepository.commit` | 395 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentRepository |
 | `apps/incident_service/service_recovery_reconciliation.py` | `is_service_down_alert` | 15 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/incident_service/service_recovery_reconciliation.py` | `local_recovery_decision` | 29 | function | Return a bounded status, not mutable Incident state. | module |
-| `apps/incident_service/service_recovery_reconciliation.py` | `commit_independent_recovery` | 87 | async function | Commit resolution, cancel stale Approvals and write Audit atomically. | module |
-| `apps/incident_service/service_recovery_reconciliation.py` | `reconcile_after_applied_config` | 159 | async function | Best-effort, fresh verification following an approved config + start. | module |
+| `apps/incident_service/service_recovery_reconciliation.py` | `can_finalize_independent_recovery` | 29 | function | Viewer access to incident status must never imply write authority. | module |
+| `apps/incident_service/service_recovery_reconciliation.py` | `local_recovery_decision` | 38 | function | Return a bounded status, not mutable Incident state. | module |
+| `apps/incident_service/service_recovery_reconciliation.py` | `commit_independent_recovery` | 96 | async function | Commit resolution, cancel stale Approvals and write Audit atomically. | module |
+| `apps/incident_service/service_recovery_reconciliation.py` | `reconcile_after_applied_config` | 168 | async function | Best-effort, fresh verification following an approved config + start. | module |
 | `apps/incident_vm_identity.py` | `normalized_service` | 19 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
 | `apps/incident_vm_identity.py` | `_safe_target` | 23 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/incident_vm_identity.py` | `incident_vm_context` | 34 | function | Merge incident context without suppressing contradictory trigger signals. | module |
