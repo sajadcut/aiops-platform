@@ -195,6 +195,23 @@ def _observed(incident: Dict[str, Any], state: Dict[str, Any], rows: List[Dict[s
         if not items[name]:
             return None
         result = {k: raw[name].get(k) for k in fields}
+        if name == "config_validate" and result.get("valid") is False:
+            # Previously collected nginx -t could record the first [warn]
+            # location instead of the later [emerg] fatal error. Derive the
+            # display-only location from the ORIGINAL validator output while
+            # keeping the immutable MCP evidence unchanged.
+            detail = raw[name].get("detail")
+            if isinstance(detail, str) and detail:
+                from integrations.vm.service_adapters import parse_config_diagnostic
+                parsed = parse_config_diagnostic(detail)
+                if (parsed.get("syntax_error")
+                        and parsed.get("config_file")
+                        and type(parsed.get("error_line")) is int
+                        and (not result.get("config_file")
+                             or parsed["config_file"] == result["config_file"])):
+                    result["config_file"] = parsed["config_file"]
+                    result["error_line"] = parsed["error_line"]
+                    result["syntax_error"] = parsed["syntax_error"]
         result["evidence_id"] = _ref(items[name])
         return result
     return {
