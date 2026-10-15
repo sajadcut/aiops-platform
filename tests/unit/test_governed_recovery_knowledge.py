@@ -191,3 +191,57 @@ async def test_reconcile_rejects_unaudited_attempt(monkeypatch):
             return incident if model is Incident else None
     assert await create_from_governed_service_recovery(
         DB(), incident_id=incident.id, approval_id=approval_id) is None
+
+
+
+@pytest.mark.asyncio
+async def test_reconcile_recent_backfills_old_gfpapi_from_audit_without_publishing(monkeypatch):
+    from unittest.mock import AsyncMock
+    from apps.api import knowledge_reviews as api
+    from apps import knowledge_review as review_module
+
+    incident, event, approval_id = _fixture()
+
+    class Result:
+        def mappings(self): return self
+        def all(self):
+            return [
+                {"incident_id": incident.id, "approval_id": approval_id},
+                {"incident_id": incident.id, "approval_id": approval_id},
+            ]
+
+    class DB:
+        async def __aenter__(self): return self
+        async def __aexit__(self, exc_type, exc, tb): return False
+        async def execute(self, query, params):
+            assert "remediation_executed" in str(query)
+            assert params["limit"] == 30
+            return Result()
+
+    monkeypatch.setattr(api, "AsyncSessionLocal", DB)
+    ready = AsyncMock()
+    create = AsyncMock(return_value=SimpleNamespace(id=uuid4()))
+    monkeypatch.setattr(api, "require_database_ready", ready)
+    monkeypatch.setattr(review_module, "create_from_governed_service_recovery", create)
+    result = await api.reconcile_recent_recovery_reviews(limit=30)
+    assert result["status"] == "completed"
+    assert result["matched"] == 1 and result["skipped"] == 1
+    assert len(result["items"]) == 1
+    assert create.await_count == 1
+    assert create.await_args.kwargs["incident_id"] == incident.id
+    assert create.await_args.kwargs["approval_id"] == approval_id
+    assert result["published_to_cognia"] is False
+    assert result["requires_human_review"] is True
+
+
+def test_knowledge_review_ui_reconciles_once_and_never_auto_publishes():
+    from pathlib import Path
+    text = (Path(__file__).resolve().parents[2] /
+            "dashboards" / "knowledge-review.js").read_text(encoding="utf-8")
+    assert "let recoveryReconciled = false" in text
+    assert "if (!recoveryReconciled)" in text
+    assert "recoveryReconciled = true" in text
+    assert "/api/v1/knowledge-reviews/reconcile-recent" in text
+    assert "method:'POST'" in text
+    assert "const result = await api('/api/v1/knowledge-reviews?limit=100')" in text
+    assert "if (op === 'approve')" in text
