@@ -71,6 +71,7 @@ class Settings(BaseSettings):
     AGENT_MAX_PARALLELISM: int = Field(...)
     AGENT_MAX_EVIDENCE_ROUNDS: int = Field(...)
     AIOPS_DYNAMIC_INVESTIGATION_ENABLED: bool = Field(...)
+    AIOPS_FULL_CONFIG_LLM_ENABLED: bool = Field(default=False)
     AGENT_MAX_DYNAMIC_EVIDENCE_TYPES: int = Field(...)
     AGENT_INITIAL_EVIDENCE_WINDOW_SECONDS: int = Field(...)
     AGENT_REFRESH_EVIDENCE_WINDOW_SECONDS: int = Field(...)
