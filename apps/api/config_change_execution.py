@@ -64,6 +64,11 @@ async def _same_incident_candidate(db, approval: dict, meta: dict) -> bool:
         and proposal.get("candidate_sha256") == meta["candidate_sha256"]
         and proposal.get("proposed_change") == meta["proposed_change"]
         and proposal.get("execution_authority") is False
+        and (meta["proposed_change"] != "llm_full_file_repair"
+             or (proposal.get("candidate_stored") is True and
+                 proposal.get("validation_profile") in {
+                     "nginx", "json_syntax", "xml_syntax",
+                 }))
     )
 
 
