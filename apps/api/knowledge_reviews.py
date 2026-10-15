@@ -41,6 +41,10 @@ class ReviewEditRequest(BaseModel):
     expected_revision: int = Field(ge=1)
 
 
+class ReviewEvidenceRefreshRequest(BaseModel):
+    expected_revision: int = Field(ge=1)
+
+
 class ReviewDecisionRequest(BaseModel):
     expected_revision: int = Field(ge=1)
     reason: str = Field(min_length=3, max_length=1000)
@@ -94,6 +98,52 @@ async def get_review(review_id: UUID):
         if row.incident_id:
             from apps.knowledge_review_dossier import incident_dossier
             response["incident_dossier"] = await incident_dossier(db, row.incident_id)
+        return response
+
+
+@router.post("/knowledge-reviews/{review_id}/refresh-evidence",
+             dependencies=[Depends(require_permission("knowledge:draft"))])
+async def refresh_review_evidence(review_id: UUID,
+                                  payload: ReviewEvidenceRefreshRequest,
+                                  actor=Depends(require_permission("knowledge:draft"))):
+    """Explicit opt-in regeneration of an untouched system-generated draft.
+
+    Never silently rewrite operator edits, approved, rejected or published
+    knowledge. Changes invalidate any future approval via revision/hash.
+    """
+    from apps.knowledge_review_dossier import (
+        dossier_addendum, dossier_title, incident_dossier,
+    )
+    async with AsyncSessionLocal() as db:
+        await require_database_ready(db, operation="knowledge_review_refresh")
+        row = await get_locked_review(db, review_id)
+        if (row.status != "pending_review" or row.incident_id is None
+                or not str(row.created_by or "").startswith("system:")
+                or row.reviewed_by is not None or row.approved_hash is not None
+                or row.revision != 1):
+            raise HTTPException(409, "knowledge_draft_not_safe_to_regenerate")
+        if row.revision != payload.expected_revision:
+            raise HTTPException(409, "review_revision_conflict")
+        dossier = await incident_dossier(db, row.incident_id)
+        addendum = dossier_addendum(dossier)
+        if not addendum:
+            raise HTTPException(409, "no_sourced_config_diagnostic_available")
+        if "شواهد فنی مرتبط با کانفیگ" in row.content:
+            return review_summary(row)
+        title = dossier_title(str(dossier.get("service") or "unknown"), dossier,
+                              verified_memory=row.source_type == "incident")
+        content = row.content + "\n\n" + addendum
+        next_title, next_content = validated_document(title or row.title, content)
+        row.title, row.content = next_title, next_content
+        row.content_hash = content_digest(next_title, next_content)
+        row.revision += 1
+        row.status = "pending_review"
+        row.review_reason = "source_backed_config_diagnostic_review"
+        await _audit(db, row, actor.subject, "evidence_refreshed")
+        await db.commit()
+        await db.refresh(row)
+        response = review_summary(row)
+        response["incident_dossier"] = dossier
         return response
 
 
