@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 498 | Dashboard JS files scanned: 8 | Symbols indexed: 5216**
+**Python files scanned: 499 | Dashboard JS files scanned: 8 | Symbols indexed: 5217**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -3363,6 +3363,7 @@
 | `tests/unit/test_config_change_review.py` | `test_operator_intent_cannot_be_approval_or_apply_command` | 52 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_config_change_review.py` | `test_api_is_guarded_and_exposes_no_execution_authority` | 60 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_config_change_review.py` | `test_proposed_response_schema_does_not_accept_bogus_hash_types` | 82 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_config_review_button_runtime.py` | `test_config_buttons_dispatch_mcp_read_without_execution_and_refresh_report` | 11 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_container_image_contract.py` | `test_offline_runtime_uses_isolated_multistage_build` | 4 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_container_image_contract.py` | `test_container_acceptance_checks_final_filesystem_not_builder_layers` | 20 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_context_policy.py` | `test_allowlisted_source` | 3 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
