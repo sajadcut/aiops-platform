@@ -34,6 +34,12 @@ def _fields(record: dict) -> dict:
     if meta.get("tool_name") != "vm_config_change" or meta.get("runbook_id") != "vm-config-change":
         raise HTTPException(status_code=409, detail="config_change_contract_mismatch")
     parameters = {k: meta[k] for k in needed if k != "target"}
+    # Pre-upgrade tickets have no recovery scope and retain their original
+    # binding. New tickets bind the exact Boolean in the approval digest.
+    if "start_service_after_apply" in meta:
+        if type(meta["start_service_after_apply"]) is not bool:
+            raise HTTPException(status_code=409, detail="config_recovery_scope_invalid")
+        parameters["start_service_after_apply"] = meta["start_service_after_apply"]
     try:
         assert_config_request_bound(
             record, incident_id=str(record["incident_id"]),
