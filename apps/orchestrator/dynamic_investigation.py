@@ -407,8 +407,12 @@ class DynamicInvestigationPlanner:
         reviewed_file = str(general_review.get("config_file") or "")
         if (name and name == reviewed_name
                 and general_review.get("status") == "candidate_proposed"
-                and general_review.get("proposed_change") == "remove_trailing_json_comma"
-                and reviewed_file.endswith(".json")
+                and (
+                    (general_review.get("proposed_change") == "remove_trailing_json_comma"
+                     and reviewed_file.endswith(".json"))
+                    or (general_review.get("proposed_change") == "remove_extra_xml_closing_tag"
+                        and reviewed_file.endswith(".xml"))
+                )
                 and (not failure or failure.get("config_file") == reviewed_file)
                 and (result.get("config_proposal") or {}).get("status") != "candidate_proposed"):
             diff = general_review.get("redacted_diff") or {}
@@ -437,7 +441,7 @@ class DynamicInvestigationPlanner:
                 } if isinstance(diff, dict) else None,
                 "original_sha256": str(general_review.get("source_hash") or "")[:64],
                 "candidate_sha256": str(general_review.get("candidate_hash") or "")[:64],
-                "proposed_change": "remove_trailing_json_comma",
+                "proposed_change": general_review["proposed_change"],
                 "test_scope": "worker_format_validation_only",
                 "validation_status": "UNVERIFIED",
                 "format_validation_status": _bounded(
