@@ -268,8 +268,14 @@ async def persist_and_reassess(
             "event_id": str(uuid4()),
             "event_type": "incident_copilot_followup_integrated",
             "actor": actor, "incident_id": str(incident_id),
-            "action": action, "status": status["status"],
+            "action": action,
+            # audit_events.status is VARCHAR(50). Keep the full, stable
+            # domain result in JSON metadata; persist a bounded audit enum.
+            "status": ("reanalysis_requires_workflow_review"
+                       if status["status"] == "evidence_recorded_reanalysis_requires_workflow_review"
+                       else status["status"]),
             "metadata": {
+                "followup_status": status["status"],
                 "evidence_ref": evidence_ref, "reassessed": status["reassessed"],
                 "knowledge": status.get("knowledge", {"status": "not_created"}),
                 "execution_authority": False,
