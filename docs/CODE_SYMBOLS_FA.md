@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 516 | Dashboard JS files scanned: 8 | Symbols indexed: 5475**
+**Python files scanned: 516 | Dashboard JS files scanned: 8 | Symbols indexed: 5476**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1291,6 +1291,7 @@
 | `apps/knowledge_review.py` | `review_summary` | 96 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/knowledge_review.py` | `create_from_memory` | 119 | async function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
 | `apps/knowledge_review.py` | `get_locked_review` | 171 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
+| `apps/knowledge_review.py` | `create_from_verified_config_apply` | 180 | async function | Draft a sourced lesson after real config apply, not false service recovery. | module |
 | `apps/knowledge_review_dossier.py` | `_safe_path` | 24 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/knowledge_review_dossier.py` | `_same_service` | 32 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/knowledge_review_dossier.py` | `build_dossier` | 38 | function | Extract sourced, scoped and bounded facts for the selected incident. | module |
