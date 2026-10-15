@@ -104,3 +104,87 @@ def test_guard_distinguishes_isolation_problem_and_vendor_error():
     assert "exit 50" in script
     assert "exit 51" in script
     assert "exit 47" in script
+
+
+@pytest.mark.asyncio
+async def test_guard_uses_existing_ssh_user_password_for_sudo_with_candidate():
+    """sudo -n failure must transparently retry with the SAME SSH password.
+
+    Both password and hash-bound candidate are sent through SSH stdin, never
+    command arguments; the helper receives only candidate bytes after sudo
+    consumes its password line.
+    """
+    from integrations.vm.ssh_connector import SSHVMConnector
+    connector = object.__new__(SSHVMConnector)
+    password = "same-ssh-user-password-123!"
+    candidate = '{"apiKey":"NEVER_LOG_ME","valid":true}\n'
+    calls = []
+
+    async def fake_run(target, command, *, stdin_data=None):
+        calls.append((target, command, stdin_data))
+        if command.startswith("sudo -n "):
+            return {"success": False, "exit_code": 1,
+                    "stderr": "sudo: a password is required"}
+        assert command.startswith("sudo -S -p '' /usr/local/sbin/aiops-config-guard ")
+        assert stdin_data == password + "\n" + candidate
+        return {"success": True, "exit_code": 0, "stdout": "VALIDATED"}
+
+    connector._run = fake_run
+    connector._auth_mode = lambda: "password"
+    connector._password = lambda: password
+    response = await connector._sudo(
+        "192.0.2.16",
+        "/usr/local/sbin/aiops-config-guard validate custom-json /etc/example/config.json "
+        + "a" * 64 + " " + "b" * 64,
+        stdin_data=candidate,
+    )
+    assert response["success"] is True
+    assert len(calls) == 2
+    assert calls[0][2] == candidate
+    assert calls[1][2] == password + "\n" + candidate
+    assert all(password not in cmd and candidate not in cmd for _, cmd, _ in calls)
+
+
+@pytest.mark.asyncio
+async def test_guard_preserves_candidate_when_sudo_nopasswd_already_works():
+    from integrations.vm.ssh_connector import SSHVMConnector
+    connector = object.__new__(SSHVMConnector)
+    calls = []
+
+    async def fake_run(target, command, *, stdin_data=None):
+        calls.append((command, stdin_data))
+        return {"success": True, "exit_code": 0, "stdout": "VALIDATED"}
+
+    connector._run = fake_run
+    connector._auth_mode = lambda: "password"
+    connector._password = lambda: "ssh-secret-not-needed"
+    result = await connector._sudo(
+        "192.0.2.16", "/usr/local/sbin/aiops-config-guard validate",
+        stdin_data="sensitive-config\n",
+    )
+    assert result["success"] is True
+    assert calls == [("sudo -n /usr/local/sbin/aiops-config-guard validate",
+                      "sensitive-config\n")]
+
+
+@pytest.mark.asyncio
+async def test_denied_sudo_policy_never_falls_back_to_su_or_password():
+    from integrations.vm.ssh_connector import SSHVMConnector
+    connector = object.__new__(SSHVMConnector)
+    calls = []
+
+    async def fake_run(target, command, *, stdin_data=None):
+        calls.append((command, stdin_data))
+        return {"success": False, "exit_code": 1,
+                "stderr": "sudo: user is not allowed to execute this command"}
+
+    connector._run = fake_run
+    connector._auth_mode = lambda: "password"
+    connector._password = lambda: "never-send-this-password"
+    result = await connector._sudo(
+        "192.0.2.16", "/usr/local/sbin/aiops-config-guard validate",
+        stdin_data="candidate\n",
+    )
+    assert result["success"] is False
+    assert len(calls) == 1
+    assert calls[0][0].startswith("sudo -n ")
