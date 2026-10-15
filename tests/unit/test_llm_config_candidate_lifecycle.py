@@ -339,6 +339,38 @@ async def test_guard_loads_sealed_model_candidate_and_runs_staging_only(vault_en
 
 
 @pytest.mark.asyncio
+async def test_previous_sealed_llm_candidate_with_extra_reformat_is_blocked_before_sudo(vault_env):
+    # Existing 24-hour vault entries created before the new minimal-change
+    # policy must not retain executable authority.
+    bloated = CORRECTED.replace(" listen 8080;", "          listen 8080;")
+    bloated_hash = hashlib.sha256(bloated.encode()).hexdigest()
+    assert bloated_hash != HASH_CORRECTED
+    store_candidate(
+        target=TARGET, service=SERVICE, path=PATH,
+        source_hash=HASH_SOURCE, candidate_hash=bloated_hash, candidate=bloated,
+    )
+    class Edge:
+        _validate_target = staticmethod(lambda _: None)
+        _validate_service = staticmethod(lambda _: None)
+        async def config_validate(self, target, service):
+            return {"success": True, "supported": True, "config_file": PATH,
+                    "valid": False, "error_line": 4}
+        async def _run(self, target, cmd, *, stdin_data=None):
+            return {"success": True, "stdout": base64.b64encode(SOURCE.encode()).decode()}
+        async def _sudo(self, target, cmd, *, stdin_data=None):
+            raise AssertionError("invalid old candidate must never reach sudo")
+    result = await run_governed_change(
+        Edge(), action="validate", target=TARGET, service=SERVICE,
+        config_file=PATH, original_sha256=HASH_SOURCE,
+        candidate_sha256=bloated_hash, proposed_change="llm_full_file_repair",
+    )
+    assert result["success"] is False
+    assert result["status"] == "config_guard_candidate_not_minimal"
+    assert result["isolated_validation"] is False
+    assert result["production_write_performed"] is False
+
+
+@pytest.mark.asyncio
 async def test_source_drift_blocks_before_sudo_even_with_sealed_candidate(vault_env):
     put()
     class Drift:
