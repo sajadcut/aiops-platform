@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 500 | Dashboard JS files scanned: 8 | Symbols indexed: 5232**
+**Python files scanned: 500 | Dashboard JS files scanned: 8 | Symbols indexed: 5235**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -3364,15 +3364,18 @@
 | `tests/unit/test_cognia_service_relevance_gate.py` | `test_agent_prompt_removes_legacy_unrelated_checkpoint_knowledge` | 72 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_cognia_service_relevance_gate.py` | `test_multiple_contradictory_service_owners_are_not_accepted` | 84 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_config_change_review.py` | `proposal` | 10 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `tests/unit/test_config_change_review.py` | `response` | 21 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `tests/unit/test_config_change_review.py` | `test_operator_response_binds_both_config_hashes_to_server_checkpoint` | 29 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_config_change_review.py` | `test_review_rejects_untrusted_or_incomplete_proposals` | 46 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_config_change_review.py` | `test_operator_intent_cannot_be_approval_or_apply_command` | 52 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_config_change_review.py` | `test_api_is_guarded_and_exposes_no_execution_authority` | 60 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_config_change_review.py` | `test_proposed_response_schema_does_not_accept_bogus_hash_types` | 82 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_config_change_review.py` | `test_submitted_request_is_visible_but_never_claims_an_executable_approval` | 89 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_config_change_review.py` | `test_unrequested_config_does_not_claim_a_pending_validation_or_approval` | 109 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_config_change_review.py` | `test_main_approval_dashboard_distinguishes_config_review_from_real_approval` | 119 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_config_change_review.py` | `response` | 23 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_config_change_review.py` | `test_operator_response_binds_both_config_hashes_to_server_checkpoint` | 31 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_config_change_review.py` | `test_review_rejects_untrusted_or_incomplete_proposals` | 50 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_config_change_review.py` | `test_operator_intent_cannot_be_approval_or_apply_command` | 56 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_config_change_review.py` | `test_api_is_guarded_and_exposes_no_execution_authority` | 64 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_config_change_review.py` | `test_proposed_response_schema_does_not_accept_bogus_hash_types` | 86 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_config_change_review.py` | `test_submitted_request_is_visible_but_never_claims_an_executable_approval` | 93 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_config_change_review.py` | `test_unrequested_config_does_not_claim_a_pending_validation_or_approval` | 113 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_config_change_review.py` | `test_main_approval_dashboard_distinguishes_config_review_from_real_approval` | 123 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_config_change_review.py` | `test_approved_queue_record_is_still_not_executable_before_validation` | 136 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_config_change_review.py` | `test_generic_service_json_candidate_can_enter_same_approval_queue` | 153 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_config_change_review.py` | `test_approval_storage_does_not_upgrade_pending_validation_to_pending` | 165 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_config_review_button_runtime.py` | `test_config_buttons_dispatch_mcp_read_without_execution_and_refresh_report` | 11 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_container_image_contract.py` | `test_offline_runtime_uses_isolated_multistage_build` | 4 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_container_image_contract.py` | `test_container_acceptance_checks_final_filesystem_not_builder_layers` | 20 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
