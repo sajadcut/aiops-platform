@@ -338,7 +338,9 @@ async def execute_approved_remediation(approval_id: str, identity=Depends(requir
             identity.subject,
             incident_id,
             action,
-            "verified" if verified else "failed",
+            ("verified" if verified else
+             str((verification_payload or {}).get("status") or "inconclusive")
+             if result.success else "failed"),
             {
                 "approval_id": approval_id,
                 "result": result.model_dump(),
