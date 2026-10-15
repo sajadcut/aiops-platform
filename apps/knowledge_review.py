@@ -129,6 +129,18 @@ async def create_from_memory(db, memory_id: UUID, actor: str, *, kb_id: int | No
     )).scalars().first()
     if existing:
         return existing
+    # Repeated memory episodes for a single incident must not create a row of
+    # indistinguishable, simultaneously pending "Verified incident recovery"
+    # candidates. Keep the first for review; do not modify approved documents.
+    pending_incident = (await db.execute(
+        select(KnowledgeReview).where(
+            KnowledgeReview.incident_id == memory.incident_id,
+            KnowledgeReview.source_type == "incident",
+            KnowledgeReview.status == "pending_review",
+        ).order_by(KnowledgeReview.created_at.asc()).limit(1)
+    )).scalars().first()
+    if pending_incident:
+        return pending_incident
     record = KnowledgeReview(
         source_type="incident", memory_id=memory.id,
         incident_id=memory.incident_id, kb_id=selected,
