@@ -15,14 +15,17 @@ import time
 
 
 _SIGNING_CONTEXT = b"aiops/configuration-apply/approval-claim/v1"
+_CANDIDATE_ENCRYPTION_CONTEXT = b"aiops/configuration-candidate/aes-256-gcm/v1"
 
 
-def _key() -> bytes:
-    """Derive a fixed domain-separated signing subkey from MCP bearer auth.
+def _derive_mcp_key(context: bytes) -> bytes:
+    """Derive a domain-separated 32-byte key from the existing MCP bearer.
 
-    Do not accept a fallback to a separate secret: API and VM MCP must agree
-    on exactly the same MCP_BEARER_TOKEN through the existing Settings loader.
+    Context is intentionally chosen by trusted code, never a model or caller.
+    This retains the existing MCP token strength policy and env precedence.
     """
+    if context not in {_SIGNING_CONTEXT, _CANDIDATE_ENCRYPTION_CONTEXT}:
+        raise PermissionError("mcp_key_purpose_not_registered")
     from domain.contracts.config import settings
     # Deployed settings read environment and .env. An explicit runtime env
     # override is useful in isolated tests and takes precedence over settings.
@@ -35,7 +38,17 @@ def _key() -> bytes:
         raise PermissionError("mcp_bearer_token_too_weak_for_signing")
     # No bearer bytes appear in claims, logs, headers beyond original MCP auth,
     # or incident metadata; HMAC output serves only as an internal subkey.
-    return hmac.new(token.encode("utf-8"), _SIGNING_CONTEXT, hashlib.sha256).digest()
+    return hmac.new(token.encode("utf-8"), context, hashlib.sha256).digest()
+
+
+def _key() -> bytes:
+    """Approval HMAC signing key: stable and isolated from candidate encryption."""
+    return _derive_mcp_key(_SIGNING_CONTEXT)
+
+
+def candidate_encryption_key() -> bytes:
+    """AES-256-GCM subkey for the VM MCP candidate vault; no new configuration."""
+    return _derive_mcp_key(_CANDIDATE_ENCRYPTION_CONTEXT)
 
 
 
