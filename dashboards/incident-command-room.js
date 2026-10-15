@@ -23,6 +23,7 @@
     config_guard_isolated_mount_failed:'اتصال درخت کانفیگ در فضای ایزوله شکست خورد؛ مجوز mount یا تنظیمات Kernel بررسی شود.',
     config_guard_prerequisite_failed:'یکی از پیش‌نیازهای اسکریپت موقت، مسیر فایل یا ابزار مستقل اعتبارسنجی سرویس در VM در دسترس نیست.',
     config_guard_candidate_hash_mismatch:'هش نسخه پیشنهادی با درخواست تأیید مطابقت ندارد؛ تغییر باید دوباره بررسی شود.',
+    config_guard_candidate_not_minimal:'Candidate ذخیره‌شده نسبت به فایل اصلی تغییرات غیرضروری یا گسترده دارد. اصلاح فقط باید ایراد نحوی نزدیک خط Validator را برطرف کند؛ یک پیشنهاد جدید با LLM تولید کنید.',
     config_guard_source_hash_changed:'فایل زنده از زمان پیشنهاد تغییر کرده؛ پیشنهاد و هش‌ها باید دوباره تولید شوند.',
     config_guard_vendor_syntax_failed:'Validator واقعی سرویس، نسخه اصلاحی را تأیید نکرده است؛ این تغییر نباید اعمال شود.',
     config_guard_staging_failed:'آماده‌سازی نسخه ایزوله کانفیگ ناموفق بود.',
