@@ -238,3 +238,90 @@ scoped combined Approval on a disposable VM with working systemd/SSH/sudo,
 database persistence, vendor validation, service activation and a real
 matching Zabbix recovery notification. Automated Python/JS unit regressions
 alone cannot prove these external behaviors.
+
+## Complete-file LLM corrections into the governed change workflow
+
+`service_config_llm_repair` now uses the **complete, verified configuration
+file** (not a value-free excerpt) as LLM input **only on an explicit operator
+request** and only with `AIOPS_FULL_CONFIG_LLM_ENABLED=true`. Entire file
+values, including possible secrets, leave the VM MCP worker for the
+**administrator-approved HTTPS/loopback LLM endpoint**. The LLM is not an
+execution authority. Configure its data retention and DLP/secret governance
+before opting in.
+
+The LLM must return a complete corrected document; a bounded diff policy
+rejects large unrelated rewrites and changes to recognizable secret-bearing
+lines. The worker encrypts the exact candidate with AES-256-GCM, stores it in
+a private volume, and binds it to `(target, service, path, source_sha256,
+candidate_sha256)`. **Neither the full source nor candidate is returned to
+MCP/API/chat/audit/Cognia.** The incident report contains source/candidate
+hashes, the lines changed and a **value-free structural diff** only. Diff
+content is intentionally *not* a plaintext reveal of production credentials.
+
+The new `llm_full_file_repair` profile is accepted by the existing Approval
+contract **only if the worker reports successful encrypted storage and a
+registered isolated validator**. It then enters exactly the existing
+`pending_validation` queue. The worker decrypts the bound candidate after
+rechecking the live systemd/vendor file identity and original SHA-256, and
+the **same root POSIX transaction** performs staging, `nginx -t`, `jq` or
+`xmllint`, then separately approved, one-use signed atomic apply, postcheck
+and rollback. Approval consumption is preceded by **another isolated
+validation** of the same candidate. On source drift, expiration, mismatched
+key, unavailable isolation or failed vendor check, refuse; do not fall back
+to executing an LLM-suggested command.
+
+### VM MCP configuration
+
+The additional settings are injected into the **VM MCP worker** (not only
+the API):
+
+```env
+AIOPS_FULL_CONFIG_LLM_ENABLED=true
+AIOPS_CONFIG_CANDIDATE_ENCRYPTION_KEY=<base64 of exactly 32 cryptographically random bytes>
+# Optional: dedicated encrypted candidate volume
+# AIOPS_CONFIG_CANDIDATE_DIRECTORY=/var/lib/aiops/config-candidates
+```
+
+Generate the key **once on a trusted AIOps host**, with
+`python -c "import secrets,base64;print(base64.b64encode(secrets.token_bytes(32)).decode())"`;
+store it in the deployment secret manager and use the **same value after
+service restarts** on every VM MCP replica that has access to this shared
+candidate volume. The path must be owner-controlled, with POSIX mode 0700
+and files 0600. Windows uses
+`%ProgramData%\\AIOps\\config-candidates` by default; its native NTFS
+DACL checker accepts **only SYSTEM, Administrators and the worker service
+identity**. Provision inheritance-disabled NTFS ACLs for the service
+identity and verify them before enabling; the worker fails closed if
+permissions cannot be proved. The directory must persist across restarts
+and be available to every worker instance that might execute a ticket.
+Never place it on a broadly readable SMB share.
+
+**Candidate TTL: 24 hours** from creation, enforced on reads. Stale files
+must be cleaned through retention operations; expiry prevents execution,
+but does not itself physically erase ciphertext. Lost/rotated AES keys
+invalidate older candidates; create a new proposal rather than bypassing
+decryption. Old stateless LLM proposals cannot be approved: run a **new
+full-file repair** after deployment so a sealed candidate is generated.
+No configuration file is automatically changed when the model responds.
+
+### Current limits / production acceptance
+
+* One selected **complete UTF-8 file** at a time, up to 24 KiB for model
+  submission; resulting exact candidate up to 48 KiB. Larger files are
+  refused instead of silently truncated.
+* Registered protected-apply validators: **Nginx** using the mount-namespace
+  vendor check, **JSON** using `jq empty` (syntax only), and **XML**
+  using `xmllint --nonet` (syntax only). **JSON/XML passing does not prove
+  Java/.NET/Python service-level semantics**. Other vendors, such as
+  HAProxy, TOML, INI, YAML, properties or bespoke parsers, remain
+  **analysis-only** until tested service-specific validator adapters exist.
+* For Nginx, dependencies outside the staged `/etc/nginx` tree may still be
+  live read-only dependencies, not a full hermetic snapshot.
+* The modified lines are shown in redacted structural form. Full plaintext
+  values must not be returned to an incident browser or ordinary audit API.
+* No Python installation is required on monitored Linux VMs; Python and
+  `cryptography` run on the AIOps VM MCP worker.
+* CI tests cover simulated paths. **Windows NTFS, privileged sudo,
+  namespace/mount isolation, post-apply behavior, rollback and monitoring
+  reconciliation are REAL ENV REQUIRED.** Do not claim Production PASS
+  from mocks or an HTTP 200 alone.
