@@ -1072,6 +1072,7 @@ class SSHVMConnector:
         outcome = None
         selected = None
         read_failed = False
+        reviewed_files = []
         visited = set()
         for path, path_source, error_line in known[:16]:
             if path in visited:
