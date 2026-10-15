@@ -119,7 +119,14 @@ def _review_progress(*, status: str, decision: str | None, proposal: dict,
         "created_at": created_at,
         "request_recorded": requested,
         "validation_status": "PASSED" if validated else proposal.get("validation_status") or "UNVERIFIED",
-        "validation_pipeline_status": "passed" if validated else "available" if approval else "not_requested",
+        "validation_pipeline_status": (
+            "passed" if validated else "blocked"
+            if metadata.get("validation_last_reason") else "available"
+            if approval else "not_requested"
+        ),
+        "validation_reason": metadata.get("validation_last_reason"),
+        "guard_exit_code": metadata.get("validation_last_exit_code"),
+        "validation_last_failed_at": metadata.get("validation_last_failed_at"),
         "change_contract_status": "registered" if approval else "not_registered",
         "validation_scope": metadata.get("validation_scope"),
         "vendor_validator": metadata.get("vendor_validator"),
@@ -131,6 +138,7 @@ def _review_progress(*, status: str, decision: str | None, proposal: dict,
         "execution_authority": False,
         "production_write_performed": False,
         "blocking_reasons": [] if validated else [
+            *([metadata["validation_last_reason"]] if metadata.get("validation_last_reason") else []),
             "independent_candidate_validation_pending_or_failed",
             "approval_cannot_be_granted_before_validation",
         ] if requested else [],
@@ -306,6 +314,7 @@ async def post_config_review_response(
         response["validation_status"] = "PASSED" if checked["validation"] == "passed" else "UNVERIFIED"
         response["validation_pipeline_status"] = checked["validation"]
         response["validation_reason"] = checked.get("validation_reason")
+        response["guard_exit_code"] = checked.get("guard_exit_code")
         response["validation_scope"] = checked.get("validation_scope")
         response["approval_eligible"] = checked["status"] == "pending"
         response["approval_actionable"] = response["approval_eligible"]
