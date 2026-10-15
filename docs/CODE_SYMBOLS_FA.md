@@ -684,8 +684,8 @@
 | `apps/api/config_change_review.py` | `_matching_proposal` | 60 | function | Accept only evidence-backed deterministic transformations. | module |
 | `apps/api/config_change_review.py` | `_approval_for_proposal` | 89 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/config_change_review.py` | `_review_progress` | 99 | function | Expose durable intent separately from executable Approval authority. | module |
-| `apps/api/config_change_review.py` | `get_config_review_response` | 156 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
-| `apps/api/config_change_review.py` | `post_config_review_response` | 202 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/config_change_review.py` | `get_config_review_response` | 159 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
+| `apps/api/config_change_review.py` | `post_config_review_response` | 205 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/dashboard.py` | `dashboard_summary` | 17 | async function | Return live PostgreSQL-backed KPIs. Database failures are never converted to fake zeroes. | module |
 | `apps/api/dashboard_incidents.py` | `dashboard_incidents` | 15 | async function | Operational incident list enriched from durable governance/audit state. | module |
 | `apps/api/dashboard_incidents.py` | `dashboard_services` | 115 | async function | Service-centric operational health derived only from durable incident/governance state. | module |
