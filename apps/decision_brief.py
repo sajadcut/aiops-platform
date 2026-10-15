@@ -731,6 +731,23 @@ def build_decision_brief(
             "status": safe(obj(obj(state.get("context")).get("dynamic_investigation")).get("status"), 40)
                 or "not_available",
             "model_status": safe(obj(obj(state.get("context")).get("dynamic_investigation")).get("model_status"), 45),
+            "config_llm_review": {
+                "status": safe(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("config_llm_review")).get("status"), 60),
+                "model_validated": False,
+                "vendor_validated": False,
+                "model_diagnosis": {
+                    "error_kind": safe(obj(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("config_llm_review")).get("model_diagnosis")).get("error_kind"), 60),
+                    "line": obj(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("config_llm_review")).get("model_diagnosis")).get("line"),
+                    "reason": safe(obj(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("config_llm_review")).get("model_diagnosis")).get("reason"), 350),
+                    "suggestion": safe(obj(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("config_llm_review")).get("model_diagnosis")).get("suggestion"), 350),
+                },
+                "model_second_review": {
+                    "error_kind": safe(obj(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("config_llm_review")).get("model_second_review")).get("error_kind"), 60),
+                    "line": obj(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("config_llm_review")).get("model_second_review")).get("line"),
+                    "reason": safe(obj(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("config_llm_review")).get("model_second_review")).get("reason"), 350),
+                    "suggestion": safe(obj(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("config_llm_review")).get("model_second_review")).get("suggestion"), 350),
+                },
+            },
             "checks": [
                 safe(x, 60)
                 for x in arr(obj(obj(state.get("context")).get("dynamic_investigation")).get("checks"))[:3]
