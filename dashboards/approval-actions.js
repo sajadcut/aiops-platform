@@ -73,17 +73,20 @@
       </div>`;
     } else if (pendingValidation) {
       controls = `<div class="approval-controls">
-        <p role="status" class="approval-warning">درخواست تغییر ثبت شد. این رکورد واقعی در صف Approval است، اما هنوز مجوز اجرا نیست. اعتبارسنجی ایزوله و قرارداد اعمال فایل باید تکمیل و ثبت شوند؛ تا آن زمان تأیید یا اجرای فایل مجاز نیست.</p>
+        <p role="status" class="approval-warning">درخواست ثبت شده اما تا موفقیت Validator ایزوله، تأیید نهایی و اعمال فایل مسدود است. ابزار معتبر و فایل زنده باید دوباره بررسی شوند.</p>
         <p><strong>فایل:</strong> ${esc(meta.config_file || '—')}</p>
         <p><strong>Source SHA-256:</strong> ${esc(meta.original_sha256 || '—')}</p>
         <p><strong>Candidate SHA-256:</strong> ${esc(meta.candidate_sha256 || '—')}</p>
+        <div class="approval-buttons"><button class="approval-btn approve" onclick="validateCurrentConfigApproval()">بررسی ایزوله و آماده‌سازی تأیید</button>
+        <button class="approval-btn reject" onclick="rejectPendingConfigApproval()">رد درخواست</button></div>
       </div>`;
     } else if (approved) {
       const complete = lower(lifecycle.checkpoint_status)==='completed';
+      const config = meta.workflow === 'config_change';
       const executeLabel = complete ? 'اجرای عملیات تأییدشده' : 'ادامه و اجرا';
       controls = `<div class="execution-controls">
         <div class="execution-ready"><span class="dot green"></span><div><strong>مجوز تأیید شد؛ اجرا هنوز شروع نشده است</strong><small>تأیید مجوز به معنی اجرا نیست. تحلیل تکمیل‌شده با شناسهٔ مجوز اجرا می‌شود و تحلیل متوقف‌شده ادامه می‌یابد. هر دو مسیر نیازمند بررسی تازه، مجوز یک‌بارمصرف و راستی‌آزمایی مستقل هستند.</small></div></div>
-        <button id="resumeExecutionBtn" class="approval-btn execute" onclick="resumeCurrentWorkflow()" ${binding ? '' : 'disabled'}>${executeLabel}</button>
+        <button id="resumeExecutionBtn" class="approval-btn execute" onclick="${config?'executeCurrentConfigApproval()':'resumeCurrentWorkflow()'}" ${binding ? '' : 'disabled'}>${config?'اعمال فایل و راستی‌آزمایی':executeLabel}</button>
         ${binding ? '' : '<p class="approval-warning">اتصال مجوز به عملیات ناقص است؛ ادامهٔ اجرا عمداً غیرفعال شده است.</p>'}
       </div>`;
     } else if (consumed) {
@@ -384,6 +387,44 @@
     await selectIncident(id);
     renderDetail('decision');
   }
+
+  window.validateCurrentConfigApproval = async function validateCurrentConfigApproval(){
+    const approval=S.detail?.lifecycle?.approval;
+    if(!approval?.approval_id||approval.metadata?.workflow!=='config_change'||
+       lower(approval.status)!=='pending_validation')return;
+    if(!window.confirm('نسخه اصلاحی از فایل زنده بازسازی و در فضای ایزوله بررسی شود؟ هیچ تغییر تولیدی اعمال نمی‌شود.'))return;
+    try{
+      const result=await api('/api/v1/approvals/'+encodeURIComponent(approval.approval_id)+'/validate-config',{method:'POST'});
+      toast(result.validation==='passed'?'تست مستقل موفق بود؛ درخواست آماده تأیید است.':'اعتبارسنجی مسدود شد: '+(result.validation_reason||'unavailable'));
+      await refreshIncidentDecision();
+    }catch(error){showError('اعتبارسنجی ناموفق: '+error.message);}
+  };
+
+  window.rejectPendingConfigApproval = async function rejectPendingConfigApproval(){
+    const approval=S.detail?.lifecycle?.approval;
+    if(!approval?.approval_id||approval.metadata?.workflow!=='config_change'||
+       lower(approval.status)!=='pending_validation')return;
+    if(!window.confirm('درخواست اصلاح کانفیگ رد شود؟'))return;
+    try{
+      await api('/api/v1/approvals/'+encodeURIComponent(approval.approval_id)+'/reject-config',{method:'POST'});
+      toast('درخواست کانفیگ رد شد.');
+      await refreshIncidentDecision();
+    }catch(error){showError(error.message);}
+  };
+
+  window.executeCurrentConfigApproval = async function executeCurrentConfigApproval(){
+    const approval=S.detail?.lifecycle?.approval;
+    if(!approval?.approval_id||approval.metadata?.workflow!=='config_change'||
+       lower(approval.status)!=='approved')return;
+    if(!window.confirm('آیا اعمال واقعی فایل دارای هش مشخص و تست Vendor پس از تغییر را تأیید می‌کنید؟'))return;
+    if(!window.confirm('تأیید دوم: مجوز فقط یک‌بار مصرف می‌شود و تغییر واقعی کانفیگ روی میزبان انجام می‌شود.'))return;
+    try{
+      const result=await api('/api/v1/approvals/'+encodeURIComponent(approval.approval_id)+'/execute-config',{method:'POST'});
+      toast(result.success===true?'کانفیگ اعمال و Syntax آن تأیید شد؛ سلامت سرویس هنوز باید بررسی شود.':
+        'اعمال کامل نشد: '+(result.status||'unknown')+' · Rollback: '+(result.rollback_status||'unverified'));
+      await refreshIncidentDecision();
+    }catch(error){showError('اجرای کانفیگ ناموفق: '+error.message);}
+  };
 
   window.approveCurrentApproval = async function approveCurrentApproval() {
     const approval = S.detail?.lifecycle?.approval;

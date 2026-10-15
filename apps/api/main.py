@@ -9,7 +9,7 @@ from domain.contracts.logging import configure_logging, logger
 from domain.contracts.exceptions import register_exception_handlers
 from domain.contracts.rate_limit import rate_limiter_strict
 
-from apps.api import health, workflow, incidents, a2a, execution, e2e_workflow, audit, runbooks, incident_resources, dashboard, runbook_execution, dashboard_incidents, remediation, agents, signals, chatbot, knowledge_reviews, config_change_review, incident_chat, service_catalog
+from apps.api import health, workflow, incidents, a2a, execution, e2e_workflow, audit, runbooks, incident_resources, dashboard, runbook_execution, dashboard_incidents, remediation, agents, signals, chatbot, knowledge_reviews, config_change_review, config_change_execution, incident_chat, service_catalog
 from apps.api.http_logging import HTTPTransactionLoggingMiddleware
 from apps.execution_service.tools.registry import tool_registry
 from apps.execution_service.tools.mock_executor import MockExecutorTool
@@ -46,6 +46,7 @@ for router, tags in [
     (incident_chat.router, ["Incident Copilot"]),
     (service_catalog.router, ["Service Health Catalog"]),
     (config_change_review.router, ["Configuration Review"]),
+    (config_change_execution.router, ["Governed Configuration Change"]),
     (knowledge_reviews.router, ["Knowledge Review"]),
     (incidents.router, ["Incidents"]),
     (signals.router, ["Signals"]),

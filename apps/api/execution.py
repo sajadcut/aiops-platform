@@ -96,6 +96,13 @@ def _require_pending(current: Dict[str, Any]) -> None:
 
 @router.post("/approvals")
 async def create_approval(payload: Dict[str, Any], identity=Depends(require_permission("approve:low_risk"))):
+    # Configuration approvals are created only from immutable MCP evidence,
+    # then promoted by independent vendor validation. The generic approval
+    # endpoint cannot mint their privileged metadata or lower their risk.
+    if (str(payload.get("action") or "") == "apply_configuration_change"
+            or str(payload.get("tool_name") or "") == "vm_config_change"
+            or (payload.get("metadata") or {}).get("workflow") == "config_change"):
+        raise HTTPException(status_code=409, detail="use_governed_config_approval_workflow")
     required_fields = ["incident_id", "action", "risk_level", "approver"]
     missing = [field for field in required_fields if field not in payload]
     if missing:

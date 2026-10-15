@@ -15,8 +15,10 @@ def test_provider_tool_names_match_control_plane_clients():
         "route_check", "firewall_status", "config_validate", "nginx_config_review", "nginx_config_inspect",
         "service_runtime_discovery", "service_config_discovery", "service_config_review", "dotnet_config_syntax",
         "start_service", "restart_service", "reload_service",
+        "config_change_validate", "config_change_apply",
     }
-    assert _WRITE_TOOLS == {"start_service", "restart_service", "reload_service"}
+    assert _WRITE_TOOLS == {"start_service", "restart_service", "reload_service", "config_change_apply"}
+    assert "config_change_validate" in _TOOL_SCHEMAS["vm"]
 
 
 def test_internal_mcp_server_has_no_native_zabbix_provider():

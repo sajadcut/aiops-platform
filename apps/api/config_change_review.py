@@ -1,8 +1,8 @@
-"""Human response to an incident configuration *proposal*, not deployment approval.
+"""Evidence-bound configuration review, governed approval and validation.
 
-The response is durable/auditable and bound to the exact existing proposal
-hashes. It cannot create an Approval, ExecutionRequest or bypass an isolated
-validator; application of bytes needs a separate guarded implementation.
+An operator's review creates a durable pending-validation request. Independent
+vendor staging must pass before an Approval can become human-approvable.
+Production writes remain behind a separately consumed, signed execution gate.
 """
 from __future__ import annotations
 
@@ -16,6 +16,7 @@ from sqlalchemy import select, text
 
 from apps.approval_service.binding import bind_metadata
 from apps.approval_service.postgres import PostgreSQLApprovalStore
+from apps.api.config_change_execution import validate_config_ticket
 from apps.incident_vm_identity import incident_vm_context, vm_binding_diagnostic
 from apps.audit_service import AuditService
 from apps.audit_service.postgres import PostgreSQLAuditStore
@@ -98,7 +99,10 @@ def _review_progress(*, status: str, decision: str | None, proposal: dict,
     successful validation and an independently registered apply contract
     could allow creation of an executable change Approval.
     """
-    requested = status in {"awaiting_isolated_validation", "pending_validation"}
+    requested = status in {"awaiting_isolated_validation", "pending_validation", "pending", "approved", "consumed"}
+    metadata = dict((approval or {}).get("metadata") or {})
+    validated = metadata.get("isolated_validation") is True
+    approvable = bool(approval and approval.get("status") == "pending" and validated)
     queue_status = str(approval.get("status")) if approval else "not_created"
     return {
         "status": status,
@@ -109,20 +113,21 @@ def _review_progress(*, status: str, decision: str | None, proposal: dict,
         "candidate_sha256": proposal.get("candidate_sha256"),
         "created_at": created_at,
         "request_recorded": requested,
-        "validation_status": proposal.get("validation_status") or "UNVERIFIED",
-        "validation_pipeline_status": "not_implemented",
-        "change_contract_status": "not_implemented",
+        "validation_status": "PASSED" if validated else proposal.get("validation_status") or "UNVERIFIED",
+        "validation_pipeline_status": "passed" if validated else "available" if approval else "not_requested",
+        "change_contract_status": "registered" if approval else "not_registered",
+        "validation_scope": metadata.get("validation_scope"),
+        "vendor_validator": metadata.get("vendor_validator"),
         "approval_status": queue_status,
         "approval_id": str(approval["approval_id"]) if approval else None,
         "approval_queue_registered": bool(approval),
-        "approval_eligible": False,
-        "approval_actionable": False,
+        "approval_eligible": approvable,
+        "approval_actionable": approvable,
         "execution_authority": False,
         "production_write_performed": False,
-        "blocking_reasons": [
-            "isolated_candidate_validation_not_implemented",
-            "versioned_file_apply_contract_not_implemented",
-            "executable_approval_not_created",
+        "blocking_reasons": [] if validated else [
+            "independent_candidate_validation_pending_or_failed",
+            "approval_cannot_be_granted_before_validation",
         ] if requested else [],
     }
 
@@ -281,8 +286,27 @@ async def post_config_review_response(
                 },
             )
             await AuditService.flush_to_store(audit, incident_id=str(incident_id))
-        return _review_progress(
+        response = _review_progress(
             status="pending_validation", decision="request_change_approval",
             proposal=proposal, created_at=str(queued.get("created_at")),
             approval=queued,
         )
+    # Validation does NOT write production files; it runs the staged vendor
+    # binary under the VM's restricted guard. A blocked validator leaves
+    # the ticket visible and non-approvable, rather than inventing a PASS.
+    try:
+        checked = await validate_config_ticket(str(queued["approval_id"]), actor=identity.subject)
+        response["status"] = checked["status"]
+        response["approval_status"] = checked["status"]
+        response["validation_status"] = "PASSED" if checked["validation"] == "passed" else "UNVERIFIED"
+        response["validation_pipeline_status"] = checked["validation"]
+        response["validation_reason"] = checked.get("validation_reason")
+        response["validation_scope"] = checked.get("validation_scope")
+        response["approval_eligible"] = checked["status"] == "pending"
+        response["approval_actionable"] = response["approval_eligible"]
+        if response["approval_eligible"]:
+            response["blocking_reasons"] = []
+    except Exception:
+        response["validation_pipeline_status"] = "blocked_or_unavailable"
+        response["validation_reason"] = "technical_validation_unavailable"
+    return response
