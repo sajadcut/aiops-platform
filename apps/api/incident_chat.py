@@ -668,8 +668,16 @@ async def incident_chat_message(
                     # No ungated LLM claims about absence of errors or health
                     # are appended to a bounded log result.
             elif observation.get("success"):
-                followup = await llm_plan(payload.message, summary, previous,
-                                          observation=observation)
+                # Complete-file repair already performed its LLM round-trip on
+                # the trusted MCP worker. Its tool result is deterministic and
+                # must not be resent to the chat LLM for redundant narration.
+                # That second call can exceed gateway context limits (HTTP 400)
+                # even though full-file repair succeeded.
+                if intent == "service_config_llm_repair":
+                    followup = {"model_status": "not_required", "answer": ""}
+                else:
+                    followup = await llm_plan(payload.message, summary, previous,
+                                              observation=observation)
                 final_model_status = followup["model_status"]
                 answer = followup["answer"] or (
                     "بررسی زنده انجام شد، اما LLM نتوانست نتیجه را خلاصه کند. "
