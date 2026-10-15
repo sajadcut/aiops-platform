@@ -21,8 +21,8 @@ _NAME = re.compile(
     # Config inventory is bound to the systemd publish directory. Syntax
     # validation never returns file contents, keys, values or secret data.
     # Exclude hidden and credential files, but inspect ordinary service JSON.
-    r"(?!.*(?:secret|password|credential|private|\\.key))"
-    r"[A-Za-z0-9][A-Za-z0-9_.+-]{0,99}\\.json\\Z", re.I,
+    r"(?!.*(?:secret|password|credential|private|\.key))"
+    r"[A-Za-z0-9][A-Za-z0-9_.+-]{0,99}\.json\Z", re.I,
 )
 
 # Neither error messages nor excerpts include JSON values, secret names,
