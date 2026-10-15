@@ -1,6 +1,8 @@
 """Regression: GFPAPI timeout must produce *advice*, never unauthorized restart."""
 from datetime import datetime, timezone
 
+import pytest
+
 from apps.decision_brief import build_decision_brief
 from apps.orchestrator.recovery_advice import build_vm_recovery_advisory
 
@@ -197,3 +199,142 @@ def test_invalid_dotnet_json_overrides_generic_unavailable_config_and_blocks_rec
     assert result["suggested_action"] is None
     assert result["alternative_actions"] == []
     assert result["execution_authority"] is False
+
+
+@pytest.mark.asyncio
+async def test_recovery_advice_automatically_queues_only_bound_human_approval(monkeypatch):
+    """Queueing a suggested restart cannot approve it or call VM restart."""
+    from types import SimpleNamespace
+    from unittest.mock import AsyncMock
+    from uuid import UUID
+    from apps.api import incident_chat as api
+
+    class DB:
+        async def __aenter__(self): return self
+        async def __aexit__(self, exc_type, exc, tb): return False
+        async def execute(self, stmt, params):
+            assert "pg_advisory_xact_lock" in str(stmt)
+            return None
+
+    proposal = advisory()
+    checkpoint = {"status": "completed", "state": {
+        "context": {"recovery_advisory": proposal}
+    }}
+    incident = SimpleNamespace(service=SERVICE, status="open", context=trigger())
+    monkeypatch.setattr(api, "AsyncSessionLocal", DB)
+    monkeypatch.setattr(api, "_scope", AsyncMock(
+        return_value=(incident, checkpoint, gfpapi_rows())))
+    monkeypatch.setattr(api, "_existing_recovery_approval",
+                        AsyncMock(return_value=None))
+    monkeypatch.setattr(api, "resolve_vm_binding", AsyncMock(return_value=(
+        {"target": TARGET, "service": SERVICE, "active_state": "failed"},
+        {"status": "verified_from_live_vm_mcp"},
+    )))
+    creator = AsyncMock(return_value={
+        "approval_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+        "status": "pending",
+    })
+    monkeypatch.setattr(api, "create_remediation_request", creator)
+    response = await api.queue_incident_recovery_approval(
+        UUID("bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"),
+        identity=SimpleNamespace(subject="sre"),
+    )
+    assert response["status"] == "pending"
+    assert response["execution_authority"] is False
+    assert response["preflight_required_before_execution"] is True
+    request = creator.await_args.args[1]
+    assert request.action == "restart_service"
+    assert request.target == TARGET
+    assert request.service == SERVICE
+    assert creator.await_count == 1
+
+
+@pytest.mark.asyncio
+async def test_recovery_approval_queue_fails_closed_on_changed_live_state(monkeypatch):
+    from types import SimpleNamespace
+    from unittest.mock import AsyncMock
+    from uuid import UUID
+    from fastapi import HTTPException
+    from apps.api import incident_chat as api
+
+    class DB:
+        async def __aenter__(self): return self
+        async def __aexit__(self, exc_type, exc, tb): return False
+        async def execute(self, stmt, params): return None
+
+    checkpoint = {"status": "completed", "state": {
+        "context": {"recovery_advisory": advisory()}
+    }}
+    monkeypatch.setattr(api, "AsyncSessionLocal", DB)
+    monkeypatch.setattr(api, "_scope", AsyncMock(return_value=(
+        SimpleNamespace(service=SERVICE, status="open", context=trigger()),
+        checkpoint, gfpapi_rows(),
+    )))
+    monkeypatch.setattr(api, "_existing_recovery_approval",
+                        AsyncMock(return_value=None))
+    monkeypatch.setattr(api, "resolve_vm_binding", AsyncMock(return_value=(
+        {"target": TARGET, "service": SERVICE, "active_state": "active"},
+        {"status": "verified_from_live_vm_mcp"},
+    )))
+    creator = AsyncMock()
+    monkeypatch.setattr(api, "create_remediation_request", creator)
+    with pytest.raises(HTTPException) as exc:
+        await api.queue_incident_recovery_approval(
+            UUID("bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"),
+            identity=SimpleNamespace(subject="sre"),
+        )
+    assert exc.value.status_code == 409
+    creator.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_dotnet_live_json_syntax_endpoint_reports_line_column_without_config(monkeypatch):
+    from types import SimpleNamespace
+    from unittest.mock import AsyncMock
+    from uuid import UUID
+    from apps.api import incident_chat as api
+
+    class DB:
+        async def __aenter__(self): return self
+        async def __aexit__(self, exc_type, exc, tb): return False
+
+    incident = SimpleNamespace(service=SERVICE, status="open", context=trigger())
+    monkeypatch.setattr(api, "AsyncSessionLocal", DB)
+    monkeypatch.setattr(api, "_scope", AsyncMock(return_value=(
+        incident, {"status": "completed", "state": {"context": trigger()}},
+        gfpapi_rows(),
+    )))
+    monkeypatch.setattr(api, "resolve_vm_binding", AsyncMock(return_value=(
+        {"target": TARGET, "service": SERVICE, "active_state": "failed"},
+        {"status": "verified_from_live_vm_mcp"},
+    )))
+    class MCP:
+        async def dotnet_config_syntax(self, target, service):
+            assert (target, service) == (TARGET, SERVICE)
+            return {
+                "success": True, "runtime": "dotnet",
+                "service": SERVICE, "target": TARGET, "syntax_valid": False,
+                "status": "invalid", "stdout": "SECRETS_NEVER_IN_API",
+                "files": [
+                    {"file": "bootstrap.json", "status": "invalid_json_syntax",
+                     "line": 19, "column": 8, "reason": "json_value_missing",
+                     "snippet": "PASSWORD_LEAK"},
+                    {"file": "appsettings.json", "status": "valid_json_syntax"},
+                ],
+            }
+    monkeypatch.setattr(api, "VMEdgeMCPClient", MCP, raising=False)
+    result = await api.incident_dotnet_config_syntax(
+        UUID("bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"),
+        identity=SimpleNamespace(subject="observer"),
+    )
+    import json
+    assert result["status"] == "invalid"
+    assert result["syntax_valid"] is False
+    assert result["application_ready"] is None
+    assert {row["file"] for row in result["files"]} == {
+        "bootstrap.json", "appsettings.json",
+    }
+    assert result["files"][0]["line"] == 19
+    assert result["files"][0]["column"] == 8
+    assert "PASSWORD_LEAK" not in json.dumps(result)
+    assert "SECRETS_NEVER_IN_API" not in json.dumps(result)
