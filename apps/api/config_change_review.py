@@ -137,7 +137,10 @@ def _review_progress(*, status: str, decision: str | None, proposal: dict,
         "approval_eligible": approvable,
         "approval_actionable": approvable,
         "execution_prerequisites": {
-            "api_signing_key": "configured" if config_signing_ready() else "missing",
+            "signing_source": "MCP_BEARER_TOKEN",
+            "api_signing_key": ("derived_from_mcp_bearer_token"
+                                if config_signing_ready()
+                                else "missing_or_weak_mcp_bearer_token"),
             "vm_mcp_signing_key": "not_checked",
             "signing_key_match": "not_checked",
             "execution_ready": False,
