@@ -176,6 +176,7 @@ async def execute_config(approval_id: UUID, identity=Depends(require_permission(
                     "target", "service", "config_file", "original_sha256",
                     "candidate_sha256", "proposed_change",
                 )},
+                start_service_after_apply=meta.get("start_service_after_apply") is True,
             )
         except PermissionError as exc:
             raise HTTPException(status_code=503, detail=str(exc)) from exc
@@ -194,13 +195,23 @@ async def execute_config(approval_id: UUID, identity=Depends(require_permission(
         result = {"success": False, "status": "mcp_apply_failed_or_unavailable",
                   "production_write_performed": None, "rollback_status": "unverified"}
 
-    # No claim of recovery is made from nginx -t alone. The service is not
-    # restarted automatically; a separate recovery Approval is required.
+    # Signed recovery scope was fixed in the original Approval metadata.
+    # The VM MCP may start systemd only after successful, postchecked apply.
+    # Independently reported systemd active != authoritative Zabbix recovery.
     applied = (
         result.get("success") is True and result.get("status") == "applied_verified"
         and result.get("production_write_performed") is True
         and result.get("candidate_sha256") == meta["candidate_sha256"]
     )
+    recovery = result.get("service_recovery") or {}
+    if not isinstance(recovery, dict):
+        recovery = {}
+    recovery_confirmed = bool(
+        applied and meta.get("start_service_after_apply") is True
+        and result.get("service_recovery_confirmed") is True
+        and recovery.get("status") in {"systemd_active", "already_active"}
+    )
+    recovery_status = str(recovery.get("status") or "not_authorized")[:48]
     async with AsyncSessionLocal() as db:
         await _audit(
             db, incident, identity.subject,
@@ -209,7 +220,10 @@ async def execute_config(approval_id: UUID, identity=Depends(require_permission(
                 "approval_id": id_, "result": str(result.get("status") or "unknown")[:100],
                 "rollback_status": result.get("rollback_status"),
                 "production_write_performed": result.get("production_write_performed"),
-                "service_recovery_confirmed": False,
+                "service_recovery_confirmed": recovery_confirmed,
+                "service_recovery_status": recovery_status,
+                "service_start_attempted": recovery.get("attempted") is True,
+                "monitor_recovery_confirmed": False,
             },
         )
     return {
@@ -217,8 +231,14 @@ async def execute_config(approval_id: UUID, identity=Depends(require_permission(
         "status": "applied_verified" if applied else str(result.get("status") or "execution_unverified"),
         "rollback_status": result.get("rollback_status") or "unverified",
         "config_file": meta["config_file"], "service": meta["service"],
-        "target": meta["target"], "service_recovery_confirmed": False,
-        "message": "Only configuration syntax and hash verified; request separate service recovery approval.",
+        "target": meta["target"], "service_recovery_confirmed": recovery_confirmed,
+        "service_recovery_status": recovery_status,
+        "service_start_attempted": recovery.get("attempted") is True,
+        "monitor_recovery_confirmed": False,
+        "message": ("Configuration applied; systemd is active. Await the original "
+                    "alert-source recovery before resolving the incident."
+                    if recovery_confirmed else
+                    "Configuration apply finished; service recovery not yet verified."),
     }
 
 @router.post("/approvals/{approval_id}/reject-config")
