@@ -118,6 +118,13 @@ async def validate_config_ticket(approval_id: str, *, actor: str) -> dict:
             )
             if not approved_to_review or approved_to_review["status"] != "pending":
                 raise HTTPException(status_code=409, detail="config_validation_transition_conflict")
+        else:
+            # Persist code-only failure details; stderr and config bytes stay on
+            # the VM worker, and a blocked ticket NEVER becomes approvable.
+            await store.record_config_validation_failure(
+                approval_id, reason=reason,
+                guard_exit_code=result.get("guard_exit_code"),
+            )
         await _audit(db, str(current["incident_id"]), actor,
                      "pending_approval" if passed else "validation_blocked",
                      {"approval_id": approval_id, "reason": reason, "isolated_validation": passed,
@@ -127,6 +134,10 @@ async def validate_config_ticket(approval_id: str, *, actor: str) -> dict:
             "status": "pending" if passed else "pending_validation",
             "validation": "passed" if passed else "blocked",
             "validation_reason": reason,
+            "guard_exit_code": (
+                result.get("guard_exit_code")
+                if type(result.get("guard_exit_code")) is int else None
+            ),
             "validation_scope": result.get("validation_scope"),
             "execution_authority": False,
             "production_write_performed": False,

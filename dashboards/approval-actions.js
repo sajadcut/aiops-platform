@@ -74,6 +74,11 @@
     } else if (pendingValidation) {
       controls = `<div class="approval-controls">
         <p role="status" class="approval-warning">درخواست ثبت شده اما تا موفقیت Validator ایزوله، تأیید نهایی و اعمال فایل مسدود است. ابزار معتبر و فایل زنده باید دوباره بررسی شوند.</p>
+        ${meta.validation_last_reason ? `<p role="alert" class="approval-warning">
+          <strong>علت توقف اعتبارسنجی:</strong> ${esc(meta.validation_last_reason)}
+          ${Number.isInteger(meta.validation_last_exit_code)?'(exit '+esc(meta.validation_last_exit_code)+')':''}
+          <small>مجوز sudo -n، نصب Helper و پیش‌نیازهای ایزوله‌سازی را بررسی کنید. تا اعتبارسنجی موفق نشود، امکان تأیید و اعمال وجود ندارد.</small>
+        </p>` : ''}
         <p><strong>فایل:</strong> ${esc(meta.config_file || '—')}</p>
         <p><strong>Source SHA-256:</strong> ${esc(meta.original_sha256 || '—')}</p>
         <p><strong>Candidate SHA-256:</strong> ${esc(meta.candidate_sha256 || '—')}</p>
@@ -395,7 +400,7 @@
     if(!window.confirm('نسخه اصلاحی از فایل زنده بازسازی و در فضای ایزوله بررسی شود؟ هیچ تغییر تولیدی اعمال نمی‌شود.'))return;
     try{
       const result=await api('/api/v1/approvals/'+encodeURIComponent(approval.approval_id)+'/validate-config',{method:'POST'});
-      toast(result.validation==='passed'?'تست مستقل موفق بود؛ درخواست آماده تأیید است.':'اعتبارسنجی مسدود شد: '+(result.validation_reason||'unavailable'));
+      toast(result.validation==='passed'?'تست مستقل موفق بود؛ درخواست آماده تأیید است.':'اعتبارسنجی مسدود شد: '+(result.validation_reason||'نامشخص')+(Number.isInteger(result.guard_exit_code)?' · exit '+result.guard_exit_code:''));
       await refreshIncidentDecision();
     }catch(error){showError('اعتبارسنجی ناموفق: '+error.message);}
   };

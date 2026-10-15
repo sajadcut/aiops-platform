@@ -100,6 +100,50 @@ def rebuild_xml_candidate(*, encoded: str, path: str,
     return candidate
 
 
+
+# Root-helper exit statuses are intentionally stable and content-free. Neither
+# stderr nor raw program output is allowed into an incident, audit log or LLM.
+_GUARD_FAILURE_CODES = {
+    41: "config_guard_request_rejected",
+    42: "config_guard_prerequisite_failed",
+    43: "config_guard_candidate_hash_mismatch",
+    44: "config_guard_lock_or_replay_blocked",
+    45: "config_guard_source_hash_changed",
+    46: "config_guard_staging_failed",
+    47: "config_guard_vendor_syntax_failed",
+    50: "config_guard_mount_namespace_unavailable",
+    51: "config_guard_isolated_mount_failed",
+}
+
+
+def classify_config_guard_failure(observed: dict) -> str:
+    """Use only fixed, operator-actionable codes; never reflect stderr."""
+    if observed.get("error") == "ssh_command_timeout":
+        return "config_guard_ssh_timeout"
+    if observed.get("error") == "ssh_command_failed":
+        return "config_guard_ssh_connection_failed"
+    code = observed.get("exit_code")
+    if type(code) is int and code in _GUARD_FAILURE_CODES:
+        return _GUARD_FAILURE_CODES[code]
+    stderr = str(observed.get("stderr") or "").lower()
+    if ("a password is required" in stderr
+            or "no tty present and no askpass program specified" in stderr
+            or "a terminal is required to read the password" in stderr):
+        return "config_guard_sudo_nopasswd_required"
+    if ("not in the sudoers file" in stderr or "not allowed to execute" in stderr
+            or "is not allowed to run sudo" in stderr or "may not run sudo" in stderr):
+        return "config_guard_sudo_policy_denied"
+    if "command not found" in stderr or "no such file or directory" in stderr:
+        return "config_guard_helper_missing"
+    if "permission denied" in stderr:
+        return "config_guard_helper_permission_denied"
+    if code == 1:
+        # Plain rc=1 cannot distinguish sudo policy, stdin I/O or helper
+        # execution. Never misreport it as invalid vendor syntax.
+        return "config_guard_sudo_or_invocation_failed"
+    return "config_guard_execution_failed"
+
+
 async def run_governed_change(connector, *, action: str, target: str, service: str,
                               config_file: str, original_sha256: str,
                               candidate_sha256: str, proposed_change: str,
@@ -198,7 +242,10 @@ async def run_governed_change(connector, *, action: str, target: str, service: s
         success = observed.get("success") is True and output == "VALIDATED"
         return {
             "success": success,
-            "status": "isolated_vendor_validation_passed" if success else "isolated_vendor_validation_failed",
+            "status": "isolated_vendor_validation_passed" if success else classify_config_guard_failure(observed),
+            "guard_exit_code": (
+                observed.get("exit_code") if type(observed.get("exit_code")) is int else None
+            ),
             "isolated_validation": success,
             "validation_scope": scope,
             "vendor_validator": validator,
