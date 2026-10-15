@@ -130,7 +130,10 @@ class PostgreSQLApprovalStore:
         This cannot skip the exact hash binding, cannot re-open terminal
         approvals, and cannot create execution authority by itself.
         """
-        if validation_scope != "nginx_mount_namespace_staged_etc_nginx_live_external_read_dependencies":
+        if validation_scope not in {
+            "nginx_mount_namespace_staged_etc_nginx_live_external_read_dependencies",
+            "generic_json_syntax_only_service_runtime_unverified",
+        }:
             raise ValueError("config_validation_scope_not_executable")
         current = await self.get(approval_id)
         if not current or current.get("status") != "pending_validation":
