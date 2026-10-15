@@ -790,6 +790,8 @@
         notify(state.language==='fa'?
           'بازیابی سرویس با دو بررسی زندهٔ VM تأیید و رخداد رفع شد. بازیابی Zabbix جداگانه ثبت می‌شود.':
           'Two live VM checks verified recovery and resolved the incident. Zabbix recovery remains separately tracked.');
+        state.serviceStatusBusy=false;
+        state.serviceStatusLoading=false;
         await load();
         return;
       }
@@ -3140,6 +3142,10 @@
     const route={validate:'validate-config',reject:'reject-config',approve:'approve',execute:'execute-config'}[kind];
     try{
       const value=await api('/api/v1/approvals/'+encodeURIComponent(id)+'/'+route,{method:'POST'});
+      const incidentResolutionNote=kind==='execute'&&
+        value.incident_resolved===true?
+        (fa?'؛ رفع رخداد با راستی‌آزمایی مستقل VM ثبت شد.':
+            '; incident resolved by independent VM verification.'):'';
       const recoveryNote=kind==='execute'&&scopedStart?
         (value.service_recovery_confirmed===true?
           (fa?'؛ سرویس در systemd فعال شد. منتظر پیام بازیابی Zabbix.':
@@ -3148,7 +3154,7 @@
             String(value.service_recovery_status||'نامشخص')):'';
       notify((fa?(kind==='validate'?'نتیجه اعتبارسنجی: ':'نتیجه درخواست: '):
                        'Configuration workflow: ')+
-             (value.validation||value.status||'ثبت شد')+recoveryNote,
+             (value.validation||value.status||'ثبت شد')+recoveryNote+incidentResolutionNote,
              kind==='execute'&&(value.success!==true||
                (scopedStart&&value.service_recovery_confirmed!==true)));
     }catch(e){notify(tr('failure')+' · '+e.message,true);}
