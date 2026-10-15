@@ -53,7 +53,7 @@ def rebuild_json_candidate(*, encoded: str, path: str,
     if not 1 <= len(source) <= 262144 or hashlib.sha256(source).hexdigest() != original_sha256:
         raise ValueError("config_source_hash_drift")
     contents = source.decode("utf-8", errors="strict")
-    if "\x00" in contents or "\r" in contents:
+    if "\x00" in contents:
         raise ValueError("config_source_invalid_encoding")
     try:
         json.loads(contents)
