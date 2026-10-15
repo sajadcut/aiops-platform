@@ -35,6 +35,33 @@ _CACHE_LIMIT = 100
 
 
 def fallback(brief: dict, lang: str, reason: str) -> dict:
+    summary = (brief.get("localized_narrative") or {}).get(lang) or ""
+    config = brief.get("configuration_diagnostic") or {}
+    if config.get("status") == "invalid":
+        # When the LLM times out or returns invalid JSON, do not bury the
+        # vendor-confirmed file/line error under a generic incident summary.
+        # Source data is still untrusted; redact and bound it before display.
+        path = redact(str(config.get("config_file") or ""))[:240]
+        error = redact(str(config.get("syntax_error") or config.get("error_code") or ""))[:200]
+        line = config.get("error_line")
+        line_text = str(line) if type(line) is int and line > 0 else ""
+        if lang == "fa":
+            detail = ("اعتبارسنجی ثبت‌شده نشان می‌دهد پیکربندی"
+                      + (f" فایل «{path}»" if path else "")
+                      + (f" در خط {line_text}" if line_text else "")
+                      + " نامعتبر است."
+                      + (f" خطای گزارش‌شده: {error}." if error else "")
+                      + " هر اصلاح پیشنهادی پیش از اجرا به اعتبارسنجی مستقل و تأیید انسانی نیاز دارد."
+                      + " این نتیجه به‌تنهایی علت اولیه رخداد را اثبات نمی‌کند.")
+        else:
+            detail = ("The recorded configuration check is invalid"
+                      + (f" for {path}" if path else "")
+                      + (f" at line {line_text}" if line_text else "")
+                      + "."
+                      + (f" Reported error: {error}." if error else "")
+                      + " Any candidate change requires independent validation and human approval."
+                      + " This finding alone does not prove the incident's original cause.")
+        summary = detail + (" " + str(summary)[:350] if summary else "")
     return {
         "snapshot_id": brief["snapshot_id"],
         "status": "fallback",
@@ -42,7 +69,7 @@ def fallback(brief: dict, lang: str, reason: str) -> dict:
         "reason": reason,
         "generator": "deterministic_fallback",
         "sections": [],
-        "summary": (brief.get("localized_narrative") or {}).get(lang) or "",
+        "summary": redact(summary),
         "authorizes_execution": False,
     }
 
