@@ -506,6 +506,8 @@ class EvidenceCollector:
                         result = await method(vm_target, vm_target, vm_port)
                     else:
                         result = await method(vm_target)
+                    if action == "service_config_review" and isinstance(result, dict):
+                        result = await self._analyze_config_syntax_without_persisting_grammar(result)
                     if isinstance(result, dict) and result.get("success"):
                         rows = self._vm_evidence(action, vm_target, effective_service, vm_port, result, since)
                         evidence.extend(rows)
