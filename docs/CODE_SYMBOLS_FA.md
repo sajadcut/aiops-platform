@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 525 | Dashboard JS files scanned: 8 | Symbols indexed: 5599**
+**Python files scanned: 525 | Dashboard JS files scanned: 8 | Symbols indexed: 5601**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1022,12 +1022,14 @@
 | `apps/chatbot/tools.py` | `_bounded_int` | 182 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/chatbot/tools.py` | `parse_tool_call` | 196 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/chatbot/tools.py` | `normalize_tool_intent` | 216 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
-| `apps/config_change_authorization.py` | `_key` | 20 | function | Derive a fixed domain-separated signing subkey from MCP bearer auth. | module |
-| `apps/config_change_authorization.py` | `config_signing_ready` | 42 | function | Local readiness only. Never expose key bytes or report VM MCP readiness. | module |
-| `apps/config_change_authorization.py` | `_message` | 51 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/config_change_authorization.py` | `create_claim` | 55 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
-| `apps/config_change_authorization.py` | `verify_claim` | 73 | function | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | module |
-| `apps/config_change_authorization.py` | `sign_root_guard` | 97 | function | Ed25519 root guard signature; VM stores only its verification public key. | module |
+| `apps/config_change_authorization.py` | `_derive_mcp_key` | 21 | function | Derive a domain-separated 32-byte key from the existing MCP bearer. | module |
+| `apps/config_change_authorization.py` | `_key` | 44 | function | Approval HMAC signing key: stable and isolated from candidate encryption. | module |
+| `apps/config_change_authorization.py` | `candidate_encryption_key` | 49 | function | AES-256-GCM subkey for the VM MCP candidate vault; no new configuration. | module |
+| `apps/config_change_authorization.py` | `config_signing_ready` | 55 | function | Local readiness only. Never expose key bytes or report VM MCP readiness. | module |
+| `apps/config_change_authorization.py` | `_message` | 64 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/config_change_authorization.py` | `create_claim` | 68 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
+| `apps/config_change_authorization.py` | `verify_claim` | 86 | function | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | module |
+| `apps/config_change_authorization.py` | `sign_root_guard` | 110 | function | Ed25519 root guard signature; VM stores only its verification public key. | module |
 | `apps/config_syntax_llm.py` | `sanitized_projection` | 30 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/config_syntax_llm.py` | `_json_model_reply` | 60 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/config_syntax_llm.py` | `assess_service_syntax` | 87 | async function | Two sequential LLM passes; second pass never asserts a vendor PASS. | module |
