@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 520 | Dashboard JS files scanned: 8 | Symbols indexed: 5527**
+**Python files scanned: 520 | Dashboard JS files scanned: 8 | Symbols indexed: 5528**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1306,15 +1306,15 @@
 | `apps/knowledge_review_dossier.py` | `dossier_addendum` | 198 | function | Knowledge-safe exact operational facts, distinct from inferred RCA. | module |
 | `apps/knowledge_review_dossier.py` | `dossier_title` | 212 | function | Meaningful candidate label rather than ten indistinguishable titles. | module |
 | `apps/mcp_server/main.py` | `JsonRpcRequest` | 22 | class | کلاس | module |
-| `apps/mcp_server/main.py` | `_provider` | 112 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/mcp_server/main.py` | `_parse_dt` | 119 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/mcp_server/main.py` | `_limit` | 125 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/mcp_server/main.py` | `_authorize` | 129 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/mcp_server/main.py` | `_call` | 142 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/mcp_server/main.py` | `_validate_production_server` | 240 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/mcp_server/main.py` | `startup_event` | 259 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/mcp_server/main.py` | `health` | 265 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/mcp_server/main.py` | `mcp` | 271 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/mcp_server/main.py` | `_provider` | 113 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/mcp_server/main.py` | `_parse_dt` | 120 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/mcp_server/main.py` | `_limit` | 126 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/mcp_server/main.py` | `_authorize` | 130 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/mcp_server/main.py` | `_call` | 143 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/mcp_server/main.py` | `_validate_production_server` | 242 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/mcp_server/main.py` | `startup_event` | 261 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/mcp_server/main.py` | `health` | 267 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/mcp_server/main.py` | `mcp` | 273 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/memory_service/__init__.py` | `OperationalMemoryService` | 32 | class | کلاس | module |
 | `apps/memory_service/__init__.py` | `OperationalMemoryService.__init__` | 37 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryService |
 | `apps/memory_service/__init__.py` | `OperationalMemoryService.add_entry` | 40 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryService |
@@ -2058,25 +2058,25 @@
 | `domain/action_plan.py` | `ActionPlan` | 5 | class | کلاس | module |
 | `domain/audit_event.py` | `AuditEvent` | 6 | class | کلاس | module |
 | `domain/contracts/config.py` | `Settings` | 8 | class | Typed loader for the centralized runtime environment contract. | module |
-| `domain/contracts/config.py` | `Settings.validate_app_env` | 196 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_ssh_auth_mode` | 204 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.parse_optional_cognia_ids` | 212 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | Settings |
-| `domain/contracts/config.py` | `Settings.validate_cognia_knowledge_base_ids` | 219 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_log_rotation_mode` | 231 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_log_level` | 239 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_elastic_agent_builder_version` | 247 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_elastic_agent_builder_endpoint` | 260 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_elastic_mcp_protocol_version` | 282 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_elastic_mcp_auth_header` | 292 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_elastic_mcp_authentication` | 303 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_elastic_namespaces` | 320 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_elastic_anomaly_job_service_map` | 328 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_jenkins_mcp_protocol_version` | 340 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_jenkins_basic_auth_header` | 348 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_prometheus_mcp_protocol_version` | 356 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_external_contracts` | 365 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_embedding_contract` | 389 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_cognia_contract` | 419 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_app_env` | 197 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_ssh_auth_mode` | 205 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.parse_optional_cognia_ids` | 213 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | Settings |
+| `domain/contracts/config.py` | `Settings.validate_cognia_knowledge_base_ids` | 220 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_log_rotation_mode` | 232 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_log_level` | 240 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_elastic_agent_builder_version` | 248 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_elastic_agent_builder_endpoint` | 261 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_elastic_mcp_protocol_version` | 283 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_elastic_mcp_auth_header` | 293 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_elastic_mcp_authentication` | 304 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_elastic_namespaces` | 321 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_elastic_anomaly_job_service_map` | 329 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_jenkins_mcp_protocol_version` | 341 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_jenkins_basic_auth_header` | 349 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_prometheus_mcp_protocol_version` | 357 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_external_contracts` | 366 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_embedding_contract` | 390 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_cognia_contract` | 420 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
 | `domain/contracts/context.py` | `set_trace_id` | 15 | function | Set the request/correlation trace id for the current execution context. | module |
 | `domain/contracts/context.py` | `get_trace_id` | 20 | function | Return the request/correlation trace id for the current context. | module |
 | `domain/contracts/context.py` | `generate_trace_id` | 25 | function | Generate a compact request trace id. | module |
@@ -2433,13 +2433,14 @@
 | `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.service_runtime_discovery` | 80 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
 | `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.service_config_discovery` | 81 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
 | `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.service_config_review` | 82 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.dotnet_config_syntax` | 83 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.config_change_validate` | 85 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.config_change_apply` | 88 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient._write_context` | 95 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.restart_service` | 102 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.reload_service` | 105 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.start_service` | 108 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.service_config_llm_repair` | 83 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.dotnet_config_syntax` | 84 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.config_change_validate` | 86 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.config_change_apply` | 89 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient._write_context` | 96 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.restart_service` | 103 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.reload_service` | 106 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.start_service` | 109 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
 | `integrations/vm/nginx_config_inspection.py` | `nginx_inspection_command` | 108 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `integrations/vm/nginx_config_inspection.py` | `parse_nginx_inspection` | 123 | function | Allowlist protocol fields; no remote byte contents can cross the MCP. | module |
 | `integrations/vm/nginx_config_review.py` | `_checked_path` | 26 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
