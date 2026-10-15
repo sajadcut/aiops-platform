@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 526 | Dashboard JS files scanned: 8 | Symbols indexed: 5625**
+**Python files scanned: 526 | Dashboard JS files scanned: 8 | Symbols indexed: 5626**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1636,7 +1636,7 @@
 | `apps/technical_investigation_report.py` | `_stop_origin_assessment` | 266 | function | Distinguish confirmed termination from unproven *origin* of a stop job. | module |
 | `apps/technical_investigation_report.py` | `_bounded_files` | 359 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/technical_investigation_report.py` | `build_technical_investigation` | 384 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
-| `apps/technical_investigation_report.py` | `build_technical_investigation.high_mount_pressure` | 719 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | build_technical_investigation |
+| `apps/technical_investigation_report.py` | `build_technical_investigation.high_mount_pressure` | 726 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | build_technical_investigation |
 | `apps/verification_service/__init__.py` | `VerificationStatus` | 11 | class | کلاس | module |
 | `apps/verification_service/__init__.py` | `VerificationResult` | 18 | class | کلاس | module |
 | `apps/verification_service/__init__.py` | `VerificationEngine` | 33 | class | Deterministic before/after verification over fresh operational Evidence. | module |
@@ -5306,15 +5306,16 @@
 | `tests/unit/test_technical_investigation_report.py` | `test_real_vm_collector_metric_shape_is_visible_and_attributed` | 336 | function | Do not expect one raw_data.metrics dictionary from the EvidenceCollector. | module |
 | `tests/unit/test_technical_investigation_report.py` | `test_failed_or_unavailable_elastic_cannot_claim_query_success` | 355 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_technical_investigation_report.py` | `test_elastic_success_is_not_host_attributed_if_provider_only_filtered_service` | 365 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_technical_investigation_report.py` | `test_actual_nested_disk_forensics_surfaces_top_file_sizes_and_growth_limits` | 378 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_technical_investigation_report.py` | `test_journal_signature_counts_do_not_expose_raw_sensitive_lines` | 400 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_technical_investigation_report.py` | `test_network_section_requires_pid_and_listener_correlation` | 419 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_technical_investigation_report.py` | `test_disk_forensics_reports_file_sizes_without_contents_or_delete_claims` | 438 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_technical_investigation_report.py` | `test_journal_enospc_is_evidence_from_logs_or_entries_not_confirmed_rca` | 462 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_technical_investigation_report.py` | `test_stop_origin_is_plausible_not_manual_stop_proven` | 477 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_technical_investigation_report.py` | `test_stop_job_log_is_not_operator_identity_and_journalctl_is_not_stop` | 499 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_technical_investigation_report.py` | `test_audit_stop_command_requires_time_correlation_and_never_proves_cause` | 517 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_technical_investigation_report.py` | `test_healthy_or_other_failure_does_not_get_manual_stop_hypothesis` | 533 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_technical_investigation_report.py` | `test_disk_summary_cannot_hide_full_var_log_mount_after_seven_other_mounts` | 378 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_technical_investigation_report.py` | `test_actual_nested_disk_forensics_surfaces_top_file_sizes_and_growth_limits` | 391 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_technical_investigation_report.py` | `test_journal_signature_counts_do_not_expose_raw_sensitive_lines` | 413 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_technical_investigation_report.py` | `test_network_section_requires_pid_and_listener_correlation` | 432 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_technical_investigation_report.py` | `test_disk_forensics_reports_file_sizes_without_contents_or_delete_claims` | 451 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_technical_investigation_report.py` | `test_journal_enospc_is_evidence_from_logs_or_entries_not_confirmed_rca` | 475 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_technical_investigation_report.py` | `test_stop_origin_is_plausible_not_manual_stop_proven` | 490 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_technical_investigation_report.py` | `test_stop_job_log_is_not_operator_identity_and_journalctl_is_not_stop` | 512 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_technical_investigation_report.py` | `test_audit_stop_command_requires_time_correlation_and_never_proves_cause` | 530 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_technical_investigation_report.py` | `test_healthy_or_other_failure_does_not_get_manual_stop_hypothesis` | 546 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_triage_production_engine.py` | `StaticTriageLLM` | 13 | class | کلاس | module |
 | `tests/unit/test_triage_production_engine.py` | `StaticTriageLLM.__init__` | 14 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | StaticTriageLLM |
 | `tests/unit/test_triage_production_engine.py` | `StaticTriageLLM.provider_name` | 19 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | StaticTriageLLM |
