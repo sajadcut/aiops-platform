@@ -3169,6 +3169,50 @@
       mini('action',statusValue==='pending_validation'?(state.language==='fa'?'اصلاح کانفیگ':'Repair configuration'):humanAction(a.action||x.action))+mini('target',durable.metadata?.target||a.target||x.target)+mini('risk',status(x.risk_level))+
       mini('tool',humanTool(a.tool||x.tool))+mini('freshness',status(a.data_freshness))+
       mini('approvalId',durable.approval_id||a.approval_id)+'</div>');
+    const recoveryApproval=state.recoveryApproval||{};
+    const recoveryStatus=low(recoveryApproval.status);
+    if(!archived&&UUID.test(String(recoveryApproval.approval_id||''))&&
+       ['pending','approved','consumed','rejected'].includes(recoveryStatus)&&
+       !['pending','approved','pending_validation'].includes(statusValue)){
+      const fa=state.language==='fa';
+      const recoveryLabel=recoveryApproval.action==='restart_service'?
+        (fa?'ری‌استارت سرویس':'Restart service'):
+        (fa?'شروع سرویس':'Start service');
+      const message=recoveryStatus==='pending'?
+        (fa?'درخواست بازیابی در صف Approval؛ منتظر تأیید شماست':
+          'Recovery request is waiting for your approval'):
+        recoveryStatus==='approved'?
+        (fa?'Restart تأیید شده؛ هنوز اجرا نشده است':
+          'Restart authorized; not yet executed'):
+        recoveryStatus==='consumed'?
+        (fa?'مجوز مصرف شده؛ نتیجه و راستی‌آزمایی را بررسی کنید':
+          'Authorization consumed; inspect execution and verification'):
+        (fa?'درخواست بازیابی رد شده است':'Recovery request rejected');
+      show('#ic-action-state','<div class="ic-decision-status"><strong>'+
+        esc(message)+'</strong><p>'+esc(fa?
+          'این مجوز فقط به سرویس و سرور شناسایی‌شده متصل است. هر اجرا مجدداً از Runbook و بررسی زنده عبور می‌کند.':
+          'The authorization is target- and service-bound; execution has fresh runbook gates.')+
+        '</p>'+pill(recoveryStatus)+'</div><div class="ic-mini-facts">'+
+        mini('action',recoveryLabel)+mini('target',recoveryApproval.target)+
+        mini('risk',fa?'زیاد':'High')+
+        mini('tool','VM MCP / SSH')+
+        mini('approvalId',recoveryApproval.approval_id)+'</div>');
+      let controls='<p class="ic-agent-disclaimer">'+esc(fa?
+        'تأیید مجوز، Restart را اجرا نمی‌کند. بعد از تأیید باید دکمهٔ اجرای جداگانه زده شود؛ Runbook می‌تواند به دلیل Syntax یا شرایط زنده جلوی Restart را بگیرد.':
+        'Approval does not run Restart; a separate execution action and a fresh live runbook pass are required.')+'</p>';
+      if(recoveryStatus==='pending'){
+        controls+='<button type="button" class="ic-btn ic-btn-primary" data-recovery-approval="approve">'+
+          esc(fa?'تأیید ری‌استارت — بدون اجرا':'Approve restart — no execution')+'</button> '+
+          '<button type="button" class="ic-btn ic-btn-muted" data-recovery-approval="reject">'+
+          esc(fa?'رد درخواست':'Reject request')+'</button>';
+      }else if(recoveryStatus==='approved'){
+        controls+='<button type="button" class="ic-btn ic-btn-danger" data-recovery-approval="execute">'+
+          esc(fa?'اجرای Restart پس از بررسی زنده':'Execute restart after live preflight')+'</button>';
+      }
+      show('#ic-action-checks','');
+      show('#ic-action-controls',controls);
+      return;
+    }
     const configApproval=durable.metadata?.workflow==='config_change' &&
       ['pending_validation','pending','approved','consumed'].includes(statusValue);
     if(configApproval && !archived){
