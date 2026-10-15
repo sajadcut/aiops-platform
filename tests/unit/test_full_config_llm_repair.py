@@ -127,15 +127,16 @@ def test_micro_fix_rejects_unrelated_changes_even_if_model_returns_valid_json():
 
     # Three harmless-looking braces beyond the single typo are not allowed
     # even if every directive/port has the same token sequence.
-    extra = source.replace("server {}", "server {{{{{")
+    extra = source.replace("server {}", "server {{{{{{{")
     rejected = _candidate_preview(source, extra, diagnostic_line=3)
     assert rejected["status"] == "llm_candidate_rejected"
     assert rejected["rejection_reason"] == "candidate_not_minimal_syntax_fix"
 
     long_source = ("# unchanged\n" * 30 +
-                   "http {\n    server {} \n    listen 8080;\n}\n")
+                   "http {\n" + "# untouched\n" * 20 +
+                   "    server {} \n    listen 8080;\n}\n")
     unrelated = long_source.replace("http {", "http {};")
-    rejected = _candidate_preview(long_source, unrelated, diagnostic_line=33)
+    rejected = _candidate_preview(long_source, unrelated, diagnostic_line=53)
     assert rejected["rejection_reason"] == "candidate_unrelated_to_validator_line"
 
     changed_value = source.replace("8080", "8081")
