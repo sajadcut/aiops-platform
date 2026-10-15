@@ -121,12 +121,38 @@ async def validate_config_ticket(approval_id: str, *, actor: str) -> dict:
         if live_meta["candidate_sha256"] != meta["candidate_sha256"] or not await _same_incident_candidate(db, current, live_meta):
             raise HTTPException(status_code=409, detail="config_candidate_changed_during_validation")
         if passed:
-            approved_to_review = await store.promote_validated_config(
-                approval_id, source_sha256=meta["original_sha256"],
-                candidate_sha256=meta["candidate_sha256"],
-                validation_scope=result["validation_scope"],
-                vendor_validator=result["vendor_validator"],
-            )
+            # A successful vendor subprocess is not, by itself, permission
+            # to upgrade an Approval ticket. If its vendor scope disagrees
+            # with the original intent, keep the ticket non-approvable and
+            # expose a bounded conflict instead of crashing the API with 500.
+            try:
+                approved_to_review = await store.promote_validated_config(
+                    approval_id, source_sha256=meta["original_sha256"],
+                    candidate_sha256=meta["candidate_sha256"],
+                    validation_scope=str(result.get("validation_scope") or ""),
+                    vendor_validator=str(result.get("vendor_validator") or ""),
+                )
+            except ValueError as exc:
+                code = str(exc)
+                if code not in {
+                    "config_validation_scope_not_executable",
+                    "config_validation_hash_binding_mismatch",
+                    "config_format_scope_mismatch",
+                    "config_xml_scope_mismatch",
+                    "config_vendor_scope_mismatch",
+                    "incident_source_already_recovered",
+                }:
+                    code = "config_validation_promotion_rejected"
+                await store.record_config_validation_failure(
+                    approval_id, reason="config_guard_promotion_rejected",
+                    guard_exit_code=result.get("guard_exit_code"),
+                )
+                await _audit(db, str(current["incident_id"]), actor,
+                             "validation_blocked",
+                             {"approval_id": approval_id, "reason": code,
+                              "isolated_validation": False,
+                              "production_write_performed": False})
+                raise HTTPException(status_code=409, detail=code) from exc
             if not approved_to_review or approved_to_review["status"] != "pending":
                 raise HTTPException(status_code=409, detail="config_validation_transition_conflict")
         else:
