@@ -345,6 +345,19 @@ class SignalAwareE2EOrchestrator(E2EOrchestrator):
                 state["analysis_results"] = findings
                 state["findings"] = [state.get("triage_result", {})] + findings
                 state["coordination"] = coordination
+                # The first proposal predates this MCP evidence round.
+                # Recompute its deterministic, evidence-bound config/diff
+                # fields from the NEW observations; otherwise a valid Nginx
+                # preview remains invisible as needs_read_only_config.
+                # Preserve the original LLM-selected read-only checks and
+                # Cognia provenance. Never reuse model output as proof.
+                refreshed = await dynamic.propose(state, adapter=None)
+                for key in ("config_proposal", "config_discovery", "runtime_discovery"):
+                    if key in refreshed:
+                        proposal[key] = refreshed[key]
+                    else:
+                        proposal.pop(key, None)
+                context["dynamic_investigation"] = proposal
                 proposal["read_only_recheck_performed"] = True
             else:
                 proposal["read_only_recheck_performed"] = False
