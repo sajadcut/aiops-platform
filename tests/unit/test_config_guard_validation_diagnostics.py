@@ -206,6 +206,70 @@ async def test_promotion_rejects_llm_vendor_mismatch_before_database_mutation(
         )
 
 
+@pytest.mark.asyncio
+async def test_vendor_scope_rejection_returns_conflict_not_internal_server_error(monkeypatch):
+    """An MCP PASS with mismatched scope must leave the ticket non-actionable."""
+    from unittest.mock import AsyncMock
+    from fastapi import HTTPException
+    from apps.api import config_change_execution as api
+
+    meta = {
+        "target": "192.0.2.41", "service": "nginx",
+        "config_file": "/etc/nginx/nginx.conf",
+        "proposed_change": "llm_full_file_repair",
+        "original_sha256": "a" * 64, "candidate_sha256": "b" * 64,
+    }
+    approval = {
+        "approval_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+        "incident_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+        "status": "pending_validation", "metadata": meta,
+        "action": "apply_configuration_change", "risk_level": "high",
+    }
+    class Session:
+        async def __aenter__(self):
+            return self
+        async def __aexit__(self, exc_type, exc, tb):
+            return False
+
+    class Store:
+        failures = []
+        def __init__(self, db):
+            pass
+        async def get(self, approval_id):
+            return approval
+        async def promote_validated_config(self, *args, **kwargs):
+            raise ValueError("config_vendor_scope_mismatch")
+        async def record_config_validation_failure(self, approval_id, **kwargs):
+            self.failures.append((approval_id, kwargs))
+            return approval
+
+    class Edge:
+        async def config_change_validate(self, target, **kwargs):
+            return {
+                "success": True, "status": "isolated_vendor_validation_passed",
+                "isolated_validation": True, "production_write_performed": False,
+                "original_sha256": "a" * 64, "candidate_sha256": "b" * 64,
+                "validation_scope": "nginx_mount_namespace_staged_etc_nginx_live_external_read_dependencies",
+                "vendor_validator": "nginx -t (private mount namespace)",
+            }
+
+    monkeypatch.setattr(api, "AsyncSessionLocal", Session)
+    monkeypatch.setattr(api, "PostgreSQLApprovalStore", Store)
+    monkeypatch.setattr(api, "VMEdgeMCPClient", Edge)
+    monkeypatch.setattr(api, "_fields", lambda _: meta)
+    monkeypatch.setattr(api, "_same_incident_candidate", AsyncMock(return_value=True))
+    audit = AsyncMock()
+    monkeypatch.setattr(api, "_audit", audit)
+    with pytest.raises(HTTPException) as exc:
+        await api.validate_config_ticket(approval["approval_id"], actor="sre-test")
+    assert exc.value.status_code == 409
+    assert exc.value.detail == "config_vendor_scope_mismatch"
+    assert len(Store.failures) == 1
+    assert Store.failures[0][1]["reason"] == "config_guard_promotion_rejected"
+    audit.assert_awaited_once()
+    assert approval["status"] == "pending_validation"
+
+
 def test_blocked_reason_is_visible_after_reload_but_cannot_make_ticket_actionable():
     from apps.approval_service.postgres import PostgreSQLApprovalStore
     from inspect import getsource
