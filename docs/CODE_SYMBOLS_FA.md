@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 499 | Dashboard JS files scanned: 8 | Symbols indexed: 5221**
+**Python files scanned: 499 | Dashboard JS files scanned: 8 | Symbols indexed: 5223**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -3632,6 +3632,8 @@
 | `tests/unit/test_dynamic_investigation.py` | `test_truncated_model_retries_with_bounded_tokens_not_silent_zero` | 169 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_dynamic_investigation.py` | `test_double_model_failure_keeps_operator_question_without_faking_fix` | 183 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_dynamic_investigation.py` | `test_only_explicit_vm_read_only_capabilities_are_requested` | 195 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_dynamic_investigation.py` | `test_fresh_nginx_diff_survives_bounded_second_round_and_rebuilds_proposal` | 206 | async function | A second evidence pass must not discard the exact MCP review it fetched. | module |
+| `tests/unit/test_dynamic_investigation.py` | `test_bounded_context_keeps_latest_validator_not_old_invalid` | 252 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_elastic_anomaly_ingestion.py` | `_active_payload` | 11 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_elastic_anomaly_ingestion.py` | `test_official_anomaly_payload_becomes_first_class_alert_signal` | 41 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_elastic_anomaly_ingestion.py` | `test_elastic_anomaly_source_id_is_stable_without_alert_uuid` | 56 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
