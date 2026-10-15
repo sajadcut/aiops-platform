@@ -2388,7 +2388,7 @@
 | `integrations/vm/config_candidate_vault.py` | `_filename` | 77 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `integrations/vm/config_candidate_vault.py` | `_read_file` | 81 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `integrations/vm/config_candidate_vault.py` | `store_candidate` | 102 | function | Seal the exact complete response, durably. Never return its bytes. | module |
-| `integrations/vm/config_candidate_vault.py` | `load_candidate` | 145 | function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
+| `integrations/vm/config_candidate_vault.py` | `load_candidate` | 170 | function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
 | `integrations/vm/dotnet_local_validator.py` | `safe_json_files` | 42 | function | Parse untrusted remote directory names. Excess is NOT a full validation. | module |
 | `integrations/vm/dotnet_local_validator.py` | `remote_file_listing_command` | 61 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `integrations/vm/dotnet_local_validator.py` | `remote_file_read_command` | 76 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |

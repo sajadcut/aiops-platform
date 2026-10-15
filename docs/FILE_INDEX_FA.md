@@ -3,7 +3,7 @@
 > این فایل فهرست فایل‌به‌فایل repository است. توضیح معماری و flow در `CODEBASE_GUIDE_FA.md` آمده است.
 > این فایل با `scripts/generate_file_index_fa.py` ساخته و در CI کنترل می‌شود.
 
-**تعداد فایل‌های track‌شده و پوشش‌داده‌شده: 660**
+**تعداد فایل‌های track‌شده و پوشش‌داده‌شده: 661**
 
 | Path | Type | Purpose | Called By | Calls/Depends On | Runtime/Test/Docs | Notes |
 |---|---|---|---|---|---|---|
@@ -12,6 +12,7 @@
 | `.github/workflows/chatbot-acceptance.yml` | CI | Workflow اتوماسیون GitHub Actions | GitHub Actions | repo/tests/deployment | CI | کیفیت، hygiene یا supply chain |
 | `.github/workflows/container-acceptance.yml` | CI | Workflow اتوماسیون GitHub Actions | GitHub Actions | repo/tests/deployment | CI | کیفیت، hygiene یا supply chain |
 | `.github/workflows/documentation-index.yml` | CI | Workflow اتوماسیون GitHub Actions | GitHub Actions | repo/tests/deployment | CI | کیفیت، hygiene یا supply chain |
+| `.github/workflows/full-file-config-repair.yml` | CI | Workflow اتوماسیون GitHub Actions | GitHub Actions | repo/tests/deployment | CI | کیفیت، hygiene یا supply chain |
 | `.github/workflows/image-signing.yml` | CI | Workflow اتوماسیون GitHub Actions | GitHub Actions | repo/tests/deployment | CI | کیفیت، hygiene یا supply chain |
 | `.github/workflows/incident-sre-browser.yml` | CI | Workflow اتوماسیون GitHub Actions | GitHub Actions | repo/tests/deployment | CI | کیفیت، hygiene یا supply chain |
 | `.github/workflows/quality.yml` | CI | Workflow اتوماسیون GitHub Actions | GitHub Actions | repo/tests/deployment | CI | کیفیت، hygiene یا supply chain |
