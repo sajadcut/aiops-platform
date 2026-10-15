@@ -136,6 +136,23 @@ def test_windows_vault_auto_repairs_inherited_permissions_fail_closed(tmp_path, 
             vault._prepare_windows_directory(alias)
 
 
+def test_windows_vault_rejects_source_checkout_without_modifying_its_acl(tmp_path, monkeypatch):
+    from integrations.vm import config_candidate_vault as vault
+    app_root = tmp_path / "aiops-platform-new"
+    app_root.mkdir()
+    (app_root / "pyproject.toml").write_text("[build-system]\\n")
+    hardened = []
+    monkeypatch.setattr(vault, "ensure_private_windows_acl", lambda _: None)
+    monkeypatch.setattr(vault, "harden_private_windows_acl", lambda _: hardened.append(True))
+    with pytest.raises(CandidateUnavailable, match="candidate_directory_not_dedicated"):
+        vault._prepare_windows_directory(app_root)
+    assert not hardened
+    dedicated = app_root / "config-candidates"
+    dedicated.mkdir()
+    vault._prepare_windows_directory(dedicated)
+    assert not hardened
+
+
 @pytest.mark.skipif(os.name != "nt", reason="Requires real Windows NTFS and OS security API")
 def test_windows_vault_acl_applies_to_inherited_candidate_file(tmp_path):
     from integrations.vm.windows_secure_acl import (
