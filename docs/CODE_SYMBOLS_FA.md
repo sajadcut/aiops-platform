@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 511 | Dashboard JS files scanned: 8 | Symbols indexed: 5394**
+**Python files scanned: 511 | Dashboard JS files scanned: 8 | Symbols indexed: 5395**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1016,10 +1016,11 @@
 | `apps/chatbot/tools.py` | `parse_tool_call` | 196 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/chatbot/tools.py` | `normalize_tool_intent` | 216 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
 | `apps/config_change_authorization.py` | `_key` | 15 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/config_change_authorization.py` | `_message` | 22 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/config_change_authorization.py` | `create_claim` | 26 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
-| `apps/config_change_authorization.py` | `verify_claim` | 39 | function | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | module |
-| `apps/config_change_authorization.py` | `sign_root_guard` | 60 | function | Ed25519 root guard signature; VM stores only its verification public key. | module |
+| `apps/config_change_authorization.py` | `config_signing_ready` | 23 | function | Local readiness only. Never expose key bytes or report VM MCP readiness. | module |
+| `apps/config_change_authorization.py` | `_message` | 32 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/config_change_authorization.py` | `create_claim` | 36 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
+| `apps/config_change_authorization.py` | `verify_claim` | 49 | function | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | module |
+| `apps/config_change_authorization.py` | `sign_root_guard` | 70 | function | Ed25519 root guard signature; VM stores only its verification public key. | module |
 | `apps/config_syntax_llm.py` | `sanitized_projection` | 30 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/config_syntax_llm.py` | `_json_model_reply` | 59 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/config_syntax_llm.py` | `assess_service_syntax` | 86 | async function | Two sequential LLM passes; second pass never asserts a vendor PASS. | module |
