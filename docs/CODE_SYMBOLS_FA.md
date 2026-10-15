@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 525 | Dashboard JS files scanned: 8 | Symbols indexed: 5592**
+**Python files scanned: 525 | Dashboard JS files scanned: 8 | Symbols indexed: 5593**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -2538,6 +2538,7 @@
 | `integrations/vm/windows_secure_acl.py` | `ensure_private_windows_acl` | 12 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `integrations/vm/windows_secure_acl.py` | `ensure_private_windows_acl.ACL` | 18 | class | کلاس | ensure_private_windows_acl |
 | `integrations/vm/windows_secure_acl.py` | `ensure_private_windows_acl.ACE_HEADER` | 27 | class | کلاس | ensure_private_windows_acl |
+| `integrations/vm/windows_secure_acl.py` | `ensure_private_windows_acl.SID_AND_ATTRIBUTES` | 53 | class | کلاس | ensure_private_windows_acl |
 | `integrations/zabbix/client.py` | `ZabbixClient` | 4 | class | کلاس | module |
 | `integrations/zabbix/client.py` | `ZabbixClient.get_alert` | 5 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | ZabbixClient |
 | `integrations/zabbix/client.py` | `MockZabbixClient` | 8 | class | کلاس | module |
