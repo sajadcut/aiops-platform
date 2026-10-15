@@ -81,7 +81,11 @@ __AIOPS_CONFIG_CANDIDATE_B64__
 [ "$(sha256sum "$stage/candidate" | cut -d ' ' -f1)" = "$expected_candidate" ] || exit 43
 
 if [ "$action" = apply ]; then
-  exec 9>/run/lock/aiops-config-transaction.lock
+  [ ! -L /var/lib/aiops ] || exit 41
+  mkdir -p -m 0700 -- /var/lib/aiops || exit 42
+  [ "$(stat -c '%u' /var/lib/aiops)" = 0 ] || exit 41
+  chmod 0700 /var/lib/aiops || exit 41
+  exec 9>/var/lib/aiops/config-transaction.lock
   flock -x -w 15 9 || exit 44
 fi
 [ "$(sha256sum "$file" | cut -d ' ' -f1)" = "$expected_source" ] || exit 45
