@@ -17,7 +17,7 @@ from domain.contracts.redaction import redact_text
 
 _INVENTORY = re.compile(
     r"(?:لیست|فهرست|نشون|نمایش|بده|کدام|کدوما|چه(?:\s+هاست|\s+سرور)|"
-    r"show|list|which|what\s+are|enumerate)",
+    r"\b(?:show|list|which|enumerate)\b|\bwhat\s+are\b)",
     re.IGNORECASE,
 )
 _ALLOWLIST = re.compile(
