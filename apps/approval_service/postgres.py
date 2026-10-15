@@ -133,6 +133,7 @@ class PostgreSQLApprovalStore:
         if validation_scope not in {
             "nginx_mount_namespace_staged_etc_nginx_live_external_read_dependencies",
             "generic_json_syntax_only_service_runtime_unverified",
+            "generic_xml_syntax_only_service_runtime_unverified",
         }:
             raise ValueError("config_validation_scope_not_executable")
         current = await self.get(approval_id)
@@ -148,6 +149,11 @@ class PostgreSQLApprovalStore:
                     or not str(meta.get("config_file") or "").endswith(".json")
                     or not vendor_validator.startswith("jq empty")):
                 raise ValueError("config_format_scope_mismatch")
+        elif validation_scope == "generic_xml_syntax_only_service_runtime_unverified":
+            if (meta.get("proposed_change") != "remove_extra_xml_closing_tag"
+                    or not str(meta.get("config_file") or "").endswith(".xml")
+                    or not vendor_validator.startswith("xmllint")):
+                raise ValueError("config_xml_scope_mismatch")
         else:
             if (meta.get("proposed_change") != "remove_extra_opening_brace"
                     or str(meta.get("service") or "").lower().removesuffix(".service") != "nginx"
