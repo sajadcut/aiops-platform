@@ -31,6 +31,14 @@ profile=$2
 file=$3
 expected_source=$4
 expected_candidate=$5
+if [ "$action" = apply ]; then
+  [ "$#" -eq 6 ] || exit 41
+  approval_id=$6
+  case "$approval_id" in *[!0123456789abcdef-]*|"") exit 41 ;; esac
+  [ "$(printf '%s' "$approval_id" | wc -c)" -eq 36 ] || exit 41
+else
+  [ "$#" -eq 5 ] || exit 41
+fi
 
 [ "$(id -u)" -eq 0 ] || exit 41
 case "$action" in validate|apply) ;; *) exit 41 ;; esac
@@ -168,10 +176,18 @@ exit 49
 
 def build_ephemeral_guard(*, action: str, profile: str, path: str,
                           original_sha256: str, candidate_sha256: str,
-                          candidate: str) -> tuple[str, str]:
+                          candidate: str, approval_id: str | None = None) -> tuple[str, str]:
     """Return (fixed sudo command, shell stdin); only allow predetermined operations."""
     if action not in {"validate", "apply"} or profile not in _PROFILE:
         raise ValueError("unregistered_config_repair_profile")
+    if action == "apply":
+        if not isinstance(approval_id, str) or not re.fullmatch(
+            r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}",
+            approval_id,
+        ):
+            raise ValueError("config_approval_id_not_valid")
+    elif approval_id is not None:
+        raise ValueError("config_validate_must_not_have_approval_id")
     if not (isinstance(path, str) and path.startswith("/") and
             not any(x in path for x in ("\n", "\r", "\x00", "\t", " ", "'", '"')) and
             isinstance(candidate, str)):
@@ -190,5 +206,7 @@ def build_ephemeral_guard(*, action: str, profile: str, path: str,
     # the heredoc or introduce shell statements.
     script = _SHELL.replace("__CANDIDATE_BASE64__", encoded)
     args = (action, profile, path, original_sha256, candidate_sha256)
+    if action == "apply":
+        args += (approval_id,)
     command = "/bin/sh -s -- " + " ".join(shlex.quote(x) for x in args)
     return command, script
