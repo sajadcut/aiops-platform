@@ -67,6 +67,33 @@ def _profile(service: str, path: str) -> str:
     return "unregistered"
 
 
+def _value_tokens(text: str) -> str:
+    """Remove only grammar-neutral punctuation outside quoted string values.
+
+    Human-visible diffs deliberately redact values. Prevent a small-looking
+    model edit from silently changing ports, hosts, command names or secrets.
+    A future semantic edit requires a separate value-aware security review.
+    """
+    parts: list[str] = []
+    quote = ""
+    escaped = False
+    for char in text:
+        if quote:
+            parts.append(char)
+            if escaped:
+                escaped = False
+            elif char == "\\\\":
+                escaped = True
+            elif char == quote:
+                quote = ""
+        elif char in ("'", '"'):
+            quote = char
+            parts.append(char)
+        elif char not in "{};, \\t\\r\\n":
+            parts.append(char)
+    return "".join(parts)
+
+
 def _candidate_preview(original: str, corrected: str) -> dict:
     """Check completeness and bounded drift; emit *metadata*, never file lines."""
     base = {"status": "llm_candidate_rejected", "candidate_hash": None,
@@ -80,6 +107,8 @@ def _candidate_preview(original: str, corrected: str) -> dict:
         return {**base, "rejection_reason": "incomplete_or_invalid_candidate"}
     if original == corrected:
         return {**base, "status": "no_change_proposed"}
+    if _value_tokens(original) != _value_tokens(corrected):
+        return {**base, "rejection_reason": "candidate_changes_configuration_values"}
     before, after = original.splitlines(keepends=True), corrected.splitlines(keepends=True)
     # Diff on full lines; never trust an LLM that rewrites the whole config.
     differences = [op for op in difflib.SequenceMatcher(
