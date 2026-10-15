@@ -217,46 +217,6 @@ class DynamicInvestigationPlanner:
         runtime = cls.runtime_evidence(evidence)
         unit = runtime.get("service_runtime_discovery") or {}
         syntax = runtime.get("dotnet_config_syntax") or {}
-        # LLM corrections are never executable merely because the model
-        # returned bytes. Only a safely sealed, hash-bound candidate with a
-        # registered, independently checkable vendor/format profile may enter
-        # the EXISTING pending_validation ticket flow.
-        if (full_repair.get("status") == "llm_candidate_proposed"
-                and full_repair.get("candidate_stored") is True
-                and full_repair.get("validation_profile") in {
-                    "nginx", "json_syntax", "xml_syntax",
-                } and full_repair.get("source_sha256")
-                and full_repair.get("candidate_sha256")
-                and full_repair.get("source_evidence_refs")):
-            preview_changes = full_repair.get("redacted_changes") or []
-            initial = preview_changes[0] if preview_changes else None
-            result["config_proposal"] = {
-                "status": "candidate_proposed",
-                "service": full_repair["service"],
-                "config_file": full_repair["config_file"],
-                "error_line": failure.get("error_line") if failure else None,
-                "source_evidence_refs": full_repair["source_evidence_refs"][:8],
-                "current_configuration": None,
-                "proposed_configuration": None,
-                "unified_diff": None,
-                "current_excerpt": [],
-                "proposed_excerpt": [],
-                "redacted_diff": initial,
-                "redacted_changes": preview_changes,
-                "original_sha256": full_repair["source_sha256"],
-                "candidate_sha256": full_repair["candidate_sha256"],
-                "proposed_change": "llm_full_file_repair",
-                "candidate_stored": True,
-                "validation_profile": full_repair["validation_profile"],
-                "test_scope": "encrypted_candidate_pending_independent_validation",
-                "validation_status": "UNVERIFIED",
-                "stage_failure_reason": "not_recorded",
-                "validator_executed_on_proposal": False,
-                "isolated_validation": False,
-                "requires_approval": True,
-                "apply_eligible": False,
-                "execution_authority": False,
-            }
         if unit.get("runtime") == "dotnet":
             if syntax.get("syntax_valid") is False:
                 invalid = next((row for row in syntax.get("files", [])
@@ -617,6 +577,46 @@ class DynamicInvestigationPlanner:
                 "validator_executed_on_proposal": False,
                 "isolated_validation": False, "requires_approval": True,
                 "apply_eligible": False, "execution_authority": False,
+            }
+        # LLM corrections are never executable merely because the model
+        # returned bytes. Only a safely sealed, hash-bound candidate with a
+        # registered, independently checkable vendor/format profile may enter
+        # the EXISTING pending_validation ticket flow.
+        if (full_repair.get("status") == "llm_candidate_proposed"
+                and full_repair.get("candidate_stored") is True
+                and full_repair.get("validation_profile") in {
+                    "nginx", "json_syntax", "xml_syntax",
+                } and full_repair.get("source_sha256")
+                and full_repair.get("candidate_sha256")
+                and full_repair.get("source_evidence_refs")):
+            preview_changes = full_repair.get("redacted_changes") or []
+            initial = preview_changes[0] if preview_changes else None
+            result["config_proposal"] = {
+                "status": "candidate_proposed",
+                "service": full_repair["service"],
+                "config_file": full_repair["config_file"],
+                "error_line": failure.get("error_line") if failure else None,
+                "source_evidence_refs": full_repair["source_evidence_refs"][:8],
+                "current_configuration": None,
+                "proposed_configuration": None,
+                "unified_diff": None,
+                "current_excerpt": [],
+                "proposed_excerpt": [],
+                "redacted_diff": initial,
+                "redacted_changes": preview_changes,
+                "original_sha256": full_repair["source_sha256"],
+                "candidate_sha256": full_repair["candidate_sha256"],
+                "proposed_change": "llm_full_file_repair",
+                "candidate_stored": True,
+                "validation_profile": full_repair["validation_profile"],
+                "test_scope": "encrypted_candidate_pending_independent_validation",
+                "validation_status": "UNVERIFIED",
+                "stage_failure_reason": "not_recorded",
+                "validator_executed_on_proposal": False,
+                "isolated_validation": False,
+                "requires_approval": True,
+                "apply_eligible": False,
+                "execution_authority": False,
             }
         if unit.get("runtime") == "dotnet":
             # Purely diagnostic: valid JSON is NOT proof that environment,
