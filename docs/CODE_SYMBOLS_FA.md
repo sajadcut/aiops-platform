@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 512 | Dashboard JS files scanned: 8 | Symbols indexed: 5405**
+**Python files scanned: 514 | Dashboard JS files scanned: 8 | Symbols indexed: 5445**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -727,20 +727,20 @@
 | `apps/api/http_logging.py` | `HTTPTransactionLoggingMiddleware.__call__` | 84 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | HTTPTransactionLoggingMiddleware |
 | `apps/api/http_logging.py` | `HTTPTransactionLoggingMiddleware.__call__.logging_receive` | 126 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | HTTPTransactionLoggingMiddleware.__call__ |
 | `apps/api/http_logging.py` | `HTTPTransactionLoggingMiddleware.__call__.logging_send` | 140 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | HTTPTransactionLoggingMiddleware.__call__ |
-| `apps/api/incident_chat.py` | `IncidentChatMessage` | 42 | class | کلاس | module |
-| `apps/api/incident_chat.py` | `IncidentChatActionRequest` | 46 | class | کلاس | module |
-| `apps/api/incident_chat.py` | `_scope` | 50 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/incident_chat.py` | `_safe_brief` | 80 | function | Keep actual DecisionBrief field names; use bounded persisted facts only. | module |
-| `apps/api/incident_chat.py` | `_explicit_wrong_target` | 145 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/incident_chat.py` | `_read_cognia` | 160 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/incident_chat.py` | `_observed_status` | 200 | function | Newest attributable, read-only VM MCP observation; never trust Agent prose. | module |
-| `apps/api/incident_chat.py` | `_observed_status.append` | 209 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _observed_status |
-| `apps/api/incident_chat.py` | `_incident_status_scope` | 287 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/incident_chat.py` | `incident_service_status` | 295 | async function | Initial card state from durable VM/Audit evidence. Zero remote calls. | module |
-| `apps/api/incident_chat.py` | `recheck_incident_service_status` | 315 | async function | An explicit, authenticated read-only VM MCP status check (no LLM/write). | module |
-| `apps/api/incident_chat.py` | `incident_chat_history` | 356 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/incident_chat.py` | `incident_chat_message` | 402 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/incident_chat.py` | `incident_chat_request_approval` | 733 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/incident_chat.py` | `IncidentChatMessage` | 43 | class | کلاس | module |
+| `apps/api/incident_chat.py` | `IncidentChatActionRequest` | 47 | class | کلاس | module |
+| `apps/api/incident_chat.py` | `_scope` | 51 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/incident_chat.py` | `_safe_brief` | 81 | function | Keep actual DecisionBrief field names; use bounded persisted facts only. | module |
+| `apps/api/incident_chat.py` | `_explicit_wrong_target` | 146 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/incident_chat.py` | `_read_cognia` | 161 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/incident_chat.py` | `_observed_status` | 201 | function | Newest attributable, read-only VM MCP observation; never trust Agent prose. | module |
+| `apps/api/incident_chat.py` | `_observed_status.append` | 210 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _observed_status |
+| `apps/api/incident_chat.py` | `_incident_status_scope` | 288 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/incident_chat.py` | `incident_service_status` | 296 | async function | Initial card state from durable VM/Audit evidence. Zero remote calls. | module |
+| `apps/api/incident_chat.py` | `recheck_incident_service_status` | 316 | async function | An explicit, authenticated read-only VM MCP status check (no LLM/write). | module |
+| `apps/api/incident_chat.py` | `incident_chat_history` | 357 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/incident_chat.py` | `incident_chat_message` | 403 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/incident_chat.py` | `incident_chat_request_approval` | 773 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/incident_resources.py` | `MemoryLifecycleRequest` | 31 | class | کلاس | module |
 | `apps/api/incident_resources.py` | `_require_current_database_schema` | 36 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/incident_resources.py` | `get_context` | 41 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
@@ -921,6 +921,10 @@
 | `apps/audit_service/postgres.py` | `PostgreSQLAuditStore.__init__` | 33 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | PostgreSQLAuditStore |
 | `apps/audit_service/postgres.py` | `PostgreSQLAuditStore.append` | 36 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | PostgreSQLAuditStore |
 | `apps/audit_service/postgres.py` | `PostgreSQLAuditStore.list` | 55 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | PostgreSQLAuditStore |
+| `apps/chat_answer_review.py` | `requests_vm_allowed_hosts` | 32 | function | Distinguish listing policy targets from checking one VM's status. | module |
+| `apps/chat_answer_review.py` | `allowed_hosts_answer` | 38 | function | Never consult user text or the LLM for deployment-defined target policy. | module |
+| `apps/chat_answer_review.py` | `review_answer_coherence` | 72 | async function | Review every textual response with a bounded LLM call, fail open to original. | module |
+| `apps/chat_answer_review.py` | `mismatched_answer_message` | 115 | function | Safety fallback; do not fabricate a correct answer from the review model. | module |
 | `apps/chatbot/errors.py` | `ChatErrorDescriptor` | 11 | class | کلاس | module |
 | `apps/chatbot/errors.py` | `ChatErrorDescriptor.public_payload` | 18 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatErrorDescriptor |
 | `apps/chatbot/errors.py` | `classify_chatbot_error` | 64 | function | Convert internal failures into short operator-safe terminal errors. | module |
@@ -964,26 +968,26 @@
 | `apps/chatbot/reliable_service.py` | `OperationsCopilotService.message` | 493 | async method | Preserve safe cause categories after the base service fail-closed wrapper. | OperationsCopilotService |
 | `apps/chatbot/reliable_service.py` | `OperationsCopilotService._execute_read` | 525 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationsCopilotService |
 | `apps/chatbot/reliable_service.py` | `OperationsCopilotService._summarize` | 537 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationsCopilotService |
-| `apps/chatbot/service.py` | `_iso` | 79 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/chatbot/service.py` | `_has_permission` | 85 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/chatbot/service.py` | `_annotate_metric_units` | 92 | function | Annotate known VM percentages for LLM summarization without changing API data. | module |
-| `apps/chatbot/service.py` | `ChatbotService` | 113 | class | LLM-assisted, policy-enforced operations copilot. | module |
-| `apps/chatbot/service.py` | `ChatbotService.__init__` | 121 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
-| `apps/chatbot/service.py` | `ChatbotService._llm` | 124 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
-| `apps/chatbot/service.py` | `ChatbotService._audit` | 128 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
-| `apps/chatbot/service.py` | `ChatbotService._session` | 159 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
-| `apps/chatbot/service.py` | `ChatbotService._history_messages` | 171 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
-| `apps/chatbot/service.py` | `ChatbotService._recent_operator_context` | 184 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
-| `apps/chatbot/service.py` | `ChatbotService._execute_read` | 194 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
-| `apps/chatbot/service.py` | `ChatbotService._summarize` | 232 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
-| `apps/chatbot/service.py` | `ChatbotService._create_chatops_incident` | 270 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
-| `apps/chatbot/service.py` | `ChatbotService._proposal` | 290 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
-| `apps/chatbot/service.py` | `ChatbotService.message` | 374 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
-| `apps/chatbot/service.py` | `ChatbotService._collect_mutation_snapshot` | 551 | async method | Collect read-only operational state for independent before/after verification. | ChatbotService |
-| `apps/chatbot/service.py` | `ChatbotService._verify_mutation` | 727 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
-| `apps/chatbot/service.py` | `ChatbotService._record_memory_after_mutation` | 765 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
-| `apps/chatbot/service.py` | `ChatbotService._preconfirm_mutation_guard` | 880 | async method | Freshly revalidate supported mutation intent before confirmation. | ChatbotService |
-| `apps/chatbot/service.py` | `ChatbotService.decide` | 1074 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
+| `apps/chatbot/service.py` | `_iso` | 84 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/chatbot/service.py` | `_has_permission` | 90 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/chatbot/service.py` | `_annotate_metric_units` | 97 | function | Annotate known VM percentages for LLM summarization without changing API data. | module |
+| `apps/chatbot/service.py` | `ChatbotService` | 118 | class | LLM-assisted, policy-enforced operations copilot. | module |
+| `apps/chatbot/service.py` | `ChatbotService.__init__` | 126 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
+| `apps/chatbot/service.py` | `ChatbotService._llm` | 129 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
+| `apps/chatbot/service.py` | `ChatbotService._audit` | 133 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
+| `apps/chatbot/service.py` | `ChatbotService._session` | 164 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
+| `apps/chatbot/service.py` | `ChatbotService._history_messages` | 176 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
+| `apps/chatbot/service.py` | `ChatbotService._recent_operator_context` | 189 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
+| `apps/chatbot/service.py` | `ChatbotService._execute_read` | 199 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
+| `apps/chatbot/service.py` | `ChatbotService._summarize` | 237 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
+| `apps/chatbot/service.py` | `ChatbotService._create_chatops_incident` | 275 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
+| `apps/chatbot/service.py` | `ChatbotService._proposal` | 295 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
+| `apps/chatbot/service.py` | `ChatbotService.message` | 379 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
+| `apps/chatbot/service.py` | `ChatbotService._collect_mutation_snapshot` | 594 | async method | Collect read-only operational state for independent before/after verification. | ChatbotService |
+| `apps/chatbot/service.py` | `ChatbotService._verify_mutation` | 770 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
+| `apps/chatbot/service.py` | `ChatbotService._record_memory_after_mutation` | 808 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
+| `apps/chatbot/service.py` | `ChatbotService._preconfirm_mutation_guard` | 923 | async method | Freshly revalidate supported mutation intent before confirmation. | ChatbotService |
+| `apps/chatbot/service.py` | `ChatbotService.decide` | 1117 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ChatbotService |
 | `apps/chatbot/store.py` | `_utcnow` | 19 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/chatbot/store.py` | `_json` | 23 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/chatbot/store.py` | `_title` | 27 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
@@ -1022,8 +1026,8 @@
 | `apps/config_change_authorization.py` | `verify_claim` | 68 | function | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | module |
 | `apps/config_change_authorization.py` | `sign_root_guard` | 89 | function | Ed25519 root guard signature; VM stores only its verification public key. | module |
 | `apps/config_syntax_llm.py` | `sanitized_projection` | 30 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/config_syntax_llm.py` | `_json_model_reply` | 59 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/config_syntax_llm.py` | `assess_service_syntax` | 86 | async function | Two sequential LLM passes; second pass never asserts a vendor PASS. | module |
+| `apps/config_syntax_llm.py` | `_json_model_reply` | 60 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/config_syntax_llm.py` | `assess_service_syntax` | 87 | async function | Two sequential LLM passes; second pass never asserts a vendor PASS. | module |
 | `apps/context_service/__init__.py` | `ContextBuilder` | 24 | class | Build knowledge-assisted operational context through governed boundaries. | module |
 | `apps/context_service/__init__.py` | `ContextBuilder.__init__` | 39 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ContextBuilder |
 | `apps/context_service/__init__.py` | `ContextBuilder._known` | 59 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ContextBuilder |
@@ -2449,40 +2453,40 @@
 | `integrations/vm/ssh_connector.py` | `SSHVMConnector._run` | 252 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
 | `integrations/vm/ssh_connector.py` | `SSHVMConnector._sudo_requires_password` | 258 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
 | `integrations/vm/ssh_connector.py` | `SSHVMConnector._sudo` | 266 | async method | Execute a fixed privileged action through the existing SSH user. | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.config_guard_preflight` | 311 | async method | Verify the fixed guard path without privilege or leaking VM output. | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.health_check` | 368 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector._parse_cpu_counters` | 373 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector._cpu_interval_percentages` | 383 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.collect_metrics` | 400 | async method | Evidence/داده موردنیاز را از منبع مربوط جمع می‌کند | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.memory_diagnostics` | 436 | async method | Bounded, read-only RAM breakdown and top RSS consumers. | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.host_info` | 525 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.disk_status` | 546 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.disk_status.parse_df` | 552 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector.disk_status |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.disk_forensics` | 562 | async method | Bounded read-only inventory; never read file contents or delete files. | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.network_status` | 717 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.service_status` | 733 | async method | Read structured systemd properties and bounded 'systemctl status'. | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.service_status.numeric` | 759 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector.service_status |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.process_status` | 793 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.process_snapshot` | 808 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.service_logs` | 822 | async method | Collect bounded journald history; retry read-only via sudo -n if denied. | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.system_logs` | 852 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.tcp_check` | 868 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.port_listener_status` | 882 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.dns_check` | 894 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.route_check` | 906 | async method | بر اساس state/capability مسیر یا handler مناسب را انتخاب می‌کند | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.firewall_status` | 914 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.service_runtime_discovery` | 926 | async method | Read selected systemd properties; never return ExecStart argv or env values. | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.service_config_discovery` | 943 | async method | Read-only proof of config-path existence from systemd-derived paths. | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.service_config_review` | 1042 | async method | Read-only bounded review for a vendor error or verified unit file. | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.dotnet_config_syntax` | 1139 | async method | Remote Linux coreutils read; *local AIOps Python* JSON syntax check. | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.nginx_config_inspect` | 1200 | async method | Inspect only allowlisted Nginx config structure; no raw file bytes. | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.nginx_config_review` | 1246 | async method | Generate a non-executable, bounded review from current validator proof. | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.nginx_config_review.safe_preview_text` | 1307 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector.nginx_config_review |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.nginx_config_review.safe_rows` | 1310 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector.nginx_config_review |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.config_validate` | 1345 | async method | Locate the running unit's config, run a fixed read-only syntax check. | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.start_service` | 1443 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.restart_service` | 1450 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.reload_service` | 1457 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.config_guard_preflight` | 313 | async method | Verify the fixed guard path without privilege or leaking VM output. | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.health_check` | 370 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector._parse_cpu_counters` | 375 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector._cpu_interval_percentages` | 385 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.collect_metrics` | 402 | async method | Evidence/داده موردنیاز را از منبع مربوط جمع می‌کند | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.memory_diagnostics` | 438 | async method | Bounded, read-only RAM breakdown and top RSS consumers. | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.host_info` | 527 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.disk_status` | 548 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.disk_status.parse_df` | 554 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector.disk_status |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.disk_forensics` | 564 | async method | Bounded read-only inventory; never read file contents or delete files. | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.network_status` | 719 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.service_status` | 735 | async method | Read structured systemd properties and bounded 'systemctl status'. | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.service_status.numeric` | 761 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector.service_status |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.process_status` | 795 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.process_snapshot` | 810 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.service_logs` | 824 | async method | Collect bounded journald history; retry read-only via sudo -n if denied. | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.system_logs` | 854 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.tcp_check` | 870 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.port_listener_status` | 884 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.dns_check` | 896 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.route_check` | 908 | async method | بر اساس state/capability مسیر یا handler مناسب را انتخاب می‌کند | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.firewall_status` | 916 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.service_runtime_discovery` | 928 | async method | Read selected systemd properties; never return ExecStart argv or env values. | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.service_config_discovery` | 945 | async method | Read-only proof of config-path existence from systemd-derived paths. | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.service_config_review` | 1044 | async method | Read-only bounded review for a vendor error or verified unit file. | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.dotnet_config_syntax` | 1141 | async method | Remote Linux coreutils read; *local AIOps Python* JSON syntax check. | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.nginx_config_inspect` | 1202 | async method | Inspect only allowlisted Nginx config structure; no raw file bytes. | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.nginx_config_review` | 1248 | async method | Generate a non-executable, bounded review from current validator proof. | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.nginx_config_review.safe_preview_text` | 1309 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector.nginx_config_review |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.nginx_config_review.safe_rows` | 1312 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector.nginx_config_review |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.config_validate` | 1347 | async method | Locate the running unit's config, run a fixed read-only syntax check. | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.start_service` | 1445 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.restart_service` | 1452 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.reload_service` | 1459 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
 | `integrations/vm/target_context.py` | `bind_vm_probe_blocked` | 22 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `integrations/vm/target_context.py` | `reset_vm_probe_blocked` | 26 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `integrations/vm/target_context.py` | `vm_probes_blocked` | 30 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
@@ -3092,6 +3096,42 @@
 | `tests/unit/test_change_correlation_engine.py` | `CapturingChangeLLM.generate` | 145 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CapturingChangeLLM |
 | `tests/unit/test_change_correlation_engine.py` | `CapturingChangeLLM.generate_with_messages` | 170 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CapturingChangeLLM |
 | `tests/unit/test_change_correlation_engine.py` | `test_change_agent_exposes_required_outputs_and_never_executes_rollback` | 175 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chat_answer_review.py` | `test_list_of_policy_targets_is_not_a_vm_diagnostic` | 21 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chat_answer_review.py` | `test_inventory_matcher_does_not_misroute_real_operations` | 37 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chat_answer_review.py` | `test_inventory_is_from_actual_settings_only_for_privileged_operator` | 41 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chat_answer_review.py` | `ReviewLLM` | 56 | class | کلاس | module |
+| `tests/unit/test_chat_answer_review.py` | `ReviewLLM.__init__` | 57 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ReviewLLM |
+| `tests/unit/test_chat_answer_review.py` | `ReviewLLM.generate` | 62 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ReviewLLM |
+| `tests/unit/test_chat_answer_review.py` | `test_review_reports_mismatch_without_authorizing_model_rewrites` | 70 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chat_answer_review.py` | `test_reviewer_outage_does_not_create_an_authoritative_new_claim` | 85 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chat_answer_review.py` | `test_both_chat_paths_reuse_shared_semantic_review_and_inventory_routing` | 92 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chat_answer_review.py` | `test_chatbot_inventory_request_never_calls_vm_tool_or_intent_router` | 107 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chat_answer_review.py` | `test_chatbot_inventory_request_never_calls_vm_tool_or_intent_router.DB` | 116 | class | کلاس | test_chatbot_inventory_request_never_calls_vm_tool_or_intent_router |
+| `tests/unit/test_chat_answer_review.py` | `test_chatbot_inventory_request_never_calls_vm_tool_or_intent_router.DB.__aenter__` | 117 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_chatbot_inventory_request_never_calls_vm_tool_or_intent_router.DB |
+| `tests/unit/test_chat_answer_review.py` | `test_chatbot_inventory_request_never_calls_vm_tool_or_intent_router.DB.__aexit__` | 118 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_chatbot_inventory_request_never_calls_vm_tool_or_intent_router.DB |
+| `tests/unit/test_chat_answer_review.py` | `test_chatbot_inventory_request_never_calls_vm_tool_or_intent_router.Store` | 119 | class | state یا داده را به‌صورت durable ذخیره/به‌روزرسانی می‌کند | test_chatbot_inventory_request_never_calls_vm_tool_or_intent_router |
+| `tests/unit/test_chat_answer_review.py` | `test_chatbot_inventory_request_never_calls_vm_tool_or_intent_router.Store.__init__` | 120 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_chatbot_inventory_request_never_calls_vm_tool_or_intent_router.Store |
+| `tests/unit/test_chat_answer_review.py` | `test_chatbot_inventory_request_never_calls_vm_tool_or_intent_router.Store.add_message` | 121 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_chatbot_inventory_request_never_calls_vm_tool_or_intent_router.Store |
+| `tests/unit/test_chat_answer_review.py` | `test_chatbot_inventory_request_never_calls_vm_tool_or_intent_router.Store.history` | 123 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_chatbot_inventory_request_never_calls_vm_tool_or_intent_router.Store |
+| `tests/unit/test_chat_answer_review.py` | `test_chatbot_inventory_request_never_calls_vm_tool_or_intent_router.session` | 124 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_chatbot_inventory_request_never_calls_vm_tool_or_intent_router |
+| `tests/unit/test_chat_answer_review.py` | `test_chatbot_inventory_request_never_calls_vm_tool_or_intent_router.audit` | 126 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_chatbot_inventory_request_never_calls_vm_tool_or_intent_router |
+| `tests/unit/test_chat_answer_review.py` | `test_chatbot_inventory_request_never_calls_vm_tool_or_intent_router.Reviewer` | 127 | class | کلاس | test_chatbot_inventory_request_never_calls_vm_tool_or_intent_router |
+| `tests/unit/test_chat_answer_review.py` | `test_chatbot_inventory_request_never_calls_vm_tool_or_intent_router.Reviewer.__init__` | 128 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_chatbot_inventory_request_never_calls_vm_tool_or_intent_router.Reviewer |
+| `tests/unit/test_chat_answer_review.py` | `test_chatbot_inventory_request_never_calls_vm_tool_or_intent_router.Reviewer.generate` | 129 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_chatbot_inventory_request_never_calls_vm_tool_or_intent_router.Reviewer |
+| `tests/unit/test_chat_answer_review.py` | `test_chatbot_inventory_request_never_calls_vm_tool_or_intent_router.Reviewer.generate_with_messages` | 134 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_chatbot_inventory_request_never_calls_vm_tool_or_intent_router.Reviewer |
+| `tests/unit/test_chat_answer_review.py` | `test_incident_chat_inventory_avoids_vm_and_shared_audit_leak` | 160 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chat_answer_review.py` | `test_incident_chat_inventory_avoids_vm_and_shared_audit_leak.DB` | 169 | class | کلاس | test_incident_chat_inventory_avoids_vm_and_shared_audit_leak |
+| `tests/unit/test_chat_answer_review.py` | `test_incident_chat_inventory_avoids_vm_and_shared_audit_leak.DB.__aenter__` | 170 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_incident_chat_inventory_avoids_vm_and_shared_audit_leak.DB |
+| `tests/unit/test_chat_answer_review.py` | `test_incident_chat_inventory_avoids_vm_and_shared_audit_leak.DB.__aexit__` | 171 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_incident_chat_inventory_avoids_vm_and_shared_audit_leak.DB |
+| `tests/unit/test_chat_answer_review.py` | `test_incident_chat_inventory_avoids_vm_and_shared_audit_leak.Audit` | 172 | class | کلاس | test_incident_chat_inventory_avoids_vm_and_shared_audit_leak |
+| `tests/unit/test_chat_answer_review.py` | `test_incident_chat_inventory_avoids_vm_and_shared_audit_leak.Audit.__init__` | 173 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_incident_chat_inventory_avoids_vm_and_shared_audit_leak.Audit |
+| `tests/unit/test_chat_answer_review.py` | `test_incident_chat_inventory_avoids_vm_and_shared_audit_leak.Audit.list` | 174 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_incident_chat_inventory_avoids_vm_and_shared_audit_leak.Audit |
+| `tests/unit/test_chat_answer_review.py` | `test_incident_chat_inventory_avoids_vm_and_shared_audit_leak.Audit.append` | 175 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_incident_chat_inventory_avoids_vm_and_shared_audit_leak.Audit |
+| `tests/unit/test_chat_answer_review.py` | `test_incident_chat_inventory_avoids_vm_and_shared_audit_leak.scope` | 176 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_incident_chat_inventory_avoids_vm_and_shared_audit_leak |
+| `tests/unit/test_chat_answer_review.py` | `test_incident_chat_inventory_avoids_vm_and_shared_audit_leak.brief` | 178 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_incident_chat_inventory_avoids_vm_and_shared_audit_leak |
+| `tests/unit/test_chat_answer_review.py` | `test_incident_chat_inventory_avoids_vm_and_shared_audit_leak.forbidden` | 179 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_incident_chat_inventory_avoids_vm_and_shared_audit_leak |
+| `tests/unit/test_chat_answer_review.py` | `test_incident_chat_inventory_avoids_vm_and_shared_audit_leak.Reviewer` | 181 | class | کلاس | test_incident_chat_inventory_avoids_vm_and_shared_audit_leak |
+| `tests/unit/test_chat_answer_review.py` | `test_incident_chat_inventory_avoids_vm_and_shared_audit_leak.Reviewer.generate` | 182 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_incident_chat_inventory_avoids_vm_and_shared_audit_leak.Reviewer |
 | `tests/unit/test_chatbot_auth_api.py` | `_configure` | 14 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_chatbot_auth_api.py` | `test_chatbot_me_requires_authentication` | 22 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_chatbot_auth_api.py` | `test_viewer_can_login_but_only_has_read_permissions` | 28 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |

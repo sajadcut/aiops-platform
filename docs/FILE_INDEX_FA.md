@@ -3,7 +3,7 @@
 > این فایل فهرست فایل‌به‌فایل repository است. توضیح معماری و flow در `CODEBASE_GUIDE_FA.md` آمده است.
 > این فایل با `scripts/generate_file_index_fa.py` ساخته و در CI کنترل می‌شود.
 
-**تعداد فایل‌های track‌شده و پوشش‌داده‌شده: 647**
+**تعداد فایل‌های track‌شده و پوشش‌داده‌شده: 649**
 
 | Path | Type | Purpose | Called By | Calls/Depends On | Runtime/Test/Docs | Notes |
 |---|---|---|---|---|---|---|
@@ -109,6 +109,7 @@
 | `apps/audit_service/__init__.py` | Python | Audit: ثبت، redaction و persistence Audit | boundaryهای حساس | PostgreSQL | Runtime | برای traceability و forensic |
 | `apps/audit_service/postgres.py` | Python | Audit: ثبت، redaction و persistence Audit | boundaryهای حساس | PostgreSQL | Runtime | برای traceability و forensic |
 | `apps/audit_service/redaction.py` | Python | Audit: ثبت، redaction و persistence Audit | boundaryهای حساس | PostgreSQL | Runtime | برای traceability و forensic |
+| `apps/chat_answer_review.py` | Python | ماژول service لایه application | Runtime | domain/integrations | Runtime | جزء Control Plane |
 | `apps/chatbot/__init__.py` | Python | ماژول service لایه application | Runtime | domain/integrations | Runtime | جزء Control Plane |
 | `apps/chatbot/errors.py` | Python | ماژول service لایه application | Runtime | domain/integrations | Runtime | جزء Control Plane |
 | `apps/chatbot/models.py` | Python | ماژول service لایه application | Runtime | domain/integrations | Runtime | جزء Control Plane |
@@ -480,6 +481,7 @@
 | `tests/unit/test_benchmark_hardening_2026.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_centralized_config.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_change_correlation_engine.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
+| `tests/unit/test_chat_answer_review.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_chatbot_auth_api.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_chatbot_conversation_policy.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_chatbot_error_taxonomy.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
