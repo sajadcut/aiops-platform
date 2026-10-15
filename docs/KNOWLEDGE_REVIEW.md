@@ -211,3 +211,16 @@ to establish whether the original config-validator evidence and vendor-apply
 audit are stored under the same Incident ID. UI preview and pending-review
 refresh should then be verified against the actual database, along with
 approval immutability and Cognia publication.
+
+
+## Governed service recovery follow-up drafts (2026-10-15)
+
+AIOps used to persist Operational Memory after an approved Start/Restart but did not create a Knowledge Review candidate. For the gfpapi Restart on 10.248.16.82, execution succeeded and service_active improved (0 to 1), but the required port_listening objective lacked post-execution evidence, so Verification was inconclusive. This must not be labeled verified incident recovery.
+
+Now a completed approved remediation with matching incident-bound audit, live preflight, executed service action, and recorded runbook objective results creates an incident_followup pending_review draft. This draft accurately distinguishes execution success, systemd-active evidence, missing port-listening evidence, unknown RCA, and unconfirmed original alert-source recovery. It is NOT automatically approved or published.
+
+On opening the Knowledge Review UI, one privileged POST /api/v1/knowledge-reviews/reconcile-recent?limit=30 checks the most recent durable remediation_executed events and idempotently backfills missed drafts. GET remains read-only. A deterministic incident+approval review ID survives restarts and human edits. No operational action is re-executed.
+
+A human SRE reviewer must inspect and approve the exact revision, then explicitly publish it to Cognia. The existing strict rule for labeling verified-success Operational Memory as verified incident knowledge remains unchanged.
+
+Cognia /health/ready returning HTTP 500 is a separate outbound readiness/publishing concern: it does not explain an absent local draft. Confirm both local draft creation and actual Cognia acceptance/indexing independently (REAL ENV REQUIRED).
