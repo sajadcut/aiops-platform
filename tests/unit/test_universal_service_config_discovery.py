@@ -300,3 +300,14 @@ def test_unknown_config_search_asks_cognia_for_vendor_procedure_not_secret_bytes
     assert "read-only" in query
     assert "password" not in query
     assert len(query) <= 430
+
+
+def test_generic_json_multi_edit_candidate_is_blocked_until_diff_covers_every_edit():
+    source = '{"outer":{"x":1,},"items":[1,2,]}'
+    result = local_config_review(
+        base64.b64encode(source.encode()).decode(),
+        path="/srv/app/application.json",
+    )
+    assert result["status"] != "candidate_proposed"
+    assert result["candidate_hash"] is None
+    assert result["execution_authority"] is False
