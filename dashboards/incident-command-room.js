@@ -2684,8 +2684,12 @@
       (full.rejection_reason?'<p>'+esc(fa?'دلیل رد: ':'Rejection reason: ')+
         txt(full.rejection_reason)+'</p>':'')+
       '<p class="ic-agent-disclaimer">'+esc(fa?
-        'فایل اصلاحی ذخیره نشده و هیچ تست مستقلی روی آن اجرا نشده است. خطوط تغییرکردهٔ LLM، شماره خط خطای Validator نیستند. این پیش‌نمایش بدون Diff محتواییِ بازبینی‌شده، امکان Approval یا Apply ندارد.':
-        'The revised file is not stored and has not passed independent validation. Model-changed lines are not validator error locations. This preview cannot be approved or applied without a reviewed diff and validation.')+'</p>'+
+        (full.candidate_stored?
+          'فایل اصلاح‌شده به‌شکل رمزنگاری‌شده نگهداری شده است؛ تا پایان موفق اعتبارسنجی مستقل و Approval، هیچ فایل Production تغییر نمی‌کند.':
+          'فایل اصلاحی هنوز به‌شکل امن نگهداری نشده و امکان تأیید یا اعمال آن وجود ندارد.'):
+        (full.candidate_stored?
+          'The revised file is stored encrypted, but no production write occurs until independent validation and approval pass.':
+          'The revised file is not securely stored and cannot be approved or applied.'))+'</p>'+
       refs(full.source_evidence_refs)+'</article>':'';
     const hasPlan=p.status && p.status!=='not_available';
     if(!hasPlan) {
