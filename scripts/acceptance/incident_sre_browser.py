@@ -148,13 +148,16 @@ def main() -> None:
                 return
             if req.method == "POST" and path.endswith("/configuration-review-response"):
                 intent = req.post_data_json
-                assert intent["decision"] == "request_isolated_validation"
+                assert intent["decision"] == "request_change_approval"
                 assert len(intent["expected_original_sha256"]) == 64
                 assert len(intent["expected_candidate_sha256"]) == 64
                 review_requests.append(intent)
                 review_state.update({
-                    "status": "awaiting_isolated_validation",
-                    "decision": "request_isolated_validation",
+                    "status": "pending_validation",
+                    "decision": "request_change_approval",
+                    "approval_status": "pending_validation",
+                    "approval_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+                    "approval_queue_registered": True,
                     "execution_authority": False,
                     "production_write_performed": False,
                 })
@@ -253,19 +256,23 @@ def main() -> None:
         assert "/etc/nginx/nginx.conf" in preview
         assert "۱۰۳" in preview or "103" in preview
         assert "permission_denied" in preview
-        assert "درخواست اعمال اصلاح (ابتدا اعتبارسنجی)" in preview
-        assert banner.locator("button[data-config-intent='request_isolated_validation']").is_enabled()
+        assert "ارسال درخواست به Approval" not in preview
+        assert banner.locator("button[data-config-intent]").count() == 0
         assert banner.locator("button:disabled").count() == 0
         assert page.locator(".ic-section-nav a[href='#ic-ai-proposed-fix']").count() == 1
         banner.locator("a[href='#ic-ai-proposed-fix']").click()
         assert page.locator("#ic-ai-proposed-fix #ic-proposed-fix").is_visible()
         assert not writes, f"Opening config proposal executed an unexpected write: {writes}"
-        # A click creates a durable pre-approval review intent, NOT an execution
-        # request. The banner must then expose the pending-validation status.
-        banner.locator("button[data-config-intent='request_isolated_validation']").click()
+        # Exactly one click beneath the reviewed diff queues a governed
+        # pending-validation Approval; no executable authority is created.
+        submit = page.locator("#ic-ai-proposed-fix button[data-config-intent='request_change_approval']")
+        assert submit.count() == 1 and submit.is_enabled()
+        assert "ارسال درخواست به Approval" in submit.inner_text()
+        submit.click()
         banner.locator("[data-config-request-status='recorded']").wait_for(timeout=15000)
         assert len(review_requests) == 1
-        assert "awaiting_isolated_validation" in banner.inner_text()
+        assert "pending_validation" in banner.inner_text()
+        assert banner.locator("button[data-config-intent]").count() == 0
         assert not writes, f"Requesting config review reached an execution endpoint: {writes}"
         assert not errors, f"Chromium page errors: {errors}"
         # Third fixture: the user's actual screenshot had a failed nginx
@@ -285,10 +292,10 @@ def main() -> None:
         banner = page.locator("#ic-config-action-banner")
         banner.wait_for(state="visible", timeout=15000)
         assert banner.locator("button[data-config-preview='nginx']:not([data-preview-open-diff])").is_enabled()
-        assert banner.locator("button[data-config-intent='request_isolated_validation']").count() == 0
+        assert banner.locator("button[data-config-intent]").count() == 0
         assert "ساخت پیش‌نمایش اصلاح" in banner.inner_text()
         assert "Diff هنوز ساخته نشده" in banner.inner_text()
-        assert "اعمال اصلاح روی سرور — غیرفعال" in banner.inner_text()
+        assert "ارسال درخواست به Approval" not in banner.inner_text()
         assert not preview_requests
         banner.locator("button[data-preview-open-diff='1']").click()
         page.locator("#ic-proposed-fix pre").filter(has_text="@@ line 103").wait_for(timeout=15000)
