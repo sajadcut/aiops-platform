@@ -58,8 +58,13 @@ class PostgreSQLApprovalStore:
                 context = json.loads(context)
             except json.JSONDecodeError:
                 context = {}
-        marker = dict(context.get("source_recovery") or {}) if isinstance(context, dict) else {}
-        return bool(str(row.get("status") or "").lower() == "resolved" and marker.get("incident_resolved"))
+        source_marker = dict(context.get("source_recovery") or {}) if isinstance(context, dict) else {}
+        local_marker = dict(context.get("independent_recovery") or {}) if isinstance(context, dict) else {}
+        return bool(
+            str(row.get("status") or "").lower() == "resolved"
+            and (source_marker.get("incident_resolved") or
+                 local_marker.get("incident_resolved"))
+        )
 
     async def save_validation_request(self, record: Dict[str, Any]) -> Dict[str, Any]:
         """Durably queue an immutable configuration request, NOT an Approval.
