@@ -2864,10 +2864,16 @@
           (fa?'نسخه پیشنهادی فقط از نظر سینتکس '+syntaxFormat+' بررسی شده است و منتظر تأیید صریح شماست.':'Staged '+syntaxFormat+' grammar check passed; application runtime is unverified.'):
           (fa?'نسخه پیشنهادی با Validator سرویس در فضای جداگانه بررسی شده و اکنون منتظر تأیید صریح شماست.':'Isolated vendor validation passed; human approval is required.'))+'</p>'+
           '<button type="button" class="ic-btn ic-btn-primary" data-config-approval-action="approve"'+(state.busy?' disabled':'')+'>'+
-          esc(fa?'تأیید اصلاح کانفیگ — بدون اجرا':'Approve configuration change')+'</button>';
+          esc(fa?(state.configResponse?.start_service_after_apply?
+            'تأیید اصلاح و شروع خودکار سرویس پس از اعمال':'تأیید اصلاح کانفیگ — بدون اجرا'):
+            (state.configResponse?.start_service_after_apply?
+            'Approve config repair + automatic service start':'Approve configuration change'))+'</button>';
       }else if(statusValue==='approved'){
         controls+='<button type="button" class="ic-btn ic-btn-primary" data-config-approval-action="execute"'+(state.busy?' disabled':'')+'>'+
-          esc(fa?'اعمال اصلاح تأییدشده و بررسی نتیجه':'Apply approved config and verify')+'</button>';
+          esc(fa?(state.configResponse?.start_service_after_apply?
+            'اعمال اصلاح، شروع سرویس و بررسی نتیجه':'اعمال اصلاح تأییدشده و بررسی نتیجه'):
+            (state.configResponse?.start_service_after_apply?
+            'Apply, start service and verify':'Apply approved config and verify'))+'</button>';
       }else{
         controls+='<p>'+esc(fa?'مجوز یک‌بارمصرف مصرف شده است. نتیجه و ممیزی عملیات را در تاریخچه بررسی کنید.':'One-time approval consumed; inspect the execution audit.')+'</p>';
       }
@@ -3136,12 +3142,23 @@
        (state.configResponse?.status!=='not_responded'&&!previousAuditOnly)||
        c.status!=='candidate_proposed'||!c.candidate_sha256||!c.original_sha256)return;
     const fa=state.language==='fa';
+    // Start permission is explicitly included in the approval being created,
+    // only when a fresh verified systemd observation says the unit is down.
+    const down=state.serviceStatus?.verified_systemd_only===true &&
+      ['failed','inactive'].includes(low(state.serviceStatus?.active_state)) &&
+      low(state.serviceStatus?.service).replace(/\.service$/,'')===
+        low(state.report?.incident_summary?.service).replace(/\.service$/,'');
+    const startAfterApply=decision==='request_change_approval' && down;
     if(!confirm(fa?
       (decision==='request_change_approval'?
-        'درخواست تغییر این Diff وارد صف Approval می‌شود. تا اعتبارسنجی مستقل، تأیید اجرایی غیرفعال می‌ماند. ادامه می‌دهید؟':
+        (startAfterApply?
+          'تأیید این درخواست شامل دو اقدام است: ۱) اصلاح فایل پس از اعتبارسنجی ۲) شروع خودکار سرویسِ متوقف و بررسی systemd. شروع فقط بعد از Approval و اعمال موفق فایل انجام می‌شود. ادامه می‌دهید؟':
+          'درخواست اصلاح فایل وارد صف Approval می‌شود؛ شروع سرویس مجاز نخواهد بود. ادامه می‌دهید؟'):
         'پیشنهاد اصلاح رد می‌شود؛ هیچ فایلی تغییر نمی‌کند. ادامه می‌دهید؟'):
       (decision==='request_change_approval'?
-        'Queue this exact change for Approval? Final approval remains blocked until independent validation.':
+        (startAfterApply?
+          'Approval covers both verified configuration repair and one automatic start of the stopped systemd service after successful apply. Continue?':
+          'Queue configuration repair only? Service start is not authorized.'):
         'Reject this proposal without changing any file?')))return;
     state.busy=true;renderInvestigation(state.report);
     try {
@@ -3154,7 +3171,8 @@
         method:'POST',headers:{'Content-Type':'application/json'},
         body:JSON.stringify({
           decision,expected_original_sha256:c.original_sha256,
-          expected_candidate_sha256:c.candidate_sha256
+          expected_candidate_sha256:c.candidate_sha256,
+          start_service_after_apply:startAfterApply
         })
       });
       state.configResponse=response;state.configResponseStatus='loaded';
