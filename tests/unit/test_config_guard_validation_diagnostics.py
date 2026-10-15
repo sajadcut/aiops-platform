@@ -194,6 +194,8 @@ async def test_denied_sudo_policy_never_falls_back_to_su_or_password():
     ("MISSING", "config_guard_helper_missing"),
     ("SYMLINK", "config_guard_helper_symlink_refused"),
     ("NOT_REGULAR", "config_guard_helper_not_regular"),
+    ("PARENT_MISSING", "config_guard_helper_parent_missing"),
+    ("PARENT_INACCESSIBLE", "config_guard_helper_parent_inaccessible"),
     ("PRESENT 1000 1000 750", "config_guard_helper_unsafe_metadata"),
     ("PRESENT 0 0 755", "config_guard_helper_unsafe_metadata"),
     ("", "config_guard_preflight_unavailable"),
@@ -328,3 +330,24 @@ def test_vm_provision_script_refuses_existing_helper_symlink():
     script = (Path(__file__).resolve().parents[2]
               / "scripts/vm/Install-AIOpsConfigGuard.ps1").read_text()
     assert "sudo test ! -L $targetFile" in script
+
+
+def test_guard_logs_allowlisted_diagnostics_without_raw_stdout_or_credentials():
+    from inspect import getsource
+    from integrations.vm.ssh_connector import SSHVMConnector
+
+    preflight = getsource(SSHVMConnector.config_guard_preflight)
+    sudo = getsource(SSHVMConnector._sudo)
+    assert 'vm_config_guard_preflight_completed' in preflight
+    assert 'probe=code' in preflight
+    assert 'status=status' in preflight
+    assert 'raw_probe' not in preflight[preflight.index('logger.info('):]
+    assert '"stdout"' not in preflight[preflight.index('logger.info('):]
+    assert '"stderr"' not in preflight[preflight.index('logger.info('):]
+    assert 'vm_config_guard_sudo_stage' in sudo
+    assert 'sudo_noninteractive' in sudo
+    assert 'sudo_password_retry' in sudo
+    # Credential and config payload must not appear in any log event.
+    for chunk in sudo.split('logger.info(')[1:]:
+        assert 'password=' not in chunk.split(')', 1)[0]
+        assert 'stdin_data=' not in chunk.split(')', 1)[0]
