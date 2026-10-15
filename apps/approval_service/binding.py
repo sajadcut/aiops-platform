@@ -100,13 +100,16 @@ def bind_metadata(metadata: Dict[str, Any] | None, **intent_fields: Any) -> Dict
 def _assert_binding(
     approval: Dict[str, Any],
     *,
-    expected_status: str,
+    expected_status: str | frozenset[str],
     require_execution_claim: bool,
     **intent_fields: Any,
 ) -> None:
     status = str(approval.get("status") or "").lower()
-    if status != expected_status:
-        raise ValueError(f"approval_not_{expected_status}")
+    allowed = frozenset({expected_status}) if isinstance(expected_status, str) else expected_status
+    if status not in allowed:
+        if isinstance(expected_status, str):
+            raise ValueError(f"approval_not_{expected_status}")
+        raise ValueError("config_request_status_not_allowed")
     if require_execution_claim and not str(
         approval.get("_execution_claim") or ""
     ).strip():
@@ -137,6 +140,21 @@ def assert_bound(approval: Dict[str, Any], **intent_fields: Any) -> None:
     _assert_binding(
         approval,
         expected_status="approved",
+        require_execution_claim=False,
+        **intent_fields,
+    )
+
+
+def assert_config_request_bound(approval: Dict[str, Any], **intent_fields: Any) -> None:
+    """Verify immutable approval intent *before* human approval, without granting authority.
+
+    The dedicated config validator must be able to check a pending_validation
+    record. The ordinary assert_bound() and assert_consumed_bound() deliberately
+    remain approved-only and consumed-only execution gates.
+    """
+    _assert_binding(
+        approval,
+        expected_status=frozenset({"pending_validation", "pending", "approved"}),
         require_execution_claim=False,
         **intent_fields,
     )
