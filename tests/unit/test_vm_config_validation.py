@@ -46,7 +46,7 @@ async def test_config_validate_retries_sudo_with_ssh_password_when_permission_de
             opt = "-c" if command.endswith("nginx") else "-f"
             return {"success": True, "exit_code": 0,
                     "stdout": f"{{ path=/usr/sbin/service ; argv[]=/usr/sbin/service {opt} {config} ; }}"}
-        if command.startswith("sudo -S "):
+        if command.startswith("sudo -k -S -p '' "):
             return {"success": True, "exit_code": 0, "stdout": "configuration ok", "stderr": ""}
         if command.startswith("sudo -n "):
             return {"success": False, "exit_code": 1, "stderr": "sudo: a password is required"}
