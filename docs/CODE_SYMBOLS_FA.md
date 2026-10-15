@@ -1734,42 +1734,42 @@
 | `dashboards/control-center.js` | `faEvent` | 203 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
 | `dashboards/control-center.js` | `serviceState` | 216 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
 | `dashboards/control-center.js` | `attentionReason` | 229 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/control-center.js` | `attentionRank` | 243 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/control-center.js` | `attentionLevel` | 258 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/control-center.js` | `dependencyEntries` | 262 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/control-center.js` | `renderOverview` | 278 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/control-center.js` | `attention` | 299 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/control-center.js` | `atRisk` | 300 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/control-center.js` | `degradedDeps` | 301 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/control-center.js` | `renderLifecycleSummary` | 324 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/control-center.js` | `renderSeverity` | 339 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/control-center.js` | `total` | 342 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/control-center.js` | `auditSummary` | 347 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/control-center.js` | `timelineItem` | 361 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/control-center.js` | `renderAuditPreview` | 365 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/control-center.js` | `renderHealth` | 370 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/control-center.js` | `renderIncidents` | 375 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/control-center.js` | `rows` | 379 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/control-center.js` | `renderServices` | 385 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/control-center.js` | `rows` | 389 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/control-center.js` | `openIncident` | 397 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/control-center.js` | `selectIncident` | 402 | JavaScript function | بر اساس state/capability مسیر یا handler مناسب را انتخاب می‌کند | browser module |
-| `dashboards/control-center.js` | `loadIncidentMemory` | 421 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
-| `dashboards/control-center.js` | `memoryState` | 435 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/control-center.js` | `event` | 436 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/control-center.js` | `workflowStages` | 442 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/control-center.js` | `verificationStatus` | 445 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/control-center.js` | `confidenceBlock` | 468 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/control-center.js` | `renderBinding` | 473 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/control-center.js` | `renderVerification` | 490 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/control-center.js` | `renderDetail` | 497 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/control-center.js` | `incident` | 500 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/control-center.js` | `writeback` | 524 | JavaScript function | state یا داده را به‌صورت durable ذخیره/به‌روزرسانی می‌کند | browser module |
-| `dashboards/control-center.js` | `loadAgents` | 533 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
-| `dashboards/control-center.js` | `renderMcp` | 547 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/control-center.js` | `renderAudit` | 565 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/control-center.js` | `refreshIncidentQueue` | 575 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/control-center.js` | `loadAll` | 597 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
+| `dashboards/control-center.js` | `attentionRank` | 244 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/control-center.js` | `attentionLevel` | 260 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/control-center.js` | `dependencyEntries` | 264 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/control-center.js` | `renderOverview` | 280 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/control-center.js` | `attention` | 302 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/control-center.js` | `atRisk` | 303 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/control-center.js` | `degradedDeps` | 304 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/control-center.js` | `renderLifecycleSummary` | 327 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/control-center.js` | `renderSeverity` | 343 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/control-center.js` | `total` | 346 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/control-center.js` | `auditSummary` | 351 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/control-center.js` | `timelineItem` | 365 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/control-center.js` | `renderAuditPreview` | 369 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/control-center.js` | `renderHealth` | 374 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/control-center.js` | `renderIncidents` | 379 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/control-center.js` | `rows` | 383 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/control-center.js` | `renderServices` | 389 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/control-center.js` | `rows` | 393 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/control-center.js` | `openIncident` | 401 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/control-center.js` | `selectIncident` | 406 | JavaScript function | بر اساس state/capability مسیر یا handler مناسب را انتخاب می‌کند | browser module |
+| `dashboards/control-center.js` | `loadIncidentMemory` | 425 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
+| `dashboards/control-center.js` | `memoryState` | 439 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/control-center.js` | `event` | 440 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/control-center.js` | `workflowStages` | 446 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/control-center.js` | `verificationStatus` | 449 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/control-center.js` | `confidenceBlock` | 472 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/control-center.js` | `renderBinding` | 477 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/control-center.js` | `renderVerification` | 494 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/control-center.js` | `renderDetail` | 501 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/control-center.js` | `incident` | 504 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/control-center.js` | `writeback` | 528 | JavaScript function | state یا داده را به‌صورت durable ذخیره/به‌روزرسانی می‌کند | browser module |
+| `dashboards/control-center.js` | `loadAgents` | 537 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
+| `dashboards/control-center.js` | `renderMcp` | 551 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/control-center.js` | `renderAudit` | 569 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/control-center.js` | `refreshIncidentQueue` | 579 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/control-center.js` | `loadAll` | 601 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
 | `dashboards/decision-brief.js` | `t` | 68 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
 | `dashboards/decision-brief.js` | `fmt` | 111 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
 | `dashboards/decision-brief.js` | `html` | 117 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
