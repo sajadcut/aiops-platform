@@ -116,7 +116,7 @@ def _prepare_windows_directory(path: Path) -> None:
         # The only allowed existing contents are our own sealed blobs.
         try:
             for entry in path.iterdir():
-                if not re.fullmatch(r"[0-9a-f]{64}\\.sealed", entry.name):
+                if not re.fullmatch(r"[0-9a-f]{64}\.sealed", entry.name):
                     raise CandidateUnavailable("candidate_directory_not_dedicated")
         except OSError:
             raise CandidateUnavailable("candidate_directory_permissions") from None
