@@ -351,3 +351,81 @@ def test_guard_logs_allowlisted_diagnostics_without_raw_stdout_or_credentials():
     for chunk in sudo.split('logger.info(')[1:]:
         assert 'password=' not in chunk.split(')', 1)[0]
         assert 'stdin_data=' not in chunk.split(')', 1)[0]
+
+
+@pytest.mark.asyncio
+async def test_missing_guard_probe_emits_safe_structured_vm_diagnostic(monkeypatch):
+    from integrations.vm import ssh_connector
+
+    events = []
+    class FakeLogger:
+        def info(self, event, **fields):
+            events.append((event, fields))
+
+    monkeypatch.setattr(ssh_connector, "logger", FakeLogger())
+    connector = object.__new__(ssh_connector.SSHVMConnector)
+    connector._validate_target = lambda target: None
+    connector._auth_mode = lambda: "password"
+
+    async def command(target, cmd, *, stdin_data=None):
+        assert target == "192.0.2.55"
+        assert stdin_data is None
+        assert "/usr/local/sbin/aiops-config-guard" in cmd
+        return {"success": True, "exit_code": 0, "stdout": "MISSING"}
+
+    connector._run = command
+    result = await connector.config_guard_preflight("192.0.2.55")
+    assert result == {"success": False, "status": "config_guard_helper_missing"}
+    assert events == [("vm_config_guard_preflight_completed", {
+        "target": "192.0.2.55",
+        "helper": "/usr/local/sbin/aiops-config-guard",
+        "probe": "MISSING", "status": "config_guard_helper_missing",
+        "success": False, "ssh_exit_code": 0, "ssh_auth_mode": "password",
+    })]
+
+
+@pytest.mark.asyncio
+async def test_config_validate_block_logs_stage_and_reason_without_candidate(monkeypatch):
+    from integrations.vm import governed_config_change
+
+    events = []
+    class FakeLogger:
+        def warning(self, event, **fields):
+            events.append((event, fields))
+
+    monkeypatch.setattr(governed_config_change, "logger", FakeLogger())
+
+    class Edge:
+        _validate_target = staticmethod(lambda _: None)
+        _validate_service = staticmethod(lambda _: None)
+
+        async def config_validate(self, target, service):
+            return {
+                "success": True, "supported": True, "valid": False,
+                "config_file": "/etc/nginx/nginx.conf", "error_line": 1,
+                "syntax_error": 'unexpected "{"',
+            }
+
+        async def _run(self, target, command, *, stdin_data=None):
+            return {"success": True, "stdout": base64.b64encode(SOURCE).decode()}
+
+        async def config_guard_preflight(self, target):
+            return {"success": False, "status": "config_guard_helper_missing"}
+
+        async def _sudo(self, *args, **kwargs):
+            raise AssertionError("guard must not be run")
+
+    result = await run_governed_change(
+        Edge(), action="validate", target="192.0.2.55", service="nginx",
+        config_file="/etc/nginx/nginx.conf",
+        original_sha256=SOURCE_SHA, candidate_sha256=CANDIDATE_SHA,
+        proposed_change="remove_extra_opening_brace",
+    )
+    assert result["status"] == "config_guard_helper_missing"
+    assert len(events) == 1
+    event, fields = events[0]
+    assert event == "vm_config_guard_change_blocked"
+    assert fields["phase"] == "guard_preflight"
+    assert fields["reason"] == "config_guard_helper_missing"
+    assert "candidate" not in str(fields).lower()
+    assert not fields["production_write_performed"]
