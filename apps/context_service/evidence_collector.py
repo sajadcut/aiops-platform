@@ -226,6 +226,57 @@ class EvidenceCollector:
             return False
 
     @staticmethod
+    async def _analyze_config_syntax_without_persisting_grammar(raw: dict) -> dict:
+        """Use VM MCP source, call LLM twice and persist only findings.
+
+        Raw grammar is transient. No model-controlled paths, commands, patches
+        or secret values are accepted or executed.
+        """
+        from apps.config_syntax_llm import sanitized_projection, assess_service_syntax
+
+        result = dict(raw)
+        source = sanitized_projection(result.pop("syntax_projection", None))
+        candidate = sanitized_projection(result.pop("candidate_syntax_projection", None))
+        reviews = []
+        for item in (result.get("file_reviews") or [])[:6]:
+            if not isinstance(item, dict):
+                continue
+            row = dict(item)
+            shape = sanitized_projection(row.pop("syntax_projection", None))
+            patched = sanitized_projection(row.pop("candidate_syntax_projection", None))
+            reviews.append((row, shape, patched))
+        result["file_reviews"] = [row for row, _, _ in reviews]
+        if result.get("success") is not True:
+            return result
+        selected = result.get("config_file")
+        inputs = [(selected, source, candidate, str(result.get("file_type") or ""))]
+        inputs += [
+            (row.get("path"), shape, patched, str(row.get("file_type") or ""))
+            for row, shape, patched in reviews
+            if row.get("path") != selected
+        ][:2]
+        inputs = [item for item in inputs if item[1] is not None]
+        if not inputs:
+            result["config_llm_review"] = {
+                "status": "projection_unavailable", "vendor_validated": False,
+                "model_validated": False, "approval_eligible": False,
+            }
+            return result
+        findings = await asyncio.gather(*[
+            assess_service_syntax(shape, patched, file_type=file_type)
+            for _, shape, patched, file_type in inputs
+        ], return_exceptions=True)
+        result["file_model_reviews"] = []
+        for (path, _, _, _), review in zip(inputs, findings):
+            if isinstance(review, Exception):
+                review = {"status": "llm_review_unavailable",
+                          "vendor_validated": False, "model_validated": False,
+                          "approval_eligible": False}
+            result["file_model_reviews"].append({"path": path, "review": review})
+        result["config_llm_review"] = result["file_model_reviews"][0]["review"]
+        return result
+
+    @staticmethod
     def _vm_evidence(action: str, target: str, service: Optional[str], port: Optional[int], result: Dict[str, Any], since: datetime) -> List[Dict[str, Any]]:
         now = datetime.now(timezone.utc).isoformat()
         if action == "collect_vm_metrics":
