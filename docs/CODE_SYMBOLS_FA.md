@@ -2367,11 +2367,11 @@
 | `integrations/vm/general_config_review.py` | `_structural_line` | 49 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `integrations/vm/general_config_review.py` | `_remove_trailing_json_commas` | 71 | function | Only a lexical trailing comma outside JSON strings; never change values. | module |
 | `integrations/vm/general_config_review.py` | `local_config_review` | 98 | function | Review a known config source and generate only a deterministic JSON fix. | module |
-| `integrations/vm/governed_config_change.py` | `rebuild_nginx_candidate` | 21 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `integrations/vm/governed_config_change.py` | `rebuild_json_candidate` | 47 | function | Rebuild an immutable one-comma JSON fix; syntax-only, not app health. | module |
-| `integrations/vm/governed_config_change.py` | `rebuild_xml_candidate` | 75 | function | Remove one unmatched EOF closing tag; never edit XML values or DTDs. | module |
-| `integrations/vm/governed_config_change.py` | `classify_config_guard_failure` | 120 | function | Use only fixed, operator-actionable codes; never reflect stderr. | module |
-| `integrations/vm/governed_config_change.py` | `run_governed_change` | 152 | async function | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | module |
+| `integrations/vm/governed_config_change.py` | `rebuild_nginx_candidate` | 22 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `integrations/vm/governed_config_change.py` | `rebuild_json_candidate` | 48 | function | Rebuild an immutable one-comma JSON fix; syntax-only, not app health. | module |
+| `integrations/vm/governed_config_change.py` | `rebuild_xml_candidate` | 76 | function | Remove one unmatched EOF closing tag; never edit XML values or DTDs. | module |
+| `integrations/vm/governed_config_change.py` | `classify_config_guard_failure` | 121 | function | Use only fixed, operator-actionable codes; never reflect stderr. | module |
+| `integrations/vm/governed_config_change.py` | `run_governed_change` | 153 | async function | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | module |
 | `integrations/vm/mcp_client.py` | `VMEdgeMCPClient` | 9 | class | MCP-only connector for VM/Edge diagnostics and governed remediation. | module |
 | `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.__init__` | 24 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
 | `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.initialize` | 38 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
