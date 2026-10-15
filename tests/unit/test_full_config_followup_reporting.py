@@ -65,6 +65,68 @@ def test_real_emerg_line_overrides_stale_warn_43():
     assert ":43" not in parsed["error"]
 
 
+def test_cognia_query_never_reads_nonexistent_candidate_or_mutates_proposal():
+    """An ordinary Zabbix incident must not crash at the Cognia lookup stage.
+
+    Regression for 2026-10-15 production traceback: NameError full_repair
+    inside DynamicInvestigationPlanner.search_query (parallel_agents).
+    """
+    planner = DynamicInvestigationPlanner
+    for records in ([], [{
+        "source": "vm_mcp", "reference": "vendor",
+        "raw_data": {
+            "diagnostic": "config_validate", "service": SERVICE,
+            "valid": False, "success": True, "supported": True,
+            "config_file": FILE, "error_line": 104,
+            "syntax_error": '"listen" directive is not allowed here',
+        },
+    }]):
+        query = planner.search_query(service=SERVICE, evidence=records, findings=[])
+        assert isinstance(query, str)
+        assert len(query) <= 430
+        if records:
+            assert "nginx" in query
+
+
+@pytest.mark.asyncio
+async def test_stored_complete_file_candidate_is_promoted_only_in_propose():
+    class Model:
+        async def generate_with_messages(self, *args, **kwargs):
+            return SimpleNamespace(content='{"checks":[],"question":""}', finish_reason="stop")
+    stored = {
+        **candidate(), "candidate_stored": True, "validation_profile": "nginx",
+        "redacted_changes": [{"line": 103, "before": "x;x{", "after": "x;x"}],
+    }
+    rows = [
+        {"source": "vm_mcp", "reference": "validator", "raw_data": {
+            "diagnostic": "config_validate", "success": True,
+            "supported": True, "valid": False, "service": SERVICE,
+            "config_file": FILE, "error_line": 104,
+            "syntax_error": '"listen" directive is not allowed here',
+        }},
+        {"source": "vm_mcp", "reference": "stored-full-file",
+         "raw_data": {"diagnostic": "service_config_llm_repair", **stored}},
+    ]
+    state = {
+        "service_name": SERVICE, "knowledge_results": [],
+        "coordination": {"missing_evidence": []},
+        "context": {"evidence": rows},
+    }
+    query = DynamicInvestigationPlanner.search_query(
+        service=SERVICE, evidence=rows, findings=[])
+    assert isinstance(query, str)
+    result = await DynamicInvestigationPlanner.propose(state, adapter=Model())
+    proposal = result["config_proposal"]
+    assert proposal["status"] == "candidate_proposed"
+    assert proposal["proposed_change"] == "llm_full_file_repair"
+    assert proposal["candidate_stored"] is True
+    assert proposal["candidate_sha256"] == NEW
+    assert proposal["original_sha256"] == OLD
+    assert proposal["validation_status"] == "UNVERIFIED"
+    assert proposal["apply_eligible"] is False
+    assert proposal["execution_authority"] is False
+
+
 def test_model_candidate_is_metadata_only_and_cannot_be_cross_service_attached():
     rows = [{
         "source": "vm_mcp", "reference": "full-103",
