@@ -496,7 +496,8 @@ async def vm_read(action: str, binding: dict, connector: Any = None) -> dict:
         ]
         extra_checks = await asyncio.gather(*[
             assess_service_syntax(row["syntax_projection"],
-                                  row.get("candidate_syntax_projection"))
+                                  row.get("candidate_syntax_projection"),
+                                  file_type=str(row.get("file_type") or ""))
             for row in extras
         ])
         result["file_model_reviews"].extend(
