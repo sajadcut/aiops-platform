@@ -157,3 +157,68 @@ intentionally trades separation for simpler operations.
 
 Real VM and CI execution remain **REAL ENV REQUIRED** until independently
 verified.
+
+
+## Incident down-alert end-to-end recovery contract (2026-10-15)
+
+A configuration syntax repair is NOT equal to incident recovery. A Zabbix
+alert such as `nginx Service Down` requires the service to be running again.
+
+For **new** config-change requests in the Incident Room, when a verified
+systemd observation for the incident's bound VM/service is `failed` or
+`inactive`, the user can submit a combined scope:
+
+`start_service_after_apply=true`
+
+The confirmation text explicitly states both effects before the ticket is
+created, and the high-risk Approval and execution confirmations repeat the
+combined scope. This Boolean is stored **immutably in the ticket's approval
+metadata**, not added to a previously approved or consumed ticket.
+
+At execute time the API issues the normal short-lived signed HMAC claim,
+adding the only allowed optional `recovery_action=start_service` field for
+a ticket whose original approval metadata contains that scope. VM MCP
+verifies **all** signed fields and binds target, service, path and hashes
+before apply. The transaction atomically replaces the config, runs the
+vendor postcheck and reports `applied_verified`. **Only then** can the
+trusted VM MCP invoke the allowlisted `systemctl start <verified service>`
+once. Immediately before starting, it rechecks the same target/service via
+systemd: `active` is a no-op; only `failed`/`inactive` plus
+`load_state=loaded` can be started. After starting, the MCP checks systemd
+again. No restart loops, speculative starts, automatic sudoers changes or
+model-generated shell commands are permitted.
+
+A response reports separate facts:
+- `status=applied_verified`: candidate applied and vendor-checked
+- `service_start_attempted`: whether one start was sent
+- `service_recovery_status`: `systemd_active`, `already_active`,
+  `start_failed`, `start_not_verified`, `precheck_unavailable`,
+  `service_state_not_startable`, or `not_authorized`
+- `service_recovery_confirmed`: observed systemd active after action
+- `monitor_recovery_confirmed=false`: do not conflate local running with
+  alert-source recovery
+
+A Zabbix PROBLEM incident remains open until the corresponding authoritative
+Zabbix RECOVERY webhook is received, at which point the existing
+`zabbix_lifecycle` resolver may mark a single-source incident Resolved.
+A mismatch or failed start must be prominently visible and must never
+falsely close the incident. An already-consumed **config-only** approval
+cannot gain service-start permissions retroactively; use a separately
+approved service-recovery action for legacy incidents.
+
+### HTTP 500 during post-approval Incident chat
+
+The two 500s at 2026-10-15 15:23 UTC were caused by writing
+`evidence_recorded_reanalysis_requires_workflow_review` into
+`audit_events.status VARCHAR(50)`. The canonical domain status stays
+unchanged, and the audit record stores `reanalysis_requires_workflow_review`
+plus `metadata.followup_status` containing the complete domain code.
+This prevents the caught, non-reassessable chat follow-up from turning into
+a database exception. The upstream Cognia health-check 500 in the same
+log is an unrelated external dependency failure.
+
+**REAL ENV REQUIRED:** Verify both the unchanged old approval and the newly
+scoped combined Approval on a disposable VM with working systemd/SSH/sudo,
+database persistence, vendor validation, service activation and a real
+matching Zabbix recovery notification. Automated Python/JS unit regressions
+alone cannot prove these external behaviors.
