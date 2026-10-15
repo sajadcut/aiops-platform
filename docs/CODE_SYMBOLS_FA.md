@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 522 | Dashboard JS files scanned: 8 | Symbols indexed: 5556**
+**Python files scanned: 522 | Dashboard JS files scanned: 8 | Symbols indexed: 5557**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -3906,6 +3906,7 @@
 | `tests/unit/test_full_config_followup_reporting.py` | `test_reassessment_planner_uses_full_file_result_but_not_executable_proposal.Model.generate_with_messages` | 106 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_reassessment_planner_uses_full_file_result_but_not_executable_proposal.Model |
 | `tests/unit/test_full_config_followup_reporting.py` | `test_decision_brief_displays_model_hash_without_enabling_apply` | 120 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_full_config_followup_reporting.py` | `test_ui_explains_two_disjoint_candidates_and_deprecates_indent_hypothesis` | 156 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_full_config_followup_reporting.py` | `test_operator_summary_recovers_fatal_line_from_historical_compiler_output` | 170 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_full_config_llm_repair.py` | `ReplyModel` | 18 | class | کلاس | module |
 | `tests/unit/test_full_config_llm_repair.py` | `ReplyModel.__init__` | 19 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ReplyModel |
 | `tests/unit/test_full_config_llm_repair.py` | `ReplyModel.generate` | 24 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ReplyModel |
