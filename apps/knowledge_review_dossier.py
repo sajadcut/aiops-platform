@@ -40,6 +40,7 @@ def build_dossier(
     evidence: list[Mapping[str, Any]],
     audits: list[Mapping[str, Any]],
     source_recovery: Mapping[str, Any] | None = None,
+    independent_recovery: Mapping[str, Any] | None = None,
 ) -> dict:
     """Extract sourced, scoped and bounded facts for the selected incident.
 
@@ -109,6 +110,16 @@ def build_dossier(
         source_recovery.get("source") == "zabbix"
         and source_recovery.get("incident_resolved") is True
         and incident_status.lower() == "resolved")
+    independent_verified = (
+        isinstance(independent_recovery, Mapping)
+        and independent_recovery.get("incident_resolved") is True
+        and independent_recovery.get("monitor_recovered") is False
+        and independent_recovery.get("checks") == 2
+        and independent_recovery.get("source") in {
+            "vm_mcp_systemd_recheck", "approved_config_apply_followup",
+        }
+        and incident_status.lower() == "resolved"
+    )
     facts = []
     if invalid:
         facts.append(
@@ -141,11 +152,17 @@ def build_dossier(
         + ("Recovery معتبر Zabbix ثبت و رخداد Resolved شده است"
            if recovered else "برای این رخداد تأیید نشده است")
     )
+    if independent_verified:
+        facts.append(
+            "وضعیت رخداد: با دو بررسی مستقل VM و شواهد systemd رفع شده؛ "
+            "دریافت Recovery از Zabbix هنوز تأیید نشده است."
+        )
     return {
         "incident_id": incident_id, "service": service,
         "config_diagnostic": invalid, "config_execution": applied,
         "systemd_observation": live_status,
         "monitor_recovered": bool(recovered),
+        "independent_recovery_verified": bool(independent_verified),
         "incident_status": incident_status.lower(),
         "facts": facts[:7],
         "source": "incident_evidence_and_audit",
@@ -165,6 +182,7 @@ async def incident_dossier(db, incident_id: UUID) -> dict:
     audits = await PostgreSQLAuditStore(db).list(str(incident_id), limit=200)
     context = row.context if isinstance(row.context, dict) else {}
     source_recovery = context.get("source_recovery")
+    independent_recovery = context.get("independent_recovery")
     status = getattr(row.status, "value", row.status)
     return build_dossier(
         incident_id=str(incident_id),
@@ -173,6 +191,7 @@ async def incident_dossier(db, incident_id: UUID) -> dict:
         evidence=[{"id": item.id, "source": item.source,
                    "raw_data": item.raw_data} for item in evidence_rows],
         audits=audits, source_recovery=source_recovery,
+        independent_recovery=independent_recovery,
     )
 
 
