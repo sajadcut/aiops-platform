@@ -198,13 +198,29 @@ A response reports separate facts:
 - `monitor_recovery_confirmed=false`: do not conflate local running with
   alert-source recovery
 
-A Zabbix PROBLEM incident remains open until the corresponding authoritative
-Zabbix RECOVERY webhook is received, at which point the existing
-`zabbix_lifecycle` resolver may mark a single-source incident Resolved.
-A mismatch or failed start must be prominently visible and must never
-falsely close the incident. An already-consumed **config-only** approval
-cannot gain service-start permissions retroactively; use a separately
-approved service-recovery action for legacy incidents.
+A Zabbix PROBLEM incident can become Resolved by either of two clearly
+attributed and audited routes:
+
+1. A matching authoritative **Zabbix RECOVERY** webhook (monitor recovered).
+2. An explicit operator/SRE read-only service recheck or approved post-config
+   recovery workflow that verifies the *same bound VM and service* in two
+   independent live MCP reads, both `ActiveState=active` and
+   `SubState=running`, and (for nginx) a successful live vendor
+   `config_validate` check. The original Zabbix alert must explicitly
+   describe the same systemd service as **down**; any additional correlated
+   alert blocks this local closure. This is recorded as
+   `independent_recovery`, `monitor_recovered=false`, not as a fake Zabbix
+   Recovery event. A read-only **viewer** can recheck the service but cannot
+   finalize/resolve the incident or revoke Approvals; it takes
+   `approve:low_risk` permission (operator/SRE). Status mutation, cancellation
+   of unconsumed Approvals and audit insertion use one DB transaction.
+
+A mismatch, missing second observation, failed syntax check, lack of privilege
+or failed start must be prominently visible; none can falsely close the
+incident. `active/exited` is not service recovery for these long-running
+units. An already-consumed **config-only** approval cannot gain service-start
+permissions retroactively; use a separately approved service-recovery action
+for legacy incidents.
 
 ### HTTP 500 during post-approval Incident chat
 
