@@ -785,6 +785,20 @@
       const result=await api(base+'/service-status/recheck',{method:'POST'});
       if(token!==state.serviceStatusToken)return;
       state.serviceStatus=result;
+      if(result.incident_status==='resolved' &&
+         result.recovery_verification==='independent_vm_verified'){
+        notify(state.language==='fa'?
+          'بازیابی سرویس با دو بررسی زندهٔ VM تأیید و رخداد رفع شد. بازیابی Zabbix جداگانه ثبت می‌شود.':
+          'Two live VM checks verified recovery and resolved the incident. Zabbix recovery remains separately tracked.');
+        await load();
+        return;
+      }
+      if(result.status==='running'&&result.recovery_verification&&
+         result.recovery_verification!=='independent_vm_verified'){
+        notify(state.language==='fa'?
+          'سرویس Running است؛ اما شرط اصلی آلارم هنوز مستقلاً تأیید نشده و رخداد باز می‌ماند.':
+          'Service is running, but the original alert condition is not independently verified; the incident remains open.');
+      }
       if(result.status==='unknown')notify(state.language==='fa'?
         'بررسی مجدد موفق نبود؛ نتیجهٔ قبلی به‌عنوان وضعیت فعلی نمایش داده نمی‌شود.':
         'Live check unavailable; previous status is not treated as current.',true);
