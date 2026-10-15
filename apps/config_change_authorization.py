@@ -1,7 +1,9 @@
-"""Signed, short-lived config execution claims. Never expose the signing secret.
+"""Signed, short-lived config execution claims derived from MCP_BEARER_TOKEN.
 
-The control plane must hold AIOPS_CONFIG_APPLY_SIGNING_SECRET independently
-of the MCP bearer token. VM-edge verifies the exact approval-bound intent.
+A versioned, purpose-specific HMAC subkey avoids directly using the transport
+bearer token as the signing key. The transport token remains a shared trust
+root: whoever knows it can derive this subkey. Approval consumption, bounded
+claims, VM target binding, source hash and replay defenses must remain active.
 """
 from __future__ import annotations
 import hashlib
@@ -12,16 +14,28 @@ import re
 import time
 
 
+_SIGNING_CONTEXT = b"aiops/configuration-apply/approval-claim/v1"
+
+
 def _key() -> bytes:
-    # Environment wins over .env. The Settings contract loads development
-    # .env without automatically publishing its secrets to os.environ.
+    """Derive a fixed domain-separated signing subkey from MCP bearer auth.
+
+    Do not accept a fallback to a separate secret: API and VM MCP must agree
+    on exactly the same MCP_BEARER_TOKEN through the existing Settings loader.
+    """
     from domain.contracts.config import settings
-    name = "AIOPS_CONFIG_APPLY_SIGNING_SECRET"
-    secret = (os.environ[name] if name in os.environ
-              else settings.AIOPS_CONFIG_APPLY_SIGNING_SECRET or "")
-    if len(secret) < 32 or secret.lower() in {"changeme", "change-me"}:
-        raise PermissionError("config_signing_key_not_configured")
-    return secret.encode("utf-8")
+    # Deployed settings read environment and .env. An explicit runtime env
+    # override is useful in isolated tests and takes precedence over settings.
+    token = (os.environ["MCP_BEARER_TOKEN"] if "MCP_BEARER_TOKEN" in os.environ
+             else settings.MCP_BEARER_TOKEN or "")
+    if not isinstance(token, str) or not token:
+        raise PermissionError("mcp_bearer_token_not_configured_for_signing")
+    if (len(token.encode("utf-8")) < 32
+            or token.lower().strip() in {"changeme", "change-me", "test", "secret"}):
+        raise PermissionError("mcp_bearer_token_too_weak_for_signing")
+    # No bearer bytes appear in claims, logs, headers beyond original MCP auth,
+    # or incident metadata; HMAC output serves only as an internal subkey.
+    return hmac.new(token.encode("utf-8"), _SIGNING_CONTEXT, hashlib.sha256).digest()
 
 
 
