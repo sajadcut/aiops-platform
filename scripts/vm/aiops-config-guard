@@ -30,7 +30,9 @@ if [ "$action" = apply ]; then
   target=$8
   expires=$9
   signature=$(printf '%s' "${10}")
-  case "$approval:$incident:$target:$expires:$signature" in *[!a-zA-Z0-9.:-]*|"") exit 41 ;; esac
+  case "$approval:$incident:$target:$expires" in *[!a-zA-Z0-9.:-]*|"") exit 41 ;; esac
+  # Ed25519 signature is RFC4648 base64, including + / and =.
+  # Its exact decoded length is verified below; the SSH command shell-quotes it.
   [ "$(printf '%s' "$signature" | wc -c)" -eq 88 ] || exit 41
   [ "$expires" -ge "$(date +%s)" ] && [ "$expires" -le "$(($(date +%s) + 60))" ] || exit 41
   # Verification uses ONLY an Ed25519 public key. No private signing secret
