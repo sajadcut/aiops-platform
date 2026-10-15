@@ -9,6 +9,122 @@ from __future__ import annotations
 import os
 
 
+def _worker_sid() -> str:
+    """Obtain the actual worker token SID without pywin32 or guessing user names."""
+    import ctypes
+    from ctypes import wintypes
+
+    class SID_AND_ATTRIBUTES(ctypes.Structure):
+        _fields_ = [("Sid", ctypes.c_void_p), ("Attributes", wintypes.DWORD)]
+
+    advapi = ctypes.WinDLL("advapi32", use_last_error=True)
+    kernel = ctypes.WinDLL("kernel32", use_last_error=True)
+    kernel.GetCurrentProcess.restype = wintypes.HANDLE
+    kernel.CloseHandle.argtypes = [wintypes.HANDLE]
+    kernel.CloseHandle.restype = wintypes.BOOL
+    kernel.LocalFree.argtypes = [ctypes.c_void_p]
+    kernel.LocalFree.restype = ctypes.c_void_p
+    advapi.OpenProcessToken.argtypes = [
+        wintypes.HANDLE, wintypes.DWORD, ctypes.POINTER(wintypes.HANDLE),
+    ]
+    advapi.OpenProcessToken.restype = wintypes.BOOL
+    advapi.GetTokenInformation.argtypes = [
+        wintypes.HANDLE, ctypes.c_int, ctypes.c_void_p, wintypes.DWORD,
+        ctypes.POINTER(wintypes.DWORD),
+    ]
+    advapi.GetTokenInformation.restype = wintypes.BOOL
+    advapi.ConvertSidToStringSidW.argtypes = [
+        ctypes.c_void_p, ctypes.POINTER(ctypes.c_void_p),
+    ]
+    advapi.ConvertSidToStringSidW.restype = wintypes.BOOL
+
+    token = wintypes.HANDLE()
+    if not advapi.OpenProcessToken(kernel.GetCurrentProcess(), 0x0008,
+                                  ctypes.byref(token)):
+        raise PermissionError("candidate_windows_acl_unverifiable")
+    try:
+        length = wintypes.DWORD()
+        advapi.GetTokenInformation(token, 1, None, 0, ctypes.byref(length))
+        if not 16 <= length.value <= 65536:
+            raise PermissionError("candidate_windows_acl_unverifiable")
+        buffer = ctypes.create_string_buffer(length.value)
+        if not advapi.GetTokenInformation(token, 1, buffer, length,
+                                         ctypes.byref(length)):
+            raise PermissionError("candidate_windows_acl_unverifiable")
+        sid = ctypes.cast(
+            buffer, ctypes.POINTER(SID_AND_ATTRIBUTES)).contents.Sid
+        output = ctypes.c_void_p()
+        if not sid or not advapi.ConvertSidToStringSidW(
+                sid, ctypes.byref(output)):
+            raise PermissionError("candidate_windows_acl_unverifiable")
+        try:
+            return ctypes.wstring_at(output)
+        finally:
+            kernel.LocalFree(output)
+    finally:
+        kernel.CloseHandle(token)
+
+
+def harden_private_windows_acl(path: str) -> None:
+    """Protect only the dedicated candidate directory from inherited broad ACEs.
+
+    No shell, icacls, PowerShell, pywin32, new secret or runtime setting.
+    Replace the DACL with full control for SYSTEM, local Administrators and
+    the *actual* worker SID, with inheritance disabled. The caller MUST
+    verify the resulting ACL and never write a candidate if this fails.
+    """
+    if os.name != "nt":
+        return
+    import ctypes
+    from ctypes import wintypes
+
+    user_sid = _worker_sid()
+    # SID comes only from the kernel token. The string never comes from
+    # an incident, model, config path, or HTTP request.
+    sddl = f"D:P(A;;FA;;;SY)(A;;FA;;;BA)(A;;FA;;;{user_sid})"
+    advapi = ctypes.WinDLL("advapi32", use_last_error=True)
+    kernel = ctypes.WinDLL("kernel32", use_last_error=True)
+    convert = advapi.ConvertStringSecurityDescriptorToSecurityDescriptorW
+    convert.argtypes = [
+        wintypes.LPCWSTR, wintypes.DWORD,
+        ctypes.POINTER(ctypes.c_void_p), ctypes.POINTER(wintypes.DWORD),
+    ]
+    convert.restype = wintypes.BOOL
+    dacl_from_descriptor = advapi.GetSecurityDescriptorDacl
+    dacl_from_descriptor.argtypes = [
+        ctypes.c_void_p, ctypes.POINTER(wintypes.BOOL),
+        ctypes.POINTER(ctypes.c_void_p), ctypes.POINTER(wintypes.BOOL),
+    ]
+    dacl_from_descriptor.restype = wintypes.BOOL
+    set_info = advapi.SetNamedSecurityInfoW
+    set_info.argtypes = [
+        wintypes.LPWSTR, wintypes.DWORD, wintypes.DWORD,
+        ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p,
+    ]
+    set_info.restype = wintypes.DWORD
+    kernel.LocalFree.argtypes = [ctypes.c_void_p]
+    kernel.LocalFree.restype = ctypes.c_void_p
+    descriptor = ctypes.c_void_p()
+    if not convert(sddl, 1, ctypes.byref(descriptor), None):
+        raise PermissionError("candidate_windows_acl_hardening_failed")
+    try:
+        present, defaulted = wintypes.BOOL(), wintypes.BOOL()
+        dacl = ctypes.c_void_p()
+        if not dacl_from_descriptor(
+                descriptor, ctypes.byref(present), ctypes.byref(dacl),
+                ctypes.byref(defaulted)) or not present.value or not dacl.value:
+            raise PermissionError("candidate_windows_acl_hardening_failed")
+        # DACL_SECURITY_INFORMATION | PROTECTED_DACL_SECURITY_INFORMATION;
+        # Windows will not propagate inherited Users/Everyone grants into
+        # newly created sealed files under the protected directory.
+        rc = set_info(path, 1, 0x00000004 | 0x80000000,
+                      None, None, dacl, None)
+        if rc:
+            raise PermissionError("candidate_windows_acl_hardening_failed")
+    finally:
+        kernel.LocalFree(descriptor)
+
+
 def ensure_private_windows_acl(path: str) -> None:
     if os.name != "nt":
         return
