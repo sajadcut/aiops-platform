@@ -2836,9 +2836,16 @@
         '<li><code dir="ltr">'+txt(file.path)+'</code> · '+
         esc(file.verified_exists===true?
           (file.source==='vendor_validator'?
-            (fa?'مسیر فایل در خروجی Validator تأیید شده و تست سینتکس خطا دارد':'Validator identified this path and reported invalid syntax'):
-            (fa?'وجود فایل تأیید شده؛ وضعیت سینتکس را در نتیجهٔ Validator بررسی کنید':'File existence verified; consult vendor validation result')):
-          (fa?'مسیر احتمالی از systemd؛ وجود فایل هنوز تأیید نشده':'Systemd path hypothesis; file not yet verified'))+
+            (fa?'فایل توسط Validator شناسایی شده':'File identified by vendor validator'):
+            (fa?'وجود فایل تأیید شده':'File existence verified')):
+          (fa?'وجود فایل تأیید نشده':'File existence unverified'))+
+        (file.verified_exists===true&&low(disc.runtime)==='dotnet'&&/\\.json$/i.test(String(file.path||''))?
+          ' · <strong>'+esc(dotnetSyntaxLabel(
+            syntaxByName.get(String(file.path).split('/').pop().toLowerCase()),fa))+'</strong>'+
+          (syntaxByName.get(String(file.path).split('/').pop().toLowerCase())?.status==='invalid_json_syntax'?
+            ' · '+esc(fa?'خط ':'Line ')+num(syntaxByName.get(String(file.path).split('/').pop().toLowerCase()).line)+
+            '، '+esc(fa?'ستون ':'Column ')+num(syntaxByName.get(String(file.path).split('/').pop().toLowerCase()).column):''):
+          '')+
         ' · '+txt(file.source)+'</li>').join('')+'</ul>':
         '<p>'+esc(fa?'فایل مشخصی هنوز تأیید نشده؛ سامانه باید از LLM و روش کشف معتبر کمک بگیرد.':
         'No verified file yet; consult LLM and vendor discovery guidance.')+'</p>')+
@@ -2873,7 +2880,27 @@
           '<p>'+esc(fa?'فایل systemd: ':'Systemd unit: ')+txt(d.unit_file)+'</p>'+
           '<p>'+esc(fa?'نوع سرویس: ':'Service Type: ')+txt(d.service_type)+
           ' · '+esc(fa?'مهلت Start (µs): ':'Start timeout (µs): ')+txt(d.timeout_start_usec)+'</p>'+
-          '<p><strong>'+esc(fa?'وضعیت بررسی Syntax JSON: ':'JSON syntax check: ')+txt(d.syntax_status||'not_checked')+'</strong></p>'+
+          '<p><strong>'+esc(fa?'نتیجهٔ بررسی Syntax JSON: ':'JSON syntax validation: ')+
+        esc(syntaxChecked?.status==='syntax_valid'?(fa?'تمام فایل‌های بررسی‌شده صحیح؛ فقط از نظر Syntax':'All checked JSON files have valid syntax only'):
+          syntaxChecked?.status==='invalid'?(fa?'حداقل یک فایل JSON سینتکس نامعتبر دارد':'One or more JSON files have invalid syntax'):
+          syntaxChecked?.status==='partial'?(fa?'بررسی بخشی از فایل‌ها ناقص است':'Partial syntax check'):
+          state.liveDotnetSyntaxStatus==='checking'?(fa?'در حال بررسی زنده از VM MCP…':'Checking live via VM MCP…'):
+          state.liveDotnetSyntaxStatus==='unavailable'?(fa?'بررسی زنده ناموفق؛ جزئیات MCP را بررسی کنید':'Live check failed; inspect MCP evidence'):
+          d.syntax_status==='syntax_valid'?(fa?'در زمان رخداد صحیح؛ فقط از نظر Syntax':'Syntax valid when collected'):
+          d.syntax_status==='invalid'?(fa?'در زمان رخداد نامعتبر':'Invalid when collected'):
+          fa?'تاکنون نتیجهٔ Syntax ثبت نشده است':'Syntax has not been checked'))+
+        '</strong></p>'+
+      (syntaxRows.length?
+        '<ul class="ic-agent-bullets">'+syntaxRows.map(row=>
+          '<li><code dir="ltr">'+txt(row.file)+'</code>: '+
+          esc(dotnetSyntaxLabel(row,fa))+
+          (row.status==='invalid_json_syntax'&&row.line?
+            ' · '+esc(fa?'خط ':'Line ')+num(row.line)+
+            '، '+esc(fa?'ستون ':'Column ')+num(row.column):'')+
+          (row.reason?' · <code>'+txt(row.reason)+'</code>':'')+
+          '</li>').join('')+'</ul>':'')+
+      (syntaxChecked?.checked_at?
+        '<p class="ic-meta">'+esc(fa?'زمان بررسی زنده: ':'Live check: ')+date(syntaxChecked.checked_at)+'</p>':'')+
           (files.length?'<ul class="ic-agent-bullets">'+files.map(f=>
             '<li>'+txt(f.file)+' — '+txt(f.status)+
             (Number.isInteger(f.line)?' · '+esc(fa?'خط ':'line ')+num(f.line):'')+
@@ -3467,6 +3494,10 @@
         if(!report.memory_investigation){void loadServiceStatus();void loadServiceProfile();}
         void loadConfigResponse(token);
         void loadIncidentChat(token);
+        if(!report.memory_investigation&&
+            low(report.dynamic_investigation?.config_discovery?.runtime)==='dotnet'){
+          void loadDotnetSyntax(token);
+        }
       }else{
         state.serviceStatus={status:'unknown',source:'analysis_in_progress',
           reason:'incident_analysis_not_finished',verified_systemd_only:false};
