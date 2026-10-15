@@ -322,7 +322,8 @@ async def test_dotnet_live_json_syntax_endpoint_reports_line_column_without_conf
                     {"file": "appsettings.json", "status": "valid_json_syntax"},
                 ],
             }
-    monkeypatch.setattr(api, "VMEdgeMCPClient", MCP, raising=False)
+    from integrations.vm import mcp_client as mcp_module
+    monkeypatch.setattr(mcp_module, "VMEdgeMCPClient", MCP)
     result = await api.incident_dotnet_config_syntax(
         UUID("bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"),
         identity=SimpleNamespace(subject="observer"),
