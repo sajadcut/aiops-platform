@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 526 | Dashboard JS files scanned: 8 | Symbols indexed: 5691**
+**Python files scanned: 526 | Dashboard JS files scanned: 8 | Symbols indexed: 5694**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1297,15 +1297,18 @@
 | `apps/incident_vm_identity.py` | `vm_binding_diagnostic` | 100 | function | Coded reason for binding failure, usable in audit and dashboard. | module |
 | `apps/incident_vm_identity.py` | `resolve_vm_binding` | 170 | async function | Recheck the **candidate**, not a chat-supplied host; status may be failed. | module |
 | `apps/incident_vm_identity.py` | `vm_status_answer` | 233 | function | Only live service_status fields form a current-state assertion. | module |
-| `apps/knowledge_review.py` | `content_digest` | 21 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/knowledge_review.py` | `validated_document` | 25 | function | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | module |
-| `apps/knowledge_review.py` | `memory_is_verified` | 36 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/knowledge_review.py` | `incident_document` | 52 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/knowledge_review.py` | `configured_kb` | 88 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/knowledge_review.py` | `review_summary` | 96 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/knowledge_review.py` | `create_from_memory` | 119 | async function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
-| `apps/knowledge_review.py` | `get_locked_review` | 183 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
-| `apps/knowledge_review.py` | `create_from_verified_config_apply` | 192 | async function | Draft a sourced lesson after real config apply, not false service recovery. | module |
+| `apps/knowledge_review.py` | `content_digest` | 22 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/knowledge_review.py` | `validated_document` | 26 | function | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | module |
+| `apps/knowledge_review.py` | `memory_is_verified` | 37 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/knowledge_review.py` | `incident_document` | 53 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/knowledge_review.py` | `configured_kb` | 89 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/knowledge_review.py` | `review_summary` | 97 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/knowledge_review.py` | `create_from_memory` | 120 | async function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
+| `apps/knowledge_review.py` | `get_locked_review` | 184 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
+| `apps/knowledge_review.py` | `create_from_verified_config_apply` | 193 | async function | Draft a sourced lesson after real config apply, not false service recovery. | module |
+| `apps/knowledge_review.py` | `recovery_review_id` | 270 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/knowledge_review.py` | `governed_recovery_document` | 274 | function | Only recorded, executed, scoped service writes can yield draft lessons. | module |
+| `apps/knowledge_review.py` | `create_from_governed_service_recovery` | 370 | async function | Recover missed drafts from durable, incident-bound remediation audit. | module |
 | `apps/knowledge_review_dossier.py` | `_safe_path` | 24 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/knowledge_review_dossier.py` | `_same_service` | 32 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/knowledge_review_dossier.py` | `build_dossier` | 38 | function | Extract sourced, scoped and bounded facts for the selected incident. | module |
