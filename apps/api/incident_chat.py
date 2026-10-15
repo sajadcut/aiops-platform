@@ -714,8 +714,8 @@ async def incident_chat_message(
                         parts.append("تمام محتوای فایل انتخاب‌شده به LLM مورداعتماد ارسال شد.")
                     else:
                         parts.append("فایل کامل به مدل ارسال نشده است.")
-                    if state == "llm_candidate_proposed" and observation.get("candidate_hash"):
-                        parts.append("مدل نسخهٔ کامل اصلاح‌شده را برگرداند و تغییرات محدود پذیرفته شد.")
+                    if state in {"llm_candidate_proposed", "candidate_storage_unavailable"} and observation.get("candidate_hash"):
+                        parts.append("LLM فایل کامل اصلاحی را برگرداند؛ این هنوز تست مستقل نیست.")
                         parts.append("تعداد خطوط تغییرکرده: " +
                                      str(observation.get("changed_line_count") or 0))
                         parts.append("شماره خطوط تغییرکرده: " +
@@ -727,9 +727,10 @@ async def incident_chat_message(
                         if observation.get("rejection_reason"):
                             parts.append("علت رد: " +
                                          str(observation["rejection_reason"])[:80])
-                    parts.append("این فقط پیش‌نمایش است. فایل اصلی تغییر نکرده، "
-                                 "Candidate ذخیره و توسط Validator مستقل تأیید نشده "
-                                 "و هنوز امکان Approval یا Apply ندارد.")
+                    parts.append("ذخیره‌سازی امن Candidate: " +
+                                 ("موفق" if observation.get("candidate_stored") is True
+                                  else "ناموفق؛ " + str(observation.get("storage_reason") or "نامشخص")[:80]))
+                    parts.append("فایل اصلی تغییر نکرده و Validator مستقل هنوز نسخهٔ اصلاحی را تأیید نکرده است؛ Approval یا Apply مجاز نیست.")
                     answer = "\n".join(parts)
                 if intent == "service_config_review":
                     review = observation.get("model_syntax_review") or {}
