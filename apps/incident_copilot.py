@@ -390,6 +390,12 @@ def public_result(action: str, value: Any) -> dict:
         elif isinstance(safe, list):
             safe = safe[:16]
         result[key] = safe
+    if action == "service_config_review":
+        from apps.config_syntax_llm import sanitized_projection
+        for kind in ("syntax_projection", "candidate_syntax_projection"):
+            checked = sanitized_projection(value.get(kind))
+            if checked is not None:
+                result[kind] = checked
     return result
 
 
