@@ -91,7 +91,11 @@ async def assess_service_syntax(projection: Any, candidate_projection: Any = Non
     if source is None:
         return {"status": "projection_unavailable", "model_validated": False,
                 "vendor_validated": False}
-    llm = model or configured_llm_adapter()
+    try:
+        llm = model or configured_llm_adapter()
+    except Exception:
+        return {"status": "llm_provider_unavailable", "model_validated": False,
+                "vendor_validated": False, "approval_eligible": False}
     instructions = (
         "You review a value-free syntax projection from a real configuration "
         "file. Lines contain ONLY punctuation, indentation and a fixed list "
