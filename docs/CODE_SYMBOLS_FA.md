@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 500 | Dashboard JS files scanned: 8 | Symbols indexed: 5230**
+**Python files scanned: 500 | Dashboard JS files scanned: 8 | Symbols indexed: 5231**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -875,15 +875,16 @@
 | `apps/approval_service/postgres.py` | `PostgreSQLApprovalStore` | 40 | class | Approval durable با expiry، transition اتمیک و consume یک‌باره قبل از execution. | module |
 | `apps/approval_service/postgres.py` | `PostgreSQLApprovalStore.__init__` | 43 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | PostgreSQLApprovalStore |
 | `apps/approval_service/postgres.py` | `PostgreSQLApprovalStore._incident_source_recovered` | 46 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | PostgreSQLApprovalStore |
-| `apps/approval_service/postgres.py` | `PostgreSQLApprovalStore.save` | 64 | async method | Create durable approval authority exactly once. | PostgreSQLApprovalStore |
-| `apps/approval_service/postgres.py` | `PostgreSQLApprovalStore._get_raw` | 116 | async method | رکورد را بدون اعمال expiry می‌خواند؛ helper داخلی برای جلوگیری از recursion است. | PostgreSQLApprovalStore |
-| `apps/approval_service/postgres.py` | `PostgreSQLApprovalStore._expired` | 130 | method | TTL را با زمان UTC محاسبه می‌کند تا timezone محلی روی مجوز اثر نگذارد. | PostgreSQLApprovalStore |
-| `apps/approval_service/postgres.py` | `PostgreSQLApprovalStore.get` | 141 | async method | رکورد را می‌خواند و Approval منقضی را قبل از استفاده به expired تبدیل می‌کند. | PostgreSQLApprovalStore |
-| `apps/approval_service/postgres.py` | `PostgreSQLApprovalStore.set_status` | 155 | async method | فقط یک Approval هنوز-pending را اتمیک به approved یا rejected transition می‌دهد. | PostgreSQLApprovalStore |
-| `apps/approval_service/postgres.py` | `PostgreSQLApprovalStore.cancel` | 196 | async method | Revoke one still-unconsumed authority token without touching peers. | PostgreSQLApprovalStore |
-| `apps/approval_service/postgres.py` | `PostgreSQLApprovalStore.cancel_unconsumed_for_incident` | 230 | async method | Invalidate pending/approved authority after recovery or another terminal fact. | PostgreSQLApprovalStore |
-| `apps/approval_service/postgres.py` | `PostgreSQLApprovalStore.consume` | 261 | async method | Claim approved authority exactly once at the execution boundary. | PostgreSQLApprovalStore |
-| `apps/approval_service/postgres.py` | `PostgreSQLApprovalStore.is_approved` | 375 | async method | برای read-only check؛ execution واقعی همچنان باید consume اتمیک انجام دهد. | PostgreSQLApprovalStore |
+| `apps/approval_service/postgres.py` | `PostgreSQLApprovalStore.save_validation_request` | 64 | async method | Durably queue an immutable configuration request, NOT an Approval. | PostgreSQLApprovalStore |
+| `apps/approval_service/postgres.py` | `PostgreSQLApprovalStore.save` | 124 | async method | Create durable approval authority exactly once. | PostgreSQLApprovalStore |
+| `apps/approval_service/postgres.py` | `PostgreSQLApprovalStore._get_raw` | 176 | async method | رکورد را بدون اعمال expiry می‌خواند؛ helper داخلی برای جلوگیری از recursion است. | PostgreSQLApprovalStore |
+| `apps/approval_service/postgres.py` | `PostgreSQLApprovalStore._expired` | 190 | method | TTL را با زمان UTC محاسبه می‌کند تا timezone محلی روی مجوز اثر نگذارد. | PostgreSQLApprovalStore |
+| `apps/approval_service/postgres.py` | `PostgreSQLApprovalStore.get` | 201 | async method | رکورد را می‌خواند و Approval منقضی را قبل از استفاده به expired تبدیل می‌کند. | PostgreSQLApprovalStore |
+| `apps/approval_service/postgres.py` | `PostgreSQLApprovalStore.set_status` | 215 | async method | فقط یک Approval هنوز-pending را اتمیک به approved یا rejected transition می‌دهد. | PostgreSQLApprovalStore |
+| `apps/approval_service/postgres.py` | `PostgreSQLApprovalStore.cancel` | 256 | async method | Revoke one still-unconsumed authority token without touching peers. | PostgreSQLApprovalStore |
+| `apps/approval_service/postgres.py` | `PostgreSQLApprovalStore.cancel_unconsumed_for_incident` | 290 | async method | Invalidate pending/approved authority after recovery or another terminal fact. | PostgreSQLApprovalStore |
+| `apps/approval_service/postgres.py` | `PostgreSQLApprovalStore.consume` | 321 | async method | Claim approved authority exactly once at the execution boundary. | PostgreSQLApprovalStore |
+| `apps/approval_service/postgres.py` | `PostgreSQLApprovalStore.is_approved` | 435 | async method | برای read-only check؛ execution واقعی همچنان باید consume اتمیک انجام دهد. | PostgreSQLApprovalStore |
 | `apps/approval_service/store.py` | `ApprovalStore` | 14 | class | کلاس | module |
 | `apps/approval_service/store.py` | `ApprovalStore.create` | 16 | method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | ApprovalStore |
 | `apps/approval_service/store.py` | `ApprovalStore.get` | 20 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ApprovalStore |
