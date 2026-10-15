@@ -8,7 +8,7 @@ KNOWN = frozenset((
     "http", "tcp", "events", "stream", "upstream", "location", "map",
     "include", "if", "else", "end", "true", "false", "null",
 ))
-WORDS = re.compile(r"[A-Za-z_][A-Za-z0-9_.-]*|[0-9]+|[^\\w\\s]", re.ASCII)
+WORDS = re.compile(r"[A-Za-z_][A-Za-z0-9_.-]*|[0-9]+|[^\w\s]", re.ASCII)
 
 
 def project_line(line: str, extension: str) -> str:
@@ -16,8 +16,8 @@ def project_line(line: str, extension: str) -> str:
         return ""
     if extension == "json":
         # Mask quoted strings before retaining JSON grammar punctuation.
-        text = re.sub(r'"(?:\\\\.|[^"\\\\])*"', '""', line)
-        return "".join(c if c in '{}[],: \\t' else 'x' for c in text)[:180]
+        text = re.sub(r'"(?:\\.|[^"\\])*"', '""', line)
+        return "".join(c if c in '{}[],: \t' else 'x' for c in text)[:180]
     tokens = []
     for word in WORDS.findall(line[:1000]):
         if re.fullmatch(r"[A-Za-z_][A-Za-z0-9_.-]*", word):
