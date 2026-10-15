@@ -311,6 +311,84 @@ async def _incident_status_scope(db, incident_id):
     return incident, evidence, context, diagnosis
 
 
+@router.get(
+    "/incidents/{incident_id}/dotnet-config-syntax",
+    dependencies=[Depends(rate_limiter_strict)],
+)
+async def incident_dotnet_config_syntax(
+    incident_id: UUID,
+    identity=Depends(require_permission("read:incident")),
+):
+    """Live read-only MCP JSON check; no config bytes cross the worker boundary.
+
+    Unlike systemd path discovery, this executes the registered JSON parser
+    on the trusted VM MCP worker. Syntax success is NOT app readiness.
+    """
+    from integrations.vm.mcp_client import VMEdgeMCPClient
+
+    async with AsyncSessionLocal() as db:
+        incident, checkpoint, evidence = await _scope(db, incident_id)
+        context = incident_vm_context(getattr(incident, "context", None), checkpoint)
+        binding, diagnostic = await resolve_vm_binding(
+            incident.service, evidence, context, force_live=True,
+        )
+        if not binding:
+            raise HTTPException(status_code=409, detail={
+                "code": "config_syntax_vm_identity_unverified",
+                "reason": str(diagnostic.get("status") or "unknown")[:80],
+            })
+        service = str(binding["service"])
+        target = str(binding["target"])
+    try:
+        checked = await VMEdgeMCPClient().dotnet_config_syntax(target, service)
+    except Exception:
+        return {
+            "status": "unavailable", "reason": "vm_mcp_syntax_check_unavailable",
+            "service": service, "target": target, "files": [],
+            "syntax_valid": None, "application_ready": None,
+        }
+    if (not isinstance(checked, dict)
+            or checked.get("service") != service
+            or checked.get("target") != target
+            or checked.get("runtime") != "dotnet"):
+        return {
+            "status": "unavailable", "reason": "syntax_identity_or_runtime_mismatch",
+            "service": service, "target": target, "files": [],
+            "syntax_valid": None, "application_ready": None,
+        }
+    allowed_statuses = {"valid_json_syntax", "invalid_json_syntax", "unavailable"}
+    files = []
+    for raw in (checked.get("files") or [])[:20]:
+        if not isinstance(raw, dict):
+            continue
+        name = str(raw.get("file") or "")[:130]
+        if not re.fullmatch(r"[A-Za-z0-9_.-]{1,130}\\.json", name, re.I):
+            continue
+        item_status = str(raw.get("status") or "unavailable")
+        if item_status not in allowed_statuses:
+            item_status = "unavailable"
+        files.append({
+            "file": name,
+            "status": item_status,
+            "line": raw.get("line") if type(raw.get("line")) is int else None,
+            "column": raw.get("column") if type(raw.get("column")) is int else None,
+            "reason": str(raw.get("reason") or raw.get("error_code") or "")[:70],
+        })
+    overall = str(checked.get("status") or "unavailable")
+    if overall not in {"syntax_valid", "invalid", "partial", "not_found", "unavailable"}:
+        overall = "unavailable"
+    return {
+        "status": overall, "service": service, "target": target,
+        "runtime": "dotnet",
+        "syntax_valid": checked.get("syntax_valid") if type(checked.get("syntax_valid")) is bool else None,
+        "files": files,
+        "validated_scope": "json_syntax_only",
+        "application_ready": None,
+        "config_contents_exposed": False,
+        "checked_at": datetime.now(timezone.utc).isoformat(),
+    }
+
+
 @router.get("/incidents/{incident_id}/service-status")
 async def incident_service_status(
     incident_id: UUID,
