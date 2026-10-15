@@ -137,3 +137,48 @@ def test_nginx_verified_vendor_error_yields_candidate_projection_for_second_llm_
         vendor_service="other", vendor_error='unexpected "{"',
     )
     assert unauthorized["candidate_syntax_projection"] is None
+
+
+@pytest.mark.asyncio
+async def test_incident_config_read_does_not_persist_transient_file_projections(monkeypatch):
+    from apps.incident_copilot import vm_read
+    from apps import config_syntax_llm
+
+    async def fake_review(source, candidate=None, *, model=None):
+        assert sanitized_projection(source) is not None
+        return {"status": "reviewed_twice", "model_validated": False,
+                "vendor_validated": False, "approval_eligible": False}
+    monkeypatch.setattr(config_syntax_llm, "assess_service_syntax", fake_review)
+
+    file_one = "/etc/haproxy/haproxy.cfg"
+    file_two = "/opt/app/application.yaml"
+
+    class MCP:
+        async def service_config_review(self, target, service):
+            return {
+                "success": True, "target": target, "service": service,
+                "config_file": file_one,
+                "syntax_projection": syntax_projection(
+                    "frontend foo\n bind *:8080\n", extension="cfg"),
+                "file_reviews": [
+                    {"path": file_one, "file_type": "cfg",
+                     "syntax_projection": syntax_projection(
+                         "frontend foo\n bind *:8080\n", extension="cfg")},
+                    {"path": file_two, "file_type": "yaml",
+                     "syntax_projection": syntax_projection(
+                         "server: foo\n", extension="yaml")},
+                ],
+            }
+
+    observation = await vm_read(
+        "service_config_review",
+        {"target": "192.0.2.33", "service": "haproxy"}, connector=MCP(),
+    )
+    assert observation["success"] is True
+    assert observation["model_syntax_review"]["model_validated"] is False
+    assert len(observation["file_model_reviews"]) == 2
+    assert "syntax_projection" not in observation
+    assert "candidate_syntax_projection" not in observation
+    for entry in observation["file_reviews"]:
+        assert "syntax_projection" not in entry
+        assert "candidate_syntax_projection" not in entry
