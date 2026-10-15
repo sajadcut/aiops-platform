@@ -20,3 +20,4 @@ PyJWT[crypto]>=2.10,<3
 python-multipart>=0.0.20,<1
 PyYAML>=6.0,<7
 asyncssh>=2.24,<3
+cryptography>=43,<48  # explicit Ed25519 execution-signature dependency

@@ -139,3 +139,56 @@ def test_config_routes_require_operator_permission_and_are_registered():
     ident = "d7562af6-a977-4dc2-8965-bd6dc752f2ce"
     assert client.post("/api/v1/approvals/" + ident + "/validate-config").status_code == 401
     assert client.post("/api/v1/approvals/" + ident + "/execute-config").status_code == 401
+
+
+def test_openssl_root_verifier_matches_worker_ed25519_signature(monkeypatch, tmp_path):
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+    from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
+
+    seed = bytes([13]) * 32
+    monkeypatch.setenv("AIOPS_CONFIG_GUARD_ED25519_PRIVATE_KEY", base64.b64encode(seed).decode())
+    values = params()
+    claims = {
+        "service": "nginx", "config_file": values["config_file"],
+        "original_sha256": values["original_sha256"],
+        "candidate_sha256": values["candidate_sha256"],
+        "approval_id": "bad888cd-277b-4e11-a264-6e2331ed2d7a",
+        "incident_id": "47583843-c814-423b-a957-a877802fae58",
+        "target": "10.248.16.82", "expires": 1792091234,
+    }
+    sign = base64.b64decode(sign_root_guard(claims))
+    data = "|".join([
+        "v1", "apply", claims["service"], claims["config_file"],
+        claims["original_sha256"], claims["candidate_sha256"],
+        claims["approval_id"], claims["incident_id"], claims["target"],
+        str(claims["expires"]),
+    ]).encode()
+    pub = Ed25519PrivateKey.from_private_bytes(seed).public_key().public_bytes(
+        Encoding.PEM, PublicFormat.SubjectPublicKeyInfo,
+    )
+    (tmp_path / "pub.pem").write_bytes(pub)
+    (tmp_path / "message").write_bytes(data)
+    (tmp_path / "signature").write_bytes(sign)
+    command = ["openssl", "pkeyutl", "-verify", "-pubin", "-inkey", str(tmp_path / "pub.pem"),
+               "-rawin", "-in", str(tmp_path / "message"),
+               "-sigfile", str(tmp_path / "signature")]
+    ok = subprocess.run(command, capture_output=True, text=True)
+    assert ok.returncode == 0, ok.stderr
+    (tmp_path / "message").write_bytes(data + b"tampered")
+    rejected = subprocess.run(command, capture_output=True, text=True)
+    assert rejected.returncode != 0
+
+
+@pytest.mark.asyncio
+async def test_generic_api_cannot_forge_validated_config_approval():
+    from fastapi import HTTPException
+    from types import SimpleNamespace
+    from apps.api.execution import create_approval
+    with pytest.raises(HTTPException) as exc:
+        await create_approval(
+            {"action": "apply_configuration_change", "tool_name": "vm_config_change",
+             "metadata": {"workflow": "config_change", "isolated_validation": True}},
+            identity=SimpleNamespace(subject="test-sre", roles=["sre"]),
+        )
+    assert exc.value.status_code == 409
+    assert exc.value.detail == "use_governed_config_approval_workflow"
