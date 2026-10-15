@@ -270,6 +270,9 @@ async def post_config_review_response(
             "original_sha256": proposal["original_sha256"],
             "candidate_sha256": proposal["candidate_sha256"],
             "proposed_change": proposal["proposed_change"],
+            # Include recovery scope in the immutable approval intent digest.
+            # Mutating metadata alone after approval must invalidate binding.
+            "start_service_after_apply": payload.start_service_after_apply is True,
         }
         metadata = bind_metadata(
             {
