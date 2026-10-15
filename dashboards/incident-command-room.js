@@ -2730,6 +2730,26 @@
     const fullCandidate=['llm_candidate_proposed','candidate_storage_unavailable'].includes(full.status)&&
       /^[a-f0-9]{64}$/.test(String(full.candidate_sha256||''))&&
       full.llm_received_complete_file===true&&full.llm_returned_complete_file===true;
+    const configRejectionReasons={
+      candidate_excessive_changes:fa?
+        'مدل بخش زیادی از کانفیگ را تغییر داده است؛ فقط اصلاح خطای کوچک مجاز است.':
+        'The model rewrote too much of the configuration; only a small fix is allowed.',
+      candidate_not_minimal_syntax_fix:fa?
+        'بیش از ۳ کاراکتر نحوی تغییر کرده یا تغییر، اصلاح نحوی مؤثری نیست.':
+        'More than 3 syntax characters changed, or no syntax correction was made.',
+      candidate_changes_unrelated_bytes:fa?
+        'تغییرات اضافی در فاصله‌گذاری، تورفتگی یا محتوای غیرمرتبط رد شد.':
+        'Unrelated whitespace, indentation or configuration edits were rejected.',
+      candidate_unrelated_to_validator_line:fa?
+        'خطوط تغییریافته از محل خطای Validator فاصله دارند.':
+        'The changes are unrelated to the vendor-reported error line.',
+      candidate_changes_configuration_values:fa?
+        'ویرایش مقدار تنظیمات مجاز نیست.':
+        'Changing configuration values is not allowed.',
+      candidate_changes_sensitive_line:fa?
+        'تغییر روی خط حاوی مقادیر حساس مجاز نیست.':
+        'Changes on sensitive lines are blocked.',
+    };
     const fullRepairHtml=full.status&&full.status!=='—'?
       '<article class="ic-detail-card ic-complete-config-llm">'+
       '<h3>'+esc(fa?'نتیجهٔ بررسی فایل کامل توسط LLM':'Complete-file LLM repair result')+'</h3>'+
@@ -2747,7 +2767,8 @@
         '<p>Candidate SHA-256: <code dir="ltr">'+txt(full.candidate_sha256)+'</code></p>':'')+
       (full.source_sha256?'<p>Source SHA-256: <code dir="ltr">'+txt(full.source_sha256)+'</code></p>':'')+
       (full.rejection_reason?'<p>'+esc(fa?'دلیل رد: ':'Rejection reason: ')+
-        txt(full.rejection_reason)+'</p>':'')+
+        esc(configRejectionReasons[String(full.rejection_reason)]||String(full.rejection_reason))+
+        ' <code>'+txt(full.rejection_reason)+'</code></p>':'')+
       '<p class="ic-agent-disclaimer">'+esc(fa?
         (full.candidate_stored?
           'فایل اصلاح‌شده به‌شکل رمزنگاری‌شده نگهداری شده است؛ تا پایان موفق اعتبارسنجی مستقل و Approval، هیچ فایل Production تغییر نمی‌کند.':
