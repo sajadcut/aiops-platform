@@ -331,6 +331,16 @@ class DynamicInvestigationPlanner:
             "config_proposal": None,
             "execution_authority": False, "counts_as_live_evidence": False,
         }
+        # Automatic syntax advice only when the real VM MCP observed a
+        # relevant configuration fault. This never upgrades evidence status.
+        if general_review.get("syntax_projection") and (
+                failure or general_review.get("validation_status") == "FORMAT_INVALID"):
+            from apps.config_syntax_llm import assess_service_syntax
+            result["config_llm_review"] = await assess_service_syntax(
+                general_review.get("syntax_projection"),
+                general_review.get("candidate_syntax_projection"),
+                model=adapter,
+            )
         if failure:
             # A redacted structural excerpt and candidate from a registered
             # MCP action remain advisory. Staged nginx -t reads live includes;
