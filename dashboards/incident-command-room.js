@@ -1699,8 +1699,8 @@
         (state.narrative&&!state.historic?
           section(fa?'۹. وضعیت تحلیل مدل':'9. AI analysis status',
             '<p>'+esc(fa?
-            'مدل در این Snapshot خروجی ساخت‌یافته و قابل‌استناد تولید نکرده است. گزارش فنی و پیشنهاد مشروط بازیابی همچنان قابل‌استفاده‌اند.':
-            'The model did not return validated structured analysis for this snapshot. Evidence-based recovery advice remains visible.')+
+            'مدلِ تحلیل علت ریشه‌ای (RCA) در این Snapshot خروجی ساخت‌یافته و قابل‌استناد تولید نکرده است. این وضعیت به معنی شکست LLM در درخواست مستقل اصلاح فایل کانفیگ نیست؛ نتیجهٔ آن در بخش «اصلاح کانفیگ» نمایش داده می‌شود.':
+            'The RCA analysis model did not return validated structured analysis in this snapshot. This does not mean the separate full-config repair LLM call failed; see the configuration repair section.')+
             ' · '+txt(state.narrative.reason||'model_unavailable')+'</p>'):'') )+
       '<footer class="ic-ir-footer">'+esc(legacyNote)+'</footer></article>';
   }
