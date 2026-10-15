@@ -165,3 +165,25 @@ def test_ui_explains_two_disjoint_candidates_and_deprecates_indent_hypothesis():
     assert "تورفتگی ناهماهنگ" in script
     assert "fullRepairHtml" in script
     assert "تست مستقلی" in script
+
+
+def test_operator_summary_recovers_fatal_line_from_historical_compiler_output():
+    from apps.operator_summary import _observed
+    rows = [
+        {"id": "validator-historic", "source": "vm_mcp",
+         "raw_data": {
+             "diagnostic": "config_validate", "service": SERVICE,
+             "target": "192.0.2.10", "success": True,
+             "supported": True, "valid": False, "config_file": FILE,
+             "error_line": 43, "syntax_error": None,
+             "detail": (
+                 '2026/10/15 [warn] user directive ignored in /etc/nginx/nginx.conf:43\n'
+                 '2026/10/15 [emerg] "listen" directive is not allowed here '
+                 'in /etc/nginx/nginx.conf:104\n'
+                 'nginx: configuration file /etc/nginx/nginx.conf test failed'
+             ),
+         }},
+    ]
+    observed = _observed({"service": SERVICE}, {}, rows)
+    assert observed["config_validate"]["error_line"] == 104
+    assert "listen" in observed["config_validate"]["syntax_error"]
