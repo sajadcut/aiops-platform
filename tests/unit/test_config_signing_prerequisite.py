@@ -37,3 +37,15 @@ def test_configured_signing_key_only_proves_api_side(monkeypatch):
     assert report["execution_prerequisites"]["signing_key_match"] == "not_checked"
     assert report["execution_prerequisites"]["execution_ready"] is False
     assert private_value not in repr(report)
+
+
+def test_signing_key_loaded_from_project_settings_when_env_unset(monkeypatch):
+    from domain.contracts.config import settings
+    monkeypatch.delenv("AIOPS_CONFIG_APPLY_SIGNING_SECRET", raising=False)
+    monkeypatch.setattr(settings, "AIOPS_CONFIG_APPLY_SIGNING_SECRET",
+                        "development-strong-example-secret-123456789")
+    assert config_signing_ready() is True
+    report = _report()
+    assert report["execution_prerequisites"]["api_signing_key"] == "configured"
+    monkeypatch.setenv("AIOPS_CONFIG_APPLY_SIGNING_SECRET", "")
+    assert config_signing_ready() is False
