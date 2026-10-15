@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 516 | Dashboard JS files scanned: 8 | Symbols indexed: 5473**
+**Python files scanned: 516 | Dashboard JS files scanned: 8 | Symbols indexed: 5475**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1295,6 +1295,8 @@
 | `apps/knowledge_review_dossier.py` | `_same_service` | 32 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/knowledge_review_dossier.py` | `build_dossier` | 38 | function | Extract sourced, scoped and bounded facts for the selected incident. | module |
 | `apps/knowledge_review_dossier.py` | `incident_dossier` | 151 | async function | Read the exact incident's durable evidence and audit; no external calls. | module |
+| `apps/knowledge_review_dossier.py` | `dossier_addendum` | 174 | function | Knowledge-safe exact operational facts, distinct from inferred RCA. | module |
+| `apps/knowledge_review_dossier.py` | `dossier_title` | 188 | function | Meaningful candidate label rather than ten indistinguishable titles. | module |
 | `apps/mcp_server/main.py` | `JsonRpcRequest` | 22 | class | کلاس | module |
 | `apps/mcp_server/main.py` | `_provider` | 112 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/mcp_server/main.py` | `_parse_dt` | 119 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
