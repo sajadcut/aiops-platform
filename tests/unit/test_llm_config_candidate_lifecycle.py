@@ -228,6 +228,21 @@ async def test_source_drift_blocks_before_sudo_even_with_sealed_candidate(vault_
     assert result["production_write_performed"] is False
 
 
+def test_complete_file_llm_exfiltration_needs_explicit_sre_permission():
+    from fastapi import HTTPException
+    from apps.api.incident_chat import authorize_complete_file_disclosure
+    tool = "service_config_llm_repair"
+    assert authorize_complete_file_disclosure(tool, tool, ("sre",)) == tool
+    assert authorize_complete_file_disclosure(tool, "answer", ("sre",)) == "answer"
+    for roles in (("viewer",), ("operator",), (), ("viewer", "operator")):
+        with pytest.raises(HTTPException) as denied:
+            authorize_complete_file_disclosure(tool, tool, roles)
+        assert denied.value.status_code == 403
+    assert authorize_complete_file_disclosure(
+        "service_config_review", "service_config_review", ("viewer",),
+    ) == "service_config_review"
+
+
 def test_llm_proposal_requires_sealed_worker_candidate():
     from apps.api.config_change_review import ConfigReviewResponse, _matching_proposal
     from apps.api.config_change_execution import _same_incident_candidate
