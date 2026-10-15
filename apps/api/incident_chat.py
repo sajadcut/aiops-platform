@@ -1010,6 +1010,115 @@ async def incident_chat_message(
     }
 
 
+async def _existing_recovery_approval(db, incident_id: UUID, *, action: str, target: str, service: str):
+    row = (await db.execute(text("""
+        SELECT approval_id, status, action, metadata
+        FROM approvals
+        WHERE incident_id=:incident AND action=:action
+          AND metadata->>'reason' LIKE 'AIOps recovery advisory:%'
+          AND metadata->>'target'=:target
+          AND metadata->>'service'=:service
+        ORDER BY created_at DESC LIMIT 1
+    """), {
+        "incident": str(incident_id), "action": action,
+        "target": target, "service": service,
+    })).mappings().first()
+    if not row:
+        return None
+    return {
+        "approval_id": str(row["approval_id"]),
+        "status": str(row["status"]), "action": str(row["action"]),
+        "target": target, "service": service,
+        "execution_authority": False,
+    }
+
+
+@router.get("/incidents/{incident_id}/recovery-approval")
+async def incident_recovery_approval(
+    incident_id: UUID,
+    identity=Depends(require_permission("read:incident")),
+):
+    """Read an existing recovery request; never synthesize Approval from advice."""
+    async with AsyncSessionLocal() as db:
+        incident, checkpoint, _ = await _scope(db, incident_id)
+        advisory = ((checkpoint.get("state") or {}).get("context") or {}).get("recovery_advisory") or {}
+        action = str(advisory.get("suggested_action") or "")
+        if action not in {"restart_service", "start_service"}:
+            return {"status": "not_applicable", "approval_id": None}
+        found = await _existing_recovery_approval(
+            db, incident_id, action=action,
+            target=str(advisory.get("target") or ""),
+            service=str(advisory.get("service") or ""),
+        )
+        return found or {"status": "not_requested", "approval_id": None,
+                         "action": action, "execution_authority": False}
+
+
+@router.post(
+    "/incidents/{incident_id}/recovery-approval/queue",
+    dependencies=[Depends(rate_limiter_strict)],
+)
+async def queue_incident_recovery_approval(
+    incident_id: UUID,
+    identity=Depends(require_permission("approve:high_risk")),
+):
+    """Idempotently queue the *already proposed* service recovery for humans.
+
+    Only live-bound failed/inactive services matching the current snapshot
+    may enter the high-risk Approval queue. This never approves or executes.
+    Fresh runbook preflight is still mandatory before execution.
+    """
+    async with AsyncSessionLocal() as db:
+        incident, checkpoint, evidence = await _scope(db, incident_id)
+        advisory = ((checkpoint.get("state") or {}).get("context") or {}).get("recovery_advisory") or {}
+        action = str(advisory.get("suggested_action") or "")
+        target = str(advisory.get("target") or "")
+        service = str(advisory.get("service") or "")
+        status = str(advisory.get("status") or "")
+        if (action not in {"restart_service", "start_service"}
+                or status != "conditional_recovery"
+                or not target or not service
+                or not advisory.get("evidence_refs")
+                or str(getattr(incident.status, "value", incident.status)).lower()
+                    in {"resolved", "closed"}):
+            raise HTTPException(status_code=409, detail="recovery_advisory_not_actionable")
+        await db.execute(text("SELECT pg_advisory_xact_lock(hashtext(:key))"),
+                         {"key": "incident_recovery:" + str(incident_id)})
+        existing = await _existing_recovery_approval(
+            db, incident_id, action=action, target=target, service=service,
+        )
+        if existing:
+            return existing
+        context = incident_vm_context(getattr(incident, "context", None), checkpoint)
+        binding, diagnostic = await resolve_vm_binding(
+            incident.service, evidence, context, force_live=True,
+        )
+        expected_state = "failed" if action == "restart_service" else "inactive"
+        if (not binding or binding.get("target") != target
+                or binding.get("service") != service
+                or binding.get("active_state") != expected_state):
+            raise HTTPException(status_code=409, detail={
+                "code": "recovery_live_binding_or_state_changed",
+                "reason": str(diagnostic.get("status") or "unverified")[:75],
+            })
+        # Reuses the existing high-risk, exact-service/target/runbook-bound
+        # remediation Approval creator. It deliberately does NOT invoke an
+        # executable MCP tool or grant approval; the runtime guard remains.
+        queued = await create_remediation_request(
+            incident_id, RemediationRequest(
+                target=target, service=service, action=action,
+                reason="AIOps recovery advisory:" + str(incident_id),
+            ), identity=identity,
+        )
+        return {
+            "approval_id": str(queued["approval_id"]),
+            "status": str(queued["status"]), "action": action,
+            "target": target, "service": service,
+            "execution_authority": False,
+            "preflight_required_before_execution": True,
+        }
+
+
 @router.post(
     "/incidents/{incident_id}/chat/request-approval",
     dependencies=[Depends(rate_limiter_strict)],
