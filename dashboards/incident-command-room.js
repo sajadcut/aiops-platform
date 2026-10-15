@@ -2343,16 +2343,18 @@
       (ready?'':' disabled')+'>'+
       esc(fa?'درخواست بازبینی و اعتبارسنجی اصلاح':'Request correction review & validation')+
       '</button>':'';
-    const regenerateButton=!candidate?
+    const regenerateButton=
       '<button type="button" class="ic-btn ic-btn-primary" data-config-preview="'+
       (service==='nginx'?'nginx':verified.length?'review':'generic')+'"'+
-      (state.historic||state.busy||state.chatBusy||state.lifecycle?.analysis_in_progress||state.chatStatus==='failed'?' disabled':'')+'>'+
-      esc(fa?(service==='nginx'?
+      (state.historic||state.busy||state.chatBusy||state.lifecycle?.analysis_in_progress?' disabled':'')+'>'+
+      esc(fa?(candidate?'بازبینی مجدد فایل کانفیگ با MCP':
+        service==='nginx'?
         (previewUnavailable?'تلاش مجدد برای خواندن امن فایل':'ساخت پیش‌نمایش اصلاح با بررسی زنده MCP'):
         (verified.length?'بررسی فایل‌های تأییدشده و پیشنهاد اصلاح':'کشف فایل کانفیگ با systemd و MCP')) :
-        (service==='nginx'?'Generate live MCP repair preview':
+        (candidate?'Recheck configuration via MCP':service==='nginx'?
+        'Generate live MCP repair preview':
          verified.length?'Review verified config & propose repair':'Discover config via systemd & MCP'))+
-      '</button>':'';
+      '</button>';
     node.hidden=false;
     node.innerHTML='<div class="ic-config-banner-copy"><strong>'+
       esc(fa?'بررسی و اصلاح کانفیگ '+service:'Configuration discovery & correction · '+service)+
@@ -2884,7 +2886,16 @@
         // snapshot after new persisted Evidence changes the report digest.
         await load();
       }
-    }catch(e){notify(tr('failure')+' · '+e.message,true);state.chatLastResult=e.message;}
+    }catch(e){
+      const message=String(e.message||'');
+      const pending=/409|incident_analysis_not_finished/.test(message);
+      state.chatLastResult=pending?
+        (state.language==='fa'?
+          'تحلیل رخداد هنوز تکمیل نشده است؛ پس از اتمام تحلیل، بررسی را دوباره اجرا کنید.':
+          'Incident analysis is still running. Retry after it completes.'):
+        message;
+      notify(tr('failure')+' · '+state.chatLastResult,true);
+    }
     finally{state.chatBusy=false;renderIncidentChat();}
   }
   async function incidentChatApproval(kind,id) {
