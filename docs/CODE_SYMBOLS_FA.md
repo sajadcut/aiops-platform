@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 506 | Dashboard JS files scanned: 8 | Symbols indexed: 5337**
+**Python files scanned: 506 | Dashboard JS files scanned: 8 | Symbols indexed: 5344**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -3439,6 +3439,13 @@
 | `tests/unit/test_config_guard_validation_diagnostics.py` | `test_missing_helper_preflight_cannot_start_sudo_or_write_production.Edge._sudo` | 254 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_missing_helper_preflight_cannot_start_sudo_or_write_production.Edge |
 | `tests/unit/test_config_guard_validation_diagnostics.py` | `test_non_helper_missing_dependency_is_not_misclassified` | 268 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_config_guard_validation_diagnostics.py` | `test_windows_vm_guard_installer_requires_explicit_operator_sudo` | 274 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_config_guard_validation_diagnostics.py` | `test_provisioned_helper_validation_can_advance_without_production_write` | 286 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_config_guard_validation_diagnostics.py` | `test_provisioned_helper_validation_can_advance_without_production_write.Edge` | 288 | class | کلاس | test_provisioned_helper_validation_can_advance_without_production_write |
+| `tests/unit/test_config_guard_validation_diagnostics.py` | `test_provisioned_helper_validation_can_advance_without_production_write.Edge.config_validate` | 292 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_provisioned_helper_validation_can_advance_without_production_write.Edge |
+| `tests/unit/test_config_guard_validation_diagnostics.py` | `test_provisioned_helper_validation_can_advance_without_production_write.Edge._run` | 299 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_provisioned_helper_validation_can_advance_without_production_write.Edge |
+| `tests/unit/test_config_guard_validation_diagnostics.py` | `test_provisioned_helper_validation_can_advance_without_production_write.Edge.config_guard_preflight` | 303 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_provisioned_helper_validation_can_advance_without_production_write.Edge |
+| `tests/unit/test_config_guard_validation_diagnostics.py` | `test_provisioned_helper_validation_can_advance_without_production_write.Edge._sudo` | 307 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_provisioned_helper_validation_can_advance_without_production_write.Edge |
+| `tests/unit/test_config_guard_validation_diagnostics.py` | `test_vm_provision_script_refuses_existing_helper_symlink` | 325 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_config_review_button_runtime.py` | `test_config_buttons_dispatch_mcp_read_without_execution_and_refresh_report` | 11 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_container_image_contract.py` | `test_offline_runtime_uses_isolated_multistage_build` | 4 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_container_image_contract.py` | `test_container_acceptance_checks_final_filesystem_not_builder_layers` | 20 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
