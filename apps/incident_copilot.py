@@ -417,7 +417,7 @@ def public_result(action: str, value: Any) -> dict:
                     item.get("candidate_syntax_projection")
                 ),
             })
-        result["file_reviews"] = files
+        result["file_reviews"] = files[:6]
         result["reviewed_file_count"] = len(files)
     return result
 
