@@ -88,7 +88,13 @@ async def get_review(review_id: UUID):
         row = await db.get(KnowledgeReview, review_id)
         if row is None:
             raise HTTPException(404, "knowledge_review_not_found")
-        return review_summary(row)
+        response = review_summary(row)
+        # Display current source-backed Incident facts beside the immutable
+        # draft; never silently change text previously edited or approved.
+        if row.incident_id:
+            from apps.knowledge_review_dossier import incident_dossier
+            response["incident_dossier"] = await incident_dossier(db, row.incident_id)
+        return response
 
 
 @router.post("/knowledge-reviews/from-memory", dependencies=[Depends(require_permission("knowledge:draft"))])
