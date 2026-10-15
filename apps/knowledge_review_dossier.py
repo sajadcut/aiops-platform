@@ -87,6 +87,11 @@ def build_dossier(
         meta = item.get("metadata") or {}
         if not isinstance(meta, dict):
             continue
+        if (meta.get("service") and not _same_service(meta["service"], service)):
+            continue
+        if (invalid and meta.get("config_file")
+                and meta["config_file"] != invalid["config_file"]):
+            continue
         if meta.get("production_write_performed") is not True:
             continue
         applied = {
