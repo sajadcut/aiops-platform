@@ -135,7 +135,9 @@ def local_config_review(encoded: str, *, path: str, validator_error_line: int | 
             answer["validation_status"] = "FORMAT_INVALID"
             error = "json_syntax_error"
             updated = _remove_trailing_json_commas(source)
-            if updated != source:
+            # One displayed redacted diff must correspond to one real edit.
+            # Reject multi-edit previews until the UI can show every changed line.
+            if updated != source and source.count(",") - updated.count(",") == 1:
                 try:
                     json.loads(updated)
                 except (ValueError, TypeError):
