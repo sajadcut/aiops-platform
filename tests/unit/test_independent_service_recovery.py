@@ -144,3 +144,15 @@ def test_only_the_original_exact_zabbix_problem_can_be_duplicate_related_signal(
 def test_malformed_second_service_status_never_raises_or_resolves():
     assert _decision(second={**SECOND, "service": None}) == "service_not_stably_running"
     assert _decision(second={**SECOND, "service": ["nginx"]}) == "service_not_stably_running"
+
+
+def test_read_only_viewer_can_recheck_but_cannot_finalize_incident():
+    from apps.incident_service.service_recovery_reconciliation import (
+        can_finalize_independent_recovery,
+    )
+    assert can_finalize_independent_recovery(("viewer",)) is False
+    assert can_finalize_independent_recovery(["viewer", "unrecognized"]) is False
+    assert can_finalize_independent_recovery(("operator",)) is True
+    assert can_finalize_independent_recovery(("sre",)) is True
+    assert can_finalize_independent_recovery(None) is False
+    assert can_finalize_independent_recovery("sre") is False
