@@ -188,3 +188,95 @@ async def test_denied_sudo_policy_never_falls_back_to_su_or_password():
     assert result["success"] is False
     assert len(calls) == 1
     assert calls[0][0].startswith("sudo -n ")
+
+
+@pytest.mark.parametrize("probe,code", [
+    ("MISSING", "config_guard_helper_missing"),
+    ("SYMLINK", "config_guard_helper_symlink_refused"),
+    ("NOT_REGULAR", "config_guard_helper_not_regular"),
+    ("PRESENT 1000 1000 750", "config_guard_helper_unsafe_metadata"),
+    ("PRESENT 0 0 755", "config_guard_helper_unsafe_metadata"),
+    ("", "config_guard_preflight_unavailable"),
+])
+@pytest.mark.asyncio
+async def test_config_guard_preflight_reports_precise_provisioning_blocker(probe, code):
+    from integrations.vm.ssh_connector import SSHVMConnector
+    connector = object.__new__(SSHVMConnector)
+    connector._validate_target = lambda target: None
+    commands = []
+
+    async def inspect(target, command, *, stdin_data=None):
+        commands.append((command, stdin_data))
+        return {"success": True, "stdout": probe}
+
+    connector._run = inspect
+    outcome = await connector.config_guard_preflight("192.0.2.16")
+    assert outcome == {"success": False, "status": code}
+    assert len(commands) == 1
+    assert "sudo" not in commands[0][0]
+    assert commands[0][1] is None
+
+
+@pytest.mark.asyncio
+async def test_config_guard_preflight_accepts_only_root_owned_mode_0750():
+    from integrations.vm.ssh_connector import SSHVMConnector
+    connector = object.__new__(SSHVMConnector)
+    connector._validate_target = lambda target: None
+
+    async def inspect(target, command, *, stdin_data=None):
+        return {"success": True, "stdout": "PRESENT 0 0 750"}
+
+    connector._run = inspect
+    outcome = await connector.config_guard_preflight("192.0.2.16")
+    assert outcome == {"success": True, "status": "config_guard_helper_present"}
+
+
+@pytest.mark.asyncio
+async def test_missing_helper_preflight_cannot_start_sudo_or_write_production():
+    class Edge:
+        _validate_target = staticmethod(lambda _: None)
+        _validate_service = staticmethod(lambda _: None)
+
+        async def config_validate(self, target, service):
+            return {
+                "success": True, "supported": True, "valid": False,
+                "config_file": "/etc/nginx/nginx.conf", "error_line": 1,
+                "syntax_error": 'unexpected "{"',
+            }
+
+        async def _run(self, target, command, *, stdin_data=None):
+            assert "sudo" not in command
+            return {"success": True, "stdout": base64.b64encode(SOURCE).decode()}
+
+        async def config_guard_preflight(self, target):
+            return {"success": False, "status": "config_guard_helper_missing"}
+
+        async def _sudo(self, *args, **kwargs):
+            raise AssertionError("no privileged command before guard provisioning")
+
+    result = await run_governed_change(
+        Edge(), action="validate", target="192.0.2.11", service="nginx",
+        config_file="/etc/nginx/nginx.conf",
+        original_sha256=SOURCE_SHA, candidate_sha256=CANDIDATE_SHA,
+        proposed_change="remove_extra_opening_brace",
+    )
+    assert result["status"] == "config_guard_helper_missing"
+    assert result["isolated_validation"] is False
+    assert result["production_write_performed"] is False
+
+
+def test_non_helper_missing_dependency_is_not_misclassified():
+    assert classify_config_guard_failure({
+        "exit_code": 1, "stderr": "jq: command not found",
+    }) == "config_guard_execution_failed"
+
+
+def test_windows_vm_guard_installer_requires_explicit_operator_sudo():
+    script = (Path(__file__).resolve().parents[2]
+              / "scripts/vm/Install-AIOpsConfigGuard.ps1").read_text()
+    assert "Get-FileHash -Algorithm SHA256" in script
+    assert "StrictHostKeyChecking=yes" in script
+    assert "sudo install -o root -g root -m 0750" in script
+    assert "sudo sha256sum" in script
+    assert "sudo su" not in script.replace("unrestricted `sudo su`", "")
+    assert "config_change_apply" not in script
