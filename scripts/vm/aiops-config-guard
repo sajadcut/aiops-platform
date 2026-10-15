@@ -31,20 +31,25 @@ if [ "$action" = apply ]; then
   expires=$9
   signature=$(printf '%s' "${10}")
   case "$approval:$incident:$target:$expires:$signature" in *[!a-zA-Z0-9.:-]*|"") exit 41 ;; esac
-  [ "$(printf '%s' "$signature" | wc -c)" -eq 64 ] || exit 41
+  [ "$(printf '%s' "$signature" | wc -c)" -eq 88 ] || exit 41
   [ "$expires" -ge "$(date +%s)" ] && [ "$expires" -le "$(($(date +%s) + 60))" ] || exit 41
-  # The VM has only a root-readable shared verification key. An SSH account
-  # with sudo permission cannot forge a production write by invoking this
-  # fixed helper directly without a short-lived control-plane authorization.
-  [ -f /etc/aiops/config-change.key ] && [ "$(stat -c %a /etc/aiops/config-change.key)" = 600 ] || exit 41
-  secret=$(cat /etc/aiops/config-change.key)
-  [ "$(printf '%s' "$secret" | wc -c)" -ge 32 ] || exit 41
-  message=$(printf 'v1|apply|%s|%s|%s|%s|%s|%s|%s|%s' \
+  # Verification uses ONLY an Ed25519 public key. No private signing secret
+  # exists on the VM and no secret can leak through process arguments.
+  pubkey=/etc/aiops/config-change-verify.pem
+  [ -f "$pubkey" ] && [ ! -L "$pubkey" ] || exit 41
+  verify_dir=$(mktemp -d /var/tmp/aiops-config-auth.XXXXXXXX) || exit 41
+  chmod 700 "$verify_dir"
+  trap 'rm -rf -- "$verify_dir"' EXIT HUP INT TERM
+  printf 'v1|apply|%s|%s|%s|%s|%s|%s|%s|%s' \
     "$service" "$file" "$expected_source" "$expected_candidate" \
-    "$approval" "$incident" "$target" "$expires")
-  actual=$(printf '%s' "$message" | openssl dgst -sha256 -hmac "$secret" | sed 's/^.*= //')
-  unset secret
-  [ "$actual" = "$signature" ] || exit 41
+    "$approval" "$incident" "$target" "$expires" > "$verify_dir/message"
+  printf '%s' "$signature" | base64 -d > "$verify_dir/signature" || exit 41
+  [ "$(stat -c %s "$verify_dir/signature")" -eq 64 ] || exit 41
+  openssl pkeyutl -verify -pubin -inkey "$pubkey" -rawin \
+    -in "$verify_dir/message" -sigfile "$verify_dir/signature" \
+    >/dev/null 2>&1 || exit 41
+  rm -rf -- "$verify_dir"
+  trap - EXIT HUP INT TERM
 fi
 [ -f "$file" ] && [ ! -L "$file" ] && [ "$(readlink -f -- "$file")" = "$file" ] || exit 42
 [ -x /usr/sbin/nginx ] && command -v unshare >/dev/null && command -v mount >/dev/null &&
@@ -66,6 +71,14 @@ cat > "$stage/candidate"
 if [ "$action" = apply ]; then
   exec 9>/run/lock/aiops-config-guard.lock
   flock -x -w 15 9 || exit 44
+  # The signed ticket is single-use even if the patch subsequently rolls
+  # back and the original source hash becomes available again.
+  claim_dir=/var/lib/aiops/config-claims
+  mkdir -p -m 0700 -- "$claim_dir"
+  chmod 0700 "$claim_dir"
+  case "$approval" in *[!0123456789abcdef-]*|"") exit 41 ;; esac
+  [ ! -e "$claim_dir/$approval" ] || exit 44
+  ( umask 077; set -C; printf '%s\n' "$incident" > "$claim_dir/$approval" ) || exit 44
 fi
 [ "$(sha256sum "$file" | cut -d ' ' -f1)" = "$expected_source" ] || exit 45
 cp -a -- /etc/nginx "$stage/tree" || exit 46

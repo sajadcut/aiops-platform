@@ -25,6 +25,8 @@ def _fields(record: dict) -> dict:
     meta = dict(record.get("metadata") or {})
     if record.get("action") != "apply_configuration_change" or meta.get("workflow") != "config_change":
         raise HTTPException(status_code=409, detail="not_a_config_change_approval")
+    if str(record.get("risk_level") or "").lower() not in {"high", "critical"}:
+        raise HTTPException(status_code=409, detail="config_change_requires_high_risk_approval")
     needed = ("target", "service", "config_file", "original_sha256",
               "candidate_sha256", "proposed_change")
     if not all(meta.get(k) for k in needed):

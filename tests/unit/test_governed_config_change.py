@@ -48,7 +48,9 @@ def test_config_execution_signed_claim_is_exact_scoped_and_short_lived(monkeypat
         target="10.248.16.82", service="nginx", **values,
     )
     verify_claim(claims, sig, target="10.248.16.82", service="nginx")
-    assert len(sign_root_guard(claims)) == 64
+    monkeypatch.setenv("AIOPS_CONFIG_GUARD_ED25519_PRIVATE_KEY",
+                      base64.b64encode(bytes([7]) * 32).decode())
+    assert len(sign_root_guard(claims)) == 88
     with pytest.raises(PermissionError):
         verify_claim({**claims, "target": "10.248.16.83"}, sig,
                      target="10.248.16.83", service="nginx")
@@ -121,7 +123,10 @@ def test_remote_helper_is_shell_only_and_refuses_generic_execution():
     assert "unshare -m --propagation private" in script
     assert "sha256sum" in script and "flock -x" in script
     assert "ROLLED_BACK" in script and "ROLLBACK_FAILED" in script
-    assert "/etc/aiops/config-change.key" in script
+    assert "/etc/aiops/config-change-verify.pem" in script
+    assert "openssl pkeyutl -verify" in script
+    assert "openssl dgst -sha256 -hmac" not in script
+    assert "config-claims" in script
     assert "sudo sh" not in script and "python" not in script.lower()
     # Without root and a precise 5- or 10-field contract it cannot write.
     assert "/usr/sbin/nginx -t" in script
