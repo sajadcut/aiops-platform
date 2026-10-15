@@ -96,6 +96,20 @@ def test_wrong_key_tamper_and_expiry_fail_closed(vault_env, monkeypatch):
         get()
 
 
+def test_expired_same_candidate_can_be_renewed_safely(vault_env, monkeypatch):
+    from integrations.vm import config_candidate_vault as vault
+    assert put()["candidate_stored"] is True
+    sealed_before = next(vault_env.glob("*.sealed")).read_bytes()
+    created = int.from_bytes(sealed_before[4:12], "big")
+    monkeypatch.setattr(vault.time, "time", lambda: created + 86401)
+    with pytest.raises(CandidateUnavailable, match="candidate_expired"):
+        get()
+    assert put()["candidate_stored"] is True
+    sealed_after = next(vault_env.glob("*.sealed")).read_bytes()
+    assert sealed_before != sealed_after
+    assert get() == CORRECTED
+
+
 def test_vault_requires_strong_key_and_no_symlink(vault_env, monkeypatch):
     from integrations.vm import config_candidate_vault as vault
     monkeypatch.setattr(vault.settings, "AIOPS_CONFIG_CANDIDATE_ENCRYPTION_KEY", "")
