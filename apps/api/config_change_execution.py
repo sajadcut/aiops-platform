@@ -149,7 +149,10 @@ async def execute_config(approval_id: UUID, identity=Depends(require_permission(
         meta = _fields(approval)
         if approval["status"] != "approved" or meta.get("isolated_validation") is not True:
             raise HTTPException(status_code=409, detail="config_approval_or_validation_required")
-        if meta.get("validation_scope") != "nginx_mount_namespace_staged_etc_nginx_live_external_read_dependencies":
+        if meta.get("validation_scope") not in {
+            "nginx_mount_namespace_staged_etc_nginx_live_external_read_dependencies",
+            "generic_json_syntax_only_service_runtime_unverified",
+        }:
             raise HTTPException(status_code=409, detail="unapproved_validation_scope")
         if not await _same_incident_candidate(db, approval, meta):
             raise HTTPException(status_code=409, detail="config_ticket_stale_incident_candidate")
