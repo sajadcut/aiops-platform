@@ -62,6 +62,78 @@ def local_recovery_decision(*, source: str, summary: str, service: str,
     return "independent_vm_verified"
 
 
+async def commit_independent_recovery(
+    db, *, incident, target: str, actor: str,
+    recovery_source: str, vendor_syntax_ok: bool | None,
+) -> None:
+    """Commit resolution, cancel stale Approvals and write Audit atomically.
+
+    The caller must first lock the matching Incident row and independently
+    verify both live observations. This helper never runs SSH or LLM commands.
+    A failure rolls back all three mutations, preventing a RESOLVED incident
+    with still-executable stale Approvals or missing provenance.
+    """
+    import json
+    from datetime import datetime, timezone
+    from uuid import uuid4
+    from sqlalchemy import text
+    from domain.models import IncidentStatus
+
+    if recovery_source not in {"vm_mcp_systemd_recheck",
+                               "approved_config_apply_followup"}:
+        raise ValueError("untrusted_recovery_source")
+    if incident.status in {IncidentStatus.CLOSED, IncidentStatus.RESOLVED}:
+        raise ValueError("incident_already_terminal")
+    context = dict(incident.context or {})
+    context["independent_recovery"] = {
+        "source": recovery_source,
+        "incident_resolved": True,
+        "verified_at": datetime.now(timezone.utc).isoformat(),
+        "service": str(incident.service),
+        "target": target,
+        "monitor_recovered": False,
+        "checks": 2,
+        "nginx_vendor_validated": vendor_syntax_ok is True,
+    }
+    incident.context = context
+    incident.status = IncidentStatus.RESOLVED
+    await db.flush()
+    patch = json.dumps({
+        "cancellation_reason": "independent_vm_recovery_confirmed",
+        "recovery_source": recovery_source,
+    })
+    cancelled = (await db.execute(text("""
+        UPDATE approvals SET status='rejected', rejected_at=CURRENT_TIMESTAMP,
+            metadata=COALESCE(metadata, '{}'::jsonb) ||
+                     CAST(:metadata_patch AS jsonb)
+        WHERE incident_id=:incident_id
+          AND status IN ('pending_validation', 'pending', 'approved')
+        RETURNING approval_id
+    """), {"incident_id": str(incident.id), "metadata_patch": patch})).scalars().all()
+    now = datetime.now(timezone.utc)
+    metadata = {
+        "target": target, "service": str(incident.service),
+        "systemd_observations": 2, "monitor_recovered": False,
+        "vendor_validated": vendor_syntax_ok,
+        "recovery_source": recovery_source,
+        "cancelled_approval_count": len(cancelled),
+        "execution_authority": False,
+    }
+    await db.execute(text("""
+        INSERT INTO audit_events
+            (event_id,event_type,actor,incident_id,action,status,metadata,created_at)
+        VALUES (:event_id,:event_type,:actor,:incident_id,:action,
+                :status,CAST(:metadata AS jsonb),:created_at)
+    """), {
+        "event_id": str(uuid4()),
+        "event_type": "incident_independent_service_recovered",
+        "actor": actor, "incident_id": str(incident.id),
+        "action": "independent_service_recovery", "status": "verified",
+        "metadata": json.dumps(metadata), "created_at": now,
+    })
+    await db.commit()
+
+
 async def reconcile_after_applied_config(*, incident_id: str, target: str,
                                          service: str, actor: str) -> str:
     """Best-effort, fresh verification following an approved config + start.
@@ -109,36 +181,11 @@ async def reconcile_after_applied_config(*, incident_id: str, target: str,
                 return verdict
             if incident.status in {IncidentStatus.CLOSED, IncidentStatus.RESOLVED}:
                 return "incident_already_resolved"
-            context = dict(incident.context or {})
-            context["independent_recovery"] = {
-                "source": "approved_config_apply_followup",
-                "incident_resolved": True,
-                "service": str(incident.service), "target": target,
-                "monitor_recovered": False, "checks": 2,
-                "nginx_vendor_validated": vendor_ok is True,
-                "verified_at": datetime.now(timezone.utc).isoformat(),
-            }
-            incident.context = context
-            incident.status = IncidentStatus.RESOLVED
-            await db.commit()
-            await PostgreSQLApprovalStore(db).cancel_unconsumed_for_incident(
-                incident_id, reason="independent_vm_recovery_confirmed",
-                metadata_patch={"recovery_source": "approved_config_apply_followup"},
+            await commit_independent_recovery(
+                db, incident=incident, target=target, actor=actor,
+                recovery_source="approved_config_apply_followup",
+                vendor_syntax_ok=vendor_ok,
             )
-            await PostgreSQLAuditStore(db).append({
-                "event_id": str(uuid4()), "event_type": "incident_independent_service_recovered",
-                "actor": actor, "incident_id": incident_id,
-                "action": "independent_service_recovery", "status": "verified",
-                "metadata": {
-                    "target": target, "service": service,
-                    "systemd_observations": 2,
-                    "monitor_recovered": False,
-                    "vendor_validated": vendor_ok,
-                    "recovery_source": "approved_config_apply_followup",
-                    "execution_authority": False,
-                },
-                "created_at": datetime.now(timezone.utc).isoformat(),
-            })
             return "resolved_independent_vm_verified"
     except Exception:
         from domain.contracts.logging import logger
