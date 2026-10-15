@@ -2341,142 +2341,144 @@
   function renderConfigActionBanner(r) {
     const node=$('#ic-config-action-banner');
     if(!node)return;
+    const fa=state.language==='fa';
     const service=low(r?.incident_summary?.service).replace(/\.service$/,'');
-    const proposal=r?.dynamic_investigation||{};
-    const config=proposal.config_proposal||{};
-    const discovery=proposal.config_discovery||{};
-    const validated=r?.configuration_diagnostic||{};
+    const investigation=r?.dynamic_investigation||{};
+    const config=investigation.config_proposal||{};
+    const discovery=investigation.config_discovery||{};
+    const validator=r?.configuration_diagnostic||{};
+    const response=state.configResponse||{};
+    const approval=low(response.approval_status||response.status);
     const candidate=low(config.status)==='candidate_proposed';
-    const hasDiff=Boolean(candidate && Number.isInteger(config.redacted_diff?.line));
-    const invalid=low(validated.status)==='invalid'||Boolean(
-      config.error_line&&config.config_file&&
-      ['needs_read_only_config','preview_unavailable'].includes(low(config.status)));
-    const discoveryAvailable=Boolean(
-      discovery.files?.length||discovery.unverified_candidates?.length||
-      (discovery.status&&!['unknown','—','not_available'].includes(low(discovery.status))));
-    if(!service||(!candidate&&!invalid&&!discoveryAvailable)){
-      node.hidden=true;node.innerHTML='';return;
-    }
-    const fa=state.language==='fa',stage=low(config.validation_status);
-    const stageText=stage==='staged_failed'?
-      (fa?'نسخه پیشنهادی ساخته شد؛ تست Nginx روی کپی موقت شکست خورد.':
-           'Candidate generated; staging nginx -t failed.'):
-      stage==='staged_pass_not_isolated'?
-      (fa?'تست نسخه پیشنهادی موفق بود، اما ایزوله نبوده است.':
-           'Staging passed, but validation was not isolated.'):
-      (fa?'اعتبارسنجی مستقل یا نسخهٔ اصلاحی تأییدشده موجود نیست.':
-           'No independently verified repair is available.');
-    const code=low(config.stage_failure_reason);
-    const previewUnavailable=low(config.status)==='preview_unavailable';
-    const reason=previewUnavailable?
-      (fa?'VM MCP نتوانست فایل را برای ساخت پیش‌نمایش به‌طور امن بخواند؛ دسترسی خواندن حساب SSH، مسیر فایل و لاگ بررسی MCP را کنترل کنید.':
-        'VM MCP could not safely read the file; check authorized SSH read access and the MCP diagnostic audit.'):
-      code==='permission_denied'?
-      (fa?'علت شکست تست: محدودیت مجوز دسترسی (permission_denied).':
-           'Staged validation was blocked by permissions (permission_denied).'):
-      code&& !['none','not_tested','not_recorded'].includes(code)?
-      (fa?'علت/کد نتیجه: ':'Reason code: ')+code:'';
-    const legacyIntent=state.configResponse?.status==='awaiting_isolated_validation' &&
-      !state.configResponse?.approval_queue_registered;
-    const responded=state.configResponse?.status&&state.configResponse.status!=='not_responded'&&!legacyIntent;
-    const ready=Boolean(candidate &&
-      config.original_sha256 && config.candidate_sha256 &&
-      !state.historic && !state.busy && state.configResponseStatus==='loaded' &&
-      state.configResponse?.status==='not_responded');
-    const verified=arr(discovery.files).filter(f=>f.verified_exists===true);
-    const path=config.config_file||validated.config_file||
+    const hasDiff=Boolean(candidate&&Number.isInteger(config.redacted_diff?.line));
+    const originalFailed=low(validator.status)==='invalid';
+    const previouslyFailed=originalFailed||candidate||
+      (Number.isInteger(config.error_line)&&!!config.config_file);
+    const verified=arr(discovery.files).filter(item=>item.verified_exists===true);
+    const path=config.config_file||validator.config_file||
       verified[0]?.path||discovery.unverified_candidates?.[0]?.path||'';
     const line=Number.isInteger(config.error_line)?config.error_line:
-      Number.isInteger(validated.error_line)?validated.error_line:null;
-    const signing=state.configResponse?.execution_prerequisites||{};
-    const signingNotice=responded&&signing.api_signing_key==='missing_or_weak_mcp_bearer_token'?
-      '<p role="status" class="ic-config-banner-warning">'+
-      esc(fa?
-        'مانع اجرای واقعی: MCP_BEARER_TOKEN در API تعریف نشده یا برای امضای امن کوتاه است. همین توکن باید در API و VM MCP یکسان، تصادفی و حداقل ۳۲ بایت باشد. پس از اصلاح محرمانه و راه‌اندازی مجدد سرویس‌ها وضعیت را بررسی کنید. اعتبارسنجی مستقل کانفیگ از این خطا جداست.':
-        'Execution blocker: MCP_BEARER_TOKEN is absent or too weak on API. Use the same strong random token (at least 32 bytes) on API and VM MCP, then restart and recheck. Vendor validation is separate.')+
-      '</p>':'';
-    const responseLabel=responded?
-      '<p role="status">'+esc(fa?'درخواست اصلاح ثبت شده؛ مرحله فعلی: ':'Correction request recorded; stage: ')+
-      '<strong>'+txt(state.configResponse.status)+'</strong>'+
-      ' — '+esc(fa?
-        (state.configResponse.approval_status==='approved'?
-          'اعتبارسنجی مستقل انجام و Approval تأیید شده است. اعمال واقعی فقط پس از تکمیل پیش‌نیاز امضا مجاز است.':
-         state.configResponse.approval_queue_registered?
-          'درخواست در صف واقعی Approval ثبت شده است؛ تأیید اجرایی تا اعتبارسنجی مستقل و ساخت قرارداد تغییر مسدود است.':
-         state.configResponse.validation_pipeline_status==='not_implemented'?
-          'این درخواست فقط در ممیزی ثبت شده است؛ پردازش اعتبارسنجی ایزوله و ایجاد Approval اجرایی هنوز پیاده‌سازی نشده‌اند. هیچ عملیات پس‌زمینه یا تغییری روی سرور آغاز نشده است.':
-          'درخواست در صف Approval ثبت شده ولی هنوز قابل تأیید اجرایی نیست.'):
-        (state.configResponse.approval_queue_registered?
-          'Change queued in durable Approvals. Executable approval is blocked pending isolated validation and a guarded change contract.':
-         state.configResponse.validation_pipeline_status==='not_implemented'?
-          'Audit-only intent: isolated validation and executable approval are not implemented. No background validation or server write was started.':
-          'Review intent recorded; no execution approval has been issued.'))+
-      '</p>':
-      state.configResponseStatus==='failed'?
-      '<p role="status" class="ic-config-banner-warning">'+esc(fa?
-        'وضعیت درخواست از API خوانده نشد؛ ثبت درخواست تا بازیابی وضعیت غیرفعال است.':
-        'Request status could not be fetched; submission is blocked until the state is known.')+'</p>':'';
-    // The only submit button follows the Diff; banner cannot submit a
-    // second, misleading or unvalidated execution request.
-    const requestButton=responded?
-      '<a class="ic-btn ic-btn-muted" href="#ic-ai-proposed-fix" data-config-request-status="recorded">'+
-      esc(fa?'مشاهده درخواست در صف تأیید':'View change request in approval queue')+
-      '</a>':'';
+      Number.isInteger(validator.error_line)?validator.error_line:null;
+    const discoveryAvailable=Boolean(verified.length||discovery.unverified_candidates?.length);
+    if(!service||(!previouslyFailed&&!path&&!discoveryAvailable)){
+      node.hidden=true;node.innerHTML='';return;
+    }
+
+    const status=low(config.validation_status);
+    const stageFailure=low(config.stage_failure_reason);
+    const prerequisite=response.execution_prerequisites||{};
+    const signingBlocked=approval==='approved'&&
+      prerequisite.api_signing_key==='missing_or_weak_mcp_bearer_token';
+    const oldEvent=approval==='consumed';
+    const reportedError=String(validator.syntax_error||'').slice(0,180);
+    const braceError=/unexpected\s*["']?\{["']?/i.test(reportedError);
+    const symptom=braceError?
+      (fa?'آکولاد باز «{» غیرمنتظره':'Unexpected opening brace {'):
+      (fa?'خطای نحوی کانفیگ':'Configuration syntax error');
+    const filename=path?'<code dir="ltr">'+txt(path)+'</code>':
+      esc(fa?'فایل کانفیگ سرویس':'the service configuration file');
+    const location=path?
+      (line!==null?
+        esc(fa?'در خط ':'At line ')+
+          '<strong>'+num(line)+'</strong> '+
+          esc(fa?'فایل ':'of ')+filename:
+        esc(fa?'در فایل ':'In ')+filename):
+      esc(fa?'در کانفیگ سرویس ':'In the configuration of ')+txt(service);
+
+    let title,summary,action;
+    if(oldEvent){
+      title=fa?'نتیجهٔ اصلاح کانفیگ '+service:'Configuration change result · '+service;
+      summary=fa?'مجوز اجرای اصلاح مصرف شده است. نتیجهٔ اجرا و وضعیت فایل را بررسی کنید.':
+        'The one-time approval has been consumed. Check the execution result and file status.';
+      action='outcome';
+    }else if(previouslyFailed){
+      title=fa?'خطای کانفیگ '+service:'Configuration issue · '+service;
+      summary=location+
+        esc(fa?'، '+symptom+' گزارش شده است.':
+          ': '+symptom+' was reported.');
+      action=approval==='approved'?'approved':
+        approval==='pending'?'pending':
+        approval==='pending_validation'?'pending_validation':
+        hasDiff?'diff':'review';
+    }else{
+      title=fa?'بررسی کانفیگ '+service:'Configuration review · '+service;
+      summary=esc(fa?'برای این فایل هنوز خطای نحوی تأییدشده ثبت نشده است.':
+        'No confirmed syntax issue has been recorded for this file.');
+      action='review';
+    }
+
+    const instructions={
+      approved:fa?'اصلاح بررسی و تأیید شده است؛ برای اعمال آن به بخش تأیید و اجرا بروید.':
+        'The correction is approved; continue in the approval and execution section.',
+      pending:fa?'نسخهٔ پیشنهادی اعتبارسنجی شده است؛ تفاوت‌ها را ببینید و در صورت موافقت تأیید کنید.':
+        'The candidate passed validation; review the diff before approving.',
+      pending_validation:fa?'پیشنهاد اصلاح ثبت شده است؛ پیش از تأیید، نسخهٔ موقت باید اعتبارسنجی شود.':
+        'The request is recorded; validate the staged version before approval.',
+      diff:fa?'اصلاح پیشنهادی را مشاهده کنید و پس از بررسی، درخواست تغییر بدهید.':
+        'Review the proposed correction before requesting a change.',
+      review:fa?'برای دیدن اصلاح پیشنهادی و تفاوت فایل، بررسی را اجرا کنید.':
+        'Run a review to see the suggested correction and file diff.',
+      outcome:fa?'جزئیات اعمال، راستی‌آزمایی و بازگشت احتمالی را بررسی کنید.':
+        'Inspect execution, verification and any rollback.',
+    };
+    const instruction=instructions[action];
     const previewKind=service==='nginx'?'nginx':verified.length?'review':'generic';
-    const previewBlocked=Boolean(
-      state.historic||state.busy||state.chatBusy||state.configPreviewPending||
-      state.lifecycle?.analysis_in_progress
-    );
-    const regenerateButton=
-      '<button type="button" class="ic-btn ic-btn-primary" data-config-preview="'+
-      previewKind+'"'+
-      (state.historic||state.busy||state.chatBusy||state.configPreviewPending||state.lifecycle?.analysis_in_progress?' disabled':'')+'>'+
-      esc(fa?(candidate?'بازبینی مجدد فایل کانفیگ با MCP':
-        service==='nginx'?
-        (previewUnavailable?'تلاش مجدد برای خواندن امن فایل':'ساخت پیش‌نمایش اصلاح با بررسی زنده MCP'):
-        (verified.length?'بررسی فایل‌های تأییدشده و پیشنهاد اصلاح':'کشف فایل کانفیگ با systemd و MCP')) :
-        (candidate?'Recheck configuration via MCP':service==='nginx'?
-        'Generate live MCP repair preview':
-         verified.length?'Review verified config & propose repair':'Discover config via systemd & MCP'))+
-      '</button>';
-    const diffButton=hasDiff?
-      '<a class="ic-btn ic-btn-muted" href="#ic-ai-proposed-fix">'+
-      esc(fa?'مشاهده اصلاح کانفیگ و Diff':'View correction and diff')+'</a>':
+    const blocked=state.historic||state.busy||state.chatBusy||
+      state.configPreviewPending||state.lifecycle?.analysis_in_progress;
+    const disabled=blocked?' disabled':'';
+    const previewButton='<button type="button" class="ic-btn ic-btn-primary" data-config-preview="'+
+      previewKind+'" data-preview-open-diff="1"'+disabled+'>'+
+      esc(fa?'بررسی و مشاهده اصلاح':'Review proposed fix')+'</button>';
+    const diffLink='<a class="ic-btn ic-btn-primary" href="#ic-ai-proposed-fix">'+
+      esc(fa?'مشاهده اصلاح و Diff':'View fix and diff')+'</a>';
+    const nextLink='<a class="ic-btn ic-btn-primary" href="#ic-action-controls">'+
+      esc(fa?'مشاهده تأیید و اجرا':'View approval and execution')+'</a>';
+    const resultLink='<a class="ic-btn ic-btn-primary" href="#ic-outcome-view">'+
+      esc(fa?'مشاهده نتیجه اجرا':'View execution result')+'</a>';
+    const primary=action==='outcome'?resultLink:
+      ['approved','pending','pending_validation'].includes(action)?nextLink:
+      hasDiff?diffLink:previewButton;
+    const secondary=hasDiff&&!blocked&&action!=='outcome'?
       '<button type="button" class="ic-btn ic-btn-muted" data-config-preview="'+
-      previewKind+'" data-preview-open-diff="1"'+(previewBlocked?' disabled':'')+'>'+
-      esc(fa?'ساخت Diff و مشاهده اصلاح':'Generate diff and view correction')+'</button>';
+      previewKind+'"'+disabled+'>'+esc(fa?'بررسی دوباره':'Recheck')+'</button>':'';
+
+    // Technical diagnostics are available on demand, not the lead sentence.
+    // These may describe unavailable systemd/LLM capabilities without
+    // contradicting a vendor-confirmed line number or a passed approval check.
+    const diagnosticRows=[];
+    if(reportedError)diagnosticRows.push(
+      esc(fa?'پیام Validator: ':'Validator message: ')+txt(reportedError));
+    if(discovery.status)diagnosticRows.push(
+      esc(fa?'کشف فایل: ':'Discovery: ')+txt(discovery.status));
+    if(discovery.llm_guidance_status)diagnosticRows.push(
+      esc(fa?'مشورت LLM: ':'LLM consultation: ')+txt(discovery.llm_guidance_status));
+    if(status&&status!=='—')diagnosticRows.push(
+      esc(fa?'وضعیت پیشنهاد: ':'Candidate validation: ')+txt(status));
+    if(stageFailure&&!['none','not_recorded','not_tested','—'].includes(stageFailure)){
+      diagnosticRows.push(esc(fa?'مانع بررسی: ':'Check blocked: ')+txt(stageFailure));
+    }
+    if(response.validation_pipeline_status)diagnosticRows.push(
+      esc(fa?'اعتبارسنجی مستقل: ':'Independent validation: ')+
+      txt(response.validation_pipeline_status));
+    const technical=diagnosticRows.length?
+      '<details class="ic-config-banner-details"><summary>'+
+      esc(fa?'جزئیات فنی':'Technical details')+'</summary><div>'+
+      diagnosticRows.map(row=>'<p>'+row+'</p>').join('')+'</div></details>':'';
+    const warning=signingBlocked?
+      '<p class="ic-config-banner-warning" role="status">'+
+        esc(fa?'اعمال فعلاً متوقف است: توکن MCP در API برای امضای اجرا تنظیم نشده یا ضعیف است.':
+          'Apply blocked: MCP bearer is missing or too weak for approval signing.')+
+      '</p>':'';
+    const liveStatus=state.configPreviewPending?
+      '<p role="status" aria-live="polite">'+
+      esc(fa?'در حال بررسی مجدد فایل کانفیگ…':'Rechecking the configuration…')+'</p>':
+      state.configPreviewLastResult?
+      '<p role="status" aria-live="polite">'+txt(state.configPreviewLastResult)+'</p>':'';
     node.hidden=false;
-    node.innerHTML='<div class="ic-config-banner-copy"><strong>'+
-      esc(fa?'بررسی و اصلاح کانفیگ '+service:'Configuration discovery & correction · '+service)+
-      '</strong><p>'+esc(candidate?stageText:
-      (fa?(invalid?
-        'خطای کانفیگ ثبت شده؛ هنوز نسخه اصلاحی معتبر موجود نیست.':
-        'فایل و روش اعتبارسنجی از systemd و MCP در حال شناسایی است؛ مسیر حدسی معتبر نیست.'):
-        (invalid?'Config failure recorded; no safe correction yet.':
-        'Discovering config files and validation methods; a guessed path is not verified.')))+
-      '</p>'+(hasDiff?'':('<p role="status" class="ic-config-banner-warning">'+
-        esc(fa?'Diff هنوز ساخته نشده است؛ خطای Validator به‌تنهایی شامل نسخه اصلاحی نیست. دکمه ساخت Diff، یک بازبینی امن و زنده از MCP درخواست می‌کند.':
-        'Diff not generated: the validator error is not a candidate. Generate Diff starts a live read-only MCP review.')+
-        '</p>'))+(path?'<p><code dir="ltr">'+txt(path)+'</code>'+
-        (line!==null?' · '+esc(fa?'خط ':'line ')+num(line):'')+'</p>':'')+
-      (reason?'<p class="ic-config-banner-warning">'+esc(reason)+'</p>':'')+
-      responseLabel+signingNotice+
-      '<p>'+esc(fa?'کشف فایل: ':'File discovery: ')+
-      txt(discovery.status||'not_recorded')+' · '+
-      esc(fa?'فایل‌های تأییدشده: ':'Verified files: ')+num(verified.length)+
-      ' · '+esc(fa?'مشورت LLM: ':'LLM consultation: ')+
-      txt(discovery.llm_guidance_status||'not_consulted')+'</p>'+
-      (state.configPreviewPending?
-        '<p role="status" aria-live="polite">'+esc(fa?
-          'در حال اجرای بررسی read-only کانفیگ از VM MCP و به‌روزرسانی تحلیل…':
-          'Read-only VM MCP configuration check and incident reanalysis in progress…')+'</p>':
-        state.configPreviewLastResult?
-        '<p role="status" aria-live="polite">'+txt(state.configPreviewLastResult)+'</p>':'')+
-      '<p class="ic-config-banner-warning">'+esc(fa?
-        'پس از مشاهده Diff، درخواست تغییر را به صف Approval بفرستید. تا گذر از اعتبارسنجی مستقل، تأیید نهایی و اعمال فایل مسدود می‌ماند.':
-        'Review the diff then submit the governed change request. Final approval and application stay blocked until independent validation.')+
-      '</p></div><div class="ic-config-banner-actions">'+regenerateButton+
-      diffButton+requestButton+'</div>';
+    node.innerHTML='<div class="ic-config-banner-copy"><strong>'+esc(title)+'</strong>'+
+      '<p class="ic-config-banner-summary">'+summary+'</p>'+
+      '<p>'+esc(instruction)+'</p>'+warning+liveStatus+technical+
+      '</div><div class="ic-config-banner-actions">'+primary+secondary+'</div>';
   }
 
   function renderConfigProposal(config) {
