@@ -75,6 +75,9 @@ async def test_worker_validates_exact_candidate_without_ssh_secret_leak():
             return {"success": True, "supported": True, "valid": False,
                     "config_file": PATH, "error_line": 1, "syntax_error": 'unexpected "{"'}
 
+        async def _sudo(self, target, command, *, stdin_data=None):
+            return await self._run(target, "sudo -n " + command, stdin_data=stdin_data)
+
         async def _run(self, target, command, *, stdin_data=None):
             calls.append((command, stdin_data))
             if "aiops-config-guard" in command:
@@ -220,6 +223,9 @@ async def test_systemd_bound_json_config_approval_path_for_any_runtime(service, 
             return {"success": True, "service": name, "files": [
                 {"path": path, "verified_exists": True, "source": "systemd_working_directory_inventory"}
             ]}
+        async def _sudo(self, target, command, *, stdin_data=None):
+            return await self._run(target, "sudo -n " + command, stdin_data=stdin_data)
+
         async def _run(self, target, command, *, stdin_data=None):
             calls.append((command, stdin_data))
             if "aiops-config-guard" in command:
@@ -251,6 +257,9 @@ async def test_generic_json_proposal_requires_fresh_systemd_file_binding():
             return {"success": True, "files": [
                 {"path": "/opt/another-service/appsettings.json", "verified_exists": True},
             ]}
+        async def _sudo(self, target, command, *, stdin_data=None):
+            return await self._run(target, "sudo -n " + command, stdin_data=stdin_data)
+
         async def _run(self, *args, **kwargs):
             raise AssertionError("must not read arbitrary unbound config")
     result = await run_governed_change(
@@ -306,6 +315,9 @@ async def test_xml_repair_flows_through_same_governed_service_neutral_validator(
         _validate_service = staticmethod(lambda service: None)
         async def service_config_discovery(self, target, service):
             return {"success": True, "files": [{"path": path, "verified_exists": True}]}
+        async def _sudo(self, target, command, *, stdin_data=None):
+            return await self._run(target, "sudo -n " + command, stdin_data=stdin_data)
+
         async def _run(self, target, command, *, stdin_data=None):
             if "aiops-config-guard" in command:
                 assert stdin_data == corrected
