@@ -272,7 +272,7 @@ def test_nginx_repair_entrypoint_is_visible_near_incident_and_never_applies_unva
     assert 'data-config-intent="request_change_approval"' in js
     assert 'href="#ic-ai-proposed-fix"' in js
     assert 'اعمال اصلاح روی سرور — غیرفعال' not in js
-    assert 'اصلاح پیشنهادی را مشاهده کنید و پس از بررسی، درخواست تغییر بدهید' in js
+    assert 'اصلاح پیشنهادی را ببینید؛ پس از تأیید، برای اعمال آن اقدام کنید' in js
     assert 'ارسال درخواست به Approval' in js
     assert 'const approval=low(response.approval_status||response.status)' in js
     assert 'state.historic' in js
