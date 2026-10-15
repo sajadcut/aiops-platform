@@ -287,36 +287,61 @@ class SSHVMConnector:
         return await self._run(target, f"sudo -k -S -p '' {fixed_command}", stdin_data=payload)
 
     async def config_guard_preflight(self, target: str) -> Dict[str, Any]:
-        """Read-only check that distinguishes an uninstalled guard from sudo.
+        """Verify the fixed guard path without privilege or leaking VM output.
 
-        The SSH user does not need root to inspect normal /usr/local/sbin
-        metadata. Never fetch, install, execute or update privileged code
-        merely because a monitoring event asks to validate a candidate.
+        POSIX `test -e` reports false for BOTH a missing file and a path
+        whose parent cannot be traversed. Distinguish those states so the
+        operator does not incorrectly reinstall a helper that already exists.
+        Log only allowlisted diagnostic codes and numeric metadata; never
+        stdout/stderr or candidate content.
         """
         self._validate_target(target)
         command = (
             "LC_ALL=C; p=/usr/local/sbin/aiops-config-guard; "
-            "if [ -L \"$p\" ]; then printf 'SYMLINK'; "
+            "if [ ! -d /usr/local/sbin ]; then printf 'PARENT_MISSING'; "
+            "elif [ ! -x /usr ] || [ ! -x /usr/local ] || "
+            "[ ! -x /usr/local/sbin ]; then printf 'PARENT_INACCESSIBLE'; "
+            "elif [ -L \"$p\" ]; then printf 'SYMLINK'; "
             "elif [ ! -e \"$p\" ]; then printf 'MISSING'; "
             "elif [ ! -f \"$p\" ]; then printf 'NOT_REGULAR'; "
             "else printf 'PRESENT '; stat -c '%u %g %a' -- \"$p\"; fi"
         )
         observed = await self._run(target, command)
+        raw_probe = str(observed.get("stdout") or "").strip()
+        fields = raw_probe.split()
+        code = raw_probe if raw_probe in {
+            "MISSING", "SYMLINK", "NOT_REGULAR",
+            "PARENT_MISSING", "PARENT_INACCESSIBLE",
+        } else "PRESENT" if len(fields) == 4 and fields[0] == "PRESENT" else "UNKNOWN"
+        states = {
+            "MISSING": "config_guard_helper_missing",
+            "SYMLINK": "config_guard_helper_symlink_refused",
+            "NOT_REGULAR": "config_guard_helper_not_regular",
+            "PARENT_MISSING": "config_guard_helper_parent_missing",
+            "PARENT_INACCESSIBLE": "config_guard_helper_parent_inaccessible",
+        }
         if observed.get("success") is not True:
-            return {"success": False, "status": "config_guard_preflight_unavailable"}
-        value = str(observed.get("stdout") or "").strip()
-        if value == "MISSING":
-            return {"success": False, "status": "config_guard_helper_missing"}
-        if value == "SYMLINK":
-            return {"success": False, "status": "config_guard_helper_symlink_refused"}
-        if value == "NOT_REGULAR":
-            return {"success": False, "status": "config_guard_helper_not_regular"}
-        fields = value.split()
-        if len(fields) != 4 or fields[0] != "PRESENT":
-            return {"success": False, "status": "config_guard_preflight_unavailable"}
-        if fields[1] != "0" or fields[2] != "0" or fields[3] != "750":
-            return {"success": False, "status": "config_guard_helper_unsafe_metadata"}
-        return {"success": True, "status": "config_guard_helper_present"}
+            code = "SSH_FAILED"
+            status = "config_guard_preflight_unavailable"
+        elif code == "PRESENT":
+            status = ("config_guard_helper_present"
+                      if fields[1:] == ["0", "0", "750"]
+                      else "config_guard_helper_unsafe_metadata")
+        else:
+            status = states.get(code, "config_guard_preflight_unavailable")
+        success = status == "config_guard_helper_present"
+        # Do not persist stdout/stderr, config contents, or sudo credentials.
+        logger.info(
+            "vm_config_guard_preflight_completed",
+            target=target,
+            helper="/usr/local/sbin/aiops-config-guard",
+            probe=code,
+            status=status,
+            success=success,
+            ssh_exit_code=observed.get("exit_code"),
+            ssh_auth_mode=self._auth_mode(),
+        )
+        return {"success": success, "status": status}
 
     async def health_check(self, target: str) -> bool:
         result = await self._run(target, "printf connected")
