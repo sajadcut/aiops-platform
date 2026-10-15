@@ -7,6 +7,17 @@ create an executable request. Knowledge is a local Cognia-review *draft* only.
 """
 from __future__ import annotations
 
+def _audit_followup_status(domain_status: str) -> str:
+    """Persist a stable VARCHAR(50) audit code; full value stays in metadata."""
+    if domain_status == "evidence_recorded_reanalysis_requires_workflow_review":
+        return "reanalysis_requires_workflow_review"
+    if len(domain_status) > 50:
+        # Preserve details in the audit metadata rather than silently
+        # truncating an arbitrary status into an ambiguous database enum.
+        return "followup_status_see_metadata"
+    return domain_status
+
+
 import asyncio
 import json
 from datetime import datetime, timezone
@@ -271,9 +282,7 @@ async def persist_and_reassess(
             "action": action,
             # audit_events.status is VARCHAR(50). Keep the full, stable
             # domain result in JSON metadata; persist a bounded audit enum.
-            "status": ("reanalysis_requires_workflow_review"
-                       if status["status"] == "evidence_recorded_reanalysis_requires_workflow_review"
-                       else status["status"]),
+            "status": _audit_followup_status(status["status"]),
             "metadata": {
                 "followup_status": status["status"],
                 "evidence_ref": evidence_ref, "reassessed": status["reassessed"],
