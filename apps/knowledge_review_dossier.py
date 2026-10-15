@@ -169,3 +169,34 @@ async def incident_dossier(db, incident_id: UUID) -> dict:
                    "raw_data": item.raw_data} for item in evidence_rows],
         audits=audits, source_recovery=source_recovery,
     )
+
+
+def dossier_addendum(dossier: Mapping[str, Any] | None) -> str:
+    """Knowledge-safe exact operational facts, distinct from inferred RCA."""
+    if not isinstance(dossier, Mapping) or not dossier.get("config_diagnostic"):
+        return ""
+    facts = [str(x) for x in (dossier.get("facts") or []) if isinstance(x, str)]
+    return "\n".join([
+        "شواهد فنی مرتبط با کانفیگ (ثبت‌شده؛ نه دستورات اجرایی):",
+        *["- " + fact for fact in facts[:7]],
+        "تمایز ضروری: گذر تست فایل با بالا آمدن سرویس و رفع آلارم یکسان نیست.",
+        "قبل از استفادهٔ مجدد، خطا و وضعیت سرویس باید دوباره بررسی و "
+        "هرگونه عملیات جداگانه تأیید شود.",
+    ])
+
+
+def dossier_title(service: str, dossier: Mapping[str, Any] | None,
+                  *, verified_memory: bool = False) -> str | None:
+    """Meaningful candidate label rather than ten indistinguishable titles."""
+    if not isinstance(dossier, Mapping):
+        return None
+    diagnostic = dossier.get("config_diagnostic")
+    if not isinstance(diagnostic, Mapping):
+        return None
+    path = diagnostic.get("config_file")
+    line = diagnostic.get("error_line")
+    if not isinstance(path, str) or type(line) is not int:
+        return None
+    # Keep filenames relevant but never assert that a stale error persists.
+    suffix = "تجربهٔ ثبت‌شده" if verified_memory else "نیازمند بازبینی"
+    return redact_text(f"{service}: خطای کانفیگ {path}:{line} ({suffix})")[:500]
