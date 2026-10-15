@@ -17,7 +17,9 @@ from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from cryptography.exceptions import InvalidTag
 
 from apps.config_change_authorization import candidate_encryption_key
-from integrations.vm.windows_secure_acl import ensure_private_windows_acl
+from integrations.vm.windows_secure_acl import (
+    ensure_private_windows_acl, harden_private_windows_acl,
+)
 
 _TTL_SECONDS = 24 * 3600
 _MAX_BYTES = 48 * 1024
@@ -43,6 +45,23 @@ def _default_directory() -> Path:
     return Path("/var/lib/aiops/config-candidates")
 
 
+def _prepare_windows_directory(path: Path) -> None:
+    """Automatically secure inherited ProgramData ACLs before any write.
+
+    Existing broad ACLs are common under ProgramData. Try native hardening
+    once, then verify the *actual* DACL. Any failure remains fail-closed.
+    """
+    if path.is_symlink() or (
+        hasattr(os.path, "isjunction") and os.path.isjunction(str(path))
+    ):
+        raise CandidateUnavailable("candidate_directory_permissions")
+    try:
+        ensure_private_windows_acl(str(path))
+    except PermissionError:
+        harden_private_windows_acl(str(path))
+        ensure_private_windows_acl(str(path))
+
+
 def _directory() -> Path:
     path = _default_directory()
     if not path.is_absolute() or ".." in path.parts:
@@ -53,7 +72,7 @@ def _directory() -> Path:
         if not stat.S_ISDIR(current.st_mode):
             raise CandidateUnavailable("candidate_directory_permissions")
         if os.name == "nt":
-            ensure_private_windows_acl(str(path))
+            _prepare_windows_directory(path)
         elif current.st_uid != os.geteuid() or current.st_mode & 0o077:
             raise CandidateUnavailable("candidate_directory_permissions")
     except PermissionError:
