@@ -280,8 +280,11 @@ class SSHVMConnector:
         password = self._password()
         if not password or "\n" in password or "\r" in password:
             return result
+        # -k prevents a concurrent/cached sudo ticket from bypassing the
+        # password read: otherwise the guard might mistake the password line
+        # for the beginning of its configuration candidate.
         payload = password + "\n" + (stdin_data if stdin_data is not None else "")
-        return await self._run(target, f"sudo -S -p '' {fixed_command}", stdin_data=payload)
+        return await self._run(target, f"sudo -k -S -p '' {fixed_command}", stdin_data=payload)
 
     async def health_check(self, target: str) -> bool:
         result = await self._run(target, "printf connected")
