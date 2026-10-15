@@ -375,6 +375,19 @@ def test_elastic_success_is_not_host_attributed_if_provider_only_filtered_servic
     assert report_row["evidence"][0]["id"] == "ev-elasticsearch"
 
 
+def test_disk_summary_cannot_hide_full_var_log_mount_after_seven_other_mounts():
+    mounts = [
+        {"mount": f"/run/slot-{idx}", "use_percent": f"{idx}%",
+         "available": "12345"} for idx in range(12)
+    ]
+    mounts.append({"mount": "/var/log", "use_percent": "100%", "available": "20480"})
+    row = domain(report(vm("disk_status", {"filesystems": mounts, "inodes": []})), "disk")
+    summary = row["technical_result"]
+    assert "/var/log: used=100%" in summary
+    assert summary.index("/var/log") < summary.index("/run/slot-")
+    assert "حذف فایل مجاز نیست" in summary
+
+
 def test_actual_nested_disk_forensics_surfaces_top_file_sizes_and_growth_limits():
     disk = vm("disk_status", {
         "filesystems": [{"mount": "/var/log", "use_percent": "100%",
