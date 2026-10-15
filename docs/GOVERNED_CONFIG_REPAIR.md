@@ -94,3 +94,47 @@ approval and second confirmation, post-write check, forced rollback, and
 negative tests for unauthorized sudo and unavailable namespaces. CI mock
 tests cannot prove these host-level properties. Label untested host scenarios
 REAL ENV REQUIRED and never claim production-ready without verification.
+
+
+## 2026-10-15 execution blocker: missing signing secret
+
+A real approval can reach `approved` after an isolated vendor check and still
+fail at `POST /api/v1/approvals/{approval_id}/execute-config` with HTTP 503
+`config_signing_key_not_configured`. This is a **control-plane signing-key
+precondition**, not a VM syntax failure, and does **not** consume the approval
+in the current API implementation.
+
+- Configure `AIOPS_CONFIG_APPLY_SIGNING_SECRET` with a new high-entropy secret
+  (minimum 32 characters) in the **API process** and **VM MCP process**.
+  The two processes must receive the **identical** value, independently of
+  MCP authentication tokens. Use a secrets manager or locked-down deployment
+  secret; never commit or log the value.
+- Restart/redeploy both processes to pick up configuration. The Settings
+  contract loads a local `.env` for development, and explicitly injected
+  process environment values override it. Production should use a managed
+  secret, not a checked-in file.
+- The Incident configuration-review response now exposes a **non-secret**
+  `execution_prerequisites.api_signing_key` value of `configured` or
+  `missing`. `vm_mcp_signing_key` and `signing_key_match` remain
+  `not_checked` unless independently verified; an API-side check cannot
+  assert remote readiness.
+- Confirm the current Approval still has `approved` status and that the
+  original/candidate hashes and the live file have not changed. Then use the
+  existing explicit execution action. Never manually bypass the signing gate.
+
+Example for **Windows PowerShell development**, in **each** process-launching
+terminal, using one secret created and stored securely out of band:
+
+```powershell
+$env:AIOPS_CONFIG_APPLY_SIGNING_SECRET = (Get-Content 'C:\secure\aiops-apply-signing-secret.txt' -Raw).Trim()
+# Then launch API or VM MCP from this same terminal.
+```
+
+The referenced file must be ACL-restricted to the service identity; the
+example path is only illustrative. For a Windows service or CI deployment,
+set the secret through the service's secure environment/secret injection,
+not via an interactive session that the service does not inherit.
+
+A passing candidate check, an `approved` Approval and a non-consumed grant
+must be shown separately in the dashboard. Do not show `PASS` for signing
+readiness merely because the vendor validator passed.
