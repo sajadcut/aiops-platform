@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 526 | Dashboard JS files scanned: 8 | Symbols indexed: 5654**
+**Python files scanned: 526 | Dashboard JS files scanned: 8 | Symbols indexed: 5656**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -3972,15 +3972,17 @@
 | `tests/unit/test_full_config_llm_repair.py` | `test_feature_off_never_reads_or_calls_model` | 64 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_full_config_llm_repair.py` | `test_cleartext_remote_gateway_rejected_before_disclosure` | 76 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_full_config_llm_repair.py` | `test_oversize_file_not_truncated_or_submitted` | 89 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_full_config_llm_repair.py` | `test_changed_secret_line_and_whole_file_rewrite_rejected` | 101 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_full_config_llm_repair.py` | `test_response_parser_accepts_json_fence_but_not_partial_file` | 109 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_full_config_llm_repair.py` | `test_connector_resolves_only_verified_path_and_never_returns_source` | 116 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_full_config_llm_repair.py` | `test_connector_resolves_only_verified_path_and_never_returns_source.validate` | 123 | async method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | test_connector_resolves_only_verified_path_and_never_returns_source |
-| `tests/unit/test_full_config_llm_repair.py` | `test_connector_resolves_only_verified_path_and_never_returns_source.discover` | 125 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_connector_resolves_only_verified_path_and_never_returns_source |
-| `tests/unit/test_full_config_llm_repair.py` | `test_connector_resolves_only_verified_path_and_never_returns_source.run` | 132 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | test_connector_resolves_only_verified_path_and_never_returns_source |
-| `tests/unit/test_full_config_llm_repair.py` | `test_connector_resolves_only_verified_path_and_never_returns_source.model_review` | 135 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_connector_resolves_only_verified_path_and_never_returns_source |
-| `tests/unit/test_full_config_llm_repair.py` | `test_incident_chat_routes_only_explicit_full_file_request_and_filters_raw` | 151 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_full_config_llm_repair.py` | `test_incident_banner_offers_deliberate_full_file_llm_preview` | 164 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_full_config_llm_repair.py` | `test_micro_fix_rejects_unrelated_changes_even_if_model_returns_valid_json` | 101 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_full_config_llm_repair.py` | `test_llm_request_emphasizes_single_character_local_repair` | 146 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_full_config_llm_repair.py` | `test_changed_secret_line_and_whole_file_rewrite_rejected` | 169 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_full_config_llm_repair.py` | `test_response_parser_accepts_json_fence_but_not_partial_file` | 177 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_full_config_llm_repair.py` | `test_connector_resolves_only_verified_path_and_never_returns_source` | 184 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_full_config_llm_repair.py` | `test_connector_resolves_only_verified_path_and_never_returns_source.validate` | 191 | async method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | test_connector_resolves_only_verified_path_and_never_returns_source |
+| `tests/unit/test_full_config_llm_repair.py` | `test_connector_resolves_only_verified_path_and_never_returns_source.discover` | 193 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_connector_resolves_only_verified_path_and_never_returns_source |
+| `tests/unit/test_full_config_llm_repair.py` | `test_connector_resolves_only_verified_path_and_never_returns_source.run` | 200 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | test_connector_resolves_only_verified_path_and_never_returns_source |
+| `tests/unit/test_full_config_llm_repair.py` | `test_connector_resolves_only_verified_path_and_never_returns_source.model_review` | 203 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_connector_resolves_only_verified_path_and_never_returns_source |
+| `tests/unit/test_full_config_llm_repair.py` | `test_incident_chat_routes_only_explicit_full_file_request_and_filters_raw` | 219 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_full_config_llm_repair.py` | `test_incident_banner_offers_deliberate_full_file_llm_preview` | 232 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_governed_config_change.py` | `params` | 19 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_governed_config_change.py` | `test_nginx_candidate_reconstructed_only_from_same_hash_bound_source` | 28 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_governed_config_change.py` | `test_config_execution_signed_claim_is_exact_scoped_and_short_lived` | 42 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
