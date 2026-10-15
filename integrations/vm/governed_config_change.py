@@ -134,7 +134,11 @@ def classify_config_guard_failure(observed: dict) -> str:
             or "is not allowed to run sudo" in stderr or "may not run sudo" in stderr):
         return "config_guard_sudo_policy_denied"
     if "command not found" in stderr or "no such file or directory" in stderr:
-        return "config_guard_helper_missing"
+        # A missing dependency or helper interpreter is not evidence that
+        # /usr/local/sbin/aiops-config-guard itself does not exist.
+        return ("config_guard_helper_missing"
+                if "/usr/local/sbin/aiops-config-guard" in stderr
+                else "config_guard_execution_failed")
     if "permission denied" in stderr:
         return "config_guard_helper_permission_denied"
     if code == 1:
@@ -220,6 +224,25 @@ async def run_governed_change(connector, *, action: str, target: str, service: s
     validator = ("nginx -t (private mount namespace)" if nginx_profile
                  else "jq empty (JSON syntax only; application semantics unverified)"
                  if json_profile else "xmllint --nonet --noout (XML syntax only)")
+
+    # Diagnose a missing/unsafe pre-provisioned root helper before trying
+    # sudo. Root tooling is not installed by an unapproved incident request:
+    # deployment must use the separate, trusted VM provisioning procedure.
+    preflight = getattr(connector, "config_guard_preflight", None)
+    if callable(preflight):
+        check = await preflight(target)
+        if check.get("success") is not True:
+            return {
+                "success": False,
+                "status": str(check.get("status") or "config_guard_preflight_unavailable"),
+                "isolated_validation": False,
+                "validation_scope": scope,
+                "vendor_validator": validator,
+                "original_sha256": original_sha256,
+                "candidate_sha256": candidate_sha256,
+                "production_write_performed": False,
+                "remote_python_required": False,
+            }
 
     # Never open an unrestricted root shell: invoke the pre-provisioned,
     # root-owned guard with the SSH user's existing sudo authorization.
