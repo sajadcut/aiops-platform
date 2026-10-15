@@ -179,6 +179,9 @@ def build_ephemeral_guard(*, action: str, profile: str, path: str,
     if not 0 < len(payload) <= _MAX_CONFIG_BYTES:
         raise ValueError("invalid_ephemeral_candidate_size")
     encoded = base64.b64encode(payload).decode("ascii")
+    # GNU base64 accepts line feeds; bounded lines keep dash/BusyBox shell
+    # heredoc parsers from handling a single 350 KB physical input line.
+    encoded = "\n".join(encoded[i:i + 76] for i in range(0, len(encoded), 76))
     # The encoded candidate contains only RFC4648 symbols; it cannot end
     # the heredoc or introduce shell statements.
     script = _SHELL.replace("__CANDIDATE_BASE64__", encoded)
