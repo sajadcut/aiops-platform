@@ -1,3 +1,5 @@
+import os
+
 from typing import Dict, List, Optional
 from urllib.parse import urlparse
 
@@ -74,9 +76,9 @@ class Settings(BaseSettings):
     AIOPS_FULL_CONFIG_LLM_ENABLED: bool = Field(default=False)
     AIOPS_CONFIG_CANDIDATE_ENCRYPTION_KEY: str = Field(default="")
     AIOPS_CONFIG_CANDIDATE_DIRECTORY: str = Field(default_factory=lambda: (
-        __import__("os").path.join(__import__("os").environ.get("ProgramData", "C:\\ProgramData"),
+        os.path.join(os.environ.get("ProgramData", "C:\\ProgramData"),
                                    "AIOps", "config-candidates")
-        if __import__("os").name == "nt" else "/var/lib/aiops/config-candidates"))
+        if os.name == "nt" else "/var/lib/aiops/config-candidates"))
     AGENT_MAX_DYNAMIC_EVIDENCE_TYPES: int = Field(...)
     AGENT_INITIAL_EVIDENCE_WINDOW_SECONDS: int = Field(...)
     AGENT_REFRESH_EVIDENCE_WINDOW_SECONDS: int = Field(...)
