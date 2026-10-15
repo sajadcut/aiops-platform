@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 510 | Dashboard JS files scanned: 8 | Symbols indexed: 5378**
+**Python files scanned: 511 | Dashboard JS files scanned: 8 | Symbols indexed: 5388**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -5104,6 +5104,16 @@
 | `tests/unit/test_triage_production_engine.py` | `test_insufficient_evidence_produces_low_confidence_bounded_investigation` | 156 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_triage_production_engine.py` | `test_stale_alert_is_explicit_and_fresh_replacement_is_requested` | 166 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_triage_production_engine.py` | `test_coordinator_uses_new_confidence_band_for_adaptive_fanout` | 189 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_universal_llm_config_syntax.py` | `test_grammar_projection_does_not_leak_values` | 24 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_universal_llm_config_syntax.py` | `test_json_trailing_comma_can_be_projected_for_both_llm_passes` | 35 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_universal_llm_config_syntax.py` | `test_public_result_forbids_raw_and_malicious_config_content` | 49 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_universal_llm_config_syntax.py` | `test_two_model_passes_cannot_approve_or_validate_a_configuration` | 68 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_universal_llm_config_syntax.py` | `test_two_model_passes_cannot_approve_or_validate_a_configuration.Model` | 70 | class | کلاس | test_two_model_passes_cannot_approve_or_validate_a_configuration |
+| `tests/unit/test_universal_llm_config_syntax.py` | `test_two_model_passes_cannot_approve_or_validate_a_configuration.Model.generate` | 71 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_two_model_passes_cannot_approve_or_validate_a_configuration.Model |
+| `tests/unit/test_universal_llm_config_syntax.py` | `test_model_unavailable_does_not_affect_live_source_or_grant_pass` | 98 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_universal_llm_config_syntax.py` | `test_model_unavailable_does_not_affect_live_source_or_grant_pass.BrokenModel` | 99 | class | کلاس | test_model_unavailable_does_not_affect_live_source_or_grant_pass |
+| `tests/unit/test_universal_llm_config_syntax.py` | `test_model_unavailable_does_not_affect_live_source_or_grant_pass.BrokenModel.generate` | 100 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_model_unavailable_does_not_affect_live_source_or_grant_pass.BrokenModel |
+| `tests/unit/test_universal_llm_config_syntax.py` | `test_llm_never_receives_raw_configuration_in_source_or_candidate` | 110 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_universal_service_config_discovery.py` | `_unit` | 18 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_universal_service_config_discovery.py` | `test_tomcat_catalina_base_is_path_hypothesis_not_validation` | 25 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_universal_service_config_discovery.py` | `test_java_spring_config_file_comes_from_unit_flag_not_model_guesses` | 39 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |

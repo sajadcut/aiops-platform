@@ -3,7 +3,7 @@
 > این فایل فهرست فایل‌به‌فایل repository است. توضیح معماری و flow در `CODEBASE_GUIDE_FA.md` آمده است.
 > این فایل با `scripts/generate_file_index_fa.py` ساخته و در CI کنترل می‌شود.
 
-**تعداد فایل‌های track‌شده و پوشش‌داده‌شده: 644**
+**تعداد فایل‌های track‌شده و پوشش‌داده‌شده: 645**
 
 | Path | Type | Purpose | Called By | Calls/Depends On | Runtime/Test/Docs | Notes |
 |---|---|---|---|---|---|---|
@@ -631,6 +631,7 @@
 | `tests/unit/test_technical_investigation_browser.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_technical_investigation_report.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_triage_production_engine.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
+| `tests/unit/test_universal_llm_config_syntax.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_universal_service_config_discovery.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_upstream_mcp_contracts.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_verification_gate.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
