@@ -488,17 +488,20 @@ async def vm_read(action: str, binding: dict, connector: Any = None) -> dict:
             "path": str(result.get("config_file") or ""),
             "review": result["model_syntax_review"],
         }]
-        for other in (result.get("file_reviews") or [])[:3]:
-            if (other.get("path") == result.get("config_file")
-                    or not other.get("syntax_projection")):
-                continue
-            result["file_model_reviews"].append({
-                "path": other["path"],
-                "review": await assess_service_syntax(
-                    other["syntax_projection"],
-                    other.get("candidate_syntax_projection"),
-                ),
-            })
+        extras = [
+            row for row in (result.get("file_reviews") or [])[:3]
+            if row.get("path") != result.get("config_file")
+            and row.get("syntax_projection")
+        ]
+        extra_checks = await asyncio.gather(*[
+            assess_service_syntax(row["syntax_projection"],
+                                  row.get("candidate_syntax_projection"))
+            for row in extras
+        ])
+        result["file_model_reviews"].extend(
+            {"path": row["path"], "review": check}
+            for row, check in zip(extras, extra_checks)
+        )
     if action == "service_config_review":
         # Grammar projections are transient LLM inputs. Do not put entire
         # 120-line slices into incident audit, checkpoints or chatbot history.
