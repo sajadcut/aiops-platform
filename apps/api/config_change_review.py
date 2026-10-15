@@ -136,6 +136,12 @@ def _review_progress(*, status: str, decision: str | None, proposal: dict,
         "approval_queue_registered": bool(approval),
         "approval_eligible": approvable,
         "approval_actionable": approvable,
+        "execution_prerequisites": {
+            "api_signing_key": "configured" if config_signing_ready() else "missing",
+            "vm_mcp_signing_key": "not_checked",
+            "signing_key_match": "not_checked",
+            "execution_ready": False,
+        },
         "execution_authority": False,
         "production_write_performed": False,
         "blocking_reasons": [] if validated else [
