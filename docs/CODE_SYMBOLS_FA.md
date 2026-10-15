@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 504 | Dashboard JS files scanned: 8 | Symbols indexed: 5292**
+**Python files scanned: 505 | Dashboard JS files scanned: 8 | Symbols indexed: 5300**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -873,8 +873,9 @@
 | `apps/approval_service/binding.py` | `intent_digest` | 67 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/approval_service/binding.py` | `bind_metadata` | 72 | function | Store a non-secret readable summary plus a digest of the complete intent. | module |
 | `apps/approval_service/binding.py` | `_assert_binding` | 100 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/approval_service/binding.py` | `assert_bound` | 136 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/approval_service/binding.py` | `assert_consumed_bound` | 145 | function | Validate the one-shot consumed authority handed to an internal executor. | module |
+| `apps/approval_service/binding.py` | `assert_bound` | 139 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/approval_service/binding.py` | `assert_config_request_bound` | 148 | function | Verify immutable approval intent *before* human approval, without granting authority. | module |
+| `apps/approval_service/binding.py` | `assert_consumed_bound` | 163 | function | Validate the one-shot consumed authority handed to an internal executor. | module |
 | `apps/approval_service/execution_claim.py` | `_ttl_seconds` | 14 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/approval_service/execution_claim.py` | `_purge_expired` | 21 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/approval_service/execution_claim.py` | `issue_execution_claim` | 27 | function | Mint one process-local, single-use execution capability. | module |
@@ -3401,6 +3402,13 @@
 | `tests/unit/test_config_change_review.py` | `test_approval_storage_does_not_upgrade_pending_validation_to_pending` | 165 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_config_change_review.py` | `test_pending_validation_cannot_be_approved_even_with_high_risk_permission` | 178 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_config_change_review.py` | `test_configuration_apply_tool_is_not_registered_before_safe_execution_exists` | 187 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_config_change_validation_binding.py` | `_intent` | 29 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_config_change_validation_binding.py` | `_approval` | 39 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_config_change_validation_binding.py` | `test_config_ticket_binding_works_in_each_legitimate_review_state` | 55 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_config_change_validation_binding.py` | `test_preapproval_ticket_cannot_be_used_as_executable_approval` | 61 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_config_change_validation_binding.py` | `test_terminal_config_ticket_is_not_accepted_as_pending_validation` | 67 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_config_change_validation_binding.py` | `test_config_ticket_rejects_drift_or_tampering_during_validation` | 82 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_config_change_validation_binding.py` | `test_preapproval_ticket_requires_exact_high_risk_and_workflow` | 91 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_config_review_button_runtime.py` | `test_config_buttons_dispatch_mcp_read_without_execution_and_refresh_report` | 11 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_container_image_contract.py` | `test_offline_runtime_uses_isolated_multistage_build` | 4 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_container_image_contract.py` | `test_container_acceptance_checks_final_filesystem_not_builder_layers` | 20 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
