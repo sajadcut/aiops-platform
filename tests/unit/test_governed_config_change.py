@@ -273,3 +273,67 @@ def test_general_guard_supports_different_approved_app_config_roots_without_runt
     assert "openssl pkeyutl -verify" in data
     assert "APPLIED_VERIFIED" in data and "ROLLED_BACK" in data
     assert subprocess.run(["sh", "-n", str(helper)], capture_output=True).returncode == 0
+
+
+@pytest.mark.parametrize("service,path", [
+    ("tomcat", "/opt/tomcat/conf/server.xml"),
+    ("java-payment", "/srv/payment/config/application.xml"),
+    ("custom-python", "/etc/example/service.xml"),
+])
+@pytest.mark.asyncio
+async def test_xml_repair_flows_through_same_governed_service_neutral_validator(service, path):
+    from integrations.vm.governed_config_change import rebuild_xml_candidate
+    src = '<Server><Service password="DO_NOT_LEAK"/></Server></Server>\n'
+    corrected = '<Server><Service password="DO_NOT_LEAK"/></Server>\n'
+    old, new = (
+        hashlib.sha256(src.encode()).hexdigest(),
+        hashlib.sha256(corrected.encode()).hexdigest(),
+    )
+    from integrations.vm.general_config_review import local_config_review
+    preview = local_config_review(base64.b64encode(src.encode()).decode(), path=path)
+    assert preview["status"] == "candidate_proposed"
+    assert preview["proposed_change"] == "remove_extra_xml_closing_tag"
+    assert preview["source_hash"] == old
+    assert preview["candidate_hash"] == new
+    assert "DO_NOT_LEAK" not in str(preview)
+    assert rebuild_xml_candidate(
+        encoded=base64.b64encode(src.encode()).decode(), path=path,
+        original_sha256=old, candidate_sha256=new,
+    ) == corrected
+
+    class Edge:
+        _validate_target = staticmethod(lambda target: None)
+        _validate_service = staticmethod(lambda service: None)
+        async def service_config_discovery(self, target, service):
+            return {"success": True, "files": [{"path": path, "verified_exists": True}]}
+        async def _run(self, target, command, *, stdin_data=None):
+            if "aiops-config-guard" in command:
+                assert stdin_data == corrected
+                return {"success": True, "stdout": "VALIDATED"}
+            return {"success": True, "stdout": base64.b64encode(src.encode()).decode()}
+
+    result = await run_governed_change(
+        Edge(), action="validate", target="192.0.2.12", service=service,
+        config_file=path, original_sha256=old, candidate_sha256=new,
+        proposed_change="remove_extra_xml_closing_tag",
+    )
+    assert result["success"] is True
+    assert result["validation_scope"] == "generic_xml_syntax_only_service_runtime_unverified"
+    assert result["vendor_validator"].startswith("xmllint")
+    assert result["production_write_performed"] is False
+
+
+def test_xml_dtd_or_missing_tag_does_not_create_unsafe_fix():
+    from integrations.vm.general_config_review import local_config_review
+    for raw in [
+        '<!DOCTYPE Server [<!ENTITY x SYSTEM "file:///etc/passwd">]><Server/>',
+        '<Server><Service></Server>',
+    ]:
+        result = local_config_review(base64.b64encode(raw.encode()).decode(),
+                                     path="/opt/tomcat/conf/server.xml")
+        assert result["status"] != "candidate_proposed"
+        assert result["candidate_hash"] is None
+        assert result["execution_authority"] is False
+    script = (Path(__file__).resolve().parents[2] / "scripts/vm/aiops-config-guard").read_text()
+    assert "xmllint --nonet --noout" in script
+    assert "DOCTYPE|ENTITY" in script
