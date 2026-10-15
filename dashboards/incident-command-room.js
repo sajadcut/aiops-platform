@@ -188,6 +188,7 @@
     receivedSignals: null, receivedSignalsStatus: 'loading',
     configResponse: null, configResponseStatus: 'loading',
     chat: null, chatStatus: 'loading', chatBusy: false, chatLastResult: null,
+    configPreviewPending: false, configPreviewLastResult: null,
     serviceStatus: null, serviceStatusLoading: false, serviceStatusBusy: false,
     serviceStatusToken: 0,
     serviceProfile: null, httpHealth: null, httpHealthBusy: false, profileBusy: false,
@@ -2346,7 +2347,7 @@
     const regenerateButton=
       '<button type="button" class="ic-btn ic-btn-primary" data-config-preview="'+
       (service==='nginx'?'nginx':verified.length?'review':'generic')+'"'+
-      (state.historic||state.busy||state.chatBusy||state.lifecycle?.analysis_in_progress?' disabled':'')+'>'+
+      (state.historic||state.busy||state.chatBusy||state.configPreviewPending||state.lifecycle?.analysis_in_progress?' disabled':'')+'>'+
       esc(fa?(candidate?'بازبینی مجدد فایل کانفیگ با MCP':
         service==='nginx'?
         (previewUnavailable?'تلاش مجدد برای خواندن امن فایل':'ساخت پیش‌نمایش اصلاح با بررسی زنده MCP'):
@@ -2373,6 +2374,12 @@
       esc(fa?'فایل‌های تأییدشده: ':'Verified files: ')+num(verified.length)+
       ' · '+esc(fa?'مشورت LLM: ':'LLM consultation: ')+
       txt(discovery.llm_guidance_status||'not_consulted')+'</p>'+
+      (state.configPreviewPending?
+        '<p role="status" aria-live="polite">'+esc(fa?
+          'در حال اجرای بررسی read-only کانفیگ از VM MCP و به‌روزرسانی تحلیل…':
+          'Read-only VM MCP configuration check and incident reanalysis in progress…')+'</p>':
+        state.configPreviewLastResult?
+        '<p role="status" aria-live="polite">'+txt(state.configPreviewLastResult)+'</p>':'')+
       '<p class="ic-config-banner-warning">'+esc(fa?
         'اعمال روی سرور فعلاً غیرفعال است: اعتبارسنجی مستقل، قرارداد تغییر نسخه‌دار و Approval اجرایی وجود ندارد. ثبت درخواست اعتبارسنجی خودش فایل را اصلاح نمی‌کند.':
         'Apply is disabled: isolated validation, a versioned change contract and executable approval are missing. A validation request does not modify the file.')+
@@ -3197,15 +3204,37 @@
       if(e.target.closest('#ic-archive-action-return')){returnLive();return;}
       const preview=e.target.closest('[data-config-preview]');
       if(preview){
-        if(!state.historic&&!state.chatBusy&&!state.busy){
-          void submitIncidentChat(
-            preview.dataset.configPreview==='nginx'?
-            'nginx_config_review: فقط پیش‌نمایش امن اصلاح nginx را از VM MCP بگیر و به شواهد و تحلیل همین رخداد اضافه کن. هیچ فایلی را تغییر نده.':
-            preview.dataset.configPreview==='review'?
-            'service_config_review: فایل کانفیگی که systemd و MCP وجودش را برای همین سرویس تأیید کرده‌اند با ابزار امن بررسی کن و در صورت امکان پیشنهاد اصلاح ساختاری ارائه بده؛ از LLM برای ناشناخته‌ها کمک بگیر ولی هیچ تغییری اجرا نکن.':
-            'service_config_discovery: مسیر فایل‌های تنظیمات همین سرویس را از systemd و VM MCP به‌صورت read-only کشف و تأیید کن؛ بعد با کمک LLM درباره روش اعتبارسنجی و رفع مشکل تحقیق کن. دستور اجرایی یا تغییر فایل انجام نده.'
-          );
+        if(state.historic||state.chatBusy||state.busy||state.configPreviewPending){
+          notify(state.language==='fa'?
+            'یک بررسی دیگر در حال اجراست یا نسخه تاریخی باز شده است.':
+            'Another check is running or the historical snapshot is active.',true);
+          return;
         }
+        if(state.lifecycle?.analysis_in_progress){
+          notify(state.language==='fa'?
+            'تحلیل اولیه هنوز کامل نشده است؛ بعد از تکمیل دوباره بررسی کنید.':
+            'Initial analysis is not yet complete; retry after it finishes.',true);
+          return;
+        }
+        const requested=preview.dataset.configPreview==='nginx'?
+          'nginx_config_review: فقط پیش‌نمایش امن اصلاح nginx را از VM MCP بگیر و به شواهد و تحلیل همین رخداد اضافه کن. هیچ فایلی را تغییر نده.':
+          preview.dataset.configPreview==='review'?
+          'service_config_review: فایل کانفیگی که systemd و MCP وجودش را برای همین سرویس تأیید کرده‌اند با ابزار امن بررسی کن و در صورت امکان پیشنهاد اصلاح ساختاری ارائه بده؛ از LLM برای ناشناخته‌ها کمک بگیر ولی هیچ تغییری اجرا نکن.':
+          'service_config_discovery: مسیر فایل‌های تنظیمات همین سرویس را از systemd و VM MCP به‌صورت read-only کشف و تأیید کن؛ بعد با کمک LLM درباره روش اعتبارسنجی و رفع مشکل تحقیق کن. دستور اجرایی یا تغییر فایل انجام نده.';
+        state.configPreviewPending=true;
+        state.configPreviewLastResult=null;
+        renderConfigActionBanner(state.report);
+        void (async()=>{
+          try{
+            await submitIncidentChat(requested);
+            state.configPreviewLastResult=state.chatLastResult ||
+              (state.language==='fa'?'بررسی ثبت شد؛ نتیجه را در چت و شواهد بخوانید.':
+                'Review recorded; see chat and Evidence for the result.');
+          }finally{
+            state.configPreviewPending=false;
+            if(state.report)renderConfigActionBanner(state.report);
+          }
+        })();
         return;
       }
       const intent=e.target.closest('[data-config-intent]');
