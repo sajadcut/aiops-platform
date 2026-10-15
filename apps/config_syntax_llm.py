@@ -131,7 +131,7 @@ async def assess_service_syntax(projection: Any, candidate_projection: Any = Non
         "Reconsider the source and the proposed candidate syntax projection "
         "if provided, and say whether the suggestion is supported by this "
         "redacted structure. Do not declare a production validator PASS. "
-        "Source: " + json.dumps(source, ensure_ascii=True)
+        "Format: " + hint + "; Source: " + json.dumps(source, ensure_ascii=True)
         + " Initial advice: " + json.dumps(diagnosis, ensure_ascii=True)
         + " Candidate projection: "
         + json.dumps(candidate, ensure_ascii=True)
