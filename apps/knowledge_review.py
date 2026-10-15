@@ -244,6 +244,21 @@ async def create_from_verified_config_apply(db, *, incident_id: UUID,
         review_reason="config_apply:" + approval_id,
     )
     db.add(record)
+    await db.flush()
+    await db.execute(text("""
+        INSERT INTO audit_events
+        (event_id,event_type,actor,incident_id,action,status,metadata,created_at)
+        VALUES (:event_id,'knowledge_drafted',:actor,:incident_id,
+                'drafted','pending_review',CAST(:metadata AS jsonb),now())
+    """), {
+        "event_id": uuid4(), "actor": "system:config-apply",
+        "incident_id": incident_id,
+        "metadata": json.dumps({
+            "review_id": str(record.id), "approval_id": approval_id,
+            "kb_id": selected, "content_hash": record.content_hash,
+            "source_type": "incident_followup",
+        }),
+    })
     await db.commit()
     await db.refresh(record)
     return record
