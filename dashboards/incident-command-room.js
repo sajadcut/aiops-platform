@@ -3098,26 +3098,45 @@
     const status=low(record.status),allowed={validate:'pending_validation',reject:'pending_validation',approve:'pending',execute:'approved'};
     if(state.busy||state.historic||!UUID.test(String(id||''))||workflow!=='config_change'||status!==allowed[kind])return;
     const fa=state.language==='fa';
+    const scopedStart=record.metadata?.start_service_after_apply===true;
     const descriptions={
       validate:'اعتبارسنجی کپی کانفیگ در فضای جداگانه اجرا شود؟ هیچ تغییر Production انجام نمی‌شود.',
       reject:'درخواست تغییر کانفیگ را رد می‌کنید؟',
-      approve:'این اصلاح دقیق کانفیگ را تأیید می‌کنید؟ تأیید به‌تنهایی هیچ فایلی تغییر نمی‌دهد.',
-      execute:'تأیید می‌کنید نسخه مشخص‌شده با هش ثابت روی سرور اعمال شود؟ در صورت شکست، بازگردانی انجام می‌شود. این عملیات پرریسک است.'
+      approve:scopedStart?
+        'آیا اصلاح کانفیگ و سپس یک بار Start خودکار سرویس در صورت موفقیت اصلاح را تأیید می‌کنید؟ هنوز عملیاتی اجرا نمی‌شود.':
+        'این اصلاح دقیق کانفیگ را تأیید می‌کنید؟ تأیید به‌تنهایی هیچ فایلی تغییر نمی‌دهد.',
+      execute:scopedStart?
+        'این اجرا فایل کانفیگ را اصلاح می‌کند و پس از اعتبارسنجی موفق، در صورت توقف سرویس یک بار آن را Start می‌کند. درستی سرویس دوباره بررسی می‌شود. تأیید می‌کنید؟':
+        'تأیید می‌کنید نسخه مشخص‌شده با هش ثابت روی سرور اعمال شود؟ در صورت شکست، بازگردانی انجام می‌شود. این عملیات پرریسک است.'
     };
     if(!confirm(fa?descriptions[kind]:{
       validate:'Validate the staged candidate without any production write?',
       reject:'Reject the config change request?',
-      approve:'Approve this exact configuration change without applying yet?',
-      execute:'Apply the approved hash-bound config to production with verification and rollback?'
+      approve:scopedStart?'Approve both config repair and one post-apply systemd start?':
+        'Approve this exact configuration change without applying yet?',
+      execute:scopedStart?'Apply verified configuration and start the stopped service once?':
+        'Apply the approved hash-bound config to production with verification and rollback?'
     }[kind]))return;
-    if(kind==='execute'&&!confirm(fa?'تأیید دوم: این مرحله واقعاً فایل کانفیگ روی سرور را تغییر می‌دهد.':'Second confirmation: this will modify the production configuration.'))return;
+    if(kind==='execute'&&!confirm(fa?
+      (scopedStart?'تأیید دوم: فایل Production تغییر می‌کند و در صورت موفقیت، یک بار Start سرویس انجام خواهد شد.':
+        'تأیید دوم: این مرحله واقعاً فایل کانفیگ روی سرور را تغییر می‌دهد.') :
+      (scopedStart?'Second confirmation: production config will change and the stopped service may start once.':
+        'Second confirmation: this will modify the production configuration.')))return;
     state.busy=true;renderDecision(state.report);
     const route={validate:'validate-config',reject:'reject-config',approve:'approve',execute:'execute-config'}[kind];
     try{
       const value=await api('/api/v1/approvals/'+encodeURIComponent(id)+'/'+route,{method:'POST'});
-      notify(fa?(kind==='validate'?'نتیجه اعتبارسنجی: ':'نتیجه درخواست: ')+(value.validation||value.status||'ثبت شد'):
-                   'Configuration workflow: '+(value.validation||value.status||'recorded'),
-                   kind==='execute'&&value.success!==true);
+      const recoveryNote=kind==='execute'&&scopedStart?
+        (value.service_recovery_confirmed===true?
+          (fa?'؛ سرویس در systemd فعال شد. منتظر پیام بازیابی Zabbix.':
+              '; service active in systemd, awaiting Zabbix recovery.') :
+          (fa?'؛ بازیابی سرویس تأیید نشد: ':'; service recovery not verified: ')+
+            String(value.service_recovery_status||'نامشخص')):'';
+      notify((fa?(kind==='validate'?'نتیجه اعتبارسنجی: ':'نتیجه درخواست: '):
+                       'Configuration workflow: ')+
+             (value.validation||value.status||'ثبت شد')+recoveryNote,
+             kind==='execute'&&(value.success!==true||
+               (scopedStart&&value.service_recovery_confirmed!==true)));
     }catch(e){notify(tr('failure')+' · '+e.message,true);}
     finally{state.busy=false;await load();}
   }
