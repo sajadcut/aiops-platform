@@ -48,7 +48,7 @@ try {
     Write-Host "Trusted source verified (SHA-256: $hash). SSH user: $SshUser"
     Write-Host 'Sudo may request the password of that same SSH user.'
     # Never use root SSH or an unrestricted `sudo su` process.
-    $remoteCommand = "sudo test -d /usr/local/sbin && sudo test ! -L /usr/local/sbin && sudo install -o root -g root -m 0750 -- $stage $targetFile && sudo stat -c '%u:%g:%a' -- $targetFile && sudo sha256sum -- $targetFile"
+    $remoteCommand = "sudo test -d /usr/local/sbin && sudo test ! -L /usr/local/sbin && sudo test ! -L $targetFile && sudo install -o root -g root -m 0750 -- $stage $targetFile && sudo stat -c '%u:%g:%a' -- $targetFile && sudo sha256sum -- $targetFile"
     $installed = & ssh -tt -o StrictHostKeyChecking=yes -- $remote $remoteCommand 2>&1
     if ($LASTEXITCODE -ne 0) {
         throw "Privileged installation failed; verify the SSH user's authorized sudo policy."
