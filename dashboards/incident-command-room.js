@@ -218,6 +218,7 @@
     serviceStatusToken: 0,
     serviceProfile: null, httpHealth: null, httpHealthBusy: false, profileBusy: false,
     liveDotnetSyntax: null, liveDotnetSyntaxStatus: 'not_checked',
+    recoveryApproval: null, recoveryQueueAttempted: false,
     lifecyclePolling: false, lastLiveCheck: null, lifecyclePollError: false,
     progress: null, progressConnected: false, progressAbort: null,
     progressStreamRunning: false, progressRetries: 0, progressFailure: false
@@ -2686,6 +2687,73 @@
     }
     return html;
   }
+  async function loadRecoveryApproval(token) {
+    if(state.historic||!state.report?.recovery_advisory?.suggested_action)return;
+    try{
+      let approval=await api(base+'/recovery-approval');
+      if(token!==state.loadingToken||state.historic)return;
+      state.recoveryApproval=approval;
+      // Queue a guarded high-risk human Approval when AIOps generated a
+      // live-evidence-bound Restart/Start recommendation. Never approve or
+      // execute automatically; the server repeats identity/target/state
+      // checks and de-duplicates concurrent requests.
+      if(approval.status==='not_requested'&&!state.recoveryQueueAttempted){
+        state.recoveryQueueAttempted=true;
+        try{
+          approval=await api(base+'/recovery-approval/queue',{method:'POST'});
+          if(token!==state.loadingToken||state.historic)return;
+          state.recoveryApproval=approval;
+        }catch(e){
+          state.recoveryApproval={status:e.status===403?'permission_required':'blocked',
+            reason:String(e.message||'recovery_queue_preflight_failed').slice(0,180)};
+        }
+      }
+    }catch(e){
+      if(token!==state.loadingToken||state.historic)return;
+      state.recoveryApproval={status:'unavailable',reason:String(e.message||'').slice(0,130)};
+    }
+    if(state.report){renderInvestigation(state.report);renderDecision(state.report);}
+  }
+
+  async function handleRecoveryApproval(action) {
+    const approval=state.recoveryApproval||{};
+    const id=String(approval.approval_id||'');
+    if(!UUID.test(id)||state.historic||state.busy)return;
+    const fa=state.language==='fa';
+    if(action==='approve'&&approval.status!=='pending')return;
+    if(action==='execute'&&approval.status!=='approved')return;
+    if(action==='reject'&&approval.status!=='pending')return;
+    const message=action==='approve'?
+      (fa?'Restart سرویس فقط تأیید می‌شود؛ هنوز اجرا نخواهد شد. موافق هستید؟':
+        'Authorize this restart? No action executes yet.'):
+      action==='execute'?
+      (fa?'این عملیات واقعی Restart روی سرور است. Runbook پیش از اجرا مجدداً شرایط زنده را بررسی می‌کند. ادامه می‌دهید؟':
+        'This will really restart the service if the fresh runbook checks pass. Continue?'):
+      (fa?'درخواست Restart رد شود؟':'Reject this restart request?');
+    if(!confirm(message))return;
+    let reason='';
+    if(action==='reject'){
+      reason=prompt(fa?'دلیل رد (الزامی):':'Reason for rejection (required):','')||'';
+      if(!reason.trim())return;
+    }
+    state.busy=true;renderInvestigation(state.report);
+    try{
+      const suffix=action==='execute'?'execute':action;
+      const options=action==='reject'?
+        {method:'POST',headers:{'Content-Type':'application/json'},
+         body:JSON.stringify({reason:reason.trim().slice(0,1000)})}:
+        {method:'POST'};
+      const result=await api('/api/v1/approvals/'+encodeURIComponent(id)+'/'+suffix,options);
+      state.recoveryApproval={...approval,status:String(result.status||'unknown')};
+      notify(fa?(action==='approve'?'مجوز ثبت شد؛ هنوز Restart اجرا نشده است.':
+        action==='reject'?'درخواست Restart رد شد.':
+        'اجرای Restart درخواست شد؛ نتیجه و Verification را بررسی کنید.'):
+        'The authorization state changed; check verification.');
+      await load();
+    }catch(e){notify(tr('failure')+' · '+e.message,true);}
+    finally{state.busy=false;void loadRecoveryApproval(state.loadingToken);}
+  }
+
   function dotnetSyntaxLabel(item,fa) {
     const status=low(item?.status);
     if(status==='valid_json_syntax')return fa?'سینتکس صحیح':'Syntax valid';
@@ -2754,6 +2822,31 @@
       '<ul class="ic-agent-bullets">'+arr(recovery.prerequisite_checks).slice(0,6).map(check=>
         '<li>'+txt(check)+'</li>').join('')+'</ul>'+
       '<p>'+txt(recovery.operator_question)+'</p>'+
+      (recovery.suggested_action?
+        '<div class="ic-recovery-approval"><h4>'+
+        esc(fa?'درخواست رسمی Approval برای بازیابی':'Recovery request in Approval queue')+'</h4>'+
+        '<p>'+esc(fa?'وضعیت: ':'Status: ')+
+        esc(state.recoveryApproval?.status==='pending'?(fa?'منتظر تأیید شما':'Awaiting your approval'):
+          state.recoveryApproval?.status==='approved'?(fa?'تأیید شده؛ هنوز اجرا نشده':'Approved; not executed'):
+          state.recoveryApproval?.status==='permission_required'?(fa?'برای ثبت درخواست نقش SRE لازم است':'SRE permission required'):
+          state.recoveryApproval?.status==='blocked'?(fa?'ثبت درخواست مسدود؛ هویت و وضعیت سرویس دوباره بررسی شود':'Request blocked by live checks'):
+          state.recoveryApproval?.status==='consumed'?(fa?'مجوز مصرف شده؛ نتیجه اجرا را بررسی کنید':'Authorization consumed'):
+          fa?'در حال بررسی/ثبت درخواست Approval':'Loading or queuing approval')+'</p>'+
+        (state.recoveryApproval?.approval_id?
+          '<p class="ic-meta">Approval ID: <code dir="ltr">'+txt(state.recoveryApproval.approval_id)+'</code></p>':'')+
+        (state.recoveryApproval?.reason?
+          '<p class="ic-diagnosis-caution">'+txt(state.recoveryApproval.reason)+'</p>':'')+
+        (state.recoveryApproval?.status==='pending'?
+          '<button type="button" class="ic-btn ic-btn-primary" data-recovery-approval="approve">'+
+          esc(fa?'تأیید Restart (بدون اجرا)':'Approve restart (no execution)')+'</button> '+
+          '<button type="button" class="ic-btn ic-btn-muted" data-recovery-approval="reject">'+
+          esc(fa?'رد درخواست':'Reject request')+'</button>':'')+
+        (state.recoveryApproval?.status==='approved'?
+          '<button type="button" class="ic-btn ic-btn-danger" data-recovery-approval="execute">'+
+          esc(fa?'اجرای واقعی پس از بررسی پیش‌شرط‌ها':'Execute after fresh preflight')+'</button>':'')+
+        '<p class="ic-meta">'+esc(fa?
+          'تأیید هیچ عملیاتی اجرا نمی‌کند. اجرای جداگانه همچنان به کنترل زنده Runbook و صحت کانفیگ وابسته است.':
+          'Approval does not execute anything. Live runbook and config checks remain mandatory.')+'</p></div>':'')+
       refs(recovery.evidence_refs)+
       '<p class="ic-agent-disclaimer">'+esc(fa?
         'مجوز اجرای این پیشنهاد صادر نشده است؛ دکمهٔ تأیید اجرا تا ایجاد درخواست اجرایی معتبر فعال نمی‌شود.':
@@ -3494,6 +3587,9 @@
         if(!report.memory_investigation){void loadServiceStatus();void loadServiceProfile();}
         void loadConfigResponse(token);
         void loadIncidentChat(token);
+        if(!report.memory_investigation&&report.recovery_advisory?.suggested_action){
+          void loadRecoveryApproval(token);
+        }
         if(!report.memory_investigation&&
             low(report.dynamic_investigation?.config_discovery?.runtime)==='dotnet'){
           void loadDotnetSyntax(token);
@@ -3687,6 +3783,10 @@
       if(approve){void incidentChatApproval('approve',approve.dataset.chatApprove);return;}
       const execute=e.target.closest('[data-chat-execute]');
       if(execute){void incidentChatApproval('execute',execute.dataset.chatExecute);return;}
+    });
+    document.addEventListener('click',e=>{
+      const button=e.target.closest('[data-recovery-approval]');
+      if(button)void handleRecoveryApproval(button.dataset.recoveryApproval);
     });
     document.addEventListener('click',e=>{
       const button=e.target.closest('[data-download-config-diff]');
