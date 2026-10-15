@@ -2329,7 +2329,7 @@
       code&& !['none','not_tested','not_recorded'].includes(code)?
       (fa?'علت/کد نتیجه: ':'Reason code: ')+code:'';
     const responded=state.configResponse?.status&&state.configResponse.status!=='not_responded';
-    const ready=Boolean(service==='nginx' && candidate &&
+    const ready=Boolean(candidate &&
       config.original_sha256 && config.candidate_sha256 &&
       !state.historic && !state.busy && state.configResponseStatus==='loaded' &&
       state.configResponse?.status==='not_responded');
@@ -2344,7 +2344,7 @@
       ' — '+esc(fa?
         (state.configResponse.validation_pipeline_status==='not_implemented'?
           'این درخواست فقط در ممیزی ثبت شده است؛ پردازش اعتبارسنجی ایزوله و ایجاد Approval اجرایی هنوز پیاده‌سازی نشده‌اند. هیچ عملیات پس‌زمینه یا تغییری روی سرور آغاز نشده است.':
-          'این درخواست فقط برای بازبینی ثبت شده و هنوز مجوز اجرای فایل صادر نشده است.'):
+          'درخواست در صف Approval ثبت شده ولی هنوز قابل تأیید اجرایی نیست.'):
         (state.configResponse.validation_pipeline_status==='not_implemented'?
           'Audit-only intent: isolated validation and executable approval are not implemented. No background validation or server write was started.':
           'Review intent recorded; no execution approval has been issued.'))+
@@ -2353,22 +2353,12 @@
       '<p role="status" class="ic-config-banner-warning">'+esc(fa?
         'وضعیت درخواست از API خوانده نشد؛ ثبت درخواست تا بازیابی وضعیت غیرفعال است.':
         'Request status could not be fetched; submission is blocked until the state is known.')+'</p>':'';
-    // This click records a *pre-approval* change intent, never a production write.
-    // A previously submitted request stays navigable and displays its blocker.
+    // The only submit button follows the Diff; banner cannot submit a
+    // second, misleading or unvalidated execution request.
     const requestButton=responded?
       '<a class="ic-btn ic-btn-muted" href="#ic-ai-proposed-fix" data-config-request-status="recorded">'+
-      esc(fa?'مشاهده درخواست ثبت‌شده (پیش از Approval)':'View submitted request (pre-approval)')+
-      '</a>':
-      candidate?
-      '<button type="button" class="ic-btn ic-btn-primary" data-config-intent="request_isolated_validation"'+
-      (ready?'':' disabled')+
-      ' title="'+esc(fa?'ثبت درخواست اعمال برای اعتبارسنجی مستقل؛ بدون تغییر فایل و بدون Approval اجرایی':'Submit a pre-approval validation request; no file write')+'">'+
-      esc(fa?'درخواست اعمال اصلاح (ابتدا اعتبارسنجی)':'Request correction (validation first)')+
-      '</button>':
-      '<button type="button" class="ic-btn ic-btn-muted" disabled title="'+
-      esc(fa?'ابتدا باید از بازبینی MCP یک پیشنهاد اصلاح با هش معتبر ساخته شود':'A hash-bound candidate is required first')+'">'+
-      esc(fa?'اعمال اصلاح روی سرور — غیرفعال':'Apply correction — unavailable')+
-      '</button>';
+      esc(fa?'مشاهده درخواست در صف تأیید':'View change request in approval queue')+
+      '</a>':'';
     const previewKind=service==='nginx'?'nginx':verified.length?'review':'generic';
     const previewBlocked=Boolean(
       state.historic||state.busy||state.chatBusy||state.configPreviewPending||
@@ -2420,8 +2410,8 @@
         state.configPreviewLastResult?
         '<p role="status" aria-live="polite">'+txt(state.configPreviewLastResult)+'</p>':'')+
       '<p class="ic-config-banner-warning">'+esc(fa?
-        'این دکمه فقط درخواست اعمال را برای بررسی پیش از Approval ثبت می‌کند. اجرای واقعی روی سرور تا اعتبارسنجی مستقل، قرارداد تغییر نسخه‌دار و تأیید اجرایی مسدود است.':
-        'The request records a pre-approval change intent only. Server application remains blocked until isolated validation, a versioned change contract, and executable approval exist.')+
+        'پس از مشاهده Diff، درخواست تغییر را به صف Approval بفرستید. تا گذر از اعتبارسنجی مستقل، تأیید نهایی و اعمال فایل مسدود می‌ماند.':
+        'Review the diff then submit the governed change request. Final approval and application stay blocked until independent validation.')+
       '</p></div><div class="ic-config-banner-actions">'+regenerateButton+
       diffButton+requestButton+'</div>';
   }
@@ -2476,20 +2466,20 @@
       const answered=state.configResponse?.status&&state.configResponse.status!=='not_responded';
       const disabled=state.historic||state.busy||state.configResponseStatus!=='loaded';
       html+='<article class="ic-detail-card"><h4>'+esc(fa?
-        'آیا می‌خواهید این پیشنهاد برای اعتبارسنجی مستقل بررسی شود؟':
-        'Would you like this proposal submitted for independent validation?')+'</h4>'+
+        'درخواست تأیید تغییر همین Diff':
+        'Request approval for this exact diff')+'</h4>'+
         '<p>'+esc(fa?
-          'پاسخ شما ثبت می‌شود؛ هیچ تغییری روی کانفیگ فعلی اعمال نمی‌شود.':
-          'Your response is recorded. The production configuration is not changed.')+'</p>'+
+          'درخواست در صف Approval ثبت می‌شود؛ دکمه تأیید تا موفقیت اعتبارسنجی مستقل غیرفعال است. هیچ فایلی تغییر نمی‌کند.':
+          'This change enters the Approval queue; final approval stays disabled until independent validation. No file is changed.')+'</p>'+
         (answered?'<p><strong>'+txt(state.configResponse.status)+'</strong></p>':
         '<div class="ic-action-buttons">'+
-        '<button type="button" class="ic-btn ic-btn-primary" data-config-intent="request_isolated_validation"'+(disabled?' disabled':'')+'>'+
-        esc(fa?'بله، درخواست بررسی و اعتبارسنجی':'Yes, request review and validation')+'</button>'+
+        '<button type="button" class="ic-btn ic-btn-primary" data-config-intent="request_change_approval"'+(disabled?' disabled':'')+'>'+
+        esc(fa?'ارسال درخواست به Approval':'Submit change for approval')+'</button>'+
         '<button type="button" class="ic-btn ic-btn-muted" data-config-intent="reject"'+(disabled?' disabled':'')+'>'+
         esc(fa?'خیر، رد پیشنهاد':'No, reject proposal')+'</button></div>')+
         '<p class="ic-agent-disclaimer">'+esc(fa?
-          'این درخواست Approval اجرایی نیست. مرحله اعتبارسنجی ایزوله و قرارداد اعمال فایل هنوز پیاده‌سازی نشده‌اند؛ با ثبت درخواست، کار اعتبارسنجی در پس‌زمینه شروع نمی‌شود.':
-          'This is not execution approval. Actual Apply requires isolated validation, a registered change contract, and separate authorization.')+
+          'درخواست با وضعیت «در انتظار اعتبارسنجی» در صف Approval قرار می‌گیرد. تأیید نهایی تا تکمیل Validator و قرارداد اجرای کنترل‌شده مسدود است.':
+          'The request queues as pending_validation. Final approval stays disabled until isolated validation and guarded execution exist.')+
         '</p></article>';
     }
     return html;
@@ -2991,11 +2981,11 @@
        c.status!=='candidate_proposed'||!c.candidate_sha256||!c.original_sha256)return;
     const fa=state.language==='fa';
     if(!confirm(fa?
-      (decision==='request_isolated_validation'?
-        'درخواست اعمال اصلاح برای اعتبارسنجی مستقل ثبت می‌شود. این مرحله هنوز Approval اجرایی نیست و هیچ تغییری روی سرور اعمال نمی‌کند. ادامه می‌دهید؟':
+      (decision==='request_change_approval'?
+        'درخواست تغییر این Diff وارد صف Approval می‌شود. تا اعتبارسنجی مستقل، تأیید اجرایی غیرفعال می‌ماند. ادامه می‌دهید؟':
         'پیشنهاد اصلاح رد می‌شود؛ هیچ فایلی تغییر نمی‌کند. ادامه می‌دهید؟'):
-      (decision==='request_isolated_validation'?
-        'Submit a correction request for independent validation? This is not execution approval and will not change the server.':
+      (decision==='request_change_approval'?
+        'Queue this exact change for Approval? Final approval remains blocked until independent validation.':
         'Reject this proposal without changing any file?')))return;
     state.busy=true;renderInvestigation(state.report);
     try {
@@ -3013,11 +3003,11 @@
       });
       state.configResponse=response;state.configResponseStatus='loaded';
       notify(fa?
-        (decision==='request_isolated_validation'?
-          'درخواست اعمال ثبت شد؛ در انتظار اعتبارسنجی مستقل پیش از Approval. هیچ فایلی تغییر نکرد.':
+        (decision==='request_change_approval'?
+          'درخواست در صف Approval ثبت شد؛ در انتظار اعتبارسنجی مستقل و بدون اجازه اعمال فایل.':
           'رد پیشنهاد ثبت شد؛ هیچ فایلی تغییر نکرد.'):
-        (decision==='request_isolated_validation'?
-          'Request recorded; independent validation is needed before approval. No file changed.':
+        (decision==='request_change_approval'?
+          'Change queued for Approval; independent validation is still required. No file changed.':
           'Proposal rejected; no file changed.'));
     }catch(e){notify(tr('failure')+' · '+e.message,true);}
     finally{state.busy=false;if(state.report){renderInvestigation(state.report);renderConfigActionBanner(state.report);}}
