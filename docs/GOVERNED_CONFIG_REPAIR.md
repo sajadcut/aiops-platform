@@ -293,7 +293,7 @@ file to the trusted LLM.
 The vault uses the optional `AIOPS_CONFIG_CANDIDATE_DIRECTORY` if provided
 in the VM MCP worker's `.env` or process environment, otherwise defaults
 to `/var/lib/aiops/config-candidates` on Linux and
-%ProgramData%\AIOps\config-candidates on Windows. Example for a
+\`%ProgramData%\AIOps\config-candidates\` on Windows. Example for a
 Windows-hosted VM MCP service:
 
 ```env
@@ -304,8 +304,9 @@ Use an absolute local drive path; UNC, device, traversal and relative paths
 are rejected on Windows. Never set the monitored Linux VM's path here.
 Only the dedicated candidate directory is protected; existing parent
 folders are not changed. If the selected folder contains unrelated files
-and has overly broad permissions, the worker refuses to rewrite its ACL. It requires a
-persistent private directory (owner-only 0700/files 0600 on POSIX, strict
+and has overly broad permissions, the worker refuses to rewrite its ACL.
+
+The vault requires a persistent private directory (owner-only 0700/files 0600 on POSIX, strict
 service identity/SYSTEM/Administrators ACL on Windows) and fails closed if
 permissions or storage availability cannot be verified. The Windows worker
 now **automatically applies a protected, inheritance-disabled NTFS DACL**
