@@ -386,10 +386,10 @@ async def recheck_incident_service_status(
                 # A read:incident viewer may inspect live status, but only
                 # an operator/SRE can authorize the side effect of resolving
                 # an incident and revoking other pending approvals.
-                from apps.security.rbac import allowed
-                can_reconcile = any(
-                    allowed(role, "approve:low_risk") for role in identity.roles
+                from apps.incident_service.service_recovery_reconciliation import (
+                    can_finalize_independent_recovery,
                 )
+                can_reconcile = can_finalize_independent_recovery(identity.roles)
                 if verdict == "independent_vm_verified" and not can_reconcile:
                     verdict = "recovery_authorization_required"
                 if verdict == "independent_vm_verified":
