@@ -2400,7 +2400,7 @@
     const response=state.configResponse||{};
     const approval=low(response.approval_status||response.status);
     const candidate=low(config.status)==='candidate_proposed';
-    const hasDiff=Boolean(candidate&&Number.isInteger(config.redacted_diff?.line));
+    const hasDiff=configDiffRows(config,fullRepair).length>0;
     const originalFailed=low(validator.status)==='invalid';
     const previouslyFailed=originalFailed||candidate||
       (Number.isInteger(config.error_line)&&!!config.config_file);
@@ -2425,7 +2425,7 @@
     const symptom=braceError?
       (fa?'آکولاد باز «{» غیرمنتظره':'Unexpected opening brace {'):
       (fa?'خطای نحوی کانفیگ':'Configuration syntax error');
-    const fullChanged=fullRepair.status==='llm_candidate_proposed'?
+    const fullChanged=['llm_candidate_proposed','candidate_storage_unavailable'].includes(fullRepair.status)?
       arr(fullRepair.changed_line_numbers).filter(Number.isInteger).slice(0,12):[];
     const filename=path?'<code dir="ltr">'+txt(path)+'</code>':
       esc(fa?'فایل کانفیگ سرویس':'the service configuration file');
@@ -2490,7 +2490,7 @@
     const previewButton='<button type="button" class="ic-btn ic-btn-primary" data-config-preview="'+
       previewKind+'" data-preview-open-diff="1"'+disabled+'>'+
       esc(fa?'بررسی و مشاهده اصلاح':'Review proposed fix')+'</button>';
-    const diffLink='<a class="ic-btn ic-btn-primary" href="#ic-ai-proposed-fix">'+
+    const diffLink='<a class="ic-btn ic-btn-primary" href="#ic-config-diff">'+
       esc(fa?'مشاهده اصلاح و Diff':'View fix and diff')+'</a>';
     const nextLink='<a class="ic-btn ic-btn-primary" href="#ic-action-controls">'+
       esc(fa?'مشاهده تأیید و اجرا':'View approval and execution')+'</a>';
@@ -2545,6 +2545,46 @@
       '</div><div class="ic-config-banner-actions">'+primary+secondary+fullLLMButton+'</div>';
   }
 
+  // Only the bounded redacted representation from MCP may enter the DOM or
+  // a client-generated download. Neither plaintext candidate nor live source
+  // config is fetched from the remote VM or persisted in the incident report.
+  function configDiffRows(config={},full={}) {
+    const valid=rows=>arr(rows).filter(x=>
+      x&&Number.isInteger(x.line)&&x.line>0&&x.line<=1000000
+    ).slice(0,12);
+    const llm=valid(full.redacted_changes);
+    if(llm.length)return llm;
+    const classic=valid(config.redacted_changes);
+    if(classic.length)return classic;
+    const fallback=config.redacted_diff||{};
+    return Number.isInteger(fallback.line)?valid([fallback]):[];
+  }
+
+  function configDiffGlyph(value) {
+    return String(value||'').replace(/[^{};=,#()[\]\s]/g,'x').slice(0,180);
+  }
+
+  function configDiffText(config={},full={}) {
+    const rows=configDiffRows(config,full);
+    if(!rows.length)return '';
+    const file=String(full.config_file||config.config_file||'configuration')
+      .replace(/[\r\n]/g,'').slice(0,260);
+    const source=String(full.source_sha256||config.original_sha256||'');
+    const candidate=String(full.candidate_sha256||config.candidate_sha256||'');
+    const header=[
+      '# AIOps structural DIFF (values and secrets are redacted)',
+      '# This is an advisory preview; apply requires independent validation and human approval',
+      '# Source SHA-256: '+(/^[a-f0-9]{64}$/.test(source)?source:'not recorded'),
+      '# Candidate SHA-256: '+(/^[a-f0-9]{64}$/.test(candidate)?candidate:'not recorded'),
+      '--- a/'+file,'+++ b/'+file,
+    ];
+    return header.concat(rows.flatMap(row=>[
+      '@@ -'+row.line+',1 +'+row.line+',1 @@',
+      '-'+configDiffGlyph(row.before),
+      '+'+configDiffGlyph(row.after),
+    ])).join('\n')+'\n';
+  }
+
   function renderConfigProposal(config,full={}) {
     const fa=state.language==='fa';
     const source=arr(config.current_excerpt),target=arr(config.proposed_excerpt);
@@ -2572,17 +2612,30 @@
       '<article class="ic-detail-card"><h4>'+esc(fa?'پیشنهاد اصلاح کانفیگ':'Proposed configuration correction')+'</h4>'+
       targetHtml+
       '<p class="ic-meta">Candidate SHA-256: '+txt(config.candidate_sha256)+'</p></article></div>';
-    const safeDiffs=arr(config.redacted_changes).filter(change=>
-      change&&Number.isInteger(change.line)).slice(0,12);
-    if(safeDiffs.length||Number.isInteger(diff.line)){
-      const changes=safeDiffs.length?safeDiffs:[diff];
-      html+='<article class="ic-detail-card"><h4>'+esc(fa?
-        'Diff تغییرات (مقادیر فایل پنهان شده‌اند)':
-        'Changed-line diff (values redacted)')+'</h4>'+
-        '<pre dir="ltr" class="ic-config-excerpt">'+
-        esc(changes.map(change=>'@@ line '+change.line+' @@\n- '+
-            safe(change.before)+'\n+ '+safe(change.after)).join('\n'))+
-        '</pre></article>';
+    const safeDiffs=configDiffRows(config,full);
+    if(safeDiffs.length){
+      const maxInline=6;
+      const inline=safeDiffs.slice(0,maxInline);
+      html+='<article class="ic-detail-card" id="ic-config-diff">'+
+        '<div class="ic-config-diff-header"><h4>'+esc(fa?
+          'مقایسه تغییرات پیشنهادی (مقادیر محرمانه پوشانده شده‌اند)':
+          'Proposed changes (sensitive values redacted)')+'</h4>'+
+        '<button type="button" class="ic-btn ic-btn-muted" data-download-config-diff="1">'+
+          esc(fa?'دانلود فایل Diff (.diff)':'Download diff (.diff)')+
+        '</button></div>'+
+        '<p class="ic-meta">'+esc(fa?
+          'فقط خطوط تغییرکرده نمایش داده می‌شوند؛ حذف (−) و افزودن (+). خروجی دانلود نیز محرمانه‌زدایی شده است.':
+          'Only changed lines are shown: removed (−) and added (+). The download is redacted too.')+'</p>'+
+        '<pre dir="ltr" class="ic-config-excerpt ic-config-diff-preview">'+
+          esc(inline.map(change=>'@@ line '+change.line+' @@\n- '+
+            configDiffGlyph(change.before)+'\n+ '+configDiffGlyph(change.after)).join('\n'))+
+        '</pre>'+
+        (safeDiffs.length>maxInline?'<p>'+esc(fa?
+          'نمایش '+num(maxInline)+' خط اول از '+num(safeDiffs.length)+
+            ' تغییر؛ فایل Diff کامل را دانلود کنید.':
+          'Showing '+maxInline+' of '+safeDiffs.length+
+            ' changes. Download the complete redacted diff.')+'</p>':'')+
+        '</article>';
     }
     html+='<article class="ic-detail-card"><h4>'+esc(fa?'وضعیت آزمایش نسخه پیشنهادی':'Proposed-version validation')+'</h4>'+
       '<p><strong>'+txt(config.validation_status||'UNVERIFIED')+'</strong></p>'+
@@ -2752,7 +2805,7 @@
       '</p></div>'+
       discoveryHtml+
       fullRepairHtml+
-      (config.status?renderConfigProposal(config,full):'')+
+      ((config.status||configDiffRows(config,full).length)?renderConfigProposal(config,full):'')+
       (p.runtime_discovery?.runtime==='dotnet'?(()=>{
         const d=p.runtime_discovery,files=arr(d.files);
         return '<article class="ic-detail-card"><h4>'+esc(fa?'کشف ساختار برنامه و بررسی تنظیمات .NET':'Discovered .NET runtime & configuration checks')+'</h4>'+
@@ -3546,6 +3599,28 @@
       if(approve){void incidentChatApproval('approve',approve.dataset.chatApprove);return;}
       const execute=e.target.closest('[data-chat-execute]');
       if(execute){void incidentChatApproval('execute',execute.dataset.chatExecute);return;}
+    });
+    document.addEventListener('click',e=>{
+      const button=e.target.closest('[data-download-config-diff]');
+      if(!button)return;
+      const report=state.historic||state.report||{};
+      const investigation=report.dynamic_investigation||{};
+      const content=configDiffText(investigation.config_proposal||{},
+        investigation.full_config_llm_repair||{});
+      if(!content){
+        notify(state.language==='fa'?
+          'هنوز Diff قابل دانلود ثبت نشده است.':'No diff is recorded yet.',true);
+        return;
+      }
+      // No server-side download endpoint or plaintext file exposure.
+      const id=String(report.incident_summary?.id||report.incident_summary?.incident_id||
+        report.incident_id||'incident').replace(/[^a-zA-Z0-9_-]/g,'').slice(0,55);
+      const blob=new Blob([content],{type:'text/plain;charset=utf-8'});
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement('a');
+      a.href=url;a.download='aiops-'+id+'-redacted.diff';
+      document.body.appendChild(a);a.click();a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url),5000);
     });
     document.addEventListener('click',e=>{
       const button=e.target.closest('[data-copy-received]');
