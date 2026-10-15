@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 506 | Dashboard JS files scanned: 8 | Symbols indexed: 5310**
+**Python files scanned: 506 | Dashboard JS files scanned: 8 | Symbols indexed: 5311**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -3570,6 +3570,7 @@
 | `tests/unit/test_decision_brief_narrative.py` | `test_llm_cannot_override_verified_invalid_appsettings_as_healthy` | 224 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_decision_brief_narrative.py` | `test_ai_narrative_receives_stop_attribution_and_conditional_start_options` | 245 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_decision_brief_narrative.py` | `test_narrative_accepts_fenced_json_without_relaxing_citation_validation` | 283 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_decision_brief_narrative.py` | `test_live_sized_config_review_retains_approval_blocker_and_exact_target` | 297 | function | Regression: 40+ observations and long citations must not hide the RCA. | module |
 | `tests/unit/test_dependency_causal_engine.py` | `trace` | 11 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_dependency_causal_engine.py` | `metric` | 25 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_dependency_causal_engine.py` | `service_log` | 36 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
