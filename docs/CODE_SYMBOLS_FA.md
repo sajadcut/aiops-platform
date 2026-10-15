@@ -1225,8 +1225,8 @@
 | `apps/incident_followup.py` | `may_reassess` | 88 | function | Do not rewrite an active/approved/executed workflow checkpoint. | module |
 | `apps/incident_followup.py` | `knowledge_candidate` | 105 | function | Sanitized *unverified* learning note; never a claimed recovery. | module |
 | `apps/incident_followup.py` | `draft_cognia_review` | 168 | async function | Create an idempotent local review/outbox entry; do NOT publish to Cognia. | module |
-| `apps/incident_followup.py` | `persist_and_reassess` | 216 | async function | Durably append observation; redo specialists and evaluator if no-action. | module |
-| `apps/incident_followup.py` | `persist_and_reassess.emit_status` | 247 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | persist_and_reassess |
+| `apps/incident_followup.py` | `persist_and_reassess` | 235 | async function | Durably append observation; redo specialists and evaluator if no-action. | module |
+| `apps/incident_followup.py` | `persist_and_reassess.emit_status` | 266 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | persist_and_reassess |
 | `apps/incident_memory_forensics.py` | `obj` | 15 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/incident_memory_forensics.py` | `stamp` | 19 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/incident_memory_forensics.py` | `metric` | 28 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
