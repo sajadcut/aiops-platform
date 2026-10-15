@@ -168,7 +168,11 @@ class IncidentRepository:
 
         context = dict(incident.context or {})
         recovery_marker = dict(context.get("source_recovery") or {})
-        source_resolved = bool(recovery_marker.get("incident_resolved"))
+        independent_marker = dict(context.get("independent_recovery") or {})
+        source_resolved = bool(
+            recovery_marker.get("incident_resolved")
+            or independent_marker.get("incident_resolved")
+        )
 
         if source_resolved and incident.status != IncidentStatus.CLOSED:
             next_status = IncidentStatus.RESOLVED
