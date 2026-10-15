@@ -339,7 +339,7 @@ class DynamicInvestigationPlanner:
             result["config_llm_review"] = await assess_service_syntax(
                 general_review.get("syntax_projection"),
                 general_review.get("candidate_syntax_projection"),
-                model=adapter,
+                model=adapter, file_type=str(general_review.get("file_type") or ""),
             )
         if failure:
             # A redacted structural excerpt and candidate from a registered
