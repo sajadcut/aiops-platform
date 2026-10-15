@@ -38,7 +38,7 @@ def _trusted_gateway() -> bool:
 def _parse_corrected(content: str) -> str | None:
     raw = str(content or "").strip()
     if raw.startswith("```"):
-        raw = re.sub(r"^\x60{3}(?:json)?\\s*|\\s*\x60{3}$", "", raw, flags=re.I)
+        raw = re.sub(r"^\x60{3}(?:json)?\s*|\s*\x60{3}$", "", raw, flags=re.I)
     try:
         response = json.loads(raw)
     except (TypeError, ValueError):
