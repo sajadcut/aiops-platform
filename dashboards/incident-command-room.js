@@ -8,9 +8,9 @@
   const safe = x => String(x == null || x === '' ? '—' : x);
   const esc = x => safe(x).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
   const guardReasonFA = code => ({
-    config_guard_sudo_nopasswd_required:'کاربر SSH مجوز sudo بدون رمز برای Helper محدود AIOps ندارد. فقط همین Helper باید به‌صورت NOPASSWD مجاز شود.',
+    config_guard_sudo_nopasswd_required:'اجرای sudo بدون رمز ممکن نبود و احراز هویت جایگزین نیز تکمیل نشد. برای SSH رمزی از همان رمز کاربر و sudo -S استفاده می‌شود؛ مجوز sudo آن کاربر برای Helper محدود AIOps باید بررسی شود.',
     config_guard_sudo_policy_denied:'سیاست sudoers اجرای Helper محدود AIOps را برای این کاربر مجاز نمی‌داند.',
-    config_guard_sudo_or_invocation_failed:'فراخوانی Helper روی VM با کد ۱ شکست خورده؛ مجوز sudo -n، نصب Helper و خروجی تشخیصی محلی باید بررسی شود. علت قطعی هنوز مشخص نیست.',
+    config_guard_sudo_or_invocation_failed:'فراخوانی Helper روی VM با کد ۱ شکست خورد؛ مجوز sudo کاربر SSH، احراز هویت با رمز همان کاربر، نصب Helper و خطای تشخیصی سمت VM باید بررسی شود. علت قطعی هنوز مشخص نیست.',
     config_guard_helper_missing:'Helper مجاز در مسیر /usr/local/sbin/aiops-config-guard روی VM پیدا نشد.',
     config_guard_helper_permission_denied:'دسترسی لازم برای اجرای Helper یا فایل هدف وجود ندارد.',
     config_guard_mount_namespace_unavailable:'ساخت فضای ایزوله Mount Namespace در این VM مجاز یا پشتیبانی‌شده نیست. اعتبارسنجی بدون ایزوله‌سازی مجاز نیست.',
