@@ -1023,8 +1023,8 @@
 | `apps/config_change_authorization.py` | `config_signing_ready` | 42 | function | Local readiness only. Never expose key bytes or report VM MCP readiness. | module |
 | `apps/config_change_authorization.py` | `_message` | 51 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/config_change_authorization.py` | `create_claim` | 55 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
-| `apps/config_change_authorization.py` | `verify_claim` | 68 | function | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | module |
-| `apps/config_change_authorization.py` | `sign_root_guard` | 89 | function | Ed25519 root guard signature; VM stores only its verification public key. | module |
+| `apps/config_change_authorization.py` | `verify_claim` | 73 | function | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | module |
+| `apps/config_change_authorization.py` | `sign_root_guard` | 97 | function | Ed25519 root guard signature; VM stores only its verification public key. | module |
 | `apps/config_syntax_llm.py` | `sanitized_projection` | 30 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/config_syntax_llm.py` | `_json_model_reply` | 60 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/config_syntax_llm.py` | `assess_service_syntax` | 87 | async function | Two sequential LLM passes; second pass never asserts a vendor PASS. | module |
