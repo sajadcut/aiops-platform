@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 526 | Dashboard JS files scanned: 8 | Symbols indexed: 5695**
+**Python files scanned: 527 | Dashboard JS files scanned: 8 | Symbols indexed: 5723**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -4029,6 +4029,34 @@
 | `tests/unit/test_governed_config_change.py` | `test_xml_repair_flows_through_same_governed_service_neutral_validator.Edge._sudo` | 321 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_xml_repair_flows_through_same_governed_service_neutral_validator.Edge |
 | `tests/unit/test_governed_config_change.py` | `test_xml_repair_flows_through_same_governed_service_neutral_validator.Edge._run` | 324 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_xml_repair_flows_through_same_governed_service_neutral_validator.Edge |
 | `tests/unit/test_governed_config_change.py` | `test_xml_dtd_or_missing_tag_does_not_create_unsafe_fix` | 341 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_governed_recovery_knowledge.py` | `_fixture` | 20 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_governed_recovery_knowledge.py` | `test_gfpapi_inconclusive_restart_generates_truthful_pending_review_content` | 57 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_governed_recovery_knowledge.py` | `test_untrusted_or_unverified_action_never_creates_a_recovery_draft` | 85 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_governed_recovery_knowledge.py` | `test_verifier_can_mark_genuine_success_without_inventing_root_cause` | 98 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_governed_recovery_knowledge.py` | `test_deterministic_review_id_survives_refresh_and_reviewer_edits` | 110 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_governed_recovery_knowledge.py` | `test_audit_reconciliation_persists_draft_but_does_not_call_cognia` | 117 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_governed_recovery_knowledge.py` | `test_audit_reconciliation_persists_draft_but_does_not_call_cognia.ScalarResult` | 122 | class | کلاس | test_audit_reconciliation_persists_draft_but_does_not_call_cognia |
+| `tests/unit/test_governed_recovery_knowledge.py` | `test_audit_reconciliation_persists_draft_but_does_not_call_cognia.ScalarResult.__init__` | 123 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_audit_reconciliation_persists_draft_but_does_not_call_cognia.ScalarResult |
+| `tests/unit/test_governed_recovery_knowledge.py` | `test_audit_reconciliation_persists_draft_but_does_not_call_cognia.ScalarResult.mappings` | 124 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_audit_reconciliation_persists_draft_but_does_not_call_cognia.ScalarResult |
+| `tests/unit/test_governed_recovery_knowledge.py` | `test_audit_reconciliation_persists_draft_but_does_not_call_cognia.ScalarResult.all` | 125 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_audit_reconciliation_persists_draft_but_does_not_call_cognia.ScalarResult |
+| `tests/unit/test_governed_recovery_knowledge.py` | `test_audit_reconciliation_persists_draft_but_does_not_call_cognia.DB` | 127 | class | کلاس | test_audit_reconciliation_persists_draft_but_does_not_call_cognia |
+| `tests/unit/test_governed_recovery_knowledge.py` | `test_audit_reconciliation_persists_draft_but_does_not_call_cognia.DB.__init__` | 128 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_audit_reconciliation_persists_draft_but_does_not_call_cognia.DB |
+| `tests/unit/test_governed_recovery_knowledge.py` | `test_audit_reconciliation_persists_draft_but_does_not_call_cognia.DB.execute` | 133 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | test_audit_reconciliation_persists_draft_but_does_not_call_cognia.DB |
+| `tests/unit/test_governed_recovery_knowledge.py` | `test_audit_reconciliation_persists_draft_but_does_not_call_cognia.DB.get` | 141 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_audit_reconciliation_persists_draft_but_does_not_call_cognia.DB |
+| `tests/unit/test_governed_recovery_knowledge.py` | `test_audit_reconciliation_persists_draft_but_does_not_call_cognia.DB.add` | 148 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_audit_reconciliation_persists_draft_but_does_not_call_cognia.DB |
+| `tests/unit/test_governed_recovery_knowledge.py` | `test_audit_reconciliation_persists_draft_but_does_not_call_cognia.DB.flush` | 151 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_audit_reconciliation_persists_draft_but_does_not_call_cognia.DB |
+| `tests/unit/test_governed_recovery_knowledge.py` | `test_audit_reconciliation_persists_draft_but_does_not_call_cognia.DB.commit` | 153 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_audit_reconciliation_persists_draft_but_does_not_call_cognia.DB |
+| `tests/unit/test_governed_recovery_knowledge.py` | `test_audit_reconciliation_persists_draft_but_does_not_call_cognia.DB.refresh` | 154 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_audit_reconciliation_persists_draft_but_does_not_call_cognia.DB |
+| `tests/unit/test_governed_recovery_knowledge.py` | `test_audit_reconciliation_persists_draft_but_does_not_call_cognia.Audit` | 157 | class | کلاس | test_audit_reconciliation_persists_draft_but_does_not_call_cognia |
+| `tests/unit/test_governed_recovery_knowledge.py` | `test_audit_reconciliation_persists_draft_but_does_not_call_cognia.Audit.__init__` | 158 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_audit_reconciliation_persists_draft_but_does_not_call_cognia.Audit |
+| `tests/unit/test_governed_recovery_knowledge.py` | `test_audit_reconciliation_persists_draft_but_does_not_call_cognia.Audit.list` | 159 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_audit_reconciliation_persists_draft_but_does_not_call_cognia.Audit |
+| `tests/unit/test_governed_recovery_knowledge.py` | `test_reconcile_rejects_unaudited_attempt` | 179 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_governed_recovery_knowledge.py` | `test_reconcile_rejects_unaudited_attempt.Audit` | 184 | class | کلاس | test_reconcile_rejects_unaudited_attempt |
+| `tests/unit/test_governed_recovery_knowledge.py` | `test_reconcile_rejects_unaudited_attempt.Audit.__init__` | 185 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_reconcile_rejects_unaudited_attempt.Audit |
+| `tests/unit/test_governed_recovery_knowledge.py` | `test_reconcile_rejects_unaudited_attempt.Audit.list` | 186 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_reconcile_rejects_unaudited_attempt.Audit |
+| `tests/unit/test_governed_recovery_knowledge.py` | `test_reconcile_rejects_unaudited_attempt.DB` | 188 | class | کلاس | test_reconcile_rejects_unaudited_attempt |
+| `tests/unit/test_governed_recovery_knowledge.py` | `test_reconcile_rejects_unaudited_attempt.DB.execute` | 189 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | test_reconcile_rejects_unaudited_attempt.DB |
+| `tests/unit/test_governed_recovery_knowledge.py` | `test_reconcile_rejects_unaudited_attempt.DB.get` | 190 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_reconcile_rejects_unaudited_attempt.DB |
 | `tests/unit/test_health_readiness_mcp.py` | `test_production_readiness_requires_cognia_and_configured_optional_mcps` | 4 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_health_readiness_mcp.py` | `test_non_production_readiness_does_not_gate_on_external_dependencies` | 32 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_host_memory_forensics.py` | `incident` | 12 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
