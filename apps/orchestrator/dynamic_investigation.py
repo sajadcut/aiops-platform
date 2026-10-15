@@ -166,7 +166,7 @@ class DynamicInvestigationPlanner:
                 value = str(value or "")
                 return value if re.fullmatch(r"[0-9a-f]{64}", value) else ""
             accepted = (
-                raw.get("status") == "llm_candidate_proposed"
+                raw.get("status") in {"llm_candidate_proposed", "candidate_storage_unavailable"}
                 and sha(raw.get("source_hash"))
                 and sha(raw.get("candidate_hash"))
                 and raw.get("llm_received_complete_file") is True
