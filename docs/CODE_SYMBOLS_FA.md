@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 526 | Dashboard JS files scanned: 8 | Symbols indexed: 5656**
+**Python files scanned: 526 | Dashboard JS files scanned: 8 | Symbols indexed: 5658**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -4093,16 +4093,18 @@
 | `tests/unit/test_incident_command_room.py` | `test_dashboard_incident_queue_routes_attention_to_full_screen` | 33 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_incident_command_room.py` | `test_command_room_has_readable_mobile_layout_and_two_stage_actions` | 52 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_incident_command_room.py` | `test_incident_room_defers_checkpoint_gated_detail_reads_and_explains_missing_milestones` | 79 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_incident_command_room.py` | `test_command_room_renders_and_only_posts_after_deliberate_confirmed_approval` | 92 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_incident_command_room.py` | `test_completed_chat_incident_routes_execute_to_approved_api_not_workflow_resume` | 320 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_incident_command_room.py` | `test_completed_incident_execution_route_matches_governed_backend` | 356 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_incident_command_room.py` | `test_completed_chat_approval_does_not_require_ephemeral_checkbox` | 369 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_incident_command_room.py` | `test_service_status_card_shows_recorded_running_and_real_readonly_recheck` | 379 | function | Actual browser handler: GET returns last recorded; click POST returns stopped without reload. | module |
-| `tests/unit/test_incident_command_room.py` | `test_service_status_card_exists_above_decision_brief_and_is_safe_readonly` | 428 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_incident_command_room.py` | `test_demo_uses_no_action_or_not_applicable_instead_of_wall_of_unknowns` | 448 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_incident_command_room.py` | `test_health_profile_html_is_present_and_never_auto_posts` | 486 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_incident_command_room.py` | `test_host_ram_room_shows_causal_gaps_and_checks_without_service_unknown_card` | 502 | function | Use the real browser renderer with a host-level memory incident. | module |
-| `tests/unit/test_incident_command_room.py` | `test_host_ram_has_dedicated_ui_without_remote_write_capability` | 549 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_command_room.py` | `test_complete_llm_diff_is_visible_and_has_redacted_download_control` | 91 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_command_room.py` | `test_full_file_llm_diff_download_prefers_latest_changes_without_secret_leaks` | 107 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_command_room.py` | `test_command_room_renders_and_only_posts_after_deliberate_confirmed_approval` | 144 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_command_room.py` | `test_completed_chat_incident_routes_execute_to_approved_api_not_workflow_resume` | 372 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_command_room.py` | `test_completed_incident_execution_route_matches_governed_backend` | 408 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_command_room.py` | `test_completed_chat_approval_does_not_require_ephemeral_checkbox` | 421 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_command_room.py` | `test_service_status_card_shows_recorded_running_and_real_readonly_recheck` | 431 | function | Actual browser handler: GET returns last recorded; click POST returns stopped without reload. | module |
+| `tests/unit/test_incident_command_room.py` | `test_service_status_card_exists_above_decision_brief_and_is_safe_readonly` | 480 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_command_room.py` | `test_demo_uses_no_action_or_not_applicable_instead_of_wall_of_unknowns` | 500 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_command_room.py` | `test_health_profile_html_is_present_and_never_auto_posts` | 538 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_command_room.py` | `test_host_ram_room_shows_causal_gaps_and_checks_without_service_unknown_card` | 554 | function | Use the real browser renderer with a host-level memory incident. | module |
+| `tests/unit/test_incident_command_room.py` | `test_host_ram_has_dedicated_ui_without_remote_write_capability` | 601 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_incident_copilot.py` | `evidence` | 18 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_incident_copilot.py` | `test_binding_corroborated_with_one_incident_and_never_from_llm` | 25 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_incident_copilot.py` | `test_chat_cannot_redirect_vm_write_to_another_host_or_service` | 40 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
