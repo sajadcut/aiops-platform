@@ -105,6 +105,7 @@ BRIEF = {
 def main() -> None:
     writes = []
     review_requests = []
+    preview_requests = []
     review_state = {"status": "not_responded", "execution_authority": False}
     errors = []
     brief_state = {"current": BRIEF}
@@ -118,6 +119,33 @@ def main() -> None:
         def respond(route):
             req = route.request
             path = urlparse(req.url).path
+            if req.method == "POST" and path.endswith("/chat"):
+                message = str((req.post_data_json or {}).get("message") or "")
+                assert message.startswith("nginx_config_review:"), message
+                preview_requests.append(message)
+                from copy import deepcopy
+                refreshed = deepcopy(brief_state["current"])
+                refreshed["snapshot_id"] = "nginx-diff-after-mcp-preview"
+                refreshed["dynamic_investigation"]["config_proposal"].update({
+                    "status": "candidate_proposed",
+                    "service": "nginx", "config_file": "/etc/nginx/nginx.conf",
+                    "error_line": 103, "original_sha256": "a" * 64,
+                    "candidate_sha256": "b" * 64,
+                    "redacted_diff": {
+                        "line": 103,
+                        "before": "server [arguments redacted] {{",
+                        "after": "server [arguments redacted] {",
+                    },
+                    "current_excerpt": [{"line": 103, "content": "server [arguments redacted] {{"}],
+                    "proposed_excerpt": [{"line": 103, "content": "server [arguments redacted] {"}],
+                })
+                brief_state["current"] = refreshed
+                route.fulfill(status=200, content_type="application/json",
+                              body=json.dumps({"followup_integration": {
+                                  "evidence_ref": "nginx-review-from-mcp",
+                                  "reassessed": True,
+                              }}, ensure_ascii=False))
+                return
             if req.method == "POST" and path.endswith("/configuration-review-response"):
                 intent = req.post_data_json
                 assert intent["decision"] == "request_isolated_validation"
@@ -259,8 +287,15 @@ def main() -> None:
         assert banner.locator("button[data-config-preview='nginx']").is_enabled()
         assert banner.locator("button[data-config-intent='request_isolated_validation']").count() == 0
         assert "ساخت پیش‌نمایش اصلاح" in banner.inner_text()
+        assert "Diff هنوز ساخته نشده" in banner.inner_text()
         assert "اعمال اصلاح روی سرور — غیرفعال" in banner.inner_text()
-        assert not writes, "Rendering missing candidate unexpectedly initiated a write"
+        assert not preview_requests
+        banner.locator("button[data-preview-open-diff='1']").click()
+        page.locator("#ic-proposed-fix pre").filter(has_text="@@ line 103").wait_for(timeout=15000)
+        assert len(preview_requests) == 1
+        assert "nginx_config_review:" in preview_requests[0]
+        assert banner.locator("a[href='#ic-ai-proposed-fix']").count() == 1
+        assert not writes, "Preview Diff unexpectedly triggered an execution write"
         assert not errors, f"Chromium page errors: {errors}"
         print("PASS: SRE evidence, missing-candidate diagnostic, safe preview CTA and no automatic apply")
         browser.close()
