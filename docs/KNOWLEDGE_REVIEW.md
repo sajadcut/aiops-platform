@@ -156,3 +156,58 @@ after transport failure, actual processing → activation, and Search retrieval.
 
 **Do not label production end-to-end acceptance PASS before live Cognia
 registration/processing/search proof and individual-reviewer identity.**
+
+
+## Configuration incident diagnosis in Cognia review (2026-10-15)
+
+Previous drafts named `بررسی تکمیلی رخداد nginx` and `Verified incident
+recovery: nginx` were overly generic. The follow-up draft used only its most
+recent single tool observation, and memory-derived documents did not join the
+configuration-change execution audit. Repeated follow-up evidence and memory
+episodes could create several indistinguishable pending reviews for one
+Incident.
+
+**Current contract:**
+
+- When an incident has an independently observed invalid vendor configuration,
+  the review includes the **observed config path, exact error line, classified
+  syntax issue and evidence ID**. Only bounded fields from durable
+  `vm_mcp` evidence for the *same service* are used. No raw configuration
+  contents, secret values, unverified LLM diagnoses, stack traces or journal
+  text enter the draft.
+- The execution outcome is independently read from an
+  `applied_config_vendor_verified` Audit event for that Incident. The dossier
+  distinguishes a validated file write from observed systemd activation, and
+  from a confirmed source-side Zabbix recovery. **Do not write "incident
+  recovered" merely because `nginx -t` passed or the file was applied.**
+- The selected-review API includes an `incident_dossier` sourced from that
+  Incident's database evidence and Audit. The UI shows the dossier separately
+  even for **old, unchanged** reviews, so a reviewer can see config diagnosis
+  and the actual outcome before editing/publishing.
+- **New** `incident_followup` and verified-memory drafts include a safe
+  technical addendum with sourced config details and descriptive titles.
+  After a real approved config apply, an additional explicit
+  `system:config-apply` draft is created once for that exact approval.
+  These candidates are **never auto-approved/published**.
+- For older still-untouched, automatically created `pending_review` drafts,
+  the operator can choose "افزودن شواهد کانفیگ به پیش‌نویس". This calls
+  `POST /api/v1/knowledge-reviews/{id}/refresh-evidence`, increments the
+  revision, changes the content hash and leaves the record pending. The
+  request rejects reviewed, edited, published, rejected, or otherwise
+  non-pristine records; there is no silent migration of approved/published
+  bytes.
+- Future chat-follow-up requests reuse one existing pending Copilot draft
+  per incident. New memory episodes likewise reuse an existing pending
+  `incident` draft for that incident. Existing duplicate rows remain
+  available for historical review and are not silently deleted or merged.
+
+The knowledge queue is **not** the Cognia knowledge base; only an explicit
+human-reviewed, content-hash-bound `publish` operation crosses that boundary.
+Any possible reapplication of a historical fix still requires new live
+evidence and independent operational Approval.
+
+**REAL ENV REQUIRED:** PostgreSQL data from the nginx incident must be checked
+to establish whether the original config-validator evidence and vendor-apply
+audit are stored under the same Incident ID. UI preview and pending-review
+refresh should then be verified against the actual database, along with
+approval immutability and Cognia publication.
