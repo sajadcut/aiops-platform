@@ -121,6 +121,42 @@ class PostgreSQLApprovalStore:
             raise ValueError("config_change_request_persistence_failed")
         return stored
 
+    async def record_config_validation_failure(
+        self, approval_id: str, *, reason: str, guard_exit_code: int | None = None,
+    ) -> Optional[Dict[str, Any]]:
+        """Persist a safe diagnostic without making a request approvable.
+
+        This is metadata-only CAS, status remains pending_validation.
+        No stdout, stderr, source bytes or validator output is stored.
+        """
+        if not (reason.startswith("config_guard_")
+                or reason in {"mcp_validation_unavailable", "validation_failed",
+                              "live_source_or_candidate_drift",
+                              "fresh_vendor_diagnostic_mismatch",
+                              "vendor_error_changed",
+                              "config_path_not_bound_to_service",
+                              "config_path_not_allowlisted",
+                              "unsupported_vendor_apply_adapter"}):
+            reason = "config_guard_execution_failed"
+        exit_code = guard_exit_code if type(guard_exit_code) is int and 0 <= guard_exit_code <= 255 else None
+        patch = {
+            "validation_last_reason": reason[:100],
+            "validation_last_exit_code": exit_code,
+            "validation_last_failed_at": datetime.now(timezone.utc).isoformat(),
+        }
+        row = (await self.session.execute(text("""
+            UPDATE approvals
+            SET metadata=COALESCE(metadata, '{}'::jsonb) || CAST(:patch AS jsonb)
+            WHERE approval_id=:id
+              AND status='pending_validation'
+              AND action='apply_configuration_change'
+              AND metadata->>'workflow'='config_change'
+            RETURNING approval_id, incident_id, action, risk_level, approver,
+                      status, metadata, created_at, approved_at, rejected_at
+        """), {"id": approval_id, "patch": json.dumps(patch)})).mappings().first()
+        await self.session.commit()
+        return dict(row) if row else None
+
     async def promote_validated_config(
         self, approval_id: str, *, source_sha256: str,
         candidate_sha256: str, validation_scope: str, vendor_validator: str,
@@ -167,6 +203,9 @@ class PostgreSQLApprovalStore:
             "validation_scope": validation_scope,
             "vendor_validator": vendor_validator,
             "validation_passed_at": datetime.now(timezone.utc).isoformat(),
+            "validation_last_reason": None,
+            "validation_last_exit_code": None,
+            "validation_last_failed_at": None,
             "request_phase": "ready_for_human_approval",
         }
         row = (await self.session.execute(
