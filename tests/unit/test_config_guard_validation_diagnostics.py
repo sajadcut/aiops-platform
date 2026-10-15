@@ -275,6 +275,8 @@ def test_windows_vm_guard_installer_requires_explicit_operator_sudo():
     script = (Path(__file__).resolve().parents[2]
               / "scripts/vm/Install-AIOpsConfigGuard.ps1").read_text()
     assert "Get-FileHash -Algorithm SHA256" in script
+    assert '.Replace("`r`n", "`n")' in script
+    assert "UTF8Encoding" in script
     assert "StrictHostKeyChecking=yes" in script
     assert "sudo install -o root -g root -m 0750" in script
     assert "sudo sha256sum" in script
