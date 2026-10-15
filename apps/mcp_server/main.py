@@ -96,7 +96,7 @@ _TOOL_SCHEMAS: Dict[str, Dict[str, Dict[str, Any]]] = {
                     "proposed_change": {"type": "string"}}},
         },
         "config_change_apply": {
-            "description": "Apply a strictly signed and consumed approval through root-owned narrow config guard",
+            "description": "Apply signed and consumed approval via fixed ephemeral SSH POSIX transaction, with backup and rollback",
             "inputSchema": {"type": "object", "additionalProperties": False,
                 "required": ["target", "service", "claims", "signature"],
                 "properties": {**_TARGET, **_SERVICE,
@@ -222,7 +222,7 @@ async def _call(provider: str, tool: str, args: Dict[str, Any]) -> Any:
             connector, action="apply", target=target, service=service,
             **{key: claims[key] for key in
                ("config_file", "original_sha256", "candidate_sha256", "proposed_change")},
-            execution_claims=claims,
+            execution_claims=claims, execution_signature=args.get("signature"),
         )
 
     approval_id = str(args.get("approval_id") or "").strip()
