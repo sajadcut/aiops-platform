@@ -286,6 +286,38 @@ class SSHVMConnector:
         payload = password + "\n" + (stdin_data if stdin_data is not None else "")
         return await self._run(target, f"sudo -k -S -p '' {fixed_command}", stdin_data=payload)
 
+    async def config_guard_preflight(self, target: str) -> Dict[str, Any]:
+        """Read-only check that distinguishes an uninstalled guard from sudo.
+
+        The SSH user does not need root to inspect normal /usr/local/sbin
+        metadata. Never fetch, install, execute or update privileged code
+        merely because a monitoring event asks to validate a candidate.
+        """
+        self._validate_target(target)
+        command = (
+            "LC_ALL=C; p=/usr/local/sbin/aiops-config-guard; "
+            "if [ -L \"$p\" ]; then printf 'SYMLINK'; "
+            "elif [ ! -e \"$p\" ]; then printf 'MISSING'; "
+            "elif [ ! -f \"$p\" ]; then printf 'NOT_REGULAR'; "
+            "else printf 'PRESENT '; stat -c '%u %g %a' -- \"$p\"; fi"
+        )
+        observed = await self._run(target, command)
+        if observed.get("success") is not True:
+            return {"success": False, "status": "config_guard_preflight_unavailable"}
+        value = str(observed.get("stdout") or "").strip()
+        if value == "MISSING":
+            return {"success": False, "status": "config_guard_helper_missing"}
+        if value == "SYMLINK":
+            return {"success": False, "status": "config_guard_helper_symlink_refused"}
+        if value == "NOT_REGULAR":
+            return {"success": False, "status": "config_guard_helper_not_regular"}
+        fields = value.split()
+        if len(fields) != 4 or fields[0] != "PRESENT":
+            return {"success": False, "status": "config_guard_preflight_unavailable"}
+        if fields[1] != "0" or fields[2] != "0" or fields[3] != "750":
+            return {"success": False, "status": "config_guard_helper_unsafe_metadata"}
+        return {"success": True, "status": "config_guard_helper_present"}
+
     async def health_check(self, target: str) -> bool:
         result = await self._run(target, "printf connected")
         return bool(result.get("success")) and result.get("stdout") == "connected"
