@@ -1572,24 +1572,24 @@
 | `apps/signal_gateway/zabbix_lifecycle.py` | `_record_source_recovery` | 96 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/signal_gateway/zabbix_lifecycle.py` | `_audit_recovery` | 150 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/signal_gateway/zabbix_lifecycle.py` | `ingest_zabbix_payload` | 187 | async function | Ingest a Zabbix Problem or Recovery without turning Recovery into a new Incident. | module |
-| `apps/technical_investigation_report.py` | `_time` | 67 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/technical_investigation_report.py` | `_text` | 75 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/technical_investigation_report.py` | `_service` | 81 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/technical_investigation_report.py` | `_source` | 85 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/technical_investigation_report.py` | `_stamp` | 89 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/technical_investigation_report.py` | `_fact_fields` | 97 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/technical_investigation_report.py` | `_state` | 151 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/technical_investigation_report.py` | `_matches` | 156 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/technical_investigation_report.py` | `_domain_rows` | 167 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/technical_investigation_report.py` | `_provider_status` | 182 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/technical_investigation_report.py` | `_latest_metric` | 202 | function | Collector emits {name, value} rows, rather than a metrics dict. | module |
-| `apps/technical_investigation_report.py` | `_best_diagnostic` | 217 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/technical_investigation_report.py` | `_sample` | 223 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/technical_investigation_report.py` | `_journal_counts` | 227 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/technical_investigation_report.py` | `_stop_origin_assessment` | 253 | function | Distinguish confirmed termination from unproven *origin* of a stop job. | module |
-| `apps/technical_investigation_report.py` | `_bounded_files` | 346 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/technical_investigation_report.py` | `build_technical_investigation` | 371 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
-| `apps/technical_investigation_report.py` | `build_technical_investigation.high_mount_pressure` | 654 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | build_technical_investigation |
+| `apps/technical_investigation_report.py` | `_time` | 68 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/technical_investigation_report.py` | `_text` | 76 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/technical_investigation_report.py` | `_service` | 82 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/technical_investigation_report.py` | `_source` | 86 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/technical_investigation_report.py` | `_stamp` | 90 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/technical_investigation_report.py` | `_fact_fields` | 98 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/technical_investigation_report.py` | `_state` | 152 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/technical_investigation_report.py` | `_matches` | 157 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/technical_investigation_report.py` | `_domain_rows` | 180 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/technical_investigation_report.py` | `_provider_status` | 195 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/technical_investigation_report.py` | `_latest_metric` | 215 | function | Collector emits {name, value} rows, rather than a metrics dict. | module |
+| `apps/technical_investigation_report.py` | `_best_diagnostic` | 230 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/technical_investigation_report.py` | `_sample` | 236 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/technical_investigation_report.py` | `_journal_counts` | 240 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/technical_investigation_report.py` | `_stop_origin_assessment` | 266 | function | Distinguish confirmed termination from unproven *origin* of a stop job. | module |
+| `apps/technical_investigation_report.py` | `_bounded_files` | 359 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/technical_investigation_report.py` | `build_technical_investigation` | 384 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
+| `apps/technical_investigation_report.py` | `build_technical_investigation.high_mount_pressure` | 719 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | build_technical_investigation |
 | `apps/verification_service/__init__.py` | `VerificationStatus` | 11 | class | کلاس | module |
 | `apps/verification_service/__init__.py` | `VerificationResult` | 18 | class | کلاس | module |
 | `apps/verification_service/__init__.py` | `VerificationEngine` | 33 | class | Deterministic before/after verification over fresh operational Evidence. | module |
