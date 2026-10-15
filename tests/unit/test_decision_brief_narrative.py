@@ -292,3 +292,56 @@ def test_narrative_accepts_fenced_json_without_relaxing_citation_validation():
             fenced + "json\n" + json.dumps(bad, ensure_ascii=False) + "\n" + fenced,
             sample_brief(), "fa",
         )
+
+
+def test_live_sized_config_review_retains_approval_blocker_and_exact_target():
+    """Regression: 40+ observations and long citations must not hide the RCA.
+
+    The original compactor trimmed agent/MCP items but kept the full citation
+    catalogue and 40 evidence-gap/conflict strings; the operator then saw
+    brief_too_large instead of the review/validation explanation.
+    """
+    brief = sample_brief()
+    brief["source_references"] = [
+        f"evidence-{n}-" + ("reference" * 15) for n in range(120)
+    ]
+    brief["mcp_evidence"] = [
+        {"server": "vm-edge", "tool": "config_validate", "status": "success",
+         "finding": 'unexpected "{" in /etc/nginx/nginx.conf:103',
+         "evidence_ref": brief["source_references"][n]}
+        for n in range(40)
+    ]
+    brief["missing_evidence"] = [
+        f"missing-evidence-{n}-" + ("needs independent verification " * 8)
+        for n in range(40)
+    ]
+    brief["evidence_conflicts"] = [
+        f"conflict-{n}-" + ("independently unverified " * 8)
+        for n in range(40)
+    ]
+    brief["configuration_diagnostic"] = {
+        "status": "invalid", "config_file": "/etc/nginx/nginx.conf",
+        "error_line": 103, "syntax_error": 'unexpected "{"',
+    }
+    brief["remediation_recommendation"] = {
+        "action": "apply_configuration_change", "tool": "ssh_vm",
+        "target": "10.248.16.82", "risk_level": "high",
+    }
+    brief["approval_readiness"] = {
+        "status": "pending_validation", "action": "apply_configuration_change",
+        "target": "10.248.16.82", "rollback_supported": True,
+    }
+    output = service.bounded_projection_json(brief)
+    assert output is not None
+    assert len(output) <= 18000
+    payload = json.loads(output)
+    assert payload["source_counts"]["evidence_references_total"] == 120
+    assert payload["source_counts"]["missing_evidence_total"] == 40
+    assert payload["source_counts"]["conflicts_total"] == 40
+    assert len(payload["allowed_evidence_references"]) < 120
+    assert len(payload["missing_evidence"]) < 40
+    assert payload["config_diagnostic"]["config_file"] == "/etc/nginx/nginx.conf"
+    assert payload["config_diagnostic"]["error_line"] == 103
+    assert payload["approval"]["status"] == "pending_validation"
+    assert payload["remediation"]["action"] == "apply_configuration_change"
+    assert payload["remediation"]["target"] == "10.248.16.82"
