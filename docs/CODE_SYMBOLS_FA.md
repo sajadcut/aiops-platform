@@ -1405,9 +1405,9 @@
 | `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner.runtime_evidence` | 123 | method | Use only MCP observations bound to the same service, not free text. | DynamicInvestigationPlanner |
 | `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner.full_config_repair_evidence` | 140 | method | Return bounded evidence of an operator-requested complete-file repair. | DynamicInvestigationPlanner |
 | `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner.search_query` | 215 | method | داده را بدون تغییر state بازیابی/فهرست می‌کند | DynamicInvestigationPlanner |
-| `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner._scope` | 316 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DynamicInvestigationPlanner |
-| `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner.enrich_knowledge` | 333 | async method | Query Cognia again with a verified error, preserving access scope. | DynamicInvestigationPlanner |
-| `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner.propose` | 406 | async method | LLM chooses from read-only capabilities, never arbitrary code. | DynamicInvestigationPlanner |
+| `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner._scope` | 276 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DynamicInvestigationPlanner |
+| `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner.enrich_knowledge` | 293 | async method | Query Cognia again with a verified error, preserving access scope. | DynamicInvestigationPlanner |
+| `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner.propose` | 366 | async method | LLM chooses from read-only capabilities, never arbitrary code. | DynamicInvestigationPlanner |
 | `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner.evidence_requests` | 753 | method | Convert validated enum members, never LLM text, to connector requests. | DynamicInvestigationPlanner |
 | `apps/orchestrator/e2e_graph.py` | `E2EState` | 50 | class | کلاس | module |
 | `apps/orchestrator/e2e_graph.py` | `retain_incident_evidence_for_followup` | 81 | function | Bound agent context without losing freshly collected config proof. | module |
