@@ -9,6 +9,7 @@
 
   function configPreApprovalPanel() {
     const request = S.configPreApproval;
+    if (request?.approval_queue_registered && request?.approval_id) return '';
     if (S.configPreApprovalError) {
       return `<article class="approval-card neutral" data-config-validation-visibility="error">
         <div class="approval-card-head"><div><span class="section-kicker">درخواست اصلاح کانفیگ</span>
@@ -21,7 +22,7 @@
     const id = encodeURIComponent(S.selected || '');
     return `<article class="approval-card neutral" data-config-validation-visibility="recorded">
       <div class="approval-card-head"><div><span class="section-kicker">درخواست اصلاح کانفیگ · پیش از Approval</span>
-      <h4>${recorded ? 'درخواست بررسی اصلاح ثبت شده؛ تأیید اجرایی ایجاد نشده' :
+      <h4>${recorded ? 'درخواست بررسی اصلاح ثبت شده؛ تأیید اجرایی هنوز مجاز نیست' :
         'وضعیت پاسخ اپراتور به پیشنهاد اصلاح'}</h4></div>${pill('not_requested')}</div>
       <div class="approval-facts">
         <div><label>وضعیت درخواست</label><strong>${esc(request.status)}</strong></div>
@@ -45,7 +46,7 @@
     if (!approval) {
       return `<div class="approval-card neutral">
         <div class="approval-card-head"><div><span class="section-kicker">تأیید انسانی</span><h4>درخواست تأییدی ثبت نشده</h4></div>${pill('not_requested')}</div>
-        <p>هنوز درخواست تأیید ماندگاری برای این رخداد ثبت نشده است. فقط بعد از ایجاد درخواست معتبر توسط گردش‌کار، گزینه‌های تأیید نمایش داده می‌شوند.</p>
+        <p>هنوز درخواست تأییدی برای این رخداد ثبت نشده است؛ پس از دیدن Diff می‌توانید یک درخواست مشخص با هش نسخه در صف Approval ایجاد کنید.</p>
       </div>`;
     }
 
@@ -53,6 +54,7 @@
     const meta = approval.metadata || {};
     const risk = approval.risk_level || decision.risk_level || decision.risk || 'unknown';
     const pending = status === 'pending';
+    const pendingValidation = status === 'pending_validation';
     const approved = status === 'approved';
     const consumed = status === 'consumed';
     const reason = meta.rejection_reason || '';
@@ -68,6 +70,13 @@
           <button class="approval-btn reject" onclick="rejectCurrentApproval()">رد درخواست</button>
           <button class="approval-btn approve" onclick="approveCurrentApproval()">تأیید درخواست</button>
         </div>
+      </div>`;
+    } else if (pendingValidation) {
+      controls = `<div class="approval-controls">
+        <p role="status" class="approval-warning">درخواست تغییر ثبت شد. این رکورد واقعی در صف Approval است، اما هنوز مجوز اجرا نیست. اعتبارسنجی ایزوله و قرارداد اعمال فایل باید تکمیل و ثبت شوند؛ تا آن زمان تأیید یا اجرای فایل مجاز نیست.</p>
+        <p><strong>فایل:</strong> ${esc(meta.config_file || '—')}</p>
+        <p><strong>Source SHA-256:</strong> ${esc(meta.original_sha256 || '—')}</p>
+        <p><strong>Candidate SHA-256:</strong> ${esc(meta.candidate_sha256 || '—')}</p>
       </div>`;
     } else if (approved) {
       const complete = lower(lifecycle.checkpoint_status)==='completed';
@@ -117,6 +126,7 @@
   function approvalBadge(status) {
     const value = lower(status);
     if (value === 'pending') return summaryBadge('نیازمند تأیید', 'probable');
+    if (value === 'pending_validation') return summaryBadge('در انتظار اعتبارسنجی فنی', 'probable');
     if (value === 'approved') return summaryBadge('تأیید صادر شده', 'confirmed');
     if (value === 'consumed') return summaryBadge('مجوز استفاده شده', 'confirmed');
     if (value === 'rejected') return summaryBadge('تأیید رد شد', 'failed');
