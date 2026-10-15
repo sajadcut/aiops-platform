@@ -8,10 +8,11 @@ import base64
 import hashlib
 import json
 import re
-import shlex
 import xml.etree.ElementTree as ET
 
 from domain.contracts.logging import logger
+from apps.config_change_authorization import verify_claim
+from integrations.vm.ephemeral_config_guard import build_ephemeral_guard
 from integrations.vm.general_config_review import checked_config_path, remote_config_read_command, _remove_trailing_json_commas
 from integrations.vm.nginx_config_review import (
     _checked_path, _repair_line, nginx_review_command,
@@ -152,12 +153,27 @@ def classify_config_guard_failure(observed: dict) -> str:
 async def run_governed_change(connector, *, action: str, target: str, service: str,
                               config_file: str, original_sha256: str,
                               candidate_sha256: str, proposed_change: str,
-                              execution_claims: dict | None = None) -> dict:
+                              execution_claims: dict | None = None,
+                              execution_signature: str | None = None) -> dict:
     if action not in {"validate", "apply"}:
         raise PermissionError("config_action_not_allowed")
     connector._validate_target(target)
     connector._validate_service(service)
     name = str(service).lower().removesuffix(".service")
+    # An apply call MUST itself verify the original HMAC, not only trust
+    # the MCP route to have verified it earlier. This is a privileged
+    # in-memory script boundary rather than a root-owned on-host verifier.
+    if action == "apply":
+        verify_claim(execution_claims, execution_signature,
+                     target=target, service=service)
+        expected = {
+            "config_file": config_file,
+            "original_sha256": original_sha256,
+            "candidate_sha256": candidate_sha256,
+            "proposed_change": proposed_change,
+        }
+        if any(execution_claims.get(k) != v for k, v in expected.items()):
+            raise PermissionError("config_execution_claim_binding_changed")
     nginx_profile = name == "nginx" and proposed_change == "remove_extra_opening_brace"
     json_profile = proposed_change == "remove_trailing_json_comma"
     xml_profile = proposed_change == "remove_extra_xml_closing_tag"
@@ -226,50 +242,30 @@ async def run_governed_change(connector, *, action: str, target: str, service: s
                  else "jq empty (JSON syntax only; application semantics unverified)"
                  if json_profile else "xmllint --nonet --noout (XML syntax only)")
 
-    # Diagnose a missing/unsafe pre-provisioned root helper before trying
-    # sudo. Root tooling is not installed by an unapproved incident request:
-    # deployment must use the separate, trusted VM provisioning procedure.
-    preflight = getattr(connector, "config_guard_preflight", None)
-    if callable(preflight):
-        check = await preflight(target)
-        if check.get("success") is not True:
-            reason = str(check.get("status") or "config_guard_preflight_unavailable")
-            logger.warning(
-                "vm_config_guard_change_blocked",
-                target=target, service=name, action=action,
-                phase="guard_preflight", reason=reason,
-                isolated_validation=False, production_write_performed=False,
-            )
-            return {
-                "success": False,
-                "status": reason,
-                "isolated_validation": False,
-                "validation_scope": scope,
-                "vendor_validator": validator,
-                "original_sha256": original_sha256,
-                "candidate_sha256": candidate_sha256,
-                "production_write_performed": False,
-                "remote_python_required": False,
-            }
-
-    # Never open an unrestricted root shell: invoke the pre-provisioned,
-    # root-owned guard with the SSH user's existing sudo authorization.
-    # _sudo tries -n, then password authentication with separate SSH stdin.
-    # Configuration bytes and credentials never appear in argv or logs.
-    arguments = [action, profile, path, original_sha256, candidate_sha256]
-    if action == "apply":
-        if not execution_claims:
-            raise PermissionError("root_config_guard_requires_signed_claim")
-        from apps.config_change_authorization import sign_root_guard
-        arguments += [
-            execution_claims["approval_id"], execution_claims["incident_id"],
-            execution_claims["target"], str(execution_claims["expires"]),
-            sign_root_guard(execution_claims),
-        ]
-    command = "/usr/local/sbin/aiops-config-guard " + " ".join(
-        shlex.quote(part) for part in arguments
+    # The only executable material is our versioned, fixed POSIX program.
+    # It travels over encrypted SSH stdin with the hash-bound candidate;
+    # no VM-side helper, Python, deploy step or LLM-built root command.
+    # A sudo-capable SSH identity is required, just as when the operator
+    # manually uses sudo/su. Only this fixed command is generated.
+    try:
+        command, script = build_ephemeral_guard(
+            action=action,
+            profile=("nginx" if nginx_profile else "json_syntax" if json_profile
+                     else "xml_syntax"),
+            path=path, original_sha256=original_sha256,
+            candidate_sha256=candidate_sha256, candidate=candidate,
+        )
+    except ValueError:
+        return {"success": False, "status": "config_guard_request_rejected",
+                "isolated_validation": False, "production_write_performed": False}
+    logger.info(
+        "vm_config_ephemeral_transaction_started",
+        target=target, service=name, action=action,
+        candidate_bytes=len(candidate.encode("utf-8")),
+        isolated_validation_requested=True,
+        production_write_requested=action == "apply",
     )
-    observed = await connector._sudo(target, command, stdin_data=candidate)
+    observed = await connector._sudo(target, command, stdin_data=script)
     output = str(observed.get("stdout") or "")
     if action == "validate":
         success = observed.get("success") is True and output == "VALIDATED"
@@ -308,8 +304,8 @@ async def run_governed_change(connector, *, action: str, target: str, service: s
         result=result_status, guard_exit_code=observed.get("exit_code"),
         production_write_performed=applied or rolled_back or output == "ROLLBACK_FAILED",
     )
-    # The fixed remote helper performs source-CAS, backup, atomic rename,
-    # post-write vendor validation and immediate rollback on a bad candidate.
+    # The trusted ephemeral POSIX program performs source-CAS, backup, atomic
+    # replacement, post-write validation and rollback on a bad candidate.
     return {
         "success": applied,
         "status": result_status,
