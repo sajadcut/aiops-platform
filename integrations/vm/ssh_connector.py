@@ -1041,6 +1041,61 @@ class SSHVMConnector:
             "candidates_not_verified" if base["files"] else "no_systemd_config_candidates")
         return base
 
+    async def service_config_llm_repair(self, target: str, service: str) -> Dict[str, Any]:
+        """Operator-requested full-file LLM repair, read-only and not approvable.
+
+        The source is never returned in an MCP response. Only the trusted VM
+        worker sees the SSH bytes; only its configured LLM gateway receives
+        the complete document, when explicitly enabled by the operator.
+        """
+        self._validate_target(target)
+        self._validate_service(service)
+        from domain.contracts.config import settings
+        from integrations.vm.general_config_review import (
+            checked_config_path, remote_config_read_command,
+        )
+        from integrations.vm.full_config_llm_repair import review_complete_config
+        base = {
+            "success": True, "target": target, "service": service,
+            "status": "file_not_verified", "validation_status": "UNVERIFIED",
+            "apply_eligible": False, "execution_authority": False,
+            "config_contents_exposed": False,
+            "llm_received_complete_file": False,
+            "llm_returned_complete_file": False,
+        }
+        if not settings.AIOPS_FULL_CONFIG_LLM_ENABLED:
+            return {**base, "status": "full_config_llm_not_enabled"}
+        validator = await self.config_validate(target, service)
+        discovered = await self.service_config_discovery(target, service)
+        candidates = []
+        # Validator and systemd, never alert text or an LLM-supplied path.
+        if validator.get("supported") and validator.get("config_file"):
+            candidates.append(validator["config_file"])
+        for item in (discovered.get("files") or [])[:10]:
+            if isinstance(item, dict) and item.get("verified_exists") is True:
+                candidates.append(item.get("path"))
+        had_read_failure = False
+        for path in list(dict.fromkeys(candidates))[:12]:
+            try:
+                safe = checked_config_path(path)
+                command = remote_config_read_command(safe)
+            except (ValueError, TypeError):
+                continue
+            read = await self._run(target, command)
+            if not read.get("success"):
+                had_read_failure = True
+                continue
+            output = await review_complete_config(
+                str(read.get("stdout") or ""), path=safe, service=service,
+                vendor_error=(str(validator.get("syntax_error") or "")[:900]
+                              if safe == validator.get("config_file") else ""),
+            )
+            return {**base, **output, "target": target, "service": service}
+        return {
+            **base, "status": ("file_read_unavailable" if had_read_failure
+                                else "file_not_verified")
+        }
+
     async def service_config_review(self, target: str, service: str) -> Dict[str, Any]:
         """Read-only bounded review for a vendor error or verified unit file.
 
