@@ -1,168 +1,96 @@
-# Governed configuration changes — production constraints
+# Governed configuration repair — helperless VM execution
 
-## Operator workflow
+## Operator workflow / جریان اپراتوری
 
-The registered sequence is evidence-bound discovery and vendor diagnostics, read-only redacted Diff, durable pending_validation Approval request, independent candidate staging, human approval, second explicit execution confirmation, one-time approval consume, signed VM MCP command, guarded on-host backup and atomic replacement, independent vendor syntax verification and automatic rollback on post-write failure.
+AIOps discovers the actual systemd service and config file, diagnoses the
+failure, produces a deterministic hash-bound redacted Diff, changes **only a
+private temporary copy**, independently checks the proposed candidate, and
+presents the evidence and Diff for human Approval. Validation MUST NOT modify
+the original production file.
 
-Approval of the request never writes production files. The target VM never needs Python. Original and proposed config bytes are never included in MCP tool responses, database snapshots, incident audit, browser displays or model prompts.
+After approval, the API requires separate execution confirmation, consumes the
+high-risk approval once in PostgreSQL, creates a short-lived HMAC signed claim,
+and sends it to the VM MCP worker. That worker **also verifies** the signature,
+target/service/path/hashes and expiry before invoking a single trusted,
+predefined POSIX transaction through the SAME SSH user's sudo privilege.
+The transaction takes a root-only backup, checks the live source hash, performs
+a same-directory atomic replacement, postchecks with the registered validator
+and restores the exact original on a failed postcheck. Starting or restarting
+a stopped service requires a separate service-recovery Approval.
 
-## Supported executable adapter and limitations
+**There is no VM agent or permanent config helper.** Trusted versioned
+POSIX program source comes from integrations/vm/ephemeral_config_guard.py on
+the VM MCP host and is streamed on SSH stdin to /bin/sh -s. Remote Python,
+aiops-config-guard, a preinstalled public key file and any per-VM bootstrap
+are NOT required. Noninteractive exact-byte patching is preferable to
+interactive vi for automation because it is reproducible and verifiable.
 
-The architecture is **service-neutral**: service and file discovery come from verified systemd observations and vendor diagnostics, not from a hardcoded Nginx-only list. The user interface follows the same Diff, technical validation, Approval, Apply, verification and rollback path for every supported repair profile.
+## Trust boundary and authorized sudo
 
-Supported guarded repair profiles:
+Eliminating the VM-root-owned guard deliberately moves the script trust
+boundary into the VM MCP worker. The VM MCP's code, connected control-plane
+authentication, HMAC key and SSH credentials are security-critical.
 
-- **Nginx .conf**: deterministic correction of one unexpected duplicated opening brace in the compiler-confirmed file. Stage the complete /etc/nginx tree in a private mount namespace and run nginx -t. External include dependencies may still be live read-only sources.
-- **JSON configuration belonging to ANY verified systemd service**, including .NET appsettings.json, Python/Java services, Tomcat custom JSON and unknown application binaries: remove exactly one trailing comma after observing the invalid JSON, reconstruct the identical hash-bound candidate from the live file, then independently check JSON grammar with **jq empty** in the remote guard before and after atomic replacement. The precise guarantee is **syntax-only JSON validation**. It does not validate application schema, semantics, downstream dependencies, service startup or runtime recovery. Lack of jq blocks validation; no Python is required on the VM.
+* The same SSH_USERNAME is used for SSH login and sudo. With password-mode
+  SSH, the worker first tries sudo -n; if the policy requires a password, it
+  retries sudo -k -S -p '' using the SSH user's configured password, followed
+  by the fixed POSIX script on encrypted SSH stdin.
+* The SSH user must be authorized to invoke root /bin/sh -s with sudo (as an
+  administrator able to sudo su generally is). **This is wider privilege**
+  than a policy that only allows /usr/local/sbin/aiops-config-guard.
+  Hosts with helper-only sudo rights must remain blocked until independently
+  authorized administrators change the privilege policy. AIOps NEVER modifies
+  sudoers to work around denial.
+* LLM output cannot define a privileged shell command or set an unverified
+  path. File discovery comes from live systemd evidence; fixed deterministic
+  repair profiles rebuild the exact hash-bound proposal from the live file.
+  SSH argv contains only allowlisted operation, profile, path and hashes.
+  Candidate bytes are encoded in an SSH-stdin heredoc, never stdout, logs,
+  LLM, process argv, incident checkpoints or browser responses.
+* AIOPS_CONFIG_APPLY_SIGNING_SECRET (high entropy, min 32 characters) remains
+  mandatory in API and VM MCP. AIOPS_CONFIG_GUARD_ED25519_PRIVATE_KEY is no
+  longer needed by the helperless runtime and no public key file must be
+  deployed to the target. Legacy scripts/vm/aiops-config-guard and
+  scripts/vm/Install-AIOpsConfigGuard.ps1 are not execution dependencies.
 
-- **XML configuration from any verified systemd service**, including Tomcat server.xml and Java application XML: remove exactly one unmatched trailing closing tag, only when a separately parsed XML candidate is well formed and contains no DTD/entity declarations. The fixed remote guard requires xmllint and runs --nonet --noout before and after atomic replacement. This is **XML syntax only**, not validation of Tomcat semantics or startup.
+## Registered independent validators
 
-Unknown service formats such as YAML, properties, INI, HAProxy and Apache vendor syntax still need their own registered deterministic repair and validated action profiles before executable approval. A model cannot generate privileged shell, authorize a file from a guess, or transform unreviewed bytes. Instead, LLM-guided discovery identifies candidate systemd/config paths which are then checked by the read-only MCP workers. The new generic engine scans multiple verified configuration paths instead of stopping at the first readable file.
+| Bounded repair profile | Services | Pre-approval validation | Claim limit |
+|---|---|---|---|
+| One unexpected duplicate opening brace in .conf | nginx | Copy complete /etc/nginx to private staging; mount it read-only on /etc/nginx inside unshare -m; run /usr/sbin/nginx -t -c with original path | External includes may remain live read-only dependencies; no mount namespace -> BLOCK |
+| One trailing JSON comma | Any live systemd-bound .NET/Java/Python/Tomcat/custom service | jq empty on staged file | JSON grammar only; not app schema/health |
+| One unmatched XML closing tag | Any live systemd-bound Java/Tomcat/custom service | xmllint --nonet --noout on staged file, DTD/entities refused | XML grammar only; not app schema/health |
 
+Other formats such as YAML, properties, INI, HAProxy or Apache remain
+discovery/review only until separately registered, tested vendor
+validation and bounded repair profiles exist. The LLM cannot use arbitrary
+shell or guessed validators to make an Approval actionable.
 
-## VM installation, no Python
+## Dependencies, diagnostics, failure codes
 
-Provision the repository's scripts/vm/aiops-config-guard on every authorized VM at /usr/local/sbin/aiops-config-guard with root:root ownership and mode 0750, through a separately approved privileged provisioning process. Audit its SHA-256, trusted parents and ownership. Nginx repair needs /usr/sbin/nginx, mount and unshare. JSON repair needs jq; XML repair needs xmllint (libxml2-utils). Both need flock, openssl, sha256sum, stat, readlink and GNU coreutils. The host must permit private mount namespaces. Failure to meet these requirements prevents advancement to human-approvable status.
+Only standard Linux commands are used by the transaction: POSIX /bin/sh,
+sudo, base64, sha256sum, stat, readlink, mktemp, flock, cp, mv and mkdir.
+Nginx also needs mount, unshare and namespace permission; JSON requires jq;
+XML requires xmllint. A missing required validator returns a prerequisite
+failure and must not auto-install software or weaken isolation.
 
-Provision /etc/aiops/config-change-verify.pem as a **root-owned Ed25519 public key**, delivered through trusted configuration management. The VM never receives a private signing secret. Generate a secure Ed25519 32-byte private seed and inject its base64 form into AIOPS_CONFIG_GUARD_ED25519_PRIVATE_KEY on **only the VM MCP service**. Use the matching OpenSSL PEM public key on the VM. Independently inject a high-entropy AIOPS_CONFIG_APPLY_SIGNING_SECRET (at least 32 unpredictable characters) into both the AIOps API and VM MCP for signed MCP authorization. These two signing credentials must be distinct. Never put private keys, HMAC secrets or configuration bytes in Git, shell arguments, logs or audit. Restart those services after changing secure environment values.
+New safe log events: vm_config_ephemeral_transaction_started,
+vm_config_guard_sudo_stage, vm_config_guard_validation_completed and
+vm_config_guard_apply_completed. All include bounded status/exit code and
+no candidate bytes or passwords. Helper preflight logs are legacy only;
+the new pipeline does NOT probe /usr/local/sbin/aiops-config-guard.
 
-Authorize the existing monitored-VM SSH identity (the exact `SSH_USERNAME` used for login) to run only the fixed /usr/local/sbin/aiops-config-guard as root. The MCP worker first tries `sudo -n`; with `SSH_AUTH_MODE=password`, if sudo reports that a password is needed, it retries `sudo -k -S -p ''` using that SAME SSH user's configured SSH password through the encrypted SSH stdin stream. The guard candidate follows the sudo password line through stdin; neither value appears in command arguments, model prompts or audit logs. This requires the user's sudo password to match their SSH password and sudoers/PAM to permit noninteractive `sudo -S`. SSH key login does not imply a usable sudo password; for key-based auth grant precisely scoped NOPASSWD or provision a separately approved credential mechanism. NEVER enable arbitrary `sudo su`, unrestricted root shells, all commands, or general config-write utilities. Root-helper writes additionally require a short-lived, hash-bound **Ed25519 signature** verified with the root-owned public key; the root VM never receives an API or MCP private key.
+Stable failure codes: 41 bad request; 42 prerequisite; 43 candidate hash;
+44 lock; 45 changed live source; 46 staging; 47 vendor syntax;
+48 rolled back; 49 rollback failed; 50 mount namespace unavailable;
+51 isolated mount failed. Human approval never follows a blocked validation.
 
+## Required production acceptance
 
-### Repairing `config_guard_helper_missing` on monitored Linux VMs
-
-A VM MCP response of `config_guard_helper_missing` is a **deployment failure**,
-not a bad candidate, failed sudo password, or an invitation to bypass isolated
-validation.
-
-**2026-10-15T12:19:49Z live example:** VM MCP authenticated as
-`szendehnam`, read `/etc/nginx/nginx.conf`, and ran a read-only path probe
-for `/usr/local/sbin/aiops-config-guard`. The SSH command returned code 0,
-but the guard preflight classified its result as `config_guard_helper_missing`.
-There was **no attempt** to run `sudo ... aiops-config-guard` in this request,
-no independent vendor validation, and no production write. Other SSH sudo
-operations (such as `sudo -k -S journalctl`) succeeded, so retrying the SSH
-password alone does not resolve this block. Previously the raw probe stdout
-was not included in the platform log.
-
-New, secret-safe runtime events make the stages explicit:
-
-- `vm_config_guard_preflight_completed`: allowlisted `probe` =
-  `MISSING`, `PARENT_INACCESSIBLE`, `PARENT_MISSING`, `SYMLINK`,
-  `NOT_REGULAR`, `PRESENT`, `UNKNOWN`, or `SSH_FAILED`; also
-  `status`, `ssh_exit_code` and target. No raw SSH stdout/stderr.
-- `vm_config_guard_change_blocked`: `phase=guard_preflight`, exact
-  status code, service and target; indicates the guard was not invoked.
-- `vm_config_guard_sudo_stage`: `stage=sudo_noninteractive`,
-  `sudo_password_unavailable`, or `sudo_password_retry`, with exit
-  codes only, after a preflight PASS.
-- `vm_config_guard_validation_completed`: allowlisted validation result
-  and numeric guard exit code. `vm_config_guard_apply_completed` is
-  logged only for an approved apply, never for the validation-only step.
-
-For an independent **read-only** check by an authorized operator, from a
-workstation with access to the monitored Linux VM:
-
-```sh
-ssh -t szendehnam@10.248.16.82 'sudo stat -c "%U:%G %a %n" /usr/local/sbin/aiops-config-guard'
-```
-
-A `stat` `No such file or directory` confirms the executable is absent
-for root; `Permission denied` instead points to an access/parent problem.
-The path probe must be rerun after deployment, not reinterpreted as a
-successful validator. The VM connector now performs a separate read-only existence,
-symlink, file-type and `root:root 0750` metadata preflight before invoking
-the guard. A missing file is never installed automatically by an alert.
-
-**Windows deployment host (the same SSH user and credentials):**
-
-From a trusted checkout of `main` with the checked-in guard and the built-in
-Windows OpenSSH client available, run this once as the authorized operator:
-
-```powershell
-.\scripts\vm\Install-AIOpsConfigGuard.ps1 -Target 10.248.16.82 -SshUser szendehnam
-```
-
-The script copies **only** `scripts/vm/aiops-config-guard` from that trusted
-checkout, checks its SHA-256 and shell syntax on the target, then uses the same
-SSH identity to invoke `sudo install` (interactive password prompt if
-required). The result must be a normal root-owned file at
-`/usr/local/sbin/aiops-config-guard` with exact mode `0750` and the same
-SHA-256 as the local trusted source; the temporary staged copy is deleted.
-It never invokes `sudo su`, grants blanket NOPASSWD, or uses a remote Python
-interpreter.
-
-A restricted sudoers policy which permits **only** the guard executable
-cannot also perform first-time `sudo install`: in that case deploy the binary
-through an authorized configuration-management/administrator channel and
-retain narrowly scoped runtime sudo. Do not weaken the sudoers policy through
-the incident itself.
-
-After provisioning, use the incident-room `Validate configuration` action
-again. A successful guard preflight is **not** a successful isolated vendor
-check. Nginx also needs working private mount namespaces, `unshare`,
-`mount`, and its vendor validator. Rebuild approval from current hashes if
-the source changed. An independent validation PASS moves the request only to
-**pending human approval**; it does not apply the config. Applying requires
-the existing approved, signed, single-use execution workflow and a separate
-approved service recovery action to start/restart a failed service.
-The Ed25519 public verification key at
-`/etc/aiops/config-change-verify.pem` must also be provisioned by trusted
-administration before any signed **apply**. No validation success alone proves
-the service or endpoint is healthy.
-
-### Live VM diagnosis after a blocked validation
-
-The API and VM MCP can be healthy while the target VM fails. In the observed
-2026-10-15 incident, `config_change_validate` reached the VM and
-`sudo -n /usr/local/sbin/aiops-config-guard validate ...` exited **1**;
-this alone does **not** prove an Nginx syntax error. Previously the dashboard
-collapsed any nonzero exit into `isolated_vendor_validation_failed`. New
-deployments report bounded reason codes plus numeric exit status, and persist
-these in the Approval record. Raw stdout/stderr, passwords and file bytes are
-not displayed.
-
-On the **monitored VM**, an authorized administrator should independently
-confirm the exact provisioned Helper and restricted sudo delegation:
-
-```sh
-sudo stat -c '%U:%G %a %n' /usr/local/sbin/aiops-config-guard
-sudo sha256sum /usr/local/sbin/aiops-config-guard
-sudo visudo -c
-sudo -l -U <dedicated-ssh-user>
-```
-
-Install the Helper from a trusted audited artifact (not from incident-provided
-shell text) with root ownership and restricted executable permissions.
-The SAME VM SSH login user must have explicit permission to invoke this
-fixed Helper as root. For SSH password authentication, password-based sudo
-is supported when the sudo password equals the SSH credential: the worker
-tries `sudo -n` first, then `sudo -k -S -p ''` over SSH stdin if required.
-It does **not** run `sudo su` or grant a generic root shell. A scoped
-password-based sudoers example for the existing SSH identity is:
-
-```sudoers
-<ssh-user> ALL=(root) PASSWD: /usr/local/sbin/aiops-config-guard
-```
-
-Where an SSH key is used and there is no separately provisioned sudo
-password, the alternative is scoped NOPASSWD for **only** this Helper:
-
-```sudoers
-<ssh-user> ALL=(root) NOPASSWD: /usr/local/sbin/aiops-config-guard
-```
-
-Neither form silently grants access to an unrestricted privileged shell.
-
-Apply policy only after checking with `visudo -cf` on the proposed
-sudoers.d file. For Nginx validate, confirm `unshare -m` and bind-mount
-privileges are permitted; do **not** weaken isolation on failure.
-The current failure codes distinguish sudo authentication/policy, helper
-prerequisites, namespace setup, staged vendor syntax and stale source hashes.
-Do not approve or execute the change while validation is blocked.
-
-The guard retains exact-byte originals in /var/lib/aiops/config-backups, mode 0700 for that directory. The customer must establish encrypted storage/retention and secret-disposal practices. The guard automatically restores the original if the post-write vendor check fails. A successful configuration syntax check does not imply the service is running or the endpoint is healthy; service start/restart is a separately approved action.
-
-## Acceptance limits
-
-CI proves API and UI control-state transitions, cryptographic tampering denial, deterministic reconstruction, bash/sh syntax and contract regressions. CI cannot prove a particular target VM has mounted namespaces or sudo privileges. Before Production Ready, test in a disposable Linux VM: true staging, expected correction, changed-hash refusal, expired/forged ticket refusal, ownership/ACL integrity, forced post-write validation failure, rollback and service state. Until then mark REAL ENV REQUIRED, never PASS by assertion alone.
+Real representative VM acceptance must prove: password sudo and multi-line
+script stdin, private nginx mount namespace, snapshot/source-hash drift,
+expired/forged claim rejection, hash/ACL ownership preservation, single-use
+approval and second confirmation, post-write check, forced rollback, and
+negative tests for unauthorized sudo and unavailable namespaces. CI mock
+tests cannot prove these host-level properties. Label untested host scenarios
+REAL ENV REQUIRED and never claim production-ready without verification.
