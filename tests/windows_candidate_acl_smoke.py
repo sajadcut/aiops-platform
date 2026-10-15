@@ -17,6 +17,24 @@ from integrations.vm.windows_secure_acl import (
 
 @unittest.skipUnless(os.name == "nt", "requires Windows security APIs / NTFS")
 class WindowsCandidateAclAcceptance(unittest.TestCase):
+    def test_explicit_directory_from_settings_is_enforced(self):
+        from domain.contracts.config import settings
+        from integrations.vm import config_candidate_vault as vault
+        with tempfile.TemporaryDirectory() as scratch:
+            configured = Path(scratch) / "data" / "tempaips"
+            previous = settings.AIOPS_CONFIG_CANDIDATE_DIRECTORY
+            try:
+                settings.AIOPS_CONFIG_CANDIDATE_DIRECTORY = str(configured)
+                self.assertEqual(vault._directory(), configured)
+                self.assertTrue(configured.is_dir())
+                ensure_private_windows_acl(str(configured))
+                # A new protected child inherits the safe directory ACL.
+                child = configured / "test.sealed"
+                child.write_bytes(b"encrypted-only-test-bytes")
+                ensure_private_windows_acl(str(child))
+            finally:
+                settings.AIOPS_CONFIG_CANDIDATE_DIRECTORY = previous
+
     def test_protected_directory_and_new_child_file(self):
         with tempfile.TemporaryDirectory() as scratch:
             directory = Path(scratch) / "AIOps" / "config-candidates"
