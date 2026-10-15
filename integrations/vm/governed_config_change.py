@@ -339,8 +339,10 @@ async def _start_after_approved_config_apply(connector, *, target: str, service:
         if before.get("success") is not True:
             return unavailable
         if before.get("active_state") == "active":
-            return {"attempted": False, "status": "already_active",
-                    "service_recovery_confirmed": True}
+            running = before.get("sub_state") == "running"
+            return {"attempted": False,
+                    "status": "already_active" if running else "active_not_running",
+                    "service_recovery_confirmed": running}
         if (before.get("active_state") not in {"failed", "inactive"}
                 or before.get("load_state") != "loaded"):
             return {"attempted": False, "status": "service_state_not_startable",
@@ -352,6 +354,7 @@ async def _start_after_approved_config_apply(connector, *, target: str, service:
         after = await connector.service_status(target, service)
         confirmed = (after.get("success") is True
                      and after.get("active_state") == "active"
+                     and after.get("sub_state") == "running"
                      and after.get("healthy") is True)
         status = "systemd_active" if confirmed else "start_not_verified"
         logger.info("vm_config_recovery_checked", target=target, service=service,
