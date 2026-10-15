@@ -103,6 +103,22 @@ def test_complete_llm_diff_is_visible_and_has_redacted_download_control():
     assert "ic-config-diff-preview" in css
 
 
+def test_recovery_and_syntax_are_actionable_in_incident_room_not_only_report_text():
+    js = (ROOT / "dashboards/incident-command-room.js").read_text(encoding="utf-8")
+    assert "void loadDotnetSyntax(token)" in js
+    assert "base+'/dotnet-config-syntax'" in js
+    assert "const syntaxByName=new Map" in js
+    assert "dotnetSyntaxLabel(" in js
+    assert "data-recovery-approval=\\\"approve\\\"" in js
+    assert "data-recovery-approval=\\\"reject\\\"" in js
+    assert "data-recovery-approval=\\\"execute\\\"" in js
+    assert "base+'/recovery-approval/queue'" in js
+    assert "base+'/recovery-approval'" in js
+    assert "preflight" in js.lower()
+    assert "if(!confirm(message))return;" in js
+    assert "state.recoveryQueueAttempted=true" in js
+
+
 @pytest.mark.skipif(shutil.which("node") is None, reason="Node required for JavaScript regression")
 def test_full_file_llm_diff_download_prefers_latest_changes_without_secret_leaks():
     script = r"""
