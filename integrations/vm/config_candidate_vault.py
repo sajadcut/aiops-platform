@@ -39,7 +39,7 @@ def _key() -> bytes:
 def _default_directory() -> Path:
     """Fixed OS-specific private location, no additional runtime setting."""
     if os.name == "nt":
-        return Path(os.environ.get("ProgramData", r"C:\\ProgramData")) / "AIOps" / "config-candidates"
+        return Path(os.environ.get("ProgramData", r"C:\ProgramData")) / "AIOps" / "config-candidates"
     return Path("/var/lib/aiops/config-candidates")
 
 
