@@ -47,14 +47,14 @@ authentication, HMAC key and SSH credentials are security-critical.
   SSH argv contains only allowlisted operation, profile, path and hashes.
   Candidate bytes are encoded in an SSH-stdin heredoc, never stdout, logs,
   LLM, process argv, incident checkpoints or browser responses.
-* MCP_BEARER_TOKEN is now the **only** shared signing root between API and
-  VM MCP. Both must have the identical, high-entropy token (at least 32 UTF-8
+* MCP_BEARER_TOKEN is the **only** shared trust root for Approval signing
+  and encrypted model-candidate storage between API and VM MCP. Both must have the identical, high-entropy token (at least 32 UTF-8
   bytes). The claim HMAC uses a domain-separated key derived from that token
   using HMAC-SHA256 with context
   `aiops/configuration-apply/approval-claim/v1`, not the raw bearer bytes.
   No additional AIOPS_CONFIG_APPLY_SIGNING_SECRET setting is necessary.
-  This couples MCP transport authorization with approval signing trust:
-  possession of the MCP bearer can also derive the signing key. Protect and
+  This couples MCP transport authorization, Approval signing and encrypted
+  candidate storage: possession of the bearer permits deriving both subkeys. Protect and
   rotate the bearer appropriately, and retain DB approval consumption, bounded
   claims, hash binding, sudo policy, root-only replay ledger and rollback.
   AIOPS_CONFIG_GUARD_ED25519_PRIVATE_KEY is no longer required by this path.
