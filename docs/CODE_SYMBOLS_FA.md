@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 508 | Dashboard JS files scanned: 8 | Symbols indexed: 5371**
+**Python files scanned: 508 | Dashboard JS files scanned: 8 | Symbols indexed: 5373**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -3760,6 +3760,8 @@
 | `tests/unit/test_ephemeral_config_guard.py` | `test_signed_approved_apply_uses_fixed_root_script_and_reports_verification.Edge.config_validate` | 145 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_signed_approved_apply_uses_fixed_root_script_and_reports_verification.Edge |
 | `tests/unit/test_ephemeral_config_guard.py` | `test_signed_approved_apply_uses_fixed_root_script_and_reports_verification.Edge._run` | 152 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_signed_approved_apply_uses_fixed_root_script_and_reports_verification.Edge |
 | `tests/unit/test_ephemeral_config_guard.py` | `test_signed_approved_apply_uses_fixed_root_script_and_reports_verification.Edge._sudo` | 156 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_signed_approved_apply_uses_fixed_root_script_and_reports_verification.Edge |
+| `tests/unit/test_ephemeral_config_guard.py` | `test_approved_ephemeral_transaction_has_root_only_lock_and_replay_guard` | 179 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_ephemeral_config_guard.py` | `test_apply_requires_safe_approval_id_and_validate_disallows_one` | 197 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_evaluator.py` | `test_rejects_empty_plan` | 4 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_evaluator.py` | `test_accepts_evidence_backed_plan` | 10 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_evaluator_live_evidence_binding.py` | `test_orchestrator_evaluator_passes_authoritative_live_evidence_ids` | 8 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
