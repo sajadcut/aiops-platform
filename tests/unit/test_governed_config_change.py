@@ -57,7 +57,8 @@ def test_config_execution_signed_claim_is_exact_scoped_and_short_lived(monkeypat
     with pytest.raises(PermissionError):
         verify_claim({**claims, "candidate_sha256": "c"*64}, sig,
                      target="10.248.16.82", service="nginx")
-    monkeypatch.delenv("MCP_BEARER_TOKEN")
+    # An explicitly empty env token must override any development .env.
+    monkeypatch.setenv("MCP_BEARER_TOKEN", "")
     with pytest.raises(PermissionError, match="mcp_bearer_token"):
         create_claim(approval_id="a", incident_id="b", target="host",
                      service="nginx", **values)
