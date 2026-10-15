@@ -194,6 +194,25 @@ def local_config_review(encoded: str, *, path: str, validator_error_line: int | 
                                 "after": "xml_closing_tag_removed",
                             },
                         })
+    elif ext == "conf" and vendor_service == "nginx" and isinstance(line_no, int):
+        from integrations.vm.nginx_config_review import _repair_line
+        rows = source.splitlines(keepends=True)
+        if 1 <= line_no <= len(rows):
+            corrected = _repair_line(rows[line_no - 1], vendor_error)
+            if corrected is not None:
+                rows[line_no - 1] = corrected
+                revised = "".join(rows)
+                answer["status"] = "candidate_proposed"
+                answer["candidate_hash"] = hashlib.sha256(revised.encode()).hexdigest()
+                answer["proposed_change"] = "remove_extra_opening_brace"
+                answer["validation_status"] = "UNVERIFIED"
+                answer["redacted_diff"] = {
+                    "line": line_no, "before": "nginx_extra_opening_brace",
+                    "after": "nginx_brace_removed",
+                }
+                answer["candidate_syntax_projection"] = syntax_projection(
+                    revised, extension=ext, error_line=line_no,
+                )
     # YAML/HAProxy/properties are intentionally NOT "syntax valid" based on
     # looking at source bytes. Only their registered vendor validators may
     # establish correctness; do not synthesize a patch for them.
