@@ -252,7 +252,7 @@ async def post_config_review_response(
             action="apply_configuration_change", target=target,
             parameters=parameters, timeout=30,
             runbook_id="vm-config-change", runbook_version="1",
-            rollback=True,
+            rollback=False,  # No proven rollback contract exists yet.
         )
         try:
             queued = await PostgreSQLApprovalStore(db).save_validation_request({
