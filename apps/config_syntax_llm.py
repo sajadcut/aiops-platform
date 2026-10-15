@@ -43,7 +43,7 @@ def sanitized_projection(value: Any) -> dict | None:
                 not isinstance(syntax, str) or len(syntax) > 180):
             return None
         # Accept only opaque JSON grammar symbols; no source values survive.
-        is_json_shape = all(ch in 'x{}[],: \\t"' for ch in syntax)
+        is_json_shape = all(ch in 'x{}[],: \t"' for ch in syntax)
         if not is_json_shape and any(
             not (part.lower() in _SAFE_PARTS or (len(part) == 1 and part in _SAFE_PUNCT))
             for part in syntax.split()
