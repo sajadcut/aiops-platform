@@ -13,6 +13,7 @@ import xml.etree.ElementTree as ET
 from domain.contracts.logging import logger
 from apps.config_change_authorization import verify_claim
 from integrations.vm.ephemeral_config_guard import build_ephemeral_guard
+from integrations.vm.config_candidate_vault import load_candidate, CandidateUnavailable
 from integrations.vm.general_config_review import checked_config_path, remote_config_read_command, _remove_trailing_json_commas
 from integrations.vm.nginx_config_review import (
     _checked_path, _repair_line, nginx_review_command,
@@ -174,9 +175,15 @@ async def run_governed_change(connector, *, action: str, target: str, service: s
         }
         if any(execution_claims.get(k) != v for k, v in expected.items()):
             raise PermissionError("config_execution_claim_binding_changed")
-    nginx_profile = name == "nginx" and proposed_change == "remove_extra_opening_brace"
-    json_profile = proposed_change == "remove_trailing_json_comma"
-    xml_profile = proposed_change == "remove_extra_xml_closing_tag"
+    llm_profile = proposed_change == "llm_full_file_repair"
+    nginx_profile = name == "nginx" and (
+        proposed_change == "remove_extra_opening_brace" or
+        llm_profile and config_file.startswith("/etc/nginx/") and config_file.endswith(".conf")
+    )
+    json_profile = proposed_change == "remove_trailing_json_comma" or (
+        llm_profile and config_file.endswith(".json"))
+    xml_profile = proposed_change == "remove_extra_xml_closing_tag" or (
+        llm_profile and config_file.endswith(".xml"))
     if not (nginx_profile or json_profile or xml_profile):
         return {"success": False, "status": "unsupported_vendor_apply_adapter",
                 "isolated_validation": False, "production_write_performed": False}
@@ -190,7 +197,35 @@ async def run_governed_change(connector, *, action: str, target: str, service: s
         return {"success": False, "status": "config_path_not_allowlisted",
                 "isolated_validation": False, "production_write_performed": False}
     try:
-        if nginx_profile:
+        if llm_profile:
+            # The ONLY source of LLM candidate bytes is the worker's encrypted
+            # hash-bound vault; no client-supplied content or LLM shell input.
+            if nginx_profile:
+                observed = await connector.config_validate(target, service)
+                bound = (observed.get("success") is True and
+                         observed.get("supported") is True and
+                         observed.get("config_file") == path)
+            else:
+                observed = await connector.service_config_discovery(target, service)
+                bound = observed.get("success") is True and any(
+                    isinstance(f, dict) and f.get("path") == path and
+                    f.get("verified_exists") is True
+                    for f in (observed.get("files") or [])
+                )
+            if not bound:
+                return {"success": False, "status": "config_path_not_bound_to_service",
+                        "isolated_validation": False, "production_write_performed": False}
+            read = await connector._run(target, remote_config_read_command(path))
+            if read.get("success") is not True:
+                raise ValueError("config_live_file_read_failed")
+            source = base64.b64decode(str(read.get("stdout") or ""), validate=True)
+            if hashlib.sha256(source).hexdigest() != original_sha256:
+                raise ValueError("config_source_hash_drift")
+            candidate = load_candidate(
+                target=target, service=service, path=path,
+                source_hash=original_sha256, candidate_hash=candidate_sha256,
+            )
+        elif nginx_profile:
             # Re-observe the exact nginx compiler failure and source hash.
             diagnostic = await connector.config_validate(target, service)
             if not (diagnostic.get("success") is True and diagnostic.get("supported") is True
@@ -231,6 +266,9 @@ async def run_governed_change(connector, *, action: str, target: str, service: s
                 encoded=str(read.get("stdout") or ""), path=path,
                 original_sha256=original_sha256, candidate_sha256=candidate_sha256,
             )
+    except CandidateUnavailable as exc:
+        return {"success": False, "status": str(exc),
+                "isolated_validation": False, "production_write_performed": False}
     except (ValueError, UnicodeError, OSError, json.JSONDecodeError, ET.ParseError):
         return {"success": False, "status": "live_source_or_candidate_drift",
                 "isolated_validation": False, "production_write_performed": False}
