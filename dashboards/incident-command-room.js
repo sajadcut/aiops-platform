@@ -217,6 +217,7 @@
     serviceStatus: null, serviceStatusLoading: false, serviceStatusBusy: false,
     serviceStatusToken: 0,
     serviceProfile: null, httpHealth: null, httpHealthBusy: false, profileBusy: false,
+    liveDotnetSyntax: null, liveDotnetSyntaxStatus: 'not_checked',
     lifecyclePolling: false, lastLiveCheck: null, lifecyclePollError: false,
     progress: null, progressConnected: false, progressAbort: null,
     progressStreamRunning: false, progressRetries: 0, progressFailure: false
@@ -2685,6 +2686,31 @@
     }
     return html;
   }
+  function dotnetSyntaxLabel(item,fa) {
+    const status=low(item?.status);
+    if(status==='valid_json_syntax')return fa?'سینتکس صحیح':'Syntax valid';
+    if(status==='invalid_json_syntax')return fa?'سینتکس نامعتبر':'Invalid syntax';
+    if(status==='unavailable')return fa?'بررسی ناموفق':'Check unavailable';
+    return fa?'بررسی نشده':'Not checked';
+  }
+
+  async function loadDotnetSyntax(token) {
+    state.liveDotnetSyntax=null;state.liveDotnetSyntaxStatus='checking';
+    if(state.report)renderInvestigation(state.report);
+    try{
+      const result=await api(base+'/dotnet-config-syntax');
+      if(token!==state.loadingToken||state.historic)return;
+      state.liveDotnetSyntax=result;
+      state.liveDotnetSyntaxStatus=low(result.status)||'unavailable';
+    }catch(e){
+      if(token!==state.loadingToken||state.historic)return;
+      state.liveDotnetSyntax={status:'unavailable',reason:e.status===409?
+        'identity_or_analysis_unverified':'vm_mcp_syntax_check_failed',files:[]};
+      state.liveDotnetSyntaxStatus='unavailable';
+    }
+    if(state.report)renderInvestigation(state.report);
+  }
+
   function renderInvestigation(r) {
     if(r.memory_investigation){
       const m=r.memory_investigation;
@@ -2697,6 +2723,12 @@
     }
     const p=r.dynamic_investigation||{},kb=p.knowledge_followup||{};
     const config=p.config_proposal||{},fa=state.language==='fa';
+    const historical=Boolean(state.historic);
+    const syntaxLive=!historical&&state.liveDotnetSyntax?.runtime==='dotnet'?
+      state.liveDotnetSyntax:null;
+    const syntaxChecked=syntaxLive||null;
+    const syntaxRows=arr(syntaxChecked?.files).filter(x=>x&&x.file);
+    const syntaxByName=new Map(syntaxRows.map(x=>[String(x.file).toLowerCase(),x]));
     const recovery=r.recovery_advisory||{};
     // Recovery suggestion is NOT a pending approval. Never expose execution
     // controls here, even if the model calls an action "approved".
@@ -2810,8 +2842,11 @@
         ' · '+txt(file.source)+'</li>').join('')+'</ul>':
         '<p>'+esc(fa?'فایل مشخصی هنوز تأیید نشده؛ سامانه باید از LLM و روش کشف معتبر کمک بگیرد.':
         'No verified file yet; consult LLM and vendor discovery guidance.')+'</p>')+
-      '<p>'+esc(fa?'وضعیت مشورت LLM: ':'LLM consultation: ')+
-      txt(disc.llm_guidance_status||guidance.status||'not_consulted')+'</p>'+
+      '<p>'+esc(fa?'وضعیت مشورت LLM برای موارد نامشخص: ':'LLM advice for open questions: ')+
+      esc((disc.llm_guidance_status||guidance.status)==='unavailable'?
+        (fa?'این فراخوانی نتیجه نداده؛ وضعیت کلی اتصال LLM نامشخص است.':
+          'This advisory call failed; general LLM availability is not established.'):
+        String(disc.llm_guidance_status||guidance.status||'not_consulted'))+'</p>'+
       arr(guidance.items).slice(0,4).map(x=>
         '<p><strong>'+txt(x.subject)+'</strong> — '+txt(x.explanation)+
         ' · '+txt(x.validation_approach)+'</p>').join('')+
