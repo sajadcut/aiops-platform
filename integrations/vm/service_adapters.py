@@ -152,7 +152,7 @@ def parse_config_diagnostic(output: str) -> dict:
     lines = [line.strip() for line in message.splitlines() if line.strip()]
     fatal = next((
         line for line in lines
-        if re.search(r"\\[(?:emerg|alert|crit|error|fatal)\\]|"
+        if re.search(r"\[(?:emerg|alert|crit|error|fatal)\]|"
                      r"syntax error|unexpected|unknown directive|"
                      r"unknown keyword|error parsing|parsing.*error", line, re.I)
     ), None)
