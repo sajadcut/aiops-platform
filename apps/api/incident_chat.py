@@ -739,6 +739,18 @@ async def incident_chat_message(
             if kb.get("status") == "pending_review":
                 note += " پیش‌نویس دانش Cognia در صف بازبینی انسانی ایجاد شد و هنوز منتشر نشده است."
             answer += "\n\n" + note
+        from integrations.llm.openai_compatible import configured_llm_adapter
+        verdict, _ = await review_answer_coherence(
+            configured_llm_adapter(),
+            question=payload.message,
+            answer=answer,
+            stage="incident_chat_answer_review",
+        )
+        if verdict == "mismatch" and kind == "answer":
+            answer = mismatched_answer_message(
+                payload.message,
+                persian=bool(re.search(r"[\u0600-\u06ff]", payload.message)),
+            )
         answer = redact_text(answer)[:3500]
         event_id = await append_turn(
             audit, incident_id=str(incident_id), actor=identity.subject,
