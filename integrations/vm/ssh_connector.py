@@ -263,20 +263,25 @@ class SSHVMConnector:
             or "a terminal is required to read the password" in output
         )
 
-    async def _sudo(self, target: str, fixed_command: str) -> Dict[str, Any]:
-        """Run only platform-owned commands; retry sudo using SSH password via stdin.
+    async def _sudo(self, target: str, fixed_command: str, *,
+                    stdin_data: Optional[str] = None) -> Dict[str, Any]:
+        """Use the SAME SSH identity for privileged fixed commands.
 
-        No credential appears in argv, shell text, logs or returned MCP payloads.
-        The OS still enforces the user's sudoers permissions. Write operations
-        remain behind the existing Incident/Approval/Execution policy gates.
+        First try passwordless sudo. If that requires authentication and SSH
+        uses password auth, supply the existing SSH user's password via stdin.
+        A governed config guard also reads the full candidate from stdin;
+        prepend ONLY the sudo password line, then pass the candidate verbatim.
+        No root login, unrestricted `su` session, shell-embedded password, or
+        write outside the signed/approved config guard is introduced.
         """
-        result = await self._run(target, f"sudo -n {fixed_command}")
+        result = await self._run(target, f"sudo -n {fixed_command}", stdin_data=stdin_data)
         if not self._sudo_requires_password(result) or self._auth_mode() != "password":
             return result
         password = self._password()
-        if not password:
+        if not password or "\n" in password or "\r" in password:
             return result
-        return await self._run(target, f"sudo -S -p '' {fixed_command}", stdin_data=password + "\n")
+        payload = password + "\n" + (stdin_data if stdin_data is not None else "")
+        return await self._run(target, f"sudo -S -p '' {fixed_command}", stdin_data=payload)
 
     async def health_check(self, target: str) -> bool:
         result = await self._run(target, "printf connected")
