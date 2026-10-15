@@ -201,11 +201,11 @@ class PostgreSQLApprovalStore:
     async def get(self, approval_id: str) -> Optional[Dict[str, Any]]:
         """رکورد را می‌خواند و Approval منقضی را قبل از استفاده به expired تبدیل می‌کند."""
         record = await self._get_raw(approval_id)
-        if record and record.get("status") in {"pending", "approved"} and self._expired(record):
+        if record and record.get("status") in {"pending_validation", "pending", "approved"} and self._expired(record):
             # Expiry فقط در حافظه محاسبه نمی‌شود؛ persisted شدن آن باعث می‌شود worker
             # دیگری هم همان approval را معتبر فرض نکند.
             await self.session.execute(
-                text("UPDATE approvals SET status='expired' WHERE approval_id=:id AND status IN ('pending','approved')"),
+                text("UPDATE approvals SET status='expired' WHERE approval_id=:id AND status IN ('pending_validation','pending','approved')"),
                 {"id": approval_id},
             )
             await self.session.commit()
@@ -272,7 +272,7 @@ class PostgreSQLApprovalStore:
                         metadata=COALESCE(metadata, '{}'::jsonb)
                             || CAST(:metadata_patch AS jsonb)
                     WHERE approval_id=:approval_id
-                      AND status IN ('pending', 'approved')
+                      AND status IN ('pending_validation', 'pending', 'approved')
                     RETURNING approval_id, incident_id, action, risk_level,
                               approver, status, metadata, created_at,
                               approved_at, rejected_at
@@ -305,7 +305,7 @@ class PostgreSQLApprovalStore:
                         rejected_at=CURRENT_TIMESTAMP,
                         metadata=COALESCE(metadata, '{}'::jsonb) || CAST(:metadata_patch AS jsonb)
                     WHERE incident_id=:incident_id
-                      AND status IN ('pending', 'approved')
+                      AND status IN ('pending_validation', 'pending', 'approved')
                     RETURNING approval_id
                     """
                 ),
