@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 525 | Dashboard JS files scanned: 8 | Symbols indexed: 5598**
+**Python files scanned: 525 | Dashboard JS files scanned: 8 | Symbols indexed: 5599**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -4563,7 +4563,8 @@
 | `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_source_drift_blocks_before_sudo_even_with_sealed_candidate.Drift.config_validate` | 216 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_source_drift_blocks_before_sudo_even_with_sealed_candidate.Drift |
 | `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_source_drift_blocks_before_sudo_even_with_sealed_candidate.Drift._run` | 218 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_source_drift_blocks_before_sudo_even_with_sealed_candidate.Drift |
 | `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_source_drift_blocks_before_sudo_even_with_sealed_candidate.Drift._sudo` | 220 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_source_drift_blocks_before_sudo_even_with_sealed_candidate.Drift |
-| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_llm_proposal_requires_sealed_worker_candidate` | 231 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_complete_file_llm_exfiltration_needs_explicit_sre_permission` | 231 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_llm_proposal_requires_sealed_worker_candidate` | 246 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_mcp_external_boundary.py` | `test_context_builder_uses_mcp_clients_not_native_external_connectors` | 22 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_mcp_external_boundary.py` | `test_zabbix_is_mcp_only_and_has_no_direct_runtime_config` | 32 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_mcp_external_boundary.py` | `test_evidence_collector_has_no_native_external_fallbacks` | 48 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
