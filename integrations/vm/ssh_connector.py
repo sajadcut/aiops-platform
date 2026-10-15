@@ -1090,6 +1090,9 @@ class SSHVMConnector:
             candidate = local_config_review(
                 str(response.get("stdout") or ""), path=path,
                 validator_error_line=error_line,
+                vendor_service=(service if path == validator.get("config_file")
+                                and validator.get("valid") is False else ""),
+                vendor_error=str(validator.get("syntax_error") or "")[:600],
             )
             reviewed_files.append({
                 "path": path, "path_source": path_source,
