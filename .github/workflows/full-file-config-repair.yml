@@ -16,6 +16,7 @@ on:
       - "dashboards/incident-command-room.js"
       - "tests/unit/test_full_config*.py"
       - "tests/unit/test_llm_config_candidate_lifecycle.py"
+      - "tests/windows_candidate_acl_smoke.py"
       - "tests/unit/test_governed_config_change.py"
       - ".github/workflows/full-file-config-repair.yml"
   pull_request:
@@ -25,6 +26,19 @@ permissions:
   contents: read
 
 jobs:
+  windows-native-acl:
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Native Windows ACL / sealed file inheritance
+        shell: pwsh
+        run: |
+          python -m compileall -q integrations/vm/windows_secure_acl.py tests/windows_candidate_acl_smoke.py
+          python -m unittest -v tests.windows_candidate_acl_smoke
   validate-full-file-repair:
     runs-on: ubuntu-latest
     timeout-minutes: 20
