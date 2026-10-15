@@ -196,6 +196,9 @@ def local_config_review(encoded: str, *, path: str, validator_error_line: int | 
     # YAML/HAProxy/properties are intentionally NOT "syntax valid" based on
     # looking at source bytes. Only their registered vendor validators may
     # establish correctness; do not synthesize a patch for them.
+    answer["syntax_projection"] = syntax_projection(
+        source, extension=ext, error_line=line_no,
+    )
     answer["error_category"] = error
     answer["observed_error_line"] = line_no
     if type(line_no) is int and 1 <= line_no <= len(lines):
