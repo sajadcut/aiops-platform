@@ -268,20 +268,20 @@ def test_nginx_repair_entrypoint_is_visible_near_incident_and_never_applies_unva
     assert 'function renderConfigActionBanner(r)' in js
     assert 'renderConfigActionBanner(r);renderOverview(r)' in js
     assert 'ic-config-banner-actions' in css
-    assert 'permission_denied' in js
+    assert 'stage_failure_reason' in js
     assert 'data-config-intent="request_change_approval"' in js
     assert 'href="#ic-ai-proposed-fix"' in js
     assert 'اعمال اصلاح روی سرور — غیرفعال' not in js
-    assert 'پس از مشاهده Diff، درخواست تغییر را به صف Approval بفرستید' in js
+    assert 'اصلاح پیشنهادی را مشاهده کنید و پس از بررسی، درخواست تغییر بدهید' in js
     assert 'ارسال درخواست به Approval' in js
-    assert 'state.configResponseStatus===\'loaded\'' in js
+    assert 'const approval=low(response.approval_status||response.status)' in js
     assert 'state.historic' in js
     assert 'config.candidate_sha256' in js and 'config.original_sha256' in js
     # The UI submits only the existing read-only review response, never a
     # fabricated patch or a config-file execution request.
     assert "base+'/configuration-review-response'" in js
     assert 'data-config-intent="apply"' not in js
-    assert 'data-config-request-status="recorded"' in js
+    assert 'href="#ic-action-controls"' in js
 
 
 @pytest.mark.asyncio
