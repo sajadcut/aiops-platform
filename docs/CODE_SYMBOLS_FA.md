@@ -2401,15 +2401,15 @@
 | `integrations/vm/config_candidate_vault.py` | `_prune_expired` | 192 | function | Opportunistic bounded ciphertext retention, never touch unknown files. | module |
 | `integrations/vm/config_candidate_vault.py` | `store_candidate` | 216 | function | Seal the exact complete response, durably. Never return its bytes. | module |
 | `integrations/vm/config_candidate_vault.py` | `load_candidate` | 286 | function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
-| `integrations/vm/dotnet_local_validator.py` | `safe_json_files` | 42 | function | Parse untrusted remote directory names. Excess is NOT a full validation. | module |
-| `integrations/vm/dotnet_local_validator.py` | `remote_file_listing_command` | 61 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `integrations/vm/dotnet_local_validator.py` | `remote_file_read_command` | 76 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `integrations/vm/dotnet_local_validator.py` | `DotnetJsonCommentError` | 98 | class | کلاس | module |
-| `integrations/vm/dotnet_local_validator.py` | `DotnetJsonCommentError.__init__` | 99 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DotnetJsonCommentError |
-| `integrations/vm/dotnet_local_validator.py` | `normalize_dotnet_json` | 105 | function | Ignore JSON comments and trailing commas accepted by .NET configuration. | module |
-| `integrations/vm/dotnet_local_validator.py` | `_reject_constant` | 176 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `integrations/vm/dotnet_local_validator.py` | `_reject_duplicate_keys` | 180 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `integrations/vm/dotnet_local_validator.py` | `validate_encoded_file` | 189 | function | Parse bytes only in worker memory; return bounded, secret-free metadata. | module |
+| `integrations/vm/dotnet_local_validator.py` | `safe_json_files` | 45 | function | Parse untrusted remote directory names. Excess is NOT a full validation. | module |
+| `integrations/vm/dotnet_local_validator.py` | `remote_file_listing_command` | 64 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `integrations/vm/dotnet_local_validator.py` | `remote_file_read_command` | 79 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `integrations/vm/dotnet_local_validator.py` | `DotnetJsonCommentError` | 101 | class | کلاس | module |
+| `integrations/vm/dotnet_local_validator.py` | `DotnetJsonCommentError.__init__` | 102 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DotnetJsonCommentError |
+| `integrations/vm/dotnet_local_validator.py` | `normalize_dotnet_json` | 108 | function | Ignore JSON comments and trailing commas accepted by .NET configuration. | module |
+| `integrations/vm/dotnet_local_validator.py` | `_reject_constant` | 179 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `integrations/vm/dotnet_local_validator.py` | `_reject_duplicate_keys` | 183 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `integrations/vm/dotnet_local_validator.py` | `validate_encoded_file` | 192 | function | Parse bytes only in worker memory; return bounded, secret-free metadata. | module |
 | `integrations/vm/ephemeral_config_guard.py` | `build_ephemeral_guard` | 183 | function | Return (fixed sudo command, shell stdin); only allow predetermined operations. | module |
 | `integrations/vm/full_config_llm_repair.py` | `_trusted_gateway` | 32 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `integrations/vm/full_config_llm_repair.py` | `_parse_corrected` | 40 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
