@@ -53,6 +53,54 @@ def get(**overrides):
     return load_candidate(**fields)
 
 
+def test_windows_vault_auto_repairs_inherited_permissions_fail_closed(tmp_path, monkeypatch):
+    from integrations.vm import config_candidate_vault as vault
+    path = tmp_path / "private"
+    path.mkdir()
+    events = []
+    def verify(_):
+        events.append("verify")
+        if events.count("verify") == 1:
+            raise PermissionError("candidate_windows_acl_too_broad")
+    monkeypatch.setattr(vault, "ensure_private_windows_acl", verify)
+    monkeypatch.setattr(
+        vault, "harden_private_windows_acl",
+        lambda _: events.append("harden"),
+    )
+    vault._prepare_windows_directory(path)
+    assert events == ["verify", "harden", "verify"]
+    events.clear()
+    def fail(_):
+        raise PermissionError("candidate_windows_acl_unverifiable")
+    monkeypatch.setattr(vault, "ensure_private_windows_acl", fail)
+    with pytest.raises(PermissionError, match="candidate_windows_acl_unverifiable"):
+        vault._prepare_windows_directory(path)
+    assert events == ["harden"]
+    (tmp_path / "actual").mkdir()
+    alias = tmp_path / "linked"
+    try:
+        alias.symlink_to(tmp_path / "actual", target_is_directory=True)
+    except (OSError, NotImplementedError):
+        pass
+    else:
+        with pytest.raises(CandidateUnavailable, match="candidate_directory_permissions"):
+            vault._prepare_windows_directory(alias)
+
+
+@pytest.mark.skipif(os.name != "nt", reason="Requires real Windows NTFS and OS security API")
+def test_windows_vault_acl_applies_to_inherited_candidate_file(tmp_path):
+    from integrations.vm.windows_secure_acl import (
+        ensure_private_windows_acl, harden_private_windows_acl,
+    )
+    directory = tmp_path / "candidate_private"
+    directory.mkdir()
+    harden_private_windows_acl(str(directory))
+    ensure_private_windows_acl(str(directory))
+    child = directory / "example.sealed"
+    child.write_bytes(b"ciphertext-test-only")
+    ensure_private_windows_acl(str(child))
+
+
 def test_key_derivation_is_stable_and_independent_from_signed_approval(vault_env, monkeypatch):
     from apps.config_change_authorization import _key as approval_key, candidate_encryption_key
     from integrations.vm.config_candidate_vault import _key as vault_key
