@@ -762,6 +762,13 @@ def build_decision_brief(
                 "llm_received_complete_file": obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("full_config_llm_repair")).get("llm_received_complete_file") is True,
                 "llm_returned_complete_file": obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("full_config_llm_repair")).get("llm_returned_complete_file") is True,
                 "candidate_returned_not_stored": obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("full_config_llm_repair")).get("candidate_returned_not_stored") is True,
+                "candidate_stored": obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("full_config_llm_repair")).get("candidate_stored") is True,
+                "validation_profile": safe(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("full_config_llm_repair")).get("validation_profile"), 35),
+                "redacted_changes": [{
+                    "line": x.get("line"), "before": safe(x.get("before"), 180),
+                    "after": safe(x.get("after"), 180),
+                } for x in arr(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("full_config_llm_repair")).get("redacted_changes"))[:12]
+                  if isinstance(x, dict) and type(x.get("line")) is int],
                 "rejection_reason": safe(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("full_config_llm_repair")).get("rejection_reason"), 90),
                 "validation_status": "UNVERIFIED",
                 "validator_executed_on_proposal": False,
@@ -868,6 +875,13 @@ def build_decision_brief(
                 "original_sha256": safe(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("config_proposal")).get("original_sha256"), 64),
                 "candidate_sha256": safe(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("config_proposal")).get("candidate_sha256"), 64),
                 "proposed_change": safe(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("config_proposal")).get("proposed_change"), 90),
+                "candidate_stored": obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("config_proposal")).get("candidate_stored") is True,
+                "validation_profile": safe(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("config_proposal")).get("validation_profile"), 40),
+                "redacted_changes": [{
+                    "line": x.get("line"), "before": safe(x.get("before"), 180),
+                    "after": safe(x.get("after"), 180),
+                } for x in arr(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("config_proposal")).get("redacted_changes"))[:12]
+                  if isinstance(x, dict) and type(x.get("line")) is int],
                 "test_scope": safe(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("config_proposal")).get("test_scope"), 100),
                 "format_validation_status": safe(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("config_proposal")).get("format_validation_status"), 80),
                 "vendor_validation_status": safe(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("config_proposal")).get("vendor_validation_status"), 80),
