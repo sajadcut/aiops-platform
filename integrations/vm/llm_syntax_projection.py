@@ -27,7 +27,7 @@ def project_line(line: str, extension: str) -> str:
         if quote is not None:
             if escaped:
                 escaped = False
-            elif ch == "\\\\":
+            elif ch == "\\":
                 escaped = True
             elif ch == quote:
                 quote = None
