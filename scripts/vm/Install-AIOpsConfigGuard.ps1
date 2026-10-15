@@ -30,14 +30,24 @@ if (-not (Get-Command ssh -ErrorAction SilentlyContinue) -or
     -not (Get-Command scp -ErrorAction SilentlyContinue)) {
     throw 'OpenSSH ssh and scp are required on the deployment workstation.'
 }
-$hash = (Get-FileHash -Algorithm SHA256 -LiteralPath $source).Hash.ToLowerInvariant()
+# Git for Windows may have checked out the POSIX helper with CRLF. Ensure
+# the deployed script has a Linux-compatible LF shebang, no UTF-8 BOM, and a
+# digest covering EXACTLY the bytes copied to the VM.
+$normalized = [IO.File]::ReadAllText($source).Replace("`r`n", "`n")
+if (-not $normalized.StartsWith("#!/bin/sh`n")) {
+    throw 'The trusted root guard does not have a valid POSIX shebang.'
+}
+$tempSource = Join-Path ([IO.Path]::GetTempPath()) (
+    'aiops-guard-' + [Guid]::NewGuid().ToString('N') + '.sh')
+[IO.File]::WriteAllText($tempSource, $normalized, [Text.UTF8Encoding]::new($false))
+$hash = (Get-FileHash -Algorithm SHA256 -LiteralPath $tempSource).Hash.ToLowerInvariant()
 $remote = "$SshUser@$Target"
 $stage = '.aiops-config-guard.' + [Guid]::NewGuid().ToString('N') + '.stage'
 $targetFile = '/usr/local/sbin/aiops-config-guard'
 
 try {
     # The payload is taken ONLY from this checked-out, trusted repository.
-    & scp -q -o StrictHostKeyChecking=yes -- $source "${remote}:./$stage"
+    & scp -q -o StrictHostKeyChecking=yes -- $tempSource "${remote}:./$stage"
     if ($LASTEXITCODE -ne 0) { throw 'Secure copy to monitored VM failed.' }
 
     $stageCheck = & ssh -o StrictHostKeyChecking=yes -- $remote "chmod 600 -- $stage && sh -n -- $stage && sha256sum -- $stage" 2>&1
@@ -64,4 +74,5 @@ try {
 finally {
     # Best effort unprivileged cleanup. Never delete the production helper.
     & ssh -o StrictHostKeyChecking=yes -- $remote "rm -f -- $stage" 2>$null | Out-Null
+    Remove-Item -LiteralPath $tempSource -Force -ErrorAction SilentlyContinue
 }
