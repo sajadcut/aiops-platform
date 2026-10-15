@@ -272,7 +272,8 @@ def test_nginx_repair_entrypoint_is_visible_near_incident_and_never_applies_unva
     assert 'data-config-intent="request_isolated_validation"' in js
     assert 'href="#ic-ai-proposed-fix"' in js
     assert 'اعمال اصلاح روی سرور — غیرفعال' in js
-    assert 'ثبت درخواست اعتبارسنجی خودش فایل را اصلاح نمی‌کند' in js
+    assert 'این دکمه فقط درخواست اعمال را برای بررسی پیش از Approval ثبت می‌کند' in js
+    assert 'درخواست اعمال اصلاح (ابتدا اعتبارسنجی)' in js
     assert 'state.configResponseStatus===\'loaded\'' in js
     assert 'state.historic' in js
     assert 'config.candidate_sha256' in js and 'config.original_sha256' in js
@@ -280,6 +281,7 @@ def test_nginx_repair_entrypoint_is_visible_near_incident_and_never_applies_unva
     # fabricated patch or a config-file execution request.
     assert "base+'/configuration-review-response'" in js
     assert 'data-config-intent="apply"' not in js
+    assert 'data-config-request-status="recorded"' in js
 
 
 @pytest.mark.asyncio
