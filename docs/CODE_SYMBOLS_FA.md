@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 521 | Dashboard JS files scanned: 8 | Symbols indexed: 5544**
+**Python files scanned: 521 | Dashboard JS files scanned: 8 | Symbols indexed: 5545**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -3911,6 +3911,7 @@
 | `tests/unit/test_full_config_llm_repair.py` | `test_connector_resolves_only_verified_path_and_never_returns_source.run` | 132 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | test_connector_resolves_only_verified_path_and_never_returns_source |
 | `tests/unit/test_full_config_llm_repair.py` | `test_connector_resolves_only_verified_path_and_never_returns_source.model_review` | 135 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_connector_resolves_only_verified_path_and_never_returns_source |
 | `tests/unit/test_full_config_llm_repair.py` | `test_incident_chat_routes_only_explicit_full_file_request_and_filters_raw` | 151 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_full_config_llm_repair.py` | `test_incident_banner_offers_deliberate_full_file_llm_preview` | 164 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_governed_config_change.py` | `params` | 19 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_governed_config_change.py` | `test_nginx_candidate_reconstructed_only_from_same_hash_bound_source` | 28 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_governed_config_change.py` | `test_config_execution_signed_claim_is_exact_scoped_and_short_lived` | 42 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
