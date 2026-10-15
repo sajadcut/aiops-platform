@@ -14,6 +14,8 @@
     config_guard_helper_missing:'ابزار محافظ اصلاح کانفیگ روی VM در مسیر /usr/local/sbin/aiops-config-guard نصب نشده است. با کاربر SSH فعلی و دسترسی sudo، ابزار نسخه‌بندی‌شده پروژه باید به‌صورت جداگانه نصب و مالکیت root:root و مجوز 0750 آن راستی‌آزمایی شود؛ سپس اعتبارسنجی را تکرار کنید.',
     config_guard_helper_symlink_refused:'فایل Helper لینک نمادین است و برای جلوگیری از تغییر مسیر اجرای root رد شد. نسخه مورد اعتماد پروژه باید به‌صورت فایل معمولی نصب شود.',
     config_guard_helper_not_regular:'مسیر Helper فایل اجرایی معمولی نیست. پیش از اجرای sudo باید نوع فایل و فرایند استقرار اصلاح شود.',
+    config_guard_helper_parent_missing:'پوشه /usr/local/sbin روی VM وجود ندارد یا در دسترس بررسی اولیه نیست؛ استقرار Helper باید توسط مدیر مجاز بررسی شود.',
+    config_guard_helper_parent_inaccessible:'کاربر SSH اجازه عبور از یکی از پوشه‌های /usr ،/usr/local یا /usr/local/sbin را ندارد؛ نبودن فایل Helper هنوز اثبات نشده است.',
     config_guard_helper_unsafe_metadata:'مالکیت یا مجوز فایل Helper قابل قبول نیست. باید root:root و دقیقاً مجوز 0750 داشته باشد.',
     config_guard_preflight_unavailable:'بررسی مقدماتی وجود و مالکیت Helper با SSH انجام نشد؛ تا روشن شدن علت، اعتبارسنجی و اعمال کانفیگ مجاز نیست.',
     config_guard_helper_permission_denied:'دسترسی لازم برای اجرای Helper یا فایل هدف وجود ندارد.',
