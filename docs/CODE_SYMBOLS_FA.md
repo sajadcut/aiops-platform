@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 508 | Dashboard JS files scanned: 8 | Symbols indexed: 5373**
+**Python files scanned: 509 | Dashboard JS files scanned: 8 | Symbols indexed: 5375**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -2372,6 +2372,8 @@
 | `integrations/vm/governed_config_change.py` | `rebuild_xml_candidate` | 76 | function | Remove one unmatched EOF closing tag; never edit XML values or DTDs. | module |
 | `integrations/vm/governed_config_change.py` | `classify_config_guard_failure` | 121 | function | Use only fixed, operator-actionable codes; never reflect stderr. | module |
 | `integrations/vm/governed_config_change.py` | `run_governed_change` | 153 | async function | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | module |
+| `integrations/vm/llm_syntax_projection.py` | `project_line` | 14 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `integrations/vm/llm_syntax_projection.py` | `syntax_projection` | 34 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `integrations/vm/mcp_client.py` | `VMEdgeMCPClient` | 9 | class | MCP-only connector for VM/Edge diagnostics and governed remediation. | module |
 | `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.__init__` | 24 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
 | `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.initialize` | 38 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
