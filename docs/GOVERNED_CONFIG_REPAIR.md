@@ -297,14 +297,19 @@ to `/var/lib/aiops/config-candidates` on Linux and
 Windows-hosted VM MCP service:
 
 ```env
-AIOPS_CONFIG_CANDIDATE_DIRECTORY=D:\data\tempaips
+AIOPS_CONFIG_CANDIDATE_DIRECTORY=D:\aiops-platform-new\config-candidates
 ```
 
-Use an absolute local drive path; UNC, device, traversal and relative paths
+Use an **exclusive directory for sealed candidates**, not the source-code checkout
+`D:\aiops-platform-new` itself. An absolute one-component drive path such as
+`D:\candidate-vault` is syntactically valid, but it must still be dedicated
+and have verifiable private ACLs. UNC, device, traversal and relative paths
 are rejected on Windows. Never set the monitored Linux VM's path here.
 Only the dedicated candidate directory is protected; existing parent
 folders are not changed. If the selected folder contains unrelated files
 and has overly broad permissions, the worker refuses to rewrite its ACL.
+The optional setting must reach the VM MCP **worker process environment**,
+not only the API process. Restart that worker after changing its environment.
 
 The vault requires a persistent private directory (owner-only 0700/files 0600 on POSIX, strict
 service identity/SYSTEM/Administrators ACL on Windows) and fails closed if
