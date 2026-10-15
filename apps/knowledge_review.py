@@ -175,3 +175,63 @@ async def get_locked_review(db, review_id: UUID) -> KnowledgeReview:
     if record is None:
         raise HTTPException(404, "knowledge_review_not_found")
     return record
+
+
+async def create_from_verified_config_apply(db, *, incident_id: UUID,
+                                            approval_id: str) -> KnowledgeReview | None:
+    """Draft a sourced lesson after real config apply, not false service recovery.
+
+    Only a pending human-reviewed Cognia candidate is created; no publication,
+    no new operational authority. Never duplicate one approved config action.
+    """
+    from apps.knowledge_review_dossier import (
+        dossier_addendum, dossier_title, incident_dossier,
+    )
+    existing = (await db.execute(
+        select(KnowledgeReview).where(
+            KnowledgeReview.incident_id == incident_id,
+            KnowledgeReview.source_type == "incident_followup",
+            KnowledgeReview.review_reason == "config_apply:" + approval_id,
+        ).limit(1)
+    )).scalars().first()
+    if existing:
+        return existing
+    dossier = await incident_dossier(db, incident_id)
+    execution = dossier.get("config_execution") or {}
+    # A vendor-success signal without the matching approval audit is not
+    # authority to describe an action as performed.
+    if (execution.get("config_apply") != "vendor_verified"
+            or execution.get("approval_id") != approval_id):
+        return None
+    selected = configured_kb()
+    if not settings.COGNIA_CLIENT_APPLICATION_ID:
+        return None
+    service = str(dossier.get("service") or "unknown")
+    title = dossier_title(service, dossier) or (
+        f"{service}: اصلاح کانفیگ اعمال و تأیید شد (وضعیت سرویس نیازمند بررسی)"
+    )
+    content = "\n".join([
+        "نوع: گزارش فنی رخداد برای بازبینی انسانی؛ نه مجوز اجرا.",
+        f"سرویس: {redact_text(service)}",
+        f"رخداد: {incident_id}",
+        f"Approval اعمال‌شده: {redact_text(approval_id)}",
+        dossier_addendum(dossier) or
+            "ثبت اجرای اصلاح در ممیزی تأیید شده، ولی خطای اولیه از شواهد قابل استخراج نبود.",
+        "این گزارش نتیجهٔ بررسی فایل را از بازیابی systemd و رفع آلارم "
+        "توسط منبع مانیتورینگ تفکیک می‌کند.",
+        "انتشار به Cognia فقط پس از تأیید بازبین انسانی است.",
+    ])
+    title, content = validated_document(title, content)
+    record = KnowledgeReview(
+        id=uuid4(), source_type="incident_followup", incident_id=incident_id,
+        kb_id=selected,
+        scope={"type": "clientApplication",
+               "clientApplicationId": int(settings.COGNIA_CLIENT_APPLICATION_ID)},
+        title=title, content=content, content_hash=content_digest(title, content),
+        status="pending_review", created_by="system:config-apply",
+        review_reason="config_apply:" + approval_id,
+    )
+    db.add(record)
+    await db.commit()
+    await db.refresh(record)
+    return record
