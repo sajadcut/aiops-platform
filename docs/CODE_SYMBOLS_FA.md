@@ -1294,8 +1294,8 @@
 | `apps/knowledge_review.py` | `configured_kb` | 88 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/knowledge_review.py` | `review_summary` | 96 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/knowledge_review.py` | `create_from_memory` | 119 | async function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
-| `apps/knowledge_review.py` | `get_locked_review` | 171 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
-| `apps/knowledge_review.py` | `create_from_verified_config_apply` | 180 | async function | Draft a sourced lesson after real config apply, not false service recovery. | module |
+| `apps/knowledge_review.py` | `get_locked_review` | 183 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
+| `apps/knowledge_review.py` | `create_from_verified_config_apply` | 192 | async function | Draft a sourced lesson after real config apply, not false service recovery. | module |
 | `apps/knowledge_review_dossier.py` | `_safe_path` | 24 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/knowledge_review_dossier.py` | `_same_service` | 32 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/knowledge_review_dossier.py` | `build_dossier` | 38 | function | Extract sourced, scoped and bounded facts for the selected incident. | module |
