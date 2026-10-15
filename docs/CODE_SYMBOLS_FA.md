@@ -1387,11 +1387,11 @@
 | `apps/operator_summary.py` | `_human_action` | 115 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/operator_summary.py` | `_observed` | 144 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/operator_summary.py` | `_observed.view` | 194 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _observed |
-| `apps/operator_summary.py` | `_cause` | 215 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/operator_summary.py` | `_evidence_summary` | 261 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/operator_summary.py` | `_observed_text` | 281 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/operator_summary.py` | `_has_persian` | 307 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/operator_summary.py` | `build_operator_summary` | 311 | function | Deterministic, read-only operator Decision Support; never an execution authority. | module |
+| `apps/operator_summary.py` | `_cause` | 232 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/operator_summary.py` | `_evidence_summary` | 278 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/operator_summary.py` | `_observed_text` | 298 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/operator_summary.py` | `_has_persian` | 324 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/operator_summary.py` | `build_operator_summary` | 328 | function | Deterministic, read-only operator Decision Support; never an execution authority. | module |
 | `apps/orchestrator/a2a_gateway.py` | `A2AGateway` | 11 | class | Compatibility gateway for structured multi-agent analysis. | module |
 | `apps/orchestrator/a2a_gateway.py` | `A2AGateway.__init__` | 18 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | A2AGateway |
 | `apps/orchestrator/a2a_gateway.py` | `A2AGateway.process_incident` | 24 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | A2AGateway |
