@@ -400,6 +400,53 @@ class DynamicInvestigationPlanner:
                     failure.get("evidence_ref"), review.get("evidence_ref")
                 ) if x],
             })
+        # Cross-service deterministic JSON proposals are computed by the
+        # trusted MCP worker, never from an LLM-generated patch.
+        name = str(state.get("service_name") or "").lower().removesuffix(".service")
+        reviewed_name = str(general_review.get("service") or "").lower().removesuffix(".service")
+        reviewed_file = str(general_review.get("config_file") or "")
+        if (name and name == reviewed_name
+                and general_review.get("status") == "candidate_proposed"
+                and general_review.get("proposed_change") == "remove_trailing_json_comma"
+                and reviewed_file.endswith(".json")
+                and (not failure or failure.get("config_file") == reviewed_file)
+                and (result.get("config_proposal") or {}).get("status") != "candidate_proposed"):
+            diff = general_review.get("redacted_diff") or {}
+            result["config_proposal"] = {
+                "status": "candidate_proposed", "service": general_review["service"],
+                "config_file": reviewed_file,
+                "error_line": general_review.get("observed_error_line"),
+                "source_evidence_refs": [general_review["evidence_ref"]]
+                    if general_review.get("evidence_ref") else [],
+                "current_configuration": None, "proposed_configuration": None,
+                "unified_diff": None,
+                "current_excerpt": [
+                    {"line": row["line"], "content": _bounded(row.get("content"), 125)}
+                    for row in (general_review.get("current_excerpt") or [])[:7]
+                    if isinstance(row, dict) and type(row.get("line")) is int
+                ],
+                "proposed_excerpt": [
+                    {"line": row["line"], "content": _bounded(row.get("content"), 125)}
+                    for row in (general_review.get("proposed_excerpt") or [])[:7]
+                    if isinstance(row, dict) and type(row.get("line")) is int
+                ],
+                "redacted_diff": {
+                    "line": diff.get("line"),
+                    "before": _bounded(diff.get("before"), 125),
+                    "after": _bounded(diff.get("after"), 125),
+                } if isinstance(diff, dict) else None,
+                "original_sha256": str(general_review.get("source_hash") or "")[:64],
+                "candidate_sha256": str(general_review.get("candidate_hash") or "")[:64],
+                "proposed_change": "remove_trailing_json_comma",
+                "test_scope": "worker_format_validation_only",
+                "validation_status": "UNVERIFIED",
+                "format_validation_status": _bounded(
+                    general_review.get("validation_status"), 80),
+                "stage_failure_reason": "not_recorded",
+                "validator_executed_on_proposal": False,
+                "isolated_validation": False, "requires_approval": True,
+                "apply_eligible": False, "execution_authority": False,
+            }
         if unit.get("runtime") == "dotnet":
             # Purely diagnostic: valid JSON is NOT proof that environment,
             # dependencies, or the application startup are correct.
