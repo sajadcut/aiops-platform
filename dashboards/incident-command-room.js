@@ -514,6 +514,10 @@
        !['paused','completed','failed'].includes(low(l.checkpoint_status)));
     const awaiting=!precheckActive&&!precheckFailed&&['pending','approved'].includes(approval);
     const terminal=['completed','failed'].includes(low(p.checkpoint_status));
+    const expectedStages=Number(p.analysis_total)||6;
+    const completedStages=Number(p.analysis_completed)||0;
+    const missingProgressMilestones=terminal&&
+      Number(p.analysis_percent)<100&&completedStages<expectedStages;
     const crashed=Boolean((precheckFailed||p.failed_stage&&!p.current_stage)&&!awaiting&&!terminal);
     const hasEvents=Boolean(p.last_event_at);
     if(state.historic || (!running && !awaiting && !hasEvents)){box.hidden=true;return;}
@@ -543,12 +547,20 @@
       (activeAgent&&currentStage==='parallel_agents'&&activeLabel
       ?(fa?'در حال تحلیل: ':'Analyzing: ')+activeLabel
       :activeLabel)||
-      (terminal?(fa?'بررسی رخداد تکمیل شده است':'Incident analysis finished'):
+      (missingProgressMilestones?
+        (fa?'پردازش پایان یافته؛ ثبت بعضی مراحل ناقص است':
+          'Workflow ended; some milestones were not recorded'):
+        terminal?(fa?'بررسی رخداد تکمیل شده است':'Incident analysis finished'):
         fa?'در حال دریافت وضعیت تحلیل…':'Loading analysis progress…');
     if(detail)detail.textContent=crashed?
       (fa?'این مرحله ناموفق بوده و ادامهٔ بررسی باید از گزارش خطا پیگیری شود.':'This step failed; check the error report.'):
       awaiting?
       (fa?'تحلیل متوقف است؛ منتظر تصمیم انسانی':'Analysis is paused for human approval'):
+      missingProgressMilestones?
+      (fa?'طبق Checkpoint پردازش پایان یافته، اما فقط '+completedStages+' مرحله از '+expectedStages+
+        ' مرحلهٔ تحلیل به‌صورت موفق در ممیزی ثبت شده است؛ درصد را به ۱۰۰ تغییر نمی‌دهیم.':
+        'The checkpoint is terminal, but only '+completedStages+' of '+expectedStages+
+        ' analysis milestones were durably recorded; percent is not fabricated.'):
       terminal?(fa?'گزارش مراحل واقعی ثبت‌شده':'Recorded workflow milestones'):
       state.progressFailure?(fa?'ارتباط زنده موقتاً قطع شده؛ تلاش برای اتصال مجدد…':'Live connection lost; reconnecting…'):
       (fa?'رویدادهای واقعی از سرور دریافت می‌شوند':'Receiving actual events from the server');
@@ -3335,10 +3347,27 @@
       state.narrative=null;state.error=null;state.rejectionVisible=false;
       $('#ic-auth').hidden=true;$('#ic-loader').hidden=true;$('#ic-main').hidden=false;alert('');
       render();
-      if(!report.memory_investigation){void loadServiceStatus();void loadServiceProfile();}
+      // Detail endpoints require a terminal/paused workflow checkpoint.
+      // Do not flood them with HTTP 409 while the graph is still analyzing.
+      // The lifecycle/progress stream stays available and triggers reload on
+      // checkpoint version change, so the controls appear once they are ready.
+      const checkpointStatus=low(lifecycle.checkpoint_status);
+      const detailReady=['completed','paused','failed'].includes(checkpointStatus);
+      if(detailReady){
+        if(!report.memory_investigation){void loadServiceStatus();void loadServiceProfile();}
+        void loadConfigResponse(token);
+        void loadIncidentChat(token);
+      }else{
+        state.serviceStatus={status:'unknown',source:'analysis_in_progress',
+          reason:'incident_analysis_not_finished',verified_systemd_only:false};
+        state.serviceProfile=null;
+        state.chat={items:[],approvals:{}};
+        state.chatStatus='loading';
+        state.configResponse=null;
+        state.configResponseStatus='loading';
+        renderServiceStatus();renderServiceProfile();renderIncidentChat();
+      }
       void loadNarrative();void loadReceivedSignals(token);
-      void loadConfigResponse(token);
-      void loadIncidentChat(token);
       void connectProgressStream();
     }catch(e){
       if(token!==state.loadingToken)return;
