@@ -269,11 +269,11 @@ def test_nginx_repair_entrypoint_is_visible_near_incident_and_never_applies_unva
     assert 'renderConfigActionBanner(r);renderOverview(r)' in js
     assert 'ic-config-banner-actions' in css
     assert 'permission_denied' in js
-    assert 'data-config-intent="request_isolated_validation"' in js
+    assert 'data-config-intent="request_change_approval"' in js
     assert 'href="#ic-ai-proposed-fix"' in js
-    assert 'اعمال اصلاح روی سرور — غیرفعال' in js
-    assert 'این دکمه فقط درخواست اعمال را برای بررسی پیش از Approval ثبت می‌کند' in js
-    assert 'درخواست اعمال اصلاح (ابتدا اعتبارسنجی)' in js
+    assert 'اعمال اصلاح روی سرور — غیرفعال' not in js
+    assert 'پس از مشاهده Diff، درخواست تغییر را به صف Approval بفرستید' in js
+    assert 'ارسال درخواست به Approval' in js
     assert 'state.configResponseStatus===\'loaded\'' in js
     assert 'state.historic' in js
     assert 'config.candidate_sha256' in js and 'config.original_sha256' in js
