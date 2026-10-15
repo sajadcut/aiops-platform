@@ -179,6 +179,31 @@ async def execute_config(approval_id: UUID, identity=Depends(require_permission(
             raise HTTPException(status_code=409, detail="unapproved_validation_scope")
         if not await _same_incident_candidate(db, approval, meta):
             raise HTTPException(status_code=409, detail="config_ticket_stale_incident_candidate")
+        # A sealed model candidate has a short retention window and may
+        # disappear or be invalidated after its original validation. Repeat
+        # the exact read-only isolated candidate test BEFORE irrevocably
+        # consuming the human Approval; production guard repeats live CAS.
+        if meta.get("proposed_change") == "llm_full_file_repair":
+            try:
+                checked = await VMEdgeMCPClient().config_change_validate(
+                    meta["target"],
+                    **{key: meta[key] for key in (
+                        "service", "config_file", "original_sha256",
+                        "candidate_sha256", "proposed_change",
+                    )},
+                )
+            except Exception:
+                checked = {"success": False}
+            if not (
+                checked.get("success") is True
+                and checked.get("status") == "isolated_vendor_validation_passed"
+                and checked.get("isolated_validation") is True
+                and checked.get("production_write_performed") is False
+                and checked.get("original_sha256") == meta["original_sha256"]
+                and checked.get("candidate_sha256") == meta["candidate_sha256"]
+                and checked.get("validation_scope") == meta.get("validation_scope")
+            ):
+                raise HTTPException(status_code=409, detail="llm_candidate_revalidation_required")
         # Sign before consuming so a missing signing key cannot burn authority.
         try:
             claim, signature = create_claim(
