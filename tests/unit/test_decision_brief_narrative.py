@@ -345,3 +345,29 @@ def test_live_sized_config_review_retains_approval_blocker_and_exact_target():
     assert payload["approval"]["status"] == "pending_validation"
     assert payload["remediation"]["action"] == "apply_configuration_change"
     assert payload["remediation"]["target"] == "10.248.16.82"
+
+
+def test_invalid_configuration_is_explicit_in_fallback_without_llm():
+    brief = sample_brief()
+    brief["configuration_diagnostic"] = {
+        "status": "invalid",
+        "config_file": "/etc/nginx/nginx.conf",
+        "error_line": 103,
+        "syntax_error": 'unexpected "{"',
+    }
+    result = service.fallback(brief, "fa", "model_output_invalid")
+    assert result["status"] == "fallback"
+    assert "/etc/nginx/nginx.conf" in result["summary"]
+    assert "۱۰۳" in result["summary"] or "103" in result["summary"]
+    assert 'unexpected "{"' in result["summary"]
+    assert "اعتبارسنجی مستقل" in result["summary"]
+    assert "تأیید انسانی" in result["summary"]
+    assert result["authorizes_execution"] is False
+    # The model failure cannot silently turn an invalid configuration healthy.
+    assert "نامعتبر" in result["summary"]
+
+
+def test_fallback_does_not_invent_configuration_failure_without_evidence():
+    brief = sample_brief()
+    result = service.fallback(brief, "fa", "model_timeout")
+    assert result["summary"] == brief["localized_narrative"]["fa"]
