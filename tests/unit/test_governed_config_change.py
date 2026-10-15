@@ -80,7 +80,7 @@ async def test_worker_validates_exact_candidate_without_ssh_secret_leak():
 
         async def _run(self, target, command, *, stdin_data=None):
             calls.append((command, stdin_data))
-            if "aiops-config-guard" in command:
+            if "/bin/sh -s --" in command:
                 return {"success": True, "stdout": "VALIDATED"}
             return {"success": True, "stdout": base64.b64encode(SOURCE).decode()}
 
@@ -92,7 +92,8 @@ async def test_worker_validates_exact_candidate_without_ssh_secret_leak():
     assert result["isolated_validation"] is True
     assert result["production_write_performed"] is False
     assert len(calls) == 2
-    assert calls[1][1].encode() == CANDIDATE
+    assert base64.b64encode(CANDIDATE).decode() in calls[1][1]
+    assert CANDIDATE.decode() not in calls[1][1]
     assert SOURCE.decode() not in calls[1][0]
     assert CANDIDATE.decode() not in calls[1][0]
 
@@ -228,7 +229,7 @@ async def test_systemd_bound_json_config_approval_path_for_any_runtime(service, 
 
         async def _run(self, target, command, *, stdin_data=None):
             calls.append((command, stdin_data))
-            if "aiops-config-guard" in command:
+            if "/bin/sh -s --" in command:
                 assert path in command
                 return {"success": True, "stdout": "VALIDATED"}
             return {"success": True, "stdout": base64.b64encode(source.encode()).decode()}
@@ -243,8 +244,9 @@ async def test_systemd_bound_json_config_approval_path_for_any_runtime(service, 
     assert result["production_write_performed"] is False
     assert result["vendor_validator"].startswith("jq empty")
     assert len(calls) == 2
-    assert desired == calls[1][1]
+    assert base64.b64encode(desired.encode()).decode() in calls[1][1]
     assert "HIDDEN_SENSITIVE" not in calls[1][0]
+    assert "HIDDEN_SENSITIVE" not in calls[1][1]
 
 
 @pytest.mark.asyncio
@@ -319,8 +321,8 @@ async def test_xml_repair_flows_through_same_governed_service_neutral_validator(
             return await self._run(target, "sudo -n " + command, stdin_data=stdin_data)
 
         async def _run(self, target, command, *, stdin_data=None):
-            if "aiops-config-guard" in command:
-                assert stdin_data == corrected
+            if "/bin/sh -s --" in command:
+                assert base64.b64encode(corrected.encode()).decode() in stdin_data
                 return {"success": True, "stdout": "VALIDATED"}
             return {"success": True, "stdout": base64.b64encode(src.encode()).decode()}
 
