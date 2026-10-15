@@ -305,9 +305,16 @@ async def run_governed_change(connector, *, action: str, target: str, service: s
         result=result_status, guard_exit_code=observed.get("exit_code"),
         production_write_performed=applied or rolled_back or output == "ROLLBACK_FAILED",
     )
+    recovery = {"attempted": False, "status": "not_authorized",
+                "service_recovery_confirmed": False}
+    if applied and execution_claims.get("recovery_action") == "start_service":
+        recovery = await _start_after_approved_config_apply(
+            connector, target=target, service=service)
     # The trusted ephemeral POSIX program performs source-CAS, backup, atomic
     # replacement, post-write validation and rollback on a bad candidate.
     return {
+        "service_recovery": recovery,
+        "service_recovery_confirmed": recovery["service_recovery_confirmed"],
         "success": applied,
         "status": result_status,
         "isolated_validation": applied,
@@ -318,3 +325,39 @@ async def run_governed_change(connector, *, action: str, target: str, service: s
                             if rolled_back else "unverified"),
         "remote_python_required": False,
     }
+
+
+async def _start_after_approved_config_apply(connector, *, target: str, service: str) -> dict:
+    """Only the signed approval recovery scope authorizes a single systemd start.
+
+    This never closes an incident without authoritative monitor recovery.
+    """
+    unavailable = {"attempted": False, "status": "precheck_unavailable",
+                   "service_recovery_confirmed": False}
+    try:
+        before = await connector.service_status(target, service)
+        if before.get("success") is not True:
+            return unavailable
+        if before.get("active_state") == "active":
+            return {"attempted": False, "status": "already_active",
+                    "service_recovery_confirmed": True}
+        if (before.get("active_state") not in {"failed", "inactive"}
+                or before.get("load_state") != "loaded"):
+            return {"attempted": False, "status": "service_state_not_startable",
+                    "service_recovery_confirmed": False}
+        started = await connector.start_service(target, service)
+        if started.get("success") is not True:
+            return {"attempted": True, "status": "start_failed",
+                    "service_recovery_confirmed": False}
+        after = await connector.service_status(target, service)
+        confirmed = (after.get("success") is True
+                     and after.get("active_state") == "active"
+                     and after.get("healthy") is True)
+        status = "systemd_active" if confirmed else "start_not_verified"
+        logger.info("vm_config_recovery_checked", target=target, service=service,
+                    status=status, started=True, systemd_active=confirmed)
+        return {"attempted": True, "status": status,
+                "service_recovery_confirmed": confirmed}
+    except Exception:
+        logger.warning("vm_config_recovery_check_failed", target=target, service=service)
+        return unavailable
