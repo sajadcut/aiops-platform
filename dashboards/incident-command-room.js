@@ -2458,7 +2458,7 @@
         '</p>'))+(path?'<p><code dir="ltr">'+txt(path)+'</code>'+
         (line!==null?' · '+esc(fa?'خط ':'line ')+num(line):'')+'</p>':'')+
       (reason?'<p class="ic-config-banner-warning">'+esc(reason)+'</p>':'')+
-      responseLabel+
+      responseLabel+signingNotice+
       '<p>'+esc(fa?'کشف فایل: ':'File discovery: ')+
       txt(discovery.status||'not_recorded')+' · '+
       esc(fa?'فایل‌های تأییدشده: ':'Verified files: ')+num(verified.length)+
