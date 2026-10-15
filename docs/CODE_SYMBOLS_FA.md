@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 526 | Dashboard JS files scanned: 8 | Symbols indexed: 5619**
+**Python files scanned: 526 | Dashboard JS files scanned: 8 | Symbols indexed: 5623**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -4557,32 +4557,35 @@
 | `tests/unit/test_llm_config_candidate_lifecycle.py` | `vault_env` | 32 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_llm_config_candidate_lifecycle.py` | `put` | 41 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_llm_config_candidate_lifecycle.py` | `get` | 49 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_windows_vault_auto_repairs_inherited_permissions_fail_closed` | 56 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_windows_vault_auto_repairs_inherited_permissions_fail_closed.verify` | 61 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | test_windows_vault_auto_repairs_inherited_permissions_fail_closed |
-| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_windows_vault_auto_repairs_inherited_permissions_fail_closed.fail` | 73 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_windows_vault_auto_repairs_inherited_permissions_fail_closed |
-| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_windows_vault_acl_applies_to_inherited_candidate_file` | 91 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_key_derivation_is_stable_and_independent_from_signed_approval` | 104 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_aes_gcm_persistent_storage_is_secret_safe_and_hash_bound` | 118 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_wrong_key_tamper_and_expiry_fail_closed` | 139 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_expired_same_candidate_can_be_renewed_safely` | 161 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_vault_requires_strong_key_and_no_symlink` | 175 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_llm_config_candidate_lifecycle.py` | `Model` | 193 | class | کلاس | module |
-| `tests/unit/test_llm_config_candidate_lifecycle.py` | `Model.__init__` | 194 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | Model |
-| `tests/unit/test_llm_config_candidate_lifecycle.py` | `Model.generate` | 196 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | Model |
-| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_full_source_is_sent_complete_and_correction_is_sealed` | 204 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_llm_cannot_hide_modified_ports_hosts_or_directives_behind_redacted_diff` | 227 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_guard_loads_sealed_model_candidate_and_runs_staging_only` | 245 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_guard_loads_sealed_model_candidate_and_runs_staging_only.Edge` | 248 | class | کلاس | test_guard_loads_sealed_model_candidate_and_runs_staging_only |
-| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_guard_loads_sealed_model_candidate_and_runs_staging_only.Edge.config_validate` | 251 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_guard_loads_sealed_model_candidate_and_runs_staging_only.Edge |
-| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_guard_loads_sealed_model_candidate_and_runs_staging_only.Edge._run` | 254 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_guard_loads_sealed_model_candidate_and_runs_staging_only.Edge |
-| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_guard_loads_sealed_model_candidate_and_runs_staging_only.Edge._sudo` | 257 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_guard_loads_sealed_model_candidate_and_runs_staging_only.Edge |
-| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_source_drift_blocks_before_sudo_even_with_sealed_candidate` | 276 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_source_drift_blocks_before_sudo_even_with_sealed_candidate.Drift` | 278 | class | کلاس | test_source_drift_blocks_before_sudo_even_with_sealed_candidate |
-| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_source_drift_blocks_before_sudo_even_with_sealed_candidate.Drift.config_validate` | 281 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_source_drift_blocks_before_sudo_even_with_sealed_candidate.Drift |
-| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_source_drift_blocks_before_sudo_even_with_sealed_candidate.Drift._run` | 283 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_source_drift_blocks_before_sudo_even_with_sealed_candidate.Drift |
-| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_source_drift_blocks_before_sudo_even_with_sealed_candidate.Drift._sudo` | 285 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_source_drift_blocks_before_sudo_even_with_sealed_candidate.Drift |
-| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_complete_file_llm_exfiltration_needs_explicit_sre_permission` | 296 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_llm_proposal_requires_sealed_worker_candidate` | 311 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_custom_candidate_directory_is_loaded_from_settings` | 56 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_windows_candidate_directory_accepts_requested_drive_and_rejects_unsafe_paths` | 77 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_env_parser_preserves_unquoted_windows_drive_path` | 95 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_windows_vault_auto_repairs_inherited_permissions_fail_closed` | 104 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_windows_vault_auto_repairs_inherited_permissions_fail_closed.verify` | 109 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | test_windows_vault_auto_repairs_inherited_permissions_fail_closed |
+| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_windows_vault_auto_repairs_inherited_permissions_fail_closed.fail` | 121 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_windows_vault_auto_repairs_inherited_permissions_fail_closed |
+| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_windows_vault_acl_applies_to_inherited_candidate_file` | 139 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_key_derivation_is_stable_and_independent_from_signed_approval` | 152 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_aes_gcm_persistent_storage_is_secret_safe_and_hash_bound` | 166 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_wrong_key_tamper_and_expiry_fail_closed` | 187 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_expired_same_candidate_can_be_renewed_safely` | 209 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_vault_requires_strong_key_and_no_symlink` | 223 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_llm_config_candidate_lifecycle.py` | `Model` | 241 | class | کلاس | module |
+| `tests/unit/test_llm_config_candidate_lifecycle.py` | `Model.__init__` | 242 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | Model |
+| `tests/unit/test_llm_config_candidate_lifecycle.py` | `Model.generate` | 244 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | Model |
+| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_full_source_is_sent_complete_and_correction_is_sealed` | 252 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_llm_cannot_hide_modified_ports_hosts_or_directives_behind_redacted_diff` | 275 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_guard_loads_sealed_model_candidate_and_runs_staging_only` | 293 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_guard_loads_sealed_model_candidate_and_runs_staging_only.Edge` | 296 | class | کلاس | test_guard_loads_sealed_model_candidate_and_runs_staging_only |
+| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_guard_loads_sealed_model_candidate_and_runs_staging_only.Edge.config_validate` | 299 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_guard_loads_sealed_model_candidate_and_runs_staging_only.Edge |
+| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_guard_loads_sealed_model_candidate_and_runs_staging_only.Edge._run` | 302 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_guard_loads_sealed_model_candidate_and_runs_staging_only.Edge |
+| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_guard_loads_sealed_model_candidate_and_runs_staging_only.Edge._sudo` | 305 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_guard_loads_sealed_model_candidate_and_runs_staging_only.Edge |
+| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_source_drift_blocks_before_sudo_even_with_sealed_candidate` | 324 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_source_drift_blocks_before_sudo_even_with_sealed_candidate.Drift` | 326 | class | کلاس | test_source_drift_blocks_before_sudo_even_with_sealed_candidate |
+| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_source_drift_blocks_before_sudo_even_with_sealed_candidate.Drift.config_validate` | 329 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_source_drift_blocks_before_sudo_even_with_sealed_candidate.Drift |
+| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_source_drift_blocks_before_sudo_even_with_sealed_candidate.Drift._run` | 331 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_source_drift_blocks_before_sudo_even_with_sealed_candidate.Drift |
+| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_source_drift_blocks_before_sudo_even_with_sealed_candidate.Drift._sudo` | 333 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_source_drift_blocks_before_sudo_even_with_sealed_candidate.Drift |
+| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_complete_file_llm_exfiltration_needs_explicit_sre_permission` | 344 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_llm_proposal_requires_sealed_worker_candidate` | 359 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_mcp_external_boundary.py` | `test_context_builder_uses_mcp_clients_not_native_external_connectors` | 22 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_mcp_external_boundary.py` | `test_zabbix_is_mcp_only_and_has_no_direct_runtime_config` | 32 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_mcp_external_boundary.py` | `test_evidence_collector_has_no_native_external_fallbacks` | 48 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
@@ -5625,4 +5628,5 @@
 | `tests/unit/test_zabbix_webhook_logging.py` | `test_unmatched_recovery_logs_failure_and_original_fields.ready` | 215 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_unmatched_recovery_logs_failure_and_original_fields |
 | `tests/unit/test_zabbix_webhook_logging.py` | `test_unmatched_recovery_logs_failure_and_original_fields.ingest` | 218 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_unmatched_recovery_logs_failure_and_original_fields |
 | `tests/windows_candidate_acl_smoke.py` | `WindowsCandidateAclAcceptance` | 19 | class | کلاس | module |
-| `tests/windows_candidate_acl_smoke.py` | `WindowsCandidateAclAcceptance.test_protected_directory_and_new_child_file` | 20 | method | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | WindowsCandidateAclAcceptance |
+| `tests/windows_candidate_acl_smoke.py` | `WindowsCandidateAclAcceptance.test_explicit_directory_from_settings_is_enforced` | 20 | method | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | WindowsCandidateAclAcceptance |
+| `tests/windows_candidate_acl_smoke.py` | `WindowsCandidateAclAcceptance.test_protected_directory_and_new_child_file` | 38 | method | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | WindowsCandidateAclAcceptance |
