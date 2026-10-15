@@ -213,7 +213,7 @@
   const operationStatesFA = {
     critical:'بحرانی',high:'زیاد',medium:'متوسط',low:'کم',open:'باز',analyzing:'در حال تحلیل',
     escalated:'ارجاع‌شده',closed:'بسته‌شده',hypothesis:'فرضیه',confirmed:'تأییدشده',
-    not_requested:'درخواست نشده',not_executed:'اجرا نشده',not_recorded:'ثبت نشده',
+    not_requested:'درخواست نشده',pending_validation:'در صف Approval، منتظر اعتبارسنجی فنی',not_executed:'اجرا نشده',not_recorded:'ثبت نشده',
     partial:'ناقص',inconclusive:'نامطمئن',queried:'پرس‌وجو انجام شده',not_queried:'جمع‌آوری نشده',
     investigated:'بررسی شده',queried_with_results:'استعلام شد؛ دارای نتیجه',
     queried_zero_results:'استعلام شد؛ بدون نتیجه',query_failed:'استعلام ناموفق',
@@ -1798,7 +1798,9 @@
         fact('risk',fa?'قابل ارزیابی نیست؛ اقدامی پیشنهاد نشده':'Not applicable; no action proposed')+
         fact('cluster',isVm?(fa?'قابل اعمال نیست؛ سرویس VM':'Not applicable to VM'):i.cluster)+
         fact('namespace',isVm?(fa?'قابل اعمال نیست؛ سرویس VM':'Not applicable to VM'):i.namespace)+
-        fact('approval',fa?'درخواستی ثبت نشده':'Not requested')+'</div>');
+        fact('approval',state.lifecycle?.approval?.status==='pending_validation'
+          ?(fa?'در صف Approval · منتظر اعتبارسنجی کانفیگ':'Queued for configuration validation')
+          :(fa?'درخواستی ثبت نشده':'Not requested'))+'</div>');
       show('#ic-preconditions','<div class="ic-callout"><strong>'+esc(fa?'قدم بعدی':'Next step')+
         '</strong><p>'+esc(fa?
         'ابتدا وضعیت واقعی سرویس، HTTP Health و شواهد ناقص را بررسی کنید؛ اجرای تغییر نیازمند درخواست مجزا و Approval است.':
@@ -2342,10 +2344,14 @@
       '<p role="status">'+esc(fa?'درخواست اصلاح ثبت شده؛ مرحله فعلی: ':'Correction request recorded; stage: ')+
       '<strong>'+txt(state.configResponse.status)+'</strong>'+
       ' — '+esc(fa?
-        (state.configResponse.validation_pipeline_status==='not_implemented'?
+        (state.configResponse.approval_queue_registered?
+          'درخواست در صف واقعی Approval ثبت شده است؛ تأیید اجرایی تا اعتبارسنجی مستقل و ساخت قرارداد تغییر مسدود است.':
+         state.configResponse.validation_pipeline_status==='not_implemented'?
           'این درخواست فقط در ممیزی ثبت شده است؛ پردازش اعتبارسنجی ایزوله و ایجاد Approval اجرایی هنوز پیاده‌سازی نشده‌اند. هیچ عملیات پس‌زمینه یا تغییری روی سرور آغاز نشده است.':
           'درخواست در صف Approval ثبت شده ولی هنوز قابل تأیید اجرایی نیست.'):
-        (state.configResponse.validation_pipeline_status==='not_implemented'?
+        (state.configResponse.approval_queue_registered?
+          'Change queued in durable Approvals. Executable approval is blocked pending isolated validation and a guarded change contract.':
+         state.configResponse.validation_pipeline_status==='not_implemented'?
           'Audit-only intent: isolated validation and executable approval are not implemented. No background validation or server write was started.':
           'Review intent recorded; no execution approval has been issued.'))+
       '</p>':
@@ -2738,7 +2744,9 @@
     const executed=low(r.execution_outcome?.status)==='success';
     const verified=['success','verified','succeeded'].includes(low(r.verification_result?.status));
     const executing=statusValue==='consumed' && state.lifecycle?.analysis_in_progress===true;
-    let heading=pending?tr('approvalPending'):approved?tr('approvalApproved'):
+    let heading=statusValue==='pending_validation'
+      ?(state.language==='fa'?'درخواست تغییر در صف Approval، منتظر اعتبارسنجی مستقل':'Configuration change queued, awaiting independent validation'):
+      pending?tr('approvalPending'):approved?tr('approvalApproved'):
       executing?(state.language==='fa'?'در حال اجرای عملیات تأییدشده':'Approved execution in progress'):
       statusValue==='consumed' && executed && verified
         ?(state.language==='fa'?'بازیابی سرویس تأیید شد':'Service recovery verified'):
@@ -2748,11 +2756,13 @@
     if(archived)heading=tr('historical');
     const detail=archived?tr('archiveHint'):statusValue==='consumed'
       ?(state.language==='fa'?'این مجوز یک‌بار مصرف شده و اجرای مجدد فقط با مجوز جدید ممکن است.':'This approval has already been consumed and cannot authorize a second execution.')
+      :statusValue==='pending_validation'
+        ?(state.language==='fa'?'درخواست معتبر ثبت شده اما هنوز مجوز اجرا نیست؛ تأیید نهایی تا تکمیل اعتبارسنجی ایزوله مسدود است.':'Change is queued, not executable. Final approval requires isolated validation.')
       :pending?tr('approvalSeparate'):tr('execBound');
     show('#ic-action-state','<div class="ic-decision-status"><strong>'+esc(heading)+'</strong><p>'+
       esc(detail)+'</p>'+
       pill(statusValue)+'</div><div class="ic-mini-facts">'+
-      mini('action',humanAction(a.action||x.action))+mini('target',a.target||x.target)+mini('risk',status(x.risk_level))+
+      mini('action',statusValue==='pending_validation'?(state.language==='fa'?'اصلاح کانفیگ':'Repair configuration'):humanAction(a.action||x.action))+mini('target',durable.metadata?.target||a.target||x.target)+mini('risk',status(x.risk_level))+
       mini('tool',humanTool(a.tool||x.tool))+mini('freshness',status(a.data_freshness))+
       mini('approvalId',durable.approval_id||a.approval_id)+'</div>');
     if(archived) {
@@ -2776,7 +2786,11 @@
     let controls='';
     if(snapshotBad)controls+='<p class="ic-action-error">'+tr('drift')+'</p>';
     else if(!binding&&(pending||approved))controls+='<p class="ic-action-error">'+tr('noBinding')+'</p>';
-    if(pending){
+    if(statusValue==='pending_validation'){
+      controls+='<p class="ic-warning">'+esc(state.language==='fa'
+        ?'درخواست این تغییر ثبت شده است؛ تا اعتبارسنجی مستقل و قرارداد اجرای امن آماده نشود، امکان تأیید یا اعمال آن وجود ندارد.'
+        :'This ticket is registered. Approve and Apply remain disabled until isolated validation and an execution contract are available.')+'</p>';
+    }else if(pending){
       controls+='<div class="ic-action-buttons"><button type="button" id="ic-approve" class="ic-btn ic-btn-primary"'+
         (!canAct||!acknowledged||state.busy?' disabled':'')+'>'+esc(state.busy?tr('processing'):tr('approveOnly'))+'</button>'+
         '<button type="button" id="ic-toggle-reject" class="ic-btn ic-btn-danger"'+(state.busy?' disabled':'')+'>'+tr('reject')+'</button></div>'+
@@ -3010,7 +3024,12 @@
           'Change queued for Approval; independent validation is still required. No file changed.':
           'Proposal rejected; no file changed.'));
     }catch(e){notify(tr('failure')+' · '+e.message,true);}
-    finally{state.busy=false;if(state.report){renderInvestigation(state.report);renderConfigActionBanner(state.report);}}
+    finally{
+      state.busy=false;
+      if(state.report){renderInvestigation(state.report);renderConfigActionBanner(state.report);}
+      // Immediately show the durable Approval in the incident decision desk.
+      if(state.configResponse?.approval_queue_registered) await load();
+    }
   }
   async function loadNarrative() {
     if(!state.report||state.historic)return;
