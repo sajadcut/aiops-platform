@@ -95,6 +95,12 @@ if [ "$action" = apply ]; then
   chmod 0700 /var/lib/aiops || exit 41
   exec 9>/var/lib/aiops/config-transaction.lock
   flock -x -w 15 9 || exit 44
+  claim_dir=/var/lib/aiops/config-claims
+  [ ! -L "$claim_dir" ] || exit 41
+  mkdir -p -m 0700 -- "$claim_dir" || exit 42
+  chmod 0700 "$claim_dir" || exit 42
+  [ ! -e "$claim_dir/$approval_id" ] || exit 44
+  ( umask 077; set -C; printf '%s\n' "$expected_candidate" > "$claim_dir/$approval_id" ) || exit 44
 fi
 [ "$(sha256sum "$file" | cut -d ' ' -f1)" = "$expected_source" ] || exit 45
 
