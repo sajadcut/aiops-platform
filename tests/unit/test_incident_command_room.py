@@ -88,6 +88,58 @@ def test_incident_room_defers_checkpoint_gated_detail_reads_and_explains_missing
     assert "درصد را به ۱۰۰ تغییر نمی‌دهیم" in js
 
 
+def test_complete_llm_diff_is_visible_and_has_redacted_download_control():
+    script = (ROOT / "dashboards/incident-command-room.js").read_text(encoding="utf-8")
+    css = (ROOT / "dashboards/incident-command-room.css").read_text(encoding="utf-8")
+    assert "const llm=valid(full.redacted_changes)" in script
+    assert "const safeDiffs=configDiffRows(config,full)" in script
+    assert 'id="ic-config-diff"' in script
+    assert 'data-download-config-diff="1"' in script
+    assert "configDiffText(investigation.config_proposal||{}," in script
+    assert "URL.createObjectURL(blob)" in script
+    assert "URL.revokeObjectURL(url)" in script
+    assert "redacted.diff" in script
+    assert "#ic-config-diff" in css
+    assert "ic-config-diff-preview" in css
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="Node required for JavaScript regression")
+def test_full_file_llm_diff_download_prefers_latest_changes_without_secret_leaks():
+    script = r"""
+const fs=require('fs'),vm=require('vm'),assert=require('node:assert/strict');
+const source=fs.readFileSync('dashboards/incident-command-room.js','utf8');
+const start=source.indexOf('  function configDiffRows(');
+const end=source.indexOf('  function renderConfigProposal(',start);
+assert.ok(start>0&&end>start);
+const helpers=source.slice(start,end);
+const context={arr:x=>Array.isArray(x)?x:[]};
+const {configDiffRows,configDiffText,configDiffGlyph}=vm.runInNewContext(
+    helpers+'\n({configDiffRows,configDiffText,configDiffGlyph})',context);
+const old={redacted_changes:[{line:22,before:'old',after:'new'}],
+  config_file:'/etc/nginx/nginx.conf'};
+const full={config_file:'/etc/nginx/nginx.conf',
+  source_sha256:'a'.repeat(64),candidate_sha256:'b'.repeat(64),
+  redacted_changes:[
+    {line:103,before:'server secret_password=NEVER_DISCLOSE {}',
+     after:'server secret_password=NEVER_DISCLOSE {'}
+  ]};
+assert.equal(configDiffRows(old,full)[0].line,103);
+const diff=configDiffText(old,full);
+assert.ok(diff.includes('@@ -103,1 +103,1 @@'));
+assert.ok(diff.includes('--- a//etc/nginx/nginx.conf'));
+assert.ok(diff.includes('Source SHA-256: '+'a'.repeat(64)));
+assert.ok(diff.includes('Candidate SHA-256: '+'b'.repeat(64)));
+assert.ok(!diff.includes('NEVER_DISCLOSE'));
+assert.ok(!diff.includes('secret_password'));
+assert.ok(diff.includes('{}'));
+assert.ok(diff.includes('{'));
+assert.ok(!diff.includes('@@ -22,1'));
+assert.equal(configDiffText({},{}),'');
+assert.equal(configDiffGlyph('a=SECRET {;}'),'x=xxxxxx {;}');
+"""
+    subprocess.run(["node", "-e", script], check=True, cwd=ROOT, timeout=12)
+
+
 @pytest.mark.skipif(shutil.which("node") is None, reason="Node required for real UI JavaScript runtime")
 def test_command_room_renders_and_only_posts_after_deliberate_confirmed_approval():
     script = r"""
