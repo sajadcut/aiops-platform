@@ -77,6 +77,44 @@ class E2EState(TypedDict, total=False):
     terminal_reason: Optional[str]
 
 
+
+def retain_incident_evidence_for_followup(rows: List[Dict[str, Any]], limit: int) -> List[Dict[str, Any]]:
+    """Bound agent context without losing freshly collected config proof.
+
+    The initial 40 Evidence items can exhaust the context before a second
+    VM-MCP pass supplies nginx_config_review and its diff. Keep the latest
+    identity-bound configuration observations (including the most recent
+    validator state), then fill remaining space from the original ordering.
+    This is context selection, NOT a new Evidence assertion or write grant.
+    """
+    limit = max(1, int(limit))
+    if len(rows) <= limit:
+        return rows
+    priority = (
+        "config_validate", "nginx_config_review", "nginx_config_inspect",
+        "service_config_discovery", "service_config_review",
+    )
+    selected_indices: set[int] = set()
+    for diagnostic in priority:
+        for index in range(len(rows) - 1, -1, -1):
+            row = rows[index]
+            raw = row.get("raw_data") if isinstance(row, dict) else None
+            if (row.get("source") == "vm_mcp" and isinstance(raw, dict)
+                    and raw.get("diagnostic") == diagnostic):
+                selected_indices.add(index)
+                break
+        if len(selected_indices) >= limit:
+            break
+    available = limit - len(selected_indices)
+    for index in range(len(rows)):
+        if available <= 0:
+            break
+        if index not in selected_indices:
+            selected_indices.add(index)
+            available -= 1
+    return [row for index, row in enumerate(rows) if index in selected_indices]
+
+
 class E2EOrchestrator:
     def __init__(self, llm_adapter: Optional[LLMAdapter] = None, db: Any = None):
         self.llm = llm_adapter or configured_llm_adapter()
@@ -544,7 +582,9 @@ class E2EOrchestrator:
                 continue
             key = str(item.get("evidence_id") or item.get("id") or item.get("reference") or item.get("source_id") or item)
             merged[key] = item
-        state["context"]["evidence"] = list(merged.values())[: settings.AGENT_MAX_EVIDENCE_ITEMS]
+        state["context"]["evidence"] = retain_incident_evidence_for_followup(
+            list(merged.values()), settings.AGENT_MAX_EVIDENCE_ITEMS,
+        )
         state["live_evidence"] = {**fresh, "evidence": state["context"]["evidence"]}
         state["context"]["live_evidence"] = state["live_evidence"]
         state["evidence_rounds"] = rounds + 1
