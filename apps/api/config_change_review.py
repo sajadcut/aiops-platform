@@ -179,10 +179,11 @@ async def post_config_review_response(
     payload: ConfigReviewResponse,
     identity=Depends(require_permission("approve:high_risk")),
 ):
-    if payload.decision not in {"request_isolated_validation", "reject"}:
+    if payload.decision not in {"request_change_approval", "request_isolated_validation", "reject"}:
         raise HTTPException(status_code=422, detail="unsupported_config_review_decision")
     async with AsyncSessionLocal() as db:
-        if await db.get(Incident, incident_id) is None:
+        incident = await db.get(Incident, incident_id)
+        if incident is None:
             raise HTTPException(status_code=404, detail="incident_not_found")
         checkpoint = await WorkflowCheckpointStore(db).load(str(incident_id)) or {}
         proposal = _proposal(checkpoint)
@@ -190,30 +191,98 @@ async def post_config_review_response(
             raise HTTPException(status_code=409, detail="stale_or_unverified_config_proposal")
         audit = PostgreSQLAuditStore(db)
         previous = await audit.list(str(incident_id), 150)
-        for event in previous:
-            meta = event.get("metadata") or {}
-            if (event.get("event_type") == "config_change_review_response"
-                    and isinstance(meta, dict)
-                    and meta.get("candidate_sha256") == payload.expected_candidate_sha256
-                    and meta.get("original_sha256") == payload.expected_original_sha256):
+        reviewed = [
+            event for event in previous
+            if event.get("event_type") == "config_change_review_response"
+            and isinstance(event.get("metadata"), dict)
+            and event["metadata"].get("candidate_sha256") == payload.expected_candidate_sha256
+            and event["metadata"].get("original_sha256") == payload.expected_original_sha256
+        ]
+        if any(event.get("status") == "declined" for event in reviewed):
+            raise HTTPException(status_code=409, detail="config_proposal_previously_declined")
+        if payload.decision == "reject":
+            if reviewed:
                 raise HTTPException(status_code=409, detail="proposal_already_reviewed")
-        status = (
-            "awaiting_isolated_validation"
-            if payload.decision == "request_isolated_validation" else "declined"
+            AuditService.record(
+                "config_change_review_response", identity.subject,
+                str(incident_id), "configuration_review", "declined",
+                {
+                    "decision": "reject",
+                    "original_sha256": payload.expected_original_sha256,
+                    "candidate_sha256": payload.expected_candidate_sha256,
+                    "service": proposal["service"],
+                    "file": proposal["config_file"],
+                    "production_write_performed": False,
+                },
+            )
+            await AuditService.flush_to_store(audit, incident_id=str(incident_id))
+            return _review_progress(status="declined", decision="reject", proposal=proposal)
+
+        state = checkpoint.get("state") or {}
+        context = state.get("context") or {}
+        evidence = context.get("evidence") or []
+        binding = vm_binding_diagnostic(
+            proposal["service"], evidence,
+            incident_vm_context(incident.context or {}, checkpoint),
         )
-        AuditService.record(
-            "config_change_review_response", identity.subject,
-            str(incident_id), "nginx_configuration_review", status,
+        target = binding.get("candidate")
+        if not target:
+            raise HTTPException(
+                status_code=409,
+                detail="config_approval_target_binding_required:" + str(binding.get("reason")),
+            )
+        service = str(proposal["service"])
+        parameters = {
+            "service": service,
+            "config_file": proposal["config_file"],
+            "original_sha256": proposal["original_sha256"],
+            "candidate_sha256": proposal["candidate_sha256"],
+            "proposed_change": proposal["proposed_change"],
+        }
+        metadata = bind_metadata(
             {
-                "decision": payload.decision,
-                "original_sha256": payload.expected_original_sha256,
-                "candidate_sha256": payload.expected_candidate_sha256,
-                "service": proposal.get("service"),
-                "file": proposal.get("config_file"),
-                "review_only": True, "production_write_performed": False,
+                "workflow": "config_change",
+                **parameters,
+                "source_evidence_refs": proposal.get("source_evidence_refs", [])[:8],
+                "request_phase": "pending_validation",
+                "isolated_validation": False,
+                "production_write_performed": False,
             },
+            incident_id=str(incident_id), tool_name="vm_config_change",
+            action="apply_configuration_change", target=target,
+            parameters=parameters, timeout=30,
+            runbook_id="vm-config-change", runbook_version="1",
+            rollback=True,
         )
-        await AuditService.flush_to_store(audit, incident_id=str(incident_id))
-    return _review_progress(
-        status=status, decision=payload.decision, proposal=proposal,
-    )
+        try:
+            queued = await PostgreSQLApprovalStore(db).save_validation_request({
+                "approval_id": str(uuid4()), "incident_id": str(incident_id),
+                "action": "apply_configuration_change",
+                "approver": identity.subject,
+                "metadata": metadata,
+                "created_at": datetime.now(timezone.utc),
+            })
+        except ValueError as exc:
+            raise HTTPException(status_code=409, detail=str(exc)) from exc
+        if not _approval_for_proposal(queued, proposal):
+            raise HTTPException(status_code=409, detail="config_approval_collision")
+        if not reviewed:
+            AuditService.record(
+                "config_change_review_response", identity.subject,
+                str(incident_id), "configuration_change_request", "pending_validation",
+                {
+                    "decision": "request_change_approval",
+                    "original_sha256": proposal["original_sha256"],
+                    "candidate_sha256": proposal["candidate_sha256"],
+                    "service": service, "file": proposal["config_file"],
+                    "approval_id": str(queued["approval_id"]),
+                    "validation": "pending_validation",
+                    "production_write_performed": False,
+                },
+            )
+            await AuditService.flush_to_store(audit, incident_id=str(incident_id))
+        return _review_progress(
+            status="pending_validation", decision="request_change_approval",
+            proposal=proposal, created_at=str(queued.get("created_at")),
+            approval=queued,
+        )
