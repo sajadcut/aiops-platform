@@ -7,6 +7,24 @@
   const $ = q => document.querySelector(q);
   const safe = x => String(x == null || x === '' ? '—' : x);
   const esc = x => safe(x).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
+  const guardReasonFA = code => ({
+    config_guard_sudo_nopasswd_required:'کاربر SSH مجوز sudo بدون رمز برای Helper محدود AIOps ندارد. فقط همین Helper باید به‌صورت NOPASSWD مجاز شود.',
+    config_guard_sudo_policy_denied:'سیاست sudoers اجرای Helper محدود AIOps را برای این کاربر مجاز نمی‌داند.',
+    config_guard_sudo_or_invocation_failed:'فراخوانی Helper روی VM با کد ۱ شکست خورده؛ مجوز sudo -n، نصب Helper و خروجی تشخیصی محلی باید بررسی شود. علت قطعی هنوز مشخص نیست.',
+    config_guard_helper_missing:'Helper مجاز در مسیر /usr/local/sbin/aiops-config-guard روی VM پیدا نشد.',
+    config_guard_helper_permission_denied:'دسترسی لازم برای اجرای Helper یا فایل هدف وجود ندارد.',
+    config_guard_mount_namespace_unavailable:'ساخت فضای ایزوله Mount Namespace در این VM مجاز یا پشتیبانی‌شده نیست. اعتبارسنجی بدون ایزوله‌سازی مجاز نیست.',
+    config_guard_isolated_mount_failed:'اتصال درخت کانفیگ در فضای ایزوله شکست خورد؛ مجوز mount یا تنظیمات Kernel بررسی شود.',
+    config_guard_prerequisite_failed:'یکی از پیش‌نیازهای Helper، مسیر فایل یا ابزار Validator معتبر نیست.',
+    config_guard_candidate_hash_mismatch:'هش نسخه پیشنهادی با درخواست تأیید مطابقت ندارد؛ تغییر باید دوباره بررسی شود.',
+    config_guard_source_hash_changed:'فایل زنده از زمان پیشنهاد تغییر کرده؛ پیشنهاد و هش‌ها باید دوباره تولید شوند.',
+    config_guard_vendor_syntax_failed:'Validator واقعی سرویس، نسخه اصلاحی را تأیید نکرده است؛ این تغییر نباید اعمال شود.',
+    config_guard_staging_failed:'آماده‌سازی نسخه ایزوله کانفیگ ناموفق بود.',
+    config_guard_ssh_timeout:'اتصال SSH یا عملیات Validator زمان‌بر و ناموفق بوده است.',
+    config_guard_ssh_connection_failed:'ارتباط SSH با VM برای اعتبارسنجی برقرار نشد.',
+    config_guard_request_rejected:'Helper درخواست را به‌دلیل ناسازگاری قرارداد امن رد کرده است.',
+    config_guard_execution_failed:'Helper نتوانست نتیجه اعتبارسنجی قابل‌اعتماد تولید کند.',
+  })[code] || 'اعتبارسنجی مستقل مسدود شده است؛ کد خطا را برای تشخیص بررسی کنید.';
   const arr = x => Array.isArray(x) ? x : [];
   const low = x => String(x || '').toLowerCase();
   const truncate = (x, limit = 340) => { const s = safe(x); return s.length > limit ? s.slice(0, limit) + '…' : s; };
@@ -2786,6 +2804,14 @@
           syntaxFormat+' grammar only: application semantics, dependencies and service runtime remain unverified. A separate approval is required for service recovery.')+'</p>';
       }
       if(statusValue==='pending_validation'){
+        const failure=state.configResponse?.validation_reason||durable.metadata?.validation_last_reason;
+        if(failure){
+          const code=String(failure).slice(0,100);
+          const exit=state.configResponse?.guard_exit_code??durable.metadata?.validation_last_exit_code;
+          controls+='<p class="ic-warning" role="alert"><strong>'+esc(fa?'اعتبارسنجی مسدود شد':'Isolated validation blocked')+'</strong> '+
+            esc(fa?guardReasonFA(code):code)+' <code>'+esc(code)+'</code>'+
+            (Number.isInteger(exit)?' (exit '+esc(exit)+')':'')+'</p>';
+        }
         controls+='<div class="ic-action-buttons"><button type="button" class="ic-btn ic-btn-primary" data-config-approval-action="validate"'+(state.busy?' disabled':'')+'>'+
           esc(fa?'اجرای اعتبارسنجی ایزوله و آماده‌سازی Approval':'Run isolated validation')+'</button>'+
           '<button type="button" class="ic-btn ic-btn-danger" data-config-approval-action="reject"'+(state.busy?' disabled':'')+'>'+
