@@ -79,7 +79,16 @@ class IncidentRepository:
             # recovery and move the incident back to analyzing/open.
             existing_context = dict(incident.context or {})
             recovery_marker = dict(existing_context.get("source_recovery") or {})
+            independent_marker = dict(existing_context.get("independent_recovery") or {})
             incoming_context = dict(safe_context or {}) if safe_context is not None else None
+            if independent_marker:
+                if incoming_context is None:
+                    incoming_context = existing_context
+                else:
+                    incoming_context["independent_recovery"] = independent_marker
+                if (independent_marker.get("incident_resolved") is True
+                        and incident.status != IncidentStatus.CLOSED):
+                    normalized_status = IncidentStatus.RESOLVED
             if recovery_marker:
                 if incoming_context is None:
                     incoming_context = existing_context
