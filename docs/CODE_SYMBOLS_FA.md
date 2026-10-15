@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 526 | Dashboard JS files scanned: 8 | Symbols indexed: 5668**
+**Python files scanned: 526 | Dashboard JS files scanned: 8 | Symbols indexed: 5671**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -742,7 +742,10 @@
 | `apps/api/incident_chat.py` | `recheck_incident_service_status` | 413 | async function | An explicit, authenticated read-only VM MCP status check (no LLM/write). | module |
 | `apps/api/incident_chat.py` | `incident_chat_history` | 544 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/incident_chat.py` | `incident_chat_message` | 590 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/incident_chat.py` | `incident_chat_request_approval` | 1017 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/incident_chat.py` | `_existing_recovery_approval` | 1013 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/incident_chat.py` | `incident_recovery_approval` | 1037 | async function | Read an existing recovery request; never synthesize Approval from advice. | module |
+| `apps/api/incident_chat.py` | `queue_incident_recovery_approval` | 1061 | async function | Idempotently queue the *already proposed* service recovery for humans. | module |
+| `apps/api/incident_chat.py` | `incident_chat_request_approval` | 1126 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/incident_resources.py` | `MemoryLifecycleRequest` | 31 | class | کلاس | module |
 | `apps/api/incident_resources.py` | `_require_current_database_schema` | 36 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/incident_resources.py` | `get_context` | 41 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
