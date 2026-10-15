@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 521 | Dashboard JS files scanned: 8 | Symbols indexed: 5546**
+**Python files scanned: 521 | Dashboard JS files scanned: 8 | Symbols indexed: 5547**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1400,11 +1400,12 @@
 | `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner.confirmed_config_failure` | 59 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DynamicInvestigationPlanner |
 | `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner.config_review_evidence` | 93 | method | Use a registered VM MCP review only for the matching live failure. | DynamicInvestigationPlanner |
 | `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner.runtime_evidence` | 112 | method | Use only MCP observations bound to the same service, not free text. | DynamicInvestigationPlanner |
-| `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner.search_query` | 129 | method | داده را بدون تغییر state بازیابی/فهرست می‌کند | DynamicInvestigationPlanner |
-| `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner._scope` | 190 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DynamicInvestigationPlanner |
-| `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner.enrich_knowledge` | 207 | async method | Query Cognia again with a verified error, preserving access scope. | DynamicInvestigationPlanner |
-| `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner.propose` | 280 | async method | LLM chooses from read-only capabilities, never arbitrary code. | DynamicInvestigationPlanner |
-| `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner.evidence_requests` | 599 | method | Convert validated enum members, never LLM text, to connector requests. | DynamicInvestigationPlanner |
+| `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner.full_config_repair_evidence` | 129 | method | Return bounded evidence of an operator-requested complete-file repair. | DynamicInvestigationPlanner |
+| `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner.search_query` | 194 | method | داده را بدون تغییر state بازیابی/فهرست می‌کند | DynamicInvestigationPlanner |
+| `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner._scope` | 255 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DynamicInvestigationPlanner |
+| `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner.enrich_knowledge` | 272 | async method | Query Cognia again with a verified error, preserving access scope. | DynamicInvestigationPlanner |
+| `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner.propose` | 345 | async method | LLM chooses from read-only capabilities, never arbitrary code. | DynamicInvestigationPlanner |
+| `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner.evidence_requests` | 673 | method | Convert validated enum members, never LLM text, to connector requests. | DynamicInvestigationPlanner |
 | `apps/orchestrator/e2e_graph.py` | `E2EState` | 50 | class | کلاس | module |
 | `apps/orchestrator/e2e_graph.py` | `retain_incident_evidence_for_followup` | 81 | function | Bound agent context without losing freshly collected config proof. | module |
 | `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator` | 118 | class | کلاس | module |
