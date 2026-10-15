@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 import time
 from datetime import datetime, timezone
 from typing import Any, Optional
@@ -15,6 +16,10 @@ from apps.audit_service.postgres import PostgreSQLAuditStore
 from apps.chatbot.models import ActionProposalView, ChatMessageRequest, ChatMessageResponse
 from apps.chatbot.store import ChatStore, HISTORY_LIMIT
 from apps.chatbot.tools import CHAT_TOOL_SCHEMAS, ToolIntent, max_tool_calls, normalize_tool_intent, parse_tool_call
+from apps.chat_answer_review import (
+    allowed_hosts_answer, mismatched_answer_message,
+    requests_vm_allowed_hosts, review_answer_coherence,
+)
 from apps.execution_service import ExecutionRequest, ExecutionService
 from apps.incident_service.repository import IncidentRepository
 from apps.memory_service import OperationalMemoryService
@@ -390,6 +395,26 @@ class ChatbotService:
                 history = await store.history(session_id, HISTORY_LIMIT)
                 messages = self._history_messages(history)
                 recent_operator_context = self._recent_operator_context(history)
+                # Policy inventory is a configuration read, never VM telemetry.
+                # Do not send SSH target names into an LLM or choose a VM tool.
+                if requests_vm_allowed_hosts(request.message):
+                    answer = allowed_hosts_answer(tuple(identity.roles),
+                                                  persian=bool(re.search(r"[\u0600-\u06ff]", request.message)))
+                    await review_answer_coherence(
+                        self._llm(), question=request.message,
+                        answer="An authorized SSH target inventory request was handled "
+                               "by server-side policy and role checks; no VM was contacted.",
+                        stage="chatbot_answer_review",
+                    )
+                    await store.add_message(session_id, "assistant", answer,
+                                            {"kind": "answer", "origin": "authorized_policy_inventory"})
+                    await self._audit(
+                        db, event_type="chatbot_response", actor=identity.subject,
+                        status="completed",
+                        metadata={"session_id": session_id, "origin": "authorized_policy_inventory"},
+                    )
+                    CHAT_REQUESTS.labels(outcome="answer").inc()
+                    return ChatMessageResponse(session_id=UUID(session_id), kind="answer", message=answer)
                 try:
                     response = await self._llm().generate_with_messages(
                         messages,
@@ -417,6 +442,14 @@ class ChatbotService:
                 if not tool_calls:
                     answer = str(response.content or "").strip() or "I could not produce a complete answer."
                     answer = answer[:8000]
+                    verdict, _ = await review_answer_coherence(
+                        self._llm(), question=request.message, answer=answer,
+                        context=recent_operator_context, stage="chatbot_answer_review",
+                    )
+                    if verdict == "mismatch":
+                        answer = mismatched_answer_message(
+                            request.message, persian=bool(re.search(r"[\u0600-\u06ff]", request.message))
+                        )
                     await store.add_message(session_id, "assistant", answer, {"kind": "answer", "model": response.model})
                     await self._audit(
                         db,
@@ -528,6 +561,16 @@ class ChatbotService:
                     data = redact(merged["result"])
                     tool_name = "multiple"
 
+                verdict, _ = await review_answer_coherence(
+                    self._llm(), question=request.message, answer=answer,
+                    context=recent_operator_context, stage="chatbot_answer_review",
+                )
+                if verdict == "mismatch":
+                    answer = mismatched_answer_message(
+                        request.message, persian=bool(re.search(r"[\u0600-\u06ff]", request.message))
+                    ) + (" اطلاعات ساختاریافتهٔ ابزار در جزئیات پاسخ قابل بررسی است."
+                         if re.search(r"[\u0600-\u06ff]", request.message)
+                         else " The governed tool data remains available in response details.")
                 await store.add_message(session_id, "assistant", answer, {"kind": "tool_result", "tool": tool_name, "source": source})
                 await self._audit(
                     db,
