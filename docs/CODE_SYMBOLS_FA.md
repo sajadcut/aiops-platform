@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 523 | Dashboard JS files scanned: 8 | Symbols indexed: 5567**
+**Python files scanned: 523 | Dashboard JS files scanned: 8 | Symbols indexed: 5516**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -2470,58 +2470,7 @@
 | `integrations/vm/service_adapters.py` | `discover_config_path` | 85 | function | Discover an explicit config argument from the installed systemd unit. | module |
 | `integrations/vm/service_adapters.py` | `config_check_for_path` | 124 | function | Use only an existing fixed allowlisted validator with a safe config path. | module |
 | `integrations/vm/service_adapters.py` | `parse_config_diagnostic` | 142 | function | Extract a compiler-reported *fatal* config location, not an earlier warning. | module |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector` | 31 | class | Controlled Linux VM adapter used only behind the VM MCP server. | module |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.__init__` | 42 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector._auth_mode` | 47 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector._password` | 51 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector._validate_runtime_security` | 55 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector._validate_target` | 91 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector._validate_remote_host` | 99 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector._validate_service` | 103 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector._validate_port` | 111 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector._bounded_limit` | 118 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector._base_ssh_args` | 121 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector._run_key` | 138 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector._run_password` | 181 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector._run_password.execute` | 195 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | SSHVMConnector._run_password |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector._run` | 252 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector._sudo_requires_password` | 258 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector._sudo` | 266 | async method | Execute a fixed privileged action through the existing SSH user. | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.config_guard_preflight` | 313 | async method | Verify the fixed guard path without privilege or leaking VM output. | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.health_check` | 370 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector._parse_cpu_counters` | 375 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector._cpu_interval_percentages` | 385 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.collect_metrics` | 402 | async method | Evidence/داده موردنیاز را از منبع مربوط جمع می‌کند | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.memory_diagnostics` | 438 | async method | Bounded, read-only RAM breakdown and top RSS consumers. | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.host_info` | 527 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.disk_status` | 548 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.disk_status.parse_df` | 554 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector.disk_status |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.disk_forensics` | 564 | async method | Bounded read-only inventory; never read file contents or delete files. | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.network_status` | 719 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.service_status` | 735 | async method | Read structured systemd properties and bounded 'systemctl status'. | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.service_status.numeric` | 761 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector.service_status |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.process_status` | 795 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.process_snapshot` | 810 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.service_logs` | 824 | async method | Collect bounded journald history; retry read-only via sudo -n if denied. | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.system_logs` | 854 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.tcp_check` | 870 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.port_listener_status` | 884 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.dns_check` | 896 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.route_check` | 908 | async method | بر اساس state/capability مسیر یا handler مناسب را انتخاب می‌کند | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.firewall_status` | 916 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.service_runtime_discovery` | 928 | async method | Read selected systemd properties; never return ExecStart argv or env values. | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.service_config_discovery` | 945 | async method | Read-only proof of config-path existence from systemd-derived paths. | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.service_config_llm_repair` | 1044 | async method | Operator-requested full-file LLM repair, read-only and not approvable. | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.service_config_review` | 1099 | async method | Read-only bounded review for a vendor error or verified unit file. | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.dotnet_config_syntax` | 1196 | async method | Remote Linux coreutils read; *local AIOps Python* JSON syntax check. | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.nginx_config_inspect` | 1257 | async method | Inspect only allowlisted Nginx config structure; no raw file bytes. | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.nginx_config_review` | 1303 | async method | Generate a non-executable, bounded review from current validator proof. | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.nginx_config_review.safe_preview_text` | 1364 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector.nginx_config_review |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.nginx_config_review.safe_rows` | 1367 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector.nginx_config_review |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.config_validate` | 1402 | async method | Locate the running unit's config, run a fixed read-only syntax check. | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.start_service` | 1500 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.restart_service` | 1507 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.reload_service` | 1514 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `<syntax-error>` | 0 | parse-error | فایل Python قابل parse نیست | — |
 | `integrations/vm/target_context.py` | `bind_vm_probe_blocked` | 22 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `integrations/vm/target_context.py` | `reset_vm_probe_blocked` | 26 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `integrations/vm/target_context.py` | `vm_probes_blocked` | 30 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
