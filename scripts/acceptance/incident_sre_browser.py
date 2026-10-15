@@ -284,7 +284,7 @@ def main() -> None:
         page.reload()
         banner = page.locator("#ic-config-action-banner")
         banner.wait_for(state="visible", timeout=15000)
-        assert banner.locator("button[data-config-preview='nginx']").is_enabled()
+        assert banner.locator("button[data-config-preview='nginx']:not([data-preview-open-diff])").is_enabled()
         assert banner.locator("button[data-config-intent='request_isolated_validation']").count() == 0
         assert "ساخت پیش‌نمایش اصلاح" in banner.inner_text()
         assert "Diff هنوز ساخته نشده" in banner.inner_text()
