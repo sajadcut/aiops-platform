@@ -63,6 +63,8 @@ def test_gfpapi_systemd_timeout_is_confirmed_symptom_not_root_cause():
 def test_dotnet_syntax_valid_does_not_hide_unsupported_generic_validator():
     r = report(
         vm("config_validate", {"supported": False, "valid": None}),
+        vm("service_runtime_discovery", {"runtime": "dotnet",
+                                         "entrypoint": "/opt/gfpapi/GFP.Endpoints.API.dll"}),
         vm("dotnet_config_syntax", {"supported": True, "syntax_valid": True,
             "files": [{"file": "appsettings.json", "status": "valid_json_syntax"},
                       {"file": "runtimeconfig.json", "status": "valid_json_syntax"}]}),
@@ -138,14 +140,15 @@ def test_memory_without_process_culprit_remains_snapshot_only():
     result = domain(r, "resources")["technical_result"]
     assert "98.4%" in result
     assert "PSI avg10=2.7" in result
-    assert "علت Timeout را اثبات نمی‌کند" in result
+    assert "علت خرابی سرویس را اثبات نمی‌کنند" in result
 
 
 def test_dotnet_process_name_false_negative_is_not_reported_as_confirmed_absence():
     r = report(vm("service_status", {"active_state": "failed", "main_pid": 0}),
                vm("process_status", {"running": False, "count": 0}))
     assert "MainPID" in domain(r, "network")["technical_result"]
-    assert "dotnet" in domain(r, "network")["technical_result"]
+    assert "dotnet" not in domain(r, "network")["technical_result"]
+    assert SERVICE in domain(r, "network")["technical_result"]
     assert not any("process" in x["text"].lower() for x in r["rca"]["confirmed_facts"])
 
 
@@ -163,6 +166,89 @@ def test_no_cognia_nginx_material_is_injected_for_dotnet_service():
     assert domain(r, "cognia")["status"] == "queried_zero_results"
     assert "اسناد مرتبط: 0" in domain(r, "cognia")["technical_result"]
     assert "nginx" not in str(r)
+
+
+
+def test_nginx_report_displays_real_config_validator_and_never_dotnet_or_gfpapi():
+    nginx = {"service": "nginx", "started_at": NOW.isoformat(),
+             "context": {"trigger_signal": {"payload": {"target_ip": HOST}}}}
+    rows = [
+        vm("config_validate", {
+            "supported": True, "valid": False,
+            "config_file": "/etc/nginx/nginx.conf", "error_line": 103,
+            "syntax_error": 'unexpected "{"',
+        }, service="nginx"),
+        vm("nginx_config_review", {
+            "supported": True, "status": "candidate_proposed",
+            "config_file": "/etc/nginx/nginx.conf",
+            "error_line": 103, "validation_status": "UNVERIFIED",
+        }, service="nginx"),
+        vm("nginx_config_inspect", {
+            "status": "inspected", "inspected_count": 2,
+        }, service="nginx"),
+        vm("service_status", {"active_state": "failed", "main_pid": 0},
+           service="nginx"),
+        vm("process_status", {"running": False}, service="nginx"),
+        vm("memory_diagnostics", {"used_percent": 23.59}, service="nginx"),
+        vm("dotnet_config_syntax", {
+            "supported": True, "syntax_valid": False,
+            "files": [{"file": "appsettings.json", "status": "invalid_json_syntax"}],
+        }, service="gfpapi"),
+    ]
+    result = report(*rows, incident=nginx)
+    config = domain(result, "config")["technical_result"]
+    assert "/etc/nginx/nginx.conf" in config
+    assert "Line=103" in config
+    assert "candidate_proposed" in config
+    assert "UNVERIFIED" in config
+    assert "inspected" in config
+    assert {row["tool"] for row in domain(result, "config")["evidence"]} == {
+        "config_validate", "nginx_config_review", "nginx_config_inspect",
+    }
+    assert "gfpapi" not in str(result)
+    assert "dotnet" not in str(result).lower()
+    assert ".NET" not in str(result)
+    assert result["identity_mismatch_count"] == 1
+    assert "nginx" in domain(result, "network")["technical_result"]
+    assert "23.59" in domain(result, "resources")["technical_result"]
+
+
+def test_same_host_other_service_query_is_not_attributed_to_nginx():
+    nginx = {"service": "nginx", "context": {"trigger_signal":
+             {"payload": {"target_ip": HOST}}}}
+    rows = [
+        {"id": "foreign-elastic", "source": "elasticsearch",
+         "created_at": NOW.isoformat(),
+         "raw_data": {"status": "queried", "result_count": 9,
+                      "service": "nginx", "query_service": "gfpapi"}},
+        {"id": "unknown-service-config", "source": "vm_mcp",
+         "created_at": NOW.isoformat(),
+         "raw_data": {"target": HOST, "diagnostic": "config_validate",
+                      "success": True, "valid": False}},
+        vm("config_validate", {"supported": True, "valid": True},
+           service="nginx"),
+    ]
+    result = report(*rows, incident=nginx)
+    assert result["identity_mismatch_count"] == 2
+    assert domain(result, "elastic")["status"] == "not_queried"
+    assert domain(result, "config")["technical_result"].startswith(
+        "Validator سرویس: Valid"
+    )
+    assert len(domain(result, "config")["evidence"]) == 1
+
+
+def test_unknown_runtime_does_not_trigger_json_disclaimer():
+    result = report(
+        vm("config_validate", {"supported": False, "valid": None}),
+        vm("dotnet_config_syntax", {"supported": True, "syntax_valid": False,
+                                   "files": [{"file": "appsettings.json",
+                                              "status": "invalid_json_syntax"}]}),
+        vm("service_runtime_discovery", {"runtime": "unknown"}),
+    )
+    text = domain(result, "config")["technical_result"]
+    assert ".NET" not in text
+    assert "appsettings" not in text
+    assert "Runtime" in text
 
 
 def test_recovery_or_approval_cannot_be_inferred_from_report():
