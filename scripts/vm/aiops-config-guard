@@ -27,6 +27,9 @@ if [ -z "$profile" ]; then
     /etc/*.json|/opt/*.json|/srv/*.json|/data/*.json|/usr/local/etc/*.json|/usr/local/tomcat/*.json)
       profile="json_syntax"
       ;;
+    /etc/*.xml|/opt/*.xml|/srv/*.xml|/data/*.xml|/usr/local/etc/*.xml|/usr/local/tomcat/*.xml)
+      profile="xml_syntax"
+      ;;
     *) exit 41 ;;
   esac
 fi
@@ -76,9 +79,11 @@ command -v flock >/dev/null && command -v sha256sum >/dev/null || exit 42
 if [ "$profile" = nginx ]; then
   [ -x /usr/sbin/nginx ] && command -v unshare >/dev/null && command -v mount >/dev/null || exit 42
   [ "$(du -sk /etc/nginx | cut -f1)" -le 51200 ] || exit 42
-else
+elif [ "$profile" = json_syntax ]; then
   # jq is a fixed grammar validator, not a JSON semantics or startup check.
   command -v jq >/dev/null || exit 42
+else
+  command -v xmllint >/dev/null || exit 42
 fi
 [ "$(stat -c %s -- "$file")" -le 262144 ] || exit 42
 stage=$(mktemp -d /var/tmp/aiops-config-guard.XXXXXXXX) || exit 42
@@ -118,9 +123,13 @@ if [ "$profile" = nginx ]; then
     mount -o remount,bind,ro /etc/nginx
     /usr/sbin/nginx -t -c "$2" >/dev/null 2>&1
   ' guard "$stage/tree" "$file" >/dev/null 2>&1 || exit 47
-else
-  # This is a bounded, read-only syntax proof, never runtime verification.
+elif [ "$profile" = json_syntax ]; then
+  # Bounded syntax proof only; never proof of application/runtime semantics.
   jq empty "$stage/candidate" >/dev/null 2>&1 || exit 47
+else
+  # Disable network fetches and reject all DTD/entity definitions.
+  ! grep -Eiq '<!(DOCTYPE|ENTITY)' "$stage/candidate" || exit 47
+  xmllint --nonet --noout "$stage/candidate" >/dev/null 2>&1 || exit 47
 fi
 if [ "$action" = validate ]; then
   printf 'VALIDATED\n'
@@ -142,8 +151,13 @@ new=""
 postcheck="failed"
 if [ "$profile" = nginx ]; then
   if /usr/sbin/nginx -t -c "$file" >/dev/null 2>&1; then postcheck="passed"; fi
-else
+elif [ "$profile" = json_syntax ]; then
   if jq empty "$file" >/dev/null 2>&1; then postcheck="passed"; fi
+else
+  if ! grep -Eiq '<!(DOCTYPE|ENTITY)' "$file" &&
+     xmllint --nonet --noout "$file" >/dev/null 2>&1; then
+    postcheck="passed"
+  fi
 fi
 if [ "$postcheck" = passed ] &&
    [ "$(sha256sum "$file" | cut -d ' ' -f1)" = "$expected_candidate" ]; then
