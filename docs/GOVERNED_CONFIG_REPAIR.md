@@ -26,7 +26,48 @@ Provision the repository's scripts/vm/aiops-config-guard on every authorized VM 
 
 Provision /etc/aiops/config-change-verify.pem as a **root-owned Ed25519 public key**, delivered through trusted configuration management. The VM never receives a private signing secret. Generate a secure Ed25519 32-byte private seed and inject its base64 form into AIOPS_CONFIG_GUARD_ED25519_PRIVATE_KEY on **only the VM MCP service**. Use the matching OpenSSL PEM public key on the VM. Independently inject a high-entropy AIOPS_CONFIG_APPLY_SIGNING_SECRET (at least 32 unpredictable characters) into both the AIOps API and VM MCP for signed MCP authorization. These two signing credentials must be distinct. Never put private keys, HMAC secrets or configuration bytes in Git, shell arguments, logs or audit. Restart those services after changing secure environment values.
 
-Delegate sudo -n only for the exact fixed /usr/local/sbin/aiops-config-guard path to the dedicated monitored-VM SSH identity. NEVER allow arbitrary sudo shell, all commands, or general config-write utilities. Root-helper writes additionally require a short-lived, hash-bound HMAC ticket verified against the root-only key.
+Delegate sudo -n only for the exact fixed /usr/local/sbin/aiops-config-guard path to the dedicated monitored-VM SSH identity. NEVER allow arbitrary sudo shell, all commands, or general config-write utilities. Root-helper writes additionally require a short-lived, hash-bound **Ed25519 signature** verified with the root-owned public key; the root VM never receives an API or MCP private key.
+
+
+### Live VM diagnosis after a blocked validation
+
+The API and VM MCP can be healthy while the target VM fails. In the observed
+2026-10-15 incident, `config_change_validate` reached the VM and
+`sudo -n /usr/local/sbin/aiops-config-guard validate ...` exited **1**;
+this alone does **not** prove an Nginx syntax error. Previously the dashboard
+collapsed any nonzero exit into `isolated_vendor_validation_failed`. New
+deployments report bounded reason codes plus numeric exit status, and persist
+these in the Approval record. Raw stdout/stderr, passwords and file bytes are
+not displayed.
+
+On the **monitored VM**, an authorized administrator should independently
+confirm the exact provisioned Helper and restricted sudo delegation:
+
+```sh
+sudo stat -c '%U:%G %a %n' /usr/local/sbin/aiops-config-guard
+sudo sha256sum /usr/local/sbin/aiops-config-guard
+sudo visudo -c
+sudo -l -U <dedicated-ssh-user>
+```
+
+Install the Helper from a trusted audited artifact (not from incident-provided
+shell text) and grant NOPASSWD **only** to the dedicated VM identity and
+**only** for the immutable root-owned
+`/usr/local/sbin/aiops-config-guard` executable. The command
+`sudo -n` cannot interactively prompt, and production must never retry it
+with a password or general-purpose root shell. Example policy for a
+dedicated identity (review against local privilege requirements):
+
+```sudoers
+<dedicated-ssh-user> ALL=(root) NOPASSWD: /usr/local/sbin/aiops-config-guard
+```
+
+Apply policy only after checking with `visudo -cf` on the proposed
+sudoers.d file. For Nginx validate, confirm `unshare -m` and bind-mount
+privileges are permitted; do **not** weaken isolation on failure.
+The current failure codes distinguish sudo authentication/policy, helper
+prerequisites, namespace setup, staged vendor syntax and stale source hashes.
+Do not approve or execute the change while validation is blocked.
 
 The guard retains exact-byte originals in /var/lib/aiops/config-backups, mode 0700 for that directory. The customer must establish encrypted storage/retention and secret-disposal practices. The guard automatically restores the original if the post-write vendor check fails. A successful configuration syntax check does not imply the service is running or the endpoint is healthy; service start/restart is a separately approved action.
 
