@@ -76,6 +76,18 @@ def test_command_room_has_readable_mobile_layout_and_two_stage_actions():
     assert "No implicit selection" in (ROOT / "dashboards/control-center.js").read_text(encoding="utf-8")
 
 
+def test_incident_room_defers_checkpoint_gated_detail_reads_and_explains_missing_milestones():
+    js = (ROOT / "dashboards/incident-command-room.js").read_text(encoding="utf-8")
+    # The lifecycle/stream remain live, but API endpoints requiring
+    # a completed graph must not be polled every time the SSE data updates.
+    assert "const detailReady=['completed','paused','failed'].includes(checkpointStatus)" in js
+    assert "if(detailReady){" in js
+    assert "void loadIncidentChat(token);" in js
+    assert "void loadConfigResponse(token);" in js
+    assert "missingProgressMilestones" in js
+    assert "درصد را به ۱۰۰ تغییر نمی‌دهیم" in js
+
+
 @pytest.mark.skipif(shutil.which("node") is None, reason="Node required for real UI JavaScript runtime")
 def test_command_room_renders_and_only_posts_after_deliberate_confirmed_approval():
     script = r"""
