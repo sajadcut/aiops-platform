@@ -2568,7 +2568,7 @@
     const rows=configDiffRows(config,full);
     if(!rows.length)return '';
     const file=String(full.config_file||config.config_file||'configuration')
-      .replace(/[\r\n]/g,'').slice(0,260);
+      .replace(/[\r\n]/g,'').replace(/^\/+/, '').slice(0,260);
     const source=String(full.source_sha256||config.original_sha256||'');
     const candidate=String(full.candidate_sha256||config.candidate_sha256||'');
     const header=[
