@@ -740,7 +740,7 @@
 | `apps/api/incident_chat.py` | `recheck_incident_service_status` | 316 | async function | An explicit, authenticated read-only VM MCP status check (no LLM/write). | module |
 | `apps/api/incident_chat.py` | `incident_chat_history` | 447 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/incident_chat.py` | `incident_chat_message` | 493 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/incident_chat.py` | `incident_chat_request_approval` | 863 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/incident_chat.py` | `incident_chat_request_approval` | 888 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/incident_resources.py` | `MemoryLifecycleRequest` | 31 | class | کلاس | module |
 | `apps/api/incident_resources.py` | `_require_current_database_schema` | 36 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/incident_resources.py` | `get_context` | 41 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
@@ -2392,7 +2392,7 @@
 | `integrations/vm/full_config_llm_repair.py` | `_trusted_gateway` | 30 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `integrations/vm/full_config_llm_repair.py` | `_parse_corrected` | 38 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `integrations/vm/full_config_llm_repair.py` | `_candidate_preview` | 52 | function | Check completeness and bounded drift; emit *metadata*, never file lines. | module |
-| `integrations/vm/full_config_llm_repair.py` | `review_complete_config` | 85 | async function | Receive exact SSH bytes in-process and request a complete revised file. | module |
+| `integrations/vm/full_config_llm_repair.py` | `review_complete_config` | 86 | async function | Receive exact SSH bytes in-process and request a complete revised file. | module |
 | `integrations/vm/general_config_review.py` | `checked_config_path` | 29 | function | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | module |
 | `integrations/vm/general_config_review.py` | `remote_config_read_command` | 37 | function | Fixed coreutils only; not a general-purpose remote file-read API. | module |
 | `integrations/vm/general_config_review.py` | `_structural_line` | 51 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
