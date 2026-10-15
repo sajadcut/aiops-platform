@@ -50,7 +50,10 @@ def _hash(value: object) -> bool:
     return isinstance(value, str) and re.fullmatch(r"[0-9a-f]{64}", value) is not None
 
 
-_ALLOWED_CHANGES = frozenset({"remove_extra_opening_brace", "remove_trailing_json_comma"})
+_ALLOWED_CHANGES = frozenset({
+    "remove_extra_opening_brace", "remove_trailing_json_comma",
+    "remove_extra_xml_closing_tag",
+})
 
 
 def _matching_proposal(proposal: dict, payload: ConfigReviewResponse) -> bool:
@@ -63,6 +66,8 @@ def _matching_proposal(proposal: dict, payload: ConfigReviewResponse) -> bool:
         and filename.endswith(".conf")
     ) or (
         change == "remove_trailing_json_comma" and filename.endswith(".json")
+    ) or (
+        change == "remove_extra_xml_closing_tag" and filename.endswith(".xml")
     )
     return (
         proposal.get("status") == "candidate_proposed"

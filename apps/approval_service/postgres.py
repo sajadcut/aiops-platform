@@ -130,7 +130,11 @@ class PostgreSQLApprovalStore:
         This cannot skip the exact hash binding, cannot re-open terminal
         approvals, and cannot create execution authority by itself.
         """
-        if validation_scope != "nginx_mount_namespace_staged_etc_nginx_live_external_read_dependencies":
+        if validation_scope not in {
+            "nginx_mount_namespace_staged_etc_nginx_live_external_read_dependencies",
+            "generic_json_syntax_only_service_runtime_unverified",
+            "generic_xml_syntax_only_service_runtime_unverified",
+        }:
             raise ValueError("config_validation_scope_not_executable")
         current = await self.get(approval_id)
         if not current or current.get("status") != "pending_validation":
@@ -140,6 +144,22 @@ class PostgreSQLApprovalStore:
                 or meta.get("original_sha256") != source_sha256
                 or meta.get("candidate_sha256") != candidate_sha256):
             raise ValueError("config_validation_hash_binding_mismatch")
+        if validation_scope == "generic_json_syntax_only_service_runtime_unverified":
+            if (meta.get("proposed_change") != "remove_trailing_json_comma"
+                    or not str(meta.get("config_file") or "").endswith(".json")
+                    or not vendor_validator.startswith("jq empty")):
+                raise ValueError("config_format_scope_mismatch")
+        elif validation_scope == "generic_xml_syntax_only_service_runtime_unverified":
+            if (meta.get("proposed_change") != "remove_extra_xml_closing_tag"
+                    or not str(meta.get("config_file") or "").endswith(".xml")
+                    or not vendor_validator.startswith("xmllint")):
+                raise ValueError("config_xml_scope_mismatch")
+        else:
+            if (meta.get("proposed_change") != "remove_extra_opening_brace"
+                    or str(meta.get("service") or "").lower().removesuffix(".service") != "nginx"
+                    or not str(meta.get("config_file") or "").endswith(".conf")
+                    or not vendor_validator.startswith("nginx -t")):
+                raise ValueError("config_vendor_scope_mismatch")
         if await self._incident_source_recovered(str(current.get("incident_id") or "")):
             raise ValueError("incident_source_already_recovered")
         proof = {

@@ -311,3 +311,40 @@ def test_generic_json_multi_edit_candidate_is_blocked_until_diff_covers_every_ed
     assert result["status"] != "candidate_proposed"
     assert result["candidate_hash"] is None
     assert result["execution_authority"] is False
+
+
+@pytest.mark.asyncio
+async def test_generic_config_review_skips_valid_first_file_and_finds_invalid_second(monkeypatch):
+    """More than one config file often exists in dotnet/java publish dirs."""
+    from integrations.vm.ssh_connector import SSHVMConnector
+    connector = SSHVMConnector()
+    first = "/opt/mydotnet/appsettings.Production.json"
+    second = "/opt/mydotnet/appsettings.json"
+    files = [
+        (first, '{"healthy":true}'),
+        (second, '{"token":"DONOTLEAK", "port":8080,}'),
+    ]
+    read_names = []
+    async def validate(target, service):
+        return {"success": True, "supported": False, "valid": None}
+    async def discovery(target, service):
+        return {
+            "success": True, "files": [
+                {"path": path, "verified_exists": True} for path, _ in files
+            ],
+        }
+    async def read(target, command):
+        path, data = next((path, data) for path, data in files if path in command)
+        read_names.append(path)
+        return {"success": True, "stdout": base64.b64encode(data.encode()).decode()}
+    monkeypatch.setattr(connector, "_validate_service", lambda _: None)
+    monkeypatch.setattr(connector, "config_validate", validate)
+    monkeypatch.setattr(connector, "service_config_discovery", discovery)
+    monkeypatch.setattr(connector, "_run", read)
+    observed = await connector.service_config_review("192.0.2.3", "gfpapi")
+    assert observed["status"] == "candidate_proposed"
+    assert observed["config_file"] == second
+    assert observed["proposed_change"] == "remove_trailing_json_comma"
+    assert read_names == [first, second]
+    assert "DONOTLEAK" not in json.dumps(observed)
+    assert observed["execution_authority"] is False
