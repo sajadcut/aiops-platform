@@ -14,6 +14,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy import select, text
 
+from apps.config_change_authorization import config_signing_ready
 from apps.approval_service.binding import bind_metadata
 from apps.approval_service.postgres import PostgreSQLApprovalStore
 from apps.api.config_change_execution import validate_config_ticket
