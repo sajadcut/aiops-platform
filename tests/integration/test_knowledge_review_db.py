@@ -244,3 +244,7 @@ async def test_read_only_incident_followup_drafts_use_migrated_source_type(monke
         assert again["review_id"] == str(row.id)
         assert again["status"] == "pending_review"
         assert again["published_to_cognia"] is False
+        # Disposable CI acceptance database also exercises downgrade; remove
+        # this test-only pending draft so the lossless downgrade guard passes.
+        await db.delete(row)
+        await db.commit()
