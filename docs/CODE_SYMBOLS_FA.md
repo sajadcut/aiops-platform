@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 512 | Dashboard JS files scanned: 8 | Symbols indexed: 5401**
+**Python files scanned: 512 | Dashboard JS files scanned: 8 | Symbols indexed: 5402**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -3471,6 +3471,7 @@
 | `tests/unit/test_config_signing_prerequisite.py` | `_report` | 6 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_config_signing_prerequisite.py` | `test_missing_signing_key_does_not_erase_verified_validation` | 20 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_config_signing_prerequisite.py` | `test_configured_signing_key_only_proves_api_side` | 31 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_config_signing_prerequisite.py` | `test_signing_key_loaded_from_project_settings_when_env_unset` | 42 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_container_image_contract.py` | `test_offline_runtime_uses_isolated_multistage_build` | 4 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_container_image_contract.py` | `test_container_acceptance_checks_final_filesystem_not_builder_layers` | 20 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_context_policy.py` | `test_allowlisted_source` | 3 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
