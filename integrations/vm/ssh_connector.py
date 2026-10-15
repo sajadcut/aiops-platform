@@ -1120,6 +1120,8 @@ class SSHVMConnector:
         return {
             **base, **outcome, "target": target, "service": service,
             "path_source": source,
+            "reviewed_file_count": len(reviewed_files),
+            "file_reviews": reviewed_files[:12],
             "vendor_validation": (
                 "invalid" if validator.get("valid") is False
                 and validator.get("success") is True else
