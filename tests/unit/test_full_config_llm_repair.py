@@ -98,6 +98,74 @@ async def test_oversize_file_not_truncated_or_submitted(monkeypatch):
     assert not model.calls
 
 
+def test_micro_fix_rejects_unrelated_changes_even_if_model_returns_valid_json():
+    source = (
+        "http {\n"
+        "    server {} \n"
+        "    listen 8080;\n"
+        "}\n"
+    )
+    minimal = source.replace("server {}", "server {")
+    accepted = _candidate_preview(source, minimal, diagnostic_line=3)
+    assert accepted["status"] == "llm_candidate_proposed"
+    assert accepted["changed_line_numbers"] == [2]
+    assert accepted["changed_line_count"] == 1
+    assert accepted["redacted_changes"][0]["before"] != accepted["redacted_changes"][0]["after"]
+
+    # Original bug: 12 reindented lines could pass because the grammar was
+    # unchanged and _value_tokens discarded all whitespace.
+    reindented = source.replace("    listen 8080;", "        listen 8080;")
+    rejected = _candidate_preview(source, reindented, diagnostic_line=3)
+    assert rejected["status"] == "llm_candidate_rejected"
+    assert rejected["rejection_reason"] == "candidate_not_minimal_syntax_fix"
+
+    reformatted_with_fix = minimal.replace(
+        "    listen 8080;", "        listen 8080;"
+    )
+    rejected = _candidate_preview(source, reformatted_with_fix, diagnostic_line=3)
+    assert rejected["rejection_reason"] == "candidate_changes_unrelated_bytes"
+
+    # Three harmless-looking braces beyond the single typo are not allowed
+    # even if every directive/port has the same token sequence.
+    extra = source.replace("server {}", "server {{{{{")
+    rejected = _candidate_preview(source, extra, diagnostic_line=3)
+    assert rejected["status"] == "llm_candidate_rejected"
+    assert rejected["rejection_reason"] == "candidate_not_minimal_syntax_fix"
+
+    long_source = ("# unchanged\n" * 30 +
+                   "http {\n    server {} \n    listen 8080;\n}\n")
+    unrelated = long_source.replace("http {", "http {};")
+    rejected = _candidate_preview(long_source, unrelated, diagnostic_line=33)
+    assert rejected["rejection_reason"] == "candidate_unrelated_to_validator_line"
+
+    changed_value = source.replace("8080", "8081")
+    assert _candidate_preview(source, changed_value)["status"] == "llm_candidate_rejected"
+
+
+@pytest.mark.asyncio
+async def test_llm_request_emphasizes_single_character_local_repair(monkeypatch):
+    from integrations.vm import full_config_llm_repair as repair
+    monkeypatch.setattr(repair.settings, "AIOPS_FULL_CONFIG_LLM_ENABLED", True)
+    monkeypatch.setattr(repair.settings, "LLM_BASE_URL", "https://trusted-llm.example")
+    source = ("# header\n" * 99 + "server {}\nlisten 8080;\n")
+    model = ReplyModel(source.replace("server {}", "server {"))
+    result = await review_complete_config(
+        base64.b64encode(source.encode()).decode(), service="nginx",
+        path="/etc/nginx/nginx.conf",
+        vendor_error='"listen" directive is not allowed here in /etc/nginx/nginx.conf:101',
+        model=model,
+    )
+    assert result["status"] == "llm_candidate_proposed"
+    payload = json.loads(model.calls[0][0])
+    assert payload["vendor_error_line"] == 101
+    assert payload["max_changed_lines"] == 3
+    assert payload["max_syntax_char_edits"] == 3
+    system = model.calls[0][1]["system_prompt"]
+    assert "one-token typo repair" in system
+    assert "not a configuration cleanup" in system
+    assert "Preserve EVERY other byte" in system
+
+
 def test_changed_secret_line_and_whole_file_rewrite_rejected():
     original = 'global\npassword=keep\nlisten 8080; {\n'
     assert _candidate_preview(original, original.replace("keep", "other"))[
