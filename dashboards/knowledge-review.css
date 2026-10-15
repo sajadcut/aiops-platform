@@ -30,3 +30,10 @@
 .knowledge-success{color:var(--green)}
 @media(max-width:900px){.knowledge-layout{grid-template-columns:1fr}.knowledge-queue{max-height:360px}}
 @media(max-width:480px){.knowledge-facts{grid-template-columns:1fr}.knowledge-actions button{width:100%}}
+
+
+.knowledge-evidence-facts{margin:12px 0 16px;padding:14px;border:1px solid var(--border);border-radius:12px;background:var(--surface)}
+.knowledge-evidence-facts h3{font-size:15px;margin:0 0 9px;font-weight:750}
+.knowledge-evidence-facts ul{margin:6px 0;padding-right:22px;line-height:1.95;font-size:13px;overflow-wrap:anywhere}
+.knowledge-evidence-facts li{margin:4px 0}
+.knowledge-evidence-facts .knowledge-alert{margin:10px 0 0;font-size:13px}
