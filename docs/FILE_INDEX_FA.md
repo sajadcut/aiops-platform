@@ -3,7 +3,7 @@
 > این فایل فهرست فایل‌به‌فایل repository است. توضیح معماری و flow در `CODEBASE_GUIDE_FA.md` آمده است.
 > این فایل با `scripts/generate_file_index_fa.py` ساخته و در CI کنترل می‌شود.
 
-**تعداد فایل‌های track‌شده و پوشش‌داده‌شده: 630**
+**تعداد فایل‌های track‌شده و پوشش‌داده‌شده: 631**
 
 | Path | Type | Purpose | Called By | Calls/Depends On | Runtime/Test/Docs | Notes |
 |---|---|---|---|---|---|---|
@@ -237,6 +237,7 @@
 | `database/migrations/versions/l9m0n1o2p3q4_decision_brief_snapshots.py` | Alembic | Migration نسخه‌دار schema PostgreSQL | Alembic/CI | domain models/pgvector | DB | canonical migration chain |
 | `database/migrations/versions/m0n1o2p3q4r5_service_health_profiles.py` | Alembic | Migration نسخه‌دار schema PostgreSQL | Alembic/CI | domain models/pgvector | DB | canonical migration chain |
 | `database/migrations/versions/n1o2p3q4r5s6_incident_followup_knowledge_source.py` | Alembic | Migration نسخه‌دار schema PostgreSQL | Alembic/CI | domain models/pgvector | DB | canonical migration chain |
+| `database/migrations/versions/o2p3q4r5s6t7_config_approval_validation.py` | Alembic | Migration نسخه‌دار schema PostgreSQL | Alembic/CI | domain models/pgvector | DB | canonical migration chain |
 | `deployment/__init__.py` | Docs | راهنما یا artifact manifest استقرار | اپراتور | deployment files | Deploy | offline/supply-chain |
 | `deployment/docker/offline/ARTIFACT_MANIFEST.md` | Docs | راهنما یا artifact manifest استقرار | اپراتور | deployment files | Deploy | offline/supply-chain |
 | `deployment/docker/offline/Dockerfile` | Docker | ساخت image آفلاین پلتفرم | Docker/CI | requirements/repo | Deploy | برای شبکه محدود |
