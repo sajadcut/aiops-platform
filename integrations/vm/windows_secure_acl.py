@@ -50,6 +50,46 @@ def ensure_private_windows_acl(path: str) -> None:
     kernel.LocalFree.argtypes = [ctypes.c_void_p]
     kernel.LocalFree.restype = ctypes.c_void_p
 
+    class SID_AND_ATTRIBUTES(ctypes.Structure):
+        _fields_ = [("Sid", ctypes.c_void_p), ("Attributes", wintypes.DWORD)]
+
+    token = wintypes.HANDLE()
+    advapi.OpenProcessToken.argtypes = [
+        wintypes.HANDLE, wintypes.DWORD, ctypes.POINTER(wintypes.HANDLE),
+    ]
+    advapi.OpenProcessToken.restype = wintypes.BOOL
+    advapi.GetTokenInformation.argtypes = [
+        wintypes.HANDLE, ctypes.c_int, ctypes.c_void_p, wintypes.DWORD,
+        ctypes.POINTER(wintypes.DWORD),
+    ]
+    advapi.GetTokenInformation.restype = wintypes.BOOL
+    kernel.GetCurrentProcess.restype = wintypes.HANDLE
+    kernel.CloseHandle.argtypes = [wintypes.HANDLE]
+    kernel.CloseHandle.restype = wintypes.BOOL
+    if not advapi.OpenProcessToken(kernel.GetCurrentProcess(), 0x0008,
+                                  ctypes.byref(token)):
+        raise PermissionError("candidate_windows_acl_unverifiable")
+    try:
+        length = wintypes.DWORD()
+        advapi.GetTokenInformation(token, 1, None, 0, ctypes.byref(length))
+        if not 16 <= length.value <= 65536:
+            raise PermissionError("candidate_windows_acl_unverifiable")
+        buff = ctypes.create_string_buffer(length.value)
+        if not advapi.GetTokenInformation(token, 1, buff, length,
+                                         ctypes.byref(length)):
+            raise PermissionError("candidate_windows_acl_unverifiable")
+        current_sid = ctypes.cast(
+            buff, ctypes.POINTER(SID_AND_ATTRIBUTES)).contents.Sid
+        sid_out = ctypes.c_void_p()
+        if not current_sid or not sid_to_string(current_sid, ctypes.byref(sid_out)):
+            raise PermissionError("candidate_windows_acl_unverifiable")
+        try:
+            user_sid = ctypes.wstring_at(sid_out)
+        finally:
+            kernel.LocalFree(sid_out)
+    finally:
+        kernel.CloseHandle(token)
+
     dacl, descriptor = ctypes.c_void_p(), ctypes.c_void_p()
     rc = get_info(path, 1, 4, None, None, ctypes.byref(dacl), None,
                   ctypes.byref(descriptor))
@@ -57,14 +97,11 @@ def ensure_private_windows_acl(path: str) -> None:
         if descriptor.value:
             kernel.LocalFree(descriptor)
         raise PermissionError("candidate_windows_acl_unverifiable")
-    forbidden = {
-        "S-1-1-0",     # Everyone
-        "S-1-5-11",    # Authenticated Users
-        "S-1-5-7",     # Anonymous
-        "S-1-5-32-545",  # Builtin Users
-        "S-1-5-32-546",  # Guests
-        "S-1-5-2",     # Network logons
-        "S-1-5-4",     # Interactive logons
+    allowed = {
+        user_sid,           # worker service account
+        "S-1-5-18",         # Local SYSTEM
+        "S-1-5-32-544",     # Builtin Administrators
+        "S-1-3-0",          # Creator Owner
     }
     try:
         count = ctypes.cast(dacl, ctypes.POINTER(ACL)).contents.AceCount
@@ -77,6 +114,8 @@ def ensure_private_windows_acl(path: str) -> None:
             # different SID offsets and could hide broad access; block them.
             if ace.AceType not in (0, 1):
                 raise PermissionError("candidate_windows_acl_unverifiable")
+            if ace.AceSize < 12:
+                raise PermissionError("candidate_windows_acl_unverifiable")
             if ace.AceType == 1:  # explicit/inherited DENY
                 continue
             sid_ptr = ctypes.c_void_p(ptr.value + 8)
@@ -87,7 +126,7 @@ def ensure_private_windows_acl(path: str) -> None:
                 sid = ctypes.wstring_at(sid_string)
             finally:
                 kernel.LocalFree(sid_string)
-            if sid in forbidden:
+            if sid not in allowed:
                 raise PermissionError("candidate_windows_acl_too_broad")
     finally:
         kernel.LocalFree(descriptor)
