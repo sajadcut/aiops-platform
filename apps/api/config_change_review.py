@@ -1,8 +1,8 @@
-"""Human response to an incident configuration *proposal*, not deployment approval.
+"""Evidence-bound configuration review, governed approval and validation.
 
-The response is durable/auditable and bound to the exact existing proposal
-hashes. It cannot create an Approval, ExecutionRequest or bypass an isolated
-validator; application of bytes needs a separate guarded implementation.
+An operator's review creates a durable pending-validation request. Independent
+vendor staging must pass before an Approval can become human-approvable.
+Production writes remain behind a separately consumed, signed execution gate.
 """
 from __future__ import annotations
 
@@ -298,6 +298,7 @@ async def post_config_review_response(
         checked = await validate_config_ticket(str(queued["approval_id"]), actor=identity.subject)
         response["status"] = checked["status"]
         response["approval_status"] = checked["status"]
+        response["validation_status"] = "PASSED" if checked["validation"] == "passed" else "UNVERIFIED"
         response["validation_pipeline_status"] = checked["validation"]
         response["validation_reason"] = checked.get("validation_reason")
         response["validation_scope"] = checked.get("validation_scope")
