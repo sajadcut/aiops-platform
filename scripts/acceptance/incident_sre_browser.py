@@ -207,9 +207,9 @@ def main() -> None:
         assert "/etc/nginx/nginx.conf" in preview
         assert "۱۰۳" in preview or "103" in preview
         assert "permission_denied" in preview
-        assert "اعمال اصلاح روی سرور — غیرفعال" in preview
+        assert "درخواست اعمال اصلاح (ابتدا اعتبارسنجی)" in preview
         assert banner.locator("button[data-config-intent='request_isolated_validation']").is_enabled()
-        assert banner.locator("button:disabled").count() == 1
+        assert banner.locator("button:disabled").count() == 0
         assert page.locator(".ic-section-nav a[href='#ic-ai-proposed-fix']").count() == 1
         banner.locator("a[href='#ic-ai-proposed-fix']").click()
         assert page.locator("#ic-ai-proposed-fix #ic-proposed-fix").is_visible()
