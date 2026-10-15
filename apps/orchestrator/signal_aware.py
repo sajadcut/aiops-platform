@@ -324,8 +324,26 @@ class SignalAwareE2EOrchestrator(E2EOrchestrator):
             if self.progress_emitter:
                 await self.progress_emitter(state.get("incident_id"), "investigation", "started")
             dynamic = DynamicInvestigationPlanner()
-            followup = await dynamic.enrich_knowledge(state)
-            proposal = await dynamic.propose(state, adapter=self.llm)
+            try:
+                followup = await dynamic.enrich_knowledge(state)
+                proposal = await dynamic.propose(state, adapter=self.llm)
+            except Exception as exc:
+                # Optional knowledge/enrichment must not turn a successfully
+                # received Zabbix alert into HTTP 500. Preserve core evidence,
+                # continue the incident, and fail closed for Approval/Apply.
+                logger.exception(
+                    "optional_dynamic_investigation_failed",
+                    incident_id=state.get("incident_id"),
+                    error_type=type(exc).__name__,
+                )
+                followup = {"status": "unavailable", "source_refs": [],
+                            "error_type": type(exc).__name__}
+                proposal = {
+                    "status": "unavailable", "model_status": "failed",
+                    "error_type": type(exc).__name__, "config_proposal": None,
+                    "checks": [], "operator_questions": [],
+                    "execution_authority": False, "counts_as_live_evidence": False,
+                }
             proposal["knowledge_followup"] = followup
             context = state.setdefault("context", {})
             context["dynamic_investigation"] = proposal
@@ -351,7 +369,18 @@ class SignalAwareE2EOrchestrator(E2EOrchestrator):
                 # preview remains invisible as needs_read_only_config.
                 # Preserve the original LLM-selected read-only checks and
                 # Cognia provenance. Never reuse model output as proof.
-                refreshed = await dynamic.propose(state, adapter=None)
+                try:
+                    refreshed = await dynamic.propose(state, adapter=None)
+                except Exception as exc:
+                    logger.exception(
+                        "optional_dynamic_reassessment_failed",
+                        incident_id=state.get("incident_id"),
+                        error_type=type(exc).__name__,
+                    )
+                    refreshed = {"status": "unavailable", "error_type": type(exc).__name__}
+                    # Never leave an older candidate actionable after a failed
+                    # recheck against new evidence: old proposal is now stale.
+                    proposal["config_proposal"] = None
                 for key in ("config_proposal", "config_discovery", "runtime_discovery"):
                     if key in refreshed:
                         proposal[key] = refreshed[key]
@@ -384,9 +413,21 @@ class SignalAwareE2EOrchestrator(E2EOrchestrator):
                 and (item.get("raw_data") or {}).get("diagnostic") in relevant
                 for item in current_evidence
             ):
-                state.setdefault("context", {})["dynamic_investigation"] = (
-                    await DynamicInvestigationPlanner.propose(state, adapter=None)
-                )
+                try:
+                    state.setdefault("context", {})["dynamic_investigation"] = (
+                        await DynamicInvestigationPlanner.propose(state, adapter=None)
+                    )
+                except Exception as exc:
+                    logger.exception(
+                        "deterministic_config_advisory_failed",
+                        incident_id=state.get("incident_id"),
+                        error_type=type(exc).__name__,
+                    )
+                    state.setdefault("context", {})["dynamic_investigation"] = {
+                        "status": "unavailable", "error_type": type(exc).__name__,
+                        "config_proposal": None, "execution_authority": False,
+                        "counts_as_live_evidence": False,
+                    }
 
         # Always produce a read-only, evidence-bound recovery suggestion even
         # when evaluator consensus/config validation cannot authorize a write.
