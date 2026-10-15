@@ -234,6 +234,15 @@ async def execute_config(approval_id: UUID, identity=Depends(require_permission(
                 "monitor_recovery_confirmed": False,
             },
         )
+    recovery_resolution = "not_verified"
+    if recovery_confirmed:
+        from apps.incident_service.service_recovery_reconciliation import (
+            reconcile_after_applied_config,
+        )
+        recovery_resolution = await reconcile_after_applied_config(
+            incident_id=incident, target=meta["target"],
+            service=meta["service"], actor=identity.subject,
+        )
     knowledge_id = None
     if applied:
         # This is only a local pending human-review document. Failure to draft
@@ -251,6 +260,8 @@ async def execute_config(approval_id: UUID, identity=Depends(require_permission(
                            incident_id=incident, approval_id=id_)
     return {
         "knowledge_review_id": knowledge_id,
+        "incident_recovery_status": recovery_resolution,
+        "incident_resolved": recovery_resolution == "resolved_independent_vm_verified",
         "approval_id": id_, "success": applied,
         "status": "applied_verified" if applied else str(result.get("status") or "execution_unverified"),
         "rollback_status": result.get("rollback_status") or "unverified",
