@@ -449,7 +449,13 @@ async def vm_read(action: str, binding: dict, connector: Any = None) -> dict:
         raw = await client.service_logs(binding["target"], binding["service"], limit=60)
     else:
         raw = await getattr(client, action)(binding["target"], binding["service"])
-    return public_result(action, raw)
+    result = public_result(action, raw)
+    if action == "service_config_review" and result.get("success"):
+        from apps.config_syntax_llm import assess_service_syntax
+        result["model_syntax_review"] = await assess_service_syntax(
+            result.get("syntax_projection"), result.get("candidate_syntax_projection"),
+        )
+    return result
 
 
 async def llm_plan(message: str, summary: dict, turns: list[dict],
