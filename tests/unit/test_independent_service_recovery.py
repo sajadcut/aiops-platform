@@ -39,6 +39,10 @@ def test_two_vm_observations_and_vendor_pass_can_confirm_service_down_recovery()
     ("first", {**FIRST, "sub_state": "exited"}, "service_not_stably_running"),
     ("vendor_syntax_ok", False, "nginx_live_config_not_verified"),
     ("context", {"related_signals": [{"source": "elastic"}]}, "other_correlated_signals"),
+    ("context", {"related_signals": [{"source": "zabbix", "source_id": "other-trigger"}]},
+     "other_correlated_signals"),
+    ("context", {"related_signals": [None]}, "correlation_unverified"),
+    ("context", {"related_signals": [17]}, "correlation_unverified"),
     ("context", {"related_signals": [{"source": "zabbix"}, {"source": "zabbix"}]}, "other_correlated_signals"),
     ("context", {"source_recovery": {"incident_resolved": True}}, "source_already_recovered"),
 ])
@@ -125,3 +129,18 @@ async def test_unsupported_recovery_source_cannot_mark_incident_resolved():
             recovery_source="model_claimed_recovered", vendor_syntax_ok=True,
         )
     assert incident.status == IncidentStatus.ANALYZING
+
+
+def test_only_the_original_exact_zabbix_problem_can_be_duplicate_related_signal():
+    context = {
+        "trigger_signal": {"source_id": "zbx-problem-1"},
+        "related_signals": [{"source": "zabbix", "source_id": "zbx-problem-1"}],
+    }
+    assert _decision(context=context) == "independent_vm_verified"
+    context["related_signals"].append({"source": "zabbix", "source_id": "another-problem"})
+    assert _decision(context=context) == "other_correlated_signals"
+
+
+def test_malformed_second_service_status_never_raises_or_resolves():
+    assert _decision(second={**SECOND, "service": None}) == "service_not_stably_running"
+    assert _decision(second={**SECOND, "service": ["nginx"]}) == "service_not_stably_running"
