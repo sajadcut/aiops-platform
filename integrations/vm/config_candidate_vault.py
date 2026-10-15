@@ -16,6 +16,7 @@ import time
 from pathlib import Path
 
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+from cryptography.exceptions import InvalidTag
 
 from domain.contracts.config import settings
 
@@ -148,5 +149,5 @@ def load_candidate(*, target: str, service: str, path: str,
         if not 0 < len(raw) <= _MAX_BYTES or hashlib.sha256(raw).hexdigest() != candidate_hash:
             raise CandidateUnavailable("candidate_hash_mismatch")
         return raw.decode("utf-8", "strict")
-    except (ValueError, UnicodeError):
+    except (InvalidTag, ValueError, UnicodeError):
         raise CandidateUnavailable("candidate_decryption_failed") from None
