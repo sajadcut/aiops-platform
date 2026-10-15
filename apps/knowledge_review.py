@@ -49,13 +49,15 @@ def memory_is_verified(row: MemoryEntry) -> bool:
     )
 
 
-def incident_document(row: MemoryEntry) -> tuple[str, str]:
+def incident_document(row: MemoryEntry, *, dossier: dict | None = None) -> tuple[str, str]:
     if not memory_is_verified(row):
         raise HTTPException(409, "verified_successful_memory_required")
     rem = row.actual_remediation
     verification = row.verification
     service = str(row.service_scope or "unknown-service")
-    title = f"Verified incident recovery: {service}"[:500]
+    from apps.knowledge_review_dossier import dossier_title, dossier_addendum
+    title = (dossier_title(service, dossier, verified_memory=True)
+             or f"Verified incident recovery: {service}"[:500])
     # Distinguish sourced/verified facts from uncertain RCA. Never turn an
     # Agent hypothesis into a proven cause in published organizational knowledge.
     root_status = str(row.root_cause_status or "unknown").lower()
@@ -76,6 +78,7 @@ def incident_document(row: MemoryEntry) -> tuple[str, str]:
         f"Recovered signals: {', '.join(map(str, verification.get('recovered_signals') or [])) or 'not recorded'}",
         f"Outcome: {row.outcome or 'verified recovery'}",
         f"Reusable lesson: {row.reusable_lesson or ''}",
+        *([dossier_addendum(dossier)] if dossier_addendum(dossier) else []),
         "Safety: historical experience only. Revalidate live evidence, blast radius,"
         " policy and approval before any remediation. Never execute from RAG alone.",
     ]
@@ -118,7 +121,9 @@ async def create_from_memory(db, memory_id: UUID, actor: str, *, kb_id: int | No
     memory = await db.get(MemoryEntry, memory_id)
     if memory is None:
         raise HTTPException(404, "operational_memory_not_found")
-    title, content = incident_document(memory)
+    from apps.knowledge_review_dossier import incident_dossier
+    dossier = await incident_dossier(db, memory.incident_id) if memory.incident_id else {}
+    title, content = incident_document(memory, dossier=dossier)
     existing = (await db.execute(
         select(KnowledgeReview).where(KnowledgeReview.memory_id == memory_id)
     )).scalars().first()
