@@ -11,12 +11,13 @@ import os
 import re
 import stat
 import time
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from cryptography.exceptions import InvalidTag
 
 from apps.config_change_authorization import candidate_encryption_key
+from domain.contracts.config import settings
 from integrations.vm.windows_secure_acl import (
     ensure_private_windows_acl, harden_private_windows_acl,
 )
@@ -38,11 +39,63 @@ def _key() -> bytes:
         raise CandidateUnavailable("candidate_mcp_bearer_missing_or_weak") from None
 
 
+def _validate_windows_directory(value: str) -> None:
+    """Require a local, explicit drive path; reject UNC, devices and traversal.
+
+    Runs before mkdir or any ACL modification. This validator is also usable
+    in platform-independent unit tests with ordinary Windows path strings.
+    """
+    if not isinstance(value, str) or not re.match(r"^[A-Za-z]:[\\/]", value):
+        raise CandidateUnavailable("candidate_directory_invalid")
+    if any(ord(char) < 32 for char in value) or any(
+            char in value[2:] for char in '<>:"|?*'):
+        raise CandidateUnavailable("candidate_directory_invalid")
+    if re.search(r"(?:^|[\\/])\.{1,2}(?:[\\/]|$)", value):
+        raise CandidateUnavailable("candidate_directory_invalid")
+    path = PureWindowsPath(value)
+    if not path.is_absolute() or len(path.parts) < 3:
+        raise CandidateUnavailable("candidate_directory_invalid")
+    for part in path.parts[1:]:
+        if part.endswith((" ", ".")):
+            raise CandidateUnavailable("candidate_directory_invalid")
+        stem = part.split(".", 1)[0].upper()
+        if stem in {"CON", "PRN", "AUX", "NUL"} or re.fullmatch(
+                r"(?:COM|LPT)[1-9]", stem):
+            raise CandidateUnavailable("candidate_directory_invalid")
+
+
 def _default_directory() -> Path:
-    """Fixed OS-specific private location, no additional runtime setting."""
+    """Optional vault directory; otherwise the original private OS default.
+
+    Pydantic Settings loads .env.example/.env and process environment. No
+    shell interpolation, relative-path fallback, or caller-supplied path.
+    """
+    configured = str(settings.AIOPS_CONFIG_CANDIDATE_DIRECTORY or "").strip()
+    if configured:
+        if os.name == "nt":
+            _validate_windows_directory(configured)
+        return Path(configured)
     if os.name == "nt":
         return Path(os.environ.get("ProgramData", r"C:\ProgramData")) / "AIOps" / "config-candidates"
     return Path("/var/lib/aiops/config-candidates")
+
+
+def _check_windows_ancestors(path: Path) -> None:
+    """Reject symlink/junction/reparse parents before creating the vault."""
+    for parent in (path, *path.parents):
+        try:
+            if not parent.exists() and not parent.is_symlink():
+                continue
+            info = parent.lstat()
+            if parent.is_symlink() or (
+                    hasattr(parent, "is_junction") and parent.is_junction()
+            ) or (
+                    getattr(info, "st_file_attributes", 0)
+                    & getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0x400)
+            ):
+                raise CandidateUnavailable("candidate_directory_permissions")
+        except OSError:
+            raise CandidateUnavailable("candidate_directory_permissions") from None
 
 
 def _prepare_windows_directory(path: Path) -> None:
@@ -67,6 +120,8 @@ def _directory() -> Path:
     if not path.is_absolute() or ".." in path.parts:
         raise CandidateUnavailable("candidate_directory_invalid")
     try:
+        if os.name == "nt":
+            _check_windows_ancestors(path)
         path.mkdir(mode=0o700, parents=True, exist_ok=True)
         current = path.lstat()
         if not stat.S_ISDIR(current.st_mode):
