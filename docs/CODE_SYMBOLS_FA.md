@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 521 | Dashboard JS files scanned: 8 | Symbols indexed: 5547**
+**Python files scanned: 522 | Dashboard JS files scanned: 8 | Symbols indexed: 5556**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -3897,6 +3897,15 @@
 | `tests/unit/test_execution_tool_policy_errors.py` | `_UnknownDeniedReadTool.execute` | 21 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | _UnknownDeniedReadTool |
 | `tests/unit/test_execution_tool_policy_errors.py` | `test_execution_registry_preserves_safe_vm_policy_denial` | 26 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_execution_tool_policy_errors.py` | `test_execution_registry_redacts_unknown_permission_denial` | 43 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_full_config_followup_reporting.py` | `candidate` | 18 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_full_config_followup_reporting.py` | `test_full_repair_is_durable_read_only_evidence` | 30 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_full_config_followup_reporting.py` | `test_real_emerg_line_overrides_stale_warn_43` | 48 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_full_config_followup_reporting.py` | `test_model_candidate_is_metadata_only_and_cannot_be_cross_service_attached` | 68 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_full_config_followup_reporting.py` | `test_reassessment_planner_uses_full_file_result_but_not_executable_proposal` | 92 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_full_config_followup_reporting.py` | `test_reassessment_planner_uses_full_file_result_but_not_executable_proposal.Model` | 105 | class | کلاس | test_reassessment_planner_uses_full_file_result_but_not_executable_proposal |
+| `tests/unit/test_full_config_followup_reporting.py` | `test_reassessment_planner_uses_full_file_result_but_not_executable_proposal.Model.generate_with_messages` | 106 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_reassessment_planner_uses_full_file_result_but_not_executable_proposal.Model |
+| `tests/unit/test_full_config_followup_reporting.py` | `test_decision_brief_displays_model_hash_without_enabling_apply` | 120 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_full_config_followup_reporting.py` | `test_ui_explains_two_disjoint_candidates_and_deprecates_indent_hypothesis` | 156 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_full_config_llm_repair.py` | `ReplyModel` | 18 | class | کلاس | module |
 | `tests/unit/test_full_config_llm_repair.py` | `ReplyModel.__init__` | 19 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ReplyModel |
 | `tests/unit/test_full_config_llm_repair.py` | `ReplyModel.generate` | 24 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ReplyModel |
