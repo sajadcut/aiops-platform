@@ -207,7 +207,26 @@ async def draft_cognia_review(
         status="pending_review", created_by="system:incident_copilot",
         review_reason=evidence_ref,
     )
-    db.add(row)
+    # The draft is best-effort and MUST NOT poison the incident chat's
+    # session if a deployed database has an outdated outbox constraint.
+    # A SAVEPOINT rolls back only this INSERT; the already durable live
+    # evidence and checkpoint remain intact.
+    try:
+        async with db.begin_nested():
+            db.add(row)
+            await db.flush()
+    except Exception:
+        from domain.contracts.logging import logger
+        logger.warning(
+            "incident_followup_review_insert_skipped",
+            incident_id=str(incident_id),
+            cause="knowledge_review_schema_or_write_unavailable",
+        )
+        return {
+            "status": "draft_failed",
+            "reason": "knowledge_review_schema_or_write_unavailable",
+            "published_to_cognia": False,
+        }
     await db.commit()
     return {"status": "pending_review", "review_id": str(row.id),
             "published_to_cognia": False}
@@ -435,6 +454,10 @@ async def persist_and_reassess(
         except Exception as exc:
             logger.error("incident_followup_knowledge_draft_failed",
                          incident_id=str(incident_id), error_type=type(exc).__name__)
+            # If draft creation failed outside the savepoint (e.g. a
+            # database failure during an early read), clear the failed
+            # transaction before the caller writes chat response/audit.
+            await db.rollback()
             status["knowledge"] = {"status": "draft_failed", "published_to_cognia": False}
     except Exception as exc:
         logger.error("incident_followup_reassessment_failed",
