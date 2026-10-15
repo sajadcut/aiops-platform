@@ -26,10 +26,6 @@ class Settings(BaseSettings):
     DATABASE_MAX_OVERFLOW: int = Field(...)
     DATABASE_VALIDATE_MIGRATIONS_ON_STARTUP: bool = Field(...)
 
-    # Optional for read-only workflows; mandatory only when signing an APPLY.
-    # Hide the value from settings repr and any configuration introspection.
-    AIOPS_CONFIG_APPLY_SIGNING_SECRET: Optional[str] = Field(default=None, repr=False)
-
     LLM_PROVIDER: str = Field(...)
     LLM_API_KEY: Optional[str] = Field(...)
     LLM_BASE_URL: Optional[str] = Field(...)
@@ -120,8 +116,8 @@ class Settings(BaseSettings):
     APPROVAL_TTL_SECONDS: int = Field(...)
 
     MCP_PROTOCOL_VERSION: str = Field(...)
-    MCP_BEARER_TOKEN: Optional[str] = Field(...)
-    MCP_WRITE_BEARER_TOKEN: Optional[str] = Field(...)
+    MCP_BEARER_TOKEN: Optional[str] = Field(..., repr=False)
+    MCP_WRITE_BEARER_TOKEN: Optional[str] = Field(..., repr=False)
     MCP_CLIENT_CERT_PATH: Optional[str] = Field(...)
     MCP_CLIENT_KEY_PATH: Optional[str] = Field(...)
     MCP_TIMEOUT_SECONDS: int = Field(...)
