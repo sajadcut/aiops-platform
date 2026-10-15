@@ -199,6 +199,17 @@ def local_config_review(encoded: str, *, path: str, validator_error_line: int | 
     answer["syntax_projection"] = syntax_projection(
         source, extension=ext, error_line=line_no,
     )
+    if answer["status"] == "candidate_proposed" and ext == "json":
+        answer["candidate_syntax_projection"] = syntax_projection(
+            _remove_trailing_json_commas(source), extension=ext, error_line=line_no,
+        )
+    elif answer["status"] == "candidate_proposed" and ext == "xml":
+        closing = re.search(r"</[A-Za-z][A-Za-z0-9_.:-]{0,47}>(?=\\s*\\Z)", source)
+        if closing:
+            answer["candidate_syntax_projection"] = syntax_projection(
+                source[:closing.start()] + source[closing.end():],
+                extension=ext, error_line=line_no,
+            )
     answer["error_category"] = error
     answer["observed_error_line"] = line_no
     if type(line_no) is int and 1 <= line_no <= len(lines):
