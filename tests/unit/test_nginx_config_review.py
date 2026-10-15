@@ -349,7 +349,8 @@ def test_existing_nginx_incident_can_request_read_only_preview_from_dashboard():
     assert "service==='nginx'?'nginx':verified.length?'review':'generic'" in js
     assert "nginx_config_review: فقط پیش‌نمایش" in js
     assert "service_config_discovery: مسیر فایل‌های تنظیمات" in js
-    assert "اعمال اصلاح روی سرور — غیرفعال" in js
+    assert "اعمال اصلاح روی سرور — غیرفعال" not in js
+    assert "ارسال درخواست به Approval" in js
 
 
 
