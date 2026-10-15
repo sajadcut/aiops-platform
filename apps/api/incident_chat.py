@@ -345,7 +345,103 @@ async def recheck_incident_service_status(
         }
         await PostgreSQLAuditStore(db).append(record)
         if success:
-            return _observed_status(incident.service, binding["target"], [], [record])
+            checked = _observed_status(incident.service, binding["target"], [], [record])
+            # Read-only rechecks may reconcile a *verified systemd Service Down*
+            # incident, but never infer that a missing Zabbix webhook arrived.
+            # Two independent live reads and a clean nginx validator are
+            # required before recording local, non-monitor recovery.
+            from apps.incident_service.service_recovery_reconciliation import (
+                local_recovery_decision,
+            )
+            from integrations.vm.mcp_client import VMEdgeMCPClient
+            from domain.models import IncidentStatus
+            verdict = "service_not_running"
+            if checked.get("status") == "running":
+                await asyncio.sleep(1.0)
+                client = VMEdgeMCPClient()
+                try:
+                    second = await client.service_status(binding["target"], incident.service)
+                except Exception:
+                    second = None
+                vendor_valid = None
+                if (isinstance(second, dict) and second.get("success") is True
+                        and str(incident.service).lower().removesuffix(".service") == "nginx"):
+                    try:
+                        vendor = await client.config_validate(binding["target"], incident.service)
+                        vendor_valid = (
+                            vendor.get("success") is True
+                            and vendor.get("supported") is True
+                            and vendor.get("valid") is True
+                        )
+                    except Exception:
+                        vendor_valid = False
+                verdict = local_recovery_decision(
+                    source=str(incident.source or ""),
+                    summary=str(incident.summary or ""),
+                    service=str(incident.service or ""),
+                    context=incident.context or {},
+                    first=observation, second=second,
+                    target=binding["target"], vendor_syntax_ok=vendor_valid,
+                )
+                if verdict == "independent_vm_verified":
+                    current = (await db.execute(
+                        select(Incident).where(Incident.id == incident_id).with_for_update()
+                    )).scalar_one()
+                    current_ctx = dict(current.context or {})
+                    # The latest incident may have already recovered or gained
+                    # correlated signals while remote checks were running.
+                    verdict = local_recovery_decision(
+                        source=str(current.source or ""),
+                        summary=str(current.summary or ""),
+                        service=str(current.service or ""),
+                        context=current_ctx,
+                        first=observation, second=second,
+                        target=binding["target"], vendor_syntax_ok=vendor_valid,
+                    )
+                    if verdict == "independent_vm_verified" and (
+                            current.status not in {IncidentStatus.CLOSED, IncidentStatus.RESOLVED}):
+                        current_ctx["independent_recovery"] = {
+                            "source": "vm_mcp_systemd_recheck",
+                            "incident_resolved": True,
+                            "verified_at": datetime.now(timezone.utc).isoformat(),
+                            "service": str(current.service),
+                            "target": binding["target"],
+                            "monitor_recovered": False,
+                            "checks": 2,
+                            "nginx_vendor_validated": vendor_valid is True,
+                        }
+                        current.context = current_ctx
+                        current.status = IncidentStatus.RESOLVED
+                        await db.commit()
+                        from apps.approval_service.postgres import PostgreSQLApprovalStore
+                        await PostgreSQLApprovalStore(db).cancel_unconsumed_for_incident(
+                            str(incident_id),
+                            reason="independent_vm_recovery_confirmed",
+                            metadata_patch={"recovery_source": "vm_mcp_systemd_recheck"},
+                        )
+                        await PostgreSQLAuditStore(db).append({
+                            "event_id": str(uuid4()),
+                            "event_type": "incident_independent_service_recovered",
+                            "actor": identity.subject, "incident_id": str(incident_id),
+                            "action": "independent_service_recovery",
+                            "status": "verified",
+                            "metadata": {
+                                "service": str(current.service), "target": binding["target"],
+                                "systemd_observations": 2,
+                                "monitor_recovered": False,
+                                "vendor_validated": vendor_valid,
+                                "execution_authority": False,
+                            },
+                            "created_at": datetime.now(timezone.utc).isoformat(),
+                        })
+            checked["recovery_verification"] = verdict
+            checked["monitor_recovery_confirmed"] = bool(
+                (incident.context or {}).get("source_recovery", {}).get("incident_resolved"))
+            checked["incident_status"] = (
+                "resolved" if verdict == "independent_vm_verified"
+                else getattr(incident.status, "value", incident.status)
+            )
+            return checked
         return {"status": "unknown", "service": str(incident.service or ""),
                 "target": diagnosis["candidate"], "observed_at": when.isoformat(),
                 "source": "vm_mcp_recheck_failed",
