@@ -84,7 +84,8 @@ def _json_model_reply(content: str) -> dict | None:
 
 
 async def assess_service_syntax(projection: Any, candidate_projection: Any = None,
-                                *, model=None) -> dict:
+                                *, model=None, file_type: str = "",
+                                vendor_status: str = "") -> dict:
     """Two sequential LLM passes; second pass never asserts a vendor PASS."""
     source = sanitized_projection(projection)
     candidate = sanitized_projection(candidate_projection) if candidate_projection else None
