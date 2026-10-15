@@ -72,7 +72,7 @@ def test_dotnet_syntax_valid_does_not_hide_unsupported_generic_validator():
     result = domain(r, "config")["technical_result"]
     assert "Unsupported" in result
     assert "JSON Syntax: Valid" in result
-    assert "Runtime Healthy" in result
+    assert "Syntax Valid به معنی سلامت Runtime" in result
     assert len(domain(r, "config")["evidence"]) == 2
 
 
