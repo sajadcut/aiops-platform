@@ -65,6 +65,7 @@ async def test_start_once_after_approved_repair_and_verify_fresh_systemd():
             actions.append("status")
             state = "failed" if actions.count("status") == 1 else "active"
             return {"success": True, "load_state": "loaded", "active_state": state,
+                    "sub_state": "running" if state == "active" else "failed",
                     "healthy": state == "active"}
         async def start_service(self, target, service):
             actions.append("start")
@@ -81,7 +82,7 @@ async def test_no_unnecessary_start_when_service_is_already_running():
     class Edge:
         async def service_status(self, target, service):
             return {"success": True, "load_state": "loaded",
-                    "active_state": "active", "healthy": True}
+                    "active_state": "active", "sub_state": "running", "healthy": True}
         async def start_service(self, target, service):
             raise AssertionError("already active: must not start")
     result = await _start_after_approved_config_apply(
@@ -150,3 +151,42 @@ def test_approved_recovery_scope_is_immutable_in_intent_digest():
     }}
     with pytest.raises(ValueError):
         assert_config_request_bound(approval, **altered_intent)
+
+
+@pytest.mark.asyncio
+async def test_systemd_active_exited_is_not_verified_service_recovery():
+    actions = []
+    class Edge:
+        async def service_status(self, target, service):
+            actions.append("status")
+            return {"success": True, "load_state": "loaded",
+                    "active_state": "active", "sub_state": "exited", "healthy": True}
+        async def start_service(self, target, service):
+            raise AssertionError("not safe to restart a different active unit")
+
+    result = await _start_after_approved_config_apply(
+        Edge(), target="192.0.2.5", service="nginx")
+    assert actions == ["status"]
+    assert result["status"] == "active_not_running"
+    assert result["service_recovery_confirmed"] is False
+
+
+@pytest.mark.asyncio
+async def test_successful_systemctl_start_but_active_exited_is_not_recovery():
+    actions = []
+    class Edge:
+        async def service_status(self, target, service):
+            actions.append("status")
+            if actions.count("status") == 1:
+                return {"success": True, "load_state": "loaded",
+                        "active_state": "failed", "sub_state": "failed"}
+            return {"success": True, "load_state": "loaded",
+                    "active_state": "active", "sub_state": "exited", "healthy": True}
+        async def start_service(self, target, service):
+            actions.append("start")
+            return {"success": True}
+    result = await _start_after_approved_config_apply(
+        Edge(), target="192.0.2.5", service="nginx")
+    assert actions == ["status", "start", "status"]
+    assert result["status"] == "start_not_verified"
+    assert result["service_recovery_confirmed"] is False
