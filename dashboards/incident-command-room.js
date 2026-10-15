@@ -2414,14 +2414,18 @@
         'The candidate passed validation; review the diff before approving.',
       pending_validation:fa?'پیشنهاد اصلاح ثبت شده است؛ پیش از تأیید، نسخهٔ موقت باید اعتبارسنجی شود.':
         'The request is recorded; validate the staged version before approval.',
-      diff:fa?'اصلاح پیشنهادی را مشاهده کنید و پس از بررسی، درخواست تغییر بدهید.':
-        'Review the proposed correction before requesting a change.',
+      diff:fa?'اصلاح پیشنهادی را ببینید؛ پس از تأیید، برای اعمال آن اقدام کنید.':
+        'Review the proposed correction; apply only after explicit approval.',
       review:fa?'برای دیدن اصلاح پیشنهادی و تفاوت فایل، بررسی را اجرا کنید.':
         'Run a review to see the suggested correction and file diff.',
       outcome:fa?'جزئیات اعمال، راستی‌آزمایی و بازگشت احتمالی را بررسی کنید.':
         'Inspect execution, verification and any rollback.',
     };
-    const instruction=instructions[action];
+    const stagedFailed=['staged_failed','staged_pass_not_isolated'].includes(status);
+    const instruction=stagedFailed&&['diff','review'].includes(action)?
+      (fa?'نسخهٔ پیشنهادی هنوز از اعتبارسنجی مستقل عبور نکرده است؛ آن را بررسی کنید، اما اعمال نکنید.':
+        'The candidate has not passed independent validation; review it but do not apply.') :
+      instructions[action];
     const previewKind=service==='nginx'?'nginx':verified.length?'review':'generic';
     const blocked=state.historic||state.busy||state.chatBusy||
       state.configPreviewPending||state.lifecycle?.analysis_in_progress;
