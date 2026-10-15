@@ -270,10 +270,11 @@ validation** of the same candidate. On source drift, expiration, mismatched
 key, unavailable isolation or failed vendor check, refuse; do not fall back
 to executing an LLM-suggested command.
 
-### Existing MCP bearer; no additional key or vault configuration
+### Existing MCP bearer; optional candidate directory setting
 
-The VM MCP worker **reuses the existing** `MCP_BEARER_TOKEN` with no new
-encryption secret, path environment variable or key-generation command.
+The VM MCP worker **reuses the existing** `MCP_BEARER_TOKEN`; there is no new
+encryption secret or key-generation command. Administrators may optionally
+set `AIOPS_CONFIG_CANDIDATE_DIRECTORY` to choose a private local directory.
 Both signing and AES-256-GCM encryption require its existing minimum
 strength of 32 UTF-8 bytes. The HMAC-SHA256 derived keys have **different
 fixed purpose contexts**:
@@ -284,25 +285,37 @@ fixed purpose contexts**:
 Neither derived key nor original token is returned to the API, browser, logs
 or LLM. They are deterministic across worker restarts so long as the original
 bearer remains unchanged. This preserves compatibility with the signing
-mechanism already in production and introduces **no additional env setting**.
+mechanism already in production and requires **no additional key**.
 The pre-existing feature gate `AIOPS_FULL_CONFIG_LLM_ENABLED` still applies;
 an explicit authorized SRE request is still required to disclose the full
 file to the trusted LLM.
 
-The vault uses a **fixed OS default**, rather than a new configuration:
-`/var/lib/aiops/config-candidates` on Linux and
-`%ProgramData%\\AIOps\\config-candidates` on Windows. It requires a
+The vault uses the optional `AIOPS_CONFIG_CANDIDATE_DIRECTORY` if provided
+in the VM MCP worker's `.env` or process environment, otherwise defaults
+to `/var/lib/aiops/config-candidates` on Linux and
+%ProgramData%\AIOps\config-candidates on Windows. Example for a
+Windows-hosted VM MCP service:
+
+```env
+AIOPS_CONFIG_CANDIDATE_DIRECTORY=D:\data\tempaips
+```
+
+Use an absolute local drive path; UNC, device, traversal and relative paths
+are rejected on Windows. Never set the monitored Linux VM's path here.
+Only the dedicated candidate directory is protected; existing parent
+folders are not changed. If the selected folder contains unrelated files
+and has overly broad permissions, the worker refuses to rewrite its ACL. It requires a
 persistent private directory (owner-only 0700/files 0600 on POSIX, strict
 service identity/SYSTEM/Administrators ACL on Windows) and fails closed if
 permissions or storage availability cannot be verified. The Windows worker
 now **automatically applies a protected, inheritance-disabled NTFS DACL**
 on its dedicated candidate directory using native Win32 APIs and the
 current worker service SID; sealed child files inherit only these private
-permissions. No administrator command, new key or new application setting
+permissions. No administrator command or new encryption key
 is normally required. If the worker cannot create or secure this directory
 with its existing Windows permissions, candidate storage remains blocked
 rather than bypassing the access check. If the VM MCP runs in a container, the
-default path must be mapped to a private persistent volume; otherwise
+selected path must be mapped to a private persistent volume; otherwise
 pending proposals cannot survive container replacement.
 
 **Security trade-off:** `MCP_BEARER_TOKEN` is a shared root of trust.
