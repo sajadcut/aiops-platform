@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 500 | Dashboard JS files scanned: 8 | Symbols indexed: 5231**
+**Python files scanned: 500 | Dashboard JS files scanned: 8 | Symbols indexed: 5232**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -671,13 +671,14 @@
 | `apps/api/chatbot.py` | `chatbot_history` | 121 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/chatbot.py` | `chatbot_action_decision` | 150 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/cognia_scope.py` | `reject_untrusted_knowledge_subject` | 8 | function | Reject caller-supplied Cognia ExternalSubject scope on public workflow APIs. | module |
-| `apps/api/config_change_review.py` | `ConfigReviewResponse` | 27 | class | کلاس | module |
-| `apps/api/config_change_review.py` | `_proposal` | 33 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/config_change_review.py` | `_hash` | 44 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/config_change_review.py` | `_matching_proposal` | 48 | function | Never accept hashes taken solely from a browser or free-form LLM. | module |
-| `apps/api/config_change_review.py` | `_review_progress` | 63 | function | Expose durable intent separately from executable Approval authority. | module |
-| `apps/api/config_change_review.py` | `get_config_review_response` | 98 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
-| `apps/api/config_change_review.py` | `post_config_review_response` | 125 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/config_change_review.py` | `ConfigReviewResponse` | 31 | class | کلاس | module |
+| `apps/api/config_change_review.py` | `_proposal` | 37 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/config_change_review.py` | `_hash` | 48 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/config_change_review.py` | `_matching_proposal` | 55 | function | Accept only evidence-backed deterministic transformations. | module |
+| `apps/api/config_change_review.py` | `_approval_for_proposal` | 82 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/config_change_review.py` | `_review_progress` | 92 | function | Expose durable intent separately from executable Approval authority. | module |
+| `apps/api/config_change_review.py` | `get_config_review_response` | 131 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
+| `apps/api/config_change_review.py` | `post_config_review_response` | 177 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/dashboard.py` | `dashboard_summary` | 17 | async function | Return live PostgreSQL-backed KPIs. Database failures are never converted to fake zeroes. | module |
 | `apps/api/dashboard_incidents.py` | `dashboard_incidents` | 15 | async function | Operational incident list enriched from durable governance/audit state. | module |
 | `apps/api/dashboard_incidents.py` | `dashboard_services` | 115 | async function | Service-centric operational health derived only from durable incident/governance state. | module |
