@@ -2774,16 +2774,24 @@
       ['pending_validation','pending','approved','consumed'].includes(statusValue);
     if(configApproval && !archived){
       const fa=state.language==='fa';
+      const syntaxOnly=durable.metadata?.validation_scope==='generic_json_syntax_only_service_runtime_unverified';
       let controls='<p class="ic-agent-disclaimer">'+esc(fa?
         'این تأیید صرفاً برای تغییر فایل مشخص با دو هش ثبت‌شده است. اعمال کانفیگ از مسیر ایمن VM MCP انجام می‌شود؛ Start یا Restart مجوز جداگانه می‌خواهد.':
         'This approval is bound to one config file and its hashes. Service start/restart requires a separate approval.')+'</p>';
+      if(syntaxOnly){
+        controls+='<p class="ic-warning">'+esc(fa?
+          'تأیید فنی این فایل فقط صحت ساختار JSON است؛ سلامت منطق برنامه، وابستگی‌ها و Runtime سرویس ثابت نشده و Start/Restart جداگانه نیازمند تأیید است.':
+          'JSON grammar only: application semantics, dependencies and service runtime remain unverified. A separate approval is required for service recovery.')+'</p>';
+      }
       if(statusValue==='pending_validation'){
         controls+='<div class="ic-action-buttons"><button type="button" class="ic-btn ic-btn-primary" data-config-approval-action="validate"'+(state.busy?' disabled':'')+'>'+
           esc(fa?'اجرای اعتبارسنجی ایزوله و آماده‌سازی Approval':'Run isolated validation')+'</button>'+
           '<button type="button" class="ic-btn ic-btn-danger" data-config-approval-action="reject"'+(state.busy?' disabled':'')+'>'+
           esc(fa?'رد درخواست تغییر':'Reject config change')+'</button></div>';
       }else if(statusValue==='pending'){
-        controls+='<p>'+esc(fa?'نسخه پیشنهادی در فضای جداگانه اعتبارسنجی شده و اکنون منتظر تأیید صریح شماست.':'Isolated vendor validation passed; human approval is required.')+'</p>'+
+        controls+='<p>'+esc(syntaxOnly?
+          (fa?'نسخه پیشنهادی فقط از نظر سینتکس JSON با jq بررسی شده است و منتظر تأیید صریح شماست.':'Staged JSON grammar check passed; application runtime is unverified.'):
+          (fa?'نسخه پیشنهادی با Validator سرویس در فضای جداگانه بررسی شده و اکنون منتظر تأیید صریح شماست.':'Isolated vendor validation passed; human approval is required.'))+'</p>'+
           '<button type="button" class="ic-btn ic-btn-primary" data-config-approval-action="approve"'+(state.busy?' disabled':'')+'>'+
           esc(fa?'تأیید اصلاح کانفیگ — بدون اجرا':'Approve configuration change')+'</button>';
       }else if(statusValue==='approved'){
