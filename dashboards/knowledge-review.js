@@ -52,6 +52,15 @@
         <div><label>حافظهٔ عملیاتی</label><strong>${esc(r.memory_id || '—')}</strong></div>
       </div>
       <p class="muted">پیش از تأیید، شواهد پشتیبان، علت تأییدشده، اقدام واقعی، نتیجه و اطلاعات حساس را بررسی کنید. هر ویرایش تأیید قبلی را باطل می‌کند.</p>
+      ${r.incident_dossier?.facts?.length ? `
+        <section class="knowledge-evidence-facts" aria-label="شواهد فنی ثبت‌شدهٔ رخداد">
+          <h3>مشکل ثبت‌شده، اصلاح واقعی و نتیجهٔ بازیابی</h3>
+          <p class="muted">از شواهد و ممیزی همین رخداد؛ این بخش فقط برای بازبینی است و به‌طور خودکار جزو متن ارسالی به کاگنیا نیست.</p>
+          <ul>${r.incident_dossier.facts.map(fact => `<li>${esc(fact)}</li>`).join('')}</ul>
+          ${r.incident_dossier.config_diagnostic && !r.content.includes(r.incident_dossier.config_diagnostic.config_file) ?
+            '<p class="knowledge-alert">متن پیش‌نویس هنوز مسیر فایل و خطای کانفیگ را ندارد؛ پیش از انتشار، آن را به‌روزرسانی کنید.</p>' : ''}
+        </section>
+      ` : ''}
       ${r.incident_id ? `<button type="button" class="approval-btn" data-knowledge-incident="${esc(r.incident_id)}">مشاهدهٔ رخداد و شواهد</button>` : ''}
       <label for="knowledgeEditTitle">عنوان دانش</label>
       <input id="knowledgeEditTitle" maxlength="500" value="${esc(r.title)}" ${editable ? '' : 'readonly'}>
