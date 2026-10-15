@@ -2328,22 +2328,41 @@
       code&& !['none','not_tested','not_recorded'].includes(code)?
       (fa?'علت/کد نتیجه: ':'Reason code: ')+code:'';
     const responded=state.configResponse?.status&&state.configResponse.status!=='not_responded';
-    const ready=Boolean(candidate && config.original_sha256 && config.candidate_sha256 &&
+    const ready=Boolean(service==='nginx' && candidate &&
+      config.original_sha256 && config.candidate_sha256 &&
       !state.historic && !state.busy && state.configResponseStatus==='loaded' &&
-      !responded);
+      state.configResponse?.status==='not_responded');
     const verified=arr(discovery.files).filter(f=>f.verified_exists===true);
     const path=config.config_file||validated.config_file||
       verified[0]?.path||discovery.unverified_candidates?.[0]?.path||'';
     const line=Number.isInteger(config.error_line)?config.error_line:
       Number.isInteger(validated.error_line)?validated.error_line:null;
     const responseLabel=responded?
-      '<p>'+esc(fa?'پاسخ قبلی ثبت شده: ':'Review response recorded: ')+
-      '<strong>'+txt(state.configResponse.status)+'</strong></p>':'';
-    const requestButton=candidate&&!responded?
+      '<p role="status">'+esc(fa?'درخواست اصلاح ثبت شده؛ مرحله فعلی: ':'Correction request recorded; stage: ')+
+      '<strong>'+txt(state.configResponse.status)+'</strong>'+
+      ' — '+esc(fa?'منتظر اعتبارسنجی مستقل، سپس ایجاد Approval اجرایی. هنوز مجوز تغییر فایل صادر نشده است.':
+        'Waiting for independent validation, then executable approval creation. No write is authorized.')+
+      '</p>':
+      state.configResponseStatus==='failed'?
+      '<p role="status" class="ic-config-banner-warning">'+esc(fa?
+        'وضعیت درخواست از API خوانده نشد؛ ثبت درخواست تا بازیابی وضعیت غیرفعال است.':
+        'Request status could not be fetched; submission is blocked until the state is known.')+'</p>':'';
+    // This click records a *pre-approval* change intent, never a production write.
+    // A previously submitted request stays navigable and displays its blocker.
+    const requestButton=responded?
+      '<a class="ic-btn ic-btn-muted" href="#ic-ai-proposed-fix" data-config-request-status="recorded">'+
+      esc(fa?'مشاهده درخواست ثبت‌شده (پیش از Approval)':'View submitted request (pre-approval)')+
+      '</a>':
+      candidate?
       '<button type="button" class="ic-btn ic-btn-primary" data-config-intent="request_isolated_validation"'+
-      (ready?'':' disabled')+'>'+
-      esc(fa?'درخواست بازبینی و اعتبارسنجی اصلاح':'Request correction review & validation')+
-      '</button>':'';
+      (ready?'':' disabled')+
+      ' title="'+esc(fa?'ثبت درخواست اعمال برای اعتبارسنجی مستقل؛ بدون تغییر فایل و بدون Approval اجرایی':'Submit a pre-approval validation request; no file write')+'">'+
+      esc(fa?'درخواست اعمال اصلاح (ابتدا اعتبارسنجی)':'Request correction (validation first)')+
+      '</button>':
+      '<button type="button" class="ic-btn ic-btn-muted" disabled title="'+
+      esc(fa?'ابتدا باید از بازبینی MCP یک پیشنهاد اصلاح با هش معتبر ساخته شود':'A hash-bound candidate is required first')+'">'+
+      esc(fa?'اعمال اصلاح روی سرور — غیرفعال':'Apply correction — unavailable')+
+      '</button>';
     const regenerateButton=
       '<button type="button" class="ic-btn ic-btn-primary" data-config-preview="'+
       (service==='nginx'?'nginx':verified.length?'review':'generic')+'"'+
@@ -2381,16 +2400,12 @@
         state.configPreviewLastResult?
         '<p role="status" aria-live="polite">'+txt(state.configPreviewLastResult)+'</p>':'')+
       '<p class="ic-config-banner-warning">'+esc(fa?
-        'اعمال روی سرور فعلاً غیرفعال است: اعتبارسنجی مستقل، قرارداد تغییر نسخه‌دار و Approval اجرایی وجود ندارد. ثبت درخواست اعتبارسنجی خودش فایل را اصلاح نمی‌کند.':
-        'Apply is disabled: isolated validation, a versioned change contract and executable approval are missing. A validation request does not modify the file.')+
-      '</p></div><div class="ic-config-banner-actions">'+regenerateButton+requestButton+
+        'این دکمه فقط درخواست اعمال را برای بررسی پیش از Approval ثبت می‌کند. اجرای واقعی روی سرور تا اعتبارسنجی مستقل، قرارداد تغییر نسخه‌دار و تأیید اجرایی مسدود است.':
+        'The request records a pre-approval change intent only. Server application remains blocked until isolated validation, a versioned change contract, and executable approval exist.')+
+      '</p></div><div class="ic-config-banner-actions">'+regenerateButton+
       '<a class="ic-btn ic-btn-muted" href="#ic-ai-proposed-fix">'+
-      esc(fa?'مشاهده خطا، Diff و پیشنهاد اصلاح':'View error, diff and proposal')+
-      '</a>'+
-      '<button type="button" class="ic-btn ic-btn-muted" disabled title="'+
-      esc(fa?'فعلاً مسیر ایمن اعمال فایل پیاده‌سازی نشده است':'No validated file-apply workflow exists')+'">'+
-      esc(fa?'اعمال اصلاح روی سرور — غیرفعال':'Apply correction — unavailable')+
-      '</button></div>';
+      esc(fa?'مشاهده اصلاح کانفیگ و Diff':'View correction and diff')+
+      '</a>'+requestButton+'</div>';
   }
 
   function renderConfigProposal(config) {
@@ -2958,8 +2973,12 @@
        c.status!=='candidate_proposed'||!c.candidate_sha256||!c.original_sha256)return;
     const fa=state.language==='fa';
     if(!confirm(fa?
-      'این کار فقط نظر شما را ثبت می‌کند؛ هیچ فایل یا سرویسی تغییر نمی‌کند. ادامه می‌دهید؟':
-      'This only records your response. No file or service changes. Continue?'))return;
+      (decision==='request_isolated_validation'?
+        'درخواست اعمال اصلاح برای اعتبارسنجی مستقل ثبت می‌شود. این مرحله هنوز Approval اجرایی نیست و هیچ تغییری روی سرور اعمال نمی‌کند. ادامه می‌دهید؟':
+        'پیشنهاد اصلاح رد می‌شود؛ هیچ فایلی تغییر نمی‌کند. ادامه می‌دهید؟'):
+      (decision==='request_isolated_validation'?
+        'Submit a correction request for independent validation? This is not execution approval and will not change the server.':
+        'Reject this proposal without changing any file?')))return;
     state.busy=true;renderInvestigation(state.report);
     try {
       const fresh=await api(base+'/decision-brief');
@@ -2975,8 +2994,13 @@
         })
       });
       state.configResponse=response;state.configResponseStatus='loaded';
-      notify(fa?'پاسخ ثبت شد؛ تغییری در کانفیگ اعمال نشده است.':
-                'Response recorded; no configuration was applied.');
+      notify(fa?
+        (decision==='request_isolated_validation'?
+          'درخواست اعمال ثبت شد؛ در انتظار اعتبارسنجی مستقل پیش از Approval. هیچ فایلی تغییر نکرد.':
+          'رد پیشنهاد ثبت شد؛ هیچ فایلی تغییر نکرد.'):
+        (decision==='request_isolated_validation'?
+          'Request recorded; independent validation is needed before approval. No file changed.':
+          'Proposal rejected; no file changed.'));
     }catch(e){notify(tr('failure')+' · '+e.message,true);}
     finally{state.busy=false;if(state.report){renderInvestigation(state.report);renderConfigActionBanner(state.report);}}
   }
