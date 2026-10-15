@@ -1309,7 +1309,7 @@
 | `apps/knowledge_review.py` | `create_from_verified_config_apply` | 193 | async function | Draft a sourced lesson after real config apply, not false service recovery. | module |
 | `apps/knowledge_review.py` | `recovery_review_id` | 270 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/knowledge_review.py` | `governed_recovery_document` | 274 | function | Only recorded, executed, scoped service writes can yield draft lessons. | module |
-| `apps/knowledge_review.py` | `create_from_governed_service_recovery` | 370 | async function | Recover missed drafts from durable, incident-bound remediation audit. | module |
+| `apps/knowledge_review.py` | `create_from_governed_service_recovery` | 374 | async function | Recover missed drafts from durable, incident-bound remediation audit. | module |
 | `apps/knowledge_review_dossier.py` | `_safe_path` | 24 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/knowledge_review_dossier.py` | `_same_service` | 32 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/knowledge_review_dossier.py` | `build_dossier` | 38 | function | Extract sourced, scoped and bounded facts for the selected incident. | module |
