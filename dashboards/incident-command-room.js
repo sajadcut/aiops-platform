@@ -2399,7 +2399,9 @@
       '<p role="status">'+esc(fa?'درخواست اصلاح ثبت شده؛ مرحله فعلی: ':'Correction request recorded; stage: ')+
       '<strong>'+txt(state.configResponse.status)+'</strong>'+
       ' — '+esc(fa?
-        (state.configResponse.approval_queue_registered?
+        (state.configResponse.approval_status==='approved'?
+          'اعتبارسنجی مستقل انجام و Approval تأیید شده است. اعمال واقعی فقط پس از تکمیل پیش‌نیاز امضا مجاز است.':
+         state.configResponse.approval_queue_registered?
           'درخواست در صف واقعی Approval ثبت شده است؛ تأیید اجرایی تا اعتبارسنجی مستقل و ساخت قرارداد تغییر مسدود است.':
          state.configResponse.validation_pipeline_status==='not_implemented'?
           'این درخواست فقط در ممیزی ثبت شده است؛ پردازش اعتبارسنجی ایزوله و ایجاد Approval اجرایی هنوز پیاده‌سازی نشده‌اند. هیچ عملیات پس‌زمینه یا تغییری روی سرور آغاز نشده است.':
