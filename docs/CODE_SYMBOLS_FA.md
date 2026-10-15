@@ -1121,8 +1121,8 @@
 | `apps/decision_brief_narrative.py` | `projection` | 72 | function | Compact, redacted source allowlist for an explain-only LLM. | module |
 | `apps/decision_brief_narrative.py` | `bounded_projection_json` | 182 | function | Fit an explain-only projection within a strict request-size budget. | module |
 | `apps/decision_brief_narrative.py` | `bounded_projection_json.encode` | 191 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | bounded_projection_json |
-| `apps/decision_brief_narrative.py` | `validate_narrative` | 215 | function | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | module |
-| `apps/decision_brief_narrative.py` | `generate_narrative` | 269 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/decision_brief_narrative.py` | `validate_narrative` | 248 | function | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | module |
+| `apps/decision_brief_narrative.py` | `generate_narrative` | 302 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/decision_engine/__init__.py` | `RiskLevel` | 11 | class | کلاس | module |
 | `apps/decision_engine/__init__.py` | `DecisionAction` | 18 | class | کلاس | module |
 | `apps/decision_engine/__init__.py` | `DecisionResult` | 25 | class | کلاس | module |
