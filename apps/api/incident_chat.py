@@ -576,6 +576,18 @@ async def incident_chat_message(
                     if not any(isinstance(review.get(k), dict) for k in
                                ("model_diagnosis", "model_second_review")):
                         parts.append("مدل نتوانست بررسی معتبر انجام دهد (" + stage[:65] + ").")
+                    multi = observation.get("file_model_reviews") or []
+                    for entry in multi[:4]:
+                        if (not isinstance(entry, dict) or
+                                entry.get("path") == observation.get("config_file")):
+                            continue
+                        other = entry.get("review") or {}
+                        diagnosis = other.get("model_diagnosis") or {}
+                        parts.append("فایل بررسی‌شده دیگر: " +
+                                     str(entry.get("path") or "")[:220] +
+                                     " — تشخیص LLM: " +
+                                     str(diagnosis.get("error_kind") or other.get("status") or
+                                         "نامشخص")[:90])
                     if observation.get("candidate_hash"):
                         parts.append("پیشنهاد اصلاح قطعیِ محدود، Hash نسخه پیشنهادی: " +
                                      str(observation["candidate_hash"])[:64])
