@@ -270,37 +270,50 @@ validation** of the same candidate. On source drift, expiration, mismatched
 key, unavailable isolation or failed vendor check, refuse; do not fall back
 to executing an LLM-suggested command.
 
-### VM MCP configuration
+### Existing MCP bearer; no additional key or vault configuration
 
-The additional settings are injected into the **VM MCP worker** (not only
-the API):
+The VM MCP worker **reuses the existing** `MCP_BEARER_TOKEN` with no new
+encryption secret, path environment variable or key-generation command.
+Both signing and AES-256-GCM encryption require its existing minimum
+strength of 32 UTF-8 bytes. The HMAC-SHA256 derived keys have **different
+fixed purpose contexts**:
 
-```env
-AIOPS_FULL_CONFIG_LLM_ENABLED=true
-AIOPS_CONFIG_CANDIDATE_ENCRYPTION_KEY=<base64 of exactly 32 cryptographically random bytes>
-# Optional: dedicated encrypted candidate volume
-# AIOPS_CONFIG_CANDIDATE_DIRECTORY=/var/lib/aiops/config-candidates
-```
+- approval signing: `aiops/configuration-apply/approval-claim/v1`
+- stored candidate encryption: `aiops/configuration-candidate/aes-256-gcm/v1`
 
-Generate the key **once on a trusted AIOps host**, with
-`python -c "import secrets,base64;print(base64.b64encode(secrets.token_bytes(32)).decode())"`;
-store it in the deployment secret manager and use the **same value after
-service restarts** on every VM MCP replica that has access to this shared
-candidate volume. The path must be owner-controlled, with POSIX mode 0700
-and files 0600. Windows uses
-`%ProgramData%\\AIOps\\config-candidates` by default; its native NTFS
-DACL checker accepts **only SYSTEM, Administrators and the worker service
-identity**. Provision inheritance-disabled NTFS ACLs for the service
-identity and verify them before enabling; the worker fails closed if
-permissions cannot be proved. The directory must persist across restarts
-and be available to every worker instance that might execute a ticket.
-Never place it on a broadly readable SMB share.
+Neither derived key nor original token is returned to the API, browser, logs
+or LLM. They are deterministic across worker restarts so long as the original
+bearer remains unchanged. This preserves compatibility with the signing
+mechanism already in production and introduces **no additional env setting**.
+The pre-existing feature gate `AIOPS_FULL_CONFIG_LLM_ENABLED` still applies;
+an explicit authorized SRE request is still required to disclose the full
+file to the trusted LLM.
+
+The vault uses a **fixed OS default**, rather than a new configuration:
+`/var/lib/aiops/config-candidates` on Linux and
+`%ProgramData%\\AIOps\\config-candidates` on Windows. It requires a
+persistent private directory (owner-only 0700/files 0600 on POSIX, strict
+service identity/SYSTEM/Administrators ACL on Windows) and fails closed if
+permissions or storage availability cannot be verified. Windows paths
+may need NTFS permissions provisioned on the host, but not another
+application configuration field. If the VM MCP runs in a container, the
+default path must be mapped to a private persistent volume; otherwise
+pending proposals cannot survive container replacement.
+
+**Security trade-off:** `MCP_BEARER_TOKEN` is a shared root of trust.
+Anyone who steals this bearer can derive both the approval-signing key and
+candidate-decryption key. Domain separation prevents accidental *cross-use*
+but is not defense against compromise of the bearer itself. **Rotating**
+`MCP_BEARER_TOKEN` invalidates all previously stored encrypted candidates,
+so fresh proposals and Approval are required. Never silently decrypt with
+a fallback or an old, unconfigured key. The same existing bearer must remain
+consistent between the API and VM MCP; replicas serving the same vault must
+use the same current bearer.
 
 **Candidate TTL: 24 hours** from creation, enforced on reads. Stale files
 must be cleaned through retention operations; expiry prevents execution,
-but does not itself physically erase ciphertext. Lost/rotated AES keys
-invalidate older candidates; create a new proposal rather than bypassing
-decryption. Old stateless LLM proposals cannot be approved: run a **new
+but does not itself physically erase ciphertext. A rotated MCP bearer invalidates older candidates; create a new proposal
+rather than bypassing decryption. Old stateless LLM proposals cannot be approved: run a **new
 full-file repair** after deployment so a sealed candidate is generated.
 No configuration file is automatically changed when the model responds.
 
