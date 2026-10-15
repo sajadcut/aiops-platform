@@ -53,7 +53,7 @@ def _parse_corrected(content: str) -> str | None:
 def _safe_structure(value: str) -> str:
     """Use value-free glyphs; never reflect secret values into MCP/UI/audit."""
     # No words, digits or byte values from config survive.
-    return re.sub(r"[^{};=,#()\\[\\]\\s]", "x", value.rstrip("\\n"))[:180]
+    return re.sub(r"[^{};=,#()\[\]\s]", "x", value.rstrip("\n"))[:180]
 
 
 def _profile(service: str, path: str) -> str:
