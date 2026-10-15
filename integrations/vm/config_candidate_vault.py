@@ -110,18 +110,22 @@ def _prepare_windows_directory(path: Path) -> None:
         hasattr(os.path, "isjunction") and os.path.isjunction(str(path))
     ):
         raise CandidateUnavailable("candidate_directory_permissions")
+    # This check applies even if the directory already happens to have a
+    # private ACL: never turn an application checkout or shared folder into
+    # sensitive candidate storage. A refresh may briefly leave our own
+    # randomly named, encrypted temporary blob, so allow that exact pattern.
+    try:
+        for entry in path.iterdir():
+            if not (re.fullmatch(r"[0-9a-f]{64}\.sealed", entry.name) or
+                    re.fullmatch(r"[0-9a-f]{64}\.sealed\.[0-9a-f]{16}\.tmp", entry.name)):
+                raise CandidateUnavailable("candidate_directory_not_dedicated")
+    except OSError:
+        raise CandidateUnavailable("candidate_directory_permissions") from None
     try:
         ensure_private_windows_acl(str(path))
     except PermissionError:
-        # The selected folder may be user-managed. Never rewrite its ACL if
-        # it contains unrelated files/directories owned by another workload.
-        # The only allowed existing contents are our own sealed blobs.
-        try:
-            for entry in path.iterdir():
-                if not re.fullmatch(r"[0-9a-f]{64}\.sealed", entry.name):
-                    raise CandidateUnavailable("candidate_directory_not_dedicated")
-        except OSError:
-            raise CandidateUnavailable("candidate_directory_permissions") from None
+        # Only a dedicated candidate directory may have its inherited ACL
+        # replaced. We checked its contents before touching Windows DACLs.
         harden_private_windows_acl(str(path))
         ensure_private_windows_acl(str(path))
 
