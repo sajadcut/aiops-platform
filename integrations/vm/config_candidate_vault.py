@@ -119,11 +119,36 @@ def store_candidate(*, target: str, service: str, path: str,
         fd = os.open(str(filename), os.O_CREAT | os.O_EXCL | os.O_WRONLY |
                      getattr(os, "O_NOFOLLOW", 0), 0o600)
     except FileExistsError:
-        # Existing immutable candidate is acceptable only if decryptable,
-        # unexpired and exactly matches all requested binding fields.
-        existing = load_candidate(target=target, service=service, path=path,
-                                  source_hash=source_hash,
-                                  candidate_hash=candidate_hash)
+        # Same hash-bound contents may be requested again after expiry.
+        # Refresh through a private temporary file and atomic rename; never
+        # make expired candidates permanently unrepairable without admin
+        # intervention. Concurrent refreshes can only commit the SAME bytes
+        # and exactly the same sealed identity.
+        try:
+            existing = load_candidate(target=target, service=service, path=path,
+                                      source_hash=source_hash,
+                                      candidate_hash=candidate_hash)
+        except CandidateUnavailable as exc:
+            if str(exc) != "candidate_expired":
+                raise
+            _read_file(filename)  # refuse to replace an unsafe file/symlink
+            temporary = filename.with_name(filename.name + "." +
+                                            os.urandom(8).hex() + ".tmp")
+            try:
+                temp_fd = os.open(str(temporary), os.O_CREAT | os.O_EXCL |
+                                  os.O_WRONLY | getattr(os, "O_NOFOLLOW", 0), 0o600)
+                with os.fdopen(temp_fd, "wb") as stream:
+                    stream.write(sealed)
+                    stream.flush()
+                    os.fsync(stream.fileno())
+                if os.name == "nt":
+                    ensure_private_windows_acl(str(temporary))
+                os.replace(temporary, filename)
+            except (OSError, PermissionError):
+                raise CandidateUnavailable("candidate_storage_unavailable") from None
+            finally:
+                temporary.unlink(missing_ok=True)
+            return {"candidate_stored": True, "candidate_ttl_seconds": _TTL_SECONDS}
         if existing != candidate:
             raise CandidateUnavailable("candidate_storage_conflict")
         return {"candidate_stored": True, "candidate_ttl_seconds": _TTL_SECONDS}
