@@ -677,7 +677,7 @@
 | `apps/api/config_change_execution.py` | `validate_config_ticket` | 83 | async function | Reconstruct the candidate on MCP worker, prove staged vendor validation. | module |
 | `apps/api/config_change_execution.py` | `validate_config` | 159 | async function | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | module |
 | `apps/api/config_change_execution.py` | `execute_config` | 164 | async function | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | module |
-| `apps/api/config_change_execution.py` | `reject_pending_config` | 285 | async function | transition مربوط به Approval/Governance را اعمال می‌کند | module |
+| `apps/api/config_change_execution.py` | `reject_pending_config` | 310 | async function | transition مربوط به Approval/Governance را اعمال می‌کند | module |
 | `apps/api/config_change_review.py` | `ConfigReviewResponse` | 33 | class | کلاس | module |
 | `apps/api/config_change_review.py` | `_proposal` | 42 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/config_change_review.py` | `_hash` | 53 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
