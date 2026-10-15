@@ -427,6 +427,33 @@ async def incident_chat_message(
         ][:2]
         await append_turn(audit, incident_id=str(incident_id),
                           actor=identity.subject, role="user", message=payload.message)
+        if requests_vm_allowed_hosts(payload.message):
+            # A policy inventory request does not select an incident VM.
+            # Restrict to SRE and never persist host names in shared history.
+            roles = tuple(getattr(identity, "roles", ()) or ())
+            persian = bool(re.search(r"[\u0600-\u06ff]", payload.message))
+            answer = allowed_hosts_answer(roles, persian=persian)
+            from integrations.llm.openai_compatible import configured_llm_adapter
+            await review_answer_coherence(
+                configured_llm_adapter(), question=payload.message,
+                answer="The requested allowlisted host inventory was handled "
+                       "under server-side access control; no VM connection ran.",
+                stage="incident_chat_answer_review",
+            )
+            audit_id = await append_turn(
+                audit, incident_id=str(incident_id), actor=identity.subject,
+                role="assistant", message="درخواست فهرست میزبان‌ها با بررسی نقش پاسخ داده شد؛ "
+                "جزئیات زیرساخت در تاریخچهٔ مشترک رخداد ثبت نشده است.",
+                model_status="policy_inventory",
+                answer_basis="role_scoped_configuration",
+            )
+            return {
+                "id": audit_id, "incident_id": str(incident_id),
+                "kind": "answer", "message": answer, "proposal": None,
+                "source_refs": [], "observation": None,
+                "model_status": "policy_inventory",
+                "answer_basis": "role_scoped_configuration",
+            }
         plan = await llm_plan(payload.message, summary, previous)
         requested = fallback_intent(payload.message)
         historical_errors = asks_for_recorded_errors(payload.message)
