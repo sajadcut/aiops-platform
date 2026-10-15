@@ -126,7 +126,7 @@ const full={config_file:'/etc/nginx/nginx.conf',
 assert.equal(configDiffRows(old,full)[0].line,103);
 const diff=configDiffText(old,full);
 assert.ok(diff.includes('@@ -103,1 +103,1 @@'));
-assert.ok(diff.includes('--- a//etc/nginx/nginx.conf'));
+assert.ok(diff.includes('--- a/etc/nginx/nginx.conf'));
 assert.ok(diff.includes('Source SHA-256: '+'a'.repeat(64)));
 assert.ok(diff.includes('Candidate SHA-256: '+'b'.repeat(64)));
 assert.ok(!diff.includes('NEVER_DISCLOSE'));
