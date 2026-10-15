@@ -116,3 +116,37 @@ async def test_unknown_state_never_starts():
     outcome = await _start_after_approved_config_apply(
         Edge(), target="192.0.2.5", service="nginx")
     assert outcome["status"] == "service_state_not_startable"
+
+
+
+def test_approved_recovery_scope_is_immutable_in_intent_digest():
+    from apps.approval_service.binding import bind_metadata, assert_config_request_bound
+    intent = {
+        "incident_id": "abcd5f51-3b4d-4319-bfe0-1ff7e4a5d090",
+        "tool_name": "vm_config_change",
+        "action": "apply_configuration_change",
+        "target": "192.0.2.5",
+        "parameters": {
+            "service": "nginx", "config_file": "/etc/nginx/nginx.conf",
+            "original_sha256": "a" * 64, "candidate_sha256": "b" * 64,
+            "proposed_change": "remove_extra_opening_brace",
+            "start_service_after_apply": True,
+        },
+        "timeout": 30, "runbook_id": "vm-config-change",
+        "runbook_version": "1", "rollback": False,
+    }
+    metadata = bind_metadata(
+        {"workflow": "config_change", **intent["parameters"]}, **intent,
+    )
+    approval = {
+        "status": "approved", "incident_id": intent["incident_id"],
+        "metadata": metadata,
+    }
+    assert_config_request_bound(approval, **intent)
+    forged = {**metadata, "start_service_after_apply": False}
+    approval["metadata"] = forged
+    altered_intent = {**intent, "parameters": {
+        **intent["parameters"], "start_service_after_apply": False,
+    }}
+    with pytest.raises(ValueError):
+        assert_config_request_bound(approval, **altered_intent)
