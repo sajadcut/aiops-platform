@@ -435,7 +435,7 @@ async def incident_chat_message(
             answer = allowed_hosts_answer(roles, persian=persian)
             from integrations.llm.openai_compatible import configured_llm_adapter
             await review_answer_coherence(
-                configured_llm_adapter(), question=payload.message,
+                configured_llm_adapter, question=payload.message,
                 answer="The requested allowlisted host inventory was handled "
                        "under server-side access control; no VM connection ran.",
                 stage="incident_chat_answer_review",
@@ -741,7 +741,7 @@ async def incident_chat_message(
             answer += "\n\n" + note
         from integrations.llm.openai_compatible import configured_llm_adapter
         verdict, _ = await review_answer_coherence(
-            configured_llm_adapter(),
+            configured_llm_adapter,
             question=payload.message,
             answer=answer,
             stage="incident_chat_answer_review",
