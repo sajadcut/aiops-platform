@@ -400,40 +400,25 @@ async def recheck_incident_service_status(
                     )
                     if verdict == "independent_vm_verified" and (
                             current.status not in {IncidentStatus.CLOSED, IncidentStatus.RESOLVED}):
-                        current_ctx["independent_recovery"] = {
-                            "source": "vm_mcp_systemd_recheck",
-                            "incident_resolved": True,
-                            "verified_at": datetime.now(timezone.utc).isoformat(),
-                            "service": str(current.service),
-                            "target": binding["target"],
-                            "monitor_recovered": False,
-                            "checks": 2,
-                            "nginx_vendor_validated": vendor_valid is True,
-                        }
-                        current.context = current_ctx
-                        current.status = IncidentStatus.RESOLVED
-                        await db.commit()
-                        from apps.approval_service.postgres import PostgreSQLApprovalStore
-                        await PostgreSQLApprovalStore(db).cancel_unconsumed_for_incident(
-                            str(incident_id),
-                            reason="independent_vm_recovery_confirmed",
-                            metadata_patch={"recovery_source": "vm_mcp_systemd_recheck"},
+                        from apps.incident_service.service_recovery_reconciliation import (
+                            commit_independent_recovery,
                         )
-                        await PostgreSQLAuditStore(db).append({
-                            "event_id": str(uuid4()),
-                            "event_type": "incident_independent_service_recovered",
-                            "actor": identity.subject, "incident_id": str(incident_id),
-                            "action": "independent_service_recovery",
-                            "status": "verified",
-                            "metadata": {
-                                "service": str(current.service), "target": binding["target"],
-                                "systemd_observations": 2,
-                                "monitor_recovered": False,
-                                "vendor_validated": vendor_valid,
-                                "execution_authority": False,
-                            },
-                            "created_at": datetime.now(timezone.utc).isoformat(),
-                        })
+                        try:
+                            await commit_independent_recovery(
+                                db, incident=current, target=binding["target"],
+                                actor=identity.subject,
+                                recovery_source="vm_mcp_systemd_recheck",
+                                vendor_syntax_ok=vendor_valid,
+                            )
+                        except Exception:
+                            await db.rollback()
+                            verdict = "recovery_commit_unavailable"
+                            from domain.contracts.logging import logger
+                            logger.warning(
+                                "independent_recovery_commit_failed",
+                                incident_id=str(incident_id),
+                                service=str(current.service),
+                            )
             checked["recovery_verification"] = verdict
             checked["monitor_recovery_confirmed"] = bool(
                 (incident.context or {}).get("source_recovery", {}).get("incident_resolved"))
