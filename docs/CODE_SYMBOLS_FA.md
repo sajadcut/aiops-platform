@@ -2381,14 +2381,14 @@
 | `integrations/prometheus/mcp_client.py` | `PrometheusMCPClient.get_metrics` | 251 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | PrometheusMCPClient |
 | `integrations/prometheus/mcp_client.py` | `PrometheusMCPClient.get_alerts` | 282 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | PrometheusMCPClient |
 | `integrations/prometheus/mcp_client.py` | `PrometheusMCPClient.health_check` | 333 | async method | Check the upstream Prometheus backend readiness through the official tool. | PrometheusMCPClient |
-| `integrations/vm/config_candidate_vault.py` | `CandidateUnavailable` | 28 | class | Expected configuration/storage refusal. Never embed sensitive bytes. | module |
-| `integrations/vm/config_candidate_vault.py` | `_key` | 32 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `integrations/vm/config_candidate_vault.py` | `_directory` | 43 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `integrations/vm/config_candidate_vault.py` | `_binding` | 60 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `integrations/vm/config_candidate_vault.py` | `_filename` | 72 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `integrations/vm/config_candidate_vault.py` | `_read_file` | 76 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `integrations/vm/config_candidate_vault.py` | `store_candidate` | 92 | function | Seal the exact complete response, durably. Never return its bytes. | module |
-| `integrations/vm/config_candidate_vault.py` | `load_candidate` | 133 | function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
+| `integrations/vm/config_candidate_vault.py` | `CandidateUnavailable` | 29 | class | Expected configuration/storage refusal. Never embed sensitive bytes. | module |
+| `integrations/vm/config_candidate_vault.py` | `_key` | 33 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `integrations/vm/config_candidate_vault.py` | `_directory` | 44 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `integrations/vm/config_candidate_vault.py` | `_binding` | 65 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `integrations/vm/config_candidate_vault.py` | `_filename` | 77 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `integrations/vm/config_candidate_vault.py` | `_read_file` | 81 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `integrations/vm/config_candidate_vault.py` | `store_candidate` | 102 | function | Seal the exact complete response, durably. Never return its bytes. | module |
+| `integrations/vm/config_candidate_vault.py` | `load_candidate` | 145 | function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
 | `integrations/vm/dotnet_local_validator.py` | `safe_json_files` | 42 | function | Parse untrusted remote directory names. Excess is NOT a full validation. | module |
 | `integrations/vm/dotnet_local_validator.py` | `remote_file_listing_command` | 61 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `integrations/vm/dotnet_local_validator.py` | `remote_file_read_command` | 76 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
