@@ -57,3 +57,71 @@ def test_no_stale_unrelated_service_or_monitor_condition_can_trigger_auto_resolu
     assert not is_service_down_alert("zabbix", "nginx high CPU", "nginx")
     assert not is_service_down_alert("zabbix", "nginx Service Down", "apache")
     assert not is_service_down_alert("elastic", "nginx Service Down", "nginx")
+
+
+@pytest.mark.asyncio
+async def test_independent_recovery_atomic_commit_records_audit_and_cancels_approvals():
+    from types import SimpleNamespace
+    from apps.incident_service.service_recovery_reconciliation import (
+        commit_independent_recovery,
+    )
+    from domain.models import IncidentStatus
+
+    class Result:
+        def scalars(self):
+            return self
+        def all(self):
+            return ["pending-approval-id"]
+
+    class Database:
+        def __init__(self):
+            self.queries = []
+            self.flush_count = 0
+            self.commit_count = 0
+        async def flush(self):
+            self.flush_count += 1
+        async def execute(self, sql, params):
+            self.queries.append((str(sql), params))
+            return Result()
+        async def commit(self):
+            self.commit_count += 1
+
+    incident = SimpleNamespace(
+        id="11111111-1111-1111-1111-111111111111",
+        service="nginx",
+        status=IncidentStatus.ANALYZING,
+        context={"related_signals": []},
+    )
+    db = Database()
+    await commit_independent_recovery(
+        db, incident=incident, target=TARGET,
+        actor="test-operator", recovery_source="vm_mcp_systemd_recheck",
+        vendor_syntax_ok=True,
+    )
+    assert incident.status == IncidentStatus.RESOLVED
+    assert incident.context["independent_recovery"]["monitor_recovered"] is False
+    assert db.flush_count == 1 and db.commit_count == 1
+    assert len(db.queries) == 2
+    assert "UPDATE approvals" in db.queries[0][0]
+    assert "INSERT INTO audit_events" in db.queries[1][0]
+    assert db.queries[1][1]["status"] == "verified"
+    assert '"cancelled_approval_count": 1' in db.queries[1][1]["metadata"]
+
+
+@pytest.mark.asyncio
+async def test_unsupported_recovery_source_cannot_mark_incident_resolved():
+    from types import SimpleNamespace
+    from domain.models import IncidentStatus
+    from apps.incident_service.service_recovery_reconciliation import (
+        commit_independent_recovery,
+    )
+    incident = SimpleNamespace(
+        id="11111111-1111-1111-1111-111111111111",
+        service="nginx", status=IncidentStatus.ANALYZING, context={},
+    )
+    with pytest.raises(ValueError, match="untrusted_recovery_source"):
+        await commit_independent_recovery(
+            None, incident=incident, target=TARGET, actor="test",
+            recovery_source="model_claimed_recovered", vendor_syntax_ok=True,
+        )
+    assert incident.status == IncidentStatus.ANALYZING
