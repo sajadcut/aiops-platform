@@ -19,6 +19,7 @@ from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from cryptography.exceptions import InvalidTag
 
 from domain.contracts.config import settings
+from integrations.vm.windows_secure_acl import ensure_private_windows_acl
 
 _TTL_SECONDS = 24 * 3600
 _MAX_BYTES = 48 * 1024
@@ -48,10 +49,14 @@ def _directory() -> Path:
     try:
         path.mkdir(mode=0o700, parents=True, exist_ok=True)
         current = path.lstat()
-        if (not stat.S_ISDIR(current.st_mode) or
-                current.st_uid != os.geteuid() or
-                current.st_mode & 0o077):
+        if not stat.S_ISDIR(current.st_mode):
             raise CandidateUnavailable("candidate_directory_permissions")
+        if os.name == "nt":
+            ensure_private_windows_acl(str(path))
+        elif current.st_uid != os.geteuid() or current.st_mode & 0o077:
+            raise CandidateUnavailable("candidate_directory_permissions")
+    except PermissionError:
+        raise CandidateUnavailable("candidate_directory_permissions") from None
     except OSError:
         raise CandidateUnavailable("candidate_directory_unavailable") from None
     return path
@@ -78,13 +83,18 @@ def _read_file(path: Path) -> bytes:
         fd = os.open(str(path), os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0))
         try:
             info = os.fstat(fd)
-            if (not stat.S_ISREG(info.st_mode) or info.st_uid != os.geteuid()
-                    or info.st_mode & 0o077 or info.st_size > 2 * _MAX_BYTES + 128):
+            if not stat.S_ISREG(info.st_mode) or info.st_size > 2 * _MAX_BYTES + 128:
+                raise CandidateUnavailable("candidate_file_permissions")
+            if os.name == "nt":
+                ensure_private_windows_acl(str(path))
+            elif info.st_uid != os.geteuid() or info.st_mode & 0o077:
                 raise CandidateUnavailable("candidate_file_permissions")
             with os.fdopen(fd, "rb", closefd=False) as stream:
                 return stream.read(2 * _MAX_BYTES + 129)
         finally:
             os.close(fd)
+    except PermissionError:
+        raise CandidateUnavailable("candidate_file_permissions") from None
     except (OSError, ValueError):
         raise CandidateUnavailable("candidate_not_available") from None
 
@@ -124,7 +134,9 @@ def store_candidate(*, target: str, service: str, path: str,
             stream.write(sealed)
             stream.flush()
             os.fsync(stream.fileno())
-    except OSError:
+        if os.name == "nt":
+            ensure_private_windows_acl(str(filename))
+    except (OSError, PermissionError):
         filename.unlink(missing_ok=True)
         raise CandidateUnavailable("candidate_storage_unavailable") from None
     return {"candidate_stored": True, "candidate_ttl_seconds": _TTL_SECONDS}
