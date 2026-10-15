@@ -319,9 +319,9 @@ class SSHVMConnector:
         self._validate_target(target)
         command = (
             "LC_ALL=C; p=/usr/local/sbin/aiops-config-guard; "
-            "if [ ! -d /usr/local/sbin ]; then printf 'PARENT_MISSING'; "
-            "elif [ ! -x /usr ] || [ ! -x /usr/local ] || "
-            "[ ! -x /usr/local/sbin ]; then printf 'PARENT_INACCESSIBLE'; "
+            "if [ ! -x /usr ] || [ ! -x /usr/local ]; then printf 'PARENT_INACCESSIBLE'; "
+            "elif [ ! -d /usr/local/sbin ]; then printf 'PARENT_MISSING'; "
+            "elif [ ! -x /usr/local/sbin ]; then printf 'PARENT_INACCESSIBLE'; "
             "elif [ -L \"$p\" ]; then printf 'SYMLINK'; "
             "elif [ ! -e \"$p\" ]; then printf 'MISSING'; "
             "elif [ ! -f \"$p\" ]; then printf 'NOT_REGULAR'; "
