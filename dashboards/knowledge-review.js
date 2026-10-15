@@ -7,6 +7,7 @@
   let loading = false;
   let actionPending = false;
   let showAllSimilarReviews = false;
+  let recoveryReconciled = false;
 
   const el = id => document.getElementById(id);
   const current = () => selectedDetails && selectedDetails.id === selectedId ? selectedDetails : null;
@@ -131,6 +132,22 @@
     if (loading) return;
     loading = true;
     try {
+      // A prior approved Restart can be recorded in Audit and Operational
+      // Memory without a Cognia review if verification was inconclusive.
+      // This POST only reconciles evidence-backed, local pending drafts.
+      // It never approves, publishes or executes an operational change.
+      if (!recoveryReconciled) {
+        recoveryReconciled = true;
+        try {
+          const sync = await api('/api/v1/knowledge-reviews/reconcile-recent?limit=30',
+                                 {method:'POST'});
+          if (sync.errors?.length) {
+            notice('بازیابی پیش‌نویس‌های جاافتاده ناقص است: ' + sync.errors.join('، '));
+          }
+        } catch (err) {
+          notice('بررسی پیش‌نویس‌های جاافتاده انجام نشد: ' + err.message);
+        }
+      }
       const result = await api('/api/v1/knowledge-reviews?limit=100');
       reviews = result.items || [];
       selectedId = reviews.some(r => r.id === preferred) ? preferred : (reviews[0]?.id || null);
