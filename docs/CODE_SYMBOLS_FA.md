@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 523 | Dashboard JS files scanned: 8 | Symbols indexed: 5568**
+**Python files scanned: 524 | Dashboard JS files scanned: 8 | Symbols indexed: 5589**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -4534,6 +4534,27 @@
 | `tests/unit/test_latency_observability.py` | `test_orchestrator_analysis_phases_publish_duration_ms` | 38 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_latency_observability.py` | `test_mcp_server_and_vm_ssh_publish_server_side_latency` | 55 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_latency_observability.py` | `test_latency_logging_does_not_log_http_query_headers_or_body` | 70 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_llm_config_candidate_lifecycle.py` | `vault_env` | 32 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_llm_config_candidate_lifecycle.py` | `put` | 40 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_llm_config_candidate_lifecycle.py` | `get` | 48 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_aes_gcm_persistent_storage_is_secret_safe_and_hash_bound` | 55 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_wrong_key_tamper_and_expiry_fail_closed` | 76 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_vault_requires_strong_key_and_no_symlink` | 99 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_llm_config_candidate_lifecycle.py` | `Model` | 114 | class | کلاس | module |
+| `tests/unit/test_llm_config_candidate_lifecycle.py` | `Model.__init__` | 115 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | Model |
+| `tests/unit/test_llm_config_candidate_lifecycle.py` | `Model.generate` | 117 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | Model |
+| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_full_source_is_sent_complete_and_correction_is_sealed` | 125 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_guard_loads_sealed_model_candidate_and_runs_staging_only` | 149 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_guard_loads_sealed_model_candidate_and_runs_staging_only.Edge` | 152 | class | کلاس | test_guard_loads_sealed_model_candidate_and_runs_staging_only |
+| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_guard_loads_sealed_model_candidate_and_runs_staging_only.Edge.config_validate` | 155 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_guard_loads_sealed_model_candidate_and_runs_staging_only.Edge |
+| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_guard_loads_sealed_model_candidate_and_runs_staging_only.Edge._run` | 158 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_guard_loads_sealed_model_candidate_and_runs_staging_only.Edge |
+| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_guard_loads_sealed_model_candidate_and_runs_staging_only.Edge._sudo` | 161 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_guard_loads_sealed_model_candidate_and_runs_staging_only.Edge |
+| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_source_drift_blocks_before_sudo_even_with_sealed_candidate` | 180 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_source_drift_blocks_before_sudo_even_with_sealed_candidate.Drift` | 182 | class | کلاس | test_source_drift_blocks_before_sudo_even_with_sealed_candidate |
+| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_source_drift_blocks_before_sudo_even_with_sealed_candidate.Drift.config_validate` | 185 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_source_drift_blocks_before_sudo_even_with_sealed_candidate.Drift |
+| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_source_drift_blocks_before_sudo_even_with_sealed_candidate.Drift._run` | 187 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_source_drift_blocks_before_sudo_even_with_sealed_candidate.Drift |
+| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_source_drift_blocks_before_sudo_even_with_sealed_candidate.Drift._sudo` | 189 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_source_drift_blocks_before_sudo_even_with_sealed_candidate.Drift |
+| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_llm_proposal_requires_sealed_worker_candidate` | 200 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_mcp_external_boundary.py` | `test_context_builder_uses_mcp_clients_not_native_external_connectors` | 22 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_mcp_external_boundary.py` | `test_zabbix_is_mcp_only_and_has_no_direct_runtime_config` | 32 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_mcp_external_boundary.py` | `test_evidence_collector_has_no_native_external_fallbacks` | 48 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
