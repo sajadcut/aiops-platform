@@ -18,8 +18,11 @@ from integrations.vm.runtime_discovery import safe_absolute_path
 MAX_FILE_BYTES = 1_048_576
 MAX_FILES = 12
 _NAME = re.compile(
-    r"(?:appsettings(?:\.[A-Za-z0-9_-]{1,40})?\.json"
-    r"|[A-Za-z0-9_.+-]{1,100}\.runtimeconfig\.json)\Z", re.I,
+    # Config inventory is bound to the systemd publish directory. Syntax
+    # validation never returns file contents, keys, values or secret data.
+    # Exclude hidden and credential files, but inspect ordinary service JSON.
+    r"(?!.*(?:secret|password|credential|private|\\.key))"
+    r"[A-Za-z0-9][A-Za-z0-9_.+-]{0,99}\\.json\\Z", re.I,
 )
 
 # Neither error messages nor excerpts include JSON values, secret names,
