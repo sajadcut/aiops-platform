@@ -159,6 +159,23 @@ async def test_full_source_is_sent_complete_and_correction_is_sealed(vault_env, 
     assert "listen" not in str(result) and SOURCE not in str(result)
 
 
+def test_llm_cannot_hide_modified_ports_hosts_or_directives_behind_redacted_diff():
+    from integrations.vm.full_config_llm_repair import _candidate_preview
+    for changed in (
+        SOURCE.replace("8080", "8081"),
+        SOURCE.replace("listen", "deny"),
+        SOURCE.replace("events", "http"),
+    ):
+        result = _candidate_preview(SOURCE, changed)
+        assert result["status"] == "llm_candidate_rejected"
+        assert result["rejection_reason"] == "candidate_changes_configuration_values"
+        assert result["candidate_hash"] is None
+    source = '{"url":"https://example.com/a,b","enabled":true,}\n'
+    malicious = source.replace("a,b", "a;b").replace("true,", "true")
+    outcome = _candidate_preview(source, malicious)
+    assert outcome["status"] == "llm_candidate_rejected"
+
+
 @pytest.mark.asyncio
 async def test_guard_loads_sealed_model_candidate_and_runs_staging_only(vault_env):
     put()
