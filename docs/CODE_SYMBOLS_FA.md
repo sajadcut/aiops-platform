@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 512 | Dashboard JS files scanned: 8 | Symbols indexed: 5398**
+**Python files scanned: 512 | Dashboard JS files scanned: 8 | Symbols indexed: 5399**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1061,8 +1061,9 @@
 | `apps/context_service/evidence_collector.py` | `EvidenceCollector.collect_requested` | 191 | async method | Evidence/داده موردنیاز را از منبع مربوط جمع می‌کند | EvidenceCollector |
 | `apps/context_service/evidence_collector.py` | `EvidenceCollector._alert_evidence` | 210 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | EvidenceCollector |
 | `apps/context_service/evidence_collector.py` | `EvidenceCollector._healthy` | 217 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | EvidenceCollector |
-| `apps/context_service/evidence_collector.py` | `EvidenceCollector._vm_evidence` | 229 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | EvidenceCollector |
-| `apps/context_service/evidence_collector.py` | `EvidenceCollector._collect` | 261 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | EvidenceCollector |
+| `apps/context_service/evidence_collector.py` | `EvidenceCollector._analyze_config_syntax_without_persisting_grammar` | 229 | async method | Use VM MCP source, call LLM twice and persist only findings. | EvidenceCollector |
+| `apps/context_service/evidence_collector.py` | `EvidenceCollector._vm_evidence` | 280 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | EvidenceCollector |
+| `apps/context_service/evidence_collector.py` | `EvidenceCollector._collect` | 312 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | EvidenceCollector |
 | `apps/context_service/knowledge_relevance.py` | `_service` | 18 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/context_service/knowledge_relevance.py` | `_metadata` | 22 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/context_service/knowledge_relevance.py` | `_declared_services` | 27 | function | Read explicit ownership only; never guess from free-text mentions. | module |
