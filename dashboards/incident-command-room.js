@@ -8,9 +8,9 @@
   const safe = x => String(x == null || x === '' ? '—' : x);
   const esc = x => safe(x).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
   const guardReasonFA = code => ({
-    config_guard_sudo_nopasswd_required:'اجرای sudo بدون رمز ممکن نبود و احراز هویت جایگزین نیز تکمیل نشد. برای SSH رمزی از همان رمز کاربر و sudo -S استفاده می‌شود؛ مجوز sudo آن کاربر برای Helper محدود AIOps باید بررسی شود.',
-    config_guard_sudo_policy_denied:'سیاست sudoers اجرای Helper محدود AIOps را برای این کاربر مجاز نمی‌داند.',
-    config_guard_sudo_or_invocation_failed:'فراخوانی Helper روی VM با کد ۱ شکست خورد؛ مجوز sudo کاربر SSH، احراز هویت با رمز همان کاربر، نصب Helper و خطای تشخیصی سمت VM باید بررسی شود. علت قطعی هنوز مشخص نیست.',
+    config_guard_sudo_nopasswd_required:'اجرای sudo بدون رمز ممکن نبود و احراز هویت با رمز کاربر SSH نیز تکمیل نشد. برای اجرای ویرایش موقتِ بدون Helper، مجوز sudo /bin/sh -s و احراز هویت همان کاربر باید بررسی شود.',
+    config_guard_sudo_policy_denied:'سیاست sudoers اجرای اسکریپت موقت /bin/sh -s را برای کاربر SSH مجاز نمی‌داند. AIOps مجوزها را خودکار تغییر نمی‌دهد.',
+    config_guard_sudo_or_invocation_failed:'اجرای اسکریپت موقت با sudo روی VM شکست خورد؛ علت دقیق از کد خروج به‌تنهایی مشخص نیست. مجوز sudo /bin/sh و لاگ مرحله اجرای SSH بررسی شود.',
     config_guard_helper_missing:'ابزار محافظ اصلاح کانفیگ روی VM در مسیر /usr/local/sbin/aiops-config-guard نصب نشده است. با کاربر SSH فعلی و دسترسی sudo، ابزار نسخه‌بندی‌شده پروژه باید به‌صورت جداگانه نصب و مالکیت root:root و مجوز 0750 آن راستی‌آزمایی شود؛ سپس اعتبارسنجی را تکرار کنید.',
     config_guard_helper_symlink_refused:'فایل Helper لینک نمادین است و برای جلوگیری از تغییر مسیر اجرای root رد شد. نسخه مورد اعتماد پروژه باید به‌صورت فایل معمولی نصب شود.',
     config_guard_helper_not_regular:'مسیر Helper فایل اجرایی معمولی نیست. پیش از اجرای sudo باید نوع فایل و فرایند استقرار اصلاح شود.',
@@ -21,7 +21,7 @@
     config_guard_helper_permission_denied:'دسترسی لازم برای اجرای Helper یا فایل هدف وجود ندارد.',
     config_guard_mount_namespace_unavailable:'ساخت فضای ایزوله Mount Namespace در این VM مجاز یا پشتیبانی‌شده نیست. اعتبارسنجی بدون ایزوله‌سازی مجاز نیست.',
     config_guard_isolated_mount_failed:'اتصال درخت کانفیگ در فضای ایزوله شکست خورد؛ مجوز mount یا تنظیمات Kernel بررسی شود.',
-    config_guard_prerequisite_failed:'یکی از پیش‌نیازهای Helper، مسیر فایل یا ابزار Validator معتبر نیست.',
+    config_guard_prerequisite_failed:'یکی از پیش‌نیازهای اسکریپت موقت، مسیر فایل یا ابزار مستقل اعتبارسنجی سرویس در VM در دسترس نیست.',
     config_guard_candidate_hash_mismatch:'هش نسخه پیشنهادی با درخواست تأیید مطابقت ندارد؛ تغییر باید دوباره بررسی شود.',
     config_guard_source_hash_changed:'فایل زنده از زمان پیشنهاد تغییر کرده؛ پیشنهاد و هش‌ها باید دوباره تولید شوند.',
     config_guard_vendor_syntax_failed:'Validator واقعی سرویس، نسخه اصلاحی را تأیید نکرده است؛ این تغییر نباید اعمال شود.',
