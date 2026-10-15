@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 512 | Dashboard JS files scanned: 8 | Symbols indexed: 5399**
+**Python files scanned: 512 | Dashboard JS files scanned: 8 | Symbols indexed: 5401**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -5125,6 +5125,8 @@
 | `tests/unit/test_universal_llm_config_syntax.py` | `test_incident_config_read_does_not_persist_transient_file_projections.fake_review` | 147 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_incident_config_read_does_not_persist_transient_file_projections |
 | `tests/unit/test_universal_llm_config_syntax.py` | `test_incident_config_read_does_not_persist_transient_file_projections.MCP` | 156 | class | کلاس | test_incident_config_read_does_not_persist_transient_file_projections |
 | `tests/unit/test_universal_llm_config_syntax.py` | `test_incident_config_read_does_not_persist_transient_file_projections.MCP.service_config_review` | 157 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_incident_config_read_does_not_persist_transient_file_projections.MCP |
+| `tests/unit/test_universal_llm_config_syntax.py` | `test_evidence_collector_triggers_llm_and_discards_grammar` | 188 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_universal_llm_config_syntax.py` | `test_evidence_collector_triggers_llm_and_discards_grammar.fake_assessment` | 193 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_evidence_collector_triggers_llm_and_discards_grammar |
 | `tests/unit/test_universal_service_config_discovery.py` | `_unit` | 18 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_universal_service_config_discovery.py` | `test_tomcat_catalina_base_is_path_hypothesis_not_validation` | 25 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_universal_service_config_discovery.py` | `test_java_spring_config_file_comes_from_unit_flag_not_model_guesses` | 39 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
