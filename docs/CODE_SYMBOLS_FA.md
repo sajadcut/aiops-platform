@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 525 | Dashboard JS files scanned: 8 | Symbols indexed: 5594**
+**Python files scanned: 525 | Dashboard JS files scanned: 8 | Symbols indexed: 5595**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -2387,8 +2387,9 @@
 | `integrations/vm/config_candidate_vault.py` | `_binding` | 65 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `integrations/vm/config_candidate_vault.py` | `_filename` | 77 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `integrations/vm/config_candidate_vault.py` | `_read_file` | 81 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `integrations/vm/config_candidate_vault.py` | `store_candidate` | 102 | function | Seal the exact complete response, durably. Never return its bytes. | module |
-| `integrations/vm/config_candidate_vault.py` | `load_candidate` | 170 | function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
+| `integrations/vm/config_candidate_vault.py` | `_prune_expired` | 102 | function | Opportunistic bounded ciphertext retention, never touch unknown files. | module |
+| `integrations/vm/config_candidate_vault.py` | `store_candidate` | 126 | function | Seal the exact complete response, durably. Never return its bytes. | module |
+| `integrations/vm/config_candidate_vault.py` | `load_candidate` | 196 | function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
 | `integrations/vm/dotnet_local_validator.py` | `safe_json_files` | 42 | function | Parse untrusted remote directory names. Excess is NOT a full validation. | module |
 | `integrations/vm/dotnet_local_validator.py` | `remote_file_listing_command` | 61 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `integrations/vm/dotnet_local_validator.py` | `remote_file_read_command` | 76 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
