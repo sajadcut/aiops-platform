@@ -1088,7 +1088,7 @@ class SSHVMConnector:
             output = await review_complete_config(
                 str(read.get("stdout") or ""), path=safe, service=service,
                 vendor_error=(str(validator.get("syntax_error") or "")[:900]
-                              if safe == validator.get("config_file") else ""),
+                              if safe == validator.get("config_file") else "") target=target,
             )
             return {**base, **output, "target": target, "service": service}
         return {
