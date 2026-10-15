@@ -79,7 +79,14 @@ const fs=require('fs'),vm=require('vm'),assert=require('node:assert/strict');
   };
   vm.runInThisContext(fs.readFileSync('dashboards/incident-command-room.js','utf8'));
   for(let n=0;n<18;n++)await new Promise(resolve=>setImmediate(resolve));
-  assert.match(el('#ic-config-action-banner').innerHTML,/بازبینی مجدد فایل کانفیگ با MCP/);
+  const banner=el('#ic-config-action-banner').innerHTML;
+  assert.match(banner,/در خط/);
+  assert.match(banner,/۱۰۳/);
+  assert.match(banner,/\/etc\/nginx\/nginx.conf/);
+  assert.match(banner,/خطای نحوی کانفیگ/);
+  assert.match(banner,/بررسی و مشاهده اصلاح/);
+  assert.doesNotMatch(banner,/فایل‌های تأییدشده: ۰|مشورت LLM: unavailable/);
+  assert.match(banner,/جزئیات فنی/);
   const click=kind=>{
     const preview={dataset:{configPreview:kind}};
     for(const handler of listeners.click||[])handler({
