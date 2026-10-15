@@ -488,6 +488,17 @@ async def vm_read(action: str, binding: dict, connector: Any = None) -> dict:
             "path": str(result.get("config_file") or ""),
             "review": result["model_syntax_review"],
         }]
+        for other in (result.get("file_reviews") or [])[:3]:
+            if (other.get("path") == result.get("config_file")
+                    or not other.get("syntax_projection")):
+                continue
+            result["file_model_reviews"].append({
+                "path": other["path"],
+                "review": await assess_service_syntax(
+                    other["syntax_projection"],
+                    other.get("candidate_syntax_projection"),
+                ),
+            })
     return result
 
 
