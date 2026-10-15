@@ -1090,6 +1090,15 @@ class SSHVMConnector:
                 str(response.get("stdout") or ""), path=path,
                 validator_error_line=error_line,
             )
+            reviewed_files.append({
+                "path": path, "path_source": path_source,
+                "file_type": candidate.get("file_type"),
+                "status": candidate.get("status"),
+                "validation_status": candidate.get("validation_status"),
+                "syntax_projection": candidate.get("syntax_projection"),
+                "candidate_syntax_projection": candidate.get("candidate_syntax_projection"),
+                "observed_error_line": candidate.get("observed_error_line"),
+            })
             if outcome is None:
                 outcome = candidate
                 selected = (path, path_source)
