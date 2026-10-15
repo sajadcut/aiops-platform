@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 525 | Dashboard JS files scanned: 8 | Symbols indexed: 5615**
+**Python files scanned: 526 | Dashboard JS files scanned: 8 | Symbols indexed: 5617**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -5622,3 +5622,5 @@
 | `tests/unit/test_zabbix_webhook_logging.py` | `test_unmatched_recovery_logs_failure_and_original_fields` | 214 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_zabbix_webhook_logging.py` | `test_unmatched_recovery_logs_failure_and_original_fields.ready` | 215 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_unmatched_recovery_logs_failure_and_original_fields |
 | `tests/unit/test_zabbix_webhook_logging.py` | `test_unmatched_recovery_logs_failure_and_original_fields.ingest` | 218 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_unmatched_recovery_logs_failure_and_original_fields |
+| `tests/windows_candidate_acl_smoke.py` | `WindowsCandidateAclAcceptance` | 19 | class | کلاس | module |
+| `tests/windows_candidate_acl_smoke.py` | `WindowsCandidateAclAcceptance.test_protected_directory_and_new_child_file` | 20 | method | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | WindowsCandidateAclAcceptance |
