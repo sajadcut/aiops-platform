@@ -29,6 +29,51 @@ Provision /etc/aiops/config-change-verify.pem as a **root-owned Ed25519 public k
 Authorize the existing monitored-VM SSH identity (the exact `SSH_USERNAME` used for login) to run only the fixed /usr/local/sbin/aiops-config-guard as root. The MCP worker first tries `sudo -n`; with `SSH_AUTH_MODE=password`, if sudo reports that a password is needed, it retries `sudo -k -S -p ''` using that SAME SSH user's configured SSH password through the encrypted SSH stdin stream. The guard candidate follows the sudo password line through stdin; neither value appears in command arguments, model prompts or audit logs. This requires the user's sudo password to match their SSH password and sudoers/PAM to permit noninteractive `sudo -S`. SSH key login does not imply a usable sudo password; for key-based auth grant precisely scoped NOPASSWD or provision a separately approved credential mechanism. NEVER enable arbitrary `sudo su`, unrestricted root shells, all commands, or general config-write utilities. Root-helper writes additionally require a short-lived, hash-bound **Ed25519 signature** verified with the root-owned public key; the root VM never receives an API or MCP private key.
 
 
+### Repairing `config_guard_helper_missing` on monitored Linux VMs
+
+A VM MCP response of `config_guard_helper_missing` is a **deployment failure**,
+not a bad candidate, failed sudo password, or an invitation to bypass isolated
+validation. The VM connector now performs a separate read-only existence,
+symlink, file-type and `root:root 0750` metadata preflight before invoking
+the guard. A missing file is never installed automatically by an alert.
+
+**Windows deployment host (the same SSH user and credentials):**
+
+From a trusted checkout of `main` with the checked-in guard and the built-in
+Windows OpenSSH client available, run this once as the authorized operator:
+
+```powershell
+.\scripts\vm\Install-AIOpsConfigGuard.ps1 -Target 10.248.16.82 -SshUser szendehnam
+```
+
+The script copies **only** `scripts/vm/aiops-config-guard` from that trusted
+checkout, checks its SHA-256 and shell syntax on the target, then uses the same
+SSH identity to invoke `sudo install` (interactive password prompt if
+required). The result must be a normal root-owned file at
+`/usr/local/sbin/aiops-config-guard` with exact mode `0750` and the same
+SHA-256 as the local trusted source; the temporary staged copy is deleted.
+It never invokes `sudo su`, grants blanket NOPASSWD, or uses a remote Python
+interpreter.
+
+A restricted sudoers policy which permits **only** the guard executable
+cannot also perform first-time `sudo install`: in that case deploy the binary
+through an authorized configuration-management/administrator channel and
+retain narrowly scoped runtime sudo. Do not weaken the sudoers policy through
+the incident itself.
+
+After provisioning, use the incident-room `Validate configuration` action
+again. A successful guard preflight is **not** a successful isolated vendor
+check. Nginx also needs working private mount namespaces, `unshare`,
+`mount`, and its vendor validator. Rebuild approval from current hashes if
+the source changed. An independent validation PASS moves the request only to
+**pending human approval**; it does not apply the config. Applying requires
+the existing approved, signed, single-use execution workflow and a separate
+approved service recovery action to start/restart a failed service.
+The Ed25519 public verification key at
+`/etc/aiops/config-change-verify.pem` must also be provisioned by trusted
+administration before any signed **apply**. No validation success alone proves
+the service or endpoint is healthy.
+
 ### Live VM diagnosis after a blocked validation
 
 The API and VM MCP can be healthy while the target VM fails. In the observed
