@@ -113,6 +113,11 @@ async def test_reassessment_planner_uses_full_file_result_but_not_executable_pro
     review = await DynamicInvestigationPlanner.propose(state, adapter=Model())
     assert review["full_config_llm_repair"]["candidate_sha256"] == NEW
     assert review["full_config_llm_repair"]["changed_line_numbers"] == [103]
+    assert review["config_discovery"]["status"] == "vendor_validator_file_observed"
+    assert any(
+        file["path"] == FILE and file["verified_exists"]
+        for file in review["config_discovery"]["files"]
+    )
     assert review["config_proposal"]["candidate_sha256"] != NEW
     assert review["execution_authority"] is False
 
