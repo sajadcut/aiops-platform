@@ -53,7 +53,9 @@ def _validate_windows_directory(value: str) -> None:
     if re.search(r"(?:^|[\\/])\.{1,2}(?:[\\/]|$)", value):
         raise CandidateUnavailable("candidate_directory_invalid")
     path = PureWindowsPath(value)
-    if not path.is_absolute() or len(path.parts) < 3:
+    # D:\\private is a valid dedicated folder. Only the drive root D:\\
+    # itself is unsafe; a two-level path must not be required.
+    if not path.is_absolute() or len(path.parts) < 2:
         raise CandidateUnavailable("candidate_directory_invalid")
     for part in path.parts[1:]:
         if part.endswith((" ", ".")):
