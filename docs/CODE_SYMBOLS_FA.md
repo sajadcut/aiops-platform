@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 523 | Dashboard JS files scanned: 8 | Symbols indexed: 5565**
+**Python files scanned: 523 | Dashboard JS files scanned: 8 | Symbols indexed: 5567**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -2398,10 +2398,12 @@
 | `integrations/vm/dotnet_local_validator.py` | `_reject_duplicate_keys` | 180 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `integrations/vm/dotnet_local_validator.py` | `validate_encoded_file` | 189 | function | Parse bytes only in worker memory; return bounded, secret-free metadata. | module |
 | `integrations/vm/ephemeral_config_guard.py` | `build_ephemeral_guard` | 183 | function | Return (fixed sudo command, shell stdin); only allow predetermined operations. | module |
-| `integrations/vm/full_config_llm_repair.py` | `_trusted_gateway` | 30 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `integrations/vm/full_config_llm_repair.py` | `_parse_corrected` | 38 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `integrations/vm/full_config_llm_repair.py` | `_candidate_preview` | 52 | function | Check completeness and bounded drift; emit *metadata*, never file lines. | module |
-| `integrations/vm/full_config_llm_repair.py` | `review_complete_config` | 86 | async function | Receive exact SSH bytes in-process and request a complete revised file. | module |
+| `integrations/vm/full_config_llm_repair.py` | `_trusted_gateway` | 31 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `integrations/vm/full_config_llm_repair.py` | `_parse_corrected` | 39 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `integrations/vm/full_config_llm_repair.py` | `_safe_structure` | 53 | function | Use value-free glyphs; never reflect secret values into MCP/UI/audit. | module |
+| `integrations/vm/full_config_llm_repair.py` | `_profile` | 59 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `integrations/vm/full_config_llm_repair.py` | `_candidate_preview` | 70 | function | Check completeness and bounded drift; emit *metadata*, never file lines. | module |
+| `integrations/vm/full_config_llm_repair.py` | `review_complete_config` | 116 | async function | Receive exact SSH bytes in-process and request a complete revised file. | module |
 | `integrations/vm/general_config_review.py` | `checked_config_path` | 29 | function | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | module |
 | `integrations/vm/general_config_review.py` | `remote_config_read_command` | 37 | function | Fixed coreutils only; not a general-purpose remote file-read API. | module |
 | `integrations/vm/general_config_review.py` | `_structural_line` | 51 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
