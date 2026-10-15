@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 511 | Dashboard JS files scanned: 8 | Symbols indexed: 5390**
+**Python files scanned: 511 | Dashboard JS files scanned: 8 | Symbols indexed: 5394**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -5116,6 +5116,10 @@
 | `tests/unit/test_universal_llm_config_syntax.py` | `test_model_unavailable_does_not_affect_live_source_or_grant_pass.BrokenModel.generate` | 100 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_model_unavailable_does_not_affect_live_source_or_grant_pass.BrokenModel |
 | `tests/unit/test_universal_llm_config_syntax.py` | `test_llm_never_receives_raw_configuration_in_source_or_candidate` | 110 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_universal_llm_config_syntax.py` | `test_nginx_verified_vendor_error_yields_candidate_projection_for_second_llm_pass` | 122 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_universal_llm_config_syntax.py` | `test_incident_config_read_does_not_persist_transient_file_projections` | 143 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_universal_llm_config_syntax.py` | `test_incident_config_read_does_not_persist_transient_file_projections.fake_review` | 147 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_incident_config_read_does_not_persist_transient_file_projections |
+| `tests/unit/test_universal_llm_config_syntax.py` | `test_incident_config_read_does_not_persist_transient_file_projections.MCP` | 156 | class | کلاس | test_incident_config_read_does_not_persist_transient_file_projections |
+| `tests/unit/test_universal_llm_config_syntax.py` | `test_incident_config_read_does_not_persist_transient_file_projections.MCP.service_config_review` | 157 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_incident_config_read_does_not_persist_transient_file_projections.MCP |
 | `tests/unit/test_universal_service_config_discovery.py` | `_unit` | 18 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_universal_service_config_discovery.py` | `test_tomcat_catalina_base_is_path_hypothesis_not_validation` | 25 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_universal_service_config_discovery.py` | `test_java_spring_config_file_comes_from_unit_flag_not_model_guesses` | 39 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
