@@ -54,7 +54,8 @@ def _message(claims: dict) -> bytes:
 
 def create_claim(*, approval_id: str, incident_id: str, target: str, service: str,
                  config_file: str, original_sha256: str, candidate_sha256: str,
-                 proposed_change: str) -> tuple[dict, str]:
+                 proposed_change: str,
+                 start_service_after_apply: bool = False) -> tuple[dict, str]:
     claims = {
         "version": 1,
         "approval_id": approval_id, "incident_id": incident_id,
@@ -62,18 +63,25 @@ def create_claim(*, approval_id: str, incident_id: str, target: str, service: st
         "original_sha256": original_sha256, "candidate_sha256": candidate_sha256,
         "proposed_change": proposed_change, "expires": int(time.time()) + 55,
     }
+    if type(start_service_after_apply) is not bool:
+        raise PermissionError("config_recovery_scope_invalid")
+    if start_service_after_apply:
+        claims["recovery_action"] = "start_service"
     return claims, hmac.new(_key(), _message(claims), hashlib.sha256).hexdigest()
 
 
 def verify_claim(claims: dict, signature: str, *, target: str, service: str) -> None:
     if not isinstance(claims, dict) or not isinstance(signature, str):
         raise PermissionError("config_execution_claim_missing")
-    if set(claims) != {
+    required = {
         "version", "approval_id", "incident_id", "target", "service",
         "config_file", "original_sha256", "candidate_sha256",
         "proposed_change", "expires",
-    }:
+    }
+    if set(claims) not in (required, required | {"recovery_action"}):
         raise PermissionError("config_execution_claim_fields")
+    if "recovery_action" in claims and claims["recovery_action"] != "start_service":
+        raise PermissionError("config_execution_claim_recovery_scope")
     if claims.get("version") != 1 or claims.get("target") != target or claims.get("service") != service:
         raise PermissionError("config_execution_claim_scope")
     expiry = claims.get("expires")
