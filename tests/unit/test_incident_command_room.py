@@ -109,9 +109,9 @@ def test_recovery_and_syntax_are_actionable_in_incident_room_not_only_report_tex
     assert "base+'/dotnet-config-syntax'" in js
     assert "const syntaxByName=new Map" in js
     assert "dotnetSyntaxLabel(" in js
-    assert "data-recovery-approval=\\\"approve\\\"" in js
-    assert "data-recovery-approval=\\\"reject\\\"" in js
-    assert "data-recovery-approval=\\\"execute\\\"" in js
+    assert 'data-recovery-approval="approve"' in js
+    assert 'data-recovery-approval="reject"' in js
+    assert 'data-recovery-approval="execute"' in js
     assert "base+'/recovery-approval/queue'" in js
     assert "base+'/recovery-approval'" in js
     assert "preflight" in js.lower()
