@@ -294,9 +294,14 @@ The vault uses a **fixed OS default**, rather than a new configuration:
 `%ProgramData%\\AIOps\\config-candidates` on Windows. It requires a
 persistent private directory (owner-only 0700/files 0600 on POSIX, strict
 service identity/SYSTEM/Administrators ACL on Windows) and fails closed if
-permissions or storage availability cannot be verified. Windows paths
-may need NTFS permissions provisioned on the host, but not another
-application configuration field. If the VM MCP runs in a container, the
+permissions or storage availability cannot be verified. The Windows worker
+now **automatically applies a protected, inheritance-disabled NTFS DACL**
+on its dedicated candidate directory using native Win32 APIs and the
+current worker service SID; sealed child files inherit only these private
+permissions. No administrator command, new key or new application setting
+is normally required. If the worker cannot create or secure this directory
+with its existing Windows permissions, candidate storage remains blocked
+rather than bypassing the access check. If the VM MCP runs in a container, the
 default path must be mapped to a private persistent volume; otherwise
 pending proposals cannot survive container replacement.
 
