@@ -56,7 +56,7 @@ def _hash(value: object) -> bool:
 
 _ALLOWED_CHANGES = frozenset({
     "remove_extra_opening_brace", "remove_trailing_json_comma",
-    "remove_extra_xml_closing_tag",
+    "remove_extra_xml_closing_tag", "llm_full_file_repair",
 })
 
 
@@ -72,6 +72,19 @@ def _matching_proposal(proposal: dict, payload: ConfigReviewResponse) -> bool:
         change == "remove_trailing_json_comma" and filename.endswith(".json")
     ) or (
         change == "remove_extra_xml_closing_tag" and filename.endswith(".xml")
+    ) or (
+        change == "llm_full_file_repair"
+        and proposal.get("candidate_stored") is True
+        and proposal.get("validation_profile") in {"nginx", "json_syntax", "xml_syntax"}
+        and (
+            proposal.get("validation_profile") == "nginx"
+            and service == "nginx" and filename.startswith("/etc/nginx/")
+            and filename.endswith(".conf")
+            or proposal.get("validation_profile") == "json_syntax"
+            and filename.endswith(".json")
+            or proposal.get("validation_profile") == "xml_syntax"
+            and filename.endswith(".xml")
+        )
     )
     return (
         proposal.get("status") == "candidate_proposed"
