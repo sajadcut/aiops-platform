@@ -797,9 +797,24 @@
       }
       if(result.status==='running'&&result.recovery_verification&&
          result.recovery_verification!=='independent_vm_verified'){
+        const restricted=result.recovery_verification==='recovery_authorization_required';
+        const competing=result.recovery_verification==='other_correlated_signals';
+        const failedVendor=result.recovery_verification==='nginx_live_config_not_verified';
         notify(state.language==='fa'?
-          'سرویس Running است؛ اما شرط اصلی آلارم هنوز مستقلاً تأیید نشده و رخداد باز می‌ماند.':
-          'Service is running, but the original alert condition is not independently verified; the incident remains open.');
+          (restricted?
+            'سرویس Running است؛ برای ثبت رفع رخداد، اختیار اپراتور یا SRE لازم است.':
+           competing?
+            'سرویس Running است؛ اما آلارم هم‌بستهٔ دیگری باقی است و رخداد بسته نمی‌شود.':
+           failedVendor?
+            'سرویس Running است؛ اعتبارسنجی کانفیگ nginx هنوز موفق نشده است.':
+            'سرویس Running است؛ شرط اصلی آلارم هنوز به‌اندازهٔ کافی تأیید نشده است.') :
+          (restricted?
+            'Service running; operator or SRE permission is required to finalize recovery.':
+           competing?
+            'Service running; another correlated alert prevents incident resolution.':
+           failedVendor?
+            'Service running; nginx configuration validation has not passed.':
+            'Service running; alert recovery is not sufficiently verified.'));
       }
       if(result.status==='unknown')notify(state.language==='fa'?
         'بررسی مجدد موفق نبود؛ نتیجهٔ قبلی به‌عنوان وضعیت فعلی نمایش داده نمی‌شود.':
