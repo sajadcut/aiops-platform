@@ -1450,9 +1450,9 @@
 | `apps/orchestrator/learning_signal_aware.py` | `LearningSignalAwareE2EOrchestrator` | 6 | class | Backward-compatible alias for the canonical Memory-v2 signal workflow. | module |
 | `apps/orchestrator/progress.py` | `progress_record` | 32 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/orchestrator/progress.py` | `emit_progress` | 43 | async function | Best-effort progress, NOT durable operational decision evidence. | module |
-| `apps/orchestrator/progress.py` | `_safe_event` | 71 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/orchestrator/progress.py` | `summarize_progress` | 87 | function | Only completed actual stages move the bar; no ETA or time-derived percent. | module |
-| `apps/orchestrator/progress.py` | `load_progress` | 174 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
+| `apps/orchestrator/progress.py` | `_safe_event` | 75 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/orchestrator/progress.py` | `summarize_progress` | 91 | function | Only completed actual stages move the bar; no ETA or time-derived percent. | module |
+| `apps/orchestrator/progress.py` | `load_progress` | 178 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
 | `apps/orchestrator/recovery_advice.py` | `_service` | 17 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/orchestrator/recovery_advice.py` | `_reference` | 22 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/orchestrator/recovery_advice.py` | `_matching_vm_evidence` | 26 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
