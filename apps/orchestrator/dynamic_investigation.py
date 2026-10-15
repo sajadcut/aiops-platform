@@ -372,11 +372,30 @@ class DynamicInvestigationPlanner:
         discovery = runtime.get("service_config_discovery") or {}
         discovered_candidates = list(unit.get("config_candidates") or [])[:10]
         discovered_files = list(discovery.get("files") or [])[:10]
+        # A vendor validator can establish the location of an actual parsed
+        # file even if systemd ExecStart contains no explicit --config flag.
+        # Do not tell the operator "no verified config file" when nginx -t
+        # already named that file in a failed compiler diagnostic.
+        if failure and failure.get("config_file"):
+            found_path = failure["config_file"]
+            if (isinstance(found_path, str) and found_path.startswith("/")
+                    and not any(isinstance(row, dict)
+                                and row.get("path") == found_path
+                                for row in discovered_files)):
+                discovered_files.insert(0, {
+                    "path": found_path, "source": "vendor_validator",
+                    "verified_exists": True,
+                })
         discovery_summary = {
             "service": _bounded(state.get("service_name"), 90),
             "runtime": _bounded(unit.get("runtime") or discovery.get("runtime") or "unknown", 50),
-            "status": _bounded(discovery.get("status") or (
-                "unit_candidates_unverified" if discovered_candidates else "unknown"), 65),
+            "status": _bounded(
+                "vendor_validator_file_observed" if failure and not
+                any(isinstance(row, dict) and row.get("verified_exists") is True
+                    for row in list(discovery.get("files") or []))
+                else discovery.get("status") or (
+                    "unit_candidates_unverified" if discovered_candidates else "unknown"
+                ), 65),
             "systemd_unit": _bounded(unit.get("unit_file") or discovery.get("unit_file"), 220),
             "files": [
                 {"path": _bounded(row.get("path"), 240),
