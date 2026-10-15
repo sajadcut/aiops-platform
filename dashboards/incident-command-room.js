@@ -2299,6 +2299,7 @@
     const discovery=proposal.config_discovery||{};
     const validated=r?.configuration_diagnostic||{};
     const candidate=low(config.status)==='candidate_proposed';
+    const hasDiff=Boolean(candidate && Number.isInteger(config.redacted_diff?.line));
     const invalid=low(validated.status)==='invalid'||Boolean(
       config.error_line&&config.config_file&&
       ['needs_read_only_config','preview_unavailable'].includes(low(config.status)));
@@ -2363,9 +2364,14 @@
       esc(fa?'ابتدا باید از بازبینی MCP یک پیشنهاد اصلاح با هش معتبر ساخته شود':'A hash-bound candidate is required first')+'">'+
       esc(fa?'اعمال اصلاح روی سرور — غیرفعال':'Apply correction — unavailable')+
       '</button>';
+    const previewKind=service==='nginx'?'nginx':verified.length?'review':'generic';
+    const previewBlocked=Boolean(
+      state.historic||state.busy||state.chatBusy||state.configPreviewPending||
+      state.lifecycle?.analysis_in_progress
+    );
     const regenerateButton=
       '<button type="button" class="ic-btn ic-btn-primary" data-config-preview="'+
-      (service==='nginx'?'nginx':verified.length?'review':'generic')+'"'+
+      previewKind+'"'+
       (state.historic||state.busy||state.chatBusy||state.configPreviewPending||state.lifecycle?.analysis_in_progress?' disabled':'')+'>'+
       esc(fa?(candidate?'بازبینی مجدد فایل کانفیگ با MCP':
         service==='nginx'?
@@ -2375,6 +2381,12 @@
         'Generate live MCP repair preview':
          verified.length?'Review verified config & propose repair':'Discover config via systemd & MCP'))+
       '</button>';
+    const diffButton=hasDiff?
+      '<a class="ic-btn ic-btn-muted" href="#ic-ai-proposed-fix">'+
+      esc(fa?'مشاهده اصلاح کانفیگ و Diff':'View correction and diff')+'</a>':
+      '<button type="button" class="ic-btn ic-btn-muted" data-config-preview="'+
+      previewKind+'" data-preview-open-diff="1"'+(previewBlocked?' disabled':'')+'>'+
+      esc(fa?'ساخت Diff و مشاهده اصلاح':'Generate diff and view correction')+'</button>';
     node.hidden=false;
     node.innerHTML='<div class="ic-config-banner-copy"><strong>'+
       esc(fa?'بررسی و اصلاح کانفیگ '+service:'Configuration discovery & correction · '+service)+
@@ -2384,7 +2396,10 @@
         'فایل و روش اعتبارسنجی از systemd و MCP در حال شناسایی است؛ مسیر حدسی معتبر نیست.'):
         (invalid?'Config failure recorded; no safe correction yet.':
         'Discovering config files and validation methods; a guessed path is not verified.')))+
-      '</p>'+(path?'<p><code dir="ltr">'+txt(path)+'</code>'+
+      '</p>'+(hasDiff?'':('<p role="status" class="ic-config-banner-warning">'+
+        esc(fa?'Diff هنوز ساخته نشده است؛ خطای Validator به‌تنهایی شامل نسخه اصلاحی نیست. دکمه ساخت Diff، یک بازبینی امن و زنده از MCP درخواست می‌کند.':
+        'Diff not generated: the validator error is not a candidate. Generate Diff starts a live read-only MCP review.')+
+        '</p>'))+(path?'<p><code dir="ltr">'+txt(path)+'</code>'+
         (line!==null?' · '+esc(fa?'خط ':'line ')+num(line):'')+'</p>':'')+
       (reason?'<p class="ic-config-banner-warning">'+esc(reason)+'</p>':'')+
       responseLabel+
@@ -2403,9 +2418,7 @@
         'این دکمه فقط درخواست اعمال را برای بررسی پیش از Approval ثبت می‌کند. اجرای واقعی روی سرور تا اعتبارسنجی مستقل، قرارداد تغییر نسخه‌دار و تأیید اجرایی مسدود است.':
         'The request records a pre-approval change intent only. Server application remains blocked until isolated validation, a versioned change contract, and executable approval exist.')+
       '</p></div><div class="ic-config-banner-actions">'+regenerateButton+
-      '<a class="ic-btn ic-btn-muted" href="#ic-ai-proposed-fix">'+
-      esc(fa?'مشاهده اصلاح کانفیگ و Diff':'View correction and diff')+
-      '</a>'+requestButton+'</div>';
+      diffButton+requestButton+'</div>';
   }
 
   function renderConfigProposal(config) {
@@ -3251,6 +3264,16 @@
         void (async()=>{
           try{
             await submitIncidentChat(requested);
+            if(preview.dataset.previewOpenDiff==='1'){
+              document.querySelector('#ic-ai-proposed-fix')?.scrollIntoView({
+                behavior:'smooth',block:'start'
+              });
+              if(!Number.isInteger(state.report?.dynamic_investigation?.config_proposal?.redacted_diff?.line)){
+                notify(state.language==='fa'?
+                  'هنوز Diff واقعی ثبت نشده است. وضعیت بازبینی MCP، دسترسی خواندن فایل و شواهد جدید را بررسی کنید.':
+                  'No real diff is recorded yet. Check the MCP review result, file read permissions, and Evidence.',true);
+              }
+            }
             state.configPreviewLastResult=state.chatLastResult ||
               (state.language==='fa'?'بررسی ثبت شد؛ نتیجه را در چت و شواهد بخوانید.':
                 'Review recorded; see chat and Evidence for the result.');
