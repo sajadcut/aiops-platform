@@ -8,7 +8,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
 
-from apps.approval_service.binding import assert_bound
+from apps.approval_service.binding import assert_config_request_bound
 from apps.approval_service.postgres import PostgreSQLApprovalStore
 from apps.audit_service import AuditService
 from apps.audit_service.postgres import PostgreSQLAuditStore
@@ -35,7 +35,7 @@ def _fields(record: dict) -> dict:
         raise HTTPException(status_code=409, detail="config_change_contract_mismatch")
     parameters = {k: meta[k] for k in needed if k != "target"}
     try:
-        assert_bound(
+        assert_config_request_bound(
             record, incident_id=str(record["incident_id"]),
             tool_name="vm_config_change", action="apply_configuration_change",
             target=meta["target"], parameters=parameters, timeout=30,
