@@ -159,3 +159,14 @@ def test_incident_chat_routes_only_explicit_full_file_request_and_filters_raw():
     assert public["diagnostic"] == "service_config_llm_repair"
     assert "DO_NOT_LEAK" not in json.dumps(public)
     assert "LEAK" not in json.dumps(public)
+
+
+def test_incident_banner_offers_deliberate_full_file_llm_preview():
+    from pathlib import Path
+    root = Path(__file__).resolve().parents[2]
+    script = (root / "dashboards/incident-command-room.js").read_text(encoding="utf-8")
+    assert 'data-config-preview="full-llm"' in script
+    assert "window.confirm(" in script
+    assert "service_config_llm_repair:" in script
+    assert "متن کامل فایل تنظیمات" in script
+    assert "fullLLMButton" in script
