@@ -166,7 +166,7 @@ async def run_governed_change(connector, *, action: str, target: str, service: s
                 encoded=str(read.get("stdout") or ""), path=path,
                 original_sha256=original_sha256, candidate_sha256=candidate_sha256,
             )
-    except (ValueError, UnicodeError, OSError, json.JSONDecodeError):
+    except (ValueError, UnicodeError, OSError, json.JSONDecodeError, ET.ParseError):
         return {"success": False, "status": "live_source_or_candidate_drift",
                 "isolated_validation": False, "production_write_performed": False}
     profile = "nginx" if nginx_profile else name
