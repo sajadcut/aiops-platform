@@ -350,6 +350,29 @@ async def execute_approved_remediation(approval_id: str, identity=Depends(requir
                 "incident_status": incident_status,
             },
         )
+        # Config repair already drafts knowledge after verified apply. Ordinary
+        # governed service actions historically skipped the Knowledge queue.
+        # Source the draft from the *committed* execution audit, not from an
+        # LLM proposal or a merely optimistic tool response. Inconclusive
+        # verification becomes an explicitly incomplete human-review case.
+        response["knowledge_review_id"] = None
+        if result.success:
+            try:
+                from apps.knowledge_review import create_from_governed_service_recovery
+                async with AsyncSessionLocal() as knowledge_db:
+                    review = await create_from_governed_service_recovery(
+                        knowledge_db, incident_id=UUID(incident_id),
+                        approval_id=approval_id,
+                    )
+                    if review:
+                        response["knowledge_review_id"] = str(review.id)
+            except Exception as exc:
+                logger.warning(
+                    "remediation_knowledge_draft_failed",
+                    incident_id=incident_id, approval_id=approval_id,
+                    error_type=type(exc).__name__,
+                )
+                response["knowledge_review_status"] = "draft_retry_available"
         return response
 
 
