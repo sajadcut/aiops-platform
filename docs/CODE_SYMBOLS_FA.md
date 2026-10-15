@@ -2387,16 +2387,16 @@
 | `integrations/vm/config_candidate_vault.py` | `CandidateUnavailable` | 30 | class | Expected configuration/storage refusal. Never embed sensitive bytes. | module |
 | `integrations/vm/config_candidate_vault.py` | `_key` | 34 | function | Only the existing MCP_BEARER_TOKEN is required. Never log key material. | module |
 | `integrations/vm/config_candidate_vault.py` | `_validate_windows_directory` | 42 | function | Require a local, explicit drive path; reject UNC, devices and traversal. | module |
-| `integrations/vm/config_candidate_vault.py` | `_default_directory` | 67 | function | Optional vault directory; otherwise the original private OS default. | module |
-| `integrations/vm/config_candidate_vault.py` | `_check_windows_ancestors` | 83 | function | Reject symlink/junction/reparse parents before creating the vault. | module |
-| `integrations/vm/config_candidate_vault.py` | `_prepare_windows_directory` | 101 | function | Automatically secure inherited ProgramData ACLs before any write. | module |
-| `integrations/vm/config_candidate_vault.py` | `_directory` | 127 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `integrations/vm/config_candidate_vault.py` | `_binding` | 149 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `integrations/vm/config_candidate_vault.py` | `_filename` | 161 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `integrations/vm/config_candidate_vault.py` | `_read_file` | 165 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `integrations/vm/config_candidate_vault.py` | `_prune_expired` | 186 | function | Opportunistic bounded ciphertext retention, never touch unknown files. | module |
-| `integrations/vm/config_candidate_vault.py` | `store_candidate` | 210 | function | Seal the exact complete response, durably. Never return its bytes. | module |
-| `integrations/vm/config_candidate_vault.py` | `load_candidate` | 280 | function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
+| `integrations/vm/config_candidate_vault.py` | `_default_directory` | 69 | function | Optional vault directory; otherwise the original private OS default. | module |
+| `integrations/vm/config_candidate_vault.py` | `_check_windows_ancestors` | 85 | function | Reject symlink/junction/reparse parents before creating the vault. | module |
+| `integrations/vm/config_candidate_vault.py` | `_prepare_windows_directory` | 103 | function | Automatically secure inherited ProgramData ACLs before any write. | module |
+| `integrations/vm/config_candidate_vault.py` | `_directory` | 129 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `integrations/vm/config_candidate_vault.py` | `_binding` | 151 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `integrations/vm/config_candidate_vault.py` | `_filename` | 163 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `integrations/vm/config_candidate_vault.py` | `_read_file` | 167 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `integrations/vm/config_candidate_vault.py` | `_prune_expired` | 188 | function | Opportunistic bounded ciphertext retention, never touch unknown files. | module |
+| `integrations/vm/config_candidate_vault.py` | `store_candidate` | 212 | function | Seal the exact complete response, durably. Never return its bytes. | module |
+| `integrations/vm/config_candidate_vault.py` | `load_candidate` | 282 | function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
 | `integrations/vm/dotnet_local_validator.py` | `safe_json_files` | 42 | function | Parse untrusted remote directory names. Excess is NOT a full validation. | module |
 | `integrations/vm/dotnet_local_validator.py` | `remote_file_listing_command` | 61 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `integrations/vm/dotnet_local_validator.py` | `remote_file_read_command` | 76 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
