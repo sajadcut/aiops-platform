@@ -51,9 +51,9 @@ def test_real_emerg_line_overrides_stale_warn_43():
         "supported": True, "valid": False, "service": SERVICE,
         "config_file": FILE, "error_line": 43, "syntax_error": None,
         "detail": (
-            '2026/10/15 [warn] user directive ignored in /etc/nginx/nginx.conf:43\\n'
+            '2026/10/15 [warn] user directive ignored in /etc/nginx/nginx.conf:43\n'
             '2026/10/15 [emerg] "listen" directive is not allowed here '
-            'in /etc/nginx/nginx.conf:104\\n'
+            'in /etc/nginx/nginx.conf:104\n'
             'nginx: configuration file test failed'
         ),
     }
