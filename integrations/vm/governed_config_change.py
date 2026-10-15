@@ -11,6 +11,7 @@ import re
 import shlex
 import xml.etree.ElementTree as ET
 
+from domain.contracts.logging import logger
 from integrations.vm.general_config_review import checked_config_path, remote_config_read_command, _remove_trailing_json_commas
 from integrations.vm.nginx_config_review import (
     _checked_path, _repair_line, nginx_review_command,
@@ -232,9 +233,16 @@ async def run_governed_change(connector, *, action: str, target: str, service: s
     if callable(preflight):
         check = await preflight(target)
         if check.get("success") is not True:
+            reason = str(check.get("status") or "config_guard_preflight_unavailable")
+            logger.warning(
+                "vm_config_guard_change_blocked",
+                target=target, service=name, action=action,
+                phase="guard_preflight", reason=reason,
+                isolated_validation=False, production_write_performed=False,
+            )
             return {
                 "success": False,
-                "status": str(check.get("status") or "config_guard_preflight_unavailable"),
+                "status": reason,
                 "isolated_validation": False,
                 "validation_scope": scope,
                 "vendor_validator": validator,
@@ -265,12 +273,20 @@ async def run_governed_change(connector, *, action: str, target: str, service: s
     output = str(observed.get("stdout") or "")
     if action == "validate":
         success = observed.get("success") is True and output == "VALIDATED"
+        result_status = ("isolated_vendor_validation_passed" if success
+                         else classify_config_guard_failure(observed))
+        guard_exit_code = (observed.get("exit_code")
+                           if type(observed.get("exit_code")) is int else None)
+        logger.info(
+            "vm_config_guard_validation_completed",
+            target=target, service=name, phase="isolated_vendor_check",
+            result=result_status, guard_exit_code=guard_exit_code,
+            isolated_validation=success, production_write_performed=False,
+        )
         return {
             "success": success,
-            "status": "isolated_vendor_validation_passed" if success else classify_config_guard_failure(observed),
-            "guard_exit_code": (
-                observed.get("exit_code") if type(observed.get("exit_code")) is int else None
-            ),
+            "status": result_status,
+            "guard_exit_code": guard_exit_code,
             "isolated_validation": success,
             "validation_scope": scope,
             "vendor_validator": validator,
@@ -281,14 +297,22 @@ async def run_governed_change(connector, *, action: str, target: str, service: s
 
     applied = observed.get("success") is True and output == "APPLIED_VERIFIED"
     rolled_back = output == "ROLLED_BACK"
+    # Only bounded enum values/exit code; do not log the signed claim,
+    # candidate bytes, validator stderr or the sudo password.
+    result_status = ("applied_verified" if applied else "rolled_back"
+                     if rolled_back else "rollback_failed"
+                     if output == "ROLLBACK_FAILED" else "apply_failed_or_blocked")
+    logger.info(
+        "vm_config_guard_apply_completed",
+        target=target, service=name, phase="approved_apply",
+        result=result_status, guard_exit_code=observed.get("exit_code"),
+        production_write_performed=applied or rolled_back or output == "ROLLBACK_FAILED",
+    )
     # The fixed remote helper performs source-CAS, backup, atomic rename,
     # post-write vendor validation and immediate rollback on a bad candidate.
     return {
         "success": applied,
-        "status": ("applied_verified" if applied else
-                   "rolled_back" if rolled_back else
-                   "rollback_failed" if output == "ROLLBACK_FAILED" else
-                   "apply_failed_or_blocked"),
+        "status": result_status,
         "isolated_validation": applied,
         "validation_scope": scope,
         "original_sha256": original_sha256, "candidate_sha256": candidate_sha256,
