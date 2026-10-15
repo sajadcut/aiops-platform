@@ -3,7 +3,7 @@ import pytest
 from pydantic import ValidationError
 
 from apps.api.config_change_review import (
-    ConfigReviewResponse, _matching_proposal, _hash,
+    ConfigReviewResponse, _matching_proposal, _hash, _review_progress,
 )
 
 
@@ -84,3 +84,45 @@ def test_proposed_response_schema_does_not_accept_bogus_hash_types():
         ConfigReviewResponse(decision="request_isolated_validation",
                              expected_original_sha256=None,
                              expected_candidate_sha256=None)
+
+
+def test_submitted_request_is_visible_but_never_claims_an_executable_approval():
+    state = _review_progress(
+        status="awaiting_isolated_validation",
+        decision="request_isolated_validation",
+        proposal=proposal(),
+        created_at="2026-10-15T08:46:33Z",
+    )
+    assert state["request_recorded"] is True
+    assert state["status"] == "awaiting_isolated_validation"
+    assert state["config_file"] == "/etc/nginx/nginx.conf"
+    assert state["validation_pipeline_status"] == "not_implemented"
+    assert state["change_contract_status"] == "not_implemented"
+    assert state["approval_status"] == "not_created"
+    assert state["approval_id"] is None
+    assert state["approval_eligible"] is False
+    assert state["execution_authority"] is False
+    assert state["production_write_performed"] is False
+    assert "isolated_candidate_validation_not_implemented" in state["blocking_reasons"]
+
+
+def test_unrequested_config_does_not_claim_a_pending_validation_or_approval():
+    state = _review_progress(
+        status="not_responded", decision=None, proposal=proposal(),
+    )
+    assert state["request_recorded"] is False
+    assert state["blocking_reasons"] == []
+    assert state["approval_id"] is None
+    assert not state["approval_eligible"]
+
+
+def test_main_approval_dashboard_distinguishes_config_review_from_real_approval():
+    from pathlib import Path
+    root = Path(__file__).resolve().parents[2]
+    dashboard = (root / "dashboards/approval-actions.js").read_text(encoding="utf-8")
+    incident = (root / "dashboards/incident-command-room.js").read_text(encoding="utf-8")
+    assert "function configPreApprovalPanel()" in dashboard
+    assert "configPreApprovalPanel()" in dashboard
+    assert "/configuration-review-response" in dashboard
+    assert "تأیید اجرایی ایجاد نشده" in dashboard
+    assert "validation_pipeline_status==='not_implemented'" in incident
