@@ -132,6 +132,14 @@ def _candidate_preview(original: str, corrected: str, *, diagnostic_line: int | 
     )
     if not 1 <= char_edits <= _MAX_SYNTAX_CHAR_EDITS:
         return {**base, "rejection_reason": "candidate_not_minimal_syntax_fix"}
+    # Compare every non-grammar byte *including whitespace/newlines*.
+    # Removing optional punctuation for comparison must produce exactly
+    # identical documents, blocking reindentation, line-ending conversion,
+    # comment cleanup and unrelated formatting even when only one brace
+    # fixes the vendor error.
+    if (re.sub(r"[{};,]", "", original) !=
+            re.sub(r"[{};,]", "", corrected)):
+        return {**base, "rejection_reason": "candidate_changes_unrelated_bytes"}
     # The compiler normally reports the *following* line when an earlier
     # brace or terminator is wrong. Permit only nearby changes.
     if diagnostic_line is not None and diagnostic_line > 0:
