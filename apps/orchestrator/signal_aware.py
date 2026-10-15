@@ -466,6 +466,7 @@ class SignalAwareE2EOrchestrator(E2EOrchestrator):
             if isinstance(proposal, dict):
                 proposal["llm_unknown_guidance"] = {
                     "status": guidance.get("status", "unavailable"),
+                    "failure_reason": str(guidance.get("failure_reason") or "")[:80],
                     "items": list(guidance.get("items") or [])[:5],
                     "execution_authority": False,
                 }
