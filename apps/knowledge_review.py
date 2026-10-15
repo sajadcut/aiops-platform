@@ -325,8 +325,12 @@ def governed_recovery_document(incident: Incident, event: dict, approval_id: str
             actual = None
         passed = item.get("passed") is True and actual is not None
         outcomes.append((name, passed, actual))
+    allowed_ref_prefixes = (
+        f"runbook:pre:{incident.id}:",
+        f"runbook:post:{incident.id}:",
+    )
     if not outcomes or not any(isinstance(ref, str) and
-        ref.startswith(("runbook:pre:", "runbook:post:")) and
+        ref.startswith(allowed_ref_prefixes) and
         len(ref) <= 250 for ref in refs):
         return None
     status = str(check["status"]).lower()
