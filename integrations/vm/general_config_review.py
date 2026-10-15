@@ -97,7 +97,8 @@ def _remove_trailing_json_commas(source: str) -> str:
     return "".join(chars)
 
 
-def local_config_review(encoded: str, *, path: str, validator_error_line: int | None = None) -> dict:
+def local_config_review(encoded: str, *, path: str, validator_error_line: int | None = None,
+                        vendor_service: str = "", vendor_error: str = "") -> dict:
     """Review a known config source and generate only a deterministic JSON fix."""
     checked_config_path(path)
     answer = {
