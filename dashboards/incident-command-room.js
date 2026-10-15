@@ -2943,9 +2943,14 @@
         '<p>'+esc(fa?'فایل مشخصی هنوز تأیید نشده؛ سامانه باید از LLM و روش کشف معتبر کمک بگیرد.':
         'No verified file yet; consult LLM and vendor discovery guidance.')+'</p>')+
       '<p>'+esc(fa?'وضعیت مشورت LLM برای موارد نامشخص: ':'LLM advice for open questions: ')+
-      esc((disc.llm_guidance_status||guidance.status)==='unavailable'?
-        (fa?'این فراخوانی نتیجه نداده؛ وضعیت کلی اتصال LLM نامشخص است.':
-          'This advisory call failed; general LLM availability is not established.'):
+      esc(['unavailable','guidance_incomplete'].includes(
+        String(disc.llm_guidance_status||guidance.status))?
+        (fa?'مشورت این مرحله تکمیل نشده ('+
+          String(guidance.failure_reason||'علت ثبت نشده')+
+          ')؛ این به معنی قطع بودن LLM نیست.':
+          'This advisory call was incomplete ('+
+          String(guidance.failure_reason||'reason not recorded')+
+          '); the shared LLM is not necessarily offline.'):
         String(disc.llm_guidance_status||guidance.status||'not_consulted'))+'</p>'+
       arr(guidance.items).slice(0,4).map(x=>
         '<p><strong>'+txt(x.subject)+'</strong> — '+txt(x.explanation)+
