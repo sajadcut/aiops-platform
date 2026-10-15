@@ -1,0 +1,57 @@
+name: full-file-config-repair
+
+on:
+  push:
+    paths:
+      - "integrations/vm/**"
+      - "apps/api/config_change_*.py"
+      - "apps/incident_copilot.py"
+      - "apps/incident_followup.py"
+      - "apps/orchestrator/dynamic_investigation.py"
+      - "apps/decision_brief.py"
+      - "apps/config_change_authorization.py"
+      - "domain/contracts/config.py"
+      - "dashboards/incident-command-room.js"
+      - "tests/unit/test_full_config*.py"
+      - "tests/unit/test_llm_config_candidate_lifecycle.py"
+      - "tests/unit/test_governed_config_change.py"
+      - ".github/workflows/full-file-config-repair.yml"
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-full-file-repair:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      PYTHONPATH: ${{ github.workspace }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt -r requirements-dev.txt
+          python -m pip check
+      - name: Python and JavaScript syntax
+        run: |
+          python -m compileall -q integrations/vm apps/incident_copilot.py apps/incident_followup.py apps/api/config_change_review.py apps/api/config_change_execution.py apps/orchestrator/dynamic_investigation.py apps/decision_brief.py
+          node --check dashboards/incident-command-room.js
+      - name: Isolated security and full-config regressions
+        run: |
+          cp .env.example .env
+          python -m pytest -q \
+            tests/unit/test_full_config_llm_repair.py \
+            tests/unit/test_full_config_followup_reporting.py \
+            tests/unit/test_llm_config_candidate_lifecycle.py \
+            tests/unit/test_config_change_review.py \
+            tests/unit/test_config_change_validation_binding.py \
+            tests/unit/test_nginx_config_review.py \
+            tests/unit/test_ephemeral_config_guard.py \
+            tests/unit/test_governed_config_change.py
