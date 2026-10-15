@@ -19,11 +19,16 @@ def is_service_down_alert(source: str, summary: str, service: str) -> bool:
     message = str(summary or "").lower()
     if not re.fullmatch(r"[a-z0-9@_.:-]{1,100}", name):
         return False
-    return bool(re.search(r"(?<![a-z0-9_.-])" + re.escape(name)
-                          + r"(?=[\s:,-])\s*(?:\S+\s+){0,2}?"
-                          + r"(?:service\s+down|service\s+(?:stopped|failed)"
-                          + r"|service\s+is\s+not\s+running)\b",
-                          message))
+    # Match only an explicit unit-down condition for this service.
+    # An nginx port/latency/HTTP failure is not systemd service recovery.
+    unit = r"(?<![a-z0-9_.-])" + re.escape(name) + r"(?:\.service)?(?![a-z0-9_.-])"
+    terminal = r"(?:down|stopped|failed|not\s+running)"
+    direct = (unit + r"\s*(?:[:,-]\s*)?"
+              + r"(?:(?:systemd|unit)\s+)?(?:service\s+)?(?:is\s+)?"
+              + terminal + r"\b")
+    reversed_order = (r"(?<![a-z0-9_.-])service\s+" + unit
+                      + r"\s*(?:is\s+)?" + terminal + r"\b")
+    return bool(re.search(direct, message) or re.search(reversed_order, message))
 
 
 def can_finalize_independent_recovery(roles: Any) -> bool:
