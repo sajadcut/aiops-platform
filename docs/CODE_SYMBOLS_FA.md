@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 506 | Dashboard JS files scanned: 8 | Symbols indexed: 5325**
+**Python files scanned: 506 | Dashboard JS files scanned: 8 | Symbols indexed: 5337**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -3427,6 +3427,18 @@
 | `tests/unit/test_config_guard_validation_diagnostics.py` | `test_guard_preserves_candidate_when_sudo_nopasswd_already_works.fake_run` | 154 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_guard_preserves_candidate_when_sudo_nopasswd_already_works |
 | `tests/unit/test_config_guard_validation_diagnostics.py` | `test_denied_sudo_policy_never_falls_back_to_su_or_password` | 171 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_config_guard_validation_diagnostics.py` | `test_denied_sudo_policy_never_falls_back_to_su_or_password.fake_run` | 176 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_denied_sudo_policy_never_falls_back_to_su_or_password |
+| `tests/unit/test_config_guard_validation_diagnostics.py` | `test_config_guard_preflight_reports_precise_provisioning_blocker` | 202 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_config_guard_validation_diagnostics.py` | `test_config_guard_preflight_reports_precise_provisioning_blocker.inspect` | 208 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_config_guard_preflight_reports_precise_provisioning_blocker |
+| `tests/unit/test_config_guard_validation_diagnostics.py` | `test_config_guard_preflight_accepts_only_root_owned_mode_0750` | 221 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_config_guard_validation_diagnostics.py` | `test_config_guard_preflight_accepts_only_root_owned_mode_0750.inspect` | 226 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_config_guard_preflight_accepts_only_root_owned_mode_0750 |
+| `tests/unit/test_config_guard_validation_diagnostics.py` | `test_missing_helper_preflight_cannot_start_sudo_or_write_production` | 235 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_config_guard_validation_diagnostics.py` | `test_missing_helper_preflight_cannot_start_sudo_or_write_production.Edge` | 236 | class | کلاس | test_missing_helper_preflight_cannot_start_sudo_or_write_production |
+| `tests/unit/test_config_guard_validation_diagnostics.py` | `test_missing_helper_preflight_cannot_start_sudo_or_write_production.Edge.config_validate` | 240 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_missing_helper_preflight_cannot_start_sudo_or_write_production.Edge |
+| `tests/unit/test_config_guard_validation_diagnostics.py` | `test_missing_helper_preflight_cannot_start_sudo_or_write_production.Edge._run` | 247 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_missing_helper_preflight_cannot_start_sudo_or_write_production.Edge |
+| `tests/unit/test_config_guard_validation_diagnostics.py` | `test_missing_helper_preflight_cannot_start_sudo_or_write_production.Edge.config_guard_preflight` | 251 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_missing_helper_preflight_cannot_start_sudo_or_write_production.Edge |
+| `tests/unit/test_config_guard_validation_diagnostics.py` | `test_missing_helper_preflight_cannot_start_sudo_or_write_production.Edge._sudo` | 254 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_missing_helper_preflight_cannot_start_sudo_or_write_production.Edge |
+| `tests/unit/test_config_guard_validation_diagnostics.py` | `test_non_helper_missing_dependency_is_not_misclassified` | 268 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_config_guard_validation_diagnostics.py` | `test_windows_vm_guard_installer_requires_explicit_operator_sudo` | 274 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_config_review_button_runtime.py` | `test_config_buttons_dispatch_mcp_read_without_execution_and_refresh_report` | 11 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_container_image_contract.py` | `test_offline_runtime_uses_isolated_multistage_build` | 4 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_container_image_contract.py` | `test_container_acceptance_checks_final_filesystem_not_builder_layers` | 20 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
