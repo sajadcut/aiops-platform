@@ -18,6 +18,7 @@ from urllib.parse import urlparse
 
 from domain.contracts.config import settings
 from integrations.llm.openai_compatible import configured_llm_adapter
+from integrations.vm.config_candidate_vault import CandidateUnavailable, store_candidate
 
 _MAX_BYTES = 24 * 1024  # Complete document only; refuse instead of truncating.
 _MAX_CHANGED_LINES = 12
@@ -49,6 +50,23 @@ def _parse_corrected(content: str) -> str | None:
     return corrected if isinstance(corrected, str) else None
 
 
+def _safe_structure(value: str) -> str:
+    """Use value-free glyphs; never reflect secret values into MCP/UI/audit."""
+    # No words, digits or byte values from config survive.
+    return re.sub(r"[^{};=,#()\\[\\]\\s]", "x", value.rstrip("\\n"))[:180]
+
+
+def _profile(service: str, path: str) -> str:
+    name = service.lower().removesuffix(".service")
+    if name == "nginx" and path.startswith("/etc/nginx/") and path.endswith(".conf"):
+        return "nginx"
+    if path.endswith(".json"):
+        return "json_syntax"
+    if path.endswith(".xml"):
+        return "xml_syntax"
+    return "unregistered"
+
+
 def _candidate_preview(original: str, corrected: str) -> dict:
     """Check completeness and bounded drift; emit *metadata*, never file lines."""
     base = {"status": "llm_candidate_rejected", "candidate_hash": None,
@@ -77,15 +95,27 @@ def _candidate_preview(original: str, corrected: str) -> dict:
             return {**base, "rejection_reason": "candidate_changes_sensitive_line"}
     locations = sorted({i + 1 for _, i1, i2, _, _ in differences
                         for i in range(i1, max(i1 + 1, i2))})
+    diffs = []
+    for _, i1, i2, j1, j2 in differences:
+        before_lines = before[i1:i2]
+        after_lines = after[j1:j2]
+        for offset in range(max(len(before_lines), len(after_lines))):
+            if len(diffs) >= _MAX_CHANGED_LINES:
+                break
+            diffs.append({
+                "line": i1 + offset + 1,
+                "before": _safe_structure(before_lines[offset] if offset < len(before_lines) else ""),
+                "after": _safe_structure(after_lines[offset] if offset < len(after_lines) else ""),
+            })
     return {**base, "status": "llm_candidate_proposed",
             "candidate_hash": hashlib.sha256(corrected.encode("utf-8")).hexdigest(),
             "changed_line_count": changed, "changed_line_numbers": locations[:_MAX_CHANGED_LINES],
-            "rejection_reason": None}
+            "redacted_changes": diffs, "rejection_reason": None}
 
 
 async def review_complete_config(
     encoded: str, *, service: str, path: str, vendor_error: str = "",
-    model=None,
+    model=None, target: str = "",
 ) -> dict:
     """Receive exact SSH bytes in-process and request a complete revised file."""
     result = {"success": True, "status": "unavailable", "service": service,
@@ -93,7 +123,8 @@ async def review_complete_config(
               "config_contents_exposed": False, "llm_received_complete_file": False,
               "llm_returned_complete_file": False, "validation_status": "UNVERIFIED",
               "validator_executed_on_proposal": False, "apply_eligible": False,
-              "execution_authority": False}
+              "execution_authority": False, "candidate_stored": False,
+              "validation_profile": "unregistered"}
     if not settings.AIOPS_FULL_CONFIG_LLM_ENABLED:
         return {**result, "status": "full_config_llm_not_enabled"}
     if not _trusted_gateway():
@@ -142,7 +173,24 @@ async def review_complete_config(
         if corrected is None:
             return {**result, "status": "llm_complete_file_response_invalid"}
         result["llm_returned_complete_file"] = bool(corrected)
-        return {**result, **_candidate_preview(source, corrected)}
+        preview = _candidate_preview(source, corrected)
+        profile = _profile(service, path)
+        if preview.get("status") != "llm_candidate_proposed":
+            return {**result, **preview, "validation_profile": profile}
+        if not target:
+            # Compatibility for pure local preview tests; no durable ticket.
+            return {**result, **preview, "validation_profile": profile}
+        try:
+            sealed = store_candidate(
+                target=target, service=service, path=path,
+                source_hash=result["source_hash"],
+                candidate_hash=preview["candidate_hash"], candidate=corrected,
+            )
+        except CandidateUnavailable as exc:
+            return {**result, **preview, "status": "candidate_storage_unavailable",
+                    "candidate_stored": False, "storage_reason": str(exc),
+                    "validation_profile": profile}
+        return {**result, **preview, **sealed, "validation_profile": profile}
     except Exception:
         # Never log an exception message: gateways may accidentally echo input.
         return {**result, "status": "llm_repair_unavailable"}
