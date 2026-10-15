@@ -808,6 +808,7 @@ def build_decision_brief(
             },
             "llm_unknown_guidance": {
                 "status": safe(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("llm_unknown_guidance")).get("status"), 60),
+                "failure_reason": safe(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("llm_unknown_guidance")).get("failure_reason"), 80),
                 "items": redact(arr(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("llm_unknown_guidance")).get("items"))[:5]),
                 "execution_authority": False,
             },
