@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 515 | Dashboard JS files scanned: 8 | Symbols indexed: 5466**
+**Python files scanned: 515 | Dashboard JS files scanned: 8 | Symbols indexed: 5467**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1248,12 +1248,13 @@
 | `apps/incident_explanation.py` | `_recent` | 20 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/incident_explanation.py` | `_dotnet` | 39 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/incident_explanation.py` | `explain_incident` | 104 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/incident_followup.py` | `followup_evidence` | 31 | function | Allowlist real MCP responses, never a model answer or cached search. | module |
-| `apps/incident_followup.py` | `may_reassess` | 88 | function | Do not rewrite an active/approved/executed workflow checkpoint. | module |
-| `apps/incident_followup.py` | `knowledge_candidate` | 105 | function | Sanitized *unverified* learning note; never a claimed recovery. | module |
-| `apps/incident_followup.py` | `draft_cognia_review` | 168 | async function | Create an idempotent local review/outbox entry; do NOT publish to Cognia. | module |
-| `apps/incident_followup.py` | `persist_and_reassess` | 235 | async function | Durably append observation; redo specialists and evaluator if no-action. | module |
-| `apps/incident_followup.py` | `persist_and_reassess.emit_status` | 266 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | persist_and_reassess |
+| `apps/incident_followup.py` | `_audit_followup_status` | 10 | function | Persist a stable VARCHAR(50) audit code; full value stays in metadata. | module |
+| `apps/incident_followup.py` | `followup_evidence` | 42 | function | Allowlist real MCP responses, never a model answer or cached search. | module |
+| `apps/incident_followup.py` | `may_reassess` | 99 | function | Do not rewrite an active/approved/executed workflow checkpoint. | module |
+| `apps/incident_followup.py` | `knowledge_candidate` | 116 | function | Sanitized *unverified* learning note; never a claimed recovery. | module |
+| `apps/incident_followup.py` | `draft_cognia_review` | 179 | async function | Create an idempotent local review/outbox entry; do NOT publish to Cognia. | module |
+| `apps/incident_followup.py` | `persist_and_reassess` | 246 | async function | Durably append observation; redo specialists and evaluator if no-action. | module |
+| `apps/incident_followup.py` | `persist_and_reassess.emit_status` | 277 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | persist_and_reassess |
 | `apps/incident_memory_forensics.py` | `obj` | 15 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/incident_memory_forensics.py` | `stamp` | 19 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/incident_memory_forensics.py` | `metric` | 28 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
