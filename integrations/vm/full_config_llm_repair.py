@@ -118,6 +118,14 @@ def _candidate_preview(original: str, corrected: str, *, diagnostic_line: int | 
             difflib.SequenceMatcher(None, original, corrected, autojunk=True).ratio() < 0.80 or
             changed > max(3, (len(before) + 3) // 5)):
         return {**base, "rejection_reason": "candidate_excessive_changes"}
+    # Preserve original, more specific rejection semantics for attempted
+    # secret/value changes before assessing whether the remaining grammar
+    # correction is minimal. This is also vital for audit classification.
+    for _, i1, i2, j1, j2 in differences:
+        if any(_SENSITIVE.search(line) for line in before[i1:i2] + after[j1:j2]):
+            return {**base, "rejection_reason": "candidate_changes_sensitive_line"}
+    if _value_tokens(original) != _value_tokens(corrected):
+        return {**base, "rejection_reason": "candidate_changes_configuration_values"}
     # Require genuinely small *syntactic* changes. Whitespace-only rewrites
     # cannot fix registered nginx/JSON/XML grammar errors and previously
     # allowed many irrelevant reindentations through the value-token filter.
@@ -149,11 +157,6 @@ def _candidate_preview(original: str, corrected: str, *, diagnostic_line: int | 
             for line_number in range(i1 + 1, max(i1 + 2, i2 + 1))
         ):
             return {**base, "rejection_reason": "candidate_unrelated_to_validator_line"}
-    for _, i1, i2, j1, j2 in differences:
-        if any(_SENSITIVE.search(line) for line in before[i1:i2] + after[j1:j2]):
-            return {**base, "rejection_reason": "candidate_changes_sensitive_line"}
-    if _value_tokens(original) != _value_tokens(corrected):
-        return {**base, "rejection_reason": "candidate_changes_configuration_values"}
     locations = sorted({i + 1 for _, i1, i2, _, _ in differences
                         for i in range(i1, max(i1 + 1, i2))})
     diffs = []
