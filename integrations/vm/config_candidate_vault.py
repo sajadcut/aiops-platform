@@ -107,7 +107,7 @@ def _prune_expired(directory: Path) -> None:
         for path in directory.iterdir():
             if examined >= 128:
                 break
-            if not re.fullmatch(r"[0-9a-f]{64}\\.sealed", path.name):
+            if not re.fullmatch(r"[0-9a-f]{64}\.sealed", path.name):
                 continue
             examined += 1
             try:
