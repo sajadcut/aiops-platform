@@ -978,32 +978,48 @@ class SSHVMConnector:
         for row in (discovered.get("files") or [])[:10]:
             if isinstance(row, dict) and row.get("verified_exists") is True:
                 known.append((row.get("path"), "verified_systemd_candidate", None))
-        safe = None
-        for path, path_source, error_line in known:
+        # An application may own many JSON/XML/config files. Inspect
+        # systemd/validator-verified candidates in order, preferring one
+        # with a deterministic repair rather than blindly stopping at the
+        # first readable (possibly healthy) file.
+        outcome = None
+        selected = None
+        read_failed = False
+        visited = set()
+        for path, path_source, error_line in known[:16]:
+            if path in visited:
+                continue
+            visited.add(path)
             try:
                 command = remote_config_read_command(checked_config_path(path))
             except (ValueError, TypeError):
                 continue
-            safe = (path, path_source, error_line, command)
-            break
-        if safe is None:
+            response = await self._run(target, command)
+            if not response.get("success"):
+                read_failed = True
+                continue
+            candidate = local_config_review(
+                str(response.get("stdout") or ""), path=path,
+                validator_error_line=error_line,
+            )
+            if outcome is None:
+                outcome = candidate
+                selected = (path, path_source)
+            if candidate.get("status") == "candidate_proposed":
+                outcome = candidate
+                selected = (path, path_source)
+                break
+        if outcome is None or selected is None:
             return {
-                **base, "status": "file_not_verified",
+                **base,
+                "status": "file_read_unavailable" if read_failed else "file_not_verified",
                 "discovery_status": discovered.get("status") or "unavailable",
-                "recommended_next_check": "llm_vendor_documentation_and_systemd_audit",
+                "recommended_next_check": (
+                    "check_scoped_read_permissions" if read_failed
+                    else "llm_vendor_documentation_and_systemd_audit"
+                ),
             }
-        path, source, line, command = safe
-        response = await self._run(target, command)
-        if not response.get("success"):
-            return {
-                **base, "status": "file_read_unavailable",
-                "config_file": path, "path_source": source,
-                "recommended_next_check": "check_scoped_read_permissions",
-            }
-        outcome = local_config_review(
-            str(response.get("stdout") or ""), path=path,
-            validator_error_line=line,
-        )
+        path, source = selected
         return {
             **base, **outcome, "target": target, "service": service,
             "path_source": source,
