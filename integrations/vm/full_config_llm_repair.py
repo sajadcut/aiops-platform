@@ -122,8 +122,8 @@ def _candidate_preview(original: str, corrected: str, *, diagnostic_line: int | 
     # cannot fix registered nginx/JSON/XML grammar errors and previously
     # allowed many irrelevant reindentations through the value-token filter.
     # Strip whitespace only for counting, NEVER for storing/reconstructing.
-    compact_before = re.sub(r"\\s+", "", original)
-    compact_after = re.sub(r"\\s+", "", corrected)
+    compact_before = re.sub(r"\s+", "", original)
+    compact_after = re.sub(r"\s+", "", corrected)
     char_edits = sum(
         max(i2 - i1, j2 - j1)
         for tag, i1, i2, j1, j2 in difflib.SequenceMatcher(
@@ -196,7 +196,7 @@ async def review_complete_config(
     result["source_hash"] = hashlib.sha256(raw).hexdigest()
     # Only a vendor-reported location is authoritative enough to constrain
     # the allowed edit region. An LLM explanation is never treated as a line.
-    matched_line = re.search(r"(?:" + re.escape(path) + r":|\\bline\\s+)([1-9][0-9]{0,6})\\b",
+    matched_line = re.search(r"(?:" + re.escape(path) + r":|\bline\s+)([1-9][0-9]{0,6})\b",
                              str(vendor_error), re.I)
     diagnostic_line = int(matched_line.group(1)) if matched_line else None
     prompt = json.dumps({
