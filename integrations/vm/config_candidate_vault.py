@@ -99,6 +99,30 @@ def _read_file(path: Path) -> bytes:
         raise CandidateUnavailable("candidate_not_available") from None
 
 
+def _prune_expired(directory: Path) -> None:
+    """Opportunistic bounded ciphertext retention, never touch unknown files."""
+    now = int(time.time())
+    try:
+        examined = 0
+        for path in directory.iterdir():
+            if examined >= 128:
+                break
+            if not re.fullmatch(r"[0-9a-f]{64}\\.sealed", path.name):
+                continue
+            examined += 1
+            try:
+                data = _read_file(path)
+                if len(data) < 24 or data[:4] != b"AIC1":
+                    continue
+                stamp = int.from_bytes(data[4:12], "big")
+                if 0 < stamp < now and now - stamp > 2 * _TTL_SECONDS:
+                    path.unlink(missing_ok=True)
+            except (OSError, CandidateUnavailable):
+                continue
+    except OSError:
+        pass  # retention failure never becomes evidence of validated repair
+
+
 def store_candidate(*, target: str, service: str, path: str,
                     source_hash: str, candidate_hash: str, candidate: str) -> dict:
     """Seal the exact complete response, durably. Never return its bytes."""
@@ -109,8 +133,10 @@ def store_candidate(*, target: str, service: str, path: str,
         raise CandidateUnavailable("candidate_hash_mismatch")
     binding = _binding(target=target, service=service, path=path,
                        source_hash=source_hash, candidate_hash=candidate_hash)
-    filename = _directory() / _filename(binding)
+    directory = _directory()
     key = _key()
+    _prune_expired(directory)
+    filename = directory / _filename(binding)
     stamp = int(time.time()).to_bytes(8, "big")
     nonce = os.urandom(12)
     sealed = b"AIC1" + stamp + nonce + AESGCM(key).encrypt(
