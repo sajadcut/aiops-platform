@@ -13,7 +13,12 @@ import time
 
 
 def _key() -> bytes:
-    secret = os.environ.get("AIOPS_CONFIG_APPLY_SIGNING_SECRET", "")
+    # Environment wins over .env. The Settings contract loads development
+    # .env without automatically publishing its secrets to os.environ.
+    from domain.contracts.config import settings
+    name = "AIOPS_CONFIG_APPLY_SIGNING_SECRET"
+    secret = (os.environ[name] if name in os.environ
+              else settings.AIOPS_CONFIG_APPLY_SIGNING_SECRET or "")
     if len(secret) < 32 or secret.lower() in {"changeme", "change-me"}:
         raise PermissionError("config_signing_key_not_configured")
     return secret.encode("utf-8")
