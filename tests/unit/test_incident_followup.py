@@ -230,3 +230,14 @@ async def test_followup_reassessment_recalculates_agents_without_executing(monke
     assert "cognia_draft" in calls
     assert "audit:incident_copilot_followup_integrated" in calls
     assert "execute" not in calls and "approve" not in calls
+
+
+def test_long_followup_status_is_persisted_without_postgresql_500():
+    from apps.incident_followup import _audit_followup_status
+
+    status = "evidence_recorded_reanalysis_requires_workflow_review"
+    stored = _audit_followup_status(status)
+    assert stored == "reanalysis_requires_workflow_review"
+    assert len(stored) <= 50
+    assert _audit_followup_status("evidence_recorded") == "evidence_recorded"
+    assert len(_audit_followup_status("long_status_" + "x" * 200)) <= 50
