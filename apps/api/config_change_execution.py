@@ -152,6 +152,7 @@ async def execute_config(approval_id: UUID, identity=Depends(require_permission(
         if meta.get("validation_scope") not in {
             "nginx_mount_namespace_staged_etc_nginx_live_external_read_dependencies",
             "generic_json_syntax_only_service_runtime_unverified",
+            "generic_xml_syntax_only_service_runtime_unverified",
         }:
             raise HTTPException(status_code=409, detail="unapproved_validation_scope")
         if not await _same_incident_candidate(db, approval, meta):
