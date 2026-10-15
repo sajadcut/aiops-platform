@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 519 | Dashboard JS files scanned: 8 | Symbols indexed: 5499**
+**Python files scanned: 519 | Dashboard JS files scanned: 8 | Symbols indexed: 5509**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -4333,6 +4333,16 @@
 | `tests/unit/test_independent_service_recovery.py` | `test_unverifiable_recovery_keeps_incident_open` | 45 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_independent_service_recovery.py` | `test_unfamiliar_service_can_be_verified_only_for_its_own_explicit_down_alert` | 49 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_independent_service_recovery.py` | `test_no_stale_unrelated_service_or_monitor_condition_can_trigger_auto_resolution` | 56 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_independent_service_recovery.py` | `test_independent_recovery_atomic_commit_records_audit_and_cancels_approvals` | 63 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_independent_service_recovery.py` | `test_independent_recovery_atomic_commit_records_audit_and_cancels_approvals.Result` | 70 | class | کلاس | test_independent_recovery_atomic_commit_records_audit_and_cancels_approvals |
+| `tests/unit/test_independent_service_recovery.py` | `test_independent_recovery_atomic_commit_records_audit_and_cancels_approvals.Result.scalars` | 71 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_independent_recovery_atomic_commit_records_audit_and_cancels_approvals.Result |
+| `tests/unit/test_independent_service_recovery.py` | `test_independent_recovery_atomic_commit_records_audit_and_cancels_approvals.Result.all` | 73 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_independent_recovery_atomic_commit_records_audit_and_cancels_approvals.Result |
+| `tests/unit/test_independent_service_recovery.py` | `test_independent_recovery_atomic_commit_records_audit_and_cancels_approvals.Database` | 76 | class | کلاس | test_independent_recovery_atomic_commit_records_audit_and_cancels_approvals |
+| `tests/unit/test_independent_service_recovery.py` | `test_independent_recovery_atomic_commit_records_audit_and_cancels_approvals.Database.__init__` | 77 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_independent_recovery_atomic_commit_records_audit_and_cancels_approvals.Database |
+| `tests/unit/test_independent_service_recovery.py` | `test_independent_recovery_atomic_commit_records_audit_and_cancels_approvals.Database.flush` | 81 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_independent_recovery_atomic_commit_records_audit_and_cancels_approvals.Database |
+| `tests/unit/test_independent_service_recovery.py` | `test_independent_recovery_atomic_commit_records_audit_and_cancels_approvals.Database.execute` | 83 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | test_independent_recovery_atomic_commit_records_audit_and_cancels_approvals.Database |
+| `tests/unit/test_independent_service_recovery.py` | `test_independent_recovery_atomic_commit_records_audit_and_cancels_approvals.Database.commit` | 86 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_independent_recovery_atomic_commit_records_audit_and_cancels_approvals.Database |
+| `tests/unit/test_independent_service_recovery.py` | `test_unsupported_recovery_source_cannot_mark_incident_resolved` | 112 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_infrastructure_use_engine.py` | `StaticInfrastructureLLM` | 11 | class | کلاس | module |
 | `tests/unit/test_infrastructure_use_engine.py` | `StaticInfrastructureLLM.provider_name` | 13 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | StaticInfrastructureLLM |
 | `tests/unit/test_infrastructure_use_engine.py` | `StaticInfrastructureLLM.generate` | 16 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | StaticInfrastructureLLM |
