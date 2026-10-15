@@ -104,6 +104,8 @@ BRIEF = {
 
 def main() -> None:
     writes = []
+    review_requests = []
+    review_state = {"status": "not_responded", "execution_authority": False}
     errors = []
     brief_state = {"current": BRIEF}
     with sync_playwright() as playwright:
@@ -111,10 +113,26 @@ def main() -> None:
         page = browser.new_page(viewport={"width": 1420, "height": 950})
         page.add_init_script("localStorage.setItem('aiops_api_key','ci-test-key')")
         page.on("pageerror", lambda error: errors.append(str(error)))
+        page.on("dialog", lambda dialog: dialog.accept())
 
         def respond(route):
             req = route.request
             path = urlparse(req.url).path
+            if req.method == "POST" and path.endswith("/configuration-review-response"):
+                intent = req.post_data_json
+                assert intent["decision"] == "request_isolated_validation"
+                assert len(intent["expected_original_sha256"]) == 64
+                assert len(intent["expected_candidate_sha256"]) == 64
+                review_requests.append(intent)
+                review_state.update({
+                    "status": "awaiting_isolated_validation",
+                    "decision": "request_isolated_validation",
+                    "execution_authority": False,
+                    "production_write_performed": False,
+                })
+                route.fulfill(status=200, content_type="application/json",
+                              body=json.dumps(review_state))
+                return
             if req.method not in {"GET", "HEAD"}:
                 writes.append((req.method, path))
                 route.fulfill(status=403, body="Read-only acceptance")
@@ -136,7 +154,7 @@ def main() -> None:
             elif path.endswith("/lifecycle"):
                 data = {"approval": {"status": "not_pending"}}
             elif path.endswith("/configuration-review-response"):
-                data = {"status": "not_responded", "execution_authority": False}
+                data = review_state
             elif path.endswith("/progress/stream"):
                 route.fulfill(status=503, body="stream disabled in synthetic acceptance")
                 return
@@ -214,6 +232,13 @@ def main() -> None:
         banner.locator("a[href='#ic-ai-proposed-fix']").click()
         assert page.locator("#ic-ai-proposed-fix #ic-proposed-fix").is_visible()
         assert not writes, f"Opening config proposal executed an unexpected write: {writes}"
+        # A click creates a durable pre-approval review intent, NOT an execution
+        # request. The banner must then expose the pending-validation status.
+        banner.locator("button[data-config-intent='request_isolated_validation']").click()
+        banner.locator("[data-config-request-status='recorded']").wait_for(timeout=15000)
+        assert len(review_requests) == 1
+        assert "awaiting_isolated_validation" in banner.inner_text()
+        assert not writes, f"Requesting config review reached an execution endpoint: {writes}"
         assert not errors, f"Chromium page errors: {errors}"
         # Third fixture: the user's actual screenshot had a failed nginx
         # validator but NO candidate. A deliberate read-only MCP preview
@@ -227,6 +252,7 @@ def main() -> None:
             "execution_authority": False, "apply_eligible": False,
         }
         brief_state["current"] = missing
+        review_state = {"status": "not_responded", "execution_authority": False}
         page.reload()
         banner = page.locator("#ic-config-action-banner")
         banner.wait_for(state="visible", timeout=15000)
