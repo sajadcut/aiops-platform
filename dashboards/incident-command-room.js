@@ -2932,7 +2932,7 @@
             (fa?'فایل توسط Validator شناسایی شده':'File identified by vendor validator'):
             (fa?'وجود فایل تأیید شده':'File existence verified')):
           (fa?'وجود فایل تأیید نشده':'File existence unverified'))+
-        (file.verified_exists===true&&low(disc.runtime)==='dotnet'&&/\\.json$/i.test(String(file.path||''))?
+        (file.verified_exists===true&&low(disc.runtime)==='dotnet'&&/\.json$/i.test(String(file.path||''))?
           ' · <strong>'+esc(dotnetSyntaxLabel(
             syntaxByName.get(String(file.path).split('/').pop().toLowerCase()),fa))+'</strong>'+
           (syntaxByName.get(String(file.path).split('/').pop().toLowerCase())?.status==='invalid_json_syntax'?
@@ -2981,7 +2981,7 @@
           state.liveDotnetSyntaxStatus==='unavailable'?(fa?'بررسی زنده ناموفق؛ جزئیات MCP را بررسی کنید':'Live check failed; inspect MCP evidence'):
           d.syntax_status==='syntax_valid'?(fa?'در زمان رخداد صحیح؛ فقط از نظر Syntax':'Syntax valid when collected'):
           d.syntax_status==='invalid'?(fa?'در زمان رخداد نامعتبر':'Invalid when collected'):
-          fa?'تاکنون نتیجهٔ Syntax ثبت نشده است':'Syntax has not been checked'))+
+          fa?'تاکنون نتیجهٔ Syntax ثبت نشده است':'Syntax has not been checked')+
         '</strong></p>'+
       (syntaxRows.length?
         '<ul class="ic-agent-bullets">'+syntaxRows.map(row=>
