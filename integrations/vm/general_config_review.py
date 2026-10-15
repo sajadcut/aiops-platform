@@ -22,7 +22,8 @@ _MAX = 262_144
 _ROOTS = ("/etc/", "/opt/", "/srv/", "/data/", "/usr/local/etc/", "/usr/local/tomcat/")
 _REJECT = ("/etc/shadow", "/etc/ssh/", "/etc/ssl/", "/etc/pki/", "/etc/security/",
            "/opt/secrets/", "/run/", "/proc/", "/sys/", "/dev/")
-_REVIEW_EXT = (".xml", ".json", ".properties", ".yaml", ".yml", ".cfg", ".conf", ".ini")
+_REVIEW_EXT = (".xml", ".json", ".properties", ".yaml", ".yml", ".cfg",
+               ".conf", ".ini", ".toml", ".hcl", ".cnf", ".config")
 
 
 def checked_config_path(path: str) -> str:
