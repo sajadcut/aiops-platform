@@ -174,3 +174,38 @@ async def test_signed_approved_apply_uses_fixed_root_script_and_reports_verifica
     assert "APPLIED_VERIFIED" in commands[1][2]
     assert ORIGINAL.decode() not in commands[1][1]
     assert CANDIDATE.decode() not in commands[1][2]
+
+
+def test_approved_ephemeral_transaction_has_root_only_lock_and_replay_guard():
+    approval_id = "bfc902da-c73c-46eb-8e58-748c67294f12"
+    cmd, script = build_ephemeral_guard(
+        action="apply", profile="nginx", path="/etc/nginx/nginx.conf",
+        original_sha256=SOURCE_HASH, candidate_sha256=TARGET_HASH,
+        candidate=CANDIDATE.decode(), approval_id=approval_id,
+    )
+    assert cmd.endswith(approval_id)
+    assert "config-transaction.lock" in script
+    assert "/var/lib/aiops/config-claims" in script
+    assert "set -C" in script
+    assert '[ "$#" -eq 6 ]' in script
+    assert "flock -x" in script
+    assert "/run/lock/aiops-config-transaction.lock" not in script
+    assert subprocess.run(["sh", "-n"], input=script,
+                          text=True, capture_output=True).returncode == 0
+
+
+def test_apply_requires_safe_approval_id_and_validate_disallows_one():
+    base = {
+        "profile": "json_syntax", "path": "/opt/app/settings.json",
+        "original_sha256": SOURCE_HASH, "candidate_sha256": TARGET_HASH,
+        "candidate": CANDIDATE.decode(),
+    }
+    with pytest.raises(ValueError, match="config_approval_id_not_valid"):
+        build_ephemeral_guard(action="apply", **base)
+    with pytest.raises(ValueError, match="config_approval_id_not_valid"):
+        build_ephemeral_guard(action="apply", approval_id="../untrusted", **base)
+    with pytest.raises(ValueError, match="config_validate_must_not_have_approval_id"):
+        build_ephemeral_guard(
+            action="validate", approval_id="bfc902da-c73c-46eb-8e58-748c67294f12",
+            **base,
+        )
