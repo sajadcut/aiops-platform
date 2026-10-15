@@ -484,6 +484,10 @@ async def vm_read(action: str, binding: dict, connector: Any = None) -> dict:
         result["model_syntax_review"] = await assess_service_syntax(
             result.get("syntax_projection"), result.get("candidate_syntax_projection"),
         )
+        result["file_model_reviews"] = [{
+            "path": str(result.get("config_file") or ""),
+            "review": result["model_syntax_review"],
+        }]
     return result
 
 
