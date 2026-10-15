@@ -483,6 +483,7 @@ async def vm_read(action: str, binding: dict, connector: Any = None) -> dict:
         from apps.config_syntax_llm import assess_service_syntax
         result["model_syntax_review"] = await assess_service_syntax(
             result.get("syntax_projection"), result.get("candidate_syntax_projection"),
+            file_type=str(result.get("file_type") or ""),
         )
         result["file_model_reviews"] = [{
             "path": str(result.get("config_file") or ""),
