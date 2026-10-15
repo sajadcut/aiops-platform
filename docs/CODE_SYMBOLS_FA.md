@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 526 | Dashboard JS files scanned: 8 | Symbols indexed: 5658**
+**Python files scanned: 526 | Dashboard JS files scanned: 8 | Symbols indexed: 5663**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -4613,13 +4613,18 @@
 | `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_guard_loads_sealed_model_candidate_and_runs_staging_only.Edge.config_validate` | 317 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_guard_loads_sealed_model_candidate_and_runs_staging_only.Edge |
 | `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_guard_loads_sealed_model_candidate_and_runs_staging_only.Edge._run` | 320 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_guard_loads_sealed_model_candidate_and_runs_staging_only.Edge |
 | `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_guard_loads_sealed_model_candidate_and_runs_staging_only.Edge._sudo` | 323 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_guard_loads_sealed_model_candidate_and_runs_staging_only.Edge |
-| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_source_drift_blocks_before_sudo_even_with_sealed_candidate` | 342 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_source_drift_blocks_before_sudo_even_with_sealed_candidate.Drift` | 344 | class | کلاس | test_source_drift_blocks_before_sudo_even_with_sealed_candidate |
-| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_source_drift_blocks_before_sudo_even_with_sealed_candidate.Drift.config_validate` | 347 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_source_drift_blocks_before_sudo_even_with_sealed_candidate.Drift |
-| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_source_drift_blocks_before_sudo_even_with_sealed_candidate.Drift._run` | 349 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_source_drift_blocks_before_sudo_even_with_sealed_candidate.Drift |
-| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_source_drift_blocks_before_sudo_even_with_sealed_candidate.Drift._sudo` | 351 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_source_drift_blocks_before_sudo_even_with_sealed_candidate.Drift |
-| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_complete_file_llm_exfiltration_needs_explicit_sre_permission` | 362 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_llm_proposal_requires_sealed_worker_candidate` | 377 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_previous_sealed_llm_candidate_with_extra_reformat_is_blocked_before_sudo` | 342 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_previous_sealed_llm_candidate_with_extra_reformat_is_blocked_before_sudo.Edge` | 352 | class | کلاس | test_previous_sealed_llm_candidate_with_extra_reformat_is_blocked_before_sudo |
+| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_previous_sealed_llm_candidate_with_extra_reformat_is_blocked_before_sudo.Edge.config_validate` | 355 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_previous_sealed_llm_candidate_with_extra_reformat_is_blocked_before_sudo.Edge |
+| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_previous_sealed_llm_candidate_with_extra_reformat_is_blocked_before_sudo.Edge._run` | 358 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_previous_sealed_llm_candidate_with_extra_reformat_is_blocked_before_sudo.Edge |
+| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_previous_sealed_llm_candidate_with_extra_reformat_is_blocked_before_sudo.Edge._sudo` | 360 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_previous_sealed_llm_candidate_with_extra_reformat_is_blocked_before_sudo.Edge |
+| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_source_drift_blocks_before_sudo_even_with_sealed_candidate` | 374 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_source_drift_blocks_before_sudo_even_with_sealed_candidate.Drift` | 376 | class | کلاس | test_source_drift_blocks_before_sudo_even_with_sealed_candidate |
+| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_source_drift_blocks_before_sudo_even_with_sealed_candidate.Drift.config_validate` | 379 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_source_drift_blocks_before_sudo_even_with_sealed_candidate.Drift |
+| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_source_drift_blocks_before_sudo_even_with_sealed_candidate.Drift._run` | 381 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_source_drift_blocks_before_sudo_even_with_sealed_candidate.Drift |
+| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_source_drift_blocks_before_sudo_even_with_sealed_candidate.Drift._sudo` | 383 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_source_drift_blocks_before_sudo_even_with_sealed_candidate.Drift |
+| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_complete_file_llm_exfiltration_needs_explicit_sre_permission` | 394 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_llm_config_candidate_lifecycle.py` | `test_llm_proposal_requires_sealed_worker_candidate` | 409 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_mcp_external_boundary.py` | `test_context_builder_uses_mcp_clients_not_native_external_connectors` | 22 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_mcp_external_boundary.py` | `test_zabbix_is_mcp_only_and_has_no_direct_runtime_config` | 32 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_mcp_external_boundary.py` | `test_evidence_collector_has_no_native_external_fallbacks` | 48 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
