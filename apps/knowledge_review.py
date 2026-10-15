@@ -7,7 +7,8 @@ from __future__ import annotations
 
 import hashlib
 import json
-from uuid import UUID, uuid4
+import re
+from uuid import UUID, uuid4, uuid5, NAMESPACE_URL
 
 from fastapi import HTTPException
 from sqlalchemy import select, text
@@ -15,7 +16,7 @@ from sqlalchemy.exc import IntegrityError
 
 from domain.contracts.config import settings
 from domain.contracts.redaction import redact_text
-from domain.models import KnowledgeReview, MemoryEntry
+from domain.models import KnowledgeReview, MemoryEntry, Incident
 
 
 def content_digest(title: str, content: str) -> str:
@@ -257,6 +258,181 @@ async def create_from_verified_config_apply(db, *, incident_id: UUID,
             "review_id": str(record.id), "approval_id": approval_id,
             "kb_id": selected, "content_hash": record.content_hash,
             "source_type": "incident_followup",
+        }),
+    })
+    await db.commit()
+    await db.refresh(record)
+    return record
+
+
+# Stable UUID keeps the Approval-to-draft binding even after the reviewer edits
+# review_reason, and across retries, restarts, and historic audit reconciliation.
+def recovery_review_id(incident_id: UUID, approval_id: str) -> UUID:
+    return uuid5(NAMESPACE_URL, f"aiops:service-recovery:v1:{incident_id}:{approval_id}")
+
+
+def governed_recovery_document(incident: Incident, event: dict, approval_id: str) -> tuple[str, str] | None:
+    """Only recorded, executed, scoped service writes can yield draft lessons.
+
+    A successful executor response is not proof of incident recovery: preserve
+    the independent runbook verdict and missing objectives without LLM claims.
+    Never accept an arbitrary user-supplied narrative or raw SSH output.
+    """
+    if event.get("event_type") != "remediation_executed":
+        return None
+    meta = event.get("metadata") or {}
+    if not isinstance(meta, dict) or str(meta.get("approval_id") or "") != approval_id:
+        return None
+    result = meta.get("result") or {}
+    before = meta.get("precondition") or {}
+    check = meta.get("verification") or {}
+    if not all(isinstance(item, dict) for item in (result, before, check)):
+        return None
+    action = str(event.get("action") or "")
+    service = str(incident.service or "")
+    target = str(result.get("target") or "")
+    if (action not in {"restart_service", "start_service", "reload_service"}
+            or result.get("action") != action
+            or result.get("success") is not True
+            or result.get("execution_blocked") is True
+            or before.get("safe_to_execute") is not True
+            or before.get("action") != action
+            or str(before.get("target") or "") != target
+            or str(before.get("service") or "").lower().removesuffix(".service")
+               != service.lower().removesuffix(".service")
+            or not re.fullmatch(r"[a-zA-Z0-9@_.:-]{1,100}", service)
+            or not re.fullmatch(r"[a-zA-Z0-9_.:-]{2,255}", target)
+            or str(check.get("status") or "").lower() not in {
+                "success", "partial", "inconclusive", "failed"
+            }):
+        return None
+    # A verification message alone is not evidence. Require post-action
+    # objective outcomes and at least one recorded VM/runbook evidence ref.
+    objectives = check.get("objective_results") or []
+    refs = check.get("evidence_refs") or []
+    if not isinstance(objectives, list) or not objectives or not isinstance(refs, list):
+        return None
+    allowed_objectives = {"service_active", "port_listening", "tcp_reachable"}
+    outcomes = []
+    for item in objectives[:12]:
+        if not isinstance(item, dict):
+            continue
+        name = str(item.get("target") or "")
+        if name not in allowed_objectives:
+            continue
+        actual = item.get("actual")
+        if actual not in (None, True, False, 0, 1, 0.0, 1.0):
+            actual = None
+        passed = item.get("passed") is True and actual is not None
+        outcomes.append((name, passed, actual))
+    if not outcomes or not any(isinstance(ref, str) and
+        ref.startswith(("runbook:pre:", "runbook:post:")) and
+        len(ref) <= 250 for ref in refs):
+        return None
+    status = str(check["status"]).lower()
+    fully_verified = (status == "success" and check.get("required_objectives_met") is True
+                      and all(passed for _, passed, _ in outcomes))
+    target_label = {"restart_service": "Restart", "start_service": "Start",
+                    "reload_service": "Reload"}[action]
+    state = ("راستی‌آزمایی مستقل کامل" if fully_verified else
+             "راستی‌آزمایی ناقص؛ بازیابی کامل اثبات نشده")
+    title = f"{service}: اجرای {target_label} ثبت شد؛ {state} (بازبینی انسانی)"
+    facts = [
+        "نوع: تجربهٔ اجرای واقعی تحت Approval؛ پیش‌نویس برای بازبینی انسانی.",
+        f"سرویس: {service}",
+        f"مقصد: {target}",
+        f"رخداد: {incident.id}",
+        f"شناسهٔ Approval: {approval_id}",
+        f"عملیات اجراشده: {action}",
+        "اجرای عملیات: موفق طبق پاسخ ابزار اجرایی؛ به معنی رفع قطعی رخداد نیست.",
+        f"وضعیت راستی‌آزمایی مستقل: {status}",
+        f"همهٔ اهداف الزامی تأیید شدند: {'بله' if fully_verified else 'خیر'}",
+    ]
+    translated = {"service_active": "وضعیت فعال systemd",
+                  "port_listening": "گوش‌دادن روی پورت موردانتظار",
+                  "tcp_reachable": "اتصال TCP"}
+    for name, passed, actual in outcomes:
+        readable = ("تأیید شد" if passed else "شاهد کافی ثبت نشده یا هدف محقق نشده")
+        facts.append(f"هدف {translated[name]}: {readable}"
+                     + ("؛ مقدار ثبت‌شده: فعال" if actual in (True, 1, 1.0)
+                        else "؛ مقدار ثبت‌شده: غیرفعال" if actual in (False, 0, 0.0)
+                        else "؛ بدون مقدار قابل استناد"))
+    facts.extend([
+        "علت ریشه‌ای: با این اجرای Restart به‌تنهایی تأیید نشده است.",
+        "وضعیت رفع آلارم اصلی: در نتیجهٔ این اجرای Runbook به‌صورت مستقل اثبات نشده است.",
+        "برای استفادهٔ مجدد، وضعیت فعلی سرویس، پورت، وابستگی‌ها و "
+        "سیاست تغییر باید دوباره بررسی شوند. این دانش مجوز اجرای عملیات نیست.",
+        "ارسال به Cognia تنها پس از بازبینی و تأیید انسانی مجاز است.",
+    ])
+    return validated_document(title, "\n".join(facts))
+
+
+async def create_from_governed_service_recovery(
+    db, *, incident_id: UUID, approval_id: str,
+) -> KnowledgeReview | None:
+    """Recover missed drafts from durable, incident-bound remediation audit.
+
+    This does not re-run or re-approve a remediation and never publishes to
+    Cognia. The deterministic ID survives arbitrary human changes to the text.
+    """
+    if not re.fullmatch(r"[0-9a-fA-F-]{36}", approval_id):
+        return None
+    identifier = recovery_review_id(incident_id, approval_id)
+    # Guard concurrent reconcilers, including a new execution racing the UI.
+    await db.execute(text("SELECT pg_advisory_xact_lock(hashtext(:lock))"),
+                     {"lock": f"knowledge:service-recovery:{identifier}"})
+    existing = await db.get(KnowledgeReview, identifier)
+    if existing is not None:
+        return existing
+    incident = await db.get(Incident, incident_id)
+    if incident is None:
+        return None
+    from apps.audit_service.postgres import PostgreSQLAuditStore
+    audits = await PostgreSQLAuditStore(db).list(str(incident_id), limit=250)
+    source = next((event for event in audits
+                   if event.get("event_type") == "remediation_executed"
+                   and str((event.get("metadata") or {}).get("approval_id") or "") == approval_id),
+                  None)
+    if source is None:
+        return None
+    candidate = governed_recovery_document(incident, source, approval_id)
+    if candidate is None:
+        return None
+    selected = configured_kb()
+    client_id = int(settings.COGNIA_CLIENT_APPLICATION_ID or 0)
+    if client_id <= 0:
+        raise HTTPException(503, "cognia_client_application_id_not_configured")
+    title, content = candidate
+    raw_memory_id = (source.get("metadata") or {}).get("memory_id")
+    try:
+        memory_id = UUID(str(raw_memory_id)) if raw_memory_id else None
+    except ValueError:
+        memory_id = None
+    record = KnowledgeReview(
+        id=identifier, source_type="incident_followup",
+        incident_id=incident_id, memory_id=None,
+        kb_id=selected,
+        scope={"type": "clientApplication", "clientApplicationId": client_id},
+        title=title, content=content, content_hash=content_digest(title, content),
+        status="pending_review", created_by="system:governed-recovery",
+        review_reason="service_recovery:" + approval_id,
+    )
+    db.add(record)
+    await db.flush()
+    await db.execute(text("""
+        INSERT INTO audit_events
+        (event_id,event_type,actor,incident_id,action,status,metadata,created_at)
+        VALUES (:event_id,'knowledge_drafted',:actor,:incident_id,
+                'drafted','pending_review',CAST(:metadata AS jsonb),now())
+    """), {
+        "event_id": uuid4(), "actor": "system:governed-recovery",
+        "incident_id": incident_id,
+        "metadata": json.dumps({
+            "review_id": str(identifier), "approval_id": approval_id,
+            "memory_id": str(memory_id) if memory_id else None,
+            "kb_id": selected, "content_hash": record.content_hash,
+            "source_type": "incident_followup",
+            "verification_status": (source.get("metadata") or {}).get("verification", {}).get("status"),
         }),
     })
     await db.commit()
