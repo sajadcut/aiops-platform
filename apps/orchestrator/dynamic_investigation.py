@@ -77,9 +77,20 @@ class DynamicInvestigationPlanner:
                 if re.search(r"\[(?:emerg|alert|crit|error|fatal)\]|syntax error|unknown directive|unexpected", line, re.I)
             ]
             compiler = parse_config_diagnostic("\n".join(serious_lines) if serious_lines else detail)
-            for key in ("config_file", "error_line", "syntax_error"):
-                if parsed.get(key) in (None, "") and compiler.get(key) is not None:
-                    parsed[key] = compiler[key]
+            # A historical producer could have selected the earlier nginx
+            # [warn] line (43) as error_line even while the full validator
+            # detail contains [emerg] at 104. A fatal location in the same
+            # vendor output supersedes that stale parse for presentation
+            # only. The original Evidence record remains immutable.
+            if (compiler.get("syntax_error") and compiler.get("config_file")
+                    and type(compiler.get("error_line")) is int):
+                parsed["config_file"] = compiler["config_file"]
+                parsed["error_line"] = compiler["error_line"]
+                parsed["syntax_error"] = compiler["syntax_error"]
+            else:
+                for key in ("config_file", "error_line", "syntax_error"):
+                    if parsed.get(key) in (None, "") and compiler.get(key) is not None:
+                        parsed[key] = compiler[key]
             return {
                 "service": _bounded(parsed.get("service"), 80),
                 "config_file": _bounded(parsed.get("config_file"), 260),
@@ -161,8 +172,9 @@ class DynamicInvestigationPlanner:
                 and raw.get("llm_received_complete_file") is True
                 and raw.get("llm_returned_complete_file") is True
             )
+            reported_lines = raw.get("changed_line_numbers")
             changes = [
-                n for n in (raw.get("changed_line_numbers") or [])[:12]
+                n for n in (reported_lines[:12] if isinstance(reported_lines, list) else [])
                 if type(n) is int and 0 < n <= 1000000
             ]
             return {
