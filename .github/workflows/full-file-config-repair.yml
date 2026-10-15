@@ -5,6 +5,8 @@ on:
     paths:
       - "integrations/vm/**"
       - "apps/api/config_change_*.py"
+      - "apps/api/incident_chat.py"
+      - "apps/security/rbac.py"
       - "apps/incident_copilot.py"
       - "apps/incident_followup.py"
       - "apps/orchestrator/dynamic_investigation.py"
@@ -41,7 +43,7 @@ jobs:
           python -m pip check
       - name: Python and JavaScript syntax
         run: |
-          python -m compileall -q integrations/vm apps/incident_copilot.py apps/incident_followup.py apps/api/config_change_review.py apps/api/config_change_execution.py apps/orchestrator/dynamic_investigation.py apps/decision_brief.py
+          python -m compileall -q integrations/vm apps/incident_copilot.py apps/incident_followup.py apps/api/incident_chat.py apps/api/config_change_review.py apps/api/config_change_execution.py apps/orchestrator/dynamic_investigation.py apps/decision_brief.py
           node --check dashboards/incident-command-room.js
       - name: Isolated security and full-config regressions
         run: |
