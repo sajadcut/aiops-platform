@@ -200,3 +200,47 @@ async def test_central_memory_writeback_auto_queues_only_verified_success(monkey
             KnowledgeReview.memory_id == failed_memory_id
         ))).scalars().all()
         assert count == []
+
+
+async def test_read_only_incident_followup_drafts_use_migrated_source_type(monkeypatch):
+    """Regression: the operator clicked config-review, MCP succeeded, but
+    the outdated knowledge_review_source constraint caused HTTP 500."""
+    from apps.incident_followup import draft_cognia_review
+    monkeypatch.setattr(settings, "COGNIA_KNOWLEDGE_BASE_IDS", [1])
+    monkeypatch.setattr(settings, "COGNIA_CLIENT_APPLICATION_ID", 2)
+    incident_id = uuid4()
+    async with AsyncSessionLocal() as db:
+        db.add(Incident(
+            id=incident_id, source="ci-config-review", severity="high",
+            service="nginx", status=IncidentStatus.OPEN,
+            summary="nginx test config error line 103",
+        ))
+        await db.commit()
+        result = await draft_cognia_review(
+            db, incident_id=incident_id, service="nginx",
+            evidence_ref="chat-mcp:nginx-config-103",
+            diagnostic="nginx_config_review",
+            state={"analysis_results": [
+                {"agent_name": "vm", "statement": "syntax error at line 103 is observed"},
+            ], "followup_analysis": {"status": "reassessed_read_only"}},
+        )
+        assert result["status"] == "pending_review"
+        assert result["published_to_cognia"] is False
+        row = (await db.execute(
+            select(KnowledgeReview).where(KnowledgeReview.id == result["review_id"])
+        )).scalars().one()
+        assert row.source_type == "incident_followup"
+        assert row.incident_id == incident_id
+        assert row.memory_id is None
+        assert row.review_reason == "chat-mcp:nginx-config-103"
+        assert row.status == "pending_review"
+        # Repeated button presses must not duplicate one observation draft.
+        again = await draft_cognia_review(
+            db, incident_id=incident_id, service="nginx",
+            evidence_ref="chat-mcp:nginx-config-103",
+            diagnostic="nginx_config_review",
+            state={"analysis_results": [], "followup_analysis": {}},
+        )
+        assert again["review_id"] == str(row.id)
+        assert again["status"] == "pending_review"
+        assert again["published_to_cognia"] is False
