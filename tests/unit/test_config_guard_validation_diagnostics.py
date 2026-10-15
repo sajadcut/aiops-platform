@@ -71,6 +71,141 @@ async def test_live_rc1_is_nonapprovable_and_safe_for_api():
     assert "sudo:" not in repr(result)
 
 
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "change,service,path,scope,validator",
+    [
+        ("llm_full_file_repair", "nginx", "/etc/nginx/nginx.conf",
+         "nginx_mount_namespace_staged_etc_nginx_live_external_read_dependencies",
+         "nginx -t (private mount namespace)"),
+        ("llm_full_file_repair", "gfpapi", "/opt/gfpapi/appsettings.json",
+         "generic_json_syntax_only_service_runtime_unverified",
+         "jq empty (JSON syntax only; application semantics unverified)"),
+        ("llm_full_file_repair", "tomcat", "/opt/tomcat/conf/server.xml",
+         "generic_xml_syntax_only_service_runtime_unverified",
+         "xmllint --nonet --noout (XML syntax only)"),
+        ("remove_extra_opening_brace", "nginx", "/etc/nginx/nginx.conf",
+         "nginx_mount_namespace_staged_etc_nginx_live_external_read_dependencies",
+         "nginx -t (private mount namespace)"),
+    ],
+)
+async def test_promote_hash_bound_validated_config_requires_only_human_approval(
+    change, service, path, scope, validator,
+):
+    """Candidate source (LLM vs deterministic) cannot veto a real vendor PASS."""
+    import json
+    from unittest.mock import AsyncMock
+    from apps.approval_service.postgres import PostgreSQLApprovalStore
+
+    source, candidate = "a" * 64, "b" * 64
+    metadata = {
+        "workflow": "config_change", "service": service, "config_file": path,
+        "proposed_change": change, "original_sha256": source,
+        "candidate_sha256": candidate,
+    }
+    record = {
+        "approval_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+        "incident_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+        "action": "apply_configuration_change", "status": "pending_validation",
+        "metadata": metadata,
+    }
+
+    class Result:
+        def __init__(self, row):
+            self.row = row
+
+        def mappings(self):
+            return self
+
+        def first(self):
+            return self.row
+
+    class Session:
+        def __init__(self):
+            self.updates = []
+            self.commits = 0
+
+        async def execute(self, statement, params):
+            self.updates.append((str(statement), params))
+            proof = json.loads(params["proof"])
+            return Result({**record, "status": "pending",
+                           "metadata": {**metadata, **proof}})
+
+        async def commit(self):
+            self.commits += 1
+
+    db = Session()
+    store = PostgreSQLApprovalStore(db)
+    store.get = AsyncMock(return_value=record)
+    store._incident_source_recovered = AsyncMock(return_value=False)
+    ready = await store.promote_validated_config(
+        record["approval_id"], source_sha256=source,
+        candidate_sha256=candidate, validation_scope=scope,
+        vendor_validator=validator,
+    )
+    assert ready["status"] == "pending"  # not approved or executed
+    assert ready["metadata"]["isolated_validation"] is True
+    assert ready["metadata"]["request_phase"] == "ready_for_human_approval"
+    assert ready["metadata"]["vendor_validator"] == validator
+    assert db.commits == 1
+    assert len(db.updates) == 1
+    assert "status='pending_validation'" in db.updates[0][0]
+    assert "SET status='pending'" in db.updates[0][0]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "change,service,path,scope,validator,expected",
+    [
+        ("llm_full_file_repair", "gfpapi", "/etc/nginx/nginx.conf",
+         "nginx_mount_namespace_staged_etc_nginx_live_external_read_dependencies",
+         "nginx -t", "config_vendor_scope_mismatch"),
+        ("llm_full_file_repair", "nginx", "/tmp/nginx.conf",
+         "nginx_mount_namespace_staged_etc_nginx_live_external_read_dependencies",
+         "nginx -t", "config_vendor_scope_mismatch"),
+        ("llm_full_file_repair", "nginx", "/etc/nginx/nginx.conf",
+         "nginx_mount_namespace_staged_etc_nginx_live_external_read_dependencies",
+         "xmllint --nonet", "config_vendor_scope_mismatch"),
+        ("llm_full_file_repair", "gfpapi", "/opt/gfpapi/appsettings.json",
+         "generic_json_syntax_only_service_runtime_unverified",
+         "xmllint", "config_format_scope_mismatch"),
+        ("llm_full_file_repair", "tomcat", "/opt/tomcat/conf/server.xml",
+         "generic_xml_syntax_only_service_runtime_unverified",
+         "jq empty", "config_xml_scope_mismatch"),
+    ],
+)
+async def test_promotion_rejects_llm_vendor_mismatch_before_database_mutation(
+    change, service, path, scope, validator, expected,
+):
+    from unittest.mock import AsyncMock
+    from apps.approval_service.postgres import PostgreSQLApprovalStore
+
+    class NoWrites:
+        async def execute(self, *args, **kwargs):
+            raise AssertionError("no SQL writes or approvals permitted")
+        async def commit(self):
+            raise AssertionError("no commit permitted")
+
+    meta = {
+        "workflow": "config_change", "service": service, "config_file": path,
+        "proposed_change": change, "original_sha256": "a" * 64,
+        "candidate_sha256": "b" * 64,
+    }
+    store = PostgreSQLApprovalStore(NoWrites())
+    store.get = AsyncMock(return_value={
+        "status": "pending_validation", "metadata": meta,
+    })
+    store._incident_source_recovered = AsyncMock(
+        side_effect=AssertionError("invalid vendor scope cannot be promoted")
+    )
+    with pytest.raises(ValueError, match=expected):
+        await store.promote_validated_config(
+            "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+            source_sha256="a" * 64, candidate_sha256="b" * 64,
+            validation_scope=scope, vendor_validator=validator,
+        )
+
+
 def test_blocked_reason_is_visible_after_reload_but_cannot_make_ticket_actionable():
     from apps.approval_service.postgres import PostgreSQLApprovalStore
     from inspect import getsource
