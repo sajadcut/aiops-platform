@@ -169,7 +169,7 @@ def local_config_review(encoded: str, *, path: str, validator_error_line: int | 
                 # supported XML transformation. Never invent attributes,
                 # values, namespaces, or missing elements with an LLM.
                 closing = re.search(
-                    r"</[A-Za-z][A-Za-z0-9_.:-]{0,47}>(?=\\s*\\Z)", source
+                    r"</[A-Za-z][A-Za-z0-9_.:-]{0,47}>(?=\s*\Z)", source
                 )
                 if closing:
                     proposed = source[:closing.start()] + source[closing.end():]
@@ -178,7 +178,7 @@ def local_config_review(encoded: str, *, path: str, validator_error_line: int | 
                     except ET.ParseError:
                         pass
                     else:
-                        line_no = source[:closing.start()].count("\\n") + 1
+                        line_no = source[:closing.start()].count("\n") + 1
                         answer.update({
                             "status": "candidate_proposed",
                             "candidate_hash": hashlib.sha256(proposed.encode("utf-8")).hexdigest(),
