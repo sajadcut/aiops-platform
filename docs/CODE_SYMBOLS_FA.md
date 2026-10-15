@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 507 | Dashboard JS files scanned: 8 | Symbols indexed: 5357**
+**Python files scanned: 508 | Dashboard JS files scanned: 8 | Symbols indexed: 5371**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -3746,6 +3746,20 @@
 | `tests/unit/test_elastic_mcp_wire_tool.py` | `test_elastic_mcp_wire_tool_allowlist_and_discovery.fake_request` | 16 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_elastic_mcp_wire_tool_allowlist_and_discovery |
 | `tests/unit/test_elastic_mcp_wire_tool.py` | `test_elastic_get_logs_calls_actual_esql_wire_tool` | 48 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_elastic_mcp_wire_tool.py` | `test_elastic_get_logs_calls_actual_esql_wire_tool.fake_call_tool` | 52 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_elastic_get_logs_calls_actual_esql_wire_tool |
+| `tests/unit/test_ephemeral_config_guard.py` | `test_ephemeral_script_has_valid_posix_syntax_and_only_trusted_static_code` | 18 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_ephemeral_config_guard.py` | `test_ephemeral_config_payload_cannot_inject_shell_syntax` | 40 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_ephemeral_config_guard.py` | `test_ephemeral_builder_rejects_untrusted_operation_or_metadata` | 62 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_ephemeral_config_guard.py` | `test_direct_apply_without_valid_signed_claim_is_denied_before_ssh` | 76 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_ephemeral_config_guard.py` | `test_direct_apply_without_valid_signed_claim_is_denied_before_ssh.NoSSH` | 77 | class | کلاس | test_direct_apply_without_valid_signed_claim_is_denied_before_ssh |
+| `tests/unit/test_ephemeral_config_guard.py` | `test_direct_apply_without_valid_signed_claim_is_denied_before_ssh.NoSSH.__getattr__` | 81 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_direct_apply_without_valid_signed_claim_is_denied_before_ssh.NoSSH |
+| `tests/unit/test_ephemeral_config_guard.py` | `test_approved_apply_still_requires_identical_signed_file_hashes` | 97 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_ephemeral_config_guard.py` | `test_approved_apply_still_requires_identical_signed_file_hashes.NoSSH` | 108 | class | کلاس | test_approved_apply_still_requires_identical_signed_file_hashes |
+| `tests/unit/test_ephemeral_config_guard.py` | `test_approved_apply_still_requires_identical_signed_file_hashes.NoSSH.__getattr__` | 112 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_approved_apply_still_requires_identical_signed_file_hashes.NoSSH |
+| `tests/unit/test_ephemeral_config_guard.py` | `test_signed_approved_apply_uses_fixed_root_script_and_reports_verification` | 128 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_ephemeral_config_guard.py` | `test_signed_approved_apply_uses_fixed_root_script_and_reports_verification.Edge` | 141 | class | کلاس | test_signed_approved_apply_uses_fixed_root_script_and_reports_verification |
+| `tests/unit/test_ephemeral_config_guard.py` | `test_signed_approved_apply_uses_fixed_root_script_and_reports_verification.Edge.config_validate` | 145 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_signed_approved_apply_uses_fixed_root_script_and_reports_verification.Edge |
+| `tests/unit/test_ephemeral_config_guard.py` | `test_signed_approved_apply_uses_fixed_root_script_and_reports_verification.Edge._run` | 152 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_signed_approved_apply_uses_fixed_root_script_and_reports_verification.Edge |
+| `tests/unit/test_ephemeral_config_guard.py` | `test_signed_approved_apply_uses_fixed_root_script_and_reports_verification.Edge._sudo` | 156 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_signed_approved_apply_uses_fixed_root_script_and_reports_verification.Edge |
 | `tests/unit/test_evaluator.py` | `test_rejects_empty_plan` | 4 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_evaluator.py` | `test_accepts_evidence_backed_plan` | 10 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_evaluator_live_evidence_binding.py` | `test_orchestrator_evaluator_passes_authoritative_live_evidence_ids` | 8 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
