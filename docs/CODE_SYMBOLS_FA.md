@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 525 | Dashboard JS files scanned: 8 | Symbols indexed: 5610**
+**Python files scanned: 525 | Dashboard JS files scanned: 8 | Symbols indexed: 5611**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -2384,16 +2384,17 @@
 | `integrations/prometheus/mcp_client.py` | `PrometheusMCPClient.get_metrics` | 251 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | PrometheusMCPClient |
 | `integrations/prometheus/mcp_client.py` | `PrometheusMCPClient.get_alerts` | 282 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | PrometheusMCPClient |
 | `integrations/prometheus/mcp_client.py` | `PrometheusMCPClient.health_check` | 333 | async method | Check the upstream Prometheus backend readiness through the official tool. | PrometheusMCPClient |
-| `integrations/vm/config_candidate_vault.py` | `CandidateUnavailable` | 27 | class | Expected configuration/storage refusal. Never embed sensitive bytes. | module |
-| `integrations/vm/config_candidate_vault.py` | `_key` | 31 | function | Only the existing MCP_BEARER_TOKEN is required. Never log key material. | module |
-| `integrations/vm/config_candidate_vault.py` | `_default_directory` | 39 | function | Fixed OS-specific private location, no additional runtime setting. | module |
-| `integrations/vm/config_candidate_vault.py` | `_directory` | 46 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `integrations/vm/config_candidate_vault.py` | `_binding` | 66 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `integrations/vm/config_candidate_vault.py` | `_filename` | 78 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `integrations/vm/config_candidate_vault.py` | `_read_file` | 82 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `integrations/vm/config_candidate_vault.py` | `_prune_expired` | 103 | function | Opportunistic bounded ciphertext retention, never touch unknown files. | module |
-| `integrations/vm/config_candidate_vault.py` | `store_candidate` | 127 | function | Seal the exact complete response, durably. Never return its bytes. | module |
-| `integrations/vm/config_candidate_vault.py` | `load_candidate` | 197 | function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
+| `integrations/vm/config_candidate_vault.py` | `CandidateUnavailable` | 29 | class | Expected configuration/storage refusal. Never embed sensitive bytes. | module |
+| `integrations/vm/config_candidate_vault.py` | `_key` | 33 | function | Only the existing MCP_BEARER_TOKEN is required. Never log key material. | module |
+| `integrations/vm/config_candidate_vault.py` | `_default_directory` | 41 | function | Fixed OS-specific private location, no additional runtime setting. | module |
+| `integrations/vm/config_candidate_vault.py` | `_prepare_windows_directory` | 48 | function | Automatically secure inherited ProgramData ACLs before any write. | module |
+| `integrations/vm/config_candidate_vault.py` | `_directory` | 65 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `integrations/vm/config_candidate_vault.py` | `_binding` | 85 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `integrations/vm/config_candidate_vault.py` | `_filename` | 97 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `integrations/vm/config_candidate_vault.py` | `_read_file` | 101 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `integrations/vm/config_candidate_vault.py` | `_prune_expired` | 122 | function | Opportunistic bounded ciphertext retention, never touch unknown files. | module |
+| `integrations/vm/config_candidate_vault.py` | `store_candidate` | 146 | function | Seal the exact complete response, durably. Never return its bytes. | module |
+| `integrations/vm/config_candidate_vault.py` | `load_candidate` | 216 | function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
 | `integrations/vm/dotnet_local_validator.py` | `safe_json_files` | 42 | function | Parse untrusted remote directory names. Excess is NOT a full validation. | module |
 | `integrations/vm/dotnet_local_validator.py` | `remote_file_listing_command` | 61 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `integrations/vm/dotnet_local_validator.py` | `remote_file_read_command` | 76 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
