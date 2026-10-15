@@ -107,8 +107,6 @@ def _candidate_preview(original: str, corrected: str) -> dict:
         return {**base, "rejection_reason": "incomplete_or_invalid_candidate"}
     if original == corrected:
         return {**base, "status": "no_change_proposed"}
-    if _value_tokens(original) != _value_tokens(corrected):
-        return {**base, "rejection_reason": "candidate_changes_configuration_values"}
     before, after = original.splitlines(keepends=True), corrected.splitlines(keepends=True)
     # Diff on full lines; never trust an LLM that rewrites the whole config.
     differences = [op for op in difflib.SequenceMatcher(
@@ -122,6 +120,8 @@ def _candidate_preview(original: str, corrected: str) -> dict:
     for _, i1, i2, j1, j2 in differences:
         if any(_SENSITIVE.search(line) for line in before[i1:i2] + after[j1:j2]):
             return {**base, "rejection_reason": "candidate_changes_sensitive_line"}
+    if _value_tokens(original) != _value_tokens(corrected):
+        return {**base, "rejection_reason": "candidate_changes_configuration_values"}
     locations = sorted({i + 1 for _, i1, i2, _, _ in differences
                         for i in range(i1, max(i1 + 1, i2))})
     diffs = []
