@@ -265,26 +265,47 @@ class SSHVMConnector:
 
     async def _sudo(self, target: str, fixed_command: str, *,
                     stdin_data: Optional[str] = None) -> Dict[str, Any]:
-        """Use the SAME SSH identity for privileged fixed commands.
+        """Execute a fixed privileged action through the existing SSH user.
 
-        First try passwordless sudo. If that requires authentication and SSH
-        uses password auth, supply the existing SSH user's password via stdin.
-        A governed config guard also reads the full candidate from stdin;
-        prepend ONLY the sudo password line, then pass the candidate verbatim.
-        No root login, unrestricted `su` session, shell-embedded password, or
-        write outside the signed/approved config guard is introduced.
+        When sudo requires an SSH-password-authenticated user's password,
+        pass it via stdin. Do not log credential or candidate bytes.
         """
-        result = await self._run(target, f"sudo -n {fixed_command}", stdin_data=stdin_data)
-        if not self._sudo_requires_password(result) or self._auth_mode() != "password":
-            return result
+        is_guard = fixed_command.startswith("/usr/local/sbin/aiops-config-guard ")
+        first = await self._run(target, f"sudo -n {fixed_command}", stdin_data=stdin_data)
+        needs_password = self._sudo_requires_password(first)
+        if is_guard:
+            logger.info(
+                "vm_config_guard_sudo_stage",
+                target=target, stage="sudo_noninteractive",
+                ssh_user=settings.SSH_USERNAME.strip(),
+                success=first.get("success") is True,
+                exit_code=first.get("exit_code"),
+                password_required=needs_password,
+            )
+        if not needs_password or self._auth_mode() != "password":
+            return first
         password = self._password()
         if not password or "\n" in password or "\r" in password:
-            return result
-        # -k prevents a concurrent/cached sudo ticket from bypassing the
-        # password read: otherwise the guard might mistake the password line
-        # for the beginning of its configuration candidate.
+            if is_guard:
+                logger.warning(
+                    "vm_config_guard_sudo_stage",
+                    target=target, stage="sudo_password_unavailable",
+                    success=False,
+                )
+            return first
+        # -k forces sudo to consume the password line even with cached tickets;
+        # otherwise the root helper could read it as config candidate data.
         payload = password + "\n" + (stdin_data if stdin_data is not None else "")
-        return await self._run(target, f"sudo -k -S -p '' {fixed_command}", stdin_data=payload)
+        second = await self._run(target, f"sudo -k -S -p '' {fixed_command}", stdin_data=payload)
+        if is_guard:
+            logger.info(
+                "vm_config_guard_sudo_stage",
+                target=target, stage="sudo_password_retry",
+                ssh_user=settings.SSH_USERNAME.strip(),
+                success=second.get("success") is True,
+                exit_code=second.get("exit_code"),
+            )
+        return second
 
     async def config_guard_preflight(self, target: str) -> Dict[str, Any]:
         """Verify the fixed guard path without privilege or leaking VM output.
