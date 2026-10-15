@@ -144,7 +144,7 @@ async def test_incident_config_read_does_not_persist_transient_file_projections(
     from apps.incident_copilot import vm_read
     from apps import config_syntax_llm
 
-    async def fake_review(source, candidate=None, *, model=None):
+    async def fake_review(source, candidate=None, *, model=None, file_type='', vendor_status=''):
         assert sanitized_projection(source) is not None
         return {"status": "reviewed_twice", "model_validated": False,
                 "vendor_validated": False, "approval_eligible": False}
