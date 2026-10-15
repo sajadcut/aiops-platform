@@ -200,3 +200,67 @@ def test_only_explicit_vm_read_only_capabilities_are_requested():
     assert len(requests) == 2
     assert all(row["preferred_source"] == "vm" for row in requests)
     assert "start_service" not in str(requests)
+
+
+@pytest.mark.asyncio
+async def test_fresh_nginx_diff_survives_bounded_second_round_and_rebuilds_proposal():
+    """A second evidence pass must not discard the exact MCP review it fetched."""
+    from apps.orchestrator.e2e_graph import retain_incident_evidence_for_followup
+
+    old = [
+        {"type": "metric", "source": "prometheus", "reference": f"metric-{i}",
+         "raw_data": {"name": "cpu_usage", "value": i}}
+        for i in range(48)
+    ]
+    validator = {
+        "type": "telemetry", "source": "vm_mcp", "reference": "recent-validator",
+        "raw_data": {
+            "diagnostic": "config_validate", "target": "10.1.2.3",
+            "service": "nginx", "success": True, "supported": True,
+            "valid": False, "config_file": "/etc/nginx/nginx.conf",
+            "error_line": 103, "syntax_error": 'unexpected "{"',
+        },
+    }
+    review = {
+        "type": "telemetry", "source": "vm_mcp", "reference": "new-candidate",
+        "raw_data": {
+            "diagnostic": "nginx_config_review", "target": "10.1.2.3",
+            "service": "nginx", "success": True, "supported": True,
+            "status": "candidate_proposed",
+            "config_file": "/etc/nginx/nginx.conf", "error_line": 103,
+            "current_hash": "a" * 64, "candidate_hash": "b" * 64,
+            "validation_status": "UNVERIFIED",
+            "diff": {"line": 103, "before": "server [arguments redacted] {{",
+                     "after": "server [arguments redacted] {"},
+        },
+    }
+    rows = retain_incident_evidence_for_followup(old + [validator, review], 40)
+    assert len(rows) == 40
+    assert validator in rows and review in rows
+    result = await DynamicInvestigationPlanner.propose(
+        incident(evidence=rows), adapter=None,
+    )
+    proposal = result["config_proposal"]
+    assert proposal["status"] == "candidate_proposed"
+    assert proposal["redacted_diff"]["line"] == 103
+    assert proposal["original_sha256"] == "a" * 64
+    assert proposal["candidate_sha256"] == "b" * 64
+    assert proposal["apply_eligible"] is False
+    assert proposal["execution_authority"] is False
+
+
+def test_bounded_context_keeps_latest_validator_not_old_invalid():
+    from apps.orchestrator.e2e_graph import retain_incident_evidence_for_followup
+
+    older = config_evidence(valid=False)
+    newer = config_evidence(valid=True)
+    newer["reference"] = "latest-valid-check"
+    background = [
+        {"type": "metric", "source": "prometheus", "reference": f"other-{i}",
+         "raw_data": {"value": i}} for i in range(50)
+    ]
+    rows = retain_incident_evidence_for_followup(
+        [older, *background, newer], 40,
+    )
+    assert newer in rows
+    assert DynamicInvestigationPlanner.confirmed_config_failure(rows) is None
