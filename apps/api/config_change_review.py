@@ -59,6 +59,41 @@ def _matching_proposal(proposal: dict, payload: ConfigReviewResponse) -> bool:
     )
 
 
+
+def _review_progress(*, status: str, decision: str | None, proposal: dict,
+                     created_at: str | None = None) -> dict:
+    """Expose durable intent separately from executable Approval authority.
+
+    A recorded request is NOT a scheduled validator job. Only an isolated
+    successful validation and an independently registered apply contract
+    could allow creation of an executable change Approval.
+    """
+    requested = status == "awaiting_isolated_validation"
+    return {
+        "status": status,
+        "decision": decision,
+        "service": proposal.get("service"),
+        "config_file": proposal.get("config_file"),
+        "original_sha256": proposal.get("original_sha256"),
+        "candidate_sha256": proposal.get("candidate_sha256"),
+        "created_at": created_at,
+        "request_recorded": requested,
+        "validation_status": proposal.get("validation_status") or "UNVERIFIED",
+        "validation_pipeline_status": "not_implemented",
+        "change_contract_status": "not_implemented",
+        "approval_status": "not_created",
+        "approval_id": None,
+        "approval_eligible": False,
+        "execution_authority": False,
+        "production_write_performed": False,
+        "blocking_reasons": [
+            "isolated_candidate_validation_not_implemented",
+            "versioned_file_apply_contract_not_implemented",
+            "executable_approval_not_created",
+        ] if requested else [],
+    }
+
+
 @router.get("/incidents/{incident_id}/configuration-review-response")
 async def get_config_review_response(
     incident_id: UUID,
@@ -77,13 +112,13 @@ async def get_config_review_response(
         if (isinstance(meta, dict)
                 and meta.get("candidate_sha256") == proposal.get("candidate_sha256")
                 and meta.get("original_sha256") == proposal.get("original_sha256")):
-            return {
-                "status": event.get("status"), "decision": meta.get("decision"),
-                "candidate_sha256": meta.get("candidate_sha256"),
-                "created_at": str(event.get("created_at")),
-                "execution_authority": False,
-            }
-    return {"status": "not_responded", "execution_authority": False}
+            return _review_progress(
+                status=str(event.get("status") or "not_responded"),
+                decision=meta.get("decision"),
+                proposal=proposal,
+                created_at=str(event.get("created_at")),
+            )
+    return _review_progress(status="not_responded", decision=None, proposal=proposal)
 
 
 @router.post("/incidents/{incident_id}/configuration-review-response")
@@ -127,9 +162,6 @@ async def post_config_review_response(
             },
         )
         await AuditService.flush_to_store(audit, incident_id=str(incident_id))
-    return {
-        "status": status, "decision": payload.decision,
-        "candidate_sha256": payload.expected_candidate_sha256,
-        "execution_authority": False,
-        "production_write_performed": False,
-    }
+    return _review_progress(
+        status=status, decision=payload.decision, proposal=proposal,
+    )
