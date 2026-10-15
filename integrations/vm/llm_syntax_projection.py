@@ -18,8 +18,29 @@ def project_line(line: str, extension: str) -> str:
         # Mask quoted strings before retaining JSON grammar punctuation.
         text = re.sub(r'"(?:\\.|[^"\\])*"', '""', line)
         return "".join(c if c in '{}[],: \t' else 'x' for c in text)[:180]
+    # Treat quoted values and inline comments as entirely opaque.
+    # The model only needs the surrounding syntax; values are never tokens.
+    scrubbed = []
+    quote = None
+    escaped = False
+    for ch in line[:1000]:
+        if quote is not None:
+            if escaped:
+                escaped = False
+            elif ch == "\\\\":
+                escaped = True
+            elif ch == quote:
+                quote = None
+            continue
+        if ch in ("'", '"'):
+            scrubbed.append(" x ")
+            quote = ch
+            continue
+        if ch == "#":
+            break
+        scrubbed.append(ch)
     tokens = []
-    for word in WORDS.findall(line[:1000]):
+    for word in WORDS.findall("".join(scrubbed)):
         if re.fullmatch(r"[A-Za-z_][A-Za-z0-9_.-]*", word):
             tokens.append(word if word.lower() in KNOWN else "x")
         elif word.isdigit():
