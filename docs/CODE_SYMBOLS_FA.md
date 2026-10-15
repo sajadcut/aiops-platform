@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 514 | Dashboard JS files scanned: 8 | Symbols indexed: 5446**
+**Python files scanned: 515 | Dashboard JS files scanned: 8 | Symbols indexed: 5466**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -3508,6 +3508,26 @@
 | `tests/unit/test_config_guard_validation_diagnostics.py` | `test_ephemeral_sudo_failure_logs_bounded_reason_without_candidate.Edge.config_validate` | 409 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_ephemeral_sudo_failure_logs_bounded_reason_without_candidate.Edge |
 | `tests/unit/test_config_guard_validation_diagnostics.py` | `test_ephemeral_sudo_failure_logs_bounded_reason_without_candidate.Edge._run` | 416 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_ephemeral_sudo_failure_logs_bounded_reason_without_candidate.Edge |
 | `tests/unit/test_config_guard_validation_diagnostics.py` | `test_ephemeral_sudo_failure_logs_bounded_reason_without_candidate.Edge._sudo` | 419 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_ephemeral_sudo_failure_logs_bounded_reason_without_candidate.Edge |
+| `tests/unit/test_config_repair_recovery.py` | `signing_token` | 10 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_config_repair_recovery.py` | `_claim` | 15 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_config_repair_recovery.py` | `test_recovery_scope_is_signed_and_cannot_be_added_after_approval` | 26 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_config_repair_recovery.py` | `test_existing_config_only_ticket_remains_config_only` | 45 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_config_repair_recovery.py` | `test_start_once_after_approved_repair_and_verify_fresh_systemd` | 61 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_config_repair_recovery.py` | `test_start_once_after_approved_repair_and_verify_fresh_systemd.Edge` | 63 | class | کلاس | test_start_once_after_approved_repair_and_verify_fresh_systemd |
+| `tests/unit/test_config_repair_recovery.py` | `test_start_once_after_approved_repair_and_verify_fresh_systemd.Edge.service_status` | 64 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_start_once_after_approved_repair_and_verify_fresh_systemd.Edge |
+| `tests/unit/test_config_repair_recovery.py` | `test_start_once_after_approved_repair_and_verify_fresh_systemd.Edge.start_service` | 69 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_start_once_after_approved_repair_and_verify_fresh_systemd.Edge |
+| `tests/unit/test_config_repair_recovery.py` | `test_no_unnecessary_start_when_service_is_already_running` | 80 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_config_repair_recovery.py` | `test_no_unnecessary_start_when_service_is_already_running.Edge` | 81 | class | کلاس | test_no_unnecessary_start_when_service_is_already_running |
+| `tests/unit/test_config_repair_recovery.py` | `test_no_unnecessary_start_when_service_is_already_running.Edge.service_status` | 82 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_no_unnecessary_start_when_service_is_already_running.Edge |
+| `tests/unit/test_config_repair_recovery.py` | `test_no_unnecessary_start_when_service_is_already_running.Edge.start_service` | 85 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_no_unnecessary_start_when_service_is_already_running.Edge |
+| `tests/unit/test_config_repair_recovery.py` | `test_failed_preflight_or_start_never_fakes_recovery` | 94 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_config_repair_recovery.py` | `test_failed_preflight_or_start_never_fakes_recovery.Edge` | 95 | class | کلاس | test_failed_preflight_or_start_never_fakes_recovery |
+| `tests/unit/test_config_repair_recovery.py` | `test_failed_preflight_or_start_never_fakes_recovery.Edge.service_status` | 96 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_failed_preflight_or_start_never_fakes_recovery.Edge |
+| `tests/unit/test_config_repair_recovery.py` | `test_failed_preflight_or_start_never_fakes_recovery.Edge.start_service` | 99 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_failed_preflight_or_start_never_fakes_recovery.Edge |
+| `tests/unit/test_config_repair_recovery.py` | `test_unknown_state_never_starts` | 109 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_config_repair_recovery.py` | `test_unknown_state_never_starts.Edge` | 110 | class | کلاس | test_unknown_state_never_starts |
+| `tests/unit/test_config_repair_recovery.py` | `test_unknown_state_never_starts.Edge.service_status` | 111 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_unknown_state_never_starts.Edge |
+| `tests/unit/test_config_repair_recovery.py` | `test_unknown_state_never_starts.Edge.start_service` | 114 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_unknown_state_never_starts.Edge |
 | `tests/unit/test_config_review_button_runtime.py` | `test_config_buttons_dispatch_mcp_read_without_execution_and_refresh_report` | 11 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_config_signing_prerequisite.py` | `_report` | 14 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_config_signing_prerequisite.py` | `_valid` | 28 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
