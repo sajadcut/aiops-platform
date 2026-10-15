@@ -392,10 +392,33 @@ def public_result(action: str, value: Any) -> dict:
         result[key] = safe
     if action == "service_config_review":
         from apps.config_syntax_llm import sanitized_projection
+        from integrations.vm.general_config_review import checked_config_path
         for kind in ("syntax_projection", "candidate_syntax_projection"):
             checked = sanitized_projection(value.get(kind))
             if checked is not None:
                 result[kind] = checked
+        files = []
+        for item in (value.get("file_reviews") or [])[:12]:
+            if not isinstance(item, dict):
+                continue
+            try:
+                path = checked_config_path(item.get("path"))
+            except (ValueError, TypeError):
+                continue
+            files.append({
+                "path": path,
+                "file_type": str(item.get("file_type") or "")[:20],
+                "status": str(item.get("status") or "")[:50],
+                "validation_status": str(item.get("validation_status") or "")[:50],
+                "observed_error_line": item.get("observed_error_line")
+                    if type(item.get("observed_error_line")) is int else None,
+                "syntax_projection": sanitized_projection(item.get("syntax_projection")),
+                "candidate_syntax_projection": sanitized_projection(
+                    item.get("candidate_syntax_projection")
+                ),
+            })
+        result["file_reviews"] = files
+        result["reviewed_file_count"] = len(files)
     return result
 
 
