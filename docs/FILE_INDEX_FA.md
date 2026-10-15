@@ -3,7 +3,7 @@
 > این فایل فهرست فایل‌به‌فایل repository است. توضیح معماری و flow در `CODEBASE_GUIDE_FA.md` آمده است.
 > این فایل با `scripts/generate_file_index_fa.py` ساخته و در CI کنترل می‌شود.
 
-**تعداد فایل‌های track‌شده و پوشش‌داده‌شده: 643**
+**تعداد فایل‌های track‌شده و پوشش‌داده‌شده: 644**
 
 | Path | Type | Purpose | Called By | Calls/Depends On | Runtime/Test/Docs | Notes |
 |---|---|---|---|---|---|---|
@@ -118,6 +118,7 @@
 | `apps/chatbot/streaming.py` | Python | ماژول service لایه application | Runtime | domain/integrations | Runtime | جزء Control Plane |
 | `apps/chatbot/tools.py` | Python | ماژول service لایه application | Runtime | domain/integrations | Runtime | جزء Control Plane |
 | `apps/config_change_authorization.py` | Python | ماژول service لایه application | Runtime | domain/integrations | Runtime | جزء Control Plane |
+| `apps/config_syntax_llm.py` | Python | ماژول service لایه application | Runtime | domain/integrations | Runtime | جزء Control Plane |
 | `apps/context_service/__init__.py` | Python | Context: Asset Resolution، Context و Evidence collection | Orchestrator/signal flow | MCP integrations/domain | Runtime | live evidence مرجع عملیات است |
 | `apps/context_service/asset_identity.py` | Python | Context: Asset Resolution، Context و Evidence collection | Orchestrator/signal flow | MCP integrations/domain | Runtime | live evidence مرجع عملیات است |
 | `apps/context_service/builder.py` | Python | Context: Asset Resolution، Context و Evidence collection | Orchestrator/signal flow | MCP integrations/domain | Runtime | live evidence مرجع عملیات است |
