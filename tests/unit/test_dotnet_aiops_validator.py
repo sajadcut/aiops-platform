@@ -43,7 +43,7 @@ def test_gfpapi_all_discovered_json_filenames_are_validated_without_contents():
         "LendingGroupSettings.json", "MessageTemplates.json",
         "translations.json",
     ]
-    listing = "".join(name + "\\tf\\n" for name in names)
+    listing = "".join(name + "\tf\n" for name in names)
     files, incomplete = safe_json_files(listing)
     assert not incomplete
     assert set(files) == set(names)
@@ -52,11 +52,11 @@ def test_gfpapi_all_discovered_json_filenames_are_validated_without_contents():
         row = validate_encoded_file(name, encoded('{"token":"NEVER_EXPOSE"}'))
         assert row["status"] == "valid_json_syntax"
         assert "NEVER_EXPOSE" not in json.dumps(row)
-    invalid = validate_encoded_file("BotUsers.json", encoded('{\\"a\\": }'))
+    invalid = validate_encoded_file("BotUsers.json", encoded('{"a": }'))
     assert invalid["status"] == "invalid_json_syntax"
     assert invalid["line"] == 1
     assert invalid["column"] is not None
-    assert "a" not in json.dumps(invalid)
+    assert '"a"' not in json.dumps(invalid)
 
 
 def test_safe_error_explains_location_and_possible_fix_without_source_line():
