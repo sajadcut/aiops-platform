@@ -2382,6 +2382,7 @@
     const service=low(r?.incident_summary?.service).replace(/\.service$/,'');
     const investigation=r?.dynamic_investigation||{};
     const config=investigation.config_proposal||{};
+    const fullRepair=investigation.full_config_llm_repair||{};
     const discovery=investigation.config_discovery||{};
     const validator=r?.configuration_diagnostic||{};
     const response=state.configResponse||{};
@@ -2412,6 +2413,8 @@
     const symptom=braceError?
       (fa?'آکولاد باز «{» غیرمنتظره':'Unexpected opening brace {'):
       (fa?'خطای نحوی کانفیگ':'Configuration syntax error');
+    const fullChanged=fullRepair.status==='llm_candidate_proposed'?
+      arr(fullRepair.changed_line_numbers).filter(Number.isInteger).slice(0,12):[];
     const filename=path?'<code dir="ltr">'+txt(path)+'</code>':
       esc(fa?'فایل کانفیگ سرویس':'the service configuration file');
     const location=path?
@@ -2430,8 +2433,13 @@
       action='outcome';
     }else if(previouslyFailed){
       title=fa?'خطای کانفیگ '+service:'Configuration issue · '+service;
-      summary=location+
-        esc(fa?'، '+symptom+' گزارش شده است.':
+      summary=fullChanged.length?
+        (esc(fa?'در فایل ':'In file ')+filename+
+          esc(fa?'، LLM تغییر خط ':' the model proposed a change at line ')+
+          fullChanged.map(num).join(', ')+
+          esc(fa?' را پیشنهاد داده است؛ شمارهٔ خط ثبت‌شدهٔ Validator ممکن است مربوط به تشخیص قدیمی باشد. هنوز تست روی فایل اصلاحی انجام نشده است.':
+            '. The recorded validator line may come from an older diagnostic. The revised file has not been tested.')):
+        location+esc(fa?'، '+symptom+' گزارش شده است.':
           ': '+symptom+' was reported.');
       action=approval==='approved'?'approved':
         approval==='pending'?'pending':
@@ -2525,7 +2533,7 @@
       '</div><div class="ic-config-banner-actions">'+primary+secondary+fullLLMButton+'</div>';
   }
 
-  function renderConfigProposal(config) {
+  function renderConfigProposal(config,full={}) {
     const fa=state.language==='fa';
     const source=arr(config.current_excerpt),target=arr(config.proposed_excerpt);
     const diff=config.redacted_diff||{};
@@ -2534,11 +2542,16 @@
     const sourceHtml=source.length?snippets(source):'<p>'+esc(fa?
       'محتوای امن قابل نمایش هنوز دریافت نشده است.':'No safely displayable source excerpt is available.')+'</p>';
     const targetHtml=target.length?snippets(target):'<p>'+esc(fa?
-      'نسخه پیشنهادی قطعی تولید نشده است.':'No deterministic patch candidate has been produced.')+'</p>';
+      (full.status==='llm_candidate_proposed'?
+        'LLM نسخهٔ کامل را برگردانده است، اما نسخهٔ بازسازی‌پذیر و تست‌شده برای مسیر اجرا ثبت نشده است.':
+        'نسخه پیشنهادی قطعی تولید نشده است.'):
+      (full.status==='llm_candidate_proposed'?
+        'The model returned a complete file, but no reproducible validated execution candidate is registered.':
+        'No deterministic patch candidate has been produced.'))+'</p>';
     let html='<div class="ic-fix-grid">'+
       '<article class="ic-detail-card"><h4>'+esc(fa?'کانفیگ موجود (بخش ساختاری، محرمانه‌زدایی شده)':'Existing config (redacted structural excerpt)')+'</h4>'+
       '<p>'+txt(config.config_file)+'</p>'+sourceHtml+
-      '<p>'+esc(fa?'خط واقعی خطا: ':'Fatal diagnostic line: ')+txt(config.error_line)+'</p>'+
+      '<p>'+esc(fa?'خط ثبت‌شده در بررسی قبلی Validator: ':'Previously recorded validator line: ')+txt(config.error_line)+'</p>'+
       '<p class="ic-meta">Source SHA-256: '+txt(config.original_sha256)+'</p></article>'+
       '<article class="ic-detail-card"><h4>'+esc(fa?'پیشنهاد اصلاح کانفیگ':'Proposed configuration correction')+'</h4>'+
       targetHtml+
@@ -2711,7 +2724,7 @@
       '</p></div>'+
       discoveryHtml+
       fullRepairHtml+
-      (config.status?renderConfigProposal(config):'')+
+      (config.status?renderConfigProposal(config,full):'')+
       (p.runtime_discovery?.runtime==='dotnet'?(()=>{
         const d=p.runtime_discovery,files=arr(d.files);
         return '<article class="ic-detail-card"><h4>'+esc(fa?'کشف ساختار برنامه و بررسی تنظیمات .NET':'Discovered .NET runtime & configuration checks')+'</h4>'+
