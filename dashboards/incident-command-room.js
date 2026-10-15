@@ -2341,8 +2341,13 @@
     const responseLabel=responded?
       '<p role="status">'+esc(fa?'درخواست اصلاح ثبت شده؛ مرحله فعلی: ':'Correction request recorded; stage: ')+
       '<strong>'+txt(state.configResponse.status)+'</strong>'+
-      ' — '+esc(fa?'منتظر اعتبارسنجی مستقل، سپس ایجاد Approval اجرایی. هنوز مجوز تغییر فایل صادر نشده است.':
-        'Waiting for independent validation, then executable approval creation. No write is authorized.')+
+      ' — '+esc(fa?
+        (state.configResponse.validation_pipeline_status==='not_implemented'?
+          'این درخواست فقط در ممیزی ثبت شده است؛ پردازش اعتبارسنجی ایزوله و ایجاد Approval اجرایی هنوز پیاده‌سازی نشده‌اند. هیچ عملیات پس‌زمینه یا تغییری روی سرور آغاز نشده است.':
+          'این درخواست فقط برای بازبینی ثبت شده و هنوز مجوز اجرای فایل صادر نشده است.'):
+        (state.configResponse.validation_pipeline_status==='not_implemented'?
+          'Audit-only intent: isolated validation and executable approval are not implemented. No background validation or server write was started.':
+          'Review intent recorded; no execution approval has been issued.'))+
       '</p>':
       state.configResponseStatus==='failed'?
       '<p role="status" class="ic-config-banner-warning">'+esc(fa?
@@ -2483,7 +2488,7 @@
         '<button type="button" class="ic-btn ic-btn-muted" data-config-intent="reject"'+(disabled?' disabled':'')+'>'+
         esc(fa?'خیر، رد پیشنهاد':'No, reject proposal')+'</button></div>')+
         '<p class="ic-agent-disclaimer">'+esc(fa?
-          'این درخواست Approval اجرایی نیست؛ پس از اعتبارسنجی ایزوله، ثبت قرارداد اجرای امن و تأیید مستقل می‌توان گزینه اعمال را فعال کرد.':
+          'این درخواست Approval اجرایی نیست. مرحله اعتبارسنجی ایزوله و قرارداد اعمال فایل هنوز پیاده‌سازی نشده‌اند؛ با ثبت درخواست، کار اعتبارسنجی در پس‌زمینه شروع نمی‌شود.':
           'This is not execution approval. Actual Apply requires isolated validation, a registered change contract, and separate authorization.')+
         '</p></article>';
     }
