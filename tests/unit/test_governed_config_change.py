@@ -40,7 +40,7 @@ def test_nginx_candidate_reconstructed_only_from_same_hash_bound_source():
 
 
 def test_config_execution_signed_claim_is_exact_scoped_and_short_lived(monkeypatch):
-    monkeypatch.setenv("AIOPS_CONFIG_APPLY_SIGNING_SECRET", "a-real-unique-secret-for-tests-1234567890")
+    monkeypatch.setenv("MCP_BEARER_TOKEN", "a-real-unique-secret-for-tests-1234567890")
     values = params()
     claims, sig = create_claim(
         approval_id="c7767949-531b-4c42-87c5-e7f1795afc44",
@@ -57,8 +57,8 @@ def test_config_execution_signed_claim_is_exact_scoped_and_short_lived(monkeypat
     with pytest.raises(PermissionError):
         verify_claim({**claims, "candidate_sha256": "c"*64}, sig,
                      target="10.248.16.82", service="nginx")
-    monkeypatch.delenv("AIOPS_CONFIG_APPLY_SIGNING_SECRET")
-    with pytest.raises(PermissionError, match="signing_key"):
+    monkeypatch.delenv("MCP_BEARER_TOKEN")
+    with pytest.raises(PermissionError, match="mcp_bearer_token"):
         create_claim(approval_id="a", incident_id="b", target="host",
                      service="nginx", **values)
 
