@@ -116,6 +116,7 @@ def may_reassess(checkpoint: Mapping[str, Any], approval_status: str | None = No
 def knowledge_candidate(
     *, incident_id: UUID, service: str, evidence_ref: str,
     diagnostic: str, state: Mapping[str, Any],
+    dossier: Mapping[str, Any] | None = None,
 ) -> tuple[str, str]:
     """Sanitized *unverified* learning note; never a claimed recovery."""
     followup = state.get("followup_analysis") or {}
@@ -158,7 +159,10 @@ def knowledge_candidate(
                 if isinstance(value, (str, int, float, bool)) and len(str(value)) <= 70:
                     selected_facts.append(key + "=" + redact_text(str(value)))
         break
-    title = redact_text(f"بررسی تکمیلی رخداد {service} (نیازمند بازبینی)")[:500]
+    from apps.knowledge_review_dossier import dossier_addendum, dossier_title
+    title = (dossier_title(service, dossier)
+             or redact_text(f"بررسی تکمیلی رخداد {service} (نیازمند بازبینی)")[:500])
+    context_facts = dossier_addendum(dossier)
     content = "\n".join([
         "نوع: یادداشت تکمیلی رخداد؛ دانش تأییدشده یا نتیجه بازیابی نیست.",
         f"سرویس: {redact_text(service)[:120]}",
@@ -166,6 +170,7 @@ def knowledge_candidate(
         f"شاهد جدید: {evidence_ref}",
         f"نوع بررسی انجام‌شده: {diagnostic}",
         "مشاهدات محدود از ابزار: " + (", ".join(selected_facts) or "جزئیات در شناسهٔ شاهد"),
+        *([context_facts] if context_facts else []),
         f"وضعیت تحلیل: {followup.get('status', 'unknown')}",
         "یافته‌های ایجنت‌ها (تحلیل/فرضیه، نه اثبات علت):",
         *(("- " + item) for item in findings_text),
@@ -189,9 +194,11 @@ async def draft_cognia_review(
     if len(ids) != 1 or not app_id:
         return {"status": "configuration_required", "published_to_cognia": False,
                 "reason": "single_kb_and_client_application_required"}
+    from apps.knowledge_review_dossier import incident_dossier
+    dossier = await incident_dossier(db, incident_id)
     title, content = knowledge_candidate(
         incident_id=incident_id, service=service, evidence_ref=evidence_ref,
-        diagnostic=diagnostic, state=state,
+        diagnostic=diagnostic, state=state, dossier=dossier,
     )
     try:
         title, content = validated_document(title, content)
