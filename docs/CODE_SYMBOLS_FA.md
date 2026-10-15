@@ -672,12 +672,12 @@
 | `apps/api/chatbot.py` | `chatbot_action_decision` | 150 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/cognia_scope.py` | `reject_untrusted_knowledge_subject` | 8 | function | Reject caller-supplied Cognia ExternalSubject scope on public workflow APIs. | module |
 | `apps/api/config_change_execution.py` | `_fields` | 24 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/config_change_execution.py` | `_same_incident_candidate` | 49 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/config_change_execution.py` | `_audit` | 64 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/config_change_execution.py` | `validate_config_ticket` | 72 | async function | Reconstruct the candidate on MCP worker, prove staged vendor validation. | module |
-| `apps/api/config_change_execution.py` | `validate_config` | 148 | async function | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | module |
-| `apps/api/config_change_execution.py` | `execute_config` | 153 | async function | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | module |
-| `apps/api/config_change_execution.py` | `reject_pending_config` | 245 | async function | transition مربوط به Approval/Governance را اعمال می‌کند | module |
+| `apps/api/config_change_execution.py` | `_same_incident_candidate` | 55 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/config_change_execution.py` | `_audit` | 70 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/config_change_execution.py` | `validate_config_ticket` | 78 | async function | Reconstruct the candidate on MCP worker, prove staged vendor validation. | module |
+| `apps/api/config_change_execution.py` | `validate_config` | 154 | async function | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | module |
+| `apps/api/config_change_execution.py` | `execute_config` | 159 | async function | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | module |
+| `apps/api/config_change_execution.py` | `reject_pending_config` | 251 | async function | transition مربوط به Approval/Governance را اعمال می‌کند | module |
 | `apps/api/config_change_review.py` | `ConfigReviewResponse` | 33 | class | کلاس | module |
 | `apps/api/config_change_review.py` | `_proposal` | 42 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/config_change_review.py` | `_hash` | 53 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
