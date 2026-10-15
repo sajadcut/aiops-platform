@@ -331,9 +331,12 @@ class DynamicInvestigationPlanner:
             "config_proposal": None,
             "execution_authority": False, "counts_as_live_evidence": False,
         }
-        # Automatic syntax advice only when the real VM MCP observed a
-        # relevant configuration fault. This never upgrades evidence status.
-        if general_review.get("syntax_projection") and (
+        # Preserve actual model findings from the VM evidence collection
+        # without persisting the transient source grammar to incident storage.
+        if isinstance(general_review.get("config_llm_review"), dict):
+            result["config_llm_review"] = general_review["config_llm_review"]
+        # Compatibility with intentionally transient in-memory projections.
+        if "config_llm_review" not in result and general_review.get("syntax_projection") and (
                 failure or general_review.get("validation_status") == "FORMAT_INVALID"):
             from apps.config_syntax_llm import assess_service_syntax
             result["config_llm_review"] = await assess_service_syntax(
