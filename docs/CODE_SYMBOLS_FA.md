@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 515 | Dashboard JS files scanned: 8 | Symbols indexed: 5467**
+**Python files scanned: 515 | Dashboard JS files scanned: 8 | Symbols indexed: 5468**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -4196,6 +4196,7 @@
 | `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.Orchestrator._rca_node` | 182 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_followup_reassessment_recalculates_agents_without_executing.Orchestrator |
 | `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.Orchestrator._evaluator_node` | 185 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_followup_reassessment_recalculates_agents_without_executing.Orchestrator |
 | `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.knowledge_draft` | 190 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_followup_reassessment_recalculates_agents_without_executing |
+| `tests/unit/test_incident_followup.py` | `test_long_followup_status_is_persisted_without_postgresql_500` | 235 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_incident_operational_finalization.py` | `FakeSession` | 9 | class | کلاس | module |
 | `tests/unit/test_incident_operational_finalization.py` | `FakeSession.__init__` | 10 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeSession |
 | `tests/unit/test_incident_operational_finalization.py` | `FakeSession.get` | 13 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeSession |
