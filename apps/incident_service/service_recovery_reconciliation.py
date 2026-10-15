@@ -36,13 +36,35 @@ def local_recovery_decision(*, source: str, summary: str, service: str,
     ctx = context or {}
     if not is_service_down_alert(source, summary, service):
         return "alert_condition_unverified"
-    related = ctx.get("related_signals") or []
-    if not isinstance(related, list):
+    related = ctx.get("related_signals", [])
+    if not isinstance(related, list) or any(
+        not isinstance(item, dict) for item in related
+    ):
         return "correlation_unverified"
-    if any(isinstance(x, dict) and str(x.get("source") or "").lower() != "zabbix"
-           for x in related):
-        return "other_correlated_signals"
-    if len(related) > 1:
+    # 'related_signals' records *other* correlated trigger events, not
+    # proofs that our original source is healthy. Even a SINGLE Zabbix
+    # sibling may still be firing, so do not close on a systemd observation.
+    # If the original signal is duplicated here, the exact original
+    # problem event ID must be available and match before ignoring it.
+    trigger = ctx.get("trigger_signal") or {}
+    trigger_payload = trigger.get("payload") or {} if isinstance(trigger, dict) else {}
+    if not isinstance(trigger_payload, dict):
+        trigger_payload = {}
+    trigger_raw = trigger.get("raw_data") or {} if isinstance(trigger, dict) else {}
+    if not isinstance(trigger_raw, dict):
+        trigger_raw = {}
+    original = str(
+        trigger.get("source_id") or trigger.get("eventid")
+        or trigger_payload.get("eventid") or trigger_payload.get("event_id")
+        or trigger_raw.get("eventid") or trigger_raw.get("event_id") or ""
+    ) if isinstance(trigger, dict) else ""
+    other = [
+        item for item in related
+        if not (original
+                and str(item.get("source") or "").lower() == "zabbix"
+                and str(item.get("source_id") or "") == original)
+    ]
+    if other:
         return "other_correlated_signals"
     if (isinstance(ctx.get("source_recovery"), dict)
             and ctx["source_recovery"].get("incident_resolved") is True):
@@ -52,7 +74,7 @@ def local_recovery_decision(*, source: str, summary: str, service: str,
         if not isinstance(observation, Mapping):
             return "second_check_unavailable"
         if (observation.get("success") is not True
-                or observation.get("service", "").lower().removesuffix(".service") != name
+                or str(observation.get("service") or "").lower().removesuffix(".service") != name
                 or observation.get("target") != target
                 or observation.get("active_state") != "active"
                 or observation.get("sub_state") != "running"):
