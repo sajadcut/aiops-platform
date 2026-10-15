@@ -9,6 +9,7 @@ import hashlib
 import json
 import re
 import shlex
+import xml.etree.ElementTree as ET
 
 from integrations.vm.general_config_review import checked_config_path, remote_config_read_command, _remove_trailing_json_commas
 from integrations.vm.nginx_config_review import (
@@ -69,6 +70,36 @@ def rebuild_json_candidate(*, encoded: str, path: str,
         raise ValueError("config_candidate_hash_mismatch")
     return candidate
 
+
+def rebuild_xml_candidate(*, encoded: str, path: str,
+                          original_sha256: str, candidate_sha256: str) -> str:
+    """Remove one unmatched EOF closing tag; never edit XML values or DTDs."""
+    if not checked_config_path(path).endswith(".xml"):
+        raise ValueError("config_format_not_supported")
+    if not all(re.fullmatch(r"[0-9a-f]{64}", h or "") for h in (original_sha256, candidate_sha256)):
+        raise ValueError("config_candidate_invalid_contract")
+    raw = base64.b64decode(encoded, validate=True)
+    if not 1 <= len(raw) <= 262144 or hashlib.sha256(raw).hexdigest() != original_sha256:
+        raise ValueError("config_source_hash_drift")
+    source = raw.decode("utf-8", errors="strict")
+    if "\x00" in source or "<!DOCTYPE" in source.upper() or "<!ENTITY" in source.upper():
+        raise ValueError("xml_unsafe_entities_or_encoding")
+    try:
+        ET.fromstring(source)
+    except ET.ParseError:
+        pass
+    else:
+        raise ValueError("source_xml_already_valid")
+    match = re.search(r"</[A-Za-z][A-Za-z0-9_.:-]{0,47}>(?=\s*\Z)", source)
+    if not match:
+        raise ValueError("config_change_not_deterministic")
+    candidate = source[:match.start()] + source[match.end():]
+    ET.fromstring(candidate)
+    if hashlib.sha256(candidate.encode("utf-8")).hexdigest() != candidate_sha256:
+        raise ValueError("config_candidate_hash_mismatch")
+    return candidate
+
+
 async def run_governed_change(connector, *, action: str, target: str, service: str,
                               config_file: str, original_sha256: str,
                               candidate_sha256: str, proposed_change: str,
@@ -80,12 +111,15 @@ async def run_governed_change(connector, *, action: str, target: str, service: s
     name = str(service).lower().removesuffix(".service")
     nginx_profile = name == "nginx" and proposed_change == "remove_extra_opening_brace"
     json_profile = proposed_change == "remove_trailing_json_comma"
-    if not (nginx_profile or json_profile):
+    xml_profile = proposed_change == "remove_extra_xml_closing_tag"
+    if not (nginx_profile or json_profile or xml_profile):
         return {"success": False, "status": "unsupported_vendor_apply_adapter",
                 "isolated_validation": False, "production_write_performed": False}
     try:
         path = _checked_path(config_file) if nginx_profile else checked_config_path(config_file)
         if json_profile and not path.endswith(".json"):
+            raise ValueError("config_file_type_mismatch")
+        if xml_profile and not path.endswith(".xml"):
             raise ValueError("config_file_type_mismatch")
     except ValueError:
         return {"success": False, "status": "config_path_not_allowlisted",
@@ -127,7 +161,8 @@ async def run_governed_change(connector, *, action: str, target: str, service: s
             read = await connector._run(target, remote_config_read_command(path))
             if read.get("success") is not True:
                 raise ValueError("config_live_file_read_failed")
-            candidate = rebuild_json_candidate(
+            rebuild = rebuild_json_candidate if json_profile else rebuild_xml_candidate
+            candidate = rebuild(
                 encoded=str(read.get("stdout") or ""), path=path,
                 original_sha256=original_sha256, candidate_sha256=candidate_sha256,
             )
@@ -136,9 +171,11 @@ async def run_governed_change(connector, *, action: str, target: str, service: s
                 "isolated_validation": False, "production_write_performed": False}
     profile = "nginx" if nginx_profile else name
     scope = ("nginx_mount_namespace_staged_etc_nginx_live_external_read_dependencies"
-             if nginx_profile else "generic_json_syntax_only_service_runtime_unverified")
+             if nginx_profile else "generic_json_syntax_only_service_runtime_unverified"
+             if json_profile else "generic_xml_syntax_only_service_runtime_unverified")
     validator = ("nginx -t (private mount namespace)" if nginx_profile
-                 else "jq empty (JSON syntax only; application semantics unverified)")
+                 else "jq empty (JSON syntax only; application semantics unverified)"
+                 if json_profile else "xmllint --nonet --noout (XML syntax only)")
 
     # No unrestricted SSH root command: sudoers may delegate only the pre-
     # provisioned, root-owned guard. Never send config bytes in argv or logs.
