@@ -2015,6 +2015,28 @@
           'AIOps نباید سالم بودن کانفیگ یا امکان Start ایمن را حدس بزند. در صورت نامشخص بودن روش بررسی، استعلام از LLM فقط راهنمای اپراتور است.':
           'Do not guess that the configuration is valid. LLM guidance cannot replace a real check.')+'</p></article>');
     }
+    const model=r?.dynamic_investigation?.config_llm_review||{};
+    if(model.status&&model.status!=='—'&&model.status!=='not_requested') {
+      const observations=[
+        [fa?'تشخیص اولیه مدل':'First model diagnosis',model.model_diagnosis],
+        [fa?'بازبینی دوم مدل':'Second model review',model.model_second_review]
+      ].filter(entry=>entry[1]?.error_kind&&entry[1].error_kind!=='—');
+      const rows=observations.map(entry=>{
+        const detail=entry[1];
+        const pos=Number.isInteger(detail.line)?(fa?'، خط ':' , line ')+num(detail.line):'';
+        return '<li><b>'+esc(entry[0])+'</b>: '+txt(detail.error_kind)+esc(pos)+
+          '<div>'+txt(detail.reason||'')+'</div>'+
+          (detail.suggestion?'<div>'+esc(fa?'پیشنهاد: ':'Suggestion: ')+
+            txt(detail.suggestion)+'</div>':'')+'</li>';
+      }).join('');
+      items.push('<article class="ic-config-check" data-config-status="advisory">'+
+        '<h3>'+esc(fa?'تحلیل و بازبینی کانفیگ با LLM':'LLM configuration syntax review')+
+        '</h3><p>'+esc(fa?
+          'تحلیل LLM از نمای نحوی پالایش‌شده فایل واقعی است؛ مقادیر محرمانه ارسال نشده‌اند. این نتیجه جایگزین تست واقعی سرویس نیست و به‌تنهایی اجازهٔ Approval یا اعمال فایل نمی‌دهد.':
+          'LLM analyzed a value-free syntax projection of the live config. This does not replace vendor validation or permit Approval or apply.')+
+        '</p>'+(rows?'<ul class="ic-agent-bullets">'+rows+'</ul>':
+          '<p>'+txt(model.status)+'</p>')+'</article>');
+    }
     show('#ic-config-diagnostic',items.join(''));
   }
 
