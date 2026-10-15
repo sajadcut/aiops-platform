@@ -724,12 +724,31 @@ async def incident_chat_message(
                                      str(observation.get("candidate_hash"))[:64])
                     else:
                         parts.append("نسخه اصلاح‌شدهٔ قابل‌قبول دریافت نشد؛ وضعیت: " + state)
-                        if observation.get("rejection_reason"):
-                            parts.append("علت رد: " +
-                                         str(observation["rejection_reason"])[:80])
-                    parts.append("ذخیره‌سازی امن Candidate: " +
-                                 ("موفق" if observation.get("candidate_stored") is True
-                                  else "ناموفق؛ " + str(observation.get("storage_reason") or "نامشخص")[:80]))
+                        rejection_code = str(observation.get("rejection_reason") or "")[:80]
+                        readable_reasons = {
+                            "candidate_excessive_changes":
+                                "مدل بیش از محدودهٔ مجاز کانفیگ را تغییر داده است.",
+                            "candidate_not_minimal_syntax_fix":
+                                "تغییرات به یک ایراد نحوی کوچک محدود نبود.",
+                            "candidate_changes_unrelated_bytes":
+                                "مدل علاوه بر خطا، تورفتگی، فاصله‌گذاری یا محتوای دیگری را تغییر داده است.",
+                            "candidate_unrelated_to_validator_line":
+                                "تغییرات مدل به خط خطای اعلام‌شده توسط Validator مربوط نیست.",
+                            "candidate_changes_configuration_values":
+                                "مدل مقدار تنظیمات را تغییر داده که برای اصلاح نحوی مجاز نیست.",
+                            "candidate_changes_sensitive_line":
+                                "تغییر روی خط حاوی اطلاعات حساس پیشنهاد شده است.",
+                        }
+                        if rejection_code:
+                            parts.append("علت رد: " + readable_reasons.get(
+                                rejection_code, rejection_code))
+                    if observation.get("candidate_stored") is True:
+                        parts.append("ذخیره‌سازی امن Candidate: موفق")
+                    elif state == "candidate_storage_unavailable":
+                        parts.append("ذخیره‌سازی امن Candidate: ناموفق؛ " +
+                                     str(observation.get("storage_reason") or "نامشخص")[:80])
+                    else:
+                        parts.append("ذخیره‌سازی امن Candidate: انجام نشد؛ نسخهٔ معتبر و مجاز وجود ندارد.")
                     parts.append("فایل اصلی تغییر نکرده و Validator مستقل هنوز نسخهٔ اصلاحی را تأیید نکرده است؛ Approval یا Apply مجاز نیست.")
                     answer = "\n".join(parts)
                 if intent == "service_config_review":
