@@ -49,8 +49,9 @@ async def test_live_rc1_is_nonapprovable_and_safe_for_api():
             return await self._run(target, "sudo -n " + command, stdin_data=stdin_data)
 
         async def _run(self, target, command, *, stdin_data=None):
-            if "aiops-config-guard" in command:
-                assert stdin_data == CANDIDATE.decode()
+            if "/bin/sh -s --" in command:
+                assert base64.b64encode(CANDIDATE).decode() in stdin_data
+                assert CANDIDATE.decode() not in stdin_data
                 return {"success": False, "exit_code": 1,
                         "stderr": "sudo: a password is required",
                         "stdout": ""}
@@ -234,7 +235,8 @@ async def test_config_guard_preflight_accepts_only_root_owned_mode_0750():
 
 
 @pytest.mark.asyncio
-async def test_missing_helper_preflight_cannot_start_sudo_or_write_production():
+async def test_missing_helper_is_not_consulted_or_required_for_validation():
+    calls = []
     class Edge:
         _validate_target = staticmethod(lambda _: None)
         _validate_service = staticmethod(lambda _: None)
@@ -247,14 +249,17 @@ async def test_missing_helper_preflight_cannot_start_sudo_or_write_production():
             }
 
         async def _run(self, target, command, *, stdin_data=None):
-            assert "sudo" not in command
+            calls.append("read")
             return {"success": True, "stdout": base64.b64encode(SOURCE).decode()}
 
         async def config_guard_preflight(self, target):
-            return {"success": False, "status": "config_guard_helper_missing"}
+            raise AssertionError("No VM-installed helper is needed")
 
-        async def _sudo(self, *args, **kwargs):
-            raise AssertionError("no privileged command before guard provisioning")
+        async def _sudo(self, target, command, *, stdin_data=None):
+            calls.append("sudo")
+            assert command.startswith("/bin/sh -s -- validate nginx ")
+            assert base64.b64encode(CANDIDATE).decode() in stdin_data
+            return {"success": True, "exit_code": 0, "stdout": "VALIDATED"}
 
     result = await run_governed_change(
         Edge(), action="validate", target="192.0.2.11", service="nginx",
@@ -262,9 +267,10 @@ async def test_missing_helper_preflight_cannot_start_sudo_or_write_production():
         original_sha256=SOURCE_SHA, candidate_sha256=CANDIDATE_SHA,
         proposed_change="remove_extra_opening_brace",
     )
-    assert result["status"] == "config_guard_helper_missing"
-    assert result["isolated_validation"] is False
+    assert result["status"] == "isolated_vendor_validation_passed"
+    assert result["isolated_validation"] is True
     assert result["production_write_performed"] is False
+    assert calls == ["read", "sudo"]
 
 
 def test_non_helper_missing_dependency_is_not_misclassified():
@@ -321,9 +327,10 @@ async def test_provisioned_helper_validation_can_advance_without_production_writ
     assert result["status"] == "isolated_vendor_validation_passed"
     assert result["isolated_validation"] is True
     assert result["production_write_performed"] is False
-    assert [row[0] for row in calls] == ["read", "preflight", "sudo"]
-    assert calls[-1][2] == CANDIDATE.decode()
-    assert calls[-1][1].startswith("/usr/local/sbin/aiops-config-guard validate nginx ")
+    assert [row[0] for row in calls] == ["read", "sudo"]
+    assert base64.b64encode(CANDIDATE).decode() in calls[-1][2]
+    assert CANDIDATE.decode() not in calls[-1][2]
+    assert calls[-1][1].startswith("/bin/sh -s -- validate nginx ")
 
 
 def test_vm_provision_script_refuses_existing_helper_symlink():
@@ -385,12 +392,12 @@ async def test_missing_guard_probe_emits_safe_structured_vm_diagnostic(monkeypat
 
 
 @pytest.mark.asyncio
-async def test_config_validate_block_logs_stage_and_reason_without_candidate(monkeypatch):
+async def test_ephemeral_sudo_failure_logs_bounded_reason_without_candidate(monkeypatch):
     from integrations.vm import governed_config_change
 
     events = []
     class FakeLogger:
-        def warning(self, event, **fields):
+        def info(self, event, **fields):
             events.append((event, fields))
 
     monkeypatch.setattr(governed_config_change, "logger", FakeLogger())
@@ -409,11 +416,9 @@ async def test_config_validate_block_logs_stage_and_reason_without_candidate(mon
         async def _run(self, target, command, *, stdin_data=None):
             return {"success": True, "stdout": base64.b64encode(SOURCE).decode()}
 
-        async def config_guard_preflight(self, target):
-            return {"success": False, "status": "config_guard_helper_missing"}
-
-        async def _sudo(self, *args, **kwargs):
-            raise AssertionError("guard must not be run")
+        async def _sudo(self, target, command, *, stdin_data=None):
+            return {"success": False, "exit_code": 1,
+                    "stderr": "sudo: user is not allowed to execute this command"}
 
     result = await run_governed_change(
         Edge(), action="validate", target="192.0.2.55", service="nginx",
@@ -421,11 +426,10 @@ async def test_config_validate_block_logs_stage_and_reason_without_candidate(mon
         original_sha256=SOURCE_SHA, candidate_sha256=CANDIDATE_SHA,
         proposed_change="remove_extra_opening_brace",
     )
-    assert result["status"] == "config_guard_helper_missing"
-    assert len(events) == 1
-    event, fields = events[0]
-    assert event == "vm_config_guard_change_blocked"
-    assert fields["phase"] == "guard_preflight"
-    assert fields["reason"] == "config_guard_helper_missing"
-    assert "candidate" not in str(fields).lower()
-    assert not fields["production_write_performed"]
+    assert result["status"] == "config_guard_sudo_policy_denied"
+    assert result["isolated_validation"] is False
+    assert result["production_write_performed"] is False
+    assert any(event == "vm_config_guard_validation_completed"
+               and fields["result"] == "config_guard_sudo_policy_denied"
+               for event, fields in events)
+    assert not any("sudo: user" in repr(x) for x in events)
