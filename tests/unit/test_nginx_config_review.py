@@ -33,6 +33,25 @@ def test_nginx_fatal_location_overrides_earlier_warning():
     assert 'unexpected "{"' in result["syntax_error"]
 
 
+
+def test_nginx_emerg_listen_context_error_beats_earlier_warn():
+    """Real observed validator emits an Nginx emerg without 'unexpected'."""
+    diagnostic = (
+        '2026/10/15 17:20:17 [warn] 1053789#1053789: '
+        'the "user" directive makes sense only if the master process '
+        'runs with super-user privileges, ignored in /etc/nginx/nginx.conf:43\\n'
+        '2026/10/15 17:20:17 [emerg] 1053789#1053789: '
+        '"listen" directive is not allowed here in /etc/nginx/nginx.conf:104\\n'
+        'nginx: configuration file /etc/nginx/nginx.conf test failed'
+    )
+    parsed = parse_config_diagnostic(diagnostic)
+    assert parsed["config_file"] == "/etc/nginx/nginx.conf"
+    assert parsed["error_line"] == 104
+    assert '[emerg]' in parsed["syntax_error"]
+    assert 'listen' in parsed["syntax_error"]
+    assert ':43' not in parsed["syntax_error"]
+
+
 @pytest.mark.parametrize("path,line", [
     ("/tmp/nginx.conf", 103),
     ("/etc/passwd", 103),
