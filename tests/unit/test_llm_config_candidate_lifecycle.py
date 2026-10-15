@@ -31,9 +31,10 @@ HASH_CORRECTED = hashlib.sha256(CORRECTED.encode()).hexdigest()
 @pytest.fixture
 def vault_env(tmp_path, monkeypatch):
     from integrations.vm import config_candidate_vault as vault
-    key = base64.b64encode(os.urandom(32)).decode("ascii")
-    monkeypatch.setattr(vault.settings, "AIOPS_CONFIG_CANDIDATE_ENCRYPTION_KEY", key)
-    monkeypatch.setattr(vault.settings, "AIOPS_CONFIG_CANDIDATE_DIRECTORY", str(tmp_path / "private"))
+    # Existing platform MCP bearer is the *only* key source. A local path
+    # override is injected into this test only; not a runtime setting.
+    monkeypatch.setenv("MCP_BEARER_TOKEN", "strong-test-bearer-with-at-least-thirty-two-bytes-v1")
+    monkeypatch.setattr(vault, "_default_directory", lambda: tmp_path / "private")
     return tmp_path / "private"
 
 
@@ -50,6 +51,20 @@ def get(**overrides):
               "source_hash": HASH_SOURCE, "candidate_hash": HASH_CORRECTED}
     fields.update(overrides)
     return load_candidate(**fields)
+
+
+def test_key_derivation_is_stable_and_independent_from_signed_approval(vault_env, monkeypatch):
+    from apps.config_change_authorization import _key as approval_key, candidate_encryption_key
+    from integrations.vm.config_candidate_vault import _key as vault_key
+    assert len(vault_key()) == 32
+    assert vault_key() == candidate_encryption_key()
+    assert vault_key() != approval_key()
+    before = vault_key()
+    # Different imports/process initialization see exactly the same subkey.
+    assert before == vault_key()
+    monkeypatch.setenv("MCP_BEARER_TOKEN", "new-strong-bearer-token-with-more-than-32-bytes")
+    assert vault_key() != before
+    assert vault_key() != approval_key()
 
 
 def test_aes_gcm_persistent_storage_is_secret_safe_and_hash_bound(vault_env):
@@ -82,16 +97,15 @@ def test_wrong_key_tamper_and_expiry_fail_closed(vault_env, monkeypatch):
     with pytest.raises(CandidateUnavailable, match="candidate_decryption_failed"):
         get()
     stored.write_bytes(sealed)
-    monkeypatch.setattr(vault.time, "time", lambda: 1780000000 + 90000)
-    # Stored timestamps are from actual current test run, so always move past
-    # the stored timestamp rather than a particular wall clock date.
+    # Use recorded creation time; do not assume a particular wall-clock date.
     created = int.from_bytes(sealed[4:12], "big")
     monkeypatch.setattr(vault.time, "time", lambda: created + 86400)
     with pytest.raises(CandidateUnavailable, match="candidate_expired"):
         get()
     monkeypatch.setattr(vault.time, "time", lambda: created + 1)
-    monkeypatch.setattr(vault.settings, "AIOPS_CONFIG_CANDIDATE_ENCRYPTION_KEY",
-                        base64.b64encode(os.urandom(32)).decode("ascii"))
+    monkeypatch.setenv(
+        "MCP_BEARER_TOKEN", "different-strong-test-bearer-with-at-least-thirty-two-bytes-v2",
+    )
     with pytest.raises(CandidateUnavailable, match="candidate_decryption_failed"):
         get()
 
@@ -112,15 +126,18 @@ def test_expired_same_candidate_can_be_renewed_safely(vault_env, monkeypatch):
 
 def test_vault_requires_strong_key_and_no_symlink(vault_env, monkeypatch):
     from integrations.vm import config_candidate_vault as vault
-    monkeypatch.setattr(vault.settings, "AIOPS_CONFIG_CANDIDATE_ENCRYPTION_KEY", "")
-    with pytest.raises(CandidateUnavailable, match="candidate_key_not_configured"):
+    # Explicitly empty (or short) MCP bearer takes precedence over .env.
+    monkeypatch.setenv("MCP_BEARER_TOKEN", "")
+    with pytest.raises(CandidateUnavailable, match="candidate_mcp_bearer_missing_or_weak"):
         put()
-    monkeypatch.setattr(vault.settings, "AIOPS_CONFIG_CANDIDATE_ENCRYPTION_KEY",
-                        base64.b64encode(os.urandom(32)).decode("ascii"))
+    monkeypatch.setenv("MCP_BEARER_TOKEN", "weak")
+    with pytest.raises(CandidateUnavailable, match="candidate_mcp_bearer_missing_or_weak"):
+        put()
+    monkeypatch.setenv("MCP_BEARER_TOKEN", "strong-test-bearer-with-at-least-thirty-two-bytes-v1")
     vault_env.mkdir(exist_ok=True)
     alias = vault_env / "alias"
     alias.symlink_to(vault_env, target_is_directory=True)
-    monkeypatch.setattr(vault.settings, "AIOPS_CONFIG_CANDIDATE_DIRECTORY", str(alias))
+    monkeypatch.setattr(vault, "_default_directory", lambda: alias)
     with pytest.raises(CandidateUnavailable):
         put()
 
