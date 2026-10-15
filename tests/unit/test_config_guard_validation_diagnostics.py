@@ -280,3 +280,49 @@ def test_windows_vm_guard_installer_requires_explicit_operator_sudo():
     assert "sudo sha256sum" in script
     assert "sudo su" not in script.replace("unrestricted `sudo su`", "")
     assert "config_change_apply" not in script
+
+
+@pytest.mark.asyncio
+async def test_provisioned_helper_validation_can_advance_without_production_write():
+    calls = []
+    class Edge:
+        _validate_target = staticmethod(lambda _: None)
+        _validate_service = staticmethod(lambda _: None)
+
+        async def config_validate(self, target, service):
+            return {
+                "success": True, "supported": True, "valid": False,
+                "config_file": "/etc/nginx/nginx.conf", "error_line": 1,
+                "syntax_error": 'unexpected "{"',
+            }
+
+        async def _run(self, target, command, *, stdin_data=None):
+            calls.append(("read", command, stdin_data))
+            return {"success": True, "stdout": base64.b64encode(SOURCE).decode()}
+
+        async def config_guard_preflight(self, target):
+            calls.append(("preflight", target, None))
+            return {"success": True, "status": "config_guard_helper_present"}
+
+        async def _sudo(self, target, command, *, stdin_data=None):
+            calls.append(("sudo", command, stdin_data))
+            return {"success": True, "exit_code": 0, "stdout": "VALIDATED"}
+
+    result = await run_governed_change(
+        Edge(), action="validate", target="192.0.2.11", service="nginx",
+        config_file="/etc/nginx/nginx.conf",
+        original_sha256=SOURCE_SHA, candidate_sha256=CANDIDATE_SHA,
+        proposed_change="remove_extra_opening_brace",
+    )
+    assert result["status"] == "isolated_vendor_validation_passed"
+    assert result["isolated_validation"] is True
+    assert result["production_write_performed"] is False
+    assert [row[0] for row in calls] == ["read", "preflight", "sudo"]
+    assert calls[-1][2] == CANDIDATE.decode()
+    assert calls[-1][1].startswith("/usr/local/sbin/aiops-config-guard validate nginx ")
+
+
+def test_vm_provision_script_refuses_existing_helper_symlink():
+    script = (Path(__file__).resolve().parents[2]
+              / "scripts/vm/Install-AIOpsConfigGuard.ps1").read_text()
+    assert "sudo test ! -L $targetFile" in script
