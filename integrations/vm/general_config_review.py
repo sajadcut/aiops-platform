@@ -204,7 +204,7 @@ def local_config_review(encoded: str, *, path: str, validator_error_line: int | 
             _remove_trailing_json_commas(source), extension=ext, error_line=line_no,
         )
     elif answer["status"] == "candidate_proposed" and ext == "xml":
-        closing = re.search(r"</[A-Za-z][A-Za-z0-9_.:-]{0,47}>(?=\\s*\\Z)", source)
+        closing = re.search(r"</[A-Za-z][A-Za-z0-9_.:-]{0,47}>(?=\s*\Z)", source)
         if closing:
             answer["candidate_syntax_projection"] = syntax_projection(
                 source[:closing.start()] + source[closing.end():],
