@@ -48,6 +48,8 @@ def local_recovery_decision(*, source: str, summary: str, service: str,
                             vendor_syntax_ok: bool | None = None) -> str:
     """Return a bounded status, not mutable Incident state."""
     ctx = context or {}
+    if not isinstance(ctx, Mapping):
+        return "correlation_unverified"
     if not is_service_down_alert(source, summary, service):
         return "alert_condition_unverified"
     related = ctx.get("related_signals", [])
