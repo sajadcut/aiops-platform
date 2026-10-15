@@ -182,3 +182,40 @@ async def test_incident_config_read_does_not_persist_transient_file_projections(
     for entry in observation["file_reviews"]:
         assert "syntax_projection" not in entry
         assert "candidate_syntax_projection" not in entry
+
+
+@pytest.mark.asyncio
+async def test_evidence_collector_triggers_llm_and_discards_grammar(monkeypatch):
+    from apps.context_service.evidence_collector import EvidenceCollector
+    from apps import config_syntax_llm
+
+    calls = []
+    async def fake_assessment(shape, patched=None, **kwargs):
+        calls.append((shape, patched, kwargs))
+        return {"status": "reviewed_twice", "model_diagnosis": {
+            "error_kind": "extra_delimiter", "repair_kind": "remove_token",
+            "line": 5, "reason": "review needed",
+        }, "vendor_validated": False, "approval_eligible": False}
+
+    monkeypatch.setattr(config_syntax_llm, "assess_service_syntax", fake_assessment)
+    source = syntax_projection("server {{\n}\n", extension="conf")
+    raw = {
+        "success": True, "status": "candidate_proposed",
+        "config_file": "/etc/nginx/nginx.conf", "file_type": "conf",
+        "syntax_projection": source,
+        "candidate_syntax_projection": syntax_projection("server {\n}\n", extension="conf"),
+        "file_reviews": [
+            {"path": "/etc/nginx/nginx.conf", "syntax_projection": source},
+            {"path": "/opt/app/config.yaml", "file_type": "yaml",
+             "syntax_projection": syntax_projection("server: config\n", extension="yaml")},
+        ],
+    }
+    safe = await EvidenceCollector._analyze_config_syntax_without_persisting_grammar(raw)
+    assert len(calls) == 2
+    assert safe["config_llm_review"]["status"] == "reviewed_twice"
+    assert len(safe["file_model_reviews"]) == 2
+    assert "syntax_projection" not in safe
+    assert "candidate_syntax_projection" not in safe
+    assert all("syntax_projection" not in row for row in safe["file_reviews"])
+    assert safe["config_llm_review"]["vendor_validated"] is False
+    assert safe["config_llm_review"]["approval_eligible"] is False
