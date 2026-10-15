@@ -270,6 +270,32 @@ validation** of the same candidate. On source drift, expiration, mismatched
 key, unavailable isolation or failed vendor check, refuse; do not fall back
 to executing an LLM-suggested command.
 
+### Minimal LLM change policy and downloadable diff
+
+The full-file LLM request is **repair-only**, not a request to reformat,
+refactor or optimize application settings. The VM MCP prompt includes the
+recorded vendor error and its line when available. A second, independent
+deterministic gate rejects more than **three changed lines**, more than
+**three non-whitespace syntax character edits**, edits outside three lines of
+the vendor diagnostic, unrelated whitespace or line-ending modifications,
+value/credential edits, and sensitive-line modifications. It returns an
+explicit rejection code; it never quietly accepts a larger rewrite. The
+entire revised document remains hash-bound and requires real staged vendor
+validation and human approval before any write.
+
+The Incident Command Room displays a **redacted changed-line diff** from
+`full_config_llm_repair.redacted_changes`, in preference to an older
+deterministic candidate. The **Download diff (.diff)** control exports the
+same redacted structural preview as a text attachment from the browser.
+When there are more than six changed lines in a historical proposal, the
+inline view shows six and the downloaded artifact contains all recorded
+bounded changes (up to the pre-existing 12-line report cap).
+Neither the view nor the download exposes raw config values, secrets, or
+complete plaintext candidate files. The filename and hashes help identify
+which proposal the review applies to. This is not a patch meant to be
+applied with a shell command; approval binds to the sealed complete file's
+SHA-256, not the redacted display.
+
 ### Existing MCP bearer; optional candidate directory setting
 
 The VM MCP worker **reuses the existing** `MCP_BEARER_TOKEN`; there is no new
