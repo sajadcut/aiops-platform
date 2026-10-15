@@ -563,7 +563,6 @@ class EvidenceCollector:
                             action == "config_validate"
                             and result.get("supported") is True
                             and result.get("valid") is False
-                            and effective_service not in {"nginx", "nginx.service"}
                             and "service_config_review" not in actions
                         ):
                             actions.append("service_config_review")
