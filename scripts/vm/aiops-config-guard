@@ -116,13 +116,19 @@ if [ "$profile" = nginx ]; then
   relative=$(printf '%s' "$file" | sed 's@^/etc/nginx/@@')
   [ -f "$stage/tree/$relative" ] && [ ! -L "$stage/tree/$relative" ] || exit 46
   cp -- "$stage/candidate" "$stage/tree/$relative"
-  # Vendor validation of the candidate through private mount namespace.
+  # Distinguish environment restrictions from a genuinely invalid candidate.
+  # Never fall back to writing production just to validate a proposal.
+  unshare -m --propagation private -- /bin/true >/dev/null 2>&1 || exit 50
+  set +e
   unshare -m --propagation private -- /bin/sh -c '
     set -eu
-    mount --bind "$1" /etc/nginx
-    mount -o remount,bind,ro /etc/nginx
-    /usr/sbin/nginx -t -c "$2" >/dev/null 2>&1
-  ' guard "$stage/tree" "$file" >/dev/null 2>&1 || exit 47
+    mount --bind "$1" /etc/nginx >/dev/null 2>&1 || exit 51
+    mount -o remount,bind,ro /etc/nginx >/dev/null 2>&1 || exit 51
+    /usr/sbin/nginx -t -c "$2" >/dev/null 2>&1 || exit 47
+  ' guard "$stage/tree" "$file" >/dev/null 2>&1
+  validation_rc=$?
+  set -e
+  [ "$validation_rc" -eq 0 ] || exit "$validation_rc"
 elif [ "$profile" = json_syntax ]; then
   # Bounded syntax proof only; never proof of application/runtime semantics.
   jq empty "$stage/candidate" >/dev/null 2>&1 || exit 47
