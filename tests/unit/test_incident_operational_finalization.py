@@ -141,3 +141,29 @@ async def test_repeated_same_operational_outcome_updates_bounded_identity_not_du
         incident.context["latest_operational_outcome"]["memory_id"]
         == "memory-new"
     )
+
+
+@pytest.mark.asyncio
+async def test_late_failed_outcome_cannot_reopen_independently_verified_recovery():
+    incident = SimpleNamespace(
+        status=IncidentStatus.RESOLVED,
+        context={
+            "independent_recovery": {
+                "source": "vm_mcp_systemd_recheck",
+                "incident_resolved": True,
+                "monitor_recovered": False,
+                "checks": 2,
+            }
+        },
+    )
+    status = await IncidentRepository(FakeSession(incident)).record_operational_outcome(
+        "11111111-1111-1111-1111-111111111111",
+        source="late_runbook_update", action="restart_service",
+        target="10.100.6.199", approval_id="old-approval",
+        execution_success=False, verified=False,
+        verification={"status": "stale_failure"},
+    )
+    assert status == "resolved"
+    assert incident.status == IncidentStatus.RESOLVED
+    assert incident.context["independent_recovery"]["incident_resolved"] is True
+    assert incident.context["latest_operational_outcome"]["verified"] is False
