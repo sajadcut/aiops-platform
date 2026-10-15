@@ -34,7 +34,7 @@ from domain.models import Evidence, KnowledgeReview
 
 _LIVE_VM_CHECKS = frozenset({
     "service_status", "service_logs", "config_validate", "nginx_config_review",
-    "nginx_config_inspect", "service_runtime_discovery", "service_config_discovery", "service_config_review", "dotnet_config_syntax",
+    "nginx_config_inspect", "service_runtime_discovery", "service_config_discovery", "service_config_review", "service_config_llm_repair", "dotnet_config_syntax",
 })
 _LIVE_CHECKS = _LIVE_VM_CHECKS | {"elastic_logs"}
 
@@ -428,7 +428,7 @@ async def persist_and_reassess(
         if action in {
             "nginx_config_review", "config_validate", "dotnet_config_syntax",
             "service_runtime_discovery", "service_config_discovery",
-            "service_config_review",
+            "service_config_review", "service_config_llm_repair",
         }:
             from apps.orchestrator.dynamic_investigation import DynamicInvestigationPlanner
             try:
