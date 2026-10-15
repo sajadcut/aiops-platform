@@ -4366,7 +4366,7 @@
 | `tests/unit/test_nginx_config_review.py` | `test_confirmed_nginx_validator_collects_preview_without_dynamic_llm_flag.VM.nginx_config_review` | 305 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_confirmed_nginx_validator_collects_preview_without_dynamic_llm_flag.VM |
 | `tests/unit/test_nginx_config_review.py` | `test_confirmed_nginx_validator_collects_preview_without_dynamic_llm_flag.VM.nginx_config_inspect` | 316 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_confirmed_nginx_validator_collects_preview_without_dynamic_llm_flag.VM |
 | `tests/unit/test_nginx_config_review.py` | `test_existing_nginx_incident_can_request_read_only_preview_from_dashboard` | 340 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_nginx_config_review.py` | `test_dynamic_nginx_config_preview_survives_llm_opt_out` | 357 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_nginx_config_review.py` | `test_dynamic_nginx_config_preview_survives_llm_opt_out` | 358 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_oidc_auth.py` | `test_oidc_claims_map_to_identity` | 6 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_oidc_auth.py` | `test_oidc_rejects_wrong_issuer` | 18 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_operational_agents.py` | `StaticLLM` | 15 | class | کلاس | module |
