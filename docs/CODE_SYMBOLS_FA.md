@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 504 | Dashboard JS files scanned: 8 | Symbols indexed: 5272**
+**Python files scanned: 504 | Dashboard JS files scanned: 8 | Symbols indexed: 5292**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -677,15 +677,15 @@
 | `apps/api/config_change_execution.py` | `validate_config_ticket` | 72 | async function | Reconstruct the candidate on MCP worker, prove staged vendor validation. | module |
 | `apps/api/config_change_execution.py` | `validate_config` | 137 | async function | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | module |
 | `apps/api/config_change_execution.py` | `execute_config` | 142 | async function | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | module |
-| `apps/api/config_change_execution.py` | `reject_pending_config` | 210 | async function | transition مربوط به Approval/Governance را اعمال می‌کند | module |
+| `apps/api/config_change_execution.py` | `reject_pending_config` | 214 | async function | transition مربوط به Approval/Governance را اعمال می‌کند | module |
 | `apps/api/config_change_review.py` | `ConfigReviewResponse` | 32 | class | کلاس | module |
 | `apps/api/config_change_review.py` | `_proposal` | 38 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/config_change_review.py` | `_hash` | 49 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/config_change_review.py` | `_matching_proposal` | 56 | function | Accept only evidence-backed deterministic transformations. | module |
-| `apps/api/config_change_review.py` | `_approval_for_proposal` | 83 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/config_change_review.py` | `_review_progress` | 93 | function | Expose durable intent separately from executable Approval authority. | module |
-| `apps/api/config_change_review.py` | `get_config_review_response` | 136 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
-| `apps/api/config_change_review.py` | `post_config_review_response` | 182 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/config_change_review.py` | `_matching_proposal` | 59 | function | Accept only evidence-backed deterministic transformations. | module |
+| `apps/api/config_change_review.py` | `_approval_for_proposal` | 88 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/config_change_review.py` | `_review_progress` | 98 | function | Expose durable intent separately from executable Approval authority. | module |
+| `apps/api/config_change_review.py` | `get_config_review_response` | 141 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
+| `apps/api/config_change_review.py` | `post_config_review_response` | 187 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/dashboard.py` | `dashboard_summary` | 17 | async function | Return live PostgreSQL-backed KPIs. Database failures are never converted to fake zeroes. | module |
 | `apps/api/dashboard_incidents.py` | `dashboard_incidents` | 15 | async function | Operational incident list enriched from durable governance/audit state. | module |
 | `apps/api/dashboard_incidents.py` | `dashboard_services` | 115 | async function | Service-centric operational health derived only from durable incident/governance state. | module |
@@ -885,15 +885,15 @@
 | `apps/approval_service/postgres.py` | `PostgreSQLApprovalStore._incident_source_recovered` | 46 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | PostgreSQLApprovalStore |
 | `apps/approval_service/postgres.py` | `PostgreSQLApprovalStore.save_validation_request` | 64 | async method | Durably queue an immutable configuration request, NOT an Approval. | PostgreSQLApprovalStore |
 | `apps/approval_service/postgres.py` | `PostgreSQLApprovalStore.promote_validated_config` | 124 | async method | Atomically make a real vendor-tested request human-approvable. | PostgreSQLApprovalStore |
-| `apps/approval_service/postgres.py` | `PostgreSQLApprovalStore.save` | 169 | async method | Create durable approval authority exactly once. | PostgreSQLApprovalStore |
-| `apps/approval_service/postgres.py` | `PostgreSQLApprovalStore._get_raw` | 221 | async method | رکورد را بدون اعمال expiry می‌خواند؛ helper داخلی برای جلوگیری از recursion است. | PostgreSQLApprovalStore |
-| `apps/approval_service/postgres.py` | `PostgreSQLApprovalStore._expired` | 235 | method | TTL را با زمان UTC محاسبه می‌کند تا timezone محلی روی مجوز اثر نگذارد. | PostgreSQLApprovalStore |
-| `apps/approval_service/postgres.py` | `PostgreSQLApprovalStore.get` | 246 | async method | رکورد را می‌خواند و Approval منقضی را قبل از استفاده به expired تبدیل می‌کند. | PostgreSQLApprovalStore |
-| `apps/approval_service/postgres.py` | `PostgreSQLApprovalStore.set_status` | 260 | async method | فقط یک Approval هنوز-pending را اتمیک به approved یا rejected transition می‌دهد. | PostgreSQLApprovalStore |
-| `apps/approval_service/postgres.py` | `PostgreSQLApprovalStore.cancel` | 301 | async method | Revoke one still-unconsumed authority token without touching peers. | PostgreSQLApprovalStore |
-| `apps/approval_service/postgres.py` | `PostgreSQLApprovalStore.cancel_unconsumed_for_incident` | 335 | async method | Invalidate pending/approved authority after recovery or another terminal fact. | PostgreSQLApprovalStore |
-| `apps/approval_service/postgres.py` | `PostgreSQLApprovalStore.consume` | 366 | async method | Claim approved authority exactly once at the execution boundary. | PostgreSQLApprovalStore |
-| `apps/approval_service/postgres.py` | `PostgreSQLApprovalStore.is_approved` | 480 | async method | برای read-only check؛ execution واقعی همچنان باید consume اتمیک انجام دهد. | PostgreSQLApprovalStore |
+| `apps/approval_service/postgres.py` | `PostgreSQLApprovalStore.save` | 189 | async method | Create durable approval authority exactly once. | PostgreSQLApprovalStore |
+| `apps/approval_service/postgres.py` | `PostgreSQLApprovalStore._get_raw` | 241 | async method | رکورد را بدون اعمال expiry می‌خواند؛ helper داخلی برای جلوگیری از recursion است. | PostgreSQLApprovalStore |
+| `apps/approval_service/postgres.py` | `PostgreSQLApprovalStore._expired` | 255 | method | TTL را با زمان UTC محاسبه می‌کند تا timezone محلی روی مجوز اثر نگذارد. | PostgreSQLApprovalStore |
+| `apps/approval_service/postgres.py` | `PostgreSQLApprovalStore.get` | 266 | async method | رکورد را می‌خواند و Approval منقضی را قبل از استفاده به expired تبدیل می‌کند. | PostgreSQLApprovalStore |
+| `apps/approval_service/postgres.py` | `PostgreSQLApprovalStore.set_status` | 280 | async method | فقط یک Approval هنوز-pending را اتمیک به approved یا rejected transition می‌دهد. | PostgreSQLApprovalStore |
+| `apps/approval_service/postgres.py` | `PostgreSQLApprovalStore.cancel` | 321 | async method | Revoke one still-unconsumed authority token without touching peers. | PostgreSQLApprovalStore |
+| `apps/approval_service/postgres.py` | `PostgreSQLApprovalStore.cancel_unconsumed_for_incident` | 355 | async method | Invalidate pending/approved authority after recovery or another terminal fact. | PostgreSQLApprovalStore |
+| `apps/approval_service/postgres.py` | `PostgreSQLApprovalStore.consume` | 386 | async method | Claim approved authority exactly once at the execution boundary. | PostgreSQLApprovalStore |
+| `apps/approval_service/postgres.py` | `PostgreSQLApprovalStore.is_approved` | 500 | async method | برای read-only check؛ execution واقعی همچنان باید consume اتمیک انجام دهد. | PostgreSQLApprovalStore |
 | `apps/approval_service/store.py` | `ApprovalStore` | 14 | class | کلاس | module |
 | `apps/approval_service/store.py` | `ApprovalStore.create` | 16 | method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | ApprovalStore |
 | `apps/approval_service/store.py` | `ApprovalStore.get` | 20 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ApprovalStore |
@@ -1378,7 +1378,7 @@
 | `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner._scope` | 190 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DynamicInvestigationPlanner |
 | `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner.enrich_knowledge` | 207 | async method | Query Cognia again with a verified error, preserving access scope. | DynamicInvestigationPlanner |
 | `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner.propose` | 280 | async method | LLM chooses from read-only capabilities, never arbitrary code. | DynamicInvestigationPlanner |
-| `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner.evidence_requests` | 582 | method | Convert validated enum members, never LLM text, to connector requests. | DynamicInvestigationPlanner |
+| `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner.evidence_requests` | 586 | method | Convert validated enum members, never LLM text, to connector requests. | DynamicInvestigationPlanner |
 | `apps/orchestrator/e2e_graph.py` | `E2EState` | 50 | class | کلاس | module |
 | `apps/orchestrator/e2e_graph.py` | `retain_incident_evidence_for_followup` | 81 | function | Bound agent context without losing freshly collected config proof. | module |
 | `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator` | 118 | class | کلاس | module |
@@ -1956,26 +1956,26 @@
 | `dashboards/incident-command-room.js` | `content` | 2693 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
 | `dashboards/incident-command-room.js` | `loadReceivedSignals` | 2722 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
 | `dashboards/incident-command-room.js` | `renderDecision` | 2735 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/incident-command-room.js` | `render` | 2848 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/incident-command-room.js` | `renderIncidentChat` | 2858 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/incident-command-room.js` | `lines` | 2873 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/incident-command-room.js` | `loadIncidentChat` | 2935 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
-| `dashboards/incident-command-room.js` | `submitIncidentChat` | 2947 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/incident-command-room.js` | `incidentChatApproval` | 2976 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/incident-command-room.js` | `configApprovalAction` | 3010 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/incident-command-room.js` | `loadConfigResponse` | 3040 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
-| `dashboards/incident-command-room.js` | `respondToConfigProposal` | 3052 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/incident-command-room.js` | `loadNarrative` | 3097 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
-| `dashboards/incident-command-room.js` | `load` | 3107 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
-| `dashboards/incident-command-room.js` | `returnLive` | 3134 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/incident-command-room.js` | `loadHistory` | 3138 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
-| `dashboards/incident-command-room.js` | `openHistory` | 3148 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/incident-command-room.js` | `loadRaw` | 3157 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
-| `dashboards/incident-command-room.js` | `approvalCurrent` | 3165 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/incident-command-room.js` | `action` | 3172 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/incident-command-room.js` | `bind` | 3236 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/incident-command-room.js` | `lifecycleTimer` | 3393 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/incident-command-room.js` | `serviceAgeTimer` | 3397 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/incident-command-room.js` | `render` | 2858 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/incident-command-room.js` | `renderIncidentChat` | 2868 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/incident-command-room.js` | `lines` | 2883 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/incident-command-room.js` | `loadIncidentChat` | 2945 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
+| `dashboards/incident-command-room.js` | `submitIncidentChat` | 2957 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/incident-command-room.js` | `incidentChatApproval` | 2986 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/incident-command-room.js` | `configApprovalAction` | 3020 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/incident-command-room.js` | `loadConfigResponse` | 3050 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
+| `dashboards/incident-command-room.js` | `respondToConfigProposal` | 3062 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/incident-command-room.js` | `loadNarrative` | 3107 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
+| `dashboards/incident-command-room.js` | `load` | 3117 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
+| `dashboards/incident-command-room.js` | `returnLive` | 3144 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/incident-command-room.js` | `loadHistory` | 3148 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
+| `dashboards/incident-command-room.js` | `openHistory` | 3158 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/incident-command-room.js` | `loadRaw` | 3167 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
+| `dashboards/incident-command-room.js` | `approvalCurrent` | 3175 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/incident-command-room.js` | `action` | 3182 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/incident-command-room.js` | `bind` | 3246 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/incident-command-room.js` | `lifecycleTimer` | 3403 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/incident-command-room.js` | `serviceAgeTimer` | 3407 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
 | `dashboards/knowledge-review.js` | `el` | 10 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
 | `dashboards/knowledge-review.js` | `current` | 11 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
 | `dashboards/knowledge-review.js` | `notice` | 14 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
@@ -2363,8 +2363,10 @@
 | `integrations/vm/general_config_review.py` | `_structural_line` | 49 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `integrations/vm/general_config_review.py` | `_remove_trailing_json_commas` | 71 | function | Only a lexical trailing comma outside JSON strings; never change values. | module |
 | `integrations/vm/general_config_review.py` | `local_config_review` | 98 | function | Review a known config source and generate only a deterministic JSON fix. | module |
-| `integrations/vm/governed_config_change.py` | `rebuild_nginx_candidate` | 17 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `integrations/vm/governed_config_change.py` | `run_governed_change` | 43 | async function | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | module |
+| `integrations/vm/governed_config_change.py` | `rebuild_nginx_candidate` | 20 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `integrations/vm/governed_config_change.py` | `rebuild_json_candidate` | 46 | function | Rebuild an immutable one-comma JSON fix; syntax-only, not app health. | module |
+| `integrations/vm/governed_config_change.py` | `rebuild_xml_candidate` | 74 | function | Remove one unmatched EOF closing tag; never edit XML values or DTDs. | module |
+| `integrations/vm/governed_config_change.py` | `run_governed_change` | 103 | async function | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | module |
 | `integrations/vm/mcp_client.py` | `VMEdgeMCPClient` | 9 | class | MCP-only connector for VM/Edge diagnostics and governed remediation. | module |
 | `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.__init__` | 24 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
 | `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.initialize` | 38 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
@@ -2458,15 +2460,15 @@
 | `integrations/vm/ssh_connector.py` | `SSHVMConnector.service_runtime_discovery` | 839 | async method | Read selected systemd properties; never return ExecStart argv or env values. | SSHVMConnector |
 | `integrations/vm/ssh_connector.py` | `SSHVMConnector.service_config_discovery` | 856 | async method | Read-only proof of config-path existence from systemd-derived paths. | SSHVMConnector |
 | `integrations/vm/ssh_connector.py` | `SSHVMConnector.service_config_review` | 954 | async method | Read-only bounded review for a vendor error or verified unit file. | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.dotnet_config_syntax` | 1020 | async method | Remote Linux coreutils read; *local AIOps Python* JSON syntax check. | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.nginx_config_inspect` | 1081 | async method | Inspect only allowlisted Nginx config structure; no raw file bytes. | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.nginx_config_review` | 1127 | async method | Generate a non-executable, bounded review from current validator proof. | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.nginx_config_review.safe_preview_text` | 1188 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector.nginx_config_review |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.nginx_config_review.safe_rows` | 1191 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector.nginx_config_review |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.config_validate` | 1226 | async method | Locate the running unit's config, run a fixed read-only syntax check. | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.start_service` | 1324 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.restart_service` | 1331 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.reload_service` | 1338 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.dotnet_config_syntax` | 1036 | async method | Remote Linux coreutils read; *local AIOps Python* JSON syntax check. | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.nginx_config_inspect` | 1097 | async method | Inspect only allowlisted Nginx config structure; no raw file bytes. | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.nginx_config_review` | 1143 | async method | Generate a non-executable, bounded review from current validator proof. | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.nginx_config_review.safe_preview_text` | 1204 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector.nginx_config_review |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.nginx_config_review.safe_rows` | 1207 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector.nginx_config_review |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.config_validate` | 1242 | async method | Locate the running unit's config, run a fixed read-only syntax check. | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.start_service` | 1340 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.restart_service` | 1347 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.reload_service` | 1354 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
 | `integrations/vm/target_context.py` | `bind_vm_probe_blocked` | 22 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `integrations/vm/target_context.py` | `reset_vm_probe_blocked` | 26 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `integrations/vm/target_context.py` | `vm_probes_blocked` | 30 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
@@ -3722,6 +3724,20 @@
 | `tests/unit/test_governed_config_change.py` | `test_config_routes_require_operator_permission_and_are_registered` | 135 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_governed_config_change.py` | `test_openssl_root_verifier_matches_worker_ed25519_signature` | 144 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_governed_config_change.py` | `test_generic_api_cannot_forge_validated_config_approval` | 183 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_governed_config_change.py` | `test_systemd_bound_json_config_approval_path_for_any_runtime` | 204 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_governed_config_change.py` | `test_systemd_bound_json_config_approval_path_for_any_runtime.Edge` | 216 | class | کلاس | test_systemd_bound_json_config_approval_path_for_any_runtime |
+| `tests/unit/test_governed_config_change.py` | `test_systemd_bound_json_config_approval_path_for_any_runtime.Edge.service_config_discovery` | 219 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_systemd_bound_json_config_approval_path_for_any_runtime.Edge |
+| `tests/unit/test_governed_config_change.py` | `test_systemd_bound_json_config_approval_path_for_any_runtime.Edge._run` | 223 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_systemd_bound_json_config_approval_path_for_any_runtime.Edge |
+| `tests/unit/test_governed_config_change.py` | `test_generic_json_proposal_requires_fresh_systemd_file_binding` | 245 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_governed_config_change.py` | `test_generic_json_proposal_requires_fresh_systemd_file_binding.Unverified` | 247 | class | کلاس | test_generic_json_proposal_requires_fresh_systemd_file_binding |
+| `tests/unit/test_governed_config_change.py` | `test_generic_json_proposal_requires_fresh_systemd_file_binding.Unverified.service_config_discovery` | 250 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_generic_json_proposal_requires_fresh_systemd_file_binding.Unverified |
+| `tests/unit/test_governed_config_change.py` | `test_generic_json_proposal_requires_fresh_systemd_file_binding.Unverified._run` | 254 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_generic_json_proposal_requires_fresh_systemd_file_binding.Unverified |
+| `tests/unit/test_governed_config_change.py` | `test_general_guard_supports_different_approved_app_config_roots_without_runtime_python` | 267 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_governed_config_change.py` | `test_xml_repair_flows_through_same_governed_service_neutral_validator` | 284 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_governed_config_change.py` | `test_xml_repair_flows_through_same_governed_service_neutral_validator.Edge` | 304 | class | کلاس | test_xml_repair_flows_through_same_governed_service_neutral_validator |
+| `tests/unit/test_governed_config_change.py` | `test_xml_repair_flows_through_same_governed_service_neutral_validator.Edge.service_config_discovery` | 307 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_xml_repair_flows_through_same_governed_service_neutral_validator.Edge |
+| `tests/unit/test_governed_config_change.py` | `test_xml_repair_flows_through_same_governed_service_neutral_validator.Edge._run` | 309 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_xml_repair_flows_through_same_governed_service_neutral_validator.Edge |
+| `tests/unit/test_governed_config_change.py` | `test_xml_dtd_or_missing_tag_does_not_create_unsafe_fix` | 326 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_health_readiness_mcp.py` | `test_production_readiness_requires_cognia_and_configured_optional_mcps` | 4 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_health_readiness_mcp.py` | `test_non_production_readiness_does_not_gate_on_external_dependencies` | 32 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_host_memory_forensics.py` | `incident` | 12 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
@@ -5027,6 +5043,10 @@
 | `tests/unit/test_universal_service_config_discovery.py` | `test_generic_review_uses_only_verified_file_and_never_returns_ssh_raw_content.read` | 260 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_generic_review_uses_only_verified_file_and_never_returns_ssh_raw_content |
 | `tests/unit/test_universal_service_config_discovery.py` | `test_unknown_config_search_asks_cognia_for_vendor_procedure_not_secret_bytes` | 279 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_universal_service_config_discovery.py` | `test_generic_json_multi_edit_candidate_is_blocked_until_diff_covers_every_edit` | 305 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_universal_service_config_discovery.py` | `test_generic_config_review_skips_valid_first_file_and_finds_invalid_second` | 317 | async function | More than one config file often exists in dotnet/java publish dirs. | module |
+| `tests/unit/test_universal_service_config_discovery.py` | `test_generic_config_review_skips_valid_first_file_and_finds_invalid_second.validate` | 328 | async method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | test_generic_config_review_skips_valid_first_file_and_finds_invalid_second |
+| `tests/unit/test_universal_service_config_discovery.py` | `test_generic_config_review_skips_valid_first_file_and_finds_invalid_second.discovery` | 330 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_generic_config_review_skips_valid_first_file_and_finds_invalid_second |
+| `tests/unit/test_universal_service_config_discovery.py` | `test_generic_config_review_skips_valid_first_file_and_finds_invalid_second.read` | 336 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_generic_config_review_skips_valid_first_file_and_finds_invalid_second |
 | `tests/unit/test_upstream_mcp_contracts.py` | `test_prometheus_adapter_uses_upstream_tool_names` | 8 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_upstream_mcp_contracts.py` | `test_elastic_adapter_uses_agent_builder_only` | 20 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_upstream_mcp_contracts.py` | `test_elastic_agent_builder_config_is_canonical` | 35 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
