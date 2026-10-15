@@ -2662,7 +2662,7 @@
         'No execution authority has been granted. Only a separately generated, properly validated request may enter the approval workflow.')+
       '</p></article>':'';
     const full=p.full_config_llm_repair||{};
-    const fullCandidate=full.status==='llm_candidate_proposed'&&
+    const fullCandidate=['llm_candidate_proposed','candidate_storage_unavailable'].includes(full.status)&&
       /^[a-f0-9]{64}$/.test(String(full.candidate_sha256||''))&&
       full.llm_received_complete_file===true&&full.llm_returned_complete_file===true;
     const fullRepairHtml=full.status&&full.status!=='—'?
