@@ -2370,7 +2370,7 @@
 | `integrations/vm/governed_config_change.py` | `rebuild_json_candidate` | 46 | function | Rebuild an immutable one-comma JSON fix; syntax-only, not app health. | module |
 | `integrations/vm/governed_config_change.py` | `rebuild_xml_candidate` | 74 | function | Remove one unmatched EOF closing tag; never edit XML values or DTDs. | module |
 | `integrations/vm/governed_config_change.py` | `classify_config_guard_failure` | 119 | function | Use only fixed, operator-actionable codes; never reflect stderr. | module |
-| `integrations/vm/governed_config_change.py` | `run_governed_change` | 147 | async function | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | module |
+| `integrations/vm/governed_config_change.py` | `run_governed_change` | 151 | async function | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | module |
 | `integrations/vm/mcp_client.py` | `VMEdgeMCPClient` | 9 | class | MCP-only connector for VM/Edge diagnostics and governed remediation. | module |
 | `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.__init__` | 24 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
 | `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.initialize` | 38 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
