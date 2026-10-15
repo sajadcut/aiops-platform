@@ -34,6 +34,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: Minimal candidate-vault Python dependencies
+        shell: pwsh
+        run: |
+          python -m pip install "pydantic>=2.11,<3" "pydantic-settings>=2.10,<3" "cryptography>=50,<52"
       - name: Native Windows ACL / sealed file inheritance
         shell: pwsh
         run: |
