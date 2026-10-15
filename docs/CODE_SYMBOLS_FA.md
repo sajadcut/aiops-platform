@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 506 | Dashboard JS files scanned: 8 | Symbols indexed: 5318**
+**Python files scanned: 506 | Dashboard JS files scanned: 8 | Symbols indexed: 5324**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -3420,6 +3420,12 @@
 | `tests/unit/test_config_guard_validation_diagnostics.py` | `test_live_rc1_is_nonapprovable_and_safe_for_api.Edge._run` | 51 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_live_rc1_is_nonapprovable_and_safe_for_api.Edge |
 | `tests/unit/test_config_guard_validation_diagnostics.py` | `test_blocked_reason_is_visible_after_reload_but_cannot_make_ticket_actionable` | 73 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_config_guard_validation_diagnostics.py` | `test_guard_distinguishes_isolation_problem_and_vendor_error` | 101 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_config_guard_validation_diagnostics.py` | `test_guard_uses_existing_ssh_user_password_for_sudo_with_candidate` | 110 | async function | sudo -n failure must transparently retry with the SAME SSH password. | module |
+| `tests/unit/test_config_guard_validation_diagnostics.py` | `test_guard_uses_existing_ssh_user_password_for_sudo_with_candidate.fake_run` | 123 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_guard_uses_existing_ssh_user_password_for_sudo_with_candidate |
+| `tests/unit/test_config_guard_validation_diagnostics.py` | `test_guard_preserves_candidate_when_sudo_nopasswd_already_works` | 149 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_config_guard_validation_diagnostics.py` | `test_guard_preserves_candidate_when_sudo_nopasswd_already_works.fake_run` | 154 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_guard_preserves_candidate_when_sudo_nopasswd_already_works |
+| `tests/unit/test_config_guard_validation_diagnostics.py` | `test_denied_sudo_policy_never_falls_back_to_su_or_password` | 171 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_config_guard_validation_diagnostics.py` | `test_denied_sudo_policy_never_falls_back_to_su_or_password.fake_run` | 176 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_denied_sudo_policy_never_falls_back_to_su_or_password |
 | `tests/unit/test_config_review_button_runtime.py` | `test_config_buttons_dispatch_mcp_read_without_execution_and_refresh_report` | 11 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_container_image_contract.py` | `test_offline_runtime_uses_isolated_multistage_build` | 4 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_container_image_contract.py` | `test_container_acceptance_checks_final_filesystem_not_builder_layers` | 20 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
