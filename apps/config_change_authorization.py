@@ -19,6 +19,16 @@ def _key() -> bytes:
     return secret.encode("utf-8")
 
 
+
+def config_signing_ready() -> bool:
+    """Local readiness only. Never expose key bytes or report VM MCP readiness."""
+    try:
+        _key()
+    except PermissionError:
+        return False
+    return True
+
+
 def _message(claims: dict) -> bytes:
     return json.dumps(claims, sort_keys=True, separators=(",", ":"), ensure_ascii=True).encode()
 
