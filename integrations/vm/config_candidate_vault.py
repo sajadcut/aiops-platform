@@ -111,6 +111,15 @@ def _prepare_windows_directory(path: Path) -> None:
     try:
         ensure_private_windows_acl(str(path))
     except PermissionError:
+        # The selected folder may be user-managed. Never rewrite its ACL if
+        # it contains unrelated files/directories owned by another workload.
+        # The only allowed existing contents are our own sealed blobs.
+        try:
+            for entry in path.iterdir():
+                if not re.fullmatch(r"[0-9a-f]{64}\\.sealed", entry.name):
+                    raise CandidateUnavailable("candidate_directory_not_dedicated")
+        except OSError:
+            raise CandidateUnavailable("candidate_directory_permissions") from None
         harden_private_windows_acl(str(path))
         ensure_private_windows_acl(str(path))
 
