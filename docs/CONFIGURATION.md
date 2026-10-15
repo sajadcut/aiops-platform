@@ -93,8 +93,8 @@ All fields below are required by `Settings`. “Secret” means the tracked temp
 | `CORS_ORIGINS` | FastAPI CORS | No | Wildcard forbidden in production. |
 | `APPROVAL_TTL_SECONDS` | PostgreSQL approval store | No | Must be positive in production; expired approvals cannot transition/execute. |
 | `MCP_PROTOCOL_VERSION`, `MCP_TIMEOUT_SECONDS` | MCP clients/server | No | HTTP and HTTPS are supported; invalid timeout fails production validation. HTTPS server certificates are not validated by project policy. |
-| `MCP_BEARER_TOKEN` | MCP read identity | Yes | Required unless mTLS identity is used for clients; required by authenticated internal server. |
-| `MCP_WRITE_BEARER_TOKEN` | MCP write identity | Yes | Required for VM writes and must differ from read bearer in production. |
+| `MCP_BEARER_TOKEN` | MCP identity + derived config-approval signing | Yes | Existing API↔VM MCP shared secret. Config APPLY derives a purpose-specific HMAC subkey; use a random token of at least 32 UTF-8 bytes on both API and VM MCP. No separate apply-signing variable. |
+| `MCP_WRITE_BEARER_TOKEN` | Legacy compatibility only for internal VM/Kubernetes MCP | Yes | The current internal VM MCP client sends MCP_BEARER_TOKEN for both read and write; this legacy field is not independently enforced on that path. |
 | `MCP_CLIENT_CERT_PATH`, `MCP_CLIENT_KEY_PATH` | MCP TLS/mTLS | key path points to secret material | optional client cert/key must be configured together when used for client identity; server certificates are not validated. |
 | `MCP_SERVER_PROVIDER`, `MCP_SERVER_REQUIRE_AUTH` | internal edge MCP server | No | Unsupported provider fails; auth must be true in production. Zabbix is intentionally not a supported internal provider. |
 | `ZABBIX_MCP_URL`, `ZABBIX_MCP_SERVER_NAME`, `ZABBIX_MCP_AUTH_HEADER` | initMAX Zabbix MCP client | auth header Yes | This is the only supported Zabbix boundary. URL may use HTTP or HTTPS; HTTPS server certificates are not validated. `ZABBIX_MCP_AUTH_HEADER` carries the MCP-client Authorization value, normally `Bearer <token>`. |
