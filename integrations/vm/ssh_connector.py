@@ -135,14 +135,18 @@ class SSHVMConnector:
         args.append(f"{user}@{target}" if user else target)
         return args
 
-    async def _run_key(self, target: str, command: str) -> Dict[str, Any]:
+    async def _run_key(self, target: str, command: str, *, stdin_data: Optional[str] = None) -> Dict[str, Any]:
         args = self._base_ssh_args(target) + ["--", command]
         started = time.perf_counter()
         process = await asyncio.create_subprocess_exec(
-            *args, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE,
+            *args, stdin=asyncio.subprocess.PIPE if stdin_data is not None else asyncio.subprocess.DEVNULL,
+            stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE,
         )
         try:
-            stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=self.timeout + 5)
+            stdout, stderr = await asyncio.wait_for(
+                process.communicate(stdin_data.encode('utf-8') if stdin_data is not None else None),
+                timeout=self.timeout + 5,
+            )
         except asyncio.TimeoutError:
             process.kill()
             await process.wait()
@@ -248,9 +252,7 @@ class SSHVMConnector:
     async def _run(self, target: str, command: str, *, stdin_data: Optional[str] = None) -> Dict[str, Any]:
         if self._auth_mode() == "password":
             return await self._run_password(target, command, stdin_data=stdin_data)
-        if stdin_data is not None:
-            raise RuntimeError("vm_ssh_stdin_requires_password_auth")
-        return await self._run_key(target, command)
+        return await self._run_key(target, command, stdin_data=stdin_data)
 
     @staticmethod
     def _sudo_requires_password(result: Dict[str, Any]) -> bool:

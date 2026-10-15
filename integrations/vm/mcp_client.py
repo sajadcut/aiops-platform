@@ -17,8 +17,9 @@ class VMEdgeMCPClient(MCPClient):
         "process_status", "tcp_check", "port_listener_status", "dns_check",
         "route_check", "firewall_status", "config_validate", "nginx_config_review", "nginx_config_inspect",
         "service_runtime_discovery", "service_config_discovery", "service_config_review", "dotnet_config_syntax",
+        "config_change_validate",
     }
-    WRITE_TOOLS = {"restart_service", "reload_service", "start_service"}
+    WRITE_TOOLS = {"restart_service", "reload_service", "start_service", "config_change_apply"}
 
     def __init__(self, server_url: Optional[str] = None):
         url = server_url or settings.VM_MCP_URL
@@ -80,6 +81,15 @@ class VMEdgeMCPClient(MCPClient):
     async def service_config_discovery(self, target: str, service: str) -> Dict[str, Any]: return await self._invoke("service_config_discovery", target, service=service)
     async def service_config_review(self, target: str, service: str) -> Dict[str, Any]: return await self._invoke("service_config_review", target, service=service)
     async def dotnet_config_syntax(self, target: str, service: str) -> Dict[str, Any]: return await self._invoke("dotnet_config_syntax", target, service=service)
+
+    async def config_change_validate(self, target: str, **parameters: Any) -> Dict[str, Any]:
+        return await self._invoke("config_change_validate", target, **parameters)
+
+    async def config_change_apply(self, target: str, *, service: str, claims: dict,
+                                  signature: str) -> Dict[str, Any]:
+        return await self._invoke(
+            "config_change_apply", target, service=service, claims=claims, signature=signature,
+        )
 
     @staticmethod
     def _write_context(approval_id: str, incident_id: str) -> Dict[str, str]:

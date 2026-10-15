@@ -100,8 +100,8 @@ def test_submitted_request_is_visible_but_never_claims_an_executable_approval():
     assert state["request_recorded"] is True
     assert state["status"] == "awaiting_isolated_validation"
     assert state["config_file"] == "/etc/nginx/nginx.conf"
-    assert state["validation_pipeline_status"] == "not_implemented"
-    assert state["change_contract_status"] == "not_implemented"
+    assert state["validation_pipeline_status"] == "not_requested"
+    assert state["change_contract_status"] == "not_registered"
     assert state["approval_status"] == "not_created"
     assert state["approval_id"] is None
     assert state["approval_eligible"] is False

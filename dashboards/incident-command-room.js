@@ -2770,6 +2770,32 @@
       mini('action',statusValue==='pending_validation'?(state.language==='fa'?'اصلاح کانفیگ':'Repair configuration'):humanAction(a.action||x.action))+mini('target',durable.metadata?.target||a.target||x.target)+mini('risk',status(x.risk_level))+
       mini('tool',humanTool(a.tool||x.tool))+mini('freshness',status(a.data_freshness))+
       mini('approvalId',durable.approval_id||a.approval_id)+'</div>');
+    const configApproval=durable.metadata?.workflow==='config_change' &&
+      ['pending_validation','pending','approved','consumed'].includes(statusValue);
+    if(configApproval && !archived){
+      const fa=state.language==='fa';
+      let controls='<p class="ic-agent-disclaimer">'+esc(fa?
+        'این تأیید صرفاً برای تغییر فایل مشخص با دو هش ثبت‌شده است. اعمال کانفیگ از مسیر ایمن VM MCP انجام می‌شود؛ Start یا Restart مجوز جداگانه می‌خواهد.':
+        'This approval is bound to one config file and its hashes. Service start/restart requires a separate approval.')+'</p>';
+      if(statusValue==='pending_validation'){
+        controls+='<div class="ic-action-buttons"><button type="button" class="ic-btn ic-btn-primary" data-config-approval-action="validate"'+(state.busy?' disabled':'')+'>'+
+          esc(fa?'اجرای اعتبارسنجی ایزوله و آماده‌سازی Approval':'Run isolated validation')+'</button>'+
+          '<button type="button" class="ic-btn ic-btn-danger" data-config-approval-action="reject"'+(state.busy?' disabled':'')+'>'+
+          esc(fa?'رد درخواست تغییر':'Reject config change')+'</button></div>';
+      }else if(statusValue==='pending'){
+        controls+='<p>'+esc(fa?'نسخه پیشنهادی در فضای جداگانه اعتبارسنجی شده و اکنون منتظر تأیید صریح شماست.':'Isolated vendor validation passed; human approval is required.')+'</p>'+
+          '<button type="button" class="ic-btn ic-btn-primary" data-config-approval-action="approve"'+(state.busy?' disabled':'')+'>'+
+          esc(fa?'تأیید اصلاح کانفیگ — بدون اجرا':'Approve configuration change')+'</button>';
+      }else if(statusValue==='approved'){
+        controls+='<button type="button" class="ic-btn ic-btn-primary" data-config-approval-action="execute"'+(state.busy?' disabled':'')+'>'+
+          esc(fa?'اعمال اصلاح تأییدشده و بررسی نتیجه':'Apply approved config and verify')+'</button>';
+      }else{
+        controls+='<p>'+esc(fa?'مجوز یک‌بارمصرف مصرف شده است. نتیجه و ممیزی عملیات را در تاریخچه بررسی کنید.':'One-time approval consumed; inspect the execution audit.')+'</p>';
+      }
+      show('#ic-action-checks','');
+      show('#ic-action-controls',controls);
+      return;
+    }
     if(archived) {
       show('#ic-action-checks','');
       show('#ic-action-controls','<p class="ic-warning critical">'+tr('archiveHint')+'</p>'+
@@ -2981,6 +3007,36 @@
     }catch(e){state.chatLastResult=e.message;notify(tr('failure')+' · '+e.message,true);}
     finally{state.chatBusy=false;renderIncidentChat();}
   }
+  async function configApprovalAction(kind){
+    const record=state.lifecycle?.approval||{};
+    const id=record.approval_id,workflow=record.metadata?.workflow;
+    const status=low(record.status),allowed={validate:'pending_validation',reject:'pending_validation',approve:'pending',execute:'approved'};
+    if(state.busy||state.historic||!UUID.test(String(id||''))||workflow!=='config_change'||status!==allowed[kind])return;
+    const fa=state.language==='fa';
+    const descriptions={
+      validate:'اعتبارسنجی کپی کانفیگ در فضای جداگانه اجرا شود؟ هیچ تغییر Production انجام نمی‌شود.',
+      reject:'درخواست تغییر کانفیگ را رد می‌کنید؟',
+      approve:'این اصلاح دقیق کانفیگ را تأیید می‌کنید؟ تأیید به‌تنهایی هیچ فایلی تغییر نمی‌دهد.',
+      execute:'تأیید می‌کنید نسخه مشخص‌شده با هش ثابت روی سرور اعمال شود؟ در صورت شکست، بازگردانی انجام می‌شود. این عملیات پرریسک است.'
+    };
+    if(!confirm(fa?descriptions[kind]:{
+      validate:'Validate the staged candidate without any production write?',
+      reject:'Reject the config change request?',
+      approve:'Approve this exact configuration change without applying yet?',
+      execute:'Apply the approved hash-bound config to production with verification and rollback?'
+    }[kind]))return;
+    if(kind==='execute'&&!confirm(fa?'تأیید دوم: این مرحله واقعاً فایل کانفیگ روی سرور را تغییر می‌دهد.':'Second confirmation: this will modify the production configuration.'))return;
+    state.busy=true;renderDecision(state.report);
+    const route={validate:'validate-config',reject:'reject-config',approve:'approve',execute:'execute-config'}[kind];
+    try{
+      const value=await api('/api/v1/approvals/'+encodeURIComponent(id)+'/'+route,{method:'POST'});
+      notify(fa?(kind==='validate'?'نتیجه اعتبارسنجی: ':'نتیجه درخواست: ')+(value.validation||value.status||'ثبت شد'):
+                   'Configuration workflow: '+(value.validation||value.status||'recorded'),
+                   kind==='execute'&&value.success!==true);
+    }catch(e){notify(tr('failure')+' · '+e.message,true);}
+    finally{state.busy=false;await load();}
+  }
+
   async function loadConfigResponse(token) {
     state.configResponse=null;state.configResponseStatus='loading';
     try {
@@ -3305,6 +3361,8 @@
         })();
         return;
       }
+      const cfg=e.target.closest('[data-config-approval-action]');
+      if(cfg){void configApprovalAction(cfg.dataset.configApprovalAction);return;}
       const intent=e.target.closest('[data-config-intent]');
       if(intent){void respondToConfigProposal(intent.dataset.configIntent);return;}
       if(e.target.closest('#ic-toggle-reject')){state.rejectionVisible=!state.rejectionVisible;renderDecision(state.report);return;}

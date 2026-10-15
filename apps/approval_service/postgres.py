@@ -121,6 +121,51 @@ class PostgreSQLApprovalStore:
             raise ValueError("config_change_request_persistence_failed")
         return stored
 
+    async def promote_validated_config(
+        self, approval_id: str, *, source_sha256: str,
+        candidate_sha256: str, validation_scope: str, vendor_validator: str,
+    ) -> Optional[Dict[str, Any]]:
+        """Atomically make a real vendor-tested request human-approvable.
+
+        This cannot skip the exact hash binding, cannot re-open terminal
+        approvals, and cannot create execution authority by itself.
+        """
+        if validation_scope != "nginx_mount_namespace_staged_etc_nginx_live_external_read_dependencies":
+            raise ValueError("config_validation_scope_not_executable")
+        current = await self.get(approval_id)
+        if not current or current.get("status") != "pending_validation":
+            return current
+        meta = current.get("metadata") or {}
+        if (meta.get("workflow") != "config_change"
+                or meta.get("original_sha256") != source_sha256
+                or meta.get("candidate_sha256") != candidate_sha256):
+            raise ValueError("config_validation_hash_binding_mismatch")
+        if await self._incident_source_recovered(str(current.get("incident_id") or "")):
+            raise ValueError("incident_source_already_recovered")
+        proof = {
+            "isolated_validation": True,
+            "validation_scope": validation_scope,
+            "vendor_validator": vendor_validator,
+            "validation_passed_at": datetime.now(timezone.utc).isoformat(),
+            "request_phase": "ready_for_human_approval",
+        }
+        row = (await self.session.execute(
+            text("""
+                UPDATE approvals
+                SET status='pending',
+                    metadata=metadata || CAST(:proof AS jsonb)
+                WHERE approval_id=:id AND status='pending_validation'
+                    AND metadata->>'original_sha256'=:source
+                    AND metadata->>'candidate_sha256'=:candidate
+                RETURNING approval_id, incident_id, action, risk_level, approver,
+                          status, metadata, created_at, approved_at, rejected_at
+            """),
+            {"id": approval_id, "source": source_sha256,
+             "candidate": candidate_sha256, "proof": json.dumps(proof)},
+        )).mappings().first()
+        await self.session.commit()
+        return dict(row) if row else None
+
     async def save(self, record: Dict[str, Any]) -> Dict[str, Any]:
         """Create durable approval authority exactly once.
 
