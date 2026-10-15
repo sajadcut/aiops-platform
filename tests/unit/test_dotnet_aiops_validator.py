@@ -35,6 +35,30 @@ def test_parse_is_local_and_never_returns_credentials(content, expected):
     assert "ApiKey" not in serialized
 
 
+def test_gfpapi_all_discovered_json_filenames_are_validated_without_contents():
+    names = [
+        "appsettings.json", "bootstrap.json", "BotUsers.json",
+        "channel-image-template.json", "channel-image-template.windows.json",
+        "GFP.Endpoints.API.deps.json", "GFP.Endpoints.API.runtimeconfig.json",
+        "LendingGroupSettings.json", "MessageTemplates.json",
+        "translations.json",
+    ]
+    listing = "".join(name + "\\tf\\n" for name in names)
+    files, incomplete = safe_json_files(listing)
+    assert not incomplete
+    assert set(files) == set(names)
+    for name in files:
+        assert "python3" not in remote_file_read_command("/data/gfp/gfpapi", name)
+        row = validate_encoded_file(name, encoded('{"token":"NEVER_EXPOSE"}'))
+        assert row["status"] == "valid_json_syntax"
+        assert "NEVER_EXPOSE" not in json.dumps(row)
+    invalid = validate_encoded_file("BotUsers.json", encoded('{\\"a\\": }'))
+    assert invalid["status"] == "invalid_json_syntax"
+    assert invalid["line"] == 1
+    assert invalid["column"] is not None
+    assert "a" not in json.dumps(invalid)
+
+
 def test_safe_error_explains_location_and_possible_fix_without_source_line():
     row = validate_encoded_file("appsettings.json", encoded('{\n  "A": 1,\n  "Bad": }\n'))
     assert row["error_code"] == "json_value_missing"
