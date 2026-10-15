@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 526 | Dashboard JS files scanned: 8 | Symbols indexed: 5623**
+**Python files scanned: 526 | Dashboard JS files scanned: 8 | Symbols indexed: 5624**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -4299,10 +4299,11 @@
 | `tests/unit/test_incident_progress.py` | `test_stage_failure_does_not_fabricate_completion` | 35 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_incident_progress.py` | `test_real_finished_path_has_100_percent_and_no_pending_node` | 44 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_incident_progress.py` | `test_early_evaluator_stop_is_a_complete_attempt_not_unexecuted_decision` | 60 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_incident_progress.py` | `test_execution_and_verification_are_separate_from_prior_analysis` | 70 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_incident_progress.py` | `test_untrusted_payload_cannot_insert_commands_or_new_stages` | 85 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_incident_progress.py` | `test_each_sse_stream_route_uses_read_permission_and_never_runs_workflow` | 98 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_incident_progress.py` | `test_individual_agents_are_live_observations_not_auto_incremented_percent` | 111 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_progress.py` | `test_terminal_checkpoint_with_missing_end_audit_stays_truthful` | 70 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_progress.py` | `test_execution_and_verification_are_separate_from_prior_analysis` | 82 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_progress.py` | `test_untrusted_payload_cannot_insert_commands_or_new_stages` | 97 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_progress.py` | `test_each_sse_stream_route_uses_read_permission_and_never_runs_workflow` | 110 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_progress.py` | `test_individual_agents_are_live_observations_not_auto_incremented_percent` | 123 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_incident_remediation_binding.py` | `_checkpoint` | 15 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_incident_remediation_binding.py` | `test_remediation_contract_uses_durable_decision_not_requested_risk` | 43 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_incident_remediation_binding.py` | `test_remediation_contract_rejects_incomplete_execution_request` | 71 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
