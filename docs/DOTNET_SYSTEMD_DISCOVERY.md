@@ -78,3 +78,11 @@ that limited diagnosis without inventing missing reasons.
 See: `tests/unit/test_dotnet_aiops_validator.py`,
 `tests/unit/test_incident_explanation.py`,
 `tests/unit/test_systemd_runtime_discovery.py`.
+
+
+## نمایش زندهٔ Syntax و صف Approval در اتاق رخداد
+
+- برای سرویس .NET که فایل‌های JSON آن در Publish directory به‌صورت systemd-bound کشف شده‌اند، اتاق رخداد پس از تکمیل تحلیل از API امن `GET /api/v1/incidents/{id}/dotnet-config-syntax` نتیجهٔ Read-only را می‌گیرد و کنار نام هر فایل می‌گذارد: `valid_json_syntax`، `invalid_json_syntax` (با line/column) یا `unavailable`/`not_checked`. وجود فایل به‌تنهایی اثبات صحت Syntax نیست.
+- بررسی با Python داخل VM MCP Worker انجام می‌شود؛ روی Linux هدف نیازی به Python/.NET SDK/JQ نیست. نام فایل‌های حساس/Hidden یا مسیرهای خارج از Publish directory پذیرفته نمی‌شوند. محتوای JSON، کلیدها و Secretها به داشبورد، Audit یا LLM بازگردانده نمی‌شوند.
+- پیشنهاد evidence-bound بازیابی، در نخستین مشاهده با سطح دسترسی SRE و پس از بررسی زندهٔ هویت، سرویس، مقصد و وضعیت systemd، از `POST /api/v1/incidents/{id}/recovery-approval/queue` به درخواست Approval جداگانه و idempotent تبدیل می‌شود. این API نه تأیید می‌کند نه سرویس را Restart می‌کند؛ Approve و Execute دو تأیید انسانی/عملیاتی مستقل‌اند و در زمان اجرا RunbookRuntimeGuard باید تازه بررسی شود.
+- `LLM guidance_incomplete` شکست یک فراخوانی مشورتی (Timeout، فرمت نامعتبر، خطای درخواست) است و نشان‌دهندهٔ خاموش بودن کل LLM نیست.
