@@ -47,11 +47,18 @@ authentication, HMAC key and SSH credentials are security-critical.
   SSH argv contains only allowlisted operation, profile, path and hashes.
   Candidate bytes are encoded in an SSH-stdin heredoc, never stdout, logs,
   LLM, process argv, incident checkpoints or browser responses.
-* AIOPS_CONFIG_APPLY_SIGNING_SECRET (high entropy, min 32 characters) remains
-  mandatory in API and VM MCP. AIOPS_CONFIG_GUARD_ED25519_PRIVATE_KEY is no
-  longer needed by the helperless runtime and no public key file must be
-  deployed to the target. Legacy scripts/vm/aiops-config-guard and
-  scripts/vm/Install-AIOpsConfigGuard.ps1 are not execution dependencies.
+* MCP_BEARER_TOKEN is now the **only** shared signing root between API and
+  VM MCP. Both must have the identical, high-entropy token (at least 32 UTF-8
+  bytes). The claim HMAC uses a domain-separated key derived from that token
+  using HMAC-SHA256 with context
+  `aiops/configuration-apply/approval-claim/v1`, not the raw bearer bytes.
+  No additional AIOPS_CONFIG_APPLY_SIGNING_SECRET setting is necessary.
+  This couples MCP transport authorization with approval signing trust:
+  possession of the MCP bearer can also derive the signing key. Protect and
+  rotate the bearer appropriately, and retain DB approval consumption, bounded
+  claims, hash binding, sudo policy, root-only replay ledger and rollback.
+  AIOPS_CONFIG_GUARD_ED25519_PRIVATE_KEY is no longer required by this path.
+  No persistent VM helper needs deployment.
 
 ## Registered independent validators
 
@@ -96,45 +103,57 @@ tests cannot prove these host-level properties. Label untested host scenarios
 REAL ENV REQUIRED and never claim production-ready without verification.
 
 
-## 2026-10-15 execution blocker: missing signing secret
+## 2026-10-15 execution blocker: derived MCP bearer approval signing
 
-A real approval can reach `approved` after an isolated vendor check and still
-fail at `POST /api/v1/approvals/{approval_id}/execute-config` with HTTP 503
-`config_signing_key_not_configured`. This is a **control-plane signing-key
-precondition**, not a VM syntax failure, and does **not** consume the approval
-in the current API implementation.
+Earlier deployments could reach `approved` after an isolated vendor check,
+then fail at `POST /api/v1/approvals/{approval_id}/execute-config` with HTTP
+503 `config_signing_key_not_configured`. The legacy dedicated signing secret
+has now been removed. **The existing MCP_BEARER_TOKEN is the single source**
+for both transport authentication and derived approval signing.
 
-- Configure `AIOPS_CONFIG_APPLY_SIGNING_SECRET` with a new high-entropy secret
-  (minimum 32 characters) in the **API process** and **VM MCP process**.
-  The two processes must receive the **identical** value, independently of
-  MCP authentication tokens. Use a secrets manager or locked-down deployment
-  secret; never commit or log the value.
-- Restart/redeploy both processes to pick up configuration. The Settings
-  contract loads a local `.env` for development, and explicitly injected
-  process environment values override it. Production should use a managed
-  secret, not a checked-in file.
-- The Incident configuration-review response now exposes a **non-secret**
-  `execution_prerequisites.api_signing_key` value of `configured` or
-  `missing`. `vm_mcp_signing_key` and `signing_key_match` remain
-  `not_checked` unless independently verified; an API-side check cannot
-  assert remote readiness.
-- Confirm the current Approval still has `approved` status and that the
-  original/candidate hashes and the live file have not changed. Then use the
-  existing explicit execution action. Never manually bypass the signing gate.
+### Operator checklist
 
-Example for **Windows PowerShell development**, in **each** process-launching
-terminal, using one secret created and stored securely out of band:
+1. Ensure `MCP_BEARER_TOKEN` is set to **exactly the same** cryptographically
+   random value (at least 32 UTF-8 bytes) in the **API** and **VM MCP** process
+   deployments. Do not generate a second, unrelated token. Set it through a
+   deployment secret manager or a locked-down development `.env`.
+2. Restart both services after injecting any corrected secret. A previously
+   approved request is still approval-bound to the original/candidate hashes;
+   recheck live file drift before applying.
+3. The Incident configuration-review response reports
+   `execution_prerequisites.signing_source=MCP_BEARER_TOKEN` and
+   `api_signing_key=derived_from_mcp_bearer_token` when the API's token is
+   strong enough. It reports `missing_or_weak_mcp_bearer_token` otherwise.
+   Remote MCP identity and token match are **not** asserted from an API-local
+   check; the signed claim is verified by VM MCP during the actual operation.
+4. Only after separately confirming a valid Approval should the operator
+   select explicit execution. Missing/weak token is a pre-consumption 503 and
+   does not change an independently confirmed syntax validation into FAIL.
+
+Example on **Windows PowerShell**, launching both processes with an existing
+secret from a secured file:
 
 ```powershell
-$env:AIOPS_CONFIG_APPLY_SIGNING_SECRET = (Get-Content 'C:\secure\aiops-apply-signing-secret.txt' -Raw).Trim()
-# Then launch API or VM MCP from this same terminal.
+$env:MCP_BEARER_TOKEN = (Get-Content 'C:\secure\aiops-mcp-token.txt' -Raw).Trim()
+# Launch the API or VM MCP from this terminal.
 ```
 
-The referenced file must be ACL-restricted to the service identity; the
-example path is only illustrative. For a Windows service or CI deployment,
-set the secret through the service's secure environment/secret injection,
-not via an interactive session that the service does not inherit.
+The example file is not created by AIOps and must be ACL-restricted to the
+service account. Production and Windows services need real service-level
+secret injection; terminal variables are not inherited by unrelated running
+services. **Never** paste or commit the value.
 
-A passing candidate check, an `approved` Approval and a non-consumed grant
-must be shown separately in the dashboard. Do not show `PASS` for signing
-readiness merely because the vendor validator passed.
+### Security trade-off
+
+This is not independent cryptographic authorization: anyone obtaining the
+MCP_BEARER_TOKEN can derive the signing subkey. Purpose separation prevents
+accidental cross-protocol raw-key use but does **not** prevent impersonation
+after the shared root is stolen. Do not expose the token to browsers, logs,
+LLMs or incident reports. Existing DB consumption, expiry, hash/file/target
+binding, no-write-before-approval and SSH/sudo policy still apply. For
+production environments requiring distinct transport and privileged-action
+trust roots, prefer separate credentials instead; this single-token design
+intentionally trades separation for simpler operations.
+
+Real VM and CI execution remain **REAL ENV REQUIRED** until independently
+verified.
