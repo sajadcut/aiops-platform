@@ -362,7 +362,7 @@ async def incident_dotnet_config_syntax(
         if not isinstance(raw, dict):
             continue
         name = str(raw.get("file") or "")[:130]
-        if not re.fullmatch(r"[A-Za-z0-9_.-]{1,130}\\.json", name, re.I):
+        if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.+-]{0,99}\.json", name, re.I):
             continue
         item_status = str(raw.get("status") or "unavailable")
         if item_status not in allowed_statuses:
