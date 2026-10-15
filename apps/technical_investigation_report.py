@@ -648,10 +648,17 @@ def build_technical_investigation(*, incident: dict, evidence: list[dict],
             disk = _best_diagnostic(domain_rows, "disk_status")
             mounts = disk.get("filesystems") if isinstance(disk.get("filesystems"), list) else []
             inodes = disk.get("inodes") if isinstance(disk.get("inodes"), list) else []
+            # Surface the fullest mount first. The VM can report /var/log
+            # after seven low-use pseudo-filesystems; position-based slicing
+            # previously hid an actual 100% utilization warning.
+            mount_rows = [m for m in mounts if isinstance(m, dict)]
+            def mount_usage(row):
+                raw = str(row.get("use_percent") or "").removesuffix("%")
+                return int(raw) if raw.isdigit() else -1
             snippets = [
                 f"{_text(m.get('mount'), 60)}: used={_text(m.get('use_percent'), 10) or 'ثبت نشده'}؛ "
                 f"free={_text(m.get('available'), 35) or 'ثبت نشده'} bytes"
-                for m in mounts[:7] if isinstance(m, dict)
+                for m in sorted(mount_rows, key=mount_usage, reverse=True)[:7]
             ]
             files = _bounded_files(domain_rows)
             file_text = "; ".join(
