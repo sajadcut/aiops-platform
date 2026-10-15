@@ -185,20 +185,31 @@ class PostgreSQLApprovalStore:
                 or meta.get("original_sha256") != source_sha256
                 or meta.get("candidate_sha256") != candidate_sha256):
             raise ValueError("config_validation_hash_binding_mismatch")
+        change = str(meta.get("proposed_change") or "")
+        file_path = str(meta.get("config_file") or "")
+        service = str(meta.get("service") or "").lower().removesuffix(".service")
+        # A sealed complete-file LLM candidate runs the SAME independently
+        # isolated vendor validator as a deterministic candidate. Restrict its
+        # promotion to the matching vendor/file scope; the API checks the
+        # original incident's sealed candidate and exact two SHA-256 bindings
+        # before AND after the MCP validation. Do not require the historical
+        # deterministic transformation name for a different candidate source.
+        llm_repair = change == "llm_full_file_repair"
         if validation_scope == "generic_json_syntax_only_service_runtime_unverified":
-            if (meta.get("proposed_change") != "remove_trailing_json_comma"
-                    or not str(meta.get("config_file") or "").endswith(".json")
+            if (change not in {"remove_trailing_json_comma", "llm_full_file_repair"}
+                    or not file_path.endswith(".json")
                     or not vendor_validator.startswith("jq empty")):
                 raise ValueError("config_format_scope_mismatch")
         elif validation_scope == "generic_xml_syntax_only_service_runtime_unverified":
-            if (meta.get("proposed_change") != "remove_extra_xml_closing_tag"
-                    or not str(meta.get("config_file") or "").endswith(".xml")
+            if (change not in {"remove_extra_xml_closing_tag", "llm_full_file_repair"}
+                    or not file_path.endswith(".xml")
                     or not vendor_validator.startswith("xmllint")):
                 raise ValueError("config_xml_scope_mismatch")
         else:
-            if (meta.get("proposed_change") != "remove_extra_opening_brace"
-                    or str(meta.get("service") or "").lower().removesuffix(".service") != "nginx"
-                    or not str(meta.get("config_file") or "").endswith(".conf")
+            if (change not in {"remove_extra_opening_brace", "llm_full_file_repair"}
+                    or service != "nginx"
+                    or not file_path.endswith(".conf")
+                    or (llm_repair and not file_path.startswith("/etc/nginx/"))
                     or not vendor_validator.startswith("nginx -t")):
                 raise ValueError("config_vendor_scope_mismatch")
         if await self._incident_source_recovered(str(current.get("incident_id") or "")):
