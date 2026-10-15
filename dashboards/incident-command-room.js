@@ -2330,7 +2330,9 @@
            'Staged validation was blocked by permissions (permission_denied).'):
       code&& !['none','not_tested','not_recorded'].includes(code)?
       (fa?'علت/کد نتیجه: ':'Reason code: ')+code:'';
-    const responded=state.configResponse?.status&&state.configResponse.status!=='not_responded';
+    const legacyIntent=state.configResponse?.status==='awaiting_isolated_validation' &&
+      !state.configResponse?.approval_queue_registered;
+    const responded=state.configResponse?.status&&state.configResponse.status!=='not_responded'&&!legacyIntent;
     const ready=Boolean(candidate &&
       config.original_sha256 && config.candidate_sha256 &&
       !state.historic && !state.busy && state.configResponseStatus==='loaded' &&
@@ -2469,7 +2471,9 @@
       )+'</p></article>';
     const candidate=config.status==='candidate_proposed'&&config.candidate_sha256&&config.original_sha256;
     if(candidate){
-      const answered=state.configResponse?.status&&state.configResponse.status!=='not_responded';
+      const legacyIntent=state.configResponse?.status==='awaiting_isolated_validation' &&
+        !state.configResponse?.approval_queue_registered;
+      const answered=state.configResponse?.status&&state.configResponse.status!=='not_responded'&&!legacyIntent;
       const disabled=state.historic||state.busy||state.configResponseStatus!=='loaded';
       html+='<article class="ic-detail-card"><h4>'+esc(fa?
         'درخواست تأیید تغییر همین Diff':
@@ -2480,7 +2484,8 @@
         (answered?'<p><strong>'+txt(state.configResponse.status)+'</strong></p>':
         '<div class="ic-action-buttons">'+
         '<button type="button" class="ic-btn ic-btn-primary" data-config-intent="request_change_approval"'+(disabled?' disabled':'')+'>'+
-        esc(fa?'ارسال درخواست به Approval':'Submit change for approval')+'</button>'+
+        esc(fa?(legacyIntent?'انتقال درخواست قبلی به صف Approval':'ارسال درخواست به Approval'):
+          (legacyIntent?'Queue previously recorded request':'Submit change for approval'))+'</button>'+
         '<button type="button" class="ic-btn ic-btn-muted" data-config-intent="reject"'+(disabled?' disabled':'')+'>'+
         esc(fa?'خیر، رد پیشنهاد':'No, reject proposal')+'</button></div>')+
         '<p class="ic-agent-disclaimer">'+esc(fa?
@@ -2990,8 +2995,10 @@
   }
   async function respondToConfigProposal(decision) {
     const c=state.report?.dynamic_investigation?.config_proposal||{};
+    const previousAuditOnly=state.configResponse?.status==='awaiting_isolated_validation' &&
+      !state.configResponse?.approval_queue_registered;
     if(state.historic||state.busy||state.configResponseStatus!=='loaded'||
-       state.configResponse?.status!=='not_responded'||
+       (state.configResponse?.status!=='not_responded'&&!previousAuditOnly)||
        c.status!=='candidate_proposed'||!c.candidate_sha256||!c.original_sha256)return;
     const fa=state.language==='fa';
     if(!confirm(fa?
