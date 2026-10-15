@@ -45,6 +45,9 @@ async def test_live_rc1_is_nonapprovable_and_safe_for_api():
                 "config_file": "/etc/nginx/nginx.conf", "error_line": 1,
                 "syntax_error": 'unexpected "{"',
             }
+        async def _sudo(self, target, command, *, stdin_data=None):
+            return await self._run(target, "sudo -n " + command, stdin_data=stdin_data)
+
         async def _run(self, target, command, *, stdin_data=None):
             if "aiops-config-guard" in command:
                 assert stdin_data == CANDIDATE.decode()
