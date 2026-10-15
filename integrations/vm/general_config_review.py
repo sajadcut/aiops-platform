@@ -165,6 +165,32 @@ def local_config_review(encoded: str, *, path: str, validator_error_line: int | 
                 line_no = exc.position[0]
                 error = "xml_syntax_error"
                 answer["validation_status"] = "FORMAT_INVALID"
+                # One extra, unmatched *closing* tag at EOF is the only
+                # supported XML transformation. Never invent attributes,
+                # values, namespaces, or missing elements with an LLM.
+                closing = re.search(
+                    r"</[A-Za-z][A-Za-z0-9_.:-]{0,47}>(?=\\s*\\Z)", source
+                )
+                if closing:
+                    proposed = source[:closing.start()] + source[closing.end():]
+                    try:
+                        ET.fromstring(proposed)
+                    except ET.ParseError:
+                        pass
+                    else:
+                        line_no = source[:closing.start()].count("\\n") + 1
+                        answer.update({
+                            "status": "candidate_proposed",
+                            "candidate_hash": hashlib.sha256(proposed.encode("utf-8")).hexdigest(),
+                            "proposed_change": "remove_extra_xml_closing_tag",
+                            "validator_executed_on_proposal": True,
+                            "candidate_validator": "worker_python_xml_syntax",
+                            "validation_status": "FORMAT_CANDIDATE_VALID_ONLY",
+                            "redacted_diff": {
+                                "line": line_no, "before": "xml_extra_closing_tag",
+                                "after": "xml_closing_tag_removed",
+                            },
+                        })
     # YAML/HAProxy/properties are intentionally NOT "syntax valid" based on
     # looking at source bytes. Only their registered vendor validators may
     # establish correctness; do not synthesize a patch for them.
@@ -178,6 +204,8 @@ def local_config_review(encoded: str, *, path: str, validator_error_line: int | 
         ]
     if answer["status"] == "candidate_proposed":
         answer["proposed_excerpt"] = [
-            {"line": line_no, "content": "json_comma_removed"}
+            {"line": line_no, "content": (
+                "xml_closing_tag_removed" if ext == "xml" else "json_comma_removed"
+            )}
         ]
     return answer
