@@ -272,7 +272,9 @@ class SSHVMConnector:
         """
         is_guard = (fixed_command.startswith("/usr/local/sbin/aiops-config-guard ") or
                     fixed_command.startswith("/bin/sh -s -- "))
-        first = await self._run(target, f"sudo -n {fixed_command}", stdin_data=stdin_data)
+        first = (await self._run(target, f"sudo -n {fixed_command}")
+                 if stdin_data is None else
+                 await self._run(target, f"sudo -n {fixed_command}", stdin_data=stdin_data))
         needs_password = self._sudo_requires_password(first)
         if is_guard:
             logger.info(

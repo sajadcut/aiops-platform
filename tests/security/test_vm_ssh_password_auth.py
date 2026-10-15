@@ -100,7 +100,7 @@ async def test_password_sudo_retry_passes_ssh_secret_only_via_stdin(monkeypatch)
                 return Result(1, stderr="permission denied")
             if command.startswith("sudo -n journalctl "):
                 return Result(1, stderr="sudo: a password is required")
-            if command.startswith("sudo -S -p '' journalctl "):
+            if command.startswith("sudo -k -S -p '' journalctl "):
                 assert input == "test-only-password\n"
                 return Result(0, stdout="log line\ntest-only-password")
             raise AssertionError(f"unexpected command: {command}")

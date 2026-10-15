@@ -25,6 +25,7 @@ from apps.incident_elastic import (
 )
 from apps.orchestrator.workflow_store import WorkflowCheckpointStore
 from apps.incident_followup import persist_and_reassess
+from apps.chat_answer_review import requests_vm_allowed_hosts, allowed_hosts_answer, review_answer_coherence, mismatched_answer_message
 from apps.incident_vm_identity import (
     incident_vm_context, vm_binding_diagnostic, resolve_vm_binding,
     vm_status_answer,
@@ -426,6 +427,33 @@ async def incident_chat_message(
         ][:2]
         await append_turn(audit, incident_id=str(incident_id),
                           actor=identity.subject, role="user", message=payload.message)
+        if requests_vm_allowed_hosts(payload.message):
+            # A policy inventory request does not select an incident VM.
+            # Restrict to SRE and never persist host names in shared history.
+            roles = tuple(getattr(identity, "roles", ()) or ())
+            persian = bool(re.search(r"[\u0600-\u06ff]", payload.message))
+            answer = allowed_hosts_answer(roles, persian=persian)
+            from integrations.llm.openai_compatible import configured_llm_adapter
+            await review_answer_coherence(
+                configured_llm_adapter, question=payload.message,
+                answer="The requested allowlisted host inventory was handled "
+                       "under server-side access control; no VM connection ran.",
+                stage="incident_chat_answer_review",
+            )
+            audit_id = await append_turn(
+                audit, incident_id=str(incident_id), actor=identity.subject,
+                role="assistant", message="درخواست فهرست میزبان‌ها با بررسی نقش پاسخ داده شد؛ "
+                "جزئیات زیرساخت در تاریخچهٔ مشترک رخداد ثبت نشده است.",
+                model_status="policy_inventory",
+                answer_basis="role_scoped_configuration",
+            )
+            return {
+                "id": audit_id, "incident_id": str(incident_id),
+                "kind": "answer", "message": answer, "proposal": None,
+                "source_refs": [], "observation": None,
+                "model_status": "policy_inventory",
+                "answer_basis": "role_scoped_configuration",
+            }
         plan = await llm_plan(payload.message, summary, previous)
         requested = fallback_intent(payload.message)
         historical_errors = asks_for_recorded_errors(payload.message)
@@ -711,6 +739,18 @@ async def incident_chat_message(
             if kb.get("status") == "pending_review":
                 note += " پیش‌نویس دانش Cognia در صف بازبینی انسانی ایجاد شد و هنوز منتشر نشده است."
             answer += "\n\n" + note
+        from integrations.llm.openai_compatible import configured_llm_adapter
+        verdict, _ = await review_answer_coherence(
+            configured_llm_adapter,
+            question=payload.message,
+            answer=answer,
+            stage="incident_chat_answer_review",
+        )
+        if verdict == "mismatch" and kind == "answer":
+            answer = mismatched_answer_message(
+                payload.message,
+                persian=bool(re.search(r"[\u0600-\u06ff]", payload.message)),
+            )
         answer = redact_text(answer)[:3500]
         event_id = await append_turn(
             audit, incident_id=str(incident_id), actor=identity.subject,
