@@ -60,3 +60,88 @@ def local_recovery_decision(*, source: str, summary: str, service: str,
     if name == "nginx" and vendor_syntax_ok is not True:
         return "nginx_live_config_not_verified"
     return "independent_vm_verified"
+
+
+async def reconcile_after_applied_config(*, incident_id: str, target: str,
+                                         service: str, actor: str) -> str:
+    """Best-effort, fresh verification following an approved config + start.
+
+    This is intentionally independent of the SSH apply result. A transient
+    verification error must never convert a successful production apply into
+    HTTP 500 or imply a Zabbix Recovery event.
+    """
+    import asyncio
+    from datetime import datetime, timezone
+    from uuid import UUID, uuid4
+    from sqlalchemy import select
+    from apps.approval_service.postgres import PostgreSQLApprovalStore
+    from apps.audit_service.postgres import PostgreSQLAuditStore
+    from database import AsyncSessionLocal
+    from domain.models import Incident, IncidentStatus
+    from integrations.vm.mcp_client import VMEdgeMCPClient
+
+    try:
+        client = VMEdgeMCPClient()
+        first = await client.service_status(target, service)
+        await asyncio.sleep(1.0)
+        second = await client.service_status(target, service)
+        vendor_ok = None
+        if service.lower().removesuffix(".service") == "nginx":
+            vendor = await client.config_validate(target, service)
+            vendor_ok = (vendor.get("success") is True
+                         and vendor.get("supported") is True
+                         and vendor.get("valid") is True)
+        async with AsyncSessionLocal() as db:
+            incident = (await db.execute(
+                select(Incident).where(Incident.id == UUID(incident_id)).with_for_update()
+            )).scalar_one_or_none()
+            if incident is None:
+                return "incident_not_found"
+            verdict = local_recovery_decision(
+                source=str(incident.source or ""),
+                summary=str(incident.summary or ""),
+                service=str(incident.service or ""),
+                context=incident.context or {},
+                first=first, second=second, target=target,
+                vendor_syntax_ok=vendor_ok,
+            )
+            if verdict != "independent_vm_verified":
+                return verdict
+            if incident.status in {IncidentStatus.CLOSED, IncidentStatus.RESOLVED}:
+                return "incident_already_resolved"
+            context = dict(incident.context or {})
+            context["independent_recovery"] = {
+                "source": "approved_config_apply_followup",
+                "incident_resolved": True,
+                "service": str(incident.service), "target": target,
+                "monitor_recovered": False, "checks": 2,
+                "nginx_vendor_validated": vendor_ok is True,
+                "verified_at": datetime.now(timezone.utc).isoformat(),
+            }
+            incident.context = context
+            incident.status = IncidentStatus.RESOLVED
+            await db.commit()
+            await PostgreSQLApprovalStore(db).cancel_unconsumed_for_incident(
+                incident_id, reason="independent_vm_recovery_confirmed",
+                metadata_patch={"recovery_source": "approved_config_apply_followup"},
+            )
+            await PostgreSQLAuditStore(db).append({
+                "event_id": str(uuid4()), "event_type": "incident_independent_service_recovered",
+                "actor": actor, "incident_id": incident_id,
+                "action": "independent_service_recovery", "status": "verified",
+                "metadata": {
+                    "target": target, "service": service,
+                    "systemd_observations": 2,
+                    "monitor_recovered": False,
+                    "vendor_validated": vendor_ok,
+                    "recovery_source": "approved_config_apply_followup",
+                    "execution_authority": False,
+                },
+                "created_at": datetime.now(timezone.utc).isoformat(),
+            })
+            return "resolved_independent_vm_verified"
+    except Exception:
+        from domain.contracts.logging import logger
+        logger.warning("config_post_apply_recovery_reconciliation_unavailable",
+                       incident_id=incident_id, service=service)
+        return "recovery_verification_unavailable"
