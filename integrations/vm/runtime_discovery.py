@@ -26,7 +26,8 @@ def safe_absolute_path(value: Any) -> str | None:
 
 
 
-_CONFIG_EXT = (".conf", ".cfg", ".xml", ".properties", ".yaml", ".yml", ".json", ".ini")
+_CONFIG_EXT = (".conf", ".cfg", ".cnf", ".xml", ".properties", ".yaml", ".yml",
+               ".json", ".ini", ".toml", ".hcl", ".config")
 _BLOCKED_ROOTS = ("/proc/", "/sys/", "/dev/", "/run/secrets/", "/etc/shadow", "/etc/ssh/", "/etc/ssl/private/")
 _JAVA = re.compile(r"^(?:java|java[0-9]+|jsvc|catalina\.sh|startup\.sh)$", re.I)
 
