@@ -6,6 +6,7 @@
   let selectedDetails = null;
   let loading = false;
   let actionPending = false;
+  let showAllSimilarReviews = false;
 
   const el = id => document.getElementById(id);
   const current = () => selectedDetails && selectedDetails.id === selectedId ? selectedDetails : null;
@@ -20,12 +21,37 @@
     const list = el('knowledgeReviewQueue');
     if (!list) return;
     el('knowledgePendingCount').textContent = String(reviews.filter(r => r.status === 'pending_review').length);
-    list.innerHTML = reviews.map(r => `
-      <button type="button" class="knowledge-queue-item ${r.id === selectedId ? 'selected' : ''}"
-        data-knowledge-select="${esc(r.id)}" aria-pressed="${r.id === selectedId}">
-        <span class="knowledge-queue-title">${esc(r.title)}</span>
-        <span>${pill(r.status)} · ${esc(r.source_type)} · KB #${esc(r.kb_id)}</span>
-      </button>`).join('') || '<div class="empty-state">هنوز موردی برای بازبینی دانش ثبت نشده است.</div>';
+    // Group identical *display* titles for one incident. No row is deleted,
+    // merged, silently published, or overwritten; expand to inspect every
+    // historically distinct version/evidence reference.
+    const key = r => [r.incident_id || '', r.source_type || '',
+                       r.status || '', r.title || ''].join('\u241f');
+    const totals = new Map();
+    for (const item of reviews) totals.set(key(item), (totals.get(key(item)) || 0) + 1);
+    const seen = new Set();
+    const visible = showAllSimilarReviews ? reviews : reviews.filter(item => {
+      const group = key(item);
+      if (item.id === selectedId) return true;
+      if (seen.has(group)) return false;
+      seen.add(group);
+      return true;
+    });
+    const hidden = reviews.length - visible.length;
+    const toggle = totals.size < reviews.length ?
+      '<button type="button" class="knowledge-queue-toggle" data-knowledge-show-similar="1">'+
+      esc(showAllSimilarReviews ? 'جمع‌کردن عنوان‌های تکراری' :
+          'نمایش همهٔ پیش‌نویس‌ها (شامل موارد مشابه)')+'</button>':'';
+    list.innerHTML = toggle + visible.map(r => {
+      const copies = totals.get(key(r)) || 0;
+      const repeated = copies > 1 && !showAllSimilarReviews ?
+        ' · '+esc(copies)+' پیش‌نویس با همین عنوان':'';
+      return '<button type="button" class="knowledge-queue-item '+
+        (r.id === selectedId?'selected':'')+
+        '" data-knowledge-select="'+esc(r.id)+'" aria-pressed="'+(r.id===selectedId)+'">'+
+        '<span class="knowledge-queue-title">'+esc(r.title)+'</span>'+
+        '<span>'+pill(r.status)+' · '+esc(r.source_type)+' · KB #'+esc(r.kb_id)+
+        repeated+'</span></button>';
+    }).join('') || '<div class="empty-state">هنوز موردی برای بازبینی دانش ثبت نشده است.</div>';
   }
 
   function renderSelection() {
@@ -208,6 +234,11 @@
     return createDraft('/api/v1/knowledge-reviews/manual', {title, content});
   };
   document.addEventListener('click', e => {
+    if (e.target.closest('[data-knowledge-show-similar]')) {
+      showAllSimilarReviews = !showAllSimilarReviews;
+      renderQueue();
+      return;
+    }
     const incidentLink = e.target.closest('[data-knowledge-incident]');
     if (incidentLink) {
       const id = incidentLink.getAttribute('data-knowledge-incident');
