@@ -266,7 +266,7 @@ async def consult_operational_unknowns(
                 ],
                 temperature=0.0, max_tokens=700, stage="operational_unknown_guidance",
             ),
-            timeout=8.0,
+            timeout=25.0,
         )
         if str(response.finish_reason or "").lower() in {"length", "max_tokens"}:
             raise ValueError("incomplete_llm_guidance")
@@ -303,9 +303,17 @@ async def consult_operational_unknowns(
             "counts_as_evidence": False,
             "config_validation_passed": False,
         }
+    except asyncio.TimeoutError:
+        reason = "model_response_timeout"
+    except (ValueError, json.JSONDecodeError):
+        reason = "model_response_invalid"
     except Exception:
-        return {
-            "status": "unavailable", "items": [], "unknowns": gaps,
-            "execution_authority": False, "counts_as_evidence": False,
-            "config_validation_passed": False,
-        }
+        # A single guidance request failing does not prove that the shared
+        # LLM gateway is offline: other stages may still use it successfully.
+        reason = "guidance_request_failed"
+    return {
+        "status": "guidance_incomplete", "failure_reason": reason,
+        "items": [], "unknowns": gaps,
+        "execution_authority": False, "counts_as_evidence": False,
+        "config_validation_passed": False,
+    }
