@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 527 | Dashboard JS files scanned: 8 | Symbols indexed: 5723**
+**Python files scanned: 527 | Dashboard JS files scanned: 8 | Symbols indexed: 5732**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -4057,6 +4057,15 @@
 | `tests/unit/test_governed_recovery_knowledge.py` | `test_reconcile_rejects_unaudited_attempt.DB` | 188 | class | کلاس | test_reconcile_rejects_unaudited_attempt |
 | `tests/unit/test_governed_recovery_knowledge.py` | `test_reconcile_rejects_unaudited_attempt.DB.execute` | 189 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | test_reconcile_rejects_unaudited_attempt.DB |
 | `tests/unit/test_governed_recovery_knowledge.py` | `test_reconcile_rejects_unaudited_attempt.DB.get` | 190 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_reconcile_rejects_unaudited_attempt.DB |
+| `tests/unit/test_governed_recovery_knowledge.py` | `test_reconcile_recent_backfills_old_gfpapi_from_audit_without_publishing` | 198 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_governed_recovery_knowledge.py` | `test_reconcile_recent_backfills_old_gfpapi_from_audit_without_publishing.Result` | 205 | class | کلاس | test_reconcile_recent_backfills_old_gfpapi_from_audit_without_publishing |
+| `tests/unit/test_governed_recovery_knowledge.py` | `test_reconcile_recent_backfills_old_gfpapi_from_audit_without_publishing.Result.mappings` | 206 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_reconcile_recent_backfills_old_gfpapi_from_audit_without_publishing.Result |
+| `tests/unit/test_governed_recovery_knowledge.py` | `test_reconcile_recent_backfills_old_gfpapi_from_audit_without_publishing.Result.all` | 207 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_reconcile_recent_backfills_old_gfpapi_from_audit_without_publishing.Result |
+| `tests/unit/test_governed_recovery_knowledge.py` | `test_reconcile_recent_backfills_old_gfpapi_from_audit_without_publishing.DB` | 213 | class | کلاس | test_reconcile_recent_backfills_old_gfpapi_from_audit_without_publishing |
+| `tests/unit/test_governed_recovery_knowledge.py` | `test_reconcile_recent_backfills_old_gfpapi_from_audit_without_publishing.DB.__aenter__` | 214 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_reconcile_recent_backfills_old_gfpapi_from_audit_without_publishing.DB |
+| `tests/unit/test_governed_recovery_knowledge.py` | `test_reconcile_recent_backfills_old_gfpapi_from_audit_without_publishing.DB.__aexit__` | 215 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_reconcile_recent_backfills_old_gfpapi_from_audit_without_publishing.DB |
+| `tests/unit/test_governed_recovery_knowledge.py` | `test_reconcile_recent_backfills_old_gfpapi_from_audit_without_publishing.DB.execute` | 216 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | test_reconcile_recent_backfills_old_gfpapi_from_audit_without_publishing.DB |
+| `tests/unit/test_governed_recovery_knowledge.py` | `test_knowledge_review_ui_reconciles_once_and_never_auto_publishes` | 237 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_health_readiness_mcp.py` | `test_production_readiness_requires_cognia_and_configured_optional_mcps` | 4 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_health_readiness_mcp.py` | `test_non_production_readiness_does_not_gate_on_external_dependencies` | 32 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_host_memory_forensics.py` | `incident` | 12 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
