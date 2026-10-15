@@ -192,3 +192,84 @@ async def test_generic_api_cannot_forge_validated_config_approval():
         )
     assert exc.value.status_code == 409
     assert exc.value.detail == "use_governed_config_approval_workflow"
+
+
+@pytest.mark.parametrize("service,path", [
+    ("gfpapi", "/opt/gfpapi/appsettings.json"),
+    ("spring-payments", "/srv/java/config/application.json"),
+    ("python-api", "/etc/python-api/settings.json"),
+    ("tomcat-app", "/usr/local/tomcat/conf/settings.json"),
+])
+@pytest.mark.asyncio
+async def test_systemd_bound_json_config_approval_path_for_any_runtime(service, path):
+    from integrations.vm.governed_config_change import rebuild_json_candidate
+    source = '{"connectionString":"HIDDEN_SENSITIVE", "enabled":true,}\n'
+    desired = '{"connectionString":"HIDDEN_SENSITIVE", "enabled":true}\n'
+    expected_source = hashlib.sha256(source.encode()).hexdigest()
+    expected_candidate = hashlib.sha256(desired.encode()).hexdigest()
+    assert rebuild_json_candidate(
+        encoded=base64.b64encode(source.encode()).decode(), path=path,
+        original_sha256=expected_source, candidate_sha256=expected_candidate,
+    ) == desired
+
+    calls = []
+    class Edge:
+        _validate_target = staticmethod(lambda x: None)
+        _validate_service = staticmethod(lambda x: None)
+        async def service_config_discovery(self, target, name):
+            return {"success": True, "service": name, "files": [
+                {"path": path, "verified_exists": True, "source": "systemd_working_directory_inventory"}
+            ]}
+        async def _run(self, target, command, *, stdin_data=None):
+            calls.append((command, stdin_data))
+            if "aiops-config-guard" in command:
+                assert path in command
+                return {"success": True, "stdout": "VALIDATED"}
+            return {"success": True, "stdout": base64.b64encode(source.encode()).decode()}
+
+    result = await run_governed_change(
+        Edge(), action="validate", target="10.248.16.82", service=service,
+        config_file=path, original_sha256=expected_source,
+        candidate_sha256=expected_candidate, proposed_change="remove_trailing_json_comma",
+    )
+    assert result["success"] is True
+    assert result["validation_scope"] == "generic_json_syntax_only_service_runtime_unverified"
+    assert result["production_write_performed"] is False
+    assert result["vendor_validator"].startswith("jq empty")
+    assert len(calls) == 2
+    assert desired == calls[1][1]
+    assert "HIDDEN_SENSITIVE" not in calls[1][0]
+
+
+@pytest.mark.asyncio
+async def test_generic_json_proposal_requires_fresh_systemd_file_binding():
+    src = '{"ok":true,}'
+    class Unverified:
+        _validate_target = staticmethod(lambda x: None)
+        _validate_service = staticmethod(lambda x: None)
+        async def service_config_discovery(self, target, service):
+            return {"success": True, "files": [
+                {"path": "/opt/another-service/appsettings.json", "verified_exists": True},
+            ]}
+        async def _run(self, *args, **kwargs):
+            raise AssertionError("must not read arbitrary unbound config")
+    result = await run_governed_change(
+        Unverified(), action="validate", target="10.248.16.82", service="gfpapi",
+        config_file="/opt/gfpapi/appsettings.json",
+        original_sha256=hashlib.sha256(src.encode()).hexdigest(),
+        candidate_sha256=hashlib.sha256(src.replace(",", "").encode()).hexdigest(),
+        proposed_change="remove_trailing_json_comma",
+    )
+    assert result["success"] is False
+    assert result["status"] == "config_path_not_bound_to_service"
+
+
+def test_general_guard_supports_different_approved_app_config_roots_without_runtime_python():
+    helper = Path(__file__).resolve().parents[2] / "scripts/vm/aiops-config-guard"
+    data = helper.read_text()
+    assert "json_syntax" in data
+    assert "jq empty" in data
+    assert "/etc/*.json" in data and "/srv/*.json" in data and "/opt/*.json" in data
+    assert "openssl pkeyutl -verify" in data
+    assert "APPLIED_VERIFIED" in data and "ROLLED_BACK" in data
+    assert subprocess.run(["sh", "-n", str(helper)], capture_output=True).returncode == 0
