@@ -81,7 +81,7 @@ def harden_private_windows_acl(path: str) -> None:
     user_sid = _worker_sid()
     # SID comes only from the kernel token. The string never comes from
     # an incident, model, config path, or HTTP request.
-    sddl = f"D:P(A;;FA;;;SY)(A;;FA;;;BA)(A;;FA;;;{user_sid})"
+    sddl = f"D:P(A;OICI;FA;;;SY)(A;OICI;FA;;;BA)(A;OICI;FA;;;{user_sid})"
     advapi = ctypes.WinDLL("advapi32", use_last_error=True)
     kernel = ctypes.WinDLL("kernel32", use_last_error=True)
     convert = advapi.ConvertStringSecurityDescriptorToSecurityDescriptorW
