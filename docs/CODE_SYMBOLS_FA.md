@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 526 | Dashboard JS files scanned: 8 | Symbols indexed: 5663**
+**Python files scanned: 526 | Dashboard JS files scanned: 8 | Symbols indexed: 5664**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -737,11 +737,12 @@
 | `apps/api/incident_chat.py` | `_observed_status` | 220 | function | Newest attributable, read-only VM MCP observation; never trust Agent prose. | module |
 | `apps/api/incident_chat.py` | `_observed_status.append` | 229 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _observed_status |
 | `apps/api/incident_chat.py` | `_incident_status_scope` | 307 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/incident_chat.py` | `incident_service_status` | 315 | async function | Initial card state from durable VM/Audit evidence. Zero remote calls. | module |
-| `apps/api/incident_chat.py` | `recheck_incident_service_status` | 335 | async function | An explicit, authenticated read-only VM MCP status check (no LLM/write). | module |
-| `apps/api/incident_chat.py` | `incident_chat_history` | 466 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/incident_chat.py` | `incident_chat_message` | 512 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/incident_chat.py` | `incident_chat_request_approval` | 939 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/incident_chat.py` | `incident_dotnet_config_syntax` | 318 | async function | Live read-only MCP JSON check; no config bytes cross the worker boundary. | module |
+| `apps/api/incident_chat.py` | `incident_service_status` | 393 | async function | Initial card state from durable VM/Audit evidence. Zero remote calls. | module |
+| `apps/api/incident_chat.py` | `recheck_incident_service_status` | 413 | async function | An explicit, authenticated read-only VM MCP status check (no LLM/write). | module |
+| `apps/api/incident_chat.py` | `incident_chat_history` | 544 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/incident_chat.py` | `incident_chat_message` | 590 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/incident_chat.py` | `incident_chat_request_approval` | 1017 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/incident_resources.py` | `MemoryLifecycleRequest` | 31 | class | کلاس | module |
 | `apps/api/incident_resources.py` | `_require_current_database_schema` | 36 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/incident_resources.py` | `get_context` | 41 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
