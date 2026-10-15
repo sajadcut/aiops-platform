@@ -2361,7 +2361,7 @@
 | `integrations/vm/dotnet_local_validator.py` | `_reject_constant` | 176 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `integrations/vm/dotnet_local_validator.py` | `_reject_duplicate_keys` | 180 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `integrations/vm/dotnet_local_validator.py` | `validate_encoded_file` | 189 | function | Parse bytes only in worker memory; return bounded, secret-free metadata. | module |
-| `integrations/vm/ephemeral_config_guard.py` | `build_ephemeral_guard` | 169 | function | Return (fixed sudo command, shell stdin); only allow predetermined operations. | module |
+| `integrations/vm/ephemeral_config_guard.py` | `build_ephemeral_guard` | 177 | function | Return (fixed sudo command, shell stdin); only allow predetermined operations. | module |
 | `integrations/vm/general_config_review.py` | `checked_config_path` | 27 | function | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | module |
 | `integrations/vm/general_config_review.py` | `remote_config_read_command` | 35 | function | Fixed coreutils only; not a general-purpose remote file-read API. | module |
 | `integrations/vm/general_config_review.py` | `_structural_line` | 49 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
