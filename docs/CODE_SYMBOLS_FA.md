@@ -1267,17 +1267,17 @@
 | `apps/incident_service/repository.py` | `IncidentRepository` | 45 | class | Canonical PostgreSQL repository for Incident, Evidence and Finding. | module |
 | `apps/incident_service/repository.py` | `IncidentRepository.__init__` | 48 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentRepository |
 | `apps/incident_service/repository.py` | `IncidentRepository.upsert_incident` | 51 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentRepository |
-| `apps/incident_service/repository.py` | `IncidentRepository.evidence_inventory_digest` | 101 | async method | Fingerprint complete persisted Incident Evidence at approval/resume. | IncidentRepository |
-| `apps/incident_service/repository.py` | `IncidentRepository.set_status` | 131 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentRepository |
-| `apps/incident_service/repository.py` | `IncidentRepository.record_operational_outcome` | 136 | async method | Persist the governed execution outcome into incident state. | IncidentRepository |
-| `apps/incident_service/repository.py` | `IncidentRepository.acquire_correlation_lock` | 228 | async method | Serialize creation for a deterministic correlation fingerprint. | IncidentRepository |
-| `apps/incident_service/repository.py` | `IncidentRepository.find_correlated_open_incident` | 235 | async method | Find a bounded open/analyzing incident with the same fingerprint. | IncidentRepository |
-| `apps/incident_service/repository.py` | `IncidentRepository.attach_correlated_signal` | 263 | async method | Attach a related trigger without rewriting the incident's primary source. | IncidentRepository |
-| `apps/incident_service/repository.py` | `IncidentRepository.find_incident_by_evidence_reference` | 286 | async method | Return the incident already owning a source event/reference. | IncidentRepository |
-| `apps/incident_service/repository.py` | `IncidentRepository.add_findings` | 311 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentRepository |
-| `apps/incident_service/repository.py` | `IncidentRepository._evidence_type` | 344 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentRepository |
-| `apps/incident_service/repository.py` | `IncidentRepository.add_evidence` | 351 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentRepository |
-| `apps/incident_service/repository.py` | `IncidentRepository.commit` | 382 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentRepository |
+| `apps/incident_service/repository.py` | `IncidentRepository.evidence_inventory_digest` | 110 | async method | Fingerprint complete persisted Incident Evidence at approval/resume. | IncidentRepository |
+| `apps/incident_service/repository.py` | `IncidentRepository.set_status` | 140 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentRepository |
+| `apps/incident_service/repository.py` | `IncidentRepository.record_operational_outcome` | 145 | async method | Persist the governed execution outcome into incident state. | IncidentRepository |
+| `apps/incident_service/repository.py` | `IncidentRepository.acquire_correlation_lock` | 237 | async method | Serialize creation for a deterministic correlation fingerprint. | IncidentRepository |
+| `apps/incident_service/repository.py` | `IncidentRepository.find_correlated_open_incident` | 244 | async method | Find a bounded open/analyzing incident with the same fingerprint. | IncidentRepository |
+| `apps/incident_service/repository.py` | `IncidentRepository.attach_correlated_signal` | 272 | async method | Attach a related trigger without rewriting the incident's primary source. | IncidentRepository |
+| `apps/incident_service/repository.py` | `IncidentRepository.find_incident_by_evidence_reference` | 295 | async method | Return the incident already owning a source event/reference. | IncidentRepository |
+| `apps/incident_service/repository.py` | `IncidentRepository.add_findings` | 320 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentRepository |
+| `apps/incident_service/repository.py` | `IncidentRepository._evidence_type` | 353 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentRepository |
+| `apps/incident_service/repository.py` | `IncidentRepository.add_evidence` | 360 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentRepository |
+| `apps/incident_service/repository.py` | `IncidentRepository.commit` | 391 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentRepository |
 | `apps/incident_service/service_recovery_reconciliation.py` | `is_service_down_alert` | 15 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/incident_service/service_recovery_reconciliation.py` | `local_recovery_decision` | 29 | function | Return a bounded status, not mutable Incident state. | module |
 | `apps/incident_vm_identity.py` | `normalized_service` | 19 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
