@@ -6,9 +6,11 @@ payload is returned to API, LLM, audit, checkpoints, or browser.
 from __future__ import annotations
 import base64
 import hashlib
+import json
 import re
 import shlex
 
+from integrations.vm.general_config_review import checked_config_path, remote_config_read_command, _remove_trailing_json_commas
 from integrations.vm.nginx_config_review import (
     _checked_path, _repair_line, nginx_review_command,
 )
@@ -40,6 +42,33 @@ def rebuild_nginx_candidate(*, encoded: str, path: str, line: int, error: str,
     return candidate.decode("utf-8")
 
 
+def rebuild_json_candidate(*, encoded: str, path: str,
+                           original_sha256: str, candidate_sha256: str) -> str:
+    """Rebuild an immutable one-comma JSON fix; syntax-only, not app health."""
+    if not checked_config_path(path).endswith(".json"):
+        raise ValueError("config_format_not_supported")
+    if not all(re.fullmatch(r"[0-9a-f]{64}", h or "") for h in (original_sha256, candidate_sha256)):
+        raise ValueError("config_candidate_invalid_contract")
+    source = base64.b64decode(encoded, validate=True)
+    if not 1 <= len(source) <= 262144 or hashlib.sha256(source).hexdigest() != original_sha256:
+        raise ValueError("config_source_hash_drift")
+    contents = source.decode("utf-8", errors="strict")
+    if "\\x00" in contents or "\\r" in contents:
+        raise ValueError("config_source_invalid_encoding")
+    try:
+        json.loads(contents)
+    except json.JSONDecodeError:
+        pass
+    else:
+        raise ValueError("source_json_already_valid")
+    candidate = _remove_trailing_json_commas(contents)
+    if not candidate or contents.count(",") - candidate.count(",") != 1:
+        raise ValueError("config_change_not_deterministic")
+    json.loads(candidate)
+    if hashlib.sha256(candidate.encode("utf-8")).hexdigest() != candidate_sha256:
+        raise ValueError("config_candidate_hash_mismatch")
+    return candidate
+
 async def run_governed_change(connector, *, action: str, target: str, service: str,
                               config_file: str, original_sha256: str,
                               candidate_sha256: str, proposed_change: str,
@@ -48,45 +77,72 @@ async def run_governed_change(connector, *, action: str, target: str, service: s
         raise PermissionError("config_action_not_allowed")
     connector._validate_target(target)
     connector._validate_service(service)
-    if str(service).lower().removesuffix(".service") != "nginx" or proposed_change != "remove_extra_opening_brace":
+    name = str(service).lower().removesuffix(".service")
+    nginx_profile = name == "nginx" and proposed_change == "remove_extra_opening_brace"
+    json_profile = proposed_change == "remove_trailing_json_comma"
+    if not (nginx_profile or json_profile):
         return {"success": False, "status": "unsupported_vendor_apply_adapter",
                 "isolated_validation": False, "production_write_performed": False}
     try:
-        path = _checked_path(config_file)
+        path = _checked_path(config_file) if nginx_profile else checked_config_path(config_file)
+        if json_profile and not path.endswith(".json"):
+            raise ValueError("config_file_type_mismatch")
     except ValueError:
         return {"success": False, "status": "config_path_not_allowlisted",
                 "isolated_validation": False, "production_write_performed": False}
-
-    # Re-observe the live compiler diagnostic, including its file and line.
-    diagnostic = await connector.config_validate(target, service)
-    if not (diagnostic.get("success") is True
-            and diagnostic.get("supported") is True
-            and diagnostic.get("valid") is False
-            and diagnostic.get("config_file") == path
-            and type(diagnostic.get("error_line")) is int):
-        return {"success": False, "status": "fresh_vendor_diagnostic_mismatch",
-                "isolated_validation": False, "production_write_performed": False}
-    line = diagnostic["error_line"]
-    error = str(diagnostic.get("syntax_error") or diagnostic.get("detail") or "")
-    if not re.search(r'unexpected\s+["“]?\{', error, re.I):
-        return {"success": False, "status": "vendor_error_changed",
-                "isolated_validation": False, "production_write_performed": False}
     try:
-        read = await connector._run(target, nginx_review_command(path, line, error))
-        if read.get("success") is not True:
-            raise ValueError("config_live_file_read_failed")
-        candidate = rebuild_nginx_candidate(
-            encoded=str(read.get("stdout") or ""), path=path, line=line,
-            error=error, original_sha256=original_sha256,
-            candidate_sha256=candidate_sha256,
-        )
-    except (ValueError, UnicodeError, OSError):
+        if nginx_profile:
+            # Re-observe the exact nginx compiler failure and source hash.
+            diagnostic = await connector.config_validate(target, service)
+            if not (diagnostic.get("success") is True and diagnostic.get("supported") is True
+                    and diagnostic.get("valid") is False and diagnostic.get("config_file") == path
+                    and type(diagnostic.get("error_line")) is int):
+                return {"success": False, "status": "fresh_vendor_diagnostic_mismatch",
+                        "isolated_validation": False, "production_write_performed": False}
+            line = diagnostic["error_line"]
+            error = str(diagnostic.get("syntax_error") or diagnostic.get("detail") or "")
+            if not re.search(r'unexpected\\s+["“]?\\{', error, re.I):
+                return {"success": False, "status": "vendor_error_changed",
+                        "isolated_validation": False, "production_write_performed": False}
+            read = await connector._run(target, nginx_review_command(path, line, error))
+            if read.get("success") is not True:
+                raise ValueError("config_live_file_read_failed")
+            candidate = rebuild_nginx_candidate(
+                encoded=str(read.get("stdout") or ""), path=path, line=line,
+                error=error, original_sha256=original_sha256,
+                candidate_sha256=candidate_sha256)
+        else:
+            # The file MUST be rediscovered on the same service through the
+            # VM's read-only, systemd-derived inventory. LLM paths are advisory.
+            observed = await connector.service_config_discovery(target, service)
+            files = observed.get("files") or []
+            bound = observed.get("success") is True and any(
+                isinstance(x, dict) and x.get("path") == path
+                and x.get("verified_exists") is True
+                for x in files
+            )
+            if not bound:
+                return {"success": False, "status": "config_path_not_bound_to_service",
+                        "isolated_validation": False, "production_write_performed": False}
+            read = await connector._run(target, remote_config_read_command(path))
+            if read.get("success") is not True:
+                raise ValueError("config_live_file_read_failed")
+            candidate = rebuild_json_candidate(
+                encoded=str(read.get("stdout") or ""), path=path,
+                original_sha256=original_sha256, candidate_sha256=candidate_sha256,
+            )
+    except (ValueError, UnicodeError, OSError, json.JSONDecodeError):
         return {"success": False, "status": "live_source_or_candidate_drift",
                 "isolated_validation": False, "production_write_performed": False}
+    profile = "nginx" if nginx_profile else name
+    scope = ("nginx_mount_namespace_staged_etc_nginx_live_external_read_dependencies"
+             if nginx_profile else "generic_json_syntax_only_service_runtime_unverified")
+    validator = ("nginx -t (private mount namespace)" if nginx_profile
+                 else "jq empty (JSON syntax only; application semantics unverified)")
 
     # No unrestricted SSH root command: sudoers may delegate only the pre-
     # provisioned, root-owned guard. Never send config bytes in argv or logs.
-    arguments = [action, "nginx", path, original_sha256, candidate_sha256]
+    arguments = [action, profile, path, original_sha256, candidate_sha256]
     if action == "apply":
         if not execution_claims:
             raise PermissionError("root_config_guard_requires_signed_claim")
@@ -107,8 +163,8 @@ async def run_governed_change(connector, *, action: str, target: str, service: s
             "success": success,
             "status": "isolated_vendor_validation_passed" if success else "isolated_vendor_validation_failed",
             "isolated_validation": success,
-            "validation_scope": "nginx_mount_namespace_staged_etc_nginx_live_external_read_dependencies",
-            "vendor_validator": "nginx -t (private mount namespace)",
+            "validation_scope": scope,
+            "vendor_validator": validator,
             "original_sha256": original_sha256, "candidate_sha256": candidate_sha256,
             "production_write_performed": False,
             "remote_python_required": False,
@@ -125,7 +181,7 @@ async def run_governed_change(connector, *, action: str, target: str, service: s
                    "rollback_failed" if output == "ROLLBACK_FAILED" else
                    "apply_failed_or_blocked"),
         "isolated_validation": applied,
-        "validation_scope": "nginx_mount_namespace_staged_etc_nginx_live_external_read_dependencies",
+        "validation_scope": scope,
         "original_sha256": original_sha256, "candidate_sha256": candidate_sha256,
         "production_write_performed": applied or rolled_back or output == "ROLLBACK_FAILED",
         "rollback_status": ("not_required" if applied else "restored_original"
