@@ -49,6 +49,24 @@ class IncidentChatActionRequest(BaseModel):
     proposal_id: UUID
 
 
+def authorize_complete_file_disclosure(intent: str, requested: str,
+                                       roles: tuple[str, ...] | list[str]) -> str:
+    """Only an explicit SRE request can send raw configuration values to LLM.
+
+    No model-chosen intent or ordinary read:incident role can trigger a
+    privileged disclosure, even if model classification is incorrect.
+    """
+    if intent != "service_config_llm_repair":
+        return intent
+    if requested != "service_config_llm_repair":
+        return "answer"
+    if not any(allowed(role, "approve:high_risk") for role in roles):
+        raise HTTPException(
+            status_code=403, detail="full_config_llm_requires_sre_authorization",
+        )
+    return intent
+
+
 async def _scope(db, incident_id: UUID) -> tuple[Incident, dict, list[dict]]:
     incident = await db.get(Incident, incident_id)
     if incident is None:
@@ -577,19 +595,10 @@ async def incident_chat_message(
             intent = requested
         elif requested != "answer" and intent == "answer" and not explanation_only:
             intent = requested
-        # A complete-file LLM request can disclose tokens/passwords outside
-        # the control plane. Only an explicit SRE-authorized user request is
-        # allowed to initiate this step; the model may NEVER elect to send
-        # source bytes merely from an inference or routine incident question.
-        if intent == "service_config_llm_repair":
-            if requested != "service_config_llm_repair":
-                intent = "answer"
-            elif not any(allowed(role, "approve:high_risk")
-                         for role in identity.roles):
-                raise HTTPException(
-                    status_code=403,
-                    detail="full_config_llm_requires_sre_authorization",
-                )
+        # Raw configuration disclosure is a separate, SRE-only trust boundary.
+        intent = authorize_complete_file_disclosure(
+            intent, requested, identity.roles,
+        )
         vm_actions = READ_ACTIONS - {"knowledge_search", "elastic_logs", "elastic_recorded"}
         if intent in vm_actions or intent in WRITE_SUGGESTIONS:
             binding, binding_diagnosis = await resolve_vm_binding(
