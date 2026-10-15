@@ -125,7 +125,7 @@ async def test_guard_uses_existing_ssh_user_password_for_sudo_with_candidate():
         if command.startswith("sudo -n "):
             return {"success": False, "exit_code": 1,
                     "stderr": "sudo: a password is required"}
-        assert command.startswith("sudo -S -p '' /usr/local/sbin/aiops-config-guard ")
+        assert command.startswith("sudo -k -S -p '' /usr/local/sbin/aiops-config-guard ")
         assert stdin_data == password + "\n" + candidate
         return {"success": True, "exit_code": 0, "stdout": "VALIDATED"}
 
