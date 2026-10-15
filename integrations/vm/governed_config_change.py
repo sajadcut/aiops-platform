@@ -254,6 +254,7 @@ async def run_governed_change(connector, *, action: str, target: str, service: s
                      else "xml_syntax"),
             path=path, original_sha256=original_sha256,
             candidate_sha256=candidate_sha256, candidate=candidate,
+            approval_id=execution_claims["approval_id"] if action == "apply" else None,
         )
     except ValueError:
         return {"success": False, "status": "config_guard_request_rejected",
