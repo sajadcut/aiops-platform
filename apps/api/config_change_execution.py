@@ -224,6 +224,8 @@ async def execute_config(approval_id: UUID, identity=Depends(require_permission(
             "applied_config_vendor_verified" if applied else "config_execution_not_verified",
             {
                 "approval_id": id_, "result": str(result.get("status") or "unknown")[:100],
+                "service": meta["service"], "config_file": meta["config_file"],
+                "candidate_sha256": meta["candidate_sha256"],
                 "rollback_status": result.get("rollback_status"),
                 "production_write_performed": result.get("production_write_performed"),
                 "service_recovery_confirmed": recovery_confirmed,
@@ -232,7 +234,23 @@ async def execute_config(approval_id: UUID, identity=Depends(require_permission(
                 "monitor_recovery_confirmed": False,
             },
         )
+    knowledge_id = None
+    if applied:
+        # This is only a local pending human-review document. Failure to draft
+        # organizational knowledge must not turn a real production change into
+        # a false HTTP 500 or cause an execution retry.
+        try:
+            from apps.knowledge_review import create_from_verified_config_apply
+            async with AsyncSessionLocal() as knowledge_db:
+                review = await create_from_verified_config_apply(
+                    knowledge_db, incident_id=UUID(incident), approval_id=id_)
+                knowledge_id = str(review.id) if review else None
+        except Exception:
+            from domain.contracts.logging import logger
+            logger.warning("config_apply_knowledge_draft_failed",
+                           incident_id=incident, approval_id=id_)
     return {
+        "knowledge_review_id": knowledge_id,
         "approval_id": id_, "success": applied,
         "status": "applied_verified" if applied else str(result.get("status") or "execution_unverified"),
         "rollback_status": result.get("rollback_status") or "unverified",
