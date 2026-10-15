@@ -748,6 +748,28 @@ def build_decision_brief(
                     "suggestion": safe(obj(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("config_llm_review")).get("model_second_review")).get("suggestion"), 350),
                 },
             },
+            "full_config_llm_repair": {
+                "status": safe(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("full_config_llm_repair")).get("status"), 65),
+                "service": safe(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("full_config_llm_repair")).get("service"), 100),
+                "config_file": safe(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("full_config_llm_repair")).get("config_file"), 250),
+                "source_sha256": safe(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("full_config_llm_repair")).get("source_sha256"), 64),
+                "candidate_sha256": safe(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("full_config_llm_repair")).get("candidate_sha256"), 64),
+                "changed_line_count": obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("full_config_llm_repair")).get("changed_line_count") if type(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("full_config_llm_repair")).get("changed_line_count")) is int else 0,
+                "changed_line_numbers": [
+                    n for n in arr(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("full_config_llm_repair")).get("changed_line_numbers"))[:12]
+                    if type(n) is int and 0 < n <= 1000000
+                ],
+                "llm_received_complete_file": obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("full_config_llm_repair")).get("llm_received_complete_file") is True,
+                "llm_returned_complete_file": obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("full_config_llm_repair")).get("llm_returned_complete_file") is True,
+                "candidate_returned_not_stored": obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("full_config_llm_repair")).get("candidate_returned_not_stored") is True,
+                "rejection_reason": safe(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("full_config_llm_repair")).get("rejection_reason"), 90),
+                "validation_status": "UNVERIFIED",
+                "validator_executed_on_proposal": False,
+                "apply_eligible": False,
+                "execution_authority": False,
+                "observed_at": safe(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("full_config_llm_repair")).get("observed_at"), 55),
+                "source_evidence_refs": refs(obj(obj(obj(state.get("context")).get("dynamic_investigation")).get("full_config_llm_repair")).get("source_evidence_refs")),
+            },
             "checks": [
                 safe(x, 60)
                 for x in arr(obj(obj(state.get("context")).get("dynamic_investigation")).get("checks"))[:3]
