@@ -352,7 +352,11 @@ jobs:
                   cur.execute("SELECT to_regclass('public.chat_sessions'), to_regclass('public.chat_messages'), to_regclass('public.chat_action_proposals')")
                   assert cur.fetchone() == ('chat_sessions', 'chat_messages', 'chat_action_proposals'), 'chatbot persistence was not created during forward migration'
                   cur.execute("SELECT version_num FROM alembic_version")
-                  assert cur.fetchone()[0] == 'n1o2p3q4r5s6', 'forward migration must end at approved Incident Followup Knowledge outbox head'
+                  assert cur.fetchone()[0] == 'o2p3q4r5s6t7', 'forward migration must end at governed configuration approval head'
+                  cur.execute("SELECT conname FROM pg_constraint WHERE conname='approvals_status_ck'")
+                  assert cur.fetchone(), 'configuration approval-state CHECK constraint missing'
+                  cur.execute("SELECT indexname FROM pg_indexes WHERE indexname='ux_config_change_approval_candidate'")
+                  assert cur.fetchone(), 'configuration proposal approval idempotency index missing'
           PY
       - name: Migration downgrade and clean rebuild
         run: |
