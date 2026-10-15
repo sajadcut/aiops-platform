@@ -1,12 +1,10 @@
 """Encrypted, hash-bound, expiring complete-file LLM candidates on the VM MCP worker.
 
 Only the MCP worker may load plaintext; APIs/checkpoints/audit receive hashes.
-Use a dedicated 32-byte encryption secret and a private persistent volume.
+Use a purpose-separated subkey of the existing MCP_BEARER_TOKEN. No extra secret.
 """
 from __future__ import annotations
 
-import base64
-import binascii
 import hashlib
 import json
 import os
@@ -18,7 +16,7 @@ from pathlib import Path
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from cryptography.exceptions import InvalidTag
 
-from domain.contracts.config import settings
+from apps.config_change_authorization import candidate_encryption_key
 from integrations.vm.windows_secure_acl import ensure_private_windows_acl
 
 _TTL_SECONDS = 24 * 3600
@@ -31,19 +29,22 @@ class CandidateUnavailable(ValueError):
 
 
 def _key() -> bytes:
-    value = str(getattr(settings, "AIOPS_CONFIG_CANDIDATE_ENCRYPTION_KEY", "") or "")
+    """Only the existing MCP_BEARER_TOKEN is required. Never log key material."""
     try:
-        key = base64.b64decode(value, validate=True)
-    except (binascii.Error, ValueError):
-        raise CandidateUnavailable("candidate_key_not_configured") from None
-    if len(key) != 32:
-        raise CandidateUnavailable("candidate_key_not_configured")
-    return key
+        return candidate_encryption_key()
+    except PermissionError:
+        raise CandidateUnavailable("candidate_mcp_bearer_missing_or_weak") from None
+
+
+def _default_directory() -> Path:
+    """Fixed OS-specific private location, no additional runtime setting."""
+    if os.name == "nt":
+        return Path(os.environ.get("ProgramData", r"C:\\ProgramData")) / "AIOps" / "config-candidates"
+    return Path("/var/lib/aiops/config-candidates")
 
 
 def _directory() -> Path:
-    path = Path(str(getattr(settings, "AIOPS_CONFIG_CANDIDATE_DIRECTORY",
-                            "/var/lib/aiops/config-candidates")))
+    path = _default_directory()
     if not path.is_absolute() or ".." in path.parts:
         raise CandidateUnavailable("candidate_directory_invalid")
     try:
