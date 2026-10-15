@@ -999,7 +999,8 @@ class SSHVMConnector:
                     + " -mindepth 1 -maxdepth 2 -type f "
                     + "\\( -name '*.conf' -o -name '*.cfg' -o -name '*.xml' "
                     + "-o -name '*.properties' -o -name '*.yaml' -o -name '*.yml' "
-                    + "-o -name '*.json' -o -name '*.ini' \\)"
+                    + "-o -name '*.json' -o -name '*.ini' -o -name '*.toml' "
+                    + "-o -name '*.hcl' -o -name '*.cnf' -o -name '*.config' \\)"
                     + " -print 2>/dev/null | head -n 24"
                 )
                 try:
