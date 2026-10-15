@@ -61,6 +61,66 @@ class PostgreSQLApprovalStore:
         marker = dict(context.get("source_recovery") or {}) if isinstance(context, dict) else {}
         return bool(str(row.get("status") or "").lower() == "resolved" and marker.get("incident_resolved"))
 
+    async def save_validation_request(self, record: Dict[str, Any]) -> Dict[str, Any]:
+        """Durably queue an immutable configuration request, NOT an Approval.
+
+        State is pending_validation and cannot be approved by set_status().
+        Never use save(): it deliberately upgrades all new records to pending.
+        """
+        meta = dict(record.get("metadata") or {})
+        if (record.get("action") != "apply_configuration_change"
+                or meta.get("workflow") != "config_change"
+                or not meta.get("binding_complete")
+                or not meta.get("original_sha256")
+                or not meta.get("candidate_sha256")
+                or not meta.get("config_file")):
+            raise ValueError("invalid_config_change_request")
+        if await self._incident_source_recovered(str(record.get("incident_id") or "")):
+            raise ValueError("incident_already_recovered")
+        now = _db_timestamp(record.get("created_at")) or datetime.now(timezone.utc)
+        rows = (await self.session.execute(
+            text("""
+                INSERT INTO approvals
+                (approval_id, incident_id, action, risk_level, approver,
+                 status, metadata, created_at, approved_at, rejected_at)
+                VALUES (:approval_id, :incident_id, 'apply_configuration_change',
+                        'high', :approver, 'pending_validation',
+                        CAST(:metadata AS jsonb), :created_at, NULL, NULL)
+                ON CONFLICT DO NOTHING
+                RETURNING approval_id
+            """),
+            {
+                "approval_id": str(record["approval_id"]),
+                "incident_id": str(record["incident_id"]),
+                "approver": str(record["approver"]),
+                "metadata": json.dumps(meta, default=str),
+                "created_at": now,
+            },
+        )).scalars().all()
+        await self.session.commit()
+        if rows:
+            stored = await self.get(str(rows[0]))
+        else:
+            matching = (await self.session.execute(
+                text("""
+                    SELECT approval_id FROM approvals
+                    WHERE incident_id=:incident_id
+                      AND action='apply_configuration_change'
+                      AND metadata->>'original_sha256'=:source
+                      AND metadata->>'candidate_sha256'=:candidate
+                    ORDER BY created_at DESC LIMIT 1
+                """),
+                {
+                    "incident_id": str(record["incident_id"]),
+                    "source": meta["original_sha256"],
+                    "candidate": meta["candidate_sha256"],
+                },
+            )).scalar_one_or_none()
+            stored = await self.get(str(matching)) if matching else None
+        if not stored:
+            raise ValueError("config_change_request_persistence_failed")
+        return stored
+
     async def save(self, record: Dict[str, Any]) -> Dict[str, Any]:
         """Create durable approval authority exactly once.
 
