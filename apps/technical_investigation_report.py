@@ -22,7 +22,8 @@ DOMAINS = (
     ("resources", "CPU، RAM و Swap", "vm_mcp", ("collect_vm_metrics", "memory_diagnostics", "process_snapshot")),
     ("disk", "Disk و Filesystem", "vm_mcp", ("disk_status", "disk_forensics")),
     ("network", "Process، Network و Port", "vm_mcp", ("process_status", "port_listener_status", "tcp_check", "network_status", "dns_check", "route_check")),
-    ("config", "Application Configuration", "vm_mcp", ("config_validate", "dotnet_config_syntax")),
+    ("config", "Application Configuration", "vm_mcp", ("config_validate", "dotnet_config_syntax",
+        "nginx_config_review", "nginx_config_inspect", "service_config_discovery", "service_config_review")),
     ("monitoring", "Prometheus و Zabbix", "monitoring", ()),
     ("cognia", "Cognia و تجربه‌های قبلی", "knowledge", ()),
 )
@@ -58,7 +59,7 @@ COLLECTION_HINTS = {
     "resources": "VM MCP: collect_vm_metrics، memory_diagnostics و process_snapshot؛ برای روند از Prometheus استفاده کنید.",
     "disk": "VM MCP: disk_status، inode و disk_forensics؛ وضعیت Mount و logrotate را بررسی کنید.",
     "network": "VM MCP: MainPID را با process_status، port_listener_status و tcp_check تطبیق دهید.",
-    "config": "VM MCP: config_validate، service_runtime_discovery و Validator اختصاصی Runtime.",
+    "config": "VM MCP: نتیجهٔ Validator و فایل تأییدشدهٔ همین سرویس/Runtime را بررسی کنید.",
     "monitoring": "Zabbix و Prometheus: وضعیت Alert/Recovery و نمونه‌های زمان‌دار را دریافت کنید.",
     "cognia": "بازیابی Cognia را فقط برای سرویس و Runtime هم‌هویت و خطای مرتبط بررسی کنید.",
 }
@@ -157,8 +158,20 @@ def _matches(row: dict, service: str, host: str | None) -> bool:
     raw = row.get("raw_data") or {}
     if not isinstance(raw, dict):
         return False
-    identified = raw.get("service") or (raw.get("labels") or {}).get("service") if isinstance(raw.get("labels") or {}, dict) else raw.get("service")
-    if identified and _service(identified) != service:
+    labels = raw.get("labels") if isinstance(raw.get("labels"), dict) else {}
+    # Check every declared identity: same host does not imply same service.
+    for declared in (raw.get("service"), labels.get("service"),
+                     raw.get("query_service"), raw.get("searched_service")):
+        if declared and _service(declared) != service:
+            return False
+    diagnostic = str(raw.get("diagnostic") or raw.get("tool_name") or "")
+    if _source(row) == "vm_mcp" and diagnostic in {
+        "service_status", "service_logs", "config_validate", "process_status",
+        "service_runtime_discovery", "service_config_discovery",
+        "service_config_review", "nginx_config_review",
+        "nginx_config_inspect", "dotnet_config_syntax",
+    } and not raw.get("service"):
+        # Do not attribute an unbound service probe to a shared VM's unit.
         return False
     target = raw.get("target") or raw.get("host_ip")
     return not (target and host and str(target).lower() != host.lower())
@@ -500,39 +513,89 @@ def build_technical_investigation(*, incident: dict, evidence: list[dict],
         elif key == "config":
             generic = _best_diagnostic(domain_rows, "config_validate")
             special = _best_diagnostic(domain_rows, "dotnet_config_syntax")
-            files = special.get("files") if isinstance(special.get("files"), list) else []
-            # Distinguish exact validated files from candidate/unknown paths.
-            directory = safe_absolute_path(special.get("publish_directory"))
-            checked = []
-            for file_row in files[:12]:
-                if not isinstance(file_row, dict):
-                    continue
-                name = str(file_row.get("file") or "")
-                if not SAFE_DOTNET_JSON_NAME.fullmatch(name):
-                    continue
-                path = safe_absolute_path(directory + "/" + name) if directory else None
-                label = _text(path or name, 300)
-                if not path:
-                    label += " (مسیر کامل نامشخص)"
-                checked.append(label + ": " + _text(file_row.get("status"), 45))
-            verified_json = (
-                special.get("syntax_valid") is True and bool(checked)
-                and all(isinstance(f, dict) and f.get("status") == "valid_json_syntax"
-                        for f in files)
+            nginx_review = _best_diagnostic(domain_rows, "nginx_config_review")
+            nginx_inspect = _best_diagnostic(domain_rows, "nginx_config_inspect")
+            general_review = _best_diagnostic(domain_rows, "service_config_review")
+            discovery = _best_diagnostic(domain_rows, "service_config_discovery")
+            runtime = _best_diagnostic(
+                _domain_rows(matching, "systemd", ("service_runtime_discovery",)),
+                "service_runtime_discovery",
             )
-            technical = (
-                "Generic Validator: " +
-                ("Unsupported" if generic.get("supported") is False else
-                 "Valid" if generic.get("valid") is True else
-                 "Invalid" if generic.get("valid") is False else "اجرا نشده یا بدون نتیجه") +
-                "؛ .NET JSON Syntax: " +
-                ("Valid" if verified_json else
-                 "Invalid" if special.get("syntax_valid") is False else "تأیید نشده") +
-                (f"؛ Checked files={'; '.join(checked[:12])}" if checked else
-                 "؛ نام فایل JSON بررسی‌شده در Evidence ثبت نشده است" if special else
-                 "؛ بررسی اختصاصی JSON اجرا نشده است") +
-                "؛ Syntax Valid به معنی Semantic Valid یا Runtime Healthy نیست؛ سلامت Dependency و Startup نیز تأیید نمی‌شود."
-            )
+            if generic:
+                validator_status = (
+                    "Unsupported" if generic.get("supported") is False else
+                    "Valid" if generic.get("valid") is True else
+                    "Invalid" if generic.get("valid") is False else "نامشخص"
+                )
+                technical = "Validator سرویس: " + validator_status
+                if generic.get("config_file"):
+                    technical += "؛ File=" + _text(generic["config_file"], 170)
+                if type(generic.get("error_line")) is int:
+                    technical += "؛ Line=" + str(generic["error_line"])
+                if generic.get("valid") is False and generic.get("syntax_error"):
+                    technical += "؛ خطا=" + _text(generic["syntax_error"], 140)
+            else:
+                technical = "Validator عمومی برای این سرویس ثبت نشده است"
+            if service == "nginx":
+                # Never render .NET/JSON diagnostics for an Nginx incident.
+                if nginx_review:
+                    technical += "؛ بازبینی Nginx=" + _text(nginx_review.get("status"), 40)
+                    if nginx_review.get("config_file") and not generic.get("config_file"):
+                        technical += "؛ File=" + _text(nginx_review["config_file"], 170)
+                    if type(nginx_review.get("error_line")) is int and type(generic.get("error_line")) is not int:
+                        technical += "؛ Line=" + str(nginx_review["error_line"])
+                    if nginx_review.get("status") == "candidate_proposed":
+                        technical += "؛ پیشنهاد اصلاح صرفاً پیش‌نمایش است"
+                    technical += "؛ وضعیت اعتبارسنجی پیشنهاد=" + _text(
+                        nginx_review.get("validation_status") or "UNVERIFIED", 35
+                    )
+                if nginx_inspect:
+                    technical += "؛ بررسی ساختار فایل‌ها=" + _text(
+                        nginx_inspect.get("status"), 35
+                    )
+                technical += "؛ اصلاح روی سرور یا رفع خرابی تأیید نشده است."
+            elif special.get("supported") is True and (
+                str(runtime.get("runtime") or "").lower() == "dotnet"
+                or str(runtime.get("entrypoint") or "").lower().endswith(".dll")
+            ):
+                files = special.get("files") if isinstance(special.get("files"), list) else []
+                directory = safe_absolute_path(special.get("publish_directory"))
+                checked = []
+                for file_row in files[:12]:
+                    if not isinstance(file_row, dict):
+                        continue
+                    name = str(file_row.get("file") or "")
+                    if not SAFE_DOTNET_JSON_NAME.fullmatch(name):
+                        continue
+                    path = safe_absolute_path(directory + "/" + name) if directory else None
+                    checked.append(_text(path or name, 170) + ": " +
+                                   _text(file_row.get("status"), 45))
+                verified_json = (
+                    special.get("syntax_valid") is True and bool(checked)
+                    and all(isinstance(f, dict) and f.get("status") == "valid_json_syntax"
+                            for f in files)
+                )
+                technical += (
+                    "؛ .NET JSON Syntax: " +
+                    ("Valid" if verified_json else
+                     "Invalid" if special.get("syntax_valid") is False else "تأیید نشده") +
+                    (f"؛ Checked files={'; '.join(checked[:12])}" if checked else
+                     "؛ نام فایل JSON بررسی‌شده ثبت نشده است") +
+                    "؛ Syntax Valid به معنی سلامت Runtime یا Dependency نیست."
+                )
+            else:
+                if general_review:
+                    technical += "؛ بازبینی فایل=" + _text(
+                        general_review.get("status") or
+                        general_review.get("validation_status") or "نامشخص", 55
+                    )
+                    if general_review.get("config_file"):
+                        technical += "؛ File=" + _text(general_review["config_file"], 160)
+                if discovery:
+                    technical += "؛ کشف مسیر فایل=" + _text(
+                        discovery.get("status") or "ثبت‌شده", 50
+                    )
+                technical += "؛ سلامت Runtime از این بررسی اثبات نمی‌شود."
         elif key == "network":
             proc = _best_diagnostic(domain_rows, "process_status")
             listener = _best_diagnostic(domain_rows, "port_listener_status")
@@ -551,13 +614,15 @@ def build_technical_investigation(*, incident: dict, evidence: list[dict],
                 f"TCP reachable={_sample(tcp.get('reachable'))}؛ "
                 f"Runtime={_sample(runtime.get('runtime'))}."
             )
-            if (runtime.get("runtime") == "dotnet"
-                    or str(runtime.get("entrypoint") or "").lower().endswith(".dll")
-                    or proc.get("running") is False):
+            if proc.get("running") is False:
                 technical += (
-                    " هشدار: ps -C بر اساس نام gfpapi ممکن است پردازش dotnet را "
-                    "نیابد؛ عدم تطبیق نام، دلیل توقف PID نیست. MainPID و Listener را جداگانه بررسی کنید."
+                    f" هشدار: جست‌وجوی فرآیند با نام «{_text(service, 70)}» "
+                    "ممکن است Runtime با نام متفاوت را پیدا نکند؛ عدم تطبیق نام، "
+                    "اثبات توقف سرویس نیست. MainPID، cgroup و Listener را جدا بررسی کنید."
                 )
+            if (str(runtime.get("runtime") or "").lower() == "dotnet"
+                    or str(runtime.get("entrypoint") or "").lower().endswith(".dll")):
+                technical += " Runtime واقعی .NET شناسایی شده؛ نام فرآیند لزوماً نام Unit نیست."
             if not listener and not tcp:
                 technical += " پورت یا TCP هدف در شواهد ثبت نشده است."
         elif key == "resources" and domain_rows:
@@ -576,7 +641,7 @@ def build_technical_investigation(*, incident: dict, evidence: list[dict],
                          f"Swap Usage={_sample(swap_pct, '%')}؛ "
                          f"PSI avg10={_sample(memory.get('psi_memory_some_avg10'), '%')}؛ "
                          f"IO Wait={_sample(io_wait, '%')}؛ "
-                         "این‌ها نمونه‌های لحظه‌ای هستند؛ بدون Time Series، علت Timeout را اثبات نمی‌کند.")
+                         "این‌ها نمونه‌های لحظه‌ای هستند؛ بدون Time Series، علت خرابی سرویس را اثبات نمی‌کنند.")
             if not memory and ram_pct is not None:
                 technical += " MemAvailable، Cache و PSI در Snapshot ثبت نشده‌اند."
         elif key == "disk" and domain_rows:
@@ -599,7 +664,7 @@ def build_technical_investigation(*, incident: dict, evidence: list[dict],
                          f"؛ Inode samples={len(inodes)}." +
                          (f" Files: {file_text}." if file_text else
                           " فایل‌های حجیم در شواهد این رخداد ثبت نشده‌اند.") +
-                         " ظرفیت یا حجم لاگ به‌تنهایی علت Timeout نیست؛ حذف فایل مجاز نیست.")
+                         " ظرفیت یا حجم لاگ به‌تنهایی علت خرابی سرویس نیست؛ حذف فایل مجاز نیست.")
         elif domain_rows:
             latest_facts = evidence_rows[0]["facts"]
             technical = "؛ ".join(f"{k}={v}" for k, v in latest_facts.items()
@@ -734,7 +799,7 @@ def build_technical_investigation(*, incident: dict, evidence: list[dict],
         "rca": {"confirmed_facts": confirmed, "likely_hypotheses": hypotheses,
                 "ruled_out": [], "remaining_unknowns": unknowns,
                 "cause_confirmed": False,
-                "note": "Timeout و هم‌زمانی شواهد، علت ریشه‌ای یا مقصر بودن Process را اثبات نمی‌کنند."},
+                "note": "هم‌زمانی شواهد و وضعیت فرآیند بدون بررسی مستقل، علت ریشه‌ای را اثبات نمی‌کنند."},
         "actions": actions,
         "identity_mismatch_count": mismatched, "conflicts": conflicts,
         "approval_status": str((approval or {}).get("status") or "not_recorded"),
