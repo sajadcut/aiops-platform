@@ -7,6 +7,37 @@
   const displayAction = value =>
     typeof faAction === 'function' ? faAction(value) : String(value ?? 'نامشخص');
 
+  function configPreApprovalPanel() {
+    const request = S.configPreApproval;
+    if (S.configPreApprovalError) {
+      return `<article class="approval-card neutral" data-config-validation-visibility="error">
+        <div class="approval-card-head"><div><span class="section-kicker">درخواست اصلاح کانفیگ</span>
+        <h4>وضعیت درخواست قابل دریافت نیست</h4></div></div>
+        <p>وضعیت بازبینی از API دریافت نشد؛ وجود یا نبود مجوز اجرایی را نمی‌توان از این خطا نتیجه گرفت.</p>
+      </article>`;
+    }
+    if (!request || request.status === 'not_responded') return '';
+    const recorded = request.status === 'awaiting_isolated_validation';
+    const id = encodeURIComponent(S.selected || '');
+    return `<article class="approval-card neutral" data-config-validation-visibility="recorded">
+      <div class="approval-card-head"><div><span class="section-kicker">درخواست اصلاح کانفیگ · پیش از Approval</span>
+      <h4>${recorded ? 'درخواست بررسی اصلاح ثبت شده؛ تأیید اجرایی ایجاد نشده' :
+        'وضعیت پاسخ اپراتور به پیشنهاد اصلاح'}</h4></div>${pill('not_requested')}</div>
+      <div class="approval-facts">
+        <div><label>وضعیت درخواست</label><strong>${esc(request.status)}</strong></div>
+        <div><label>وضعیت اعتبارسنجی</label><strong>${esc(request.validation_status || 'UNVERIFIED')}</strong></div>
+        <div><label>سرویس</label><strong>${esc(request.service || '—')}</strong></div>
+        <div><label>فایل بررسی‌شده</label><strong dir="ltr">${esc(request.config_file || '—')}</strong></div>
+        <div><label>Approval اجرایی</label><strong>ایجاد نشده</strong></div>
+        <div><label>زمان ثبت</label><strong>${esc(request.created_at || '—')}</strong></div>
+      </div>
+      <p class="approval-note">${recorded ?
+        'این صرفاً درخواست اعتبارسنجی است، نه صف فعال اعتبارسنجی یا Approval اجرایی. سرویس اعتبارسنجی ایزوله و قرارداد ایمن اعمال فایل هنوز پیاده‌سازی نشده‌اند؛ بنابراین دکمهٔ تأیید و اجرای فایل نباید فعال باشد.' :
+        'درخواست رد یا بررسی شده است؛ ثبت این پاسخ هیچ مجوز اجرایی صادر نمی‌کند.'}</p>
+      <a href="/dashboard/incidents/${id}#ic-ai-proposed-fix">مشاهده Diff و جزئیات اصلاح در اتاق رخداد ←</a>
+    </article>`;
+  }
+
   function approvalPanel() {
     const lifecycle = S.detail?.lifecycle || {};
     const approval = lifecycle.approval || null;
@@ -442,6 +473,11 @@
   };
 
   selectIncident = async function selectIncidentWithOperatorSummary(id) {
+    S.configPreApproval = null;
+    S.configPreApprovalError = null;
+    const configRequest = api(`/api/v1/incidents/${encodeURIComponent(id)}/configuration-review-response`)
+      .then(value => ({value, error: null}))
+      .catch(error => ({value: null, error: error.message}));
     S.operatorSummary = null;
     S.operatorSummaryError = null;
     S.operatorSummaryPending = true;
@@ -451,7 +487,10 @@
       .catch(error => ({value: null, error: error.message}));
     await baseSelectIncident(id);
     if (S.selected !== id) return;
-    const result = await summaryRequest;
+    const [result, review] = await Promise.all([summaryRequest, configRequest]);
+    if (S.selected !== id) return;
+    S.configPreApproval = review.value;
+    S.configPreApprovalError = review.error;
     S.operatorSummary = result.value;
     S.operatorSummaryError = result.error;
     S.operatorSummaryPending = false;
@@ -465,7 +504,7 @@
     const pane = document.querySelector('#detailPane');
     if (!pane) return;
     const existing = pane.innerHTML;
-    pane.innerHTML = `${approvalPanel()}${existing}`;
+    pane.innerHTML = `${configPreApprovalPanel()}${approvalPanel()}${existing}`;
   };
 
   loadAll = async function loadAllWithCurrentIncidentSummary() {
