@@ -34,6 +34,9 @@ class ConfigReviewResponse(BaseModel):
     decision: str
     expected_original_sha256: str
     expected_candidate_sha256: str
+    # Must be explicitly requested before Approval; never retroactively
+    # extend an already-issued config-only ticket with service-start authority.
+    start_service_after_apply: bool = False
 
 
 def _proposal(checkpoint: dict) -> dict:
@@ -133,6 +136,7 @@ def _review_progress(*, status: str, decision: str | None, proposal: dict,
         "vendor_validator": metadata.get("vendor_validator"),
         "approval_status": queue_status,
         "approval_id": str(approval["approval_id"]) if approval else None,
+        "start_service_after_apply": metadata.get("start_service_after_apply") is True,
         "approval_queue_registered": bool(approval),
         "approval_eligible": approvable,
         "approval_actionable": approvable,
@@ -273,6 +277,7 @@ async def post_config_review_response(
                 **parameters,
                 "source_evidence_refs": proposal.get("source_evidence_refs", [])[:8],
                 "request_phase": "pending_validation",
+                "start_service_after_apply": payload.start_service_after_apply is True,
                 "isolated_validation": False,
                 "production_write_performed": False,
             },
@@ -304,6 +309,7 @@ async def post_config_review_response(
                     "candidate_sha256": proposal["candidate_sha256"],
                     "service": service, "file": proposal["config_file"],
                     "approval_id": str(queued["approval_id"]),
+                    "start_service_after_apply": payload.start_service_after_apply is True,
                     "validation": "pending_validation",
                     "production_write_performed": False,
                 },
