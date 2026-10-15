@@ -227,7 +227,7 @@ async def test_read_only_incident_followup_drafts_use_migrated_source_type(monke
         assert result["status"] == "pending_review"
         assert result["published_to_cognia"] is False
         row = (await db.execute(
-            select(KnowledgeReview).where(KnowledgeReview.id == result["review_id"])
+            select(KnowledgeReview).where(KnowledgeReview.id == __import__("uuid").UUID(result["review_id"]))
         )).scalars().one()
         assert row.source_type == "incident_followup"
         assert row.incident_id == incident_id
