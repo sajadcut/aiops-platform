@@ -13,6 +13,8 @@ def proposal():
         "config_file": "/etc/nginx/nginx.conf",
         "original_sha256": "a" * 64,
         "candidate_sha256": "b" * 64,
+        "proposed_change": "remove_extra_opening_brace",
+        "source_evidence_refs": ["vm-review-103"],
         "validation_status": "STAGED_PASS_NOT_ISOLATED",
         "execution_authority": False, "apply_eligible": False,
     }
@@ -42,6 +44,8 @@ def test_operator_response_binds_both_config_hashes_to_server_checkpoint():
     ("original_sha256", None),
     ("candidate_sha256", None),
     ("candidate_sha256", "b" * 63),
+    ("proposed_change", "arbitrary_llm_patch"),
+    ("source_evidence_refs", []),
 ])
 def test_review_rejects_untrusted_or_incomplete_proposals(key,value):
     p=proposal()
@@ -124,5 +128,48 @@ def test_main_approval_dashboard_distinguishes_config_review_from_real_approval(
     assert "function configPreApprovalPanel()" in dashboard
     assert "configPreApprovalPanel()" in dashboard
     assert "/configuration-review-response" in dashboard
-    assert "تأیید اجرایی ایجاد نشده" in dashboard
+    assert "در انتظار اعتبارسنجی فنی" in dashboard
+    assert "ارسال درخواست به Approval" in incident
     assert "validation_pipeline_status==='not_implemented'" in incident
+
+
+def test_approved_queue_record_is_still_not_executable_before_validation():
+    queued = {
+        "approval_id": "11111111-1111-4111-8111-111111111111",
+        "status": "pending_validation",
+    }
+    result = _review_progress(
+        status="pending_validation", decision="request_change_approval",
+        proposal=proposal(), approval=queued,
+    )
+    assert result["approval_id"] == queued["approval_id"]
+    assert result["approval_queue_registered"] is True
+    assert result["approval_status"] == "pending_validation"
+    assert result["approval_actionable"] is False
+    assert result["execution_authority"] is False
+    assert result["production_write_performed"] is False
+
+
+def test_generic_service_json_candidate_can_enter_same_approval_queue():
+    candidate = proposal()
+    candidate.update({
+        "service": "gfpapi",
+        "config_file": "/opt/apps/gfpapi/appsettings.json",
+        "proposed_change": "remove_trailing_json_comma",
+    })
+    assert _matching_proposal(candidate, response("request_change_approval"))
+    candidate["proposed_change"] = "remove_extra_opening_brace"
+    assert not _matching_proposal(candidate, response("request_change_approval"))
+
+
+def test_approval_storage_does_not_upgrade_pending_validation_to_pending():
+    from inspect import getsource
+    from apps.approval_service.postgres import PostgreSQLApprovalStore
+    implementation = getsource(PostgreSQLApprovalStore.save_validation_request)
+    assert "'pending_validation'" in implementation
+    assert "ON CONFLICT DO NOTHING" in implementation
+    assert "self.save(" not in implementation
+    assert "return stored" in implementation
+    approval_route = getsource(__import__(
+        "apps.api.execution", fromlist=["approve"]).approve)
+    assert "_require_pending(current)" in approval_route
