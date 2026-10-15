@@ -557,6 +557,31 @@ async def incident_chat_message(
                     "بررسی زنده انجام شد، اما LLM نتوانست نتیجه را خلاصه کند. "
                     "نتیجهٔ ثبت‌شدهٔ ابزار را در شواهد مشاهده کنید."
                 )
+                if intent == "service_config_review":
+                    review = observation.get("model_syntax_review") or {}
+                    file_path = str(observation.get("config_file") or "نامشخص")[:240]
+                    stage = str(review.get("status") or "unavailable")
+                    parts = ["بررسی فایل کانفیگ واقعی: " + file_path]
+                    for label, field in (("تشخیص اولیه LLM", "model_diagnosis"),
+                                         ("بازبینی دوم LLM", "model_second_review")):
+                        item = review.get(field)
+                        if isinstance(item, dict):
+                            category = str(item.get("error_kind") or "نامشخص")[:48]
+                            line = item.get("line")
+                            reason = redact_text(str(item.get("reason") or ""))[:300]
+                            suggestion = redact_text(str(item.get("suggestion") or ""))[:300]
+                            parts.append(label + ": " + category +
+                                         (", خط " + str(line) if type(line) is int else "") +
+                                         ". " + reason + " پیشنهاد: " + suggestion)
+                    if not any(isinstance(review.get(k), dict) for k in
+                               ("model_diagnosis", "model_second_review")):
+                        parts.append("مدل نتوانست بررسی معتبر انجام دهد (" + stage[:65] + ").")
+                    if observation.get("candidate_hash"):
+                        parts.append("پیشنهاد اصلاح قطعیِ محدود، Hash نسخه پیشنهادی: " +
+                                     str(observation["candidate_hash"])[:64])
+                    parts.append("LLM فقط بررسی مشورتی انجام داده است؛ اعتبارسنجی مستقل "
+                                 "نسخهٔ موقت، پیش‌شرط Approval است و تا اینجا فایل اصلی تغییر نکرده است.")
+                    answer = "\n".join(parts)
                 if intent == "service_status":
                     answer = vm_status_answer(
                         observation,
