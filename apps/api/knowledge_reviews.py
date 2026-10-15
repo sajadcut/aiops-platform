@@ -69,6 +69,74 @@ async def _audit(db, row: KnowledgeReview, actor: str, event: str) -> None:
     })
 
 
+@router.post("/knowledge-reviews/reconcile-recent",
+             dependencies=[Depends(require_permission("knowledge:draft"))])
+async def reconcile_recent_recovery_reviews(
+    limit: int = Query(default=30, ge=1, le=50),
+):
+    """Recover missing *drafts* from verified, immutable execution audit.
+
+    This is a privileged, idempotent local-outbox reconciliation, NOT a Cognia
+    write or an approval. It also covers prior incidents where the runbook
+    executed successfully but port-listening verification stayed inconclusive.
+    """
+    from apps.knowledge_review import create_from_governed_service_recovery
+    from domain.contracts.logging import logger
+    async with AsyncSessionLocal() as db:
+        await require_database_ready(db, operation="knowledge_review_reconcile")
+        rows = (await db.execute(text("""
+            SELECT incident_id, metadata->>'approval_id' AS approval_id
+            FROM audit_events
+            WHERE event_type='remediation_executed'
+              AND metadata->'result'->>'success'='true'
+              AND incident_id IS NOT NULL
+            ORDER BY created_at DESC LIMIT :limit
+        """), {"limit": limit})).mappings().all()
+    created = []
+    skipped = 0
+    failures = []
+    seen = set()
+    for item in rows:
+        try:
+            incident_id = UUID(str(item["incident_id"]))
+            approval_id = str(item["approval_id"] or "")
+        except (ValueError, TypeError):
+            skipped += 1
+            continue
+        if not approval_id or (incident_id, approval_id) in seen:
+            skipped += 1
+            continue
+        seen.add((incident_id, approval_id))
+        try:
+            async with AsyncSessionLocal() as db:
+                review = await create_from_governed_service_recovery(
+                    db, incident_id=incident_id, approval_id=approval_id,
+                )
+                if review:
+                    created.append({
+                        "incident_id": str(incident_id),
+                        "review_id": str(review.id),
+                    })
+                else:
+                    skipped += 1
+        except HTTPException as exc:
+            logger.warning("knowledge_reconcile_configuration_blocked",
+                           incident_id=str(incident_id), status_code=exc.status_code)
+            failures.append(str(exc.detail)[:100])
+        except Exception as exc:
+            logger.warning("knowledge_reconcile_execution_failed",
+                           incident_id=str(incident_id), error_type=type(exc).__name__)
+            failures.append("knowledge_reconcile_execution_failed")
+    return {
+        "status": "partial" if failures else "completed",
+        "items": created,
+        "matched": len(seen), "skipped": skipped,
+        "errors": list(dict.fromkeys(failures))[:5],
+        "published_to_cognia": False,
+        "requires_human_review": True,
+    }
+
+
 @router.get("/knowledge-reviews", dependencies=[Depends(require_permission("knowledge:draft"))])
 async def list_reviews(status: str | None = Query(default=None), limit: int = Query(default=50, ge=1, le=100)):
     async with AsyncSessionLocal() as db:
