@@ -216,6 +216,21 @@ async def draft_cognia_review(
     if existing:
         return {"status": existing.status, "review_id": str(existing.id),
                 "published_to_cognia": existing.status == "published"}
+    # One pending Copilot follow-up per incident. Different live probes still
+    # accumulate in Evidence; they must not flood the Cognia review queue.
+    # Existing human-edited/approved/published drafts are never overwritten.
+    pending = (await db.execute(
+        select(KnowledgeReview).where(
+            KnowledgeReview.incident_id == incident_id,
+            KnowledgeReview.source_type == "incident_followup",
+            KnowledgeReview.created_by == "system:incident_copilot",
+            KnowledgeReview.status == "pending_review",
+        ).order_by(KnowledgeReview.created_at.desc()).limit(1)
+    )).scalars().first()
+    if pending:
+        return {"status": pending.status, "review_id": str(pending.id),
+                "published_to_cognia": False,
+                "reason": "existing_incident_followup_draft"}
     row = KnowledgeReview(
         id=uuid4(), source_type="incident_followup", incident_id=incident_id,
         kb_id=int(ids[0]),
