@@ -194,6 +194,10 @@ def bounded_projection_json(brief: dict, max_chars: int = 18000) -> str | None:
     encoded = encode()
     if len(encoded) <= max_chars:
         return encoded
+    # Prioritize durable incident facts, exact action/target and validation
+    # blockers. The citation catalogue is supporting metadata: it must not
+    # monopolize the budget and prevent the model seeing the live diagnosis.
+    # Keep the total counts above even when secondary lists are shortened.
     for key, retained in (
         ("mcp_observations", 8),
         ("agents", 8),
@@ -202,6 +206,17 @@ def bounded_projection_json(brief: dict, max_chars: int = 18000) -> str | None:
         ("historical_memory", 5),
         ("agents", 5),
         ("mcp_observations", 2),
+        ("allowed_evidence_references", 48),
+        ("conflicting_evidence", 12),
+        ("allowed_evidence_references", 24),
+        ("missing_evidence", 12),
+        ("conflicting_evidence", 6),
+        ("allowed_evidence_references", 12),
+        ("mcp_observations", 1),
+        ("agents", 3),
+        ("missing_evidence", 6),
+        ("cognia_sources", 2),
+        ("historical_memory", 2),
     ):
         items = payload.get(key) or []
         if len(items) > retained:
@@ -209,6 +224,24 @@ def bounded_projection_json(brief: dict, max_chars: int = 18000) -> str | None:
             encoded = encode()
             if len(encoded) <= max_chars:
                 return encoded
+
+    # Some incidents contain lengthy per-domain investigations and dozens of
+    # hypotheses. Trim only these optional collections, never their parent
+    # confirmed-status fields, the proposed operation, or verification state.
+    technical = payload.get("technical_diagnosis") or {}
+    for key, retained in (
+        ("domains", 5),
+        ("unverified_hypotheses", 3),
+        ("domains", 2),
+        ("unverified_hypotheses", 1),
+    ):
+        items = technical.get(key) or []
+        if len(items) > retained:
+            technical[key] = items[:retained]
+            encoded = encode()
+            if len(encoded) <= max_chars:
+                return encoded
+
     return encoded if len(encoded) <= max_chars else None
 
 
