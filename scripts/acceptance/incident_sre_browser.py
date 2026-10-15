@@ -183,7 +183,13 @@ def main() -> None:
             if path.endswith("/decision-brief"):
                 data = brief_state["current"]
             elif path.endswith("/lifecycle"):
-                data = {"approval": {"status": "not_pending"}}
+                data = ({"approval": {
+                    "status": "pending_validation",
+                    "approval_id": review_state["approval_id"],
+                    "metadata": {"target": "10.248.16.82", "binding_complete": True},
+                }, "checkpoint_status": "completed"}
+                if review_state.get("approval_queue_registered")
+                else {"approval": {"status": "not_pending"}})
             elif path.endswith("/configuration-review-response"):
                 data = review_state
             elif path.endswith("/progress/stream"):
@@ -273,6 +279,13 @@ def main() -> None:
         assert len(review_requests) == 1
         assert "pending_validation" in banner.inner_text()
         assert banner.locator("button[data-config-intent]").count() == 0
+        # The same incident displays the durable request but never exposes
+        # Approve/Apply until an isolated validator has passed.
+        page.locator("#ic-action-state").get_by_text(
+            "درخواست تغییر در صف Approval", exact=False
+        ).wait_for(timeout=15000)
+        assert page.locator("#ic-approve").count() == 0
+        assert page.locator("#ic-resume").count() == 0
         assert not writes, f"Requesting config review reached an execution endpoint: {writes}"
         assert not errors, f"Chromium page errors: {errors}"
         # Third fixture: the user's actual screenshot had a failed nginx
