@@ -2366,11 +2366,11 @@
 | `integrations/vm/dotnet_local_validator.py` | `_reject_duplicate_keys` | 180 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `integrations/vm/dotnet_local_validator.py` | `validate_encoded_file` | 189 | function | Parse bytes only in worker memory; return bounded, secret-free metadata. | module |
 | `integrations/vm/ephemeral_config_guard.py` | `build_ephemeral_guard` | 183 | function | Return (fixed sudo command, shell stdin); only allow predetermined operations. | module |
-| `integrations/vm/general_config_review.py` | `checked_config_path` | 28 | function | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | module |
-| `integrations/vm/general_config_review.py` | `remote_config_read_command` | 36 | function | Fixed coreutils only; not a general-purpose remote file-read API. | module |
-| `integrations/vm/general_config_review.py` | `_structural_line` | 50 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `integrations/vm/general_config_review.py` | `_remove_trailing_json_commas` | 72 | function | Only a lexical trailing comma outside JSON strings; never change values. | module |
-| `integrations/vm/general_config_review.py` | `local_config_review` | 99 | function | Review a known config source and generate only a deterministic JSON fix. | module |
+| `integrations/vm/general_config_review.py` | `checked_config_path` | 29 | function | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | module |
+| `integrations/vm/general_config_review.py` | `remote_config_read_command` | 37 | function | Fixed coreutils only; not a general-purpose remote file-read API. | module |
+| `integrations/vm/general_config_review.py` | `_structural_line` | 51 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `integrations/vm/general_config_review.py` | `_remove_trailing_json_commas` | 73 | function | Only a lexical trailing comma outside JSON strings; never change values. | module |
+| `integrations/vm/general_config_review.py` | `local_config_review` | 100 | function | Review a known config source and generate only a deterministic JSON fix. | module |
 | `integrations/vm/governed_config_change.py` | `rebuild_nginx_candidate` | 22 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `integrations/vm/governed_config_change.py` | `rebuild_json_candidate` | 48 | function | Rebuild an immutable one-comma JSON fix; syntax-only, not app health. | module |
 | `integrations/vm/governed_config_change.py` | `rebuild_xml_candidate` | 76 | function | Remove one unmatched EOF closing tag; never edit XML values or DTDs. | module |
