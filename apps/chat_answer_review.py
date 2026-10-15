@@ -88,8 +88,14 @@ async def review_answer_coherence(
         "recent_operator_context": redact_text(str(context or "")[:1400]),
     }, ensure_ascii=False)
     try:
+        # Resolve the provider lazily so a missing LLM never breaks an
+        # otherwise authorized deterministic inventory read.
+        adapter = llm() if callable(llm) else llm
+        if adapter is None:
+            from integrations.llm.openai_compatible import configured_llm_adapter
+            adapter = configured_llm_adapter()
         response = await asyncio.wait_for(
-            llm.generate(
+            adapter.generate(
                 material, system_prompt=_REVIEW_PROMPT, temperature=0,
                 max_tokens=150, stage=stage,
             ), timeout=7.0,
