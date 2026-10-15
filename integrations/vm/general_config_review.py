@@ -16,6 +16,7 @@ import shlex
 import xml.etree.ElementTree as ET
 
 from integrations.vm.runtime_discovery import _candidate_path
+from integrations.vm.llm_syntax_projection import syntax_projection
 
 _MAX = 262_144
 _ROOTS = ("/etc/", "/opt/", "/srv/", "/data/", "/usr/local/etc/", "/usr/local/tomcat/")
