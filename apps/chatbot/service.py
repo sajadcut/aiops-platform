@@ -401,7 +401,7 @@ class ChatbotService:
                     answer = allowed_hosts_answer(tuple(identity.roles),
                                                   persian=bool(re.search(r"[\u0600-\u06ff]", request.message)))
                     await review_answer_coherence(
-                        self._llm(), question=request.message,
+                        self._llm, question=request.message,
                         answer="An authorized SSH target inventory request was handled "
                                "by server-side policy and role checks; no VM was contacted.",
                         stage="chatbot_answer_review",
@@ -443,7 +443,7 @@ class ChatbotService:
                     answer = str(response.content or "").strip() or "I could not produce a complete answer."
                     answer = answer[:8000]
                     verdict, _ = await review_answer_coherence(
-                        self._llm(), question=request.message, answer=answer,
+                        self._llm, question=request.message, answer=answer,
                         context=recent_operator_context, stage="chatbot_answer_review",
                     )
                     if verdict == "mismatch":
@@ -562,7 +562,7 @@ class ChatbotService:
                     tool_name = "multiple"
 
                 verdict, _ = await review_answer_coherence(
-                    self._llm(), question=request.message, answer=answer,
+                    self._llm, question=request.message, answer=answer,
                     context=recent_operator_context, stage="chatbot_answer_review",
                 )
                 if verdict == "mismatch":
