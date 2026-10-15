@@ -67,6 +67,18 @@ def test_early_evaluator_stop_is_a_complete_attempt_not_unexecuted_decision():
     assert "decision" not in final["stages"]
 
 
+def test_terminal_checkpoint_with_missing_end_audit_stays_truthful():
+    # A timed-out observer event may be missing even after the workflow
+    # checkpoint is committed; never synthesize success for an absent stage.
+    rows = [event(stage, "completed", i) for i, stage in enumerate(ANALYSIS_STAGES[:-1])]
+    result = summarize_progress(rows, checkpoint_status="completed")
+    assert result["analysis_percent"] == round(100 * 5 / 6)
+    assert result["analysis_completed"] == 5
+    assert result["analysis_total"] == 6
+    assert "end" not in result["stages"]
+    assert result["checkpoint_status"] == "completed"
+
+
 def test_execution_and_verification_are_separate_from_prior_analysis():
     rows = [event(stage, "completed", i) for i, stage in enumerate(ANALYSIS_STAGES)]
     rows += [event("execution", "started", 20)]
