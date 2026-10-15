@@ -156,3 +156,32 @@ def test_read_only_viewer_can_recheck_but_cannot_finalize_incident():
     assert can_finalize_independent_recovery(("sre",)) is True
     assert can_finalize_independent_recovery(None) is False
     assert can_finalize_independent_recovery("sre") is False
+
+
+@pytest.mark.parametrize("title,expected", [
+    ("nginx Service Down", True),
+    ("nginx: Service Down", True),
+    ("nginx.service down", True),
+    ("Service nginx is down", True),
+    ("nginx systemd Service Down", True),
+    ("nginx service is not running", True),
+    ("nginx failed", True),
+    ("nginx port down", False),
+    ("nginx latency high", False),
+    ("nginx HTTP 500", False),
+    ("othernginx service down", False),
+    ("apache Service Down", False),
+])
+def test_zabbix_titles_only_recognize_bound_systemd_service_condition(title, expected):
+    assert is_service_down_alert("zabbix", title, "nginx") is expected
+
+
+@pytest.mark.parametrize("bad_context", [
+    [dict(source="zabbix")],
+    "not-an-object",
+    5,
+    {"related_signals": [False]},
+    {"related_signals": "not-a-list"},
+])
+def test_bad_correlation_metadata_never_authorizes_local_recovery(bad_context):
+    assert _decision(context=bad_context) == "correlation_unverified"
