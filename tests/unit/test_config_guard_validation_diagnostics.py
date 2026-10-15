@@ -30,7 +30,8 @@ CANDIDATE_SHA = hashlib.sha256(CANDIDATE).hexdigest()
 def test_guard_diagnostic_classified_without_exposing_stderr(stderr, code, expected):
     result = {"success": False, "exit_code": code, "stderr": stderr}
     assert classify_config_guard_failure(result) == expected
-    assert stderr not in classify_config_guard_failure(result)
+    if stderr:
+        assert stderr not in classify_config_guard_failure(result)
 
 
 @pytest.mark.asyncio
