@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 516 | Dashboard JS files scanned: 8 | Symbols indexed: 5476**
+**Python files scanned: 517 | Dashboard JS files scanned: 8 | Symbols indexed: 5480**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -775,17 +775,19 @@
 | `apps/api/knowledge_reviews.py` | `IncidentDraftRequest` | 27 | class | کلاس | module |
 | `apps/api/knowledge_reviews.py` | `ManualDraftRequest` | 32 | class | کلاس | module |
 | `apps/api/knowledge_reviews.py` | `ReviewEditRequest` | 38 | class | کلاس | module |
-| `apps/api/knowledge_reviews.py` | `ReviewDecisionRequest` | 44 | class | کلاس | module |
-| `apps/api/knowledge_reviews.py` | `_audit` | 49 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/knowledge_reviews.py` | `list_reviews` | 69 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
-| `apps/api/knowledge_reviews.py` | `get_review` | 85 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
-| `apps/api/knowledge_reviews.py` | `draft_from_memory` | 101 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/knowledge_reviews.py` | `draft_manual` | 109 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/knowledge_reviews.py` | `edit_review` | 131 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/knowledge_reviews.py` | `approve_review` | 158 | async function | transition مربوط به Approval/Governance را اعمال می‌کند | module |
-| `apps/api/knowledge_reviews.py` | `reject_review` | 188 | async function | transition مربوط به Approval/Governance را اعمال می‌کند | module |
-| `apps/api/knowledge_reviews.py` | `publish_review` | 206 | async function | Publish with a deterministic Idempotency-Key; no unapproved content crosses. | module |
-| `apps/api/knowledge_reviews.py` | `refresh_review` | 274 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/knowledge_reviews.py` | `ReviewEvidenceRefreshRequest` | 44 | class | کلاس | module |
+| `apps/api/knowledge_reviews.py` | `ReviewDecisionRequest` | 48 | class | کلاس | module |
+| `apps/api/knowledge_reviews.py` | `_audit` | 53 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/knowledge_reviews.py` | `list_reviews` | 73 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
+| `apps/api/knowledge_reviews.py` | `get_review` | 89 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
+| `apps/api/knowledge_reviews.py` | `refresh_review_evidence` | 106 | async function | Explicit opt-in regeneration of an untouched system-generated draft. | module |
+| `apps/api/knowledge_reviews.py` | `draft_from_memory` | 151 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/knowledge_reviews.py` | `draft_manual` | 159 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/knowledge_reviews.py` | `edit_review` | 181 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/knowledge_reviews.py` | `approve_review` | 208 | async function | transition مربوط به Approval/Governance را اعمال می‌کند | module |
+| `apps/api/knowledge_reviews.py` | `reject_review` | 238 | async function | transition مربوط به Approval/Governance را اعمال می‌کند | module |
+| `apps/api/knowledge_reviews.py` | `publish_review` | 256 | async function | Publish with a deterministic Idempotency-Key; no unapproved content crosses. | module |
+| `apps/api/knowledge_reviews.py` | `refresh_review` | 324 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/main.py` | `dashboard_font_stylesheet` | 94 | async function | Shared font definitions for dashboard, chatbot and incident room. | module |
 | `apps/api/main.py` | `approved_ui_font` | 100 | async function | Serve only explicitly allowlisted local font assets (no directory browse). | module |
 | `apps/api/main.py` | `root` | 118 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
@@ -1276,6 +1278,8 @@
 | `apps/incident_service/repository.py` | `IncidentRepository._evidence_type` | 344 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentRepository |
 | `apps/incident_service/repository.py` | `IncidentRepository.add_evidence` | 351 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentRepository |
 | `apps/incident_service/repository.py` | `IncidentRepository.commit` | 382 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentRepository |
+| `apps/incident_service/service_recovery_reconciliation.py` | `is_service_down_alert` | 15 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/incident_service/service_recovery_reconciliation.py` | `local_recovery_decision` | 29 | function | Return a bounded status, not mutable Incident state. | module |
 | `apps/incident_vm_identity.py` | `normalized_service` | 19 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
 | `apps/incident_vm_identity.py` | `_safe_target` | 23 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/incident_vm_identity.py` | `incident_vm_context` | 34 | function | Merge incident context without suppressing contradictory trigger signals. | module |
