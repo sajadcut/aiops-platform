@@ -125,6 +125,71 @@ class DynamicInvestigationPlanner:
                 }
         return result
 
+    @staticmethod
+    def full_config_repair_evidence(
+        evidence: list[dict], *, service: str, failure: dict | None,
+    ) -> dict:
+        """Return bounded evidence of an operator-requested complete-file repair.
+
+        This is separate from the deterministic, re-creatable config_proposal.
+        The LLM output is NOT persisted or independently validated: its hash
+        cannot authorize a config_change approval or a production file write.
+        """
+        expected = str(service or "").lower().removesuffix(".service")
+        for item in reversed(evidence):
+            if not isinstance(item, dict) or item.get("source") != "vm_mcp":
+                continue
+            raw = item.get("raw_data")
+            if not isinstance(raw, dict) or raw.get("diagnostic") != "service_config_llm_repair":
+                continue
+            if raw.get("success") is not True:
+                continue
+            if str(raw.get("service") or "").lower().removesuffix(".service") != expected:
+                continue
+            path = str(raw.get("config_file") or "")
+            if not path.startswith("/") or len(path) > 260:
+                continue
+            if failure and failure.get("config_file") and path != failure["config_file"]:
+                continue
+            def sha(value: Any) -> str:
+                value = str(value or "")
+                return value if re.fullmatch(r"[0-9a-f]{64}", value) else ""
+            accepted = (
+                raw.get("status") == "llm_candidate_proposed"
+                and sha(raw.get("source_hash"))
+                and sha(raw.get("candidate_hash"))
+                and raw.get("llm_received_complete_file") is True
+                and raw.get("llm_returned_complete_file") is True
+            )
+            changes = [
+                n for n in (raw.get("changed_line_numbers") or [])[:12]
+                if type(n) is int and 0 < n <= 1000000
+            ]
+            return {
+                "status": _bounded(raw.get("status"), 65),
+                "service": expected,
+                "config_file": path,
+                "source_sha256": sha(raw.get("source_hash")),
+                "candidate_sha256": sha(raw.get("candidate_hash")) if accepted else "",
+                "changed_line_count": min(1000000, max(
+                    0, int(raw.get("changed_line_count") or 0)
+                )) if type(raw.get("changed_line_count")) is int else 0,
+                "changed_line_numbers": changes if accepted else [],
+                "llm_received_complete_file": raw.get("llm_received_complete_file") is True,
+                "llm_returned_complete_file": raw.get("llm_returned_complete_file") is True,
+                "candidate_returned_not_stored": bool(accepted),
+                "rejection_reason": _bounded(raw.get("rejection_reason"), 90),
+                "validation_status": "UNVERIFIED",
+                "validator_executed_on_proposal": False,
+                "apply_eligible": False,
+                "execution_authority": False,
+                "observed_at": _bounded(item.get("created_at") or raw.get("collected_at"), 55),
+                "source_evidence_refs": [
+                    _bounded(item.get("reference") or item.get("id"), 160)
+                ],
+            }
+        return {}
+
     @classmethod
     def search_query(cls, *, service: str, evidence: list[dict], findings: list[dict]) -> str:
         failure = cls.confirmed_config_failure(evidence)
@@ -331,6 +396,15 @@ class DynamicInvestigationPlanner:
             "config_proposal": None,
             "execution_authority": False, "counts_as_live_evidence": False,
         }
+        # Prefer the live, complete-file model result for the selected service
+        # over stale grammar-only advice, but never elevate it to an executable
+        # config_proposal. Its actual corrected bytes are intentionally absent.
+        full_repair = cls.full_config_repair_evidence(
+            evidence, service=str(state.get("service_name") or ""),
+            failure=failure,
+        )
+        if full_repair:
+            result["full_config_llm_repair"] = full_repair
         # Preserve actual model findings from the VM evidence collection
         # without persisting the transient source grammar to incident storage.
         if isinstance(general_review.get("config_llm_review"), dict):
