@@ -2389,11 +2389,11 @@
     const line=Number.isInteger(config.error_line)?config.error_line:
       Number.isInteger(validated.error_line)?validated.error_line:null;
     const signing=state.configResponse?.execution_prerequisites||{};
-    const signingNotice=responded&&signing.api_signing_key==='missing'?
+    const signingNotice=responded&&signing.api_signing_key==='missing_or_weak_mcp_bearer_token'?
       '<p role="status" class="ic-config-banner-warning">'+
       esc(fa?
-        'مانع اجرای واقعی: کلید امضای تغییر کانفیگ در API تنظیم نشده است (AIOPS_CONFIG_APPLY_SIGNING_SECRET). پس از تنظیم امن کلید یکسان در API و VM MCP و راه‌اندازی مجدد آن‌ها، دوباره وضعیت را بررسی کنید. تست مستقل کانفیگ از این خطا جداست.':
-        'Execution blocker: AIOPS_CONFIG_APPLY_SIGNING_SECRET is missing on the API. Provision the same secret securely on API and VM MCP, restart both, then retry. Vendor validation is separate.')+
+        'مانع اجرای واقعی: MCP_BEARER_TOKEN در API تعریف نشده یا برای امضای امن کوتاه است. همین توکن باید در API و VM MCP یکسان، تصادفی و حداقل ۳۲ بایت باشد. پس از اصلاح محرمانه و راه‌اندازی مجدد سرویس‌ها وضعیت را بررسی کنید. اعتبارسنجی مستقل کانفیگ از این خطا جداست.':
+        'Execution blocker: MCP_BEARER_TOKEN is absent or too weak on API. Use the same strong random token (at least 32 bytes) on API and VM MCP, then restart and recheck. Vendor validation is separate.')+
       '</p>':'';
     const responseLabel=responded?
       '<p role="status">'+esc(fa?'درخواست اصلاح ثبت شده؛ مرحله فعلی: ':'Correction request recorded; stage: ')+
