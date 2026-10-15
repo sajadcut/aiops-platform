@@ -33,7 +33,44 @@ Authorize the existing monitored-VM SSH identity (the exact `SSH_USERNAME` used 
 
 A VM MCP response of `config_guard_helper_missing` is a **deployment failure**,
 not a bad candidate, failed sudo password, or an invitation to bypass isolated
-validation. The VM connector now performs a separate read-only existence,
+validation.
+
+**2026-10-15T12:19:49Z live example:** VM MCP authenticated as
+`szendehnam`, read `/etc/nginx/nginx.conf`, and ran a read-only path probe
+for `/usr/local/sbin/aiops-config-guard`. The SSH command returned code 0,
+but the guard preflight classified its result as `config_guard_helper_missing`.
+There was **no attempt** to run `sudo ... aiops-config-guard` in this request,
+no independent vendor validation, and no production write. Other SSH sudo
+operations (such as `sudo -k -S journalctl`) succeeded, so retrying the SSH
+password alone does not resolve this block. Previously the raw probe stdout
+was not included in the platform log.
+
+New, secret-safe runtime events make the stages explicit:
+
+- `vm_config_guard_preflight_completed`: allowlisted `probe` =
+  `MISSING`, `PARENT_INACCESSIBLE`, `PARENT_MISSING`, `SYMLINK`,
+  `NOT_REGULAR`, `PRESENT`, `UNKNOWN`, or `SSH_FAILED`; also
+  `status`, `ssh_exit_code` and target. No raw SSH stdout/stderr.
+- `vm_config_guard_change_blocked`: `phase=guard_preflight`, exact
+  status code, service and target; indicates the guard was not invoked.
+- `vm_config_guard_sudo_stage`: `stage=sudo_noninteractive`,
+  `sudo_password_unavailable`, or `sudo_password_retry`, with exit
+  codes only, after a preflight PASS.
+- `vm_config_guard_validation_completed`: allowlisted validation result
+  and numeric guard exit code. `vm_config_guard_apply_completed` is
+  logged only for an approved apply, never for the validation-only step.
+
+For an independent **read-only** check by an authorized operator, from a
+workstation with access to the monitored Linux VM:
+
+```sh
+ssh -t szendehnam@10.248.16.82 'sudo stat -c "%U:%G %a %n" /usr/local/sbin/aiops-config-guard'
+```
+
+A `stat` `No such file or directory` confirms the executable is absent
+for root; `Permission denied` instead points to an access/parent problem.
+The path probe must be rerun after deployment, not reinterpreted as a
+successful validator. The VM connector now performs a separate read-only existence,
 symlink, file-type and `root:root 0750` metadata preflight before invoking
 the guard. A missing file is never installed automatically by an alert.
 
