@@ -69,7 +69,7 @@ def _candidate_preview(original: str, corrected: str) -> dict:
     changed = sum(max(i2 - i1, j2 - j1) for _, i1, i2, j1, j2 in differences)
     if (changed > _MAX_CHANGED_LINES or not differences or
             len(differences) > 6 or
-            difflib.SequenceMatcher(None, original, corrected, autojunk=False).ratio() < 0.80 or
+            difflib.SequenceMatcher(None, original, corrected, autojunk=True).ratio() < 0.80 or
             changed > max(3, (len(before) + 3) // 5)):
         return {**base, "rejection_reason": "candidate_excessive_changes"}
     for _, i1, i2, j1, j2 in differences:
