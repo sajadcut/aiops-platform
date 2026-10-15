@@ -82,14 +82,14 @@ def _value_tokens(text: str) -> str:
             parts.append(char)
             if escaped:
                 escaped = False
-            elif char == "\\\\":
+            elif char == "\\":
                 escaped = True
             elif char == quote:
                 quote = ""
         elif char in ("'", '"'):
             quote = char
             parts.append(char)
-        elif char not in "{};, \\t\\r\\n":
+        elif char not in "{};, \t\r\n":
             parts.append(char)
     return "".join(parts)
 
