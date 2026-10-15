@@ -499,6 +499,14 @@ async def vm_read(action: str, binding: dict, connector: Any = None) -> dict:
                     other.get("candidate_syntax_projection"),
                 ),
             })
+    if action == "service_config_review":
+        # Grammar projections are transient LLM inputs. Do not put entire
+        # 120-line slices into incident audit, checkpoints or chatbot history.
+        result.pop("syntax_projection", None)
+        result.pop("candidate_syntax_projection", None)
+        for row in result.get("file_reviews", []):
+            row.pop("syntax_projection", None)
+            row.pop("candidate_syntax_projection", None)
     return result
 
 
