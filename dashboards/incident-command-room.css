@@ -416,6 +416,13 @@
 .ic-config-banner-copy p{margin:5px 0;color:var(--muted);font-size:13px;line-height:1.8}
 .ic-config-banner-copy code{direction:ltr;unicode-bidi:isolate;display:inline-block;color:var(--text);word-break:break-all}
 .ic-config-banner-copy .ic-config-banner-warning{color:var(--amber)}
+.ic-config-banner-copy .ic-config-banner-summary{color:var(--text);font-size:14px;line-height:1.9}
+.ic-config-banner-summary strong{font-weight:800}
+.ic-config-banner-details{margin-top:9px;color:var(--muted);font-size:12px}
+.ic-config-banner-details summary{cursor:pointer;display:list-item;list-style:disclosure-closed inside}
+.ic-config-banner-details[open] summary{list-style:disclosure-open inside}
+.ic-config-banner-details>div{margin-top:7px;max-width:100%;overflow-wrap:anywhere}
+.ic-config-banner-details p{font-size:12px;margin:3px 0}
 .ic-config-banner-actions{display:flex;align-items:stretch;flex-wrap:wrap;gap:9px;flex:1 1 260px}
 .ic-config-banner-actions .ic-btn{min-height:43px}
 @media(max-width:760px){.ic-config-action-banner{padding:16px;gap:12px}.ic-config-banner-actions{width:100%;flex-direction:column}.ic-config-banner-actions .ic-btn{width:100%}}
