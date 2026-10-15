@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 519 | Dashboard JS files scanned: 8 | Symbols indexed: 5497**
+**Python files scanned: 519 | Dashboard JS files scanned: 8 | Symbols indexed: 5498**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -4219,6 +4219,7 @@
 | `tests/unit/test_incident_operational_finalization.py` | `test_operational_outcome_escalates_failed_or_inconclusive_recovery` | 51 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_incident_operational_finalization.py` | `test_operational_outcome_preserves_authoritative_source_recovery` | 82 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_incident_operational_finalization.py` | `test_repeated_same_operational_outcome_updates_bounded_identity_not_duplicate` | 112 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_operational_finalization.py` | `test_late_failed_outcome_cannot_reopen_independently_verified_recovery` | 147 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_incident_progress.py` | `event` | 14 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_incident_progress.py` | `test_progress_only_advances_on_real_completed_work_not_time_or_source_ping` | 19 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_incident_progress.py` | `test_stage_failure_does_not_fabricate_completion` | 35 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
