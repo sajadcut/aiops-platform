@@ -2477,6 +2477,9 @@
       '<button type="button" class="ic-btn ic-btn-muted" data-config-preview="'+
       previewKind+'"'+disabled+'>'+esc(fa?'بررسی دوباره':'Recheck')+'</button>':'';
 
+    const fullLLMButton=action==='outcome'?'':(
+      '<button type="button" class="ic-btn ic-btn-muted" data-config-preview="full-llm"'+disabled+'>'+
+      esc(fa?'اصلاح فایل کامل با LLM (پیش‌نمایش)':'Full-file LLM repair preview')+'</button>');
     // Technical diagnostics are available on demand, not the lead sentence.
     // These may describe unavailable systemd/LLM capabilities without
     // contradicting a vendor-confirmed line number or a passed approval check.
@@ -2513,7 +2516,7 @@
     node.innerHTML='<div class="ic-config-banner-copy"><strong>'+esc(title)+'</strong>'+
       '<p class="ic-config-banner-summary">'+summary+'</p>'+
       '<p>'+esc(instruction)+'</p>'+warning+liveStatus+technical+
-      '</div><div class="ic-config-banner-actions">'+primary+secondary+'</div>';
+      '</div><div class="ic-config-banner-actions">'+primary+secondary+fullLLMButton+'</div>';
   }
 
   function renderConfigProposal(config) {
@@ -3481,7 +3484,14 @@
             'Initial analysis is not yet complete; retry after it finishes.',true);
           return;
         }
-        const requested=preview.dataset.configPreview==='nginx'?
+        if(preview.dataset.configPreview==='full-llm'&&!window.confirm(
+          state.language==='fa'?
+          'متن کامل فایل تنظیمات ممکن است شامل گذرواژه یا توکن باشد و به LLM تعریف‌شده در تنظیمات VM MCP ارسال شود. هیچ تغییری روی سرور اعمال نمی‌شود. ادامه می‌دهید؟':
+          'The full configuration may contain passwords or tokens and will be sent to the VM MCP configured LLM. Nothing will be applied. Continue?'
+        ))return;
+        const requested=preview.dataset.configPreview==='full-llm'?
+          'service_config_llm_repair: درخواست صریح بازبینی فایل کانفیگ کامل همین سرویس با LLM و دریافت نسخه کامل اصلاح‌شده، فقط در حافظهٔ VM MCP و بدون Apply.':
+          preview.dataset.configPreview==='nginx'?
           'nginx_config_review: فقط پیش‌نمایش امن اصلاح nginx را از VM MCP بگیر و به شواهد و تحلیل همین رخداد اضافه کن. هیچ فایلی را تغییر نده.':
           preview.dataset.configPreview==='review'?
           'service_config_review: فایل کانفیگی که systemd و MCP وجودش را برای همین سرویس تأیید کرده‌اند با ابزار امن بررسی کن و در صورت امکان پیشنهاد اصلاح ساختاری ارائه بده؛ از LLM برای ناشناخته‌ها کمک بگیر ولی هیچ تغییری اجرا نکن.':
