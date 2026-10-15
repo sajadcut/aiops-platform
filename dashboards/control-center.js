@@ -171,7 +171,7 @@ function faStatus(value) {
     healthy: 'سالم', degraded: 'دچار اختلال', unhealthy: 'ناسالم', unavailable: 'در دسترس نیست', not_configured: 'پیکربندی نشده',
     active: 'فعال', inactive: 'غیرفعال', open: 'باز', closed: 'بسته‌شده',
     analyzing: 'در حال تحلیل', escalated: 'ارجاع‌شده', resolved: 'رفع‌شده',
-    pending: 'در انتظار تأیید', approved: 'تأییدشده', rejected: 'ردشده',
+    pending: 'در انتظار تأیید', pending_validation: 'در انتظار اعتبارسنجی کانفیگ', approved: 'تأییدشده', rejected: 'ردشده',
     consumed: 'مصرف‌شده', failed: 'ناموفق', failure: 'ناموفق', not_persisted: 'ثبت‌نشده',
     blocked: 'مسدودشده', partial: 'ناقص', inconclusive: 'نامشخص',
     verified: 'راستی‌آزمایی‌شده', completed: 'تکمیل‌شده',
@@ -231,6 +231,7 @@ function attentionReason(i) {
   if (lower(i.severity) === 'critical') reasons.push('شدت بحرانی');
   else if (lower(i.severity) === 'high') reasons.push('شدت زیاد');
   if (lower(i.approval_status) === 'pending') reasons.push('در انتظار تأیید');
+  if (lower(i.approval_status) === 'pending_validation') reasons.push('درخواست اصلاح کانفیگ در انتظار اعتبارسنجی فنی');
   if (lower(i.approval_status) === 'approved') reasons.push('تأییدشده و در انتظار اجرا');
   if (/failed|failure|blocked/.test(lower(i.execution_status))) reasons.push(`اجرای ${faStatus(i.execution_status)}`);
   if (/failed|failure/.test(lower(i.verification_status))) reasons.push('راستی‌آزمایی ناموفق');
@@ -246,6 +247,7 @@ function attentionRank(i) {
   else if (lower(i.severity) === 'high') n += 60;
   else if (lower(i.severity) === 'medium') n += 20;
   if (lower(i.approval_status) === 'pending') n += 30;
+  if (lower(i.approval_status) === 'pending_validation') n += 20;
   if (lower(i.approval_status) === 'approved') n += 35;
   if (/failed|failure|blocked/.test(lower(i.execution_status))) n += 70;
   if (/failed|failure/.test(lower(i.verification_status))) n += 65;
@@ -280,6 +282,7 @@ function renderOverview() {
   $('#kActive').textContent = x.incidents_active ?? '—';
   $('#kCritical').textContent = x.incidents_critical ?? '—';
   $('#kPending').textContent = x.approvals_pending ?? '—';
+  $('#kValidationPending').textContent = x.approvals_validation_pending ?? '—';
   $('#kApproved').textContent = x.approvals_approved ?? '—';
   $('#kExec').textContent = x.execution_success ?? '—';
   $('#kSuccess').textContent = x.successful_remediations ?? '—';
@@ -324,6 +327,7 @@ function renderOverview() {
 function renderLifecycleSummary() {
   const x = S.summary || {};
   const items = [
+    ['در انتظار اعتبارسنجی', x.approvals_validation_pending || 0, 'تأیید و اجرای کانفیگ هنوز مجاز نیست'],
     ['در انتظار تأیید', x.approvals_pending || 0, 'نیازمند تأیید انسانی'],
     ['تأییدشده', x.approvals_approved || 0, 'در انتظار ادامه اجرا'],
     ['مجوز مصرف‌شده', x.approvals_consumed || 0, 'مجوز یک‌بارمصرف استفاده شده'],
