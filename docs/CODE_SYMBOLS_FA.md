@@ -1116,13 +1116,13 @@
 | `apps/decision_brief_history.py` | `list_decision_brief_history` | 62 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
 | `apps/decision_brief_history.py` | `read_decision_brief_snapshot` | 83 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
 | `apps/decision_brief_narrative.py` | `fallback` | 37 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/decision_brief_narrative.py` | `_bounded_text` | 50 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/decision_brief_narrative.py` | `_field_view` | 57 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/decision_brief_narrative.py` | `projection` | 72 | function | Compact, redacted source allowlist for an explain-only LLM. | module |
-| `apps/decision_brief_narrative.py` | `bounded_projection_json` | 182 | function | Fit an explain-only projection within a strict request-size budget. | module |
-| `apps/decision_brief_narrative.py` | `bounded_projection_json.encode` | 191 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | bounded_projection_json |
-| `apps/decision_brief_narrative.py` | `validate_narrative` | 248 | function | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | module |
-| `apps/decision_brief_narrative.py` | `generate_narrative` | 302 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/decision_brief_narrative.py` | `_bounded_text` | 77 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/decision_brief_narrative.py` | `_field_view` | 84 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/decision_brief_narrative.py` | `projection` | 99 | function | Compact, redacted source allowlist for an explain-only LLM. | module |
+| `apps/decision_brief_narrative.py` | `bounded_projection_json` | 209 | function | Fit an explain-only projection within a strict request-size budget. | module |
+| `apps/decision_brief_narrative.py` | `bounded_projection_json.encode` | 218 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | bounded_projection_json |
+| `apps/decision_brief_narrative.py` | `validate_narrative` | 275 | function | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | module |
+| `apps/decision_brief_narrative.py` | `generate_narrative` | 329 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/decision_engine/__init__.py` | `RiskLevel` | 11 | class | کلاس | module |
 | `apps/decision_engine/__init__.py` | `DecisionAction` | 18 | class | کلاس | module |
 | `apps/decision_engine/__init__.py` | `DecisionResult` | 25 | class | کلاس | module |
