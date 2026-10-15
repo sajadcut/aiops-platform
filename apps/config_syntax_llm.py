@@ -42,9 +42,10 @@ def sanitized_projection(value: Any) -> dict | None:
                 type(indent) is not int or not 0 <= indent <= 32 or
                 not isinstance(syntax, str) or len(syntax) > 180):
             return None
-        is_json_shape = re.fullmatch(r'[x{}\\[\\],:\\s"]*', syntax) is not None
+        # Accept only opaque JSON grammar symbols; no source values survive.
+        is_json_shape = all(ch in 'x{}[],: \\t"' for ch in syntax)
         if not is_json_shape and any(
-            not (part in _SAFE_PARTS or (len(part) == 1 and part in _SAFE_PUNCT))
+            not (part.lower() in _SAFE_PARTS or (len(part) == 1 and part in _SAFE_PUNCT))
             for part in syntax.split()
         ):
             # Source is supposed to have lost *every* unrecognized word.
