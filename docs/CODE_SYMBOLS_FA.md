@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 519 | Dashboard JS files scanned: 8 | Symbols indexed: 5513**
+**Python files scanned: 519 | Dashboard JS files scanned: 8 | Symbols indexed: 5515**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -4347,6 +4347,8 @@
 | `tests/unit/test_independent_service_recovery.py` | `test_only_the_original_exact_zabbix_problem_can_be_duplicate_related_signal` | 134 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_independent_service_recovery.py` | `test_malformed_second_service_status_never_raises_or_resolves` | 144 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_independent_service_recovery.py` | `test_read_only_viewer_can_recheck_but_cannot_finalize_incident` | 149 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_independent_service_recovery.py` | `test_zabbix_titles_only_recognize_bound_systemd_service_condition` | 175 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_independent_service_recovery.py` | `test_bad_correlation_metadata_never_authorizes_local_recovery` | 186 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_infrastructure_use_engine.py` | `StaticInfrastructureLLM` | 11 | class | کلاس | module |
 | `tests/unit/test_infrastructure_use_engine.py` | `StaticInfrastructureLLM.provider_name` | 13 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | StaticInfrastructureLLM |
 | `tests/unit/test_infrastructure_use_engine.py` | `StaticInfrastructureLLM.generate` | 16 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | StaticInfrastructureLLM |
