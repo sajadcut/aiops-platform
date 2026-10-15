@@ -116,3 +116,24 @@ def test_llm_never_receives_raw_configuration_in_source_or_candidate():
     assert "TOP_SECRET_PASSWORD" not in json.dumps(second)
     assert "server" in first["lines"][1]["syntax"]
     assert "{" in first["lines"][1]["syntax"]
+
+
+
+def test_nginx_verified_vendor_error_yields_candidate_projection_for_second_llm_pass():
+    source = b"events {\n}\nserver {{\n}\n"
+    preview = local_config_review(
+        base64.b64encode(source).decode(), path="/etc/nginx/nginx.conf",
+        validator_error_line=3,
+        vendor_service="nginx", vendor_error='unexpected "{"',
+    )
+    assert preview["status"] == "candidate_proposed"
+    assert preview["proposed_change"] == "remove_extra_opening_brace"
+    assert preview["candidate_syntax_projection"] is not None
+    assert preview["validation_status"] == "UNVERIFIED"
+    assert preview["apply_eligible"] is False
+    unauthorized = local_config_review(
+        base64.b64encode(source).decode(), path="/etc/nginx/nginx.conf",
+        validator_error_line=3,
+        vendor_service="other", vendor_error='unexpected "{"',
+    )
+    assert unauthorized["candidate_syntax_projection"] is None
