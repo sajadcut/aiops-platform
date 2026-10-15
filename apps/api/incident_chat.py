@@ -675,6 +675,31 @@ async def incident_chat_message(
                     "بررسی زنده انجام شد، اما LLM نتوانست نتیجه را خلاصه کند. "
                     "نتیجهٔ ثبت‌شدهٔ ابزار را در شواهد مشاهده کنید."
                 )
+                if intent == "service_config_llm_repair":
+                    state = str(observation.get("status") or "unavailable")[:80]
+                    file_path = str(observation.get("config_file") or "نامشخص")[:240]
+                    parts = ["درخواست تحلیل کامل فایل کانفیگ با LLM: " + file_path]
+                    if observation.get("llm_received_complete_file"):
+                        parts.append("تمام محتوای فایل انتخاب‌شده به LLM مورداعتماد ارسال شد.")
+                    else:
+                        parts.append("فایل کامل به مدل ارسال نشده است.")
+                    if state == "llm_candidate_proposed" and observation.get("candidate_hash"):
+                        parts.append("مدل نسخهٔ کامل اصلاح‌شده را برگرداند و تغییرات محدود پذیرفته شد.")
+                        parts.append("تعداد خطوط تغییرکرده: " +
+                                     str(observation.get("changed_line_count") or 0))
+                        parts.append("شماره خطوط تغییرکرده: " +
+                                     ", ".join(map(str, (observation.get("changed_line_numbers") or [])[:12])))
+                        parts.append("SHA-256 نسخه پیشنهادی: " +
+                                     str(observation.get("candidate_hash"))[:64])
+                    else:
+                        parts.append("نسخه اصلاح‌شدهٔ قابل‌قبول دریافت نشد؛ وضعیت: " + state)
+                        if observation.get("rejection_reason"):
+                            parts.append("علت رد: " +
+                                         str(observation["rejection_reason"])[:80])
+                    parts.append("این فقط پیش‌نمایش است. فایل اصلی تغییر نکرده، "
+                                 "Candidate ذخیره و توسط Validator مستقل تأیید نشده "
+                                 "و هنوز امکان Approval یا Apply ندارد.")
+                    answer = "\n".join(parts)
                 if intent == "service_config_review":
                     review = observation.get("model_syntax_review") or {}
                     file_path = str(observation.get("config_file") or "نامشخص")[:240]
