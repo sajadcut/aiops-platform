@@ -17,6 +17,7 @@ from integrations.vm.config_candidate_vault import load_candidate, CandidateUnav
 from integrations.vm.general_config_review import checked_config_path, remote_config_read_command, _remove_trailing_json_commas
 from integrations.vm.json_syntax_candidate import (
     deterministic_json_syntax_fix, deterministic_json_punctuation_fix,
+    deterministic_json_duplicate_brace_fix,
 )
 from integrations.vm.nginx_config_review import (
     _checked_path, _repair_line, nginx_review_command,
@@ -78,7 +79,10 @@ def rebuild_json_candidate(*, encoded: str, path: str,
         if candidate is None or len(candidate) != len(contents) + 2:
             raise ValueError("config_change_not_deterministic")
     elif proposed_change == "repair_json_punctuation":
-        candidate = deterministic_json_punctuation_fix(contents)
+        candidate = (
+            deterministic_json_punctuation_fix(contents)
+            or deterministic_json_duplicate_brace_fix(contents)
+        )
         if candidate is None:
             raise ValueError("config_change_not_deterministic")
     else:
