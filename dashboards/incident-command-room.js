@@ -2436,15 +2436,17 @@
     const candidate=low(config.status)==='candidate_proposed';
     const hasDiff=configDiffRows(config,fullRepair).length>0;
     const originalFailed=low(validator.status)==='invalid'||
+      low(response.repair_attention)==='confirmed_syntax_error_no_valid_candidate'||
       ['candidate_not_yet_valid','ready_for_prevalidation'].includes(
         low(repairAttention.status));
     const previouslyFailed=originalFailed||candidate||
       (Number.isInteger(config.error_line)&&!!config.config_file);
     const verified=arr(discovery.files).filter(item=>item.verified_exists===true);
-    const path=config.config_file||validator.config_file||
+    const path=config.config_file||response.config_file||validator.config_file||
       verified[0]?.path||discovery.unverified_candidates?.[0]?.path||'';
     const line=Number.isInteger(config.error_line)?config.error_line:
-      Number.isInteger(validator.error_line)?validator.error_line:null;
+      Number.isInteger(validator.error_line)?validator.error_line:
+      Number.isInteger(response.repair_error_line)?response.repair_error_line:null;
     const discoveryAvailable=Boolean(verified.length||discovery.unverified_candidates?.length);
     if(!service||(!previouslyFailed&&!path&&!discoveryAvailable)){
       node.hidden=true;node.innerHTML='';return;
@@ -2605,10 +2607,10 @@
     const urgency=originalFailed&&!candidate&&!['pending','approved','pending_validation'].includes(approval);
     node.setAttribute('role',urgency?'alert':'region');
     const urgentExplanation=urgency?
-      '<p style="font-size:1.05rem;font-weight:700;line-height:1.8;">'+
+      '<p role="alert" style="font-size:1.05rem;font-weight:700;line-height:1.8;">'+
       esc(fa?
-        'خطای کانفیگ تأیید شده ولی هیچ Candidate قابل‌تأییدی ساخته نشده است. این رخداد نیازمند اقدام است؛ اختلاف‌نظر ایجنت‌ها نباید بازبینی مجدد را متوقف کند. اجرای فایل اصلاحی همچنان نیازمند اعتبارسنجی و Approval است.':
-        'A configuration failure is confirmed but no approved candidate exists. Investigate and rebuild the minimal fix now; execution still requires independent validation and human Approval.')+
+        'خطای واقعی کانفیگ تأیید شده، اما هنوز اصلاح یکتا و قابل‌Parse ساخته نشده است؛ بنابراین هش معتبر و تیکت Approval وجود ندارد. فایل را دوباره با ابزار امن بررسی کنید. اجرای اصلاح همچنان به اعتبارسنجی مستقل و تأیید شما نیاز دارد.':
+        'A measured configuration grammar error exists, but no unique parser-valid repair was generated. There is no hash-bound candidate or Approval ticket. Recheck the file; independent validation and your approval remain required.')+
       '</p>':'';
     node.innerHTML='<div class="ic-config-banner-copy"><strong style="font-size:1.2rem;">'+esc(title)+'</strong>'+urgentExplanation+
       '<p class="ic-config-banner-summary">'+summary+'</p>'+
