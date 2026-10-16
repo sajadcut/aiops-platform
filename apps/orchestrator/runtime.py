@@ -154,6 +154,7 @@ class DurableWorkflowRuntime:
                 "config_auto_prevalidation_result",
                 incident_id=incident_id,
                 status=prevalidation.get("status"),
+                reason=prevalidation.get("reason"),
                 validation=prevalidation.get("validation"),
                 approval_id=prevalidation.get("approval_id"),
             )
