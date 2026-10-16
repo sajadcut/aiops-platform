@@ -2460,6 +2460,9 @@
       (fa?'خطای نحوی کانفیگ':'Configuration syntax error');
     const fullChanged=['llm_candidate_proposed','candidate_storage_unavailable'].includes(fullRepair.status)?
       arr(fullRepair.changed_line_numbers).filter(Number.isInteger).slice(0,12):[];
+    const fullChangeActor=fullRepair.candidate_origin==='deterministic_json_syntax'?
+      (fa?'، ابزار اعتبارسنج محلی تغییر خط ':'; worker syntax validator proposed line '):
+      (fa?'، LLM تغییر خط ':'; LLM proposed line ');
     const filename=path?'<code dir="ltr">'+txt(path)+'</code>':
       esc(fa?'فایل کانفیگ سرویس':'the service configuration file');
     const location=path?
@@ -2480,7 +2483,7 @@
       title=fa?'خطای کانفیگ '+service:'Configuration issue · '+service;
       summary=fullChanged.length?
         (esc(fa?'در فایل ':'In file ')+filename+
-          esc(fa?'، LLM تغییر خط ':' the model proposed a change at line ')+
+          esc(fullChangeActor)+
           fullChanged.map(num).join(', ')+
           esc(fa?' را پیشنهاد داده است؛ شمارهٔ خط ثبت‌شدهٔ Validator ممکن است مربوط به تشخیص قدیمی باشد. هنوز تست روی فایل اصلاحی انجام نشده است.':
             '. The recorded validator line may come from an older diagnostic. The revised file has not been tested.')):
