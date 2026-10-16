@@ -63,3 +63,43 @@ def test_main_dashboard_separates_service_recovery_approval_from_e2e_resume():
     assert "if (willExecute)" in js
     assert "await window.performServiceRecovery('execute');" in js
     assert "const recoveryRequest = api(\u0060/api/v1/incidents/\u0024{encodeURIComponent(id)}/recovery-approval\u0060)" in js
+
+
+def test_main_dashboard_resume_never_issues_e2e_post_when_recovery_start_is_approved():
+    import shutil
+    import subprocess
+    import pytest
+
+    if not shutil.which("node"):
+        pytest.skip("Node.js required for browser JS behavior test")
+    node = r"""
+const fs = require('node:fs'), vm=require('node:vm'), assert=require('node:assert/strict');
+const src=fs.readFileSync('dashboards/approval-actions.js','utf8');
+const begin=src.indexOf('  window.resumeCurrentWorkflow = async function resumeCurrentWorkflow() {');
+const end=src.indexOf('  window.performServiceRecovery =',begin);
+assert(begin>0&&end>begin);
+const func=src.slice(begin,end);
+let delegated=[], posted=[];
+const env={
+  S:{selected:'cc4da676-027d-4ef9-9a4f-4b8587568c5c',
+    detail:{lifecycle:{checkpoint_status:'paused',approval:{
+      approval_id:'d642354f-9984-4f60-9dfc-6d948be7746c',
+      status:'pending',metadata:{binding_complete:true}}}},
+    recoveryApproval:{approval_id:'605493f9-6903-4c77-a78f-cf116615330e',
+      status:'approved',action:'start_service',target:'10.248.16.82',service:'nginx'}},
+  window:{performServiceRecovery:async action=>delegated.push(action)},
+  lower:x=>String(x||'').toLowerCase(),
+  recoveryUUID:/^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i,
+  api:async url=>{posted.push(url);throw Error('E2E endpoint must not be called')}
+};
+vm.runInNewContext(func,env);
+(async()=>{
+  await env.window.resumeCurrentWorkflow();
+  assert.deepEqual(delegated,['execute']);
+  assert.deepEqual(posted,[]);
+})().catch(err=>{console.error(err);process.exitCode=1});
+"""
+    result = subprocess.run(
+        ["node", "-e", node], cwd=ROOT, capture_output=True, text=True, timeout=10,
+    )
+    assert result.returncode == 0, result.stderr[-2500:]
