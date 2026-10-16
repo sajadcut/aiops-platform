@@ -753,6 +753,33 @@
       '<p class="ic-service-health-conflict">'+esc(fa?
         'بررسی زنده یا شناسایی مقصد تأیید نشد: ':'Live check or target binding failed: ')+
         txt(o.reason)+'</p>':'';
+    const reconciliation=low(o.recovery_verification);
+    const recoveryReason={
+      other_correlated_signals:fa?
+        'سرویس Running است، اما رخدادهای هم‌بستهٔ دیگری هنوز نیازمند بررسی‌اند.':
+        'Systemd is Running, but other correlated incidents still require investigation.',
+      alert_condition_unverified:fa?
+        'سرویس Running است، اما این هشدار به‌طور مستقل با شرط Systemd Down تطبیق داده نشد.':
+        'Running verified, but the original alert was not independently matched to systemd Down.',
+      second_check_unavailable:fa?
+        'بررسی دوم VM MCP کامل نشد؛ هنوز امکان ثبت رفع رخداد وجود ندارد.':
+        'Second independent VM MCP read failed; incident resolution is not verified.',
+      service_not_stably_running:fa?
+        'دو مشاهدهٔ مستقل Running نبوده‌اند؛ رفع رخداد هنوز تأیید نشده است.':
+        'Two independent readings did not both show Running.',
+      restart_count_increased_between_checks:fa?
+        'تعداد Restart بین دو بررسی افزایش یافت؛ احتمال Crash/Restart جدید وجود دارد.':
+        'Restart counter increased between independent checks.',
+      systemd_main_pid_changed_between_checks:fa?
+        'شناسهٔ پردازش systemd بین دو بررسی تغییر کرد؛ پایداری تأیید نشد.':
+        'Systemd MainPID changed between independent checks; stability is unverified.',
+      recovery_authorization_required:fa?
+        'بررسی زنده Running است، اما ثبت رفع رخداد به اختیار SRE نیاز دارد.':
+        'Systemd Running was observed; SRE authorization is required to finalize.',
+      recovery_commit_unavailable:fa?
+        'بررسی موفق بود اما ذخیرهٔ تغییر وضعیت رخداد ناموفق بود؛ رخداد باز مانده است.':
+        'Independent checks passed but persisting incident resolution failed.',
+    }[reconciliation];
     const stateExplanation=authenticated?
       (status==='unstable'?
         (fa?'شواهد اخیر systemd چرخهٔ راه‌اندازی مجدد یا افزایش تعداد Restart را نشان می‌دهند. مشاهدهٔ لحظه‌ای Active به معنی پایداری یا سلامت API نیست.':
@@ -784,7 +811,8 @@
       (conflict?'<p class="ic-service-health-conflict">'+esc(fa?
         'آلارم اولیه وضعیت Down را گزارش کرده، اما شواهد جدیدتر systemd وضعیت Running را نشان می‌دهند.':
         'The initial alert reports Down, while later systemd evidence reports Running.')+'</p>':'')+
-      reason+'<p class="ic-service-health-note">'+esc(stateExplanation)+'</p>'+
+      reason+(recoveryReason?'<p class="ic-service-health-conflict">'+esc(recoveryReason)+'</p>':'')+
+      '<p class="ic-service-health-note">'+esc(stateExplanation)+'</p>'+
       '<div class="ic-service-health-action"><button type="button" id="ic-service-recheck" class="ic-btn ic-btn-primary"'+
       (busy||state.historic||state.lifecycle?.analysis_in_progress?' disabled':'')+'>'+
       esc(busy?(fa?'در حال بررسی…':'Checking…'):(fa?'↻ بررسی مجدد وضعیت سرویس':'↻ Recheck service status'))+
