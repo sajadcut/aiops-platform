@@ -171,7 +171,7 @@ def _review_progress(*, status: str, decision: str | None, proposal: dict,
             else "independent_validation_or_human_approval"
         ),
         "blocking_reasons": (
-            ["confirmed_error_but_no_safe_candidate",
+            ["no_verified_config_candidate",
              "recheck_current_file_and_generate_parser_valid_repair"]
             if not requested and proposal.get("status") != "candidate_proposed"
             else []
