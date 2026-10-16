@@ -395,10 +395,21 @@ async def review_complete_config(
         "corrected file, return an empty corrected_config. Your response is "
         "a proposal, NOT a validator result and cannot authorize execution."
     )
+    # For JSON, returning the entire 16-64 KiB file often produces truncated
+    # or malformed output. The model ALREADY has the complete input. Require
+    # a tiny bounded edit plan and apply it on trusted original bytes.
+    # Other formats keep their existing complete-document option.
+    if path.lower().endswith(".json"):
+        system += (
+            " JSON-SPECIFIC RULE: Respond ONLY with a JSON object containing "
+            "an edits array. Do not include corrected_config or any values "
+            "from the configuration. Each edit has line, column, old and new."
+        )
     try:
         llm = model or configured_llm_adapter()
         response = await asyncio.wait_for(llm.generate(
-            prompt, system_prompt=system, temperature=0, max_tokens=8192,
+            prompt, system_prompt=system, temperature=0,
+            max_tokens=(1024 if path.lower().endswith(".json") else 8192),
             stage="full_config_llm_repair", completion_repair_attempts=0,
         ), timeout=105)
         result["llm_received_complete_file"] = True
