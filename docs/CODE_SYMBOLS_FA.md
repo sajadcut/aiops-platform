@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 550 | Dashboard JS files scanned: 8 | Symbols indexed: 6035**
+**Python files scanned: 550 | Dashboard JS files scanned: 8 | Symbols indexed: 6037**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -4893,6 +4893,8 @@
 | `tests/unit/test_last_incident_config_apply_timeout.py` | `test_signed_postapply_start_works_for_crash_loop_and_checks_systemd.Worker.service_status` | 109 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_signed_postapply_start_works_for_crash_loop_and_checks_systemd.Worker |
 | `tests/unit/test_last_incident_config_apply_timeout.py` | `test_signed_postapply_start_works_for_crash_loop_and_checks_systemd.Worker.start_service` | 122 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_signed_postapply_start_works_for_crash_loop_and_checks_systemd.Worker |
 | `tests/unit/test_last_incident_config_apply_timeout.py` | `test_auto_prevalidation_timeout_is_not_shorter_than_mcp_config_timeout` | 140 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_last_incident_config_apply_timeout.py` | `test_reissue_requires_consumed_nonverified_approval_and_safe_audit` | 160 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_last_incident_config_apply_timeout.py` | `test_db_keeps_active_approval_unique_and_requires_revalidation_after_failure` | 178 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_latency_observability.py` | `_read` | 4 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_latency_observability.py` | `test_major_outbound_integrations_have_semantic_latency_components` | 8 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_latency_observability.py` | `test_llm_logs_per_request_and_total_generation_latency` | 28 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
