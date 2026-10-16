@@ -212,3 +212,66 @@ async def test_explicit_llm_request_can_queue_worker_fix_without_candidate_vault
     assert proposal is not None
     assert proposal["proposed_change"] == "repair_json_bounded_syntax"
     assert proposal["candidate_stored"] is False
+
+
+
+@pytest.mark.asyncio
+async def test_auto_queue_recovers_handoff_dropped_candidate(monkeypatch):
+    from types import SimpleNamespace
+    from uuid import uuid4
+    from apps import config_change_auto_queue as queue
+
+    original, _ = _fixture()
+    preview = local_config_review(base64.b64encode(original.encode()).decode(),
+                                  path=PATH)
+    assert preview["status"] == "candidate_proposed"
+    rows = [{
+        "source": "vm_mcp", "reference": "vm:review:fresh",
+        "raw_data": {"diagnostic": "service_config_review",
+                     "success": True, "service": "gfpapi", **preview},
+    }]
+    state = {"service_name": "gfpapi", "context": {
+        "evidence": rows,
+        "dynamic_investigation": {"status": "completed", "checks": []},
+    }}
+    from apps.orchestrator.dynamic_investigation import DynamicInvestigationPlanner
+    report = await DynamicInvestigationPlanner.propose(state, adapter=None)
+    assert report["config_proposal"]["status"] == "candidate_proposed"
+
+    async def recalculated(cls, fresh_state, *, adapter):
+        assert adapter is None
+        assert fresh_state["context"]["evidence"] == rows
+        return report
+
+    monkeypatch.setattr(DynamicInvestigationPlanner, "propose",
+                        classmethod(recalculated))
+    monkeypatch.setattr(queue, "incident_vm_context", lambda *_: {})
+    monkeypatch.setattr(queue, "vm_binding_diagnostic",
+                        lambda *_: {"candidate": "10.248.16.82"})
+
+    class FakeAudit:
+        def __init__(self, session):
+            pass
+        async def list(self, incident_id, limit):
+            return []
+
+    monkeypatch.setattr(queue, "PostgreSQLAuditStore", FakeAudit)
+    known_ticket = uuid4()
+
+    class ScalarResult:
+        def scalar_one_or_none(self):
+            return known_ticket
+
+    class FakeSession:
+        async def get(self, kind, incident_id):
+            return SimpleNamespace(service="gfpapi", context={})
+        async def execute(self, query, parameters):
+            assert parameters["candidate"] == preview["candidate_hash"]
+            return ScalarResult()
+
+    assert queue.auto_queue_candidate(state) is None
+    outcome = await queue.auto_queue_prevalidation(
+        FakeSession(), str(uuid4()), state,
+    )
+    assert outcome == {"status": "already_queued", "approval_id": str(known_ticket)}
+    assert queue.auto_queue_candidate(state) is not None
