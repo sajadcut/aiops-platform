@@ -200,6 +200,13 @@ async def get_config_review_response(
             raise HTTPException(status_code=404, detail="incident_not_found")
         checkpoint = await WorkflowCheckpointStore(db).load(str(incident_id)) or {}
         proposal = _proposal(checkpoint)
+        # A verified failure without a parser-valid candidate is a real
+        # operator attention item, NOT an executable Approval. Do not show
+        # empty service/path and an unexplained "not_responded" status.
+        saved = checkpoint.get("state") or {}
+        investigation = ((saved.get("context") or {})
+                         .get("dynamic_investigation") or {})
+        attention = investigation.get("config_repair_attention") or {}
         match = (await db.execute(text("""
             SELECT approval_id FROM approvals
             WHERE incident_id=:incident_id
@@ -233,7 +240,21 @@ async def get_config_review_response(
                 proposal=proposal,
                 created_at=str(event.get("created_at")),
             )
-    return _review_progress(status="not_responded", decision=None, proposal=proposal)
+    response = _review_progress(status="not_responded", decision=None, proposal=proposal)
+    if not proposal and isinstance(attention, dict) and attention.get("status") == "candidate_not_yet_valid":
+        response.update({
+            "service": attention.get("service"),
+            "config_file": attention.get("file"),
+            "repair_attention": "confirmed_syntax_error_no_valid_candidate",
+            "repair_error_code": attention.get("error_code"),
+            "repair_error_line": attention.get("line"),
+            "blocking_reasons": [
+                "parser_confirmed_config_error",
+                "candidate_generation_or_validation_failed",
+                "approval_requires_hash_bound_parser_valid_candidate",
+            ],
+        })
+    return response
 
 
 @router.post("/incidents/{incident_id}/configuration-review-response")
