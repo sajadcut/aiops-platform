@@ -10,9 +10,11 @@ from apps.api.main import app
 def test_dashboard_ui_contains_live_api_calls():
     html = Path("dashboards/index.html").read_text(encoding="utf-8")
     js = Path("dashboards/control-center.js").read_text(encoding="utf-8")
-    assert 'href="/dashboard/control-center.css"' in html
+    # Versioned URL is required: otherwise browsers can render the new ×
+    # markup with an old stylesheet, putting native buttons on separate rows.
+    assert 'href="/dashboard/control-center.css?v=20261016-dismiss-ux2"' in html
     assert 'href="/dashboard/approval-actions.css"' in html
-    assert 'src="/dashboard/control-center.js"' in html
+    assert 'src="/dashboard/control-center.js?v=20261016-dismiss-ux2"' in html
     assert 'src="/dashboard/approval-actions.js"' in html
     assert "location.replace(location.pathname+'/'" not in html
     assert "/api/v1/dashboard/summary" in js
