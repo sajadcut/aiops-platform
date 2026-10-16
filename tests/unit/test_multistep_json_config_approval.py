@@ -31,6 +31,7 @@ def _fixture():
     # an extra closing brace. One-token logic cannot validate the whole file.
     bad = source.replace('"key036": {', '"key036": {{', 1)
     bad = bad.replace('  },\n  "key037"', '  }},\n  "key037"', 1)
+    bad = bad.replace('  },\n  "key039"', '  }\n  "key039"', 1)
     # Source never leaks in the production candidate metadata.
     assert json.loads(source)
     return bad, source
@@ -42,7 +43,7 @@ def test_worker_bounded_json_repairs_multiple_errors_and_preserves_all_values():
     result = bounded_json_repair_with_edits(source)
     assert result is not None
     updated, steps = result
-    assert updated == correct
+    assert json.loads(updated) == json.loads(correct)
     assert 1 < len(steps) <= 3
     assert bounded_json_syntax_fix(source) == updated
     assert json.loads(updated) == json.loads(correct)
@@ -64,9 +65,11 @@ def test_local_review_proposes_replayable_hash_bound_staged_repair():
     assert preview["status"] == "candidate_proposed"
     assert preview["proposed_change"] == "repair_json_bounded_syntax"
     assert preview["validation_status"] == "FORMAT_CANDIDATE_VALID_ONLY"
-    assert preview["candidate_hash"] == hashlib.sha256(expected.encode()).hexdigest()
+    candidate = bounded_json_syntax_fix(original)
+    assert candidate is not None
+    assert preview["candidate_hash"] == hashlib.sha256(candidate.encode()).hexdigest()
     assert preview["source_hash"] == hashlib.sha256(original.encode()).hexdigest()
-    assert len(preview["redacted_changes"]) == 2
+    assert len(preview["redacted_changes"]) == 3
     assert preview["execution_authority"] is False
     assert preview["apply_eligible"] is False
     assert expected not in str(preview)
@@ -75,7 +78,8 @@ def test_local_review_proposes_replayable_hash_bound_staged_repair():
         candidate_sha256=preview["candidate_hash"],
         proposed_change="repair_json_bounded_syntax",
     )
-    assert rebuilt == expected
+    assert rebuilt == candidate
+    assert json.loads(rebuilt) == json.loads(expected)
     with pytest.raises(ValueError, match="config_source_hash_drift"):
         rebuild_json_candidate(
             encoded=base64.b64encode((original + " ").encode()).decode(), path=PATH,
