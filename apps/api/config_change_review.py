@@ -56,7 +56,8 @@ def _hash(value: object) -> bool:
 
 _ALLOWED_CHANGES = frozenset({
     "remove_extra_opening_brace", "remove_trailing_json_comma",
-    "quote_unquoted_json_key", "remove_extra_xml_closing_tag", "llm_full_file_repair",
+    "quote_unquoted_json_key", "repair_json_punctuation",
+    "remove_extra_xml_closing_tag", "llm_full_file_repair",
 })
 
 
@@ -69,7 +70,8 @@ def _matching_proposal(proposal: dict, payload: ConfigReviewResponse) -> bool:
         change == "remove_extra_opening_brace" and service == "nginx"
         and filename.endswith(".conf")
     ) or (
-        change in {"remove_trailing_json_comma", "quote_unquoted_json_key"}
+        change in {"remove_trailing_json_comma", "quote_unquoted_json_key",
+                   "repair_json_punctuation"}
         and filename.endswith(".json")
     ) or (
         change == "remove_extra_xml_closing_tag" and filename.endswith(".xml")
