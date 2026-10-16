@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 529 | Dashboard JS files scanned: 8 | Symbols indexed: 5763**
+**Python files scanned: 530 | Dashboard JS files scanned: 8 | Symbols indexed: 5780**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -4569,6 +4569,23 @@
 | `tests/unit/test_jenkins_mcp_client.py` | `test_health_check_fails_closed_on_anonymous_or_identity_mismatch.anonymous` | 169 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_health_check_fails_closed_on_anonymous_or_identity_mismatch |
 | `tests/unit/test_jenkins_mcp_client.py` | `test_health_check_fails_closed_on_anonymous_or_identity_mismatch.wrong_identity` | 172 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_health_check_fails_closed_on_anonymous_or_identity_mismatch |
 | `tests/unit/test_jenkins_mcp_client.py` | `test_health_check_fails_closed_on_anonymous_or_identity_mismatch.expected_identity` | 175 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_health_check_fails_closed_on_anonymous_or_identity_mismatch |
+| `tests/unit/test_json_key_approval_and_flapping.py` | `_sample` | 18 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_json_key_approval_and_flapping.py` | `test_recent_auto_restart_overrides_momentary_active_running_card` | 33 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_json_key_approval_and_flapping.py` | `test_single_old_restart_counter_is_not_proof_of_current_failure` | 50 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_json_key_approval_and_flapping.py` | `test_auto_restart_state_alone_never_becomes_running` | 60 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_json_key_approval_and_flapping.py` | `test_old_auto_restart_does_not_permanently_mark_running_as_unstable` | 71 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_json_key_approval_and_flapping.py` | `test_json_microfix_accepts_one_bare_key_or_one_trailing_comma_only` | 81 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_json_key_approval_and_flapping.py` | `test_default_config_review_proposes_json_key_quote_without_llm_or_remote_python` | 90 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_json_key_approval_and_flapping.py` | `test_governed_json_rebuild_matches_original_hash_and_rejects_drift` | 106 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_json_key_approval_and_flapping.py` | `test_unrelated_llm_edit_never_sealed_but_local_json_microfix_can_be` | 127 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_json_key_approval_and_flapping.py` | `test_unrelated_llm_edit_never_sealed_but_local_json_microfix_can_be.FakeModel` | 137 | class | کلاس | test_unrelated_llm_edit_never_sealed_but_local_json_microfix_can_be |
+| `tests/unit/test_json_key_approval_and_flapping.py` | `test_unrelated_llm_edit_never_sealed_but_local_json_microfix_can_be.FakeModel.generate` | 138 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_unrelated_llm_edit_never_sealed_but_local_json_microfix_can_be.FakeModel |
+| `tests/unit/test_json_key_approval_and_flapping.py` | `test_unrelated_llm_edit_never_sealed_but_local_json_microfix_can_be.seal` | 147 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_unrelated_llm_edit_never_sealed_but_local_json_microfix_can_be |
+| `tests/unit/test_json_key_approval_and_flapping.py` | `test_json_repair_rejects_two_errors_without_creating_a_ticket` | 169 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_json_key_approval_and_flapping.py` | `test_json_repair_rejects_two_errors_without_creating_a_ticket.FakeModel` | 175 | class | کلاس | test_json_repair_rejects_two_errors_without_creating_a_ticket |
+| `tests/unit/test_json_key_approval_and_flapping.py` | `test_json_repair_rejects_two_errors_without_creating_a_ticket.FakeModel.generate` | 176 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_json_repair_rejects_two_errors_without_creating_a_ticket.FakeModel |
+| `tests/unit/test_json_key_approval_and_flapping.py` | `test_json_repair_rejects_two_errors_without_creating_a_ticket.forbid` | 182 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_json_repair_rejects_two_errors_without_creating_a_ticket |
+| `tests/unit/test_json_key_approval_and_flapping.py` | `test_incident_room_exposes_restart_loop_instead_of_healthy_badge` | 195 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_jsonb_persistence_contract.py` | `FakeResult` | 10 | class | کلاس | module |
 | `tests/unit/test_jsonb_persistence_contract.py` | `FakeResult.mappings` | 11 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeResult |
 | `tests/unit/test_jsonb_persistence_contract.py` | `FakeResult.first` | 14 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeResult |
