@@ -119,3 +119,57 @@ async def test_dynamic_proposal_enters_prevalidation_queue():
     )
     assert _matching_proposal(proposal, intent)
     assert proposal["execution_authority"] is False
+
+
+
+@pytest.mark.asyncio
+async def test_explicit_llm_request_can_queue_worker_fix_without_candidate_vault(monkeypatch):
+    from types import SimpleNamespace
+    from integrations.vm import full_config_llm_repair as mod
+    from integrations.vm.config_candidate_vault import CandidateUnavailable
+
+    monkeypatch.setattr(mod.settings, "AIOPS_FULL_CONFIG_LLM_ENABLED", True)
+    monkeypatch.setattr(mod.settings, "LLM_BASE_URL", "https://trusted-gateway.example")
+    original, correct = _fixture()
+
+    class UnhelpfulModel:
+        async def generate(self, prompt, **kwargs):
+            assert json.loads(prompt)["complete_config"] == original
+            return SimpleNamespace(content="not a JSON edit plan", finish_reason="stop")
+
+    def failed_vault(**kwargs):
+        raise CandidateUnavailable("candidate_key_not_configured")
+
+    monkeypatch.setattr(mod, "store_candidate", failed_vault)
+    response = await mod.review_complete_config(
+        base64.b64encode(original.encode()).decode(),
+        service="gfpapi", path=PATH, target="10.248.16.82",
+        model=UnhelpfulModel(),
+    )
+    assert response["status"] == "llm_candidate_proposed"
+    assert response["candidate_origin"] == "deterministic_json_syntax"
+    assert response["proposed_change"] == "repair_json_bounded_syntax"
+    assert response["candidate_stored"] is False
+    assert response["candidate_hash"] == hashlib.sha256(
+        bounded_json_syntax_fix(original).encode()).hexdigest()
+    assert response["apply_eligible"] is False
+    assert response["execution_authority"] is False
+    assert "enabled" not in str(response)
+
+    evidence = [{
+        "source": "vm_mcp", "reference": "vm:llm:1",
+        "raw_data": {"diagnostic": "service_config_llm_repair",
+                     "success": True, **response},
+    }]
+    partial = DynamicInvestigationPlanner.full_config_repair_evidence(
+        evidence, service="gfpapi", failure=None,
+    )
+    assert partial["proposed_change"] == "repair_json_bounded_syntax"
+    assert partial["candidate_origin"] == "deterministic_json_syntax"
+    state = {"service_name": "gfpapi", "context": {"evidence": evidence}}
+    report = await DynamicInvestigationPlanner.propose(state, adapter=None)
+    state["context"]["dynamic_investigation"] = report
+    proposal = auto_queue_candidate(state)
+    assert proposal is not None
+    assert proposal["proposed_change"] == "repair_json_bounded_syntax"
+    assert proposal["candidate_stored"] is False
