@@ -189,11 +189,18 @@ def local_config_review(encoded: str, *, path: str, validator_error_line: int | 
                         },
                     })
             if answer["status"] != "candidate_proposed":
-                from integrations.vm.json_syntax_candidate import deterministic_json_punctuation_fix
-                punctuation = deterministic_json_punctuation_fix(source)
+                from integrations.vm.json_syntax_candidate import (
+                    deterministic_json_punctuation_fix,
+                    deterministic_json_duplicate_brace_fix,
+                )
+                punctuation = (
+                    deterministic_json_punctuation_fix(source)
+                    or deterministic_json_duplicate_brace_fix(source)
+                )
                 if punctuation is not None:
-                    # Strictly one byte inserted/deleted, complete JSON parses.
-                    # All unchanged keys and values retain their exact bytes.
+                    # Either one grammar byte or one uniquely repaired duplicated
+                    # brace pair. Whole-document JSON parsing must have passed.
+                    # All configuration key/value bytes remain identical.
                     position = next(
                         (i for i, (a, b) in enumerate(zip(source, punctuation))
                          if a != b), min(len(source), len(punctuation)),
@@ -205,7 +212,11 @@ def local_config_review(encoded: str, *, path: str, validator_error_line: int | 
                         len(source) == len(punctuation) + 1
                         and source[:position] + source[position + 1:] == punctuation
                     )
-                    if single_byte:
+                    duplicate_brace_pair = (
+                        len(source) == len(punctuation) + 2
+                        and punctuation == deterministic_json_duplicate_brace_fix(source)
+                    )
+                    if single_byte or duplicate_brace_pair:
                         updated = punctuation
                         line_no = source[:position].count("\n") + 1
                         answer.update({
