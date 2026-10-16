@@ -2440,12 +2440,12 @@
 | `integrations/vm/general_config_review.py` | `_structural_line` | 51 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `integrations/vm/general_config_review.py` | `_remove_trailing_json_commas` | 73 | function | Only a lexical trailing comma outside JSON strings; never change values. | module |
 | `integrations/vm/general_config_review.py` | `local_config_review` | 100 | function | Review a known config source and generate only a deterministic JSON fix. | module |
-| `integrations/vm/governed_config_change.py` | `rebuild_nginx_candidate` | 23 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `integrations/vm/governed_config_change.py` | `rebuild_json_candidate` | 49 | function | Rebuild an immutable one-comma JSON fix; syntax-only, not app health. | module |
-| `integrations/vm/governed_config_change.py` | `rebuild_xml_candidate` | 77 | function | Remove one unmatched EOF closing tag; never edit XML values or DTDs. | module |
-| `integrations/vm/governed_config_change.py` | `classify_config_guard_failure` | 122 | function | Use only fixed, operator-actionable codes; never reflect stderr. | module |
-| `integrations/vm/governed_config_change.py` | `run_governed_change` | 154 | async function | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | module |
-| `integrations/vm/governed_config_change.py` | `_start_after_approved_config_apply` | 389 | async function | Only the signed approval recovery scope authorizes a single systemd start. | module |
+| `integrations/vm/governed_config_change.py` | `rebuild_nginx_candidate` | 24 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `integrations/vm/governed_config_change.py` | `rebuild_json_candidate` | 50 | function | Rebuild exact one-token JSON grammar correction, never values. | module |
+| `integrations/vm/governed_config_change.py` | `rebuild_xml_candidate` | 86 | function | Remove one unmatched EOF closing tag; never edit XML values or DTDs. | module |
+| `integrations/vm/governed_config_change.py` | `classify_config_guard_failure` | 131 | function | Use only fixed, operator-actionable codes; never reflect stderr. | module |
+| `integrations/vm/governed_config_change.py` | `run_governed_change` | 163 | async function | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | module |
+| `integrations/vm/governed_config_change.py` | `_start_after_approved_config_apply` | 405 | async function | Only the signed approval recovery scope authorizes a single systemd start. | module |
 | `integrations/vm/json_syntax_candidate.py` | `deterministic_json_syntax_fix` | 12 | function | Repair one measured JSON grammar error; fail closed otherwise. | module |
 | `integrations/vm/llm_syntax_projection.py` | `project_line` | 14 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `integrations/vm/llm_syntax_projection.py` | `syntax_projection` | 55 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
