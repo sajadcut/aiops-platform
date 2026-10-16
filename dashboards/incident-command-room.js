@@ -3452,7 +3452,12 @@
     const recoveryStatus=low(recoveryApproval.status);
     if(!archived&&UUID.test(String(recoveryApproval.approval_id||''))&&
        ['pending','approved','consumed','rejected'].includes(recoveryStatus)&&
-       !['pending','approved','pending_validation'].includes(statusValue)){
+       // A recovery approval has its OWN signed execution contract. Do not
+       // bury it behind an unrelated paused E2E workflow approval: otherwise
+       // the operator is directed to workflow/resume and receives 409
+       // approval_not_granted even though Start itself is approved.
+       (['pending','approved'].includes(recoveryStatus)||
+         !['pending','approved','pending_validation'].includes(statusValue))){
       const fa=state.language==='fa';
       const recoveryLabel=recoveryApproval.action==='restart_service'?
         (fa?'ری‌استارت سرویس':'Restart service'):
@@ -3476,9 +3481,17 @@
         mini('risk',fa?'زیاد':'High')+
         mini('tool','VM MCP / SSH')+
         mini('approvalId',recoveryApproval.approval_id)+'</div>');
-      let controls='<p class="ic-agent-disclaimer">'+esc(fa?
-        'تأیید مجوز، Restart را اجرا نمی‌کند. بعد از تأیید باید دکمهٔ اجرای جداگانه زده شود؛ Runbook می‌تواند به دلیل Syntax یا شرایط زنده جلوی Restart را بگیرد.':
-        'Approval does not run Restart; a separate execution action and a fresh live runbook pass are required.')+'</p>';
+      const separateWorkflow=UUID.test(String(durable.approval_id||''))&&
+        String(durable.approval_id)!==String(recoveryApproval.approval_id)&&
+        ['pending','approved','pending_validation'].includes(statusValue);
+      let controls=(separateWorkflow?
+        '<p class="ic-warning" role="status">'+esc(fa?
+          'دو مجوز متفاوت وجود دارد: Approval گردش‌کار تحلیل برای اجرای Start معتبر نیست. فقط مجوز بازیابی سرویسِ نمایش‌داده‌شده در این بخش می‌تواند Start/Restart را اجرا کند.':
+          'Two different approvals exist: the analysis-workflow approval cannot authorize Start. Use the service recovery approval shown here.')+
+        '</p>':'')+
+        '<p class="ic-agent-disclaimer">'+esc(fa?
+          'تأیید و اجرای Start/Restart دو مرحلهٔ مجزا هستند. هر دو مرحله فقط از مسیر مجوز متصل به همین سرویس/سرور انجام می‌شوند؛ قبل از Start وضعیت زنده و سینتکس کانفیگ بررسی می‌شود.':
+          'Recovery approval and execution are separate governed operations. Live systemd state and config are checked before any Start/Restart.')+'</p>';
       if(recoveryStatus==='pending'){
         controls+='<button type="button" class="ic-btn ic-btn-primary" data-recovery-approval="approve-execute">'+
           esc(fa?'تأیید و اجرای واقعی '+recoveryLabel:'Approve & execute '+recoveryLabel)+'</button> '+
@@ -4013,6 +4026,20 @@
       a.binding_complete&&a.evidence_snapshot_binding!=='drift_detected';
   }
   async function action(kind) {
+    // Stale tabs, cached controls and overlapping workflow approvals must
+    // never route a service-recovery Start through the E2E graph resume.
+    // The separate approval ID is the only valid execution authority.
+    const recovery=state.recoveryApproval||{};
+    const mainApproval=state.lifecycle?.approval||{};
+    const independentRecovery=kind==='resume'&&
+      low(recovery.status)==='approved'&&
+      ['start_service','restart_service'].includes(recovery.action)&&
+      UUID.test(String(recovery.approval_id||''))&&
+      String(recovery.approval_id)!==String(mainApproval.approval_id||'');
+    if(independentRecovery){
+      await handleRecoveryApproval('execute');
+      return;
+    }
     const completedRequest=kind==='resume'&&
       low(state.lifecycle?.checkpoint_status)==='completed';
     if(state.busy||state.historic||!state.report||
