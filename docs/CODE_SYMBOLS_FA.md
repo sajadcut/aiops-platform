@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 551 | Dashboard JS files scanned: 8 | Symbols indexed: 6047**
+**Python files scanned: 551 | Dashboard JS files scanned: 8 | Symbols indexed: 6049**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -4587,6 +4587,8 @@
 | `tests/unit/test_incident_post_repair_live_status.py` | `test_successful_config_apply_audit_separates_file_and_start` | 123 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_incident_post_repair_live_status.py` | `test_systemd_recovery_needs_two_live_checks_but_not_http_health` | 146 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_incident_post_repair_live_status.py` | `test_recheck_includes_prior_apply_audit_and_ui_uses_durable_outcome` | 169 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_post_repair_live_status.py` | `test_recovery_does_not_resolve_service_that_restarts_between_live_checks` | 181 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_post_repair_live_status.py` | `test_config_only_approval_still_checks_recovery_without_issuing_start` | 205 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_incident_progress.py` | `event` | 14 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_incident_progress.py` | `test_progress_only_advances_on_real_completed_work_not_time_or_source_ping` | 19 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_incident_progress.py` | `test_stage_failure_does_not_fabricate_completion` | 35 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
