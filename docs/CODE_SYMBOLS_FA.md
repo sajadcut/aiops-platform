@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 554 | Dashboard JS files scanned: 8 | Symbols indexed: 6069**
+**Python files scanned: 554 | Dashboard JS files scanned: 8 | Symbols indexed: 6085**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -714,12 +714,12 @@
 | `apps/api/health.py` | `_pool_status` | 28 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/health.py` | `_probe_database` | 51 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/health.py` | `_probe_one` | 78 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/health.py` | `_probe_external` | 104 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/health.py` | `_external_required_ready` | 130 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/health.py` | `health_check` | 145 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/health.py` | `liveness` | 162 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/health.py` | `readiness` | 167 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/health.py` | `metrics` | 177 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/health.py` | `_probe_external` | 125 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/health.py` | `_external_required_ready` | 151 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/health.py` | `health_check` | 166 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/health.py` | `liveness` | 183 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/health.py` | `readiness` | 188 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/health.py` | `metrics` | 198 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/http_logging.py` | `_headers` | 36 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/http_logging.py` | `_safe_json_body` | 43 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/http_logging.py` | `_value` | 57 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
@@ -1812,39 +1812,39 @@
 | `dashboards/control-center.js` | `attentionRank` | 248 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
 | `dashboards/control-center.js` | `attentionLevel` | 264 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
 | `dashboards/control-center.js` | `dependencyEntries` | 268 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/control-center.js` | `renderOverview` | 284 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/control-center.js` | `attention` | 306 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/control-center.js` | `atRisk` | 307 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/control-center.js` | `degradedDeps` | 308 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/control-center.js` | `renderLifecycleSummary` | 331 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/control-center.js` | `renderSeverity` | 347 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/control-center.js` | `total` | 350 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/control-center.js` | `auditSummary` | 355 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/control-center.js` | `timelineItem` | 369 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/control-center.js` | `renderAuditPreview` | 373 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/control-center.js` | `renderHealth` | 378 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/control-center.js` | `renderIncidents` | 383 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/control-center.js` | `rows` | 387 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/control-center.js` | `renderServices` | 393 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/control-center.js` | `rows` | 397 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/control-center.js` | `openIncident` | 405 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/control-center.js` | `selectIncident` | 410 | JavaScript function | بر اساس state/capability مسیر یا handler مناسب را انتخاب می‌کند | browser module |
-| `dashboards/control-center.js` | `loadIncidentMemory` | 429 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
-| `dashboards/control-center.js` | `memoryState` | 443 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/control-center.js` | `event` | 444 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/control-center.js` | `workflowStages` | 450 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/control-center.js` | `verificationStatus` | 453 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/control-center.js` | `confidenceBlock` | 476 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/control-center.js` | `renderBinding` | 481 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/control-center.js` | `renderVerification` | 498 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/control-center.js` | `renderDetail` | 505 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/control-center.js` | `incident` | 508 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/control-center.js` | `writeback` | 532 | JavaScript function | state یا داده را به‌صورت durable ذخیره/به‌روزرسانی می‌کند | browser module |
-| `dashboards/control-center.js` | `loadAgents` | 541 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
-| `dashboards/control-center.js` | `renderMcp` | 555 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/control-center.js` | `renderAudit` | 573 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/control-center.js` | `refreshIncidentQueue` | 583 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/control-center.js` | `loadAll` | 605 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
+| `dashboards/control-center.js` | `renderOverview` | 290 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/control-center.js` | `attention` | 312 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/control-center.js` | `atRisk` | 313 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/control-center.js` | `degradedDeps` | 314 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/control-center.js` | `renderLifecycleSummary` | 337 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/control-center.js` | `renderSeverity` | 353 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/control-center.js` | `total` | 356 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/control-center.js` | `auditSummary` | 361 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/control-center.js` | `timelineItem` | 375 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/control-center.js` | `renderAuditPreview` | 379 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/control-center.js` | `renderHealth` | 384 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/control-center.js` | `renderIncidents` | 389 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/control-center.js` | `rows` | 393 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/control-center.js` | `renderServices` | 399 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/control-center.js` | `rows` | 403 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/control-center.js` | `openIncident` | 411 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/control-center.js` | `selectIncident` | 416 | JavaScript function | بر اساس state/capability مسیر یا handler مناسب را انتخاب می‌کند | browser module |
+| `dashboards/control-center.js` | `loadIncidentMemory` | 435 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
+| `dashboards/control-center.js` | `memoryState` | 449 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/control-center.js` | `event` | 450 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/control-center.js` | `workflowStages` | 456 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/control-center.js` | `verificationStatus` | 459 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/control-center.js` | `confidenceBlock` | 482 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/control-center.js` | `renderBinding` | 487 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/control-center.js` | `renderVerification` | 504 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/control-center.js` | `renderDetail` | 511 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/control-center.js` | `incident` | 514 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/control-center.js` | `writeback` | 538 | JavaScript function | state یا داده را به‌صورت durable ذخیره/به‌روزرسانی می‌کند | browser module |
+| `dashboards/control-center.js` | `loadAgents` | 547 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
+| `dashboards/control-center.js` | `renderMcp` | 561 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/control-center.js` | `renderAudit` | 579 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/control-center.js` | `refreshIncidentQueue` | 589 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/control-center.js` | `loadAll` | 611 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
 | `dashboards/decision-brief.js` | `t` | 68 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
 | `dashboards/decision-brief.js` | `fmt` | 111 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
 | `dashboards/decision-brief.js` | `html` | 117 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
@@ -2234,18 +2234,19 @@
 | `integrations/cognia/client.py` | `CogniaClient._authorized_json` | 200 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaClient |
 | `integrations/cognia/client.py` | `CogniaClient.verify_machine_auth` | 229 | async method | Verify Client Application authentication without returning/logging the token. | CogniaClient |
 | `integrations/cognia/client.py` | `CogniaClient.get_knowledge_base` | 233 | async method | Read one KB with the Machine Client identity; never mutate its policy. | CogniaClient |
-| `integrations/cognia/client.py` | `CogniaClient.health_check` | 249 | async method | Probe Cognia's documented readiness endpoint without exposing credentials. | CogniaClient |
-| `integrations/cognia/client.py` | `CogniaClient.list_knowledge_bases` | 257 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | CogniaClient |
-| `integrations/cognia/client.py` | `CogniaClient._assert_own_client_application` | 268 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaClient |
-| `integrations/cognia/client.py` | `CogniaClient._normalize_scope_context` | 278 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaClient |
-| `integrations/cognia/client.py` | `CogniaClient._normalize_knowledge_scope` | 292 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaClient |
-| `integrations/cognia/client.py` | `CogniaClient._validate_revision_payload` | 314 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaClient |
-| `integrations/cognia/client.py` | `CogniaClient.register_knowledge` | 338 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaClient |
-| `integrations/cognia/client.py` | `CogniaClient.get_knowledge_detail` | 381 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | CogniaClient |
-| `integrations/cognia/client.py` | `CogniaClient.create_revision` | 387 | async method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | CogniaClient |
-| `integrations/cognia/client.py` | `CogniaClient.get_processing_status` | 433 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | CogniaClient |
-| `integrations/cognia/client.py` | `CogniaClient.search` | 441 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | CogniaClient |
-| `integrations/cognia/client.py` | `CogniaClient.generate_context` | 486 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaClient |
+| `integrations/cognia/client.py` | `CogniaClient.readiness_status` | 249 | async method | Probe the exact origin-root Cognia readiness route, without auth. | CogniaClient |
+| `integrations/cognia/client.py` | `CogniaClient.health_check` | 278 | async method | Boolean-compatible readiness check for evidence collectors. | CogniaClient |
+| `integrations/cognia/client.py` | `CogniaClient.list_knowledge_bases` | 282 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | CogniaClient |
+| `integrations/cognia/client.py` | `CogniaClient._assert_own_client_application` | 293 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaClient |
+| `integrations/cognia/client.py` | `CogniaClient._normalize_scope_context` | 303 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaClient |
+| `integrations/cognia/client.py` | `CogniaClient._normalize_knowledge_scope` | 317 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaClient |
+| `integrations/cognia/client.py` | `CogniaClient._validate_revision_payload` | 339 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaClient |
+| `integrations/cognia/client.py` | `CogniaClient.register_knowledge` | 363 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaClient |
+| `integrations/cognia/client.py` | `CogniaClient.get_knowledge_detail` | 406 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | CogniaClient |
+| `integrations/cognia/client.py` | `CogniaClient.create_revision` | 412 | async method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | CogniaClient |
+| `integrations/cognia/client.py` | `CogniaClient.get_processing_status` | 458 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | CogniaClient |
+| `integrations/cognia/client.py` | `CogniaClient.search` | 466 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | CogniaClient |
+| `integrations/cognia/client.py` | `CogniaClient.generate_context` | 511 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaClient |
 | `integrations/elasticsearch/client.py` | `ElasticsearchClient` | 10 | class | Production connector for operational log evidence and ECS asset metadata. | module |
 | `integrations/elasticsearch/client.py` | `ElasticsearchClient.__init__` | 18 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ElasticsearchClient |
 | `integrations/elasticsearch/client.py` | `ElasticsearchClient.source_name` | 26 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ElasticsearchClient |
@@ -2814,6 +2815,15 @@
 | `tests/integration/test_health_probes.py` | `test_mcp_dependency_health_probe_forces_single_read_attempt.FakeMCPClient` | 35 | class | کلاس | test_mcp_dependency_health_probe_forces_single_read_attempt |
 | `tests/integration/test_health_probes.py` | `test_mcp_dependency_health_probe_forces_single_read_attempt.FakeMCPClient.health_check` | 38 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_mcp_dependency_health_probe_forces_single_read_attempt.FakeMCPClient |
 | `tests/integration/test_health_probes.py` | `test_mcp_dependency_health_probe_forces_single_read_attempt.FakeMCPClient.close` | 42 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_mcp_dependency_health_probe_forces_single_read_attempt.FakeMCPClient |
+| `tests/integration/test_health_probes.py` | `test_cognia_probe_reports_exact_ready_endpoint_and_upstream_http_status` | 55 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/integration/test_health_probes.py` | `test_cognia_probe_reports_exact_ready_endpoint_and_upstream_http_status.Cognia` | 56 | class | کلاس | test_cognia_probe_reports_exact_ready_endpoint_and_upstream_http_status |
+| `tests/integration/test_health_probes.py` | `test_cognia_probe_reports_exact_ready_endpoint_and_upstream_http_status.Cognia.readiness_status` | 59 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_cognia_probe_reports_exact_ready_endpoint_and_upstream_http_status.Cognia |
+| `tests/integration/test_health_probes.py` | `test_cognia_probe_reports_exact_ready_endpoint_and_upstream_http_status.Cognia.health_check` | 63 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_cognia_probe_reports_exact_ready_endpoint_and_upstream_http_status.Cognia |
+| `tests/integration/test_health_probes.py` | `test_cognia_probe_reports_exact_ready_endpoint_and_upstream_http_status.Cognia.close` | 66 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_cognia_probe_reports_exact_ready_endpoint_and_upstream_http_status.Cognia |
+| `tests/integration/test_health_probes.py` | `test_cognia_probe_success_preserves_http_200` | 80 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/integration/test_health_probes.py` | `test_cognia_probe_success_preserves_http_200.Cognia` | 81 | class | کلاس | test_cognia_probe_success_preserves_http_200 |
+| `tests/integration/test_health_probes.py` | `test_cognia_probe_success_preserves_http_200.Cognia.readiness_status` | 82 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_cognia_probe_success_preserves_http_200.Cognia |
+| `tests/integration/test_health_probes.py` | `test_cognia_probe_success_preserves_http_200.Cognia.close` | 85 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_cognia_probe_success_preserves_http_200.Cognia |
 | `tests/integration/test_knowledge_review_db.py` | `test_verified_memory_human_review_and_cognia_activation` | 25 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/integration/test_knowledge_review_db.py` | `test_verified_memory_human_review_and_cognia_activation.FakeCognia` | 33 | class | کلاس | test_verified_memory_human_review_and_cognia_activation |
 | `tests/integration/test_knowledge_review_db.py` | `test_verified_memory_human_review_and_cognia_activation.FakeCognia.__aenter__` | 34 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_verified_memory_human_review_and_cognia_activation.FakeCognia |
@@ -3518,6 +3528,12 @@
 | `tests/unit/test_cognia_client.py` | `test_machine_client_does_not_expose_human_approval_decisions` | 407 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_cognia_client.py` | `test_machine_token_redirect_is_rejected_without_replaying_credentials` | 413 | async function | Cognia may redirect HTTP to HTTPS; the client must not forward secrets. | module |
 | `tests/unit/test_cognia_client.py` | `test_machine_token_redirect_is_rejected_without_replaying_credentials.handler` | 418 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_machine_token_redirect_is_rejected_without_replaying_credentials |
+| `tests/unit/test_cognia_client.py` | `test_readiness_always_targets_origin_root_and_never_sends_credentials` | 455 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_cognia_client.py` | `test_readiness_always_targets_origin_root_and_never_sends_credentials.handler` | 458 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_readiness_always_targets_origin_root_and_never_sends_credentials |
+| `tests/unit/test_cognia_client.py` | `test_cognia_readiness_rejects_non_200_and_does_not_follow_redirects` | 481 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_cognia_client.py` | `test_cognia_readiness_rejects_non_200_and_does_not_follow_redirects.handler` | 484 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_cognia_readiness_rejects_non_200_and_does_not_follow_redirects |
+| `tests/unit/test_cognia_client.py` | `test_cognia_readiness_timeout_is_not_falsely_reported_as_healthy` | 503 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_cognia_client.py` | `test_cognia_readiness_timeout_is_not_falsely_reported_as_healthy.handler` | 504 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_cognia_readiness_timeout_is_not_falsely_reported_as_healthy |
 | `tests/unit/test_cognia_gfpapi_identity_conflict.py` | `identity_with_cognia_conflict` | 37 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_cognia_gfpapi_identity_conflict.py` | `old_evidence` | 46 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_cognia_gfpapi_identity_conflict.py` | `test_oct_13_repro_keeps_nginx_cognia_disagreement_but_identity_is_verified` | 60 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
