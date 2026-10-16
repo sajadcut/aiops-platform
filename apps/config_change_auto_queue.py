@@ -46,7 +46,22 @@ async def auto_queue_prevalidation(session, incident_id: str, state: dict) -> di
     """Automatic *request*, never automatic Approval; record the exact blocker."""
     proposal = auto_queue_candidate(state)
     if proposal is None:
-        return {"status": "no_verified_candidate"}
+        # A generic "no_verified_candidate" hid the exact reason and forced
+        # operators to repeat lengthy LLM attempts. Publish only bounded
+        # control-state enums: never config content, LLM text or hashes.
+        investigation = ((state.get("context") or {})
+                         .get("dynamic_investigation") or {})
+        candidate = investigation.get("config_proposal") or {}
+        if state.get("approval") or state.get("execution_result"):
+            reason = "existing_workflow_action"
+        elif not candidate:
+            reason = "no_config_proposal"
+        elif candidate.get("status") != "candidate_proposed":
+            reason = "candidate_not_parser_valid"
+        else:
+            reason = "candidate_contract_rejected"
+        return {"status": "no_verified_candidate", "reason": reason,
+                "approval_id": None, "production_write_performed": False}
     incident = await session.get(Incident, UUID(str(incident_id)))
     if incident is None or str(incident.service or "").lower().removesuffix(".service") != str(
         proposal["service"]).lower().removesuffix(".service"):
