@@ -114,6 +114,7 @@ def test_post_apply_stable_pair_supersedes_old_crash_loop_in_header():
 @pytest.mark.asyncio
 async def test_reconcile_after_config_closes_only_matching_service_down_incident(monkeypatch):
     import apps.incident_service.service_recovery_reconciliation as module
+    import asyncio
     from domain.models import IncidentStatus
     import database
     import integrations.vm.mcp_client as mcp
@@ -159,14 +160,13 @@ async def test_reconcile_after_config_closes_only_matching_service_down_incident
         return None
     monkeypatch.setattr(database, "AsyncSessionLocal", lambda: db)
     monkeypatch.setattr(mcp, "VMEdgeMCPClient", FakeClient)
-    monkeypatch.setattr(module.asyncio, "sleep", no_wait)
+    monkeypatch.setattr(asyncio, "sleep", no_wait)
 
     decision = await module.reconcile_after_applied_config(
         incident_id=str(incident.id), target=TARGET, service=SERVICE, actor="sre",
     )
     assert decision == "resolved_independent_vm_verified"
     assert incident.status == IncidentStatus.RESOLVED
-    assert any("incident_config_apply_service_rechecked" in stmt for stmt in []) is False
     assert len([q for q in db.sql if "INSERT INTO audit_events" in q]) == 2
     assert db.commits == 1
     assert incident.context["independent_recovery"]["monitor_recovered"] is False
