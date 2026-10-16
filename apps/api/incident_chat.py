@@ -533,7 +533,15 @@ async def recheck_incident_service_status(
         }
         await PostgreSQLAuditStore(db).append(record)
         if success:
-            checked = _observed_status(incident.service, binding["target"], evidence, [record])
+            # Include the immutable successful-apply audit as the diagnostic
+            # epoch. Passing only the new status record revived pre-repair
+            # crash evidence and blocked the second live recovery check.
+            history = await PostgreSQLAuditStore(db).list(str(incident_id), 200)
+            if not any(str(event.get("event_id")) == record["event_id"] for event in history):
+                history = [*history, record]
+            checked = _observed_status(
+                incident.service, binding["target"], evidence, history,
+            )
             # Read-only rechecks may reconcile a *verified systemd Service Down*
             # incident, but never infer that a missing Zabbix webhook arrived.
             # Two independent live reads and a clean nginx validator are
