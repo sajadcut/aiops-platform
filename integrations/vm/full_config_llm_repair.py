@@ -23,7 +23,7 @@ from integrations.vm.json_syntax_candidate import (
     deterministic_json_syntax_fix, deterministic_json_punctuation_fix,
 )
 
-_MAX_BYTES = 24 * 1024  # Complete document only; refuse instead of truncating.
+_MAX_BYTES = 64 * 1024  # Opt-in complete document only; never silently truncate.
 _MAX_CHANGED_LINES = 3
 _MAX_SYNTAX_CHAR_EDITS = 3
 _SENSITIVE = re.compile(
@@ -52,6 +52,56 @@ def _parse_corrected(content: str) -> str | None:
         return None
     corrected = response.get("corrected_config")
     return corrected if isinstance(corrected, str) else None
+
+
+def _parse_bounded_edit_plan(source: str, content: str,
+                             diagnostic_line: int | None) -> str | None:
+    """Apply only three grammar-character edits in the trusted MCP worker.
+
+    The model reads the entire source but need not re-emit secrets or reformat
+    the document. The complete corrected file is independently parsed and
+    checked for unrelated edits before sealing.
+    """
+    raw = str(content or "").strip()
+    if raw.startswith("```"):
+        raw = re.sub(r"^\x60{3}(?:json)?\s*|\s*\x60{3}$", "", raw, flags=re.I)
+    try:
+        plan = json.loads(raw)
+    except (ValueError, TypeError):
+        return None
+    if not isinstance(plan, dict) or not isinstance(plan.get("edits"), list):
+        return None
+    edits = plan["edits"]
+    if not 1 <= len(edits) <= 3:
+        return None
+    lines = source.splitlines(keepends=True)
+    positions = []
+    allowed = set('{}[],:"')
+    for change in edits:
+        if not isinstance(change, dict):
+            return None
+        line, column = change.get("line"), change.get("column")
+        before, after = change.get("old"), change.get("new")
+        if type(line) is not int or type(column) is not int:
+            return None
+        if not 1 <= line <= len(lines) or not 1 <= column <= len(lines[line - 1]) + 1:
+            return None
+        if diagnostic_line is not None and abs(line - diagnostic_line) > 3:
+            return None
+        if (not isinstance(before, str) or not isinstance(after, str)
+                or before == after or max(len(before), len(after)) > 1
+                or not set(before + after).issubset(allowed)):
+            return None
+        pos = sum(len(part) for part in lines[:line - 1]) + column - 1
+        if source[pos:pos + len(before)] != before:
+            return None
+        positions.append((pos, before, after))
+    if len({pos for pos, _, _ in positions}) != len(positions):
+        return None
+    corrected = source
+    for pos, before, after in sorted(positions, reverse=True):
+        corrected = corrected[:pos] + after + corrected[pos + len(before):]
+    return corrected
 
 
 def _safe_structure(value: str) -> str:
@@ -219,7 +269,9 @@ async def review_complete_config(
               "llm_returned_complete_file": False, "validation_status": "UNVERIFIED",
               "validator_executed_on_proposal": False, "apply_eligible": False,
               "execution_authority": False, "candidate_stored": False,
-              "validation_profile": "unregistered"}
+              "validation_profile": "unregistered",
+              "complete_file_in_prompt": False, "source_size_bytes": None,
+              "candidate_generation_mode": "not_started"}
     if not settings.AIOPS_FULL_CONFIG_LLM_ENABLED:
         return {**result, "status": "full_config_llm_not_enabled"}
     if not _trusted_gateway():
@@ -236,6 +288,7 @@ async def review_complete_config(
     except (ValueError, UnicodeError, binascii.Error):
         return {**result, "status": "config_encoding_unsupported"}
     result["source_hash"] = hashlib.sha256(raw).hexdigest()
+    result["source_size_bytes"] = len(raw)
     # Only a vendor-reported location is authoritative enough to constrain
     # the allowed edit region. An LLM explanation is never treated as a line.
     matched_line = re.search(r"(?:" + re.escape(path) + r":|\bline\s+)([1-9][0-9]{0,6})\b",
@@ -271,6 +324,13 @@ async def review_complete_config(
         "summarizing a single unchanged line. Make the smallest necessary "
         "syntax correction to address ONLY the supplied vendor_error. "
         "Treat this as a one-token typo repair, not a configuration cleanup. "
+        "Prefer ONLY a JSON object with edits: [{line: 1-based integer, "
+        "column: 1-based character offset, old: one punctuation character "
+        "or empty string, new: one punctuation character or empty string}]. "
+        "For unquoted property keys, propose two double-quote insertions. "
+        "Do not return any configuration values in edits. "
+        "The model may alternatively return corrected_config containing the "
+        "complete file if a small edit plan cannot be expressed. "
         "Modify at most 3 lines and at most 3 non-whitespace syntax characters "
         "in the entire document; prefer exactly one inserted/deleted character. "
         "If vendor_error_line is present, edit that line or one of its three "
@@ -287,13 +347,19 @@ async def review_complete_config(
     try:
         llm = model or configured_llm_adapter()
         response = await asyncio.wait_for(llm.generate(
-            prompt, system_prompt=system, temperature=0, max_tokens=32768,
+            prompt, system_prompt=system, temperature=0, max_tokens=8192,
             stage="full_config_llm_repair", completion_repair_attempts=0,
         ), timeout=105)
         result["llm_received_complete_file"] = True
+        result["complete_file_in_prompt"] = True
         if str(getattr(response, "finish_reason", "") or "").lower() in {"length", "max_tokens"}:
             return {**result, "status": "llm_response_truncated"}
-        corrected = _parse_corrected(response.content)
+        corrected = _parse_bounded_edit_plan(source, response.content, diagnostic_line)
+        result["candidate_generation_mode"] = (
+            "llm_bounded_edit_plan" if corrected is not None else "llm_complete_file"
+        )
+        if corrected is None:
+            corrected = _parse_corrected(response.content)
         if corrected is None:
             return {**result, "status": "llm_complete_file_response_invalid"}
         result["llm_returned_complete_file"] = bool(corrected)
