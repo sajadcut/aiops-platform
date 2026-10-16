@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 533 | Dashboard JS files scanned: 8 | Symbols indexed: 5814**
+**Python files scanned: 534 | Dashboard JS files scanned: 8 | Symbols indexed: 5824**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -4012,6 +4012,16 @@
 | `tests/unit/test_execution_tool_policy_errors.py` | `_UnknownDeniedReadTool.execute` | 21 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | _UnknownDeniedReadTool |
 | `tests/unit/test_execution_tool_policy_errors.py` | `test_execution_registry_preserves_safe_vm_policy_denial` | 26 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_execution_tool_policy_errors.py` | `test_execution_registry_redacts_unknown_permission_denial` | 43 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_full_config_edit_plan_delivery.py` | `test_grammar_edits_allow_missing_comma_but_never_change_values` | 21 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_full_config_edit_plan_delivery.py` | `test_bare_property_key_can_be_quoted_using_two_literal_edits` | 30 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_full_config_edit_plan_delivery.py` | `test_edit_plan_rejects_non_grammar_out_of_bounds_or_mass_edits` | 48 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_full_config_edit_plan_delivery.py` | `test_full_40kb_file_and_all_values_reach_model_unchanged_but_not_incident_record` | 53 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_full_config_edit_plan_delivery.py` | `test_full_40kb_file_and_all_values_reach_model_unchanged_but_not_incident_record.FakeModel` | 64 | class | کلاس | test_full_40kb_file_and_all_values_reach_model_unchanged_but_not_incident_record |
+| `tests/unit/test_full_config_edit_plan_delivery.py` | `test_full_40kb_file_and_all_values_reach_model_unchanged_but_not_incident_record.FakeModel.generate` | 65 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_full_40kb_file_and_all_values_reach_model_unchanged_but_not_incident_record.FakeModel |
+| `tests/unit/test_full_config_edit_plan_delivery.py` | `test_full_40kb_file_and_all_values_reach_model_unchanged_but_not_incident_record.seal` | 77 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_full_40kb_file_and_all_values_reach_model_unchanged_but_not_incident_record |
+| `tests/unit/test_full_config_edit_plan_delivery.py` | `test_no_opt_in_never_sends_complete_file` | 104 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_full_config_edit_plan_delivery.py` | `test_no_opt_in_never_sends_complete_file.ForbiddenModel` | 108 | class | کلاس | test_no_opt_in_never_sends_complete_file |
+| `tests/unit/test_full_config_edit_plan_delivery.py` | `test_no_opt_in_never_sends_complete_file.ForbiddenModel.generate` | 109 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_no_opt_in_never_sends_complete_file.ForbiddenModel |
 | `tests/unit/test_full_config_followup_reporting.py` | `candidate` | 18 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_full_config_followup_reporting.py` | `test_full_repair_is_durable_read_only_evidence` | 30 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_full_config_followup_reporting.py` | `test_real_emerg_line_overrides_stale_warn_43` | 48 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
