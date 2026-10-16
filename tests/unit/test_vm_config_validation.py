@@ -259,12 +259,12 @@ async def test_nginx_syntax_passes_despite_incidental_sudo_log_full_warning(monk
         return {
             "success": True, "exit_code": 0,
             "stdout": (
-                "nginx: the configuration file /etc/nginx/nginx.conf syntax is ok\\n"
+                "nginx: the configuration file /etc/nginx/nginx.conf syntax is ok\n"
                 "nginx: configuration file /etc/nginx/nginx.conf test is successful"
             ),
             "stderr": (
                 "sudo: unable to write log file: /var/log/sudo.log: "
-                "No space left on device\\n"
+                "No space left on device\n"
             ),
         }
     monkeypatch.setattr(connector, "_run", run)

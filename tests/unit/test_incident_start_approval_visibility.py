@@ -27,14 +27,14 @@ def test_start_is_not_mislabelled_restart_and_needs_explicit_execution():
     assert "const recoveryIsStart=state.recoveryApproval?.action==='start_service';" in js
     assert "recovery.suggested_action==='start_service'?'Start':'Restart'" in js
     assert "if(action==='execute'&&approval.status!=='approved')return;" in js
-    assert "const result=await api('/api/v1/approvals/'+encodeURIComponent(id)+'/'+suffix,options);" in js
+    assert "const result=await api(url+'/'+action,options);" in js
     assert "if(button)void handleRecoveryApproval(button.dataset.recoveryApproval);" in js
-    assert "if(action==='execute')await recheckServiceStatus();" in js
+    assert "if(attempted)await recheckServiceStatus();" in js
 
 
 def test_approval_can_explicitly_include_execution_without_unrelated_storage_precheck():
     js = _room()
-    assert "data-recovery-approval=\\"approve-execute\\"" in js
+    assert 'data-recovery-approval="approve-execute"' in js
     assert "const combined=action==='approve-execute';" in js
     assert "const authorized=await api(url+'/approve',{method:'POST'});" in js
     assert "if(low(authorized.status)!=='approved')" in js

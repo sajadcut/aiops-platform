@@ -1529,8 +1529,8 @@ class SSHVMConnector:
         if result.get("success") is True and result.get("exit_code") == 0:
             lines = stderr.splitlines()
             sudo_log_pattern = re.compile(
-                r"^sudo:\\s+unable to write log file:\\s+"
-                r"/var/log/sudo\\.log:\\s+No space left on device\\s*$",
+                r"^sudo:\s+unable to write log file:\s+"
+                r"/var/log/sudo\.log:\s+No space left on device\s*$",
                 re.IGNORECASE,
             )
             if any(sudo_log_pattern.fullmatch(line.strip()) for line in lines):
