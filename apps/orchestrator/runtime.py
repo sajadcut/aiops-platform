@@ -49,6 +49,15 @@ class DurableWorkflowRuntime:
                     event_type=event_type, error_type=type(exc).__name__,
                 )
 
+    async def _draft_incident_knowledge(self, incident_id: str) -> None:
+        """Best-effort draft after durable incident outcome; never an execution gate."""
+        from sqlalchemy.ext.asyncio import AsyncSession
+        # Unit tests and dry orchestrators use lightweight session stubs.
+        if not isinstance(self.session, AsyncSession):
+            return
+        from apps.knowledge_incident_coverage import draft_incident_best_effort
+        await draft_incident_best_effort(incident_id)
+
     async def _set_incident_status(self, incident_id: str, status: str) -> None:
         setter = getattr(self.incidents, "set_status", None)
         if callable(setter):
@@ -164,6 +173,7 @@ class DurableWorkflowRuntime:
                 "config_auto_prevalidation_failed",
                 incident_id=incident_id, error_type=type(exc).__name__,
             )
+        await self._draft_incident_knowledge(incident_id)
         return result
 
     async def _evidence_inventory(self, incident_id: str) -> str | None:
@@ -451,6 +461,7 @@ class DurableWorkflowRuntime:
             await self._flush_audit(incident_id)
             await self._archive_decision_brief(incident_id, "execution_finished")
             await self.incidents.commit()
+            await self._draft_incident_knowledge(incident_id)
             return result
 
         await emit_progress(incident_id, "verification", "started")
@@ -489,4 +500,5 @@ class DurableWorkflowRuntime:
         await self._flush_audit(incident_id)
         await self._archive_decision_brief(incident_id, "verification_finished")
         await self.incidents.commit()
+        await self._draft_incident_knowledge(incident_id)
         return result
