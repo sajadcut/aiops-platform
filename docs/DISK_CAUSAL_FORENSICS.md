@@ -49,3 +49,33 @@ test_incident_command_room.py.
 
 Production validation still requires authorized staging VM access and actual
 Zabbix/Elastic event correlation; code review alone is NOT TESTED.
+
+
+## Multi-finding incident actions (2026-10-16)
+
+A Service Down incident can independently contain a valid configuration repair
+candidate, systemd crash-loop evidence, and a full filesystem. The incident
+Decision Brief's `remediation_opportunities` is a separate, evidence-bound
+**catalog**, not a single action proposal or an executable Approval. The
+Incident Room now displays every eligible item and its individual route and
+blocker. A hash-bound configuration Approval cannot authorize rotating,
+truncating or deleting logs, nor can a Service Start Approval authorize
+filesystems changes.
+
+For example, incident `e9bf28f6-fefc-4a03-9142-a9cc6b30b079`
+records `/var/log` at 100% with about 20,480 bytes available. Its
+large `syslog`/`daemon.log` files are a **read-only inventory**, with
+the actual writer, log retention, open-file state and impact still
+unverified. The disk opportunity therefore remains
+`executor_unavailable`; the UI offers further bounded investigation
+instead of pretending it can perform a root-level cleanup. This is
+deliberate until a narrow runbook and governed execution tool exist.
+
+Separately, the configuration ticket was independently validated but
+its APPLY returned a transport error (`BrokenPipeError`, no remote exit
+code). A lost SSH stdin/response does not establish whether the remote
+guard wrote anything. The trusted worker now reports
+`config_apply_result_unknown`, preserves
+`production_write_performed=null`, classifies a safe failure code,
+and does not allow auto-reissuing the consumed approval until the live
+file hash is read and a new candidate/approval is established.
