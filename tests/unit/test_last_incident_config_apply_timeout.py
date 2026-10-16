@@ -146,3 +146,48 @@ def test_auto_prevalidation_timeout_is_not_shorter_than_mcp_config_timeout():
     assert "config_apply_transport_timeout_result_unknown" in api
     assert "isinstance(exc.__cause__, httpx.TimeoutException)" in api
     assert "The approval has been consumed" in api
+
+
+@pytest.mark.parametrize("outcome,previous_status,write_performed,allowed", [
+    ("config_execution_not_verified", "consumed", None, True),
+    ("config_execution_not_verified", "consumed", False, True),
+    ("applied_config_vendor_verified", "consumed", True, False),
+    ("config_execution_not_verified", "approved", False, False),
+    ("config_execution_not_verified", "pending", False, False),
+    ("config_execution_not_verified", "rejected", False, False),
+    ("config_execution_not_verified", "consumed", True, False),
+])
+def test_reissue_requires_consumed_nonverified_approval_and_safe_audit(
+    outcome, previous_status, write_performed, allowed,
+):
+    from apps.api.config_change_review import _consumed_failure_reissuable
+    approval = {"status": previous_status, "approval_id": "approval-1"}
+    audit = [{
+        "event_type": "configuration_change_transition",
+        "status": outcome,
+        "metadata": {
+            "approval_id": "approval-1",
+            "production_write_performed": write_performed,
+        },
+    }]
+    assert _consumed_failure_reissuable(approval, audit) is allowed
+    audit[0]["metadata"]["approval_id"] = "different-approval"
+    assert _consumed_failure_reissuable(approval, audit) is False
+
+
+def test_db_keeps_active_approval_unique_and_requires_revalidation_after_failure():
+    from pathlib import Path
+    root = Path(__file__).resolve().parents[2]
+    script = (root / "database/migrations/versions/p3q4r5s6t7u8_config_retry_after_terminal.py"
+              ).read_text(encoding="utf-8")
+    review = (root / "apps/api/config_change_review.py").read_text(encoding="utf-8")
+    ui = (root / "dashboards/incident-command-room.js").read_text(encoding="utf-8")
+    assert "ux_config_change_approval_candidate" in script
+    assert "status IN ('pending_validation','pending','approved')" in script
+    assert "Revises: o2p3q4r5s6t7" in script
+    assert "previous_config_apply_not_safe_to_reissue" in review
+    assert "config_service_start_scope_fresh_status_required" in review
+    assert 'response["retry_eligible"] = _consumed_failure_reissuable' in review
+    assert "درخواست Approval جدید بعد از شکست اعمال" in ui
+    assert "state.configResponse?.retry_eligible===true" in ui
+    assert "stateValue==='activating'" in ui
