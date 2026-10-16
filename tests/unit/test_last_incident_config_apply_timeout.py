@@ -41,6 +41,7 @@ async def test_long_config_mcp_has_180_second_per_tool_timeout_and_no_replay(
     monkeypatch.setattr(settings, "RETRY_MAX_ATTEMPTS", 4)
     monkeypatch.setattr(settings, "MCP_TIMEOUT_SECONDS", 20)
     client = VMEdgeMCPClient(server_url="http://mcp.example/mcp")
+    client.write_bearer_token = "integration-test-only"
     calls = []
 
     class Transport:
@@ -57,8 +58,9 @@ async def test_long_config_mcp_has_180_second_per_tool_timeout_and_no_replay(
         "params": {"name": tool, "arguments": {"target": "192.0.2.10"}},
     }
     try:
-        with pytest.raises(httpx.ReadTimeout):
+        with pytest.raises(RuntimeError, match="mcp_transport_error:vm-edge") as caught:
             await client._post(payload, tool_name=tool)
+        assert isinstance(caught.value.__cause__, httpx.ReadTimeout)
         assert len(calls) == 1
         assert calls[0]["timeout"] == 180.0
     finally:
@@ -142,5 +144,5 @@ def test_auto_prevalidation_timeout_is_not_shorter_than_mcp_config_timeout():
     api = (root / "apps/api/config_change_execution.py").read_text()
     assert "timeout=200" in queue
     assert "config_apply_transport_timeout_result_unknown" in api
-    assert "except httpx.TimeoutException" in api
+    assert "isinstance(exc.__cause__, httpx.TimeoutException)" in api
     assert "The approval has been consumed" in api
