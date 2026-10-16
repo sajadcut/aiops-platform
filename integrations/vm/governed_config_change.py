@@ -458,8 +458,19 @@ async def _start_after_approved_config_apply(connector, *, target: str, service:
             return {"attempted": False,
                     "status": "already_active" if running else "active_not_running",
                     "service_recovery_confirmed": running}
+        # A persistent crash loop is normally "activating (auto-restart)",
+        # not "failed" or "inactive". An explicitly signed recovery scope
+        # may try systemctl start after a verified config replacement. The
+        # request is still subject to its one-use authorization and postcheck.
+        crash_loop = (
+            before.get("active_state") == "activating"
+            and before.get("sub_state") == "auto-restart"
+            and before.get("main_pid") == 0
+            and type(before.get("restart_count")) is int
+            and before["restart_count"] >= 2
+        )
         if (before.get("active_state") not in {"failed", "inactive"}
-                or before.get("load_state") != "loaded"):
+                and not crash_loop) or before.get("load_state") != "loaded":
             return {"attempted": False, "status": "service_state_not_startable",
                     "service_recovery_confirmed": False}
         started = await connector.start_service(target, service)
