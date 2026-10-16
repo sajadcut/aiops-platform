@@ -21,6 +21,7 @@ from integrations.llm.openai_compatible import configured_llm_adapter
 from integrations.vm.config_candidate_vault import CandidateUnavailable, store_candidate
 from integrations.vm.json_syntax_candidate import (
     deterministic_json_syntax_fix, deterministic_json_punctuation_fix,
+    deterministic_json_duplicate_brace_fix,
 )
 
 _MAX_BYTES = 64 * 1024  # Opt-in complete document only; never silently truncate.
@@ -362,45 +363,93 @@ async def review_complete_config(
         ), timeout=105)
         result["llm_received_complete_file"] = True
         result["complete_file_in_prompt"] = True
-        if str(getattr(response, "finish_reason", "") or "").lower() in {"length", "max_tokens"}:
-            return {**result, "status": "llm_response_truncated"}
-        corrected = _parse_bounded_edit_plan(source, response.content, diagnostic_line)
-        result["candidate_generation_mode"] = (
-            "llm_bounded_edit_plan" if corrected is not None else "llm_complete_file"
-        )
-        if corrected is None:
-            corrected = _parse_corrected(response.content)
-        if corrected is None:
-            return {**result, "status": "llm_complete_file_response_invalid"}
-        result["llm_returned_complete_file"] = bool(corrected)
-        preview = _candidate_preview(source, corrected, diagnostic_line=diagnostic_line)
         profile = _profile(service, path)
-        if profile == "json_syntax" and preview.get("status") == "llm_candidate_proposed":
-            try:
-                json.loads(corrected)
-            except json.JSONDecodeError:
-                preview = {"status": "llm_candidate_rejected",
-                           "rejection_reason": "candidate_json_syntax_invalid",
-                           "candidate_hash": None, "changed_line_count": 0,
-                           "changed_line_numbers": []}
-        if preview.get("status") != "llm_candidate_proposed" and profile == "json_syntax":
-            # A model can modify an unrelated line, which must stay rejected.
-            # Instead independently reconstruct one *measured* syntax token.
-            # Never relax the model's drift guard or reuse its rejected bytes.
+        corrected = None
+        preview = {"status": "llm_candidate_rejected",
+                   "rejection_reason": "llm_candidate_not_validated"}
+        last_model_failure = "llm_complete_file_response_invalid"
+        # A malformed gateway reply cannot be treated as an unrepairable
+        # file. Retry once for only line/column punctuation edits, then use
+        # the independent worker parser. No rejected model bytes are reused.
+        for attempt in range(2):
+            truncated = str(getattr(response, "finish_reason", "") or "").lower() in {
+                "length", "max_tokens",
+            }
+            if not truncated:
+                current = _parse_bounded_edit_plan(
+                    source, response.content, diagnostic_line,
+                )
+                mode = "llm_bounded_edit_plan" if current is not None else "llm_complete_file"
+                if current is None:
+                    current = _parse_corrected(response.content)
+                if current is not None:
+                    inspected = _candidate_preview(
+                        source, current, diagnostic_line=diagnostic_line,
+                    )
+                    if inspected.get("status") == "llm_candidate_proposed":
+                        if profile == "json_syntax":
+                            try:
+                                json.loads(current)
+                            except json.JSONDecodeError:
+                                inspected = {"status": "llm_candidate_rejected",
+                                             "rejection_reason": "candidate_json_syntax_invalid"}
+                        if inspected.get("status") == "llm_candidate_proposed":
+                            corrected, preview = current, inspected
+                            result["candidate_generation_mode"] = mode
+                            result["llm_returned_complete_file"] = True
+                            break
+                    last_model_failure = str(inspected.get("rejection_reason")
+                                             or inspected.get("status")
+                                             or "llm_candidate_rejected")
+            else:
+                last_model_failure = "llm_response_truncated"
+            if attempt == 0:
+                try:
+                    response = await asyncio.wait_for(
+                        llm.generate(
+                            prompt,
+                            system_prompt=(
+                                "Return ONLY a JSON object with an edits list. "
+                                "Every edit has integer line and column (1-based), "
+                                "and single punctuation-character old and new "
+                                "strings; insertion uses an empty old string. "
+                                "Make at most THREE changes near vendor_error_line. "
+                                "Preserve all original values, whitespace, keys "
+                                "and other bytes; return no file values or prose."
+                            ),
+                            temperature=0, max_tokens=1024,
+                            stage="full_config_llm_repair_structured_retry",
+                            completion_repair_attempts=0,
+                        ),
+                        timeout=45,
+                    )
+                except Exception:
+                    # The invalid response remains classified; try worker fix.
+                    break
+        if corrected is None and profile == "json_syntax":
             deterministic = (
                 deterministic_json_syntax_fix(source)
                 or deterministic_json_punctuation_fix(source)
+                or deterministic_json_duplicate_brace_fix(source)
             )
             if deterministic is not None:
-                verified_preview = _candidate_preview(
+                checked = _candidate_preview(
                     source, deterministic, diagnostic_line=diagnostic_line,
                 )
-                if verified_preview.get("status") == "llm_candidate_proposed":
-                    corrected = deterministic
-                    preview = {**verified_preview,
-                               "candidate_origin": "deterministic_json_syntax"}
-        if preview.get("status") != "llm_candidate_proposed":
-            return {**result, **preview, "validation_profile": profile}
+                if checked.get("status") == "llm_candidate_proposed":
+                    try:
+                        json.loads(deterministic)
+                    except json.JSONDecodeError:
+                        pass
+                    else:
+                        corrected, preview = deterministic, {
+                            **checked, "candidate_origin": "deterministic_json_syntax",
+                        }
+                        result["candidate_generation_mode"] = "worker_verified_json_repair"
+        if corrected is None:
+            return {**result, "status": "llm_complete_file_response_invalid",
+                    "rejection_reason": last_model_failure,
+                    "validation_profile": profile}
         if not target:
             # Compatibility for pure local preview tests; no durable ticket.
             return {**result, **preview, "validation_profile": profile}
