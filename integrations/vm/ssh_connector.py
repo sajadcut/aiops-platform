@@ -1228,6 +1228,21 @@ class SSHVMConnector:
                 ),
             }
         path, source = selected
+        # No config contents, values, redacted excerpts or hashes in logs.
+        # Earlier MCP responses exceeded the HTTP log size limit and hid
+        # why Approval generation stopped, making every retry opaque.
+        logger.info(
+            "service_config_candidate_diagnostic",
+            service=service,
+            file_type=str(outcome.get("file_type") or "unknown")[:20],
+            review_status=str(outcome.get("status") or "unknown")[:65],
+            format_status=str(outcome.get("validation_status") or "unknown")[:65],
+            repair_blocker=str(outcome.get("repair_blocker") or "none")[:100],
+            parser_error_line=outcome.get("observed_error_line"),
+            proposed_change=str(outcome.get("proposed_change") or "none")[:65],
+            candidate_hash_present=bool(outcome.get("candidate_hash")),
+            verified_file_count=len(reviewed_files),
+        )
         return {
             **base, **outcome, "target": target, "service": service,
             "path_source": source,
