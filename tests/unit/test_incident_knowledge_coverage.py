@@ -294,3 +294,23 @@ async def test_reconcile_reports_configuration_gap_instead_of_claiming_full_cove
     assert result["created"] == 0
     assert result["errors"] == ["knowledge_kb_must_be_explicitly_configured"]
     assert result["published_to_cognia"] is False
+
+
+def test_zabbix_recovery_and_failed_remediation_both_offer_local_review_drafts():
+    lifecycle = (ROOT / "apps/signal_gateway/zabbix_lifecycle.py").read_text(
+        encoding="utf-8"
+    )
+    remediation = (ROOT / "apps/api/remediation.py").read_text(
+        encoding="utf-8"
+    )
+    assert "await incidents.commit()" in lifecycle
+    assert "draft_incident_best_effort(incident_id)" in lifecycle
+    assert lifecycle.index("await incidents.commit()") < lifecycle.index(
+        "draft_incident_best_effort(incident_id)"
+    )
+    assert '"remediation_executed"' in remediation
+    assert "from apps.knowledge_incident_coverage import create_from_incident" in remediation
+    assert remediation.index('"remediation_executed"') < remediation.index(
+        "from apps.knowledge_incident_coverage import create_from_incident"
+    )
+    assert "remediation_incident_coverage_draft_failed" in remediation
