@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 548 | Dashboard JS files scanned: 8 | Symbols indexed: 6003**
+**Python files scanned: 548 | Dashboard JS files scanned: 8 | Symbols indexed: 6017**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -4550,6 +4550,20 @@
 | `tests/unit/test_incident_knowledge_coverage.py` | `test_incident_draft_refreshes_later_resolution_only_when_unreviewed` | 169 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_incident_knowledge_coverage.py` | `test_incident_draft_refreshes_later_resolution_only_when_unreviewed.dossier` | 173 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_incident_draft_refreshes_later_resolution_only_when_unreviewed |
 | `tests/unit/test_incident_knowledge_coverage.py` | `test_knowledge_entry_requires_human_publish_even_for_resolved` | 213 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_knowledge_coverage.py` | `test_reconcile_incident_api_pages_without_cognia_or_operational_write` | 226 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_knowledge_coverage.py` | `test_reconcile_incident_api_pages_without_cognia_or_operational_write.Session` | 233 | class | کلاس | test_reconcile_incident_api_pages_without_cognia_or_operational_write |
+| `tests/unit/test_incident_knowledge_coverage.py` | `test_reconcile_incident_api_pages_without_cognia_or_operational_write.Session.__aenter__` | 234 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_reconcile_incident_api_pages_without_cognia_or_operational_write.Session |
+| `tests/unit/test_incident_knowledge_coverage.py` | `test_reconcile_incident_api_pages_without_cognia_or_operational_write.Session.__aexit__` | 237 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_reconcile_incident_api_pages_without_cognia_or_operational_write.Session |
+| `tests/unit/test_incident_knowledge_coverage.py` | `test_reconcile_incident_api_pages_without_cognia_or_operational_write.Session.execute` | 240 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | test_reconcile_incident_api_pages_without_cognia_or_operational_write.Session |
+| `tests/unit/test_incident_knowledge_coverage.py` | `test_reconcile_incident_api_pages_without_cognia_or_operational_write.ready` | 243 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_reconcile_incident_api_pages_without_cognia_or_operational_write |
+| `tests/unit/test_incident_knowledge_coverage.py` | `test_reconcile_incident_api_pages_without_cognia_or_operational_write.create` | 246 | async method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | test_reconcile_incident_api_pages_without_cognia_or_operational_write |
+| `tests/unit/test_incident_knowledge_coverage.py` | `test_reconcile_reports_configuration_gap_instead_of_claiming_full_coverage` | 266 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_knowledge_coverage.py` | `test_reconcile_reports_configuration_gap_instead_of_claiming_full_coverage.Session` | 271 | class | کلاس | test_reconcile_reports_configuration_gap_instead_of_claiming_full_coverage |
+| `tests/unit/test_incident_knowledge_coverage.py` | `test_reconcile_reports_configuration_gap_instead_of_claiming_full_coverage.Session.__aenter__` | 272 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_reconcile_reports_configuration_gap_instead_of_claiming_full_coverage.Session |
+| `tests/unit/test_incident_knowledge_coverage.py` | `test_reconcile_reports_configuration_gap_instead_of_claiming_full_coverage.Session.__aexit__` | 275 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_reconcile_reports_configuration_gap_instead_of_claiming_full_coverage.Session |
+| `tests/unit/test_incident_knowledge_coverage.py` | `test_reconcile_reports_configuration_gap_instead_of_claiming_full_coverage.Session.execute` | 278 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | test_reconcile_reports_configuration_gap_instead_of_claiming_full_coverage.Session |
+| `tests/unit/test_incident_knowledge_coverage.py` | `test_reconcile_reports_configuration_gap_instead_of_claiming_full_coverage.ready` | 281 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_reconcile_reports_configuration_gap_instead_of_claiming_full_coverage |
+| `tests/unit/test_incident_knowledge_coverage.py` | `test_reconcile_reports_configuration_gap_instead_of_claiming_full_coverage.unavailable` | 284 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_reconcile_reports_configuration_gap_instead_of_claiming_full_coverage |
 | `tests/unit/test_incident_operational_finalization.py` | `FakeSession` | 9 | class | کلاس | module |
 | `tests/unit/test_incident_operational_finalization.py` | `FakeSession.__init__` | 10 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeSession |
 | `tests/unit/test_incident_operational_finalization.py` | `FakeSession.get` | 13 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeSession |
