@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 537 | Dashboard JS files scanned: 8 | Symbols indexed: 5853**
+**Python files scanned: 537 | Dashboard JS files scanned: 8 | Symbols indexed: 5857**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -4853,6 +4853,10 @@
 | `tests/unit/test_multistep_json_config_approval.py` | `test_no_rewrite_or_unsupported_multi_error_or_secret_edit` | 54 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_multistep_json_config_approval.py` | `test_local_review_proposes_replayable_hash_bound_staged_repair` | 61 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_multistep_json_config_approval.py` | `test_dynamic_proposal_enters_prevalidation_queue` | 93 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_multistep_json_config_approval.py` | `test_explicit_llm_request_can_queue_worker_fix_without_candidate_vault` | 126 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_multistep_json_config_approval.py` | `test_explicit_llm_request_can_queue_worker_fix_without_candidate_vault.UnhelpfulModel` | 135 | class | کلاس | test_explicit_llm_request_can_queue_worker_fix_without_candidate_vault |
+| `tests/unit/test_multistep_json_config_approval.py` | `test_explicit_llm_request_can_queue_worker_fix_without_candidate_vault.UnhelpfulModel.generate` | 136 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_explicit_llm_request_can_queue_worker_fix_without_candidate_vault.UnhelpfulModel |
+| `tests/unit/test_multistep_json_config_approval.py` | `test_explicit_llm_request_can_queue_worker_fix_without_candidate_vault.failed_vault` | 140 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_explicit_llm_request_can_queue_worker_fix_without_candidate_vault |
 | `tests/unit/test_network_reliability_engine.py` | `metric` | 11 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_network_reliability_engine.py` | `telemetry` | 28 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_network_reliability_engine.py` | `analyze` | 44 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
