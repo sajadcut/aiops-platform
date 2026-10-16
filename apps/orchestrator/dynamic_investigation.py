@@ -589,6 +589,12 @@ class DynamicInvestigationPlanner:
                     "before": _bounded(diff.get("before"), 125),
                     "after": _bounded(diff.get("after"), 125),
                 } if isinstance(diff, dict) else None,
+                "redacted_changes": [{
+                    "line": item.get("line"),
+                    "before": _bounded(item.get("before"), 125),
+                    "after": _bounded(item.get("after"), 125),
+                } for item in (general_review.get("redacted_changes") or [])[:3]
+                    if isinstance(item, dict) and type(item.get("line")) is int],
                 "original_sha256": str(general_review.get("source_hash") or "")[:64],
                 "candidate_sha256": str(general_review.get("candidate_hash") or "")[:64],
                 "proposed_change": general_review["proposed_change"],
