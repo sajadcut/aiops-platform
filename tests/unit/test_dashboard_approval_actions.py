@@ -62,4 +62,4 @@ def test_main_dashboard_separates_service_recovery_approval_from_e2e_resume():
     assert "const authorization = await api(root+'/approve', {method:'POST'});" in js
     assert "if (willExecute)" in js
     assert "await window.performServiceRecovery('execute');" in js
-    assert "await api(\u0060/api/v1/incidents/\u0024{encodeURIComponent(id)}/recovery-approval\u0060)" in js
+    assert "const recoveryRequest = api(\u0060/api/v1/incidents/\u0024{encodeURIComponent(id)}/recovery-approval\u0060)" in js
