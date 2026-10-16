@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 548 | Dashboard JS files scanned: 8 | Symbols indexed: 5997**
+**Python files scanned: 548 | Dashboard JS files scanned: 8 | Symbols indexed: 6000**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -4547,6 +4547,9 @@
 | `tests/unit/test_incident_knowledge_coverage.py` | `test_coverage_draft_is_idempotent_and_never_publishes` | 123 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_incident_knowledge_coverage.py` | `test_coverage_draft_is_idempotent_and_never_publishes.dossier` | 126 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_coverage_draft_is_idempotent_and_never_publishes |
 | `tests/unit/test_incident_knowledge_coverage.py` | `test_dashboard_can_sync_old_incidents_and_page_existing_reviews` | 150 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_knowledge_coverage.py` | `test_incident_draft_refreshes_later_resolution_only_when_unreviewed` | 169 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_knowledge_coverage.py` | `test_incident_draft_refreshes_later_resolution_only_when_unreviewed.dossier` | 173 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_incident_draft_refreshes_later_resolution_only_when_unreviewed |
+| `tests/unit/test_incident_knowledge_coverage.py` | `test_knowledge_entry_requires_human_publish_even_for_resolved` | 213 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_incident_operational_finalization.py` | `FakeSession` | 9 | class | کلاس | module |
 | `tests/unit/test_incident_operational_finalization.py` | `FakeSession.__init__` | 10 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeSession |
 | `tests/unit/test_incident_operational_finalization.py` | `FakeSession.get` | 13 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeSession |
