@@ -54,8 +54,40 @@ def test_worker_bounded_json_repairs_multiple_errors_and_preserves_all_values():
 def test_no_rewrite_or_unsupported_multi_error_or_secret_edit():
     assert bounded_json_syntax_fix('{"password":"SECRET","ok":true}') is None
     assert bounded_json_syntax_fix('{"key": "x{y}"}') is None
-    assert bounded_json_syntax_fix('{"a":1, wrong:2, also_wrong:3}') is None
+    # Four unquoted keys need eight character insertions; fail closed.
+    assert bounded_json_syntax_fix(
+        '{"a":1, wrong:2, also_wrong:3, fourth:4, fifth:5}'
+    ) is None
     assert bounded_json_syntax_fix('{"a":') is None
+
+
+def test_unquoted_json_property_plus_mismatched_brace_pair_four_edits():
+    # appsettings-style mixed grammar faults need FOUR measured edits:
+    # 2 key quotes, one duplicate opening brace, one duplicate closing brace.
+    correct = '{"outer":{"item":{"n":1}},"status":"ok"}'
+    broken = '{"outer":{item:{{"n":1}}},"status":"ok"}'
+    assert json.loads(correct)["outer"]["item"] == {"n": 1}
+    assert broken != correct
+    repaired = bounded_json_repair_with_edits(broken)
+    assert repaired is not None
+    candidate, changes = repaired
+    assert candidate == correct
+    assert len(changes) == 3
+    assert all(set(change) == {"line", "before", "after"} for change in changes)
+    assert "item" not in str(changes)
+    assert bounded_json_syntax_fix(broken) == correct
+    preview = local_config_review(base64.b64encode(broken.encode()).decode(),
+                                  path=PATH)
+    assert preview["status"] == "candidate_proposed"
+    assert preview["proposed_change"] == "repair_json_bounded_syntax"
+    assert preview["candidate_hash"] == hashlib.sha256(correct.encode()).hexdigest()
+    rebuilt = rebuild_json_candidate(
+        encoded=base64.b64encode(broken.encode()).decode(), path=PATH,
+        original_sha256=hashlib.sha256(broken.encode()).hexdigest(),
+        candidate_sha256=hashlib.sha256(correct.encode()).hexdigest(),
+        proposed_change="repair_json_bounded_syntax",
+    )
+    assert rebuilt == correct
 
 
 def test_local_review_proposes_replayable_hash_bound_staged_repair():
