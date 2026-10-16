@@ -78,6 +78,32 @@ async def test_start_once_after_approved_repair_and_verify_fresh_systemd():
 
 
 @pytest.mark.asyncio
+async def test_systemd_running_with_unknown_app_health_is_successfully_started():
+    """MCP service_status sets healthy=None when no health profile exists."""
+    actions = []
+    class Edge:
+        async def service_status(self, target, service):
+            actions.append("status")
+            if len(actions) == 1:
+                return {"success": True, "target": target, "service": service,
+                        "load_state": "loaded", "active_state": "failed",
+                        "sub_state": "failed", "healthy": None}
+            return {"success": True, "target": target, "service": service,
+                    "load_state": "loaded", "active_state": "active",
+                    "sub_state": "running", "healthy": None}
+        async def start_service(self, target, service):
+            actions.append("start")
+            return {"success": True}
+    result = await _start_after_approved_config_apply(
+        Edge(), target="192.0.2.5", service="nginx",
+    )
+    assert actions == ["status", "start", "status"]
+    assert result["attempted"] is True
+    assert result["status"] == "systemd_active"
+    assert result["service_recovery_confirmed"] is True
+
+
+@pytest.mark.asyncio
 async def test_no_unnecessary_start_when_service_is_already_running():
     class Edge:
         async def service_status(self, target, service):
