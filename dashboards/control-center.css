@@ -257,3 +257,35 @@
   :root[dir="rtl"] .view[data-view="overview"] .service-row{grid-template-columns:minmax(0,1fr) 60px 62px}
   :root[dir="rtl"] .view[data-view="overview"] .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
+
+
+/* Operator-only dismissal: never delete an Incident or alter its approvals,
+   monitoring, audit history, operational knowledge or source KPIs. */
+.incident-dismiss-shell{position:relative;min-width:0}
+.incident-dismiss-shell > .incident-queue-card{height:100%;padding-inline-end:55px}
+.incident-dismiss-btn{
+  position:absolute;z-index:2;inset-inline-end:11px;top:11px;
+  display:grid;place-items:center;width:31px;height:31px;
+  border:1px solid var(--line);border-radius:9px;
+  background:var(--surface);color:var(--muted);cursor:pointer;
+  font-size:22px;line-height:1;transition:border-color .15s,background .15s,color .15s;
+}
+.incident-dismiss-btn:hover{color:var(--text);border-color:var(--blue);background:var(--accent-soft)}
+.incident-dismiss-btn:focus-visible,.incident-hidden-toggle:focus-visible,
+.incident-hidden-restore-all:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.incident-hidden-toggle,.incident-hidden-restore-all{
+  border:1px solid var(--line);border-radius:9px;
+  background:var(--surface-2);color:var(--text);padding:8px 11px;
+  font:inherit;font-size:12px;cursor:pointer
+}
+.incident-hidden-toggle[aria-pressed="true"]{border-color:var(--blue);background:var(--accent-soft)}
+.incident-hidden-restore-all[hidden]{display:none}
+.incident-cards[data-size="list"] .incident-dismiss-row{min-width:1050px}
+.incident-cards[data-size="list"] .incident-dismiss-row > .incident-list-row{
+  padding-inline-end:55px;min-width:1050px
+}
+.incident-cards[data-size="list"] .incident-dismiss-btn{top:50%;transform:translateY(-50%)}
+@media(max-width:650px){
+  .incident-dismiss-shell > .incident-queue-card{padding-inline-end:52px}
+  .incident-cards[data-size="small"] .incident-dismiss-shell > .incident-queue-card{padding-inline-end:52px}
+}
