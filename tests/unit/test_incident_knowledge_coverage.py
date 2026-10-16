@@ -220,3 +220,77 @@ def test_knowledge_entry_requires_human_publish_even_for_resolved():
     assert '"/knowledge-reviews/{review_id}/publish"' in source
     assert "row.approved_hash != row.content_hash" in source
     assert "CogniaClient()" not in generic
+
+
+@pytest.mark.asyncio
+async def test_reconcile_incident_api_pages_without_cognia_or_operational_write(monkeypatch):
+    from apps.api import knowledge_reviews as api
+    from apps import knowledge_incident_coverage as coverage
+
+    identifiers = [uuid4(), uuid4()]
+    observed = []
+
+    class Session:
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *args):
+            return False
+
+        async def execute(self, *_args, **_kwargs):
+            return _Result(identifiers)
+
+    async def ready(*_args, **_kwargs):
+        return None
+
+    async def create(_db, incident_id):
+        observed.append(incident_id)
+        return SimpleNamespace(id=coverage_review_id(incident_id)), "created"
+
+    monkeypatch.setattr(api, "AsyncSessionLocal", lambda: Session())
+    monkeypatch.setattr(api, "require_database_ready", ready)
+    monkeypatch.setattr(coverage, "create_from_incident", create)
+
+    result = await api.reconcile_incident_coverage(limit=1, offset=0)
+    assert result == {
+        "status": "completed",
+        "scanned": 1, "created": 1, "existing": 0,
+        "failed": 0, "has_more": True,
+        "next_offset": 1, "errors": [],
+        "published_to_cognia": False, "requires_human_review": True,
+    }
+    assert observed == identifiers[:1]
+
+
+@pytest.mark.asyncio
+async def test_reconcile_reports_configuration_gap_instead_of_claiming_full_coverage(monkeypatch):
+    from fastapi import HTTPException
+    from apps.api import knowledge_reviews as api
+    from apps import knowledge_incident_coverage as coverage
+
+    class Session:
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *args):
+            return False
+
+        async def execute(self, *_args, **_kwargs):
+            return _Result([uuid4()])
+
+    async def ready(*_args, **_kwargs):
+        return None
+
+    async def unavailable(_db, incident_id):
+        raise HTTPException(422, "knowledge_kb_must_be_explicitly_configured")
+
+    monkeypatch.setattr(api, "AsyncSessionLocal", lambda: Session())
+    monkeypatch.setattr(api, "require_database_ready", ready)
+    monkeypatch.setattr(coverage, "create_from_incident", unavailable)
+    result = await api.reconcile_incident_coverage(limit=3, offset=0)
+    assert result["status"] == "partial"
+    assert result["scanned"] == 1
+    assert result["failed"] == 1
+    assert result["created"] == 0
+    assert result["errors"] == ["knowledge_kb_must_be_explicitly_configured"]
+    assert result["published_to_cognia"] is False
