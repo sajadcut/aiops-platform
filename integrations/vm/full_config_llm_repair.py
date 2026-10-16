@@ -19,7 +19,9 @@ from urllib.parse import urlparse
 from domain.contracts.config import settings
 from integrations.llm.openai_compatible import configured_llm_adapter
 from integrations.vm.config_candidate_vault import CandidateUnavailable, store_candidate
-from integrations.vm.json_syntax_candidate import deterministic_json_syntax_fix
+from integrations.vm.json_syntax_candidate import (
+    deterministic_json_syntax_fix, deterministic_json_punctuation_fix,
+)
 
 _MAX_BYTES = 24 * 1024  # Complete document only; refuse instead of truncating.
 _MAX_CHANGED_LINES = 3
@@ -309,7 +311,10 @@ async def review_complete_config(
             # A model can modify an unrelated line, which must stay rejected.
             # Instead independently reconstruct one *measured* syntax token.
             # Never relax the model's drift guard or reuse its rejected bytes.
-            deterministic = deterministic_json_syntax_fix(source)
+            deterministic = (
+                deterministic_json_syntax_fix(source)
+                or deterministic_json_punctuation_fix(source)
+            )
             if deterministic is not None:
                 verified_preview = _candidate_preview(
                     source, deterministic, diagnostic_line=diagnostic_line,
