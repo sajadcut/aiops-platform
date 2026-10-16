@@ -3857,7 +3857,9 @@
             String(value.service_recovery_status||'نامشخص')):'';
       notify((fa?(kind==='validate'?'نتیجه اعتبارسنجی: ':'نتیجه درخواست: '):
                        'Configuration workflow: ')+
-             (value.validation||value.status||'ثبت شد')+recoveryNote+incidentResolutionNote,
+             (value.validation||value.status||'ثبت شد')+recoveryNote+incidentResolutionNote+
+             (kind==='execute'&&value.success!==true&&value.message?
+               '؛ '+String(value.message).slice(0,550):''),
              kind==='execute'&&(value.success!==true||
                (scopedStart&&value.service_recovery_confirmed!==true)));
     }catch(e){notify(tr('failure')+' · '+e.message,true);}
