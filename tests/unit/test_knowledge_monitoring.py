@@ -166,19 +166,20 @@ def test_monitoring_endpoint_order_and_safe_ui_contract():
 
 
 def _monitoring_test_app():
-    """Exercise real HTTP query parsing while isolating the authorization gate."""
+    """Exercise HTTP query parsing without coupling to production router wiring.
+
+    Mount the production endpoint itself in an isolated test-only FastAPI app.
+    The actual RBAC-decorated router and route order are verified separately;
+    only this isolated transport test bypasses authentication.
+    """
     from fastapi import FastAPI
 
     app = FastAPI()
-    app.include_router(api.router, prefix="/api/v1")
-    route = next(
-        route for route in app.routes
-        if getattr(route, "path", "") == "/api/v1/knowledge-reviews/monitoring"
+    app.add_api_route(
+        "/api/v1/knowledge-reviews/monitoring",
+        api.knowledge_monitoring,
+        methods=["GET"],
     )
-    # Tests must not disable RBAC in production; override only on this
-    # disposable in-process test app, using the actual route dependency.
-    assert len(route.dependencies) == 1
-    app.dependency_overrides[route.dependencies[0].dependency] = lambda: None
     return app
 
 
