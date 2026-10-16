@@ -95,6 +95,33 @@ def _value_tokens(text: str) -> str:
     return "".join(parts)
 
 
+def _is_exact_json_key_quote_fix(original: str, corrected: str) -> bool:
+    """Only accept inserting two quotes around one previously bare JSON key.
+
+    This never changes key bytes or values and requires independent Python
+    JSON parsing of the complete candidate. No general LLM text edits.
+    """
+    try:
+        json.loads(original)
+        return False
+    except json.JSONDecodeError as error:
+        if "property name" not in error.msg.lower():
+            return False
+        pos = error.pos
+    match = re.match(r"([A-Za-z_][A-Za-z0-9_.-]*)(\s*:)", original[pos:])
+    if not match:
+        return False
+    end = pos + len(match.group(1))
+    expected = original[:pos] + '"' + original[pos:end] + '"' + original[end:]
+    if corrected != expected:
+        return False
+    try:
+        json.loads(corrected)
+    except json.JSONDecodeError:
+        return False
+    return True
+
+
 def _candidate_preview(original: str, corrected: str, *, diagnostic_line: int | None = None) -> dict:
     """Check completeness and bounded drift; emit *metadata*, never file lines."""
     base = {"status": "llm_candidate_rejected", "candidate_hash": None,
@@ -124,7 +151,8 @@ def _candidate_preview(original: str, corrected: str, *, diagnostic_line: int | 
     for _, i1, i2, j1, j2 in differences:
         if any(_SENSITIVE.search(line) for line in before[i1:i2] + after[j1:j2]):
             return {**base, "rejection_reason": "candidate_changes_sensitive_line"}
-    if _value_tokens(original) != _value_tokens(corrected):
+    exact_json_key_quotes = _is_exact_json_key_quote_fix(original, corrected)
+    if not exact_json_key_quotes and _value_tokens(original) != _value_tokens(corrected):
         return {**base, "rejection_reason": "candidate_changes_configuration_values"}
     # Require genuinely small *syntactic* changes. Whitespace-only rewrites
     # cannot fix registered nginx/JSON/XML grammar errors and previously
@@ -145,8 +173,8 @@ def _candidate_preview(original: str, corrected: str, *, diagnostic_line: int | 
     # identical documents, blocking reindentation, line-ending conversion,
     # comment cleanup and unrelated formatting even when only one brace
     # fixes the vendor error.
-    if (re.sub(r"[{};,]", "", original) !=
-            re.sub(r"[{};,]", "", corrected)):
+    if not exact_json_key_quotes and (re.sub(r"[{};,]", "", original) !=
+                                      re.sub(r"[{};,]", "", corrected)):
         return {**base, "rejection_reason": "candidate_changes_unrelated_bytes"}
     # The compiler normally reports the *following* line when an earlier
     # brace or terminator is wrong. Permit only nearby changes.
@@ -210,6 +238,15 @@ async def review_complete_config(
     matched_line = re.search(r"(?:" + re.escape(path) + r":|\bline\s+)([1-9][0-9]{0,6})\b",
                              str(vendor_error), re.I)
     diagnostic_line = int(matched_line.group(1)) if matched_line else None
+    # .NET config_validate may have no registered vendor adapter even when
+    # the worker can reliably identify a JSON grammar error. Derive the
+    # location locally so the LLM is constrained to the actual broken line.
+    if path.lower().endswith(".json") and diagnostic_line is None:
+        try:
+            json.loads(source)
+        except json.JSONDecodeError as exc:
+            diagnostic_line = exc.lineno
+            vendor_error = f"JSON syntax error at line {exc.lineno}, column {exc.colno}: {exc.msg}"
     prompt = json.dumps({
         "service": str(service)[:100],
         "file_type": path.rsplit(".", 1)[-1].lower()[:16],
@@ -245,7 +282,7 @@ async def review_complete_config(
         response = await asyncio.wait_for(llm.generate(
             prompt, system_prompt=system, temperature=0, max_tokens=32768,
             stage="full_config_llm_repair", completion_repair_attempts=0,
-        ), timeout=75)
+        ), timeout=105)
         result["llm_received_complete_file"] = True
         if str(getattr(response, "finish_reason", "") or "").lower() in {"length", "max_tokens"}:
             return {**result, "status": "llm_response_truncated"}
@@ -271,6 +308,9 @@ async def review_complete_config(
                     "candidate_stored": False, "storage_reason": str(exc),
                     "validation_profile": profile}
         return {**result, **preview, **sealed, "validation_profile": profile}
+    except (asyncio.TimeoutError, TimeoutError):
+        # Never expose the gateway response or complete config in audit.
+        return {**result, "status": "llm_repair_timeout"}
     except Exception:
         # Never log an exception message: gateways may accidentally echo input.
         return {**result, "status": "llm_repair_unavailable"}
