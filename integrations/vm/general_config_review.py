@@ -194,14 +194,18 @@ def local_config_review(encoded: str, *, path: str, validator_error_line: int | 
                 if punctuation is not None:
                     # Strictly one byte inserted/deleted, complete JSON parses.
                     # All unchanged keys and values retain their exact bytes.
-                    from difflib import SequenceMatcher
-                    operations = [op for op in SequenceMatcher(
-                        None, source, punctuation, autojunk=False,
-                    ).get_opcodes() if op[0] != "equal"]
-                    if (len(operations) == 1
-                            and max(operations[0][2] - operations[0][1],
-                                    operations[0][4] - operations[0][3]) == 1):
-                        position = operations[0][1]
+                    position = next(
+                        (i for i, (a, b) in enumerate(zip(source, punctuation))
+                         if a != b), min(len(source), len(punctuation)),
+                    )
+                    single_byte = (
+                        len(punctuation) == len(source) + 1
+                        and punctuation[:position] + punctuation[position + 1:] == source
+                    ) or (
+                        len(source) == len(punctuation) + 1
+                        and source[:position] + source[position + 1:] == punctuation
+                    )
+                    if single_byte:
                         line_no = source[:position].count("\n") + 1
                         answer.update({
                             "status": "candidate_proposed",
