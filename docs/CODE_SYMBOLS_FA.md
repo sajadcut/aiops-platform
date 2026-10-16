@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 543 | Dashboard JS files scanned: 8 | Symbols indexed: 5921**
+**Python files scanned: 543 | Dashboard JS files scanned: 8 | Symbols indexed: 5925**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -3694,27 +3694,31 @@
 | `tests/unit/test_config_repair_recovery.py` | `test_start_once_after_approved_repair_and_verify_fresh_systemd.Edge` | 63 | class | کلاس | test_start_once_after_approved_repair_and_verify_fresh_systemd |
 | `tests/unit/test_config_repair_recovery.py` | `test_start_once_after_approved_repair_and_verify_fresh_systemd.Edge.service_status` | 64 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_start_once_after_approved_repair_and_verify_fresh_systemd.Edge |
 | `tests/unit/test_config_repair_recovery.py` | `test_start_once_after_approved_repair_and_verify_fresh_systemd.Edge.start_service` | 70 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_start_once_after_approved_repair_and_verify_fresh_systemd.Edge |
-| `tests/unit/test_config_repair_recovery.py` | `test_no_unnecessary_start_when_service_is_already_running` | 81 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_config_repair_recovery.py` | `test_no_unnecessary_start_when_service_is_already_running.Edge` | 82 | class | کلاس | test_no_unnecessary_start_when_service_is_already_running |
-| `tests/unit/test_config_repair_recovery.py` | `test_no_unnecessary_start_when_service_is_already_running.Edge.service_status` | 83 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_no_unnecessary_start_when_service_is_already_running.Edge |
-| `tests/unit/test_config_repair_recovery.py` | `test_no_unnecessary_start_when_service_is_already_running.Edge.start_service` | 86 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_no_unnecessary_start_when_service_is_already_running.Edge |
-| `tests/unit/test_config_repair_recovery.py` | `test_failed_preflight_or_start_never_fakes_recovery` | 95 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_config_repair_recovery.py` | `test_failed_preflight_or_start_never_fakes_recovery.Edge` | 96 | class | کلاس | test_failed_preflight_or_start_never_fakes_recovery |
-| `tests/unit/test_config_repair_recovery.py` | `test_failed_preflight_or_start_never_fakes_recovery.Edge.service_status` | 97 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_failed_preflight_or_start_never_fakes_recovery.Edge |
-| `tests/unit/test_config_repair_recovery.py` | `test_failed_preflight_or_start_never_fakes_recovery.Edge.start_service` | 100 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_failed_preflight_or_start_never_fakes_recovery.Edge |
-| `tests/unit/test_config_repair_recovery.py` | `test_unknown_state_never_starts` | 110 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_config_repair_recovery.py` | `test_unknown_state_never_starts.Edge` | 111 | class | کلاس | test_unknown_state_never_starts |
-| `tests/unit/test_config_repair_recovery.py` | `test_unknown_state_never_starts.Edge.service_status` | 112 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_unknown_state_never_starts.Edge |
-| `tests/unit/test_config_repair_recovery.py` | `test_unknown_state_never_starts.Edge.start_service` | 115 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_unknown_state_never_starts.Edge |
-| `tests/unit/test_config_repair_recovery.py` | `test_approved_recovery_scope_is_immutable_in_intent_digest` | 123 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_config_repair_recovery.py` | `test_systemd_active_exited_is_not_verified_service_recovery` | 157 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_config_repair_recovery.py` | `test_systemd_active_exited_is_not_verified_service_recovery.Edge` | 159 | class | کلاس | test_systemd_active_exited_is_not_verified_service_recovery |
-| `tests/unit/test_config_repair_recovery.py` | `test_systemd_active_exited_is_not_verified_service_recovery.Edge.service_status` | 160 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_systemd_active_exited_is_not_verified_service_recovery.Edge |
-| `tests/unit/test_config_repair_recovery.py` | `test_systemd_active_exited_is_not_verified_service_recovery.Edge.start_service` | 164 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_systemd_active_exited_is_not_verified_service_recovery.Edge |
-| `tests/unit/test_config_repair_recovery.py` | `test_successful_systemctl_start_but_active_exited_is_not_recovery` | 175 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_config_repair_recovery.py` | `test_successful_systemctl_start_but_active_exited_is_not_recovery.Edge` | 177 | class | کلاس | test_successful_systemctl_start_but_active_exited_is_not_recovery |
-| `tests/unit/test_config_repair_recovery.py` | `test_successful_systemctl_start_but_active_exited_is_not_recovery.Edge.service_status` | 178 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_successful_systemctl_start_but_active_exited_is_not_recovery.Edge |
-| `tests/unit/test_config_repair_recovery.py` | `test_successful_systemctl_start_but_active_exited_is_not_recovery.Edge.start_service` | 185 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_successful_systemctl_start_but_active_exited_is_not_recovery.Edge |
+| `tests/unit/test_config_repair_recovery.py` | `test_systemd_running_with_unknown_app_health_is_successfully_started` | 81 | async function | MCP service_status sets healthy=None when no health profile exists. | module |
+| `tests/unit/test_config_repair_recovery.py` | `test_systemd_running_with_unknown_app_health_is_successfully_started.Edge` | 84 | class | کلاس | test_systemd_running_with_unknown_app_health_is_successfully_started |
+| `tests/unit/test_config_repair_recovery.py` | `test_systemd_running_with_unknown_app_health_is_successfully_started.Edge.service_status` | 85 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_systemd_running_with_unknown_app_health_is_successfully_started.Edge |
+| `tests/unit/test_config_repair_recovery.py` | `test_systemd_running_with_unknown_app_health_is_successfully_started.Edge.start_service` | 94 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_systemd_running_with_unknown_app_health_is_successfully_started.Edge |
+| `tests/unit/test_config_repair_recovery.py` | `test_no_unnecessary_start_when_service_is_already_running` | 107 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_config_repair_recovery.py` | `test_no_unnecessary_start_when_service_is_already_running.Edge` | 108 | class | کلاس | test_no_unnecessary_start_when_service_is_already_running |
+| `tests/unit/test_config_repair_recovery.py` | `test_no_unnecessary_start_when_service_is_already_running.Edge.service_status` | 109 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_no_unnecessary_start_when_service_is_already_running.Edge |
+| `tests/unit/test_config_repair_recovery.py` | `test_no_unnecessary_start_when_service_is_already_running.Edge.start_service` | 112 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_no_unnecessary_start_when_service_is_already_running.Edge |
+| `tests/unit/test_config_repair_recovery.py` | `test_failed_preflight_or_start_never_fakes_recovery` | 121 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_config_repair_recovery.py` | `test_failed_preflight_or_start_never_fakes_recovery.Edge` | 122 | class | کلاس | test_failed_preflight_or_start_never_fakes_recovery |
+| `tests/unit/test_config_repair_recovery.py` | `test_failed_preflight_or_start_never_fakes_recovery.Edge.service_status` | 123 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_failed_preflight_or_start_never_fakes_recovery.Edge |
+| `tests/unit/test_config_repair_recovery.py` | `test_failed_preflight_or_start_never_fakes_recovery.Edge.start_service` | 126 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_failed_preflight_or_start_never_fakes_recovery.Edge |
+| `tests/unit/test_config_repair_recovery.py` | `test_unknown_state_never_starts` | 136 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_config_repair_recovery.py` | `test_unknown_state_never_starts.Edge` | 137 | class | کلاس | test_unknown_state_never_starts |
+| `tests/unit/test_config_repair_recovery.py` | `test_unknown_state_never_starts.Edge.service_status` | 138 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_unknown_state_never_starts.Edge |
+| `tests/unit/test_config_repair_recovery.py` | `test_unknown_state_never_starts.Edge.start_service` | 141 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_unknown_state_never_starts.Edge |
+| `tests/unit/test_config_repair_recovery.py` | `test_approved_recovery_scope_is_immutable_in_intent_digest` | 149 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_config_repair_recovery.py` | `test_systemd_active_exited_is_not_verified_service_recovery` | 183 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_config_repair_recovery.py` | `test_systemd_active_exited_is_not_verified_service_recovery.Edge` | 185 | class | کلاس | test_systemd_active_exited_is_not_verified_service_recovery |
+| `tests/unit/test_config_repair_recovery.py` | `test_systemd_active_exited_is_not_verified_service_recovery.Edge.service_status` | 186 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_systemd_active_exited_is_not_verified_service_recovery.Edge |
+| `tests/unit/test_config_repair_recovery.py` | `test_systemd_active_exited_is_not_verified_service_recovery.Edge.start_service` | 190 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_systemd_active_exited_is_not_verified_service_recovery.Edge |
+| `tests/unit/test_config_repair_recovery.py` | `test_successful_systemctl_start_but_active_exited_is_not_recovery` | 201 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_config_repair_recovery.py` | `test_successful_systemctl_start_but_active_exited_is_not_recovery.Edge` | 203 | class | کلاس | test_successful_systemctl_start_but_active_exited_is_not_recovery |
+| `tests/unit/test_config_repair_recovery.py` | `test_successful_systemctl_start_but_active_exited_is_not_recovery.Edge.service_status` | 204 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_successful_systemctl_start_but_active_exited_is_not_recovery.Edge |
+| `tests/unit/test_config_repair_recovery.py` | `test_successful_systemctl_start_but_active_exited_is_not_recovery.Edge.start_service` | 211 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_successful_systemctl_start_but_active_exited_is_not_recovery.Edge |
 | `tests/unit/test_config_review_button_runtime.py` | `test_config_buttons_dispatch_mcp_read_without_execution_and_refresh_report` | 11 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_config_signing_prerequisite.py` | `_report` | 14 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_config_signing_prerequisite.py` | `_valid` | 28 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
