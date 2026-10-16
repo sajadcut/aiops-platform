@@ -246,13 +246,38 @@ class CogniaClient:
             raise CogniaContractError("cognia_knowledge_base_identity_or_activity_invalid")
         return payload
 
-    async def health_check(self) -> bool:
-        """Probe Cognia's documented readiness endpoint without exposing credentials."""
+    async def readiness_status(self) -> Dict[str, Any]:
+        """Probe the exact origin-root Cognia readiness route, without auth.
+
+        httpx appends leading-slash paths to a client's base_url path. With a
+        configured URL like https://cognia.example/api, a relative
+        '/health/ready' becomes '/api/health/ready'. An absolute URL tied to
+        the configured scheme/authority avoids that incorrect result. Do not
+        follow redirects or infer that readiness proves KB authorization.
+        """
+        endpoint = "/health/ready"
+        url = httpx.URL(self.base_url).copy_with(
+            path=endpoint, query=None, fragment=None,
+        )
         try:
-            response = await self._client.get("/health/ready")
-            return 200 <= response.status_code < 300
-        except (httpx.TimeoutException, httpx.TransportError):
-            return False
+            response = await self._client.get(url, follow_redirects=False)
+        except (httpx.TimeoutException, httpx.TransportError) as exc:
+            return {
+                "healthy": False, "endpoint": endpoint, "http_status": None,
+                "error": "timeout" if isinstance(exc, httpx.TimeoutException)
+                else "transport_unavailable",
+            }
+        healthy = response.status_code == 200
+        return {
+            "healthy": healthy, "endpoint": endpoint,
+            "http_status": response.status_code,
+            **({"error": "redirect_rejected" if 300 <= response.status_code < 400
+                 else "unexpected_http_status"} if not healthy else {}),
+        }
+
+    async def health_check(self) -> bool:
+        """Boolean-compatible readiness check for evidence collectors."""
+        return bool((await self.readiness_status())["healthy"])
 
     async def list_knowledge_bases(self) -> List[Dict[str, Any]]:
         payload = await self._authorized_json("GET", "/api/engine/knowledge-bases")

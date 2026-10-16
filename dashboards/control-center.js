@@ -277,7 +277,13 @@ function dependencyEntries() {
   if (Object.prototype.hasOwnProperty.call(ext, 'vm_mcp')) rows.push({name: 'VM Edge MCP', healthy: ext.vm_mcp?.healthy, kind: 'mcp-write', meta: 'پایش ماشین مجازی و بازیابی تحت نظارت'});
   if (Object.prototype.hasOwnProperty.call(ext, 'kubernetes_mcp')) rows.push({name: 'Kubernetes MCP', healthy: ext.kubernetes_mcp?.healthy, kind: 'mcp-write', meta: 'اتصال اختیاری Kubernetes'});
   if (Object.prototype.hasOwnProperty.call(ext, 'jenkins_mcp')) rows.push({name: 'Jenkins MCP', healthy: ext.jenkins_mcp?.healthy, kind: 'mcp-write', meta: 'اتصال اختیاری فرایند انتشار'});
-  if (Object.prototype.hasOwnProperty.call(ext, 'cognia')) rows.push({name: 'Cognia Knowledge', healthy: ext.cognia?.healthy, kind: 'knowledge', meta: ext.cognia?.configured === false ? 'پیکربندی نشده' : 'رابط دانش با کنترل دسترسی'});
+  if (Object.prototype.hasOwnProperty.call(ext, 'cognia')) {
+    const c = ext.cognia || {};
+    const httpStatus = Number.isInteger(c.http_status) ? ' · HTTP '+c.http_status : '';
+    rows.push({name: 'Cognia Knowledge', healthy: c.healthy, kind: 'knowledge',
+      meta: c.configured === false ? 'پیکربندی نشده · /health/ready' :
+        'بررسی آمادگی Cognia · /health/ready'+httpStatus});
+  }
   return rows;
 }
 
@@ -563,10 +569,10 @@ function renderMcp() {
   if (Object.prototype.hasOwnProperty.call(ext, 'vm_mcp')) defs.push(['VM Edge MCP', 'vm_mcp', 'پایش ماشین مجازی و اصلاح کنترل‌شدهٔ سرویس', 'مرز اجرا']);
   if (Object.prototype.hasOwnProperty.call(ext, 'kubernetes_mcp')) defs.push(['Kubernetes MCP', 'kubernetes_mcp', 'مرز اختیاری عملیات کوبرنتیز', 'مرز اجرا']);
   if (Object.prototype.hasOwnProperty.call(ext, 'jenkins_mcp')) defs.push(['Jenkins MCP', 'jenkins_mcp', 'مرز اختیاری انتشار تحت نظارت', 'مرز اجرا']);
-  if (Object.prototype.hasOwnProperty.call(ext, 'cognia')) defs.push(['Cognia Knowledge API', 'cognia', 'بازیابی دانش سازمانی تحت نظارت؛ ابزار عملیاتی MCP نیست', 'مرز دانش']);
+  if (Object.prototype.hasOwnProperty.call(ext, 'cognia')) defs.push(['Cognia Knowledge API', 'cognia', 'بررسی آمادگی سرویس از /health/ready؛ سلامت سرویس به معنی تأیید دسترسی پایگاه دانش نیست', 'مرز دانش']);
   $('#mcpGrid').innerHTML = defs.map(([name, key, desc, boundary]) => {
     const x = ext[key] || {};
-    return `<article class="panel mcp-card"><div class="mcp-card-head"><div class="mcp-icon">◇</div>${pill(x.healthy ? 'healthy' : x.configured === false ? 'not_configured' : 'unavailable')}</div><span class="section-kicker">${esc(boundary)}</span><h3>${esc(name)}</h3><p>${esc(desc)}</p><div class="mcp-status"><span>اتصال</span><strong>${x.healthy ? 'سالم' : 'در دسترس نیست'}</strong></div>${x.error ? `<div class="dependency-error">${esc(x.error)}</div>` : ''}</article>`;
+    return `<article class="panel mcp-card"><div class="mcp-card-head"><div class="mcp-icon">◇</div>${pill(x.healthy ? 'healthy' : x.configured === false ? 'not_configured' : 'unavailable')}</div><span class="section-kicker">${esc(boundary)}</span><h3>${esc(name)}</h3><p>${esc(desc)}</p><div class="mcp-status"><span>${key === 'cognia' ? 'آمادگی /health/ready' : 'اتصال'}</span><strong>${x.healthy ? 'سالم' : 'در دسترس نیست'}</strong></div>${key === 'cognia' && Number.isInteger(x.http_status) ? `<div class="mcp-status"><span>پاسخ HTTP</span><strong>${x.http_status}</strong></div>` : ''}${x.error ? `<div class="dependency-error">${esc(x.error)}</div>` : ''}</article>`;
   }).join('');
 }
 

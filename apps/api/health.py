@@ -89,14 +89,35 @@ async def _probe_one(name: str, client) -> tuple[str, dict]:
     if name != "cognia" and hasattr(client, "read_retry_attempts_override"):
         client.read_retry_attempts_override = 1
     try:
-        value = await asyncio.wait_for(client.health_check(), timeout=min(timeout, 30.0))
-        healthy = bool(value)
+        # Cognia returns a structured readiness status so that a /health/ready
+        # HTTP 500 is distinguishable from a failed transport and visible in
+        # the dashboard. All other connectors retain the boolean contract.
+        cognia_probe = getattr(client, "readiness_status", None) if name == "cognia" else None
+        if callable(cognia_probe):
+            value = await asyncio.wait_for(cognia_probe(), timeout=min(timeout, 30.0))
+            healthy = bool(value.get("healthy"))
+            result = {
+                "healthy": healthy,
+                "endpoint": "/health/ready",
+                "http_status": value.get("http_status"),
+            }
+            if value.get("error"):
+                result["error"] = str(value["error"])
+        else:
+            value = await asyncio.wait_for(client.health_check(), timeout=min(timeout, 30.0))
+            healthy = bool(value)
+            result = {"healthy": healthy}
+            if name == "cognia":
+                result["endpoint"] = "/health/ready"
         DEPENDENCY_UP.labels(dependency=name).set(1 if healthy else 0)
-        return name, {"healthy": healthy}
+        return name, result
     except Exception as exc:
         logger.warning("dependency_health_probe_failed", dependency=name, error_type=type(exc).__name__)
         DEPENDENCY_UP.labels(dependency=name).set(0)
-        return name, {"healthy": False, "error": type(exc).__name__}
+        return name, {
+            "healthy": False, "error": type(exc).__name__,
+            **({"endpoint": "/health/ready"} if name == "cognia" else {}),
+        }
     finally:
         await client.close()
 
@@ -118,10 +139,10 @@ async def _probe_external() -> dict:
         try:
             connectors["cognia"] = CogniaClient()
         except Exception as exc:
-            static["cognia"] = {"healthy": False, "configured": False, "error": type(exc).__name__}
+            static["cognia"] = {"healthy": False, "configured": False, "endpoint": "/health/ready", "error": type(exc).__name__}
             DEPENDENCY_UP.labels(dependency="cognia").set(0)
     else:
-        static["cognia"] = {"healthy": False, "configured": False, "error": "not_configured"}
+        static["cognia"] = {"healthy": False, "configured": False, "endpoint": "/health/ready", "error": "not_configured"}
         DEPENDENCY_UP.labels(dependency="cognia").set(0)
     pairs = await asyncio.gather(*(_probe_one(name, client) for name, client in connectors.items()))
     return {**dict(pairs), **static}

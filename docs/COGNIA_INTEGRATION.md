@@ -58,3 +58,22 @@ Before Cognia can be marked Production PASS, record evidence for: machine authen
 See [COGNIA_HANDOVER_ACCEPTANCE.md](COGNIA_HANDOVER_ACCEPTANCE.md) for the exact deployment identifiers and the read-only Cognia Machine Client / Knowledge Base / Search acceptance check.
 
 Run `python -m scripts.verify_cognia_connection` from the repository root after configuring the private environment. Empty Search results are not proof of network or authorization failure.
+
+
+
+## Readiness monitoring
+
+The AIOps dependency status for Cognia is derived exclusively from
+`GET /health/ready` on the **origin** of `COGNIA_BASE_URL`.
+Even if that configuration contains a path such as `/api`, the probe must
+request `https://<host>/health/ready` rather than
+`https://<host>/api/health/ready`. HTTP **200** is healthy. Other HTTP
+statuses, redirects, transport errors, and timeouts are unhealthy and
+must not be reported as successful in `/api/v1/health`,
+`/api/v1/health/ready`, or the AIOps dashboard. The dependency result
+includes `endpoint` and, if available, `http_status` for diagnosis.
+
+A successful readiness probe confirms only Cognia service readiness.
+It does **not** confirm Machine Client credentials, Knowledge Base grants,
+searchability, indexing, or permission to publish; those remain separate
+authenticated acceptance checks.

@@ -442,3 +442,73 @@ async def test_machine_token_redirect_is_rejected_without_replaying_credentials(
     assert all(url.startswith("http://cognia.test/") for url in destinations)
     assert "redirected.example" not in str(caught.value)
     assert "private-test-value" not in str(caught.value)
+
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("base_url", [
+    "http://cognia.test",
+    "http://cognia.test/api",
+    "http://cognia.test/api/engine/",
+    "http://cognia.test/api/health/ready?unwanted=1",
+])
+async def test_readiness_always_targets_origin_root_and_never_sends_credentials(base_url):
+    destinations = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        destinations.append(str(request.url))
+        assert request.method == "GET"
+        assert request.url.path == "/health/ready"
+        assert request.url.query == b""
+        assert "authorization" not in request.headers
+        return httpx.Response(200, json={"status": "ready"})
+
+    async with CogniaClient(
+        base_url=base_url,
+        client_id="secret-client-id", client_secret="secret-client-secret",
+        transport=httpx.MockTransport(handler),
+    ) as client:
+        status = await client.readiness_status()
+        assert status == {
+            "healthy": True, "endpoint": "/health/ready", "http_status": 200,
+        }
+        assert await client.health_check() is True
+    assert destinations == ["http://cognia.test/health/ready"] * 2
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("status_code", [301, 302, 404, 500, 503])
+async def test_cognia_readiness_rejects_non_200_and_does_not_follow_redirects(status_code):
+    calls = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        calls.append(request.url.path)
+        return httpx.Response(status_code, headers={"Location": "https://other.test/private"})
+
+    async with CogniaClient(
+        base_url="http://cognia.test/api", client_id="client", client_secret="secret",
+        transport=httpx.MockTransport(handler),
+    ) as client:
+        status = await client.readiness_status()
+        assert status["healthy"] is False
+        assert status["endpoint"] == "/health/ready"
+        assert status["http_status"] == status_code
+        assert status["error"] == (
+            "redirect_rejected" if status_code in (301, 302) else "unexpected_http_status"
+        )
+    assert calls == ["/health/ready"]
+
+
+@pytest.mark.asyncio
+async def test_cognia_readiness_timeout_is_not_falsely_reported_as_healthy():
+    def handler(request: httpx.Request) -> httpx.Response:
+        raise httpx.ConnectTimeout("probe timed out")
+
+    async with CogniaClient(
+        base_url="https://cognia.test/api", transport=httpx.MockTransport(handler),
+    ) as client:
+        status = await client.readiness_status()
+    assert status == {
+        "healthy": False, "endpoint": "/health/ready",
+        "http_status": None, "error": "timeout",
+    }
