@@ -219,7 +219,34 @@ def local_config_review(encoded: str, *, path: str, validator_error_line: int | 
                     if single_byte or duplicate_brace_pair:
                         updated = punctuation
                         line_no = source[:position].count("\n") + 1
+                        # Two separated brace removals must show TWO redacted
+                        # changes before a human can consent to the exact
+                        # hash-bound patch. No key/value bytes are exposed.
+                        redacted_changes = []
+                        if duplicate_brace_pair:
+                            old_at = new_at = 0
+                            removed = []
+                            while old_at < len(source):
+                                if (new_at < len(punctuation)
+                                        and source[old_at] == punctuation[new_at]):
+                                    old_at += 1
+                                    new_at += 1
+                                elif source[old_at] in "{}" and len(removed) < 2:
+                                    removed.append((source[:old_at].count("\n") + 1,
+                                                    source[old_at]))
+                                    old_at += 1
+                                else:
+                                    removed = []
+                                    break
+                            if len(removed) == 2:
+                                redacted_changes = [{
+                                    "line": row_line,
+                                    "before": ("json_extra_opening_brace" if token == "{"
+                                               else "json_extra_closing_brace"),
+                                    "after": "json_extra_brace_removed",
+                                } for row_line, token in removed]
                         answer.update({
+                            "redacted_changes": redacted_changes,
                             "status": "candidate_proposed",
                             "candidate_hash": hashlib.sha256(punctuation.encode("utf-8")).hexdigest(),
                             "proposed_change": "repair_json_punctuation",
