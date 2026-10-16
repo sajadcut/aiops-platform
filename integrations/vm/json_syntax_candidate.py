@@ -121,3 +121,63 @@ def deterministic_json_punctuation_fix(source: str) -> str | None:
             else:
                 matches.add(candidate)
     return next(iter(matches)) if len(matches) == 1 else None
+
+
+def deterministic_json_duplicate_brace_fix(source: str) -> str | None:
+    """Delete exactly one superfluous opening and closing brace.
+
+    Models sometimes produce no parseable plan for "{{ ... }}" typos. Only
+    attempt this unambiguous two-byte repair after a measured JSON failure.
+    All non-brace bytes (including secrets, names and whitespace) stay intact;
+    no remote file is written. Multiple valid candidates fail closed.
+    """
+    if not isinstance(source, str) or not 1 <= len(source) <= 65536 or "\x00" in source:
+        return None
+    try:
+        json.loads(source)
+        return None
+    except json.JSONDecodeError as error:
+        pos, error_line = error.pos, error.lineno
+    # Preserve strings verbatim. Never delete a brace in a quoted value.
+    outside = []
+    quoted = escaped = False
+    for ch in source:
+        outside.append(not quoted)
+        if quoted:
+            if escaped:
+                escaped = False
+            elif ch == "\\":
+                escaped = True
+            elif ch == '"':
+                quoted = False
+        elif ch == '"':
+            quoted = True
+    # The duplicate opener must be on the measured error line or the
+    # immediately preceding line; matched closer can be further down.
+    openers = [
+        i for i in range(max(0, pos - 180), min(len(source) - 1, pos + 100))
+        if source[i:i + 2] == "{{" and outside[i] and outside[i + 1]
+        and abs(source.count("\n", 0, i) + 1 - error_line) <= 2
+    ]
+    if not openers:
+        return None
+    matches = set()
+    for left in openers[:8]:
+        # A double closer is the symmetrical, grammar-only counterpart.
+        # Limit scope to the next 30 lines to avoid editing other objects.
+        end = min(len(source) - 1, left + 4096)
+        for right in range(left + 2, end):
+            if (source[right:right + 2] != "}}" or not outside[right]
+                    or not outside[right + 1]
+                    or source.count("\n", left, right) > 30):
+                continue
+            candidate = (source[:left] + source[left + 1:right]
+                         + source[right + 1:])
+            try:
+                json.loads(candidate)
+            except json.JSONDecodeError:
+                continue
+            matches.add(candidate)
+            if len(matches) > 1:
+                return None
+    return next(iter(matches)) if len(matches) == 1 else None
