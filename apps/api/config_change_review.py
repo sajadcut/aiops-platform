@@ -119,6 +119,38 @@ def _approval_for_proposal(approval: dict, proposal: dict) -> bool:
             and meta.get("config_file") == proposal.get("config_file"))
 
 
+def _last_config_apply_result(approval: dict, events: list[dict]) -> dict | None:
+    """Durable, narrowly bound apply result for the Incident Room.
+
+    A workflow Decision Brief is an analysis-time snapshot. A configuration
+    apply is a separate one-shot execution and lives in the audit stream.
+    Present only outcome metadata for this exact approval; do not infer
+    that systemd/HTTP or the incident have recovered.
+    """
+    approval_id = str(approval.get("approval_id") or "")
+    for event in events:
+        if (event.get("event_type") != "configuration_change_transition"
+                or event.get("status") not in {
+                    "applied_config_vendor_verified", "config_execution_not_verified",
+                }):
+            continue
+        meta = event.get("metadata") or {}
+        if not isinstance(meta, dict) or str(meta.get("approval_id") or "") != approval_id:
+            continue
+        return {
+            "approval_id": approval_id,
+            "status": str(event.get("status")),
+            "config_apply_verified": event.get("status") == "applied_config_vendor_verified",
+            "service_recovery_confirmed": meta.get("service_recovery_confirmed") is True,
+            "service_start_attempted": meta.get("service_start_attempted") is True,
+            "service_recovery_status": str(meta.get("service_recovery_status") or "not_verified")[:80],
+            "production_write_performed": meta.get("production_write_performed") is True,
+            "rollback_status": str(meta.get("rollback_status") or "unverified")[:80],
+            "observed_at": str(event.get("created_at") or ""),
+        }
+    return None
+
+
 def _consumed_failure_reissuable(approval: dict | None, audits: list[dict]) -> bool:
     """Require a failed/nonverified terminal audit, never revive old authority.
 
@@ -252,6 +284,7 @@ async def get_config_review_response(
                 approval=approval,
             )
             response["retry_eligible"] = _consumed_failure_reissuable(approval, events)
+            response["last_execution"] = _last_config_apply_result(approval, events)
             return response
     for event in events:
         if event.get("event_type") != "config_change_review_response":
