@@ -408,3 +408,60 @@ No configuration file is automatically changed when the model responds.
   namespace/mount isolation, post-apply behavior, rollback and monitoring
   reconciliation are REAL ENV REQUIRED.** Do not claim Production PASS
   from mocks or an HTTP 200 alone.
+
+
+## Incident 0ae1959c: MCP timeout during .NET config repair (2026-10-16)
+
+**Observed, not inferred:** The approval for `gfpapi` at `10.248.16.82`
+(`8604c5dd-74a0-4823-9367-403af2b3a469`) passed isolated JSON
+validation and was approved, but the `config_change_apply` MCP call reached
+its generic 20-second HTTP read timeout while the worker was still running the
+SSH staging/guard. The worker subsequently logged `BrokenPipeError`.
+The API reported `mcp_apply_failed_or_unavailable`, no verified write and
+no verified recovery. A later live check still found invalid JSON at
+`/data/gfp/gfpapi/appsettings.json`, line 9 column 16. The service was
+`activating (auto-restart)` with hundreds of restarts. Its signed ticket had
+`start_service_after_apply=false`, so the VM was not authorized to start it.
+
+The full-file workflow now has a single bounded 180-second MCP attempt for
+`config_change_validate` and `config_change_apply`, a 60-second SSH
+execution deadline **only** for the fixed `/bin/sh -s -- validate/apply`
+guard (not arbitrary shell commands), and a 200-second automatic read-only
+prevalidation deadline. These numbers are separate from the regular SSH
+connection timeout. Write operations are never retried on transport failure.
+
+A verified systemd `activating/auto-restart` crash loop with `MainPID=0`
+and multiple recorded restarts can now be covered by a NEW approval for a
+Start after a successful, postvalidated config repair. That scope is signed
+and immutable, requires an additional fresh MCP check when requested manually,
+and never upgrades an earlier consumed ticket. Start success alone does not
+prove application health or authoritative Zabbix recovery.
+
+**Repair after an already-consumed nonverified Approval:** No old execution
+grant may be reopened or replayed. The migration
+`p3q4r5s6t7u8_config_retry_after_terminal.py` retains uniqueness for active
+config requests but allows a separate ticket after a consumed terminal one.
+The incident UI offers a new request only when the exact consumed approval has
+a matching `config_execution_not_verified` audit without a proven write.
+That new ticket must independently revalidate the *current* original file hash
+and candidate before becoming approvable, and needs fresh human approval.
+If the prior worker actually wrote the candidate during a lost response,
+live source-CAS prevents the stale original hash from being used again.
+
+Operator steps after deploying/migrating:
+1. Open the incident, refresh its service status and config evidence, and
+   inspect whether the live original file remains invalid/unchanged.
+2. If the exact previous Approval was consumed with an audited nonverified
+   apply, choose **Request NEW Approval after failed apply**.
+3. Check that Start-after-apply scope is included if the service is still
+   down/in a crash loop; the API verifies the live binding independently.
+4. Await fresh isolated validation, review the diff, grant the new approval,
+   then explicitly execute it. Finally check stable systemd status and the
+   original monitoring alert; never claim recovery from a successful file
+   syntax test alone.
+
+**Environment caveat:** The recorded approval carried an environment
+label of `development` while the Zabbix signal was marked `production`.
+This did not trigger the observed MCP transport failure, but operators should
+review the asset catalog/environment mapping before any further production
+write.
