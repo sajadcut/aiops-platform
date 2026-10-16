@@ -414,9 +414,10 @@
     const headers={'Accept':'application/json', ...(state.key ? {'X-API-Key':state.key}:{}),...(options.headers||{})};
     const response=await fetch(path,{...options,headers,credentials:'same-origin'});
     if(!response.ok){
-      let detail='',code='';
+      let detail='',code='',responseDetail=null;
       try {
         const body=await response.json();
+        responseDetail=body?.detail&&typeof body.detail==='object'?body.detail:null;
         code=body?.detail?.code||body?.error?.code||'';
         detail=typeof body.detail==='string'?body.detail:JSON.stringify(body.detail||'');
       }catch(_){}
@@ -425,7 +426,9 @@
           'نسخه دیتابیس قدیمی است و عملیات به‌صورت ایمن متوقف شده. مدیر سیستم باید پس از بکاپ، Alembic migration را اجرا کند.':
           'Database schema is behind the application. Operations are safely blocked; a DBA must back up and apply Alembic migrations.') :
         response.status+' '+(detail||response.statusText);
-      const e=new Error(message);e.status=response.status;e.code=code;throw e;
+      const e=new Error(message);e.status=response.status;e.code=code;
+      e.detail=responseDetail;
+      throw e;
     }
     return response.json();
   }
@@ -2687,11 +2690,60 @@
     }
     return html;
   }
+  // 409 is an intentional execution guard, not a server outage. Only a
+  // live, identity-matched systemd 'active' observation gets this label.
+  // Never describe active systemd as proven application/HTTP recovery.
+  function recoveryApprovalFailure(error) {
+    const detail=error?.detail||{};
+    const recognized=error?.status===409&&
+      (error?.code||detail.code)==='recovery_live_binding_or_state_changed';
+    if(recognized&&detail.reason_code==='service_active_before_approval'&&
+       detail.observed_state==='active'){
+      return {status:'state_changed_active',reason_code:detail.reason_code,
+        observed_state:'active',expected_state:detail.expected_state||'failed',
+        execution_authority:false,application_health_verified:false};
+    }
+    if(recognized)return {status:'blocked',reason_code:
+      ['live_identity_unverified','service_state_changed'].includes(detail.reason_code)?
+        detail.reason_code:'live_preflight_not_matching',
+      execution_authority:false};
+    if(error?.status===403)return {status:'permission_required',reason_code:'permission_required',
+      execution_authority:false};
+    return {status:'blocked',reason_code:error?.code||
+      (error?.status===409?'recovery_approval_conflict':'recovery_queue_failed'),
+      execution_authority:false};
+  }
+  function recoveryApprovalStatusLabel(approval,fa) {
+    if(approval?.status==='state_changed_active')return fa?
+      'سرویس اکنون از دید systemd فعال است؛ درخواست Restart به دلیل تغییر وضعیت ثبت نشد.':
+      'The service is now active in systemd; Restart approval was not queued because its state changed.';
+    if(approval?.status==='blocked')return fa?
+      'ایجاد Approval مسدود شد؛ بررسی زنده با وضعیت یا هویت ثبت‌شده مطابقت ندارد.':
+      'Approval was blocked: live target identity or service state did not match.';
+    if(approval?.status==='permission_required')return fa?
+      'دسترسی لازم برای ایجاد درخواست Approval وجود ندارد.':
+      'You do not have permission to queue this Approval.';
+    return '';
+  }
+  function recoveryApprovalSafetyNote(fa) {
+    return fa?
+      'فعال بودن systemd اثبات سلامت HTTP/API یا رفع آلارم Zabbix نیست. ابتدا وضعیت برنامه را به‌صورت Read-only بررسی کنید؛ Restart خودکار یا مجوز اجرا صادر نشده است.':
+      'An active systemd unit does not prove API/HTTP health or Zabbix recovery. Recheck application health read-only; no restart or execution authority was issued.';
+  }
+
   async function loadRecoveryApproval(token) {
     if(state.historic||!state.report?.recovery_advisory?.suggested_action)return;
     try{
       let approval=await api(base+'/recovery-approval');
       if(token!==state.loadingToken||state.historic)return;
+      // A GET returning not_requested must not erase a prior, definitive
+      // 409 status from this page load; otherwise the operator sees
+      // "Loading Approval" forever while the queue attempt is suppressed.
+      if(approval.status==='not_requested'&&state.recoveryQueueAttempted&&
+         ['state_changed_active','blocked','permission_required'].includes(
+           state.recoveryApproval?.status)){
+        approval=state.recoveryApproval;
+      }
       state.recoveryApproval=approval;
       // Queue a guarded high-risk human Approval when AIOps generated a
       // live-evidence-bound Restart/Start recommendation. Never approve or
@@ -2704,8 +2756,8 @@
           if(token!==state.loadingToken||state.historic)return;
           state.recoveryApproval=approval;
         }catch(e){
-          state.recoveryApproval={status:e.status===403?'permission_required':'blocked',
-            reason:String(e.message||'recovery_queue_preflight_failed').slice(0,180)};
+          if(token!==state.loadingToken||state.historic)return;
+          state.recoveryApproval=recoveryApprovalFailure(e);
         }
       }
     }catch(e){
@@ -2829,13 +2881,17 @@
         esc(state.recoveryApproval?.status==='pending'?(fa?'منتظر تأیید شما':'Awaiting your approval'):
           state.recoveryApproval?.status==='approved'?(fa?'تأیید شده؛ هنوز اجرا نشده':'Approved; not executed'):
           state.recoveryApproval?.status==='permission_required'?(fa?'برای ثبت درخواست نقش SRE لازم است':'SRE permission required'):
-          state.recoveryApproval?.status==='blocked'?(fa?'ثبت درخواست مسدود؛ هویت و وضعیت سرویس دوباره بررسی شود':'Request blocked by live checks'):
+          ['blocked','state_changed_active'].includes(state.recoveryApproval?.status)?
+            recoveryApprovalStatusLabel(state.recoveryApproval,fa):
           state.recoveryApproval?.status==='consumed'?(fa?'مجوز مصرف شده؛ نتیجه اجرا را بررسی کنید':'Authorization consumed'):
           fa?'در حال بررسی/ثبت درخواست Approval':'Loading or queuing approval')+'</p>'+
         (state.recoveryApproval?.approval_id?
           '<p class="ic-meta">Approval ID: <code dir="ltr">'+txt(state.recoveryApproval.approval_id)+'</code></p>':'')+
-        (state.recoveryApproval?.reason?
-          '<p class="ic-diagnosis-caution">'+txt(state.recoveryApproval.reason)+'</p>':'')+
+        (state.recoveryApproval?.status==='state_changed_active'?
+          '<p class="ic-diagnosis-caution" role="status">'+
+            esc(recoveryApprovalSafetyNote(fa))+'</p>':'')+
+        (state.recoveryApproval?.reason_code&&state.recoveryApproval.status!=='state_changed_active'?
+          '<p class="ic-meta"><code>'+txt(state.recoveryApproval.reason_code)+'</code></p>':'')+
         (state.recoveryApproval?.status==='pending'?
           '<button type="button" class="ic-btn ic-btn-primary" data-recovery-approval="approve">'+
           esc(fa?'تأیید Restart (بدون اجرا)':'Approve restart (no execution)')+'</button> '+
@@ -3216,6 +3272,24 @@
       }
       show('#ic-action-checks','');
       show('#ic-action-controls',controls);
+      return;
+    }
+    if(!archived&&recoveryStatus==='state_changed_active'&&
+       !['pending','approved','pending_validation'].includes(statusValue)){
+      const fa=state.language==='fa';
+      show('#ic-action-state','<div class="ic-decision-status" role="status"><strong>'+
+        esc(recoveryApprovalStatusLabel(recoveryApproval,fa))+'</strong><p>'+
+        esc(recoveryApprovalSafetyNote(fa))+'</p>'+
+        '<p class="ic-meta"><code>409 · recovery_live_binding_or_state_changed</code></p>'+
+        '</div><div class="ic-mini-facts">'+
+        mini('action',fa?'Restart لغو شد':'Restart not queued')+
+        mini('target',r.recovery_advisory?.target)+
+        mini('service',r.recovery_advisory?.service)+
+        mini('approvalId',fa?'صادر نشده':'Not issued')+'</div>');
+      show('#ic-action-checks','');
+      show('#ic-action-controls','<p class="ic-agent-disclaimer">'+
+        esc(fa?'برای تصمیم جدید، ابتدا «بررسی مجدد وضعیت سرویس» را اجرا و نتیجه HTTP Health و Zabbix را بررسی کنید.':
+          'Run a new read-only service-status check, then verify HTTP health and the Zabbix recovery signal before making another decision.')+'</p>');
       return;
     }
     const configApproval=durable.metadata?.workflow==='config_change' &&
