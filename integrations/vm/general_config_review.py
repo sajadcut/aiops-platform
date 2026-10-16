@@ -189,6 +189,34 @@ def local_config_review(encoded: str, *, path: str, validator_error_line: int | 
                         },
                     })
             if answer["status"] != "candidate_proposed":
+                from integrations.vm.json_syntax_candidate import deterministic_json_punctuation_fix
+                punctuation = deterministic_json_punctuation_fix(source)
+                if punctuation is not None:
+                    # Strictly one byte inserted/deleted, complete JSON parses.
+                    # All unchanged keys and values retain their exact bytes.
+                    from difflib import SequenceMatcher
+                    operations = [op for op in SequenceMatcher(
+                        None, source, punctuation, autojunk=False,
+                    ).get_opcodes() if op[0] != "equal"]
+                    if (len(operations) == 1
+                            and max(operations[0][2] - operations[0][1],
+                                    operations[0][4] - operations[0][3]) == 1):
+                        position = operations[0][1]
+                        line_no = source[:position].count("\n") + 1
+                        answer.update({
+                            "status": "candidate_proposed",
+                            "candidate_hash": hashlib.sha256(punctuation.encode("utf-8")).hexdigest(),
+                            "proposed_change": "repair_json_punctuation",
+                            "validator_executed_on_proposal": True,
+                            "candidate_validator": "worker_python_json_syntax",
+                            "validation_status": "FORMAT_CANDIDATE_VALID_ONLY",
+                            "redacted_diff": {
+                                "line": line_no,
+                                "before": "json_invalid_punctuation",
+                                "after": "json_punctuation_repaired",
+                            },
+                        })
+            if answer["status"] != "candidate_proposed":
                 # Confirmed grammar error; do not mislead the operator with
                 # the generic "file_observed" status. This is an actionable
                 # investigation blocker, not a patch or an executable request.
