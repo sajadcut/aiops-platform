@@ -2663,7 +2663,25 @@
   }
 
   function configDiffGlyph(value) {
-    return String(value||'').replace(/[^{};=,#()[\]\s]/g,'x').slice(0,180);
+    // Trusted worker enum values describe grammar edits without exposing
+    // any property name, literal or secret. Unknown strings stay masked.
+    const labels={
+      remove_opening_brace:'حذف آکولاد باز اضافی {',
+      remove_closing_brace:'حذف آکولاد بسته اضافی }',
+      remove_opening_bracket:'حذف کروشه باز اضافی [',
+      remove_closing_bracket:'حذف کروشه بسته اضافی ]',
+      remove_comma:'حذف ویرگول اضافی ,',
+      remove_colon:'حذف دونقطه اضافی :',
+      insert_comma:'افزودن ویرگول لازم ,',
+      insert_colon:'افزودن دونقطه لازم :',
+      insert_closing_brace:'افزودن آکولاد بسته }',
+      insert_closing_bracket:'افزودن کروشه بسته ]',
+      quote_unquoted_key:'افزودن کوتیشن به نام ویژگی JSON',
+      json_syntax_repaired:'ساختار JSON اصلاح شد',
+    };
+    const key=String(value||'');
+    return Object.prototype.hasOwnProperty.call(labels,key)
+      ?labels[key]:key.replace(/[^{};=,#()[\]\s]/g,'x').slice(0,180);
   }
 
   function configDiffText(config={},full={}) {
