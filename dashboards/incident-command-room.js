@@ -1173,8 +1173,17 @@
     const analyzing=state.lifecycle?.analysis_in_progress===true;
     const stateChangedActive=!state.historic&&
       state.recoveryApproval?.status==='state_changed_active';
+    const recoveryApproved=!state.historic&&
+      state.recoveryApproval?.status==='approved'&&
+      UUID.test(String(state.recoveryApproval?.approval_id||''))&&
+      ['start_service','restart_service'].includes(state.recoveryApproval?.action);
+    const recoveryIsStart=state.recoveryApproval?.action==='start_service';
+    const recoveryVerb=recoveryIsStart?'Start':'Restart';
     const pulseTitle=resolved?
       (state.language==='fa'?'رخداد رفع شده است':'Incident resolved')
+      : recoveryApproved?
+        (state.language==='fa'?'مجوز '+recoveryVerb+' تأیید شده؛ هنوز اجرا نشده است':
+          recoveryVerb+' approved; execution pending')
       : analyzing
       ? (state.language==='fa'?'در حال بررسی و تحلیل':'Investigation in progress')
       : stateChangedActive?
@@ -1191,6 +1200,17 @@
           'وضعیت رفع رخداد در سامانه ثبت شده است. کارت وضعیت سرویس در بالا آخرین شواهد VM را جداگانه نمایش می‌دهد.':
           'Resolution was persisted. The service card separately shows the latest VM evidence.')+
         '</p>'
+      : recoveryApproved
+      ? '<small>'+esc(state.language==='fa'?'مجوز بازیابی آمادهٔ اجرا':'Approved recovery ready')+
+          '</small><strong>'+esc(pulseTitle)+'</strong><p>'+
+          esc(state.language==='fa'?
+            'تأیید مجوز به‌تنهایی سرویس را راه‌اندازی نمی‌کند. برای اجرای واقعی روی سرور، دکمهٔ زیر را بزنید. پیش از اجرا وضعیت زنده و کانفیگ دوباره بررسی می‌شود.':
+            'Approval alone does not start the service. Use the explicit action below; the server repeats live status and configuration checks.')+
+          '</p><p><code>'+txt(state.recoveryApproval.approval_id)+'</code></p>'+
+          '<button type="button" class="ic-btn ic-btn-danger" data-recovery-approval="execute"'+
+          (state.busy?' disabled':'')+'>'+
+          esc(state.language==='fa'?'اجرای واقعی '+recoveryVerb+' تأییدشده':
+            'Execute approved '+recoveryVerb)+'</button>'
       : stateChangedActive
       ? '<div role="alert" aria-live="polite" style="border:2px solid #d97706;border-radius:12px;padding:18px 20px;background:rgba(217,119,6,.09);margin:8px 0;">'+
           '<strong style="display:block;font-size:1.35rem;line-height:1.6;font-weight:800;">'+
@@ -2923,13 +2943,14 @@
     if(action==='approve'&&approval.status!=='pending')return;
     if(action==='execute'&&approval.status!=='approved')return;
     if(action==='reject'&&approval.status!=='pending')return;
+    const verb=approval.action==='start_service'?'Start':'Restart';
     const message=action==='approve'?
-      (fa?'Restart سرویس فقط تأیید می‌شود؛ هنوز اجرا نخواهد شد. موافق هستید؟':
-        'Authorize this restart? No action executes yet.'):
+      (fa?'مجوز '+verb+' سرویس فقط تأیید می‌شود؛ هنوز اجرا نخواهد شد. موافق هستید؟':
+        'Authorize '+verb+'? No action executes yet.'):
       action==='execute'?
-      (fa?'این عملیات واقعی Restart روی سرور است. Runbook پیش از اجرا مجدداً شرایط زنده را بررسی می‌کند. ادامه می‌دهید؟':
-        'This will really restart the service if the fresh runbook checks pass. Continue?'):
-      (fa?'درخواست Restart رد شود؟':'Reject this restart request?');
+      (fa?'این عملیات واقعی '+verb+' روی سرور است. Runbook پیش از اجرا مجدداً شرایط زنده را بررسی می‌کند. ادامه می‌دهید؟':
+        'This will actually '+verb+' the service if fresh runbook checks pass. Continue?'):
+      (fa?'درخواست '+verb+' رد شود؟':'Reject this '+verb+' request?');
     if(!confirm(message))return;
     let reason='';
     if(action==='reject'){
@@ -2945,9 +2966,9 @@
         {method:'POST'};
       const result=await api('/api/v1/approvals/'+encodeURIComponent(id)+'/'+suffix,options);
       state.recoveryApproval={...approval,status:String(result.status||'unknown')};
-      notify(fa?(action==='approve'?'مجوز ثبت شد؛ هنوز Restart اجرا نشده است.':
-        action==='reject'?'درخواست Restart رد شد.':
-        'اجرای Restart درخواست شد؛ نتیجه و Verification را بررسی کنید.'):
+      notify(fa?(action==='approve'?'مجوز ثبت شد؛ هنوز '+verb+' اجرا نشده است.':
+        action==='reject'?'درخواست '+verb+' رد شد.':
+        'اجرای '+verb+' درخواست شد؛ نتیجه و Verification را بررسی کنید.'):
         'The authorization state changed; check verification.');
       await load();
       if(action==='execute')await recheckServiceStatus();
@@ -3043,12 +3064,14 @@
           '<p class="ic-meta"><code>'+txt(state.recoveryApproval.reason_code)+'</code></p>':'')+
         (state.recoveryApproval?.status==='pending'?
           '<button type="button" class="ic-btn ic-btn-primary" data-recovery-approval="approve">'+
-          esc(fa?'تأیید Restart (بدون اجرا)':'Approve restart (no execution)')+'</button> '+
+          esc(fa?'تأیید '+(recovery.suggested_action==='start_service'?'Start':'Restart')+' (بدون اجرا)':
+            'Approve '+(recovery.suggested_action==='start_service'?'start':'restart')+' (no execution)')+'</button> '+
           '<button type="button" class="ic-btn ic-btn-muted" data-recovery-approval="reject">'+
           esc(fa?'رد درخواست':'Reject request')+'</button>':'')+
         (state.recoveryApproval?.status==='approved'?
           '<button type="button" class="ic-btn ic-btn-danger" data-recovery-approval="execute">'+
-          esc(fa?'اجرای واقعی پس از بررسی پیش‌شرط‌ها':'Execute after fresh preflight')+'</button>':'')+
+          esc(fa?'اجرای واقعی '+(recovery.suggested_action==='start_service'?'Start':'Restart')+' پس از بررسی پیش‌شرط‌ها':
+            'Execute '+(recovery.suggested_action==='start_service'?'start':'restart')+' after fresh preflight')+'</button>':'')+
         '<p class="ic-meta">'+esc(fa?
           'تأیید هیچ عملیاتی اجرا نمی‌کند. اجرای جداگانه همچنان به کنترل زنده Runbook و صحت کانفیگ وابسته است.':
           'Approval does not execute anything. Live runbook and config checks remain mandatory.')+'</p></div>':'')+
@@ -3400,8 +3423,8 @@
         (fa?'درخواست بازیابی در صف Approval؛ منتظر تأیید شماست':
           'Recovery request is waiting for your approval'):
         recoveryStatus==='approved'?
-        (fa?'Restart تأیید شده؛ هنوز اجرا نشده است':
-          'Restart authorized; not yet executed'):
+        (fa?recoveryLabel+' تأیید شده؛ هنوز اجرا نشده است':
+          recoveryLabel+' authorized; not yet executed'):
         recoveryStatus==='consumed'?
         (fa?'مجوز مصرف شده؛ نتیجه و راستی‌آزمایی را بررسی کنید':
           'Authorization consumed; inspect execution and verification'):
@@ -3420,12 +3443,12 @@
         'Approval does not run Restart; a separate execution action and a fresh live runbook pass are required.')+'</p>';
       if(recoveryStatus==='pending'){
         controls+='<button type="button" class="ic-btn ic-btn-primary" data-recovery-approval="approve">'+
-          esc(fa?'تأیید ری‌استارت — بدون اجرا':'Approve restart — no execution')+'</button> '+
+          esc(fa?'تأیید '+recoveryLabel+' — بدون اجرا':'Approve '+recoveryLabel+' — no execution')+'</button> '+
           '<button type="button" class="ic-btn ic-btn-muted" data-recovery-approval="reject">'+
           esc(fa?'رد درخواست':'Reject request')+'</button>';
       }else if(recoveryStatus==='approved'){
         controls+='<button type="button" class="ic-btn ic-btn-danger" data-recovery-approval="execute">'+
-          esc(fa?'اجرای Restart پس از بررسی زنده':'Execute restart after live preflight')+'</button>';
+          esc(fa?'اجرای '+recoveryLabel+' پس از بررسی زنده':'Execute '+recoveryLabel+' after live preflight')+'</button>';
       }
       show('#ic-action-checks','');
       show('#ic-action-controls',controls);
