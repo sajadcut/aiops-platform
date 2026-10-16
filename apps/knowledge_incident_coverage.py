@@ -80,13 +80,63 @@ def incident_coverage_document(
     return validated_document(title, "\n".join(body))
 
 
+async def _source_document(db, incident: Incident) -> tuple[str, str]:
+    evidence = (await db.execute(
+        select(Evidence).where(Evidence.incident_id == incident.id)
+        .order_by(Evidence.created_at.desc()).limit(12)
+    )).scalars().all()
+    findings = (await db.execute(
+        select(Finding).where(Finding.incident_id == incident.id)
+        .order_by(Finding.created_at.desc()).limit(6)
+    )).scalars().all()
+    dossier = await incident_dossier(db, incident.id)
+    return incident_coverage_document(
+        incident, evidence=evidence, findings=findings, dossier=dossier,
+    )
+
+
 async def create_from_incident(db, incident_id: UUID) -> tuple[KnowledgeReview | None, str]:
-    """Idempotent, concurrency-safe, does not mutate existing human work."""
+    """Stable ID. Refresh only untouched system drafts; preserve human decisions."""
     identifier = coverage_review_id(incident_id)
     await db.execute(text("SELECT pg_advisory_xact_lock(hashtext(:lock))"),
                      {"lock": f"knowledge:incident-coverage:{incident_id}"})
     existing = await db.get(KnowledgeReview, identifier)
     if existing is not None:
+        # The incident can later recover or fail after its first analysis.
+        # Update the pending, system-owned draft, but NEVER rewrite operator
+        # edits, approvals, rejects or previously published revisions.
+        pristine = (
+            existing.created_by == "system:incident-coverage"
+            and existing.review_reason == "incident_coverage:v1"
+            and existing.status == "pending_review"
+            and existing.reviewed_by is None
+            and existing.approved_hash is None
+            and existing.content_hash == content_digest(existing.title, existing.content)
+        )
+        if pristine:
+            source = await db.get(Incident, incident_id)
+            if source is not None:
+                title, content = await _source_document(db, source)
+                digest = content_digest(title, content)
+                if digest != existing.content_hash:
+                    existing.title, existing.content = title, content
+                    existing.content_hash = digest
+                    existing.revision += 1
+                    await db.execute(text("""
+                        INSERT INTO audit_events
+                          (event_id,event_type,actor,incident_id,action,status,metadata,created_at)
+                        VALUES (:event_id,'knowledge_evidence_refreshed',:actor,:incident_id,
+                          'refreshed','pending_review',CAST(:metadata AS jsonb),now())
+                    """), {
+                        "event_id": uuid4(), "actor": "system:incident-coverage",
+                        "incident_id": incident_id,
+                        "metadata": json.dumps({
+                            "review_id": str(identifier), "revision": existing.revision,
+                            "content_hash": digest, "source": "incident_coverage",
+                        }),
+                    })
+                    await db.commit()
+                    return existing, "updated"
         return existing, "existing"
     incident = await db.get(Incident, incident_id)
     if incident is None:
@@ -104,18 +154,7 @@ async def create_from_incident(db, incident_id: UUID) -> tuple[KnowledgeReview |
     app_id = int(settings.COGNIA_CLIENT_APPLICATION_ID or 0)
     if app_id <= 0:
         raise HTTPException(503, "cognia_client_application_id_not_configured")
-    evidence = (await db.execute(
-        select(Evidence).where(Evidence.incident_id == incident_id)
-        .order_by(Evidence.created_at.desc()).limit(12)
-    )).scalars().all()
-    findings = (await db.execute(
-        select(Finding).where(Finding.incident_id == incident_id)
-        .order_by(Finding.created_at.desc()).limit(6)
-    )).scalars().all()
-    dossier = await incident_dossier(db, incident_id)
-    title, content = incident_coverage_document(
-        incident, evidence=evidence, findings=findings, dossier=dossier,
-    )
+    title, content = await _source_document(db, incident)
     record = KnowledgeReview(
         id=identifier, incident_id=incident_id, memory_id=None,
         source_type="incident_followup", kb_id=kb_id,
