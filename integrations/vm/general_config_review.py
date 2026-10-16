@@ -98,7 +98,8 @@ def _remove_trailing_json_commas(source: str) -> str:
 
 
 def local_config_review(encoded: str, *, path: str, validator_error_line: int | None = None,
-                        vendor_service: str = "", vendor_error: str = "") -> dict:
+                        vendor_service: str = "", vendor_error: str = "",
+                        syntax_profile: str = "strict_json") -> dict:
     """Review a known config source and generate only a deterministic JSON fix."""
     checked_config_path(path)
     answer = {
@@ -130,7 +131,47 @@ def local_config_review(encoded: str, *, path: str, validator_error_line: int | 
     line_no = validator_error_line if type(validator_error_line) is int else None
     ext = answer["file_type"]
     error = None
-    if ext == "json":
+    if ext == "json" and syntax_profile == "dotnet_jsonc":
+        # .NET accepts JSONC comments and trailing commas, unlike json.loads.
+        # Normalize using the SAME vendor rules as dotnet_config_syntax,
+        # then generate a strict-JSON artifact which isolated jq can validate.
+        # The *original* bytes and hash remain bound to the approval ticket.
+        from integrations.vm.dotnet_local_validator import (
+            normalize_dotnet_json, _reject_constant, _reject_duplicate_keys,
+            DotnetJsonCommentError,
+        )
+        from integrations.vm.dotnet_json_repair import dotnet_json_repair
+        try:
+            normalized = normalize_dotnet_json(source)
+            json.loads(normalized, parse_constant=_reject_constant,
+                       object_pairs_hook=_reject_duplicate_keys)
+            answer["validation_status"] = "FORMAT_VALID"
+        except (json.JSONDecodeError, ValueError, DotnetJsonCommentError) as exc:
+            line_no = exc.lineno if isinstance(exc, json.JSONDecodeError) else line_no
+            answer["validation_status"] = "FORMAT_INVALID"
+            error = "dotnet_json_syntax_error"
+            verified = dotnet_json_repair(source)
+            if verified is not None:
+                updated, edits = verified
+                if len(edits) > 0:
+                    answer.update({
+                        "status": "candidate_proposed",
+                        "candidate_hash": hashlib.sha256(
+                            updated.encode("utf-8")).hexdigest(),
+                        "proposed_change": "repair_dotnet_json_syntax",
+                        "validator_executed_on_proposal": True,
+                        "candidate_validator": "worker_dotnet_jsonc_to_strict_json",
+                        "validation_status": "FORMAT_CANDIDATE_VALID_ONLY",
+                        "redacted_diff": edits[0],
+                        "redacted_changes": edits,
+                        "syntax_profile": "dotnet_jsonc",
+                        "normalizes_accepted_jsonc": source != normalize_dotnet_json(source),
+                    })
+            if answer["status"] != "candidate_proposed":
+                answer["status"] = "syntax_invalid_no_safe_candidate"
+                answer["repair_blocker"] = "dotnet_jsonc_normalized_parser_no_unique_candidate"
+                answer["recommended_next_action"] = "explicit_operator_full_file_repair"
+    elif ext == "json":
         try:
             json.loads(source)
             answer["validation_status"] = "FORMAT_VALID"
@@ -386,6 +427,7 @@ def local_config_review(encoded: str, *, path: str, validator_error_line: int | 
                 else "json_property_quoted" if answer["proposed_change"] == "quote_unquoted_json_key"
                 else "json_punctuation_repaired" if answer["proposed_change"] in {
                     "repair_json_punctuation", "repair_json_bounded_syntax",
+                    "repair_dotnet_json_syntax",
                 }
                 else "json_comma_removed"
             )}

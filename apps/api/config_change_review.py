@@ -57,7 +57,7 @@ def _hash(value: object) -> bool:
 _ALLOWED_CHANGES = frozenset({
     "remove_extra_opening_brace", "remove_trailing_json_comma",
     "quote_unquoted_json_key", "repair_json_punctuation",
-    "repair_json_bounded_syntax",
+    "repair_json_bounded_syntax", "repair_dotnet_json_syntax",
     "remove_extra_xml_closing_tag", "llm_full_file_repair",
 })
 
@@ -72,8 +72,11 @@ def _matching_proposal(proposal: dict, payload: ConfigReviewResponse) -> bool:
         and filename.endswith(".conf")
     ) or (
         change in {"remove_trailing_json_comma", "quote_unquoted_json_key",
-                   "repair_json_punctuation", "repair_json_bounded_syntax"}
+                   "repair_json_punctuation", "repair_json_bounded_syntax",
+                   "repair_dotnet_json_syntax"}
         and filename.endswith(".json")
+        and (change != "repair_dotnet_json_syntax"
+             or filename.endswith("/appsettings.json"))
     ) or (
         change == "remove_extra_xml_closing_tag" and filename.endswith(".xml")
     ) or (

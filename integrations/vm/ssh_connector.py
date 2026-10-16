@@ -1174,6 +1174,11 @@ class SSHVMConnector:
                 vendor_service=(service if path == validator.get("config_file")
                                 and validator.get("valid") is False else ""),
                 vendor_error=str(validator.get("syntax_error") or "")[:600],
+                syntax_profile=(
+                    "dotnet_jsonc" if str(discovered.get("runtime") or "").lower() == "dotnet"
+                    and path.rsplit("/", 1)[-1] == "appsettings.json"
+                    else "strict_json"
+                ),
             )
             reviewed_files.append({
                 "path": path, "path_source": path_source,

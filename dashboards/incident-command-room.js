@@ -2678,6 +2678,10 @@
       insert_closing_bracket:'افزودن کروشه بسته ]',
       quote_unquoted_key:'افزودن کوتیشن به نام ویژگی JSON',
       json_syntax_repaired:'ساختار JSON اصلاح شد',
+      dotnet_jsonc_comments_or_trailing_commas:'بازنویسی کامنت‌ها و ویرگول‌های انتهایی مجاز در .NET برای اعتبارسنجی مستقل',
+      strict_json_validator_compatible:'نسخه سازگار با JSON استاندارد و jq',
+      json_invalid_punctuation:'ساختار نامعتبر JSON',
+      json_punctuation_repaired:'ساختار JSON اصلاح شد',
     };
     const key=String(value||'');
     return Object.prototype.hasOwnProperty.call(labels,key)
