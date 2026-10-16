@@ -23,7 +23,7 @@ from integrations.vm.windows_secure_acl import (
 )
 
 _TTL_SECONDS = 24 * 3600
-_MAX_BYTES = 48 * 1024
+_MAX_BYTES = 64 * 1024
 _SHA = re.compile(r"[a-f0-9]{64}\Z")
 
 
