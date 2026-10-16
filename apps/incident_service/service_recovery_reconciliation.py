@@ -95,6 +95,19 @@ def local_recovery_decision(*, source: str, summary: str, service: str,
                 or observation.get("active_state") != "active"
                 or observation.get("sub_state") != "running"):
             return "service_not_stably_running"
+    # A Type=simple unit can briefly report Running between crashes.
+    # When available, preserve stable NRestarts and process identity across
+    # the TWO live observations required for independent incident resolution.
+    before_restarts = first.get("restart_count")
+    after_restarts = second.get("restart_count")
+    if (type(before_restarts) is int and type(after_restarts) is int
+            and after_restarts > before_restarts):
+        return "restart_count_increased_between_checks"
+    before_pid = first.get("main_pid")
+    after_pid = second.get("main_pid")
+    if (type(before_pid) is int and type(after_pid) is int
+            and before_pid > 0 and after_pid > 0 and before_pid != after_pid):
+        return "systemd_main_pid_changed_between_checks"
     if name == "nginx" and vendor_syntax_ok is not True:
         return "nginx_live_config_not_verified"
     return "independent_vm_verified"
