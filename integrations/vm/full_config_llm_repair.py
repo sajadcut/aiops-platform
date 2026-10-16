@@ -22,6 +22,7 @@ from integrations.vm.config_candidate_vault import CandidateUnavailable, store_c
 from integrations.vm.json_syntax_candidate import (
     deterministic_json_syntax_fix, deterministic_json_punctuation_fix,
     deterministic_json_duplicate_brace_fix,
+    bounded_json_repair_with_edits,
 )
 
 _MAX_BYTES = 64 * 1024  # Opt-in complete document only; never silently truncate.
@@ -497,6 +498,38 @@ async def review_complete_config(
                             **checked, "candidate_origin": "deterministic_json_syntax",
                         }
                         result["candidate_generation_mode"] = "worker_verified_json_repair"
+        if corrected is None and profile == "json_syntax":
+            # The LLM may return arbitrary prose or a malformed edit-plan
+            # for a large config. This must not discard a UNIQUE parser-
+            # verified, bounded multi-step candidate derived from original
+            # bytes. Reject all model text and make every edit reproducible.
+            staged = bounded_json_repair_with_edits(source)
+            if staged is not None:
+                worker_candidate, worker_changes = staged
+                # This branch does not bypass security to accept a model
+                # rewrite. Only the verified deterministic repair function
+                # can produce its exact bytes and line-only redacted edits.
+                corrected = worker_candidate
+                preview = {
+                    "status": "llm_candidate_proposed",
+                    "candidate_hash": hashlib.sha256(
+                        worker_candidate.encode("utf-8")).hexdigest(),
+                    "changed_line_count": len({
+                        change["line"] for change in worker_changes
+                    }),
+                    "changed_line_numbers": sorted({
+                        change["line"] for change in worker_changes
+                    })[:3],
+                    "redacted_changes": worker_changes,
+                    "rejection_reason": None,
+                    "candidate_origin": "deterministic_json_syntax",
+                    "validation_status": "UNVERIFIED",
+                    "validator_executed_on_proposal": False,
+                    "apply_eligible": False,
+                    "execution_authority": False,
+                    "config_contents_exposed": False,
+                }
+                result["candidate_generation_mode"] = "worker_bounded_json_repair"
         if corrected is None:
             return {**result, "status": "llm_complete_file_response_invalid",
                     "rejection_reason": last_model_failure,
