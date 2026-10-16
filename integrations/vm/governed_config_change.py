@@ -267,6 +267,7 @@ async def run_governed_change(connector, *, action: str, target: str, service: s
             )
             minimal_preview = _candidate_preview(
                 source_text, candidate, diagnostic_line=authoritative_line,
+                expanded_json_grammar=json_profile,
             )
             if (minimal_preview.get("status") != "llm_candidate_proposed"
                     or minimal_preview.get("candidate_hash") != candidate_sha256):

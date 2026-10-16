@@ -19,6 +19,9 @@ from urllib.parse import urlparse
 from domain.contracts.config import settings
 from integrations.llm.openai_compatible import configured_llm_adapter
 from integrations.vm.config_candidate_vault import CandidateUnavailable, store_candidate
+from integrations.vm.iterative_json_repair import (
+    build_json_candidate, independently_verify_structural_candidate,
+)
 from integrations.vm.json_syntax_candidate import (
     deterministic_json_syntax_fix, deterministic_json_punctuation_fix,
     deterministic_json_duplicate_brace_fix,
@@ -215,7 +218,8 @@ def _bounded_exact_character_edits(before: str, after: str, maximum: int = 3) ->
     return previous.get(m, maximum + 1)
 
 
-def _candidate_preview(original: str, corrected: str, *, diagnostic_line: int | None = None) -> dict:
+def _candidate_preview(original: str, corrected: str, *, diagnostic_line: int | None = None,
+                       expanded_json_grammar: bool = False) -> dict:
     """Check completeness and bounded drift; emit *metadata*, never file lines."""
     base = {"status": "llm_candidate_rejected", "candidate_hash": None,
             "changed_line_count": 0, "changed_line_numbers": [],
@@ -228,14 +232,22 @@ def _candidate_preview(original: str, corrected: str, *, diagnostic_line: int | 
         return {**base, "rejection_reason": "incomplete_or_invalid_candidate"}
     if original == corrected:
         return {**base, "status": "no_change_proposed"}
+    # The extended 16-character syntax budget requires an independent,
+    # parser-valid grammar-only edit proof on exact source/candidate bytes.
+    expanded_verified = bool(expanded_json_grammar and
+        independently_verify_structural_candidate(original, corrected))
+    if expanded_json_grammar and not expanded_verified:
+        return {**base, "rejection_reason": "candidate_unsafe_json_grammar_edit"}
+    line_limit = 12 if expanded_verified else _MAX_CHANGED_LINES
+    character_limit = 16 if expanded_verified else _MAX_SYNTAX_CHAR_EDITS
     before, after = original.splitlines(keepends=True), corrected.splitlines(keepends=True)
     # Diff on full lines; never trust an LLM that rewrites the whole config.
     differences = [op for op in difflib.SequenceMatcher(
         a=before, b=after, autojunk=True).get_opcodes() if op[0] != "equal"]
     changed = sum(max(i2 - i1, j2 - j1) for _, i1, i2, j1, j2 in differences)
-    if (changed > _MAX_CHANGED_LINES or not differences or
-            len(differences) > 2 or
-            changed > max(3, (len(before) + 3) // 5)):
+    if (changed > line_limit or not differences or
+            len(differences) > (12 if expanded_verified else 2) or
+            changed > (12 if expanded_verified else max(3, (len(before) + 3) // 5))):
         return {**base, "rejection_reason": "candidate_excessive_changes"}
     # A syntax-only comma or brace correction is safe even on a line
     # containing a "password" key: require every non-grammar byte, including
@@ -249,27 +261,27 @@ def _candidate_preview(original: str, corrected: str, *, diagnostic_line: int | 
     unchanged_value_tokens = _value_tokens(original) == _value_tokens(corrected)
     for _, i1, i2, j1, j2 in differences:
         if any(_SENSITIVE.search(line) for line in before[i1:i2] + after[j1:j2]):
-            if not (exact_json_key_quotes or (
+            if not (expanded_verified or exact_json_key_quotes or (
                 unchanged_non_grammar and unchanged_value_tokens
             )):
                 return {**base, "rejection_reason": "candidate_changes_sensitive_line"}
-    if not exact_json_key_quotes and not unchanged_value_tokens:
+    if not expanded_verified and not exact_json_key_quotes and not unchanged_value_tokens:
         return {**base, "rejection_reason": "candidate_changes_configuration_values"}
     # Require genuinely small *syntactic* changes. Whitespace-only rewrites
     # cannot fix registered nginx/JSON/XML grammar errors and previously
     # allowed many irrelevant reindentations through the value-token filter.
     # Strip whitespace only for counting, NEVER for storing/reconstructing.
     char_edits = _bounded_exact_character_edits(
-        original, corrected, _MAX_SYNTAX_CHAR_EDITS,
+        original, corrected, character_limit,
     )
-    if not 1 <= char_edits <= _MAX_SYNTAX_CHAR_EDITS:
+    if not 1 <= char_edits <= character_limit:
         return {**base, "rejection_reason": "candidate_not_minimal_syntax_fix"}
     # Compare every non-grammar byte *including whitespace/newlines*.
     # Removing optional punctuation for comparison must produce exactly
     # identical documents, blocking reindentation, line-ending conversion,
     # comment cleanup and unrelated formatting even when only one brace
     # fixes the vendor error.
-    if not exact_json_key_quotes and not unchanged_non_grammar:
+    if not expanded_verified and not exact_json_key_quotes and not unchanged_non_grammar:
         return {**base, "rejection_reason": "candidate_changes_unrelated_bytes"}
     # The compiler normally reports the *following* line when an earlier
     # brace or terminator is wrong. Permit only nearby changes.
@@ -286,7 +298,7 @@ def _candidate_preview(original: str, corrected: str, *, diagnostic_line: int | 
             and original.lstrip().startswith(("{", "["))
             and corrected == deterministic_json_duplicate_brace_fix(original)
         )
-        if distant_change and not verified_matching_brace_pair:
+        if distant_change and not verified_matching_brace_pair and not expanded_verified:
             return {**base, "rejection_reason": "candidate_unrelated_to_validator_line"}
     locations = sorted({i + 1 for _, i1, i2, _, _ in differences
                         for i in range(i1, max(i1 + 1, i2))})
@@ -295,7 +307,7 @@ def _candidate_preview(original: str, corrected: str, *, diagnostic_line: int | 
         before_lines = before[i1:i2]
         after_lines = after[j1:j2]
         for offset in range(max(len(before_lines), len(after_lines))):
-            if len(diffs) >= _MAX_CHANGED_LINES:
+            if len(diffs) >= line_limit:
                 break
             diffs.append({
                 "line": i1 + offset + 1,
@@ -304,7 +316,7 @@ def _candidate_preview(original: str, corrected: str, *, diagnostic_line: int | 
             })
     return {**base, "status": "llm_candidate_proposed",
             "candidate_hash": hashlib.sha256(corrected.encode("utf-8")).hexdigest(),
-            "changed_line_count": changed, "changed_line_numbers": locations[:_MAX_CHANGED_LINES],
+            "changed_line_count": changed, "changed_line_numbers": locations[:line_limit],
             "redacted_changes": diffs, "rejection_reason": None}
 
 
@@ -455,7 +467,7 @@ async def review_complete_config(
                                              or "llm_candidate_rejected")
             else:
                 last_model_failure = "llm_response_truncated"
-            if attempt == 0:
+            if attempt == 0 and profile != "json_syntax":
                 try:
                     response = await asyncio.wait_for(
                         llm.generate(
@@ -478,6 +490,29 @@ async def review_complete_config(
                 except Exception:
                     # The invalid response remains classified; try worker fix.
                     break
+        if corrected is None and profile == "json_syntax":
+            # Deliberate complete-file LLM repair in bounded parser-guided
+            # rounds. Model output is not trusted without independent proof.
+            try:
+                iterative = await asyncio.wait_for(
+                    build_json_candidate(source, model=llm, max_rounds=6),
+                    timeout=80,
+                )
+            except (asyncio.TimeoutError, TimeoutError):
+                iterative = {"status": "no_candidate",
+                             "reason": "iterative_model_timeout"}
+            if iterative.get("status") == "candidate_proposed":
+                expanded = _candidate_preview(
+                    source, iterative["candidate"],
+                    diagnostic_line=diagnostic_line,
+                    expanded_json_grammar=True,
+                )
+                if expanded.get("status") == "llm_candidate_proposed":
+                    corrected, preview = iterative["candidate"], expanded
+                    result["llm_returned_complete_file"] = True
+                    result["candidate_generation_mode"] = "llm_bounded_edit_plan"
+            else:
+                last_model_failure = str(iterative.get("reason") or last_model_failure)
         if corrected is None and profile == "json_syntax":
             deterministic = (
                 deterministic_json_syntax_fix(source)
