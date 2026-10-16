@@ -2832,7 +2832,10 @@
     if(candidate){
       const legacyIntent=state.configResponse?.status==='awaiting_isolated_validation' &&
         !state.configResponse?.approval_queue_registered;
-      const answered=state.configResponse?.status&&state.configResponse.status!=='not_responded'&&!legacyIntent;
+      const retryEligible=state.configResponse?.status==='consumed' &&
+        state.configResponse?.retry_eligible===true;
+      const answered=state.configResponse?.status&&state.configResponse.status!=='not_responded'&&
+        !legacyIntent&&!retryEligible;
       const disabled=state.historic||state.busy||state.configResponseStatus!=='loaded';
       html+='<article class="ic-detail-card"><h4>'+esc(fa?
         'درخواست تأیید تغییر همین Diff':
@@ -2843,10 +2846,12 @@
         (answered?'<p><strong>'+txt(state.configResponse.status)+'</strong></p>':
         '<div class="ic-action-buttons">'+
         '<button type="button" class="ic-btn ic-btn-primary" data-config-intent="request_change_approval"'+(disabled?' disabled':'')+'>'+
-        esc(fa?(legacyIntent?'انتقال درخواست قبلی به صف Approval':'ارسال درخواست به Approval'):
-          (legacyIntent?'Queue previously recorded request':'Submit change for approval'))+'</button>'+
-        '<button type="button" class="ic-btn ic-btn-muted" data-config-intent="reject"'+(disabled?' disabled':'')+'>'+
-        esc(fa?'خیر، رد پیشنهاد':'No, reject proposal')+'</button></div>')+
+        esc(fa?(retryEligible?'درخواست Approval جدید بعد از شکست اعمال':
+          legacyIntent?'انتقال درخواست قبلی به صف Approval':'ارسال درخواست به Approval'):
+          (retryEligible?'Create NEW approval after failed apply':
+           legacyIntent?'Queue previously recorded request':'Submit change for approval'))+'</button>'+
+        (retryEligible?'':'<button type="button" class="ic-btn ic-btn-muted" data-config-intent="reject"'+(disabled?' disabled':'')+'>'+
+        esc(fa?'خیر، رد پیشنهاد':'No, reject proposal')+'</button>')+'</div>')+
         '<p class="ic-agent-disclaimer">'+esc(fa?
           'درخواست با وضعیت «در انتظار اعتبارسنجی» در صف Approval قرار می‌گیرد. تأیید نهایی تا تکمیل Validator و قرارداد اجرای کنترل‌شده مسدود است.':
           'The request queues as pending_validation. Final approval stays disabled until isolated validation and guarded execution exist.')+
@@ -3875,14 +3880,22 @@
     const c=state.report?.dynamic_investigation?.config_proposal||{};
     const previousAuditOnly=state.configResponse?.status==='awaiting_isolated_validation' &&
       !state.configResponse?.approval_queue_registered;
+    const retryEligible=state.configResponse?.status==='consumed' &&
+      state.configResponse?.retry_eligible===true &&
+      decision==='request_change_approval';
     if(state.historic||state.busy||state.configResponseStatus!=='loaded'||
-       (state.configResponse?.status!=='not_responded'&&!previousAuditOnly)||
+       (state.configResponse?.status!=='not_responded'&&!previousAuditOnly&&!retryEligible)||
        c.status!=='candidate_proposed'||!c.candidate_sha256||!c.original_sha256)return;
     const fa=state.language==='fa';
     // Start permission is explicitly included in the approval being created,
     // only when a fresh verified systemd observation says the unit is down.
+    const stateValue=low(state.serviceStatus?.active_state);
+    const crashed=stateValue==='activating'&&
+      low(state.serviceStatus?.sub_state)==='auto-restart' &&
+      Number(state.serviceStatus?.main_pid)===0 &&
+      Number(state.serviceStatus?.restart_count)>=2;
     const down=state.serviceStatus?.verified_systemd_only===true &&
-      ['failed','inactive'].includes(low(state.serviceStatus?.active_state)) &&
+      (['failed','inactive'].includes(stateValue)||crashed) &&
       low(state.serviceStatus?.service).replace(/\.service$/,'')===
         low(state.report?.incident_summary?.service).replace(/\.service$/,'');
     const startAfterApply=decision==='request_change_approval' && down;
