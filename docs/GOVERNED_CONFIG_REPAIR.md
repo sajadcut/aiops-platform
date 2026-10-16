@@ -465,3 +465,50 @@ label of `development` while the Zabbix signal was marked `production`.
 This did not trigger the observed MCP transport failure, but operators should
 review the asset catalog/environment mapping before any further production
 write.
+
+
+## Follow-up: fixed JSON, Running systemd, stale Crash UI (2026-10-16)
+
+For incident `9cdca567-0aab-44a4-a1a0-251ddb105254` on
+`gfpapi@10.248.16.82`, the authenticated MCP response confirms
+`config_change_apply.status=applied_verified`,
+`production_write_performed=true` for `appsettings.json` and approval
+`60bb5112-c817-4a0f-9f21-cafd87cef497`. The signed approval was
+**config-only**: `start_service_after_apply=false`,
+`service_start_attempted=false`. The subsequent service observation at
+16:27:08 UTC was `active/running`, MainPID `1791923`, NRestarts `873`.
+This is evidence of systemd Running, not proof of application HTTP readiness
+or of Zabbix RECOVERY. The source of the later Start is not established by the
+config-apply audit.
+
+The old UI falsely returned `status=unstable` and
+`stability_reason=auto_restart_cycle_observed` because its ten-minute
+sliding window included **pre-repair** `activating/auto-restart` evidence
+(NRestarts `853`). It did not use the successful apply as a diagnostic
+epoch boundary, and its recheck code passed only the single newly inserted
+audit to the classifier. It also ran a generic redactor over trusted systemd
+NRestarts/MainPID, losing the numeric evidence needed for stability tracking.
+Consequently `recovery_verification=service_not_running` prevented the
+second VM read and the independent-resolution transaction, even while
+`active_state=active` and `sub_state=running`.
+
+The updated control plane (a) ignores crash observations **before** a
+correctly bound, audited, verified production apply when evaluating the
+current state, (b) retains bounded integer MainPID/NRestarts without storing
+freeform systemctl output, (c) loads the full incident's apply/recheck audit
+history before adjudicating a recheck, (d) performs two independent read-only
+checks after *any* successful config write, without issuing an unauthorized
+Start, and (e) refuses independent incident resolution if the restart
+counter increased or MainPID changed between live checks. The UI displays
+the exact approval's audited config-apply result separately from systemd
+Running and the Incident status, avoiding a missing Workflow-output message
+for externally executed approvals.
+
+**Validation and limitations:** Only the incident specifically bound to a
+systemd Service Down alert may resolve locally without a monitoring Recovery
+event. Other correlated alerts and failed checks remain blocking. A local
+resolution retains `monitor_recovered=false` and is not represented as
+Zabbix clearing its trigger. Original investigation/Agent snapshots remain
+historical evidence. After deployment, operators should click the read-only
+**Recheck service status** control and confirm the two fresh VM observations,
+the Incident `resolved` state, and the separate monitoring alert status.
