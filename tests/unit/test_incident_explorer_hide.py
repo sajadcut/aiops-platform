@@ -51,7 +51,7 @@ function initialize() {
       archivedIncidents:baseArchived.map(i=>({...i})),
       incidentPeriod:'recent',archiveLoaded:true,
     },
-    document:{querySelectorAll:()=>buttons}, window:null,
+    document:{querySelectorAll:selector => selector==='[data-incident-size]' ? buttons : []}, window:null,
     localStorage:{
       getItem:k=>Object.prototype.hasOwnProperty.call(storage,k)?storage[k]:null,
       setItem:(k,v)=>{storage[k]=v;},
