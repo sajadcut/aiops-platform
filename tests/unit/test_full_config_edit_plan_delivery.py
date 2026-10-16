@@ -14,7 +14,7 @@ from types import SimpleNamespace
 import pytest
 
 from integrations.vm.full_config_llm_repair import (
-    _parse_bounded_edit_plan, review_complete_config,
+    _parse_bounded_edit_plan, _candidate_preview, review_complete_config,
 )
 
 
@@ -116,3 +116,16 @@ async def test_no_opt_in_never_sends_complete_file(monkeypatch):
     )
     assert result["status"] == "full_config_llm_not_enabled"
     assert result["complete_file_in_prompt"] is False
+
+
+
+def test_sensitive_line_allows_one_safe_comma_but_not_value_mutation():
+    source = '{"password":"SECRET_VALUE_STAYS", "enabled":true "count":3}\n'
+    corrected = source.replace('"count":3', ',"count":3')
+    assert _candidate_preview(source, corrected, diagnostic_line=1)["status"] == (
+        "llm_candidate_proposed"
+    )
+    tampered = corrected.replace("SECRET_VALUE_STAYS", "ALTERED")
+    assert _candidate_preview(source, tampered, diagnostic_line=1)["status"] == (
+        "llm_candidate_rejected"
+    )
