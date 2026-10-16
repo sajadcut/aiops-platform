@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 548 | Dashboard JS files scanned: 8 | Symbols indexed: 5996**
+**Python files scanned: 548 | Dashboard JS files scanned: 8 | Symbols indexed: 5997**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1307,8 +1307,9 @@
 | `apps/knowledge_incident_coverage.py` | `coverage_review_id` | 22 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/knowledge_incident_coverage.py` | `_safe` | 26 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/knowledge_incident_coverage.py` | `incident_coverage_document` | 30 | function | Use *recorded* incident fields and scoped refs, not arbitrary MCP output. | module |
-| `apps/knowledge_incident_coverage.py` | `create_from_incident` | 83 | async function | Idempotent, concurrency-safe, does not mutate existing human work. | module |
-| `apps/knowledge_incident_coverage.py` | `draft_incident_best_effort` | 146 | async function | Run *after* incident commit; knowledge failures must not break ingestion. | module |
+| `apps/knowledge_incident_coverage.py` | `_source_document` | 83 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/knowledge_incident_coverage.py` | `create_from_incident` | 98 | async function | Stable ID. Refresh only untouched system drafts; preserve human decisions. | module |
+| `apps/knowledge_incident_coverage.py` | `draft_incident_best_effort` | 185 | async function | Run *after* incident commit; knowledge failures must not break ingestion. | module |
 | `apps/knowledge_review.py` | `content_digest` | 22 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/knowledge_review.py` | `validated_document` | 26 | function | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | module |
 | `apps/knowledge_review.py` | `memory_is_verified` | 37 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
