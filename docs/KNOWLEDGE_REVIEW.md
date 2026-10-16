@@ -282,3 +282,61 @@ Reviewer controls stay distinct: save an edit, approve/reject the pending
 local draft, and explicitly publish the approved exact-content revision.
 No incident ingestion, reconciliation, or evidence refresh publishes to
 Cognia, approves a knowledge record, or authorizes execution.
+
+
+## AIOps Knowledge and Cognia monitoring
+
+The **پایگاه دانش** command-center view includes read-only operational
+monitoring at `GET /api/v1/knowledge-reviews/monitoring?days=7|30|90`
+under `read:incident` RBAC. PostgreSQL aggregation is independent of the
+review-queue pagination/filter, and never calls Cognia registration or any
+operational execution action. It exposes no document text, query text,
+retrieved passages, secrets, or raw prompts.
+
+### Review and publication lifecycle (AIOps-owned data only)
+
+- All-time local review drafts grouped by state and source type; approvals
+  are not counted as Cognia publications.
+- `submitted` means Cognia accepted registration but active revision has
+  **not** yet been verified. `published` requires confirmation of the
+  exact active Cognia revision after a separate refresh action.
+- Period-scoped created/published events, 14-day UTC trends, pending review
+  older than 24h, publishing claims older than 3 minutes, and activation
+  waits older than 24h. These durations are indicators requiring operator
+  attention, not an automatic retry policy or guaranteed SLA.
+- Coverage: durable Incidents with one or more local reviews / all durable
+  Incidents. This is not coverage of all alerts ever received.
+- `Cognia global document total = unknown`: the AIOps outbox is not the
+  Cognia inventory. Never present local `published` rows as all documents
+  stored in Cognia. Per-KB global totals require an authorized, documented
+  Cognia inventory API with an agreed scope; none is assumed.
+
+### RAG retrieval observations
+
+The dashboard aggregates `context_loaded` audit events (where
+`knowledge_status.provider=cognia`) for the selected 7/30/90-day window:
+observed requests by status (`available`, `empty`, `filtered_empty`,
+or error/other), total retained retrieved chunks, and last observation
+timestamp. These are **workflow context phase** observations only, not
+complete traffic metrics; chat-based/ad-hoc Cognia searches and external
+Cognia consumers may not be represented. A status of `empty` is not an
+error; `filtered_empty` means the relevance guard rejected results.
+The phase's `duration_ms` includes other context work and cannot be
+presented as Cognia Search latency.
+
+No p95 latency, token cost, recall@k, context precision/relevance, citation
+accuracy, faithfulness/groundedness or document-index freshness metric is
+shown as a fabricated percentage. Those fields remain `null` until a
+proper traced and independently evaluated pipeline supplies evidence.
+Operational extensions should record retrieval-specific OpenTelemetry
+spans and bounded timing, track retrieval errors per KB (low-cardinality
+tags), implement activation-lag tracking, and compute recall/relevance/
+groundedness on consented sampled traces or a controlled golden dataset.
+Never log raw confidential context in these measurements.
+
+Cognia connectivity is separately read from the API's
+`/api/v1/health` output, which probes `GET /swagger/index.html`.
+HTTP success is only reachability, not KB authorization, content indexing,
+searchability, or engine readiness. Failure to probe Cognia does not hide
+the independently accessible PostgreSQL review statistics. No writes are
+triggered by rendering or refreshing monitoring.

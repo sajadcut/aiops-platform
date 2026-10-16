@@ -35,6 +35,182 @@
       esc(timeLabel(value))+'</time>';
   }
 
+  let monitorLoading = false;
+  let monitorData = null;
+  let monitorHealth = null;
+  const monitorLabels = {
+    pending_review:'در انتظار بازبینی', approved:'تأییدشده، ارسال‌نشده',
+    publishing:'در حال ارسال', submitted:'ارسال‌شده، در انتظار فعال‌سازی',
+    published:'انتشار تأییدشده', publish_failed:'انتشار ناموفق',
+    rejected:'ردشده'
+  };
+  const monitorNumber = value => value === null || value === undefined ? '—' :
+    Number(value).toLocaleString('fa-IR');
+  const monitorPercent = value => value === null || value === undefined ?
+    '—' : Number(value).toLocaleString('fa-IR', {maximumFractionDigits:1})+'٪';
+
+  function monitorFact(label, value) {
+    return '<div class="knowledge-monitor-fact"><span>'+esc(label)+'</span><strong>'+
+      esc(monitorNumber(value))+'</strong></div>';
+  }
+
+  function renderKnowledgeMonitor() {
+    if (!monitorData) return;
+    const r = monitorData.reviews || {};
+    const counts = r.by_status || {};
+    const rag = monitorData.retrieval || {};
+    const coverage = monitorData.coverage || {};
+    const total = Number(r.total || 0);
+    const kpis = [
+      ['سوابق ثبت‌شدهٔ AIOps', total, 'همه وضعیت‌ها · سوابق محلی'],
+      ['در انتظار بازبینی', counts.pending_review, 'هنوز برای انتشار تأیید نشده', counts.pending_review ? 'warning' : ''],
+      ['در انتظار ارسال', counts.approved, 'نسخهٔ تأییدشده در صف ارسال'],
+      ['فعال‌شده در Cognia', counts.published, 'فعال‌سازی نسخه تأیید شده', 'success'],
+      ['ارسال‌شده، در انتظار فعال‌سازی', counts.submitted, 'ثبت در Cognia ≠ قابل جست‌وجو', counts.submitted ? 'warning' : ''],
+      ['انتشار ناموفق', counts.publish_failed, 'نیازمند بررسی و تلاش مجدد', counts.publish_failed ? 'danger' : ''],
+      ['پیش‌نویس‌های بازه', r.created_in_period, 'در '+monitorNumber(monitorData.period_days)+' روز اخیر'],
+      ['پوشش رخدادهای ماندگار', monitorPercent(coverage.percentage),
+       monitorNumber(coverage.incidents_with_review)+' رخداد از '+monitorNumber(coverage.durable_incidents)]
+    ];
+    const grid = el('knowledgeMonitorKpis');
+    if (grid) grid.innerHTML = kpis.map(([title, value, hint, tone]) =>
+      '<article class="knowledge-monitor-kpi" data-tone="'+esc(tone||'')+'"><span>'+
+      esc(title)+'</span><strong>'+esc(typeof value==='string'?value:monitorNumber(value))+
+      '</strong><small>'+esc(hint)+'</small></article>').join('');
+
+    const stages = [
+      ['pending_review','km-pending'],['approved','km-approved'],
+      ['publishing','km-submitted'],['submitted','km-submitted'],
+      ['published','km-published'],['publish_failed','km-failed'],
+      ['rejected','km-other']
+    ];
+    const lifecycle = el('knowledgeMonitorLifecycle');
+    if (lifecycle) {
+      const segments = stages.map(([status, css]) => {
+        const value = Number(counts[status] || 0);
+        return value > 0 && total > 0 ?
+          '<span class="'+css+'" style="width:'+(value/total*100).toFixed(2)+'%" title="'+
+          esc(monitorLabels[status])+': '+monitorNumber(value)+'"></span>' : '';
+      }).join('');
+      lifecycle.innerHTML =
+        '<div class="knowledge-monitor-meter" aria-label="توزیع وضعیت سوابق">'+segments+'</div>'+
+        '<div class="knowledge-monitor-facts">'+stages.map(([status])=>
+          monitorFact(monitorLabels[status],counts[status])).join('')+
+          monitorFact('منتشرشده در بازه',r.published_in_period)+
+          monitorFact('انتظار بازبینی بیش از ۲۴ ساعت',r.review_overdue_24h)+
+          monitorFact('ارسال متوقف بیش از ۳ دقیقه',r.publication_stalled_3m)+
+          monitorFact('فعال‌سازی معطل بیش از ۲۴ ساعت',r.activation_overdue_24h)+
+        '</div>'+
+        '<p class="knowledge-monitor-hint">آخرین انتشار تأییدشده: '+
+          esc(timeLabel(r.latest_published_at))+' · داده‌ها فقط متعلق به سوابق ارسال‌شده توسط AIOps هستند.</p>';
+    }
+
+    const timeline = r.daily_last_14_days || [];
+    const highest = Math.max(1, ...timeline.flatMap(x => [Number(x.drafted||0), Number(x.published||0)]));
+    const trend = el('knowledgeMonitorTrend');
+    if (trend) trend.innerHTML =
+      '<div class="knowledge-monitor-trend" role="img" aria-label="روند روزانهٔ ثبت و انتشار ۱۴ روز اخیر">'+
+      timeline.map(x => {
+        const label = String(x.day || '').slice(-2);
+        const draft = Math.max(2, Math.round(100*Number(x.drafted||0)/highest));
+        const published = Math.max(2, Math.round(100*Number(x.published||0)/highest));
+        return '<div class="knowledge-monitor-day" title="'+esc(x.day)+
+          ' · ثبت '+monitorNumber(x.drafted)+' · انتشار '+monitorNumber(x.published)+'">'+
+          '<div class="km-bars"><i style="height:'+draft+'%" aria-hidden="true"></i>'+
+          '<i style="height:'+published+'%" aria-hidden="true"></i></div>'+
+          '<small>'+esc(label)+'</small></div>';
+      }).join('')+'</div><div class="knowledge-monitor-legend">'+
+      '<span><b></b>ثبت پیش‌نویس</span><span><b class="km-legend-green"></b>فعال‌سازی تأییدشده</span>'+
+      '</div><p class="knowledge-monitor-hint">نمودار بر مبنای تاریخ UTC است؛ ارتفاع ۲ پیکسلی یعنی صفر، نه مقدار واقعی.</p>';
+
+    const rStatus = rag.by_status || {};
+    const good = Number(rStatus.available || 0), empty = Number(rStatus.empty || 0),
+      filtered = Number(rStatus.filtered_empty || 0);
+    const errors = Math.max(0, Number(rag.observed_calls || 0) - good - empty - filtered);
+    const retrieval = el('knowledgeMonitorRetrieval');
+    if (retrieval) retrieval.innerHTML = '<div class="knowledge-monitor-facts">'+
+      monitorFact('جست‌وجوهای ثبت‌شده در این بازه', rag.observed_calls)+
+      monitorFact('پاسخ حاوی دانش مرتبط',good)+
+      monitorFact('نتیجهٔ خالی',empty)+
+      monitorFact('نتیجهٔ نامرتبط و حذف‌شده',filtered)+
+      monitorFact('خطا یا وضعیت‌های دیگر',errors)+
+      monitorFact('تعداد قطعه‌های پذیرفته‌شده',rag.returned_items_total)+
+      '</div><p class="knowledge-monitor-hint">فقط جست‌وجوهای ثبت‌شده در رویداد context_loaded؛ شامل همهٔ فراخوانی‌های چت‌بات و سرویس‌های دیگر نیست. آخرین ثبت: '+
+      esc(timeLabel(rag.last_observed_at))+'</p>'+
+      '<p class="knowledge-monitor-hint">P95 تأخیر، ارتباط معنایی، صحت استناد و Groundedness: <strong>اندازه‌گیری نشده</strong>. بدون Trace و ارزیابی مستقل، عددی برای کیفیت تولید نمی‌شود.</p>';
+
+    renderKnowledgeCognia();
+    const state = el('knowledgeMonitorState');
+    if (state) {
+      state.dataset.error = 'false';
+      state.textContent = 'آمار ماندگار تا '+timeLabel(monitorData.sampled_at)+
+        ' · '+monitorNumber(monitorData.period_days)+' روز برای روندهای بازه‌ای · کل سوابق محلی بدون فیلتر';
+    }
+  }
+
+  function renderKnowledgeCognia() {
+    const box = el('knowledgeMonitorCognia');
+    if (!box || !monitorData) return;
+    const cognia = monitorData.cognia || {};
+    const h = monitorHealth;
+    const status = !h ? 'نامشخص' : h.configured === false ? 'پیکربندی نشده' :
+      h.healthy ? 'پاسخ HTTP موفق' : 'عدم دسترسی HTTP';
+    const tone = !h ? 'unknown' : h.healthy ? 'ok' : 'bad';
+    const statusCode = h?.http_status;
+    const kbIds = (cognia.configured_kb_ids || []).map(String).join('، ') || '—';
+    box.innerHTML =
+      '<div class="knowledge-monitor-connection"><span class="knowledge-monitor-dot" data-status="'+
+        tone+'"></span><strong>'+esc(status)+'</strong><span class="muted">'+
+        esc(cognia.health_probe || '/swagger/index.html')+
+        (Number.isInteger(statusCode) ? ' · HTTP '+esc(statusCode) : '')+'</span></div>'+
+      '<div class="knowledge-monitor-facts">'+
+      '<div class="knowledge-monitor-fact"><span>شناسهٔ پایگاه‌های دانش تنظیم‌شده</span><strong>'+
+        esc(kbIds)+'</strong></div>'+
+      '<div class="knowledge-monitor-fact"><span>کل اسناد Cognia (سراسری)</span><strong>نامشخص</strong></div>'+
+      '</div>'+
+      '<p class="knowledge-monitor-hint">بررسی Swagger فقط دسترسی HTTP را نشان می‌دهد، نه آمادگی موتور جست‌وجو یا مجوز KB. کل اسناد داخل Cognia از این API قابل شمارش نیست؛ عدد فعال‌شدهٔ بالا فقط متعلق به انتشارهای تأییدشدهٔ AIOps است.</p>';
+  }
+
+  let monitorReloadRequested = false;
+  async function loadKnowledgeMonitoring() {
+    if (monitorLoading) { monitorReloadRequested = true; return; }
+    if (!el('knowledgeMonitorKpis')) return;
+    monitorLoading = true;
+    const days = Number(el('knowledgeMonitorPeriod')?.value || 30);
+    const state = el('knowledgeMonitorState');
+    if (state) { state.textContent = 'در حال بازخوانی شاخص‌های پایگاه دانش…'; state.dataset.error='false'; }
+    try {
+      monitorData = await api('/api/v1/knowledge-reviews/monitoring?days='+encodeURIComponent(days));
+      renderKnowledgeMonitor();
+    } catch (err) {
+      monitorData = null;
+      if (state) {
+        state.dataset.error='true';
+        state.textContent = 'داده‌های مانیتورینگ قابل دریافت نیستند: '+err.message;
+      }
+      for (const id of ['knowledgeMonitorKpis','knowledgeMonitorLifecycle',
+                        'knowledgeMonitorTrend','knowledgeMonitorRetrieval','knowledgeMonitorCognia']) {
+        if (el(id)) el(id).textContent = '';
+      }
+    } finally {
+      monitorLoading = false;
+      if (monitorReloadRequested) {
+        monitorReloadRequested = false;
+        void loadKnowledgeMonitoring();
+        return;
+      }
+    }
+    // Health is separate from the local outbox report. A slow/down external
+    // dependency must not hide durable review counts or be treated as healthy.
+    try {
+      const status = await api('/api/v1/health');
+      monitorHealth = status?.components?.external?.cognia || null;
+    } catch (_) {
+      monitorHealth = null;
+    }
+    renderKnowledgeCognia();
+  }
+
   const el = id => document.getElementById(id);
   const current = () => selectedDetails && selectedDetails.id === selectedId ? selectedDetails : null;
   const pendingStatuses = new Set(['pending_review', 'approved', 'publish_failed', 'submitted', 'publishing']);
@@ -234,6 +410,7 @@
       selectedId = reviews.some(r => r.id === preferred) ? preferred : (reviews[0]?.id || null);
       renderQueue();
       await loadSelected();
+      void loadKnowledgeMonitoring();
     } catch (err) {
       const list = el('knowledgeReviewQueue');
       if (list) list.textContent = 'بارگذاری بازبینی دانش ناموفق بود: ' + err.message;
@@ -344,6 +521,15 @@
   });
 
   window.loadKnowledgeReviews = reload;
+  window.loadKnowledgeMonitoring = loadKnowledgeMonitoring;
+  document.addEventListener('change', event => {
+    if (event.target?.id === 'knowledgeMonitorPeriod') void loadKnowledgeMonitoring();
+  });
+  window.setInterval(() => {
+    if (typeof S !== 'undefined' && S.view === 'knowledge' && !document.hidden) {
+      void loadKnowledgeMonitoring();
+    }
+  }, 60000);
   window.loadMoreKnowledgeReviews = async () => {
     if (loading || actionPending || !reviewHasMore) return;
     reviewPageCount += 1;

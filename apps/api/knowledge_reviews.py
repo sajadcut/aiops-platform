@@ -245,6 +245,190 @@ async def list_reviews(
            "next_offset": offset + min(len(rows), limit)}
 
 
+# Aggregated monitoring only. PostgreSQL holds review/outbox and historical
+# workflow audit, never Cognia's complete inventory or any RAG vector index.
+_MONITOR_REVIEW_SQL = text("""
+SELECT status, source_type, COUNT(*) AS count,
+       COUNT(*) FILTER (WHERE created_at >= :since) AS created_in_window,
+       COUNT(*) FILTER (WHERE published_at >= :since) AS published_in_window,
+       COUNT(*) FILTER (WHERE status = 'pending_review' AND created_at < :stale_review) AS overdue_review,
+       COUNT(*) FILTER (WHERE status = 'publishing'
+                        AND publish_attempted_at < :stale_claim) AS stale_publish,
+       COUNT(*) FILTER (WHERE status = 'submitted'
+                        AND submitted_at < :stale_activation) AS overdue_activation,
+       MAX(published_at) AS latest_published
+FROM knowledge_reviews
+GROUP BY status, source_type
+""")
+
+_MONITOR_TREND_SQL = text("""
+SELECT DATE(created_at AT TIME ZONE 'UTC') AS day, COUNT(*) AS count
+FROM knowledge_reviews
+WHERE created_at >= :trend_since
+GROUP BY day ORDER BY day
+""")
+
+_MONITOR_PUBLISHED_TREND_SQL = text("""
+SELECT DATE(published_at AT TIME ZONE 'UTC') AS day, COUNT(*) AS count
+FROM knowledge_reviews
+WHERE published_at >= :trend_since
+GROUP BY day ORDER BY day
+""")
+
+_MONITOR_RAG_SQL = text("""
+SELECT metadata->'knowledge_status'->>'status' AS status,
+       COUNT(*) AS calls,
+       COALESCE(SUM(CASE
+         WHEN jsonb_typeof(metadata->'knowledge_count') = 'number'
+         THEN (metadata->>'knowledge_count')::integer ELSE 0 END),0) AS returned_items,
+       MAX(created_at) AS last_attempt
+FROM audit_events
+WHERE event_type = 'context_loaded'
+  AND created_at >= :since
+  AND metadata->'knowledge_status'->>'provider' = 'cognia'
+GROUP BY metadata->'knowledge_status'->>'status'
+""")
+
+_MONITOR_COVERAGE_SQL = text("""
+SELECT (SELECT COUNT(*) FROM incidents) AS incident_total,
+       (SELECT COUNT(DISTINCT incident_id) FROM knowledge_reviews
+        WHERE incident_id IS NOT NULL) AS incident_with_review
+""")
+
+
+def _knowledge_monitoring_projection(review_rows, created_rows, published_rows,
+                                     rag_rows, coverage_row, *, days: int, now: datetime) -> dict:
+    """Pure summary: unknown indicators stay explicitly unmeasured."""
+    from collections import Counter
+    from datetime import date
+
+    states = ("pending_review", "approved", "rejected", "publishing",
+              "submitted", "publish_failed", "published")
+    totals = Counter()
+    sources = Counter()
+    created_in_window = 0
+    published_in_window = 0
+    overdue_review = stale_publish = overdue_activation = 0
+    latest_published = None
+    for r in review_rows:
+        count = int(r["count"] or 0)
+        totals[str(r["status"] or "unknown")] += count
+        sources[str(r["source_type"] or "unknown")] += count
+        created_in_window += int(r["created_in_window"] or 0)
+        published_in_window += int(r["published_in_window"] or 0)
+        overdue_review += int(r["overdue_review"] or 0)
+        stale_publish += int(r["stale_publish"] or 0)
+        overdue_activation += int(r["overdue_activation"] or 0)
+        last = r["latest_published"]
+        if last is not None and (latest_published is None or last > latest_published):
+            latest_published = last
+
+    def trend_map(rows):
+        result = Counter()
+        for row in rows:
+            stamp = row["day"]
+            key = stamp.isoformat() if isinstance(stamp, date) else str(stamp or "")
+            if key:
+                result[key] += int(row["count"] or 0)
+        return result
+
+    created = trend_map(created_rows)
+    published = trend_map(published_rows)
+    trend = []
+    # A fixed 14-day daily visualization is bounded even with multi-year ledgers.
+    for offset in range(13, -1, -1):
+        day = (now - timedelta(days=offset)).date().isoformat()
+        trend.append({"day": day, "drafted": created[day], "published": published[day]})
+
+    rag_statuses = Counter()
+    rag_returned = 0
+    rag_total = 0
+    last_rag_at = None
+    for item in rag_rows:
+        name = str(item["status"] or "unknown")
+        calls = int(item["calls"] or 0)
+        rag_statuses[name] += calls
+        rag_total += calls
+        rag_returned += int(item["returned_items"] or 0)
+        last = item["last_attempt"]
+        if last is not None and (last_rag_at is None or last > last_rag_at):
+            last_rag_at = last
+
+    incident_total = int(coverage_row["incident_total"] or 0)
+    incident_with_review = int(coverage_row["incident_with_review"] or 0)
+    return {
+        "source": "aiops_postgresql_review_outbox_and_context_audit",
+        "period_days": days,
+        "sampled_at": now.isoformat(),
+        "scope_note": "AIOps local review ledger; not Cognia global KB inventory",
+        "reviews": {
+            "total": sum(totals.values()),
+            "by_status": {status: totals[status] for status in states},
+            "other_status": sum(n for k, n in totals.items() if k not in states),
+            "by_source": dict(sorted(sources.items())),
+            "created_in_period": created_in_window,
+            "published_in_period": published_in_window,
+            "latest_published_at": latest_published.isoformat() if latest_published else None,
+            "review_overdue_24h": overdue_review,
+            "publication_stalled_3m": stale_publish,
+            "activation_overdue_24h": overdue_activation,
+            "daily_last_14_days": trend,
+        },
+        "coverage": {
+            "durable_incidents": incident_total,
+            "incidents_with_review": incident_with_review,
+            "percentage": round(100 * incident_with_review / incident_total, 1) if incident_total else None,
+        },
+        "retrieval": {
+            "scope": "workflow_context_loaded_audit_only",
+            "period_days": days, "observed_calls": rag_total,
+            "by_status": dict(sorted(rag_statuses.items())),
+            "returned_items_total": rag_returned,
+            "last_observed_at": last_rag_at.isoformat() if last_rag_at else None,
+            "coverage_complete": False,
+            "p95_latency_ms": None,
+            "context_relevance": None,
+            "groundedness": None,
+            "citation_accuracy": None,
+        },
+        "cognia": {
+            "configured_kb_ids": list(settings.COGNIA_KNOWLEDGE_BASE_IDS),
+            "global_document_total": None,
+            "global_inventory_status": "unavailable_without_authorized_cognia_inventory",
+            "health_probe": "/swagger/index.html",
+            "health_scope": "http_reachability_only",
+        },
+    }
+
+
+@router.get("/knowledge-reviews/monitoring",
+            dependencies=[Depends(require_permission("read:incident"))])
+async def knowledge_monitoring(days: Literal[7, 30, 90] = Query(default=30)):
+    """Read-only operational dashboard, no publication, polling or Cognia writes.
+
+    Metrics are aggregated in PostgreSQL, never by downloading draft contents.
+    Retrieval counts include only workflow context_loaded audit observations.
+    """
+    now = datetime.now(timezone.utc)
+    since = now - timedelta(days=days)
+    params = {
+        "since": since, "trend_since": now - timedelta(days=13),
+        "stale_review": now - timedelta(hours=24),
+        "stale_claim": now - timedelta(minutes=3),
+        "stale_activation": now - timedelta(hours=24),
+    }
+    async with AsyncSessionLocal() as db:
+        await require_database_ready(db, operation="knowledge_monitoring")
+        review = (await db.execute(_MONITOR_REVIEW_SQL, params)).mappings().all()
+        drafted = (await db.execute(_MONITOR_TREND_SQL, params)).mappings().all()
+        published = (await db.execute(_MONITOR_PUBLISHED_TREND_SQL, params)).mappings().all()
+        retrieval = (await db.execute(_MONITOR_RAG_SQL, params)).mappings().all()
+        coverage = (await db.execute(_MONITOR_COVERAGE_SQL)).mappings().one()
+    return _knowledge_monitoring_projection(
+        review, drafted, published, retrieval, coverage, days=days, now=now,
+    )
+
+
 @router.get("/knowledge-reviews/{review_id}", dependencies=[Depends(require_permission("knowledge:draft"))])
 async def get_review(review_id: UUID):
     async with AsyncSessionLocal() as db:

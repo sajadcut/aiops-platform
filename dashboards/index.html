@@ -21,7 +21,7 @@
   <link rel="stylesheet" href="/dashboard/control-center.css?v=20261016-dismiss-ux2">
   <link rel="stylesheet" href="/dashboard/approval-actions.css">
   <link rel="stylesheet" href="/dashboard/decision-brief.css">
-  <link rel="stylesheet" href="/dashboard/knowledge-review.css?v=20261016-knowledge2">
+  <link rel="stylesheet" href="/dashboard/knowledge-review.css?v=20261016-rag-monitor1">
   <!-- Load typography last so application CSS cannot override the Persian font. -->
   <link rel="stylesheet" href="/dashboard/fonts.css?v=2">
 </head>
@@ -158,6 +158,44 @@
 
     <section class="view" data-view="knowledge">
       <div class="policy-banner"><div><span class="section-kicker">دانش سازمانی تحت نظارت کاگنیا</span><h2>پایگاه دانش</h2><p>گزارش همهٔ رخدادها، حتی بدون بازیابی موفق یا علت قطعی، به‌عنوان پیش‌نویس تشخیصی قابل بازبینی است. شما تصمیم می‌گیرید ذخیره و منتشر شود یا رد گردد؛ انتشار خودکار نیست.</p></div><div class="policy-chips"><span>در انتظار بازبینی</span><span>اولویت با شواهد</span><span>تأیید انسانی</span><span>پایگاه دانش کاگنیا شمارهٔ ۱</span></div></div>
+      <section class="knowledge-monitor" aria-label="مانیتورینگ دانش سازمانی و RAG">
+        <div class="knowledge-monitor-head">
+          <div>
+            <span class="section-kicker">دید عملیاتی · PostgreSQL / Cognia</span>
+            <h2>مانیتورینگ پایگاه دانش</h2>
+            <p>وضعیت ثبت، بازبینی، انتشار و بازیابی دانش، از داده‌های واقعی سامانه</p>
+          </div>
+          <div class="knowledge-monitor-tools">
+            <label for="knowledgeMonitorPeriod">بازهٔ گزارش</label>
+            <select id="knowledgeMonitorPeriod" aria-label="بازهٔ شاخص‌های دانش">
+              <option value="7">۷ روز اخیر</option>
+              <option value="30" selected>۳۰ روز اخیر</option>
+              <option value="90">۹۰ روز اخیر</option>
+            </select>
+            <button type="button" class="knowledge-monitor-refresh" onclick="loadKnowledgeMonitoring()" aria-label="بازخوانی شاخص‌های پایگاه دانش">↻ به‌روزرسانی</button>
+          </div>
+        </div>
+        <div id="knowledgeMonitorState" class="knowledge-monitor-state" role="status" aria-live="polite">در حال دریافت شاخص‌های ذخیره‌شده…</div>
+        <div id="knowledgeMonitorKpis" class="knowledge-monitor-kpis" aria-label="شاخص‌های ثبت و انتشار"></div>
+        <div class="knowledge-monitor-panels">
+          <article class="panel knowledge-monitor-panel">
+            <div class="knowledge-monitor-subhead"><h3>چرخهٔ انتشار دانش</h3><span>تعداد کل سوابق AIOps</span></div>
+            <div id="knowledgeMonitorLifecycle"></div>
+          </article>
+          <article class="panel knowledge-monitor-panel">
+            <div class="knowledge-monitor-subhead"><h3>روند ثبت و انتشار</h3><span>۱۴ روز اخیر · روزانه (UTC)</span></div>
+            <div id="knowledgeMonitorTrend"></div>
+          </article>
+          <article class="panel knowledge-monitor-panel">
+            <div class="knowledge-monitor-subhead"><h3>سلامت بازیابی RAG</h3><span>فقط درخواست‌های ثبت‌شده در ممیزی Workflow</span></div>
+            <div id="knowledgeMonitorRetrieval"></div>
+          </article>
+          <article class="panel knowledge-monitor-panel">
+            <div class="knowledge-monitor-subhead"><h3>اتصال Cognia و کیفیت داده</h3><span>سلامت HTTP با کیفیت RAG متفاوت است</span></div>
+            <div id="knowledgeMonitorCognia"></div>
+          </article>
+        </div>
+      </section>
       <div class="knowledge-layout">
         <section class="panel">
           <div class="panel-head"><div><span class="section-kicker">پیش‌نویس‌ها و سوابق</span><h2>موارد پایگاه دانش <span id="knowledgePendingCount" class="pill">—</span></h2></div><button type="button" class="approval-btn" onclick="loadKnowledgeReviews()">به‌روزرسانی</button></div>
@@ -234,7 +272,7 @@
 <script src="/dashboard/control-center.js?v=20261016-agent-durable1"></script>
 <script src="/dashboard/approval-actions.js"></script>
 <script src="/dashboard/decision-brief.js"></script>
-<script src="/dashboard/knowledge-review.js?v=20261016-knowledge2"></script>
+<script src="/dashboard/knowledge-review.js?v=20261016-rag-monitor1"></script>
 <script>
 (() => {
   const baseRenderOverviewForIncidentTime = window.renderOverview;
