@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 534 | Dashboard JS files scanned: 8 | Symbols indexed: 5824**
+**Python files scanned: 535 | Dashboard JS files scanned: 8 | Symbols indexed: 5833**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -3563,6 +3563,15 @@
 | `tests/unit/test_config_change_validation_binding.py` | `test_terminal_config_ticket_is_not_accepted_as_pending_validation` | 67 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_config_change_validation_binding.py` | `test_config_ticket_rejects_drift_or_tampering_during_validation` | 82 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_config_change_validation_binding.py` | `test_preapproval_ticket_requires_exact_high_risk_and_workflow` | 91 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_config_file_target_selection.py` | `_connector` | 11 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_config_file_target_selection.py` | `_connector.validator` | 15 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _connector |
+| `tests/unit/test_config_file_target_selection.py` | `_connector.discovery` | 17 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _connector |
+| `tests/unit/test_config_file_target_selection.py` | `test_explicit_full_file_llm_receives_verified_appsettings_not_first_json` | 31 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_config_file_target_selection.py` | `test_explicit_full_file_llm_receives_verified_appsettings_not_first_json.read` | 38 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_explicit_full_file_llm_receives_verified_appsettings_not_first_json |
+| `tests/unit/test_config_file_target_selection.py` | `test_explicit_full_file_llm_receives_verified_appsettings_not_first_json.repair` | 43 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_explicit_full_file_llm_receives_verified_appsettings_not_first_json |
+| `tests/unit/test_config_file_target_selection.py` | `test_primary_broken_appsettings_never_replaced_with_unrelated_patch` | 59 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_config_file_target_selection.py` | `test_primary_broken_appsettings_never_replaced_with_unrelated_patch.discovery` | 62 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_primary_broken_appsettings_never_replaced_with_unrelated_patch |
+| `tests/unit/test_config_file_target_selection.py` | `test_primary_broken_appsettings_never_replaced_with_unrelated_patch.read` | 67 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_primary_broken_appsettings_never_replaced_with_unrelated_patch |
 | `tests/unit/test_config_guard_validation_diagnostics.py` | `test_guard_diagnostic_classified_without_exposing_stderr` | 30 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_config_guard_validation_diagnostics.py` | `test_live_rc1_is_nonapprovable_and_safe_for_api` | 38 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_config_guard_validation_diagnostics.py` | `test_live_rc1_is_nonapprovable_and_safe_for_api.Edge` | 39 | class | کلاس | test_live_rc1_is_nonapprovable_and_safe_for_api |
