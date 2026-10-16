@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 532 | Dashboard JS files scanned: 8 | Symbols indexed: 5792**
+**Python files scanned: 532 | Dashboard JS files scanned: 8 | Symbols indexed: 5804**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -3135,6 +3135,18 @@
 | `tests/unit/test_auto_config_prevalidation.py` | `test_mcp_review_prefers_broken_appsettings_over_first_healthy_json.validator` | 77 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_mcp_review_prefers_broken_appsettings_over_first_healthy_json |
 | `tests/unit/test_auto_config_prevalidation.py` | `test_mcp_review_prefers_broken_appsettings_over_first_healthy_json.discovery` | 80 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_mcp_review_prefers_broken_appsettings_over_first_healthy_json |
 | `tests/unit/test_auto_config_prevalidation.py` | `test_mcp_review_prefers_broken_appsettings_over_first_healthy_json.read` | 86 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_mcp_review_prefers_broken_appsettings_over_first_healthy_json |
+| `tests/unit/test_auto_config_prevalidation.py` | `test_valid_microfix_auto_creates_nonapprovable_request_and_only_validates` | 107 | async function | The automated branch can queue/stage, not approve or apply a file. | module |
+| `tests/unit/test_auto_config_prevalidation.py` | `test_valid_microfix_auto_creates_nonapprovable_request_and_only_validates.DB` | 114 | class | کلاس | test_valid_microfix_auto_creates_nonapprovable_request_and_only_validates |
+| `tests/unit/test_auto_config_prevalidation.py` | `test_valid_microfix_auto_creates_nonapprovable_request_and_only_validates.DB.get` | 115 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_valid_microfix_auto_creates_nonapprovable_request_and_only_validates.DB |
+| `tests/unit/test_auto_config_prevalidation.py` | `test_valid_microfix_auto_creates_nonapprovable_request_and_only_validates.DB.execute` | 117 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | test_valid_microfix_auto_creates_nonapprovable_request_and_only_validates.DB |
+| `tests/unit/test_auto_config_prevalidation.py` | `test_valid_microfix_auto_creates_nonapprovable_request_and_only_validates.Audit` | 119 | class | کلاس | test_valid_microfix_auto_creates_nonapprovable_request_and_only_validates |
+| `tests/unit/test_auto_config_prevalidation.py` | `test_valid_microfix_auto_creates_nonapprovable_request_and_only_validates.Audit.__init__` | 120 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_valid_microfix_auto_creates_nonapprovable_request_and_only_validates.Audit |
+| `tests/unit/test_auto_config_prevalidation.py` | `test_valid_microfix_auto_creates_nonapprovable_request_and_only_validates.Audit.list` | 122 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_valid_microfix_auto_creates_nonapprovable_request_and_only_validates.Audit |
+| `tests/unit/test_auto_config_prevalidation.py` | `test_valid_microfix_auto_creates_nonapprovable_request_and_only_validates.Audit.append` | 124 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_valid_microfix_auto_creates_nonapprovable_request_and_only_validates.Audit |
+| `tests/unit/test_auto_config_prevalidation.py` | `test_valid_microfix_auto_creates_nonapprovable_request_and_only_validates.Approvals` | 126 | class | کلاس | test_valid_microfix_auto_creates_nonapprovable_request_and_only_validates |
+| `tests/unit/test_auto_config_prevalidation.py` | `test_valid_microfix_auto_creates_nonapprovable_request_and_only_validates.Approvals.__init__` | 127 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_valid_microfix_auto_creates_nonapprovable_request_and_only_validates.Approvals |
+| `tests/unit/test_auto_config_prevalidation.py` | `test_valid_microfix_auto_creates_nonapprovable_request_and_only_validates.Approvals.save_validation_request` | 129 | async method | state یا داده را به‌صورت durable ذخیره/به‌روزرسانی می‌کند | test_valid_microfix_auto_creates_nonapprovable_request_and_only_validates.Approvals |
+| `tests/unit/test_auto_config_prevalidation.py` | `test_valid_microfix_auto_creates_nonapprovable_request_and_only_validates.stage` | 132 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_valid_microfix_auto_creates_nonapprovable_request_and_only_validates |
 | `tests/unit/test_base_orchestrator_decision_binding.py` | `_finding` | 9 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_base_orchestrator_decision_binding.py` | `test_base_decision_rejects_unknown_execution_tool` | 19 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_base_orchestrator_decision_binding.py` | `test_base_decision_rejects_write_target_known_only_from_knowledge` | 46 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
