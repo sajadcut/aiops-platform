@@ -1074,9 +1074,25 @@ class SSHVMConnector:
         # Validator and systemd, never alert text or an LLM-supplied path.
         if validator.get("supported") and validator.get("config_file"):
             candidates.append(validator["config_file"])
-        for item in (discovered.get("files") or [])[:10]:
+        for item in (discovered.get("files") or [])[:20]:
             if isinstance(item, dict) and item.get("verified_exists") is True:
                 candidates.append(item.get("path"))
+        # For the .NET endpoint, a discovered appsettings.json is the primary
+        # application config. Do not blindly send unrelated JSON data files
+        # (e.g. MessageTemplates.json) to an LLM just because the first read
+        # succeeded. All paths here MUST already be existence-verified by VM
+        # discovery or registered vendor validation.
+        if str(discovered.get("runtime") or "").lower() == "dotnet":
+            primary = [
+                p for p in candidates
+                if isinstance(p, str) and (
+                    p.rsplit("/", 1)[-1] == "appsettings.json"
+                    or (p.rsplit("/", 1)[-1].startswith("appsettings.")
+                        and p.endswith(".json"))
+                )
+            ]
+            if primary:
+                candidates = primary
         had_read_failure = False
         for path in list(dict.fromkeys(candidates))[:12]:
             try:
@@ -1093,7 +1109,12 @@ class SSHVMConnector:
                 vendor_error=(str(validator.get("syntax_error") or "")[:900]
                               if safe == validator.get("config_file") else ""), target=target,
             )
-            return {**base, **output, "target": target, "service": service}
+            return {**base, **output, "target": target, "service": service,
+                    "selected_by": (
+                        "verified_dotnet_appsettings" if str(
+                            discovered.get("runtime") or "").lower() == "dotnet"
+                        else "verified_service_config_discovery"
+                    )}
         return {
             **base, "status": ("file_read_unavailable" if had_read_failure
                                 else "file_not_verified")
