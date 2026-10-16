@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 535 | Dashboard JS files scanned: 8 | Symbols indexed: 5836**
+**Python files scanned: 536 | Dashboard JS files scanned: 8 | Symbols indexed: 5844**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -3092,6 +3092,14 @@
 | `tests/unit/test_approval_binding.py` | `test_approval_cannot_be_replayed_for_different_request` | 61 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_approval_binding.py` | `test_approval_id_requires_incident_binding` | 69 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_approval_binding.py` | `test_legacy_partial_binding_fails_closed` | 77 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_approval_repair_malformed_llm.py` | `test_unique_double_braces_repaired_without_touching_secret_or_other_bytes` | 41 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_approval_repair_malformed_llm.py` | `test_never_guess_when_two_or_more_possible_or_unrelated_repairs` | 50 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_approval_repair_malformed_llm.py` | `test_large_repetitive_document_gets_exact_edit_distance` | 59 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_approval_repair_malformed_llm.py` | `test_invalid_llm_responses_fall_back_to_parser_and_publish_sealed_candidate` | 70 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_approval_repair_malformed_llm.py` | `test_invalid_llm_responses_fall_back_to_parser_and_publish_sealed_candidate.AlwaysBadModel` | 78 | class | کلاس | test_invalid_llm_responses_fall_back_to_parser_and_publish_sealed_candidate |
+| `tests/unit/test_approval_repair_malformed_llm.py` | `test_invalid_llm_responses_fall_back_to_parser_and_publish_sealed_candidate.AlwaysBadModel.generate` | 79 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_invalid_llm_responses_fall_back_to_parser_and_publish_sealed_candidate.AlwaysBadModel |
+| `tests/unit/test_approval_repair_malformed_llm.py` | `test_invalid_llm_responses_fall_back_to_parser_and_publish_sealed_candidate.store` | 84 | method | state یا داده را به‌صورت durable ذخیره/به‌روزرسانی می‌کند | test_invalid_llm_responses_fall_back_to_parser_and_publish_sealed_candidate |
+| `tests/unit/test_approval_repair_malformed_llm.py` | `test_brace_pair_preview_allows_measured_closer_further_down` | 120 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_approval_store_contract.py` | `Result` | 6 | class | کلاس | module |
 | `tests/unit/test_approval_store_contract.py` | `Result.__init__` | 7 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | Result |
 | `tests/unit/test_approval_store_contract.py` | `Result.mappings` | 10 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | Result |
