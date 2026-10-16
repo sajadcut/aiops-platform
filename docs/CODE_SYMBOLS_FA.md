@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 530 | Dashboard JS files scanned: 8 | Symbols indexed: 5780**
+**Python files scanned: 531 | Dashboard JS files scanned: 8 | Symbols indexed: 5782**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1035,6 +1035,8 @@
 | `apps/config_change_authorization.py` | `create_claim` | 68 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
 | `apps/config_change_authorization.py` | `verify_claim` | 86 | function | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | module |
 | `apps/config_change_authorization.py` | `sign_root_guard` | 110 | function | Ed25519 root guard signature; VM stores only its verification public key. | module |
+| `apps/config_change_auto_queue.py` | `auto_queue_candidate` | 25 | function | Only existing, tightly validated hash-bound proposals can enter queue. | module |
+| `apps/config_change_auto_queue.py` | `auto_queue_prevalidation` | 45 | async function | Automatic *request*, never automatic Approval; record the exact blocker. | module |
 | `apps/config_syntax_llm.py` | `sanitized_projection` | 30 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/config_syntax_llm.py` | `_json_model_reply` | 60 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/config_syntax_llm.py` | `assess_service_syntax` | 87 | async function | Two sequential LLM passes; second pass never asserts a vendor PASS. | module |
