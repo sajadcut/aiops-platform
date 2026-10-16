@@ -39,6 +39,32 @@
     </article>`;
   }
 
+  // A paused incident analysis workflow and an independently approved VM
+  // recovery are different execution authorities. Never offer graph-resume
+  // as the execution control for a signed service Start/Restart.
+  const recoveryUUID = /^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i;
+  function serviceRecoveryApprovalPanel() {
+    const rec = S.recoveryApproval || {};
+    const state = lower(rec.status);
+    if (!recoveryUUID.test(String(rec.approval_id || '')) ||
+        !['pending','approved','consumed'].includes(state) ||
+        !['start_service','restart_service'].includes(rec.action)) return '';
+    const verb = rec.action === 'start_service' ? 'Start' : 'Restart';
+    const actionControls = state === 'pending'
+      ? `<button class="approval-btn execute" onclick="performServiceRecovery('approve-execute')">تأیید و اجرای واقعی ${verb}</button>
+         <button class="approval-btn approve" onclick="performServiceRecovery('approve')">فقط تأیید (بدون اجرا)</button>`
+      : state === 'approved'
+        ? `<button class="approval-btn execute" onclick="performServiceRecovery('execute')">اجرای واقعی ${verb} تأییدشده</button>`
+        : '<p>مجوز بازیابی مصرف شده است؛ وضعیت VM و نتیجهٔ راستی‌آزمایی را بررسی کنید.</p>';
+    return `<article class="approval-card ${esc(state)}" id="service-recovery-approval">
+      <div class="approval-card-head"><div><span class="section-kicker">مجوز مستقل بازیابی سرویس</span>
+      <h4>${esc(verb)} سرویس ${esc(rec.service)} روی ${esc(rec.target)}</h4></div>${pill(state)}</div>
+      <p>این مجوز از تأیید گردش‌کار تحلیل مستقل است. برای Start/Restart نباید Resume گردش‌کار را اجرا کرد.</p>
+      <div class="approval-facts"><div><label>شناسهٔ مجوز Start/Restart</label>
+        <strong dir="ltr">${esc(rec.approval_id)}</strong></div></div>
+      <div class="approval-buttons">${actionControls}</div></article>`;
+  }
+
   function approvalPanel() {
     const lifecycle = S.detail?.lifecycle || {};
     const approval = lifecycle.approval || null;
@@ -477,6 +503,15 @@
     const lifecycle = S.detail?.lifecycle || {};
     const approval = lifecycle.approval;
     const id = S.selected;
+    const recovery = S.recoveryApproval || {};
+    if (id && lower(recovery.status) === 'approved' &&
+        recoveryUUID.test(String(recovery.approval_id || '')) &&
+        ['start_service','restart_service'].includes(recovery.action)) {
+      // Old/detached Resume button: route only via exact signed recovery
+      // approval, not through the unrelated E2E checkpoint (HTTP 409).
+      await window.performServiceRecovery('execute');
+      return;
+    }
     if (!id || !approval?.approval_id || lower(approval.status) !== 'approved') return;
     const meta = approval.metadata || {};
     const binding = meta.binding_complete === true || lower(meta.binding_complete) === 'true';
@@ -528,9 +563,60 @@
     }
   };
 
+  window.performServiceRecovery = async function performServiceRecovery(mode) {
+    const incident = S.selected, ticket = S.recoveryApproval || {};
+    if (!incident || !recoveryUUID.test(String(ticket.approval_id || '')) ||
+        !['start_service','restart_service'].includes(ticket.action) ||
+        (mode === 'execute' && lower(ticket.status) !== 'approved') ||
+        (['approve','approve-execute'].includes(mode) && lower(ticket.status) !== 'pending') ||
+        !['approve','approve-execute','execute'].includes(mode)) return;
+    const verb = ticket.action === 'start_service' ? 'Start' : 'Restart';
+    const willExecute = mode !== 'approve';
+    const confirmation = willExecute
+      ? `آیا اجرای واقعی ${verb} سرویس ${ticket.service} روی سرور ${ticket.target} را تأیید می‌کنید؟\\nمجوز و Runbook دوباره در سرور بررسی می‌شوند.`
+      : `آیا فقط مجوز ${verb} سرویس ${ticket.service} روی ${ticket.target} تأیید شود، بدون اجرای عملیات؟`;
+    if (!window.confirm(confirmation)) return;
+    showError();
+    try {
+      // Recheck same incident/approval/action/target/service before any write.
+      const fresh = await api(`/api/v1/incidents/${encodeURIComponent(incident)}/recovery-approval`);
+      if (S.selected !== incident ||
+          String(fresh.approval_id || '') !== String(ticket.approval_id) ||
+          String(fresh.action || '') !== String(ticket.action) ||
+          String(fresh.service || '') !== String(ticket.service) ||
+          String(fresh.target || '') !== String(ticket.target) ||
+          lower(fresh.status) !== (mode === 'execute' ? 'approved' : 'pending')) {
+        throw new Error('recovery_approval_changed_recheck_required');
+      }
+      const root = '/api/v1/approvals/' + encodeURIComponent(ticket.approval_id);
+      if (mode !== 'execute') {
+        const authorization = await api(root+'/approve', {method:'POST'});
+        if (lower(authorization.status) !== 'approved') {
+          throw new Error('recovery_approval_not_granted');
+        }
+      }
+      if (willExecute) {
+        const outcome = await api(root+'/execute', {method:'POST'});
+        if (outcome.success !== true) {
+          throw new Error('service_recovery_execution_or_verification_failed');
+        }
+      }
+      toast(willExecute ? verb+' انجام شد؛ نتیجهٔ راستی‌آزمایی را بررسی کنید.' :
+        'مجوز تأیید شد؛ هنوز عملیاتی اجرا نشده است.');
+      await loadAll();
+      await refreshIncidentDecision();
+    } catch(error) {
+      showError('بازیابی سرویس انجام نشد: '+String(error.message || 'unknown_failure').slice(0,240));
+      await refreshIncidentDecision();
+    }
+  };
+
   selectIncident = async function selectIncidentWithOperatorSummary(id) {
+    S.recoveryApproval = null;
     S.configPreApproval = null;
     S.configPreApprovalError = null;
+    const recoveryRequest = api(`/api/v1/incidents/${encodeURIComponent(id)}/recovery-approval`)
+      .then(value => ({value, error:null})).catch(error => ({value:null,error:error.message}));
     const configRequest = api(`/api/v1/incidents/${encodeURIComponent(id)}/configuration-review-response`)
       .then(value => ({value, error: null}))
       .catch(error => ({value: null, error: error.message}));
@@ -543,8 +629,9 @@
       .catch(error => ({value: null, error: error.message}));
     await baseSelectIncident(id);
     if (S.selected !== id) return;
-    const [result, review] = await Promise.all([summaryRequest, configRequest]);
+    const [result, review, recovery] = await Promise.all([summaryRequest, configRequest, recoveryRequest]);
     if (S.selected !== id) return;
+    S.recoveryApproval = recovery.value;
     S.configPreApproval = review.value;
     S.configPreApprovalError = review.error;
     S.operatorSummary = result.value;
@@ -560,7 +647,7 @@
     const pane = document.querySelector('#detailPane');
     if (!pane) return;
     const existing = pane.innerHTML;
-    pane.innerHTML = `${configPreApprovalPanel()}${approvalPanel()}${existing}`;
+    pane.innerHTML = `${configPreApprovalPanel()}${serviceRecoveryApprovalPanel()}${approvalPanel()}${existing}`;
   };
 
   loadAll = async function loadAllWithCurrentIncidentSummary() {

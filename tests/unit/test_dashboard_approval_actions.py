@@ -50,3 +50,16 @@ def test_operator_dashboard_does_not_resume_a_completed_incident():
     assert "checkpoint === 'paused'" in js
     assert "/approvals/${encodeURIComponent(approval.approval_id)}/execute" in js
     assert "approval_changed_or_binding_unverified" in js
+
+
+def test_main_dashboard_separates_service_recovery_approval_from_e2e_resume():
+    js = (ROOT / "dashboards/approval-actions.js").read_text(encoding="utf-8")
+    assert "function serviceRecoveryApprovalPanel()" in js
+    assert "serviceRecoveryApprovalPanel()}\u0024{approvalPanel()" in js
+    assert "window.performServiceRecovery = async function performServiceRecovery(mode)" in js
+    assert "recovery_approval_changed_recheck_required" in js
+    assert "const outcome = await api(root+'/execute', {method:'POST'});" in js
+    assert "const authorization = await api(root+'/approve', {method:'POST'});" in js
+    assert "if (willExecute)" in js
+    assert "await window.performServiceRecovery('execute');" in js
+    assert "await api(\u0060/api/v1/incidents/\u0024{encodeURIComponent(id)}/recovery-approval\u0060)" in js
