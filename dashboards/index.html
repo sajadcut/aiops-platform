@@ -439,10 +439,11 @@
       'رخدادی با این فیلترها پیدا نشد. پنهان‌شده‌ها را از دکمهٔ بالای فهرست می‌توانید بازگردانید.';
     if (incidentSize === 'list') {
       const header = '<div class="incident-list-header" aria-hidden="true">'+
+        '<span class="incident-list-action-heading">کنترل</span>'+
         '<div class="incident-list-header-main">'+
         '<span>سرویس / رخداد</span><span>شرح کوتاه</span><span>شدت</span>'+
         '<span>وضعیت رخداد</span><span>شروع رخداد</span><span>وضعیت تأیید</span><span>جزئیات</span>'+
-        '</div><span class="incident-list-action-heading">نمایش</span></div>';
+        '</div></div>';
       const listRows = rows.map(i => {
         const started = incidentTimeInfo(i.started_at || i.created_at);
         const approval = lower(i.approval_status);
@@ -460,7 +461,7 @@
         })[lower(i.severity)] || i.severity || 'نامشخص';
         const needsDecision = ['pending','approved'].includes(approval);
         const path = '/dashboard/incidents/' + encodeURIComponent(i.id);
-        return `<div class="incident-dismiss-shell incident-dismiss-row"><a class="incident-list-row ${needsDecision ? 'needs-decision' : ''} ${incidentAnalyzing(i) ? 'is-analyzing' : ''}" href="${path}"
+        return `<div class="incident-dismiss-shell incident-dismiss-row ${needsDecision ? 'needs-decision' : ''}">${dismissal(i)}<a class="incident-list-row ${needsDecision ? 'needs-decision' : ''} ${incidentAnalyzing(i) ? 'is-analyzing' : ''}" href="${path}"
           aria-label="مشاهده گزارش ${esc(incidentDisplayName(i))}، ${esc(statusLabel)}، ${esc(approvalLabel)}">
           <span class="incident-list-service"><span class="incident-list-symbol" aria-hidden="true">◈</span><span>
             <strong>${esc(incidentDisplayName(i))}</strong><small>#${esc(String(i.id).slice(0,8))}</small></span></span>
@@ -470,7 +471,7 @@
           <time class="incident-list-date" datetime="${esc(i.started_at || i.created_at || '')}">${esc(started.exact)} <small>${esc(started.zone)}</small></time>
           <span class="incident-list-approval ${needsDecision ? 'attention' : ''}">${esc(approvalLabel)}</span>
           <span class="incident-list-open">مشاهده ←</span>
-        </a>${dismissal(i)}</div>`;
+        </a></div>`;
       }).join('');
       $('#incidentRows').innerHTML = rows.length ? header + listRows :
         '<div class="empty-state">'+esc(emptyMessage)+'</div>';
