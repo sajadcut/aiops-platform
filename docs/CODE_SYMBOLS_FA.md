@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 527 | Dashboard JS files scanned: 8 | Symbols indexed: 5735**
+**Python files scanned: 527 | Dashboard JS files scanned: 8 | Symbols indexed: 5745**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -5594,12 +5594,22 @@
 | `tests/unit/test_vm_recovery_advice.py` | `test_recovery_approval_queue_fails_closed_on_changed_live_state.DB.__aenter__` | 261 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_recovery_approval_queue_fails_closed_on_changed_live_state.DB |
 | `tests/unit/test_vm_recovery_advice.py` | `test_recovery_approval_queue_fails_closed_on_changed_live_state.DB.__aexit__` | 262 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_recovery_approval_queue_fails_closed_on_changed_live_state.DB |
 | `tests/unit/test_vm_recovery_advice.py` | `test_recovery_approval_queue_fails_closed_on_changed_live_state.DB.execute` | 263 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | test_recovery_approval_queue_fails_closed_on_changed_live_state.DB |
-| `tests/unit/test_vm_recovery_advice.py` | `test_dotnet_live_json_syntax_endpoint_reports_line_column_without_config` | 291 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_vm_recovery_advice.py` | `test_dotnet_live_json_syntax_endpoint_reports_line_column_without_config.DB` | 297 | class | کلاس | test_dotnet_live_json_syntax_endpoint_reports_line_column_without_config |
-| `tests/unit/test_vm_recovery_advice.py` | `test_dotnet_live_json_syntax_endpoint_reports_line_column_without_config.DB.__aenter__` | 298 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_dotnet_live_json_syntax_endpoint_reports_line_column_without_config.DB |
-| `tests/unit/test_vm_recovery_advice.py` | `test_dotnet_live_json_syntax_endpoint_reports_line_column_without_config.DB.__aexit__` | 299 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_dotnet_live_json_syntax_endpoint_reports_line_column_without_config.DB |
-| `tests/unit/test_vm_recovery_advice.py` | `test_dotnet_live_json_syntax_endpoint_reports_line_column_without_config.MCP` | 311 | class | کلاس | test_dotnet_live_json_syntax_endpoint_reports_line_column_without_config |
-| `tests/unit/test_vm_recovery_advice.py` | `test_dotnet_live_json_syntax_endpoint_reports_line_column_without_config.MCP.dotnet_config_syntax` | 312 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_dotnet_live_json_syntax_endpoint_reports_line_column_without_config.MCP |
+| `tests/unit/test_vm_recovery_advice.py` | `test_recovery_409_distinguishes_other_states_from_active_recovery` | 307 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_recovery_advice.py` | `test_recovery_409_distinguishes_other_states_from_active_recovery.DB` | 316 | class | کلاس | test_recovery_409_distinguishes_other_states_from_active_recovery |
+| `tests/unit/test_vm_recovery_advice.py` | `test_recovery_409_distinguishes_other_states_from_active_recovery.DB.__aenter__` | 317 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_recovery_409_distinguishes_other_states_from_active_recovery.DB |
+| `tests/unit/test_vm_recovery_advice.py` | `test_recovery_409_distinguishes_other_states_from_active_recovery.DB.__aexit__` | 318 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_recovery_409_distinguishes_other_states_from_active_recovery.DB |
+| `tests/unit/test_vm_recovery_advice.py` | `test_recovery_409_distinguishes_other_states_from_active_recovery.DB.execute` | 319 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | test_recovery_409_distinguishes_other_states_from_active_recovery.DB |
+| `tests/unit/test_vm_recovery_advice.py` | `test_recovery_409_does_not_label_unverified_identity_as_recovered` | 351 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_recovery_advice.py` | `test_recovery_409_does_not_label_unverified_identity_as_recovered.DB` | 358 | class | کلاس | test_recovery_409_does_not_label_unverified_identity_as_recovered |
+| `tests/unit/test_vm_recovery_advice.py` | `test_recovery_409_does_not_label_unverified_identity_as_recovered.DB.__aenter__` | 359 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_recovery_409_does_not_label_unverified_identity_as_recovered.DB |
+| `tests/unit/test_vm_recovery_advice.py` | `test_recovery_409_does_not_label_unverified_identity_as_recovered.DB.__aexit__` | 360 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_recovery_409_does_not_label_unverified_identity_as_recovered.DB |
+| `tests/unit/test_vm_recovery_advice.py` | `test_recovery_409_does_not_label_unverified_identity_as_recovered.DB.execute` | 361 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | test_recovery_409_does_not_label_unverified_identity_as_recovered.DB |
+| `tests/unit/test_vm_recovery_advice.py` | `test_dotnet_live_json_syntax_endpoint_reports_line_column_without_config` | 392 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_recovery_advice.py` | `test_dotnet_live_json_syntax_endpoint_reports_line_column_without_config.DB` | 398 | class | کلاس | test_dotnet_live_json_syntax_endpoint_reports_line_column_without_config |
+| `tests/unit/test_vm_recovery_advice.py` | `test_dotnet_live_json_syntax_endpoint_reports_line_column_without_config.DB.__aenter__` | 399 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_dotnet_live_json_syntax_endpoint_reports_line_column_without_config.DB |
+| `tests/unit/test_vm_recovery_advice.py` | `test_dotnet_live_json_syntax_endpoint_reports_line_column_without_config.DB.__aexit__` | 400 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_dotnet_live_json_syntax_endpoint_reports_line_column_without_config.DB |
+| `tests/unit/test_vm_recovery_advice.py` | `test_dotnet_live_json_syntax_endpoint_reports_line_column_without_config.MCP` | 412 | class | کلاس | test_dotnet_live_json_syntax_endpoint_reports_line_column_without_config |
+| `tests/unit/test_vm_recovery_advice.py` | `test_dotnet_live_json_syntax_endpoint_reports_line_column_without_config.MCP.dotnet_config_syntax` | 413 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_dotnet_live_json_syntax_endpoint_reports_line_column_without_config.MCP |
 | `tests/unit/test_vm_symptom_verification.py` | `_context` | 6 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_vm_symptom_verification.py` | `_telemetry` | 10 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_vm_symptom_verification.py` | `test_port_recovery_is_verified_from_fresh_operational_evidence` | 20 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
