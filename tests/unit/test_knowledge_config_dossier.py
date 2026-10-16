@@ -115,3 +115,55 @@ def test_no_unverified_source_is_upgraded_to_a_config_root_cause():
     d = _dossier()
     assert "Root cause:" not in dossier_addendum(d)
     assert "Cause confirmed" not in dossier_addendum(d)
+
+
+def test_failed_approved_start_is_truthfully_presented_to_knowledge_reviewer():
+    approval_id = str(uuid4())
+    audit_id = str(uuid4())
+    result = build_dossier(
+        incident_id=INCIDENT, service="nginx", incident_status="analyzing",
+        evidence=[], audits=[{
+            "event_type": "remediation_executed",
+            "event_id": audit_id, "action": "start_service",
+            "metadata": {
+                "approval_id": approval_id,
+                "result": {"action": "start_service", "success": False},
+                "verification": {"status": "failed"},
+            },
+        }],
+    )
+    facts = "\n".join(result["facts"])
+    assert "Start" in facts
+    assert "اجرای فرمان ناموفق ثبت شد" in facts
+    assert "Verification: failed" in facts
+    assert approval_id in facts and audit_id in facts
+    assert result["monitor_recovered"] is False
+
+
+def test_blocked_start_never_claims_actual_execution_or_recovery():
+    result = build_dossier(
+        incident_id=INCIDENT, service="nginx", incident_status="open",
+        evidence=[], audits=[{
+            "event_type": "remediation_precondition_failed",
+            "event_id": str(uuid4()), "action": "start_service",
+            "metadata": {"approval_id": str(uuid4())},
+        }],
+    )
+    assert any("در پیش‌شرط اجرا مسدود شد" in fact for fact in result["facts"])
+    assert any("اجرا به‌عنوان موفق ثبت نشده" in fact for fact in result["facts"])
+    assert not result["monitor_recovered"]
+
+
+def test_unaudited_or_malformed_service_execution_is_not_knowledge_proof():
+    for meta in (
+        {"approval_id": "unknown", "result": {"action": "start_service", "success": True}},
+        {"approval_id": str(uuid4()), "result": {"action": "restart_service", "success": True}},
+    ):
+        outcome = build_dossier(
+            incident_id=INCIDENT, service="nginx", incident_status="analyzing",
+            evidence=[], audits=[{
+                "event_type": "remediation_executed",
+                "action": "start_service", "metadata": meta,
+            }],
+        )
+        assert not any("عملیات ممیزی‌شده" in fact for fact in outcome["facts"])
