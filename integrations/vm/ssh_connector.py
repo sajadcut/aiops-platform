@@ -135,6 +135,23 @@ class SSHVMConnector:
         args.append(f"{user}@{target}" if user else target)
         return args
 
+    def _command_deadline_seconds(self, command: str) -> int:
+        """Keep SSH connection timeout short; bound trusted config guard work separately.
+
+        This is *not* an SSH allowlist expansion. Only the existing fixed
+        ephemeral POSIX guard, never generic remote shell or service actions,
+        receives time to stage/check the candidate and perform sudo fallback.
+        """
+        permitted = (
+            "sudo -n /bin/sh -s -- ",
+            "sudo -k -S -p '' /bin/sh -s -- ",
+        )
+        if (command.startswith(permitted)
+                and any(command.startswith(prefix + action + " ")
+                        for prefix in permitted for action in ("apply", "validate"))):
+            return max(self.timeout + 5, 60)
+        return self.timeout + 5
+
     async def _run_key(self, target: str, command: str, *, stdin_data: Optional[str] = None) -> Dict[str, Any]:
         args = self._base_ssh_args(target) + ["--", command]
         started = time.perf_counter()
@@ -145,7 +162,7 @@ class SSHVMConnector:
         try:
             stdout, stderr = await asyncio.wait_for(
                 process.communicate(stdin_data.encode('utf-8') if stdin_data is not None else None),
-                timeout=self.timeout + 5,
+                timeout=self._command_deadline_seconds(command),
             )
         except asyncio.TimeoutError:
             process.kill()
@@ -210,7 +227,9 @@ class SSHVMConnector:
                 }
 
         try:
-            result = await asyncio.wait_for(execute(), timeout=self.timeout + 5)
+            result = await asyncio.wait_for(
+                execute(), timeout=self._command_deadline_seconds(command)
+            )
         except asyncio.TimeoutError:
             duration_ms = round((time.perf_counter() - started) * 1000, 3)
             logger.warning("vm_ssh_command_timeout", target=target, auth_mode="password", duration_ms=duration_ms)
