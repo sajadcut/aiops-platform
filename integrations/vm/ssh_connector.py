@@ -243,7 +243,15 @@ class SSHVMConnector:
                 error_type=type(exc).__name__,
                 duration_ms=duration_ms,
             )
-            return {"success": False, "error": "ssh_command_failed", "execution_time": duration_ms / 1000.0}
+            return {
+                "success": False,
+                # A closed stdin pipe may mean that sudo rejected the request
+                # early OR that an already-started guard lost its transport.
+                # For an APPLY, never assume the production write did not run.
+                "error": ("ssh_stdin_pipe_closed" if isinstance(exc, BrokenPipeError)
+                          else "ssh_command_failed"),
+                "execution_time": duration_ms / 1000.0,
+            }
         # Remote programs may echo arbitrary stdin. Never return the SSH secret
         # through MCP results, API responses, audit entries or error details.
         for stream in ("stdout", "stderr"):
