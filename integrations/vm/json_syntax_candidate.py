@@ -181,3 +181,142 @@ def deterministic_json_duplicate_brace_fix(source: str) -> str | None:
             if len(matches) > 1:
                 return None
     return next(iter(matches)) if len(matches) == 1 else None
+
+
+def bounded_json_repair_with_edits(source: str, max_edits: int = 3):
+    """Recover successive measured grammar faults without touching values.
+
+    Every intermediate document is parsed again; only structural punctuation
+    outside JSON strings or quoting one bare key can change. Edits are capped
+    at three characters, alternatives must converge to ONE final document,
+    and no original/candidate text or key names are returned in metadata.
+    This is a preview/validation candidate, NEVER permission to execute.
+    """
+    if (not isinstance(source, str) or "\x00" in source
+            or not 1 <= len(source.encode("utf-8")) <= 262144
+            or type(max_edits) is not int or not 1 <= max_edits <= 3):
+        return None
+    try:
+        json.loads(source)
+        return None
+    except json.JSONDecodeError:
+        pass
+
+    frontier = {0: {source: ()}}
+    visited = {source: 0}
+    successes = {}
+    for spent in range(max_edits):
+        for text, history in frontier.get(spent, {}).items():
+            try:
+                json.loads(text)
+            except json.JSONDecodeError as caught:
+                error = caught
+            else:
+                continue
+            pos = error.pos
+            detail = error.msg.lower()
+            if not any(token in detail for token in (
+                "property name", "expecting value", "expecting ',' delimiter",
+                "expecting ':' delimiter", "extra data",
+            )):
+                continue
+
+            inside = []
+            quoted = escaped = False
+            for char in text[:min(len(text), pos + 5)]:
+                inside.append(quoted)
+                if quoted:
+                    if escaped:
+                        escaped = False
+                    elif char == "\\":
+                        escaped = True
+                    elif char == '"':
+                        quoted = False
+                elif char == '"':
+                    quoted = True
+
+            proposals = {}
+
+            def add(candidate, label, at, cost):
+                if (candidate == text or len(candidate) > 262144
+                        or spent + cost > max_edits):
+                    return
+                # No file bytes or arbitrary key names in this edit history.
+                change = (label, text[:at].count("\n") + 1, cost)
+                proposals.setdefault(candidate, (history + (change,), cost))
+
+            if "property name" in detail and pos < len(text) and not inside[pos]:
+                match = re.match(
+                    r"([A-Za-z_][A-Za-z0-9_.-]*)(?=\s*:)", text[pos:],
+                )
+                if match:
+                    end = pos + len(match.group(1))
+                    add(text[:pos] + '"' + text[pos:end] + '"' + text[end:],
+                        "quote_unquoted_key", pos, 2)
+
+            positions = set(range(max(0, pos - 3), min(len(text), pos + 4)))
+            before = pos - 1
+            while before >= 0 and text[before] in " \r\n\t":
+                before -= 1
+            if before >= 0:
+                positions.add(before)
+            after = pos
+            while after < len(text) and text[after] in " \r\n\t":
+                after += 1
+            if after < len(text):
+                positions.add(after)
+            names = {"{": "remove_opening_brace", "}": "remove_closing_brace",
+                     "[": "remove_opening_bracket", "]": "remove_closing_bracket",
+                     ",": "remove_comma", ":": "remove_colon"}
+            for at in sorted(positions):
+                if at >= len(inside) or inside[at] or text[at] not in names:
+                    continue
+                add(text[:at] + text[at + 1:], names[text[at]], at, 1)
+
+            if ("expecting ',' delimiter" in detail
+                    or ("property name" in detail
+                        and pos < len(text) and text[pos] == '"')):
+                if pos <= len(text) and (pos == len(text) or not inside[pos]):
+                    add(text[:pos] + "," + text[pos:], "insert_comma", pos, 1)
+            if "expecting ':' delimiter" in detail:
+                if pos <= len(text) and (pos == len(text) or not inside[pos]):
+                    add(text[:pos] + ":" + text[pos:], "insert_colon", pos, 1)
+            if pos == len(text) and "expecting" in detail:
+                for glyph, name in (("}", "insert_closing_brace"),
+                                    ("]", "insert_closing_bracket")):
+                    add(text + glyph, name, pos, 1)
+
+            for proposed, (changes, cost) in proposals.items():
+                new_cost = spent + cost
+                if proposed in visited and visited[proposed] <= new_cost:
+                    continue
+                visited[proposed] = new_cost
+                try:
+                    json.loads(proposed)
+                except json.JSONDecodeError as next_error:
+                    # Do not speculate backwards or explore arbitrary source.
+                    bucket = frontier.setdefault(new_cost, {})
+                    if next_error.pos >= error.pos and len(bucket) < 128:
+                        bucket[proposed] = changes
+                else:
+                    successes.setdefault(new_cost, {})[proposed] = changes
+
+        if successes.get(spent + 1):
+            # Different *complete* outputs at the same minimal edit distance
+            # are ambiguous and may alter application semantics. Fail closed.
+            solutions = successes[spent + 1]
+            if len(solutions) != 1:
+                return None
+            corrected, steps = next(iter(solutions.items()))
+            return corrected, [
+                {"line": step[1], "before": step[0],
+                 "after": "json_syntax_repaired"}
+                for step in steps
+            ]
+    return None
+
+
+def bounded_json_syntax_fix(source: str) -> str | None:
+    """Pure deterministic replay of a bounded worker-generated JSON patch."""
+    result = bounded_json_repair_with_edits(source)
+    return result[0] if result else None
