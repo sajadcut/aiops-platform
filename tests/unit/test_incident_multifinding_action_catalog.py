@@ -98,7 +98,7 @@ def test_service_already_running_does_not_offer_restart_from_historical_alarm():
 
 
 def test_interrupted_config_apply_preserves_unknown_and_no_replay():
-    approval = {"approval_id": "a9"}
+    approval = {"approval_id": "a9", "status": "consumed"}
     event = {
         "event_type": "configuration_change_transition",
         "status": "config_execution_not_verified",
