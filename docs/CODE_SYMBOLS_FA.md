@@ -2429,15 +2429,15 @@
 | `integrations/vm/dotnet_local_validator.py` | `_reject_duplicate_keys` | 183 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `integrations/vm/dotnet_local_validator.py` | `validate_encoded_file` | 192 | function | Parse bytes only in worker memory; return bounded, secret-free metadata. | module |
 | `integrations/vm/ephemeral_config_guard.py` | `build_ephemeral_guard` | 183 | function | Return (fixed sudo command, shell stdin); only allow predetermined operations. | module |
-| `integrations/vm/full_config_llm_repair.py` | `_trusted_gateway` | 35 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `integrations/vm/full_config_llm_repair.py` | `_parse_corrected` | 43 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `integrations/vm/full_config_llm_repair.py` | `_parse_bounded_edit_plan` | 57 | function | Apply only three grammar-character edits in the trusted MCP worker. | module |
-| `integrations/vm/full_config_llm_repair.py` | `_safe_structure` | 107 | function | Use value-free glyphs; never reflect secret values into MCP/UI/audit. | module |
-| `integrations/vm/full_config_llm_repair.py` | `_profile` | 113 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `integrations/vm/full_config_llm_repair.py` | `_value_tokens` | 124 | function | Remove only grammar-neutral punctuation outside quoted string values. | module |
-| `integrations/vm/full_config_llm_repair.py` | `_is_exact_json_key_quote_fix` | 151 | function | Only accept inserting two quotes around one previously bare JSON key. | module |
-| `integrations/vm/full_config_llm_repair.py` | `_candidate_preview` | 178 | function | Check completeness and bounded drift; emit *metadata*, never file lines. | module |
-| `integrations/vm/full_config_llm_repair.py` | `review_complete_config` | 269 | async function | Receive exact SSH bytes in-process and request a complete revised file. | module |
+| `integrations/vm/full_config_llm_repair.py` | `_trusted_gateway` | 36 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `integrations/vm/full_config_llm_repair.py` | `_parse_corrected` | 44 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `integrations/vm/full_config_llm_repair.py` | `_parse_bounded_edit_plan` | 58 | function | Apply only three grammar-character edits in the trusted MCP worker. | module |
+| `integrations/vm/full_config_llm_repair.py` | `_safe_structure` | 108 | function | Use value-free glyphs; never reflect secret values into MCP/UI/audit. | module |
+| `integrations/vm/full_config_llm_repair.py` | `_profile` | 114 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `integrations/vm/full_config_llm_repair.py` | `_value_tokens` | 125 | function | Remove only grammar-neutral punctuation outside quoted string values. | module |
+| `integrations/vm/full_config_llm_repair.py` | `_is_exact_json_key_quote_fix` | 152 | function | Only accept inserting two quotes around one previously bare JSON key. | module |
+| `integrations/vm/full_config_llm_repair.py` | `_candidate_preview` | 179 | function | Check completeness and bounded drift; emit *metadata*, never file lines. | module |
+| `integrations/vm/full_config_llm_repair.py` | `review_complete_config` | 270 | async function | Receive exact SSH bytes in-process and request a complete revised file. | module |
 | `integrations/vm/general_config_review.py` | `checked_config_path` | 29 | function | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | module |
 | `integrations/vm/general_config_review.py` | `remote_config_read_command` | 37 | function | Fixed coreutils only; not a general-purpose remote file-read API. | module |
 | `integrations/vm/general_config_review.py` | `_structural_line` | 51 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
