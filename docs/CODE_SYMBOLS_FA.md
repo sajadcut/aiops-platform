@@ -2482,39 +2482,39 @@
 | `integrations/vm/llm_syntax_projection.py` | `syntax_projection` | 55 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `integrations/vm/mcp_client.py` | `VMEdgeMCPClient` | 9 | class | MCP-only connector for VM/Edge diagnostics and governed remediation. | module |
 | `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.__init__` | 24 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.initialize` | 43 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient._invoke` | 57 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.collect_vm_metrics` | 65 | async method | Evidence/داده موردنیاز را از منبع مربوط جمع می‌کند | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.collect_metrics` | 66 | async method | Evidence/داده موردنیاز را از منبع مربوط جمع می‌کند | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.memory_diagnostics` | 67 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.host_info` | 68 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.disk_status` | 69 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.disk_forensics` | 70 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.network_status` | 71 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.service_status` | 72 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.service_logs` | 73 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.system_logs` | 74 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.process_snapshot` | 75 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.process_status` | 76 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.tcp_check` | 77 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.port_listener_status` | 78 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.dns_check` | 79 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.route_check` | 80 | async method | بر اساس state/capability مسیر یا handler مناسب را انتخاب می‌کند | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.firewall_status` | 81 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.config_validate` | 82 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.nginx_config_review` | 83 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.nginx_config_inspect` | 84 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.service_runtime_discovery` | 85 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.service_config_discovery` | 86 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.service_config_review` | 87 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.service_config_llm_repair` | 88 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.dotnet_config_syntax` | 89 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.config_change_validate` | 91 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.config_change_apply` | 94 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient._write_context` | 101 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.restart_service` | 108 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.reload_service` | 111 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.start_service` | 114 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.initialize` | 56 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient._invoke` | 70 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.collect_vm_metrics` | 78 | async method | Evidence/داده موردنیاز را از منبع مربوط جمع می‌کند | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.collect_metrics` | 79 | async method | Evidence/داده موردنیاز را از منبع مربوط جمع می‌کند | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.memory_diagnostics` | 80 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.host_info` | 81 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.disk_status` | 82 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.disk_forensics` | 83 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.network_status` | 84 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.service_status` | 85 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.service_logs` | 86 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.system_logs` | 87 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.process_snapshot` | 88 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.process_status` | 89 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.tcp_check` | 90 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.port_listener_status` | 91 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.dns_check` | 92 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.route_check` | 93 | async method | بر اساس state/capability مسیر یا handler مناسب را انتخاب می‌کند | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.firewall_status` | 94 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.config_validate` | 95 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.nginx_config_review` | 96 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.nginx_config_inspect` | 97 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.service_runtime_discovery` | 98 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.service_config_discovery` | 99 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.service_config_review` | 100 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.service_config_llm_repair` | 101 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.dotnet_config_syntax` | 102 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.config_change_validate` | 104 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.config_change_apply` | 107 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient._write_context` | 114 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.restart_service` | 121 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.reload_service` | 124 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.start_service` | 127 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
 | `integrations/vm/nginx_config_inspection.py` | `nginx_inspection_command` | 108 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `integrations/vm/nginx_config_inspection.py` | `parse_nginx_inspection` | 123 | function | Allowlist protocol fields; no remote byte contents can cross the MCP. | module |
 | `integrations/vm/nginx_config_review.py` | `_checked_path` | 26 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
