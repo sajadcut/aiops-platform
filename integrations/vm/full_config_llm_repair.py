@@ -491,11 +491,28 @@ async def review_complete_config(
                     # The invalid response remains classified; try worker fix.
                     break
         if corrected is None and profile == "json_syntax":
-            # Deliberate complete-file LLM repair in bounded parser-guided
-            # rounds. Model output is not trusted without independent proof.
+            # A verified .NET appsettings file may legally contain comments
+            # and trailing commas. The repair LLM must see the very same
+            # parser position as dotnet_config_syntax, not a spurious error
+            # on the first JSONC comment. Normalization is deterministic,
+            # preserves names/values and produces strict JSON for staged jq.
+            worker_source = source
+            worker_line = diagnostic_line
+            dotnet_config = path.rsplit("/", 1)[-1] == "appsettings.json"
+            if dotnet_config:
+                try:
+                    from integrations.vm.dotnet_local_validator import normalize_dotnet_json
+                    worker_source = normalize_dotnet_json(source)
+                    try:
+                        json.loads(worker_source)
+                    except json.JSONDecodeError as source_error:
+                        worker_line = source_error.lineno
+                except ValueError:
+                    worker_source = source
+                    dotnet_config = False
             try:
                 iterative = await asyncio.wait_for(
-                    build_json_candidate(source, model=llm, max_rounds=6),
+                    build_json_candidate(worker_source, model=llm, max_rounds=6),
                     timeout=80,
                 )
             except (asyncio.TimeoutError, TimeoutError):
@@ -503,14 +520,17 @@ async def review_complete_config(
                              "reason": "iterative_model_timeout"}
             if iterative.get("status") == "candidate_proposed":
                 expanded = _candidate_preview(
-                    source, iterative["candidate"],
-                    diagnostic_line=diagnostic_line,
+                    worker_source, iterative["candidate"],
+                    diagnostic_line=worker_line,
                     expanded_json_grammar=True,
                 )
                 if expanded.get("status") == "llm_candidate_proposed":
                     corrected, preview = iterative["candidate"], expanded
                     result["llm_returned_complete_file"] = True
-                    result["candidate_generation_mode"] = "llm_bounded_edit_plan"
+                    result["candidate_generation_mode"] = (
+                        "llm_dotnet_jsonc_bounded_edits" if dotnet_config
+                        else "llm_bounded_edit_plan"
+                    )
             else:
                 last_model_failure = str(iterative.get("reason") or last_model_failure)
         if corrected is None and profile == "json_syntax":

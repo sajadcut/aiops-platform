@@ -207,7 +207,8 @@ class DynamicInvestigationPlanner:
                 ),
                 "candidate_generation_mode": (
                     raw.get("candidate_generation_mode") if raw.get("candidate_generation_mode")
-                    in {"llm_bounded_edit_plan", "llm_complete_file"} else "not_verified"
+                    in {"llm_bounded_edit_plan", "llm_complete_file",
+                        "llm_dotnet_jsonc_bounded_edits"} else "not_verified"
                 ),
                 "candidate_returned_not_stored": bool(accepted and raw.get("candidate_stored") is not True),
                 "candidate_stored": bool(accepted and raw.get("candidate_stored") is True),

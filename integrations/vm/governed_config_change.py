@@ -273,8 +273,19 @@ async def run_governed_change(connector, *, action: str, target: str, service: s
                 observed.get("error_line") if nginx_profile
                 and type(observed.get("error_line")) is int else None
             )
+            verified_preview_source = source_text
+            if (json_profile and observed.get("runtime") == "dotnet"
+                    and path.rsplit("/", 1)[-1] == "appsettings.json"):
+                try:
+                    from integrations.vm.dotnet_local_validator import normalize_dotnet_json
+                    verified_preview_source = normalize_dotnet_json(source_text)
+                except ValueError:
+                    return {"success": False, "status": "dotnet_config_normalization_failed",
+                            "isolated_validation": False,
+                            "production_write_performed": False}
             minimal_preview = _candidate_preview(
-                source_text, candidate, diagnostic_line=authoritative_line,
+                verified_preview_source, candidate,
+                diagnostic_line=authoritative_line,
                 expanded_json_grammar=json_profile,
             )
             if (minimal_preview.get("status") != "llm_candidate_proposed"

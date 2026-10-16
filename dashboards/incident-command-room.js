@@ -2591,7 +2591,7 @@
           esc(fa?'در این رخداد تأیید نشده؛ مشورت ساختاری LLM به معنی ارسال فایل کامل نیست':
             'Not verified for this incident; structural LLM advice does not send the complete file'))
       );
-      if(fullRepair.candidate_generation_mode==='llm_bounded_edit_plan')diagnosticRows.push(
+      if(['llm_bounded_edit_plan','llm_dotnet_jsonc_bounded_edits'].includes(fullRepair.candidate_generation_mode))diagnosticRows.push(
         esc(fa?'شیوه تولید اصلاح: پیشنهاد ویرایش کوچک روی متن کامل':
           'Repair mode: bounded edits against full original source')
       );
