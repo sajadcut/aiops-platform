@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 542 | Dashboard JS files scanned: 8 | Symbols indexed: 5909**
+**Python files scanned: 543 | Dashboard JS files scanned: 8 | Symbols indexed: 5913**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1414,11 +1414,11 @@
 | `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner.config_review_evidence` | 104 | method | Use a registered VM MCP review only for the matching live failure. | DynamicInvestigationPlanner |
 | `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner.runtime_evidence` | 123 | method | Use only MCP observations bound to the same service, not free text. | DynamicInvestigationPlanner |
 | `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner.full_config_repair_evidence` | 140 | method | Return bounded evidence of an operator-requested complete-file repair. | DynamicInvestigationPlanner |
-| `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner.search_query` | 246 | method | داده را بدون تغییر state بازیابی/فهرست می‌کند | DynamicInvestigationPlanner |
-| `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner._scope` | 307 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DynamicInvestigationPlanner |
-| `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner.enrich_knowledge` | 324 | async method | Query Cognia again with a verified error, preserving access scope. | DynamicInvestigationPlanner |
-| `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner.propose` | 397 | async method | LLM chooses from read-only capabilities, never arbitrary code. | DynamicInvestigationPlanner |
-| `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner.evidence_requests` | 856 | method | Convert validated enum members, never LLM text, to connector requests. | DynamicInvestigationPlanner |
+| `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner.search_query` | 247 | method | داده را بدون تغییر state بازیابی/فهرست می‌کند | DynamicInvestigationPlanner |
+| `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner._scope` | 308 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DynamicInvestigationPlanner |
+| `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner.enrich_knowledge` | 325 | async method | Query Cognia again with a verified error, preserving access scope. | DynamicInvestigationPlanner |
+| `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner.propose` | 398 | async method | LLM chooses from read-only capabilities, never arbitrary code. | DynamicInvestigationPlanner |
+| `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner.evidence_requests` | 857 | method | Convert validated enum members, never LLM text, to connector requests. | DynamicInvestigationPlanner |
 | `apps/orchestrator/e2e_graph.py` | `E2EState` | 50 | class | کلاس | module |
 | `apps/orchestrator/e2e_graph.py` | `retain_incident_evidence_for_followup` | 81 | function | Bound agent context without losing freshly collected config proof. | module |
 | `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator` | 118 | class | کلاس | module |
@@ -2452,7 +2452,7 @@
 | `integrations/vm/governed_config_change.py` | `rebuild_xml_candidate` | 108 | function | Remove one unmatched EOF closing tag; never edit XML values or DTDs. | module |
 | `integrations/vm/governed_config_change.py` | `classify_config_guard_failure` | 153 | function | Use only fixed, operator-actionable codes; never reflect stderr. | module |
 | `integrations/vm/governed_config_change.py` | `run_governed_change` | 185 | async function | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | module |
-| `integrations/vm/governed_config_change.py` | `_start_after_approved_config_apply` | 434 | async function | Only the signed approval recovery scope authorizes a single systemd start. | module |
+| `integrations/vm/governed_config_change.py` | `_start_after_approved_config_apply` | 445 | async function | Only the signed approval recovery scope authorizes a single systemd start. | module |
 | `integrations/vm/iterative_json_repair.py` | `_quoted_offsets` | 18 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `integrations/vm/iterative_json_repair.py` | `_json_reply` | 35 | function | Strictly identify a JSON edit plan even with a fenced LLM response. | module |
 | `integrations/vm/iterative_json_repair.py` | `apply_edit_plan` | 49 | function | Apply only structural punctuation edits to the exact original bytes. | module |
@@ -3972,6 +3972,10 @@
 | `tests/unit/test_dotnet_json_approval_flow.py` | `test_connector_and_orchestrator_preserve_candidate_to_preapproval.fake_validator` | 118 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_connector_and_orchestrator_preserve_candidate_to_preapproval |
 | `tests/unit/test_dotnet_json_approval_flow.py` | `test_connector_and_orchestrator_preserve_candidate_to_preapproval.fake_discovery` | 121 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_connector_and_orchestrator_preserve_candidate_to_preapproval |
 | `tests/unit/test_dotnet_json_approval_flow.py` | `test_connector_and_orchestrator_preserve_candidate_to_preapproval.fake_run` | 126 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_connector_and_orchestrator_preserve_candidate_to_preapproval |
+| `tests/unit/test_dotnet_jsonc_full_file_llm_approval.py` | `test_full_file_llm_normalizes_jsonc_then_seals_replayable_strict_candidate` | 19 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_dotnet_jsonc_full_file_llm_approval.py` | `test_full_file_llm_normalizes_jsonc_then_seals_replayable_strict_candidate.FakeModel` | 34 | class | کلاس | test_full_file_llm_normalizes_jsonc_then_seals_replayable_strict_candidate |
+| `tests/unit/test_dotnet_jsonc_full_file_llm_approval.py` | `test_full_file_llm_normalizes_jsonc_then_seals_replayable_strict_candidate.FakeModel.generate` | 35 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_full_file_llm_normalizes_jsonc_then_seals_replayable_strict_candidate.FakeModel |
+| `tests/unit/test_dotnet_jsonc_full_file_llm_approval.py` | `test_full_file_llm_normalizes_jsonc_then_seals_replayable_strict_candidate.fake_store` | 55 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_full_file_llm_normalizes_jsonc_then_seals_replayable_strict_candidate |
 | `tests/unit/test_dual_logging.py` | `_flush_root_handlers` | 10 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_dual_logging.py` | `_configure_file_logging` | 15 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_dual_logging.py` | `test_dual_format_logging_writes_human_and_json_files` | 32 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
