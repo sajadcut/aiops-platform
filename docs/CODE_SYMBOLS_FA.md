@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 553 | Dashboard JS files scanned: 8 | Symbols indexed: 6059**
+**Python files scanned: 554 | Dashboard JS files scanned: 8 | Symbols indexed: 6061**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -4500,6 +4500,8 @@
 | `tests/unit/test_incident_explanation.py` | `test_missing_file_metadata_does_not_claim_json_was_verified` | 204 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_incident_explanation.py` | `test_partial_or_unavailable_json_file_does_not_claim_all_valid` | 215 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_incident_explanation.py` | `test_unallowlisted_filename_is_neither_shown_nor_claimed_valid` | 229 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_explorer_hide.py` | `test_hide_restore_survives_reload_and_poll_and_is_safe_in_all_view_sizes` | 13 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_explorer_hide.py` | `test_attention_queue_filters_only_visual_items_not_immutable_backend_kpis` | 137 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_incident_explorer_views.py` | `test_incident_explorer_sort_filter_persistence_and_views` | 12 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_incident_explorer_views.py` | `test_incident_brief_has_clear_headline_and_expandable_originals` | 144 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_incident_followup.py` | `test_only_real_live_vm_mcp_diagnostics_can_enter_canonical_evidence` | 12 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
