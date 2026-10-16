@@ -281,6 +281,8 @@ async def review_complete_config(
     if path.lower().endswith(".json"):
         try:
             json.loads(source)
+            return {**result, "status": "json_syntax_valid_no_repair_needed",
+                    "validation_profile": "json_syntax"}
         except json.JSONDecodeError as exc:
             # The worker's parse of the actual current file is authoritative
             # for JSON grammar even without a registered vendor adapter.
@@ -331,6 +333,14 @@ async def review_complete_config(
         result["llm_returned_complete_file"] = bool(corrected)
         preview = _candidate_preview(source, corrected, diagnostic_line=diagnostic_line)
         profile = _profile(service, path)
+        if profile == "json_syntax" and preview.get("status") == "llm_candidate_proposed":
+            try:
+                json.loads(corrected)
+            except json.JSONDecodeError:
+                preview = {"status": "llm_candidate_rejected",
+                           "rejection_reason": "candidate_json_syntax_invalid",
+                           "candidate_hash": None, "changed_line_count": 0,
+                           "changed_line_numbers": []}
         if preview.get("status") != "llm_candidate_proposed" and profile == "json_syntax":
             # A model can modify an unrelated line, which must stay rejected.
             # Instead independently reconstruct one *measured* syntax token.
