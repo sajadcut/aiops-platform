@@ -722,7 +722,7 @@
     const busy=state.serviceStatusBusy,loading=state.serviceStatusLoading;
     const status=low(o.status);
     const authenticated=o.verified_systemd_only===true &&
-      ['running','active','stopped','transitioning'].includes(status);
+      ['running','active','stopped','transitioning','unstable'].includes(status);
     const validTime=o.observed_at&&!Number.isNaN(new Date(o.observed_at).getTime());
     const old=validTime&&(Date.now()-new Date(o.observed_at).getTime()>120000);
     const label=busy?(fa?'در حال بررسی زنده…':'Checking live status…'):
@@ -731,9 +731,11 @@
         active:fa?'سرویس فعال است · Active':'Service is active · Active',
         stopped:fa?'سرویس متوقف است · Down':'Service is stopped · Down',
         transitioning:fa?'وضعیت سرویس در حال تغییر است':'Service state is transitioning',
+        unstable:fa?'سرویس ناپایدار · چرخه Crash/Restart':'Unstable · Crash/restart loop',
       }[status]):loading?(fa?'در حال خواندن وضعیت…':'Loading recorded status…'):
       (fa?'وضعیت فعلی نامشخص است':'Current status unknown');
-    const tone=!authenticated||old||busy?'warn':status==='stopped'?'danger':
+    const tone=!authenticated||old||busy?'warn':
+      ['stopped','unstable'].includes(status)?'danger':
       status==='running'||status==='active'?'ok':'warn';
     const source=o.source==='vm_mcp_chat'?(fa?'پاسخ زندهٔ ثبت‌شده در چت':'Recorded live chat VM MCP'):
       o.source==='vm_mcp_recheck'?(fa?'بررسی زندهٔ مجدد VM MCP':'Fresh VM MCP recheck'):
@@ -749,8 +751,11 @@
         'بررسی زنده یا شناسایی مقصد تأیید نشد: ':'Live check or target binding failed: ')+
         txt(o.reason)+'</p>':'';
     const stateExplanation=authenticated?
-      (fa?'این نتیجه فقط وضعیت systemd را در زمان ثبت ثابت می‌کند؛ سلامت Endpoint و پاسخ واقعی API هنوز جداگانه باید بررسی شود.':
-        'This observation verifies only systemd at the recorded time; API readiness and endpoint health remain unverified.'):
+      (status==='unstable'?
+        (fa?'شواهد اخیر systemd چرخهٔ راه‌اندازی مجدد یا افزایش تعداد Restart را نشان می‌دهند. مشاهدهٔ لحظه‌ای Active به معنی پایداری یا سلامت API نیست.':
+          'Recent systemd evidence shows auto-restart or increasing restarts. A momentary Active state is not proof of stability or API health.'):
+        (fa?'این نتیجه فقط وضعیت systemd را در زمان ثبت ثابت می‌کند؛ سلامت Endpoint و پاسخ واقعی API هنوز جداگانه باید بررسی شود.':
+          'This observation verifies only systemd at the recorded time; API readiness and endpoint health remain unverified.')):
       (fa?'تا دریافت پاسخ معتبر از VM MCP، وضعیت سرویس را Running یا Down فرض نمی‌کنیم.':
         'No Running/Down claim is made without valid VM MCP evidence.');
     node.dataset.state=authenticated?status:'unknown';
@@ -762,7 +767,10 @@
         txt(o.service||state.report?.incident_summary?.service)+'</span><span>'+esc(fa?'میزبان: ':'Host: ')+
         txt(o.target)+'</span><span>'+esc(fa?'منبع: ':'Source: ')+esc(source)+'</span>'+
       '<span>'+esc(fa?'زمان مشاهده: ':'Observed at: ')+
-        txt(validTime?date(o.observed_at):null)+'</span></div>'+
+        txt(validTime?date(o.observed_at):null)+'</span>'+
+      (Number.isInteger(o.restart_count)?'<span>'+esc(fa?'تعداد Restart: ':'Restarts: ')+num(o.restart_count)+'</span>':'')+
+      (Number.isInteger(o.main_pid)?'<span>MainPID: '+num(o.main_pid)+'</span>':'')+
+      '</div>'+
       (old?'<p class="ic-service-health-conflict">'+esc(fa?
         'این مشاهده قدیمی است؛ برای اطلاع از وضعیت فعلی «بررسی مجدد» را بزنید.':
         'This observation is stale. Use Recheck for the current state.')+'</p>':'')+
