@@ -196,7 +196,7 @@ class PostgreSQLApprovalStore:
         # deterministic transformation name for a different candidate source.
         llm_repair = change == "llm_full_file_repair"
         if validation_scope == "generic_json_syntax_only_service_runtime_unverified":
-            if (change not in {"remove_trailing_json_comma", "llm_full_file_repair"}
+            if (change not in {"remove_trailing_json_comma", "quote_unquoted_json_key", "llm_full_file_repair"}
                     or not file_path.endswith(".json")
                     or not vendor_validator.startswith("jq empty")):
                 raise ValueError("config_format_scope_mismatch")
