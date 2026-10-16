@@ -163,3 +163,94 @@ def test_monitoring_endpoint_order_and_safe_ui_contract():
     assert 'row.approved_hash != row.content_hash' in api_source
     assert "row.status = \"submitted\"" in api_source
     assert "row.status = \"published\"" in api_source
+
+
+def _monitoring_test_app():
+    """Exercise real HTTP query parsing while isolating the authorization gate."""
+    from fastapi import FastAPI
+
+    app = FastAPI()
+    app.include_router(api.router, prefix="/api/v1")
+    route = next(
+        route for route in app.routes
+        if getattr(route, "path", "") == "/api/v1/knowledge-reviews/monitoring"
+    )
+    # Tests must not disable RBAC in production; override only on this
+    # disposable in-process test app, using the actual route dependency.
+    assert len(route.dependencies) == 1
+    app.dependency_overrides[route.dependencies[0].dependency] = lambda: None
+    return app
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("days", ["7", "30", "90"])
+async def test_monitoring_http_accepts_dashboard_period_strings(monkeypatch, days):
+    """Regression: Pydantic v2 numeric Literal rejected all string query values."""
+    import httpx
+
+    periods = []
+
+    class Rows:
+        def __init__(self, items):
+            self.items = items
+
+        def mappings(self):
+            return self
+
+        def all(self):
+            return self.items
+
+        def one(self):
+            return self.items[0]
+
+    class Session:
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *args):
+            return None
+
+        async def execute(self, statement, params=None):
+            if params and "since" in params:
+                periods.append((datetime.now(timezone.utc) - params["since"]).days)
+            sql = str(statement)
+            if "SELECT (SELECT COUNT(*) FROM incidents)" in sql:
+                return Rows([{"incident_total": 4, "incident_with_review": 1}])
+            return Rows([])
+
+    async def ready(db, *, operation):
+        assert operation == "knowledge_monitoring"
+
+    monkeypatch.setattr(api, "AsyncSessionLocal", Session)
+    monkeypatch.setattr(api, "require_database_ready", ready)
+
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=_monitoring_test_app()),
+        base_url="http://testserver",
+    ) as client:
+        response = await client.get("/api/v1/knowledge-reviews/monitoring", params={"days": days})
+
+    assert response.status_code == 200, response.text
+    payload = response.json()
+    assert payload["period_days"] == int(days)
+    assert payload["coverage"]["percentage"] == 25.0
+    assert payload["cognia"]["global_document_total"] is None
+    assert len(periods) == 4
+    assert all(abs(span - int(days)) <= 1 for span in periods)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("days", ["1", "14", "91", "not-an-integer"])
+async def test_monitoring_http_rejects_unsupported_periods_without_database(monkeypatch, days):
+    import httpx
+
+    def unexpected_session():
+        raise AssertionError("Invalid report interval must not touch the database")
+
+    monkeypatch.setattr(api, "AsyncSessionLocal", unexpected_session)
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=_monitoring_test_app()),
+        base_url="http://testserver",
+    ) as client:
+        response = await client.get("/api/v1/knowledge-reviews/monitoring", params={"days": days})
+    assert response.status_code == 422

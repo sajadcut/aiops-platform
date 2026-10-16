@@ -417,12 +417,19 @@ def _knowledge_monitoring_projection(review_rows, created_rows, published_rows,
 
 @router.get("/knowledge-reviews/monitoring",
             dependencies=[Depends(require_permission("read:incident"))])
-async def knowledge_monitoring(days: Literal[7, 30, 90] = Query(default=30)):
+async def knowledge_monitoring(days: int = Query(default=30, ge=7, le=90)):
     """Read-only operational dashboard, no publication, polling or Cognia writes.
+
+    Query parameters arrive as strings over HTTP. Pydantic v2 does not coerce
+    those strings to numeric Literal values, so Literal[7, 30, 90] rejected
+    every valid dashboard selection with HTTP 422. Parse as int first and
+    explicitly restrict the supported reporting windows.
 
     Metrics are aggregated in PostgreSQL, never by downloading draft contents.
     Retrieval counts include only workflow context_loaded audit observations.
     """
+    if days not in (7, 30, 90):
+        raise HTTPException(status_code=422, detail="knowledge_monitoring_period_not_supported")
     now = datetime.now(timezone.utc)
     since = now - timedelta(days=days)
     params = {
