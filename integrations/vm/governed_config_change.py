@@ -15,7 +15,9 @@ from apps.config_change_authorization import verify_claim
 from integrations.vm.ephemeral_config_guard import build_ephemeral_guard
 from integrations.vm.config_candidate_vault import load_candidate, CandidateUnavailable
 from integrations.vm.general_config_review import checked_config_path, remote_config_read_command, _remove_trailing_json_commas
-from integrations.vm.json_syntax_candidate import deterministic_json_syntax_fix
+from integrations.vm.json_syntax_candidate import (
+    deterministic_json_syntax_fix, deterministic_json_punctuation_fix,
+)
 from integrations.vm.nginx_config_review import (
     _checked_path, _repair_line, nginx_review_command,
 )
@@ -74,6 +76,10 @@ def rebuild_json_candidate(*, encoded: str, path: str,
     elif proposed_change == "quote_unquoted_json_key":
         candidate = deterministic_json_syntax_fix(contents)
         if candidate is None or len(candidate) != len(contents) + 2:
+            raise ValueError("config_change_not_deterministic")
+    elif proposed_change == "repair_json_punctuation":
+        candidate = deterministic_json_punctuation_fix(contents)
+        if candidate is None:
             raise ValueError("config_change_not_deterministic")
     else:
         raise ValueError("config_change_type_not_supported")
@@ -191,6 +197,7 @@ async def run_governed_change(connector, *, action: str, target: str, service: s
     )
     json_profile = proposed_change in {
         "remove_trailing_json_comma", "quote_unquoted_json_key",
+        "repair_json_punctuation",
     } or (llm_profile and config_file.endswith(".json"))
     xml_profile = proposed_change == "remove_extra_xml_closing_tag" or (
         llm_profile and config_file.endswith(".xml"))
