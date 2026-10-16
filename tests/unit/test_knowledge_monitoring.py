@@ -15,19 +15,19 @@ def test_monitoring_separates_review_outbox_from_cognia_inventory(monkeypatch):
     monkeypatch.setattr(settings, "COGNIA_KNOWLEDGE_BASE_IDS", [1, 7])
     payload = api._knowledge_monitoring_projection(
         [
-            {"status": "pending_review", "source_type": "incident", "count": 8,
+            {"status": "pending_review", "source_type": "incident", "kb_id": 1, "count": 8,
              "created_in_window": 3, "published_in_window": 0,
              "overdue_review": 2, "stale_publish": 0,
              "overdue_activation": 0, "latest_published": None},
-            {"status": "submitted", "source_type": "manual", "count": 2,
+            {"status": "submitted", "source_type": "manual", "kb_id": 7, "count": 2,
              "created_in_window": 2, "published_in_window": 0,
              "overdue_review": 0, "stale_publish": 0,
              "overdue_activation": 1, "latest_published": None},
-            {"status": "published", "source_type": "incident", "count": 4,
+            {"status": "published", "source_type": "incident", "kb_id": 1, "count": 4,
              "created_in_window": 1, "published_in_window": 3,
              "overdue_review": 0, "stale_publish": 0,
              "overdue_activation": 0, "latest_published": NOW - timedelta(days=1)},
-            {"status": "publish_failed", "source_type": "incident", "count": 1,
+            {"status": "publish_failed", "source_type": "incident", "kb_id": 1, "count": 1,
              "created_in_window": 1, "published_in_window": 0,
              "overdue_review": 0, "stale_publish": 0,
              "overdue_activation": 0, "latest_published": None},
@@ -57,6 +57,10 @@ def test_monitoring_separates_review_outbox_from_cognia_inventory(monkeypatch):
     assert r["published_in_period"] == 3
     assert r["latest_published_at"] is not None
     assert r["by_source"] == {"incident": 13, "manual": 2}
+    assert r["by_kb"] == {
+        "1": {"total": 13, "published": 4, "submitted": 0, "publish_failed": 1},
+        "7": {"total": 2, "published": 0, "submitted": 2, "publish_failed": 0},
+    }
     assert len(r["daily_last_14_days"]) == 14
     assert r["daily_last_14_days"][-1]["day"] == "2026-10-16"
     assert r["daily_last_14_days"][-1]["drafted"] == 2
@@ -147,6 +151,7 @@ def test_monitoring_endpoint_order_and_safe_ui_contract():
     assert "knowledgeMonitorKpis" in html
     assert "knowledgeMonitorRetrieval" in html
     assert "knowledgeMonitorCognia" in html
+    assert "byKb[kb].published" in js
     assert "knowledgeMonitorTrend" in html
     assert "/api/v1/knowledge-reviews/monitoring?days=" in js
     assert "loadKnowledgeMonitoring" in js

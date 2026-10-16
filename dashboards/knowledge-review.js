@@ -112,8 +112,10 @@
       '<div class="knowledge-monitor-trend" role="img" aria-label="روند روزانهٔ ثبت و انتشار ۱۴ روز اخیر">'+
       timeline.map(x => {
         const label = String(x.day || '').slice(-2);
-        const draft = Math.max(2, Math.round(100*Number(x.drafted||0)/highest));
-        const published = Math.max(2, Math.round(100*Number(x.published||0)/highest));
+        const draft = Number(x.drafted || 0) > 0 ?
+          Math.max(3, Math.round(100*Number(x.drafted)/highest)) : 0;
+        const published = Number(x.published || 0) > 0 ?
+          Math.max(3, Math.round(100*Number(x.published)/highest)) : 0;
         return '<div class="knowledge-monitor-day" title="'+esc(x.day)+
           ' · ثبت '+monitorNumber(x.drafted)+' · انتشار '+monitorNumber(x.published)+'">'+
           '<div class="km-bars"><i style="height:'+draft+'%" aria-hidden="true"></i>'+
@@ -121,7 +123,7 @@
           '<small>'+esc(label)+'</small></div>';
       }).join('')+'</div><div class="knowledge-monitor-legend">'+
       '<span><b></b>ثبت پیش‌نویس</span><span><b class="km-legend-green"></b>فعال‌سازی تأییدشده</span>'+
-      '</div><p class="knowledge-monitor-hint">نمودار بر مبنای تاریخ UTC است؛ ارتفاع ۲ پیکسلی یعنی صفر، نه مقدار واقعی.</p>';
+      '</div><p class="knowledge-monitor-hint">نمودار بر مبنای تاریخ UTC است؛ روزهای بدون ثبت یا انتشار، ستون ندارند.</p>';
 
     const rStatus = rag.by_status || {};
     const good = Number(rStatus.available || 0), empty = Number(rStatus.empty || 0),
@@ -158,12 +160,17 @@
     const tone = !h ? 'unknown' : h.healthy ? 'ok' : 'bad';
     const statusCode = h?.http_status;
     const kbIds = (cognia.configured_kb_ids || []).map(String).join('، ') || '—';
+    const byKb = monitorData.reviews?.by_kb || {};
+    const kbRows = Object.keys(byKb).sort((a,b) => Number(a)-Number(b)).map(kb =>
+      '<div class="knowledge-monitor-fact"><span>انتشار تأییدشدهٔ AIOps در KB #'+
+        esc(kb)+'</span><strong>'+esc(monitorNumber(byKb[kb].published))+
+      '</strong></div>').join('');
     box.innerHTML =
       '<div class="knowledge-monitor-connection"><span class="knowledge-monitor-dot" data-status="'+
         tone+'"></span><strong>'+esc(status)+'</strong><span class="muted">'+
         esc(cognia.health_probe || '/swagger/index.html')+
         (Number.isInteger(statusCode) ? ' · HTTP '+esc(statusCode) : '')+'</span></div>'+
-      '<div class="knowledge-monitor-facts">'+
+      '<div class="knowledge-monitor-facts">'+kbRows+
       '<div class="knowledge-monitor-fact"><span>شناسهٔ پایگاه‌های دانش تنظیم‌شده</span><strong>'+
         esc(kbIds)+'</strong></div>'+
       '<div class="knowledge-monitor-fact"><span>کل اسناد Cognia (سراسری)</span><strong>نامشخص</strong></div>'+
@@ -520,7 +527,12 @@
     queryTimer = window.setTimeout(applyQueueFilters, 320);
   });
 
-  window.loadKnowledgeReviews = reload;
+  window.loadKnowledgeReviews = (...args) => {
+    // Show monitoring immediately, independently of write-gated historical
+    // outbox reconciliation and the paginated review queue.
+    void loadKnowledgeMonitoring();
+    return reload(...args);
+  };
   window.loadKnowledgeMonitoring = loadKnowledgeMonitoring;
   document.addEventListener('change', event => {
     if (event.target?.id === 'knowledgeMonitorPeriod') void loadKnowledgeMonitoring();

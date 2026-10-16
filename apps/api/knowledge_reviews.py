@@ -248,7 +248,7 @@ async def list_reviews(
 # Aggregated monitoring only. PostgreSQL holds review/outbox and historical
 # workflow audit, never Cognia's complete inventory or any RAG vector index.
 _MONITOR_REVIEW_SQL = text("""
-SELECT status, source_type, COUNT(*) AS count,
+SELECT status, source_type, kb_id, COUNT(*) AS count,
        COUNT(*) FILTER (WHERE created_at >= :since) AS created_in_window,
        COUNT(*) FILTER (WHERE published_at >= :since) AS published_in_window,
        COUNT(*) FILTER (WHERE status = 'pending_review' AND created_at < :stale_review) AS overdue_review,
@@ -258,7 +258,7 @@ SELECT status, source_type, COUNT(*) AS count,
                         AND submitted_at < :stale_activation) AS overdue_activation,
        MAX(published_at) AS latest_published
 FROM knowledge_reviews
-GROUP BY status, source_type
+GROUP BY status, source_type, kb_id
 """)
 
 _MONITOR_TREND_SQL = text("""
@@ -306,6 +306,8 @@ def _knowledge_monitoring_projection(review_rows, created_rows, published_rows,
               "submitted", "publish_failed", "published")
     totals = Counter()
     sources = Counter()
+    kb_counts = {}
+
     created_in_window = 0
     published_in_window = 0
     overdue_review = stale_publish = overdue_activation = 0
@@ -314,6 +316,15 @@ def _knowledge_monitoring_projection(review_rows, created_rows, published_rows,
         count = int(r["count"] or 0)
         totals[str(r["status"] or "unknown")] += count
         sources[str(r["source_type"] or "unknown")] += count
+        kb_id = str(r.get("kb_id") or "unknown")
+        per_kb = kb_counts.setdefault(kb_id, Counter())
+        per_kb["total"] += count
+        if str(r["status"]) == "published":
+            per_kb["published"] += count
+        if str(r["status"]) == "submitted":
+            per_kb["submitted"] += count
+        if str(r["status"]) == "publish_failed":
+            per_kb["publish_failed"] += count
         created_in_window += int(r["created_in_window"] or 0)
         published_in_window += int(r["published_in_window"] or 0)
         overdue_review += int(r["overdue_review"] or 0)
@@ -366,6 +377,9 @@ def _knowledge_monitoring_projection(review_rows, created_rows, published_rows,
             "by_status": {status: totals[status] for status in states},
             "other_status": sum(n for k, n in totals.items() if k not in states),
             "by_source": dict(sorted(sources.items())),
+            "by_kb": {kb: {key: metrics[key] for key in
+                               ("total", "published", "submitted", "publish_failed")}
+                      for kb, metrics in sorted(kb_counts.items())},
             "created_in_period": created_in_window,
             "published_in_period": published_in_window,
             "latest_published_at": latest_published.isoformat() if latest_published else None,

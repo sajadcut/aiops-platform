@@ -85,7 +85,7 @@
 .knowledge-monitor-trend{display:grid;grid-template-columns:repeat(14,minmax(0,1fr));gap:5px;align-items:end;min-height:113px;padding-top:12px}
 .knowledge-monitor-day{display:flex;flex-direction:column;gap:3px;justify-content:end;height:114px;align-items:stretch}
 .knowledge-monitor-day .km-bars{display:flex;gap:2px;align-items:end;justify-content:center;height:95px}
-.knowledge-monitor-day .km-bars i{width:45%;min-height:2px;border-radius:3px 3px 0 0;background:var(--blue)}
+.knowledge-monitor-day .km-bars i{width:45%;border-radius:3px 3px 0 0;background:var(--blue)}
 .knowledge-monitor-day .km-bars i:last-child{background:var(--green)}
 .knowledge-monitor-day small{text-align:center;font-size:9px;color:var(--muted-2)}
 .knowledge-monitor-legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:12px;color:var(--muted);font-size:10px}

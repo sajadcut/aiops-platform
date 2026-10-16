@@ -295,8 +295,10 @@ retrieved passages, secrets, or raw prompts.
 
 ### Review and publication lifecycle (AIOps-owned data only)
 
-- All-time local review drafts grouped by state and source type; approvals
-  are not counted as Cognia publications.
+- All-time local review drafts grouped by state, source type and configured
+  KB ID; approvals are not counted as Cognia publications. The per-KB
+  "published" count is AIOps-owned verified activations, **not** total
+  documents in that KB.
 - `submitted` means Cognia accepted registration but active revision has
   **not** yet been verified. `published` requires confirmation of the
   exact active Cognia revision after a separate refresh action.
