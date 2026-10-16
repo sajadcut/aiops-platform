@@ -788,13 +788,13 @@
 | `apps/api/knowledge_reviews.py` | `list_reviews` | 195 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
 | `apps/api/knowledge_reviews.py` | `get_review` | 214 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
 | `apps/api/knowledge_reviews.py` | `refresh_review_evidence` | 231 | async function | Explicit opt-in regeneration of an untouched system-generated draft. | module |
-| `apps/api/knowledge_reviews.py` | `draft_from_memory` | 276 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/knowledge_reviews.py` | `draft_manual` | 284 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/knowledge_reviews.py` | `edit_review` | 306 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/knowledge_reviews.py` | `approve_review` | 333 | async function | transition مربوط به Approval/Governance را اعمال می‌کند | module |
-| `apps/api/knowledge_reviews.py` | `reject_review` | 363 | async function | transition مربوط به Approval/Governance را اعمال می‌کند | module |
-| `apps/api/knowledge_reviews.py` | `publish_review` | 381 | async function | Publish with a deterministic Idempotency-Key; no unapproved content crosses. | module |
-| `apps/api/knowledge_reviews.py` | `refresh_review` | 449 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/knowledge_reviews.py` | `draft_from_memory` | 296 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/knowledge_reviews.py` | `draft_manual` | 304 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/knowledge_reviews.py` | `edit_review` | 326 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/knowledge_reviews.py` | `approve_review` | 353 | async function | transition مربوط به Approval/Governance را اعمال می‌کند | module |
+| `apps/api/knowledge_reviews.py` | `reject_review` | 383 | async function | transition مربوط به Approval/Governance را اعمال می‌کند | module |
+| `apps/api/knowledge_reviews.py` | `publish_review` | 401 | async function | Publish with a deterministic Idempotency-Key; no unapproved content crosses. | module |
+| `apps/api/knowledge_reviews.py` | `refresh_review` | 469 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/main.py` | `dashboard_font_stylesheet` | 94 | async function | Shared font definitions for dashboard, chatbot and incident room. | module |
 | `apps/api/main.py` | `approved_ui_font` | 100 | async function | Serve only explicitly allowlisted local font assets (no directory browse). | module |
 | `apps/api/main.py` | `root` | 118 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
