@@ -2043,17 +2043,17 @@
 | `dashboards/incident-command-room.js` | `bind` | 4112 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
 | `dashboards/incident-command-room.js` | `lifecycleTimer` | 4302 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
 | `dashboards/incident-command-room.js` | `serviceAgeTimer` | 4306 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/knowledge-review.js` | `el` | 12 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/knowledge-review.js` | `current` | 13 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/knowledge-review.js` | `notice` | 16 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/knowledge-review.js` | `renderQueue` | 21 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/knowledge-review.js` | `key` | 28 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/knowledge-review.js` | `visible` | 33 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/knowledge-review.js` | `renderSelection` | 58 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/knowledge-review.js` | `loadSelected` | 115 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
-| `dashboards/knowledge-review.js` | `reload` | 131 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/knowledge-review.js` | `invoke` | 165 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/knowledge-review.js` | `createDraft` | 224 | JavaScript function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | browser module |
+| `dashboards/knowledge-review.js` | `el` | 17 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/knowledge-review.js` | `current` | 18 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/knowledge-review.js` | `notice` | 21 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/knowledge-review.js` | `renderQueue` | 26 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/knowledge-review.js` | `key` | 41 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/knowledge-review.js` | `visible` | 46 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/knowledge-review.js` | `renderSelection` | 71 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/knowledge-review.js` | `loadSelected` | 128 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
+| `dashboards/knowledge-review.js` | `reload` | 144 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/knowledge-review.js` | `invoke` | 205 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/knowledge-review.js` | `createDraft` | 264 | JavaScript function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | browser module |
 | `database/__init__.py` | `_json_default` | 23 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `database/__init__.py` | `_json_serializer` | 38 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `database/__init__.py` | `get_db` | 56 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
