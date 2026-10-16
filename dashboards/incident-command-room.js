@@ -2581,6 +2581,21 @@
       esc(fa?'کشف فایل: ':'Discovery: ')+txt(discovery.status));
     if(discovery.llm_guidance_status)diagnosticRows.push(
       esc(fa?'مشورت LLM: ':'LLM consultation: ')+txt(discovery.llm_guidance_status));
+    if(originalFailed) {
+      diagnosticRows.push(
+        esc(fa?'ارسال فایل کامل به مدل برای اصلاح: ':'Complete file sent to repair LLM: ')+
+        (fullRepair.complete_file_in_prompt===true?
+          esc(fa?'تأیید شد':'Confirmed')+
+          (Number.isInteger(fullRepair.source_size_bytes)?
+            ' ('+num(fullRepair.source_size_bytes)+' bytes)':''):
+          esc(fa?'در این رخداد تأیید نشده؛ مشورت ساختاری LLM به معنی ارسال فایل کامل نیست':
+            'Not verified for this incident; structural LLM advice does not send the complete file'))
+      );
+      if(fullRepair.candidate_generation_mode==='llm_bounded_edit_plan')diagnosticRows.push(
+        esc(fa?'شیوه تولید اصلاح: پیشنهاد ویرایش کوچک روی متن کامل':
+          'Repair mode: bounded edits against full original source')
+      );
+    }
     if(status&&status!=='—')diagnosticRows.push(
       esc(fa?'وضعیت پیشنهاد: ':'Candidate validation: ')+txt(status));
     if(stageFailure&&!['none','not_recorded','not_tested','—'].includes(stageFailure)){
