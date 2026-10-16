@@ -511,6 +511,15 @@ async def persist_and_reassess(
             auto = await auto_queue_prevalidation(db, str(incident_id), state)
             recorded["auto_config_prevalidation"] = auto
         except Exception as exc:
+            # Never hide a queue failure behind a successful incident-chat
+            # answer. Record only its type, never candidate contents or
+            # provider error strings that might include private config.
+            recorded["auto_config_prevalidation"] = {
+                "status": "queue_failed",
+                "error_type": type(exc).__name__[:70],
+                "approval_id": None,
+                "human_approval_required": True,
+            }
             logger.warning(
                 "incident_followup_auto_prevalidation_failed",
                 incident_id=str(incident_id), error_type=type(exc).__name__,
