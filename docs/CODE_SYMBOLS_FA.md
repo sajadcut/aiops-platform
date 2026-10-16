@@ -1037,8 +1037,8 @@
 | `apps/config_change_authorization.py` | `verify_claim` | 86 | function | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | module |
 | `apps/config_change_authorization.py` | `sign_root_guard` | 110 | function | Ed25519 root guard signature; VM stores only its verification public key. | module |
 | `apps/config_change_auto_queue.py` | `_verified_service_start_scope` | 26 | async function | Only a fresh read-only VM MCP check can extend a new ticket to Start. | module |
-| `apps/config_change_auto_queue.py` | `auto_queue_candidate` | 59 | function | Only existing, tightly validated hash-bound proposals can enter queue. | module |
-| `apps/config_change_auto_queue.py` | `auto_queue_prevalidation` | 79 | async function | Automatic *request*, never automatic Approval; record the exact blocker. | module |
+| `apps/config_change_auto_queue.py` | `auto_queue_candidate` | 68 | function | Only existing, tightly validated hash-bound proposals can enter queue. | module |
+| `apps/config_change_auto_queue.py` | `auto_queue_prevalidation` | 88 | async function | Automatic *request*, never automatic Approval; record the exact blocker. | module |
 | `apps/config_syntax_llm.py` | `sanitized_projection` | 30 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/config_syntax_llm.py` | `_json_model_reply` | 60 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/config_syntax_llm.py` | `assess_service_syntax` | 87 | async function | Two sequential LLM passes; second pass never asserts a vendor PASS. | module |
