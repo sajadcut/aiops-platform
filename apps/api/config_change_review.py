@@ -127,6 +127,19 @@ def _review_progress(*, status: str, decision: str | None, proposal: dict,
     validated = metadata.get("isolated_validation") is True
     approvable = bool(approval and approval.get("status") == "pending" and validated)
     queue_status = str(approval.get("status")) if approval else "not_created"
+    blocking_reasons = []
+    if requested and not validated:
+        if metadata.get("validation_last_reason"):
+            blocking_reasons.append(metadata["validation_last_reason"])
+        blocking_reasons.extend([
+            "independent_candidate_validation_pending_or_failed",
+            "approval_cannot_be_granted_before_validation",
+        ])
+    elif not requested and proposal.get("status") != "candidate_proposed":
+        blocking_reasons = [
+            "no_verified_config_candidate",
+            "recheck_current_file_and_generate_parser_valid_repair",
+        ]
     return {
         "status": status,
         "decision": decision,
@@ -170,16 +183,7 @@ def _review_progress(*, status: str, decision: str | None, proposal: dict,
             else "candidate_ready_for_isolated_validation" if not requested
             else "independent_validation_or_human_approval"
         ),
-        "blocking_reasons": (
-            ["no_verified_config_candidate",
-             "recheck_current_file_and_generate_parser_valid_repair"]
-            if not requested and proposal.get("status") != "candidate_proposed"
-            else []
-        ) if not validated and not requested else [] if validated else [
-            *([metadata["validation_last_reason"]] if metadata.get("validation_last_reason") else []),
-            "independent_candidate_validation_pending_or_failed",
-            "approval_cannot_be_granted_before_validation",
-        ] if requested else [],
+        "blocking_reasons": blocking_reasons,
     }
 
 
