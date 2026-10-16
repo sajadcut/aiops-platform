@@ -524,7 +524,7 @@ async def recheck_incident_service_status(
             "actor": identity.subject, "incident_id": str(incident_id),
             "action": "service_status",
             "status": "success" if success else "unavailable",
-            "metadata": redact({
+            "metadata": {
                 "observation": safe_observation if success else None,
                 "reason": None if success else str(live.get("status") or "vm_mcp_unavailable"),
                 "source_refs": redact((binding or {}).get("evidence_refs") or []),
