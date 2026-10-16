@@ -3526,9 +3526,9 @@
 | `tests/unit/test_config_change_review.py` | `test_main_approval_dashboard_distinguishes_config_review_from_real_approval` | 123 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_config_change_review.py` | `test_approved_queue_record_is_still_not_executable_before_validation` | 136 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_config_change_review.py` | `test_generic_service_json_candidate_can_enter_same_approval_queue` | 153 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_config_change_review.py` | `test_approval_storage_does_not_upgrade_pending_validation_to_pending` | 165 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_config_change_review.py` | `test_pending_validation_cannot_be_approved_even_with_high_risk_permission` | 178 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_config_change_review.py` | `test_configuration_apply_tool_is_not_registered_before_safe_execution_exists` | 187 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_config_change_review.py` | `test_approval_storage_does_not_upgrade_pending_validation_to_pending` | 170 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_config_change_review.py` | `test_pending_validation_cannot_be_approved_even_with_high_risk_permission` | 183 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_config_change_review.py` | `test_configuration_apply_tool_is_not_registered_before_safe_execution_exists` | 192 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_config_change_validation_binding.py` | `_intent` | 29 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_config_change_validation_binding.py` | `_approval` | 39 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_config_change_validation_binding.py` | `test_config_ticket_binding_works_in_each_legitimate_review_state` | 55 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
