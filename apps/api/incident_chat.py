@@ -251,12 +251,18 @@ def _observed_status(
                  else "active" if active == "active"
                  else "stopped" if active in {"failed", "inactive"}
                  else "transitioning")
+        restart_count = raw.get("restart_count")
+        restart_count = restart_count if type(restart_count) is int and restart_count >= 0 else None
+        main_pid = raw.get("main_pid")
+        main_pid = main_pid if type(main_pid) is int and main_pid >= 0 else None
         candidates.append((at, {
             "status": state, "active_state": active, "sub_state": sub,
             "result": result, "target": target, "service": expected,
+            "restart_count": restart_count, "main_pid": main_pid,
             "observed_at": at.astimezone(timezone.utc).isoformat(),
             "source": source, "evidence_ref": str(reference or "")[:160],
             "verified_systemd_only": True,
+            "application_health_verified": False,
         }))
 
     for row in evidence:
@@ -301,7 +307,42 @@ def _observed_status(
         return {"status": "unknown", "service": expected, "target": target,
                 "observed_at": None, "source": "no_verified_observation",
                 "verified_systemd_only": False}
-    return max(candidates, key=lambda candidate: candidate[0])[1]
+    latest_at, newest = max(candidates, key=lambda candidate: candidate[0])
+    newest = dict(newest)
+    if not newest.get("verified_systemd_only"):
+        return newest
+    # Type=simple can briefly report active/running between repeated crashes.
+    # Use only attributable recent systemd samples, never the LLM, Zabbix
+    # alarm prose, or a historical restart counter alone.
+    from datetime import timedelta
+    recent = [
+        (at, row) for at, row in candidates
+        if row.get("verified_systemd_only") is True
+        and timedelta(0) <= latest_at - at <= timedelta(minutes=10)
+    ]
+    restart_samples = sorted([
+        (at, row["restart_count"]) for at, row in recent
+        if type(row.get("restart_count")) is int
+    ], key=lambda row: row[0])
+    restart_growth = bool(
+        len(restart_samples) >= 2
+        and restart_samples[-1][1] > min(n for _, n in restart_samples[:-1])
+    )
+    saw_auto_restart = any(
+        row.get("active_state") == "activating"
+        and row.get("sub_state") == "auto-restart"
+        for _, row in recent
+    )
+    if newest.get("status") in {"running", "active", "transitioning"} and (
+        saw_auto_restart or restart_growth
+    ):
+        newest["status"] = "unstable"
+        newest["stability_reason"] = (
+            "auto_restart_cycle_observed" if saw_auto_restart
+            else "restart_count_increased"
+        )
+        newest["recent_observation_count"] = len(recent)
+    return newest
 
 
 async def _incident_status_scope(db, incident_id):
@@ -442,7 +483,7 @@ async def recheck_incident_service_status(
         }
         await PostgreSQLAuditStore(db).append(record)
         if success:
-            checked = _observed_status(incident.service, binding["target"], [], [record])
+            checked = _observed_status(incident.service, binding["target"], evidence, [record])
             # Read-only rechecks may reconcile a *verified systemd Service Down*
             # incident, but never infer that a missing Zabbix webhook arrived.
             # Two independent live reads and a clean nginx validator are
