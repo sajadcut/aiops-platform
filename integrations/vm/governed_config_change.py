@@ -15,6 +15,7 @@ from apps.config_change_authorization import verify_claim
 from integrations.vm.ephemeral_config_guard import build_ephemeral_guard
 from integrations.vm.config_candidate_vault import load_candidate, CandidateUnavailable
 from integrations.vm.general_config_review import checked_config_path, remote_config_read_command, _remove_trailing_json_commas
+from integrations.vm.json_syntax_candidate import deterministic_json_syntax_fix
 from integrations.vm.nginx_config_review import (
     _checked_path, _repair_line, nginx_review_command,
 )
@@ -47,8 +48,9 @@ def rebuild_nginx_candidate(*, encoded: str, path: str, line: int, error: str,
 
 
 def rebuild_json_candidate(*, encoded: str, path: str,
-                           original_sha256: str, candidate_sha256: str) -> str:
-    """Rebuild an immutable one-comma JSON fix; syntax-only, not app health."""
+                           original_sha256: str, candidate_sha256: str,
+                           proposed_change: str = "remove_trailing_json_comma") -> str:
+    """Rebuild exact one-token JSON grammar correction, never values."""
     if not checked_config_path(path).endswith(".json"):
         raise ValueError("config_format_not_supported")
     if not all(re.fullmatch(r"[0-9a-f]{64}", h or "") for h in (original_sha256, candidate_sha256)):
@@ -65,9 +67,16 @@ def rebuild_json_candidate(*, encoded: str, path: str,
         pass
     else:
         raise ValueError("source_json_already_valid")
-    candidate = _remove_trailing_json_commas(contents)
-    if not candidate or contents.count(",") - candidate.count(",") != 1:
-        raise ValueError("config_change_not_deterministic")
+    if proposed_change == "remove_trailing_json_comma":
+        candidate = _remove_trailing_json_commas(contents)
+        if not candidate or contents.count(",") - candidate.count(",") != 1:
+            raise ValueError("config_change_not_deterministic")
+    elif proposed_change == "quote_unquoted_json_key":
+        candidate = deterministic_json_syntax_fix(contents)
+        if candidate is None or len(candidate) != len(contents) + 2:
+            raise ValueError("config_change_not_deterministic")
+    else:
+        raise ValueError("config_change_type_not_supported")
     json.loads(candidate)
     if hashlib.sha256(candidate.encode("utf-8")).hexdigest() != candidate_sha256:
         raise ValueError("config_candidate_hash_mismatch")
@@ -180,8 +189,9 @@ async def run_governed_change(connector, *, action: str, target: str, service: s
         proposed_change == "remove_extra_opening_brace" or
         llm_profile and config_file.startswith("/etc/nginx/") and config_file.endswith(".conf")
     )
-    json_profile = proposed_change == "remove_trailing_json_comma" or (
-        llm_profile and config_file.endswith(".json"))
+    json_profile = proposed_change in {
+        "remove_trailing_json_comma", "quote_unquoted_json_key",
+    } or (llm_profile and config_file.endswith(".json"))
     xml_profile = proposed_change == "remove_extra_xml_closing_tag" or (
         llm_profile and config_file.endswith(".xml"))
     if not (nginx_profile or json_profile or xml_profile):
@@ -282,11 +292,17 @@ async def run_governed_change(connector, *, action: str, target: str, service: s
             read = await connector._run(target, remote_config_read_command(path))
             if read.get("success") is not True:
                 raise ValueError("config_live_file_read_failed")
-            rebuild = rebuild_json_candidate if json_profile else rebuild_xml_candidate
-            candidate = rebuild(
-                encoded=str(read.get("stdout") or ""), path=path,
-                original_sha256=original_sha256, candidate_sha256=candidate_sha256,
-            )
+            if json_profile:
+                candidate = rebuild_json_candidate(
+                    encoded=str(read.get("stdout") or ""), path=path,
+                    original_sha256=original_sha256, candidate_sha256=candidate_sha256,
+                    proposed_change=proposed_change,
+                )
+            else:
+                candidate = rebuild_xml_candidate(
+                    encoded=str(read.get("stdout") or ""), path=path,
+                    original_sha256=original_sha256, candidate_sha256=candidate_sha256,
+                )
     except CandidateUnavailable as exc:
         return {"success": False, "status": str(exc),
                 "isolated_validation": False, "production_write_performed": False}
