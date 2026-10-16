@@ -270,6 +270,11 @@ def local_config_review(encoded: str, *, path: str, validator_error_line: int | 
                 staged = bounded_json_repair_with_edits(source)
                 if staged is not None:
                     patched, edits = staged
+                    # The preview projection must describe the EXACT
+                    # candidate whose SHA-256 will later be replayed by VM.
+                    # Using the earlier, still-invalid one-token attempt
+                    # here displayed a misleading diff.
+                    updated = patched
                     answer.update({
                         "status": "candidate_proposed",
                         "candidate_hash": hashlib.sha256(
