@@ -341,7 +341,7 @@ def public_result(action: str, value: Any) -> dict:
                                       "changed_line_numbers", "rejection_reason",
                                       "llm_received_complete_file",
                                       "llm_returned_complete_file", "validation_status",
-                                      "candidate_stored", "validation_profile", "redacted_changes",
+                                      "candidate_stored", "candidate_origin", "validation_profile", "redacted_changes",
                                       "storage_reason", "validator_executed_on_proposal", "apply_eligible",
                                       "execution_authority", "config_contents_exposed"),
         "service_config_review": ("service", "target", "status", "config_file",
