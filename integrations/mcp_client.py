@@ -61,6 +61,11 @@ class MCPClient:
         # probes may temporarily override this to one attempt so readiness
         # checks do not amplify an unavailable dependency into repeated traffic.
         self.read_retry_attempts_override: Optional[int] = None
+        # Explicit, potentially long-running read-only jobs are not safe to
+        # replay after a lost response: the original remote LLM request may
+        # still be running. Overrides apply to one tool, not all MCP calls.
+        self.single_attempt_read_tools: frozenset[str] = frozenset()
+        self.tool_timeout_seconds: Dict[str, float] = {}
 
         parsed = urlparse(self.server_url)
         if parsed.scheme not in {"http", "https"} or not parsed.netloc:
@@ -168,7 +173,9 @@ class MCPClient:
             if self.read_retry_attempts_override is None
             else self.read_retry_attempts_override
         )
-        attempts = 1 if tool_name in self.write_tools else max(1, int(configured_read_attempts))
+        attempts = (1 if tool_name in self.write_tools
+                    or tool_name in self.single_attempt_read_tools
+                    else max(1, int(configured_read_attempts)))
         delay = max(0.0, float(settings.RETRY_DELAY_SECONDS))
         method = str(payload.get("method") or "unknown")
         incident_id = self._incident_id_from_payload(payload)
@@ -194,10 +201,14 @@ class MCPClient:
                 details={"method": method, "tool": tool_name, "attempt": attempt},
             )
             try:
+                tool_timeout = self.tool_timeout_seconds.get(str(tool_name or ""))
+                timeout_override = ({"timeout": float(tool_timeout)}
+                                    if tool_timeout is not None else {})
                 response = await self._client.post(
                     self.server_url,
                     json=payload,
                     headers=self._headers(tool_name=tool_name, include_protocol=include_protocol),
+                    **timeout_override,
                 )
                 if response.status_code >= 500 and attempt < attempts:
                     duration_ms = round((time.perf_counter() - started) * 1000, 3)
