@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 551 | Dashboard JS files scanned: 8 | Symbols indexed: 6049**
+**Python files scanned: 552 | Dashboard JS files scanned: 8 | Symbols indexed: 6050**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1277,6 +1277,7 @@
 | `apps/incident_memory_forensics.py` | `is_memory_incident` | 38 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/incident_memory_forensics.py` | `build_memory_investigation` | 48 | function | Parse only durable attributed MCP results, original alert and recovery. | module |
 | `apps/incident_memory_forensics.py` | `build_memory_investigation.status` | 111 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | build_memory_investigation |
+| `apps/incident_remediation_opportunities.py` | `build_remediation_opportunities` | 13 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
 | `apps/incident_service/repository.py` | `_json_safe` | 17 | function | Convert durable JSON payloads to PostgreSQL/SQLAlchemy-safe primitives. | module |
 | `apps/incident_service/repository.py` | `IncidentRepository` | 45 | class | Canonical PostgreSQL repository for Incident, Evidence and Finding. | module |
 | `apps/incident_service/repository.py` | `IncidentRepository.__init__` | 48 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentRepository |
