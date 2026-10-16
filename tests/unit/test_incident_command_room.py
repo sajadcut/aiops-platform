@@ -128,6 +128,8 @@ def test_recovery_409_is_explained_in_both_review_and_decision_desk():
     assert "recoveryApprovalStatusLabel(state.recoveryApproval,fa)" in js
     assert "recoveryApprovalStatusLabel(recoveryApproval,fa)" in js
     assert "recoveryApprovalSafetyNote(fa)" in js
+    assert "const stateChangedActive=!state.historic&&" in js
+    assert "renderHero(state.report);" in js
     assert "if(approval.status==='not_requested'&&state.recoveryQueueAttempted&&" in js
     assert "approval=state.recoveryApproval;" in js
     assert "['blocked','state_changed_active'].includes" in js
