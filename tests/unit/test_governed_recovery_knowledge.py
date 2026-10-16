@@ -245,7 +245,9 @@ def test_knowledge_review_ui_reconciles_once_and_never_auto_publishes():
     assert "method:'POST'" in text
     # The queue is now paginated: receiving only the newest 100 used to hide
     # legitimate older drafts, even after durable recovery reconciliation.
-    assert "const result = await api('/api/v1/knowledge-reviews?limit=100&offset='+(page*100))" in text
+    assert "const params = new URLSearchParams({" in text
+    assert "offset:String(page*100), sort_by:reviewSort" in text
+    assert "const result = await api('/api/v1/knowledge-reviews?'+params.toString());" in text
     assert "reviewPageCount" in text
     assert "reviewHasMore = result.has_more === true;" in text
     assert "if (op === 'approve')" in text
