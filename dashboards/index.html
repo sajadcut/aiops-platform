@@ -129,11 +129,13 @@
             <button type="button" data-incident-size="list" aria-pressed="false" onclick="setIncidentDisplayMode('list')" title="نمایش لیستی، هر رخداد در یک ردیف">☰ <span>لیستی</span></button>
           </div>
           <span id="incidentCount" class="badge neutral" aria-live="polite">0 رخداد</span>
+          <button type="button" class="incident-hidden-toggle" id="incidentHiddenToggle" onclick="toggleHiddenIncidents()" aria-pressed="false" title="فهرست رخدادهای پنهان‌شده در این مرورگر">پنهان‌شده‌ها (۰)</button>
+          <button type="button" class="incident-hidden-restore-all" id="incidentRestoreAll" onclick="restoreAllHiddenIncidents()" hidden>بازگرداندن همه</button>
           <span id="incidentLiveSync" class="incident-live-sync" role="status" aria-live="polite">به‌روزرسانی خودکار هر ۶ ثانیه</span>
         </div>
       </div>
       <section class="panel incident-queue-panel" aria-labelledby="incidentQueueTitle">
-        <div class="panel-head incident-queue-heading"><div><span class="section-kicker">فهرست رخدادهای ثبت‌شده</span><h2 id="incidentQueueTitle">رخدادها</h2><p>هر هشدار تا ۲۴ ساعت پس از دریافت در نمای روزانه نمایش داده می‌شود؛ سپس فقط از این نما کنار می‌رود و سوابق آن در آرشیو و سوابق ممیزی باقی می‌ماند.</p></div><span class="badge neutral">صفحه اختصاصی هر رخداد ↗</span></div>
+        <div class="panel-head incident-queue-heading"><div><span class="section-kicker">فهرست رخدادهای ثبت‌شده</span><h2 id="incidentQueueTitle">رخدادها</h2><p>هر هشدار تا ۲۴ ساعت در نمای روزانه دیده می‌شود. با × می‌توانید رخداد را فقط از نمایش همین مرورگر پنهان کنید؛ اطلاعات، تأییدها و ممیزی در سامانه باقی می‌مانند. از «پنهان‌شده‌ها» می‌توانید برگردانید.</p></div><span class="badge neutral">صفحه اختصاصی هر رخداد ↗</span></div>
         <div id="incidentRows" class="incident-cards" data-size="medium"></div>
       </section>
       <div id="detail" hidden aria-hidden="true"></div>
@@ -245,6 +247,87 @@
     return !scope || lower(incident.status) === scope;
   }
 
+  // Visibility is an operator's *local presentation preference*, never a
+  // DELETE or a status change on the server. Retain it across refresh/polling
+  // and both 24h/archive views. Do not store incident content or credentials.
+  const incidentHiddenKey = 'aiops.incidents.hidden.v1';
+  const incidentUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  function loadHiddenIncidents() {
+    try {
+      const value = JSON.parse(localStorage.getItem(incidentHiddenKey) || '[]');
+      return new Set(Array.isArray(value) ? value.filter(id =>
+        typeof id === 'string' && incidentUuid.test(id)).slice(-1000) : []);
+    } catch (_) { return new Set(); }
+  }
+  let hiddenIncidents = loadHiddenIncidents();
+  let showingHiddenIncidents = false;
+  const isIncidentDismissed = id => hiddenIncidents.has(String(id || ''));
+  function persistHiddenIncidents(next) {
+    try {
+      localStorage.setItem(incidentHiddenKey, JSON.stringify([...next].slice(-1000)));
+    } catch (_) {
+      if (typeof showError === 'function') showError('ذخیره پنهان‌سازی در مرورگر ممکن نیست. تنظیمات ذخیره‌سازی مرورگر را بررسی کنید.');
+      return false;
+    }
+    hiddenIncidents = next;
+    return true;
+  }
+  function refreshHiddenIncidentViews() {
+    renderIncidentsWithClearTime();
+    // The overview attention queue is also a *presentation*, unlike source
+    // KPIs and audit counts; do not alter original operational data.
+    if (typeof renderOverview === 'function') renderOverview();
+  }
+  function hideIncidentFromDashboard(id) {
+    if (!incidentUuid.test(String(id || '')) || hiddenIncidents.has(id)) return false;
+    const next = new Set(hiddenIncidents);
+    next.add(id);
+    if (!persistHiddenIncidents(next)) return false;
+    refreshHiddenIncidentViews();
+    if (typeof toast === 'function') toast('رخداد فقط از نمایش این مرورگر پنهان شد؛ از «پنهان‌شده‌ها» می‌توانید آن را بازگردانید.');
+    return true;
+  }
+  function restoreHiddenIncident(id) {
+    if (!incidentUuid.test(String(id || '')) || !hiddenIncidents.has(id)) return false;
+    const next = new Set(hiddenIncidents);
+    next.delete(id);
+    if (!persistHiddenIncidents(next)) return false;
+    refreshHiddenIncidentViews();
+    return true;
+  }
+  function toggleHiddenIncidents() {
+    showingHiddenIncidents = !showingHiddenIncidents;
+    renderIncidentsWithClearTime();
+  }
+  function restoreAllHiddenIncidents() {
+    if (!hiddenIncidents.size) return;
+    if (!persistHiddenIncidents(new Set())) return;
+    showingHiddenIncidents = false;
+    refreshHiddenIncidentViews();
+  }
+  // Events are handled on the list container, never nested inside the
+  // navigation links. A click on × must not open the incident room.
+  const incidentContainer = $('#incidentRows');
+  if (incidentContainer && typeof incidentContainer.addEventListener === 'function') {
+    incidentContainer.addEventListener('click', event => {
+      const button = event.target.closest('[data-incident-dismiss]');
+      if (!button || !incidentContainer.contains(button)) return;
+      event.preventDefault(); event.stopPropagation();
+      const id = button.getAttribute('data-incident-dismiss');
+      if (button.getAttribute('data-incident-operation') === 'restore') {
+        restoreHiddenIncident(id);
+      } else {
+        hideIncidentFromDashboard(id);
+      }
+    });
+  }
+  if (typeof window.addEventListener === 'function') {
+    window.addEventListener('storage', event => {
+      if (event.key !== incidentHiddenKey) return;
+      hiddenIncidents = loadHiddenIncidents();
+      refreshHiddenIncidentViews();
+    });
+  }
   const incidentSortKey = 'aiops.incidents.sort';
   const incidentSizeKey = 'aiops.incidents.size';
   const preference = (key, valid, fallback) => {
@@ -316,14 +399,35 @@
       return;
     }
     const sourceRows = archived ? S.archivedIncidents : S.incidents;
-    const rows = sortIncidents(sourceRows.filter(i =>
+    const scopedRows = sourceRows.filter(i => isIncidentDismissed(i.id) === showingHiddenIncidents);
+    const rows = sortIncidents(scopedRows.filter(i =>
       (!q || lower([i.id, i.service, i.source_host, i.summary, i.execution_target, i.execution_tool, i.runbook_id].join(' ')).includes(q)) &&
       (!sev || lower(i.severity) === sev) &&
       matchesIncidentStatusScope(i, status)
     ));
     updateIncidentDisplayControls();
-    if ($('#incidentCount')) $('#incidentCount').textContent = `${rows.length} از ${sourceRows.length} رخداد`;
+    if ($('#incidentCount')) $('#incidentCount').textContent =
+      `${rows.length} از ${scopedRows.length} رخداد`;
+    const toggle = $('#incidentHiddenToggle');
+    if (toggle) {
+      toggle.textContent = showingHiddenIncidents ?
+        `بازگشت به رخدادها (${sourceRows.filter(i => !isIncidentDismissed(i.id)).length})` :
+        `پنهان‌شده‌ها (${hiddenIncidents.size})`;
+      toggle.setAttribute('aria-pressed', String(showingHiddenIncidents));
+    }
+    const restoreAll = $('#incidentRestoreAll');
+    if (restoreAll) restoreAll.hidden = !showingHiddenIncidents || !hiddenIncidents.size;
     if (!$('#incidentRows')) return;
+    const dismissal = i => '<button type="button" class="incident-dismiss-btn"'+
+      ' data-incident-dismiss="'+esc(i.id)+'"'+
+      ' data-incident-operation="'+(showingHiddenIncidents?'restore':'hide')+'"'+
+      ' aria-label="'+(showingHiddenIncidents?'بازگرداندن رخداد ':'پنهان کردن رخداد ')+
+      esc(incidentDisplayName(i))+'"'+
+      ' title="'+(showingHiddenIncidents?'بازگرداندن به فهرست':'پنهان کردن فقط از این مرورگر')+'">'+
+      (showingHiddenIncidents?'↶':'×')+'</button>';
+    const emptyMessage = showingHiddenIncidents ?
+      'در این بازه رخداد پنهان‌شده‌ای با فیلترهای فعلی وجود ندارد. برای بازگرداندن تمام موارد از دکمهٔ «بازگرداندن همه» استفاده کنید.' :
+      'رخدادی با این فیلترها پیدا نشد. پنهان‌شده‌ها را از دکمهٔ بالای فهرست می‌توانید بازگردانید.';
     if (incidentSize === 'list') {
       const header = '<div class="incident-list-header" aria-hidden="true">'+
         '<span>سرویس / رخداد</span><span>شرح کوتاه</span><span>شدت</span>'+
@@ -345,7 +449,7 @@
         })[lower(i.severity)] || i.severity || 'نامشخص';
         const needsDecision = ['pending','approved'].includes(approval);
         const path = '/dashboard/incidents/' + encodeURIComponent(i.id);
-        return `<a class="incident-list-row ${needsDecision ? 'needs-decision' : ''} ${incidentAnalyzing(i) ? 'is-analyzing' : ''}" href="${path}"
+        return `<div class="incident-dismiss-shell incident-dismiss-row"><a class="incident-list-row ${needsDecision ? 'needs-decision' : ''} ${incidentAnalyzing(i) ? 'is-analyzing' : ''}" href="${path}"
           aria-label="مشاهده گزارش ${esc(incidentDisplayName(i))}، ${esc(statusLabel)}، ${esc(approvalLabel)}">
           <span class="incident-list-service"><span class="incident-list-symbol" aria-hidden="true">◈</span><span>
             <strong>${esc(incidentDisplayName(i))}</strong><small>#${esc(String(i.id).slice(0,8))}</small></span></span>
@@ -355,10 +459,10 @@
           <time class="incident-list-date" datetime="${esc(i.started_at || i.created_at || '')}">${esc(started.exact)} <small>${esc(started.zone)}</small></time>
           <span class="incident-list-approval ${needsDecision ? 'attention' : ''}">${esc(approvalLabel)}</span>
           <span class="incident-list-open">مشاهده ←</span>
-        </a>`;
+        </a>${dismissal(i)}</div>`;
       }).join('');
       $('#incidentRows').innerHTML = rows.length ? header + listRows :
-        '<div class="empty-state">رخدادی با این فیلترها پیدا نشد. برای دیدن موارد بسته‌شده، گزینه «همه رخدادها» را انتخاب کن.</div>';
+        '<div class="empty-state">'+esc(emptyMessage)+'</div>';
       return;
     }
     $('#incidentRows').innerHTML = rows.map(i => {
@@ -370,7 +474,7 @@
       const stateLabel = state === 'pending' ? 'منتظر تأیید شما' : state === 'approved' ? 'تأیید شده، منتظر اجرا' :
         ({analyzing:'در حال بررسی',open:'باز',resolved:'رفع شده',closed:'بسته شده',escalated:'ارجاع داده شده'}[state] || i.status || 'نامشخص');
       const severityLabel = ({critical:'بحرانی',high:'زیاد',medium:'متوسط',low:'کم'}[lower(i.severity)] || i.severity || 'نامشخص');
-      return `<a class="incident-queue-card ${pending ? 'needs-decision' : ''} ${incidentAnalyzing(i) ? 'is-analyzing' : ''}" href="${path}" aria-label="گزارش کامل رخداد ${esc(incidentDisplayName(i))}">
+      return `<div class="incident-dismiss-shell"><a class="incident-queue-card ${pending ? 'needs-decision' : ''} ${incidentAnalyzing(i) ? 'is-analyzing' : ''}" href="${path}" aria-label="گزارش کامل رخداد ${esc(incidentDisplayName(i))}">
         <span class="incident-queue-icon" aria-hidden="true">◈</span>
         <div class="incident-queue-main">
           <div class="incident-queue-eyebrow"><span class="incident-queue-severity">${esc(severityLabel)}</span><span class="incident-queue-state">${incidentStatusHtml(i,stateLabel)}</span><span class="incident-queue-id">#${esc(String(i.id).slice(0,8))}</span></div>
@@ -381,15 +485,20 @@
         <div class="incident-queue-next">${pending ? '<span class="incident-queue-urgent">نیازمند تصمیم شما</span>' : (risk ? '<span class="incident-queue-urgent">اولویت بررسی</span>' : '')}
           <span class="incident-queue-open">دیدن گزارش <b aria-hidden="true">←</b></span>
         </div>
-      </a>`;
-    }).join('') || '<div class="empty-state">رخدادی با این فیلترها پیدا نشد. برای دیدن موارد بسته‌شده، گزینه «همه رخدادها» را انتخاب کن.</div>';
+      </a>${dismissal(i)}</div>`;
+    }).join('') || '<div class="empty-state">'+esc(emptyMessage)+'</div>';
   }
+  window.toggleHiddenIncidents = toggleHiddenIncidents;
+  window.restoreAllHiddenIncidents = restoreAllHiddenIncidents;
+  window.hideIncidentFromDashboard = hideIncidentFromDashboard;
+  window.restoreHiddenIncident = restoreHiddenIncident;
+  window.isIncidentDismissed = isIncidentDismissed;
   window.setIncidentSort = setIncidentSort;
   window.setIncidentDisplayMode = setIncidentDisplayMode;
 
   function patchAttentionIncidentTimes() {
     const incidents = S.incidents
-      .filter(i => isOpen(i) && attentionReason(i).length)
+      .filter(i => !isIncidentDismissed(i.id) && isOpen(i) && attentionReason(i).length)
       .sort((a, b) => attentionRank(b) - attentionRank(a))
       .slice(0, 7);
     document.querySelectorAll('#attentionQueue .attention-item').forEach((row, index) => {
