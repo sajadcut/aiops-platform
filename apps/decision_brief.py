@@ -989,6 +989,10 @@ def build_decision_brief(
         }),
         "checkpoint_version": checkpoint.get("version"),
     }
+    from apps.incident_remediation_opportunities import build_remediation_opportunities
+    recorded["remediation_opportunities"] = build_remediation_opportunities(
+        incident=incident, evidence=evidence, report=recorded,
+    )
     # The approval/review snapshot must bind operational facts, not the wall
     # clock. Elapsed duration is a display-only derived value that changes on
     # every GET; hashing it makes a pending approval impossible to confirm.
