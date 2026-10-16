@@ -2425,9 +2425,10 @@
     const investigation=r?.dynamic_investigation||{};
     const config=investigation.config_proposal||{};
     const fullRepair=investigation.full_config_llm_repair||{};
+    const repairAttention=investigation.config_repair_attention||{};
     const repairFailure=['llm_repair_timeout','llm_repair_unavailable',
       'llm_response_truncated','llm_complete_file_response_invalid',
-      'candidate_storage_unavailable'].includes(fullRepair.status);
+      'candidate_storage_unavailable','llm_candidate_rejected'].includes(fullRepair.status);
     const discovery=investigation.config_discovery||{};
     const validator=r?.configuration_diagnostic||{};
     const response=state.configResponse||{};
@@ -2480,7 +2481,9 @@
         'The one-time approval has been consumed. Check the execution result and file status.';
       action='outcome';
     }else if(previouslyFailed){
-      title=fa?'خطای کانفیگ '+service:'Configuration issue · '+service;
+      title=!candidate && approval!=='pending' && approval!=='pending_validation'
+        ? (fa?'اقدام اصلاحی فوری لازم · '+service:'Action required: configuration repair · '+service)
+        : (fa?'خطای کانفیگ '+service:'Configuration issue · '+service);
       summary=fullChanged.length?
         (esc(fa?'در فایل ':'In file ')+filename+
           esc(fullChangeActor)+
@@ -2573,13 +2576,17 @@
       esc(fa?'جزئیات فنی':'Technical details')+'</summary><div>'+
       diagnosticRows.map(row=>'<p>'+row+'</p>').join('')+'</div></details>':'';
     const repairWarning=repairFailure&&!hasDiff?
-      '<p class="ic-config-banner-warning" role="status">'+
+      '<p class="ic-config-banner-warning" role="alert">'+
         esc(fa?
           (fullRepair.status==='llm_repair_timeout'?
-            'علت توقف: ارتباط با مدل هنگام ساخت اصلاح زمان‌بر شد و به Timeout رسید. بازبینی زندهٔ دوباره و تلاش مجدد با تأیید صریح اپراتور لازم است.':
-            'علت توقف: مدل نسخه کامل قابل‌قبول تولید نکرد یا ذخیره امن Candidate انجام نشد؛ ارسال برای Approval ممکن نیست.'):
+            'علت توقف: ارتباط با مدل هنگام ساخت اصلاح زمان‌بر شد و به Timeout رسید. بازبینی زندهٔ دوباره و تلاش مجدد لازم است.':
+            fullRepair.status==='llm_candidate_rejected'?
+            'علت توقف: اصلاح LLM به خطای واقعی Validator مربوط نبود. این پچ برای حفاظت از فایل رد شد؛ باید اصلاح حداقلی معتبر تولید شود. هیچ درخواست Approval ثبت نشده است.':
+            'علت توقف: مدل نسخه کامل قابل‌قبول تولید نکرد یا ذخیره امن Candidate انجام نشد؛ ارسال برای Approval ممکن نیست.'): 
           (fullRepair.status==='llm_repair_timeout'?
-            'Reason: LLM repair timed out. Recheck live evidence and explicitly retry the preview.':
+            'Reason: LLM repair timed out. Recheck live evidence and retry.':
+            fullRepair.status==='llm_candidate_rejected'?
+            'The model changed unrelated lines. Its patch was correctly rejected; rebuild and validate a minimal fix before queuing Approval.':
             'Reason: no complete acceptable candidate was produced or securely stored; approval cannot be queued.'))+
       '</p>':'';
     const warning=signingBlocked?
@@ -2593,7 +2600,15 @@
       state.configPreviewLastResult?
       '<p role="status" aria-live="polite">'+txt(state.configPreviewLastResult)+'</p>':'';
     node.hidden=false;
-    node.innerHTML='<div class="ic-config-banner-copy"><strong>'+esc(title)+'</strong>'+
+    const urgency=originalFailed&&!candidate&&!['pending','approved','pending_validation'].includes(approval);
+    node.setAttribute('role',urgency?'alert':'region');
+    const urgentExplanation=urgency?
+      '<p style="font-size:1.05rem;font-weight:700;line-height:1.8;">'+
+      esc(fa?
+        'خطای کانفیگ تأیید شده ولی هیچ Candidate قابل‌تأییدی ساخته نشده است. این رخداد نیازمند اقدام است؛ اختلاف‌نظر ایجنت‌ها نباید بازبینی مجدد را متوقف کند. اجرای فایل اصلاحی همچنان نیازمند اعتبارسنجی و Approval است.':
+        'A configuration failure is confirmed but no approved candidate exists. Investigate and rebuild the minimal fix now; execution still requires independent validation and human Approval.')+
+      '</p>':'';
+    node.innerHTML='<div class="ic-config-banner-copy"><strong style="font-size:1.2rem;">'+esc(title)+'</strong>'+urgentExplanation+
       '<p class="ic-config-banner-summary">'+summary+'</p>'+
       '<p>'+esc(instruction)+'</p>'+repairWarning+warning+liveStatus+technical+
       '</div><div class="ic-config-banner-actions">'+primary+secondary+fullLLMButton+'</div>';
