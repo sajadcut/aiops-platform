@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 537 | Dashboard JS files scanned: 8 | Symbols indexed: 5858**
+**Python files scanned: 537 | Dashboard JS files scanned: 8 | Symbols indexed: 5868**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -4858,6 +4858,16 @@
 | `tests/unit/test_multistep_json_config_approval.py` | `test_explicit_llm_request_can_queue_worker_fix_without_candidate_vault.UnhelpfulModel` | 168 | class | کلاس | test_explicit_llm_request_can_queue_worker_fix_without_candidate_vault |
 | `tests/unit/test_multistep_json_config_approval.py` | `test_explicit_llm_request_can_queue_worker_fix_without_candidate_vault.UnhelpfulModel.generate` | 169 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_explicit_llm_request_can_queue_worker_fix_without_candidate_vault.UnhelpfulModel |
 | `tests/unit/test_multistep_json_config_approval.py` | `test_explicit_llm_request_can_queue_worker_fix_without_candidate_vault.failed_vault` | 173 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_explicit_llm_request_can_queue_worker_fix_without_candidate_vault |
+| `tests/unit/test_multistep_json_config_approval.py` | `test_auto_queue_recovers_handoff_dropped_candidate` | 219 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_multistep_json_config_approval.py` | `test_auto_queue_recovers_handoff_dropped_candidate.recalculated` | 241 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_auto_queue_recovers_handoff_dropped_candidate |
+| `tests/unit/test_multistep_json_config_approval.py` | `test_auto_queue_recovers_handoff_dropped_candidate.FakeAudit` | 252 | class | کلاس | test_auto_queue_recovers_handoff_dropped_candidate |
+| `tests/unit/test_multistep_json_config_approval.py` | `test_auto_queue_recovers_handoff_dropped_candidate.FakeAudit.__init__` | 253 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_auto_queue_recovers_handoff_dropped_candidate.FakeAudit |
+| `tests/unit/test_multistep_json_config_approval.py` | `test_auto_queue_recovers_handoff_dropped_candidate.FakeAudit.list` | 255 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_auto_queue_recovers_handoff_dropped_candidate.FakeAudit |
+| `tests/unit/test_multistep_json_config_approval.py` | `test_auto_queue_recovers_handoff_dropped_candidate.ScalarResult` | 261 | class | کلاس | test_auto_queue_recovers_handoff_dropped_candidate |
+| `tests/unit/test_multistep_json_config_approval.py` | `test_auto_queue_recovers_handoff_dropped_candidate.ScalarResult.scalar_one_or_none` | 262 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_auto_queue_recovers_handoff_dropped_candidate.ScalarResult |
+| `tests/unit/test_multistep_json_config_approval.py` | `test_auto_queue_recovers_handoff_dropped_candidate.FakeSession` | 265 | class | کلاس | test_auto_queue_recovers_handoff_dropped_candidate |
+| `tests/unit/test_multistep_json_config_approval.py` | `test_auto_queue_recovers_handoff_dropped_candidate.FakeSession.get` | 266 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_auto_queue_recovers_handoff_dropped_candidate.FakeSession |
+| `tests/unit/test_multistep_json_config_approval.py` | `test_auto_queue_recovers_handoff_dropped_candidate.FakeSession.execute` | 268 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | test_auto_queue_recovers_handoff_dropped_candidate.FakeSession |
 | `tests/unit/test_network_reliability_engine.py` | `metric` | 11 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_network_reliability_engine.py` | `telemetry` | 28 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_network_reliability_engine.py` | `analyze` | 44 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
