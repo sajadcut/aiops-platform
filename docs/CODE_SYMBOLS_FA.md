@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 547 | Dashboard JS files scanned: 8 | Symbols indexed: 5976**
+**Python files scanned: 548 | Dashboard JS files scanned: 8 | Symbols indexed: 5996**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -4526,6 +4526,26 @@
 | `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.Orchestrator._evaluator_node` | 185 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_followup_reassessment_recalculates_agents_without_executing.Orchestrator |
 | `tests/unit/test_incident_followup.py` | `test_followup_reassessment_recalculates_agents_without_executing.knowledge_draft` | 190 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_followup_reassessment_recalculates_agents_without_executing |
 | `tests/unit/test_incident_followup.py` | `test_long_followup_status_is_persisted_without_postgresql_500` | 235 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_knowledge_coverage.py` | `test_every_incident_outcome_has_truthful_reviewable_document` | 27 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_knowledge_coverage.py` | `test_unverified_case_with_no_evidence_never_claims_root_cause_or_execution` | 54 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_knowledge_coverage.py` | `test_one_stable_id_per_incident_across_retries` | 65 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_knowledge_coverage.py` | `_Scalar` | 71 | class | کلاس | module |
+| `tests/unit/test_incident_knowledge_coverage.py` | `_Scalar.__init__` | 72 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Scalar |
+| `tests/unit/test_incident_knowledge_coverage.py` | `_Scalar.all` | 75 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Scalar |
+| `tests/unit/test_incident_knowledge_coverage.py` | `_Scalar.first` | 78 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Scalar |
+| `tests/unit/test_incident_knowledge_coverage.py` | `_Result` | 82 | class | کلاس | module |
+| `tests/unit/test_incident_knowledge_coverage.py` | `_Result.__init__` | 83 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Result |
+| `tests/unit/test_incident_knowledge_coverage.py` | `_Result.scalars` | 86 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Result |
+| `tests/unit/test_incident_knowledge_coverage.py` | `_DB` | 90 | class | کلاس | module |
+| `tests/unit/test_incident_knowledge_coverage.py` | `_DB.__init__` | 91 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _DB |
+| `tests/unit/test_incident_knowledge_coverage.py` | `_DB.get` | 97 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _DB |
+| `tests/unit/test_incident_knowledge_coverage.py` | `_DB.execute` | 104 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | _DB |
+| `tests/unit/test_incident_knowledge_coverage.py` | `_DB.add` | 112 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _DB |
+| `tests/unit/test_incident_knowledge_coverage.py` | `_DB.flush` | 115 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _DB |
+| `tests/unit/test_incident_knowledge_coverage.py` | `_DB.commit` | 118 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _DB |
+| `tests/unit/test_incident_knowledge_coverage.py` | `test_coverage_draft_is_idempotent_and_never_publishes` | 123 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_knowledge_coverage.py` | `test_coverage_draft_is_idempotent_and_never_publishes.dossier` | 126 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_coverage_draft_is_idempotent_and_never_publishes |
+| `tests/unit/test_incident_knowledge_coverage.py` | `test_dashboard_can_sync_old_incidents_and_page_existing_reviews` | 150 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_incident_operational_finalization.py` | `FakeSession` | 9 | class | کلاس | module |
 | `tests/unit/test_incident_operational_finalization.py` | `FakeSession.__init__` | 10 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeSession |
 | `tests/unit/test_incident_operational_finalization.py` | `FakeSession.get` | 13 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeSession |
