@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 528 | Dashboard JS files scanned: 8 | Symbols indexed: 5762**
+**Python files scanned: 528 | Dashboard JS files scanned: 8 | Symbols indexed: 5763**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -2433,8 +2433,9 @@
 | `integrations/vm/full_config_llm_repair.py` | `_profile` | 60 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `integrations/vm/full_config_llm_repair.py` | `_value_tokens` | 71 | function | Remove only grammar-neutral punctuation outside quoted string values. | module |
 | `integrations/vm/full_config_llm_repair.py` | `_is_exact_json_key_quote_fix` | 98 | function | Only accept inserting two quotes around one previously bare JSON key. | module |
-| `integrations/vm/full_config_llm_repair.py` | `_candidate_preview` | 125 | function | Check completeness and bounded drift; emit *metadata*, never file lines. | module |
-| `integrations/vm/full_config_llm_repair.py` | `review_complete_config` | 208 | async function | Receive exact SSH bytes in-process and request a complete revised file. | module |
+| `integrations/vm/full_config_llm_repair.py` | `_deterministic_json_syntax_fix` | 125 | function | Fix exactly one measured JSON grammar token, never a value or format. | module |
+| `integrations/vm/full_config_llm_repair.py` | `_candidate_preview` | 162 | function | Check completeness and bounded drift; emit *metadata*, never file lines. | module |
+| `integrations/vm/full_config_llm_repair.py` | `review_complete_config` | 245 | async function | Receive exact SSH bytes in-process and request a complete revised file. | module |
 | `integrations/vm/general_config_review.py` | `checked_config_path` | 29 | function | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | module |
 | `integrations/vm/general_config_review.py` | `remote_config_read_command` | 37 | function | Fixed coreutils only; not a general-purpose remote file-read API. | module |
 | `integrations/vm/general_config_review.py` | `_structural_line` | 51 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
