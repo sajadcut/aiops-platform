@@ -77,5 +77,6 @@ code). A lost SSH stdin/response does not establish whether the remote
 guard wrote anything. The trusted worker now reports
 `config_apply_result_unknown`, preserves
 `production_write_performed=null`, classifies a safe failure code,
-and does not allow auto-reissuing the consumed approval until the live
-file hash is read and a new candidate/approval is established.
+and never replays the consumed approval. The operator may create a
+**new**, separately validated approval, whose source-hash compare-and-swap
+must prove the current file state before any production write.
