@@ -807,6 +807,7 @@
     }finally{
       if(token===state.serviceStatusToken){
         state.serviceStatusLoading=false;renderServiceStatus();
+        if(state.report&&!state.historic)renderOutcome(state.report);
       }
     }
   }
@@ -861,6 +862,7 @@
       if(token===state.serviceStatusToken){
         state.serviceStatusBusy=false;state.serviceStatusLoading=false;
         renderServiceStatus();renderOperationalSummary();
+        if(state.report&&!state.historic)renderOutcome(state.report);
       }
     }
   }
