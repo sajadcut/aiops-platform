@@ -308,7 +308,14 @@ async def execute_config(approval_id: UUID, identity=Depends(require_permission(
             },
         )
     recovery_resolution = "not_verified"
-    if recovery_confirmed:
+    if applied:
+        # The approved config write and permission to start a service are
+        # different scopes. After ANY verified config apply, two independent
+        # read-only VM checks may show that the original systemd-down alarm
+        # has recovered (e.g. Restart=always recovers on valid JSON, or a
+        # human separately starts it). No Start is issued without the signed
+        # start_service_after_apply scope, and the incident closes only under
+        # local_recovery_decision's separate signal/identity gates.
         from apps.incident_service.service_recovery_reconciliation import (
             reconcile_after_applied_config,
         )
