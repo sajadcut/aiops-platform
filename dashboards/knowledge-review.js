@@ -31,6 +31,8 @@
       (reviewHasMore ? '+' : '');
     const more = el('knowledgeLoadMore');
     if (more) more.hidden = !reviewHasMore;
+    const syncButton = el('knowledgeSyncMoreIncidents');
+    if (syncButton) syncButton.hidden = !incidentSyncHasMore;
     const status = el('knowledgeSyncCoverageStatus');
     if (status) status.textContent = incidentSyncHasMore ?
       'همگام‌سازی رخدادهای قدیمی‌تر هنوز کامل نیست؛ برای ادامه از دکمهٔ پایین استفاده کنید.' :
@@ -82,13 +84,15 @@
     const reviewable = r.status === 'pending_review';
     const publishable = ['approved', 'publish_failed'].includes(r.status);
     const canRefresh = ['submitted', 'published'].includes(r.status);
-    const canRefreshEvidence = r.status==='pending_review' && r.revision===1 &&
+    const coverageDraft = r.created_by === 'system:incident-coverage';
+    const canRefreshEvidence = r.status==='pending_review' &&
       String(r.created_by||'').startsWith('system:') && !r.reviewed_by &&
-      !!r.incident_dossier?.config_diagnostic &&
-      !r.content.includes('شواهد فنی مرتبط با کانفیگ');
+      (coverageDraft ? r.review_reason==='incident_coverage:v1' :
+        r.revision===1 && !!r.incident_dossier?.config_diagnostic &&
+        !r.content.includes('شواهد فنی مرتبط با کانفیگ'));
     box.innerHTML = `
       <div class="knowledge-facts">
-        <div><label>منبع</label><strong>${esc(r.source_type === 'incident' ? 'رخداد بازیابی‌شده و تأییدشده' : r.source_type === 'incident_followup' ? 'بررسی تکمیلی رخداد (نیازمند بازبینی)' : 'دانش دستی')}</strong></div>
+        <div><label>منبع</label><strong>${esc(r.source_type === 'incident' ? 'رخداد بازیابی‌شده و تأییدشده' : coverageDraft ? 'گزارش رخداد (نیازمند تصمیم ذخیره یا رد)' : r.source_type === 'incident_followup' ? 'بررسی تکمیلی رخداد (نیازمند بازبینی)' : 'دانش دستی')}</strong></div>
         <div><label>مقصد</label><strong>Cognia KB #${esc(r.kb_id)}</strong></div>
         <div><label>نسخه</label><strong>${esc(r.revision)}</strong></div>
         <div><label>بازبین</label><strong>${esc(r.reviewed_by || 'در انتظار بازبینی')}</strong></div>
@@ -111,7 +115,8 @@
       <label for="knowledgeEditContent">محتوای بررسی‌شده (متن دقیق ارسالی به کاگنیا)</label>
       <textarea id="knowledgeEditContent" rows="15" ${editable ? '' : 'readonly'}>${esc(r.content)}</textarea>
       <div class="knowledge-actions">
-        ${canRefreshEvidence ? '<button type="button" class="approval-btn" data-knowledge-op="refresh-evidence">افزودن شواهد کانفیگ به پیش‌نویس</button>' : ''}
+        ${canRefreshEvidence ? '<button type="button" class="approval-btn" data-knowledge-op="refresh-evidence">'+
+          (coverageDraft ? 'بازخوانی آخرین وضعیت و شواهد رخداد' : 'افزودن شواهد کانفیگ به پیش‌نویس')+'</button>' : ''}
         ${editable ? '<button type="button" data-knowledge-op="edit">ذخیرهٔ تغییرات</button>' : ''}
         ${reviewable ? '<button type="button" class="approval-btn execute" data-knowledge-op="approve">تأیید و انتشار</button><button type="button" class="approval-btn reject" data-knowledge-op="reject">رد درخواست</button>' : ''}
         ${publishable ? '<button type="button" class="approval-btn execute" data-knowledge-op="publish">انتشار نسخهٔ تأییدشده</button>' : ''}
@@ -215,11 +220,11 @@
           notice('ابتدا تغییرات در حال ویرایش را ذخیره کنید؛ بازسازی نباید آن‌ها را از بین ببرد.');
           return;
         }
-        if (!window.confirm('شواهد ثبت‌شدهٔ کانفیگ به نسخهٔ جدیدِ پیش‌نویس اضافه شود؟ هنوز چیزی در Cognia منتشر نمی‌شود.')) return;
+        if (!window.confirm('آخرین شواهد ثبت‌شدهٔ رخداد جایگزین پیش‌نویس دست‌نخورده شود؟ تصمیم شما لازم است و چیزی در Cognia منتشر نمی‌شود.')) return;
         await api(base + '/refresh-evidence', {method:'POST',
           headers:{'Content-Type':'application/json'},
           body:JSON.stringify({expected_revision:row.revision})});
-        notice('شواهد واقعی کانفیگ به پیش‌نویس افزوده شد؛ نسخهٔ جدید نیازمند بازبینی است.');
+        notice('آخرین شواهد رخداد در پیش‌نویس ثبت شد؛ نسخهٔ جدید نیازمند بازبینی است.');
       } else if (op === 'edit') {
         const title = el('knowledgeEditTitle').value;
         const content = el('knowledgeEditContent').value;
