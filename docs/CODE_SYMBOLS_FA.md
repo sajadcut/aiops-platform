@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 535 | Dashboard JS files scanned: 8 | Symbols indexed: 5833**
+**Python files scanned: 535 | Dashboard JS files scanned: 8 | Symbols indexed: 5834**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -4031,6 +4031,7 @@
 | `tests/unit/test_full_config_edit_plan_delivery.py` | `test_no_opt_in_never_sends_complete_file` | 104 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_full_config_edit_plan_delivery.py` | `test_no_opt_in_never_sends_complete_file.ForbiddenModel` | 108 | class | کلاس | test_no_opt_in_never_sends_complete_file |
 | `tests/unit/test_full_config_edit_plan_delivery.py` | `test_no_opt_in_never_sends_complete_file.ForbiddenModel.generate` | 109 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_no_opt_in_never_sends_complete_file.ForbiddenModel |
+| `tests/unit/test_full_config_edit_plan_delivery.py` | `test_sensitive_line_allows_one_safe_comma_but_not_value_mutation` | 122 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_full_config_followup_reporting.py` | `candidate` | 18 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_full_config_followup_reporting.py` | `test_full_repair_is_durable_read_only_evidence` | 30 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_full_config_followup_reporting.py` | `test_real_emerg_line_overrides_stale_warn_43` | 48 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
