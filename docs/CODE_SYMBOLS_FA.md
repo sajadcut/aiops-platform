@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 550 | Dashboard JS files scanned: 8 | Symbols indexed: 6034**
+**Python files scanned: 550 | Dashboard JS files scanned: 8 | Symbols indexed: 6035**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -683,9 +683,10 @@
 | `apps/api/config_change_review.py` | `_hash` | 53 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/config_change_review.py` | `_matching_proposal` | 65 | function | Accept only evidence-backed deterministic transformations. | module |
 | `apps/api/config_change_review.py` | `_approval_for_proposal` | 112 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/config_change_review.py` | `_review_progress` | 122 | function | Expose durable intent separately from executable Approval authority. | module |
-| `apps/api/config_change_review.py` | `get_config_review_response` | 198 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
-| `apps/api/config_change_review.py` | `post_config_review_response` | 265 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/config_change_review.py` | `_consumed_failure_reissuable` | 122 | function | Require a failed/nonverified terminal audit, never revive old authority. | module |
+| `apps/api/config_change_review.py` | `_review_progress` | 142 | function | Expose durable intent separately from executable Approval authority. | module |
+| `apps/api/config_change_review.py` | `get_config_review_response` | 218 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
+| `apps/api/config_change_review.py` | `post_config_review_response` | 287 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/dashboard.py` | `dashboard_summary` | 17 | async function | Return live PostgreSQL-backed KPIs. Database failures are never converted to fake zeroes. | module |
 | `apps/api/dashboard_incidents.py` | `dashboard_incidents` | 15 | async function | Operational incident list enriched from durable governance/audit state. | module |
 | `apps/api/dashboard_incidents.py` | `dashboard_services` | 115 | async function | Service-centric operational health derived only from durable incident/governance state. | module |
