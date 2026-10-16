@@ -3474,8 +3474,8 @@
         const failedAfterConfig=state.configResponse?.start_service_after_apply!==true &&
           state.serviceStatus?.verified_systemd_only===true &&
           ['failed','inactive'].includes(low(state.serviceStatus?.active_state)) &&
-          low(state.serviceStatus?.service).replace(/\\.service$/,'')===
-            low(state.report?.incident_summary?.service).replace(/\\.service$/,'');
+          low(state.serviceStatus?.service).replace(/\.service$/,'')===
+            low(state.report?.incident_summary?.service).replace(/\.service$/,'');
         if(failedAfterConfig){
           controls+='<p class="ic-warning critical">'+esc(fa?
             'فایل اصلاح شده اما Approval قبلی فقط اجازه تغییر کانفیگ داشته است؛ Start/Restart صادر نشده و امکان افزودن مجوز به تیکت مصرف‌شده وجود ندارد. از چت همین رخداد درخواست «راه‌اندازی مجدد سرویس» بدهید تا درخواست Approval جداگانه با کنترل زنده ایجاد شود.':
