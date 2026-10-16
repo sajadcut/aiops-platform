@@ -307,7 +307,15 @@ class OpenAICompatibleLLMProvider(LLMAdapter):
             },
         )
 
-        transport_attempts = max(1, int(settings.RETRY_MAX_ATTEMPTS))
+        # Replaying complete-file repair can start multiple expensive model
+        # generations with sensitive config still in flight. Only this explicit
+        # operator workflow uses a single, longer request; other LLM stages
+        # retain the existing global timeout and retry policy.
+        complete_file_repair = stage == "full_config_llm_repair"
+        transport_attempts = (1 if complete_file_repair
+                              else max(1, int(settings.RETRY_MAX_ATTEMPTS)))
+        request_timeout = (max(90.0, float(settings.LLM_TIMEOUT_SECONDS))
+                           if complete_file_repair else settings.LLM_TIMEOUT_SECONDS)
         delay = max(0.0, float(settings.RETRY_DELAY_SECONDS))
         backoff = max(1.0, float(settings.RETRY_BACKOFF_FACTOR))
         result: Optional[LLMResponse] = None
@@ -316,7 +324,7 @@ class OpenAICompatibleLLMProvider(LLMAdapter):
             attempt_started = time.perf_counter()
             try:
                 async with insecure_async_client(
-                    timeout=settings.LLM_TIMEOUT_SECONDS,
+                    timeout=request_timeout,
                     component=f"llm:{self.provider_name}",
                 ) as client:
                     response = await client.post(
