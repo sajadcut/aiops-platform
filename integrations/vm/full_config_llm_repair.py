@@ -176,6 +176,44 @@ def _is_exact_json_key_quote_fix(original: str, corrected: str) -> bool:
     return True
 
 
+def _bounded_exact_character_edits(before: str, after: str, maximum: int = 3) -> int:
+    """Exact thresholded Levenshtein distance in O(maximum * file_length).
+
+    difflib's popular-token heuristic miscounts a comma edit in a large,
+    repetitive JSON file. This banded check never widens the change budget.
+    """
+    if abs(len(before) - len(after)) > maximum:
+        return maximum + 1
+    first = 0
+    while first < min(len(before), len(after)) and before[first] == after[first]:
+        first += 1
+    before, after = before[first:], after[first:]
+    while before and after and before[-1] == after[-1]:
+        before, after = before[:-1], after[:-1]
+    n, m = len(before), len(after)
+    if not n or not m:
+        return max(n, m)
+    previous = {j: j for j in range(min(m, maximum) + 1)}
+    for i in range(1, n + 1):
+        current = {}
+        for j in range(max(0, i - maximum), min(m, i + maximum) + 1):
+            if j == 0:
+                value = i
+            else:
+                value = min(
+                    previous.get(j, maximum + 1) + 1,
+                    current.get(j - 1, maximum + 1) + 1,
+                    previous.get(j - 1, maximum + 1)
+                    + (before[i - 1] != after[j - 1]),
+                )
+            if value <= maximum:
+                current[j] = value
+        if not current:
+            return maximum + 1
+        previous = current
+    return previous.get(m, maximum + 1)
+
+
 def _candidate_preview(original: str, corrected: str, *, diagnostic_line: int | None = None) -> dict:
     """Check completeness and bounded drift; emit *metadata*, never file lines."""
     base = {"status": "llm_candidate_rejected", "candidate_hash": None,
@@ -221,13 +259,8 @@ def _candidate_preview(original: str, corrected: str, *, diagnostic_line: int | 
     # cannot fix registered nginx/JSON/XML grammar errors and previously
     # allowed many irrelevant reindentations through the value-token filter.
     # Strip whitespace only for counting, NEVER for storing/reconstructing.
-    compact_before = re.sub(r"\s+", "", original)
-    compact_after = re.sub(r"\s+", "", corrected)
-    char_edits = sum(
-        max(i2 - i1, j2 - j1)
-        for tag, i1, i2, j1, j2 in difflib.SequenceMatcher(
-            None, compact_before, compact_after, autojunk=True,
-        ).get_opcodes() if tag != "equal"
+    char_edits = _bounded_exact_character_edits(
+        original, corrected, _MAX_SYNTAX_CHAR_EDITS,
     )
     if not 1 <= char_edits <= _MAX_SYNTAX_CHAR_EDITS:
         return {**base, "rejection_reason": "candidate_not_minimal_syntax_fix"}
@@ -241,11 +274,19 @@ def _candidate_preview(original: str, corrected: str, *, diagnostic_line: int | 
     # The compiler normally reports the *following* line when an earlier
     # brace or terminator is wrong. Permit only nearby changes.
     if diagnostic_line is not None and diagnostic_line > 0:
-        if any(
+        distant_change = any(
             abs(line_number - diagnostic_line) > 3
             for _, i1, i2, _, _ in differences
             for line_number in range(i1 + 1, max(i1 + 2, i2 + 1))
-        ):
+        )
+        # Only a UNIQUE local parser-derived duplicated-brace pair may
+        # remove its matching closer farther down the same JSON block.
+        verified_matching_brace_pair = (
+            distant_change and original != corrected
+            and original.lstrip().startswith(("{", "["))
+            and corrected == deterministic_json_duplicate_brace_fix(original)
+        )
+        if distant_change and not verified_matching_brace_pair:
             return {**base, "rejection_reason": "candidate_unrelated_to_validator_line"}
     locations = sorted({i + 1 for _, i1, i2, _, _ in differences
                         for i in range(i1, max(i1 + 1, i2))})
