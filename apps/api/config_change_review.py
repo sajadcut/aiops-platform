@@ -147,7 +147,10 @@ def _last_config_apply_result(approval: dict, events: list[dict]) -> dict | None
             "service_recovery_confirmed": meta.get("service_recovery_confirmed") is True,
             "service_start_attempted": meta.get("service_start_attempted") is True,
             "service_recovery_status": str(meta.get("service_recovery_status") or "not_verified")[:80],
-            "production_write_performed": meta.get("production_write_performed") is True,
+            "production_write_performed": (
+                None if meta.get("production_write_performed") is None
+                else meta.get("production_write_performed") is True
+            ),
             "rollback_status": str(meta.get("rollback_status") or "unverified")[:80],
             "observed_at": str(event.get("created_at") or ""),
         }
