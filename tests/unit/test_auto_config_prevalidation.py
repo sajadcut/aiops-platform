@@ -101,3 +101,52 @@ async def test_mcp_review_prefers_broken_appsettings_over_first_healthy_json(mon
     assert result["status"] != "candidate_proposed"
     assert result["candidate_hash"] is None
     assert result["execution_authority"] is False
+
+
+@pytest.mark.asyncio
+async def test_valid_microfix_auto_creates_nonapprovable_request_and_only_validates(monkeypatch):
+    """The automated branch can queue/stage, not approve or apply a file."""
+    import apps.config_change_auto_queue as mod
+    from types import SimpleNamespace
+
+    state = _state()
+    seen = []
+    class DB:
+        async def get(self, cls, key):
+            return SimpleNamespace(service="gfpapi", context={})
+        async def execute(self, statement, parameters):
+            return SimpleNamespace(scalar_one_or_none=lambda: None)
+    class Audit:
+        def __init__(self, session):
+            pass
+        async def list(self, incident_id, limit):
+            return []
+        async def append(self, record):
+            seen.append(("audit", record["status"]))
+    class Approvals:
+        def __init__(self, session):
+            pass
+        async def save_validation_request(self, record):
+            seen.append(("queue", record))
+            return {"approval_id": record["approval_id"], "status": "pending_validation"}
+    async def stage(approval_id, *, actor):
+        seen.append(("stage", actor))
+        return {"status": "pending", "validation": "passed"}
+    monkeypatch.setattr(mod, "PostgreSQLAuditStore", Audit)
+    monkeypatch.setattr(mod, "PostgreSQLApprovalStore", Approvals)
+    monkeypatch.setattr(mod, "incident_vm_context", lambda *a: {})
+    monkeypatch.setattr(mod, "vm_binding_diagnostic",
+                        lambda *a: {"candidate": "10.248.16.82"})
+    monkeypatch.setattr(mod, "validate_config_ticket", stage)
+    result = await mod.auto_queue_prevalidation(
+        DB(), "11111111-1111-4111-8111-111111111111", state,
+    )
+    assert result["status"] == "pending"
+    assert [record[0] for record in seen] == ["queue", "audit", "stage"]
+    record = seen[0][1]
+    assert record["action"] == "apply_configuration_change"
+    assert record["metadata"]["start_service_after_apply"] is False
+    assert record["metadata"]["isolated_validation"] is False
+    assert record["metadata"]["production_write_performed"] is False
+    assert record["metadata"]["automated_prevalidation"] is True
+    assert seen[-1] == ("stage", "aiops-auto-prevalidation")
