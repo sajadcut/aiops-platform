@@ -152,6 +152,8 @@ _GUARD_FAILURE_CODES = {
 
 def classify_config_guard_failure(observed: dict) -> str:
     """Use only fixed, operator-actionable codes; never reflect stderr."""
+    if observed.get("error") == "ssh_stdin_pipe_closed":
+        return "config_guard_ssh_stdin_closed_result_unknown"
     if observed.get("error") == "ssh_command_timeout":
         return "config_guard_ssh_timeout"
     if observed.get("error") == "ssh_command_failed":
@@ -411,14 +413,29 @@ async def run_governed_change(connector, *, action: str, target: str, service: s
     rolled_back = output == "ROLLED_BACK"
     # Only bounded enum values/exit code; do not log the signed claim,
     # candidate bytes, validator stderr or the sudo password.
+    transport_ambiguous = (
+        observed.get("success") is not True
+        and observed.get("error") in {
+            "ssh_stdin_pipe_closed", "ssh_command_timeout", "ssh_command_failed",
+        }
+        and not output
+    )
+    failure_reason = (
+        classify_config_guard_failure(observed)
+        if not applied and not rolled_back and output != "ROLLBACK_FAILED"
+        else None
+    )
     result_status = ("applied_verified" if applied else "rolled_back"
                      if rolled_back else "rollback_failed"
-                     if output == "ROLLBACK_FAILED" else "apply_failed_or_blocked")
+                     if output == "ROLLBACK_FAILED" else "config_apply_result_unknown"
+                     if transport_ambiguous else "apply_failed_or_blocked")
     logger.info(
         "vm_config_guard_apply_completed",
         target=target, service=name, phase="approved_apply",
         result=result_status, guard_exit_code=observed.get("exit_code"),
-        production_write_performed=applied or rolled_back or output == "ROLLBACK_FAILED",
+        failure_reason=failure_reason,
+        production_write_performed=(None if transport_ambiguous
+                                    else applied or rolled_back or output == "ROLLBACK_FAILED"),
     )
     recovery = {"attempted": False, "status": "not_authorized",
                 "service_recovery_confirmed": False}
@@ -432,10 +449,14 @@ async def run_governed_change(connector, *, action: str, target: str, service: s
         "service_recovery_confirmed": recovery["service_recovery_confirmed"],
         "success": applied,
         "status": result_status,
+        "failure_reason": failure_reason,
+        "guard_exit_code": (observed.get("exit_code")
+                            if type(observed.get("exit_code")) is int else None),
         "isolated_validation": applied,
         "validation_scope": scope,
         "original_sha256": original_sha256, "candidate_sha256": candidate_sha256,
-        "production_write_performed": applied or rolled_back or output == "ROLLBACK_FAILED",
+        "production_write_performed": (None if transport_ambiguous
+                                       else applied or rolled_back or output == "ROLLBACK_FAILED"),
         "rollback_status": ("not_required" if applied else "restored_original"
                             if rolled_back else "unverified"),
         "remote_python_required": False,
