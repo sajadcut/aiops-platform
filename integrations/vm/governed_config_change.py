@@ -467,10 +467,13 @@ async def _start_after_approved_config_apply(connector, *, target: str, service:
             return {"attempted": True, "status": "start_failed",
                     "service_recovery_confirmed": False}
         after = await connector.service_status(target, service)
+        # service_status.healthy is deliberately None until application-
+        # specific probes run. Do not turn a successful verified systemd
+        # start into a false failure by requiring application health here.
+        # Independent health/monitor checks still gate incident resolution.
         confirmed = (after.get("success") is True
                      and after.get("active_state") == "active"
-                     and after.get("sub_state") == "running"
-                     and after.get("healthy") is True)
+                     and after.get("sub_state") == "running")
         status = "systemd_active" if confirmed else "start_not_verified"
         logger.info("vm_config_recovery_checked", target=target, service=service,
                     status=status, started=True, systemd_active=confirmed)
