@@ -157,7 +157,9 @@ async def test_structured_service_status_parses_systemd_properties(monkeypatch):
     assert result["unit_file_state"] == "enabled"
     assert result["main_pid"] == 123
     assert result["restart_count"] == 2
-    assert result["healthy"] is True
+    assert result["healthy"] is None
+    assert result["systemd_active"] is True
+    assert result["application_health_verified"] is False
 
 
 @pytest.mark.asyncio
