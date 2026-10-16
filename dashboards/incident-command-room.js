@@ -3428,7 +3428,11 @@
         '<div class="ic-outcome-heading"><strong>'+
         esc(fa?'نتیجهٔ واقعی اجرای اصلاح کانفیگ':'Audited configuration apply result')+
         '</strong>'+pill(ok?'verified':'unverified')+'</div>'+
-        '<p>'+esc(configMessage)+'</p><p>'+esc(serviceMessage)+'</p>'+
+        '<p>'+esc(configMessage)+'</p>'+
+        (applied.failure_reason?'<p class="ic-warning">'+
+          esc(fa?guardReasonFA(applied.failure_reason):applied.failure_reason)+
+          ' <code>'+txt(applied.failure_reason)+'</code></p>':'')+
+        '<p>'+esc(serviceMessage)+'</p>'+
         '<p>'+esc(incidentMessage)+'</p><div class="ic-proposal">'+
         fact('action','apply_configuration_change')+
         fact('approvalId',applied.approval_id)+
