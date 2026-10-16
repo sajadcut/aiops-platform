@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 555 | Dashboard JS files scanned: 8 | Symbols indexed: 6128**
+**Python files scanned: 555 | Dashboard JS files scanned: 8 | Symbols indexed: 6142**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -792,15 +792,15 @@
 | `apps/api/knowledge_reviews.py` | `_knowledge_monitoring_projection` | 299 | function | Pure summary: unknown indicators stay explicitly unmeasured. | module |
 | `apps/api/knowledge_reviews.py` | `_knowledge_monitoring_projection.trend_map` | 337 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _knowledge_monitoring_projection |
 | `apps/api/knowledge_reviews.py` | `knowledge_monitoring` | 420 | async function | Read-only operational dashboard, no publication, polling or Cognia writes. | module |
-| `apps/api/knowledge_reviews.py` | `get_review` | 447 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
-| `apps/api/knowledge_reviews.py` | `refresh_review_evidence` | 464 | async function | Explicit opt-in regeneration of an untouched system-generated draft. | module |
-| `apps/api/knowledge_reviews.py` | `draft_from_memory` | 529 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/knowledge_reviews.py` | `draft_manual` | 537 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/knowledge_reviews.py` | `edit_review` | 559 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/knowledge_reviews.py` | `approve_review` | 586 | async function | transition مربوط به Approval/Governance را اعمال می‌کند | module |
-| `apps/api/knowledge_reviews.py` | `reject_review` | 616 | async function | transition مربوط به Approval/Governance را اعمال می‌کند | module |
-| `apps/api/knowledge_reviews.py` | `publish_review` | 634 | async function | Publish with a deterministic Idempotency-Key; no unapproved content crosses. | module |
-| `apps/api/knowledge_reviews.py` | `refresh_review` | 702 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/knowledge_reviews.py` | `get_review` | 454 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
+| `apps/api/knowledge_reviews.py` | `refresh_review_evidence` | 471 | async function | Explicit opt-in regeneration of an untouched system-generated draft. | module |
+| `apps/api/knowledge_reviews.py` | `draft_from_memory` | 536 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/knowledge_reviews.py` | `draft_manual` | 544 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/knowledge_reviews.py` | `edit_review` | 566 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/knowledge_reviews.py` | `approve_review` | 593 | async function | transition مربوط به Approval/Governance را اعمال می‌کند | module |
+| `apps/api/knowledge_reviews.py` | `reject_review` | 623 | async function | transition مربوط به Approval/Governance را اعمال می‌کند | module |
+| `apps/api/knowledge_reviews.py` | `publish_review` | 641 | async function | Publish with a deterministic Idempotency-Key; no unapproved content crosses. | module |
+| `apps/api/knowledge_reviews.py` | `refresh_review` | 709 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/main.py` | `dashboard_font_stylesheet` | 96 | async function | Shared font definitions for dashboard, chatbot and incident room. | module |
 | `apps/api/main.py` | `approved_ui_font` | 102 | async function | Serve only explicitly allowlisted local font assets (no directory browse). | module |
 | `apps/api/main.py` | `root` | 120 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
@@ -4903,6 +4903,20 @@
 | `tests/unit/test_knowledge_monitoring.py` | `test_monitoring_queries_only_aggregated_durable_sources.Session.execute` | 115 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | test_monitoring_queries_only_aggregated_durable_sources.Session |
 | `tests/unit/test_knowledge_monitoring.py` | `test_monitoring_queries_only_aggregated_durable_sources.ready` | 122 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_monitoring_queries_only_aggregated_durable_sources |
 | `tests/unit/test_knowledge_monitoring.py` | `test_monitoring_endpoint_order_and_safe_ui_contract` | 140 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_knowledge_monitoring.py` | `_monitoring_test_app` | 168 | function | Exercise real HTTP query parsing while isolating the authorization gate. | module |
+| `tests/unit/test_knowledge_monitoring.py` | `test_monitoring_http_accepts_dashboard_period_strings` | 187 | async function | Regression: Pydantic v2 numeric Literal rejected all string query values. | module |
+| `tests/unit/test_knowledge_monitoring.py` | `test_monitoring_http_accepts_dashboard_period_strings.Rows` | 193 | class | کلاس | test_monitoring_http_accepts_dashboard_period_strings |
+| `tests/unit/test_knowledge_monitoring.py` | `test_monitoring_http_accepts_dashboard_period_strings.Rows.__init__` | 194 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_monitoring_http_accepts_dashboard_period_strings.Rows |
+| `tests/unit/test_knowledge_monitoring.py` | `test_monitoring_http_accepts_dashboard_period_strings.Rows.mappings` | 197 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_monitoring_http_accepts_dashboard_period_strings.Rows |
+| `tests/unit/test_knowledge_monitoring.py` | `test_monitoring_http_accepts_dashboard_period_strings.Rows.all` | 200 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_monitoring_http_accepts_dashboard_period_strings.Rows |
+| `tests/unit/test_knowledge_monitoring.py` | `test_monitoring_http_accepts_dashboard_period_strings.Rows.one` | 203 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_monitoring_http_accepts_dashboard_period_strings.Rows |
+| `tests/unit/test_knowledge_monitoring.py` | `test_monitoring_http_accepts_dashboard_period_strings.Session` | 206 | class | کلاس | test_monitoring_http_accepts_dashboard_period_strings |
+| `tests/unit/test_knowledge_monitoring.py` | `test_monitoring_http_accepts_dashboard_period_strings.Session.__aenter__` | 207 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_monitoring_http_accepts_dashboard_period_strings.Session |
+| `tests/unit/test_knowledge_monitoring.py` | `test_monitoring_http_accepts_dashboard_period_strings.Session.__aexit__` | 210 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_monitoring_http_accepts_dashboard_period_strings.Session |
+| `tests/unit/test_knowledge_monitoring.py` | `test_monitoring_http_accepts_dashboard_period_strings.Session.execute` | 213 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | test_monitoring_http_accepts_dashboard_period_strings.Session |
+| `tests/unit/test_knowledge_monitoring.py` | `test_monitoring_http_accepts_dashboard_period_strings.ready` | 221 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_monitoring_http_accepts_dashboard_period_strings |
+| `tests/unit/test_knowledge_monitoring.py` | `test_monitoring_http_rejects_unsupported_periods_without_database` | 244 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_knowledge_monitoring.py` | `test_monitoring_http_rejects_unsupported_periods_without_database.unexpected_session` | 247 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_monitoring_http_rejects_unsupported_periods_without_database |
 | `tests/unit/test_knowledge_review_governance.py` | `_memory` | 21 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_knowledge_review_governance.py` | `test_verified_incident_can_be_drafted_but_hypothetical_cause_never_becomes_fact` | 42 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_knowledge_review_governance.py` | `test_unverified_or_negative_experience_cannot_be_mislabeled_as_success` | 65 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
