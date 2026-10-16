@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 528 | Dashboard JS files scanned: 8 | Symbols indexed: 5761**
+**Python files scanned: 528 | Dashboard JS files scanned: 8 | Symbols indexed: 5762**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -3611,12 +3611,13 @@
 | `tests/unit/test_config_repair_long_running_guard.py` | `test_full_config_mcp_call_uses_single_long_bounded_attempt` | 68 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_config_repair_long_running_guard.py` | `test_full_config_mcp_call_uses_single_long_bounded_attempt.StubTransport` | 76 | class | کلاس | test_full_config_mcp_call_uses_single_long_bounded_attempt |
 | `tests/unit/test_config_repair_long_running_guard.py` | `test_full_config_mcp_call_uses_single_long_bounded_attempt.StubTransport.post` | 77 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_full_config_mcp_call_uses_single_long_bounded_attempt.StubTransport |
-| `tests/unit/test_config_repair_long_running_guard.py` | `test_full_config_llm_transport_does_not_replay_on_timeout` | 102 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_config_repair_long_running_guard.py` | `test_full_config_llm_transport_does_not_replay_on_timeout.StubGateway` | 110 | class | کلاس | test_full_config_llm_transport_does_not_replay_on_timeout |
-| `tests/unit/test_config_repair_long_running_guard.py` | `test_full_config_llm_transport_does_not_replay_on_timeout.StubGateway.__aenter__` | 111 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_full_config_llm_transport_does_not_replay_on_timeout.StubGateway |
-| `tests/unit/test_config_repair_long_running_guard.py` | `test_full_config_llm_transport_does_not_replay_on_timeout.StubGateway.__aexit__` | 114 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_full_config_llm_transport_does_not_replay_on_timeout.StubGateway |
-| `tests/unit/test_config_repair_long_running_guard.py` | `test_full_config_llm_transport_does_not_replay_on_timeout.StubGateway.post` | 117 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_full_config_llm_transport_does_not_replay_on_timeout.StubGateway |
-| `tests/unit/test_config_repair_long_running_guard.py` | `test_full_config_llm_transport_does_not_replay_on_timeout.fake_client` | 121 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_full_config_llm_transport_does_not_replay_on_timeout |
+| `tests/unit/test_config_repair_long_running_guard.py` | `test_full_config_mcp_call_uses_single_long_bounded_attempt.StubTransport.aclose` | 86 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_full_config_mcp_call_uses_single_long_bounded_attempt.StubTransport |
+| `tests/unit/test_config_repair_long_running_guard.py` | `test_full_config_llm_transport_does_not_replay_on_timeout` | 105 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_config_repair_long_running_guard.py` | `test_full_config_llm_transport_does_not_replay_on_timeout.StubGateway` | 113 | class | کلاس | test_full_config_llm_transport_does_not_replay_on_timeout |
+| `tests/unit/test_config_repair_long_running_guard.py` | `test_full_config_llm_transport_does_not_replay_on_timeout.StubGateway.__aenter__` | 114 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_full_config_llm_transport_does_not_replay_on_timeout.StubGateway |
+| `tests/unit/test_config_repair_long_running_guard.py` | `test_full_config_llm_transport_does_not_replay_on_timeout.StubGateway.__aexit__` | 117 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_full_config_llm_transport_does_not_replay_on_timeout.StubGateway |
+| `tests/unit/test_config_repair_long_running_guard.py` | `test_full_config_llm_transport_does_not_replay_on_timeout.StubGateway.post` | 120 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_full_config_llm_transport_does_not_replay_on_timeout.StubGateway |
+| `tests/unit/test_config_repair_long_running_guard.py` | `test_full_config_llm_transport_does_not_replay_on_timeout.fake_client` | 124 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_full_config_llm_transport_does_not_replay_on_timeout |
 | `tests/unit/test_config_repair_recovery.py` | `signing_token` | 10 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_config_repair_recovery.py` | `_claim` | 15 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_config_repair_recovery.py` | `test_recovery_scope_is_signed_and_cannot_be_added_after_approval` | 26 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
