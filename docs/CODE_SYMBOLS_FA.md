@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 548 | Dashboard JS files scanned: 8 | Symbols indexed: 6000**
+**Python files scanned: 548 | Dashboard JS files scanned: 8 | Symbols indexed: 6003**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -4790,6 +4790,9 @@
 | `tests/unit/test_knowledge_config_dossier.py` | `test_vendor_success_only_does_not_invent_a_prior_fault` | 92 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_knowledge_config_dossier.py` | `test_followup_draft_includes_actual_config_details_without_claiming_recovery` | 100 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_knowledge_config_dossier.py` | `test_no_unverified_source_is_upgraded_to_a_config_root_cause` | 114 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_knowledge_config_dossier.py` | `test_failed_approved_start_is_truthfully_presented_to_knowledge_reviewer` | 120 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_knowledge_config_dossier.py` | `test_blocked_start_never_claims_actual_execution_or_recovery` | 143 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_knowledge_config_dossier.py` | `test_unaudited_or_malformed_service_execution_is_not_knowledge_proof` | 157 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_knowledge_review_governance.py` | `_memory` | 21 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_knowledge_review_governance.py` | `test_verified_incident_can_be_drafted_but_hypothetical_cause_never_becomes_fact` | 42 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_knowledge_review_governance.py` | `test_unverified_or_negative_experience_cannot_be_mislabeled_as_success` | 65 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
