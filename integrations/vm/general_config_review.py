@@ -263,7 +263,7 @@ def local_config_review(encoded: str, *, path: str, validator_error_line: int | 
                 # A single fix cannot parse a document with consecutive
                 # punctuation typos. Reparse after each measured edit and
                 # accept only ONE complete, value-preserving result within
-                # a hard three-character budget.
+                # a hard six-character budget (including key quotes).
                 from integrations.vm.json_syntax_candidate import (
                     bounded_json_repair_with_edits,
                 )
@@ -295,7 +295,7 @@ def local_config_review(encoded: str, *, path: str, validator_error_line: int | 
                 # the generic "file_observed" status. This is an actionable
                 # investigation blocker, not a patch or an executable request.
                 answer["status"] = "syntax_invalid_no_safe_candidate"
-                answer["repair_blocker"] = "no_unique_parser_valid_repair_within_three_syntax_characters"
+                answer["repair_blocker"] = "no_unique_parser_valid_repair_within_six_syntax_characters"
                 answer["recommended_next_action"] = "escalate_bounded_manual_review_or_vendor_specific_validator"
     elif ext == "xml":
         if "<!DOCTYPE" in source.upper() or "<!ENTITY" in source.upper():
