@@ -52,7 +52,16 @@ async def _verified_service_start_scope(*, target: str, service: str) -> bool:
         and observed == requested
         and status.get("load_state") == "loaded"
         and ((active == "failed" and sub == "failed")
-             or (active == "inactive" and sub == "dead"))
+             or (active == "inactive" and sub == "dead")
+             # systemd Restart=always/on-failure can keep a crashing .NET,
+             # Java or Python unit in 'activating (auto-restart)' forever.
+             # It is not healthy/active and needs recovery scope after a
+             # validated config change. Bind the right to Start explicitly
+             # before the human approves, never retrofit a consumed ticket.
+             or (active == "activating" and sub == "auto-restart"
+                 and status.get("main_pid") == 0
+                 and type(status.get("restart_count")) is int
+                 and status["restart_count"] >= 2))
     )
 
 
@@ -221,7 +230,10 @@ async def auto_queue_prevalidation(session, incident_id: str, state: dict) -> di
         checked = await asyncio.wait_for(
             validate_config_ticket(str(ticket["approval_id"]),
                                    actor="aiops-auto-prevalidation"),
-            timeout=45,
+            # A complete-file JSON/XML staging guard can exceed the generic
+            # MCP timeout even with healthy SSH. The MCP transport itself is
+            # bounded to 180 seconds and validation never writes production.
+            timeout=200,
         )
         return {"status": str(checked.get("status") or "pending_validation"),
                 "approval_id": str(ticket["approval_id"]),
