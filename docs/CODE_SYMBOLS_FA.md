@@ -2782,9 +2782,9 @@
 | `tests/integration/test_controlled_connectors.py` | `test_native_edge_observability_failure_harness` | 20 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/integration/test_controlled_connectors.py` | `test_native_edge_observability_failure_harness.failed` | 21 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_native_edge_observability_failure_harness |
 | `tests/integration/test_dashboard_api.py` | `test_dashboard_ui_contains_live_api_calls` | 10 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/integration/test_dashboard_api.py` | `test_dashboard_route_and_api_are_registered` | 24 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/integration/test_dashboard_api.py` | `test_dashboard_html_css_and_js_are_actually_served_over_http` | 35 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/integration/test_dashboard_api.py` | `test_legacy_dashboard_asset_aliases_remain_available_for_stale_tabs` | 58 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/integration/test_dashboard_api.py` | `test_dashboard_route_and_api_are_registered` | 26 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/integration/test_dashboard_api.py` | `test_dashboard_html_css_and_js_are_actually_served_over_http` | 37 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/integration/test_dashboard_api.py` | `test_legacy_dashboard_asset_aliases_remain_available_for_stale_tabs` | 60 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/integration/test_decision_brief_history_db.py` | `test_archive_history_is_immutable_versioned_and_incident_scoped` | 25 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/integration/test_decision_brief_history_db.py` | `test_consumption_rechecks_snapshot_atomically_after_evidence_change` | 85 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/integration/test_decision_brief_history_db.py` | `test_trigger_serializes_evidence_and_checkpoint_writes_with_incident_lock` | 141 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
