@@ -65,6 +65,7 @@ def test_local_review_proposes_replayable_hash_bound_staged_repair():
     assert preview["status"] == "candidate_proposed"
     assert preview["proposed_change"] == "repair_json_bounded_syntax"
     assert preview["validation_status"] == "FORMAT_CANDIDATE_VALID_ONLY"
+    assert preview["candidate_syntax_projection"] != preview["syntax_projection"]
     candidate = bounded_json_syntax_fix(original)
     assert candidate is not None
     assert preview["candidate_hash"] == hashlib.sha256(candidate.encode()).hexdigest()
