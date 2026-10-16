@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 546 | Dashboard JS files scanned: 8 | Symbols indexed: 5965**
+**Python files scanned: 546 | Dashboard JS files scanned: 8 | Symbols indexed: 5968**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1667,46 +1667,48 @@
 | `dashboards/approval-actions.js` | `displayStatus` | 5 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
 | `dashboards/approval-actions.js` | `displayAction` | 7 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
 | `dashboards/approval-actions.js` | `configPreApprovalPanel` | 10 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `approvalPanel` | 42 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `summaryBadge` | 126 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `causeBadge` | 130 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `approvalBadge` | 134 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `executionBadge` | 144 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `verificationBadge` | 151 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `memoryBadge` | 158 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `observedStateRows` | 165 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `evidenceRows` | 179 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `storedRecommendationLanguage` | 184 | JavaScript function | state یا داده را به‌صورت durable ذخیره/به‌روزرسانی می‌کند | browser module |
-| `dashboards/approval-actions.js` | `recommendationTranslationKey` | 193 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `translatedRecommendation` | 196 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `ensurePersianRecommendation` | 202 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `actionText` | 227 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `recommendationHasUntranslatedOriginal` | 267 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `recommendationArticle` | 271 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `controlRows` | 314 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `executionText` | 326 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `verificationText` | 334 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `operatorSummaryCard` | 344 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `injectOperatorSummary` | 368 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `refreshIncidentDecision` | 389 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `validateCurrentConfigApproval` | 396 | JavaScript function | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | browser module |
-| `dashboards/approval-actions.js` | `rejectPendingConfigApproval` | 408 | JavaScript function | transition مربوط به Approval/Governance را اعمال می‌کند | browser module |
-| `dashboards/approval-actions.js` | `executeCurrentConfigApproval` | 420 | JavaScript function | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | browser module |
-| `dashboards/approval-actions.js` | `approveCurrentApproval` | 434 | JavaScript function | transition مربوط به Approval/Governance را اعمال می‌کند | browser module |
-| `dashboards/approval-actions.js` | `rejectCurrentApproval` | 451 | JavaScript function | transition مربوط به Approval/Governance را اعمال می‌کند | browser module |
-| `dashboards/approval-actions.js` | `resumeCurrentWorkflow` | 476 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `selectIncidentWithOperatorSummary` | 531 | JavaScript function | بر اساس state/capability مسیر یا handler مناسب را انتخاب می‌کند | browser module |
-| `dashboards/approval-actions.js` | `enhancedRenderDetail` | 556 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `loadAllWithCurrentIncidentSummary` | 566 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
-| `dashboards/approval-actions.js` | `list` | 583 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `uniqueText` | 584 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `safeJson` | 586 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `detailsFor` | 595 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `analyzerKeys` | 601 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `candidateCount` | 607 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `agentAnalysisCard` | 614 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/approval-actions.js` | `renderDetailWithAgentAnalysis` | 657 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/approval-actions.js` | `loadAgentsWithReliabilityContract` | 672 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
+| `dashboards/approval-actions.js` | `serviceRecoveryApprovalPanel` | 46 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `approvalPanel` | 68 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `summaryBadge` | 152 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `causeBadge` | 156 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `approvalBadge` | 160 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `executionBadge` | 170 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `verificationBadge` | 177 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `memoryBadge` | 184 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `observedStateRows` | 191 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `evidenceRows` | 205 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `storedRecommendationLanguage` | 210 | JavaScript function | state یا داده را به‌صورت durable ذخیره/به‌روزرسانی می‌کند | browser module |
+| `dashboards/approval-actions.js` | `recommendationTranslationKey` | 219 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `translatedRecommendation` | 222 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `ensurePersianRecommendation` | 228 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `actionText` | 253 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `recommendationHasUntranslatedOriginal` | 293 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `recommendationArticle` | 297 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `controlRows` | 340 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `executionText` | 352 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `verificationText` | 360 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `operatorSummaryCard` | 370 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `injectOperatorSummary` | 394 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `refreshIncidentDecision` | 415 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `validateCurrentConfigApproval` | 422 | JavaScript function | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | browser module |
+| `dashboards/approval-actions.js` | `rejectPendingConfigApproval` | 434 | JavaScript function | transition مربوط به Approval/Governance را اعمال می‌کند | browser module |
+| `dashboards/approval-actions.js` | `executeCurrentConfigApproval` | 446 | JavaScript function | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | browser module |
+| `dashboards/approval-actions.js` | `approveCurrentApproval` | 460 | JavaScript function | transition مربوط به Approval/Governance را اعمال می‌کند | browser module |
+| `dashboards/approval-actions.js` | `rejectCurrentApproval` | 477 | JavaScript function | transition مربوط به Approval/Governance را اعمال می‌کند | browser module |
+| `dashboards/approval-actions.js` | `resumeCurrentWorkflow` | 502 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `performServiceRecovery` | 566 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `selectIncidentWithOperatorSummary` | 614 | JavaScript function | بر اساس state/capability مسیر یا handler مناسب را انتخاب می‌کند | browser module |
+| `dashboards/approval-actions.js` | `enhancedRenderDetail` | 643 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `loadAllWithCurrentIncidentSummary` | 653 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
+| `dashboards/approval-actions.js` | `list` | 670 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `uniqueText` | 671 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `safeJson` | 673 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `detailsFor` | 682 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `analyzerKeys` | 688 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `candidateCount` | 694 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `agentAnalysisCard` | 701 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/approval-actions.js` | `renderDetailWithAgentAnalysis` | 744 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/approval-actions.js` | `loadAgentsWithReliabilityContract` | 759 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
 | `dashboards/chatbot-transport.js` | `createTransport` | 1 | JavaScript function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | browser module |
 | `dashboards/chatbot-transport.js` | `authHeaders` | 2 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
 | `dashboards/chatbot-transport.js` | `api` | 8 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
@@ -3781,6 +3783,7 @@
 | `tests/unit/test_dashboard_approval_actions.py` | `test_fastapi_serves_approval_assets` | 34 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_dashboard_approval_actions.py` | `test_critical_risk_requires_secondary_confirmation_before_approval_and_resume` | 40 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_dashboard_approval_actions.py` | `test_operator_dashboard_does_not_resume_a_completed_incident` | 46 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_dashboard_approval_actions.py` | `test_main_dashboard_separates_service_recovery_approval_from_e2e_resume` | 55 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_dashboard_contract.py` | `test_dashboard_contains_required_operational_capabilities` | 4 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_dashboard_contract.py` | `test_dashboard_does_not_embed_demo_or_synthetic_operational_data` | 55 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_dashboard_contract.py` | `test_service_health_is_durable_not_static_topology` | 64 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
