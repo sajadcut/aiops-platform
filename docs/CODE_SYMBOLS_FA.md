@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 545 | Dashboard JS files scanned: 8 | Symbols indexed: 5963**
+**Python files scanned: 546 | Dashboard JS files scanned: 8 | Symbols indexed: 5965**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -5031,6 +5031,8 @@
 | `tests/unit/test_nginx_config_review.py` | `test_confirmed_nginx_validator_collects_preview_without_dynamic_llm_flag.VM.nginx_config_inspect` | 335 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_confirmed_nginx_validator_collects_preview_without_dynamic_llm_flag.VM |
 | `tests/unit/test_nginx_config_review.py` | `test_existing_nginx_incident_can_request_read_only_preview_from_dashboard` | 359 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_nginx_config_review.py` | `test_dynamic_nginx_config_preview_survives_llm_opt_out` | 377 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_nginx_recovery_approval_routing.py` | `test_recovery_approval_does_not_lose_action_controls_to_workflow_approval` | 16 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_nginx_recovery_approval_routing.py` | `test_browser_decision_renders_approved_start_with_separate_paused_workflow` | 29 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_oidc_auth.py` | `test_oidc_claims_map_to_identity` | 6 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_oidc_auth.py` | `test_oidc_rejects_wrong_issuer` | 18 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_operational_agents.py` | `StaticLLM` | 15 | class | کلاس | module |
