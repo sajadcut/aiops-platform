@@ -189,6 +189,15 @@ class DynamicInvestigationPlanner:
                 "changed_line_numbers": changes if accepted else [],
                 "llm_received_complete_file": raw.get("llm_received_complete_file") is True,
                 "llm_returned_complete_file": raw.get("llm_returned_complete_file") is True,
+                "complete_file_in_prompt": raw.get("complete_file_in_prompt") is True,
+                "source_size_bytes": (
+                    raw["source_size_bytes"] if type(raw.get("source_size_bytes")) is int
+                    and 0 < raw["source_size_bytes"] <= 65536 else None
+                ),
+                "candidate_generation_mode": (
+                    raw.get("candidate_generation_mode") if raw.get("candidate_generation_mode")
+                    in {"llm_bounded_edit_plan", "llm_complete_file"} else "not_verified"
+                ),
                 "candidate_returned_not_stored": bool(accepted and raw.get("candidate_stored") is not True),
                 "candidate_stored": bool(accepted and raw.get("candidate_stored") is True),
                 "candidate_origin": (
