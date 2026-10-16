@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 545 | Dashboard JS files scanned: 8 | Symbols indexed: 5962**
+**Python files scanned: 545 | Dashboard JS files scanned: 8 | Symbols indexed: 5963**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -4563,6 +4563,7 @@
 | `tests/unit/test_incident_start_approval_visibility.py` | `test_approved_start_visible_in_hero_even_with_other_workflow_approval` | 14 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_incident_start_approval_visibility.py` | `test_start_is_not_mislabelled_restart_and_needs_explicit_execution` | 24 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_incident_start_approval_visibility.py` | `test_approval_can_explicitly_include_execution_without_unrelated_storage_precheck` | 35 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_start_approval_visibility.py` | `test_node_runtime_approved_start_dispatches_two_governed_calls_in_order` | 46 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_incident_state_correlation_room.py` | `test_section01_displays_source_discrepancy_timing_and_safe_read_only_steps` | 13 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_incident_state_correlation_room.py` | `test_correlation_card_is_defined_and_exposes_no_auto_execute_paths` | 79 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_incident_vm_identity_recovery.py` | `vm_fact` | 17 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
