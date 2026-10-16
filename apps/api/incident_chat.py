@@ -321,12 +321,34 @@ def _observed_status(
     # Use only attributable recent systemd samples, never the LLM, Zabbix
     # alarm prose, or a historical restart counter alone.
     from datetime import timedelta
-    # A verified post-config recovery pair establishes a new stability
-    # window. Crash-loop samples from before the successfully repaired
-    # service must not overrule newer systemd Running observations.
+    # A verified config APPLY is a diagnostic epoch boundary, not a
+    # recovery claim. An old crash loop before this actual production write
+    # cannot label post-change live active/running as currently crashing.
+    # The systemd state after the boundary must still be independently
+    # sampled, and any NEW restart/crash still wins.
     recovery_epochs = [
         at for at, row in candidates if row.get("_post_repair_stable") is True
     ]
+    for event in events:
+        if (event.get("event_type") != "configuration_change_transition"
+                or event.get("status") != "applied_config_vendor_verified"):
+            continue
+        metadata = event.get("metadata") or {}
+        if (not isinstance(metadata, dict)
+                or metadata.get("production_write_performed") is not True
+                or normalized_service(metadata.get("service")) != expected
+                or (metadata.get("target") is not None
+                    and _safe_target(metadata.get("target")) != target)):
+            continue
+        try:
+            stamp = event.get("created_at")
+            stamp = stamp if isinstance(stamp, datetime) else datetime.fromisoformat(
+                str(stamp).replace("Z", "+00:00")
+            )
+            stamp = stamp if stamp.tzinfo else stamp.replace(tzinfo=timezone.utc)
+            recovery_epochs.append(stamp)
+        except (ValueError, TypeError):
+            continue
     epoch = max(recovery_epochs) if recovery_epochs else None
     recent = [
         (at, row) for at, row in candidates
@@ -483,7 +505,19 @@ async def recheck_incident_service_status(
             incident.service, evidence, context, force_live=True,
         )
         observation = live.get("live_observation") if binding else None
-        success = isinstance(observation, dict) and observation.get("success") is True
+        from apps.incident_service.service_recovery_reconciliation import (
+            _bound_systemd_observation,
+        )
+        # Do not run a generic log-redactor over these already allowlisted
+        # numerical systemd facts: masking MainPID/NRestarts prevented
+        # longitudinal stability checks and left the UI in perpetual Crash.
+        safe_observation = _bound_systemd_observation(
+            observation, target=(binding or {}).get("target") or "",
+            service=incident.service,
+        )
+        success = safe_observation is not None
+        if success:
+            safe_observation["result"] = str(observation.get("result") or "")[:60]
         when = datetime.now(timezone.utc)
         record = {
             "event_id": str(uuid4()), "event_type": "incident_service_status_rechecked",
@@ -491,10 +525,10 @@ async def recheck_incident_service_status(
             "action": "service_status",
             "status": "success" if success else "unavailable",
             "metadata": redact({
-                "observation": observation if success else None,
+                "observation": safe_observation if success else None,
                 "reason": None if success else str(live.get("status") or "vm_mcp_unavailable"),
-                "source_refs": (binding or {}).get("evidence_refs") or [],
-            }),
+                "source_refs": redact((binding or {}).get("evidence_refs") or []),
+            },
             "created_at": when.isoformat(),
         }
         await PostgreSQLAuditStore(db).append(record)
@@ -534,7 +568,7 @@ async def recheck_incident_service_status(
                     summary=str(incident.summary or ""),
                     service=str(incident.service or ""),
                     context=incident.context or {},
-                    first=observation, second=second,
+                    first=safe_observation, second=second,
                     target=binding["target"], vendor_syntax_ok=vendor_valid,
                 )
                 # A read:incident viewer may inspect live status, but only
@@ -558,7 +592,7 @@ async def recheck_incident_service_status(
                         summary=str(current.summary or ""),
                         service=str(current.service or ""),
                         context=current_ctx,
-                        first=observation, second=second,
+                        first=safe_observation, second=second,
                         target=binding["target"], vendor_syntax_ok=vendor_valid,
                     )
                     if verdict == "independent_vm_verified" and (
