@@ -143,6 +143,9 @@ def test_automatic_review_and_preapproval_binds_same_two_brace_candidate():
     assert reviewed["status"] == "candidate_proposed"
     assert reviewed["proposed_change"] == "repair_json_punctuation"
     assert reviewed["validation_status"] == "FORMAT_CANDIDATE_VALID_ONLY"
+    assert len(reviewed["redacted_changes"]) == 2
+    assert {x["line"] for x in reviewed["redacted_changes"]} == {3, 5}
+    assert all("KEEP_THIS_SECRET" not in str(x) for x in reviewed["redacted_changes"])
     assert reviewed["apply_eligible"] is False
     rebuilt = rebuild_json_candidate(
         encoded=base64.b64encode(SOURCE.encode()).decode(), path=path,
