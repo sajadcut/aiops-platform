@@ -3471,6 +3471,16 @@
             'Apply, start service and verify':'Apply approved config and verify'))+'</button>';
       }else{
         controls+='<p>'+esc(fa?'مجوز یک‌بارمصرف مصرف شده است. نتیجه و ممیزی عملیات را در تاریخچه بررسی کنید.':'One-time approval consumed; inspect the execution audit.')+'</p>';
+        const failedAfterConfig=state.configResponse?.start_service_after_apply!==true &&
+          state.serviceStatus?.verified_systemd_only===true &&
+          ['failed','inactive'].includes(low(state.serviceStatus?.active_state)) &&
+          low(state.serviceStatus?.service).replace(/\\.service$/,'')===
+            low(state.report?.incident_summary?.service).replace(/\\.service$/,'');
+        if(failedAfterConfig){
+          controls+='<p class="ic-warning critical">'+esc(fa?
+            'فایل اصلاح شده اما Approval قبلی فقط اجازه تغییر کانفیگ داشته است؛ Start/Restart صادر نشده و امکان افزودن مجوز به تیکت مصرف‌شده وجود ندارد. از چت همین رخداد درخواست «راه‌اندازی مجدد سرویس» بدهید تا درخواست Approval جداگانه با کنترل زنده ایجاد شود.':
+            'The configuration Approval was config-only and has been consumed. Start/restart requires a NEW signed approval. Request service recovery from this incident chat; live preflight is required.')+'</p>';
+        }
       }
       show('#ic-action-checks','');
       show('#ic-action-controls',controls);
