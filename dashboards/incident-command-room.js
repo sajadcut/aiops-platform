@@ -28,6 +28,7 @@
     config_guard_vendor_syntax_failed:'Validator واقعی سرویس، نسخه اصلاحی را تأیید نکرده است؛ این تغییر نباید اعمال شود.',
     config_guard_staging_failed:'آماده‌سازی نسخه ایزوله کانفیگ ناموفق بود.',
     config_guard_ssh_timeout:'اتصال SSH یا عملیات Validator زمان‌بر و ناموفق بوده است.',
+    config_guard_ssh_stdin_closed_result_unknown:'ارتباط ورودی SSH قطع شد؛ نتیجه اعمال فایل نامشخص است و بررسی مجدد هش زنده لازم است.',
     config_guard_ssh_connection_failed:'ارتباط SSH با VM برای اعتبارسنجی برقرار نشد.',
     config_guard_request_rejected:'Helper درخواست را به‌دلیل ناسازگاری قرارداد امن رد کرده است.',
     config_guard_execution_failed:'Helper نتوانست نتیجه اعتبارسنجی قابل‌اعتماد تولید کند.',
