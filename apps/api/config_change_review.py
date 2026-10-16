@@ -165,7 +165,17 @@ def _review_progress(*, status: str, decision: str | None, proposal: dict,
         },
         "execution_authority": False,
         "production_write_performed": False,
-        "blocking_reasons": [] if validated else [
+        "repair_attention": (
+            "candidate_not_yet_valid" if proposal.get("status") != "candidate_proposed"
+            else "candidate_ready_for_isolated_validation" if not requested
+            else "independent_validation_or_human_approval"
+        ),
+        "blocking_reasons": (
+            ["confirmed_error_but_no_safe_candidate",
+             "recheck_current_file_and_generate_parser_valid_repair"]
+            if not requested and proposal.get("status") != "candidate_proposed"
+            else []
+        ) if not validated and not requested else [] if validated else [
             *([metadata["validation_last_reason"]] if metadata.get("validation_last_reason") else []),
             "independent_candidate_validation_pending_or_failed",
             "approval_cannot_be_granted_before_validation",
