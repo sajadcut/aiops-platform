@@ -52,17 +52,17 @@ def deterministic_json_punctuation_fix(source: str) -> str | None:
     try:
         json.loads(source)
         return None
-    except json.JSONDecodeError as error:
-        pass
+    except json.JSONDecodeError as exc:
+        error_pos, error_msg, error_line = exc.pos, exc.msg.lower(), exc.lineno
     if not isinstance(source, str) or len(source) > 262144 or "\x00" in source:
         return None
     # Do not guess from a transport/semantic failure or search the whole file.
-    if not any(k in error.msg.lower() for k in (
+    if not any(k in error_msg for k in (
         "property name", "expecting ',' delimiter", "expecting value",
         "extra data", "expecting ':' delimiter",
     )):
         return None
-    pos = error.pos
+    pos = error_pos
     start = max(0, pos - 96)
     end = min(len(source), pos + 48)
     # Scan lexical string state only once. Quotes and escaped data are never
@@ -81,7 +81,7 @@ def deterministic_json_punctuation_fix(source: str) -> str | None:
         elif ch == '"':
             quoted = True
     matches: set[str] = set()
-    line = error.lineno
+    line = error_line
     def local(index: int) -> bool:
         # An error after a dangling comma often points to the NEXT line.
         return abs(source.count("\n", 0, index) + 1 - line) <= 2
@@ -103,7 +103,7 @@ def deterministic_json_punctuation_fix(source: str) -> str | None:
     # The other common one-byte typo: missing separator before a property or
     # array element. Require a preceding completed token; no punctuation is
     # injected into text, values or an already quoted string.
-    if "delimiter" in error.msg.lower() or "property name" in error.msg.lower():
+    if "delimiter" in error_msg or "property name" in error_msg:
         at = pos
         while at < len(source) and source[at] in " \t\r\n":
             at += 1
