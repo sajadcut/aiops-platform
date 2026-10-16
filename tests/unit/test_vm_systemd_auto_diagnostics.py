@@ -38,7 +38,9 @@ async def test_failed_systemd_status_collects_full_diagnostics_even_when_status_
     monkeypatch.setattr(settings, "SSH_ALLOWED_SERVICES", ["gfpapi"])
     result = await connector.service_status("10.248.19.82", "gfpapi")
     assert result["success"] is True
-    assert result["healthy"] is False
+    assert result["healthy"] is None
+    assert result["systemd_active"] is False
+    assert result["application_health_verified"] is False
     assert result["active_state"] == "failed"
     assert result["result"] == "timeout"
     assert result["exec_main_code"] == 2
@@ -63,7 +65,9 @@ async def test_active_systemd_status_does_not_fetch_expensive_diagnostics(monkey
     monkeypatch.setattr(connector, "_run", fake_run)
     monkeypatch.setattr(settings, "SSH_ALLOWED_SERVICES", ["gfpapi"])
     result = await connector.service_status("10.248.19.82", "gfpapi")
-    assert result["healthy"] is True
+    assert result["healthy"] is None
+    assert result["systemd_active"] is True
+    assert result["application_health_verified"] is False
     assert "systemctl_status" not in result
     assert len(seen) == 1
 
