@@ -644,13 +644,29 @@ class DynamicInvestigationPlanner:
         ]
         if invalid_files or general_review.get("validation_status") == "FORMAT_INVALID":
             broken = invalid_files[0] if invalid_files else {}
+            failed_name = str(broken.get("file") or "")
+            verified_matches = [
+                row["path"] for row in (discovery_summary.get("files") or [])
+                if isinstance(row, dict) and row.get("verified_exists") is True
+                and isinstance(row.get("path"), str)
+                and row["path"].rsplit("/", 1)[-1] == failed_name
+            ]
+            # A basename alone is not enough for a production change.
+            # Only map it to a unique path verified by live service discovery.
+            failed_path = (
+                verified_matches[0] if len(verified_matches) == 1
+                else reviewed_file if isinstance(reviewed_file, str)
+                and reviewed_file.startswith("/") and
+                reviewed_file.rsplit("/", 1)[-1] == failed_name
+                else failed_name
+            )
             candidate_ready = (result.get("config_proposal") or {}).get("status") == "candidate_proposed"
             result["config_repair_attention"] = {
                 "status": ("ready_for_prevalidation" if candidate_ready
                            else "candidate_not_yet_valid"),
                 "priority": "high",
                 "service": name,
-                "file": _bounded(broken.get("file") or reviewed_file, 150),
+                "file": _bounded(failed_path or reviewed_file, 240),
                 "line": broken.get("line") if type(broken.get("line")) is int
                         else general_review.get("observed_error_line"),
                 "error_code": _bounded(broken.get("error_code") or
