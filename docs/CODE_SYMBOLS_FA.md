@@ -1295,10 +1295,10 @@
 | `apps/incident_service/service_recovery_reconciliation.py` | `is_service_down_alert` | 15 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/incident_service/service_recovery_reconciliation.py` | `can_finalize_independent_recovery` | 34 | function | Viewer access to incident status must never imply write authority. | module |
 | `apps/incident_service/service_recovery_reconciliation.py` | `local_recovery_decision` | 43 | function | Return a bounded status, not mutable Incident state. | module |
-| `apps/incident_service/service_recovery_reconciliation.py` | `commit_independent_recovery` | 103 | async function | Commit resolution, cancel stale Approvals and write Audit atomically. | module |
-| `apps/incident_service/service_recovery_reconciliation.py` | `_bound_systemd_observation` | 176 | function | Persist only bounded VM MCP systemd facts, never shell output or config. | module |
-| `apps/incident_service/service_recovery_reconciliation.py` | `record_post_config_service_status` | 202 | async function | Write the final post-Start read into the *same* transaction as recovery. | module |
-| `apps/incident_service/service_recovery_reconciliation.py` | `reconcile_after_applied_config` | 250 | async function | Best-effort, fresh verification following an approved config + start. | module |
+| `apps/incident_service/service_recovery_reconciliation.py` | `commit_independent_recovery` | 116 | async function | Commit resolution, cancel stale Approvals and write Audit atomically. | module |
+| `apps/incident_service/service_recovery_reconciliation.py` | `_bound_systemd_observation` | 189 | function | Persist only bounded VM MCP systemd facts, never shell output or config. | module |
+| `apps/incident_service/service_recovery_reconciliation.py` | `record_post_config_service_status` | 215 | async function | Write the final post-Start read into the *same* transaction as recovery. | module |
+| `apps/incident_service/service_recovery_reconciliation.py` | `reconcile_after_applied_config` | 263 | async function | Best-effort, fresh verification following an approved config + start. | module |
 | `apps/incident_vm_identity.py` | `normalized_service` | 19 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
 | `apps/incident_vm_identity.py` | `_safe_target` | 23 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/incident_vm_identity.py` | `incident_vm_context` | 34 | function | Merge incident context without suppressing contradictory trigger signals. | module |
