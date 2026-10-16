@@ -137,20 +137,77 @@ async def reconcile_recent_recovery_reviews(
     }
 
 
+@router.post("/knowledge-reviews/reconcile-incidents",
+             dependencies=[Depends(require_permission("knowledge:draft"))])
+async def reconcile_incident_coverage(
+    limit: int = Query(default=40, ge=1, le=100),
+    offset: int = Query(default=0, ge=0, le=1000000),
+):
+    """Backfill every incident *outcome*, not only verified write actions.
+
+    Pages are bounded and idempotent; a rejected/published/edited review is
+    never replaced. No Cognia API request and no service write is performed.
+    """
+    from domain.models import Incident
+    from apps.knowledge_incident_coverage import create_from_incident
+    from domain.contracts.logging import logger
+
+    async with AsyncSessionLocal() as db:
+        await require_database_ready(db, operation="knowledge_incident_coverage")
+        ids = (await db.execute(
+            select(Incident.id).order_by(
+                Incident.created_at.desc(), Incident.id.desc()
+            ).offset(offset).limit(limit + 1)
+        )).scalars().all()
+    created = 0
+    existing = 0
+    failures = []
+    for incident_id in ids[:limit]:
+        try:
+            async with AsyncSessionLocal() as db:
+                _, outcome = await create_from_incident(db, incident_id)
+                if outcome == "created":
+                    created += 1
+                else:
+                    existing += 1
+        except HTTPException as exc:
+            failures.append(str(exc.detail)[:100])
+            logger.warning("knowledge_incident_coverage_blocked",
+                           incident_id=str(incident_id), code=str(exc.detail)[:100])
+        except Exception as exc:
+            failures.append("incident_coverage_draft_failed")
+            logger.warning("knowledge_incident_coverage_failed",
+                           incident_id=str(incident_id), error_type=type(exc).__name__)
+    return {
+        "status": "partial" if failures else "completed",
+        "scanned": min(len(ids), limit),
+        "created": created, "existing": existing,
+        "failed": len(failures),
+        "has_more": len(ids) > limit,
+        "next_offset": offset + min(len(ids), limit),
+        "errors": list(dict.fromkeys(failures))[:5],
+        "published_to_cognia": False,
+        "requires_human_review": True,
+    }
+
+
 @router.get("/knowledge-reviews", dependencies=[Depends(require_permission("knowledge:draft"))])
-async def list_reviews(status: str | None = Query(default=None), limit: int = Query(default=50, ge=1, le=100)):
+async def list_reviews(status: str | None = Query(default=None), limit: int = Query(default=50, ge=1, le=100), offset: int = Query(default=0, ge=0, le=1000000)):
     async with AsyncSessionLocal() as db:
         await require_database_ready(db, operation="knowledge_review_list")
         statement = select(KnowledgeReview)
         if status:
             statement = statement.where(KnowledgeReview.status == status)
-        rows = (await db.execute(statement.order_by(KnowledgeReview.created_at.desc()).limit(limit))).scalars().all()
+        rows = (await db.execute(statement.order_by(
+            KnowledgeReview.created_at.desc(), KnowledgeReview.id.desc()
+        ).offset(offset).limit(limit + 1))).scalars().all()
         # The queue is metadata-only. Full draft text is fetched on explicit
         # review selection, not multiplied by 100 in polling responses.
         return {"items": [
             {key: value for key, value in review_summary(row).items() if key != "content"}
-            for row in rows
-        ]}
+            for row in rows[:limit]
+        ], "has_more": len(rows) > limit,
+           "next_offset": offset + min(len(rows), limit)}
 
 
 @router.get("/knowledge-reviews/{review_id}", dependencies=[Depends(require_permission("knowledge:draft"))])
