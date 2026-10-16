@@ -122,6 +122,43 @@ def _is_exact_json_key_quote_fix(original: str, corrected: str) -> bool:
     return True
 
 
+def _deterministic_json_syntax_fix(source: str) -> str | None:
+    """Fix exactly one measured JSON grammar token, never a value or format.
+
+    The rejected LLM output is not used. Return a complete independently
+    parseable file or no proposal at all. Source stays inside the VM worker.
+    """
+    try:
+        json.loads(source)
+        return None
+    except json.JSONDecodeError as error:
+        pos = error.pos
+        detail = error.msg.lower()
+        candidate = None
+        if "property name" in detail:
+            bare_key = re.match(r"([A-Za-z_][A-Za-z0-9_.-]*)(?=\\s*:)", source[pos:])
+            if bare_key:
+                end = pos + len(bare_key.group(1))
+                candidate = source[:pos] + '"' + source[pos:end] + '"' + source[end:]
+        # Python's JSON decoder reports a dangling comma at the *next*
+        # closing token. Only remove the immediately preceding comma.
+        if candidate is None and (
+            "property name" in detail or "expecting value" in detail
+        ) and pos < len(source) and source[pos] in "}]":
+            comma = pos - 1
+            while comma >= 0 and source[comma] in " \\t\\r\\n":
+                comma -= 1
+            if comma >= 0 and source[comma] == ",":
+                candidate = source[:comma] + source[comma + 1:]
+        if candidate is None:
+            return None
+        try:
+            json.loads(candidate)
+        except json.JSONDecodeError:
+            return None
+        return candidate
+
+
 def _candidate_preview(original: str, corrected: str, *, diagnostic_line: int | None = None) -> dict:
     """Check completeness and bounded drift; emit *metadata*, never file lines."""
     base = {"status": "llm_candidate_rejected", "candidate_hash": None,
@@ -241,10 +278,12 @@ async def review_complete_config(
     # .NET config_validate may have no registered vendor adapter even when
     # the worker can reliably identify a JSON grammar error. Derive the
     # location locally so the LLM is constrained to the actual broken line.
-    if path.lower().endswith(".json") and diagnostic_line is None:
+    if path.lower().endswith(".json"):
         try:
             json.loads(source)
         except json.JSONDecodeError as exc:
+            # The worker's parse of the actual current file is authoritative
+            # for JSON grammar even without a registered vendor adapter.
             diagnostic_line = exc.lineno
             vendor_error = f"JSON syntax error at line {exc.lineno}, column {exc.colno}: {exc.msg}"
     prompt = json.dumps({
@@ -292,6 +331,19 @@ async def review_complete_config(
         result["llm_returned_complete_file"] = bool(corrected)
         preview = _candidate_preview(source, corrected, diagnostic_line=diagnostic_line)
         profile = _profile(service, path)
+        if preview.get("status") != "llm_candidate_proposed" and profile == "json_syntax":
+            # A model can modify an unrelated line, which must stay rejected.
+            # Instead independently reconstruct one *measured* syntax token.
+            # Never relax the model's drift guard or reuse its rejected bytes.
+            deterministic = _deterministic_json_syntax_fix(source)
+            if deterministic is not None:
+                verified_preview = _candidate_preview(
+                    source, deterministic, diagnostic_line=diagnostic_line,
+                )
+                if verified_preview.get("status") == "llm_candidate_proposed":
+                    corrected = deterministic
+                    preview = {**verified_preview,
+                               "candidate_origin": "deterministic_json_syntax"}
         if preview.get("status") != "llm_candidate_proposed":
             return {**result, **preview, "validation_profile": profile}
         if not target:
