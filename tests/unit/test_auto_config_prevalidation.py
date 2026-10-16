@@ -1,0 +1,103 @@
+"""Config repair is proactive, not a way to bypass human approval."""
+from __future__ import annotations
+
+import base64
+import hashlib
+
+import pytest
+
+from apps.config_change_auto_queue import auto_queue_candidate, auto_queue_prevalidation
+
+
+def _state():
+    original = hashlib.sha256(b"broken").hexdigest()
+    fixed = hashlib.sha256(b"repaired").hexdigest()
+    return {
+        "service_name": "gfpapi",
+        "context": {
+            "dynamic_investigation": {
+                "config_proposal": {
+                    "status": "candidate_proposed",
+                    "service": "gfpapi",
+                    "config_file": "/data/gfp/gfpapi/appsettings.json",
+                    "original_sha256": original,
+                    "candidate_sha256": fixed,
+                    "source_evidence_refs": ["evidence:exact-mcp-validation"],
+                    "proposed_change": "quote_unquoted_json_key",
+                    "execution_authority": False,
+                    "apply_eligible": False,
+                },
+            },
+        },
+    }
+
+
+def test_eligible_microfix_auto_queues_only_a_prevalidation_intent():
+    proposal = auto_queue_candidate(_state())
+    assert proposal is not None
+    assert proposal["proposed_change"] == "quote_unquoted_json_key"
+    assert proposal["execution_authority"] is False
+
+
+@pytest.mark.parametrize("mutation", [
+    lambda s: s["context"]["dynamic_investigation"]["config_proposal"].update(
+        {"status": "llm_candidate_rejected"}),
+    lambda s: s["context"]["dynamic_investigation"]["config_proposal"].update(
+        {"candidate_sha256": None}),
+    lambda s: s["context"]["dynamic_investigation"]["config_proposal"].update(
+        {"source_evidence_refs": []}),
+    lambda s: s["context"]["dynamic_investigation"]["config_proposal"].update(
+        {"execution_authority": True}),
+    lambda s: s["context"]["dynamic_investigation"]["config_proposal"].update(
+        {"proposed_change": "arbitrary_shell"}),
+    lambda s: s.update({"approval": {"approval_id": "exists"}}),
+])
+def test_unverified_candidate_never_enters_the_auto_queue(mutation):
+    state = _state()
+    mutation(state)
+    assert auto_queue_candidate(state) is None
+
+
+@pytest.mark.asyncio
+async def test_without_candidate_no_database_or_validator_is_called():
+    class DB:
+        async def get(self, *args, **kwargs):
+            raise AssertionError("no candidate: no database read")
+    assert await auto_queue_prevalidation(DB(), "11111111-1111-4111-8111-111111111111", {}) == {
+        "status": "no_verified_candidate"
+    }
+
+
+@pytest.mark.asyncio
+async def test_mcp_review_prefers_broken_appsettings_over_first_healthy_json(monkeypatch):
+    from integrations.vm.ssh_connector import SSHVMConnector
+    connector = object.__new__(SSHVMConnector)
+    monkeypatch.setattr(connector, "_validate_service", lambda service: None)
+
+    async def validator(target, service):
+        return {"success": True, "supported": False, "valid": None}
+
+    async def discovery(target, service):
+        return {"status": "verified", "files": [
+            {"path": "/data/gfp/gfpapi/alpha.json", "verified_exists": True},
+            {"path": "/data/gfp/gfpapi/appsettings.json", "verified_exists": True},
+        ]}
+
+    async def read(target, command):
+        if "/alpha.json" in command:
+            value = '{"status":"ok"}'
+        else:
+            value = '{"enabled":true, invalid-key!:1}'
+        return {"success": True,
+                "stdout": base64.b64encode(value.encode()).decode()}
+
+    monkeypatch.setattr(connector, "config_validate", validator)
+    monkeypatch.setattr(connector, "service_config_discovery", discovery)
+    monkeypatch.setattr(connector, "_run", read)
+    result = await connector.service_config_review("10.248.16.82", "gfpapi")
+    assert result["success"] is True
+    assert result["config_file"] == "/data/gfp/gfpapi/appsettings.json"
+    assert result["validation_status"] == "FORMAT_INVALID"
+    assert result["status"] != "candidate_proposed"
+    assert result["candidate_hash"] is None
+    assert result["execution_authority"] is False
