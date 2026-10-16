@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 552 | Dashboard JS files scanned: 8 | Symbols indexed: 6051**
+**Python files scanned: 553 | Dashboard JS files scanned: 8 | Symbols indexed: 6058**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -4572,6 +4572,13 @@
 | `tests/unit/test_incident_knowledge_coverage.py` | `test_reconcile_reports_configuration_gap_instead_of_claiming_full_coverage.ready` | 281 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_reconcile_reports_configuration_gap_instead_of_claiming_full_coverage |
 | `tests/unit/test_incident_knowledge_coverage.py` | `test_reconcile_reports_configuration_gap_instead_of_claiming_full_coverage.unavailable` | 284 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_reconcile_reports_configuration_gap_instead_of_claiming_full_coverage |
 | `tests/unit/test_incident_knowledge_coverage.py` | `test_zabbix_recovery_and_failed_remediation_both_offer_local_review_drafts` | 299 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_multifinding_action_catalog.py` | `_record` | 20 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_incident_multifinding_action_catalog.py` | `_report` | 31 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_incident_multifinding_action_catalog.py` | `test_one_incident_three_independent_action_paths` | 45 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_multifinding_action_catalog.py` | `test_no_disk_action_for_other_vm_or_healthy_mount` | 73 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_multifinding_action_catalog.py` | `test_service_already_running_does_not_offer_restart_from_historical_alarm` | 89 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_multifinding_action_catalog.py` | `test_interrupted_config_apply_preserves_unknown_and_no_replay` | 100 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_multifinding_action_catalog.py` | `test_multifinding_ui_has_real_navigation_and_no_fake_disk_apply` | 121 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_incident_operational_finalization.py` | `FakeSession` | 9 | class | کلاس | module |
 | `tests/unit/test_incident_operational_finalization.py` | `FakeSession.__init__` | 10 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeSession |
 | `tests/unit/test_incident_operational_finalization.py` | `FakeSession.get` | 13 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeSession |
