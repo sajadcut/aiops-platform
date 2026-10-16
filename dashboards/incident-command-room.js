@@ -1037,8 +1037,8 @@
       '<p><strong>'+esc(statusSentence)+'</strong></p>'+
       '<p>'+esc(healthLabel+' '+config)+'</p>'+
       (full?'<p class="ic-headline-caution">'+esc(fa?
-        'فضای دیسک در زمان تحلیل به آستانه بحرانی رسیده بود؛ وضعیت فعلی ظرفیت باید بررسی شود.':
-        'Disk was at a critical threshold during analysis; recheck current storage capacity.')+'</p>':'')+
+        'در زمان تحلیل فشار فضای دیسک مشاهده شد. این یک هشدار مستقل است و به‌تنهایی مانع Start مجاز سرویس نیست؛ وضعیت ظرفیت جداگانه بررسی شود.':
+        'Disk pressure was observed during analysis. This is an independent warning, not a standalone blocker for an approved service Start; review storage separately.')+'</p>':'')+
       '<p>'+esc(action?reason:(fa?'اقدام پیشنهادی باید مطابق گیت مجوز بررسی شود.':
         'The proposed action requires governed authorization.'))+'</p>'+
       '<p class="ic-headline-meta">'+esc(observationTime+rcaLabel)+
@@ -2940,11 +2940,19 @@
     const id=String(approval.approval_id||'');
     if(!UUID.test(id)||state.historic||state.busy)return;
     const fa=state.language==='fa';
-    if(action==='approve'&&approval.status!=='pending')return;
+    const combined=action==='approve-execute';
+    const executionRequested=combined||action==='execute';
+    if((action==='approve'||combined)&&approval.status!=='pending')return;
     if(action==='execute'&&approval.status!=='approved')return;
     if(action==='reject'&&approval.status!=='pending')return;
+    if(!['approve','approve-execute','execute','reject'].includes(action))return;
     const verb=approval.action==='start_service'?'Start':'Restart';
-    const message=action==='approve'?
+    const message=combined?
+      (fa?'آیا با تأیید این مجوز، اجرای واقعی '+verb+' روی '+approval.service+
+        ' در سرور '+approval.target+' نیز انجام شود؟ ابتدا Approval ثبت و سپس بررسی زنده و تلاش برای '+verb+' اجرا می‌شود.':
+        'Approve and execute '+verb+' of '+approval.service+' on '+approval.target+
+        '? Approval is recorded first; live preflight and the actual action follow.'):
+      action==='approve'?
       (fa?'مجوز '+verb+' سرویس فقط تأیید می‌شود؛ هنوز اجرا نخواهد شد. موافق هستید؟':
         'Authorize '+verb+'? No action executes yet.'):
       action==='execute'?
@@ -2957,23 +2965,51 @@
       reason=prompt(fa?'دلیل رد (الزامی):':'Reason for rejection (required):','')||'';
       if(!reason.trim())return;
     }
-    state.busy=true;renderInvestigation(state.report);
+    state.busy=true;renderInvestigation(state.report);renderHero(state.report);
+    let attempted=false;
     try{
-      const suffix=action==='execute'?'execute':action;
-      const options=action==='reject'?
-        {method:'POST',headers:{'Content-Type':'application/json'},
-         body:JSON.stringify({reason:reason.trim().slice(0,1000)})}:
-        {method:'POST'};
-      const result=await api('/api/v1/approvals/'+encodeURIComponent(id)+'/'+suffix,options);
-      state.recoveryApproval={...approval,status:String(result.status||'unknown')};
-      notify(fa?(action==='approve'?'مجوز ثبت شد؛ هنوز '+verb+' اجرا نشده است.':
-        action==='reject'?'درخواست '+verb+' رد شد.':
-        'اجرای '+verb+' درخواست شد؛ نتیجه و Verification را بررسی کنید.'):
-        'The authorization state changed; check verification.');
+      const url='/api/v1/approvals/'+encodeURIComponent(id);
+      if(combined){
+        // One explicit operator confirmation, two distinct governed server
+        // boundaries. No execution if approval fails, and the execution API
+        // still checks independent execute permission, freshness and intent.
+        const authorized=await api(url+'/approve',{method:'POST'});
+        if(low(authorized.status)!=='approved'){
+          throw new Error('recovery_approval_not_granted');
+        }
+        state.recoveryApproval={...approval,status:'approved'};
+        attempted=true;
+        const result=await api(url+'/execute',{method:'POST'});
+        state.recoveryApproval={...approval,status:String(result.status||'consumed')};
+        notify(result.success===true?
+          (fa?'فرمان '+verb+' ارسال شد؛ نتیجهٔ راستی‌آزمایی سرویس در حال بازخوانی است.':
+            verb+' executed; refreshing independently verified service state.'):
+          (fa?'تلاش برای '+verb+' تأیید نشد؛ نتیجهٔ اجرای MCP و پیش‌شرط‌ها را بررسی کنید.':
+            verb+' attempt was not confirmed; inspect MCP execution and preflight.'),
+          result.success!==true);
+      }else{
+        const options=action==='reject'?
+          {method:'POST',headers:{'Content-Type':'application/json'},
+           body:JSON.stringify({reason:reason.trim().slice(0,1000)})}:
+          {method:'POST'};
+        attempted=executionRequested;
+        const result=await api(url+'/'+action,options);
+        state.recoveryApproval={...approval,status:String(result.status||'unknown')};
+        notify(fa?(action==='approve'?'مجوز ثبت شد؛ هنوز '+verb+' اجرا نشده است.':
+          action==='reject'?'درخواست '+verb+' رد شد.':
+          'تلاش برای '+verb+' انجام شد؛ نتیجه و Verification را بررسی کنید.'):
+          'The authorization state changed; check verification.');
+      }
+    }catch(e){
+      notify(tr('failure')+' · '+e.message,true);
+    }finally{
+      state.busy=false;
+      // Refresh even on 403/409 after approval. The approval can already be
+      // durable while the independent execution is rejected by a live gate.
       await load();
-      if(action==='execute')await recheckServiceStatus();
-    }catch(e){notify(tr('failure')+' · '+e.message,true);}
-    finally{state.busy=false;void loadRecoveryApproval(state.loadingToken);}
+      if(attempted)await recheckServiceStatus();
+      void loadRecoveryApproval(state.loadingToken);
+    }
   }
 
   function dotnetSyntaxLabel(item,fa) {
@@ -3063,9 +3099,11 @@
         (state.recoveryApproval?.reason_code&&state.recoveryApproval.status!=='state_changed_active'?
           '<p class="ic-meta"><code>'+txt(state.recoveryApproval.reason_code)+'</code></p>':'')+
         (state.recoveryApproval?.status==='pending'?
-          '<button type="button" class="ic-btn ic-btn-primary" data-recovery-approval="approve">'+
-          esc(fa?'تأیید '+(recovery.suggested_action==='start_service'?'Start':'Restart')+' (بدون اجرا)':
-            'Approve '+(recovery.suggested_action==='start_service'?'start':'restart')+' (no execution)')+'</button> '+
+          '<button type="button" class="ic-btn ic-btn-primary" data-recovery-approval="approve-execute">'+
+          esc(fa?'تأیید و اجرای واقعی '+(recovery.suggested_action==='start_service'?'Start':'Restart'):
+            'Approve & execute '+(recovery.suggested_action==='start_service'?'Start':'Restart'))+'</button> '+
+          '<button type="button" class="ic-btn ic-btn-muted" data-recovery-approval="approve">'+
+          esc(fa?'فقط تأیید (بدون اجرا)':'Approve only (no execution)')+'</button> '+
           '<button type="button" class="ic-btn ic-btn-muted" data-recovery-approval="reject">'+
           esc(fa?'رد درخواست':'Reject request')+'</button>':'')+
         (state.recoveryApproval?.status==='approved'?
@@ -3442,8 +3480,10 @@
         'تأیید مجوز، Restart را اجرا نمی‌کند. بعد از تأیید باید دکمهٔ اجرای جداگانه زده شود؛ Runbook می‌تواند به دلیل Syntax یا شرایط زنده جلوی Restart را بگیرد.':
         'Approval does not run Restart; a separate execution action and a fresh live runbook pass are required.')+'</p>';
       if(recoveryStatus==='pending'){
-        controls+='<button type="button" class="ic-btn ic-btn-primary" data-recovery-approval="approve">'+
-          esc(fa?'تأیید '+recoveryLabel+' — بدون اجرا':'Approve '+recoveryLabel+' — no execution')+'</button> '+
+        controls+='<button type="button" class="ic-btn ic-btn-primary" data-recovery-approval="approve-execute">'+
+          esc(fa?'تأیید و اجرای واقعی '+recoveryLabel:'Approve & execute '+recoveryLabel)+'</button> '+
+          '<button type="button" class="ic-btn ic-btn-muted" data-recovery-approval="approve">'+
+          esc(fa?'فقط تأیید (بدون اجرا)':'Approve only (no execution)')+'</button> '+
           '<button type="button" class="ic-btn ic-btn-muted" data-recovery-approval="reject">'+
           esc(fa?'رد درخواست':'Reject request')+'</button>';
       }else if(recoveryStatus==='approved'){

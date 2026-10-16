@@ -298,3 +298,42 @@ async def test_unsupported_generic_config_without_dotnet_does_not_auto_pass(monk
     )
     assert gate["safe_to_execute"] is False
     assert gate["reason"] == "dotnet_runtime_identity_unverified"
+
+
+def test_runtime_preflight_ignores_incidental_full_var_log_warning_after_valid_nginx_syntax():
+    """A disk alarm never substitutes for failed config or systemd evidence."""
+    bound = {"target": "10.100.6.199", "service": "nginx"}
+    evidence = [
+        {"source": "vm_mcp", "reference": "live-svc", "raw_data": {
+            **bound, "diagnostic": "service_status",
+            "success": True, "active_state": "inactive", "sub_state": "dead",
+        }},
+        {"source": "vm_mcp", "reference": "live-config", "raw_data": {
+            **bound, "diagnostic": "config_validate", "supported": True,
+            "success": True, "valid": True, "exit_code": 0,
+            "nonfatal_warnings": ["sudo_audit_log_write_failed_enospc"],
+        }},
+        {"source": "vm_mcp", "reference": "storage", "raw_data": {
+            "target": "10.100.6.199", "diagnostic": "disk_status",
+            "filesystems": [{"mount": "/var/log", "use_percent": "100%"}],
+        }},
+    ]
+    result = RunbookRuntimeGuard.preflight(
+        runbook_id="vm-service-recovery", tool_name="ssh_vm",
+        action="start_service", target="10.100.6.199",
+        parameters={"service": "nginx"}, incident_id="incident-1",
+        evidence=evidence,
+    )
+    assert result["safe_to_execute"] is True
+    assert result["action"] == "start_service"
+
+    # Actual configuration failure still blocks; no unsafe bypass.
+    evidence[1]["raw_data"]["valid"] = False
+    result = RunbookRuntimeGuard.preflight(
+        runbook_id="vm-service-recovery", tool_name="ssh_vm",
+        action="start_service", target="10.100.6.199",
+        parameters={"service": "nginx"}, incident_id="incident-1",
+        evidence=evidence,
+    )
+    assert result["safe_to_execute"] is False
+    assert result["reason"] == "service_configuration_invalid"

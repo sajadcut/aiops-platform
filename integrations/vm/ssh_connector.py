@@ -1520,10 +1520,27 @@ class SSHVMConnector:
                 "config_file": discovered, "config_path_source": path_source,
                 "detail": "config_validation_binary_unavailable",
             }
+        # A successful validator may print a *separate* sudo audit-log warning
+        # when /var/log is full. That warning is not a failed nginx -t, and
+        # must not be mixed into the validator diagnosis or used to veto Start.
+        # If the command itself failed, preserve its entire stderr instead.
+        stderr = str(result.get("stderr") or "")
+        warnings = []
+        if result.get("success") is True and result.get("exit_code") == 0:
+            lines = stderr.splitlines()
+            sudo_log_pattern = re.compile(
+                r"^sudo:\\s+unable to write log file:\\s+"
+                r"/var/log/sudo\\.log:\\s+No space left on device\\s*$",
+                re.IGNORECASE,
+            )
+            if any(sudo_log_pattern.fullmatch(line.strip()) for line in lines):
+                warnings.append("sudo_audit_log_write_failed_enospc")
+                stderr = "\n".join(line for line in lines
+                                   if not sudo_log_pattern.fullmatch(line.strip()))
         detail = redact_text("\n".join(
             part for part in (
                 str(result.get("stdout") or "").strip(),
-                str(result.get("stderr") or "").strip(),
+                stderr.strip(),
             ) if part
         ))[:4000]
         parsed = parse_config_diagnostic(detail)
@@ -1542,6 +1559,7 @@ class SSHVMConnector:
             "syntax_error": parsed["syntax_error"],
             "exit_code": result.get("exit_code"),
             "detail": detail,
+            "nonfatal_warnings": warnings,
         }
         if not result.get("success") and any(
             marker in detail.lower() for marker in (

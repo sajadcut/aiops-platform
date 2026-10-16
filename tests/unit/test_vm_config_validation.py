@@ -243,3 +243,53 @@ async def test_config_permission_error_is_not_reported_as_syntax_failure(monkeyp
     assert result["success"] is False
     assert result["valid"] is None
     assert result["error"] == "config_validation_access_denied"
+
+
+@pytest.mark.asyncio
+async def test_nginx_syntax_passes_despite_incidental_sudo_log_full_warning(monkeypatch):
+    """No ENOSPC-based false veto when sudo actually returns code zero."""
+    monkeypatch.setattr(settings, "APP_ENV", "test")
+    monkeypatch.setattr(settings, "SSH_AUTH_MODE", "key")
+    monkeypatch.setattr(settings, "SSH_ALLOWED_SERVICES", ["nginx"])
+    connector = SSHVMConnector()
+
+    async def run(target, command):
+        if command.startswith("systemctl show "):
+            return {"success": True, "exit_code": 0, "stdout": ""}
+        return {
+            "success": True, "exit_code": 0,
+            "stdout": (
+                "nginx: the configuration file /etc/nginx/nginx.conf syntax is ok\\n"
+                "nginx: configuration file /etc/nginx/nginx.conf test is successful"
+            ),
+            "stderr": (
+                "sudo: unable to write log file: /var/log/sudo.log: "
+                "No space left on device\\n"
+            ),
+        }
+    monkeypatch.setattr(connector, "_run", run)
+    outcome = await connector.config_validate("10.100.6.199", "nginx")
+    assert outcome["success"] is True
+    assert outcome["valid"] is True
+    assert outcome["exit_code"] == 0
+    assert outcome["nonfatal_warnings"] == ["sudo_audit_log_write_failed_enospc"]
+    assert "No space left" not in outcome["detail"]
+
+
+@pytest.mark.asyncio
+async def test_nginx_start_attempt_not_blocked_by_nonfatal_sudo_log_warning(monkeypatch):
+    monkeypatch.setattr(settings, "APP_ENV", "test")
+    monkeypatch.setattr(settings, "SSH_ALLOWED_SERVICES", ["nginx"])
+    connector = SSHVMConnector()
+    calls = []
+
+    async def run(target, fixed_command, **kwargs):
+        calls.append((target, fixed_command))
+        return {
+            "success": True, "exit_code": 0,
+            "stderr": "sudo: unable to write log file: /var/log/sudo.log: No space left on device",
+        }
+    monkeypatch.setattr(connector, "_sudo", run)
+    result = await connector.start_service("10.100.6.199", "nginx")
+    assert result["success"] is True
+    assert calls == [("10.100.6.199", "systemctl start nginx")]

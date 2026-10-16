@@ -69,6 +69,11 @@ class RunbookRuntimeGuard:
                 "evidence": [],
             }
 
+        # Recovering a stopped/failed service is independent of a host-storage
+        # advisory. In particular, a full /var/log/sudo.log can be a nonfatal
+        # sudo logging warning: do not add disk_status or journal availability
+        # as a new precondition to issuing an *approved* Start/Restart.
+        # Still fail closed on missing systemd identity or invalid config.
         reads: List[tuple[str, Dict[str, Any]]] = [
             ("service_status", {"service": service}),
             ("config_validate", {"service": service}),
