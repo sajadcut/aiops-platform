@@ -2438,7 +2438,7 @@
 | `integrations/vm/full_config_llm_repair.py` | `_is_exact_json_key_quote_fix` | 152 | function | Only accept inserting two quotes around one previously bare JSON key. | module |
 | `integrations/vm/full_config_llm_repair.py` | `_bounded_exact_character_edits` | 179 | function | Exact thresholded Levenshtein distance in O(maximum * file_length). | module |
 | `integrations/vm/full_config_llm_repair.py` | `_candidate_preview` | 217 | function | Check completeness and bounded drift; emit *metadata*, never file lines. | module |
-| `integrations/vm/full_config_llm_repair.py` | `review_complete_config` | 311 | async function | Receive exact SSH bytes in-process and request a complete revised file. | module |
+| `integrations/vm/full_config_llm_repair.py` | `review_complete_config` | 310 | async function | Receive exact SSH bytes in-process and request a complete revised file. | module |
 | `integrations/vm/general_config_review.py` | `checked_config_path` | 29 | function | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | module |
 | `integrations/vm/general_config_review.py` | `remote_config_read_command` | 37 | function | Fixed coreutils only; not a general-purpose remote file-read API. | module |
 | `integrations/vm/general_config_review.py` | `_structural_line` | 51 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
