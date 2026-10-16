@@ -34,6 +34,11 @@ class VMEdgeMCPClient(MCPClient):
             client_cert_path=settings.MCP_CLIENT_CERT_PATH,
             client_key_path=settings.MCP_CLIENT_KEY_PATH,
         )
+        # Full-file repair runs a bounded LLM call on the trusted MCP worker.
+        # Use one longer read, not three 20-second HTTP retries: a lost
+        # response does not cancel the in-flight remote LLM generation.
+        self.single_attempt_read_tools = frozenset({"service_config_llm_repair"})
+        self.tool_timeout_seconds = {"service_config_llm_repair": 140.0}
 
     async def initialize(self) -> Dict[str, Any]:
         if self._initialized and self._identity_validated:
