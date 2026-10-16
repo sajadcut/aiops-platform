@@ -255,16 +255,24 @@ async def execute_config(approval_id: UUID, identity=Depends(require_permission(
         result = await VMEdgeMCPClient().config_change_apply(
             meta["target"], service=meta["service"], claims=claim, signature=signature,
         )
-    except httpx.TimeoutException:
-        # The worker may still be writing after the client loses its reply.
-        # Mark outcome UNKNOWN, never retry a consumed, high-risk Approval.
-        result = {"success": False,
-                  "status": "config_apply_transport_timeout_result_unknown",
-                  "production_write_performed": None,
-                  "rollback_status": "unverified"}
-    except Exception:
-        result = {"success": False, "status": "mcp_apply_failed_or_unavailable",
-                  "production_write_performed": None, "rollback_status": "unverified"}
+    except Exception as exc:
+        # MCPClient deliberately wraps httpx transport errors as a safe,
+        # bounded RuntimeError. Preserve the underlying timeout *class* via
+        # __cause__, without leaking transport traces or remote config bytes.
+        # A lost write response is ambiguous: never replay a consumed Approval.
+        timeout = (
+            isinstance(exc, httpx.TimeoutException)
+            or (isinstance(exc, RuntimeError)
+                and str(exc) == "mcp_transport_error:vm-edge"
+                and isinstance(exc.__cause__, httpx.TimeoutException))
+        )
+        result = {
+            "success": False,
+            "status": ("config_apply_transport_timeout_result_unknown"
+                       if timeout else "mcp_apply_failed_or_unavailable"),
+            "production_write_performed": None,
+            "rollback_status": "unverified",
+        }
 
     # Signed recovery scope was fixed in the original Approval metadata.
     # The VM MCP may start systemd only after successful, postchecked apply.
