@@ -2709,6 +2709,8 @@
     const fa=state.language==='fa';
     const source=arr(config.current_excerpt),target=arr(config.proposed_excerpt);
     const diff=config.redacted_diff||{};
+    const workerReplay=full.candidate_origin==='deterministic_json_syntax'&&
+      full.proposed_change==='repair_json_bounded_syntax';
     const snippets=rows=>'<pre dir="ltr" class="ic-config-excerpt">'+
       rows.map(x=>esc(String(x.line).padStart(4,' ')+': '+safe(x.content))).join('\n')+'</pre>';
     const sourceHtml=source.length?snippets(source):'<p>'+esc(fa?
@@ -2717,12 +2719,14 @@
       (['llm_candidate_proposed','candidate_storage_unavailable'].includes(full.status)?
         (full.candidate_stored?
           'نسخهٔ کامل اصلاحی به‌صورت رمزنگاری‌شده در VM MCP نگهداری شده؛ اعتبارسنجی مستقل قبل از Approval اجرا می‌شود.':
-          'LLM فایل کامل را برگردانده ولی ذخیره‌سازی امن آن تأیید نشده است.') :
+          (workerReplay?'اصلاح محدود JSON توسط اعتبارسنج محلی قابل‌بازسازی است؛ اعتبارسنجی ایزوله و Approval هنوز لازم است.':
+            'LLM فایل کامل را برگردانده ولی ذخیره‌سازی امن آن تأیید نشده است.')) :
         'نسخه پیشنهادی قطعی تولید نشده است.'):
       (['llm_candidate_proposed','candidate_storage_unavailable'].includes(full.status)?
         (full.candidate_stored?
           'The full corrected file is encrypted in VM MCP; independent validation must pass before approval.':
-          'The model returned a complete file, but durable secure storage is unverified.') :
+          (workerReplay?'The bounded JSON syntax repair is independently reconstructible; isolated validation and approval are still required.':
+            'The model returned a complete file, but durable secure storage is unverified.')) :
         'No deterministic patch candidate has been produced.'))+'</p>';
     let html='<div class="ic-fix-grid">'+
       '<article class="ic-detail-card"><h4>'+esc(fa?'کانفیگ موجود (بخش ساختاری، محرمانه‌زدایی شده)':'Existing config (redacted structural excerpt)')+'</h4>'+
@@ -3029,7 +3033,9 @@
     const full=p.full_config_llm_repair||{};
     const fullCandidate=['llm_candidate_proposed','candidate_storage_unavailable'].includes(full.status)&&
       /^[a-f0-9]{64}$/.test(String(full.candidate_sha256||''))&&
-      full.llm_received_complete_file===true&&full.llm_returned_complete_file===true;
+      full.llm_received_complete_file===true&&
+      (full.llm_returned_complete_file===true||
+        full.candidate_origin==='deterministic_json_syntax');
     const configRejectionReasons={
       candidate_excessive_changes:fa?
         'مدل بخش زیادی از کانفیگ را تغییر داده است؛ فقط اصلاح خطای کوچک مجاز است.':
@@ -3072,10 +3078,16 @@
       '<p class="ic-agent-disclaimer">'+esc(fa?
         (full.candidate_stored?
           'فایل اصلاح‌شده به‌شکل رمزنگاری‌شده نگهداری شده است؛ تا پایان موفق اعتبارسنجی مستقل و Approval، هیچ فایل Production تغییر نمی‌کند.':
-          'فایل اصلاحی هنوز به‌شکل امن نگهداری نشده و امکان تأیید یا اعمال آن وجود ندارد.'):
+          (full.candidate_origin==='deterministic_json_syntax'&&
+           full.proposed_change==='repair_json_bounded_syntax'?
+            'این اصلاح JSON از هش فایل اصلی قابل‌بازسازی است؛ پس از اعتبارسنجی مستقل می‌تواند به Approval برسد.':
+            'فایل اصلاحی هنوز به‌شکل امن نگهداری نشده و امکان تأیید یا اعمال آن وجود ندارد.')):
         (full.candidate_stored?
           'The revised file is stored encrypted, but no production write occurs until independent validation and approval pass.':
-          'The revised file is not securely stored and cannot be approved or applied.'))+'</p>'+
+          (full.candidate_origin==='deterministic_json_syntax'&&
+           full.proposed_change==='repair_json_bounded_syntax'?
+            'The worker can reconstruct this exact hash-bound JSON change without storing source bytes; independent validation and approval are still required.':
+            'The revised file is not securely stored and cannot be approved or applied.')))+'</p>'+
       refs(full.source_evidence_refs)+'</article>':'';
     const hasPlan=p.status && p.status!=='not_available';
     if(!hasPlan) {
