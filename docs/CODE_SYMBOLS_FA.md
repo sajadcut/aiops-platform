@@ -2470,8 +2470,8 @@
 | `integrations/vm/governed_config_change.py` | `rebuild_json_candidate` | 55 | function | Rebuild exact one-token JSON grammar correction, never values. | module |
 | `integrations/vm/governed_config_change.py` | `rebuild_xml_candidate` | 108 | function | Remove one unmatched EOF closing tag; never edit XML values or DTDs. | module |
 | `integrations/vm/governed_config_change.py` | `classify_config_guard_failure` | 153 | function | Use only fixed, operator-actionable codes; never reflect stderr. | module |
-| `integrations/vm/governed_config_change.py` | `run_governed_change` | 185 | async function | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | module |
-| `integrations/vm/governed_config_change.py` | `_start_after_approved_config_apply` | 445 | async function | Only the signed approval recovery scope authorizes a single systemd start. | module |
+| `integrations/vm/governed_config_change.py` | `run_governed_change` | 187 | async function | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | module |
+| `integrations/vm/governed_config_change.py` | `_start_after_approved_config_apply` | 466 | async function | Only the signed approval recovery scope authorizes a single systemd start. | module |
 | `integrations/vm/iterative_json_repair.py` | `_quoted_offsets` | 18 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `integrations/vm/iterative_json_repair.py` | `_json_reply` | 35 | function | Strictly identify a JSON edit plan even with a fenced LLM response. | module |
 | `integrations/vm/iterative_json_repair.py` | `apply_edit_plan` | 49 | function | Apply only structural punctuation edits to the exact original bytes. | module |
