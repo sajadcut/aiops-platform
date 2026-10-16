@@ -30,7 +30,7 @@ def _fixture():
     # Two independent parser failures: an extra opening brace followed by
     # an extra closing brace. One-token logic cannot validate the whole file.
     bad = source.replace('"key036": {', '"key036": {{', 1)
-    bad = bad.replace('  },\n  "key037"', '    }},\n    "key037"', 1)
+    bad = bad.replace('  },\n  "key037"', '  }},\n  "key037"', 1)
     # Source never leaks in the production candidate metadata.
     assert json.loads(source)
     return bad, source
