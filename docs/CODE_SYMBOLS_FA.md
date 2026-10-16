@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 531 | Dashboard JS files scanned: 8 | Symbols indexed: 5782**
+**Python files scanned: 532 | Dashboard JS files scanned: 8 | Symbols indexed: 5792**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -3125,6 +3125,16 @@
 | `tests/unit/test_audit_flush.py` | `FakeAuditStore.__init__` | 7 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeAuditStore |
 | `tests/unit/test_audit_flush.py` | `FakeAuditStore.append` | 10 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeAuditStore |
 | `tests/unit/test_audit_flush.py` | `test_audit_flush_persists_and_clears_incident_events` | 15 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_auto_config_prevalidation.py` | `_state` | 12 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_auto_config_prevalidation.py` | `test_eligible_microfix_auto_queues_only_a_prevalidation_intent` | 35 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_auto_config_prevalidation.py` | `test_unverified_candidate_never_enters_the_auto_queue` | 55 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_auto_config_prevalidation.py` | `test_without_candidate_no_database_or_validator_is_called` | 62 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_auto_config_prevalidation.py` | `test_without_candidate_no_database_or_validator_is_called.DB` | 63 | class | کلاس | test_without_candidate_no_database_or_validator_is_called |
+| `tests/unit/test_auto_config_prevalidation.py` | `test_without_candidate_no_database_or_validator_is_called.DB.get` | 64 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_without_candidate_no_database_or_validator_is_called.DB |
+| `tests/unit/test_auto_config_prevalidation.py` | `test_mcp_review_prefers_broken_appsettings_over_first_healthy_json` | 72 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_auto_config_prevalidation.py` | `test_mcp_review_prefers_broken_appsettings_over_first_healthy_json.validator` | 77 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_mcp_review_prefers_broken_appsettings_over_first_healthy_json |
+| `tests/unit/test_auto_config_prevalidation.py` | `test_mcp_review_prefers_broken_appsettings_over_first_healthy_json.discovery` | 80 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_mcp_review_prefers_broken_appsettings_over_first_healthy_json |
+| `tests/unit/test_auto_config_prevalidation.py` | `test_mcp_review_prefers_broken_appsettings_over_first_healthy_json.read` | 86 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_mcp_review_prefers_broken_appsettings_over_first_healthy_json |
 | `tests/unit/test_base_orchestrator_decision_binding.py` | `_finding` | 9 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_base_orchestrator_decision_binding.py` | `test_base_decision_rejects_unknown_execution_tool` | 19 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_base_orchestrator_decision_binding.py` | `test_base_decision_rejects_write_target_known_only_from_knowledge` | 46 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
