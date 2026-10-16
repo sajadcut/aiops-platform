@@ -172,6 +172,81 @@ async def commit_independent_recovery(
     await db.commit()
 
 
+
+def _bound_systemd_observation(raw, *, target: str, service: str) -> dict | None:
+    """Persist only bounded VM MCP systemd facts, never shell output or config."""
+    if not isinstance(raw, Mapping) or raw.get("success") is not True:
+        return None
+    expected = str(service).strip().lower().removesuffix(".service")
+    observed = str(raw.get("service") or "").strip().lower().removesuffix(".service")
+    if raw.get("target") != target or observed != expected:
+        return None
+    active = raw.get("active_state")
+    sub = raw.get("sub_state")
+    if (raw.get("load_state") != "loaded"
+            or active not in {"active", "failed", "inactive", "activating",
+                              "deactivating", "reloading"}
+            or not isinstance(sub, str) or len(sub) > 60):
+        return None
+    sample = {
+        "success": True, "target": target, "service": expected,
+        "load_state": "loaded", "active_state": active, "sub_state": sub,
+    }
+    for key in ("restart_count", "main_pid"):
+        value = raw.get(key)
+        if type(value) is int and value >= 0:
+            sample[key] = value
+    return sample
+
+
+async def record_post_config_service_status(
+    db, *, incident_id: str, target: str, service: str, actor: str,
+    first: Mapping[str, Any] | None, second: Mapping[str, Any] | None,
+    vendor_syntax_ok: bool | None,
+) -> bool:
+    """Write the final post-Start read into the *same* transaction as recovery.
+
+    A proven stable pair starts a new stability window for the status card;
+    earlier crash-loop observations must not override newer verified recovery.
+    This audit does not itself authorize closing the incident.
+    """
+    import json
+    from datetime import datetime, timezone
+    from uuid import uuid4
+    from sqlalchemy import text
+
+    newest = _bound_systemd_observation(second, target=target, service=service)
+    if newest is None:
+        return False
+    earlier = _bound_systemd_observation(first, target=target, service=service)
+    stable_pair = bool(
+        earlier is not None
+        and all(o["active_state"] == "active" and o["sub_state"] == "running"
+                for o in (earlier, newest))
+        and (service.lower().removesuffix(".service") != "nginx"
+             or vendor_syntax_ok is True)
+    )
+    await db.execute(text("""
+        INSERT INTO audit_events
+            (event_id,event_type,actor,incident_id,action,status,metadata,created_at)
+        VALUES (:event_id,:event_type,:actor,:incident_id,:action,
+                :status,CAST(:metadata AS jsonb),:created_at)
+    """), {
+        "event_id": str(uuid4()),
+        "event_type": "incident_config_apply_service_rechecked",
+        "actor": actor, "incident_id": incident_id,
+        "action": "service_status", "status": "success",
+        "metadata": json.dumps({
+            "observation": newest,
+            "stable_pair": stable_pair,
+            "monitor_recovery_confirmed": False,
+            "source": "approved_config_apply_followup",
+        }),
+        "created_at": datetime.now(timezone.utc),
+    })
+    return stable_pair
+
+
 async def reconcile_after_applied_config(*, incident_id: str, target: str,
                                          service: str, actor: str) -> str:
     """Best-effort, fresh verification following an approved config + start.
@@ -181,11 +256,8 @@ async def reconcile_after_applied_config(*, incident_id: str, target: str,
     HTTP 500 or imply a Zabbix Recovery event.
     """
     import asyncio
-    from datetime import datetime, timezone
-    from uuid import UUID, uuid4
+    from uuid import UUID
     from sqlalchemy import select
-    from apps.approval_service.postgres import PostgreSQLApprovalStore
-    from apps.audit_service.postgres import PostgreSQLAuditStore
     from database import AsyncSessionLocal
     from domain.models import Incident, IncidentStatus
     from integrations.vm.mcp_client import VMEdgeMCPClient
@@ -215,9 +287,19 @@ async def reconcile_after_applied_config(*, incident_id: str, target: str,
                 first=first, second=second, target=target,
                 vendor_syntax_ok=vendor_ok,
             )
+            # Persist the *actual* second systemd observation, even if an
+            # unrelated alert prevents resolving the incident. Otherwise the
+            # Incident Room keeps displaying its old pre-fix Down state.
+            await record_post_config_service_status(
+                db, incident_id=incident_id, target=target,
+                service=service, actor=actor, first=first, second=second,
+                vendor_syntax_ok=vendor_ok,
+            )
             if verdict != "independent_vm_verified":
+                await db.commit()
                 return verdict
             if incident.status in {IncidentStatus.CLOSED, IncidentStatus.RESOLVED}:
+                await db.commit()
                 return "incident_already_resolved"
             await commit_independent_recovery(
                 db, incident=incident, target=target, actor=actor,

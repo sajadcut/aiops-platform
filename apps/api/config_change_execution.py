@@ -326,10 +326,16 @@ async def execute_config(approval_id: UUID, identity=Depends(require_permission(
         "service_recovery_status": recovery_status,
         "service_start_attempted": recovery.get("attempted") is True,
         "monitor_recovery_confirmed": False,
-        "message": ("Configuration applied; systemd is active. Await the original "
-                    "alert-source recovery before resolving the incident."
-                    if recovery_confirmed else
-                    "Configuration apply finished; service recovery not yet verified."),
+        "message": (
+            "Configuration applied; two independent systemd checks verified "
+            "recovery and the service-down incident was resolved locally. "
+            "No Zabbix recovery event was fabricated."
+            if recovery_resolution == "resolved_independent_vm_verified"
+            else "Configuration applied and systemd is running, but incident "
+                 "resolution is gated by the original alert and correlated signals."
+            if recovery_confirmed
+            else "Configuration apply finished; service recovery not yet verified."
+        ),
     }
 
 @router.post("/approvals/{approval_id}/reject-config")

@@ -226,7 +226,7 @@ def _observed_status(
     candidates = []
     expected = normalized_service(service)
 
-    def append(raw, when, source, reference):
+    def append(raw, when, source, reference, *, post_repair_stable=False):
         if not isinstance(raw, dict) or raw.get("success") is not True:
             return
         if normalized_service(raw.get("service")) != expected:
@@ -263,6 +263,7 @@ def _observed_status(
             "source": source, "evidence_ref": str(reference or "")[:160],
             "verified_systemd_only": True,
             "application_health_verified": False,
+            "_post_repair_stable": post_repair_stable,
         }))
 
     for row in evidence:
@@ -280,6 +281,10 @@ def _observed_status(
         if kind == "incident_copilot_read" and event.get("action") == "service_status":
             append(metadata.get("observation"), event.get("created_at"),
                    "vm_mcp_chat", "audit:" + str(event.get("event_id") or ""))
+        elif kind == "incident_config_apply_service_rechecked" and event.get("status") == "success":
+            append(metadata.get("observation"), event.get("created_at"),
+                   "vm_mcp_post_config", "audit:" + str(event.get("event_id") or ""),
+                   post_repair_stable=metadata.get("stable_pair") is True)
         elif kind == "incident_service_status_rechecked":
             if event.get("status") != "success":
                 # Failed explicit recheck supersedes old success in the visible
@@ -309,16 +314,25 @@ def _observed_status(
                 "verified_systemd_only": False}
     latest_at, newest = max(candidates, key=lambda candidate: candidate[0])
     newest = dict(newest)
+    newest.pop("_post_repair_stable", None)
     if not newest.get("verified_systemd_only"):
         return newest
     # Type=simple can briefly report active/running between repeated crashes.
     # Use only attributable recent systemd samples, never the LLM, Zabbix
     # alarm prose, or a historical restart counter alone.
     from datetime import timedelta
+    # A verified post-config recovery pair establishes a new stability
+    # window. Crash-loop samples from before the successfully repaired
+    # service must not overrule newer systemd Running observations.
+    recovery_epochs = [
+        at for at, row in candidates if row.get("_post_repair_stable") is True
+    ]
+    epoch = max(recovery_epochs) if recovery_epochs else None
     recent = [
         (at, row) for at, row in candidates
         if row.get("verified_systemd_only") is True
         and timedelta(0) <= latest_at - at <= timedelta(minutes=10)
+        and (epoch is None or at >= epoch)
     ]
     restart_samples = sorted([
         (at, row["restart_count"]) for at, row in recent
@@ -444,7 +458,9 @@ async def incident_service_status(
                     "observed_at": None, "source": "identity_unverified",
                     "reason": diagnosis["reason"], "verified_systemd_only": False}
         events = await PostgreSQLAuditStore(db).list(str(incident_id), 200)
-        return _observed_status(incident.service, target, evidence, events)
+        observed = _observed_status(incident.service, target, evidence, events)
+        observed["incident_status"] = getattr(incident.status, "value", incident.status)
+        return observed
 
 
 @router.post(

@@ -739,13 +739,16 @@
       status==='running'||status==='active'?'ok':'warn';
     const source=o.source==='vm_mcp_chat'?(fa?'پاسخ زندهٔ ثبت‌شده در چت':'Recorded live chat VM MCP'):
       o.source==='vm_mcp_recheck'?(fa?'بررسی زندهٔ مجدد VM MCP':'Fresh VM MCP recheck'):
+      o.source==='vm_mcp_post_config'?(fa?'راستی‌آزمایی پس از اصلاح و شروع سرویس':'Verified after config repair and service start'):
       o.source==='vm_mcp_recorded'?(fa?'شواهد ثبت‌شدهٔ VM MCP':'Recorded VM MCP evidence'):
       o.source==='vm_mcp_recheck_failed'?(fa?'بررسی زنده ناموفق':'Failed live check'):
       (fa?'مشاهدهٔ قابل‌تأیید وجود ندارد':'No verifiable observation');
     const alertDown=/systemd service down|service down|inactive|failed/i.test(
       String(state.report?.incident_summary?.summary||'')+' '+
       String(state.report?.incident_summary?.title||''));
-    const conflict=authenticated&&status==='running'&&alertDown;
+    const incidentResolved=!state.historic&&
+      ['resolved','closed'].includes(low(state.lifecycle?.incident_status));
+    const conflict=authenticated&&status==='running'&&alertDown&&!incidentResolved;
     const reason=!authenticated&&o.reason?
       '<p class="ic-service-health-conflict">'+esc(fa?
         'بررسی زنده یا شناسایی مقصد تأیید نشد: ':'Live check or target binding failed: ')+
@@ -774,6 +777,10 @@
       (old?'<p class="ic-service-health-conflict">'+esc(fa?
         'این مشاهده قدیمی است؛ برای اطلاع از وضعیت فعلی «بررسی مجدد» را بزنید.':
         'This observation is stale. Use Recheck for the current state.')+'</p>':'')+
+      (incidentResolved&&authenticated&&status==='running'?
+        '<p class="ic-service-health-note">'+esc(fa?
+          'رخداد رفع‌شده ثبت شده است؛ وضعیت Running از شواهد VM تأیید شده و مستقل از پیام Recovery سامانه مانیتورینگ است.':
+          'Incident resolved from independent VM evidence; monitor recovery is tracked separately.')+'</p>':'')+
       (conflict?'<p class="ic-service-health-conflict">'+esc(fa?
         'آلارم اولیه وضعیت Down را گزارش کرده، اما شواهد جدیدتر systemd وضعیت Running را نشان می‌دهند.':
         'The initial alert reports Down, while later systemd evidence reports Running.')+'</p>':'')+
@@ -1155,12 +1162,20 @@
       : value(i.service);
     $('#ic-description').textContent=value(i.summary);
     $('#ic-short-id').textContent='#'+String(incidentId).slice(0,8);
-    show('#ic-hero-badges',pill(i.severity)+pill(i.status)+pill(a.approval_status));
+    // The Decision Brief is an immutable analysis snapshot. After an
+    // approved Start the authoritative Incident row, not that old snapshot,
+    // decides what appears in the page header.
+    const currentIncidentStatus=state.historic?i.status:
+      state.lifecycle?.incident_status||i.status;
+    const resolved=['resolved','closed'].includes(low(currentIncidentStatus));
+    show('#ic-hero-badges',pill(i.severity)+pill(currentIncidentStatus)+pill(a.approval_status));
     const authStatus=low(a.approval_status);
     const analyzing=state.lifecycle?.analysis_in_progress===true;
     const stateChangedActive=!state.historic&&
       state.recoveryApproval?.status==='state_changed_active';
-    const pulseTitle=analyzing
+    const pulseTitle=resolved?
+      (state.language==='fa'?'رخداد رفع شده است':'Incident resolved')
+      : analyzing
       ? (state.language==='fa'?'در حال بررسی و تحلیل':'Investigation in progress')
       : stateChangedActive?
         (state.language==='fa'?'سرویس از دید systemd فعال؛ Restart ثبت نشد':
@@ -1169,7 +1184,14 @@
     const recoveryExplanation=state.language==='fa'
       ? 'علت توقف بازیابی: هنگام ثبت درخواست تأیید، بررسی زنده نشان داد سرویس از وضعیت خطا به active/running تغییر کرده است. بنابراین برای جلوگیری از Restart غیرضروری، درخواست Approval ثبت نشد.'
       : 'Why recovery was stopped: the fresh systemd check found the service active/running rather than failed. Restart approval was not queued to prevent an unnecessary operation.';
-    show('#ic-decision-pulse',stateChangedActive
+    show('#ic-decision-pulse',resolved?
+        '<small>'+esc(state.language==='fa'?'آخرین وضعیت پایگاه داده':'Latest incident state')+
+        '</small><strong>'+esc(pulseTitle)+'</strong><p>'+
+        esc(state.language==='fa'?
+          'وضعیت رفع رخداد در سامانه ثبت شده است. کارت وضعیت سرویس در بالا آخرین شواهد VM را جداگانه نمایش می‌دهد.':
+          'Resolution was persisted. The service card separately shows the latest VM evidence.')+
+        '</p>'
+      : stateChangedActive
       ? '<div role="alert" aria-live="polite" style="border:2px solid #d97706;border-radius:12px;padding:18px 20px;background:rgba(217,119,6,.09);margin:8px 0;">'+
           '<strong style="display:block;font-size:1.35rem;line-height:1.6;font-weight:800;">'+
             esc(state.language==='fa'?'علت عدم اجرای بازیابی سرویس':'Why service recovery was stopped')+'</strong>'+
@@ -2928,6 +2950,7 @@
         'اجرای Restart درخواست شد؛ نتیجه و Verification را بررسی کنید.'):
         'The authorization state changed; check verification.');
       await load();
+      if(action==='execute')await recheckServiceStatus();
     }catch(e){notify(tr('failure')+' · '+e.message,true);}
     finally{state.busy=false;void loadRecoveryApproval(state.loadingToken);}
   }
@@ -3693,7 +3716,12 @@
             'Approval requested; no service change has occurred.');
       await load();
       await loadIncidentChat();
-      if(kind==='execute')notify(state.chatLastResult);
+      if(kind==='execute'){
+        // A governed Start/Restart may change the service after the cached
+        // Decision Brief was produced. Recheck the live bound VM immediately.
+        await recheckServiceStatus();
+        notify(state.chatLastResult);
+      }
     }catch(e){state.chatLastResult=e.message;notify(tr('failure')+' · '+e.message,true);}
     finally{state.chatBusy=false;renderIncidentChat();}
   }
@@ -3737,8 +3765,11 @@
             '; incident resolved by independent VM verification.'):'';
       const recoveryNote=kind==='execute'&&scopedStart?
         (value.service_recovery_confirmed===true?
-          (fa?'؛ سرویس در systemd فعال شد. منتظر پیام بازیابی Zabbix.':
-              '; service active in systemd, awaiting Zabbix recovery.') :
+          (value.incident_resolved===true?
+            (fa?'؛ سرویس Running و رخداد با دو بررسی مستقل رفع شد.':
+                '; systemd running and incident independently resolved.') :
+            (fa?'؛ سرویس Running است؛ شرایط رفع رخداد هنوز کامل نشده.':
+                '; systemd running; incident resolution is still gated.')) :
           (fa?'؛ بازیابی سرویس تأیید نشد: ':'; service recovery not verified: ')+
             String(value.service_recovery_status||'نامشخص')):'';
       notify((fa?(kind==='validate'?'نتیجه اعتبارسنجی: ':'نتیجه درخواست: '):
@@ -3980,7 +4011,11 @@
       }
       notify(tr(kind==='approve'?'successApprove':kind==='reject'?'successReject':'successResume'));
     }catch(e){notify(tr('failure')+' · '+e.message,true);alert(e.message);}
-    finally{state.busy=false;state.reviewedSnapshot=null;await load();}
+    finally{
+      state.busy=false;state.reviewedSnapshot=null;
+      await load();
+      if(kind==='resume')await recheckServiceStatus();
+    }
   }
   function bind(){
     document.querySelectorAll('[data-lang]').forEach(el=>el.addEventListener('click',()=>setLang(el.dataset.lang)));
