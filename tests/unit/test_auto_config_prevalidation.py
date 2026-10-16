@@ -64,7 +64,8 @@ async def test_without_candidate_no_database_or_validator_is_called():
         async def get(self, *args, **kwargs):
             raise AssertionError("no candidate: no database read")
     assert await auto_queue_prevalidation(DB(), "11111111-1111-4111-8111-111111111111", {}) == {
-        "status": "no_verified_candidate"
+        "status": "no_verified_candidate", "reason": "no_config_proposal",
+        "approval_id": None, "production_write_performed": False,
     }
 
 
@@ -104,7 +105,10 @@ async def test_mcp_review_prefers_broken_appsettings_over_first_healthy_json(mon
 
 
 @pytest.mark.asyncio
-async def test_valid_microfix_auto_creates_nonapprovable_request_and_only_validates(monkeypatch):
+@pytest.mark.parametrize("recover_stopped_service", [False, True])
+async def test_valid_microfix_auto_creates_nonapprovable_request_and_only_validates(
+    monkeypatch, recover_stopped_service,
+):
     """The automated branch can queue/stage, not approve or apply a file."""
     import apps.config_change_auto_queue as mod
     from types import SimpleNamespace
@@ -138,6 +142,11 @@ async def test_valid_microfix_auto_creates_nonapprovable_request_and_only_valida
     monkeypatch.setattr(mod, "vm_binding_diagnostic",
                         lambda *a: {"candidate": "10.248.16.82"})
     monkeypatch.setattr(mod, "validate_config_ticket", stage)
+    async def verified_recovery_scope(*, target, service):
+        assert target == "10.248.16.82" and service == "gfpapi"
+        return recover_stopped_service
+    monkeypatch.setattr(mod, "_verified_service_start_scope",
+                        verified_recovery_scope)
     result = await mod.auto_queue_prevalidation(
         DB(), "11111111-1111-4111-8111-111111111111", state,
     )
@@ -145,8 +154,53 @@ async def test_valid_microfix_auto_creates_nonapprovable_request_and_only_valida
     assert [record[0] for record in seen] == ["queue", "audit", "stage"]
     record = seen[0][1]
     assert record["action"] == "apply_configuration_change"
-    assert record["metadata"]["start_service_after_apply"] is False
+    assert record["metadata"]["start_service_after_apply"] is recover_stopped_service
     assert record["metadata"]["isolated_validation"] is False
     assert record["metadata"]["production_write_performed"] is False
     assert record["metadata"]["automated_prevalidation"] is True
     assert seen[-1] == ("stage", "aiops-auto-prevalidation")
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("state,scope", [
+    ({"success": True, "target": "192.0.2.10", "service": "nginx",
+      "load_state": "loaded", "active_state": "failed", "sub_state": "failed"}, True),
+    ({"success": True, "target": "192.0.2.10", "service": "nginx",
+      "load_state": "loaded", "active_state": "inactive", "sub_state": "dead"}, True),
+    ({"success": True, "target": "192.0.2.10", "service": "nginx",
+      "load_state": "loaded", "active_state": "active", "sub_state": "running"}, False),
+    ({"success": True, "target": "192.0.2.10", "service": "nginx",
+      "load_state": "loaded", "active_state": "activating", "sub_state": "auto-restart"}, False),
+    ({"success": True, "target": "192.0.2.99", "service": "nginx",
+      "load_state": "loaded", "active_state": "failed", "sub_state": "failed"}, False),
+    ({"success": True, "target": "192.0.2.10", "service": "other",
+      "load_state": "loaded", "active_state": "failed", "sub_state": "failed"}, False),
+    ({"success": False, "target": "192.0.2.10", "service": "nginx",
+      "load_state": "loaded", "active_state": "failed", "sub_state": "failed"}, False),
+])
+async def test_live_recovery_scope_matches_only_verified_stopped_bound_unit(
+    monkeypatch, state, scope,
+):
+    from apps import config_change_auto_queue as module
+    class FakeClient:
+        async def service_status(self, target, service):
+            assert target == "192.0.2.10"
+            assert service == "nginx"
+            return state
+    monkeypatch.setattr(module, "VMEdgeMCPClient", FakeClient)
+    got = await module._verified_service_start_scope(
+        target="192.0.2.10", service="nginx",
+    )
+    assert got is scope
+
+
+@pytest.mark.asyncio
+async def test_recovery_scope_transport_failure_never_grants_start(monkeypatch):
+    from apps import config_change_auto_queue as module
+    class BrokenClient:
+        async def service_status(self, target, service):
+            raise RuntimeError("gateway unavailable")
+    monkeypatch.setattr(module, "VMEdgeMCPClient", BrokenClient)
+    assert await module._verified_service_start_scope(
+        target="192.0.2.10", service="nginx",
+    ) is False
