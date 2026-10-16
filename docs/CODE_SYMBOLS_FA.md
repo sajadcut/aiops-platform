@@ -714,12 +714,12 @@
 | `apps/api/health.py` | `_pool_status` | 28 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/health.py` | `_probe_database` | 51 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/health.py` | `_probe_one` | 78 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/health.py` | `_probe_external` | 125 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/health.py` | `_external_required_ready` | 151 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/health.py` | `health_check` | 166 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/health.py` | `liveness` | 183 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/health.py` | `readiness` | 188 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/health.py` | `metrics` | 198 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/health.py` | `_probe_external` | 129 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/health.py` | `_external_required_ready` | 155 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/health.py` | `health_check` | 170 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/health.py` | `liveness` | 187 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/health.py` | `readiness` | 192 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/health.py` | `metrics` | 202 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/http_logging.py` | `_headers` | 36 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/http_logging.py` | `_safe_json_body` | 43 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/http_logging.py` | `_value` | 57 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
@@ -2234,19 +2234,19 @@
 | `integrations/cognia/client.py` | `CogniaClient._authorized_json` | 200 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaClient |
 | `integrations/cognia/client.py` | `CogniaClient.verify_machine_auth` | 229 | async method | Verify Client Application authentication without returning/logging the token. | CogniaClient |
 | `integrations/cognia/client.py` | `CogniaClient.get_knowledge_base` | 233 | async method | Read one KB with the Machine Client identity; never mutate its policy. | CogniaClient |
-| `integrations/cognia/client.py` | `CogniaClient.readiness_status` | 249 | async method | Probe the exact origin-root Cognia readiness route, without auth. | CogniaClient |
-| `integrations/cognia/client.py` | `CogniaClient.health_check` | 278 | async method | Boolean-compatible readiness check for evidence collectors. | CogniaClient |
-| `integrations/cognia/client.py` | `CogniaClient.list_knowledge_bases` | 282 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | CogniaClient |
-| `integrations/cognia/client.py` | `CogniaClient._assert_own_client_application` | 293 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaClient |
-| `integrations/cognia/client.py` | `CogniaClient._normalize_scope_context` | 303 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaClient |
-| `integrations/cognia/client.py` | `CogniaClient._normalize_knowledge_scope` | 317 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaClient |
-| `integrations/cognia/client.py` | `CogniaClient._validate_revision_payload` | 339 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaClient |
-| `integrations/cognia/client.py` | `CogniaClient.register_knowledge` | 363 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaClient |
-| `integrations/cognia/client.py` | `CogniaClient.get_knowledge_detail` | 406 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | CogniaClient |
-| `integrations/cognia/client.py` | `CogniaClient.create_revision` | 412 | async method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | CogniaClient |
-| `integrations/cognia/client.py` | `CogniaClient.get_processing_status` | 458 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | CogniaClient |
-| `integrations/cognia/client.py` | `CogniaClient.search` | 466 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | CogniaClient |
-| `integrations/cognia/client.py` | `CogniaClient.generate_context` | 511 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaClient |
+| `integrations/cognia/client.py` | `CogniaClient.readiness_status` | 249 | async method | Probe origin-root Swagger for HTTP reachability, without auth. | CogniaClient |
+| `integrations/cognia/client.py` | `CogniaClient.health_check` | 277 | async method | Boolean-compatible Swagger HTTP reachability check for collectors. | CogniaClient |
+| `integrations/cognia/client.py` | `CogniaClient.list_knowledge_bases` | 281 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | CogniaClient |
+| `integrations/cognia/client.py` | `CogniaClient._assert_own_client_application` | 292 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaClient |
+| `integrations/cognia/client.py` | `CogniaClient._normalize_scope_context` | 302 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaClient |
+| `integrations/cognia/client.py` | `CogniaClient._normalize_knowledge_scope` | 316 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaClient |
+| `integrations/cognia/client.py` | `CogniaClient._validate_revision_payload` | 338 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaClient |
+| `integrations/cognia/client.py` | `CogniaClient.register_knowledge` | 362 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaClient |
+| `integrations/cognia/client.py` | `CogniaClient.get_knowledge_detail` | 405 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | CogniaClient |
+| `integrations/cognia/client.py` | `CogniaClient.create_revision` | 411 | async method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | CogniaClient |
+| `integrations/cognia/client.py` | `CogniaClient.get_processing_status` | 457 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | CogniaClient |
+| `integrations/cognia/client.py` | `CogniaClient.search` | 465 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | CogniaClient |
+| `integrations/cognia/client.py` | `CogniaClient.generate_context` | 510 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CogniaClient |
 | `integrations/elasticsearch/client.py` | `ElasticsearchClient` | 10 | class | Production connector for operational log evidence and ECS asset metadata. | module |
 | `integrations/elasticsearch/client.py` | `ElasticsearchClient.__init__` | 18 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ElasticsearchClient |
 | `integrations/elasticsearch/client.py` | `ElasticsearchClient.source_name` | 26 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ElasticsearchClient |
@@ -2820,10 +2820,10 @@
 | `tests/integration/test_health_probes.py` | `test_cognia_probe_reports_exact_ready_endpoint_and_upstream_http_status.Cognia.readiness_status` | 59 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_cognia_probe_reports_exact_ready_endpoint_and_upstream_http_status.Cognia |
 | `tests/integration/test_health_probes.py` | `test_cognia_probe_reports_exact_ready_endpoint_and_upstream_http_status.Cognia.health_check` | 63 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_cognia_probe_reports_exact_ready_endpoint_and_upstream_http_status.Cognia |
 | `tests/integration/test_health_probes.py` | `test_cognia_probe_reports_exact_ready_endpoint_and_upstream_http_status.Cognia.close` | 66 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_cognia_probe_reports_exact_ready_endpoint_and_upstream_http_status.Cognia |
-| `tests/integration/test_health_probes.py` | `test_cognia_probe_success_preserves_http_200` | 80 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/integration/test_health_probes.py` | `test_cognia_probe_success_preserves_http_200.Cognia` | 81 | class | کلاس | test_cognia_probe_success_preserves_http_200 |
-| `tests/integration/test_health_probes.py` | `test_cognia_probe_success_preserves_http_200.Cognia.readiness_status` | 82 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_cognia_probe_success_preserves_http_200.Cognia |
-| `tests/integration/test_health_probes.py` | `test_cognia_probe_success_preserves_http_200.Cognia.close` | 85 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_cognia_probe_success_preserves_http_200.Cognia |
+| `tests/integration/test_health_probes.py` | `test_cognia_probe_success_preserves_http_200` | 81 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/integration/test_health_probes.py` | `test_cognia_probe_success_preserves_http_200.Cognia` | 82 | class | کلاس | test_cognia_probe_success_preserves_http_200 |
+| `tests/integration/test_health_probes.py` | `test_cognia_probe_success_preserves_http_200.Cognia.readiness_status` | 83 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_cognia_probe_success_preserves_http_200.Cognia |
+| `tests/integration/test_health_probes.py` | `test_cognia_probe_success_preserves_http_200.Cognia.close` | 86 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_cognia_probe_success_preserves_http_200.Cognia |
 | `tests/integration/test_knowledge_review_db.py` | `test_verified_memory_human_review_and_cognia_activation` | 25 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/integration/test_knowledge_review_db.py` | `test_verified_memory_human_review_and_cognia_activation.FakeCognia` | 33 | class | کلاس | test_verified_memory_human_review_and_cognia_activation |
 | `tests/integration/test_knowledge_review_db.py` | `test_verified_memory_human_review_and_cognia_activation.FakeCognia.__aenter__` | 34 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_verified_memory_human_review_and_cognia_activation.FakeCognia |
@@ -3528,8 +3528,8 @@
 | `tests/unit/test_cognia_client.py` | `test_machine_client_does_not_expose_human_approval_decisions` | 407 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_cognia_client.py` | `test_machine_token_redirect_is_rejected_without_replaying_credentials` | 413 | async function | Cognia may redirect HTTP to HTTPS; the client must not forward secrets. | module |
 | `tests/unit/test_cognia_client.py` | `test_machine_token_redirect_is_rejected_without_replaying_credentials.handler` | 418 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_machine_token_redirect_is_rejected_without_replaying_credentials |
-| `tests/unit/test_cognia_client.py` | `test_readiness_always_targets_origin_root_and_never_sends_credentials` | 455 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_cognia_client.py` | `test_readiness_always_targets_origin_root_and_never_sends_credentials.handler` | 458 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_readiness_always_targets_origin_root_and_never_sends_credentials |
+| `tests/unit/test_cognia_client.py` | `test_swagger_reachability_targets_origin_root_and_never_sends_credentials` | 455 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_cognia_client.py` | `test_swagger_reachability_targets_origin_root_and_never_sends_credentials.handler` | 458 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_swagger_reachability_targets_origin_root_and_never_sends_credentials |
 | `tests/unit/test_cognia_client.py` | `test_cognia_readiness_rejects_non_200_and_does_not_follow_redirects` | 481 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_cognia_client.py` | `test_cognia_readiness_rejects_non_200_and_does_not_follow_redirects.handler` | 484 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_cognia_readiness_rejects_non_200_and_does_not_follow_redirects |
 | `tests/unit/test_cognia_client.py` | `test_cognia_readiness_timeout_is_not_falsely_reported_as_healthy` | 503 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
