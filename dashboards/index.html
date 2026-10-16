@@ -160,7 +160,10 @@
         <section class="panel">
           <div class="panel-head"><div><span class="section-kicker">صف بررسی</span><h2>دانش در انتظار بازبینی <span id="knowledgePendingCount" class="pill">—</span></h2></div><button type="button" class="approval-btn" onclick="loadKnowledgeReviews()">به‌روزرسانی</button></div>
           <div class="knowledge-source"><label for="knowledgeMemoryId">شناسهٔ حافظهٔ عملیاتی تأییدشده</label><div class="knowledge-inline"><input id="knowledgeMemoryId" placeholder="شناسهٔ حافظه (UUID)"><button type="button" onclick="createKnowledgeFromMemory()">ساخت پیش‌نویس</button></div></div>
+          <p id="knowledgeSyncCoverageStatus" class="muted" role="status">پیش‌نویس هر رخداد پس از پایان تحلیل یا هنگام همگام‌سازی سوابق، بدون انتشار خودکار، برای بازبینی ساخته می‌شود.</p>
+          <button type="button" class="approval-btn" onclick="syncMoreIncidentKnowledge()">همگام‌سازی ۱۰۰ رخداد قدیمی‌تر برای تصمیم ذخیره یا رد</button>
           <div id="knowledgeReviewQueue" class="knowledge-queue"><div class="empty-state">صف بازبینی در این بخش نمایش داده می‌شود.</div></div>
+          <button type="button" class="approval-btn" id="knowledgeLoadMore" hidden onclick="loadMoreKnowledgeReviews()">نمایش ۱۰۰ پیش‌نویس بعدی</button>
         </section>
         <section class="panel knowledge-editor">
           <div class="panel-head"><div><span class="section-kicker">مرز تأیید انسانی</span><h2 id="knowledgeReviewHeading">یک مورد را انتخاب کنید</h2></div><span class="pill amber" id="knowledgeReviewStatus">موردی انتخاب نشده</span></div>
