@@ -119,6 +119,54 @@ def test_recovery_and_syntax_are_actionable_in_incident_room_not_only_report_tex
     assert "state.recoveryQueueAttempted=true" in js
 
 
+def test_recovery_409_is_explained_in_both_review_and_decision_desk():
+    js = (ROOT / "dashboards/incident-command-room.js").read_text(encoding="utf-8")
+    assert "e.detail=responseDetail" in js
+    assert "function recoveryApprovalFailure(error)" in js
+    assert "service_active_before_approval" in js
+    assert "state_changed_active" in js
+    assert "recoveryApprovalStatusLabel(state.recoveryApproval,fa)" in js
+    assert "recoveryApprovalStatusLabel(recoveryApproval,fa)" in js
+    assert "recoveryApprovalSafetyNote(fa)" in js
+    assert "if(approval.status==='not_requested'&&state.recoveryQueueAttempted&&" in js
+    assert "approval=state.recoveryApproval;" in js
+    assert "['blocked','state_changed_active'].includes" in js
+    assert "show('#ic-action-controls','<p class=" in js
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="Node required for real JS regression")
+def test_recovery_409_helper_does_not_invent_application_recovery():
+    script = r"""
+const fs=require('fs'),vm=require('node:vm'),assert=require('node:assert/strict');
+const src=fs.readFileSync('dashboards/incident-command-room.js','utf8');
+const start=src.indexOf('  function recoveryApprovalFailure(');
+const end=src.indexOf('  async function loadRecoveryApproval(',start);
+assert.ok(start>0&&end>start);
+const f=vm.runInNewContext(src.slice(start,end)+
+  '\n({recoveryApprovalFailure,recoveryApprovalStatusLabel,recoveryApprovalSafetyNote})');
+const active=f.recoveryApprovalFailure({status:409,
+  code:'recovery_live_binding_or_state_changed',
+  detail:{code:'recovery_live_binding_or_state_changed',
+    reason_code:'service_active_before_approval',
+    expected_state:'failed',observed_state:'active'}});
+assert.equal(active.status,'state_changed_active');
+assert.equal(active.execution_authority,false);
+assert.equal(active.application_health_verified,false);
+assert.ok(f.recoveryApprovalStatusLabel(active,true).includes('درخواست Restart'));
+assert.ok(f.recoveryApprovalSafetyNote(true).includes('Zabbix'));
+assert.ok(f.recoveryApprovalSafetyNote(false).includes('does not prove'));
+const unverified=f.recoveryApprovalFailure({status:409,
+  code:'recovery_live_binding_or_state_changed',
+  detail:{reason_code:'live_identity_unverified',observed_state:null}});
+assert.equal(unverified.status,'blocked');
+assert.equal(unverified.reason_code,'live_identity_unverified');
+assert.ok(!f.recoveryApprovalStatusLabel(unverified,true).includes('اکنون'));
+const forbidden=f.recoveryApprovalFailure({status:403,detail:{},code:''});
+assert.equal(forbidden.status,'permission_required');
+"""
+    subprocess.run(["node", "-e", script], check=True, cwd=ROOT, timeout=12)
+
+
 @pytest.mark.skipif(shutil.which("node") is None, reason="Node required for JavaScript regression")
 def test_full_file_llm_diff_download_prefers_latest_changes_without_secret_leaks():
     script = r"""
