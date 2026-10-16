@@ -230,11 +230,10 @@ def _candidate_preview(original: str, corrected: str, *, diagnostic_line: int | 
     before, after = original.splitlines(keepends=True), corrected.splitlines(keepends=True)
     # Diff on full lines; never trust an LLM that rewrites the whole config.
     differences = [op for op in difflib.SequenceMatcher(
-        a=before, b=after, autojunk=False).get_opcodes() if op[0] != "equal"]
+        a=before, b=after, autojunk=True).get_opcodes() if op[0] != "equal"]
     changed = sum(max(i2 - i1, j2 - j1) for _, i1, i2, j1, j2 in differences)
     if (changed > _MAX_CHANGED_LINES or not differences or
             len(differences) > 2 or
-            difflib.SequenceMatcher(None, original, corrected, autojunk=True).ratio() < 0.80 or
             changed > max(3, (len(before) + 3) // 5)):
         return {**base, "rejection_reason": "candidate_excessive_changes"}
     # A syntax-only comma or brace correction is safe even on a line
