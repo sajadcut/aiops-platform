@@ -174,8 +174,12 @@ class DynamicInvestigationPlanner:
                      and raw.get("llm_returned_complete_file") is True)
                     or (
                         raw.get("candidate_origin") == "deterministic_json_syntax"
-                        and raw.get("candidate_stored") is True
                         and raw.get("validation_profile") == "json_syntax"
+                        and (
+                            raw.get("candidate_stored") is True
+                            or (raw.get("candidate_stored") is False and
+                                raw.get("proposed_change") == "repair_json_bounded_syntax")
+                        )
                     )
                 )
             )
@@ -207,6 +211,12 @@ class DynamicInvestigationPlanner:
                 ),
                 "candidate_returned_not_stored": bool(accepted and raw.get("candidate_stored") is not True),
                 "candidate_stored": bool(accepted and raw.get("candidate_stored") is True),
+                "proposed_change": (
+                    "repair_json_bounded_syntax" if accepted and
+                    raw.get("candidate_origin") == "deterministic_json_syntax"
+                    and raw.get("proposed_change") == "repair_json_bounded_syntax"
+                    else "llm_full_file_repair"
+                ),
                 "candidate_origin": (
                     "deterministic_json_syntax" if accepted and
                     raw.get("candidate_origin") == "deterministic_json_syntax"
@@ -612,7 +622,9 @@ class DynamicInvestigationPlanner:
         # registered, independently checkable vendor/format profile may enter
         # the EXISTING pending_validation ticket flow.
         if (full_repair.get("status") == "llm_candidate_proposed"
-                and full_repair.get("candidate_stored") is True
+                and (full_repair.get("candidate_stored") is True
+                     or (full_repair.get("candidate_origin") == "deterministic_json_syntax"
+                         and full_repair.get("proposed_change") == "repair_json_bounded_syntax"))
                 and full_repair.get("validation_profile") in {
                     "nginx", "json_syntax", "xml_syntax",
                 } and full_repair.get("source_sha256")
@@ -639,8 +651,8 @@ class DynamicInvestigationPlanner:
                 "redacted_changes": preview_changes,
                 "original_sha256": full_repair["source_sha256"],
                 "candidate_sha256": full_repair["candidate_sha256"],
-                "proposed_change": "llm_full_file_repair",
-                "candidate_stored": True,
+                "proposed_change": full_repair.get("proposed_change") or "llm_full_file_repair",
+                "candidate_stored": full_repair.get("candidate_stored") is True,
                 "validation_profile": full_repair["validation_profile"],
                 "test_scope": "encrypted_candidate_pending_independent_validation",
                 "validation_status": "UNVERIFIED",
