@@ -191,6 +191,11 @@ class DynamicInvestigationPlanner:
                 "llm_returned_complete_file": raw.get("llm_returned_complete_file") is True,
                 "candidate_returned_not_stored": bool(accepted and raw.get("candidate_stored") is not True),
                 "candidate_stored": bool(accepted and raw.get("candidate_stored") is True),
+                "candidate_origin": (
+                    "deterministic_json_syntax" if accepted and
+                    raw.get("candidate_origin") == "deterministic_json_syntax"
+                    else "llm_complete_file" if accepted else "none"
+                ),
                 "validation_profile": (str(raw.get("validation_profile")) if
                     raw.get("validation_profile") in {"nginx", "json_syntax", "xml_syntax"}
                     else "unregistered"),
