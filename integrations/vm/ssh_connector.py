@@ -1194,6 +1194,25 @@ class SSHVMConnector:
                     and outcome.get("status") != "candidate_proposed"):
                 outcome = candidate
                 selected = (path, path_source)
+            # A confirmed broken application entrypoint config outranks any
+            # patchable unrelated JSON data file. Otherwise we could offer an
+            # Approval for MessageTemplates.json while appsettings.json stays
+            # syntactically invalid. This priority is derived from the runtime
+            # and verified path, never from an LLM-supplied path.
+            primary_dotnet_appsettings = (
+                str(discovered.get("runtime") or "").lower() == "dotnet"
+                and path.rsplit("/", 1)[-1] == "appsettings.json"
+                and candidate.get("validation_status") in {
+                    "FORMAT_INVALID", "FORMAT_CANDIDATE_VALID_ONLY",
+                }
+            )
+            if primary_dotnet_appsettings or (
+                path_source == "confirmed_vendor_validator"
+                and candidate.get("validation_status") == "FORMAT_INVALID"
+            ):
+                outcome = candidate
+                selected = (path, path_source)
+                break
             if candidate.get("status") == "candidate_proposed":
                 outcome = candidate
                 selected = (path, path_source)
