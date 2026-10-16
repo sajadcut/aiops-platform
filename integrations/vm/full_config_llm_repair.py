@@ -22,7 +22,7 @@ from integrations.vm.config_candidate_vault import CandidateUnavailable, store_c
 from integrations.vm.json_syntax_candidate import (
     deterministic_json_syntax_fix, deterministic_json_punctuation_fix,
     deterministic_json_duplicate_brace_fix,
-    bounded_json_repair_with_edits,
+    bounded_json_repair_with_edits, bounded_json_syntax_fix,
 )
 
 _MAX_BYTES = 64 * 1024  # Opt-in complete document only; never silently truncate.
@@ -544,6 +544,18 @@ async def review_complete_config(
                 candidate_hash=preview["candidate_hash"], candidate=corrected,
             )
         except CandidateUnavailable as exc:
+            # A local deterministic JSON repair needs no encrypted vault:
+            # the VM transaction rebuilds the exact same bytes from the
+            # live source and requires both SHA256s to match. Only make
+            # this exception when independent replay reproduces the *exact*
+            # candidate, never for LLM-authored file contents.
+            if (profile == "json_syntax"
+                    and preview.get("candidate_origin") == "deterministic_json_syntax"
+                    and bounded_json_syntax_fix(source) == corrected):
+                return {**result, **preview, "candidate_stored": False,
+                        "proposed_change": "repair_json_bounded_syntax",
+                        "validation_profile": profile,
+                        "candidate_generation_mode": "worker_bounded_json_repair"}
             return {**result, **preview, "status": "candidate_storage_unavailable",
                     "candidate_stored": False, "storage_reason": str(exc),
                     "validation_profile": profile}
