@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 535 | Dashboard JS files scanned: 8 | Symbols indexed: 5834**
+**Python files scanned: 535 | Dashboard JS files scanned: 8 | Symbols indexed: 5835**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -2452,6 +2452,7 @@
 | `integrations/vm/json_syntax_candidate.py` | `deterministic_json_syntax_fix` | 12 | function | Repair one measured JSON grammar error; fail closed otherwise. | module |
 | `integrations/vm/json_syntax_candidate.py` | `deterministic_json_punctuation_fix` | 45 | function | Find a UNIQUE one-byte grammar-only repair near the actual JSON error. | module |
 | `integrations/vm/json_syntax_candidate.py` | `deterministic_json_punctuation_fix.local` | 85 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | deterministic_json_punctuation_fix |
+| `integrations/vm/json_syntax_candidate.py` | `deterministic_json_duplicate_brace_fix` | 126 | function | Delete exactly one superfluous opening and closing brace. | module |
 | `integrations/vm/llm_syntax_projection.py` | `project_line` | 14 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `integrations/vm/llm_syntax_projection.py` | `syntax_projection` | 55 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `integrations/vm/mcp_client.py` | `VMEdgeMCPClient` | 9 | class | MCP-only connector for VM/Edge diagnostics and governed remediation. | module |
