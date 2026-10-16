@@ -1150,12 +1150,18 @@
     show('#ic-hero-badges',pill(i.severity)+pill(i.status)+pill(a.approval_status));
     const authStatus=low(a.approval_status);
     const analyzing=state.lifecycle?.analysis_in_progress===true;
+    const stateChangedActive=!state.historic&&
+      state.recoveryApproval?.status==='state_changed_active';
     const pulseTitle=analyzing
       ? (state.language==='fa'?'در حال بررسی و تحلیل':'Investigation in progress')
+      : stateChangedActive?
+        (state.language==='fa'?'سرویس از دید systemd فعال؛ Restart ثبت نشد':
+          'Systemd active; restart approval not queued')
       : authStatus==='pending'?tr('approvalPending'):authStatus==='approved'?tr('approvalApproved'):tr('approvalFinished');
     show('#ic-decision-pulse','<small>'+tr('decisionDesk')+'</small><strong>'+esc(pulseTitle)+'</strong><p>'+
-      txt(analyzing
+      esc(analyzing
         ? (state.language==='fa'?'Agentها در حال گردآوری شواهد و بررسی رخداد هستند.':'Agents are analyzing the incident and gathering evidence.')
+        : stateChangedActive?recoveryApprovalSafetyNote(state.language==='fa')
         : authStatus==='approved'?tr('approvalSeparate'):tr('backendGate'))+'</p>');
     const quick=[
       ['started',date(i.started_at)],['duration',i.elapsed_seconds==null?tr('unknown'):num(Math.max(0,Math.floor(i.elapsed_seconds/60)))+' '+(state.language==='fa'?'دقیقه':'min')],
@@ -2764,7 +2770,11 @@
       if(token!==state.loadingToken||state.historic)return;
       state.recoveryApproval={status:'unavailable',reason:String(e.message||'').slice(0,130)};
     }
-    if(state.report){renderInvestigation(state.report);renderDecision(state.report);}
+    if(state.report){
+      renderHero(state.report);
+      renderInvestigation(state.report);
+      renderDecision(state.report);
+    }
   }
 
   async function handleRecoveryApproval(action) {
