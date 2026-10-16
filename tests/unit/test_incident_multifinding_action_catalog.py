@@ -112,7 +112,8 @@ def test_interrupted_config_apply_preserves_unknown_and_no_replay():
     result = _last_config_apply_result(approval, [event])
     assert result["production_write_performed"] is None
     assert result["failure_reason"] == "config_guard_ssh_stdin_closed_result_unknown"
-    assert _consumed_failure_reissuable(approval, [event]) is False
+    # Eligible for a NEW separately validated ticket, never for replay.
+    assert _consumed_failure_reissuable(approval, [event]) is True
     assert classify_config_guard_failure(
         {"success": False, "error": "ssh_stdin_pipe_closed"}
     ) == "config_guard_ssh_stdin_closed_result_unknown"
