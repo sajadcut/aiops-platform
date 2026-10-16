@@ -159,7 +159,7 @@ Runtime telemetry tracks:
 - coordination disagreements/contradictions
 - Human Review rate
 
-Durable per-Incident routing/collaboration remains in workflow state and Audit; process-local counters are health/operations metrics, not the source of truth.
+Durable per-Incident routing/collaboration remains in workflow state and Audit. The global Agent dashboard and `GET /api/v1/agents/metrics` now read **PostgreSQL**, not per-process counters. Historical analyzed-Incident counts and mean confidence are taken from durable `findings`; coverage and collaboration facts use the latest workflow checkpoints. New per-attempt `agent_invocation_completed` audit events provide exact workflow invocation/success/failure counts **only from the point instrumentation was deployed**. Older deduplicated findings are never mislabelled as invocations. Missing measurements are shown as unknown (—), not synthetic 0. API failure is a 503, not an empty healthy response.
 
 ## Agent Dashboard
 

@@ -458,8 +458,20 @@ class E2EOrchestrator:
     async def _triage_node(self, state: E2EState) -> E2EState:
         phase_started = time.perf_counter()
         state["current_node"] = "triage"
-        result = await self.triage_agent.analyze(self._agent_input(state))
+        try:
+            result = await self.triage_agent.analyze(self._agent_input(state))
+        except Exception:
+            self._audit("agent_invocation_completed", state, agent_name="triage",
+                        status="failed", success=False)
+            raise
         data = result.model_dump(mode="json")
+        self._audit("agent_invocation_completed", state, agent_name="triage",
+                    status="success", success=True,
+                    confidence=result.confidence,
+                    evidence_coverage=result.evidence_coverage,
+                    handoffs=len(result.handoff_agents),
+                    conflicts=len(result.conflicting_evidence_ids),
+                    human_review=result.requires_human_review)
         state["triage_result"] = data
         state["findings"] = state.get("findings", []) + [data]
         AgentTelemetry.record_result(
@@ -528,6 +540,8 @@ class E2EOrchestrator:
         findings: List[Dict[str, Any]] = []
         for name, result in zip(actual_names, results):
             if isinstance(result, Exception):
+                self._audit("agent_invocation_completed", state, agent_name=name,
+                            status="failed", success=False)
                 findings.append({
                     "agent_name": name,
                     "finding_type": f"{name}_error",
@@ -546,6 +560,13 @@ class E2EOrchestrator:
                 continue
             output = cast(AgentOutput, result)
             data = output.model_dump(mode="json")
+            self._audit("agent_invocation_completed", state, agent_name=name,
+                        status="success", success=True,
+                        confidence=output.confidence,
+                        evidence_coverage=output.evidence_coverage,
+                        handoffs=len(output.handoff_agents),
+                        conflicts=len(output.conflicting_evidence_ids),
+                        human_review=output.requires_human_review)
             AgentTelemetry.record_result(
                 name,
                 confidence=output.confidence,

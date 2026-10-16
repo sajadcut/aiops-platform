@@ -547,15 +547,22 @@ function renderDetail(tab = 'overview') {
 async function loadAgents() {
   try {
     const [c, m] = await Promise.all([api('/api/v1/agents/catalog'), api('/api/v1/agents/metrics')]);
+    if (m.scope !== 'durable_postgresql') throw new Error('آمار ماندگار ایجنت‌ها در دسترس نیست.');
     S.agents = c.items || [];
     S.agentMetrics = m.items || [];
     const metrics = {};
     S.agentMetrics.forEach(x => metrics[x.agent_name || x.agent] = x);
     $('#agentsGrid').innerHTML = S.agents.map(a => {
       const met = metrics[a.name] || {};
-      return `<article class="panel agent-manifest"><div style="display:flex;justify-content:space-between">${pill(a.enabled ? 'enabled' : 'disabled')}<span class="muted" style="font-size:7px">${esc(a.version || '')}</span></div><h3>${esc(a.name)}</h3><p>${esc(a.description || a.responsibility || 'ایجنت متخصص تحلیل')}</p><div class="tags">${(a.capabilities || a.read_capabilities || []).slice(0, 8).map(x => `<span>${esc(x)}</span>`).join('')}</div><div class="mini-metrics"><div><label>دفعات فراخوانی</label><strong>${met.invocations ?? 0}</strong></div><div><label>میانگین اطمینان</label><strong>${pct(met.average_confidence || 0)}</strong></div></div></article>`;
+      const historic = (met.incident_count ?? 0) > 0;
+      const known = historic || met.invocations !== undefined && met.invocations !== null;
+      const percentOrUnknown = x => x === null || x === undefined ? '—' : pct(x);
+      return `<article class="panel agent-manifest"><div style="display:flex;justify-content:space-between">${pill(a.enabled ? 'enabled' : 'disabled')}<span class="muted">${esc(a.version || '')}</span></div><h3>${esc(a.name)}</h3><p>${esc(a.description || a.responsibility || 'ایجنت متخصص تحلیل')}</p><div class="tags">${(a.capabilities || a.read_capabilities || []).slice(0, 8).map(x => `<span>${esc(x)}</span>`).join('')}</div><div class="mini-metrics"><div><label>رخدادهای تحلیل‌شده</label><strong>${met.incident_count ?? '—'}</strong></div><div><label>فراخوانی‌های ثبت‌شده در ممیزی</label><strong>${met.invocations ?? '—'}</strong></div><div><label>میانگین اطمینان</label><strong>${percentOrUnknown(met.average_confidence)}</strong></div><div><label>پوشش شواهد</label><strong>${percentOrUnknown(met.average_evidence_coverage)}</strong></div><div><label>خطاهای ثبت‌شده</label><strong>${met.failures ?? '—'}</strong></div><div><label>ارجاع به متخصص</label><strong>${met.handoffs ?? '—'}</strong></div></div><p class="muted agent-data-note">${known ? 'سوابق از PostgreSQL و ممیزی خوانده شده‌اند؛ شمارش فراخوانی فقط از زمان ثبت رویدادهای جدید است.' : 'هنوز سابقهٔ تحلیل قابل استناد برای این ایجنت ثبت نشده است.'}</p></article>`;
     }).join('') || '<div class="panel empty-state">ایجنتی در دسترس نیست.</div>';
-  } catch (e) { showError(e.message); }
+  } catch (e) {
+    $('#agentsGrid').innerHTML = '<div class="panel empty-state">دریافت آمار ماندگار ایجنت‌ها ناموفق بود؛ صفر به معنی نبود فعالیت نیست.</div>';
+    showError(e.message);
+  }
 }
 
 function renderMcp() {
