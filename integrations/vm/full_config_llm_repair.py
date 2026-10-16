@@ -183,7 +183,7 @@ def _candidate_preview(original: str, corrected: str, *, diagnostic_line: int | 
             "apply_eligible": False, "execution_authority": False,
             "config_contents_exposed": False}
     if (not corrected or "\x00" in corrected or
-            len(corrected.encode("utf-8")) > _MAX_BYTES * 2 or
+            len(corrected.encode("utf-8")) > _MAX_BYTES or
             original.endswith("\n") != corrected.endswith("\n")):
         return {**base, "rejection_reason": "incomplete_or_invalid_candidate"}
     if original == corrected:
