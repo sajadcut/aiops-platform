@@ -121,7 +121,7 @@ async def create_from_incident(db, incident_id: UUID) -> tuple[KnowledgeReview |
                 if digest != existing.content_hash:
                     existing.title, existing.content = title, content
                     existing.content_hash = digest
-                    existing.revision += 1
+                    existing.revision = int(existing.revision or 1) + 1
                     await db.execute(text("""
                         INSERT INTO audit_events
                           (event_id,event_type,actor,incident_id,action,status,metadata,created_at)
@@ -160,7 +160,7 @@ async def create_from_incident(db, incident_id: UUID) -> tuple[KnowledgeReview |
         source_type="incident_followup", kb_id=kb_id,
         scope={"type": "clientApplication", "clientApplicationId": app_id},
         title=title, content=content, content_hash=content_digest(title, content),
-        status="pending_review", created_by="system:incident-coverage",
+        status="pending_review", revision=1, created_by="system:incident-coverage",
         review_reason="incident_coverage:v1",
     )
     db.add(record)
