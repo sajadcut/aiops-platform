@@ -259,33 +259,203 @@
 }
 
 
-/* Operator-only dismissal: never delete an Incident or alter its approvals,
-   monitoring, audit history, operational knowledge or source KPIs. */
+/* Incident dismissal / restore — discreet and theme-native in RTL or LTR.
+   The list uses a real 2-column grid. The control is never a floating second
+   row, never inside a link, and never relies on native button appearance. */
 .incident-dismiss-shell{position:relative;min-width:0}
-.incident-dismiss-shell > .incident-queue-card{height:100%;padding-inline-end:55px}
+.incident-dismiss-shell > .incident-queue-card{
+  height:100%;
+  padding-inline-start:57px;
+}
 .incident-dismiss-btn{
-  position:absolute;z-index:2;inset-inline-end:11px;top:11px;
-  display:grid;place-items:center;width:31px;height:31px;
-  border:1px solid var(--line);border-radius:9px;
-  background:var(--surface);color:var(--muted);cursor:pointer;
-  font-size:22px;line-height:1;transition:border-color .15s,background .15s,color .15s;
+  appearance:none;
+  -webkit-appearance:none;
+  position:absolute;
+  inset-inline-start:13px;
+  inset-inline-end:auto;
+  top:13px;
+  z-index:2;
+  display:grid;
+  place-items:center;
+  width:34px;
+  height:34px;
+  min-width:34px;
+  min-height:34px;
+  margin:0;
+  padding:0;
+  border:1px solid transparent;
+  border-radius:10px;
+  background:color-mix(in srgb,var(--surface) 85%,transparent);
+  color:var(--muted);
+  font:inherit;
+  line-height:1;
+  box-shadow:none;
+  cursor:pointer;
+  opacity:.88;
+  transition:color .15s ease,background-color .15s ease,border-color .15s ease,opacity .15s ease;
 }
-.incident-dismiss-btn:hover{color:var(--text);border-color:var(--blue);background:var(--accent-soft)}
-.incident-dismiss-btn:focus-visible,.incident-hidden-toggle:focus-visible,
-.incident-hidden-restore-all:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.incident-dismiss-btn svg{display:block;pointer-events:none;flex:none}
+.incident-dismiss-btn:hover{
+  color:var(--red);
+  background:var(--red-soft);
+  border-color:color-mix(in srgb,var(--red) 30%,transparent);
+  opacity:1;
+}
+.incident-dismiss-btn[data-incident-operation="restore"]:hover{
+  color:var(--blue);
+  background:var(--accent-soft);
+  border-color:color-mix(in srgb,var(--blue) 30%,transparent);
+}
+.incident-dismiss-btn:focus-visible,
+.incident-hidden-toggle:focus-visible,
+.incident-hidden-restore-all:focus-visible{
+  outline:2px solid var(--blue);
+  outline-offset:3px;
+  opacity:1;
+}
+@media(hover:none){.incident-dismiss-btn{opacity:1}}
+@media(prefers-reduced-motion:reduce){.incident-dismiss-btn{transition:none}}
 .incident-hidden-toggle,.incident-hidden-restore-all{
-  border:1px solid var(--line);border-radius:9px;
-  background:var(--surface-2);color:var(--text);padding:8px 11px;
-  font:inherit;font-size:12px;cursor:pointer
+  appearance:none;
+  border:1px solid var(--line);
+  border-radius:10px;
+  background:var(--surface-2);
+  color:var(--muted);
+  padding:8px 12px;
+  font:inherit;
+  font-size:12px;
+  font-weight:700;
+  cursor:pointer;
+  transition:background-color .15s,color .15s,border-color .15s;
 }
-.incident-hidden-toggle[aria-pressed="true"]{border-color:var(--blue);background:var(--accent-soft)}
+.incident-hidden-toggle:hover,.incident-hidden-restore-all:hover{
+  color:var(--text);
+  background:var(--accent-soft);
+  border-color:var(--blue);
+}
+.incident-hidden-toggle[aria-pressed="true"]{
+  border-color:var(--blue);
+  background:var(--accent-soft);
+  color:var(--blue)
+}
 .incident-hidden-restore-all[hidden]{display:none}
-.incident-cards[data-size="list"] .incident-dismiss-row{min-width:1050px}
-.incident-cards[data-size="list"] .incident-dismiss-row > .incident-list-row{
-  padding-inline-end:55px;min-width:1050px
+
+/* Windows-style list: the button owns the RIGHT (inline-start) 50px cell.
+   Every Incident is precisely ONE row, including under horizontal scroll. */
+.incident-cards[data-size="list"] .incident-list-header,
+.incident-cards[data-size="list"] .incident-dismiss-row{
+  display:grid;
+  grid-template-columns:50px minmax(0,1fr);
+  gap:0;
+  align-items:center;
+  min-width:1120px;
+  box-sizing:border-box;
 }
-.incident-cards[data-size="list"] .incident-dismiss-btn{top:50%;transform:translateY(-50%)}
+.incident-cards[data-size="list"] .incident-list-header{
+  padding:0;
+  border-radius:11px 11px 0 0;
+  overflow:hidden;
+}
+.incident-list-action-heading{
+  font-size:10px;
+  font-weight:750;
+  text-align:center;
+  color:var(--muted);
+  padding-inline:2px;
+}
+.incident-list-header-main{
+  display:grid;
+  grid-template-columns:minmax(165px,1.15fr) minmax(190px,1.8fr) 85px 120px minmax(170px,1.05fr) minmax(145px,1fr) 85px;
+  gap:12px;
+  align-items:center;
+  min-width:0;
+  padding:12px 14px;
+}
+.incident-cards[data-size="list"] .incident-dismiss-row{
+  border-bottom:1px solid var(--line);
+  border-inline-start:3px solid transparent;
+  background:var(--surface);
+  transition:background-color .15s ease;
+}
+.incident-cards[data-size="list"] .incident-dismiss-row:nth-of-type(odd){
+  background:color-mix(in srgb,var(--surface-2) 40%,var(--surface))
+}
+.incident-cards[data-size="list"] .incident-dismiss-row:hover{
+  background:var(--accent-soft)
+}
+.incident-cards[data-size="list"] .incident-dismiss-row.needs-decision{
+  border-inline-start-color:var(--amber);
+  background:color-mix(in srgb,var(--amber) 6%,var(--surface))
+}
+.incident-cards[data-size="list"] .incident-dismiss-row:focus-within{
+  outline:1px solid var(--blue);
+  outline-offset:-1px;
+  position:relative;
+  z-index:1;
+}
+.incident-cards[data-size="list"] .incident-dismiss-row > .incident-list-row{
+  display:grid;
+  grid-template-columns:minmax(165px,1.15fr) minmax(190px,1.8fr) 85px 120px minmax(170px,1.05fr) minmax(145px,1fr) 85px;
+  gap:12px;
+  align-items:center;
+  min-width:0;
+  width:100%;
+  box-sizing:border-box;
+  min-height:62px;
+  padding:12px 14px;
+  margin:0;
+  border:0;
+  border-radius:0;
+  background:transparent;
+  color:var(--text);
+  box-shadow:none;
+}
+.incident-cards[data-size="list"] .incident-dismiss-row > .incident-list-row:hover,
+.incident-cards[data-size="list"] .incident-dismiss-row > .incident-list-row:focus-visible{
+  background:transparent;
+  outline:none;
+}
+.incident-cards[data-size="list"] .incident-dismiss-row > .incident-dismiss-btn{
+  position:static;
+  transform:none;
+  inset:auto;
+  grid-column:1;
+  grid-row:1;
+  width:32px;
+  height:32px;
+  min-width:32px;
+  min-height:32px;
+  margin:auto;
+  padding:0;
+  background:transparent;
+  border-color:transparent;
+  border-radius:9px;
+  box-shadow:none;
+}
+.incident-cards[data-size="list"] .incident-dismiss-row > .incident-list-row{
+  grid-column:2;
+  grid-row:1;
+}
+.incident-cards[data-size="list"] .incident-dismiss-row > .incident-dismiss-btn:hover{
+  background:var(--red-soft);
+  border-color:color-mix(in srgb,var(--red) 30%,transparent)
+}
+.incident-cards[data-size="list"] .incident-dismiss-row > .incident-dismiss-btn[data-incident-operation="restore"]:hover{
+  background:var(--accent-soft);
+  border-color:color-mix(in srgb,var(--blue) 30%,transparent)
+}
+.incident-cards[data-size="small"] .incident-dismiss-shell > .incident-queue-card{
+  padding-inline-start:48px;
+}
+.incident-cards[data-size="small"] .incident-dismiss-btn{
+  top:9px;
+  inset-inline-start:8px;
+  width:30px;
+  height:30px;
+  min-width:30px;
+  min-height:30px;
+}
 @media(max-width:650px){
-  .incident-dismiss-shell > .incident-queue-card{padding-inline-end:52px}
-  .incident-cards[data-size="small"] .incident-dismiss-shell > .incident-queue-card{padding-inline-end:52px}
+  .incident-dismiss-shell > .incident-queue-card{padding-inline-start:54px}
+  .incident-cards[data-size="small"] .incident-dismiss-shell > .incident-queue-card{padding-inline-start:48px}
 }
