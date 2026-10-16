@@ -375,6 +375,22 @@ async def execute_approved_remediation(approval_id: str, identity=Depends(requir
                     error_type=type(exc).__name__,
                 )
                 response["knowledge_review_status"] = "draft_retry_available"
+        # Failed attempts also deserve review. The success-only governed
+        # recovery document cannot represent them, so refresh/create the
+        # separate diagnostic incident lesson from the committed execution
+        # audit. This is best effort and never changes execution outcome.
+        from sqlalchemy.ext.asyncio import AsyncSession
+        if isinstance(db, AsyncSession):
+            try:
+                from apps.knowledge_incident_coverage import create_from_incident
+                await create_from_incident(db, UUID(incident_id))
+            except Exception as exc:
+                logger.warning(
+                    "remediation_incident_coverage_draft_failed",
+                    incident_id=incident_id, approval_id=approval_id,
+                    error_type=type(exc).__name__,
+                )
+                await db.rollback()
         return response
 
 
