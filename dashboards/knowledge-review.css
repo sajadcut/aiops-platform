@@ -5,9 +5,20 @@
 .knowledge-inline{display:flex;gap:8px;flex-wrap:wrap}
 .knowledge-inline input{flex:1;min-width:160px}
 .knowledge-layout label{display:block;color:var(--muted);font-size:12px;margin:12px 0 6px}
+.knowledge-filters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 12px;margin:12px 0}
+.knowledge-filters label{margin:0;font-weight:600}
+.knowledge-filters select,.knowledge-filters input{display:block;width:100%;min-width:0;margin-top:6px;padding:9px 10px;border:1px solid var(--line-strong);border-radius:9px;background:var(--surface-2);color:var(--text);font:inherit;font-weight:400}
+.knowledge-filters :is(select,input):focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.knowledge-queue-summary{font-size:12px;color:var(--muted);line-height:1.7;margin:8px 0 12px}
+.knowledge-queue-metadata{display:flex;align-items:center;flex-wrap:wrap;gap:5px 8px;font-size:11px;color:var(--muted);line-height:1.75}
+.knowledge-queue-metadata time{direction:rtl;unicode-bidi:isolate}
+.knowledge-queue-item:hover{border-color:var(--line-strong);background:var(--surface-3)}
+.knowledge-queue-item.selected:hover{border-color:var(--blue);background:var(--accent-soft)}
+.knowledge-queue-item:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+@media(max-width:580px){.knowledge-filters{grid-template-columns:1fr}}
 .knowledge-layout input,.knowledge-layout textarea{width:100%;min-width:0;box-sizing:border-box;background:var(--surface-2);border:1px solid var(--line-strong);border-radius:8px;color:var(--text);padding:10px;font:inherit}
 .knowledge-layout textarea{line-height:1.65;resize:vertical;white-space:pre-wrap;direction:auto;unicode-bidi:plaintext}
-.knowledge-layout input:focus-visible,.knowledge-layout textarea:focus-visible,.knowledge-layout button:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.knowledge-layout input:focus-visible,.knowledge-layout select:focus-visible,.knowledge-layout textarea:focus-visible,.knowledge-layout button:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
 .knowledge-layout button{cursor:pointer}
 .knowledge-inline button,.knowledge-manual button,.knowledge-actions button{background:var(--surface-3);border:1px solid var(--line-strong);border-radius:8px;padding:9px 12px;color:var(--text)}
 .knowledge-queue{max-height:70vh;overflow:auto;display:flex;flex-direction:column;gap:8px}

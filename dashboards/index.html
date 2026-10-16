@@ -21,7 +21,7 @@
   <link rel="stylesheet" href="/dashboard/control-center.css?v=20261016-dismiss-ux2">
   <link rel="stylesheet" href="/dashboard/approval-actions.css">
   <link rel="stylesheet" href="/dashboard/decision-brief.css">
-  <link rel="stylesheet" href="/dashboard/knowledge-review.css">
+  <link rel="stylesheet" href="/dashboard/knowledge-review.css?v=20261016-knowledge2">
   <!-- Load typography last so application CSS cannot override the Persian font. -->
   <link rel="stylesheet" href="/dashboard/fonts.css?v=2">
 </head>
@@ -36,7 +36,7 @@
       <button data-view="services" onclick="setView('services')"><span>▦</span>سرویس‌ها</button>
       <button data-view="agents" onclick="setView('agents')"><span>◎</span>ایجنت‌ها و تحلیل علت</button>
       <button data-view="mcp" onclick="setView('mcp')"><span>◇</span>زیرساخت MCP</button>
-      <button data-view="knowledge" onclick="setView('knowledge')"><span>▤</span>بازبینی دانش</button>
+      <button data-view="knowledge" onclick="setView('knowledge')"><span>▤</span>پایگاه دانش</button>
       <button data-view="audit" onclick="setView('audit')"><span>▣</span>ممیزی و حاکمیت</button>
     </nav>
     <div class="sidebar-spacer"></div>
@@ -157,10 +157,47 @@
     </section>
 
     <section class="view" data-view="knowledge">
-      <div class="policy-banner"><div><span class="section-kicker">دانش سازمانی تحت نظارت کاگنیا</span><h2>بازبینی دانش</h2><p>گزارش همهٔ رخدادها، حتی بدون بازیابی موفق یا علت قطعی، به‌عنوان پیش‌نویس تشخیصی قابل بازبینی است. شما تصمیم می‌گیرید ذخیره و منتشر شود یا رد گردد؛ انتشار خودکار نیست.</p></div><div class="policy-chips"><span>در انتظار بازبینی</span><span>اولویت با شواهد</span><span>تأیید انسانی</span><span>پایگاه دانش کاگنیا شمارهٔ ۱</span></div></div>
+      <div class="policy-banner"><div><span class="section-kicker">دانش سازمانی تحت نظارت کاگنیا</span><h2>پایگاه دانش</h2><p>گزارش همهٔ رخدادها، حتی بدون بازیابی موفق یا علت قطعی، به‌عنوان پیش‌نویس تشخیصی قابل بازبینی است. شما تصمیم می‌گیرید ذخیره و منتشر شود یا رد گردد؛ انتشار خودکار نیست.</p></div><div class="policy-chips"><span>در انتظار بازبینی</span><span>اولویت با شواهد</span><span>تأیید انسانی</span><span>پایگاه دانش کاگنیا شمارهٔ ۱</span></div></div>
       <div class="knowledge-layout">
         <section class="panel">
-          <div class="panel-head"><div><span class="section-kicker">صف بررسی</span><h2>دانش در انتظار بازبینی <span id="knowledgePendingCount" class="pill">—</span></h2></div><button type="button" class="approval-btn" onclick="loadKnowledgeReviews()">به‌روزرسانی</button></div>
+          <div class="panel-head"><div><span class="section-kicker">پیش‌نویس‌ها و سوابق</span><h2>موارد پایگاه دانش <span id="knowledgePendingCount" class="pill">—</span></h2></div><button type="button" class="approval-btn" onclick="loadKnowledgeReviews()">به‌روزرسانی</button></div>
+          <div class="knowledge-filters" role="group" aria-label="مرتب‌سازی و پالایش پایگاه دانش">
+            <label for="knowledgeSort">مرتب‌سازی
+              <select id="knowledgeSort">
+                <option value="created_desc">جدیدترین ثبت‌شده</option>
+                <option value="created_asc">قدیمی‌ترین ثبت‌شده</option>
+                <option value="updated_desc">آخرین به‌روزرسانی</option>
+                <option value="updated_asc">قدیمی‌ترین به‌روزرسانی</option>
+                <option value="title_asc">عنوان (الفبایی)</option>
+                <option value="status_asc">وضعیت بازبینی</option>
+              </select>
+            </label>
+            <label for="knowledgeStatusFilter">وضعیت
+              <select id="knowledgeStatusFilter">
+                <option value="">همه وضعیت‌ها</option>
+                <option value="pending_review">دانش در انتظار بازبینی</option>
+                <option value="approved">تأییدشده</option>
+                <option value="rejected">ردشده</option>
+                <option value="publish_failed">انتشار ناموفق</option>
+                <option value="publishing">در حال انتشار</option>
+                <option value="submitted">ارسال‌شده</option>
+                <option value="published">منتشرشده</option>
+              </select>
+            </label>
+            <label for="knowledgePeriod">بازهٔ ثبت
+              <select id="knowledgePeriod">
+                <option value="">همه تاریخ‌ها</option>
+                <option value="1">۲۴ ساعت اخیر</option>
+                <option value="7">۷ روز اخیر</option>
+                <option value="30">۳۰ روز اخیر</option>
+                <option value="90">۹۰ روز اخیر</option>
+              </select>
+            </label>
+            <label for="knowledgeSearch">جست‌وجو در عنوان یا شناسهٔ رخداد
+              <input id="knowledgeSearch" type="search" autocomplete="off" maxlength="100" placeholder="عنوان یا شناسهٔ رخداد">
+            </label>
+          </div>
+          <p id="knowledgeQueueSummary" class="knowledge-queue-summary" aria-live="polite">تاریخ و ساعت بر اساس زمان محلی مرورگر نمایش داده می‌شود.</p>
           <div class="knowledge-source"><label for="knowledgeMemoryId">شناسهٔ حافظهٔ عملیاتی تأییدشده</label><div class="knowledge-inline"><input id="knowledgeMemoryId" placeholder="شناسهٔ حافظه (UUID)"><button type="button" onclick="createKnowledgeFromMemory()">ساخت پیش‌نویس</button></div></div>
           <p id="knowledgeSyncCoverageStatus" class="muted" role="status">پیش‌نویس هر رخداد پس از پایان تحلیل یا هنگام همگام‌سازی سوابق، بدون انتشار خودکار، برای بازبینی ساخته می‌شود.</p>
           <button type="button" class="approval-btn" id="knowledgeSyncMoreIncidents" onclick="syncMoreIncidentKnowledge()">همگام‌سازی ۱۰۰ رخداد قدیمی‌تر برای تصمیم ذخیره یا رد</button>
@@ -197,7 +234,7 @@
 <script src="/dashboard/control-center.js?v=20261016-dismiss-ux2"></script>
 <script src="/dashboard/approval-actions.js"></script>
 <script src="/dashboard/decision-brief.js"></script>
-<script src="/dashboard/knowledge-review.js"></script>
+<script src="/dashboard/knowledge-review.js?v=20261016-knowledge2"></script>
 <script>
 (() => {
   const baseRenderOverviewForIncidentTime = window.renderOverview;

@@ -13,6 +13,27 @@
   let incidentSyncHasMore = true;
   let reviewPageCount = 1;
   let reviewHasMore = false;
+  let reviewTotal = 0;
+  let reviewSort = 'created_desc';
+  let reviewStatus = '';
+  let reviewPeriod = '';
+  let reviewQuery = '';
+  let queryTimer = null;
+  let reloadRequested = false;
+  const dateFormatter = new Intl.DateTimeFormat('fa-IR-u-ca-persian', {
+    year:'numeric', month:'2-digit', day:'2-digit',
+    hour:'2-digit', minute:'2-digit', hourCycle:'h23'
+  });
+
+  function timeLabel(value) {
+    if (!value) return '—';
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? '—' : dateFormatter.format(date);
+  }
+  function displayTime(value) {
+    return '<time datetime="'+esc(value || '')+'" title="'+esc(value || '')+'">'+
+      esc(timeLabel(value))+'</time>';
+  }
 
   const el = id => document.getElementById(id);
   const current = () => selectedDetails && selectedDetails.id === selectedId ? selectedDetails : null;
@@ -26,9 +47,10 @@
   function renderQueue() {
     const list = el('knowledgeReviewQueue');
     if (!list) return;
-    el('knowledgePendingCount').textContent =
-      String(reviews.filter(r => r.status === 'pending_review').length) +
-      (reviewHasMore ? '+' : '');
+    el('knowledgePendingCount').textContent = String(reviewTotal);
+    const summary = el('knowledgeQueueSummary');
+    if (summary) summary.textContent = 'نمایش '+reviews.length+' مورد از '+reviewTotal+
+      ' نتیجه · تاریخ و ساعت به وقت محلی مرورگر · انتشار فقط با تأیید انسانی';
     const more = el('knowledgeLoadMore');
     if (more) more.hidden = !reviewHasMore;
     const syncButton = el('knowledgeSyncMoreIncidents');
@@ -65,8 +87,10 @@
         (r.id === selectedId?'selected':'')+
         '" data-knowledge-select="'+esc(r.id)+'" aria-pressed="'+(r.id===selectedId)+'">'+
         '<span class="knowledge-queue-title">'+esc(r.title)+'</span>'+
-        '<span>'+pill(r.status)+' · '+esc(r.source_type)+' · KB #'+esc(r.kb_id)+
-        repeated+'</span></button>';
+        '<span class="knowledge-queue-metadata">'+pill(r.status)+
+        '<span>'+esc(r.source_type)+' · KB #'+esc(r.kb_id)+repeated+'</span></span>'+
+        '<span class="knowledge-queue-metadata"><span>ثبت:</span>'+displayTime(r.created_at)+
+        '<span>آخرین تغییر:</span>'+displayTime(r.updated_at)+'</span></button>';
     }).join('') || '<div class="empty-state">هنوز موردی برای بازبینی دانش ثبت نشده است.</div>';
   }
 
@@ -95,6 +119,8 @@
         <div><label>منبع</label><strong>${esc(r.source_type === 'incident' ? 'رخداد بازیابی‌شده و تأییدشده' : coverageDraft ? 'گزارش رخداد (نیازمند تصمیم ذخیره یا رد)' : r.source_type === 'incident_followup' ? 'بررسی تکمیلی رخداد (نیازمند بازبینی)' : 'دانش دستی')}</strong></div>
         <div><label>مقصد</label><strong>Cognia KB #${esc(r.kb_id)}</strong></div>
         <div><label>نسخه</label><strong>${esc(r.revision)}</strong></div>
+        <div><label>تاریخ و ساعت ثبت</label><strong>${displayTime(r.created_at)}</strong></div>
+        <div><label>آخرین به‌روزرسانی</label><strong>${displayTime(r.updated_at)}</strong></div>
         <div><label>بازبین</label><strong>${esc(r.reviewed_by || 'در انتظار بازبینی')}</strong></div>
         <div><label>رخداد</label><strong>${esc(r.incident_id || '—')}</strong></div>
         <div><label>حافظهٔ عملیاتی</label><strong>${esc(r.memory_id || '—')}</strong></div>
@@ -147,7 +173,10 @@
   }
 
   async function reload(preferred = selectedId) {
-    if (loading) return;
+    if (loading) {
+      reloadRequested = true;
+      return;
+    }
     loading = true;
     try {
       // A prior approved Restart can be recorded in Audit and Operational
@@ -189,8 +218,15 @@
       const collected = [];
       reviewHasMore = false;
       for (let page = 0; page < reviewPageCount; page++) {
-        const result = await api('/api/v1/knowledge-reviews?limit=100&offset='+(page*100));
+        const params = new URLSearchParams({
+          limit:'100', offset:String(page*100), sort_by:reviewSort
+        });
+        if (reviewStatus) params.set('status', reviewStatus);
+        if (reviewPeriod) params.set('period_days', reviewPeriod);
+        if (reviewQuery) params.set('q', reviewQuery);
+        const result = await api('/api/v1/knowledge-reviews?'+params.toString());
         collected.push(...(result.items || []));
+        reviewTotal = Number(result.total ?? collected.length);
         reviewHasMore = result.has_more === true;
         if (!reviewHasMore) break;
       }
@@ -204,6 +240,10 @@
       notice('بازبینی دانش در دسترس نیست: ' + err.message);
     } finally {
       loading = false;
+      if (reloadRequested) {
+        reloadRequested = false;
+        void reload();
+      }
     }
   }
 
@@ -282,6 +322,26 @@
       actionPending = false;
     }
   }
+
+  function applyQueueFilters() {
+    reviewSort = el('knowledgeSort')?.value || 'created_desc';
+    reviewStatus = el('knowledgeStatusFilter')?.value || '';
+    reviewPeriod = el('knowledgePeriod')?.value || '';
+    reviewQuery = el('knowledgeSearch')?.value.trim() || '';
+    reviewPageCount = 1;
+    void reload();
+  }
+
+  document.addEventListener('change', e => {
+    if (['knowledgeSort', 'knowledgeStatusFilter', 'knowledgePeriod'].includes(e.target.id)) {
+      applyQueueFilters();
+    }
+  });
+  document.addEventListener('input', e => {
+    if (e.target.id !== 'knowledgeSearch') return;
+    window.clearTimeout(queryTimer);
+    queryTimer = window.setTimeout(applyQueueFilters, 320);
+  });
 
   window.loadKnowledgeReviews = reload;
   window.loadMoreKnowledgeReviews = async () => {

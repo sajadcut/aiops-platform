@@ -4,10 +4,11 @@ from __future__ import annotations
 import json
 from datetime import datetime, timedelta, timezone
 from uuid import UUID, uuid4
+from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
-from sqlalchemy import select, text
+from sqlalchemy import String, cast, func, or_, select, text
 
 from apps.api.database_guard import require_database_ready
 from apps.knowledge_review import (
@@ -191,22 +192,56 @@ async def reconcile_incident_coverage(
     }
 
 
+_REVIEW_SORTS = {
+    "created_desc": (KnowledgeReview.created_at.desc(), KnowledgeReview.id.desc()),
+    "created_asc": (KnowledgeReview.created_at.asc(), KnowledgeReview.id.asc()),
+    "updated_desc": (KnowledgeReview.updated_at.desc(), KnowledgeReview.id.desc()),
+    "updated_asc": (KnowledgeReview.updated_at.asc(), KnowledgeReview.id.asc()),
+    "title_asc": (KnowledgeReview.title.asc(), KnowledgeReview.id.asc()),
+    "status_asc": (KnowledgeReview.status.asc(), KnowledgeReview.created_at.desc(), KnowledgeReview.id.desc()),
+}
+
+
 @router.get("/knowledge-reviews", dependencies=[Depends(require_permission("knowledge:draft"))])
-async def list_reviews(status: str | None = Query(default=None), limit: int = Query(default=50, ge=1, le=100), offset: int = Query(default=0, ge=0, le=1000000)):
+async def list_reviews(
+    status: str | None = Query(default=None),
+    limit: int = Query(default=50, ge=1, le=100),
+    offset: int = Query(default=0, ge=0, le=1000000),
+    sort_by: Literal["created_desc", "created_asc", "updated_desc", "updated_asc",
+                     "title_asc", "status_asc"] = Query(default="created_desc"),
+    period_days: int | None = Query(default=None, ge=1, le=365),
+    q: str | None = Query(default=None, max_length=100),
+):
+    filters = []
+    if status:
+        filters.append(KnowledgeReview.status == status)
+    if period_days is not None:
+        filters.append(KnowledgeReview.created_at >=
+                       datetime.now(timezone.utc) - timedelta(days=period_days))
+    if q and q.strip():
+        # Escape LIKE metacharacters; a query is literal, not a wildcard scan.
+        escaped = q.strip().replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+        pattern = "%" + escaped + "%"
+        filters.append(or_(
+            KnowledgeReview.title.ilike(pattern, escape="\\"),
+            cast(KnowledgeReview.incident_id, String).ilike(pattern, escape="\\"),
+        ))
     async with AsyncSessionLocal() as db:
         await require_database_ready(db, operation="knowledge_review_list")
-        statement = select(KnowledgeReview)
-        if status:
-            statement = statement.where(KnowledgeReview.status == status)
+        statement = select(KnowledgeReview).where(*filters)
         rows = (await db.execute(statement.order_by(
-            KnowledgeReview.created_at.desc(), KnowledgeReview.id.desc()
+            *_REVIEW_SORTS[sort_by]
         ).offset(offset).limit(limit + 1))).scalars().all()
-        # The queue is metadata-only. Full draft text is fetched on explicit
-        # review selection, not multiplied by 100 in polling responses.
+        total = (await db.execute(
+            select(func.count()).select_from(KnowledgeReview).where(*filters)
+        )).scalar_one()
+        # Sorting and filtering run in PostgreSQL BEFORE pagination. The list
+        # stays metadata-only; full text is returned on explicit selection.
         return {"items": [
             {key: value for key, value in review_summary(row).items() if key != "content"}
             for row in rows[:limit]
-        ], "has_more": len(rows) > limit,
+        ], "total": total, "sort_by": sort_by,
+           "has_more": len(rows) > limit,
            "next_offset": offset + min(len(rows), limit)}
 
 

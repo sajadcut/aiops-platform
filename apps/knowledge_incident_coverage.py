@@ -6,6 +6,7 @@ runbook. No MCP or Cognia call occurs in this module.
 """
 from __future__ import annotations
 
+import asyncio
 import json
 from uuid import UUID, NAMESPACE_URL, uuid4, uuid5
 
@@ -196,3 +197,68 @@ async def draft_incident_best_effort(incident_id: str) -> None:
     except Exception as exc:
         logger.warning("incident_knowledge_draft_failed",
                        incident_id=incident_id, error_type=type(exc).__name__)
+
+
+async def reconcile_incident_batch(*, offset: int = 0, limit: int = 50) -> dict:
+    """Bounded, idempotent repair of missed incident drafts, without Cognia writes.
+
+    A separate database session per incident keeps a failed draft from
+    poisoning the rest of the batch. Later sweeps retry failed items.
+    """
+    from database import AsyncSessionLocal
+    from apps.api.database_guard import require_database_ready
+    from domain.contracts.logging import logger
+
+    if not settings.COGNIA_KNOWLEDGE_BASE_IDS or not settings.COGNIA_CLIENT_APPLICATION_ID:
+        return {"scanned": 0, "has_more": False, "failed": 0, "skipped": "cognia_not_configured"}
+    async with AsyncSessionLocal() as session:
+        await require_database_ready(session, operation="knowledge_incident_background_reconcile")
+        ids = (await session.execute(
+            select(Incident.id).order_by(Incident.created_at.desc(), Incident.id.desc())
+            .offset(offset).limit(limit + 1)
+        )).scalars().all()
+
+    failed = 0
+    for incident_id in ids[:limit]:
+        try:
+            async with AsyncSessionLocal() as session:
+                await create_from_incident(session, incident_id)
+        except asyncio.CancelledError:
+            raise
+        except Exception as exc:
+            failed += 1
+            logger.warning("incident_knowledge_reconcile_item_failed",
+                           incident_id=str(incident_id), error_type=type(exc).__name__)
+    return {"scanned": min(len(ids), limit), "has_more": len(ids) > limit,
+            "failed": failed}
+
+
+async def reconcile_incidents_forever() -> None:
+    """Self-heal after ingestion/runtime crashes without waiting for a UI visit.
+
+    All workers may run this task. Stable IDs and transactional advisory locks
+    enforce idempotence across replicas, and each batch is rate-limited.
+    No approval, publication, or target-system execution is performed.
+    """
+    from domain.contracts.logging import logger
+
+    offset = 0
+    await asyncio.sleep(30)
+    while True:
+        try:
+            result = await reconcile_incident_batch(offset=offset)
+            if result["failed"]:
+                logger.warning("incident_knowledge_reconcile_batch_partial",
+                               offset=offset, failed=result["failed"])
+            if result["has_more"]:
+                offset += result["scanned"]
+                await asyncio.sleep(20)
+            else:
+                offset = 0
+                await asyncio.sleep(600)
+        except asyncio.CancelledError:
+            raise
+        except Exception as exc:
+            logger.warning("incident_knowledge_reconcile_batch_unavailable",
+                           offset=offset, error_type=type(exc).__name__)
+            await asyncio.sleep(60)

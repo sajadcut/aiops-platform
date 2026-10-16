@@ -314,3 +314,40 @@ def test_zabbix_recovery_and_failed_remediation_both_offer_local_review_drafts()
         "from apps.knowledge_incident_coverage import create_from_incident"
     )
     assert "remediation_incident_coverage_draft_failed" in remediation
+
+
+def test_knowledge_sort_and_filters_apply_before_database_pagination():
+    from apps.api.knowledge_reviews import _REVIEW_SORTS
+    assert set(_REVIEW_SORTS) == {
+        "created_desc", "created_asc", "updated_desc", "updated_asc",
+        "title_asc", "status_asc",
+    }
+    assert "created_at DESC" in str(_REVIEW_SORTS["created_desc"][0])
+    assert "created_at ASC" in str(_REVIEW_SORTS["created_asc"][0])
+    assert "updated_at DESC" in str(_REVIEW_SORTS["updated_desc"][0])
+    api = (ROOT / "apps/api/knowledge_reviews.py").read_text(encoding="utf-8")
+    ui = (ROOT / "dashboards/knowledge-review.js").read_text(encoding="utf-8")
+    html = (ROOT / "dashboards/index.html").read_text(encoding="utf-8")
+    assert "statement.order_by(" in api
+    assert "*_REVIEW_SORTS[sort_by]" in api
+    assert "func.count()" in api and '"total": total' in api
+    assert "period_days" in api and "KnowledgeReview.title.ilike" in api
+    assert "sort_by:reviewSort" in ui and "reviewPageCount = 1" in ui
+    assert "fa-IR-u-ca-persian" in ui
+    assert "displayTime(r.created_at)" in ui and "displayTime(r.updated_at)" in ui
+    assert 'id="knowledgeSort"' in html and 'id="knowledgePeriod"' in html
+    assert 'id="knowledgeSearch"' in html and "پایگاه دانش" in html
+
+
+def test_background_reconciliation_is_bounded_and_governed():
+    cov = (ROOT / "apps/knowledge_incident_coverage.py").read_text(encoding="utf-8")
+    main = (ROOT / "apps/api/main.py").read_text(encoding="utf-8")
+    assert "async def reconcile_incident_batch(" in cov
+    assert ".offset(offset).limit(limit + 1)" in cov
+    assert "await create_from_incident(session, incident_id)" in cov
+    assert "async def reconcile_incidents_forever()" in cov
+    assert "await asyncio.sleep(600)" in cov
+    assert "asyncio.create_task(" in main
+    assert "task.cancel()" in main
+    assert "CogniaClient()" not in cov
+    assert 'status="pending_review"' in cov

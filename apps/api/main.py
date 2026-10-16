@@ -1,3 +1,5 @@
+import asyncio
+
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
@@ -396,9 +398,24 @@ async def startup_event():
 
     logger.info("execution_tools_available", tools=tool_registry.list_tools())
 
+    # Repair missed local knowledge drafts even when no operator opens the UI.
+    # Never publishes or approves in Cognia. Keep startup non-blocking.
+    if settings.COGNIA_KNOWLEDGE_BASE_IDS and settings.COGNIA_CLIENT_APPLICATION_ID:
+        from apps.knowledge_incident_coverage import reconcile_incidents_forever
+        app.state.incident_knowledge_task = asyncio.create_task(
+            reconcile_incidents_forever(), name="incident-knowledge-reconciliation"
+        )
+
 
 @app.on_event("shutdown")
 async def shutdown_event():
+    task = getattr(app.state, "incident_knowledge_task", None)
+    if task and not task.done():
+        task.cancel()
+        try:
+            await task
+        except asyncio.CancelledError:
+            pass
     logger.info("application_shutting_down", app=settings.APP_NAME)
 
 
