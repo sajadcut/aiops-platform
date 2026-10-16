@@ -45,11 +45,12 @@ async def test_explicit_full_file_llm_receives_verified_appsettings_not_first_js
         assert kwargs["path"] == "/data/gfp/gfpapi/appsettings.json"
         assert base64.b64decode(encoded).startswith(b'{"app":"gfpapi"')
         return {"status": "llm_candidate_proposed", "success": True,
+                "config_file": kwargs["path"],
                 "source_hash": "a"*64, "candidate_hash": "b"*64}
     monkeypatch.setattr(connector, "_run", read)
     monkeypatch.setattr(mod, "review_complete_config", repair)
     result = await connector.service_config_llm_repair("10.248.16.82", "gfpapi")
-    assert result["config_file"] == "/data/gfp/gfpapi/appsettings.json" if "config_file" in result else True
+    assert result["config_file"] == "/data/gfp/gfpapi/appsettings.json"
     assert result["selected_by"] == "verified_dotnet_appsettings"
     assert len(seen) == 2
     assert "/MessageTemplates.json" not in seen[0][1]
