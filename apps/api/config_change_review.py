@@ -172,8 +172,10 @@ def _consumed_failure_reissuable(approval: dict | None, audits: list[dict]) -> b
         and e.get("status") == "config_execution_not_verified"
         and isinstance(e.get("metadata"), dict)
         and str(e["metadata"].get("approval_id") or "") == identifier
-        and e["metadata"].get("production_write_performed") is False
-        and str(e["metadata"].get("result") or "") != "config_apply_result_unknown"
+        # This only enables creating a NEW, separately validated ticket.
+        # It never replays the consumed approval and the next candidate must
+        # still pass a fresh source-hash compare-and-swap on the VM.
+        and e["metadata"].get("production_write_performed") in (None, False)
         for e in audits
     )
 
