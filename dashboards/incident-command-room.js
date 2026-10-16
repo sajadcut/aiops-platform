@@ -1905,9 +1905,55 @@
     return true;
   }
 
+  function renderRemediationActions(r) {
+    const root=$('#ic-remediation-actions');
+    if(!root)return;
+    const items=arr(r.remediation_opportunities);
+    const fa=state.language==='fa';
+    if(!items.length){
+      root.innerHTML='<p class="ic-empty">'+esc(fa?
+        'برای این رخداد، یافتهٔ مستقل دیگری که راهکار عملیاتی آن از شواهد VM تأیید شده باشد ثبت نشده است.':
+        'No further evidence-bound repair opportunity is recorded.')+'</p>';
+      return;
+    }
+    const warnings={
+      approval_path_available:fa?'مسیر بازبینی و تأیید کانفیگ موجود است':'Config review/approval path available',
+      candidate_required:fa?'نیازمند نسخه اصلاحی معتبر':'Valid candidate required',
+      independent_approval_required:fa?'نیازمند Approval مستقل':'Separate approval required',
+      executor_unavailable:fa?'مسیر اجرای امن هنوز پیاده‌سازی نشده':'Governed execution is not available',
+    };
+    root.innerHTML='<h3>'+esc(fa?
+      'مسیر اصلاح هر مشکل مستقل':'Independent remediation paths')+'</h3>'+
+      '<p class="ic-agent-disclaimer">'+esc(fa?
+        'هر یافته Approval و پیش‌شرط مستقل دارد. مشاهده خطا یا موفقیت یک اصلاح، مجوز حذف فایل، تغییر سیستم یا اجرای اقدام دیگر نیست.':
+        'Each finding has its own prerequisites and authority. One completed change never authorizes other operations.')+'</p>'+
+      items.map(item=>{
+        const action=low(item.action);
+        const href=action==='config_review'?'#ic-ai-proposed-fix':
+          action==='service_recheck'?'#ic-service-status':'#ic-disk-forensics';
+        const actionText=action==='config_review'?(fa?'بررسی اصلاح و Approval':'Review repair and approval'):
+          action==='service_recheck'?(fa?'بررسی زندهٔ سرویس':'Check live service state'):
+          (fa?'مشاهده بررسی فایل‌های دیسک':'Inspect disk evidence');
+        const title=fa?item.title_fa:item.title_en;
+        const finding=fa?item.finding_fa:item.finding_en;
+        const plan=fa?item.remediation_fa:item.remediation_en;
+        const blocker=fa?item.blocker_fa:item.blocker_en;
+        const more=action==='disk_investigation'?
+          ' <button type="button" class="ic-btn ic-btn-muted" data-incident-chat-prompt="disk">'+
+          esc(fa?'تحلیل اصلاح امن با LLM':'Analyze safe repair with LLM')+'</button>':'';
+        return '<article class="ic-detail-card"><h4>'+txt(title)+'</h4>'+
+          '<p>'+txt(finding)+'</p><p>'+txt(plan)+'</p>'+
+          '<p class="ic-meta">'+txt(warnings[item.status]||item.status)+'</p>'+
+          (blocker?'<p class="ic-warning">'+txt(blocker)+'</p>':'')+
+          '<a class="ic-btn ic-btn-primary" href="'+href+'">'+esc(actionText)+'</a>'+
+          more+'</article>';
+      }).join('');
+  }
+
   function renderOverview(r) {
     const i=r.incident_summary||{},act=r.remediation_recommendation||{},a=r.approval_readiness||{};
     renderIntelligenceReport(r);
+    renderRemediationActions(r);
     renderOperationalSummary(r);
     renderOperatorDiagnosis(r);
     renderMemoryForensics(r);
@@ -4261,9 +4307,9 @@
       const prompt=e.target.closest('[data-incident-chat-prompt]');
       if(prompt){
         const suggestions={
-          fa:{plan:'بر اساس شواهد همین رخداد، سه بررسی read-only بعدی را به ترتیب اولویت پیشنهاد بده؛ برای هرکدام توضیح بده چه چیزی را تأیید یا رد می‌کند و از کدام MCP باید استفاده شود. هیچ عملیاتی اجرا نکن.',start:'با توجه به وضعیت ثبت‌شده و احتمال Stop دستی، مقایسه کن Start یا Restart کدام منطقی‌تر است؛ پیش‌شرط‌ها، ناسازگاری با Runbook و Verification را بگو. فقط پیشنهاد بده، اجرا نکن.',error:'علت اصلی این رخداد از شواهد و تحلیل Agentها چیست؟',config:'کانفیگ همین سرویس را از VM MCP بررسی کن و خطا را بگو.',
+          fa:{disk:'در این رخداد Mount /var/log پر شده است. با استفاده از شواهد ثبت‌شده و استعلام‌های read-only مجاز، منشأ رشد، فعال بودن فایل‌ها، وضعیت logrotate، خطر ENOSPC و سیاست نگهداری را بررسی کن. راهکارهای غیرمخرب را به ترتیب ریسک توضیح بده. حذف فایل، truncate، rotate یا هر تغییر واقعی بدون Runbook و Approval مستقل انجام نده.',plan:'بر اساس شواهد همین رخداد، سه بررسی read-only بعدی را به ترتیب اولویت پیشنهاد بده؛ برای هرکدام توضیح بده چه چیزی را تأیید یا رد می‌کند و از کدام MCP باید استفاده شود. هیچ عملیاتی اجرا نکن.',start:'با توجه به وضعیت ثبت‌شده و احتمال Stop دستی، مقایسه کن Start یا Restart کدام منطقی‌تر است؛ پیش‌شرط‌ها، ناسازگاری با Runbook و Verification را بگو. فقط پیشنهاد بده، اجرا نکن.',error:'علت اصلی این رخداد از شواهد و تحلیل Agentها چیست؟',config:'کانفیگ همین سرویس را از VM MCP بررسی کن و خطا را بگو.',
               status:'وضعیت زنده سرویس این رخداد را بررسی کن.',files:'فایل‌های nginx.conf و sites-enabled همین سرویس را به صورت امن از VM MCP بخوان و خطای nginx -t و شماره خطوط را مشخص کن.',reload:'برای سرویس همین رخداد Reload پیشنهاد بده و پیش‌شرط‌های امنیتی را بگو.'},
-          en:{plan:'Suggest the next three prioritized read-only MCP checks based on this incident evidence; for each explain what it would confirm or rule out. Do not execute anything.',start:'Compare a conditional Start and Restart in light of a possible manual stop, the current runbook, required preflight and verification; do not execute.',error:'What does the incident evidence establish about the root cause?',config:'Run a read-only configuration check for the incident service.',
+          en:{disk:'Investigate the incident /var/log pressure using available read-only evidence, examine file writers, logrotate, ENOSPC and retention policy. Suggest non-destructive remediations by risk. Do not delete, truncate, rotate or edit without a separate verified runbook and approval.',plan:'Suggest the next three prioritized read-only MCP checks based on this incident evidence; for each explain what it would confirm or rule out. Do not execute anything.',start:'Compare a conditional Start and Restart in light of a possible manual stop, the current runbook, required preflight and verification; do not execute.',error:'What does the incident evidence establish about the root cause?',config:'Run a read-only configuration check for the incident service.',
               status:'Check the live service status for this incident.',files:'Inspect nginx.conf and sites-enabled configuration structure for this incident via VM MCP and report nginx -t errors.',reload:'Propose reloading the incident service and explain the safety gates.'}
         };
         $('#ic-chat-message').value=suggestions[state.language][prompt.dataset.incidentChatPrompt]||'';
