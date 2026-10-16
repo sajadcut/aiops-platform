@@ -140,3 +140,35 @@ def test_attention_queue_filters_only_visual_items_not_immutable_backend_kpis():
     assert "typeof window.isIncidentDismissed === 'function'" in js
     assert "x.incidents_active" in js
     assert "S.incidents.filter(i => visibleOnThisDashboard(i) && isOpen(i))" in js
+
+
+def test_dismiss_button_is_not_a_new_list_row_and_uses_both_theme_palettes():
+    """Regression for the screenshot showing a native × *under* each row."""
+    root = ROOT
+    html = (root / "dashboards/index.html").read_text(encoding="utf-8")
+    css = (root / "dashboards/control-center.css").read_text(encoding="utf-8")
+    list_markup = html.split("if (incidentSize === 'list') {", 1)[1].split(
+        "$('#incidentRows').innerHTML = rows.map(i => {", 1
+    )[0]
+    # Separate sibling controls: the grid holds both. Never nest the button
+    # inside the link, never put it after the row's closing wrapper.
+    assert '${dismissal(i)}<a class="incident-list-row' in list_markup
+    assert '</a></div>' in list_markup
+    assert '</a>${dismissal(i)}</div>' not in list_markup
+    assert 'incident-list-header-main' in list_markup
+    assert 'incident-list-action-heading' in list_markup
+    assert 'const icon = restoring ?' in html
+    assert '<svg aria-hidden="true"' in html
+    assert 'appearance:none;' in css
+    assert 'position:static;' in css  # inline list actions; floating for cards
+    assert 'grid-template-columns:50px minmax(0,1fr);' in css
+    assert 'grid-column:1;' in css
+    assert 'grid-column:2;' in css
+    assert 'inset-inline-start:13px;' in css  # honors RTL icon placement
+    assert 'color:var(--muted)' in css
+    assert 'background:var(--red-soft)' in css
+    assert 'color:var(--blue)' in css  # restore hover and accessible focus
+    assert 'prefers-reduced-motion:reduce' in css
+    # The previous screenshot strongly suggested stale HTML-vs-CSS bundles.
+    assert '/dashboard/control-center.css?v=20261016-dismiss-ux2' in html
+    assert '/dashboard/control-center.js?v=20261016-dismiss-ux2' in html
