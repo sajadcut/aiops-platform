@@ -249,6 +249,26 @@ async def refresh_review_evidence(review_id: UUID,
             raise HTTPException(409, "knowledge_draft_not_safe_to_regenerate")
         if row.revision != payload.expected_revision:
             raise HTTPException(409, "review_revision_conflict")
+        if row.created_by == "system:incident-coverage":
+            if (row.review_reason != "incident_coverage:v1"
+                    or row.content_hash != content_digest(row.title, row.content)):
+                raise HTTPException(409, "incident_coverage_revision_manually_changed")
+            from apps.knowledge_incident_coverage import _source_document
+            from domain.models import Incident
+            incident = await db.get(Incident, row.incident_id)
+            if incident is None:
+                raise HTTPException(404, "incident_not_found")
+            title, content = await _source_document(db, incident)
+            if content_digest(title, content) != row.content_hash:
+                row.title, row.content = title, content
+                row.content_hash = content_digest(title, content)
+                row.revision += 1
+                await _audit(db, row, actor.subject, "evidence_refreshed")
+                await db.commit()
+                await db.refresh(row)
+            response = review_summary(row)
+            response["incident_dossier"] = await incident_dossier(db, row.incident_id)
+            return response
         dossier = await incident_dossier(db, row.incident_id)
         addendum = dossier_addendum(dossier)
         if not addendum:
