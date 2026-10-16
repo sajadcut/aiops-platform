@@ -23,6 +23,10 @@ const fmtDate = v => v ? new Date(v).toLocaleString('fa-IR') : '—';
 const fmtShortDate = v => v ? new Date(v).toLocaleString('fa-IR', {month:'short',day:'2-digit',hour:'2-digit',minute:'2-digit'}) : '—';
 const pct = v => `${Math.round((Number(v) || 0) * 100)}%`;
 const isOpen = i => !['closed', 'resolved'].includes(lower(i.status));
+const visibleOnThisDashboard = i => !(
+  typeof window.isIncidentDismissed === 'function' &&
+  window.isIncidentDismissed(i.id)
+);
 const THEME_STORAGE = 'aiops.chatbot.theme';
 
 function initialTheme() {
@@ -299,7 +303,7 @@ function renderOverview() {
   $('#platformVersion').textContent = S.health?.version || '—';
   $('#lastUpdated').textContent = live ? new Date().toLocaleTimeString('fa-IR') : '—';
 
-  const attention = S.incidents.filter(i => isOpen(i) && attentionReason(i).length).sort((a, b) => attentionRank(b) - attentionRank(a));
+  const attention = S.incidents.filter(i => visibleOnThisDashboard(i) && isOpen(i) && attentionReason(i).length).sort((a, b) => attentionRank(b) - attentionRank(a));
   const atRisk = S.services.filter(s => serviceState(s) !== 'healthy');
   const degradedDeps = dependencyEntries().filter(d => !d.healthy);
   $('#attentionCount').textContent = attention.length;
@@ -342,7 +346,7 @@ function renderLifecycleSummary() {
 
 function renderSeverity() {
   const sev = {critical: 0, high: 0, medium: 0, low: 0};
-  S.incidents.filter(isOpen).forEach(i => { const s = lower(i.severity); if (sev[s] != null) sev[s]++; });
+  S.incidents.filter(i => visibleOnThisDashboard(i) && isOpen(i)).forEach(i => { const s = lower(i.severity); if (sev[s] != null) sev[s]++; });
   const total = Object.values(sev).reduce((a, b) => a + b, 0);
   const colors = {critical:'var(--red)', high:'var(--amber)', medium:'var(--blue)', low:'var(--green)'};
   $('#severityBreakdown').innerHTML = total ? Object.entries(sev).map(([k, n]) => `<div class="severity-row"><span>${esc(faStatus(k))}</span><div class="severity-bar"><i style="width:${n / total * 100}%;background:${colors[k]}"></i></div><b>${n}</b></div>`).join('') : '<div class="empty-state">رخداد فعالی وجود ندارد.</div>';
