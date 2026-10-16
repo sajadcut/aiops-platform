@@ -158,6 +158,11 @@ def test_generic_service_json_candidate_can_enter_same_approval_queue():
         "proposed_change": "remove_trailing_json_comma",
     })
     assert _matching_proposal(candidate, response("request_change_approval"))
+    candidate["proposed_change"] = "quote_unquoted_json_key"
+    assert _matching_proposal(candidate, response("request_change_approval"))
+    candidate["config_file"] = "/opt/apps/gfpapi/appsettings.conf"
+    assert not _matching_proposal(candidate, response("request_change_approval"))
+    candidate["config_file"] = "/opt/apps/gfpapi/appsettings.json"
     candidate["proposed_change"] = "remove_extra_opening_brace"
     assert not _matching_proposal(candidate, response("request_change_approval"))
 
