@@ -157,6 +157,37 @@ def local_config_review(encoded: str, *, path: str, validator_error_line: int | 
                         "redacted_diff": {"line": line_no, "before": "json_trailing_comma",
                                           "after": "json_comma_removed"},
                     })
+            if answer["status"] != "candidate_proposed":
+                from integrations.vm.json_syntax_candidate import deterministic_json_syntax_fix
+                deterministic = deterministic_json_syntax_fix(source)
+                # The shared worker helper only inserts two quotes around
+                # ONE bare key or removes ONE dangling comma. Require a
+                # completely parseable result and publish redacted metadata.
+                if deterministic is not None and (
+                    len(deterministic) == len(source) + 2
+                    or len(deterministic) == len(source) - 1
+                ):
+                    updated = deterministic
+                    is_key_quote = len(updated) == len(source) + 2
+                    diff_at = next(
+                        (i for i, (before, after) in enumerate(zip(source, updated))
+                         if before != after), min(len(source), len(updated))
+                    )
+                    line_no = source[:diff_at].count("\n") + 1
+                    answer.update({
+                        "status": "candidate_proposed",
+                        "candidate_hash": hashlib.sha256(updated.encode("utf-8")).hexdigest(),
+                        "proposed_change": ("quote_unquoted_json_key" if is_key_quote
+                                            else "remove_trailing_json_comma"),
+                        "validator_executed_on_proposal": True,
+                        "candidate_validator": "worker_python_json_syntax",
+                        "validation_status": "FORMAT_CANDIDATE_VALID_ONLY",
+                        "redacted_diff": {
+                            "line": line_no,
+                            "before": "json_unquoted_property" if is_key_quote else "json_trailing_comma",
+                            "after": "json_property_quoted" if is_key_quote else "json_comma_removed",
+                        },
+                    })
     elif ext == "xml":
         if "<!DOCTYPE" in source.upper() or "<!ENTITY" in source.upper():
             error = "xml_dtd_or_entity_not_allowed"
@@ -222,7 +253,7 @@ def local_config_review(encoded: str, *, path: str, validator_error_line: int | 
     )
     if answer["status"] == "candidate_proposed" and ext == "json":
         answer["candidate_syntax_projection"] = syntax_projection(
-            _remove_trailing_json_commas(source), extension=ext, error_line=line_no,
+            updated, extension=ext, error_line=line_no,
         )
     elif answer["status"] == "candidate_proposed" and ext == "xml":
         closing = re.search(r"</[A-Za-z][A-Za-z0-9_.:-]{0,47}>(?=\s*\Z)", source)
