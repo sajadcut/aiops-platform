@@ -1094,12 +1094,37 @@ async def queue_incident_recovery_approval(
             incident.service, evidence, context, force_live=True,
         )
         expected_state = "failed" if action == "restart_service" else "inactive"
-        if (not binding or binding.get("target") != target
-                or binding.get("service") != service
-                or binding.get("active_state") != expected_state):
+        identity_matches = bool(
+            binding and binding.get("target") == target
+            and binding.get("service") == service
+        )
+        observed_state = (
+            str(binding.get("active_state") or "")
+            if identity_matches else ""
+        )
+        if not identity_matches or observed_state != expected_state:
+            # Keep the 409 safety gate. Expose only a small, enumerated
+            # systemd state so the UI can distinguish spontaneous recovery
+            # from an unverified/mismatched VM identity. "active" is never
+            # proof that the application endpoint or Zabbix alert recovered.
+            safe_state = observed_state if observed_state in {
+                "active", "failed", "inactive", "activating",
+                "deactivating", "reloading",
+            } else None
+            reason_code = (
+                "service_active_before_approval"
+                if safe_state == "active" else
+                "service_state_changed" if identity_matches else
+                "live_identity_unverified"
+            )
             raise HTTPException(status_code=409, detail={
                 "code": "recovery_live_binding_or_state_changed",
+                "reason_code": reason_code,
                 "reason": str(diagnostic.get("status") or "unverified")[:75],
+                "expected_state": expected_state,
+                "observed_state": safe_state,
+                "execution_authority": False,
+                "application_health_verified": False,
             })
         # Reuses the existing high-risk, exact-service/target/runbook-bound
         # remediation Approval creator. It deliberately does NOT invoke an
