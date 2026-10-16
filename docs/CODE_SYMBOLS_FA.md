@@ -681,11 +681,11 @@
 | `apps/api/config_change_review.py` | `ConfigReviewResponse` | 33 | class | کلاس | module |
 | `apps/api/config_change_review.py` | `_proposal` | 42 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/config_change_review.py` | `_hash` | 53 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/config_change_review.py` | `_matching_proposal` | 63 | function | Accept only evidence-backed deterministic transformations. | module |
-| `apps/api/config_change_review.py` | `_approval_for_proposal` | 106 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/config_change_review.py` | `_review_progress` | 116 | function | Expose durable intent separately from executable Approval authority. | module |
-| `apps/api/config_change_review.py` | `get_config_review_response` | 192 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
-| `apps/api/config_change_review.py` | `post_config_review_response` | 238 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/config_change_review.py` | `_matching_proposal` | 64 | function | Accept only evidence-backed deterministic transformations. | module |
+| `apps/api/config_change_review.py` | `_approval_for_proposal` | 108 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/config_change_review.py` | `_review_progress` | 118 | function | Expose durable intent separately from executable Approval authority. | module |
+| `apps/api/config_change_review.py` | `get_config_review_response` | 194 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
+| `apps/api/config_change_review.py` | `post_config_review_response` | 240 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/dashboard.py` | `dashboard_summary` | 17 | async function | Return live PostgreSQL-backed KPIs. Database failures are never converted to fake zeroes. | module |
 | `apps/api/dashboard_incidents.py` | `dashboard_incidents` | 15 | async function | Operational incident list enriched from durable governance/audit state. | module |
 | `apps/api/dashboard_incidents.py` | `dashboard_services` | 115 | async function | Service-centric operational health derived only from durable incident/governance state. | module |
@@ -1418,7 +1418,7 @@
 | `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner._scope` | 281 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DynamicInvestigationPlanner |
 | `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner.enrich_knowledge` | 298 | async method | Query Cognia again with a verified error, preserving access scope. | DynamicInvestigationPlanner |
 | `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner.propose` | 371 | async method | LLM chooses from read-only capabilities, never arbitrary code. | DynamicInvestigationPlanner |
-| `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner.evidence_requests` | 800 | method | Convert validated enum members, never LLM text, to connector requests. | DynamicInvestigationPlanner |
+| `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner.evidence_requests` | 801 | method | Convert validated enum members, never LLM text, to connector requests. | DynamicInvestigationPlanner |
 | `apps/orchestrator/e2e_graph.py` | `E2EState` | 50 | class | کلاس | module |
 | `apps/orchestrator/e2e_graph.py` | `retain_incident_evidence_for_followup` | 81 | function | Bound agent context without losing freshly collected config proof. | module |
 | `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator` | 118 | class | کلاس | module |
@@ -2442,12 +2442,12 @@
 | `integrations/vm/general_config_review.py` | `_structural_line` | 51 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `integrations/vm/general_config_review.py` | `_remove_trailing_json_commas` | 73 | function | Only a lexical trailing comma outside JSON strings; never change values. | module |
 | `integrations/vm/general_config_review.py` | `local_config_review` | 100 | function | Review a known config source and generate only a deterministic JSON fix. | module |
-| `integrations/vm/governed_config_change.py` | `rebuild_nginx_candidate` | 24 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `integrations/vm/governed_config_change.py` | `rebuild_json_candidate` | 50 | function | Rebuild exact one-token JSON grammar correction, never values. | module |
-| `integrations/vm/governed_config_change.py` | `rebuild_xml_candidate` | 86 | function | Remove one unmatched EOF closing tag; never edit XML values or DTDs. | module |
-| `integrations/vm/governed_config_change.py` | `classify_config_guard_failure` | 131 | function | Use only fixed, operator-actionable codes; never reflect stderr. | module |
-| `integrations/vm/governed_config_change.py` | `run_governed_change` | 163 | async function | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | module |
-| `integrations/vm/governed_config_change.py` | `_start_after_approved_config_apply` | 405 | async function | Only the signed approval recovery scope authorizes a single systemd start. | module |
+| `integrations/vm/governed_config_change.py` | `rebuild_nginx_candidate` | 26 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `integrations/vm/governed_config_change.py` | `rebuild_json_candidate` | 52 | function | Rebuild exact one-token JSON grammar correction, never values. | module |
+| `integrations/vm/governed_config_change.py` | `rebuild_xml_candidate` | 92 | function | Remove one unmatched EOF closing tag; never edit XML values or DTDs. | module |
+| `integrations/vm/governed_config_change.py` | `classify_config_guard_failure` | 137 | function | Use only fixed, operator-actionable codes; never reflect stderr. | module |
+| `integrations/vm/governed_config_change.py` | `run_governed_change` | 169 | async function | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | module |
+| `integrations/vm/governed_config_change.py` | `_start_after_approved_config_apply` | 412 | async function | Only the signed approval recovery scope authorizes a single systemd start. | module |
 | `integrations/vm/json_syntax_candidate.py` | `deterministic_json_syntax_fix` | 12 | function | Repair one measured JSON grammar error; fail closed otherwise. | module |
 | `integrations/vm/json_syntax_candidate.py` | `deterministic_json_punctuation_fix` | 45 | function | Find a UNIQUE one-byte grammar-only repair near the actual JSON error. | module |
 | `integrations/vm/json_syntax_candidate.py` | `deterministic_json_punctuation_fix.local` | 85 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | deterministic_json_punctuation_fix |
