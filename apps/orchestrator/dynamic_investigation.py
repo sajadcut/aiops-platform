@@ -617,7 +617,11 @@ class DynamicInvestigationPlanner:
                     "nginx", "json_syntax", "xml_syntax",
                 } and full_repair.get("source_sha256")
                 and full_repair.get("candidate_sha256")
-                and full_repair.get("source_evidence_refs")):
+                and full_repair.get("source_evidence_refs")
+                and (result.get("config_proposal") or {}).get("status") != "candidate_proposed"):
+            # A locally reproducible, parser-proven repair must not be
+            # silently overwritten by a different LLM proposal for the
+            # same current source. Preserve one coherent hash-bound ticket.
             preview_changes = full_repair.get("redacted_changes") or []
             initial = preview_changes[0] if preview_changes else None
             result["config_proposal"] = {
