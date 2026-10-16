@@ -135,7 +135,7 @@ def _review_progress(*, status: str, decision: str | None, proposal: dict,
             "independent_candidate_validation_pending_or_failed",
             "approval_cannot_be_granted_before_validation",
         ])
-    elif not requested and proposal.get("status") != "candidate_proposed":
+    elif not requested and proposal and proposal.get("status") != "candidate_proposed":
         blocking_reasons = [
             "no_verified_config_candidate",
             "recheck_current_file_and_generate_parser_valid_repair",
@@ -179,7 +179,8 @@ def _review_progress(*, status: str, decision: str | None, proposal: dict,
         "execution_authority": False,
         "production_write_performed": False,
         "repair_attention": (
-            "candidate_not_yet_valid" if proposal.get("status") != "candidate_proposed"
+            "no_config_proposal" if not proposal
+            else "candidate_not_yet_valid" if proposal.get("status") != "candidate_proposed"
             else "candidate_ready_for_isolated_validation" if not requested
             else "independent_validation_or_human_approval"
         ),
