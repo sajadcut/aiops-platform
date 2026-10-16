@@ -169,8 +169,15 @@ class DynamicInvestigationPlanner:
                 raw.get("status") in {"llm_candidate_proposed", "candidate_storage_unavailable"}
                 and sha(raw.get("source_hash"))
                 and sha(raw.get("candidate_hash"))
-                and raw.get("llm_received_complete_file") is True
-                and raw.get("llm_returned_complete_file") is True
+                and (
+                    (raw.get("llm_received_complete_file") is True
+                     and raw.get("llm_returned_complete_file") is True)
+                    or (
+                        raw.get("candidate_origin") == "deterministic_json_syntax"
+                        and raw.get("candidate_stored") is True
+                        and raw.get("validation_profile") == "json_syntax"
+                    )
+                )
             )
             reported_lines = raw.get("changed_line_numbers")
             changes = [
