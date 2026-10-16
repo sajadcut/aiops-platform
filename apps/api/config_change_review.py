@@ -141,6 +141,9 @@ def _last_config_apply_result(approval: dict, events: list[dict]) -> dict | None
             "approval_id": approval_id,
             "status": str(event.get("status")),
             "config_apply_verified": event.get("status") == "applied_config_vendor_verified",
+            "failure_reason": str(meta.get("failure_reason") or "")[:100] or None,
+            "guard_exit_code": (meta.get("guard_exit_code")
+                                if type(meta.get("guard_exit_code")) is int else None),
             "service_recovery_confirmed": meta.get("service_recovery_confirmed") is True,
             "service_start_attempted": meta.get("service_start_attempted") is True,
             "service_recovery_status": str(meta.get("service_recovery_status") or "not_verified")[:80],
@@ -166,7 +169,8 @@ def _consumed_failure_reissuable(approval: dict | None, audits: list[dict]) -> b
         and e.get("status") == "config_execution_not_verified"
         and isinstance(e.get("metadata"), dict)
         and str(e["metadata"].get("approval_id") or "") == identifier
-        and e["metadata"].get("production_write_performed") in (None, False)
+        and e["metadata"].get("production_write_performed") is False
+        and str(e["metadata"].get("result") or "") != "config_apply_result_unknown"
         for e in audits
     )
 
