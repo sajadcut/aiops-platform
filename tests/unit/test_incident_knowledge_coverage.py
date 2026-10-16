@@ -163,3 +163,60 @@ def test_dashboard_can_sync_old_incidents_and_page_existing_reviews():
     assert "syncMoreIncidentKnowledge()" in html
     assert "await self._draft_incident_knowledge(incident_id)" in runtime
     assert "draft_incident_best_effort" in runtime
+
+
+@pytest.mark.asyncio
+async def test_incident_draft_refreshes_later_resolution_only_when_unreviewed(monkeypatch):
+    monkeypatch.setattr(settings, "COGNIA_KNOWLEDGE_BASE_IDS", [1])
+    monkeypatch.setattr(settings, "COGNIA_CLIENT_APPLICATION_ID", 2)
+
+    async def dossier(_db, _id):
+        return {"facts": [], "monitor_recovered": False}
+    monkeypatch.setattr("apps.knowledge_incident_coverage.incident_dossier", dossier)
+    incident = SimpleNamespace(
+        id=uuid4(), status="analyzing", source="zabbix",
+        service="nginx", severity="High", summary="nginx Service Down",
+    )
+    db = _DB(incident)
+    row, outcome = await create_from_incident(db, incident.id)
+    assert outcome == "created"
+    first_hash = row.content_hash
+    incident.status = "escalated"
+    incident.summary = "Start failed; no verified recovery"
+    refreshed, outcome = await create_from_incident(db, incident.id)
+    assert refreshed is row
+    assert outcome == "updated"
+    assert row.revision == 2
+    assert row.content_hash != first_hash
+    assert "escalated" in row.content
+    assert db.commits == 2 and len(db.audit) == 2
+
+    # Retry without any changed facts must not create another revision.
+    again, outcome = await create_from_incident(db, incident.id)
+    assert again is row and outcome == "existing"
+    assert row.revision == 2 and db.commits == 2
+
+    # Editing and review are immutable to background refresh.
+    row.review_reason = None
+    row.content = "بازبین شواهد تکمیلی را دستی ثبت کرده است"
+    row.content_hash = __import__("apps.knowledge_review", fromlist=["content_digest"]).content_digest(
+        row.title, row.content
+    )
+    incident.status = "resolved"
+    untouched, outcome = await create_from_incident(db, incident.id)
+    assert untouched is row and outcome == "existing"
+    assert row.revision == 2
+    assert "بازبین شواهد" in row.content
+    assert db.commits == 2
+
+
+def test_knowledge_entry_requires_human_publish_even_for_resolved():
+    source = (ROOT / "apps/api/knowledge_reviews.py").read_text(encoding="utf-8")
+    generic = (ROOT / "apps/knowledge_incident_coverage.py").read_text(encoding="utf-8")
+    assert 'status="pending_review"' in generic
+    assert 'created_by="system:incident-coverage"' in generic
+    assert 'review_reason="incident_coverage:v1"' in generic
+    assert '"/knowledge-reviews/{review_id}/approve"' in source
+    assert '"/knowledge-reviews/{review_id}/publish"' in source
+    assert "row.approved_hash != row.content_hash" in source
+    assert "CogniaClient()" not in generic
