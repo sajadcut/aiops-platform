@@ -141,6 +141,28 @@ class DurableWorkflowRuntime:
         if approval.get("approval_id"):
             await self._archive_decision_brief(incident_id, "approval_requested")
         await self.incidents.commit()
+        # A blocked RCA evaluator does NOT block an independently measured,
+        # hash-bound syntax repair from entering isolated prevalidation.
+        # Never queue an unverified patch or initiate a production write.
+        try:
+            from apps.config_change_auto_queue import auto_queue_prevalidation
+            from domain.contracts.logging import logger
+            prevalidation = await auto_queue_prevalidation(
+                self.session, incident_id, result,
+            )
+            logger.info(
+                "config_auto_prevalidation_result",
+                incident_id=incident_id,
+                status=prevalidation.get("status"),
+                validation=prevalidation.get("validation"),
+                approval_id=prevalidation.get("approval_id"),
+            )
+        except Exception as exc:
+            from domain.contracts.logging import logger
+            logger.warning(
+                "config_auto_prevalidation_failed",
+                incident_id=incident_id, error_type=type(exc).__name__,
+            )
         return result
 
     async def _evidence_inventory(self, incident_id: str) -> str | None:
