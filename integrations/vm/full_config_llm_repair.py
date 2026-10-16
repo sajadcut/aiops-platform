@@ -19,6 +19,7 @@ from urllib.parse import urlparse
 from domain.contracts.config import settings
 from integrations.llm.openai_compatible import configured_llm_adapter
 from integrations.vm.config_candidate_vault import CandidateUnavailable, store_candidate
+from integrations.vm.json_syntax_candidate import deterministic_json_syntax_fix
 
 _MAX_BYTES = 24 * 1024  # Complete document only; refuse instead of truncating.
 _MAX_CHANGED_LINES = 3
@@ -120,43 +121,6 @@ def _is_exact_json_key_quote_fix(original: str, corrected: str) -> bool:
     except json.JSONDecodeError:
         return False
     return True
-
-
-def _deterministic_json_syntax_fix(source: str) -> str | None:
-    """Fix exactly one measured JSON grammar token, never a value or format.
-
-    The rejected LLM output is not used. Return a complete independently
-    parseable file or no proposal at all. Source stays inside the VM worker.
-    """
-    try:
-        json.loads(source)
-        return None
-    except json.JSONDecodeError as error:
-        pos = error.pos
-        detail = error.msg.lower()
-        candidate = None
-        if "property name" in detail:
-            bare_key = re.match(r"([A-Za-z_][A-Za-z0-9_.-]*)(?=\s*:)", source[pos:])
-            if bare_key:
-                end = pos + len(bare_key.group(1))
-                candidate = source[:pos] + '"' + source[pos:end] + '"' + source[end:]
-        # Python's JSON decoder reports a dangling comma at the *next*
-        # closing token. Only remove the immediately preceding comma.
-        if candidate is None and (
-            "property name" in detail or "expecting value" in detail
-        ) and pos < len(source) and source[pos] in "}]":
-            comma = pos - 1
-            while comma >= 0 and source[comma] in " \t\r\n":
-                comma -= 1
-            if comma >= 0 and source[comma] == ",":
-                candidate = source[:comma] + source[comma + 1:]
-        if candidate is None:
-            return None
-        try:
-            json.loads(candidate)
-        except json.JSONDecodeError:
-            return None
-        return candidate
 
 
 def _candidate_preview(original: str, corrected: str, *, diagnostic_line: int | None = None) -> dict:
@@ -345,7 +309,7 @@ async def review_complete_config(
             # A model can modify an unrelated line, which must stay rejected.
             # Instead independently reconstruct one *measured* syntax token.
             # Never relax the model's drift guard or reuse its rejected bytes.
-            deterministic = _deterministic_json_syntax_fix(source)
+            deterministic = deterministic_json_syntax_fix(source)
             if deterministic is not None:
                 verified_preview = _candidate_preview(
                     source, deterministic, diagnostic_line=diagnostic_line,
