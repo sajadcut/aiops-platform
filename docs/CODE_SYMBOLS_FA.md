@@ -1325,9 +1325,9 @@
 | `apps/knowledge_review_dossier.py` | `_safe_path` | 24 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/knowledge_review_dossier.py` | `_same_service` | 32 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/knowledge_review_dossier.py` | `build_dossier` | 38 | function | Extract sourced, scoped and bounded facts for the selected incident. | module |
-| `apps/knowledge_review_dossier.py` | `incident_dossier` | 173 | async function | Read the exact incident's durable evidence and audit; no external calls. | module |
-| `apps/knowledge_review_dossier.py` | `dossier_addendum` | 198 | function | Knowledge-safe exact operational facts, distinct from inferred RCA. | module |
-| `apps/knowledge_review_dossier.py` | `dossier_title` | 212 | function | Meaningful candidate label rather than ten indistinguishable titles. | module |
+| `apps/knowledge_review_dossier.py` | `incident_dossier` | 221 | async function | Read the exact incident's durable evidence and audit; no external calls. | module |
+| `apps/knowledge_review_dossier.py` | `dossier_addendum` | 246 | function | Knowledge-safe exact operational facts, distinct from inferred RCA. | module |
+| `apps/knowledge_review_dossier.py` | `dossier_title` | 260 | function | Meaningful candidate label rather than ten indistinguishable titles. | module |
 | `apps/mcp_server/main.py` | `JsonRpcRequest` | 22 | class | کلاس | module |
 | `apps/mcp_server/main.py` | `_provider` | 113 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/mcp_server/main.py` | `_parse_dt` | 120 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
