@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 547 | Dashboard JS files scanned: 8 | Symbols indexed: 5974**
+**Python files scanned: 547 | Dashboard JS files scanned: 8 | Symbols indexed: 5975**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -784,16 +784,17 @@
 | `apps/api/knowledge_reviews.py` | `ReviewDecisionRequest` | 48 | class | کلاس | module |
 | `apps/api/knowledge_reviews.py` | `_audit` | 53 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/knowledge_reviews.py` | `reconcile_recent_recovery_reviews` | 74 | async function | Recover missing *drafts* from verified, immutable execution audit. | module |
-| `apps/api/knowledge_reviews.py` | `list_reviews` | 141 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
-| `apps/api/knowledge_reviews.py` | `get_review` | 157 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
-| `apps/api/knowledge_reviews.py` | `refresh_review_evidence` | 174 | async function | Explicit opt-in regeneration of an untouched system-generated draft. | module |
-| `apps/api/knowledge_reviews.py` | `draft_from_memory` | 219 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/knowledge_reviews.py` | `draft_manual` | 227 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/knowledge_reviews.py` | `edit_review` | 249 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/knowledge_reviews.py` | `approve_review` | 276 | async function | transition مربوط به Approval/Governance را اعمال می‌کند | module |
-| `apps/api/knowledge_reviews.py` | `reject_review` | 306 | async function | transition مربوط به Approval/Governance را اعمال می‌کند | module |
-| `apps/api/knowledge_reviews.py` | `publish_review` | 324 | async function | Publish with a deterministic Idempotency-Key; no unapproved content crosses. | module |
-| `apps/api/knowledge_reviews.py` | `refresh_review` | 392 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/knowledge_reviews.py` | `reconcile_incident_coverage` | 142 | async function | Backfill every incident *outcome*, not only verified write actions. | module |
+| `apps/api/knowledge_reviews.py` | `list_reviews` | 195 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
+| `apps/api/knowledge_reviews.py` | `get_review` | 214 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
+| `apps/api/knowledge_reviews.py` | `refresh_review_evidence` | 231 | async function | Explicit opt-in regeneration of an untouched system-generated draft. | module |
+| `apps/api/knowledge_reviews.py` | `draft_from_memory` | 276 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/knowledge_reviews.py` | `draft_manual` | 284 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/knowledge_reviews.py` | `edit_review` | 306 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/knowledge_reviews.py` | `approve_review` | 333 | async function | transition مربوط به Approval/Governance را اعمال می‌کند | module |
+| `apps/api/knowledge_reviews.py` | `reject_review` | 363 | async function | transition مربوط به Approval/Governance را اعمال می‌کند | module |
+| `apps/api/knowledge_reviews.py` | `publish_review` | 381 | async function | Publish with a deterministic Idempotency-Key; no unapproved content crosses. | module |
+| `apps/api/knowledge_reviews.py` | `refresh_review` | 449 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/main.py` | `dashboard_font_stylesheet` | 94 | async function | Shared font definitions for dashboard, chatbot and incident room. | module |
 | `apps/api/main.py` | `approved_ui_font` | 100 | async function | Serve only explicitly allowlisted local font assets (no directory browse). | module |
 | `apps/api/main.py` | `root` | 118 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
