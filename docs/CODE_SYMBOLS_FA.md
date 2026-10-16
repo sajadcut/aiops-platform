@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 533 | Dashboard JS files scanned: 8 | Symbols indexed: 5811**
+**Python files scanned: 533 | Dashboard JS files scanned: 8 | Symbols indexed: 5812**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -5491,6 +5491,7 @@
 | `tests/unit/test_unique_json_punctuation_approval.py` | `test_missing_separator_reconstructs_without_modifying_key_or_values` | 56 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_unique_json_punctuation_approval.py` | `test_no_unverified_or_multi_edit_json_candidate` | 71 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_unique_json_punctuation_approval.py` | `test_rebuild_cannot_upgrade_any_changed_or_stale_file` | 75 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_unique_json_punctuation_approval.py` | `test_incident_planner_exposes_unique_json_repair_to_auto_queue` | 94 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_universal_llm_config_syntax.py` | `test_grammar_projection_does_not_leak_values` | 24 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_universal_llm_config_syntax.py` | `test_json_trailing_comma_can_be_projected_for_both_llm_passes` | 35 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_universal_llm_config_syntax.py` | `test_public_result_forbids_raw_and_malicious_config_content` | 49 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
