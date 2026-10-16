@@ -2417,6 +2417,9 @@
     const investigation=r?.dynamic_investigation||{};
     const config=investigation.config_proposal||{};
     const fullRepair=investigation.full_config_llm_repair||{};
+    const repairFailure=['llm_repair_timeout','llm_repair_unavailable',
+      'llm_response_truncated','llm_complete_file_response_invalid',
+      'candidate_storage_unavailable'].includes(fullRepair.status);
     const discovery=investigation.config_discovery||{};
     const validator=r?.configuration_diagnostic||{};
     const response=state.configResponse||{};
@@ -2500,6 +2503,14 @@
       outcome:fa?'جزئیات اعمال، راستی‌آزمایی و بازگشت احتمالی را بررسی کنید.':
         'Inspect execution, verification and any rollback.',
     };
+    // A failed full-file LLM attempt must not be silently presented as
+    // "no fix exists". This is a generation/transport failure, not proof that
+    // the configuration is unrepairable or that approval is already queued.
+    if(repairFailure&&!hasDiff&&!oldEvent){
+      summary=esc(fa?
+        'تست کانفیگ خطا را نشان داده، اما تولید نسخه اصلاحی با LLM کامل نشده است؛ هنوز Diff معتبر یا درخواست Approval ایجاد نشده است.':
+        'The configuration check found an error, but LLM repair did not complete. No verified diff or approval request exists yet.');
+    }
     const stagedFailed=['staged_failed','staged_pass_not_isolated'].includes(status);
     const instruction=stagedFailed&&['diff','review'].includes(action)?
       (fa?'نسخهٔ پیشنهادی هنوز از اعتبارسنجی مستقل عبور نکرده است؛ آن را بررسی کنید، اما اعمال نکنید.':
@@ -2550,6 +2561,16 @@
       '<details class="ic-config-banner-details"><summary>'+
       esc(fa?'جزئیات فنی':'Technical details')+'</summary><div>'+
       diagnosticRows.map(row=>'<p>'+row+'</p>').join('')+'</div></details>':'';
+    const repairWarning=repairFailure&&!hasDiff?
+      '<p class="ic-config-banner-warning" role="status">'+
+        esc(fa?
+          (fullRepair.status==='llm_repair_timeout'?
+            'علت توقف: ارتباط با مدل هنگام ساخت اصلاح زمان‌بر شد و به Timeout رسید. بازبینی زندهٔ دوباره و تلاش مجدد با تأیید صریح اپراتور لازم است.':
+            'علت توقف: مدل نسخه کامل قابل‌قبول تولید نکرد یا ذخیره امن Candidate انجام نشد؛ ارسال برای Approval ممکن نیست.'):
+          (fullRepair.status==='llm_repair_timeout'?
+            'Reason: LLM repair timed out. Recheck live evidence and explicitly retry the preview.':
+            'Reason: no complete acceptable candidate was produced or securely stored; approval cannot be queued.'))+
+      '</p>':'';
     const warning=signingBlocked?
       '<p class="ic-config-banner-warning" role="status">'+
         esc(fa?'اعمال فعلاً متوقف است: توکن MCP در API برای امضای اجرا تنظیم نشده یا ضعیف است.':
@@ -2563,7 +2584,7 @@
     node.hidden=false;
     node.innerHTML='<div class="ic-config-banner-copy"><strong>'+esc(title)+'</strong>'+
       '<p class="ic-config-banner-summary">'+summary+'</p>'+
-      '<p>'+esc(instruction)+'</p>'+warning+liveStatus+technical+
+      '<p>'+esc(instruction)+'</p>'+repairWarning+warning+liveStatus+technical+
       '</div><div class="ic-config-banner-actions">'+primary+secondary+fullLLMButton+'</div>';
   }
 
