@@ -3409,8 +3409,11 @@
       const configMessage=ok?
         (fa?'اصلاح فایل روی سرور اعمال و صحت کانفیگ تأیید شد.':
           'Configuration applied and vendor/staged validation confirmed.'):
-        (fa?'اجرای اصلاح هنوز با نتیجهٔ موفق قابل تأیید نیست.':
-          'Configuration apply has no verified successful result.');
+        (applied.production_write_performed==null?
+          (fa?'نتیجه اجرای کانفیگ نامشخص است؛ ابتدا هش فایل روی سرور بررسی شود.':
+            'Config-apply result is uncertain. Check the live file hash before retrying.'):
+          (fa?'اجرای اصلاح هنوز با نتیجهٔ موفق قابل تأیید نیست.':
+            'Configuration apply has no verified successful result.'));
       const serviceMessage=running?
         (fa?'آخرین بررسی VM MCP: سرویس از نظر systemd در حالت Running است؛ سلامت API جداگانه بررسی می‌شود.':
           'Latest VM MCP check: systemd Running; API readiness is independently unverified.'):
