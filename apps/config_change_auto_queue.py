@@ -45,6 +45,42 @@ def auto_queue_candidate(state: dict) -> dict | None:
 async def auto_queue_prevalidation(session, incident_id: str, state: dict) -> dict:
     """Automatic *request*, never automatic Approval; record the exact blocker."""
     proposal = auto_queue_candidate(state)
+    if (proposal is None and not state.get("approval")
+            and not state.get("execution_result")):
+        # Recover from an orchestration handoff dropping a valid worker
+        # candidate. Independently recompute the contract from the CURRENT
+        # verified MCP evidence, never from model text, old UI state or
+        # an operator-supplied file path.
+        context = state.get("context") or {}
+        evidence = context.get("evidence") or []
+        if any(
+            isinstance(item, dict) and item.get("source") == "vm_mcp"
+            and isinstance(item.get("raw_data"), dict)
+            and item["raw_data"].get("diagnostic") == "service_config_review"
+            and item["raw_data"].get("success") is True
+            and item["raw_data"].get("status") == "candidate_proposed"
+            for item in evidence
+        ):
+            try:
+                from apps.orchestrator.dynamic_investigation import (
+                    DynamicInvestigationPlanner,
+                )
+                recalculated = await DynamicInvestigationPlanner.propose(
+                    state, adapter=None,
+                )
+                recovered = recalculated.get("config_proposal")
+                if isinstance(recovered, dict):
+                    current = context.get("dynamic_investigation") or {}
+                    context["dynamic_investigation"] = {
+                        **current, "config_proposal": recovered,
+                    }
+                    proposal = auto_queue_candidate(state)
+            except Exception as exc:
+                logger.warning(
+                    "config_candidate_recalculation_failed",
+                    incident_id=str(incident_id),
+                    error_type=type(exc).__name__,
+                )
     if proposal is None:
         # A generic "no_verified_candidate" hid the exact reason and forced
         # operators to repeat lengthy LLM attempts. Publish only bounded
