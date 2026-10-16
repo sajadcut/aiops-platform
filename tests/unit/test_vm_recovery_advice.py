@@ -284,6 +284,107 @@ async def test_recovery_approval_queue_fails_closed_on_changed_live_state(monkey
             identity=SimpleNamespace(subject="sre"),
         )
     assert exc.value.status_code == 409
+    assert exc.value.detail == {
+        "code": "recovery_live_binding_or_state_changed",
+        "reason_code": "service_active_before_approval",
+        "reason": "verified_from_live_vm_mcp",
+        "expected_state": "failed",
+        "observed_state": "active",
+        "execution_authority": False,
+        "application_health_verified": False,
+    }
+    creator.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "observed,expected_reason",
+    [
+        ("inactive", "service_state_changed"),
+        ("activating", "service_state_changed"),
+    ],
+)
+async def test_recovery_409_distinguishes_other_states_from_active_recovery(
+    monkeypatch, observed, expected_reason,
+):
+    from types import SimpleNamespace
+    from unittest.mock import AsyncMock
+    from uuid import UUID
+    from fastapi import HTTPException
+    from apps.api import incident_chat as api
+
+    class DB:
+        async def __aenter__(self): return self
+        async def __aexit__(self, exc_type, exc, tb): return False
+        async def execute(self, stmt, params): return None
+
+    checkpoint = {"status": "completed", "state": {
+        "context": {"recovery_advisory": advisory()}
+    }}
+    monkeypatch.setattr(api, "AsyncSessionLocal", DB)
+    monkeypatch.setattr(api, "_scope", AsyncMock(return_value=(
+        SimpleNamespace(service=SERVICE, status="open", context=trigger()),
+        checkpoint, gfpapi_rows(),
+    )))
+    monkeypatch.setattr(api, "_existing_recovery_approval",
+                        AsyncMock(return_value=None))
+    monkeypatch.setattr(api, "resolve_vm_binding", AsyncMock(return_value=(
+        {"target": TARGET, "service": SERVICE, "active_state": observed},
+        {"status": "verified_from_live_vm_mcp"},
+    )))
+    creator = AsyncMock()
+    monkeypatch.setattr(api, "create_remediation_request", creator)
+    with pytest.raises(HTTPException) as exc:
+        await api.queue_incident_recovery_approval(
+            UUID("bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"),
+            identity=SimpleNamespace(subject="sre"),
+        )
+    assert exc.value.status_code == 409
+    assert exc.value.detail["code"] == "recovery_live_binding_or_state_changed"
+    assert exc.value.detail["reason_code"] == expected_reason
+    assert exc.value.detail["observed_state"] == observed
+    assert exc.value.detail["application_health_verified"] is False
+    creator.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_recovery_409_does_not_label_unverified_identity_as_recovered(monkeypatch):
+    from types import SimpleNamespace
+    from unittest.mock import AsyncMock
+    from uuid import UUID
+    from fastapi import HTTPException
+    from apps.api import incident_chat as api
+
+    class DB:
+        async def __aenter__(self): return self
+        async def __aexit__(self, exc_type, exc, tb): return False
+        async def execute(self, stmt, params): return None
+
+    checkpoint = {"status": "completed", "state": {
+        "context": {"recovery_advisory": advisory()}
+    }}
+    monkeypatch.setattr(api, "AsyncSessionLocal", DB)
+    monkeypatch.setattr(api, "_scope", AsyncMock(return_value=(
+        SimpleNamespace(service=SERVICE, status="open", context=trigger()),
+        checkpoint, gfpapi_rows(),
+    )))
+    monkeypatch.setattr(api, "_existing_recovery_approval",
+                        AsyncMock(return_value=None))
+    monkeypatch.setattr(api, "resolve_vm_binding", AsyncMock(return_value=(
+        {"target": "10.255.0.99", "service": SERVICE, "active_state": "active"},
+        {"status": "vm_mcp_live_identity_mismatch"},
+    )))
+    creator = AsyncMock()
+    monkeypatch.setattr(api, "create_remediation_request", creator)
+    with pytest.raises(HTTPException) as exc:
+        await api.queue_incident_recovery_approval(
+            UUID("bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"),
+            identity=SimpleNamespace(subject="sre"),
+        )
+    assert exc.value.status_code == 409
+    assert exc.value.detail["reason_code"] == "live_identity_unverified"
+    assert exc.value.detail["observed_state"] is None
+    assert exc.value.detail["execution_authority"] is False
     creator.assert_not_awaited()
 
 
