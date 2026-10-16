@@ -155,13 +155,13 @@
     </section>
 
     <section class="view" data-view="knowledge">
-      <div class="policy-banner"><div><span class="section-kicker">دانش سازمانی تحت نظارت کاگنیا</span><h2>بازبینی دانش</h2><p>تجربه‌های معتبر رخداد و راهنماهای دستی تا زمان تأیید، پیش‌نویس می‌مانند. تأیید دانش به معنی مجوز اجرای عملیات نیست.</p></div><div class="policy-chips"><span>در انتظار بازبینی</span><span>اولویت با شواهد</span><span>تأیید انسانی</span><span>پایگاه دانش کاگنیا شمارهٔ ۱</span></div></div>
+      <div class="policy-banner"><div><span class="section-kicker">دانش سازمانی تحت نظارت کاگنیا</span><h2>بازبینی دانش</h2><p>گزارش همهٔ رخدادها، حتی بدون بازیابی موفق یا علت قطعی، به‌عنوان پیش‌نویس تشخیصی قابل بازبینی است. شما تصمیم می‌گیرید ذخیره و منتشر شود یا رد گردد؛ انتشار خودکار نیست.</p></div><div class="policy-chips"><span>در انتظار بازبینی</span><span>اولویت با شواهد</span><span>تأیید انسانی</span><span>پایگاه دانش کاگنیا شمارهٔ ۱</span></div></div>
       <div class="knowledge-layout">
         <section class="panel">
           <div class="panel-head"><div><span class="section-kicker">صف بررسی</span><h2>دانش در انتظار بازبینی <span id="knowledgePendingCount" class="pill">—</span></h2></div><button type="button" class="approval-btn" onclick="loadKnowledgeReviews()">به‌روزرسانی</button></div>
           <div class="knowledge-source"><label for="knowledgeMemoryId">شناسهٔ حافظهٔ عملیاتی تأییدشده</label><div class="knowledge-inline"><input id="knowledgeMemoryId" placeholder="شناسهٔ حافظه (UUID)"><button type="button" onclick="createKnowledgeFromMemory()">ساخت پیش‌نویس</button></div></div>
           <p id="knowledgeSyncCoverageStatus" class="muted" role="status">پیش‌نویس هر رخداد پس از پایان تحلیل یا هنگام همگام‌سازی سوابق، بدون انتشار خودکار، برای بازبینی ساخته می‌شود.</p>
-          <button type="button" class="approval-btn" onclick="syncMoreIncidentKnowledge()">همگام‌سازی ۱۰۰ رخداد قدیمی‌تر برای تصمیم ذخیره یا رد</button>
+          <button type="button" class="approval-btn" id="knowledgeSyncMoreIncidents" onclick="syncMoreIncidentKnowledge()">همگام‌سازی ۱۰۰ رخداد قدیمی‌تر برای تصمیم ذخیره یا رد</button>
           <div id="knowledgeReviewQueue" class="knowledge-queue"><div class="empty-state">صف بازبینی در این بخش نمایش داده می‌شود.</div></div>
           <button type="button" class="approval-btn" id="knowledgeLoadMore" hidden onclick="loadMoreKnowledgeReviews()">نمایش ۱۰۰ پیش‌نویس بعدی</button>
         </section>
