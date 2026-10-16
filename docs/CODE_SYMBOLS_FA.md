@@ -4578,7 +4578,7 @@
 | `tests/unit/test_incident_multifinding_action_catalog.py` | `test_no_disk_action_for_other_vm_or_healthy_mount` | 73 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_incident_multifinding_action_catalog.py` | `test_service_already_running_does_not_offer_restart_from_historical_alarm` | 89 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_incident_multifinding_action_catalog.py` | `test_interrupted_config_apply_preserves_unknown_and_no_replay` | 100 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_incident_multifinding_action_catalog.py` | `test_multifinding_ui_has_real_navigation_and_no_fake_disk_apply` | 121 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_multifinding_action_catalog.py` | `test_multifinding_ui_has_real_navigation_and_no_fake_disk_apply` | 122 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_incident_operational_finalization.py` | `FakeSession` | 9 | class | کلاس | module |
 | `tests/unit/test_incident_operational_finalization.py` | `FakeSession.__init__` | 10 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeSession |
 | `tests/unit/test_incident_operational_finalization.py` | `FakeSession.get` | 13 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeSession |
