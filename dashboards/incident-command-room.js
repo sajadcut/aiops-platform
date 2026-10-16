@@ -2523,8 +2523,12 @@
     let title,summary,action;
     if(oldEvent){
       title=fa?'نتیجهٔ اصلاح کانفیگ '+service:'Configuration change result · '+service;
-      summary=fa?'مجوز اجرای اصلاح مصرف شده است. نتیجهٔ اجرا و وضعیت فایل را بررسی کنید.':
-        'The one-time approval has been consumed. Check the execution result and file status.';
+      const audited=state.configResponse?.last_execution||{};
+      summary=audited.config_apply_verified===true?
+        (fa?'فایل کانفیگ با موفقیت روی سرور اصلاح و اعتبارسنجی شده است. وضعیت سرویس و بسته‌شدن رخداد مستقل بررسی می‌شوند.':
+          'Configuration applied and verified on the server. Service recovery and incident resolution are checked separately.'):
+        (fa?'مجوز اجرای اصلاح مصرف شده است. نتیجهٔ اجرا هنوز از ممیزی تأیید نشده است.':
+          'The one-time approval was consumed, but a verified apply result is not available.');
       action='outcome';
     }else if(previouslyFailed){
       title=!candidate && approval!=='pending' && approval!=='pending_validation'
@@ -3314,6 +3318,46 @@
 
   function renderOutcome(r) {
     const o=r.execution_outcome||{},v=r.verification_result||{},learn=r.knowledge_learning_status||{},a=r.approval_readiness||{};
+    // Standalone config execution is NOT part of the completed E2E analysis
+    // snapshot. Show the exact audited approval outcome instead of incorrectly
+    // claiming that an already executed apply has "no final outcome".
+    const applied=state.historic?null:state.configResponse?.last_execution;
+    if(applied && applied.approval_id===state.configResponse?.approval_id){
+      const fa=state.language==='fa';
+      const ok=applied.config_apply_verified===true;
+      const running=state.serviceStatus?.verified_systemd_only===true &&
+        state.serviceStatus?.status==='running';
+      const resolved=['resolved','closed'].includes(
+        low(state.lifecycle?.incident_status||state.serviceStatus?.incident_status));
+      const configMessage=ok?
+        (fa?'اصلاح فایل روی سرور اعمال و صحت کانفیگ تأیید شد.':
+          'Configuration applied and vendor/staged validation confirmed.'):
+        (fa?'اجرای اصلاح هنوز با نتیجهٔ موفق قابل تأیید نیست.':
+          'Configuration apply has no verified successful result.');
+      const serviceMessage=running?
+        (fa?'آخرین بررسی VM MCP: سرویس از نظر systemd در حالت Running است؛ سلامت API جداگانه بررسی می‌شود.':
+          'Latest VM MCP check: systemd Running; API readiness is independently unverified.'):
+        (fa?'راه‌اندازی و پایداری سرویس از این نتیجهٔ اعمال فایل ثابت نشده است.':
+          'The config apply does not prove service startup or stability.');
+      const incidentMessage=resolved?
+        (fa?'رخداد با شواهد مستقل به وضعیت رفع‌شده منتقل شده است.':
+          'Incident was independently reconciled as resolved.'):
+        (fa?'رخداد هنوز باز است؛ وضعیت آلارم و شروط رفع رخداد باید مستقل بررسی شوند.':
+          'The incident remains open pending independent recovery reconciliation.');
+      show('#ic-outcome-view',
+        '<div class="ic-outcome-heading"><strong>'+
+        esc(fa?'نتیجهٔ واقعی اجرای اصلاح کانفیگ':'Audited configuration apply result')+
+        '</strong>'+pill(ok?'verified':'unverified')+'</div>'+
+        '<p>'+esc(configMessage)+'</p><p>'+esc(serviceMessage)+'</p>'+
+        '<p>'+esc(incidentMessage)+'</p><div class="ic-proposal">'+
+        fact('action','apply_configuration_change')+
+        fact('approvalId',applied.approval_id)+
+        fact('verification',applied.status)+
+        fact('result',applied.rollback_status)+
+        fact('target',state.serviceStatus?.target||r?.incident_summary?.target)+
+        '</div>');
+      return;
+    }
     const performed=o.status && !['not_executed','not_recorded','unknown'].includes(low(o.status));
     const consumed=low(a.approval_status)==='consumed';
     const running=consumed && state.lifecycle?.analysis_in_progress===true;
@@ -3576,7 +3620,12 @@
             (state.configResponse?.start_service_after_apply?
             'Apply, start service and verify':'Apply approved config and verify'))+'</button>';
       }else{
-        controls+='<p>'+esc(fa?'مجوز یک‌بارمصرف مصرف شده است. نتیجه و ممیزی عملیات را در تاریخچه بررسی کنید.':'One-time approval consumed; inspect the execution audit.')+'</p>';
+        const verifiedApply=state.configResponse?.last_execution?.config_apply_verified===true;
+        controls+='<p>'+esc(verifiedApply?
+          (fa?'اصلاح فایل با موفقیت اعمال شد؛ نتیجهٔ راستی‌آزمایی فایل در ممیزی ثبت شده است. وضعیت سرویس و رخداد جداگانه بررسی می‌شوند.':
+            'Configuration successfully applied and audited. Service and incident status are verified separately.'):
+          (fa?'مجوز یک‌بارمصرف مصرف شده است؛ برای نتیجهٔ دقیق ممیزی اجرا را بررسی کنید.':
+            'One-time approval consumed; inspect the execution audit.'))+'</p>';
         const failedAfterConfig=state.configResponse?.start_service_after_apply!==true &&
           state.serviceStatus?.verified_systemd_only===true &&
           ['failed','inactive'].includes(low(state.serviceStatus?.active_state)) &&
@@ -3876,7 +3925,11 @@
       if(token!==state.loadingToken)return;
       state.configResponseStatus='failed';
     }
-    if(state.report){renderInvestigation(state.historic||state.report);renderConfigActionBanner(state.historic||state.report);}
+    if(state.report){
+      const shown=state.historic||state.report;
+      renderInvestigation(shown);renderConfigActionBanner(shown);
+      renderOutcome(shown);renderDecision(shown);
+    }
   }
   async function respondToConfigProposal(decision) {
     const c=state.report?.dynamic_investigation?.config_proposal||{};
