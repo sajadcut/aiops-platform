@@ -8,6 +8,11 @@
   let actionPending = false;
   let showAllSimilarReviews = false;
   let recoveryReconciled = false;
+  let incidentReconciled = false;
+  let incidentSyncOffset = 0;
+  let incidentSyncHasMore = true;
+  let reviewPageCount = 1;
+  let reviewHasMore = false;
 
   const el = id => document.getElementById(id);
   const current = () => selectedDetails && selectedDetails.id === selectedId ? selectedDetails : null;
@@ -21,7 +26,15 @@
   function renderQueue() {
     const list = el('knowledgeReviewQueue');
     if (!list) return;
-    el('knowledgePendingCount').textContent = String(reviews.filter(r => r.status === 'pending_review').length);
+    el('knowledgePendingCount').textContent =
+      String(reviews.filter(r => r.status === 'pending_review').length) +
+      (reviewHasMore ? '+' : '');
+    const more = el('knowledgeLoadMore');
+    if (more) more.hidden = !reviewHasMore;
+    const status = el('knowledgeSyncCoverageStatus');
+    if (status) status.textContent = incidentSyncHasMore ?
+      'همگام‌سازی رخدادهای قدیمی‌تر هنوز کامل نیست؛ برای ادامه از دکمهٔ پایین استفاده کنید.' :
+      'همگام‌سازی تاریخچهٔ رخدادها تکمیل شده است.';
     // Group identical *display* titles for one incident. No row is deleted,
     // merged, silently published, or overwritten; expand to inspect every
     // historically distinct version/evidence reference.
@@ -148,8 +161,35 @@
           notice('بررسی پیش‌نویس‌های جاافتاده انجام نشد: ' + err.message);
         }
       }
-      const result = await api('/api/v1/knowledge-reviews?limit=100');
-      reviews = result.items || [];
+      if (!incidentReconciled) {
+        incidentReconciled = true;
+        try {
+          const sync = await api('/api/v1/knowledge-reviews/reconcile-incidents?limit=40&offset=0',
+                                 {method:'POST'});
+          if (sync.errors?.length) {
+            incidentSyncHasMore = true;
+            notice('برخی رخدادها وارد صف دانش نشدند: ' + sync.errors.join('، '));
+          } else {
+            incidentSyncOffset = sync.next_offset || 0;
+            incidentSyncHasMore = sync.has_more === true;
+          }
+        } catch (err) {
+          incidentSyncHasMore = true;
+          incidentReconciled = false;
+          notice('تهیهٔ پیش‌نویس رخدادهای اخیر ناموفق بود: ' + err.message);
+        }
+      }
+      // Fetch every page the reviewer has explicitly opened. The former
+      // single 100-row window hid older drafts even when already persisted.
+      const collected = [];
+      reviewHasMore = false;
+      for (let page = 0; page < reviewPageCount; page++) {
+        const result = await api('/api/v1/knowledge-reviews?limit=100&offset='+(page*100));
+        collected.push(...(result.items || []));
+        reviewHasMore = result.has_more === true;
+        if (!reviewHasMore) break;
+      }
+      reviews = collected;
       selectedId = reviews.some(r => r.id === preferred) ? preferred : (reviews[0]?.id || null);
       renderQueue();
       await loadSelected();
@@ -239,6 +279,34 @@
   }
 
   window.loadKnowledgeReviews = reload;
+  window.loadMoreKnowledgeReviews = async () => {
+    if (loading || actionPending || !reviewHasMore) return;
+    reviewPageCount += 1;
+    await reload();
+  };
+  window.syncMoreIncidentKnowledge = async () => {
+    if (loading || actionPending || !incidentSyncHasMore) return;
+    actionPending = true;
+    try {
+      const response = await api('/api/v1/knowledge-reviews/reconcile-incidents?limit=100&offset='+
+        encodeURIComponent(incidentSyncOffset), {method:'POST'});
+      if (response.errors?.length) {
+        // Keep the same cursor on failure; the backend uses stable IDs and
+        // never overwrites a reviewed, rejected or published draft.
+        notice('همگام‌سازی برخی رخدادها ناموفق بود: ' + response.errors.join('، '));
+      } else {
+        incidentSyncOffset = response.next_offset || incidentSyncOffset;
+        incidentSyncHasMore = response.has_more === true;
+        notice('بازبینی '+response.scanned+' رخداد · '+response.created+
+          ' پیش‌نویس جدید · '+response.existing+' مورد موجود؛ بدون انتشار خودکار.');
+      }
+    } catch (err) {
+      notice('همگام‌سازی رخدادها ناموفق بود: ' + err.message);
+    } finally {
+      actionPending = false;
+      await reload();
+    }
+  };
   window.createKnowledgeFromMemory = () => {
     const memory_id = el('knowledgeMemoryId')?.value.trim();
     if (!memory_id) return notice('Enter a verified Operational Memory ID.');
