@@ -126,3 +126,58 @@ def test_brace_pair_preview_allows_measured_closer_further_down():
     assert _candidate_preview(
         source, candidate, diagnostic_line=2,
     )["status"] == "llm_candidate_proposed"
+
+
+
+def test_automatic_review_and_preapproval_binds_same_two_brace_candidate():
+    from integrations.vm.general_config_review import local_config_review
+    from integrations.vm.governed_config_change import rebuild_json_candidate
+    from apps.api.config_change_review import (
+        ConfigReviewResponse, _matching_proposal,
+    )
+
+    path = "/data/gfp/gfpapi/appsettings.json"
+    reviewed = local_config_review(
+        base64.b64encode(SOURCE.encode()).decode(), path=path,
+    )
+    assert reviewed["status"] == "candidate_proposed"
+    assert reviewed["proposed_change"] == "repair_json_punctuation"
+    assert reviewed["validation_status"] == "FORMAT_CANDIDATE_VALID_ONLY"
+    assert reviewed["apply_eligible"] is False
+    rebuilt = rebuild_json_candidate(
+        encoded=base64.b64encode(SOURCE.encode()).decode(), path=path,
+        original_sha256=reviewed["source_hash"],
+        candidate_sha256=reviewed["candidate_hash"],
+        proposed_change=reviewed["proposed_change"],
+    )
+    assert rebuilt == CORRECTED
+    proposal = {
+        "service": "gfpapi",
+        "config_file": path,
+        "status": "candidate_proposed",
+        "proposed_change": reviewed["proposed_change"],
+        "original_sha256": reviewed["source_hash"],
+        "candidate_sha256": reviewed["candidate_hash"],
+        "source_evidence_refs": ["vm:evidence:measured"],
+        "execution_authority": False,
+        "apply_eligible": False,
+    }
+    req = ConfigReviewResponse(
+        decision="request_isolated_validation",
+        expected_original_sha256=proposal["original_sha256"],
+        expected_candidate_sha256=proposal["candidate_sha256"],
+    )
+    assert _matching_proposal(proposal, req) is True
+    assert reviewed["source_hash"] != reviewed["candidate_hash"]
+
+
+def test_approval_scope_accepts_json_punctuation_only_after_jq_validation():
+    # Explicitly guards against the historic fail-closed allowlist mismatch:
+    # the repair could pass isolated jq, then fail pending -> human approval.
+    from pathlib import Path
+    root = Path(__file__).resolve().parents[2]
+    source = (root / "apps/approval_service/postgres.py").read_text()
+    marker = 'if validation_scope == "generic_json_syntax_only_service_runtime_unverified":'
+    section = source[source.index(marker):source.index(marker) + 400]
+    assert '"repair_json_punctuation"' in section
+    assert 'vendor_validator.startswith("jq empty")' in section
