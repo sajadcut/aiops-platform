@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 555 | Dashboard JS files scanned: 8 | Symbols indexed: 6127**
+**Python files scanned: 555 | Dashboard JS files scanned: 8 | Symbols indexed: 6128**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -790,17 +790,17 @@
 | `apps/api/knowledge_reviews.py` | `reconcile_incident_coverage` | 143 | async function | Backfill every incident *outcome*, not only verified write actions. | module |
 | `apps/api/knowledge_reviews.py` | `list_reviews` | 206 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
 | `apps/api/knowledge_reviews.py` | `_knowledge_monitoring_projection` | 299 | function | Pure summary: unknown indicators stay explicitly unmeasured. | module |
-| `apps/api/knowledge_reviews.py` | `_knowledge_monitoring_projection.trend_map` | 326 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _knowledge_monitoring_projection |
-| `apps/api/knowledge_reviews.py` | `knowledge_monitoring` | 406 | async function | Read-only operational dashboard, no publication, polling or Cognia writes. | module |
-| `apps/api/knowledge_reviews.py` | `get_review` | 433 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
-| `apps/api/knowledge_reviews.py` | `refresh_review_evidence` | 450 | async function | Explicit opt-in regeneration of an untouched system-generated draft. | module |
-| `apps/api/knowledge_reviews.py` | `draft_from_memory` | 515 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/knowledge_reviews.py` | `draft_manual` | 523 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/knowledge_reviews.py` | `edit_review` | 545 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/knowledge_reviews.py` | `approve_review` | 572 | async function | transition مربوط به Approval/Governance را اعمال می‌کند | module |
-| `apps/api/knowledge_reviews.py` | `reject_review` | 602 | async function | transition مربوط به Approval/Governance را اعمال می‌کند | module |
-| `apps/api/knowledge_reviews.py` | `publish_review` | 620 | async function | Publish with a deterministic Idempotency-Key; no unapproved content crosses. | module |
-| `apps/api/knowledge_reviews.py` | `refresh_review` | 688 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/knowledge_reviews.py` | `_knowledge_monitoring_projection.trend_map` | 337 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _knowledge_monitoring_projection |
+| `apps/api/knowledge_reviews.py` | `knowledge_monitoring` | 420 | async function | Read-only operational dashboard, no publication, polling or Cognia writes. | module |
+| `apps/api/knowledge_reviews.py` | `get_review` | 447 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
+| `apps/api/knowledge_reviews.py` | `refresh_review_evidence` | 464 | async function | Explicit opt-in regeneration of an untouched system-generated draft. | module |
+| `apps/api/knowledge_reviews.py` | `draft_from_memory` | 529 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/knowledge_reviews.py` | `draft_manual` | 537 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/knowledge_reviews.py` | `edit_review` | 559 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/knowledge_reviews.py` | `approve_review` | 586 | async function | transition مربوط به Approval/Governance را اعمال می‌کند | module |
+| `apps/api/knowledge_reviews.py` | `reject_review` | 616 | async function | transition مربوط به Approval/Governance را اعمال می‌کند | module |
+| `apps/api/knowledge_reviews.py` | `publish_review` | 634 | async function | Publish with a deterministic Idempotency-Key; no unapproved content crosses. | module |
+| `apps/api/knowledge_reviews.py` | `refresh_review` | 702 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/main.py` | `dashboard_font_stylesheet` | 96 | async function | Shared font definitions for dashboard, chatbot and incident room. | module |
 | `apps/api/main.py` | `approved_ui_font` | 102 | async function | Serve only explicitly allowlisted local font assets (no directory browse). | module |
 | `apps/api/main.py` | `root` | 120 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
@@ -2064,20 +2064,21 @@
 | `dashboards/knowledge-review.js` | `renderKnowledgeMonitor` | 57 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
 | `dashboards/knowledge-review.js` | `segments` | 89 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
 | `dashboards/knowledge-review.js` | `highest` | 109 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/knowledge-review.js` | `renderKnowledgeCognia` | 151 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/knowledge-review.js` | `loadKnowledgeMonitoring` | 175 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
-| `dashboards/knowledge-review.js` | `el` | 214 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/knowledge-review.js` | `current` | 215 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/knowledge-review.js` | `notice` | 218 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/knowledge-review.js` | `renderQueue` | 223 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/knowledge-review.js` | `key` | 241 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/knowledge-review.js` | `visible` | 246 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/knowledge-review.js` | `renderSelection` | 273 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/knowledge-review.js` | `loadSelected` | 335 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
-| `dashboards/knowledge-review.js` | `reload` | 351 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/knowledge-review.js` | `invoke` | 427 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/knowledge-review.js` | `createDraft` | 486 | JavaScript function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | browser module |
-| `dashboards/knowledge-review.js` | `applyQueueFilters` | 503 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/knowledge-review.js` | `renderKnowledgeCognia` | 153 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/knowledge-review.js` | `kbRows` | 164 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/knowledge-review.js` | `loadKnowledgeMonitoring` | 182 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
+| `dashboards/knowledge-review.js` | `el` | 221 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/knowledge-review.js` | `current` | 222 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/knowledge-review.js` | `notice` | 225 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/knowledge-review.js` | `renderQueue` | 230 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/knowledge-review.js` | `key` | 248 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/knowledge-review.js` | `visible` | 253 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/knowledge-review.js` | `renderSelection` | 280 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/knowledge-review.js` | `loadSelected` | 342 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
+| `dashboards/knowledge-review.js` | `reload` | 358 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/knowledge-review.js` | `invoke` | 434 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/knowledge-review.js` | `createDraft` | 493 | JavaScript function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | browser module |
+| `dashboards/knowledge-review.js` | `applyQueueFilters` | 510 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
 | `database/__init__.py` | `_json_default` | 23 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `database/__init__.py` | `_json_serializer` | 38 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `database/__init__.py` | `get_db` | 56 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
@@ -4889,19 +4890,19 @@
 | `tests/unit/test_knowledge_config_dossier.py` | `test_blocked_start_never_claims_actual_execution_or_recovery` | 143 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_knowledge_config_dossier.py` | `test_unaudited_or_malformed_service_execution_is_not_knowledge_proof` | 157 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_knowledge_monitoring.py` | `test_monitoring_separates_review_outbox_from_cognia_inventory` | 12 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_knowledge_monitoring.py` | `test_empty_monitoring_does_not_invent_retrieval_quality_or_coverage` | 76 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_knowledge_monitoring.py` | `test_monitoring_queries_only_aggregated_durable_sources` | 88 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_knowledge_monitoring.py` | `test_monitoring_queries_only_aggregated_durable_sources.Result` | 91 | class | کلاس | test_monitoring_queries_only_aggregated_durable_sources |
-| `tests/unit/test_knowledge_monitoring.py` | `test_monitoring_queries_only_aggregated_durable_sources.Result.__init__` | 92 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_monitoring_queries_only_aggregated_durable_sources.Result |
-| `tests/unit/test_knowledge_monitoring.py` | `test_monitoring_queries_only_aggregated_durable_sources.Result.mappings` | 95 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_monitoring_queries_only_aggregated_durable_sources.Result |
-| `tests/unit/test_knowledge_monitoring.py` | `test_monitoring_queries_only_aggregated_durable_sources.Result.all` | 98 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_monitoring_queries_only_aggregated_durable_sources.Result |
-| `tests/unit/test_knowledge_monitoring.py` | `test_monitoring_queries_only_aggregated_durable_sources.Result.one` | 101 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_monitoring_queries_only_aggregated_durable_sources.Result |
-| `tests/unit/test_knowledge_monitoring.py` | `test_monitoring_queries_only_aggregated_durable_sources.Session` | 104 | class | کلاس | test_monitoring_queries_only_aggregated_durable_sources |
-| `tests/unit/test_knowledge_monitoring.py` | `test_monitoring_queries_only_aggregated_durable_sources.Session.__aenter__` | 105 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_monitoring_queries_only_aggregated_durable_sources.Session |
-| `tests/unit/test_knowledge_monitoring.py` | `test_monitoring_queries_only_aggregated_durable_sources.Session.__aexit__` | 108 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_monitoring_queries_only_aggregated_durable_sources.Session |
-| `tests/unit/test_knowledge_monitoring.py` | `test_monitoring_queries_only_aggregated_durable_sources.Session.execute` | 111 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | test_monitoring_queries_only_aggregated_durable_sources.Session |
-| `tests/unit/test_knowledge_monitoring.py` | `test_monitoring_queries_only_aggregated_durable_sources.ready` | 118 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_monitoring_queries_only_aggregated_durable_sources |
-| `tests/unit/test_knowledge_monitoring.py` | `test_monitoring_endpoint_order_and_safe_ui_contract` | 136 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_knowledge_monitoring.py` | `test_empty_monitoring_does_not_invent_retrieval_quality_or_coverage` | 80 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_knowledge_monitoring.py` | `test_monitoring_queries_only_aggregated_durable_sources` | 92 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_knowledge_monitoring.py` | `test_monitoring_queries_only_aggregated_durable_sources.Result` | 95 | class | کلاس | test_monitoring_queries_only_aggregated_durable_sources |
+| `tests/unit/test_knowledge_monitoring.py` | `test_monitoring_queries_only_aggregated_durable_sources.Result.__init__` | 96 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_monitoring_queries_only_aggregated_durable_sources.Result |
+| `tests/unit/test_knowledge_monitoring.py` | `test_monitoring_queries_only_aggregated_durable_sources.Result.mappings` | 99 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_monitoring_queries_only_aggregated_durable_sources.Result |
+| `tests/unit/test_knowledge_monitoring.py` | `test_monitoring_queries_only_aggregated_durable_sources.Result.all` | 102 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_monitoring_queries_only_aggregated_durable_sources.Result |
+| `tests/unit/test_knowledge_monitoring.py` | `test_monitoring_queries_only_aggregated_durable_sources.Result.one` | 105 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_monitoring_queries_only_aggregated_durable_sources.Result |
+| `tests/unit/test_knowledge_monitoring.py` | `test_monitoring_queries_only_aggregated_durable_sources.Session` | 108 | class | کلاس | test_monitoring_queries_only_aggregated_durable_sources |
+| `tests/unit/test_knowledge_monitoring.py` | `test_monitoring_queries_only_aggregated_durable_sources.Session.__aenter__` | 109 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_monitoring_queries_only_aggregated_durable_sources.Session |
+| `tests/unit/test_knowledge_monitoring.py` | `test_monitoring_queries_only_aggregated_durable_sources.Session.__aexit__` | 112 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_monitoring_queries_only_aggregated_durable_sources.Session |
+| `tests/unit/test_knowledge_monitoring.py` | `test_monitoring_queries_only_aggregated_durable_sources.Session.execute` | 115 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | test_monitoring_queries_only_aggregated_durable_sources.Session |
+| `tests/unit/test_knowledge_monitoring.py` | `test_monitoring_queries_only_aggregated_durable_sources.ready` | 122 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_monitoring_queries_only_aggregated_durable_sources |
+| `tests/unit/test_knowledge_monitoring.py` | `test_monitoring_endpoint_order_and_safe_ui_contract` | 140 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_knowledge_review_governance.py` | `_memory` | 21 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_knowledge_review_governance.py` | `test_verified_incident_can_be_drafted_but_hypothetical_cause_never_becomes_fact` | 42 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_knowledge_review_governance.py` | `test_unverified_or_negative_experience_cannot_be_mislabeled_as_success` | 65 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
