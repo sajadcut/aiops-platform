@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 548 | Dashboard JS files scanned: 8 | Symbols indexed: 6019**
+**Python files scanned: 549 | Dashboard JS files scanned: 8 | Symbols indexed: 6032**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -4877,6 +4877,19 @@
 | `tests/unit/test_kubernetes_resource_analyzers.py` | `test_admission_webhook_analyzers_expose_metadata_not_client_credentials` | 104 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_kubernetes_resource_analyzers.py` | `test_secret_and_configmap_outputs_are_metadata_only` | 130 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_kubernetes_resource_analyzers.py` | `test_diagnostics_builder_exposes_independent_stage_outputs_and_registry` | 142 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_last_incident_config_apply_timeout.py` | `test_only_fixed_config_guard_gets_long_ssh_execution_window` | 22 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_last_incident_config_apply_timeout.py` | `test_long_config_mcp_has_180_second_per_tool_timeout_and_no_replay` | 38 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_last_incident_config_apply_timeout.py` | `test_long_config_mcp_has_180_second_per_tool_timeout_and_no_replay.Transport` | 46 | class | کلاس | test_long_config_mcp_has_180_second_per_tool_timeout_and_no_replay |
+| `tests/unit/test_last_incident_config_apply_timeout.py` | `test_long_config_mcp_has_180_second_per_tool_timeout_and_no_replay.Transport.post` | 47 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_long_config_mcp_has_180_second_per_tool_timeout_and_no_replay.Transport |
+| `tests/unit/test_last_incident_config_apply_timeout.py` | `test_long_config_mcp_has_180_second_per_tool_timeout_and_no_replay.Transport.aclose` | 51 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_long_config_mcp_has_180_second_per_tool_timeout_and_no_replay.Transport |
+| `tests/unit/test_last_incident_config_apply_timeout.py` | `test_auto_restart_crash_loop_can_be_included_in_explicit_start_scope` | 69 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_last_incident_config_apply_timeout.py` | `test_auto_restart_crash_loop_can_be_included_in_explicit_start_scope.Client` | 77 | class | کلاس | test_auto_restart_crash_loop_can_be_included_in_explicit_start_scope |
+| `tests/unit/test_last_incident_config_apply_timeout.py` | `test_auto_restart_crash_loop_can_be_included_in_explicit_start_scope.Client.service_status` | 78 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_auto_restart_crash_loop_can_be_included_in_explicit_start_scope.Client |
+| `tests/unit/test_last_incident_config_apply_timeout.py` | `test_signed_postapply_start_works_for_crash_loop_and_checks_systemd` | 104 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_last_incident_config_apply_timeout.py` | `test_signed_postapply_start_works_for_crash_loop_and_checks_systemd.Worker` | 106 | class | کلاس | test_signed_postapply_start_works_for_crash_loop_and_checks_systemd |
+| `tests/unit/test_last_incident_config_apply_timeout.py` | `test_signed_postapply_start_works_for_crash_loop_and_checks_systemd.Worker.service_status` | 107 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_signed_postapply_start_works_for_crash_loop_and_checks_systemd.Worker |
+| `tests/unit/test_last_incident_config_apply_timeout.py` | `test_signed_postapply_start_works_for_crash_loop_and_checks_systemd.Worker.start_service` | 120 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_signed_postapply_start_works_for_crash_loop_and_checks_systemd.Worker |
+| `tests/unit/test_last_incident_config_apply_timeout.py` | `test_auto_prevalidation_timeout_is_not_shorter_than_mcp_config_timeout` | 138 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_latency_observability.py` | `_read` | 4 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_latency_observability.py` | `test_major_outbound_integrations_have_semantic_latency_components` | 8 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_latency_observability.py` | `test_llm_logs_per_request_and_total_generation_latency` | 28 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
