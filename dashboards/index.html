@@ -263,13 +263,14 @@
   let showingHiddenIncidents = false;
   const isIncidentDismissed = id => hiddenIncidents.has(String(id || ''));
   function persistHiddenIncidents(next) {
+    const bounded = new Set([...next].slice(-1000));
     try {
-      localStorage.setItem(incidentHiddenKey, JSON.stringify([...next].slice(-1000)));
+      localStorage.setItem(incidentHiddenKey, JSON.stringify([...bounded]));
     } catch (_) {
       if (typeof showError === 'function') showError('ذخیره پنهان‌سازی در مرورگر ممکن نیست. تنظیمات ذخیره‌سازی مرورگر را بررسی کنید.');
       return false;
     }
-    hiddenIncidents = next;
+    hiddenIncidents = bounded;
     return true;
   }
   function refreshHiddenIncidentViews() {
