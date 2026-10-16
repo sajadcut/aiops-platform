@@ -20,6 +20,40 @@ from apps.incident_vm_identity import incident_vm_context, vm_binding_diagnostic
 from apps.audit_service.postgres import PostgreSQLAuditStore
 from domain.contracts.logging import logger
 from domain.models import Incident
+from integrations.vm.mcp_client import VMEdgeMCPClient
+
+
+async def _verified_service_start_scope(*, target: str, service: str) -> bool:
+    """Only a fresh read-only VM MCP check can extend a new ticket to Start.
+
+    This does NOT approve or execute a service operation. The exact Boolean
+    goes into the immutable approval digest and signed single-use claim.
+    Older config-only tickets must never be upgraded.
+    """
+    try:
+        status = await asyncio.wait_for(
+            VMEdgeMCPClient().service_status(target, service), timeout=12,
+        )
+    except Exception as exc:
+        logger.warning(
+            "config_recovery_scope_precheck_unavailable",
+            service=service, failure_type=type(exc).__name__,
+        )
+        return False
+    if not isinstance(status, dict):
+        return False
+    observed = str(status.get("service") or "").lower().removesuffix(".service")
+    requested = str(service).lower().removesuffix(".service")
+    active = status.get("active_state")
+    sub = status.get("sub_state")
+    return bool(
+        status.get("success") is True
+        and status.get("target") == target
+        and observed == requested
+        and status.get("load_state") == "loaded"
+        and ((active == "failed" and sub == "failed")
+             or (active == "inactive" and sub == "dead"))
+    )
 
 
 def auto_queue_candidate(state: dict) -> dict | None:
@@ -130,20 +164,26 @@ async def auto_queue_prevalidation(session, incident_id: str, state: dict) -> di
            "candidate": proposal["candidate_sha256"]})).scalar_one_or_none()
     if prior_id:
         return {"status": "already_queued", "approval_id": str(prior_id)}
+    # Read the *current* systemd state before fixing the approval scope.
+    # The operator's later high-risk Approval explicitly covers this start;
+    # automatic prevalidation alone has no production-write authority.
+    start_after_apply = await _verified_service_start_scope(
+        target=target, service=proposal["service"],
+    )
     parameters = {
         "service": proposal["service"],
         "config_file": proposal["config_file"],
         "original_sha256": proposal["original_sha256"],
         "candidate_sha256": proposal["candidate_sha256"],
         "proposed_change": proposal["proposed_change"],
-        "start_service_after_apply": False,
+        "start_service_after_apply": start_after_apply,
     }
     metadata = bind_metadata(
         {"workflow": "config_change", **parameters,
          "source_evidence_refs": proposal["source_evidence_refs"][:8],
          "request_phase": "pending_validation",
          "automated_prevalidation": True,
-         "start_service_after_apply": False,
+         "start_service_after_apply": start_after_apply,
          "isolated_validation": False,
          "production_write_performed": False},
         incident_id=str(incident_id), tool_name="vm_config_change",
@@ -171,6 +211,7 @@ async def auto_queue_prevalidation(session, incident_id: str, state: dict) -> di
             "proposed_change": proposal["proposed_change"],
             "production_write_performed": False,
             "human_approval_required": True,
+            "start_service_after_apply": start_after_apply,
         },
         "created_at": datetime.now(timezone.utc).isoformat(),
     })
