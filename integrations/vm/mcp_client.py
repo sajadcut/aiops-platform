@@ -37,8 +37,21 @@ class VMEdgeMCPClient(MCPClient):
         # Full-file repair runs a bounded LLM call on the trusted MCP worker.
         # Use one longer read, not three 20-second HTTP retries: a lost
         # response does not cancel the in-flight remote LLM generation.
-        self.single_attempt_read_tools = frozenset({"service_config_llm_repair"})
-        self.tool_timeout_seconds = {"service_config_llm_repair": 140.0}
+        # Config prevalidation and apply can rebuild a complete file, run
+        # isolated vendor validation, then perform a bounded two-stage sudo
+        # transaction. The generic 15/20-second MCP read timeout cancels the
+        # HTTP request while the SSH command is still running. A write response
+        # lost in this window is ambiguous and MUST NOT be blindly replayed.
+        # Validation is a single read attempt to avoid parallel workers
+        # reconstructing the same candidate after a slow response.
+        self.single_attempt_read_tools = frozenset({
+            "service_config_llm_repair", "config_change_validate",
+        })
+        self.tool_timeout_seconds = {
+            "service_config_llm_repair": 140.0,
+            "config_change_validate": 180.0,
+            "config_change_apply": 180.0,
+        }
 
     async def initialize(self) -> Dict[str, Any]:
         if self._initialized and self._identity_validated:
