@@ -297,6 +297,11 @@ async def execute_config(approval_id: UUID, identity=Depends(require_permission(
             "applied_config_vendor_verified" if applied else "config_execution_not_verified",
             {
                 "approval_id": id_, "result": str(result.get("status") or "unknown")[:100],
+                # Stable, fixed diagnostic identifiers only. Never include
+                # remote stdout/stderr, script bytes, config, or sudo password.
+                "failure_reason": str(result.get("failure_reason") or "")[:100] or None,
+                "guard_exit_code": (result.get("guard_exit_code")
+                                    if type(result.get("guard_exit_code")) is int else None),
                 "service": meta["service"], "config_file": meta["config_file"],
                 "candidate_sha256": meta["candidate_sha256"],
                 "rollback_status": result.get("rollback_status"),
@@ -343,6 +348,10 @@ async def execute_config(approval_id: UUID, identity=Depends(require_permission(
         "incident_recovery_status": recovery_resolution,
         "incident_resolved": recovery_resolution == "resolved_independent_vm_verified",
         "approval_id": id_, "success": applied,
+        "failure_reason": str(result.get("failure_reason") or "")[:100] or None,
+        "guard_exit_code": (result.get("guard_exit_code")
+                            if type(result.get("guard_exit_code")) is int else None),
+        "production_write_performed": result.get("production_write_performed"),
         "status": "applied_verified" if applied else str(result.get("status") or "execution_unverified"),
         "rollback_status": result.get("rollback_status") or "unverified",
         "config_file": meta["config_file"], "service": meta["service"],
