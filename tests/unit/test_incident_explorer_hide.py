@@ -171,4 +171,4 @@ def test_dismiss_button_is_not_a_new_list_row_and_uses_both_theme_palettes():
     assert 'prefers-reduced-motion:reduce' in css
     # The previous screenshot strongly suggested stale HTML-vs-CSS bundles.
     assert '/dashboard/control-center.css?v=20261016-dismiss-ux2' in html
-    assert '/dashboard/control-center.js?v=20261016-dismiss-ux2' in html
+    assert '/dashboard/control-center.js?v=20261016-agent-durable1' in html

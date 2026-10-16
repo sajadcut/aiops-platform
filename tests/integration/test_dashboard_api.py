@@ -14,7 +14,7 @@ def test_dashboard_ui_contains_live_api_calls():
     # markup with an old stylesheet, putting native buttons on separate rows.
     assert 'href="/dashboard/control-center.css?v=20261016-dismiss-ux2"' in html
     assert 'href="/dashboard/approval-actions.css"' in html
-    assert 'src="/dashboard/control-center.js?v=20261016-dismiss-ux2"' in html
+    assert 'src="/dashboard/control-center.js?v=20261016-agent-durable1"' in html
     assert 'src="/dashboard/approval-actions.js"' in html
     assert "location.replace(location.pathname+'/'" not in html
     assert "/api/v1/dashboard/summary" in js
