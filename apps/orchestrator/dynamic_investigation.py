@@ -542,6 +542,7 @@ class DynamicInvestigationPlanner:
                 and (
                     (general_review.get("proposed_change") in {
                          "remove_trailing_json_comma", "quote_unquoted_json_key",
+                         "repair_json_punctuation",
                      } and reviewed_file.endswith(".json"))
                     or (general_review.get("proposed_change") == "remove_extra_xml_closing_tag"
                         and reviewed_file.endswith(".xml"))
