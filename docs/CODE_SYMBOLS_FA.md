@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 550 | Dashboard JS files scanned: 8 | Symbols indexed: 6020**
+**Python files scanned: 551 | Dashboard JS files scanned: 8 | Symbols indexed: 6029**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -4560,6 +4560,15 @@
 | `tests/unit/test_incident_operational_finalization.py` | `test_operational_outcome_preserves_authoritative_source_recovery` | 82 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_incident_operational_finalization.py` | `test_repeated_same_operational_outcome_updates_bounded_identity_not_duplicate` | 112 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_incident_operational_finalization.py` | `test_late_failed_outcome_cannot_reopen_independently_verified_recovery` | 147 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_post_repair_live_status.py` | `_sample` | 26 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_incident_post_repair_live_status.py` | `_applied` | 45 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_incident_post_repair_live_status.py` | `test_verified_apply_starts_new_observation_epoch_not_fabricated_health` | 64 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_post_repair_live_status.py` | `test_unbound_or_failed_change_cannot_erase_existing_crash` | 90 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_post_repair_live_status.py` | `test_new_post_repair_crash_or_restart_growth_still_flags_instability` | 97 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_post_repair_live_status.py` | `test_allowlisted_live_status_preserves_safe_numeric_fields` | 110 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_post_repair_live_status.py` | `test_successful_config_apply_audit_separates_file_and_start` | 123 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_post_repair_live_status.py` | `test_systemd_recovery_needs_two_live_checks_but_not_http_health` | 146 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_post_repair_live_status.py` | `test_recheck_includes_prior_apply_audit_and_ui_uses_durable_outcome` | 169 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_incident_progress.py` | `event` | 14 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_incident_progress.py` | `test_progress_only_advances_on_real_completed_work_not_time_or_source_ping` | 19 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_incident_progress.py` | `test_stage_failure_does_not_fabricate_completion` | 35 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
