@@ -1166,6 +1166,13 @@ class SSHVMConnector:
             if outcome is None:
                 outcome = candidate
                 selected = (path, path_source)
+            # Do not show the FIRST syntactically healthy JSON file while a
+            # later systemd-verified appsettings.json is actually broken.
+            # A measured syntax failure outranks a healthy/unverified review.
+            if (candidate.get("validation_status") == "FORMAT_INVALID"
+                    and outcome.get("status") != "candidate_proposed"):
+                outcome = candidate
+                selected = (path, path_source)
             if candidate.get("status") == "candidate_proposed":
                 outcome = candidate
                 selected = (path, path_source)
