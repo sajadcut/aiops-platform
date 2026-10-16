@@ -218,7 +218,7 @@ class OpenAICompatibleLLMProvider(LLMAdapter):
                             "repair_attempts_used": attempt,
                             "configured_attempts": attempts,
                             "configured_completion_attempts": attempts,
-                            "configured_transport_attempts": max(1, int(settings.RETRY_MAX_ATTEMPTS)),
+                            "configured_transport_attempts": (1 if stage == "full_config_llm_repair" else max(1, int(settings.RETRY_MAX_ATTEMPTS))),
                             "finish_reason": response.finish_reason,
                             "total_duration_ms": round((time.perf_counter() - generation_started) * 1000, 3),
                         },
@@ -237,7 +237,7 @@ class OpenAICompatibleLLMProvider(LLMAdapter):
                     "error_type": type(exc).__name__,
                     "configured_attempts": attempts,
                     "configured_completion_attempts": attempts,
-                    "configured_transport_attempts": max(1, int(settings.RETRY_MAX_ATTEMPTS)),
+                    "configured_transport_attempts": (1 if stage == "full_config_llm_repair" else max(1, int(settings.RETRY_MAX_ATTEMPTS))),
                     "total_duration_ms": round((time.perf_counter() - generation_started) * 1000, 3),
                 },
                 level="warning",
@@ -303,7 +303,7 @@ class OpenAICompatibleLLMProvider(LLMAdapter):
                 "reasoning_effort": request_payload.get("reasoning_effort"),
                 "tool_count": len(request_payload.get("tools") or []),
                 "tool_choice": request_payload.get("tool_choice"),
-                "configured_transport_attempts": max(1, int(settings.RETRY_MAX_ATTEMPTS)),
+                "configured_transport_attempts": (1 if stage == "full_config_llm_repair" else max(1, int(settings.RETRY_MAX_ATTEMPTS))),
             },
         )
 
