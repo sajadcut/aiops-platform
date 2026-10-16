@@ -206,6 +206,7 @@ def local_config_review(encoded: str, *, path: str, validator_error_line: int | 
                         and source[:position] + source[position + 1:] == punctuation
                     )
                     if single_byte:
+                        updated = punctuation
                         line_no = source[:position].count("\n") + 1
                         answer.update({
                             "status": "candidate_proposed",
@@ -312,7 +313,10 @@ def local_config_review(encoded: str, *, path: str, validator_error_line: int | 
     if answer["status"] == "candidate_proposed":
         answer["proposed_excerpt"] = [
             {"line": line_no, "content": (
-                "xml_closing_tag_removed" if ext == "xml" else "json_comma_removed"
+                "xml_closing_tag_removed" if ext == "xml"
+                else "json_property_quoted" if answer["proposed_change"] == "quote_unquoted_json_key"
+                else "json_punctuation_repaired" if answer["proposed_change"] == "repair_json_punctuation"
+                else "json_comma_removed"
             )}
         ]
     return answer
