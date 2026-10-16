@@ -745,7 +745,7 @@
 | `apps/api/incident_chat.py` | `_existing_recovery_approval` | 1013 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/incident_chat.py` | `incident_recovery_approval` | 1037 | async function | Read an existing recovery request; never synthesize Approval from advice. | module |
 | `apps/api/incident_chat.py` | `queue_incident_recovery_approval` | 1061 | async function | Idempotently queue the *already proposed* service recovery for humans. | module |
-| `apps/api/incident_chat.py` | `incident_chat_request_approval` | 1126 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/incident_chat.py` | `incident_chat_request_approval` | 1151 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/incident_resources.py` | `MemoryLifecycleRequest` | 31 | class | کلاس | module |
 | `apps/api/incident_resources.py` | `_require_current_database_schema` | 36 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/incident_resources.py` | `get_context` | 41 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
