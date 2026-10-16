@@ -6,6 +6,8 @@ single-use, DB-consumed approval and an independent short-lived MCP signature.
 from __future__ import annotations
 from uuid import UUID
 
+import httpx
+
 from fastapi import APIRouter, Depends, HTTPException
 
 from apps.approval_service.binding import assert_config_request_bound
@@ -253,6 +255,13 @@ async def execute_config(approval_id: UUID, identity=Depends(require_permission(
         result = await VMEdgeMCPClient().config_change_apply(
             meta["target"], service=meta["service"], claims=claim, signature=signature,
         )
+    except httpx.TimeoutException:
+        # The worker may still be writing after the client loses its reply.
+        # Mark outcome UNKNOWN, never retry a consumed, high-risk Approval.
+        result = {"success": False,
+                  "status": "config_apply_transport_timeout_result_unknown",
+                  "production_write_performed": None,
+                  "rollback_status": "unverified"}
     except Exception:
         result = {"success": False, "status": "mcp_apply_failed_or_unavailable",
                   "production_write_performed": None, "rollback_status": "unverified"}
@@ -334,7 +343,10 @@ async def execute_config(approval_id: UUID, identity=Depends(require_permission(
             else "Configuration applied and systemd is running, but incident "
                  "resolution is gated by the original alert and correlated signals."
             if recovery_confirmed
-            else "Configuration apply finished; service recovery not yet verified."
+            else "Configuration apply failed or its result could not be verified. "
+                 "The approval has been consumed; check the live file hash, "
+                 "service state and execution audit before issuing a new "
+                 "human-approved change. No Start was authorized or verified."
         ),
     }
 
