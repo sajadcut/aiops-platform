@@ -170,6 +170,23 @@ systemd observation for the incident's bound VM/service is `failed` or
 
 `start_service_after_apply=true`
 
+**Automated prevalidation** now runs an additional live, read-only MCP
+`service_status` check on the exactly bound target and service *before*
+creating the immutable ticket. If `LoadState=loaded` and
+`ActiveState/SubState` is `failed/failed` or `inactive/dead`,
+the pending ticket includes `start_service_after_apply=true` in its signed
+approval intent. On any transport error, identity mismatch, transitional
+state, or healthy/running service it is `false`. The automated step NEVER
+approves, starts, or writes anything; the subsequent human approval UI clearly
+states that this particular ticket covers configuration repair AND one
+conditional service start after a successful post-apply vendor check.
+
+A consumed config-only ticket cannot be upgraded. If the configuration was
+already repaired under an older approval that had `false`, request a NEW
+service-recovery approval via the Incident Room chat, validate the live runbook
+preconditions and approve/execute that separate request. Never replay the old
+config-change approval against an already changed source hash.
+
 The confirmation text explicitly states both effects before the ticket is
 created, and the high-risk Approval and execution confirmations repeat the
 combined scope. This Boolean is stored **immutably in the ticket's approval
@@ -194,7 +211,10 @@ A response reports separate facts:
 - `service_recovery_status`: `systemd_active`, `already_active`,
   `start_failed`, `start_not_verified`, `precheck_unavailable`,
   `service_state_not_startable`, or `not_authorized`
-- `service_recovery_confirmed`: observed systemd active after action
+- `service_recovery_confirmed`: observed systemd active and running after action;
+  an unknown application health value (`healthy=null`) must not falsely negate
+  the *systemd* result. Application readiness and Zabbix recovery remain
+  separate checks and are not inferred from systemd status.
 - `monitor_recovery_confirmed=false`: do not conflate local running with
   alert-source recovery
 
