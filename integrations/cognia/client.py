@@ -247,15 +247,14 @@ class CogniaClient:
         return payload
 
     async def readiness_status(self) -> Dict[str, Any]:
-        """Probe the exact origin-root Cognia readiness route, without auth.
+        """Probe origin-root Swagger for HTTP reachability, without auth.
 
-        httpx appends leading-slash paths to a client's base_url path. With a
-        configured URL like https://cognia.example/api, a relative
-        '/health/ready' becomes '/api/health/ready'. An absolute URL tied to
-        the configured scheme/authority avoids that incorrect result. Do not
-        follow redirects or infer that readiness proves KB authorization.
+        This is NOT Cognia readiness or Knowledge Base authorization.
+        Retain the existing method name for callers. The absolute origin URL
+        avoids appending Swagger to an '/api' path in COGNIA_BASE_URL.
+        Never follow redirects or forward Machine Client credentials.
         """
-        endpoint = "/health/ready"
+        endpoint = "/swagger/index.html"
         url = httpx.URL(self.base_url).copy_with(
             path=endpoint, query=None, fragment=None,
         )
@@ -276,7 +275,7 @@ class CogniaClient:
         }
 
     async def health_check(self) -> bool:
-        """Boolean-compatible readiness check for evidence collectors."""
+        """Boolean-compatible Swagger HTTP reachability check for collectors."""
         return bool((await self.readiness_status())["healthy"])
 
     async def list_knowledge_bases(self) -> List[Dict[str, Any]]:

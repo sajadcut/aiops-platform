@@ -450,15 +450,15 @@ async def test_machine_token_redirect_is_rejected_without_replaying_credentials(
     "http://cognia.test",
     "http://cognia.test/api",
     "http://cognia.test/api/engine/",
-    "http://cognia.test/api/health/ready?unwanted=1",
+    "http://cognia.test/api/swagger/index.html?unwanted=1",
 ])
-async def test_readiness_always_targets_origin_root_and_never_sends_credentials(base_url):
+async def test_swagger_reachability_targets_origin_root_and_never_sends_credentials(base_url):
     destinations = []
 
     def handler(request: httpx.Request) -> httpx.Response:
         destinations.append(str(request.url))
         assert request.method == "GET"
-        assert request.url.path == "/health/ready"
+        assert request.url.path == "/swagger/index.html"
         assert request.url.query == b""
         assert "authorization" not in request.headers
         return httpx.Response(200, json={"status": "ready"})
@@ -470,10 +470,10 @@ async def test_readiness_always_targets_origin_root_and_never_sends_credentials(
     ) as client:
         status = await client.readiness_status()
         assert status == {
-            "healthy": True, "endpoint": "/health/ready", "http_status": 200,
+            "healthy": True, "endpoint": "/swagger/index.html", "http_status": 200,
         }
         assert await client.health_check() is True
-    assert destinations == ["http://cognia.test/health/ready"] * 2
+    assert destinations == ["http://cognia.test/swagger/index.html"] * 2
 
 
 @pytest.mark.asyncio
@@ -491,12 +491,12 @@ async def test_cognia_readiness_rejects_non_200_and_does_not_follow_redirects(st
     ) as client:
         status = await client.readiness_status()
         assert status["healthy"] is False
-        assert status["endpoint"] == "/health/ready"
+        assert status["endpoint"] == "/swagger/index.html"
         assert status["http_status"] == status_code
         assert status["error"] == (
             "redirect_rejected" if status_code in (301, 302) else "unexpected_http_status"
         )
-    assert calls == ["/health/ready"]
+    assert calls == ["/swagger/index.html"]
 
 
 @pytest.mark.asyncio
@@ -509,6 +509,6 @@ async def test_cognia_readiness_timeout_is_not_falsely_reported_as_healthy():
     ) as client:
         status = await client.readiness_status()
     assert status == {
-        "healthy": False, "endpoint": "/health/ready",
+        "healthy": False, "endpoint": "/swagger/index.html",
         "http_status": None, "error": "timeout",
     }

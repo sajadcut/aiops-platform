@@ -61,19 +61,19 @@ Run `python -m scripts.verify_cognia_connection` from the repository root after 
 
 
 
-## Readiness monitoring
+## Cognia HTTP reachability monitoring
 
-The AIOps dependency status for Cognia is derived exclusively from
-`GET /health/ready` on the **origin** of `COGNIA_BASE_URL`.
-Even if that configuration contains a path such as `/api`, the probe must
-request `https://<host>/health/ready` rather than
-`https://<host>/api/health/ready`. HTTP **200** is healthy. Other HTTP
-statuses, redirects, transport errors, and timeouts are unhealthy and
-must not be reported as successful in `/api/v1/health`,
-`/api/v1/health/ready`, or the AIOps dashboard. The dependency result
-includes `endpoint` and, if available, `http_status` for diagnosis.
+AIOps probes `GET /swagger/index.html` at the **origin** of
+`COGNIA_BASE_URL`, not `/health/ready`. Even if the configured base URL
+includes `/api`, the actual request goes to
+`https://<host>/swagger/index.html`, not the nested `/api` URL.
 
-A successful readiness probe confirms only Cognia service readiness.
-It does **not** confirm Machine Client credentials, Knowledge Base grants,
-searchability, indexing, or permission to publish; those remain separate
-authenticated acceptance checks.
+HTTP **200** counts as reachable. Redirects, other HTTP statuses, timeouts
+and transport failures do not. The check neither sends Client credentials
+nor follows redirects. The AIOps dashboard and `/api/v1/health` report the
+`endpoint`, available `http_status`, and
+`check_type="http_reachability"`.
+
+**Important:** Swagger availability proves HTTP reachability only. It
+does not prove complete Cognia readiness, KB authorization, indexing,
+searchability or publication. Authenticated acceptance checks remain separate.

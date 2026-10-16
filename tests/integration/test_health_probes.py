@@ -57,7 +57,7 @@ async def test_cognia_probe_reports_exact_ready_endpoint_and_upstream_http_statu
         closed = False
 
         async def readiness_status(self):
-            return {"healthy": False, "endpoint": "/health/ready",
+            return {"healthy": False, "endpoint": "/swagger/index.html",
                     "http_status": 503, "error": "unexpected_http_status"}
 
         async def health_check(self):
@@ -70,8 +70,9 @@ async def test_cognia_probe_reports_exact_ready_endpoint_and_upstream_http_statu
     name, status = await _probe_one("cognia", client)
     assert name == "cognia"
     assert status == {
-        "healthy": False, "endpoint": "/health/ready",
-        "http_status": 503, "error": "unexpected_http_status",
+        "healthy": False, "endpoint": "/swagger/index.html",
+        "http_status": 503, "check_type": "http_reachability",
+        "error": "unexpected_http_status",
     }
     assert client.closed is True
 
@@ -80,10 +81,11 @@ async def test_cognia_probe_reports_exact_ready_endpoint_and_upstream_http_statu
 async def test_cognia_probe_success_preserves_http_200():
     class Cognia:
         async def readiness_status(self):
-            return {"healthy": True, "endpoint": "/health/ready", "http_status": 200}
+            return {"healthy": True, "endpoint": "/swagger/index.html", "http_status": 200}
 
         async def close(self):
             return None
 
     _, status = await _probe_one("cognia", Cognia())
-    assert status == {"healthy": True, "endpoint": "/health/ready", "http_status": 200}
+    assert status == {"healthy": True, "endpoint": "/swagger/index.html",
+                      "http_status": 200, "check_type": "http_reachability"}
