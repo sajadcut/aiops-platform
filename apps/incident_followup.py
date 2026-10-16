@@ -501,4 +501,18 @@ async def persist_and_reassess(
                      incident_id=str(incident_id), error_type=type(exc).__name__)
         status["status"] = "evidence_recorded_reassessment_failed"
         await db.rollback()
-    return await emit_status(status)
+    recorded = await emit_status(status)
+    # A newly valid candidate from a live Copilot review is actionable even
+    # when the initial incident RCA was inconclusive. The separate queue
+    # requires exact hashes and independent validation; no Apply is invoked.
+    if status.get("reassessed") is True:
+        try:
+            from apps.config_change_auto_queue import auto_queue_prevalidation
+            auto = await auto_queue_prevalidation(db, str(incident_id), state)
+            recorded["auto_config_prevalidation"] = auto
+        except Exception as exc:
+            logger.warning(
+                "incident_followup_auto_prevalidation_failed",
+                incident_id=str(incident_id), error_type=type(exc).__name__,
+            )
+    return recorded
