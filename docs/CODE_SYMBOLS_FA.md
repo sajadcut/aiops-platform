@@ -3101,7 +3101,7 @@
 | `tests/unit/test_approval_repair_malformed_llm.py` | `test_invalid_llm_responses_fall_back_to_parser_and_publish_sealed_candidate.store` | 84 | method | state یا داده را به‌صورت durable ذخیره/به‌روزرسانی می‌کند | test_invalid_llm_responses_fall_back_to_parser_and_publish_sealed_candidate |
 | `tests/unit/test_approval_repair_malformed_llm.py` | `test_brace_pair_preview_allows_measured_closer_further_down` | 120 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_approval_repair_malformed_llm.py` | `test_automatic_review_and_preapproval_binds_same_two_brace_candidate` | 132 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_approval_repair_malformed_llm.py` | `test_approval_scope_accepts_json_punctuation_only_after_jq_validation` | 174 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_approval_repair_malformed_llm.py` | `test_approval_scope_accepts_json_punctuation_only_after_jq_validation` | 177 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_approval_store_contract.py` | `Result` | 6 | class | کلاس | module |
 | `tests/unit/test_approval_store_contract.py` | `Result.__init__` | 7 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | Result |
 | `tests/unit/test_approval_store_contract.py` | `Result.mappings` | 10 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | Result |
