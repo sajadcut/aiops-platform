@@ -540,8 +540,9 @@ class DynamicInvestigationPlanner:
         if (name and name == reviewed_name
                 and general_review.get("status") == "candidate_proposed"
                 and (
-                    (general_review.get("proposed_change") == "remove_trailing_json_comma"
-                     and reviewed_file.endswith(".json"))
+                    (general_review.get("proposed_change") in {
+                         "remove_trailing_json_comma", "quote_unquoted_json_key",
+                     } and reviewed_file.endswith(".json"))
                     or (general_review.get("proposed_change") == "remove_extra_xml_closing_tag"
                         and reviewed_file.endswith(".xml"))
                 )
