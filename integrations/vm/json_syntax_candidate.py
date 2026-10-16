@@ -296,7 +296,7 @@ def bounded_json_repair_with_edits(source: str, max_edits: int = 3):
                 except json.JSONDecodeError as next_error:
                     # Do not speculate backwards or explore arbitrary source.
                     bucket = frontier.setdefault(new_cost, {})
-                    if next_error.pos >= error.pos and len(bucket) < 128:
+                    if next_error.pos >= error.pos - 3 and len(bucket) < 128:
                         bucket[proposed] = changes
                 else:
                     successes.setdefault(new_cost, {})[proposed] = changes
