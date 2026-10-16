@@ -775,7 +775,10 @@ class SSHVMConnector:
             "restart_count": numeric("NRestarts"), "result": values.get("Result"),
             "timeout_start_usec": values.get("TimeoutStartUSec"),
             "timeout_stop_usec": values.get("TimeoutStopUSec"),
-            "status": active_state, "healthy": active_state == "active", "error": None,
+            # systemd ActiveState can be transient during crash/restart loops.
+            # It proves neither a successful application startup nor HTTP health.
+            "status": active_state, "systemd_active": active_state == "active",
+            "healthy": None, "application_health_verified": False, "error": None,
         }
         if active_state in {"failed", "inactive", "activating", "deactivating"}:
             status = await self._run(
