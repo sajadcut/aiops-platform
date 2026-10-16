@@ -106,6 +106,52 @@ def build_dossier(
         }
         break
 
+    # Preserve actual attempted/blocked recovery outcomes for human lessons,
+    # including FAILED writes that are not eligible for verified-runbook KB.
+    # This source is the incident-bound durable audit, never model prose.
+    operation_fact = None
+    allowed_actions = {"start_service": "Start", "restart_service": "Restart",
+                       "reload_service": "Reload"}
+    for event in audits[:200]:
+        kind = str(event.get("event_type") or "")
+        if kind not in {"remediation_executed", "remediation_precondition_failed"}:
+            continue
+        action = str(event.get("action") or "")
+        if action not in allowed_actions:
+            continue
+        meta = event.get("metadata") or {}
+        if not isinstance(meta, Mapping):
+            continue
+        result = meta.get("result") or {}
+        verification = meta.get("verification") or {}
+        if not isinstance(result, Mapping) or not isinstance(verification, Mapping):
+            continue
+        if kind == "remediation_executed" and result.get("action") != action:
+            continue
+        approval = str(meta.get("approval_id") or "")
+        if not re.fullmatch(r"[0-9a-fA-F-]{36}", approval):
+            continue
+        audit_id = str(event.get("event_id") or "")[:64]
+        if kind == "remediation_precondition_failed":
+            operation_fact = (
+                f"درخواست {allowed_actions[action]} پس از Approval در پیش‌شرط اجرا مسدود شد"
+                f"؛ اجرا به‌عنوان موفق ثبت نشده؛ Approval: {approval}؛ Audit: {audit_id}"
+            )
+        else:
+            result_code = (
+                "فرمان توسط ابزار اجرا شد" if result.get("success") is True else
+                "اجرای فرمان ناموفق ثبت شد" if result.get("success") is False else
+                "نتیجهٔ اجرا نامعلوم"
+            )
+            verification_code = str(verification.get("status") or "unverified").lower()
+            if verification_code not in {"success", "failed", "partial", "inconclusive"}:
+                verification_code = "unverified"
+            operation_fact = (
+                f"عملیات ممیزی‌شده: {allowed_actions[action]}؛ {result_code}؛ "
+                f"Verification: {verification_code}؛ Approval: {approval}؛ Audit: {audit_id}"
+            )
+        break
+
     recovered = isinstance(source_recovery, Mapping) and (
         source_recovery.get("source") == "zabbix"
         and source_recovery.get("incident_resolved") is True
@@ -147,6 +193,8 @@ def build_dossier(
             f"وضعیت ثبت‌شدهٔ systemd: {live_status['active_state']} "
             f"(شاهد: {live_status['evidence_ref']}؛ ممکن است قدیمی باشد)"
         )
+    if operation_fact:
+        facts.append(operation_fact)
     facts.append(
         "وضعیت رفع رخداد در منبع مانیتورینگ: "
         + ("Recovery معتبر Zabbix ثبت و رخداد Resolved شده است"
