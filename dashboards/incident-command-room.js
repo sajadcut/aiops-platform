@@ -1158,11 +1158,21 @@
         (state.language==='fa'?'سرویس از دید systemd فعال؛ Restart ثبت نشد':
           'Systemd active; restart approval not queued')
       : authStatus==='pending'?tr('approvalPending'):authStatus==='approved'?tr('approvalApproved'):tr('approvalFinished');
-    show('#ic-decision-pulse','<small>'+tr('decisionDesk')+'</small><strong>'+esc(pulseTitle)+'</strong><p>'+
-      esc(analyzing
-        ? (state.language==='fa'?'Agentها در حال گردآوری شواهد و بررسی رخداد هستند.':'Agents are analyzing the incident and gathering evidence.')
-        : stateChangedActive?recoveryApprovalSafetyNote(state.language==='fa')
-        : authStatus==='approved'?tr('approvalSeparate'):tr('backendGate'))+'</p>');
+    const recoveryExplanation=state.language==='fa'
+      ? 'علت توقف بازیابی: هنگام ثبت درخواست تأیید، بررسی زنده نشان داد سرویس از وضعیت خطا به active/running تغییر کرده است. بنابراین برای جلوگیری از Restart غیرضروری، درخواست Approval ثبت نشد.'
+      : 'Why recovery was stopped: the fresh systemd check found the service active/running rather than failed. Restart approval was not queued to prevent an unnecessary operation.';
+    show('#ic-decision-pulse',stateChangedActive
+      ? '<div role="alert" aria-live="polite" style="border:2px solid #d97706;border-radius:12px;padding:18px 20px;background:rgba(217,119,6,.09);margin:8px 0;">'+
+          '<strong style="display:block;font-size:1.35rem;line-height:1.6;font-weight:800;">'+
+            esc(state.language==='fa'?'علت عدم اجرای بازیابی سرویس':'Why service recovery was stopped')+'</strong>'+
+          '<p style="font-size:1.1rem;line-height:1.9;font-weight:650;margin:10px 0;">'+
+            esc(recoveryExplanation)+'</p>'+
+          '<p style="font-size:1rem;line-height:1.8;margin:0;">'+
+            esc(recoveryApprovalSafetyNote(state.language==='fa'))+'</p></div>'
+      : '<small>'+tr('decisionDesk')+'</small><strong>'+esc(pulseTitle)+'</strong><p>'+
+          esc(analyzing
+            ? (state.language==='fa'?'Agentها در حال گردآوری شواهد و بررسی رخداد هستند.':'Agents are analyzing the incident and gathering evidence.')
+            : authStatus==='approved'?tr('approvalSeparate'):tr('backendGate'))+'</p>');
     const quick=[
       ['started',date(i.started_at)],['duration',i.elapsed_seconds==null?tr('unknown'):num(Math.max(0,Math.floor(i.elapsed_seconds/60)))+' '+(state.language==='fa'?'دقیقه':'min')],
       ['risk',noProposedAction(r)?(state.language==='fa'?'اقدام اجرایی پیشنهاد نشده':'No executable action'):status(action.risk_level)],
