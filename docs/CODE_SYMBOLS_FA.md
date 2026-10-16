@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 554 | Dashboard JS files scanned: 8 | Symbols indexed: 6085**
+**Python files scanned: 554 | Dashboard JS files scanned: 8 | Symbols indexed: 6102**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -652,13 +652,14 @@
 | `agents/vm/engine.py` | `_causal_findings` | 607 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/vm/engine.py` | `build_vm_guest_analysis` | 665 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
 | `apps/api/a2a.py` | `a2a_request` | 13 | async function | Governed in-process A2A analysis endpoint. | module |
-| `apps/api/agents.py` | `_CatalogOnlyLLMAdapter` | 13 | class | Non-executable adapter used only to construct analysis metadata safely. | module |
-| `apps/api/agents.py` | `_CatalogOnlyLLMAdapter.provider_name` | 22 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _CatalogOnlyLLMAdapter |
-| `apps/api/agents.py` | `_CatalogOnlyLLMAdapter.generate` | 25 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _CatalogOnlyLLMAdapter |
-| `apps/api/agents.py` | `_CatalogOnlyLLMAdapter.generate_with_messages` | 35 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _CatalogOnlyLLMAdapter |
-| `apps/api/agents.py` | `agent_catalog` | 46 | async function | Return the specialist catalog without requiring an operational LLM runtime. | module |
-| `apps/api/agents.py` | `_agent_metric_items` | 64 | function | Normalize process-local telemetry into the dashboard/API list contract. | module |
-| `apps/api/agents.py` | `agent_metrics` | 77 | async function | Return process-local Agent observability counters. | module |
+| `apps/api/agents.py` | `_CatalogOnlyLLMAdapter` | 16 | class | Non-executable adapter used only to construct analysis metadata safely. | module |
+| `apps/api/agents.py` | `_CatalogOnlyLLMAdapter.provider_name` | 25 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _CatalogOnlyLLMAdapter |
+| `apps/api/agents.py` | `_CatalogOnlyLLMAdapter.generate` | 28 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _CatalogOnlyLLMAdapter |
+| `apps/api/agents.py` | `_CatalogOnlyLLMAdapter.generate_with_messages` | 38 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _CatalogOnlyLLMAdapter |
+| `apps/api/agents.py` | `agent_catalog` | 49 | async function | Return the specialist catalog without requiring an operational LLM runtime. | module |
+| `apps/api/agents.py` | `_agent_metric_items` | 67 | function | Merge durable facts without inferring a call from deduplicated findings. | module |
+| `apps/api/agents.py` | `_agent_metric_items.row_for` | 81 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _agent_metric_items |
+| `apps/api/agents.py` | `agent_metrics` | 191 | async function | Durable cross-worker Agent history, not process-local zeroed counters. | module |
 | `apps/api/audit.py` | `list_audit_events` | 15 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
 | `apps/api/chatbot.py` | `_iso` | 30 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/chatbot.py` | `_session_summary` | 34 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
@@ -1447,24 +1448,24 @@
 | `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._operational_memory_query` | 228 | method | Build a bounded symptom query without copying raw logs or credentials. | E2EOrchestrator |
 | `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._context_node` | 288 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
 | `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._triage_node` | 458 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._agent_input` | 487 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._run_specialists` | 495 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._run_specialists.observed_agent` | 500 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator._run_specialists |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._additional_evidence_round` | 560 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._parallel_agents_node` | 601 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._rca_node` | 663 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._live_evidence_ids` | 698 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._evaluator_node` | 721 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._route_after_evaluation` | 739 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._decision_node` | 747 | async method | Evaluate the concrete execution binding, never RCA prose alone. | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._route_after_decision` | 787 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._approval_node` | 800 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._route_after_approval` | 813 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._execution_node` | 820 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._verification_node` | 829 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._memory_node` | 936 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._end_node` | 1026 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._average_confidence` | 1033 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._agent_input` | 499 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._run_specialists` | 507 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._run_specialists.observed_agent` | 512 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator._run_specialists |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._additional_evidence_round` | 581 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._parallel_agents_node` | 622 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._rca_node` | 684 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._live_evidence_ids` | 719 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._evaluator_node` | 742 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._route_after_evaluation` | 760 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._decision_node` | 768 | async method | Evaluate the concrete execution binding, never RCA prose alone. | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._route_after_decision` | 808 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._approval_node` | 821 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._route_after_approval` | 834 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._execution_node` | 841 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._verification_node` | 850 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._memory_node` | 957 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._end_node` | 1047 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._average_confidence` | 1054 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
 | `apps/orchestrator/graph.py` | `WorkflowOrchestrator` | 16 | class | Backward-compatible facade; not a second orchestration implementation. | module |
 | `apps/orchestrator/graph.py` | `WorkflowOrchestrator.__init__` | 19 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | WorkflowOrchestrator |
 | `apps/orchestrator/graph.py` | `WorkflowOrchestrator.run` | 23 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | WorkflowOrchestrator |
@@ -1841,10 +1842,11 @@
 | `dashboards/control-center.js` | `incident` | 514 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
 | `dashboards/control-center.js` | `writeback` | 538 | JavaScript function | state یا داده را به‌صورت durable ذخیره/به‌روزرسانی می‌کند | browser module |
 | `dashboards/control-center.js` | `loadAgents` | 547 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
-| `dashboards/control-center.js` | `renderMcp` | 561 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/control-center.js` | `renderAudit` | 579 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
-| `dashboards/control-center.js` | `refreshIncidentQueue` | 589 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
-| `dashboards/control-center.js` | `loadAll` | 611 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
+| `dashboards/control-center.js` | `percentOrUnknown` | 559 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/control-center.js` | `renderMcp` | 568 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/control-center.js` | `renderAudit` | 586 | JavaScript function | خروجی UI/نمایشی را می‌سازد | browser module |
+| `dashboards/control-center.js` | `refreshIncidentQueue` | 596 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
+| `dashboards/control-center.js` | `loadAll` | 618 | JavaScript function | داده را بدون تغییر state بازیابی/فهرست می‌کند | browser module |
 | `dashboards/decision-brief.js` | `t` | 68 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
 | `dashboards/decision-brief.js` | `fmt` | 111 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
 | `dashboards/decision-brief.js` | `html` | 117 | JavaScript function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | browser module |
@@ -3030,7 +3032,22 @@
 | `tests/unit/test_agent_catalog_api.py` | `test_agent_catalog_does_not_require_llm_runtime_configuration` | 13 | function | Dashboard metadata must stay readable when the execution LLM is unavailable. | module |
 | `tests/unit/test_agent_catalog_api.py` | `test_catalog_only_adapter_cannot_execute_inference` | 32 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_agent_catalog_api.py` | `test_agent_catalog_route_has_no_operational_llm_dependency` | 39 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_agent_catalog_api.py` | `test_agent_metrics_exposes_stable_dashboard_list_contract` | 48 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_agent_catalog_api.py` | `test_durable_agent_metric_aggregation_does_not_invent_invocations` | 48 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_agent_catalog_api.py` | `test_durable_agent_metric_aggregation_uses_audit_invocations` | 65 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_agent_catalog_api.py` | `test_agent_metrics_reads_all_sources_from_durable_database` | 85 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_agent_catalog_api.py` | `test_agent_metrics_reads_all_sources_from_durable_database.Rows` | 89 | class | کلاس | test_agent_metrics_reads_all_sources_from_durable_database |
+| `tests/unit/test_agent_catalog_api.py` | `test_agent_metrics_reads_all_sources_from_durable_database.Rows.__init__` | 90 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_agent_metrics_reads_all_sources_from_durable_database.Rows |
+| `tests/unit/test_agent_catalog_api.py` | `test_agent_metrics_reads_all_sources_from_durable_database.Rows.mappings` | 93 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_agent_metrics_reads_all_sources_from_durable_database.Rows |
+| `tests/unit/test_agent_catalog_api.py` | `test_agent_metrics_reads_all_sources_from_durable_database.Rows.all` | 96 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_agent_metrics_reads_all_sources_from_durable_database.Rows |
+| `tests/unit/test_agent_catalog_api.py` | `test_agent_metrics_reads_all_sources_from_durable_database.Session` | 99 | class | کلاس | test_agent_metrics_reads_all_sources_from_durable_database |
+| `tests/unit/test_agent_catalog_api.py` | `test_agent_metrics_reads_all_sources_from_durable_database.Session.__aenter__` | 100 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_agent_metrics_reads_all_sources_from_durable_database.Session |
+| `tests/unit/test_agent_catalog_api.py` | `test_agent_metrics_reads_all_sources_from_durable_database.Session.__aexit__` | 103 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_agent_metrics_reads_all_sources_from_durable_database.Session |
+| `tests/unit/test_agent_catalog_api.py` | `test_agent_metrics_reads_all_sources_from_durable_database.Session.execute` | 106 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | test_agent_metrics_reads_all_sources_from_durable_database.Session |
+| `tests/unit/test_agent_catalog_api.py` | `test_agent_metrics_fails_closed_when_database_is_unavailable` | 130 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_agent_catalog_api.py` | `test_agent_metrics_fails_closed_when_database_is_unavailable.Broken` | 134 | class | کلاس | test_agent_metrics_fails_closed_when_database_is_unavailable |
+| `tests/unit/test_agent_catalog_api.py` | `test_agent_metrics_fails_closed_when_database_is_unavailable.Broken.__aenter__` | 135 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_agent_metrics_fails_closed_when_database_is_unavailable.Broken |
+| `tests/unit/test_agent_catalog_api.py` | `test_agent_metrics_fails_closed_when_database_is_unavailable.Broken.__aexit__` | 138 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_agent_metrics_fails_closed_when_database_is_unavailable.Broken |
+| `tests/unit/test_agent_catalog_api.py` | `test_orchestrator_persists_agent_invocations_in_audit` | 147 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_agent_completion_contract.py` | `StaticLLM` | 19 | class | کلاس | module |
 | `tests/unit/test_agent_completion_contract.py` | `StaticLLM.__init__` | 20 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | StaticLLM |
 | `tests/unit/test_agent_completion_contract.py` | `StaticLLM.provider_name` | 24 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | StaticLLM |
