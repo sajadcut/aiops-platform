@@ -83,6 +83,9 @@ async def test_full_config_mcp_call_uses_single_long_bounded_attempt(monkeypatch
                 request=httpx.Request("POST", url),
             )
 
+        async def aclose(self):
+            pass
+
     client._client = StubTransport()
     try:
         result = await client._post(
