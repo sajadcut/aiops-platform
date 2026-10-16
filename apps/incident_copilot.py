@@ -351,6 +351,7 @@ def public_result(action: str, value: Any) -> dict:
                                   "vendor_validation", "error_category", "observed_error_line",
                                   "source_hash", "candidate_hash", "proposed_change",
                                   "current_excerpt", "proposed_excerpt", "redacted_diff",
+                                  "redacted_changes",
                                   "validator_executed_on_proposal", "test_scope"),
         "dotnet_config_syntax": ("service", "target", "runtime",
                                 "syntax_valid", "files", "status"),
