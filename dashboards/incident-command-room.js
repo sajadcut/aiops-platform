@@ -4032,14 +4032,12 @@
     // never route a service-recovery Start through the E2E graph resume.
     // The separate approval ID is the only valid execution authority.
     const recovery=state.recoveryApproval||{};
-    const mainApproval=state.lifecycle?.approval||{};
     const independentRecovery=kind==='resume'&&
       low(recovery.status)==='approved'&&
       ['start_service','restart_service'].includes(recovery.action)&&
-      UUID.test(String(recovery.approval_id||''))&&
-      // Recovery execution uses the recovery approval ID, even if a future
-      // lifecycle representation also happens to expose that same ID.
-      Boolean(mainApproval);
+      // Recovery approval is an independent execution authority, even if a
+      // future lifecycle snapshot happens to show that same approval ID.
+      UUID.test(String(recovery.approval_id||''));
     if(independentRecovery){
       await handleRecoveryApproval('execute');
       return;
