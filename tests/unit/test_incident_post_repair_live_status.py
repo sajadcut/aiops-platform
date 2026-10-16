@@ -175,3 +175,37 @@ def test_recheck_includes_prior_apply_audit_and_ui_uses_durable_outcome():
     assert "state.configResponse?.last_execution" in ui
     assert "Audited configuration apply result" in ui
     assert "renderOutcome(shown);renderDecision(shown)" in ui
+
+
+
+def test_recovery_does_not_resolve_service_that_restarts_between_live_checks():
+    common = {
+        "success": True, "target": TARGET, "service": SERVICE,
+        "active_state": "active", "sub_state": "running",
+    }
+    context = {"related_signals": []}
+    args = {
+        "source": "zabbix", "summary": "GFPAPI Systemd Service Down",
+        "service": SERVICE, "context": context, "target": TARGET,
+    }
+    first = {**common, "restart_count": 873, "main_pid": 1791923}
+    assert local_recovery_decision(
+        **args, first=first,
+        second={**first, "restart_count": 874},
+    ) == "restart_count_increased_between_checks"
+    assert local_recovery_decision(
+        **args, first=first,
+        second={**first, "main_pid": 1791924},
+    ) == "systemd_main_pid_changed_between_checks"
+    assert local_recovery_decision(
+        **args, first=first, second={**first},
+    ) == "independent_vm_verified"
+
+
+def test_config_only_approval_still_checks_recovery_without_issuing_start():
+    root = Path(__file__).resolve().parents[2]
+    api = (root / "apps/api/config_change_execution.py").read_text()
+    assert 'if applied:\n        # The approved config write' in api
+    assert "reconcile_after_applied_config(" in api
+    worker = (root / "integrations/vm/governed_config_change.py").read_text()
+    assert 'if applied and execution_claims.get("recovery_action") == "start_service":' in worker
