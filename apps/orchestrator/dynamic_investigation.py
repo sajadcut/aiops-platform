@@ -624,6 +624,47 @@ class DynamicInvestigationPlanner:
                 "apply_eligible": False,
                 "execution_authority": False,
             }
+        # An independently confirmed syntax error demands an actionable
+        # repair work item even if no safe candidate exists yet. The RCA
+        # evaluator's disagreement must not silently bury this fact, but it
+        # must never manufacture an execution/Approval authority.
+        invalid_files = [
+            row for row in (syntax.get("files") or [])
+            if isinstance(row, dict) and row.get("status") == "invalid_json_syntax"
+        ]
+        if invalid_files or general_review.get("validation_status") == "FORMAT_INVALID":
+            broken = invalid_files[0] if invalid_files else {}
+            candidate_ready = (result.get("config_proposal") or {}).get("status") == "candidate_proposed"
+            result["config_repair_attention"] = {
+                "status": ("ready_for_prevalidation" if candidate_ready
+                           else "candidate_not_yet_valid"),
+                "priority": "high",
+                "service": name,
+                "file": _bounded(broken.get("file") or reviewed_file, 150),
+                "line": broken.get("line") if type(broken.get("line")) is int
+                        else general_review.get("observed_error_line"),
+                "error_code": _bounded(broken.get("error_code") or
+                                       general_review.get("error_category"), 60),
+                "review_status": _bounded(general_review.get("status"), 65),
+                "review_format_status": _bounded(general_review.get("validation_status"), 65),
+                "candidate_present": candidate_ready,
+                "next_action": ("auto_prevalidate_then_human_approval" if candidate_ready
+                                else "recheck_verified_file_and_build_minimal_candidate"),
+                "human_approval_required": True,
+                "execution_authority": False,
+            }
+            if not candidate_ready:
+                result["operator_questions"].append({
+                    "question": (
+                        "خطای قطعی سینتکس کانفیگ پیدا شده ولی هنوز نسخه اصلاحی معتبر وجود ندارد. "
+                        "بازبینی امن فایل و تولید اصلاح حداقلی را دوباره انجام دهید؛ "
+                        "این موضوع مستقل از اختلاف‌نظر RCA است."
+                    ),
+                    "reason": "confirmed_syntax_failure_candidate_not_validated",
+                    "evidence_refs": [x for x in [
+                        syntax.get("evidence_ref"), general_review.get("evidence_ref")
+                    ] if x],
+                })
         if unit.get("runtime") == "dotnet":
             # Purely diagnostic: valid JSON is NOT proof that environment,
             # dependencies, or the application startup are correct.
