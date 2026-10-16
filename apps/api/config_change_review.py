@@ -119,6 +119,26 @@ def _approval_for_proposal(approval: dict, proposal: dict) -> bool:
             and meta.get("config_file") == proposal.get("config_file"))
 
 
+def _consumed_failure_reissuable(approval: dict | None, audits: list[dict]) -> bool:
+    """Require a failed/nonverified terminal audit, never revive old authority.
+
+    Timeout is an *unknown* write outcome. The new request is not executable
+    until the worker independently proves the live original-source hash and
+    tests the candidate again. A previous verified apply is not reissuable.
+    """
+    if not approval or approval.get("status") != "consumed":
+        return False
+    identifier = str(approval.get("approval_id") or "")
+    return any(
+        e.get("event_type") == "configuration_change_transition"
+        and e.get("status") == "config_execution_not_verified"
+        and isinstance(e.get("metadata"), dict)
+        and str(e["metadata"].get("approval_id") or "") == identifier
+        and e["metadata"].get("production_write_performed") in (None, False)
+        for e in audits
+    )
+
+
 def _review_progress(*, status: str, decision: str | None, proposal: dict,
                      created_at: str | None = None,
                      approval: dict | None = None) -> dict:
@@ -217,20 +237,22 @@ async def get_config_review_response(
               AND action='apply_configuration_change'
               AND metadata->>'original_sha256'=:source
               AND metadata->>'candidate_sha256'=:candidate
-            LIMIT 1
+            ORDER BY created_at DESC LIMIT 1
         """), {
             "incident_id": str(incident_id),
             "source": proposal.get("original_sha256") or "",
             "candidate": proposal.get("candidate_sha256") or "",
         })).scalar_one_or_none()
         approval = await PostgreSQLApprovalStore(db).get(str(match)) if match else None
+        events = await PostgreSQLAuditStore(db).list(str(incident_id), 150)
         if approval and _approval_for_proposal(approval, proposal):
-            return _review_progress(
+            response = _review_progress(
                 status=approval["status"], decision="request_change_approval",
                 proposal=proposal, created_at=str(approval.get("created_at")),
                 approval=approval,
             )
-        events = await PostgreSQLAuditStore(db).list(str(incident_id), 150)
+            response["retry_eligible"] = _consumed_failure_reissuable(approval, events)
+            return response
     for event in events:
         if event.get("event_type") != "config_change_review_response":
             continue
@@ -306,6 +328,25 @@ async def post_config_review_response(
             await AuditService.flush_to_store(audit, incident_id=str(incident_id))
             return _review_progress(status="declined", decision="reject", proposal=proposal)
 
+        previous_id = (await db.execute(text("""
+            SELECT approval_id FROM approvals
+            WHERE incident_id=:incident_id
+              AND action='apply_configuration_change'
+              AND metadata->>'original_sha256'=:source
+              AND metadata->>'candidate_sha256'=:candidate
+            ORDER BY created_at DESC LIMIT 1
+        """), {
+            "incident_id": str(incident_id),
+            "source": proposal["original_sha256"],
+            "candidate": proposal["candidate_sha256"],
+        })).scalar_one_or_none()
+        if previous_id:
+            previous_approval = await PostgreSQLApprovalStore(db).get(str(previous_id))
+            if (previous_approval and previous_approval.get("status") == "consumed"
+                    and not _consumed_failure_reissuable(previous_approval, previous)):
+                raise HTTPException(
+                    status_code=409, detail="previous_config_apply_not_safe_to_reissue",
+                )
         state = checkpoint.get("state") or {}
         context = state.get("context") or {}
         evidence = context.get("evidence") or []
@@ -320,6 +361,15 @@ async def post_config_review_response(
                 detail="config_approval_target_binding_required:" + str(binding.get("reason")),
             )
         service = str(proposal["service"])
+        if payload.start_service_after_apply is True:
+            # Never grant Start scope from a stale dashboard snapshot.
+            # A fresh VM-MCP read must prove the exact target+service is
+            # stopped or in a persistent crash/restart loop.
+            from apps.config_change_auto_queue import _verified_service_start_scope
+            if not await _verified_service_start_scope(target=target, service=service):
+                raise HTTPException(
+                    status_code=409, detail="config_service_start_scope_fresh_status_required",
+                )
         parameters = {
             "service": service,
             "config_file": proposal["config_file"],
