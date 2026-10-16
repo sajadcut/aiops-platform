@@ -224,3 +224,61 @@ On opening the Knowledge Review UI, one privileged POST /api/v1/knowledge-review
 A human SRE reviewer must inspect and approve the exact revision, then explicitly publish it to Cognia. The existing strict rule for labeling verified-success Operational Memory as verified incident knowledge remains unchanged.
 
 Cognia /health/ready returning HTTP 500 is a separate outbound readiness/publishing concern: it does not explain an absent local draft. Confirm both local draft creation and actual Cognia acceptance/indexing independently (REAL ENV REQUIRED).
+
+
+## Complete incident-scenario coverage (2026-10-16)
+
+All **durable** incident outcomes are now candidates for *human* review, not
+automatic Cognia knowledge. Previously only verified Operational Memory,
+Copilot follow-up evidence, vendor-verified config apply, or audited approved
+service recovery could create local review entries. This left no-action,
+unresolved, blocked, denied, and failed workflows without reviewable drafts.
+
+A general incident-coverage document uses the incident's own persisted source,
+service, alert summary and lifecycle status; bounded evidence IDs and sources;
+explicitly marked Agent hypotheses; and incident-bound, vetted technical facts.
+It does **not** reuse raw logs/configuration or claim an RCA, remediation or
+monitoring recovery from an alert headline. If there is no evidence or no
+confirmed recovery, the draft states that gap plainly.
+
+| Durable scenario | Pending reviewer case |
+| --- | --- |
+| OPEN/ANALYZING; still collecting evidence | Diagnostic case, unverified; decision deferred or rejected by human |
+| No-action/observation-only; no runbook proposed | Diagnostic case, no action claimed |
+| Evaluator or policy rejected an action | Diagnostic case, not a successful remediation |
+| Approval pending/rejected or live preflight blocked | Diagnostic case, no command claimed executed |
+| Start/Restart/Reload attempted and failed | Diagnostic case and, where eligible, separately audited execution lesson |
+| Command succeeded but port/service verification inconclusive | Diagnostic case and governed partial/inconclusive execution lesson |
+| Verified recovery / monitoring resolved | Case with explicitly sourced verification, plus existing verified-memory or runbook case |
+| Config diagnostics, candidate-only, or verified config apply | Case plus existing config-specific review with independent apply/recovery evidence |
+
+The canonical analysis runtime creates a best-effort review after the durable
+incident commit, including unsuccessful workflows. Creation failures are
+isolated from the execution/incident transaction and reported in operational
+logs. When an untouched system-owned draft exists, later outcome updates can
+refresh it with a new revision and an audit event. A manually edited, rejected,
+approved or published case is **never overwritten**.
+
+The Knowledge Review UI now invokes
+`POST /api/v1/knowledge-reviews/reconcile-incidents?limit=40&offset=0`
+when first opened, in addition to the existing audited recovery reconciliation.
+An operator can request additional bounded historical batches (up to 100 at a
+time) and load subsequent review queue pages. This allows backfilling older
+incidents and viewing reviews beyond the original 100-item display cap.
+The API returns matched/scanned, created, existing, failed, next_offset,
+has_more and explicit errors; it never silently claims full coverage if KB,
+application scope or database writes are unavailable.
+
+The outbox requires `COGNIA_KNOWLEDGE_BASE_IDS` selecting exactly one KB and a
+valid `COGNIA_CLIENT_APPLICATION_ID`. Absent configuration is reported as a
+drafting error rather than automatically selecting an unauthorized KB.
+This historical reconciliation is paginated; a single click does **not**
+guarantee that every historical incident in a large installation has already
+been processed. It is also possible for new incidents during offset-based
+pagination to shift positions; restarting at offset 0 after the pass provides
+an idempotent sweep.
+
+Reviewer controls stay distinct: save an edit, approve/reject the pending
+local draft, and explicitly publish the approved exact-content revision.
+No incident ingestion, reconciliation, or evidence refresh publishes to
+Cognia, approves a knowledge record, or authorizes execution.
