@@ -2956,8 +2956,10 @@
       (fa?'مجوز '+verb+' سرویس فقط تأیید می‌شود؛ هنوز اجرا نخواهد شد. موافق هستید؟':
         'Authorize '+verb+'? No action executes yet.'):
       action==='execute'?
-      (fa?'این عملیات واقعی '+verb+' روی سرور است. Runbook پیش از اجرا مجدداً شرایط زنده را بررسی می‌کند. ادامه می‌دهید؟':
-        'This will actually '+verb+' the service if fresh runbook checks pass. Continue?'):
+      (fa?'این عملیات واقعی '+verb+' سرویس '+approval.service+' روی سرور '+approval.target+
+        ' است. Runbook پیش از اجرا مجدداً شرایط زنده و کانفیگ را بررسی می‌کند. ادامه می‌دهید؟':
+        'This will actually '+verb+' '+approval.service+' on '+approval.target+
+        ' if fresh runbook checks pass. Continue?'):
       (fa?'درخواست '+verb+' رد شود؟':'Reject this '+verb+' request?');
     if(!confirm(message))return;
     let reason='';
@@ -3456,7 +3458,7 @@
        // bury it behind an unrelated paused E2E workflow approval: otherwise
        // the operator is directed to workflow/resume and receives 409
        // approval_not_granted even though Start itself is approved.
-       (['pending','approved'].includes(recoveryStatus)||
+       (['pending','approved','consumed'].includes(recoveryStatus)||
          !['pending','approved','pending_validation'].includes(statusValue))){
       const fa=state.language==='fa';
       const recoveryLabel=recoveryApproval.action==='restart_service'?
@@ -4035,7 +4037,9 @@
       low(recovery.status)==='approved'&&
       ['start_service','restart_service'].includes(recovery.action)&&
       UUID.test(String(recovery.approval_id||''))&&
-      String(recovery.approval_id)!==String(mainApproval.approval_id||'');
+      // Recovery execution uses the recovery approval ID, even if a future
+      // lifecycle representation also happens to expose that same ID.
+      Boolean(mainApproval);
     if(independentRecovery){
       await handleRecoveryApproval('execute');
       return;

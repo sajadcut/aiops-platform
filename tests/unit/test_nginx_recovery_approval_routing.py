@@ -17,7 +17,7 @@ def test_recovery_approval_does_not_lose_action_controls_to_workflow_approval():
     src = JS.read_text(encoding="utf-8")
     assert "const separateWorkflow=UUID.test(String(durable.approval_id||''))" in src
     assert "Two different approvals exist:" in src
-    assert "['pending','approved'].includes(recoveryStatus)" in src
+    assert "['pending','approved','consumed'].includes(recoveryStatus)" in src
     assert "data-recovery-approval=\"execute\"" in src
     assert "const independentRecovery=kind==='resume'&&" in src
     assert "await handleRecoveryApproval('execute');" in src
@@ -88,6 +88,12 @@ const action=section('  async function action(kind) {','  function bind(){');
   vm.runInNewContext(action+';globalThis.run=action;',env);
   await env.run('resume');
   assert.deepEqual(delegated,['execute']);
+  assert.deepEqual(writes,[]);
+  // No authorization boundary permits graph resume merely because the
+  // displayed workflow approval ID happens to equal the recovery ticket.
+  env.state.lifecycle.approval.approval_id=env.state.recoveryApproval.approval_id;
+  await env.run('resume');
+  assert.deepEqual(delegated,['execute','execute']);
   assert.deepEqual(writes,[]);
 })().catch(e=>{console.error(e);process.exitCode=1});
 """
