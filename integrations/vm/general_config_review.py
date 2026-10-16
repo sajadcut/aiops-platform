@@ -260,6 +260,32 @@ def local_config_review(encoded: str, *, path: str, validator_error_line: int | 
                             },
                         })
             if answer["status"] != "candidate_proposed":
+                # A single fix cannot parse a document with consecutive
+                # punctuation typos. Reparse after each measured edit and
+                # accept only ONE complete, value-preserving result within
+                # a hard three-character budget.
+                from integrations.vm.json_syntax_candidate import (
+                    bounded_json_repair_with_edits,
+                )
+                staged = bounded_json_repair_with_edits(source)
+                if staged is not None:
+                    patched, edits = staged
+                    answer.update({
+                        "status": "candidate_proposed",
+                        "candidate_hash": hashlib.sha256(
+                            patched.encode("utf-8")).hexdigest(),
+                        "proposed_change": "repair_json_bounded_syntax",
+                        "validator_executed_on_proposal": True,
+                        "candidate_validator": "worker_python_json_syntax",
+                        "validation_status": "FORMAT_CANDIDATE_VALID_ONLY",
+                        "redacted_diff": edits[0],
+                        "redacted_changes": edits,
+                        "repair_char_edits": sum(
+                            2 if e["before"] == "quote_unquoted_key" else 1
+                            for e in edits),
+                    })
+                    line_no = edits[0]["line"]
+            if answer["status"] != "candidate_proposed":
                 # Confirmed grammar error; do not mislead the operator with
                 # the generic "file_observed" status. This is an actionable
                 # investigation blocker, not a patch or an executable request.
@@ -353,7 +379,9 @@ def local_config_review(encoded: str, *, path: str, validator_error_line: int | 
             {"line": line_no, "content": (
                 "xml_closing_tag_removed" if ext == "xml"
                 else "json_property_quoted" if answer["proposed_change"] == "quote_unquoted_json_key"
-                else "json_punctuation_repaired" if answer["proposed_change"] == "repair_json_punctuation"
+                else "json_punctuation_repaired" if answer["proposed_change"] in {
+                    "repair_json_punctuation", "repair_json_bounded_syntax",
+                }
                 else "json_comma_removed"
             )}
         ]
