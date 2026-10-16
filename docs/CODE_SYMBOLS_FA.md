@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 546 | Dashboard JS files scanned: 8 | Symbols indexed: 5968**
+**Python files scanned: 546 | Dashboard JS files scanned: 8 | Symbols indexed: 5969**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -3784,6 +3784,7 @@
 | `tests/unit/test_dashboard_approval_actions.py` | `test_critical_risk_requires_secondary_confirmation_before_approval_and_resume` | 40 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_dashboard_approval_actions.py` | `test_operator_dashboard_does_not_resume_a_completed_incident` | 46 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_dashboard_approval_actions.py` | `test_main_dashboard_separates_service_recovery_approval_from_e2e_resume` | 55 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_dashboard_approval_actions.py` | `test_main_dashboard_resume_never_issues_e2e_post_when_recovery_start_is_approved` | 68 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_dashboard_contract.py` | `test_dashboard_contains_required_operational_capabilities` | 4 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_dashboard_contract.py` | `test_dashboard_does_not_embed_demo_or_synthetic_operational_data` | 55 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_dashboard_contract.py` | `test_service_health_is_durable_not_static_topology` | 64 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
