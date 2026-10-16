@@ -198,14 +198,23 @@ def _candidate_preview(original: str, corrected: str, *, diagnostic_line: int | 
             difflib.SequenceMatcher(None, original, corrected, autojunk=True).ratio() < 0.80 or
             changed > max(3, (len(before) + 3) // 5)):
         return {**base, "rejection_reason": "candidate_excessive_changes"}
-    # Preserve original, more specific rejection semantics for attempted
-    # secret/value changes before assessing whether the remaining grammar
-    # correction is minimal. This is also vital for audit classification.
+    # A syntax-only comma or brace correction is safe even on a line
+    # containing a "password" key: require every non-grammar byte, including
+    # the complete secret value, to remain IDENTICAL. Previously any mention
+    # of a sensitive field blocked otherwise legitimate one-byte fixes.
+    exact_json_key_quotes = _is_exact_json_key_quote_fix(original, corrected)
+    unchanged_non_grammar = (
+        re.sub(r"[{};,]", "", original) ==
+        re.sub(r"[{};,]", "", corrected)
+    )
+    unchanged_value_tokens = _value_tokens(original) == _value_tokens(corrected)
     for _, i1, i2, j1, j2 in differences:
         if any(_SENSITIVE.search(line) for line in before[i1:i2] + after[j1:j2]):
-            return {**base, "rejection_reason": "candidate_changes_sensitive_line"}
-    exact_json_key_quotes = _is_exact_json_key_quote_fix(original, corrected)
-    if not exact_json_key_quotes and _value_tokens(original) != _value_tokens(corrected):
+            if not (exact_json_key_quotes or (
+                unchanged_non_grammar and unchanged_value_tokens
+            )):
+                return {**base, "rejection_reason": "candidate_changes_sensitive_line"}
+    if not exact_json_key_quotes and not unchanged_value_tokens:
         return {**base, "rejection_reason": "candidate_changes_configuration_values"}
     # Require genuinely small *syntactic* changes. Whitespace-only rewrites
     # cannot fix registered nginx/JSON/XML grammar errors and previously
@@ -216,7 +225,7 @@ def _candidate_preview(original: str, corrected: str, *, diagnostic_line: int | 
     char_edits = sum(
         max(i2 - i1, j2 - j1)
         for tag, i1, i2, j1, j2 in difflib.SequenceMatcher(
-            None, compact_before, compact_after, autojunk=False,
+            None, compact_before, compact_after, autojunk=True,
         ).get_opcodes() if tag != "equal"
     )
     if not 1 <= char_edits <= _MAX_SYNTAX_CHAR_EDITS:
@@ -226,8 +235,7 @@ def _candidate_preview(original: str, corrected: str, *, diagnostic_line: int | 
     # identical documents, blocking reindentation, line-ending conversion,
     # comment cleanup and unrelated formatting even when only one brace
     # fixes the vendor error.
-    if not exact_json_key_quotes and (re.sub(r"[{};,]", "", original) !=
-                                      re.sub(r"[{};,]", "", corrected)):
+    if not exact_json_key_quotes and not unchanged_non_grammar:
         return {**base, "rejection_reason": "candidate_changes_unrelated_bytes"}
     # The compiler normally reports the *following* line when an earlier
     # brace or terminator is wrong. Permit only nearby changes.
