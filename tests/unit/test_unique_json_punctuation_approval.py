@@ -87,3 +87,37 @@ def test_rebuild_cannot_upgrade_any_changed_or_stale_file():
         rebuild_json_candidate(**{**args, "candidate_sha256": "a" * 64})
     with pytest.raises(ValueError, match="config_source_hash_drift"):
         rebuild_json_candidate(**{**args, "encoded": _encoded(source + " ")})
+
+
+
+@pytest.mark.asyncio
+async def test_incident_planner_exposes_unique_json_repair_to_auto_queue():
+    from apps.orchestrator.dynamic_investigation import DynamicInvestigationPlanner
+    from apps.config_change_auto_queue import auto_queue_candidate
+
+    broken = '{"config": {{"enabled": true}}'
+    path = "/data/gfp/gfpapi/appsettings.json"
+    review = local_config_review(_encoded(broken), path=path)
+    evidence = [{
+        "source": "vm_mcp", "reference": "vm:config:verified:1",
+        "raw_data": {
+            "success": True, "diagnostic": "service_config_review",
+            "service": "gfpapi", **review,
+        },
+    }, {
+        "source": "vm_mcp", "reference": "vm:dotnet:verified:2",
+        "raw_data": {
+            "success": True, "diagnostic": "dotnet_config_syntax",
+            "service": "gfpapi", "syntax_valid": False,
+            "files": [{"file": "appsettings.json",
+                       "status": "invalid_json_syntax", "line": 1}],
+        },
+    }]
+    state = {"service_name": "gfpapi", "context": {"evidence": evidence}}
+    outcome = await DynamicInvestigationPlanner.propose(state, adapter=None)
+    assert outcome["config_proposal"]["status"] == "candidate_proposed"
+    assert outcome["config_proposal"]["proposed_change"] == "repair_json_punctuation"
+    assert outcome["config_proposal"]["execution_authority"] is False
+    assert outcome["config_repair_attention"]["status"] == "ready_for_prevalidation"
+    state["context"]["dynamic_investigation"] = outcome
+    assert auto_queue_candidate(state) is not None
