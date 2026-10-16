@@ -121,3 +121,21 @@ async def test_incident_planner_exposes_unique_json_repair_to_auto_queue():
     assert outcome["config_repair_attention"]["status"] == "ready_for_prevalidation"
     state["context"]["dynamic_investigation"] = outcome
     assert auto_queue_candidate(state) is not None
+
+
+
+def test_regression_invalid_appsettings_at_line_36_is_repairable_without_source_leak():
+    path = "/data/gfp/gfpapi/appsettings.json"
+    source = "{\n" + "\n" * 34 + '  "config": {{"enabled": true}\n}\n'
+    corrected = "{\n" + "\n" * 34 + '  "config": {"enabled": true}\n}\n'
+    with pytest.raises(json.JSONDecodeError) as err:
+        json.loads(source)
+    assert err.value.lineno == 36
+    assert deterministic_json_punctuation_fix(source) == corrected
+    output = local_config_review(_encoded(source), path=path)
+    assert output["status"] == "candidate_proposed"
+    assert output["redacted_diff"]["line"] == 36
+    assert output["proposed_change"] == "repair_json_punctuation"
+    assert output["candidate_syntax_projection"] != output["syntax_projection"]
+    assert '"enabled"' not in json.dumps(output)
+    assert output["execution_authority"] is False
