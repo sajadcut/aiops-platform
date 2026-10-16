@@ -183,18 +183,18 @@ def deterministic_json_duplicate_brace_fix(source: str) -> str | None:
     return next(iter(matches)) if len(matches) == 1 else None
 
 
-def bounded_json_repair_with_edits(source: str, max_edits: int = 3):
+def bounded_json_repair_with_edits(source: str, max_edits: int = 6):
     """Recover successive measured grammar faults without touching values.
 
     Every intermediate document is parsed again; only structural punctuation
     outside JSON strings or quoting one bare key can change. Edits are capped
-    at three characters, alternatives must converge to ONE final document,
+    at six characters, alternatives must converge to ONE final document,
     and no original/candidate text or key names are returned in metadata.
     This is a preview/validation candidate, NEVER permission to execute.
     """
     if (not isinstance(source, str) or "\x00" in source
             or not 1 <= len(source.encode("utf-8")) <= 262144
-            or type(max_edits) is not int or not 1 <= max_edits <= 3):
+            or type(max_edits) is not int or not 1 <= max_edits <= 6):
         return None
     try:
         json.loads(source)
@@ -296,7 +296,7 @@ def bounded_json_repair_with_edits(source: str, max_edits: int = 3):
                 except json.JSONDecodeError as next_error:
                     # Do not speculate backwards or explore arbitrary source.
                     bucket = frontier.setdefault(new_cost, {})
-                    if next_error.pos >= error.pos - 3 and len(bucket) < 128:
+                    if next_error.pos >= error.pos - 6 and len(bucket) < 128:
                         bucket[proposed] = changes
                 else:
                     successes.setdefault(new_cost, {})[proposed] = changes
