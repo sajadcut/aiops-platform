@@ -156,10 +156,16 @@ async def test_explicit_llm_request_can_queue_worker_fix_without_candidate_vault
     assert response["execution_authority"] is False
     assert "enabled" not in str(response)
 
+    from apps.incident_copilot import public_result
+    public = public_result(
+        "service_config_llm_repair", {"success": True,
+                                      "target": "10.248.16.82", **response},
+    )
+    assert public["proposed_change"] == "repair_json_bounded_syntax"
+    assert public["candidate_origin"] == "deterministic_json_syntax"
     evidence = [{
         "source": "vm_mcp", "reference": "vm:llm:1",
-        "raw_data": {"diagnostic": "service_config_llm_repair",
-                     "success": True, **response},
+        "raw_data": public,
     }]
     partial = DynamicInvestigationPlanner.full_config_repair_evidence(
         evidence, service="gfpapi", failure=None,
