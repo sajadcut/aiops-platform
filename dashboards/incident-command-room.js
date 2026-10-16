@@ -2435,7 +2435,9 @@
     const approval=low(response.approval_status||response.status);
     const candidate=low(config.status)==='candidate_proposed';
     const hasDiff=configDiffRows(config,fullRepair).length>0;
-    const originalFailed=low(validator.status)==='invalid';
+    const originalFailed=low(validator.status)==='invalid'||
+      ['candidate_not_yet_valid','ready_for_prevalidation'].includes(
+        low(repairAttention.status));
     const previouslyFailed=originalFailed||candidate||
       (Number.isInteger(config.error_line)&&!!config.config_file);
     const verified=arr(discovery.files).filter(item=>item.verified_exists===true);
