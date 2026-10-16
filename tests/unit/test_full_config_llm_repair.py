@@ -92,7 +92,7 @@ async def test_oversize_file_not_truncated_or_submitted(monkeypatch):
     monkeypatch.setattr(repair.settings, "LLM_BASE_URL", "https://internal-llm.example")
     model = ReplyModel("a\n")
     result = await review_complete_config(
-        base64.b64encode(b"x" * (24 * 1024 + 1)).decode(),
+        base64.b64encode(b"x" * (64 * 1024 + 1)).decode(),
         service="svc", path="/etc/svc/config.conf", model=model)
     assert result["status"] == "full_config_exceeds_model_budget"
     assert not model.calls
