@@ -136,7 +136,7 @@ def _deterministic_json_syntax_fix(source: str) -> str | None:
         detail = error.msg.lower()
         candidate = None
         if "property name" in detail:
-            bare_key = re.match(r"([A-Za-z_][A-Za-z0-9_.-]*)(?=\\s*:)", source[pos:])
+            bare_key = re.match(r"([A-Za-z_][A-Za-z0-9_.-]*)(?=\s*:)", source[pos:])
             if bare_key:
                 end = pos + len(bare_key.group(1))
                 candidate = source[:pos] + '"' + source[pos:end] + '"' + source[end:]
@@ -146,7 +146,7 @@ def _deterministic_json_syntax_fix(source: str) -> str | None:
             "property name" in detail or "expecting value" in detail
         ) and pos < len(source) and source[pos] in "}]":
             comma = pos - 1
-            while comma >= 0 and source[comma] in " \\t\\r\\n":
+            while comma >= 0 and source[comma] in " \t\r\n":
                 comma -= 1
             if comma >= 0 and source[comma] == ",":
                 candidate = source[:comma] + source[comma + 1:]
