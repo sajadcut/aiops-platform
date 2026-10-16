@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 537 | Dashboard JS files scanned: 8 | Symbols indexed: 5868**
+**Python files scanned: 540 | Dashboard JS files scanned: 8 | Symbols indexed: 5897**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -2429,16 +2429,16 @@
 | `integrations/vm/dotnet_local_validator.py` | `_reject_duplicate_keys` | 183 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `integrations/vm/dotnet_local_validator.py` | `validate_encoded_file` | 192 | function | Parse bytes only in worker memory; return bounded, secret-free metadata. | module |
 | `integrations/vm/ephemeral_config_guard.py` | `build_ephemeral_guard` | 183 | function | Return (fixed sudo command, shell stdin); only allow predetermined operations. | module |
-| `integrations/vm/full_config_llm_repair.py` | `_trusted_gateway` | 37 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `integrations/vm/full_config_llm_repair.py` | `_parse_corrected` | 45 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `integrations/vm/full_config_llm_repair.py` | `_parse_bounded_edit_plan` | 59 | function | Apply only three grammar-character edits in the trusted MCP worker. | module |
-| `integrations/vm/full_config_llm_repair.py` | `_safe_structure` | 109 | function | Use value-free glyphs; never reflect secret values into MCP/UI/audit. | module |
-| `integrations/vm/full_config_llm_repair.py` | `_profile` | 115 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `integrations/vm/full_config_llm_repair.py` | `_value_tokens` | 126 | function | Remove only grammar-neutral punctuation outside quoted string values. | module |
-| `integrations/vm/full_config_llm_repair.py` | `_is_exact_json_key_quote_fix` | 153 | function | Only accept inserting two quotes around one previously bare JSON key. | module |
-| `integrations/vm/full_config_llm_repair.py` | `_bounded_exact_character_edits` | 180 | function | Exact thresholded Levenshtein distance in O(maximum * file_length). | module |
-| `integrations/vm/full_config_llm_repair.py` | `_candidate_preview` | 218 | function | Check completeness and bounded drift; emit *metadata*, never file lines. | module |
-| `integrations/vm/full_config_llm_repair.py` | `review_complete_config` | 311 | async function | Receive exact SSH bytes in-process and request a complete revised file. | module |
+| `integrations/vm/full_config_llm_repair.py` | `_trusted_gateway` | 40 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `integrations/vm/full_config_llm_repair.py` | `_parse_corrected` | 48 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `integrations/vm/full_config_llm_repair.py` | `_parse_bounded_edit_plan` | 62 | function | Apply only three grammar-character edits in the trusted MCP worker. | module |
+| `integrations/vm/full_config_llm_repair.py` | `_safe_structure` | 112 | function | Use value-free glyphs; never reflect secret values into MCP/UI/audit. | module |
+| `integrations/vm/full_config_llm_repair.py` | `_profile` | 118 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `integrations/vm/full_config_llm_repair.py` | `_value_tokens` | 129 | function | Remove only grammar-neutral punctuation outside quoted string values. | module |
+| `integrations/vm/full_config_llm_repair.py` | `_is_exact_json_key_quote_fix` | 156 | function | Only accept inserting two quotes around one previously bare JSON key. | module |
+| `integrations/vm/full_config_llm_repair.py` | `_bounded_exact_character_edits` | 183 | function | Exact thresholded Levenshtein distance in O(maximum * file_length). | module |
+| `integrations/vm/full_config_llm_repair.py` | `_candidate_preview` | 221 | function | Check completeness and bounded drift; emit *metadata*, never file lines. | module |
+| `integrations/vm/full_config_llm_repair.py` | `review_complete_config` | 323 | async function | Receive exact SSH bytes in-process and request a complete revised file. | module |
 | `integrations/vm/general_config_review.py` | `checked_config_path` | 29 | function | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | module |
 | `integrations/vm/general_config_review.py` | `remote_config_read_command` | 37 | function | Fixed coreutils only; not a general-purpose remote file-read API. | module |
 | `integrations/vm/general_config_review.py` | `_structural_line` | 51 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
@@ -2449,7 +2449,13 @@
 | `integrations/vm/governed_config_change.py` | `rebuild_xml_candidate` | 101 | function | Remove one unmatched EOF closing tag; never edit XML values or DTDs. | module |
 | `integrations/vm/governed_config_change.py` | `classify_config_guard_failure` | 146 | function | Use only fixed, operator-actionable codes; never reflect stderr. | module |
 | `integrations/vm/governed_config_change.py` | `run_governed_change` | 178 | async function | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | module |
-| `integrations/vm/governed_config_change.py` | `_start_after_approved_config_apply` | 421 | async function | Only the signed approval recovery scope authorizes a single systemd start. | module |
+| `integrations/vm/governed_config_change.py` | `_start_after_approved_config_apply` | 422 | async function | Only the signed approval recovery scope authorizes a single systemd start. | module |
+| `integrations/vm/iterative_json_repair.py` | `_quoted_offsets` | 18 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `integrations/vm/iterative_json_repair.py` | `_json_reply` | 35 | function | Strictly identify a JSON edit plan even with a fenced LLM response. | module |
+| `integrations/vm/iterative_json_repair.py` | `apply_edit_plan` | 49 | function | Apply only structural punctuation edits to the exact original bytes. | module |
+| `integrations/vm/iterative_json_repair.py` | `build_json_candidate` | 100 | async function | Repeatedly request a tiny edit plan, with independent full-file parses. | module |
+| `integrations/vm/iterative_json_repair.py` | `independently_verify_structural_candidate` | 193 | function | Independently gate a vault candidate before validation AND apply. | module |
+| `integrations/vm/iterative_json_repair.py` | `independently_verify_structural_candidate.walk` | 228 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | independently_verify_structural_candidate |
 | `integrations/vm/json_syntax_candidate.py` | `deterministic_json_syntax_fix` | 12 | function | Repair one measured JSON grammar error; fail closed otherwise. | module |
 | `integrations/vm/json_syntax_candidate.py` | `deterministic_json_punctuation_fix` | 45 | function | Find a UNIQUE one-byte grammar-only repair near the actual JSON error. | module |
 | `integrations/vm/json_syntax_candidate.py` | `deterministic_json_punctuation_fix.local` | 85 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | deterministic_json_punctuation_fix |
@@ -4614,6 +4620,29 @@
 | `tests/unit/test_iransansx_assets.py` | `test_symlink_is_never_served_as_font` | 73 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_iransansx_assets.py` | `test_public_repository_publishing_script_requires_redistribution_permission` | 85 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_iransansx_assets.py` | `test_font_diagnostic_checks_real_running_routes_without_mutation` | 96 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_iterative_json_approval_integration.py` | `FakeModel` | 17 | class | کلاس | module |
+| `tests/unit/test_iterative_json_approval_integration.py` | `FakeModel.__init__` | 18 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeModel |
+| `tests/unit/test_iterative_json_approval_integration.py` | `FakeModel.generate` | 21 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeModel |
+| `tests/unit/test_iterative_json_approval_integration.py` | `test_explicit_full_config_llm_repair_produces_auto_prevalidation_intent` | 47 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_iterative_json_approval_integration.py` | `test_explicit_full_config_llm_repair_produces_auto_prevalidation_intent.store` | 54 | method | state یا داده را به‌صورت durable ذخیره/به‌روزرسانی می‌کند | test_explicit_full_config_llm_repair_produces_auto_prevalidation_intent |
+| `tests/unit/test_iterative_json_repair_approval.py` | `PlannedModel` | 6 | class | کلاس | module |
+| `tests/unit/test_iterative_json_repair_approval.py` | `PlannedModel.__init__` | 7 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | PlannedModel |
+| `tests/unit/test_iterative_json_repair_approval.py` | `PlannedModel.generate` | 10 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | PlannedModel |
+| `tests/unit/test_iterative_json_repair_approval.py` | `test_model_repairs_mixed_syntax_errors_and_keeps_secrets` | 41 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_iterative_json_repair_approval.py` | `test_value_edit_is_rejected` | 51 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_iterative_json_repair_approval.py` | `test_string_punctuation_edit_is_rejected` | 57 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_iterative_json_repair_approval.py` | `test_model_cannot_edit_other_lines` | 63 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_iterative_json_repair_approval.py` | `test_no_approval_for_unfixed_input` | 68 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_iterative_json_repair_approval.py` | `test_no_approval_for_unfixed_input.BadModel` | 69 | class | کلاس | test_no_approval_for_unfixed_input |
+| `tests/unit/test_iterative_json_repair_approval.py` | `test_no_approval_for_unfixed_input.BadModel.generate` | 70 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_no_approval_for_unfixed_input.BadModel |
+| `tests/unit/test_iterative_json_repair_approval.py` | `test_no_repair_to_valid_input` | 77 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_iterative_json_repair_approval.py` | `test_no_repair_to_valid_input.DoNotCall` | 78 | class | کلاس | test_no_repair_to_valid_input |
+| `tests/unit/test_iterative_json_repair_approval.py` | `test_no_repair_to_valid_input.DoNotCall.generate` | 79 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_no_repair_to_valid_input.DoNotCall |
+| `tests/unit/test_iterative_json_repair_approval.py` | `test_large_complete_dotnet_file_multi_fault_repair_no_values_changed` | 82 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_iterative_json_repair_approval.py` | `test_large_complete_dotnet_file_multi_fault_repair_no_values_changed.FakeGrammarModel` | 89 | class | کلاس | test_large_complete_dotnet_file_multi_fault_repair_no_values_changed |
+| `tests/unit/test_iterative_json_repair_approval.py` | `test_large_complete_dotnet_file_multi_fault_repair_no_values_changed.FakeGrammarModel.generate` | 91 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_large_complete_dotnet_file_multi_fault_repair_no_values_changed.FakeGrammarModel |
+| `tests/unit/test_iterative_json_repair_approval.py` | `test_independent_guard_accepts_only_exact_original_key_and_grammar_bytes` | 121 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_iterative_json_repair_approval.py` | `test_independent_guard_handles_large_file_with_multiple_bare_keys` | 134 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_jenkins_mcp_client.py` | `_client` | 14 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_jenkins_mcp_client.py` | `test_official_jenkins_mcp_contract_uses_streamable_http_and_2025_06_18` | 26 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_jenkins_mcp_client.py` | `test_jenkins_headers_use_basic_auth_and_optional_origin` | 42 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
