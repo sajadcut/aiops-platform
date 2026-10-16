@@ -1231,11 +1231,11 @@
 | `apps/incident_copilot.py` | `is_recovery_comparison_question` | 246 | function | A request to *explain* Start versus Restart is not a write request. | module |
 | `apps/incident_copilot.py` | `fallback_intent` | 266 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/incident_copilot.py` | `public_result` | 314 | function | Project known diagnostic keys; never forward arbitrary MCP payloads. | module |
-| `apps/incident_copilot.py` | `nginx_inspection_answer` | 440 | function | Deterministic user-visible facts from sanitized VM MCP inspection. | module |
-| `apps/incident_copilot.py` | `vm_read` | 486 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/incident_copilot.py` | `llm_plan` | 533 | async function | LLM may select a bounded enum but cannot set a target or authorize writes. | module |
-| `apps/incident_copilot.py` | `history` | 656 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/incident_copilot.py` | `append_turn` | 677 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/incident_copilot.py` | `nginx_inspection_answer` | 441 | function | Deterministic user-visible facts from sanitized VM MCP inspection. | module |
+| `apps/incident_copilot.py` | `vm_read` | 487 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/incident_copilot.py` | `llm_plan` | 534 | async function | LLM may select a bounded enum but cannot set a target or authorize writes. | module |
+| `apps/incident_copilot.py` | `history` | 657 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/incident_copilot.py` | `append_turn` | 678 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/incident_elastic.py` | `is_elastic_question` | 13 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/incident_elastic.py` | `wants_live_elastic` | 19 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/incident_elastic.py` | `_iso` | 28 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
