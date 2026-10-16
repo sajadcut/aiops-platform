@@ -2547,16 +2547,30 @@
       esc(fa?'مشاهده تأیید و اجرا':'View approval and execution')+'</a>';
     const resultLink='<a class="ic-btn ic-btn-primary" href="#ic-outcome-view">'+
       esc(fa?'مشاهده نتیجه اجرا':'View execution result')+'</a>';
+    // A confirmed syntax failure without a candidate should offer the
+    // deliberate COMPLETE-file repair as the primary action. The browser
+    // always asks before sending any configuration secrets to the gateway.
+    const needsCompleteRepair=originalFailed&&!candidate&&!hasDiff&&
+      !['approved','pending','pending_validation','consumed'].includes(approval);
+    const fullLLMButton=action==='outcome'?'':(
+      '<button type="button" class="ic-btn '+
+      (needsCompleteRepair?'ic-btn-primary':'ic-btn-muted')+
+      '" data-config-preview="full-llm"'+disabled+'>'+
+      esc(fa?'بررسی و اصلاح فایل کامل با LLM':'Review and repair COMPLETE config with LLM')+
+      '</button>');
     const primary=action==='outcome'?resultLink:
       ['approved','pending','pending_validation'].includes(action)?nextLink:
+      needsCompleteRepair?fullLLMButton:
       hasDiff?diffLink:previewButton;
-    const secondary=hasDiff&&!blocked&&action!=='outcome'?
+    const secondary=needsCompleteRepair?
+      '<button type="button" class="ic-btn ic-btn-muted" data-config-preview="'+
+      previewKind+'"'+disabled+'>'+
+      esc(fa?'بررسی امن بدون ارسال فایل به LLM':'Local review without sending the file to LLM')+
+      '</button>':
+      hasDiff&&!blocked&&action!=='outcome'?
       '<button type="button" class="ic-btn ic-btn-muted" data-config-preview="'+
       previewKind+'"'+disabled+'>'+esc(fa?'بررسی دوباره':'Recheck')+'</button>':'';
-
-    const fullLLMButton=action==='outcome'?'':(
-      '<button type="button" class="ic-btn ic-btn-muted" data-config-preview="full-llm"'+disabled+'>'+
-      esc(fa?'اصلاح فایل کامل با LLM (پیش‌نمایش)':'Full-file LLM repair preview')+'</button>');
+    const extraLLMButton=needsCompleteRepair?'':fullLLMButton;
     // Technical diagnostics are available on demand, not the lead sentence.
     // These may describe unavailable systemd/LLM capabilities without
     // contradicting a vendor-confirmed line number or a passed approval check.
@@ -2615,7 +2629,7 @@
     node.innerHTML='<div class="ic-config-banner-copy"><strong style="font-size:1.2rem;">'+esc(title)+'</strong>'+urgentExplanation+
       '<p class="ic-config-banner-summary">'+summary+'</p>'+
       '<p>'+esc(instruction)+'</p>'+repairWarning+warning+liveStatus+technical+
-      '</div><div class="ic-config-banner-actions">'+primary+secondary+fullLLMButton+'</div>';
+      '</div><div class="ic-config-banner-actions">'+primary+secondary+extraLLMButton+'</div>';
   }
 
   // Only the bounded redacted representation from MCP may enter the DOM or
