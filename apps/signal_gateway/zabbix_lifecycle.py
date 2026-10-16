@@ -363,4 +363,11 @@ async def ingest_zabbix_payload(session, payload: Dict[str, Any]) -> Dict[str, A
             status="completed" if outcome.get("incident_resolved") else str(checkpoint.get("status") or "paused"),
         )
 
+    # Recovery is a separate durable lifecycle edge, not always followed by
+    # E2E analysis. Refresh only untouched, local review drafts after commit.
+    # No Cognia write or service action is authorized by this callback.
+    from sqlalchemy.ext.asyncio import AsyncSession
+    if isinstance(session, AsyncSession):
+        from apps.knowledge_incident_coverage import draft_incident_best_effort
+        await draft_incident_best_effort(incident_id)
     return state
