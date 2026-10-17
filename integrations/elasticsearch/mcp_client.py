@@ -6,6 +6,7 @@ from typing import Any, List, Optional
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from domain.contracts.config import settings
+from domain.contracts.logging import logger
 from integrations.base import LogEntry
 from integrations.mcp_client import MCPClient
 
@@ -72,45 +73,46 @@ class ElasticsearchMCPClient(MCPClient):
 
     @staticmethod
     def _rows_from_payload(payload: Any) -> list[dict[str, Any]]:
-        """Normalize Agent Builder execute_esql output into row dictionaries."""
-        if not isinstance(payload, dict):
+        """Normalize bounded Agent Builder ES|QL result envelopes.
+
+        Kibana/MCP versions may nest ES|QL tabular data under result/data,
+        structuredContent/results or return column/value pairs. Never interpret
+        string contents as instructions or log their contents.
+        """
+        def decode(value: Any, depth: int) -> list[dict[str, Any]]:
+            if depth > 5 or not isinstance(value, dict):
+                return []
+            columns = value.get("columns")
+            data_rows = value.get("values")
+            if data_rows is None:
+                data_rows = value.get("rows")
+            if isinstance(columns, list) and isinstance(data_rows, list):
+                names = [str(col.get("name") or "") if isinstance(col, dict) else str(col)
+                         for col in columns]
+                return [
+                    ({name: row[i] if i < len(row) else None for i, name in enumerate(names)}
+                     if isinstance(row, list) else row)
+                    for row in data_rows[:500] if isinstance(row, (list, dict))
+                ]
+            rows = value.get("rows")
+            if isinstance(rows, list) and all(isinstance(row, dict) for row in rows):
+                return rows[:500]
+            for key in ("result", "data", "structuredContent", "results"):
+                nested = value.get(key)
+                if isinstance(nested, dict):
+                    decoded = decode(nested, depth + 1)
+                    if decoded:
+                        return decoded
+                elif isinstance(nested, list):
+                    decoded: list[dict[str, Any]] = []
+                    for child in nested[:10]:
+                        decoded.extend(decode(child, depth + 1))
+                        if len(decoded) >= 500:
+                            break
+                    if decoded:
+                        return decoded[:500]
             return []
-        if isinstance(payload.get("rows"), list):
-            return [row for row in payload["rows"] if isinstance(row, dict)]
-
-        # Tools API/MCP output can contain typed result entries. Locate a data
-        # block with columns + values and convert its tabular response to rows.
-        results = payload.get("results")
-        if isinstance(results, list):
-            rows: list[dict[str, Any]] = []
-            for result in results:
-                if not isinstance(result, dict):
-                    continue
-                data = result.get("data")
-                if not isinstance(data, dict):
-                    continue
-                columns = data.get("columns")
-                values = data.get("values") or data.get("rows")
-                if not isinstance(columns, list) or not isinstance(values, list):
-                    continue
-                names = [str(col.get("name")) if isinstance(col, dict) else str(col) for col in columns]
-                for value_row in values:
-                    if isinstance(value_row, list):
-                        rows.append({name: value_row[index] if index < len(value_row) else None for index, name in enumerate(names)})
-                    elif isinstance(value_row, dict):
-                        rows.append(value_row)
-            return rows
-
-        columns = payload.get("columns")
-        values = payload.get("values")
-        if isinstance(columns, list) and isinstance(values, list):
-            names = [str(col.get("name")) if isinstance(col, dict) else str(col) for col in columns]
-            return [
-                {name: row[index] if index < len(row) else None for index, name in enumerate(names)}
-                for row in values
-                if isinstance(row, list)
-            ]
-        return []
+        return decode(payload, 0)
 
     async def health_check(self) -> bool:
         """Require the exact allowlisted Agent Builder tool, not just a live MCP route."""
@@ -130,7 +132,6 @@ class ElasticsearchMCPClient(MCPClient):
     ) -> List[LogEntry]:
         bounded_limit = min(max(int(limit), 1), 500)
         end = until or datetime.now(timezone.utc)
-        service_literal = self._esql_string(service)
         # Operator-configured aliases only; never infer GFP_Backend == gfpapi.
         aliases = getattr(settings, "ELASTIC_SERVICE_DISCOVERY_ALIASES", {}) or {}
         values = aliases.get(service, []) if isinstance(aliases, dict) else []
@@ -146,6 +147,7 @@ class ElasticsearchMCPClient(MCPClient):
         index_pattern = settings.ELASTIC_AGENT_BUILDER_INDEX_PATTERN.strip()
         rows: list[dict[str, Any]] = []
         succeeded = 0
+        unrecognized_payloads = 0
         last_error: Exception | None = None
         for name in names:
             for field in fields:
@@ -179,12 +181,28 @@ class ElasticsearchMCPClient(MCPClient):
                         last_error = exc
                 if result is None:
                     continue
-                for payload in self.json_content(result):
-                    rows.extend(self._rows_from_payload(payload))
+                payloads = self.json_content(result)
+                for payload in payloads:
+                    decoded = self._rows_from_payload(payload)
+                    if not decoded and isinstance(payload, dict) and not (
+                        payload.get("rows") == [] or payload.get("values") == []
+                    ):
+                        unrecognized_payloads += 1
+                    rows.extend(decoded)
                 if rows:
                     break
             if rows:
                 break
+        logger.info(
+            "elastic_service_query_summary",
+            service=str(service)[:90],
+            index_pattern=index_pattern[:160],
+            searched_name_count=len(names),
+            searched_field_count=len(fields),
+            successful_queries=succeeded,
+            decoded_rows=len(rows),
+            unrecognized_envelopes=unrecognized_payloads,
+        )
         if not succeeded and last_error is not None:
             raise RuntimeError("elastic_all_service_field_queries_failed") from last_error
 
@@ -233,9 +251,52 @@ class ElasticsearchMCPClient(MCPClient):
                 "source": "elasticsearch", "status": "candidate", "record_count": 0,
             })
             candidate["record_count"] += 1
+        # A transport-level HTTP 200 doesn't prove a service/time match.
+        # Probe one document from the operator-configured index (without
+        # exposing its contents) to separate empty index from mismatched
+        # filters. Index-only samples NEVER produce host candidates.
+        index_probe = "not_needed"
+        if not logs:
+            try:
+                probe = await self.call_tool(
+                    self.TOOL_EXECUTE_ESQL,
+                    {"query": f"FROM {settings.ELASTIC_AGENT_BUILDER_INDEX_PATTERN.strip()} | LIMIT 1"},
+                )
+                envelopes = self.json_content(probe)
+                sample = [
+                    row for envelope in envelopes
+                    for row in self._rows_from_payload(envelope)
+                ]
+                index_probe = "has_rows" if sample else (
+                    "unrecognized_response" if envelopes and any(
+                        isinstance(value, dict) and
+                        not (value.get("rows") == [] or value.get("values") == [])
+                        for value in envelopes
+                    ) else "empty_index"
+                )
+            except Exception:
+                index_probe = "probe_failed"
+        status = (
+            "candidates_found" if hosts else
+            "no_host_metadata" if logs else
+            "index_has_rows_no_service_time_match" if index_probe == "has_rows" else
+            "response_format_unrecognized" if index_probe == "unrecognized_response" else
+            "index_probe_failed" if index_probe == "probe_failed" else
+            "no_matching_logs"
+        )
+        logger.info(
+            "elastic_host_discovery_summary",
+            service=str(service)[:90],
+            index_pattern=settings.ELASTIC_AGENT_BUILDER_INDEX_PATTERN.strip()[:160],
+            status=status,
+            index_probe=index_probe,
+            log_rows=len(logs),
+            host_candidates=len(hosts),
+        )
         return {
-            "status": ("candidates_found" if hosts else
-                       "no_host_metadata" if logs else "no_matching_logs"),
+            "status": status,
+            "index_pattern": settings.ELASTIC_AGENT_BUILDER_INDEX_PATTERN.strip()[:160],
+            "index_probe": index_probe,
             "searched_service": service, "result_count": len(logs),
             "candidates": list(hosts.values())[:8],
             "requires_independent_verification": True,
