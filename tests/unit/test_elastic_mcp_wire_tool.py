@@ -496,7 +496,7 @@ async def test_verified_runtime_alias_requires_exact_vm_evidence_and_config(monk
         "hostname": "gfp-app.internal", "ip_addresses": [],
     }]}
     evidence = await SignalGateway._verify_elastic_host_candidate("GFP_Backend", discovery)
-    assert seen == [("gfp-app.internal", "GFP_Backend"), ("gfp-app.internal", "gfpapi")]
+    assert seen == [("gfp-app.internal", "gfpapi")]
     assert discovery["status"] == "verified_by_vm_mcp"
     assert discovery["verified_runtime_service"] == "gfpapi"
     assert discovery["reported_log_service"] == "GFP_Backend"
@@ -748,8 +748,7 @@ async def test_old_gfp_redis_logs_are_searched_historically_with_live_vm_proof(m
     assert history["historical_candidate_requires_live_verification"] is True
     assert history["verified_target"] == "10.248.16.82"
     assert history["verified_runtime_service"] == "gfpapi"
-    assert probes == [("10.248.16.82", "GFP_Backend"),
-                      ("10.248.16.82", "gfpapi")]
+    assert probes == [("10.248.16.82", "gfpapi")]
     assert resolution["verified_runtime_mapping"]["runtime_service"] == "gfpapi"
 
 
@@ -835,8 +834,7 @@ async def test_gfp_serilog_keeps_host_ip_and_verifies_allowlisted_ip_not_unliste
     assert evidence
     assert discovery["candidates"][0]["verification_method"] == "ip"
     assert discovery["verified_target"] == "10.248.16.82"
-    assert seen_statuses == [("10.248.16.82", "GFP_Backend"),
-                            ("10.248.16.82", "gfpapi")]
+    assert seen_statuses == [("10.248.16.82", "gfpapi")]
     assert discovery["verified_runtime_service"] == "gfpapi"
 
 
