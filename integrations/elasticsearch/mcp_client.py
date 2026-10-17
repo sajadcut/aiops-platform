@@ -312,6 +312,52 @@ class ElasticsearchMCPClient(MCPClient):
         if not str(service or "").strip():
             return {"status": "service_unknown", "candidates": [], "result_count": 0}
         logs = await self.get_logs(service, since, until, limit=40)
+        initial_diagnostics = dict(getattr(self, "_last_esql_query_diagnostics", {}) or {})
+        index_probe = "not_needed"
+        indexed_fields: list[str] = []
+        attempted_observed_schema = False
+        if not logs:
+            # Diagnostic sample is used exclusively for known COLUMN NAMES.
+            # Never bind a VM directly from an unfiltered index document.
+            try:
+                probe = await self.call_tool(
+                    self.TOOL_EXECUTE_ESQL,
+                    {"query": f"FROM {settings.ELASTIC_AGENT_BUILDER_INDEX_PATTERN.strip()} | LIMIT 1"},
+                )
+                envelopes = self.json_content(probe)
+                sample = [row for envelope in envelopes
+                          for row in self._rows_from_payload(envelope)]
+                if sample:
+                    import re
+                    indexed_fields = sorted(
+                        str(key)[:90] for key in sample[0]
+                        if isinstance(key, str)
+                        and re.fullmatch(r"[A-Za-z0-9_.@-]{1,90}", key)
+                    )[:128]
+                index_probe = "has_rows" if sample else (
+                    "unrecognized_response" if envelopes and any(
+                        not self._esql_empty_table(value) for value in envelopes
+                    ) else "empty_index")
+            except Exception as exc:
+                index_probe = "probe_failed"
+                logger.warning("elastic_schema_probe_failed",
+                               error_type=type(exc).__name__)
+
+            if (index_probe == "has_rows" and
+                    any(key in indexed_fields for key in (
+                        "Properties.ServiceName", "Properties.ServiceName.keyword",
+                        "Properties.ApplicationName", "Properties.ApplicationName.keyword",
+                        "service.name", "service", "Properties.ServiceId")) and
+                    any(key in indexed_fields for key in ("@timestamp", "Timestamp"))):
+                attempted_observed_schema = True
+                try:
+                    logs = await self.get_logs(
+                        service, since, until, limit=40,
+                        schema_field_names=indexed_fields)
+                except Exception as exc:
+                    logger.warning("elastic_observed_schema_lookup_failed",
+                                   error_type=type(exc).__name__)
+        observed_diagnostics = dict(getattr(self, "_last_esql_query_diagnostics", {}) or {})
         hosts: dict[str, dict[str, Any]] = {}
         import ipaddress
         for log in logs:
@@ -319,7 +365,14 @@ class ElasticsearchMCPClient(MCPClient):
             host = raw.get("host")
             if not isinstance(host, dict):
                 host = {}
-            hostname = str(raw.get("host.name") or host.get("name") or "").strip()
+            # Serilog commonly emits Properties.MachineName while ECS uses
+            # host.name or host.ip. agent.hostname identifies the collector,
+            # so prefer an application machine field where available.
+            hostname = str(
+                raw.get("Properties.MachineName")
+                or raw.get("host.name") or host.get("name")
+                or raw.get("agent.hostname") or ""
+            ).strip()
             raw_ips = raw.get("host.ip") or host.get("ip") or []
             if isinstance(raw_ips, str):
                 raw_ips = [raw_ips]
@@ -334,8 +387,6 @@ class ElasticsearchMCPClient(MCPClient):
                         continue
             if len(hostname) > 253:
                 hostname = ""
-            # Explicit IP-only ECS logs are useful discovery candidates too;
-            # never derive a host from a message, LLM or an index-wide probe.
             key = hostname or (ips[0] if ips else "")
             if not key:
                 continue
@@ -348,41 +399,20 @@ class ElasticsearchMCPClient(MCPClient):
                 if ip not in candidate["ip_addresses"]:
                     candidate["ip_addresses"].append(ip)
             candidate["record_count"] += 1
-        # A transport-level HTTP 200 doesn't prove a service/time match.
-        # Probe one document from the operator-configured index (without
-        # exposing its contents) to separate empty index from mismatched
-        # filters. Index-only samples NEVER produce host candidates.
-        index_probe = "not_needed"
-        indexed_fields: list[str] = []
-        if not logs:
-            try:
-                probe = await self.call_tool(
-                    self.TOOL_EXECUTE_ESQL,
-                    {"query": f"FROM {settings.ELASTIC_AGENT_BUILDER_INDEX_PATTERN.strip()} | LIMIT 1"},
-                )
-                envelopes = self.json_content(probe)
-                sample = [
-                    row for envelope in envelopes
-                    for row in self._rows_from_payload(envelope)
-                ]
-                if sample:
-                    # Field names only, never sample values/log records.
-                    import re
-                    indexed_fields = sorted(
-                        str(key)[:90] for key in sample[0].keys()
-                        if isinstance(key, str)
-                        and re.fullmatch(r"[A-Za-z0-9_.@-]{1,90}", key)
-                    )[:32]
-                index_probe = "has_rows" if sample else (
-                    "unrecognized_response" if envelopes and any(
-                        not self._esql_empty_table(value) for value in envelopes
-                    ) else "empty_index"
-                )
-            except Exception:
-                index_probe = "probe_failed"
+        # If the MCP responded with a non-tabular envelope, report a parsing
+        # ambiguity, NOT a definite empty service/time result.
+        unknown_rows = max(
+            int(initial_diagnostics.get("unrecognized_envelopes") or 0),
+            int(observed_diagnostics.get("unrecognized_envelopes") or 0),
+        )
+        recognized_empty = max(
+            int(initial_diagnostics.get("recognized_empty_envelopes") or 0),
+            int(observed_diagnostics.get("recognized_empty_envelopes") or 0),
+        )
         status = (
             "candidates_found" if hosts else
             "no_host_metadata" if logs else
+            "response_format_unrecognized" if unknown_rows > 0 and recognized_empty == 0 else
             "index_has_rows_no_service_time_match" if index_probe == "has_rows" else
             "response_format_unrecognized" if index_probe == "unrecognized_response" else
             "index_probe_failed" if index_probe == "probe_failed" else
@@ -396,12 +426,18 @@ class ElasticsearchMCPClient(MCPClient):
             index_probe=index_probe,
             log_rows=len(logs),
             host_candidates=len(hosts),
+            observed_schema_lookup=attempted_observed_schema,
+            unrecognized_envelopes=unknown_rows,
+            recognized_empty_envelopes=recognized_empty,
         )
         return {
             "status": status,
             "index_pattern": settings.ELASTIC_AGENT_BUILDER_INDEX_PATTERN.strip()[:160],
             "index_probe": index_probe,
-            "sample_field_names": indexed_fields,
+            "sample_field_names": indexed_fields[:32],
+            "observed_schema_lookup": attempted_observed_schema,
+            "unrecognized_envelopes": unknown_rows,
+            "recognized_empty_envelopes": recognized_empty,
             "searched_service": service, "result_count": len(logs),
             "candidates": list(hosts.values())[:8],
             "requires_independent_verification": True,
