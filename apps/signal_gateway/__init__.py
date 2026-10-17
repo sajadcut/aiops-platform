@@ -212,30 +212,52 @@ class SignalGateway:
             except ValueError:
                 continue
         hostname = str(candidate.get("hostname") or "").strip()
-        # No IP in the log? Try the exact allowlisted hostname via read-only
-        # VM MCP service_status. DNS and SSH host-key checks remain on the VM
-        # MCP worker; the control plane does not resolve untrusted hostnames.
-        via_hostname = not valid_ips
-        if via_hostname:
-            candidate["verification_method"] = "hostname"
-            if not (2 <= len(hostname) <= 253
-                    and re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]*", hostname)
-                    and hostname.lower() not in {"localhost", "localhost.localdomain"}):
-                candidate["verification_status"] = "candidate_hostname_invalid"
-                return []
-            options = [hostname]
-        else:
-            candidate["verification_method"] = "ip"
-            options = valid_ips
+        valid_hostname = (
+            2 <= len(hostname) <= 253
+            and re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]*", hostname) is not None
+            and hostname.casefold() not in {"localhost", "localhost.localdomain"}
+        )
 
-        target = next((allowed[value.casefold()] for value in options
-                       if value.casefold() in allowed), None)
+        # Each process loads its OWN settings: a target being approved on the
+        # VM MCP worker does not imply the API has the same allowlist. Never
+        # probe a target missing from the control-plane policy.
+        candidate["control_plane_allowlist_count"] = len(allowed)
+        candidate["control_plane_target_allowed"] = False
+        # Choose a target that is explicitly approved, not simply the first
+        # available address. Prefer IP, but an independently allowlisted
+        # hostname can be used when the log's IP is not allowed.
+        authorized_ips = [
+            allowed[ip.casefold()] for ip in valid_ips if ip.casefold() in allowed
+        ]
+        authorized_hostname = (
+            allowed.get(hostname.casefold()) if valid_hostname else None
+        )
+        if authorized_ips:
+            target = authorized_ips[0]
+            method = "ip"
+        elif authorized_hostname:
+            target = authorized_hostname
+            method = "hostname"
+        else:
+            target = None
+            method = "ip" if valid_ips else "hostname"
+        candidate["verification_method"] = method
         if not target:
             candidate["verification_status"] = (
-                "candidate_hostname_not_allowlisted" if via_hostname
-                else "candidate_ip_not_allowlisted"
+                "candidate_ip_not_allowlisted" if valid_ips else
+                "candidate_hostname_not_allowlisted" if valid_hostname else
+                "candidate_hostname_invalid"
+            )
+            logger.warning(
+                "elastic_vm_target_control_plane_denied",
+                service=str(service)[:90],
+                candidate_has_ip=bool(valid_ips),
+                candidate_has_hostname=bool(valid_hostname),
+                control_plane_allowlist_count=len(allowed),
+                # Target values and secrets are never logged.
             )
             return []
+        candidate["control_plane_target_allowed"] = True
         candidate["verification_target"] = target
         from integrations.vm.mcp_client import VMEdgeMCPClient
         client = None
@@ -252,6 +274,23 @@ class SignalGateway:
                         client.service_status(target, runtime_service),
                         timeout=max(2.0, min(5.0, float(settings.MCP_TIMEOUT_SECONDS))),
                     )
+                except PermissionError as exc:
+                    # The independent VM MCP worker also enforces its own
+                    # allowlists; keep this denial distinct from network IO.
+                    denial = str(exc)
+                    candidate["verification_status"] = (
+                        "vm_worker_target_not_allowlisted"
+                        if denial == "vm_target_not_allowed" else
+                        "vm_worker_service_not_allowlisted"
+                        if denial == "vm_service_not_allowed" else "vm_read_failed"
+                    )
+                    discovery["runtime_probe_count"] = len(attempted)
+                    logger.warning(
+                        "elastic_vm_worker_policy_denied",
+                        policy_code=candidate["verification_status"],
+                        runtime_probe="mapped_alias" if runtime_service != service else "reported",
+                    )
+                    return []
                 except Exception as exc:
                     candidate["verification_status"] = "vm_read_failed"
                     logger.warning("elastic_host_candidate_vm_verify_failed",
