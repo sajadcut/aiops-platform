@@ -192,3 +192,123 @@ async def test_elastic_host_vm_service_mismatch_must_not_bind(monkeypatch):
     assert await SignalGateway._verify_elastic_host_candidate("gfpapi", discovery) == []
     assert discovery["status"] == "candidates_found"
     assert discovery["candidates"][0]["verification_status"] == "vm_service_identity_not_confirmed"
+
+
+@pytest.mark.asyncio
+async def test_elastic_hostname_only_probe_uses_exact_allowlisted_hostname(monkeypatch):
+    """No host.ip in Elastic -> connect by host.name, read only."""
+    from apps.signal_gateway import SignalGateway
+    from domain.contracts.config import settings
+    from integrations.vm import mcp_client as vm_module
+
+    hostname = "GFP-App01.internal.example"
+    monkeypatch.setattr(settings, "SSH_ALLOWED_TARGETS", [hostname])
+    monkeypatch.setattr(settings, "VM_MCP_URL", "http://vm.test/mcp")
+    invoked = []
+
+    class FakeVM:
+        async def service_status(self, target, service):
+            invoked.append((target, service))
+            return {
+                "success": True, "service": service, "target": target,
+                "active_state": "active", "load_state": "loaded",
+            }
+
+        async def close(self):
+            pass
+
+    monkeypatch.setattr(vm_module, "VMEdgeMCPClient", FakeVM)
+    discovery = {"status": "candidates_found", "candidates": [{
+        "hostname": hostname.lower(), "ip_addresses": [],
+        "record_count": 2,
+    }]}
+    observations = await SignalGateway._verify_elastic_host_candidate("gfpapi", discovery)
+    assert invoked == [(hostname, "gfpapi")]
+    assert discovery["status"] == "verified_by_vm_mcp"
+    assert discovery["verified_target"] == hostname
+    assert discovery["candidates"][0]["verification_method"] == "hostname"
+    assert discovery["candidates"][0]["verification_status"] == "verified_read_only"
+    assert observations[0]["source"] == "vm_mcp"
+    assert observations[0]["raw_data"]["target"] == hostname
+
+
+@pytest.mark.asyncio
+async def test_elastic_hostname_without_ip_must_not_bypass_allowlist(monkeypatch):
+    """A log entry is never permission to probe an arbitrary hostname."""
+    from apps.signal_gateway import SignalGateway
+    from domain.contracts.config import settings
+    from integrations.vm import mcp_client as vm_module
+
+    monkeypatch.setattr(settings, "SSH_ALLOWED_TARGETS", ["10.0.0.10"])
+    monkeypatch.setattr(settings, "VM_MCP_URL", "http://vm.test/mcp")
+
+    class UnexpectedVM:
+        def __init__(self):
+            raise AssertionError("unapproved hostname must never reach VM MCP")
+
+    monkeypatch.setattr(vm_module, "VMEdgeMCPClient", UnexpectedVM)
+    discovery = {"status": "candidates_found", "candidates": [{
+        "hostname": "app01.internal.example", "ip_addresses": [],
+    }]}
+    result = await SignalGateway._verify_elastic_host_candidate("gfpapi", discovery)
+    assert result == []
+    assert discovery["candidates"][0]["verification_method"] == "hostname"
+    assert discovery["candidates"][0]["verification_status"] == "candidate_hostname_not_allowlisted"
+    assert "verified_target" not in discovery
+
+
+@pytest.mark.asyncio
+async def test_elastic_hostname_only_invalid_or_unreachable_stays_unverified(monkeypatch):
+    from apps.signal_gateway import SignalGateway
+    from domain.contracts.config import settings
+    from integrations.vm import mcp_client as vm_module
+
+    monkeypatch.setattr(settings, "VM_MCP_URL", "http://vm.test/mcp")
+    monkeypatch.setattr(settings, "SSH_ALLOWED_TARGETS", ["app01.internal.example"])
+
+    class UnreachableVM:
+        async def service_status(self, target, service):
+            raise OSError("test connection refused")
+
+        async def close(self):
+            pass
+
+    monkeypatch.setattr(vm_module, "VMEdgeMCPClient", UnreachableVM)
+    unreachable = {"status": "candidates_found", "candidates": [{
+        "hostname": "app01.internal.example", "ip_addresses": [],
+    }]}
+    assert await SignalGateway._verify_elastic_host_candidate("gfpapi", unreachable) == []
+    assert unreachable["candidates"][0]["verification_status"] == "vm_read_failed"
+    assert unreachable["candidates"][0]["verification_method"] == "hostname"
+
+    invalid = {"status": "candidates_found", "candidates": [{
+        "hostname": "../server;rm -rf", "ip_addresses": [],
+    }]}
+    assert await SignalGateway._verify_elastic_host_candidate("gfpapi", invalid) == []
+    assert invalid["candidates"][0]["verification_status"] == "candidate_hostname_invalid"
+
+
+@pytest.mark.asyncio
+async def test_elastic_host_discovery_retains_hostname_when_ip_missing(monkeypatch):
+    client = ElasticsearchMCPClient()
+
+    async def fake_call_tool(name, arguments):
+        assert name == "platform_core_execute_esql"
+        # Simulate an ECS index with host.name but no mapped host.ip.
+        if "`host.ip`" in arguments["query"]:
+            raise ValueError("unknown column host.ip")
+        return {"structuredContent": {"rows": [{
+            "@timestamp": "2026-10-17T10:30:00Z",
+            "service.name": "gfpapi",
+            "host.name": "app01.internal.example",
+        }]}}
+
+    monkeypatch.setattr(client, "call_tool", fake_call_tool)
+    try:
+        discovered = await client.discover_service_hosts(
+            "gfpapi", datetime(2026, 10, 17, 10, 15, tzinfo=timezone.utc))
+        assert discovered["status"] == "candidates_found"
+        assert discovered["candidates"][0]["hostname"] == "app01.internal.example"
+        assert discovered["candidates"][0]["ip_addresses"] == []
+    finally:
+        await client.close()
