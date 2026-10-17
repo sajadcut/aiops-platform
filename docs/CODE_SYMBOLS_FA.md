@@ -1233,19 +1233,19 @@
 | `apps/execution_service/tools/vm_telemetry.py` | `VMTelemetryTool.execute` | 50 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | VMTelemetryTool |
 | `apps/incident_copilot.py` | `merge_incident_evidence` | 25 | function | Supplement truncated DB evidence with the same Incident's checkpoint. | module |
 | `apps/incident_copilot.py` | `vm_binding` | 64 | function | Bind exactly one service/target using observed, consistent VM MCP facts. | module |
-| `apps/incident_copilot.py` | `asks_for_recorded_errors` | 141 | function | Distinguish 'what did you find?' from a request for a *new* MCP check. | module |
-| `apps/incident_copilot.py` | `recorded_error_facts` | 147 | function | Only facts already persisted by MCP; never present an Agent guess as proof. | module |
-| `apps/incident_copilot.py` | `recorded_error_facts.add` | 152 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | recorded_error_facts |
-| `apps/incident_copilot.py` | `recorded_error_answer` | 192 | function | Grounded fallback when LLM or current MCP is unavailable. | module |
-| `apps/incident_copilot.py` | `unsupported_security_exclusion_claim` | 228 | function | Prevent unverified negative auth claims from a fluent LLM response. | module |
-| `apps/incident_copilot.py` | `is_recovery_comparison_question` | 246 | function | A request to *explain* Start versus Restart is not a write request. | module |
-| `apps/incident_copilot.py` | `fallback_intent` | 266 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/incident_copilot.py` | `public_result` | 314 | function | Project known diagnostic keys; never forward arbitrary MCP payloads. | module |
-| `apps/incident_copilot.py` | `nginx_inspection_answer` | 441 | function | Deterministic user-visible facts from sanitized VM MCP inspection. | module |
-| `apps/incident_copilot.py` | `vm_read` | 487 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/incident_copilot.py` | `llm_plan` | 534 | async function | LLM may select a bounded enum but cannot set a target or authorize writes. | module |
-| `apps/incident_copilot.py` | `history` | 657 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/incident_copilot.py` | `append_turn` | 678 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/incident_copilot.py` | `asks_for_recorded_errors` | 146 | function | Distinguish 'what did you find?' from a request for a *new* MCP check. | module |
+| `apps/incident_copilot.py` | `recorded_error_facts` | 152 | function | Only facts already persisted by MCP; never present an Agent guess as proof. | module |
+| `apps/incident_copilot.py` | `recorded_error_facts.add` | 157 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | recorded_error_facts |
+| `apps/incident_copilot.py` | `recorded_error_answer` | 197 | function | Grounded fallback when LLM or current MCP is unavailable. | module |
+| `apps/incident_copilot.py` | `unsupported_security_exclusion_claim` | 233 | function | Prevent unverified negative auth claims from a fluent LLM response. | module |
+| `apps/incident_copilot.py` | `is_recovery_comparison_question` | 251 | function | A request to *explain* Start versus Restart is not a write request. | module |
+| `apps/incident_copilot.py` | `fallback_intent` | 271 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/incident_copilot.py` | `public_result` | 319 | function | Project known diagnostic keys; never forward arbitrary MCP payloads. | module |
+| `apps/incident_copilot.py` | `nginx_inspection_answer` | 446 | function | Deterministic user-visible facts from sanitized VM MCP inspection. | module |
+| `apps/incident_copilot.py` | `vm_read` | 492 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/incident_copilot.py` | `llm_plan` | 539 | async function | LLM may select a bounded enum but cannot set a target or authorize writes. | module |
+| `apps/incident_copilot.py` | `history` | 662 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/incident_copilot.py` | `append_turn` | 683 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/incident_elastic.py` | `is_elastic_question` | 13 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/incident_elastic.py` | `wants_live_elastic` | 19 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/incident_elastic.py` | `_iso` | 28 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
