@@ -533,3 +533,69 @@ def test_ambiguous_reverse_runtime_alias_does_not_guess(monkeypatch):
     monkeypatch.setattr(settings, "ELASTIC_SERVICE_DISCOVERY_ALIASES",
                         {"service-a": ["GFP_Backend"], "service-b": ["GFP_Backend"]})
     assert SignalGateway._runtime_service_candidates("GFP_Backend") == ["GFP_Backend"]
+
+
+@pytest.mark.asyncio
+async def test_ingest_host_discovery_promotes_runtime_name_only_after_vm_proof(monkeypatch):
+    from datetime import timedelta
+    from apps.signal_gateway import SignalGateway, OperationalSignal
+    from apps.rag_service import KnowledgeRAGService
+    from domain.contracts.config import settings
+    from integrations import elasticsearch as elastic_namespace
+    from integrations.elasticsearch import mcp_client as elastic_module
+    from integrations.vm import mcp_client as vm_module
+
+    monkeypatch.setattr(settings, "VM_MCP_URL", "http://vm.test/mcp")
+    monkeypatch.setattr(settings, "SSH_ALLOWED_TARGETS", ["gfp-app.internal"])
+    monkeypatch.setattr(settings, "ELASTIC_SERVICE_DISCOVERY_ALIASES",
+                        {"gfpapi": ["GFP_Backend"]})
+    monkeypatch.setattr(settings, "ELASTIC_ANOMALY_CONTEXT_LOOKAHEAD_SECONDS", 300)
+
+    async def no_knowledge(self, *args, **kwargs):
+        return []
+    monkeypatch.setattr(KnowledgeRAGService, "search", no_knowledge)
+    query_windows = []
+    class FakeElastic:
+        async def discover_service_hosts(self, service, since, until):
+            query_windows.append((service, since, until))
+            return {"status": "candidates_found", "searched_service": service,
+                    "candidates": [{"hostname": "gfp-app.internal", "ip_addresses": []}],
+                    "result_count": 1}
+        async def close(self):
+            pass
+    class FakeVM:
+        async def service_status(self, target, service):
+            if service == "gfpapi":
+                return {"success": True, "target": target, "service": service,
+                        "load_state": "loaded", "active_state": "failed"}
+            return {"success": False, "target": target, "service": service}
+        async def close(self):
+            pass
+    monkeypatch.setattr(elastic_module, "ElasticsearchMCPClient", FakeElastic)
+    monkeypatch.setattr(vm_module, "VMEdgeMCPClient", FakeVM)
+    now = datetime.now(timezone.utc)
+    signal = OperationalSignal(
+        source="elasticsearch", source_id="ingest-alias-proof-1",
+        signal_type="redis_error_threshold", summary="Redis errors elevated",
+        service="GFP_Backend", timestamp=now + timedelta(seconds=273))
+    result = await SignalGateway._knowledge_assisted_asset(signal, signal.to_evidence())
+    assert result["service_identity"]["service"] == "gfpapi"
+    assert result["service_identity"]["status"] == "verified"
+    assert result["service_identity"]["reported_service"] == "GFP_Backend"
+    assert result["asset_context"]["service"] == "gfpapi"
+    assert result["verified_runtime_mapping"]["source_service"] == "GFP_Backend"
+    assert result["verified_runtime_mapping"]["runtime_service"] == "gfpapi"
+    assert result["host_discovery"]["mapping_status"] == "verified_runtime_promoted"
+    assert result["host_discovery"]["timestamp_skew_seconds"] >= 270
+    assert query_windows[0][0] == "GFP_Backend"
+    assert query_windows[0][2] > now
+
+
+def test_nested_empty_esql_table_is_not_schema_error():
+    checker = ElasticsearchMCPClient._esql_empty_table
+    assert checker({"results": [{"data": {
+        "columns": [{"name": "host.name"}], "values": []
+    }}]})
+    assert checker({"result": {"data": {"columns": ["x"], "rows": []}}})
+    assert not checker({"result": {"message": "unexpected envelope"}})
+    assert not checker({"results": ["raw text"]})
