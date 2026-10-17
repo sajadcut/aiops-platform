@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 555 | Dashboard JS files scanned: 8 | Symbols indexed: 6158**
+**Python files scanned: 555 | Dashboard JS files scanned: 8 | Symbols indexed: 6169**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -4141,6 +4141,17 @@
 | `tests/unit/test_elastic_mcp_wire_tool.py` | `test_discovery_finds_host_without_authorizing_vm.fake_tool` | 74 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_discovery_finds_host_without_authorizing_vm |
 | `tests/unit/test_elastic_mcp_wire_tool.py` | `test_alias_lookup_is_opt_in_and_does_not_rename_service` | 98 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_elastic_mcp_wire_tool.py` | `test_alias_lookup_is_opt_in_and_does_not_rename_service.fake_tool` | 104 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_alias_lookup_is_opt_in_and_does_not_rename_service |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_elastic_host_vm_verification_requires_allowlisted_exact_service` | 125 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_elastic_host_vm_verification_requires_allowlisted_exact_service.FakeVM` | 133 | class | کلاس | test_elastic_host_vm_verification_requires_allowlisted_exact_service |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_elastic_host_vm_verification_requires_allowlisted_exact_service.FakeVM.service_status` | 134 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_elastic_host_vm_verification_requires_allowlisted_exact_service.FakeVM |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_elastic_host_vm_verification_requires_allowlisted_exact_service.FakeVM.close` | 138 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_elastic_host_vm_verification_requires_allowlisted_exact_service.FakeVM |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_elastic_host_vm_verification_rejects_unapproved_or_ambiguous_target` | 153 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_elastic_host_vm_verification_rejects_unapproved_or_ambiguous_target.ExplodingVM` | 160 | class | کلاس | test_elastic_host_vm_verification_rejects_unapproved_or_ambiguous_target |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_elastic_host_vm_verification_rejects_unapproved_or_ambiguous_target.ExplodingVM.__init__` | 161 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_elastic_host_vm_verification_rejects_unapproved_or_ambiguous_target.ExplodingVM |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_elastic_host_vm_service_mismatch_must_not_bind` | 175 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_elastic_host_vm_service_mismatch_must_not_bind.FakeVM` | 182 | class | کلاس | test_elastic_host_vm_service_mismatch_must_not_bind |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_elastic_host_vm_service_mismatch_must_not_bind.FakeVM.service_status` | 183 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_elastic_host_vm_service_mismatch_must_not_bind.FakeVM |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_elastic_host_vm_service_mismatch_must_not_bind.FakeVM.close` | 186 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_elastic_host_vm_service_mismatch_must_not_bind.FakeVM |
 | `tests/unit/test_ephemeral_config_guard.py` | `test_ephemeral_script_has_valid_posix_syntax_and_only_trusted_static_code` | 18 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_ephemeral_config_guard.py` | `test_ephemeral_config_payload_cannot_inject_shell_syntax` | 40 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_ephemeral_config_guard.py` | `test_ephemeral_builder_rejects_untrusted_operation_or_metadata` | 62 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
