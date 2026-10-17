@@ -105,6 +105,7 @@ async def get_host_discovery(incident_id: UUID):
             "hostname": host,
             "record_count": max(0, min(int(item.get("record_count") or 0), 40)),
             "status": "candidate",
+            "verification_status": str(item.get("verification_status") or "unverified")[:60],
             "source": "elasticsearch",
         })
     return {
@@ -113,7 +114,9 @@ async def get_host_discovery(incident_id: UUID):
         "searched_service": str(source.get("searched_service") or incident.service or "")[:90],
         "result_count": max(0, min(int(source.get("result_count") or 0), 40)),
         "candidates": candidates,
-        "requires_independent_verification": True,
+        "verified_target": (str(source.get("verified_target") or "")[:253]
+                            if source.get("status") == "verified_by_vm_mcp" else None),
+        "requires_independent_verification": source.get("status") != "verified_by_vm_mcp",
         "may_authorize_vm_execution": False,
     }
 
