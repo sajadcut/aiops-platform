@@ -599,3 +599,88 @@ def test_nested_empty_esql_table_is_not_schema_error():
     assert checker({"result": {"data": {"columns": ["x"], "rows": []}}})
     assert not checker({"result": {"message": "unexpected envelope"}})
     assert not checker({"results": ["raw text"]})
+
+
+@pytest.mark.asyncio
+async def test_serilog_schema_retry_finds_machine_name_in_gfp_index(monkeypatch):
+    from domain.contracts.config import settings
+    monkeypatch.setattr(settings, "ELASTIC_AGENT_BUILDER_INDEX_PATTERN",
+                        "1m-digitaloperation-gfpapi-*")
+    monkeypatch.setattr(settings, "ELASTIC_SERVICE_DISCOVERY_ALIASES",
+                        {"gfpapi": ["GFP_Backend"]})
+    client = ElasticsearchMCPClient()
+    queries = []
+
+    async def fake_tool(name, arguments):
+        assert name == "platform_core_execute_esql"
+        query = arguments["query"]
+        queries.append(query)
+        if query.endswith("| LIMIT 1"):
+            return {"structuredContent": {"columns": [
+                {"name": "@timestamp"}, {"name": "Timestamp"},
+                {"name": "Properties.ServiceName"},
+                {"name": "Properties.ServiceName.keyword"},
+                {"name": "Properties.MachineName"},
+            ], "values": [["2026-10-17T11:00:00Z",
+                           "2026-10-17T11:00:00Z", "gfpapi", "gfpapi",
+                           "gfp-app.internal"]]}}
+        if ("Properties.ServiceName" in query and "GFP_Backend" in query
+                and "Properties.MachineName" in query):
+            return {"structuredContent": {"rows": [{
+                "@timestamp": "2026-10-17T11:00:00Z",
+                "Properties.ServiceName.keyword": "GFP_Backend",
+                "Properties.MachineName": "gfp-app.internal",
+            }]}}
+        if ("Properties.ServiceName" in query and "gfpapi" in query
+                and "Properties.MachineName" in query):
+            return {"structuredContent": {"rows": [{
+                "@timestamp": "2026-10-17T11:00:00Z",
+                "Properties.ServiceName.keyword": "gfpapi",
+                "Properties.MachineName": "gfp-app.internal",
+            }]}}
+        # Elastic returned a result envelope, but the old ECS-only query
+        # could not decode it as a table.
+        return {"structuredContent": {"details": {"status": "unrecognized"}}}
+
+    monkeypatch.setattr(client, "call_tool", fake_tool)
+    try:
+        result = await client.discover_service_hosts(
+            "GFP_Backend", datetime(2026, 10, 17, 10, 45, tzinfo=timezone.utc),
+            datetime(2026, 10, 17, 11, 5, tzinfo=timezone.utc))
+        assert result["status"] == "candidates_found"
+        assert result["index_probe"] == "has_rows"
+        assert result["observed_schema_lookup"] is True
+        assert result["candidates"][0]["hostname"] == "gfp-app.internal"
+        assert result["result_count"] >= 1
+        assert any("Properties.MachineName" in query and "Properties.ServiceName" in query
+                   and "WHERE " in query for query in queries)
+        assert all("FROM 1m-digitaloperation-gfpapi-*" in query for query in queries)
+    finally:
+        await client.close()
+
+
+@pytest.mark.asyncio
+async def test_unparseable_esql_is_not_false_service_time_mismatch(monkeypatch):
+    from domain.contracts.config import settings
+    monkeypatch.setattr(settings, "ELASTIC_SERVICE_DISCOVERY_ALIASES", {})
+    client = ElasticsearchMCPClient()
+
+    async def fake_tool(name, arguments):
+        if arguments["query"].endswith("| LIMIT 1"):
+            return {"structuredContent": {"rows": [{
+                "@timestamp": "2026-10-17T11:00:00Z",
+                "Properties.ServiceName": "gfpapi",
+                "Properties.MachineName": "gfp-app.internal",
+            }]}}
+        return {"structuredContent": {"error": "unexpected backend format"}}
+
+    monkeypatch.setattr(client, "call_tool", fake_tool)
+    try:
+        result = await client.discover_service_hosts(
+            "gfpapi", datetime(2026, 10, 17, 10, 45, tzinfo=timezone.utc))
+        assert result["status"] == "response_format_unrecognized"
+        assert result["candidates"] == []
+        assert result["unrecognized_envelopes"] >= 1
+        assert result["index_probe"] == "has_rows"
+    finally:
+        await client.close()
