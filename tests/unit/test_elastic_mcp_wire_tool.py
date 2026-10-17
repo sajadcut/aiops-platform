@@ -464,3 +464,72 @@ async def test_explicit_reverse_elastic_alias_gets_used_in_esql(monkeypatch):
         assert any('"gfpapi"' in query for query in queries)
     finally:
         await client.close()
+
+
+@pytest.mark.asyncio
+async def test_verified_runtime_alias_requires_exact_vm_evidence_and_config(monkeypatch):
+    from apps.signal_gateway import SignalGateway
+    from apps.context_service.service_identity import ServiceIdentityResolver
+    from apps.incident_copilot import vm_binding
+    from apps.incident_vm_identity import vm_binding_diagnostic
+    from domain.contracts.config import settings
+    from integrations.vm import mcp_client as vm_module
+
+    monkeypatch.setattr(settings, "VM_MCP_URL", "http://vm.test/mcp")
+    monkeypatch.setattr(settings, "SSH_ALLOWED_TARGETS", ["gfp-app.internal"])
+    monkeypatch.setattr(settings, "ELASTIC_SERVICE_DISCOVERY_ALIASES",
+                        {"gfpapi": ["GFP_Backend"]})
+    seen = []
+    class FakeVM:
+        async def service_status(self, target, service):
+            seen.append((target, service))
+            if service != "gfpapi":
+                return {"success": False, "target": target, "service": service}
+            return {"success": True, "target": target, "service": service,
+                    "load_state": "loaded", "active_state": "failed"}
+        async def close(self):
+            pass
+
+    monkeypatch.setattr(vm_module, "VMEdgeMCPClient", FakeVM)
+    discovery = {"status": "candidates_found", "candidates": [{
+        "hostname": "gfp-app.internal", "ip_addresses": [],
+    }]}
+    evidence = await SignalGateway._verify_elastic_host_candidate("GFP_Backend", discovery)
+    assert seen == [("gfp-app.internal", "GFP_Backend"), ("gfp-app.internal", "gfpapi")]
+    assert discovery["status"] == "verified_by_vm_mcp"
+    assert discovery["verified_runtime_service"] == "gfpapi"
+    assert discovery["reported_log_service"] == "GFP_Backend"
+    assert evidence[0]["raw_data"]["service"] == "gfpapi"
+    assert evidence[0]["raw_data"]["source_service_label"] == "GFP_Backend"
+
+    association = {"source_service": "GFP_Backend", "runtime_service": "gfpapi",
+                   "target": "gfp-app.internal",
+                   "evidence_reference": evidence[0]["reference"],
+                   "verification": "vm_mcp_service_status"}
+    context = {"verified_runtime_mapping": association,
+               "service_identity": {"service": "gfpapi", "status": "verified"},
+               "trigger_signal": {"service": "GFP_Backend"}}
+    assert ServiceIdentityResolver.verified_runtime_alias_matches(
+        "GFP_Backend", "gfpapi", context, evidence)
+    assert vm_binding_diagnostic("gfpapi", evidence, context)["candidate"] == "gfp-app.internal"
+    assert vm_binding("gfpapi", evidence, context)["target"] == "gfp-app.internal"
+
+    wrong = [{"source": "vm_mcp", "reference": evidence[0]["reference"],
+              "raw_data": {**evidence[0]["raw_data"], "service": "nginx"}}]
+    assert not ServiceIdentityResolver.verified_runtime_alias_matches(
+        "GFP_Backend", "gfpapi", context, wrong)
+    assert not ServiceIdentityResolver.verified_runtime_alias_matches(
+        "GFP_Backend", "gfpapi", context, [])
+    assert vm_binding("gfpapi", wrong, context) is None
+    monkeypatch.setattr(settings, "ELASTIC_SERVICE_DISCOVERY_ALIASES", {})
+    assert not ServiceIdentityResolver.verified_runtime_alias_matches(
+        "GFP_Backend", "gfpapi", context, evidence)
+    assert vm_binding("gfpapi", evidence, context) is None
+
+
+def test_ambiguous_reverse_runtime_alias_does_not_guess(monkeypatch):
+    from apps.signal_gateway import SignalGateway
+    from domain.contracts.config import settings
+    monkeypatch.setattr(settings, "ELASTIC_SERVICE_DISCOVERY_ALIASES",
+                        {"service-a": ["GFP_Backend"], "service-b": ["GFP_Backend"]})
+    assert SignalGateway._runtime_service_candidates("GFP_Backend") == ["GFP_Backend"]
