@@ -2480,9 +2480,23 @@
           esc(fa?'تعداد شواهد: ':'Records: ')+esc(x.record_count)+
           (method?' · '+esc(method):'')+' · '+esc(reason)+'</li>';
       }).join('');
+      const discoveryStagesFA={esql_query:'اجرای ES|QL',index_probe:'بررسی ایندکس',response_parsing:'پردازش پاسخ Elastic',index_or_service_lookup:'جست‌وجوی ایندکس/سرویس',service_or_time_filter:'فیلتر سرویس/زمان',host_metadata:'استخراج مشخصات میزبان',vm_identity_verification:'تأیید هویت VM MCP',completed:'تکمیل‌شده'};
+      const discoveryStagesEN={esql_query:'ES|QL query',index_probe:'Index probe',response_parsing:'Elastic response parsing',index_or_service_lookup:'Index/service lookup',service_or_time_filter:'Service/time matching',host_metadata:'Host metadata',vm_identity_verification:'VM MCP identity check',completed:'Completed'};
+      const stageDetail=(fa?discoveryStagesFA:discoveryStagesEN)[discovery.failure_stage]||(fa?'نامشخص':'Unknown');
+      const clockOffset=Number(discovery.timestamp_skew_seconds)||0;
+      const indexProbeText=discovery.index_probe==='has_rows'?(fa?'ایندکس داده دارد':'Index has rows'):discovery.index_probe==='empty_index'?(fa?'ایندکس نمونه‌ای برنگرداند':'Index sample empty'):discovery.index_probe==='probe_failed'?(fa?'بررسی ایندکس شکست خورد':'Index probe failed'):discovery.index_probe==='unrecognized_response'?(fa?'قالب پاسخ ناشناخته':'Unknown response schema'):'';
       hostCard='<article class="ic-detail-card"><div class="ic-detail-head"><h4>'+
         esc(fa?'کشف سرویس و سرور از Elastic MCP':'Elastic MCP service / host discovery')+
         '</h4></div><p>'+esc(statusText)+'</p>'+
+        '<p><strong>'+esc(fa?'مرحله بررسی: ':'Investigation stage: ')+esc(stageDetail)+'</strong></p>'+
+        (indexProbeText?'<p>'+esc(fa?'نتیجه نمونه‌گیری: ':'Index probe result: ')+esc(indexProbeText)+'</p>':'')+
+        (discovery.window_from&&discovery.window_to?'<p>'+esc(fa?'بازه جست‌وجوی ES|QL: ':'ES|QL search window: ')+
+          '<code>'+esc(discovery.window_from)+'</code> → <code>'+esc(discovery.window_to)+'</code>'+
+          (clockOffset?' · '+esc(fa?'اختلاف ساعت: ':'Clock offset: ')+esc(clockOffset)+'s':'')+'</p>':'')+
+        (discovery.verified_runtime_service?'<p><strong>'+esc(fa?'واحد واقعی تأییدشده: ':'VM-verified runtime service: ')+
+          '<code>'+esc(discovery.verified_runtime_service)+'</code></strong>'+
+          (discovery.reported_log_service?' · '+esc(fa?'نام سرویس در هشدار: ':'Source alert label: ')+
+          '<code>'+esc(discovery.reported_log_service)+'</code>':'')+'</p>':'')+
         '<p>'+esc(fa?'سرویس جست‌وجوشده: ':'Searched service: ')+
         esc(discovery.searched_service)+' · '+
         esc(fa?'رکوردهای برگشتی: ':'Matching records: ')+
