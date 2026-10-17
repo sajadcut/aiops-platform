@@ -106,6 +106,8 @@ async def get_host_discovery(incident_id: UUID):
             "record_count": max(0, min(int(item.get("record_count") or 0), 40)),
             "status": "candidate",
             "verification_status": str(item.get("verification_status") or "unverified")[:60],
+            "verification_method": (str(item.get("verification_method") or "")[:16]
+                                    if item.get("verification_method") in {"hostname", "ip"} else None),
             "source": "elasticsearch",
         })
     return {
