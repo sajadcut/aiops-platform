@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 555 | Dashboard JS files scanned: 8 | Symbols indexed: 6169**
+**Python files scanned: 555 | Dashboard JS files scanned: 8 | Symbols indexed: 6182**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -4152,6 +4152,19 @@
 | `tests/unit/test_elastic_mcp_wire_tool.py` | `test_elastic_host_vm_service_mismatch_must_not_bind.FakeVM` | 182 | class | کلاس | test_elastic_host_vm_service_mismatch_must_not_bind |
 | `tests/unit/test_elastic_mcp_wire_tool.py` | `test_elastic_host_vm_service_mismatch_must_not_bind.FakeVM.service_status` | 183 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_elastic_host_vm_service_mismatch_must_not_bind.FakeVM |
 | `tests/unit/test_elastic_mcp_wire_tool.py` | `test_elastic_host_vm_service_mismatch_must_not_bind.FakeVM.close` | 186 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_elastic_host_vm_service_mismatch_must_not_bind.FakeVM |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_elastic_hostname_only_probe_uses_exact_allowlisted_hostname` | 198 | async function | No host.ip in Elastic -> connect by host.name, read only. | module |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_elastic_hostname_only_probe_uses_exact_allowlisted_hostname.FakeVM` | 209 | class | کلاس | test_elastic_hostname_only_probe_uses_exact_allowlisted_hostname |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_elastic_hostname_only_probe_uses_exact_allowlisted_hostname.FakeVM.service_status` | 210 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_elastic_hostname_only_probe_uses_exact_allowlisted_hostname.FakeVM |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_elastic_hostname_only_probe_uses_exact_allowlisted_hostname.FakeVM.close` | 217 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_elastic_hostname_only_probe_uses_exact_allowlisted_hostname.FakeVM |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_elastic_hostname_without_ip_must_not_bypass_allowlist` | 236 | async function | A log entry is never permission to probe an arbitrary hostname. | module |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_elastic_hostname_without_ip_must_not_bypass_allowlist.UnexpectedVM` | 245 | class | کلاس | test_elastic_hostname_without_ip_must_not_bypass_allowlist |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_elastic_hostname_without_ip_must_not_bypass_allowlist.UnexpectedVM.__init__` | 246 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_elastic_hostname_without_ip_must_not_bypass_allowlist.UnexpectedVM |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_elastic_hostname_only_invalid_or_unreachable_stays_unverified` | 261 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_elastic_hostname_only_invalid_or_unreachable_stays_unverified.UnreachableVM` | 269 | class | کلاس | test_elastic_hostname_only_invalid_or_unreachable_stays_unverified |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_elastic_hostname_only_invalid_or_unreachable_stays_unverified.UnreachableVM.service_status` | 270 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_elastic_hostname_only_invalid_or_unreachable_stays_unverified.UnreachableVM |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_elastic_hostname_only_invalid_or_unreachable_stays_unverified.UnreachableVM.close` | 273 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_elastic_hostname_only_invalid_or_unreachable_stays_unverified.UnreachableVM |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_elastic_host_discovery_retains_hostname_when_ip_missing` | 292 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_elastic_host_discovery_retains_hostname_when_ip_missing.fake_call_tool` | 295 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_elastic_host_discovery_retains_hostname_when_ip_missing |
 | `tests/unit/test_ephemeral_config_guard.py` | `test_ephemeral_script_has_valid_posix_syntax_and_only_trusted_static_code` | 18 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_ephemeral_config_guard.py` | `test_ephemeral_config_payload_cannot_inject_shell_syntax` | 40 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_ephemeral_config_guard.py` | `test_ephemeral_builder_rejects_untrusted_operation_or_metadata` | 62 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
