@@ -294,8 +294,13 @@ class SignalGateway:
             discovery["runtime_probe_count"] = len(attempted)
             if not attempted:
                 candidate["verification_status"] = "no_valid_runtime_service_name"
-            if len(attempted) == 1 and service.casefold() != "gfpapi":
+            if len(attempted) == 1:
                 discovery["mapping_status"] = "no_verified_runtime_alias"
+            return []
+        except Exception as exc:
+            candidate["verification_status"] = "vm_read_failed"
+            logger.warning("elastic_host_candidate_vm_verify_failed",
+                           error_type=type(exc).__name__)
             return []
         finally:
             if client is not None:
@@ -384,6 +389,7 @@ class SignalGateway:
         )
         host_discovery: Dict[str, Any] = {"status": "not_requested", "candidates": [], "result_count": 0}
         host_verification_evidence: list[Dict[str, Any]] = []
+        verified_runtime_mapping: Dict[str, Any] | None = None
         if signal.source == "elasticsearch" and ServiceIdentityResolver.known(signal.service):
             # Read-only log-host discovery at ingest time, *before* RCA routing.
             # Future-skewed webhook timestamps must not shift the query into
@@ -413,7 +419,6 @@ class SignalGateway:
             host_discovery.update(time_metadata)
             host_verification_evidence = await SignalGateway._verify_elastic_host_candidate(
                 str(signal.service), host_discovery)
-            verified_runtime_mapping: Dict[str, Any] | None = None
             runtime_service = str(host_discovery.get("verified_runtime_service") or "").strip()
             source_label = str(signal.service or "").strip()
             if (host_discovery.get("status") == "verified_by_vm_mcp"
@@ -470,7 +475,7 @@ class SignalGateway:
         return {
             "asset_context": resolution["asset_context"],
             "host_discovery": host_discovery,
-            "verified_runtime_mapping": locals().get("verified_runtime_mapping"),
+            "verified_runtime_mapping": verified_runtime_mapping,
             "host_verification_evidence": host_verification_evidence,
             "service_identity": resolution["service_identity"],
             "live_asset_context": live_asset,
