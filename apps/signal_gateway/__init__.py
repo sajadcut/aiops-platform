@@ -165,7 +165,9 @@ class SignalGateway:
             # Ambiguous operator configuration: do not guess the systemd unit.
             aliases = []
         choices: list[str] = []
-        for name in [*aliases, reported]:
+        order = ([reported, *aliases] if keys and not reverse
+                 else [*aliases, reported])
+        for name in order:
             if (re.fullmatch(r"[A-Za-z0-9@_.:-]{2,128}", name)
                     and name.casefold() not in {s.casefold() for s in choices}):
                 choices.append(name)
