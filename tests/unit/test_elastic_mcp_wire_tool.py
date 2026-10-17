@@ -119,3 +119,76 @@ async def test_alias_lookup_is_opt_in_and_does_not_rename_service(monkeypatch):
         assert len(queries) <= 10
     finally:
         await client.close()
+
+
+@pytest.mark.asyncio
+async def test_elastic_host_vm_verification_requires_allowlisted_exact_service(monkeypatch):
+    from apps.signal_gateway import SignalGateway
+    from domain.contracts.config import settings
+    from integrations.vm import mcp_client as vm_module
+
+    monkeypatch.setattr(settings, "SSH_ALLOWED_TARGETS", ["10.0.0.10"])
+    monkeypatch.setattr(settings, "VM_MCP_URL", "http://vm.test/mcp")
+    seen = []
+    class FakeVM:
+        async def service_status(self, target, service):
+            seen.append((target, service))
+            return {"success": True, "target": target, "service": service,
+                    "active_state": "failed", "load_state": "loaded"}
+        async def close(self):
+            pass
+    monkeypatch.setattr(vm_module, "VMEdgeMCPClient", FakeVM)
+    discovery = {"status": "candidates_found", "candidates": [
+        {"hostname": "app01", "ip_addresses": ["10.0.0.10"], "status": "candidate"}
+    ]}
+    evidence = await SignalGateway._verify_elastic_host_candidate("gfpapi", discovery)
+    assert seen == [("10.0.0.10", "gfpapi")]
+    assert discovery["status"] == "verified_by_vm_mcp"
+    assert evidence[0]["raw_data"]["diagnostic"] == "service_status"
+    assert evidence[0]["raw_data"]["target"] == "10.0.0.10"
+    assert discovery["candidates"][0]["verification_status"] == "verified_read_only"
+
+
+@pytest.mark.asyncio
+async def test_elastic_host_vm_verification_rejects_unapproved_or_ambiguous_target(monkeypatch):
+    from apps.signal_gateway import SignalGateway
+    from domain.contracts.config import settings
+    from integrations.vm import mcp_client as vm_module
+
+    monkeypatch.setattr(settings, "SSH_ALLOWED_TARGETS", ["10.0.0.10"])
+    monkeypatch.setattr(settings, "VM_MCP_URL", "http://vm.test/mcp")
+    class ExplodingVM:
+        def __init__(self):
+            raise AssertionError("VM MCP must not be called for unsafe target")
+    monkeypatch.setattr(vm_module, "VMEdgeMCPClient", ExplodingVM)
+    for candidates in (
+        [{"hostname": "app01", "ip_addresses": ["10.0.0.99"]}],
+        [{"hostname": "a", "ip_addresses": ["10.0.0.10"]},
+         {"hostname": "b", "ip_addresses": ["10.0.0.11"]}],
+    ):
+        discovery = {"status": "candidates_found", "candidates": candidates}
+        assert await SignalGateway._verify_elastic_host_candidate("gfpapi", discovery) == []
+        assert discovery["status"] == "candidates_found"
+
+
+@pytest.mark.asyncio
+async def test_elastic_host_vm_service_mismatch_must_not_bind(monkeypatch):
+    from apps.signal_gateway import SignalGateway
+    from domain.contracts.config import settings
+    from integrations.vm import mcp_client as vm_module
+
+    monkeypatch.setattr(settings, "SSH_ALLOWED_TARGETS", ["10.0.0.10"])
+    monkeypatch.setattr(settings, "VM_MCP_URL", "http://vm.test/mcp")
+    class FakeVM:
+        async def service_status(self, target, service):
+            return {"success": True, "target": target, "service": "nginx",
+                    "active_state": "active", "load_state": "loaded"}
+        async def close(self):
+            pass
+    monkeypatch.setattr(vm_module, "VMEdgeMCPClient", FakeVM)
+    discovery = {"status": "candidates_found", "candidates": [
+        {"hostname": "app01", "ip_addresses": ["10.0.0.10"]}
+    ]}
+    assert await SignalGateway._verify_elastic_host_candidate("gfpapi", discovery) == []
+    assert discovery["status"] == "candidates_found"
+    assert discovery["candidates"][0]["verification_status"] == "vm_service_identity_not_confirmed"
