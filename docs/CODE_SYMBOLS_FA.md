@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 555 | Dashboard JS files scanned: 8 | Symbols indexed: 6202**
+**Python files scanned: 555 | Dashboard JS files scanned: 8 | Symbols indexed: 6211**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -4185,6 +4185,15 @@
 | `tests/unit/test_elastic_mcp_wire_tool.py` | `test_verified_runtime_alias_requires_exact_vm_evidence_and_config.FakeVM.service_status` | 484 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_verified_runtime_alias_requires_exact_vm_evidence_and_config.FakeVM |
 | `tests/unit/test_elastic_mcp_wire_tool.py` | `test_verified_runtime_alias_requires_exact_vm_evidence_and_config.FakeVM.close` | 490 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_verified_runtime_alias_requires_exact_vm_evidence_and_config.FakeVM |
 | `tests/unit/test_elastic_mcp_wire_tool.py` | `test_ambiguous_reverse_runtime_alias_does_not_guess` | 530 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_ingest_host_discovery_promotes_runtime_name_only_after_vm_proof` | 539 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_ingest_host_discovery_promotes_runtime_name_only_after_vm_proof.no_knowledge` | 554 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_ingest_host_discovery_promotes_runtime_name_only_after_vm_proof |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_ingest_host_discovery_promotes_runtime_name_only_after_vm_proof.FakeElastic` | 558 | class | کلاس | test_ingest_host_discovery_promotes_runtime_name_only_after_vm_proof |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_ingest_host_discovery_promotes_runtime_name_only_after_vm_proof.FakeElastic.discover_service_hosts` | 559 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_ingest_host_discovery_promotes_runtime_name_only_after_vm_proof.FakeElastic |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_ingest_host_discovery_promotes_runtime_name_only_after_vm_proof.FakeElastic.close` | 564 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_ingest_host_discovery_promotes_runtime_name_only_after_vm_proof.FakeElastic |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_ingest_host_discovery_promotes_runtime_name_only_after_vm_proof.FakeVM` | 566 | class | کلاس | test_ingest_host_discovery_promotes_runtime_name_only_after_vm_proof |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_ingest_host_discovery_promotes_runtime_name_only_after_vm_proof.FakeVM.service_status` | 567 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_ingest_host_discovery_promotes_runtime_name_only_after_vm_proof.FakeVM |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_ingest_host_discovery_promotes_runtime_name_only_after_vm_proof.FakeVM.close` | 572 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_ingest_host_discovery_promotes_runtime_name_only_after_vm_proof.FakeVM |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_nested_empty_esql_table_is_not_schema_error` | 594 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_ephemeral_config_guard.py` | `test_ephemeral_script_has_valid_posix_syntax_and_only_trusted_static_code` | 18 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_ephemeral_config_guard.py` | `test_ephemeral_config_payload_cannot_inject_shell_syntax` | 40 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_ephemeral_config_guard.py` | `test_ephemeral_builder_rejects_untrusted_operation_or_metadata` | 62 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
