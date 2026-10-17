@@ -406,9 +406,10 @@ def test_elastic_future_window_covers_clock_skew_but_is_bounded(monkeypatch):
     prior, end, _ = SignalGateway._elastic_discovery_window(late, now)
     assert prior == late - timedelta(minutes=20)
     assert end == now
-    _, capped, _ = SignalGateway._elastic_discovery_window(
+    _, capped, extreme_meta = SignalGateway._elastic_discovery_window(
         now + timedelta(days=5), now)
     assert capped == now + timedelta(minutes=5)
+    assert extreme_meta["time_window_status"] == "future_skew_capped"
 
 
 @pytest.mark.asyncio
@@ -541,7 +542,6 @@ async def test_ingest_host_discovery_promotes_runtime_name_only_after_vm_proof(m
     from apps.signal_gateway import SignalGateway, OperationalSignal
     from apps.rag_service import KnowledgeRAGService
     from domain.contracts.config import settings
-    from integrations import elasticsearch as elastic_namespace
     from integrations.elasticsearch import mcp_client as elastic_module
     from integrations.vm import mcp_client as vm_module
 
