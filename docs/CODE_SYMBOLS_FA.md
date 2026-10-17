@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 555 | Dashboard JS files scanned: 8 | Symbols indexed: 6242**
+**Python files scanned: 555 | Dashboard JS files scanned: 8 | Symbols indexed: 6248**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -4867,6 +4867,12 @@
 | `tests/unit/test_incident_vm_identity_recovery.py` | `test_recheck_refuses_ambiguous_target_and_makes_no_remote_call.scope` | 343 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_recheck_refuses_ambiguous_target_and_makes_no_remote_call |
 | `tests/unit/test_incident_vm_identity_recovery.py` | `test_recheck_refuses_ambiguous_target_and_makes_no_remote_call.forbidden` | 347 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_recheck_refuses_ambiguous_target_and_makes_no_remote_call |
 | `tests/unit/test_incident_vm_identity_recovery.py` | `test_recheck_refuses_ambiguous_target_and_makes_no_remote_call.isolated_followup` | 350 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_recheck_refuses_ambiguous_target_and_makes_no_remote_call |
+| `tests/unit/test_incident_vm_identity_recovery.py` | `test_verified_elastic_alias_uses_canonical_unit_in_live_recheck` | 366 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_vm_identity_recovery.py` | `test_verified_elastic_alias_uses_canonical_unit_in_live_recheck.FakeVM` | 396 | class | کلاس | test_verified_elastic_alias_uses_canonical_unit_in_live_recheck |
+| `tests/unit/test_incident_vm_identity_recovery.py` | `test_verified_elastic_alias_uses_canonical_unit_in_live_recheck.FakeVM.service_status` | 397 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_verified_elastic_alias_uses_canonical_unit_in_live_recheck.FakeVM |
+| `tests/unit/test_incident_vm_identity_recovery.py` | `test_live_recheck_rejects_mismatched_canonical_unit_id` | 419 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_vm_identity_recovery.py` | `test_live_recheck_rejects_mismatched_canonical_unit_id.FakeVM` | 430 | class | کلاس | test_live_recheck_rejects_mismatched_canonical_unit_id |
+| `tests/unit/test_incident_vm_identity_recovery.py` | `test_live_recheck_rejects_mismatched_canonical_unit_id.FakeVM.service_status` | 431 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_live_recheck_rejects_mismatched_canonical_unit_id.FakeVM |
 | `tests/unit/test_independent_service_recovery.py` | `_decision` | 16 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_independent_service_recovery.py` | `test_two_vm_observations_and_vendor_pass_can_confirm_service_down_recovery` | 27 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_independent_service_recovery.py` | `test_unverifiable_recovery_keeps_incident_open` | 49 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
