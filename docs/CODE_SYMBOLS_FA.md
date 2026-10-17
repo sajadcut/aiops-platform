@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 555 | Dashboard JS files scanned: 8 | Symbols indexed: 6182**
+**Python files scanned: 555 | Dashboard JS files scanned: 8 | Symbols indexed: 6183**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -2276,15 +2276,16 @@
 | `integrations/elasticsearch/client.py` | `ElasticsearchClient._escape_query_value` | 75 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ElasticsearchClient |
 | `integrations/elasticsearch/client.py` | `ElasticsearchClient.get_logs` | 78 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | ElasticsearchClient |
 | `integrations/elasticsearch/client.py` | `ElasticsearchClient.get_metrics` | 109 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | ElasticsearchClient |
-| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient` | 13 | class | Canonical Elastic Agent Builder MCP adapter for Elastic Stack >= 9.2. | module |
-| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient.__init__` | 27 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ElasticsearchMCPClient |
-| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient._configured_authorization_header` | 44 | method | Resolve Elastic MCP auth without exposing raw Basic credentials to the generic client. | ElasticsearchMCPClient |
-| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient._with_namespace` | 58 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ElasticsearchMCPClient |
-| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient._esql_string` | 68 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ElasticsearchMCPClient |
-| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient._rows_from_payload` | 74 | method | Normalize Agent Builder execute_esql output into row dictionaries. | ElasticsearchMCPClient |
-| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient.health_check` | 115 | async method | Require the exact allowlisted Agent Builder tool, not just a live MCP route. | ElasticsearchMCPClient |
-| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient.get_logs` | 123 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | ElasticsearchMCPClient |
-| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient.discover_service_hosts` | 211 | async method | Bounded, read-only Elasticsearch host *candidates*, never VM authority. | ElasticsearchMCPClient |
+| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient` | 14 | class | Canonical Elastic Agent Builder MCP adapter for Elastic Stack >= 9.2. | module |
+| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient.__init__` | 28 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ElasticsearchMCPClient |
+| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient._configured_authorization_header` | 45 | method | Resolve Elastic MCP auth without exposing raw Basic credentials to the generic client. | ElasticsearchMCPClient |
+| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient._with_namespace` | 59 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ElasticsearchMCPClient |
+| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient._esql_string` | 69 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ElasticsearchMCPClient |
+| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient._rows_from_payload` | 75 | method | Normalize bounded Agent Builder ES/QL result envelopes. | ElasticsearchMCPClient |
+| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient._rows_from_payload.decode` | 82 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ElasticsearchMCPClient._rows_from_payload |
+| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient.health_check` | 117 | async method | Require the exact allowlisted Agent Builder tool, not just a live MCP route. | ElasticsearchMCPClient |
+| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient.get_logs` | 125 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | ElasticsearchMCPClient |
+| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient.discover_service_hosts` | 229 | async method | Bounded, read-only Elasticsearch host *candidates*, never VM authority. | ElasticsearchMCPClient |
 | `integrations/http_transport.py` | `insecure_ssl_context` | 13 | function | Create a TLS context that does not validate server certificates or hostnames. | module |
 | `integrations/http_transport.py` | `_safe_destination` | 21 | function | Return log-safe destination fields without query strings, credentials or bodies. | module |
 | `integrations/http_transport.py` | `_log_completed` | 39 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
