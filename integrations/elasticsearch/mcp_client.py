@@ -234,7 +234,8 @@ class ElasticsearchMCPClient(MCPClient):
             })
             candidate["record_count"] += 1
         return {
-            "status": "candidates_found" if hosts else "no_host_metadata",
+            "status": ("candidates_found" if hosts else
+                       "no_host_metadata" if logs else "no_matching_logs"),
             "searched_service": service, "result_count": len(logs),
             "candidates": list(hosts.values())[:8],
             "requires_independent_verification": True,
