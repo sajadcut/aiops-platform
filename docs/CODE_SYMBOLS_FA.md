@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 555 | Dashboard JS files scanned: 8 | Symbols indexed: 6248**
+**Python files scanned: 555 | Dashboard JS files scanned: 8 | Symbols indexed: 6256**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -4225,6 +4225,14 @@
 | `tests/unit/test_elastic_mcp_wire_tool.py` | `test_vm_worker_policy_denial_is_not_misreported_as_ssh_failure.RejectingVM` | 909 | class | transition مربوط به Approval/Governance را اعمال می‌کند | test_vm_worker_policy_denial_is_not_misreported_as_ssh_failure |
 | `tests/unit/test_elastic_mcp_wire_tool.py` | `test_vm_worker_policy_denial_is_not_misreported_as_ssh_failure.RejectingVM.service_status` | 910 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_vm_worker_policy_denial_is_not_misreported_as_ssh_failure.RejectingVM |
 | `tests/unit/test_elastic_mcp_wire_tool.py` | `test_vm_worker_policy_denial_is_not_misreported_as_ssh_failure.RejectingVM.close` | 912 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_vm_worker_policy_denial_is_not_misreported_as_ssh_failure.RejectingVM |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_elastic_vm_refuses_reported_alias_when_systemd_id_is_different` | 926 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_elastic_vm_refuses_reported_alias_when_systemd_id_is_different.VM` | 936 | class | کلاس | test_elastic_vm_refuses_reported_alias_when_systemd_id_is_different |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_elastic_vm_refuses_reported_alias_when_systemd_id_is_different.VM.service_status` | 937 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_elastic_vm_refuses_reported_alias_when_systemd_id_is_different.VM |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_elastic_vm_refuses_reported_alias_when_systemd_id_is_different.VM.close` | 944 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_elastic_vm_refuses_reported_alias_when_systemd_id_is_different.VM |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_gfp_prefers_verified_canonical_runtime_with_systemd_id` | 959 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_gfp_prefers_verified_canonical_runtime_with_systemd_id.VM` | 973 | class | کلاس | test_gfp_prefers_verified_canonical_runtime_with_systemd_id |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_gfp_prefers_verified_canonical_runtime_with_systemd_id.VM.service_status` | 974 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_gfp_prefers_verified_canonical_runtime_with_systemd_id.VM |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_gfp_prefers_verified_canonical_runtime_with_systemd_id.VM.close` | 981 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_gfp_prefers_verified_canonical_runtime_with_systemd_id.VM |
 | `tests/unit/test_ephemeral_config_guard.py` | `test_ephemeral_script_has_valid_posix_syntax_and_only_trusted_static_code` | 18 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_ephemeral_config_guard.py` | `test_ephemeral_config_payload_cannot_inject_shell_syntax` | 40 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_ephemeral_config_guard.py` | `test_ephemeral_builder_rejects_untrusted_operation_or_metadata` | 62 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
