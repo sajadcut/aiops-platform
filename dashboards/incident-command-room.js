@@ -2442,6 +2442,12 @@
         ?(fa?'میزبان‌های کاندیدا از لاگ Elastic':'Host candidates from Elastic logs'):
         discovery.status==='no_host_metadata'
         ?(fa?'لاگ پیدا شد اما مشخصات سرور در نتایج نیست':'Logs found but host metadata is missing'):
+        discovery.status==='index_has_rows_no_service_time_match'
+        ?(fa?'ایندکس داده دارد، اما فیلتر سرویس یا بازه زمانی تطبیق ندارد':'Index contains data, but service/time filter has no matches'):
+        discovery.status==='response_format_unrecognized'
+        ?(fa?'قالب پاسخ ES|QL شناخته نشد؛ مشکل تبدیل نتایج است':'Unrecognized ES|QL response schema; parsing failed'):
+        discovery.status==='index_probe_failed'
+        ?(fa?'بررسی نمونه ایندکس ناموفق بود':'Index sample probe failed'):
         discovery.status==='query_failed'
         ?(fa?'استعلام کشف میزبان ناموفق بود':'Host discovery query failed'):
         (fa?'هنوز میزبان تأییدشده‌ای کشف نشده است':'No independently verified host discovered');
@@ -2481,6 +2487,9 @@
         esc(discovery.searched_service)+' · '+
         esc(fa?'رکوردهای برگشتی: ':'Matching records: ')+
         esc(discovery.result_count)+'</p>'+
+        (discovery.index_pattern?'<p>'+
+          esc(fa?'ایندکس مؤثر Elastic: ':'Effective Elastic index: ')+
+          '<code>'+esc(discovery.index_pattern)+'</code></p>':'')+
         (discovery.verified_target?'<p><strong>'+
           esc(fa?'سرور تأییدشده: ':'Verified host: ')+
           esc(discovery.verified_target)+'</strong></p>':'')+
