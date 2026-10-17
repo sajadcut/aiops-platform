@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import asyncio
+
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, Literal, Optional
 from uuid import uuid4
@@ -184,8 +186,39 @@ class SignalGateway:
             knowledge_topology=topology,
             expected_fqdns=expected_fqdns,
         )
+        host_discovery: Dict[str, Any] = {"status": "not_requested", "candidates": [], "result_count": 0}
+        if signal.source == "elasticsearch" and ServiceIdentityResolver.known(signal.service):
+            # Read-only log-host discovery at ingest time, *before* RCA routing.
+            # Future-skewed webhook timestamps must not shift the query into
+            # the future. Host candidates NEVER become approved VM targets.
+            from integrations.elasticsearch.mcp_client import ElasticsearchMCPClient
+            now = datetime.now(timezone.utc)
+            event_time = signal.timestamp.astimezone(timezone.utc)
+            since = max(now - timedelta(hours=6), min(now, event_time) - timedelta(minutes=20))
+            connector = None
+            try:
+                connector = ElasticsearchMCPClient()
+                host_discovery = await asyncio.wait_for(
+                    connector.discover_service_hosts(str(signal.service), since, now),
+                    timeout=max(3.0, min(20.0, float(settings.MCP_TIMEOUT_SECONDS))),
+                )
+            except Exception as exc:
+                host_discovery = {
+                    "status": "query_failed", "error_type": type(exc).__name__[:60],
+                    "candidates": [], "result_count": 0,
+                }
+            finally:
+                if connector is not None:
+                    await connector.close()
+            logger.info(
+                "elastic_ingest_host_discovery",
+                service=signal.service, status=host_discovery["status"],
+                candidate_count=len(host_discovery.get("candidates") or []),
+                result_count=host_discovery.get("result_count", 0),
+            )
         return {
             "asset_context": resolution["asset_context"],
+            "host_discovery": host_discovery,
             "service_identity": resolution["service_identity"],
             "live_asset_context": live_asset,
             "topology_context": resolution["topology_context"],
@@ -300,6 +333,8 @@ class SignalGateway:
             "summary": signal.summary,
             "service_identity_basis": discovery["service_identity"]["basis"],
             "service_identity_status": discovery["service_identity"]["status"],
+            "host_discovery_status": (discovery.get("host_discovery") or {}).get("status"),
+            "host_candidate_count": len((discovery.get("host_discovery") or {}).get("candidates") or []),
             "source_host": asset.get("hostname"),
             "signal_type": signal.signal_type,
             "correlation_key": correlation_key,
@@ -312,6 +347,7 @@ class SignalGateway:
                 "incident": incident_context,
                 "service": resolved_service,
                 "asset_context": asset,
+                "host_discovery": discovery.get("host_discovery", {}),
                 "service_identity": discovery["service_identity"],
                 "live_asset_context": discovery.get("live_asset_context"),
                 "topology_context": discovery.get("topology_context"),
