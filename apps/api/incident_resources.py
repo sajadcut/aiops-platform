@@ -114,6 +114,12 @@ async def get_host_discovery(incident_id: UUID):
         "incident_id": str(incident_id),
         "status": str(source.get("status") or "not_recorded")[:50],
         "searched_service": str(source.get("searched_service") or incident.service or "")[:90],
+        "index_pattern": str(source.get("index_pattern") or "")[:160],
+        "index_probe": (str(source.get("index_probe") or "not_recorded")[:50]
+                        if str(source.get("index_probe") or "not_recorded") in {
+                            "not_needed", "has_rows", "empty_index",
+                            "unrecognized_response", "probe_failed", "not_recorded"
+                        } else "unknown"),
         "result_count": max(0, min(int(source.get("result_count") or 0), 40)),
         "candidates": candidates,
         "verified_target": (str(source.get("verified_target") or "")[:253]
