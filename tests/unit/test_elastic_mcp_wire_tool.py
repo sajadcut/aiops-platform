@@ -767,3 +767,70 @@ def test_elastic_parses_json_text_result_without_trusting_metadata_only_envelope
     assert client._rows_from_payload({"result": json.dumps(payload)}) == [{
         "host.name": "apgfpdtnksa0101", "host.ip": "10.248.16.82"
     }]
+
+
+@pytest.mark.asyncio
+async def test_gfp_serilog_keeps_host_ip_and_verifies_allowlisted_ip_not_unlisted_hostname(monkeypatch):
+    """Regression for Kibana evidence: host.name is not allowlisted but host.ip is."""
+    from apps.signal_gateway import SignalGateway
+    from domain.contracts.config import settings
+    from integrations.vm import mcp_client as vm_module
+
+    monkeypatch.setattr(settings, "ELASTIC_AGENT_BUILDER_INDEX_PATTERN",
+                        "1m-digitaloperation-gfpapi-*")
+    monkeypatch.setattr(settings, "ELASTIC_SERVICE_DISCOVERY_ALIASES",
+                        {"gfpapi": ["GFP_Backend"]})
+    monkeypatch.setattr(settings, "SSH_ALLOWED_TARGETS", ["10.248.16.82"])
+    monkeypatch.setattr(settings, "VM_MCP_URL", "http://vm.test/mcp")
+    client = ElasticsearchMCPClient()
+    seen_queries = []
+    async def fake_tool(name, arguments):
+        query = arguments["query"]
+        seen_queries.append(query)
+        if query.endswith("| LIMIT 1"):
+            return {"structuredContent": {"rows": [{
+                "@timestamp": "2026-10-17T11:10:00Z",
+                "Properties.ServiceName.keyword": "GFP_Backend",
+                "Properties.MachineName": "apgfpdtnksa0101",
+                "host.name": "apgfpdtnksa0101", "host.ip": "10.248.16.82",
+            }]}}
+        if ("Properties.MachineName" in query and "host.ip" in query
+                and "Properties.ServiceName" in query):
+            return {"structuredContent": {"rows": [{
+                "@timestamp": "2026-10-17T11:10:00Z",
+                "Properties.ServiceName.keyword": "GFP_Backend",
+                "Properties.MachineName": "apgfpdtnksa0101",
+                "host.name": "apgfpdtnksa0101", "host.ip": "10.248.16.82",
+            }]}}
+        return {"structuredContent": {"rows": []}}
+    monkeypatch.setattr(client, "call_tool", fake_tool)
+    try:
+        discovery = await client.discover_service_hosts(
+            "GFP_Backend", datetime(2026, 10, 17, 11, 0, tzinfo=timezone.utc),
+            datetime(2026, 10, 17, 11, 15, tzinfo=timezone.utc))
+        assert discovery["status"] == "candidates_found"
+        assert discovery["candidates"] == [{
+            "hostname": "apgfpdtnksa0101",
+            "ip_addresses": ["10.248.16.82"], "source": "elasticsearch",
+            "status": "candidate", "record_count": 1
+        }]
+        assert any("host.ip" in query and "host.name" in query
+                   and "Properties.MachineName" in query for query in seen_queries)
+    finally:
+        await client.close()
+
+    seen_statuses = []
+    class FakeVM:
+        async def service_status(self, target, service):
+            seen_statuses.append((target, service))
+            return {"success": True, "target": target, "service": service,
+                    "load_state": "loaded", "active_state": "active"}
+        async def close(self):
+            pass
+
+    monkeypatch.setattr(vm_module, "VMEdgeMCPClient", FakeVM)
+    evidence = await SignalGateway._verify_elastic_host_candidate("GFP_Backend", discovery)
+    assert evidence
+    assert discovery["candidates"][0]["verification_method"] == "ip"
+    assert discovery["verified_target"] == "10.248.16.82"
+    assert seen_statuses == [("10.248.16.82", "GFP_Backend")]
