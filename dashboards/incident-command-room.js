@@ -2445,10 +2445,35 @@
         discovery.status==='query_failed'
         ?(fa?'استعلام کشف میزبان ناموفق بود':'Host discovery query failed'):
         (fa?'هنوز میزبان تأییدشده‌ای کشف نشده است':'No independently verified host discovered');
-      const names=candidates.map(x=>'<li><strong>'+esc(x.hostname)+'</strong> · '+
-        esc(fa?'تعداد شواهد: ':'Records: ')+esc(x.record_count)+
-        (x.verification_status==='verified_read_only'?'<strong> · '+esc(fa?'هویت تأیید شد':'Identity verified')+'</strong>':'')+
-        '</li>').join('');
+      const hostVerificationFA={
+        verified_read_only:'هویت سرویس با استعلام فقط‌خواندنی تأیید شد',
+        candidate_hostname_invalid:'نام میزبان دریافتی معتبر نیست؛ اتصال انجام نشد',
+        candidate_hostname_not_allowlisted:'نام میزبان در SSH_ALLOWED_TARGETS مجاز نیست؛ اتصال انجام نشد',
+        candidate_ip_not_allowlisted:'IP در SSH_ALLOWED_TARGETS مجاز نیست؛ اتصال انجام نشد',
+        vm_mcp_not_configured:'VM MCP برای بررسی مقصد تنظیم نشده است',
+        vm_read_failed:'اتصال یا استعلام فقط‌خواندنی از VM MCP ناموفق بود',
+        vm_service_identity_not_confirmed:'پاسخ سرور با هویت سرویس و مقصد مورد انتظار تطابق ندارد',
+        vm_result_malformed:'پاسخ VM MCP قابل اعتبارسنجی نیست'
+      };
+      const hostVerificationEN={
+        verified_read_only:'Read-only VM service identity verified',
+        candidate_hostname_invalid:'Invalid hostname; no connection attempted',
+        candidate_hostname_not_allowlisted:'Hostname not in SSH_ALLOWED_TARGETS; no connection attempted',
+        candidate_ip_not_allowlisted:'IP not in SSH_ALLOWED_TARGETS; no connection attempted',
+        vm_mcp_not_configured:'VM MCP is not configured',
+        vm_read_failed:'Read-only VM connection or service check failed',
+        vm_service_identity_not_confirmed:'VM returned mismatched service or target identity',
+        vm_result_malformed:'Malformed VM MCP verification response'
+      };
+      const names=candidates.map(x=>{
+        const method=x.verification_method==='hostname'?(fa?'بررسی با نام میزبان':'Hostname probe'):
+          x.verification_method==='ip'?(fa?'بررسی با IP':'IP probe'):'';
+        const reason=(fa?hostVerificationFA:hostVerificationEN)[x.verification_status]||
+          (fa?'هنوز تأیید نشده':'Not yet verified');
+        return '<li><strong>'+esc(x.hostname)+'</strong> · '+
+          esc(fa?'تعداد شواهد: ':'Records: ')+esc(x.record_count)+
+          (method?' · '+esc(method):'')+' · '+esc(reason)+'</li>';
+      }).join('');
       hostCard='<article class="ic-detail-card"><div class="ic-detail-head"><h4>'+
         esc(fa?'کشف سرویس و سرور از Elastic MCP':'Elastic MCP service / host discovery')+
         '</h4></div><p>'+esc(statusText)+'</p>'+
