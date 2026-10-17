@@ -117,16 +117,61 @@ class SignalGateway:
         require the independent incident binding, policy and human Approval.
         """
         candidates = discovery.get("candidates") or []
-        if len(candidates) != 1 or not settings.VM_MCP_URL:
+        if len(candidates) != 1:
             return []
         candidate = candidates[0]
-        allowed = {str(value).strip().casefold() for value in settings.SSH_ALLOWED_TARGETS if str(value).strip()}
-        possible = list(candidate.get("ip_addresses") or []) + [candidate.get("hostname")]
-        target = next((str(item).strip() for item in possible
-                       if str(item or "").strip().casefold() in allowed), None)
-        if not target:
-            candidate["verification_status"] = "candidate_target_not_allowlisted"
+        if not settings.VM_MCP_URL:
+            candidate["verification_status"] = "vm_mcp_not_configured"
             return []
+
+        # A hostname from Elastic is untrusted telemetry. Never discover or
+        # connect to an arbitrary host: the name/IP must exactly match the VM
+        # worker's preconfigured target allowlist before ANY network probe.
+        # Return the spelling from the allowlist because the SSH worker uses
+        # case-sensitive target authorization.
+        import ipaddress
+        import re
+        allowed = {
+            str(item).strip().casefold(): str(item).strip()
+            for item in settings.SSH_ALLOWED_TARGETS if str(item).strip()
+        }
+        raw_ips = candidate.get("ip_addresses") or []
+        if isinstance(raw_ips, str):
+            raw_ips = [raw_ips]
+        valid_ips: list[str] = []
+        for value in (raw_ips if isinstance(raw_ips, list) else [])[:6]:
+            try:
+                parsed = ipaddress.ip_address(str(value).strip())
+                if not (parsed.is_loopback or parsed.is_unspecified or parsed.is_multicast):
+                    valid_ips.append(str(parsed))
+            except ValueError:
+                continue
+        hostname = str(candidate.get("hostname") or "").strip()
+        # No IP in the log? Try the exact allowlisted hostname via read-only
+        # VM MCP service_status. DNS and SSH host-key checks remain on the VM
+        # MCP worker; the control plane does not resolve untrusted hostnames.
+        via_hostname = not valid_ips
+        if via_hostname:
+            candidate["verification_method"] = "hostname"
+            if not (2 <= len(hostname) <= 253
+                    and re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]*", hostname)
+                    and hostname.lower() not in {"localhost", "localhost.localdomain"}):
+                candidate["verification_status"] = "candidate_hostname_invalid"
+                return []
+            options = [hostname]
+        else:
+            candidate["verification_method"] = "ip"
+            options = valid_ips
+
+        target = next((allowed[value.casefold()] for value in options
+                       if value.casefold() in allowed), None)
+        if not target:
+            candidate["verification_status"] = (
+                "candidate_hostname_not_allowlisted" if via_hostname
+                else "candidate_ip_not_allowlisted"
+            )
+            return []
+        candidate["verification_target"] = target
         from integrations.vm.mcp_client import VMEdgeMCPClient
         client = None
         try:
