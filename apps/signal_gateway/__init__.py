@@ -413,6 +413,50 @@ class SignalGateway:
             host_discovery.update(time_metadata)
             host_verification_evidence = await SignalGateway._verify_elastic_host_candidate(
                 str(signal.service), host_discovery)
+            verified_runtime_mapping: Dict[str, Any] | None = None
+            runtime_service = str(host_discovery.get("verified_runtime_service") or "").strip()
+            source_label = str(signal.service or "").strip()
+            if (host_discovery.get("status") == "verified_by_vm_mcp"
+                    and runtime_service and source_label
+                    and runtime_service.casefold() != source_label.casefold()
+                    and host_verification_evidence):
+                blocking, _ = ServiceIdentityResolver.split_conflicts(
+                    (resolution.get("service_identity") or {}).get("conflicts"))
+                first_evidence = host_verification_evidence[0]
+                candidate_mapping = {
+                    "source_service": source_label,
+                    "runtime_service": runtime_service,
+                    "target": host_discovery.get("verified_target"),
+                    "evidence_reference": first_evidence.get("reference"),
+                    "verification": "vm_mcp_service_status",
+                }
+                if (not blocking and ServiceIdentityResolver.verified_runtime_alias_matches(
+                        source_label, runtime_service,
+                        {"verified_runtime_mapping": candidate_mapping},
+                        host_verification_evidence)):
+                    # This is a new independently checked runtime identity, not
+                    # a rewrite of what the original Elastic alert reported.
+                    verified_runtime_mapping = candidate_mapping
+                    original_identity = dict(resolution["service_identity"])
+                    original_identity.update({
+                        "service": runtime_service,
+                        "status": "verified",
+                        "verified": True,
+                        "basis": "configured_elastic_alias_verified_by_vm_mcp",
+                        "reported_service": source_label,
+                        "requires_more_evidence": False,
+                    })
+                    resolution["service_identity"] = original_identity
+                    resolution["asset_context"] = {
+                        **resolution["asset_context"],
+                        "service": runtime_service,
+                        "service_identity_status": "verified",
+                        "service_identity_basis": "configured_elastic_alias_verified_by_vm_mcp",
+                        "service_identity_unverified": False,
+                    }
+                    host_discovery["mapping_status"] = "verified_runtime_promoted"
+                else:
+                    host_discovery["mapping_status"] = "mapping_conflict_or_unverified"
             sole_candidate = ((host_discovery.get("candidates") or [None])[0]
                               if len(host_discovery.get("candidates") or []) == 1 else None)
             logger.info(
@@ -426,6 +470,7 @@ class SignalGateway:
         return {
             "asset_context": resolution["asset_context"],
             "host_discovery": host_discovery,
+            "verified_runtime_mapping": locals().get("verified_runtime_mapping"),
             "host_verification_evidence": host_verification_evidence,
             "service_identity": resolution["service_identity"],
             "live_asset_context": live_asset,
@@ -543,6 +588,7 @@ class SignalGateway:
             "service_identity_status": discovery["service_identity"]["status"],
             "host_discovery_status": (discovery.get("host_discovery") or {}).get("status"),
             "host_candidate_count": len((discovery.get("host_discovery") or {}).get("candidates") or []),
+            "verified_runtime_mapping": discovery.get("verified_runtime_mapping"),
             "source_host": asset.get("hostname"),
             "signal_type": signal.signal_type,
             "correlation_key": correlation_key,
@@ -558,6 +604,7 @@ class SignalGateway:
                 "service": resolved_service,
                 "asset_context": asset,
                 "host_discovery": discovery.get("host_discovery", {}),
+                "verified_runtime_mapping": discovery.get("verified_runtime_mapping"),
                 "service_identity": discovery["service_identity"],
                 "live_asset_context": discovery.get("live_asset_context"),
                 "topology_context": discovery.get("topology_context"),
