@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 555 | Dashboard JS files scanned: 8 | Symbols indexed: 6142**
+**Python files scanned: 555 | Dashboard JS files scanned: 8 | Symbols indexed: 6143**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -2280,6 +2280,7 @@
 | `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient._rows_from_payload` | 74 | method | Normalize Agent Builder execute_esql output into row dictionaries. | ElasticsearchMCPClient |
 | `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient.health_check` | 115 | async method | Require the exact allowlisted Agent Builder tool, not just a live MCP route. | ElasticsearchMCPClient |
 | `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient.get_logs` | 123 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | ElasticsearchMCPClient |
+| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient.discover_service_hosts` | 201 | async method | Bounded, read-only Elasticsearch host *candidates*, never VM authority. | ElasticsearchMCPClient |
 | `integrations/http_transport.py` | `insecure_ssl_context` | 13 | function | Create a TLS context that does not validate server certificates or hostnames. | module |
 | `integrations/http_transport.py` | `_safe_destination` | 21 | function | Return log-safe destination fields without query strings, credentials or bodies. | module |
 | `integrations/http_transport.py` | `_log_completed` | 39 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
