@@ -122,7 +122,9 @@ def vm_binding_diagnostic(service: str, evidence: list[dict],
             payload = outer.get("payload") or outer
             if isinstance(payload, dict):
                 reported = normalized_service(payload.get("service"))
-                if reported and reported != name:
+                if (reported and reported != name
+                        and not ServiceIdentityResolver.verified_runtime_alias_matches(
+                            reported, name, ctx, evidence)):
                     return {"reason": "incident_service_conflict", "candidate": None}
     vm_targets: set[str] = set()
     refs: list[str] = []
