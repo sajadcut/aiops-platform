@@ -115,6 +115,8 @@ async def get_host_discovery(incident_id: UUID):
         "status": str(source.get("status") or "not_recorded")[:50],
         "searched_service": str(source.get("searched_service") or incident.service or "")[:90],
         "index_pattern": str(source.get("index_pattern") or "")[:160],
+        "sample_field_names": [str(key)[:90] for key in (source.get("sample_field_names") or [])[:32]
+                               if isinstance(key, str)],
         "index_probe": (str(source.get("index_probe") or "not_recorded")[:50]
                         if str(source.get("index_probe") or "not_recorded") in {
                             "not_needed", "has_rows", "empty_index",
