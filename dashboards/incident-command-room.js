@@ -2437,7 +2437,9 @@
     let hostCard='';
     if(discovery && discovery.status!=='not_requested'){
       const statusText=discovery.status==='verified_by_vm_mcp'
-        ?(fa?'هویت سرویس روی سرور با استعلام زنده VM MCP تأیید شد':'VM MCP independently verified service/host identity'):
+        ?(discovery.mapping_status==='mapping_conflict_or_unverified'?
+          (fa?'سرویس روی VM پیدا شد اما تطبیق آن با نام هشدار به‌علت تعارض یا نبود شاهد کافی تأیید نشد':'VM unit found, but alert-to-runtime mapping remains unverified or conflicted'):
+          (fa?'هویت سرویس روی سرور با استعلام زنده VM MCP تأیید شد':'VM MCP independently verified service/host identity')):
         discovery.status==='candidates_found'
         ?(fa?'میزبان‌های کاندیدا از لاگ Elastic':'Host candidates from Elastic logs'):
         discovery.status==='no_host_metadata'
@@ -2480,8 +2482,8 @@
           esc(fa?'تعداد شواهد: ':'Records: ')+esc(x.record_count)+
           (method?' · '+esc(method):'')+' · '+esc(reason)+'</li>';
       }).join('');
-      const discoveryStagesFA={esql_query:'اجرای ES|QL',index_probe:'بررسی ایندکس',response_parsing:'پردازش پاسخ Elastic',index_or_service_lookup:'جست‌وجوی ایندکس/سرویس',service_or_time_filter:'فیلتر سرویس/زمان',host_metadata:'استخراج مشخصات میزبان',vm_identity_verification:'تأیید هویت VM MCP',completed:'تکمیل‌شده'};
-      const discoveryStagesEN={esql_query:'ES|QL query',index_probe:'Index probe',response_parsing:'Elastic response parsing',index_or_service_lookup:'Index/service lookup',service_or_time_filter:'Service/time matching',host_metadata:'Host metadata',vm_identity_verification:'VM MCP identity check',completed:'Completed'};
+      const discoveryStagesFA={esql_query:'اجرای ES|QL',index_probe:'بررسی ایندکس',response_parsing:'پردازش پاسخ Elastic',index_or_service_lookup:'جست‌وجوی ایندکس/سرویس',service_or_time_filter:'فیلتر سرویس/زمان',host_metadata:'استخراج مشخصات میزبان',vm_identity_verification:'تأیید هویت VM MCP',runtime_mapping_validation:'اعتبارسنجی نگاشت نام هشدار به unit',completed:'تکمیل‌شده'};
+      const discoveryStagesEN={esql_query:'ES|QL query',index_probe:'Index probe',response_parsing:'Elastic response parsing',index_or_service_lookup:'Index/service lookup',service_or_time_filter:'Service/time matching',host_metadata:'Host metadata',vm_identity_verification:'VM MCP identity check',runtime_mapping_validation:'Alert-label/runtime mapping verification',completed:'Completed'};
       const stageDetail=(fa?discoveryStagesFA:discoveryStagesEN)[discovery.failure_stage]||(fa?'نامشخص':'Unknown');
       const clockOffset=Number(discovery.timestamp_skew_seconds)||0;
       const indexProbeText=discovery.index_probe==='has_rows'?(fa?'ایندکس داده دارد':'Index has rows'):discovery.index_probe==='empty_index'?(fa?'ایندکس نمونه‌ای برنگرداند':'Index sample empty'):discovery.index_probe==='probe_failed'?(fa?'بررسی ایندکس شکست خورد':'Index probe failed'):discovery.index_probe==='unrecognized_response'?(fa?'قالب پاسخ ناشناخته':'Unknown response schema'):'';
