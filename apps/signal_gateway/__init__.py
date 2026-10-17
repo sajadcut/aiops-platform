@@ -133,6 +133,44 @@ class SignalGateway:
         }
 
     @staticmethod
+    def _runtime_service_candidates(reported_service: str) -> list[str]:
+        """Only operator-configured aliases may be tested as real systemd units.
+
+        A log name or LLM text by itself is never a runtime service binding.
+        Reverse matching is accepted only when one unambiguous config owner
+        declared the reported log label.
+        """
+        import re
+        reported = str(reported_service or "").strip()
+        if not re.fullmatch(r"[A-Za-z0-9@_.:-]{2,128}", reported):
+            return []
+        mapping = settings.ELASTIC_SERVICE_DISCOVERY_ALIASES or {}
+        if not isinstance(mapping, dict):
+            return [reported]
+        keys = [str(key) for key in mapping if str(key).casefold() == reported.casefold()]
+        forward = mapping.get(keys[0]) if len(keys) == 1 else []
+        aliases = [str(item).strip() for item in forward[:3]] if isinstance(forward, list) else []
+        reverse = [
+            str(key).strip() for key, values in mapping.items()
+            if isinstance(values, list) and any(
+                str(value).strip().casefold() == reported.casefold() for value in values
+            )
+        ]
+        if len(reverse) == 1:
+            aliases.append(reverse[0])
+        elif len(reverse) > 1:
+            # Ambiguous operator configuration: do not guess the systemd unit.
+            aliases = []
+        choices = [reported]
+        for alias in aliases:
+            if (re.fullmatch(r"[A-Za-z0-9@_.:-]{2,128}", alias)
+                    and alias.casefold() not in {s.casefold() for s in choices}):
+                choices.append(alias)
+            if len(choices) >= 4:
+                break
+        return choices
+
+    @staticmethod
     async def _verify_elastic_host_candidate(service: str, discovery: Dict[str, Any]) -> list[Dict[str, Any]]:
         """Verify one log host with a read-only service_status on an *allowlisted* VM.
 
@@ -198,42 +236,66 @@ class SignalGateway:
         candidate["verification_target"] = target
         from integrations.vm.mcp_client import VMEdgeMCPClient
         client = None
+        attempted: list[str] = []
         try:
             client = VMEdgeMCPClient()
-            result = await asyncio.wait_for(
-                client.service_status(target, service),
-                timeout=max(3.0, min(20.0, float(settings.MCP_TIMEOUT_SECONDS))),
-            )
-            if not isinstance(result, dict):
-                candidate["verification_status"] = "vm_result_malformed"
-                return []
-            returned_service = str(result.get("service") or "").strip().casefold().removesuffix(".service")
-            returned_target = str(result.get("target") or "").strip().casefold()
-            active = str(result.get("active_state") or "").strip().lower()
-            load = str(result.get("load_state") or "").strip().lower()
-            if (result.get("success") is not True or returned_service != service.casefold().removesuffix(".service")
-                    or returned_target != target.casefold()
-                    or load != "loaded"
-                    or active not in {"active", "failed", "inactive", "activating", "deactivating", "reloading"}):
-                candidate["verification_status"] = "vm_service_identity_not_confirmed"
-                return []
-            candidate["verification_status"] = "verified_read_only"
-            discovery["status"] = "verified_by_vm_mcp"
-            discovery["verified_target"] = target
-            return [{
-                "type": "telemetry", "source": "vm_mcp",
-                "reference": f"elastic-discovery-vm:{target}:{service}",
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-                "raw_data": {
-                    "diagnostic": "service_status", "success": True,
-                    "target": target, "service": service,
-                    "active_state": active, "load_state": load,
-                    "sub_state": str(result.get("sub_state") or "")[:60],
-                },
-            }]
-        except Exception as exc:
-            candidate["verification_status"] = "vm_read_failed"
-            logger.warning("elastic_host_candidate_vm_verify_failed", error_type=type(exc).__name__)
+            # At most four exact, configured names. A successful read of an
+            # allowlisted VM's loaded unit establishes the runtime service;
+            # no alias becomes canonical on config alone.
+            for runtime_service in SignalGateway._runtime_service_candidates(service):
+                attempted.append(runtime_service)
+                try:
+                    result = await asyncio.wait_for(
+                        client.service_status(target, runtime_service),
+                        timeout=max(2.0, min(5.0, float(settings.MCP_TIMEOUT_SECONDS))),
+                    )
+                except Exception as exc:
+                    candidate["verification_status"] = "vm_read_failed"
+                    logger.warning("elastic_host_candidate_vm_verify_failed",
+                                   error_type=type(exc).__name__,
+                                   runtime_probe="mapped_alias" if runtime_service != service else "reported")
+                    continue
+                if not isinstance(result, dict):
+                    candidate["verification_status"] = "vm_result_malformed"
+                    continue
+                returned_service = str(result.get("service") or "").strip().casefold().removesuffix(".service")
+                returned_target = str(result.get("target") or "").strip().casefold()
+                active = str(result.get("active_state") or "").strip().lower()
+                load = str(result.get("load_state") or "").strip().lower()
+                if (result.get("success") is not True
+                        or returned_service != runtime_service.casefold().removesuffix(".service")
+                        or returned_target != target.casefold()
+                        or load != "loaded"
+                        or active not in {"active", "failed", "inactive", "activating", "deactivating", "reloading"}):
+                    candidate["verification_status"] = "vm_service_identity_not_confirmed"
+                    continue
+                candidate["verification_status"] = "verified_read_only"
+                discovery["status"] = "verified_by_vm_mcp"
+                discovery["verified_target"] = target
+                discovery["verified_runtime_service"] = runtime_service
+                discovery["reported_log_service"] = service
+                discovery["mapping_status"] = (
+                    "verified_live_vm_mcp" if runtime_service.casefold() != service.casefold()
+                    else "same_name_verified"
+                )
+                discovery["runtime_probe_count"] = len(attempted)
+                return [{
+                    "type": "telemetry", "source": "vm_mcp",
+                    "reference": f"elastic-discovery-vm:{target}:{runtime_service}",
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "raw_data": {
+                        "diagnostic": "service_status", "success": True,
+                        "target": target, "service": runtime_service,
+                        "source_service_label": service,
+                        "active_state": active, "load_state": load,
+                        "sub_state": str(result.get("sub_state") or "")[:60],
+                    },
+                }]
+            discovery["runtime_probe_count"] = len(attempted)
+            if not attempted:
+                candidate["verification_status"] = "no_valid_runtime_service_name"
+            if len(attempted) == 1 and service.casefold() != "gfpapi":
+                discovery["mapping_status"] = "no_verified_runtime_alias"
             return []
         finally:
             if client is not None:
