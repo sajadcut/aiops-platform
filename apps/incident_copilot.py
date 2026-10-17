@@ -76,7 +76,9 @@ def vm_binding(service: str, evidence: list[dict], context: dict | None = None) 
         blocking, _ = ServiceIdentityResolver.split_conflicts(identity.get("conflicts"))
         if blocking:
             return None
-    name = str(service or "").strip().lower().removesuffix(".service")
+    live_unit = ServiceIdentityResolver.runtime_name_from_verified_mapping(
+        service, ctx, evidence)
+    name = str(live_unit or "").strip().lower().removesuffix(".service")
     if not name:
         return None
     trustworthy = {"service_status", "process_status", "config_validate",
