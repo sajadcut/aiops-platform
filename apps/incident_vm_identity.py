@@ -205,6 +205,17 @@ async def resolve_vm_binding(
     try:
         client = connector or VMEdgeMCPClient()
         fresh = await client.service_status(target, runtime_service)
+    except PermissionError as exc:
+        code = str(exc)
+        return None, {
+            "status": (
+                "vm_worker_service_not_allowlisted" if code == "vm_service_not_allowed"
+                else "vm_worker_target_not_allowlisted" if code == "vm_target_not_allowed"
+                else "vm_mcp_live_identity_check_failed"
+            ),
+            "error_type": type(exc).__name__,
+            "evidence_refs": diagnosis.get("evidence_refs", []),
+        }
     except Exception as exc:
         return None, {"status": "vm_mcp_live_identity_check_failed",
                       "error_type": type(exc).__name__, "evidence_refs": diagnosis.get("evidence_refs", [])}
