@@ -2436,7 +2436,9 @@
     const candidates=arr(discovery?.candidates);
     let hostCard='';
     if(discovery && discovery.status!=='not_requested'){
-      const statusText=discovery.status==='candidates_found'
+      const statusText=discovery.status==='verified_by_vm_mcp'
+        ?(fa?'هویت سرویس روی سرور با استعلام زنده VM MCP تأیید شد':'VM MCP independently verified service/host identity'):
+        discovery.status==='candidates_found'
         ?(fa?'میزبان‌های کاندیدا از لاگ Elastic':'Host candidates from Elastic logs'):
         discovery.status==='no_host_metadata'
         ?(fa?'لاگ پیدا شد اما مشخصات سرور در نتایج نیست':'Logs found but host metadata is missing'):
@@ -2444,7 +2446,9 @@
         ?(fa?'استعلام کشف میزبان ناموفق بود':'Host discovery query failed'):
         (fa?'هنوز میزبان تأییدشده‌ای کشف نشده است':'No independently verified host discovered');
       const names=candidates.map(x=>'<li><strong>'+esc(x.hostname)+'</strong> · '+
-        esc(fa?'تعداد شواهد: ':'Records: ')+esc(x.record_count)+'</li>').join('');
+        esc(fa?'تعداد شواهد: ':'Records: ')+esc(x.record_count)+
+        (x.verification_status==='verified_read_only'?'<strong> · '+esc(fa?'هویت تأیید شد':'Identity verified')+'</strong>':'')+
+        '</li>').join('');
       hostCard='<article class="ic-detail-card"><div class="ic-detail-head"><h4>'+
         esc(fa?'کشف سرویس و سرور از Elastic MCP':'Elastic MCP service / host discovery')+
         '</h4></div><p>'+esc(statusText)+'</p>'+
@@ -2452,10 +2456,17 @@
         esc(discovery.searched_service)+' · '+
         esc(fa?'رکوردهای برگشتی: ':'Matching records: ')+
         esc(discovery.result_count)+'</p>'+
+        (discovery.verified_target?'<p><strong>'+
+          esc(fa?'سرور تأییدشده: ':'Verified host: ')+
+          esc(discovery.verified_target)+'</strong></p>':'')+
         (names?'<ul>'+names+'</ul>':'')+
         '<p class="ic-warning">'+esc(fa?
-        'این میزبان‌ها فقط کاندیدا هستند؛ تا تأیید مستقل هویت سرویس و مقصد، هیچ مجوز اجرا صادر نمی‌شود.':
-        'Hosts are only candidates: service/target must be independently verified before execution.')+
+        (discovery.status==='verified_by_vm_mcp'?
+         'استعلام فقط‌خواندنی VM MCP هویت سرویس را تأیید کرده؛ اجرای عملیاتی همچنان نیازمند تأیید انسانی و پیش‌شرط‌های مستقل است.':
+         'این میزبان‌ها فقط کاندیدا هستند؛ تا تأیید مستقل هویت سرویس و مقصد، هیچ مجوز اجرا صادر نمی‌شود.'):
+        (discovery.status==='verified_by_vm_mcp'?
+         'Read-only VM MCP verified identity; operational writes still require separate human Approval and safety checks.':
+         'Hosts are only candidates: service/target must be independently verified before execution.'))+
         '</p></article>';
     }
     show('#ic-mcp',hostCard+(mcp.length?important.join('')+extra:empty()));
