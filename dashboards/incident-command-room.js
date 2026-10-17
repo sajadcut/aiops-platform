@@ -212,6 +212,7 @@
     report: null, lifecycle: null, narrative: null, historic: null, history: null,
     loadingToken: 0, busy: false, reviewedSnapshot: null, rejectionVisible: false, error: null,
     receivedSignals: null, receivedSignalsStatus: 'loading',
+    hostDiscovery: null,
     configResponse: null, configResponseStatus: 'loading',
     chat: null, chatStatus: 'loading', chatBusy: false, chatLastResult: null,
     configPreviewPending: false, configPreviewLastResult: null,
@@ -2431,7 +2432,33 @@
     const extra=remaining.length?'<details class="ic-evidence-rest"><summary>'+
       esc(fa?'مشاهدهٔ '+num(remaining.length)+' بررسی فنی دیگر':'Show '+remaining.length+' more technical results')+
       '</summary><div class="ic-evidence-rest-content">'+remaining.join('')+'</div></details>':'';
-    show('#ic-mcp',mcp.length?important.join('')+extra:empty());
+    const discovery=state.historic?null:state.hostDiscovery;
+    const candidates=arr(discovery?.candidates);
+    let hostCard='';
+    if(discovery && discovery.status!=='not_requested'){
+      const statusText=discovery.status==='candidates_found'
+        ?(fa?'میزبان‌های کاندیدا از لاگ Elastic':'Host candidates from Elastic logs'):
+        discovery.status==='no_host_metadata'
+        ?(fa?'لاگ پیدا شد اما مشخصات سرور در نتایج نیست':'Logs found but host metadata is missing'):
+        discovery.status==='query_failed'
+        ?(fa?'استعلام کشف میزبان ناموفق بود':'Host discovery query failed'):
+        (fa?'هنوز میزبان تأییدشده‌ای کشف نشده است':'No independently verified host discovered');
+      const names=candidates.map(x=>'<li><strong>'+esc(x.hostname)+'</strong> · '+
+        esc(fa?'تعداد شواهد: ':'Records: ')+esc(x.record_count)+'</li>').join('');
+      hostCard='<article class="ic-detail-card"><div class="ic-detail-head"><h4>'+
+        esc(fa?'کشف سرویس و سرور از Elastic MCP':'Elastic MCP service / host discovery')+
+        '</h4></div><p>'+esc(statusText)+'</p>'+
+        '<p>'+esc(fa?'سرویس جست‌وجوشده: ':'Searched service: ')+
+        esc(discovery.searched_service)+' · '+
+        esc(fa?'رکوردهای برگشتی: ':'Matching records: ')+
+        esc(discovery.result_count)+'</p>'+
+        (names?'<ul>'+names+'</ul>':'')+
+        '<p class="ic-warning">'+esc(fa?
+        'این میزبان‌ها فقط کاندیدا هستند؛ تا تأیید مستقل هویت سرویس و مقصد، هیچ مجوز اجرا صادر نمی‌شود.':
+        'Hosts are only candidates: service/target must be independently verified before execution.')+
+        '</p></article>';
+    }
+    show('#ic-mcp',hostCard+(mcp.length?important.join('')+extra:empty()));
   }
   function renderKnowledge(r) {
     const k=r.cognia_knowledge||{},m=r.operational_memory||{},fa=state.language==='fa';
@@ -4090,6 +4117,17 @@
       state.narrative=narrative;render();
     }catch(_){if(state.report?.snapshot_id===snapshot&&state.language===lang)state.narrative=null;}
   }
+  async function loadHostDiscovery(token=state.loadingToken) {
+    try {
+      const data=await api(base+'/host-discovery');
+      if(token!==state.loadingToken)return;
+      state.hostDiscovery=data;
+    } catch (_) {
+      if(token!==state.loadingToken)return;
+      state.hostDiscovery={status:'query_unavailable',candidates:[],result_count:0};
+    }
+    if(state.report)renderEvidence(state.historic||state.report);
+  }
   async function load({preserveHistory=false}={}) {
     if(!incidentId||!UUID.test(incidentId)){alert(tr('failure')+' · Invalid Incident ID');$('#ic-loader').hidden=true;return;}
     const token=++state.loadingToken;
@@ -4133,6 +4171,7 @@
         renderServiceStatus();renderServiceProfile();renderIncidentChat();
       }
       void loadNarrative();void loadReceivedSignals(token);
+      void loadHostDiscovery(token);
       void connectProgressStream();
     }catch(e){
       if(token!==state.loadingToken)return;
