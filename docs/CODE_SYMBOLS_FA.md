@@ -2289,7 +2289,7 @@
 | `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient._esql_empty_table` | 118 | method | Differentiate a recognized empty table from an unparseable reply. | ElasticsearchMCPClient |
 | `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient.health_check` | 138 | async method | Require the exact allowlisted Agent Builder tool, not just a live MCP route. | ElasticsearchMCPClient |
 | `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient.get_logs` | 146 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | ElasticsearchMCPClient |
-| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient.discover_service_hosts` | 263 | async method | Bounded, read-only Elasticsearch host *candidates*, never VM authority. | ElasticsearchMCPClient |
+| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient.discover_service_hosts` | 308 | async method | Bounded, read-only Elasticsearch host *candidates*, never VM authority. | ElasticsearchMCPClient |
 | `integrations/http_transport.py` | `insecure_ssl_context` | 13 | function | Create a TLS context that does not validate server certificates or hostnames. | module |
 | `integrations/http_transport.py` | `_safe_destination` | 21 | function | Return log-safe destination fields without query strings, credentials or bodies. | module |
 | `integrations/http_transport.py` | `_log_completed` | 39 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
