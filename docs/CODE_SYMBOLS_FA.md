@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 555 | Dashboard JS files scanned: 8 | Symbols indexed: 6147**
+**Python files scanned: 555 | Dashboard JS files scanned: 8 | Symbols indexed: 6154**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -4112,13 +4112,20 @@
 | `tests/unit/test_dynamic_investigation.py` | `test_only_explicit_vm_read_only_capabilities_are_requested` | 195 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_dynamic_investigation.py` | `test_fresh_nginx_diff_survives_bounded_second_round_and_rebuilds_proposal` | 206 | async function | A second evidence pass must not discard the exact MCP review it fetched. | module |
 | `tests/unit/test_dynamic_investigation.py` | `test_bounded_context_keeps_latest_validator_not_old_invalid` | 252 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_elastic_anomaly_ingestion.py` | `_active_payload` | 11 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `tests/unit/test_elastic_anomaly_ingestion.py` | `test_official_anomaly_payload_becomes_first_class_alert_signal` | 41 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_elastic_anomaly_ingestion.py` | `test_elastic_anomaly_source_id_is_stable_without_alert_uuid` | 56 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_elastic_anomaly_ingestion.py` | `test_job_service_map_is_deterministic_fallback` | 65 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_elastic_anomaly_ingestion.py` | `test_recovery_reuses_problem_identity_and_has_stable_recovery_reference` | 76 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_elastic_anomaly_ingestion.py` | `test_json_encoded_action_variables_are_normalized` | 91 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_elastic_anomaly_ingestion.py` | `test_native_json_arrays_from_asjson_webhook_are_normalized` | 98 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_elastic_anomaly_ingestion.py` | `_active_payload` | 13 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_elastic_anomaly_ingestion.py` | `test_official_anomaly_payload_becomes_first_class_alert_signal` | 43 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_elastic_anomaly_ingestion.py` | `test_elastic_anomaly_source_id_is_stable_without_alert_uuid` | 58 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_elastic_anomaly_ingestion.py` | `test_job_service_map_is_deterministic_fallback` | 67 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_elastic_anomaly_ingestion.py` | `test_recovery_reuses_problem_identity_and_has_stable_recovery_reference` | 78 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_elastic_anomaly_ingestion.py` | `test_json_encoded_action_variables_are_normalized` | 93 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_elastic_anomaly_ingestion.py` | `test_native_json_arrays_from_asjson_webhook_are_normalized` | 100 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_elastic_anomaly_ingestion.py` | `test_nested_threshold_webhook_is_not_silently_misclassified_as_ml` | 129 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_elastic_anomaly_ingestion.py` | `test_nested_threshold_webhook_is_not_silently_misclassified_as_ml.fake_ingest` | 146 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_nested_threshold_webhook_is_not_silently_misclassified_as_ml |
+| `tests/unit/test_elastic_anomaly_ingestion.py` | `test_nested_threshold_webhook_is_not_silently_misclassified_as_ml.must_not_use_ml` | 149 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_nested_threshold_webhook_is_not_silently_misclassified_as_ml |
+| `tests/unit/test_elastic_anomaly_ingestion.py` | `test_generic_threshold_duplicate_identity_requires_event_context` | 166 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_elastic_anomaly_ingestion.py` | `test_nested_ml_webhook_still_uses_ml_lifecycle` | 183 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_elastic_anomaly_ingestion.py` | `test_nested_ml_webhook_still_uses_ml_lifecycle.fake_ml` | 186 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_nested_ml_webhook_still_uses_ml_lifecycle |
+| `tests/unit/test_elastic_anomaly_ingestion.py` | `test_nested_ml_webhook_still_uses_ml_lifecycle.never_generic` | 189 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_nested_ml_webhook_still_uses_ml_lifecycle |
 | `tests/unit/test_elastic_mcp_log_safety.py` | `test_esql_mcp_query_is_not_in_application_log_payload` | 6 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_elastic_mcp_log_safety.py` | `test_esql_mcp_result_and_tool_errors_are_not_in_application_log_payload` | 22 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_elastic_mcp_log_safety.py` | `test_non_elastic_mcp_logging_contract_unchanged` | 38 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
