@@ -138,8 +138,21 @@ class ElasticsearchMCPClient(MCPClient):
         names = [service]
         if isinstance(values, list):
             for alias in values[:4]:
-                if isinstance(alias, str) and alias.strip() and alias.strip() not in names:
+                if isinstance(alias, str) and alias.strip() and alias.strip().casefold() not in {
+                        s.casefold() for s in names}:
                     names.append(alias.strip())
+        # An operator might declare the canonical unit -> Elastic label instead
+        # of label -> unit. Reverse only a unique explicit relationship.
+        reverse = [
+            str(owner).strip() for owner, entries in aliases.items()
+            if isinstance(entries, list) and any(
+                str(item).strip().casefold() == str(service).strip().casefold()
+                for item in entries)
+        ] if isinstance(aliases, dict) else []
+        if len(reverse) == 1 and reverse[0].casefold() not in {
+                name.casefold() for name in names}:
+            names.append(reverse[0])
+        names = names[:5]
         lower = self._esql_string(since.astimezone(timezone.utc).isoformat())
         upper = self._esql_string(end.astimezone(timezone.utc).isoformat())
         fields = ("service.name", "service", "Properties.ServiceName.keyword",
