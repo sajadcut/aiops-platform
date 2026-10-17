@@ -156,18 +156,28 @@ class ElasticsearchMCPClient(MCPClient):
                 ]
                 if level:
                     clauses.append(f"`log.level` == {self._esql_string(level)}")
-                query = (
-                    f"FROM {index_pattern} | WHERE " + " AND ".join(clauses)
-                    + " | SORT @timestamp DESC"
-                    + " | KEEP @timestamp, message, host.name, host.ip, service.name,"
-                    + " service, Properties.ServiceName.keyword, Properties.ServiceName, log.level, level"
-                    + f" | LIMIT {bounded_limit}"
+                # ES|QL fails if a projected field is unmapped. Degrade
+                # projection independently of the service lookup field.
+                projections = (
+                    f"@timestamp, message, `host.name`, `host.ip`, `{field}`",
+                    f"@timestamp, `host.name`, `{field}`",
+                    f"@timestamp, message, `{field}`",
+                    f"@timestamp, `{field}`",
                 )
-                try:
-                    result = await self.call_tool(self.TOOL_EXECUTE_ESQL, {"query": query})
-                    succeeded += 1
-                except Exception as exc:
-                    last_error = exc
+                result = None
+                for projection in projections:
+                    query = (
+                        f"FROM {index_pattern} | WHERE " + " AND ".join(clauses)
+                        + " | SORT @timestamp DESC | KEEP " + projection
+                        + f" | LIMIT {bounded_limit}"
+                    )
+                    try:
+                        result = await self.call_tool(self.TOOL_EXECUTE_ESQL, {"query": query})
+                        succeeded += 1
+                        break
+                    except Exception as exc:
+                        last_error = exc
+                if result is None:
                     continue
                 for payload in self.json_content(result):
                     rows.extend(self._rows_from_payload(payload))
