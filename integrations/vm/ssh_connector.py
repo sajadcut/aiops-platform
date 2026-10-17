@@ -768,7 +768,7 @@ class SSHVMConnector:
         """
         self._validate_service(service)
         props = " --property=".join([
-            "LoadState", "ActiveState", "SubState", "UnitFileState", "MainPID",
+            "Id", "LoadState", "ActiveState", "SubState", "UnitFileState", "MainPID",
             "ExecMainCode", "ExecMainStatus", "NRestarts", "Result",
             "TimeoutStartUSec", "TimeoutStopUSec",
         ])
@@ -795,6 +795,9 @@ class SSHVMConnector:
         active_state = values.get("ActiveState", "unknown")
         diagnostics: Dict[str, Any] = {
             "success": True, "target": target, "service": service,
+            # Id is systemd's canonical loaded unit, unlike a requested alias.
+            # The Control Plane must check it independently before binding.
+            "unit_id": str(values.get("Id") or "")[:128] or None,
             "load_state": values.get("LoadState"), "active_state": active_state,
             "sub_state": values.get("SubState"), "unit_file_state": values.get("UnitFileState"),
             "main_pid": numeric("MainPID"), "exec_main_code": numeric("ExecMainCode"),
