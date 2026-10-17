@@ -112,6 +112,28 @@ class ServiceIdentityResolver:
                 return True
         return False
 
+    @staticmethod
+    def runtime_name_from_verified_mapping(
+        reported_service: str, context: Mapping[str, Any] | None,
+        evidence: Iterable[Mapping[str, Any]],
+    ) -> str:
+        """Return a case-preserved VM runtime unit only with same-incident proof.
+
+        The original alert's label is retained in incident.service; it must
+        never be lowercased or used as an arbitrary systemctl unit by live
+        reads when a verified, explicitly configured runtime mapping exists.
+        """
+        reported = str(reported_service or "").strip()
+        ctx = context if isinstance(context, Mapping) else {}
+        mapping = ctx.get("verified_runtime_mapping")
+        if isinstance(mapping, Mapping):
+            canonical = str(mapping.get("runtime_service") or "").strip()
+            if (canonical and
+                    ServiceIdentityResolver.verified_runtime_alias_matches(
+                        reported, canonical, ctx, evidence)):
+                return canonical
+        return reported
+
     @classmethod
     def independently_verified(
         cls,
