@@ -347,10 +347,25 @@ def signal_from_elasticsearch(payload: Dict[str, Any]) -> OperationalSignal:
         service = service.get("name")
     rule = source.get("rule") if isinstance(source.get("rule"), dict) else {}
     event = source.get("event") if isinstance(source.get("event"), dict) else {}
+    event_id = payload.get("_id") or event.get("id") or source.get("id")
+    # Kibana's "query matched" is a *status*, not a unique alert identifier.
+    # Stable incident identity uses event context and source timestamp.
+    if str(event_id or "").strip().casefold() in {"query matched", "matched", "unknown", ""}:
+        import hashlib
+        import json
+        material = {
+            "service": service, "event": event, "rule": rule,
+            "timestamp": source.get("timestamp") or source.get("@timestamp"),
+            "observed_count": source.get("observed_count"),
+            "message": source.get("message"),
+        }
+        event_id = "elastic-event:" + hashlib.sha256(
+            json.dumps(material, sort_keys=True, ensure_ascii=False, default=str).encode("utf-8")
+        ).hexdigest()
     return OperationalSignal(
         source="elasticsearch",
-        source_id=str(payload.get("_id") or source.get("id") or event.get("id") or uuid4()),
-        signal_type=str(event.get("kind") or event.get("action") or rule.get("category") or "log_anomaly"),
+        source_id=str(event_id),
+        signal_type=str(event.get("action") or event.get("kind") or rule.get("category") or "log_anomaly"),
         severity=str(source.get("severity") or rule.get("severity") or "unknown"),
         summary=str(source.get("message") or rule.get("name") or "Elasticsearch anomaly detected"),
         service=str(service) if service else None,
