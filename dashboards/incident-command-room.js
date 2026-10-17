@@ -2499,6 +2499,13 @@
           '<code>'+esc(discovery.verified_runtime_service)+'</code></strong>'+
           (discovery.reported_log_service?' · '+esc(fa?'نام سرویس در هشدار: ':'Source alert label: ')+
           '<code>'+esc(discovery.reported_log_service)+'</code>':'')+'</p>':'')+
+        (discovery.search_strategy==='bounded_historical'?
+          '<p><strong>'+esc(fa?'میزبان در بازه تاریخی شش‌ساعته پیدا شد؛ تنها استعلام زنده VM MCP می‌تواند هویتش را تأیید کند.':
+          'Host found in a bounded six-hour historical scan; only live VM MCP can verify its identity.')+
+          '</strong></p>':
+          discovery.historical_lookup_status&&discovery.historical_lookup_status!=='not_attempted'?
+          '<p>'+esc(fa?'نتیجه جست‌وجوی تاریخی محدود: ':'Bounded historical search: ')+
+          '<code>'+esc(discovery.historical_lookup_status)+'</code></p>':'')+
         '<p>'+esc(fa?'سرویس جست‌وجوشده: ':'Searched service: ')+
         esc(discovery.searched_service)+' · '+
         esc(fa?'رکوردهای برگشتی: ':'Matching records: ')+
