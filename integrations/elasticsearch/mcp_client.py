@@ -401,18 +401,19 @@ class ElasticsearchMCPClient(MCPClient):
             candidate["record_count"] += 1
         # If the MCP responded with a non-tabular envelope, report a parsing
         # ambiguity, NOT a definite empty service/time result.
-        unknown_rows = max(
-            int(initial_diagnostics.get("unrecognized_envelopes") or 0),
-            int(observed_diagnostics.get("unrecognized_envelopes") or 0),
+        # Report the final schema-specific attempt when it ran, rather than
+        # carrying an old generic-schema parsing miss as the outcome.
+        final_diagnostics = (
+            observed_diagnostics if attempted_observed_schema
+            and observed_diagnostics.get("schema_lookup")
+            else initial_diagnostics
         )
-        recognized_empty = max(
-            int(initial_diagnostics.get("recognized_empty_envelopes") or 0),
-            int(observed_diagnostics.get("recognized_empty_envelopes") or 0),
-        )
+        unknown_rows = int(final_diagnostics.get("unrecognized_envelopes") or 0)
+        recognized_empty = int(final_diagnostics.get("recognized_empty_envelopes") or 0)
         status = (
             "candidates_found" if hosts else
             "no_host_metadata" if logs else
-            "response_format_unrecognized" if unknown_rows > 0 and recognized_empty == 0 else
+            "response_format_unrecognized" if unknown_rows > 0 else
             "index_has_rows_no_service_time_match" if index_probe == "has_rows" else
             "response_format_unrecognized" if index_probe == "unrecognized_response" else
             "index_probe_failed" if index_probe == "probe_failed" else
