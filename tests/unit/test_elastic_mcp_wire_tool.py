@@ -684,3 +684,86 @@ async def test_unparseable_esql_is_not_false_service_time_mismatch(monkeypatch):
         assert result["index_probe"] == "has_rows"
     finally:
         await client.close()
+
+
+@pytest.mark.asyncio
+async def test_old_gfp_redis_logs_are_searched_historically_with_live_vm_proof(monkeypatch):
+    from datetime import timedelta
+    from apps.signal_gateway import SignalGateway, OperationalSignal
+    from apps.rag_service import KnowledgeRAGService
+    from domain.contracts.config import settings
+    from integrations.elasticsearch import mcp_client as elastic_module
+    from integrations.vm import mcp_client as vm_module
+
+    monkeypatch.setattr(settings, "ELASTIC_SERVICE_DISCOVERY_ALIASES",
+                        {"gfpapi": ["GFP_Backend"]})
+    monkeypatch.setattr(settings, "SSH_ALLOWED_TARGETS", ["10.248.16.82"])
+    monkeypatch.setattr(settings, "VM_MCP_URL", "http://vm.test/mcp")
+
+    async def knowledge_empty(self, *args, **kwargs):
+        return []
+    monkeypatch.setattr(KnowledgeRAGService, "search", knowledge_empty)
+    intervals = []
+    probes = []
+
+    class ElasticWithDelayedLogs:
+        async def discover_service_hosts(self, service, since, until):
+            intervals.append((service, since, until))
+            if since >= datetime.now(timezone.utc) - timedelta(hours=1):
+                return {"status": "index_has_rows_no_service_time_match",
+                        "searched_service": service, "result_count": 0,
+                        "candidates": []}
+            return {"status": "candidates_found", "searched_service": service,
+                    "result_count": 6, "candidates": [{
+                        "hostname": "apgfpdtnksa0101",
+                        "ip_addresses": ["10.248.16.82"], "record_count": 6
+                    }]}
+        async def close(self):
+            pass
+
+    class VerifyingVM:
+        async def service_status(self, target, service):
+            probes.append((target, service))
+            if service != "gfpapi":
+                return {"success": False, "target": target, "service": service}
+            return {"success": True, "target": target, "service": service,
+                    "load_state": "loaded", "active_state": "active"}
+        async def close(self):
+            pass
+
+    monkeypatch.setattr(elastic_module, "ElasticsearchMCPClient", ElasticWithDelayedLogs)
+    monkeypatch.setattr(vm_module, "VMEdgeMCPClient", VerifyingVM)
+    signal = OperationalSignal(
+        source="elasticsearch", source_id="redis-delayed-host-001",
+        signal_type="redis_error_threshold", summary="Redis Connection refused",
+        service="GFP_Backend", timestamp=datetime.now(timezone.utc))
+    resolution = await SignalGateway._knowledge_assisted_asset(
+        signal, signal.to_evidence())
+    history = resolution["host_discovery"]
+    assert len(intervals) == 2
+    assert intervals[0][1] > intervals[1][1]
+    assert intervals[1][1] <= datetime.now(timezone.utc) - timedelta(hours=5)
+    assert history["search_strategy"] == "bounded_historical"
+    assert history["recent_lookup_status"] == "index_has_rows_no_service_time_match"
+    assert history["historical_candidate_requires_live_verification"] is True
+    assert history["verified_target"] == "10.248.16.82"
+    assert history["verified_runtime_service"] == "gfpapi"
+    assert probes == [("10.248.16.82", "GFP_Backend"),
+                      ("10.248.16.82", "gfpapi")]
+    assert resolution["verified_runtime_mapping"]["runtime_service"] == "gfpapi"
+
+
+def test_elastic_parses_json_text_result_without_trusting_metadata_only_envelope():
+    import json
+    client = ElasticsearchMCPClient()
+    payload = {"columns": [{"name": "host.name"}, {"name": "host.ip"}],
+               "values": [["apgfpdtnksa0101", "10.248.16.82"]]}
+    wrapped = {"structuredContent": {"status": "success"},
+               "content": [{"type": "text", "text": json.dumps(payload)}]}
+    assert client._esql_payloads(wrapped) == wrapped["content"]
+    assert client._rows_from_payload(wrapped["content"][0]) == [{
+        "host.name": "apgfpdtnksa0101", "host.ip": "10.248.16.82"
+    }]
+    assert client._rows_from_payload({"result": json.dumps(payload)}) == [{
+        "host.name": "apgfpdtnksa0101", "host.ip": "10.248.16.82"
+    }]
