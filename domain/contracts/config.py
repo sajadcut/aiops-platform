@@ -147,6 +147,8 @@ class Settings(BaseSettings):
     ELASTICSEARCH_MCP_PASSWORD: Optional[str] = Field(...)
     ELASTIC_AGENT_BUILDER_MCP_NAMESPACES: List[str] = Field(...)
     ELASTIC_AGENT_BUILDER_INDEX_PATTERN: str = Field(...)
+    # Explicit log-field aliases; never grant VM execution authority.
+    ELASTIC_SERVICE_DISCOVERY_ALIASES: Dict[str, List[str]] = Field(default_factory=dict)
     ELASTIC_ANOMALY_ACCEPT_INTERIM: bool = Field(...)
     ELASTIC_ANOMALY_CONTEXT_LOOKBACK_SECONDS: int = Field(..., ge=60, le=86400)
     ELASTIC_ANOMALY_CONTEXT_LOOKAHEAD_SECONDS: int = Field(..., ge=0, le=3600)
