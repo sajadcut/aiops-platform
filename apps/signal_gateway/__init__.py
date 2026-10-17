@@ -109,6 +109,30 @@ class SignalGateway:
         return state
 
     @staticmethod
+    def _elastic_discovery_window(event_time: datetime, now: datetime) -> tuple[datetime, datetime, Dict[str, Any]]:
+        """Allow a bounded future-clock offset without unbounded historical scans.
+
+        A received alert may be ahead of the ingestion clock. Keep the original
+        timestamp for audit; widen only this read-only investigation window.
+        """
+        event_utc = event_time.astimezone(timezone.utc)
+        now_utc = now.astimezone(timezone.utc)
+        cap = min(300, max(0, int(settings.ELASTIC_ANOMALY_CONTEXT_LOOKAHEAD_SECONDS)))
+        skew = (event_utc - now_utc).total_seconds()
+        since = max(now_utc - timedelta(hours=6),
+                    min(now_utc, event_utc) - timedelta(minutes=20))
+        until = min(now_utc + timedelta(seconds=cap),
+                    max(now_utc, event_utc + timedelta(seconds=30)))
+        return since, until, {
+            "timestamp_skew_seconds": int(skew),
+            "future_skew_window_seconds": max(0, int((until - now_utc).total_seconds())),
+            "time_window_status": ("future_skew_included" if until > now_utc else
+                                   "future_skew_capped" if skew > 0 else "current_time"),
+            "window_from": since.isoformat(),
+            "window_to": until.isoformat(),
+        }
+
+    @staticmethod
     async def _verify_elastic_host_candidate(service: str, discovery: Dict[str, Any]) -> list[Dict[str, Any]]:
         """Verify one log host with a read-only service_status on an *allowlisted* VM.
 
@@ -304,13 +328,13 @@ class SignalGateway:
             # the future. Host candidates NEVER become approved VM targets.
             from integrations.elasticsearch.mcp_client import ElasticsearchMCPClient
             now = datetime.now(timezone.utc)
-            event_time = signal.timestamp.astimezone(timezone.utc)
-            since = max(now - timedelta(hours=6), min(now, event_time) - timedelta(minutes=20))
+            since, until, time_metadata = SignalGateway._elastic_discovery_window(
+                signal.timestamp, now)
             connector = None
             try:
                 connector = ElasticsearchMCPClient()
                 host_discovery = await asyncio.wait_for(
-                    connector.discover_service_hosts(str(signal.service), since, now),
+                    connector.discover_service_hosts(str(signal.service), since, until),
                     timeout=max(3.0, min(20.0, float(settings.MCP_TIMEOUT_SECONDS))),
                 )
             except Exception as exc:
@@ -324,6 +348,7 @@ class SignalGateway:
                         await connector.close()
                     except Exception:
                         logger.debug("elastic_host_discovery_client_close_failed")
+            host_discovery.update(time_metadata)
             host_verification_evidence = await SignalGateway._verify_elastic_host_candidate(
                 str(signal.service), host_discovery)
             sole_candidate = ((host_discovery.get("candidates") or [None])[0]
