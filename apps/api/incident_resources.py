@@ -108,6 +108,8 @@ async def get_host_discovery(incident_id: UUID):
             "verification_status": str(item.get("verification_status") or "unverified")[:60],
             "verification_method": (str(item.get("verification_method") or "")[:16]
                                     if item.get("verification_method") in {"hostname", "ip"} else None),
+            "control_plane_allowlist_count": max(0, min(10000, int(item.get("control_plane_allowlist_count") or 0))),
+            "control_plane_target_allowed": item.get("control_plane_target_allowed") is True,
             "source": "elasticsearch",
         })
     discovery_status = str(source.get("status") or "not_recorded")[:50]
@@ -127,7 +129,11 @@ async def get_host_discovery(incident_id: UUID):
         failures = {str(candidate.get("verification_status") or "")
                     for candidate in candidates}
         if failures & {"candidate_hostname_not_allowlisted", "candidate_ip_not_allowlisted"}:
-            failed_stage = "vm_target_allowlist"
+            failed_stage = "control_plane_target_allowlist"
+        elif "vm_worker_target_not_allowlisted" in failures:
+            failed_stage = "vm_worker_target_allowlist"
+        elif "vm_worker_service_not_allowlisted" in failures:
+            failed_stage = "vm_worker_service_allowlist"
         elif "candidate_hostname_invalid" in failures:
             failed_stage = "candidate_host_validation"
         elif "vm_mcp_not_configured" in failures:
