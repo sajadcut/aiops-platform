@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 555 | Dashboard JS files scanned: 8 | Symbols indexed: 6241**
+**Python files scanned: 555 | Dashboard JS files scanned: 8 | Symbols indexed: 6242**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1120,8 +1120,9 @@
 | `apps/context_service/service_identity.py` | `ServiceIdentityResolver.known` | 43 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ServiceIdentityResolver |
 | `apps/context_service/service_identity.py` | `ServiceIdentityResolver.expected_fqdns` | 50 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ServiceIdentityResolver |
 | `apps/context_service/service_identity.py` | `ServiceIdentityResolver.verified_runtime_alias_matches` | 59 | method | Permit an alert-label/runtime-name mismatch only with direct VM evidence. | ServiceIdentityResolver |
-| `apps/context_service/service_identity.py` | `ServiceIdentityResolver.independently_verified` | 116 | method | Require a direct successful read from the exact approved asset. | ServiceIdentityResolver |
-| `apps/context_service/service_identity.py` | `ServiceIdentityResolver.resolve` | 149 | method | Produce provenance plus a canonical service for non-executable display. | ServiceIdentityResolver |
+| `apps/context_service/service_identity.py` | `ServiceIdentityResolver.runtime_name_from_verified_mapping` | 116 | method | Return a case-preserved VM runtime unit only with same-incident proof. | ServiceIdentityResolver |
+| `apps/context_service/service_identity.py` | `ServiceIdentityResolver.independently_verified` | 138 | method | Require a direct successful read from the exact approved asset. | ServiceIdentityResolver |
+| `apps/context_service/service_identity.py` | `ServiceIdentityResolver.resolve` | 171 | method | Produce provenance plus a canonical service for non-executable display. | ServiceIdentityResolver |
 | `apps/context_service/source_policy.py` | `EvidenceSourcePolicy` | 5 | class | کلاس | module |
 | `apps/context_service/source_policy.py` | `EvidenceSourcePolicy.allows` | 9 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | EvidenceSourcePolicy |
 | `apps/database/pgvector_contract.py` | `validate_pgvector` | 9 | async function | Validate pgvector strictly for Operational Memory, never Knowledge RAG. | module |
