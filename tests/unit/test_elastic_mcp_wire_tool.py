@@ -383,6 +383,7 @@ async def test_index_probe_distinguishes_wrong_service_filter_from_empty_index(m
             "GFP_Backend", datetime(2026, 10, 17, 10, 0, tzinfo=timezone.utc))
         assert report["status"] == "index_has_rows_no_service_time_match"
         assert report["index_probe"] == "has_rows"
+        assert report["sample_field_names"] == ["@timestamp", "service.name"]
         assert report["candidates"] == []  # never bind host from index-only query
         assert seen[-1] == "FROM 1m-digitaloperation-gfpapi-* | LIMIT 1"
     finally:
