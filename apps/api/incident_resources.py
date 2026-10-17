@@ -80,6 +80,44 @@ async def get_evidence(incident_id: UUID, limit: int = Query(default=100, le=500
         ]}
 
 
+@router.get("/incidents/{incident_id}/host-discovery")
+async def get_host_discovery(incident_id: UUID):
+    """Only redacted candidate identity and status, never raw Elastic records."""
+    async with AsyncSessionLocal() as db:
+        incident = await db.get(Incident, incident_id)
+        if incident is None:
+            raise HTTPException(status_code=404, detail="Incident not found")
+        checkpoint = await WorkflowCheckpointStore(db).load(str(incident_id))
+        state = dict((checkpoint or {}).get("state") or {})
+        context = state.get("context") if isinstance(state.get("context"), dict) else {}
+        persisted = incident.context if isinstance(incident.context, dict) else {}
+        source = context.get("host_discovery") or persisted.get("host_discovery") or {}
+        if not isinstance(source, dict):
+            source = {}
+    candidates = []
+    for item in (source.get("candidates") or [])[:8]:
+        if not isinstance(item, dict):
+            continue
+        host = str(item.get("hostname") or "").strip()[:253]
+        if not host:
+            continue
+        candidates.append({
+            "hostname": host,
+            "record_count": max(0, min(int(item.get("record_count") or 0), 40)),
+            "status": "candidate",
+            "source": "elasticsearch",
+        })
+    return {
+        "incident_id": str(incident_id),
+        "status": str(source.get("status") or "not_recorded")[:50],
+        "searched_service": str(source.get("searched_service") or incident.service or "")[:90],
+        "result_count": max(0, min(int(source.get("result_count") or 0), 40)),
+        "candidates": candidates,
+        "requires_independent_verification": True,
+        "may_authorize_vm_execution": False,
+    }
+
+
 @router.get("/incidents/{incident_id}/received-signals")
 async def get_received_signals(incident_id: UUID, limit: int = Query(default=60, ge=1, le=100)):
     """Original source notifications from durable Evidence; read-only and RBAC-guarded.
