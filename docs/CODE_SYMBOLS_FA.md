@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 555 | Dashboard JS files scanned: 8 | Symbols indexed: 6216**
+**Python files scanned: 555 | Dashboard JS files scanned: 8 | Symbols indexed: 6225**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -4199,6 +4199,15 @@
 | `tests/unit/test_elastic_mcp_wire_tool.py` | `test_serilog_schema_retry_finds_machine_name_in_gfp_index.fake_tool` | 614 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_serilog_schema_retry_finds_machine_name_in_gfp_index |
 | `tests/unit/test_elastic_mcp_wire_tool.py` | `test_unparseable_esql_is_not_false_service_time_mismatch` | 663 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_elastic_mcp_wire_tool.py` | `test_unparseable_esql_is_not_false_service_time_mismatch.fake_tool` | 668 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_unparseable_esql_is_not_false_service_time_mismatch |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_old_gfp_redis_logs_are_searched_historically_with_live_vm_proof` | 690 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_old_gfp_redis_logs_are_searched_historically_with_live_vm_proof.knowledge_empty` | 703 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_old_gfp_redis_logs_are_searched_historically_with_live_vm_proof |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_old_gfp_redis_logs_are_searched_historically_with_live_vm_proof.ElasticWithDelayedLogs` | 709 | class | کلاس | test_old_gfp_redis_logs_are_searched_historically_with_live_vm_proof |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_old_gfp_redis_logs_are_searched_historically_with_live_vm_proof.ElasticWithDelayedLogs.discover_service_hosts` | 710 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_old_gfp_redis_logs_are_searched_historically_with_live_vm_proof.ElasticWithDelayedLogs |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_old_gfp_redis_logs_are_searched_historically_with_live_vm_proof.ElasticWithDelayedLogs.close` | 721 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_old_gfp_redis_logs_are_searched_historically_with_live_vm_proof.ElasticWithDelayedLogs |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_old_gfp_redis_logs_are_searched_historically_with_live_vm_proof.VerifyingVM` | 724 | class | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | test_old_gfp_redis_logs_are_searched_historically_with_live_vm_proof |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_old_gfp_redis_logs_are_searched_historically_with_live_vm_proof.VerifyingVM.service_status` | 725 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_old_gfp_redis_logs_are_searched_historically_with_live_vm_proof.VerifyingVM |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_old_gfp_redis_logs_are_searched_historically_with_live_vm_proof.VerifyingVM.close` | 731 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_old_gfp_redis_logs_are_searched_historically_with_live_vm_proof.VerifyingVM |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_elastic_parses_json_text_result_without_trusting_metadata_only_envelope` | 756 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_ephemeral_config_guard.py` | `test_ephemeral_script_has_valid_posix_syntax_and_only_trusted_static_code` | 18 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_ephemeral_config_guard.py` | `test_ephemeral_config_payload_cannot_inject_shell_syntax` | 40 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_ephemeral_config_guard.py` | `test_ephemeral_builder_rejects_untrusted_operation_or_metadata` | 62 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
