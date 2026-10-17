@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 555 | Dashboard JS files scanned: 8 | Symbols indexed: 6230**
+**Python files scanned: 555 | Dashboard JS files scanned: 8 | Symbols indexed: 6241**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -4213,6 +4213,17 @@
 | `tests/unit/test_elastic_mcp_wire_tool.py` | `test_gfp_serilog_keeps_host_ip_and_verifies_allowlisted_ip_not_unlisted_hostname.FakeVM` | 823 | class | کلاس | test_gfp_serilog_keeps_host_ip_and_verifies_allowlisted_ip_not_unlisted_hostname |
 | `tests/unit/test_elastic_mcp_wire_tool.py` | `test_gfp_serilog_keeps_host_ip_and_verifies_allowlisted_ip_not_unlisted_hostname.FakeVM.service_status` | 824 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_gfp_serilog_keeps_host_ip_and_verifies_allowlisted_ip_not_unlisted_hostname.FakeVM |
 | `tests/unit/test_elastic_mcp_wire_tool.py` | `test_gfp_serilog_keeps_host_ip_and_verifies_allowlisted_ip_not_unlisted_hostname.FakeVM.close` | 830 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_gfp_serilog_keeps_host_ip_and_verifies_allowlisted_ip_not_unlisted_hostname.FakeVM |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_api_process_allowlist_missing_even_when_vm_worker_config_is_correct` | 844 | async function | No VM MCP call when this API process did not load its target policy. | module |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_api_process_allowlist_missing_even_when_vm_worker_config_is_correct.UnexpectedVM` | 852 | class | کلاس | test_api_process_allowlist_missing_even_when_vm_worker_config_is_correct |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_api_process_allowlist_missing_even_when_vm_worker_config_is_correct.UnexpectedVM.__init__` | 853 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_api_process_allowlist_missing_even_when_vm_worker_config_is_correct.UnexpectedVM |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_allowlisted_hostname_selected_if_ip_is_not_authorized` | 868 | async function | Hostnames are not skipped simply because an unallowlisted IP exists. | module |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_allowlisted_hostname_selected_if_ip_is_not_authorized.FakeVM` | 877 | class | کلاس | test_allowlisted_hostname_selected_if_ip_is_not_authorized |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_allowlisted_hostname_selected_if_ip_is_not_authorized.FakeVM.service_status` | 878 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_allowlisted_hostname_selected_if_ip_is_not_authorized.FakeVM |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_allowlisted_hostname_selected_if_ip_is_not_authorized.FakeVM.close` | 882 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_allowlisted_hostname_selected_if_ip_is_not_authorized.FakeVM |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_vm_worker_policy_denial_is_not_misreported_as_ssh_failure` | 903 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_vm_worker_policy_denial_is_not_misreported_as_ssh_failure.RejectingVM` | 911 | class | transition مربوط به Approval/Governance را اعمال می‌کند | test_vm_worker_policy_denial_is_not_misreported_as_ssh_failure |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_vm_worker_policy_denial_is_not_misreported_as_ssh_failure.RejectingVM.service_status` | 912 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_vm_worker_policy_denial_is_not_misreported_as_ssh_failure.RejectingVM |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_vm_worker_policy_denial_is_not_misreported_as_ssh_failure.RejectingVM.close` | 914 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_vm_worker_policy_denial_is_not_misreported_as_ssh_failure.RejectingVM |
 | `tests/unit/test_ephemeral_config_guard.py` | `test_ephemeral_script_has_valid_posix_syntax_and_only_trusted_static_code` | 18 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_ephemeral_config_guard.py` | `test_ephemeral_config_payload_cannot_inject_shell_syntax` | 40 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_ephemeral_config_guard.py` | `test_ephemeral_builder_rejects_untrusted_operation_or_metadata` | 62 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
