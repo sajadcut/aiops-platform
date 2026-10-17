@@ -920,3 +920,73 @@ async def test_vm_worker_policy_denial_is_not_misreported_as_ssh_failure(
     assert discovery["candidates"][0]["verification_status"] == code
     assert discovery["candidates"][0]["control_plane_target_allowed"] is True
     assert discovery["runtime_probe_count"] == 1
+
+
+@pytest.mark.asyncio
+async def test_elastic_vm_refuses_reported_alias_when_systemd_id_is_different(monkeypatch):
+    from apps.signal_gateway import SignalGateway
+    from domain.contracts.config import settings
+    from integrations.vm import mcp_client as vm_module
+
+    monkeypatch.setattr(settings, "VM_MCP_URL", "http://vm.test/mcp")
+    monkeypatch.setattr(settings, "SSH_ALLOWED_TARGETS", ["10.248.16.82"])
+    monkeypatch.setattr(settings, "ELASTIC_SERVICE_DISCOVERY_ALIASES", {})
+    requested = []
+
+    class VM:
+        async def service_status(self, target, service):
+            requested.append(service)
+            return {
+                "success": True, "target": target, "service": service,
+                "unit_id": "gfpapi.service", "load_state": "loaded",
+                "active_state": "deactivating", "sub_state": "stop-sigterm",
+            }
+        async def close(self):
+            pass
+    monkeypatch.setattr(vm_module, "VMEdgeMCPClient", VM)
+    discovery = {"status": "candidates_found", "candidates": [{
+        "hostname": "apgfpdtnksa0101", "ip_addresses": ["10.248.16.82"],
+    }]}
+    evidence = await SignalGateway._verify_elastic_host_candidate(
+        "GFP_Backend", discovery)
+    assert requested == ["GFP_Backend"]
+    assert evidence == []
+    assert discovery["status"] == "candidates_found"
+    assert discovery["candidates"][0]["verification_status"] == "vm_canonical_unit_mismatch"
+
+
+@pytest.mark.asyncio
+async def test_gfp_prefers_verified_canonical_runtime_with_systemd_id(monkeypatch):
+    from apps.signal_gateway import SignalGateway
+    from domain.contracts.config import settings
+    from integrations.vm import mcp_client as vm_module
+
+    monkeypatch.setattr(settings, "VM_MCP_URL", "http://vm.test/mcp")
+    monkeypatch.setattr(settings, "SSH_ALLOWED_TARGETS", ["10.248.16.82"])
+    monkeypatch.setattr(settings, "ELASTIC_SERVICE_DISCOVERY_ALIASES",
+                        {"gfpapi": ["GFP_Backend"]})
+    assert SignalGateway._runtime_service_candidates("GFP_Backend") == [
+        "gfpapi", "GFP_Backend"
+    ]
+    requested = []
+
+    class VM:
+        async def service_status(self, target, service):
+            requested.append(service)
+            return {
+                "success": True, "target": target, "service": service,
+                "unit_id": "gfpapi.service", "load_state": "loaded",
+                "active_state": "deactivating", "sub_state": "stop-sigterm",
+            }
+        async def close(self):
+            pass
+    monkeypatch.setattr(vm_module, "VMEdgeMCPClient", VM)
+    discovery = {"status": "candidates_found", "candidates": [{
+        "hostname": "apgfpdtnksa0101", "ip_addresses": ["10.248.16.82"],
+    }]}
+    evidence = await SignalGateway._verify_elastic_host_candidate(
+        "GFP_Backend", discovery)
+    assert requested == ["gfpapi"]
+    assert discovery["verified_runtime_service"] == "gfpapi"
+    assert discovery["mapping_status"] == "verified_live_vm_mcp"
+    assert evidence[0]["raw_data"]["unit_id"] == "gfpapi.service"
