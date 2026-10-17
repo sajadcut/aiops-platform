@@ -150,6 +150,7 @@ class ElasticsearchMCPClient(MCPClient):
         until: Optional[datetime] = None,
         level: Optional[str] = None,
         limit: int = 100,
+        schema_field_names: Optional[list[str]] = None,
     ) -> List[LogEntry]:
         bounded_limit = min(max(int(limit), 1), 500)
         end = until or datetime.now(timezone.utc)
@@ -176,53 +177,88 @@ class ElasticsearchMCPClient(MCPClient):
         names = names[:5]
         lower = self._esql_string(since.astimezone(timezone.utc).isoformat())
         upper = self._esql_string(end.astimezone(timezone.utc).isoformat())
-        fields = ("service.name", "service", "Properties.ServiceName.keyword",
-                  "Properties.ServiceName", "service.name.keyword")
+        # Use the sample document's COLUMN NAMES only to select a
+        # deterministic schema-specific query. A generic ECS lookup is still
+        # used where no index schema was observed.
+        available = set(schema_field_names or [])
+        if schema_field_names is None:
+            fields = ("service.name", "service", "Properties.ServiceName.keyword",
+                      "Properties.ServiceName", "service.name.keyword")
+            time_fields = ("@timestamp",)
+            observed_hosts: tuple[str, ...] = ()
+        else:
+            fields = tuple(field for field in (
+                "Properties.ServiceName.keyword", "Properties.ServiceName",
+                "Properties.ApplicationName.keyword", "Properties.ApplicationName",
+                "service.name.keyword", "service.name", "service",
+                "Properties.ServiceId.keyword", "Properties.ServiceId",
+            ) if field in available)
+            time_fields = tuple(field for field in ("@timestamp", "Timestamp")
+                                if field in available)
+            observed_hosts = tuple(field for field in (
+                "Properties.MachineName", "host.name", "host.ip", "agent.hostname"
+            ) if field in available)
         index_pattern = settings.ELASTIC_AGENT_BUILDER_INDEX_PATTERN.strip()
         rows: list[dict[str, Any]] = []
         succeeded = 0
         unrecognized_payloads = 0
         last_error: Exception | None = None
+        recognized_empty_envelopes = 0
         for name in names:
             for field in fields:
-                clauses = [
-                    f"@timestamp >= TO_DATETIME({lower})",
-                    f"@timestamp <= TO_DATETIME({upper})",
-                    f"`{field}` == {self._esql_string(name)}",
-                ]
-                if level:
-                    clauses.append(f"`log.level` == {self._esql_string(level)}")
-                # ES|QL fails if a projected field is unmapped. Degrade
-                # projection independently of the service lookup field.
-                projections = (
-                    f"@timestamp, message, `host.name`, `host.ip`, `{field}`",
-                    f"@timestamp, `host.name`, `host.ip`, `{field}`",
-                    f"@timestamp, `host.name`, `{field}`",
-                    f"@timestamp, `host.ip`, `{field}`",
-                    f"@timestamp, message, `{field}`",
-                    f"@timestamp, `{field}`",
-                )
-                result = None
-                for projection in projections:
-                    query = (
-                        f"FROM {index_pattern} | WHERE " + " AND ".join(clauses)
-                        + " | SORT @timestamp DESC | KEEP " + projection
-                        + f" | LIMIT {bounded_limit}"
-                    )
-                    try:
-                        result = await self.call_tool(self.TOOL_EXECUTE_ESQL, {"query": query})
-                        succeeded += 1
+                for time_field in time_fields:
+                    quoted_time = time_field if time_field == "@timestamp" else f"`{time_field}`"
+                    clauses = [
+                        f"{quoted_time} >= TO_DATETIME({lower})",
+                        f"{quoted_time} <= TO_DATETIME({upper})",
+                        f"`{field}` == {self._esql_string(name)}",
+                    ]
+                    if level and (schema_field_names is None or "log.level" in available):
+                        clauses.append(f"`log.level` == {self._esql_string(level)}")
+                    if schema_field_names is not None:
+                        # No guessing missing fields on this schema path. Keep
+                        # just existing fields, not a broad unfiltered scan.
+                        keep = [quoted_time]
+                        if "message" in available:
+                            keep.append("message")
+                        keep.extend(f"`{value}`" for value in observed_hosts[:2])
+                        keep.append(f"`{field}`")
+                        projections = (", ".join(dict.fromkeys(keep)),)
+                    else:
+                        projections = (
+                            f"@timestamp, message, `host.name`, `host.ip`, `{field}`",
+                            f"@timestamp, `host.name`, `host.ip`, `{field}`",
+                            f"@timestamp, `host.name`, `{field}`",
+                            f"@timestamp, `host.ip`, `{field}`",
+                            f"@timestamp, message, `{field}`",
+                            f"@timestamp, `{field}`",
+                        )
+                    result = None
+                    for projection in projections:
+                        query = (
+                            f"FROM {index_pattern} | WHERE " + " AND ".join(clauses)
+                            + f" | SORT {quoted_time} DESC | KEEP " + projection
+                            + f" | LIMIT {bounded_limit}"
+                        )
+                        try:
+                            result = await self.call_tool(self.TOOL_EXECUTE_ESQL, {"query": query})
+                            succeeded += 1
+                            break
+                        except Exception as exc:
+                            last_error = exc
+                    if result is None:
+                        continue
+                    payloads = self.json_content(result)
+                    for payload in payloads:
+                        decoded = self._rows_from_payload(payload)
+                        if not decoded:
+                            if self._esql_empty_table(payload):
+                                recognized_empty_envelopes += 1
+                            else:
+                                unrecognized_payloads += 1
+                        rows.extend(decoded)
+                    if rows:
                         break
-                    except Exception as exc:
-                        last_error = exc
-                if result is None:
-                    continue
-                payloads = self.json_content(result)
-                for payload in payloads:
-                    decoded = self._rows_from_payload(payload)
-                    if not decoded and not self._esql_empty_table(payload):
-                        unrecognized_payloads += 1
-                    rows.extend(decoded)
                 if rows:
                     break
             if rows:
@@ -236,13 +272,22 @@ class ElasticsearchMCPClient(MCPClient):
             successful_queries=succeeded,
             decoded_rows=len(rows),
             unrecognized_envelopes=unrecognized_payloads,
+            recognized_empty_envelopes=recognized_empty_envelopes,
+            observed_schema_lookup=schema_field_names is not None,
         )
+        self._last_esql_query_diagnostics = {
+            "success_count": succeeded,
+            "decoded_rows": len(rows),
+            "unrecognized_envelopes": unrecognized_payloads,
+            "recognized_empty_envelopes": recognized_empty_envelopes,
+            "schema_lookup": schema_field_names is not None,
+        }
         if not succeeded and last_error is not None:
             raise RuntimeError("elastic_all_service_field_queries_failed") from last_error
 
         logs: List[LogEntry] = []
         for item in rows:
-            raw_ts = item.get("@timestamp") or item.get("timestamp")
+            raw_ts = item.get("@timestamp") or item.get("Timestamp") or item.get("timestamp")
             try:
                 timestamp = datetime.fromisoformat(str(raw_ts).replace("Z", "+00:00")) if raw_ts else datetime.now(timezone.utc)
             except (ValueError, TypeError):
@@ -252,7 +297,7 @@ class ElasticsearchMCPClient(MCPClient):
                 service_value = service_value.get("name")
             logs.append(LogEntry(
                 timestamp=timestamp,
-                service=str(service_value or item.get("service.name") or item.get("Properties.ServiceName.keyword") or item.get("Properties.ServiceName") or service),
+                service=str(service_value or item.get("service.name") or item.get("Properties.ServiceName.keyword") or item.get("Properties.ServiceName") or item.get("Properties.ApplicationName.keyword") or item.get("Properties.ApplicationName") or service),
                 level=str(item.get("level") or (item.get("log") or {}).get("level") or "info"),
                 message=str(item.get("message") or ""),
                 source="elasticsearch",
