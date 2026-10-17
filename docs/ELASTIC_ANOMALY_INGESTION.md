@@ -166,3 +166,65 @@ The active anomaly timestamp anchors an additional read-only Evidence window. Wi
 - Webhook authentication uses the existing API boundary and `ingest:signal` RBAC permission.
 - The Agent Builder MCP path is read-only from the Control Plane and is used for context/investigation, not for webhook delivery.
 - No database migration is required; anomaly/recovery metadata uses the existing Incident Evidence/context model.
+
+
+## Generic Redis/threshold webhooks and read-only host discovery (October 2026)
+
+The `/api/v1/signals/elasticsearch/anomaly` endpoint now distinguishes ML
+anomaly notifications from rule/threshold events carrying `event.action`.
+Both native and `{"payload":{...}}` forms are supported. Custom events keep
+`service`, `severity`, `message`, `event.action` and
+`event.correlation_key`; they are **not** fabricated as unknown ML jobs.
+`/api/v1/signals/elasticsearch` remains the generic webhook endpoint.
+A generic event ID like `query matched` is not a unique source ID; its
+deterministic fingerprint also includes the event context and timestamp.
+
+For Elasticsearch-originated incidents with a reported service, the ingestion
+gateway queries the allowlisted Agent Builder ES|QL tool against bounded time
+and fixed fields `service.name`, `service`,
+`Properties.ServiceName.keyword`, `Properties.ServiceName`,
+and `service.name.keyword`. It tolerates missing optional ECS projection
+columns and caps returned rows. No LLM-generated query is executed.
+
+Optional, independently validated aliases may be specified in `.env`:
+
+```dotenv
+ELASTIC_SERVICE_DISCOVERY_ALIASES={"gfpapi":["GFP_Backend"]}
+```
+
+The example does **not** assert that these are the same service in all
+environments. An operator must verify that relationship first; omitting the
+setting safely disables cross-label matching.
+
+The discovery result is available from
+`GET /api/v1/incidents/{incident_id}/host-discovery` and displayed in the
+**Evidence & MCP** section of Incident Command Room. Result statuses distinguish
+`no_matching_logs`, `no_host_metadata`, `candidates_found`,
+`verified_by_vm_mcp` and `query_failed`.
+A log's `host.name` or `host.ip` is merely a **candidate**, not a verified
+VM destination or execution authorization. Only a sole candidate matching the
+existing `SSH_ALLOWED_TARGETS` allowlist may receive a read-only
+`service_status` VM MCP probe. Its returned service, target, loaded unit and
+recognized systemd state must all match before the read can become durable
+independent evidence. Every mutating action still requires separate signed
+authorization, policy and Approval.
+
+Sensitive ES|QL queries and result records stay excluded from HTTP/MCP logs;
+the incident API exposes only bounded counts and host identity metadata.
+A 200 response from Elastic MCP means tool transport succeeded, not that a
+matching host or application-to-VM binding was established.
+
+### Live acceptance (real environment required)
+
+1. Send a non-ML nested Redis threshold alert and verify correct service,
+   severity, message, signal type and per-occurrence identity.
+2. Query the incident host-discovery API and check the actual query result
+   count, candidate list and source labels (do not infer a match from HTTP 200).
+3. If the source log label differs from the systemd unit, configure a
+   validated alias. Search both before and after changing the alias.
+4. Confirm one candidate in the VM allowlist yields only a read-only identity
+   probe, and that a different service, two candidates or an unallowlisted
+   target never grants a VM binding.
+5. Confirm source event timestamps in the future do not move ES|QL search into
+   the future. An empty result must not be presented as evidence of health.
+6. Obtain human Approval separately before any actual service change.
