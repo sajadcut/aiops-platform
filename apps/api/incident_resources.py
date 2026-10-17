@@ -110,9 +110,34 @@ async def get_host_discovery(incident_id: UUID):
                                     if item.get("verification_method") in {"hostname", "ip"} else None),
             "source": "elasticsearch",
         })
+    discovery_status = str(source.get("status") or "not_recorded")[:50]
+    failed_stage = {
+        "query_failed": "esql_query",
+        "index_probe_failed": "index_probe",
+        "response_format_unrecognized": "response_parsing",
+        "no_matching_logs": "index_or_service_lookup",
+        "index_has_rows_no_service_time_match": "service_or_time_filter",
+        "no_host_metadata": "host_metadata",
+        "candidates_found": "vm_identity_verification",
+        "verified_by_vm_mcp": "completed",
+        "not_requested": "not_requested",
+        "not_recorded": "not_recorded",
+    }.get(discovery_status, "unknown")
     return {
         "incident_id": str(incident_id),
-        "status": str(source.get("status") or "not_recorded")[:50],
+        "status": discovery_status,
+        "failure_stage": failed_stage,
+        "reported_log_service": str(source.get("reported_log_service") or "")[:90],
+        "verified_runtime_service": (
+            str(source.get("verified_runtime_service") or "")[:90]
+            if discovery_status == "verified_by_vm_mcp" else None),
+        "mapping_status": str(source.get("mapping_status") or "not_evaluated")[:70],
+        "runtime_probe_count": max(0, min(int(source.get("runtime_probe_count") or 0), 4)),
+        "timestamp_skew_seconds": max(-86400, min(86400, int(source.get("timestamp_skew_seconds") or 0))),
+        "future_skew_window_seconds": max(0, min(300, int(source.get("future_skew_window_seconds") or 0))),
+        "time_window_status": str(source.get("time_window_status") or "not_recorded")[:50],
+        "window_from": str(source.get("window_from") or "")[:50],
+        "window_to": str(source.get("window_to") or "")[:50],
         "searched_service": str(source.get("searched_service") or incident.service or "")[:90],
         "index_pattern": str(source.get("index_pattern") or "")[:160],
         "sample_field_names": [str(key)[:90] for key in (source.get("sample_field_names") or [])[:32]
