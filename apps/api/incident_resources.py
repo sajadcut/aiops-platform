@@ -141,6 +141,15 @@ async def get_host_discovery(incident_id: UUID):
         "time_window_status": str(source.get("time_window_status") or "not_recorded")[:50],
         "window_from": str(source.get("window_from") or "")[:50],
         "window_to": str(source.get("window_to") or "")[:50],
+        "search_strategy": (str(source.get("search_strategy") or "incident_window")[:32]
+                            if source.get("search_strategy") in {"incident_window", "bounded_historical"}
+                            else "unknown"),
+        "historical_lookup_status": str(source.get("historical_lookup_status") or "not_attempted")[:64],
+        "recent_lookup_status": str(source.get("recent_lookup_status") or "")[:64],
+        "historical_candidate_requires_live_verification": source.get(
+            "historical_candidate_requires_live_verification") is True,
+        "incident_window_from": str(source.get("incident_window_from") or "")[:50],
+        "incident_window_to": str(source.get("incident_window_to") or "")[:50],
         "searched_service": str(source.get("searched_service") or incident.service or "")[:90],
         "index_pattern": str(source.get("index_pattern") or "")[:160],
         "observed_schema_lookup": source.get("observed_schema_lookup") is True,
