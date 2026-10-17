@@ -2490,6 +2490,10 @@
         (discovery.index_pattern?'<p>'+
           esc(fa?'ایندکس مؤثر Elastic: ':'Effective Elastic index: ')+
           '<code>'+esc(discovery.index_pattern)+'</code></p>':'')+
+        (arr(discovery.sample_field_names).length?'<p>'+
+          esc(fa?'فیلدهای نمونه در ایندکس: ':'Sample index fields: ')+
+          arr(discovery.sample_field_names).slice(0,20).map(x=>'<code>'+esc(x)+'</code>').join(' · ')+
+          '</p>':'')+
         (discovery.verified_target?'<p><strong>'+
           esc(fa?'سرور تأییدشده: ':'Verified host: ')+
           esc(discovery.verified_target)+'</strong></p>':'')+
