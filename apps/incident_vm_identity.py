@@ -113,7 +113,9 @@ def vm_binding_diagnostic(service: str, evidence: list[dict],
                                        for x in blocking[:5]]}
     else:
         advisory = []
-    name = normalized_service(service)
+    checked_service = ServiceIdentityResolver.runtime_name_from_verified_mapping(
+        service, ctx, evidence)
+    name = normalized_service(checked_service)
     if not name or name == "unknown":
         return {"reason": "service_identity_missing", "candidate": None}
     for field in ("trigger_signal", "incident"):
@@ -194,10 +196,12 @@ async def resolve_vm_binding(
     if diagnosis.get("candidate") is None:
         return None, {"status": diagnosis["reason"], "evidence_refs": []}
     target = diagnosis["candidate"]
-    name = normalized_service(service)
+    runtime_service = ServiceIdentityResolver.runtime_name_from_verified_mapping(
+        service, ctx, evidence)
+    name = normalized_service(runtime_service)
     try:
         client = connector or VMEdgeMCPClient()
-        fresh = await client.service_status(target, name)
+        fresh = await client.service_status(target, runtime_service)
     except Exception as exc:
         return None, {"status": "vm_mcp_live_identity_check_failed",
                       "error_type": type(exc).__name__, "evidence_refs": diagnosis.get("evidence_refs", [])}
@@ -207,7 +211,9 @@ async def resolve_vm_binding(
     returned_target = _safe_target(fresh.get("target"))
     returned_service = normalized_service(fresh.get("service"))
     status = str(fresh.get("active_state") or "").strip().lower()
+    actual_unit = normalized_service(fresh.get("unit_id"))
     if (returned_target != target or returned_service != name
+        or (actual_unit and actual_unit != name)
         or status not in {"active", "failed", "inactive", "activating", "deactivating", "reloading"}
         or str(fresh.get("load_state") or "loaded").lower() not in {"loaded", ""}):
         return None, {"status": "vm_mcp_live_identity_mismatch",
