@@ -377,3 +377,41 @@ final query is still undecodable, it reports
 `response_format_unrecognized` rather than wrongly claiming zero
 matching application logs. Real target and service verification still
 requires allowlisted VM MCP with exact `service_status` identity.
+
+### Actual Kibana screenshot: Redis errors with host metadata
+
+An operator-provided Kibana Discover screenshot for 2026-10-17
+shows an Elasticsearch document around `08:10:53` (display timezone
+unspecified) with:
+
+- `host.name=apgfpdtnksa0101`
+- `host.ip=10.248.16.82`
+- `agent.hostname=apgfpdtnksa0101`
+- RedisConnectionException/RedisTimeoutException and "Connection refused"
+  inside `Properties.LogEntry.Message`
+
+**Do not assume** this screenshot document is causally connected to the
+11:01 UTC incident without matching service/time and independent evidence.
+
+Previously, ingestion searched only about 20 minutes preceding the alert
+and could miss the historical records in this screenshot. The ingestion
+gateway now attempts a second, bounded **six-hour lookback** only when
+the incident-time search finds no host. The retry uses the reported
+service plus only explicit, configured log aliases; it does not turn
+a generic unfiltered document or user-provided IP into an execution
+target. Historical hits are labeled `search_strategy=bounded_historical`
+and still require a fresh allowlisted VM MCP `service_status` response
+for the exact runtime unit. The API and Incident Room expose both the
+historical stage result and queried window.
+
+The Elastic adapter also retains all observed `host.name` and
+`host.ip` projection fields, reads `Properties.LogEntry.Message`,
+and decodes bounded JSON-string ES|QL tables in Kibana
+`structuredContent.result` or `content[].text`. A metadata-only
+`structuredContent` object must not hide a valid tabular result in
+`content[].text`.
+
+Regression tests cover delayed redis-log host discovery, live-only VM
+verification, and both MCP response formats. Real environment validation
+is still required; neither the screenshot nor unit tests are proof that
+the fresh incident was successfully bound.
