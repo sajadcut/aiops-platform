@@ -2503,6 +2503,15 @@
         esc(discovery.searched_service)+' · '+
         esc(fa?'رکوردهای برگشتی: ':'Matching records: ')+
         esc(discovery.result_count)+'</p>'+
+        ((discovery.observed_schema_lookup||Number(discovery.unrecognized_envelopes)>0)?
+          '<p>'+esc(fa?'بررسی ساختار واقعی ایندکس: ':'Observed index schema: ')+
+          esc(discovery.observed_schema_lookup?
+            (fa?'جست‌وجوی مجدد با فیلدهای واقعی انجام شد':'Schema-specific lookup attempted'):
+            (fa?'هنوز جست‌وجوی ساختاری اجرا نشده':'Schema-specific lookup not attempted'))+
+          ' · '+esc(fa?'پاسخ‌های غیرقابل‌تبدیل: ':'Unrecognized envelopes: ')+
+          esc(discovery.unrecognized_envelopes||0)+
+          ' · '+esc(fa?'جدول‌های خالی معتبر: ':'Recognized empty tables: ')+
+          esc(discovery.recognized_empty_envelopes||0)+'</p>':'')+
         (discovery.index_pattern?'<p>'+
           esc(fa?'ایندکس مؤثر Elastic: ':'Effective Elastic index: ')+
           '<code>'+esc(discovery.index_pattern)+'</code></p>':'')+
