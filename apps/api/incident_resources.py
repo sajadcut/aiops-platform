@@ -143,6 +143,9 @@ async def get_host_discovery(incident_id: UUID):
         "window_to": str(source.get("window_to") or "")[:50],
         "searched_service": str(source.get("searched_service") or incident.service or "")[:90],
         "index_pattern": str(source.get("index_pattern") or "")[:160],
+        "observed_schema_lookup": source.get("observed_schema_lookup") is True,
+        "unrecognized_envelopes": max(0, min(200, int(source.get("unrecognized_envelopes") or 0))),
+        "recognized_empty_envelopes": max(0, min(200, int(source.get("recognized_empty_envelopes") or 0))),
         "sample_field_names": [str(key)[:90] for key in (source.get("sample_field_names") or [])[:32]
                                if isinstance(key, str)],
         "index_probe": (str(source.get("index_probe") or "not_recorded")[:50]
