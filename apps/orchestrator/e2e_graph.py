@@ -377,12 +377,32 @@ class E2EOrchestrator:
                 "completed" if knowledge_status in {"available", "empty", "filtered_empty"}
                 else "skipped" if knowledge_status == "invalid_scope" else "failed",
             )
+        # Preserve independently verified, pre-ingest read-only VM status
+        # when the generic collector replaces its live-evidence object.
+        # Never promote unverified log hosts, RAG or LLM hypotheses.
+        seed_live = state.get("live_evidence") or {}
+        seed_rows = seed_live.get("evidence", []) if isinstance(seed_live, dict) else []
+        verified_seed = [
+            item for item in seed_rows
+            if isinstance(item, dict) and item.get("source") == "vm_mcp"
+            and isinstance(item.get("raw_data"), dict)
+            and item["raw_data"].get("diagnostic") == "service_status"
+            and item["raw_data"].get("success") is True
+        ]
         try:
             since = datetime.now(timezone.utc) - timedelta(seconds=settings.AGENT_INITIAL_EVIDENCE_WINDOW_SECONDS)
             state["live_evidence"] = await self.evidence_collector.collect(service, since)
         except Exception as exc:
             logger.warning("live_evidence_collection_failed", error_type=type(exc).__name__)
             state["live_evidence"] = {"service": service, "evidence": [], "error": type(exc).__name__}
+        current_rows = list(state["live_evidence"].get("evidence") or [])
+        seen_refs = {str(item.get("reference") or "") for item in current_rows if isinstance(item, dict)}
+        for item in verified_seed:
+            reference = str(item.get("reference") or "")
+            if reference and reference not in seen_refs:
+                current_rows.append(item)
+                seen_refs.add(reference)
+        state["live_evidence"]["evidence"] = current_rows
 
         memory_query = self._operational_memory_query(
             service=service,
