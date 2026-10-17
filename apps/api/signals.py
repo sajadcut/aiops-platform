@@ -228,7 +228,17 @@ async def ingest_elasticsearch_anomaly(
     body: ElasticAnomalyWebhookPayload,
     _user=Depends(require_permission("ingest:signal")),
 ):
-    return await _ingest_elastic_anomaly(body.model_dump(mode="json"))
+    original = body.model_dump(mode="json", exclude_unset=True)
+    # Custom Elastic rule/threshold webhooks may use {"payload": {...}}.
+    # Do not silently parse them as ML jobs: that drops service and severity.
+    candidate = original.get("payload") if isinstance(original.get("payload"), dict) else original
+    event = candidate.get("event")
+    if (isinstance(event, dict) and not isinstance(candidate.get("anomaly"), dict)
+            and (candidate.get("message") or event.get("action"))):
+        signal = signal_from_elasticsearch(candidate)
+        signal.raw_data["_received_payload"] = capture_received_signal(original)
+        return await _ingest(signal)
+    return await _ingest_elastic_anomaly(original)
 
 
 @router.post("/signals/prometheus/alertmanager", dependencies=[Depends(rate_limiter_strict)])
