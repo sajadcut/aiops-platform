@@ -109,6 +109,71 @@ class SignalGateway:
         return state
 
     @staticmethod
+    async def _verify_elastic_host_candidate(service: str, discovery: Dict[str, Any]) -> list[Dict[str, Any]]:
+        """Verify one log host with a read-only service_status on an *allowlisted* VM.
+
+        A log shipper hostname or an LLM suggestion never grants an action target.
+        Verification proves only service identity and current state; writes still
+        require the independent incident binding, policy and human Approval.
+        """
+        candidates = discovery.get("candidates") or []
+        if len(candidates) != 1 or not settings.VM_MCP_URL:
+            return []
+        candidate = candidates[0]
+        allowed = {str(value).strip().casefold() for value in settings.SSH_ALLOWED_TARGETS if str(value).strip()}
+        possible = list(candidate.get("ip_addresses") or []) + [candidate.get("hostname")]
+        target = next((str(item).strip() for item in possible
+                       if str(item or "").strip().casefold() in allowed), None)
+        if not target:
+            candidate["verification_status"] = "candidate_target_not_allowlisted"
+            return []
+        from integrations.vm.mcp_client import VMEdgeMCPClient
+        client = None
+        try:
+            client = VMEdgeMCPClient()
+            result = await asyncio.wait_for(
+                client.service_status(target, service),
+                timeout=max(3.0, min(20.0, float(settings.MCP_TIMEOUT_SECONDS))),
+            )
+            if not isinstance(result, dict):
+                candidate["verification_status"] = "vm_result_malformed"
+                return []
+            returned_service = str(result.get("service") or "").strip().casefold().removesuffix(".service")
+            returned_target = str(result.get("target") or "").strip().casefold()
+            active = str(result.get("active_state") or "").strip().lower()
+            load = str(result.get("load_state") or "").strip().lower()
+            if (result.get("success") is not True or returned_service != service.casefold().removesuffix(".service")
+                    or returned_target != target.casefold()
+                    or load != "loaded"
+                    or active not in {"active", "failed", "inactive", "activating", "deactivating", "reloading"}):
+                candidate["verification_status"] = "vm_service_identity_not_confirmed"
+                return []
+            candidate["verification_status"] = "verified_read_only"
+            discovery["status"] = "verified_by_vm_mcp"
+            discovery["verified_target"] = target
+            return [{
+                "type": "telemetry", "source": "vm_mcp",
+                "reference": f"elastic-discovery-vm:{target}:{service}",
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "raw_data": {
+                    "diagnostic": "service_status", "success": True,
+                    "target": target, "service": service,
+                    "active_state": active, "load_state": load,
+                    "sub_state": str(result.get("sub_state") or "")[:60],
+                },
+            }]
+        except Exception as exc:
+            candidate["verification_status"] = "vm_read_failed"
+            logger.warning("elastic_host_candidate_vm_verify_failed", error_type=type(exc).__name__)
+            return []
+        finally:
+            if client is not None:
+                try:
+                    await client.close()
+                except Exception:
+                    logger.debug("elastic_host_vm_client_close_failed")
+
+    @staticmethod
     async def _knowledge_assisted_asset(signal: OperationalSignal, trigger_evidence: Dict[str, Any]) -> Dict[str, Any]:
         live_asset = AssetIdentityResolver.resolve([trigger_evidence], signal.service)
         incident = {
@@ -187,6 +252,7 @@ class SignalGateway:
             expected_fqdns=expected_fqdns,
         )
         host_discovery: Dict[str, Any] = {"status": "not_requested", "candidates": [], "result_count": 0}
+        host_verification_evidence: list[Dict[str, Any]] = []
         if signal.source == "elasticsearch" and ServiceIdentityResolver.known(signal.service):
             # Read-only log-host discovery at ingest time, *before* RCA routing.
             # Future-skewed webhook timestamps must not shift the query into
@@ -209,7 +275,12 @@ class SignalGateway:
                 }
             finally:
                 if connector is not None:
-                    await connector.close()
+                    try:
+                        await connector.close()
+                    except Exception:
+                        logger.debug("elastic_host_discovery_client_close_failed")
+            host_verification_evidence = await SignalGateway._verify_elastic_host_candidate(
+                str(signal.service), host_discovery)
             logger.info(
                 "elastic_ingest_host_discovery",
                 service=signal.service, status=host_discovery["status"],
@@ -219,6 +290,7 @@ class SignalGateway:
         return {
             "asset_context": resolution["asset_context"],
             "host_discovery": host_discovery,
+            "host_verification_evidence": host_verification_evidence,
             "service_identity": resolution["service_identity"],
             "live_asset_context": live_asset,
             "topology_context": resolution["topology_context"],
@@ -358,7 +430,7 @@ class SignalGateway:
                 "related_signals": [],
                 "trigger_signal": signal.model_dump(mode="json"),
                 "trigger_evidence": [trigger_evidence],
-                "evidence": [trigger_evidence],
+                "evidence": [trigger_evidence] + list(discovery.get("host_verification_evidence") or []),
             },
             "messages": [],
             "findings": [],
