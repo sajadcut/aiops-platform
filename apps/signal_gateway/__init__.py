@@ -304,6 +304,10 @@ class SignalGateway:
                 returned_target = str(result.get("target") or "").strip().casefold()
                 active = str(result.get("active_state") or "").strip().lower()
                 load = str(result.get("load_state") or "").strip().lower()
+                unit_id = str(result.get("unit_id") or "").strip().casefold().removesuffix(".service")
+                if unit_id and unit_id != runtime_service.casefold().removesuffix(".service"):
+                    candidate["verification_status"] = "vm_canonical_unit_mismatch"
+                    continue
                 if (result.get("success") is not True
                         or returned_service != runtime_service.casefold().removesuffix(".service")
                         or returned_target != target.casefold()
@@ -330,6 +334,7 @@ class SignalGateway:
                         "target": target, "service": runtime_service,
                         "source_service_label": service,
                         "active_state": active, "load_state": load,
+                        "unit_id": str(result.get("unit_id") or "")[:128] or None,
                         "sub_state": str(result.get("sub_state") or "")[:60],
                     },
                 }]
