@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 555 | Dashboard JS files scanned: 8 | Symbols indexed: 6256**
+**Python files scanned: 555 | Dashboard JS files scanned: 8 | Symbols indexed: 6258**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -4881,6 +4881,8 @@
 | `tests/unit/test_incident_vm_identity_recovery.py` | `test_live_recheck_rejects_mismatched_canonical_unit_id` | 419 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_incident_vm_identity_recovery.py` | `test_live_recheck_rejects_mismatched_canonical_unit_id.FakeVM` | 430 | class | کلاس | test_live_recheck_rejects_mismatched_canonical_unit_id |
 | `tests/unit/test_incident_vm_identity_recovery.py` | `test_live_recheck_rejects_mismatched_canonical_unit_id.FakeVM.service_status` | 431 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_live_recheck_rejects_mismatched_canonical_unit_id.FakeVM |
+| `tests/unit/test_incident_vm_identity_recovery.py` | `test_vm_worker_service_status_returns_actual_systemd_id` | 442 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_vm_identity_recovery.py` | `test_vm_worker_service_status_returns_actual_systemd_id.fake_run` | 450 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_vm_worker_service_status_returns_actual_systemd_id |
 | `tests/unit/test_independent_service_recovery.py` | `_decision` | 16 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_independent_service_recovery.py` | `test_two_vm_observations_and_vendor_pass_can_confirm_service_down_recovery` | 27 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_independent_service_recovery.py` | `test_unverifiable_recovery_keeps_incident_open` | 49 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
