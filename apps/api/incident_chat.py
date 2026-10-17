@@ -513,7 +513,7 @@ async def recheck_incident_service_status(
         # longitudinal stability checks and left the UI in perpetual Crash.
         safe_observation = _bound_systemd_observation(
             observation, target=(binding or {}).get("target") or "",
-            service=incident.service,
+            service=(binding or {}).get("service") or incident.service,
         )
         success = safe_observation is not None
         if success:
@@ -540,7 +540,7 @@ async def recheck_incident_service_status(
             if not any(str(event.get("event_id")) == record["event_id"] for event in history):
                 history = [*history, record]
             checked = _observed_status(
-                incident.service, binding["target"], evidence, history,
+                binding["service"], binding["target"], evidence, history,
             )
             # Read-only rechecks may reconcile a *verified systemd Service Down*
             # incident, but never infer that a missing Zabbix webhook arrived.
@@ -556,14 +556,14 @@ async def recheck_incident_service_status(
                 await asyncio.sleep(1.0)
                 client = VMEdgeMCPClient()
                 try:
-                    second = await client.service_status(binding["target"], incident.service)
+                    second = await client.service_status(binding["target"], binding["service"])
                 except Exception:
                     second = None
                 vendor_valid = None
                 if (isinstance(second, dict) and second.get("success") is True
-                        and str(incident.service).lower().removesuffix(".service") == "nginx"):
+                        and str(binding["service"]).lower().removesuffix(".service") == "nginx"):
                     try:
-                        vendor = await client.config_validate(binding["target"], incident.service)
+                        vendor = await client.config_validate(binding["target"], binding["service"])
                         vendor_valid = (
                             vendor.get("success") is True
                             and vendor.get("supported") is True
@@ -574,7 +574,7 @@ async def recheck_incident_service_status(
                 verdict = local_recovery_decision(
                     source=str(incident.source or ""),
                     summary=str(incident.summary or ""),
-                    service=str(incident.service or ""),
+                    service=str(binding["service"]),
                     context=incident.context or {},
                     first=safe_observation, second=second,
                     target=binding["target"], vendor_syntax_ok=vendor_valid,
@@ -598,7 +598,7 @@ async def recheck_incident_service_status(
                     verdict = local_recovery_decision(
                         source=str(current.source or ""),
                         summary=str(current.summary or ""),
-                        service=str(current.service or ""),
+                        service=str(binding["service"]),
                         context=current_ctx,
                         first=safe_observation, second=second,
                         target=binding["target"], vendor_syntax_ok=vendor_valid,
