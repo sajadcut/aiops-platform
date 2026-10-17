@@ -93,9 +93,11 @@ def vm_binding(service: str, evidence: list[dict], context: dict | None = None) 
             continue
         action = str(raw.get("diagnostic") or "")
         bound_service = str(raw.get("service") or "").lower().removesuffix(".service")
+        canonical_unit = str(raw.get("unit_id") or "").strip().lower().removesuffix(".service")
         target = str(raw.get("target") or "").strip()
         if (action not in trustworthy or raw.get("success") is not True
-                or bound_service != name or not target):
+                or bound_service != name or (canonical_unit and canonical_unit != name)
+                or not target):
             continue
         # Never accept incidental values or incomplete/failed probe outputs
         # as a fresh enough operational fact for authorization.
