@@ -345,3 +345,35 @@ Regression cases live in
 a fresh incident from the actual deployed configuration and should
 include the exact index, read-only ES|QL match, actual hostname/IP,
 working VM MCP, valid SSH allowlist and systemd unit.
+
+### GFP Serilog schema discovered in 2026-10-17 11:01 UTC incident
+
+Actual read-only Incident Room diagnostics for incident
+`e47675c2-b30b-49d8-b41c-61b1f5bf515f` confirmed:
+
+- Effective index `1m-digitaloperation-gfpapi-*` and `index_probe=has_rows`.
+- The index's field names include `Properties.MachineName`,
+  `Properties.ServiceName`, `Properties.ServiceName.keyword`,
+  `Properties.ApplicationName`, `Timestamp`, `@timestamp`,
+  and `agent.hostname`. Values of this probe remain hidden.
+- Ten generic service ES|QL queries returned HTTP 200 yet no decodable
+  matching rows; all ten result envelopes were unrecognized. This is
+  **not proof that service/time has no matching data**.
+- No host candidates or VM `service_status` read were produced; the
+  downstream `verified_target_not_in_incident_evidence` / HTTP 409
+  followed from absent verified evidence.
+
+A failed generic ECS lookup now runs an additional **service-and-time
+filtered** retry using only observed, allowlisted column names. On this
+schema it prefers `Properties.ServiceName` and
+`Properties.ServiceName.keyword` for service lookup and
+`Properties.MachineName` to discover a candidate host; `Timestamp`
+is an alternative time field. It never authorizes any VM target from the
+unfiltered index sample and never copies sample values to logs/API.
+
+The Incident Room exposes whether the observed-schema retry ran and the
+counts of recognized-empty and unrecognized result envelopes. If the
+final query is still undecodable, it reports
+`response_format_unrecognized` rather than wrongly claiming zero
+matching application logs. Real target and service verification still
+requires allowlisted VM MCP with exact `service_status` identity.
