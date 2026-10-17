@@ -164,11 +164,11 @@ class SignalGateway:
         elif len(reverse) > 1:
             # Ambiguous operator configuration: do not guess the systemd unit.
             aliases = []
-        choices = [reported]
-        for alias in aliases:
-            if (re.fullmatch(r"[A-Za-z0-9@_.:-]{2,128}", alias)
-                    and alias.casefold() not in {s.casefold() for s in choices}):
-                choices.append(alias)
+        choices: list[str] = []
+        for name in [*aliases, reported]:
+            if (re.fullmatch(r"[A-Za-z0-9@_.:-]{2,128}", name)
+                    and name.casefold() not in {s.casefold() for s in choices}):
+                choices.append(name)
             if len(choices) >= 4:
                 break
         return choices
