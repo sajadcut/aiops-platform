@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+
 from domain.contracts.config import settings
 from apps.signal_gateway.elastic_anomaly import (
     classify_elastic_anomaly_lifecycle,
@@ -121,3 +123,74 @@ def test_native_json_arrays_from_asjson_webhook_are_normalized():
     assert normalized["anomaly"]["job_ids"] == ["payment-latency-job"]
     assert normalized["anomaly"]["top_influencers"][0]["influencer_field_value"] == "payment-api"
     assert normalized["anomaly"]["top_records"][0]["field_name"] == "response_time"
+
+
+@pytest.mark.asyncio
+async def test_nested_threshold_webhook_is_not_silently_misclassified_as_ml(monkeypatch):
+    from apps.api import signals as api
+    import pytest
+    # Use the actual endpoint with an in-memory ingestion boundary, no DB/MCP.
+    sample = {
+        "payload": {
+            "id": "query matched", "service": "GFP_Backend",
+            "severity": "high",
+            "message": "GFP Redis errors reached at least 10 events in the last 2 minutes.",
+            "event": {"kind": "alert", "action": "redis_error_threshold",
+                      "correlation_key": "GFP_Backend:redis"},
+            "rule": {"name": "GFP Redis Error Threshold - AIOps"},
+            "observed_count": "443",
+            "timestamp": "2026-10-17T08:57:46Z",
+        }
+    }
+    seen = []
+    async def fake_ingest(signal):
+        seen.append(signal)
+        return {"status": "accepted", "incident_id": "test"}
+    async def must_not_use_ml(_):
+        raise AssertionError("Custom threshold was routed to ML anomaly handler")
+    monkeypatch.setattr(api, "_ingest", fake_ingest)
+    monkeypatch.setattr(api, "_ingest_elastic_anomaly", must_not_use_ml)
+    body = api.ElasticAnomalyWebhookPayload(**sample)
+    response = await api.ingest_elasticsearch_anomaly(None, body, _user=None)
+    assert response["incident_id"] == "test"
+    signal = seen[0]
+    assert signal.service == "GFP_Backend"  # no speculative rename to gfpapi
+    assert signal.severity == "high"
+    assert signal.signal_type == "redis_error_threshold"
+    assert signal.correlation_key == "GFP_Backend:redis"
+    assert "Redis errors" in signal.summary
+    assert signal.raw_data["_received_payload"] is not None
+
+
+@pytest.mark.asyncio
+async def test_generic_threshold_duplicate_identity_requires_event_context():
+    from apps.signal_gateway import signal_from_elasticsearch
+    template = {
+        "id": "query matched", "service": "GFP_Backend",
+        "message": "GFP Redis errors reached 10 events",
+        "event": {"action": "redis_error_threshold"},
+        "timestamp": "2026-10-17T08:53:00Z", "observed_count": "443",
+    }
+    original = signal_from_elasticsearch(template)
+    repeated = signal_from_elasticsearch(dict(template))
+    changed = signal_from_elasticsearch({**template, "timestamp": "2026-10-17T08:58:00Z"})
+    assert original.source_id == repeated.source_id
+    assert original.source_id != changed.source_id
+    assert original.source_id.startswith("elastic-event:")
+
+
+@pytest.mark.asyncio
+async def test_nested_ml_webhook_still_uses_ml_lifecycle(monkeypatch):
+    from apps.api import signals as api
+    recorded = []
+    async def fake_ml(payload):
+        recorded.append(payload)
+        return {"incident_id": "ml-test", "trigger_source": "elasticsearch"}
+    async def never_generic(_):
+        raise AssertionError("ML event routed as generic signal")
+    monkeypatch.setattr(api, "_ingest_elastic_anomaly", fake_ml)
+    monkeypatch.setattr(api, "_ingest", never_generic)
+    response = await api.ingest_elasticsearch_anomaly(
+        None, api.ElasticAnomalyWebhookPayload(payload=_active_payload()), _user=None)
+    assert response["incident_id"] == "ml-test"
+    assert recorded[0]["anomaly"]["score"] == "82.5"
