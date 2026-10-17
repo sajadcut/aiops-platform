@@ -388,3 +388,79 @@ async def test_index_probe_distinguishes_wrong_service_filter_from_empty_index(m
         assert seen[-1] == "FROM 1m-digitaloperation-gfpapi-* | LIMIT 1"
     finally:
         await client.close()
+
+
+def test_elastic_future_window_covers_clock_skew_but_is_bounded(monkeypatch):
+    from datetime import timedelta
+    from apps.signal_gateway import SignalGateway
+    from domain.contracts.config import settings
+    monkeypatch.setattr(settings, "ELASTIC_ANOMALY_CONTEXT_LOOKAHEAD_SECONDS", 300)
+    now = datetime(2026, 10, 17, 10, 15, tzinfo=timezone.utc)
+    ahead = now + timedelta(seconds=273)
+    since, until, meta = SignalGateway._elastic_discovery_window(ahead, now)
+    assert since == now - timedelta(minutes=20)
+    assert ahead < until <= now + timedelta(minutes=5)
+    assert meta["timestamp_skew_seconds"] == 273
+    assert meta["time_window_status"] == "future_skew_included"
+    late = now - timedelta(hours=1)
+    prior, end, _ = SignalGateway._elastic_discovery_window(late, now)
+    assert prior == late - timedelta(minutes=20)
+    assert end == now
+    _, capped, _ = SignalGateway._elastic_discovery_window(
+        now + timedelta(days=5), now)
+    assert capped == now + timedelta(minutes=5)
+
+
+@pytest.mark.asyncio
+async def test_elastic_host_ip_only_is_discovered_when_host_name_unmapped(monkeypatch):
+    client = ElasticsearchMCPClient()
+    queries = []
+    async def fake_tool(name, arguments):
+        query = arguments["query"]
+        queries.append(query)
+        if chr(96) + "host.name" + chr(96) in query:
+            raise ValueError("missing host.name mapping")
+        if chr(96) + "host.ip" + chr(96) in query:
+            return {"structuredContent": {"rows": [{
+                "@timestamp": "2026-10-17T10:15:00Z",
+                "service.name": "gfpapi", "host.ip": "10.0.0.10"
+            }]}}
+        return {"structuredContent": {"rows": []}}
+    monkeypatch.setattr(client, "call_tool", fake_tool)
+    try:
+        report = await client.discover_service_hosts(
+            "gfpapi", datetime(2026, 10, 17, 10, 0, tzinfo=timezone.utc))
+        assert report["status"] == "candidates_found"
+        assert report["candidates"][0]["hostname"] == "10.0.0.10"
+        assert report["candidates"][0]["ip_addresses"] == ["10.0.0.10"]
+        assert any(chr(96) + "host.ip" + chr(96) in query
+                   and chr(96) + "host.name" + chr(96) not in query for query in queries)
+    finally:
+        await client.close()
+
+
+@pytest.mark.asyncio
+async def test_explicit_reverse_elastic_alias_gets_used_in_esql(monkeypatch):
+    from domain.contracts.config import settings
+    monkeypatch.setattr(settings, "ELASTIC_SERVICE_DISCOVERY_ALIASES",
+                        {"gfpapi": ["GFP_Backend"]})
+    client = ElasticsearchMCPClient()
+    queries = []
+    async def fake_tool(name, arguments):
+        query = arguments["query"]
+        queries.append(query)
+        if '"gfpapi"' in query:
+            return {"structuredContent": {"rows": [{
+                "@timestamp": "2026-10-17T10:15:00Z",
+                "service.name": "gfpapi", "host.name": "app-1"
+            }]}}
+        return {"structuredContent": {"rows": []}}
+    monkeypatch.setattr(client, "call_tool", fake_tool)
+    try:
+        logs = await client.get_logs(
+            "GFP_Backend", datetime(2026, 10, 17, 10, 0, tzinfo=timezone.utc))
+        assert len(logs) == 1
+        assert logs[0].service == "gfpapi"
+        assert any('"gfpapi"' in query for query in queries)
+    finally:
+        await client.close()
