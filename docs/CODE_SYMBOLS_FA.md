@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 555 | Dashboard JS files scanned: 8 | Symbols indexed: 6143**
+**Python files scanned: 555 | Dashboard JS files scanned: 8 | Symbols indexed: 6147**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -4126,6 +4126,10 @@
 | `tests/unit/test_elastic_mcp_wire_tool.py` | `test_elastic_mcp_wire_tool_allowlist_and_discovery.fake_request` | 16 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_elastic_mcp_wire_tool_allowlist_and_discovery |
 | `tests/unit/test_elastic_mcp_wire_tool.py` | `test_elastic_get_logs_calls_actual_esql_wire_tool` | 48 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_elastic_mcp_wire_tool.py` | `test_elastic_get_logs_calls_actual_esql_wire_tool.fake_call_tool` | 52 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_elastic_get_logs_calls_actual_esql_wire_tool |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_discovery_finds_host_without_authorizing_vm` | 72 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_discovery_finds_host_without_authorizing_vm.fake_tool` | 74 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_discovery_finds_host_without_authorizing_vm |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_alias_lookup_is_opt_in_and_does_not_rename_service` | 98 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_alias_lookup_is_opt_in_and_does_not_rename_service.fake_tool` | 104 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_alias_lookup_is_opt_in_and_does_not_rename_service |
 | `tests/unit/test_ephemeral_config_guard.py` | `test_ephemeral_script_has_valid_posix_syntax_and_only_trusted_static_code` | 18 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_ephemeral_config_guard.py` | `test_ephemeral_config_payload_cannot_inject_shell_syntax` | 40 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_ephemeral_config_guard.py` | `test_ephemeral_builder_rejects_untrusted_operation_or_metadata` | 62 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
