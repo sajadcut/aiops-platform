@@ -238,7 +238,7 @@ async def ingest_elasticsearch_anomaly(
         signal = signal_from_elasticsearch(candidate)
         signal.raw_data["_received_payload"] = capture_received_signal(original)
         return await _ingest(signal)
-    return await _ingest_elastic_anomaly(original)
+    return await _ingest_elastic_anomaly(candidate if isinstance(original.get("payload"), dict) else original)
 
 
 @router.post("/signals/prometheus/alertmanager", dependencies=[Depends(rate_limiter_strict)])
