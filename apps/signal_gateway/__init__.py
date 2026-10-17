@@ -415,6 +415,8 @@ class SignalGateway:
             "incident_id": incident_id,
             "service_name": resolved_service,
             "evidence_summary": f"Trigger source={signal.source}; type={signal.signal_type}; severity={signal.severity}; {signal.summary}",
+            # Persist the independent VM read before the graph can overwrite its live collection.
+            "live_evidence": {"evidence": list(discovery.get("host_verification_evidence") or [])},
             "context": {
                 "incident": incident_context,
                 "service": resolved_service,
