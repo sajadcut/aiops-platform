@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 555 | Dashboard JS files scanned: 8 | Symbols indexed: 6196**
+**Python files scanned: 555 | Dashboard JS files scanned: 8 | Symbols indexed: 6201**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -4179,6 +4179,11 @@
 | `tests/unit/test_elastic_mcp_wire_tool.py` | `test_elastic_host_ip_only_is_discovered_when_host_name_unmapped.fake_tool` | 418 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_elastic_host_ip_only_is_discovered_when_host_name_unmapped |
 | `tests/unit/test_elastic_mcp_wire_tool.py` | `test_explicit_reverse_elastic_alias_gets_used_in_esql` | 443 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_elastic_mcp_wire_tool.py` | `test_explicit_reverse_elastic_alias_gets_used_in_esql.fake_tool` | 449 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_explicit_reverse_elastic_alias_gets_used_in_esql |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_verified_runtime_alias_requires_exact_vm_evidence_and_config` | 470 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_verified_runtime_alias_requires_exact_vm_evidence_and_config.FakeVM` | 483 | class | کلاس | test_verified_runtime_alias_requires_exact_vm_evidence_and_config |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_verified_runtime_alias_requires_exact_vm_evidence_and_config.FakeVM.service_status` | 484 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_verified_runtime_alias_requires_exact_vm_evidence_and_config.FakeVM |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_verified_runtime_alias_requires_exact_vm_evidence_and_config.FakeVM.close` | 490 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_verified_runtime_alias_requires_exact_vm_evidence_and_config.FakeVM |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_ambiguous_reverse_runtime_alias_does_not_guess` | 530 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_ephemeral_config_guard.py` | `test_ephemeral_script_has_valid_posix_syntax_and_only_trusted_static_code` | 18 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_ephemeral_config_guard.py` | `test_ephemeral_config_payload_cannot_inject_shell_syntax` | 40 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_ephemeral_config_guard.py` | `test_ephemeral_builder_rejects_untrusted_operation_or_metadata` | 62 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
