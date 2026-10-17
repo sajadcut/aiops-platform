@@ -415,3 +415,38 @@ Regression tests cover delayed redis-log host discovery, live-only VM
 verification, and both MCP response formats. Real environment validation
 is still required; neither the screenshot nor unit tests are proof that
 the fresh incident was successfully bound.
+
+### 2026-10-17 11:26 UTC: canonical systemd name versus alert label
+
+The latest GFP Redis incident discovered 40 matching Elastic rows and one
+allowlisted IP host. A live VM MCP SSH connection succeeded, but the worker
+received the alert label `GFP_Backend` and reported a loaded, deactivating
+systemd service whose status banner identified `gfpapi.service`. The original
+ingest classified `GFP_Backend` as independently verified. Subsequent
+Incident Room rechecks sent a lowercased `gfp_backend`, which the worker's
+case-sensitive `SSH_ALLOWED_SERVICES` correctly rejected
+(`vm_service_not_allowed`). This was a real cross-stage unit identity bug,
+not a missing Elastic record or SSH network failure.
+
+**Resolution:** the VM MCP worker includes systemd's canonical `Id` in its
+read-only `service_status` result as `unit_id`. Candidate verification
+prefers explicitly configured runtime aliases (for this deployment,
+`gfpapi`) before the log label, rejects a mismatched canonical Id, and
+records the original source label separately. Incident identity binding,
+manual status recheck and second verification use the VM-verified actual
+runtime unit. Stored evidence with an explicitly contradictory unit Id
+is not sufficient for binding. Worker allowlist errors are reported as
+policy-denied rather than generic connectivity failures.
+
+Use an operator-approved mapping, such as
+`ELASTIC_SERVICE_DISCOVERY_ALIASES={"gfpapi":["GFP_Backend"]}`, on the
+Control Plane. The worker must explicitly allow `gfpapi`. Update and
+restart **both** separate processes; older incident snapshots are not
+automatically rewritten or promoted from an unverified source label.
+Live acceptance requires a new incident and a VM-verified
+`verified_runtime_service=gfpapi`, with `unit_id=gfpapi.service`.
+
+The log showed a separate remote-clock concern: the target's systemd
+status printed a timestamp about 4.5 minutes ahead of the Control Plane
+timestamp. NTP/clock alignment should be checked independently rather
+than mutating event timestamps or silently extending authorization.
