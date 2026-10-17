@@ -162,7 +162,9 @@ class ElasticsearchMCPClient(MCPClient):
                 # projection independently of the service lookup field.
                 projections = (
                     f"@timestamp, message, `host.name`, `host.ip`, `{field}`",
+                    f"@timestamp, `host.name`, `host.ip`, `{field}`",
                     f"@timestamp, `host.name`, `{field}`",
+                    f"@timestamp, `host.ip`, `{field}`",
                     f"@timestamp, message, `{field}`",
                     f"@timestamp, `{field}`",
                 )
@@ -234,22 +236,40 @@ class ElasticsearchMCPClient(MCPClient):
             return {"status": "service_unknown", "candidates": [], "result_count": 0}
         logs = await self.get_logs(service, since, until, limit=40)
         hosts: dict[str, dict[str, Any]] = {}
+        import ipaddress
         for log in logs:
             raw = log.raw_data if isinstance(log.raw_data, dict) else {}
             host = raw.get("host")
             if not isinstance(host, dict):
                 host = {}
             hostname = str(raw.get("host.name") or host.get("name") or "").strip()
-            if not hostname or len(hostname) > 253:
+            raw_ips = raw.get("host.ip") or host.get("ip") or []
+            if isinstance(raw_ips, str):
+                raw_ips = [raw_ips]
+            ips: list[str] = []
+            if isinstance(raw_ips, list):
+                for value in raw_ips[:6]:
+                    try:
+                        ip = ipaddress.ip_address(str(value).strip())
+                        if not (ip.is_loopback or ip.is_unspecified or ip.is_multicast):
+                            ips.append(str(ip))
+                    except ValueError:
+                        continue
+            if len(hostname) > 253:
+                hostname = ""
+            # Explicit IP-only ECS logs are useful discovery candidates too;
+            # never derive a host from a message, LLM or an index-wide probe.
+            key = hostname or (ips[0] if ips else "")
+            if not key:
                 continue
-            ips = raw.get("host.ip") or host.get("ip") or []
-            if isinstance(ips, str):
-                ips = [ips]
-            ips = [str(ip) for ip in ips[:6]] if isinstance(ips, list) else []
-            candidate = hosts.setdefault(hostname, {
-                "hostname": hostname, "ip_addresses": ips,
-                "source": "elasticsearch", "status": "candidate", "record_count": 0,
+            candidate = hosts.setdefault(key.casefold(), {
+                "hostname": key, "ip_addresses": [],
+                "source": "elasticsearch", "status": "candidate",
+                "record_count": 0,
             })
+            for ip in ips:
+                if ip not in candidate["ip_addresses"]:
+                    candidate["ip_addresses"].append(ip)
             candidate["record_count"] += 1
         # A transport-level HTTP 200 doesn't prove a service/time match.
         # Probe one document from the operator-configured index (without
