@@ -360,3 +360,79 @@ async def test_recheck_refuses_ambiguous_target_and_makes_no_remote_call(monkeyp
         )
     assert exc.value.status_code == 409
     assert exc.value.detail["reason"] == "conflicting_vm_targets"
+
+
+@pytest.mark.asyncio
+async def test_verified_elastic_alias_uses_canonical_unit_in_live_recheck(monkeypatch):
+    from apps.context_service.service_identity import ServiceIdentityResolver
+    from domain.contracts.config import settings
+    monkeypatch.setattr(settings, "ELASTIC_SERVICE_DISCOVERY_ALIASES",
+                        {"gfpapi": ["GFP_Backend"]})
+    proof = {
+        "source": "vm_mcp",
+        "reference": "elastic-discovery-vm:10.248.16.82:gfpapi",
+        "raw_data": {
+            "diagnostic": "service_status", "success": True,
+            "target": "10.248.16.82", "service": "gfpapi",
+            "source_service_label": "GFP_Backend",
+            "load_state": "loaded", "active_state": "deactivating",
+            "unit_id": "gfpapi.service",
+        },
+    }
+    mapping = {
+        "source_service": "GFP_Backend", "runtime_service": "gfpapi",
+        "target": "10.248.16.82", "evidence_reference": proof["reference"],
+        "verification": "vm_mcp_service_status",
+    }
+    context = {"verified_runtime_mapping": mapping,
+               "trigger_signal": {"source": "elasticsearch",
+                                  "payload": {"service": "GFP_Backend"}}}
+    assert ServiceIdentityResolver.runtime_name_from_verified_mapping(
+        "GFP_Backend", context, [proof]) == "gfpapi"
+    assert vm_binding("GFP_Backend", [proof], context)["service"] == "gfpapi"
+    assert vm_binding_diagnostic("GFP_Backend", [proof], context)["candidate"] == "10.248.16.82"
+
+    called = []
+    class FakeVM:
+        async def service_status(self, target, service):
+            called.append((target, service))
+            return {
+                "success": True, "target": target, "service": service,
+                "unit_id": "gfpapi.service", "load_state": "loaded",
+                "active_state": "deactivating", "sub_state": "stop-sigterm",
+            }
+    binding, result = await resolve_vm_binding(
+        "GFP_Backend", [proof], context, connector=FakeVM(), force_live=True,
+    )
+    assert called == [("10.248.16.82", "gfpapi")]
+    assert binding["service"] == "gfpapi"
+    assert result["status"] == "verified_from_live_vm_mcp"
+
+    # An incident with only the alert label and no same-incident proof
+    # cannot infer or authorize the canonical unit.
+    assert ServiceIdentityResolver.runtime_name_from_verified_mapping(
+        "GFP_Backend", context, []) == "GFP_Backend"
+    assert vm_binding("GFP_Backend", [], context) is None
+
+
+@pytest.mark.asyncio
+async def test_live_recheck_rejects_mismatched_canonical_unit_id(monkeypatch):
+    from domain.contracts.config import settings
+    monkeypatch.setattr(settings, "ELASTIC_SERVICE_DISCOVERY_ALIASES",
+                        {"gfpapi": ["GFP_Backend"]})
+    proof = vm_fact(
+        service="gfpapi", source_service_label="GFP_Backend",
+        load_state="loaded", active_state="failed", unit_id="gfpapi.service")
+    mapping = {"source_service": "GFP_Backend", "runtime_service": "gfpapi",
+               "target": "10.248.16.82", "evidence_reference": proof["reference"],
+               "verification": "vm_mcp_service_status"}
+    context = {"verified_runtime_mapping": mapping}
+    class FakeVM:
+        async def service_status(self, target, service):
+            return {"success": True, "target": target, "service": service,
+                    "unit_id": "other.service", "load_state": "loaded",
+                    "active_state": "active"}
+    binding, diagnostic = await resolve_vm_binding(
+        "GFP_Backend", [proof], context, connector=FakeVM(), force_live=True)
+    assert binding is None
+    assert diagnostic["status"] == "vm_mcp_live_identity_mismatch"
