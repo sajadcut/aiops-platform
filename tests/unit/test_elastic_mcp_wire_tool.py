@@ -823,8 +823,10 @@ async def test_gfp_serilog_keeps_host_ip_and_verifies_allowlisted_ip_not_unliste
     class FakeVM:
         async def service_status(self, target, service):
             seen_statuses.append((target, service))
-            return {"success": True, "target": target, "service": service,
-                    "load_state": "loaded", "active_state": "active"}
+            return {"success": service == "gfpapi", "target": target,
+                    "service": service, "load_state": (
+                        "loaded" if service == "gfpapi" else "not-found"),
+                    "active_state": ("active" if service == "gfpapi" else "inactive")}
         async def close(self):
             pass
 
@@ -833,4 +835,6 @@ async def test_gfp_serilog_keeps_host_ip_and_verifies_allowlisted_ip_not_unliste
     assert evidence
     assert discovery["candidates"][0]["verification_method"] == "ip"
     assert discovery["verified_target"] == "10.248.16.82"
-    assert seen_statuses == [("10.248.16.82", "GFP_Backend")]
+    assert seen_statuses == [("10.248.16.82", "GFP_Backend"),
+                            ("10.248.16.82", "gfpapi")]
+    assert discovery["verified_runtime_service"] == "gfpapi"
