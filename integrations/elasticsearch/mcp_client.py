@@ -256,6 +256,7 @@ class ElasticsearchMCPClient(MCPClient):
         # exposing its contents) to separate empty index from mismatched
         # filters. Index-only samples NEVER produce host candidates.
         index_probe = "not_needed"
+        indexed_fields: list[str] = []
         if not logs:
             try:
                 probe = await self.call_tool(
@@ -267,6 +268,14 @@ class ElasticsearchMCPClient(MCPClient):
                     row for envelope in envelopes
                     for row in self._rows_from_payload(envelope)
                 ]
+                if sample:
+                    # Field names only, never sample values/log records.
+                    import re
+                    indexed_fields = sorted(
+                        str(key)[:90] for key in sample[0].keys()
+                        if isinstance(key, str)
+                        and re.fullmatch(r"[A-Za-z0-9_.@-]{1,90}", key)
+                    )[:32]
                 index_probe = "has_rows" if sample else (
                     "unrecognized_response" if envelopes and any(
                         isinstance(value, dict) and
@@ -297,6 +306,7 @@ class ElasticsearchMCPClient(MCPClient):
             "status": status,
             "index_pattern": settings.ELASTIC_AGENT_BUILDER_INDEX_PATTERN.strip()[:160],
             "index_probe": index_probe,
+            "sample_field_names": indexed_fields,
             "searched_service": service, "result_count": len(logs),
             "candidates": list(hosts.values())[:8],
             "requires_independent_verification": True,
