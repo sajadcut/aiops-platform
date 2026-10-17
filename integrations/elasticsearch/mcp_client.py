@@ -114,6 +114,26 @@ class ElasticsearchMCPClient(MCPClient):
             return []
         return decode(payload, 0)
 
+    @staticmethod
+    def _esql_empty_table(payload: Any, depth: int = 0) -> bool:
+        """Differentiate a recognized empty table from an unparseable reply."""
+        if depth > 5 or not isinstance(payload, dict):
+            return False
+        if (isinstance(payload.get("columns"), list)
+                and ((payload.get("rows") == []) or (payload.get("values") == []))):
+            return True
+        if payload.get("rows") == [] or payload.get("values") == []:
+            return True
+        for key in ("result", "data", "results", "structuredContent"):
+            item = payload.get(key)
+            if isinstance(item, dict) and ElasticsearchMCPClient._esql_empty_table(item, depth + 1):
+                return True
+            if isinstance(item, list) and item and all(
+                    ElasticsearchMCPClient._esql_empty_table(value, depth + 1)
+                    for value in item if isinstance(value, dict)):
+                return True
+        return False
+
     async def health_check(self) -> bool:
         """Require the exact allowlisted Agent Builder tool, not just a live MCP route."""
         try:
@@ -199,9 +219,7 @@ class ElasticsearchMCPClient(MCPClient):
                 payloads = self.json_content(result)
                 for payload in payloads:
                     decoded = self._rows_from_payload(payload)
-                    if not decoded and isinstance(payload, dict) and not (
-                        payload.get("rows") == [] or payload.get("values") == []
-                    ):
+                    if not decoded and not self._esql_empty_table(payload):
                         unrecognized_payloads += 1
                     rows.extend(decoded)
                 if rows:
@@ -311,9 +329,7 @@ class ElasticsearchMCPClient(MCPClient):
                     )[:32]
                 index_probe = "has_rows" if sample else (
                     "unrecognized_response" if envelopes and any(
-                        isinstance(value, dict) and
-                        not (value.get("rows") == [] or value.get("values") == [])
-                        for value in envelopes
+                        not self._esql_empty_table(value) for value in envelopes
                     ) else "empty_index"
                 )
             except Exception:
