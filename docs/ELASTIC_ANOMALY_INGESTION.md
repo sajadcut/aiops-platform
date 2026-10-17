@@ -288,3 +288,60 @@ response envelopes are labeled `response_format_unrecognized`.
 The index-only probe never identifies or authorizes a host. Follow-up
 `service_status` VM checks still require the existing allowlist and exact
 verified service identity.
+
+### End-to-end host and runtime identity resolution (October 2026)
+
+A new Elasticsearch incident follows these read-only, fail-closed stages:
+
+1. **Actual index and result schema**: use the deployed
+   `ELASTIC_AGENT_BUILDER_INDEX_PATTERN` (GFP's example is
+   `1m-digitaloperation-gfpapi-*`). ES|QL response decoding supports
+   nested MCP tables and independently distinguishes empty tables from
+   unrecognized envelopes. If a service/time lookup returns zero rows,
+   run only one `FROM <configured-pattern> | LIMIT 1` index diagnostic.
+   Save field **names only**, never returned sample values.
+2. **Event clock skew**: keep the original alert timestamp intact.
+   Investigate up to 20 minutes before the earlier of event/receive time,
+   with a six-hour maximum lookback. Allow read-only ES|QL searches up
+   to 5 minutes ahead of receive time (also bounded by
+   `ELASTIC_ANOMALY_CONTEXT_LOOKAHEAD_SECONDS`), with at most 30 seconds
+   beyond a slightly future-dated alert. Save the queried interval and
+   actual timestamp offset in `host_discovery`. There is no unbounded
+   future or historical search.
+3. **Source label vs systemd service**: `GFP_Backend` is not silently
+   renamed `gfpapi`. First configure an **operator-confirmed** alias
+   using `ELASTIC_SERVICE_DISCOVERY_ALIASES`, e.g.
+   `{"gfpapi":["GFP_Backend"]}`. Both unique forward and reverse aliases
+   are used in bounded ES|QL queries. For runtime promotion, an exact
+   `service_status` response from allowlisted VM MCP must independently
+   confirm the candidate unit (loaded, valid state, exact target and
+   service). The original alert label is preserved as a separate
+   `source_service_label` and its explicit, same-incident evidence
+   reference is required by VM binding checks.
+4. **Host discovery and verification**: retain either an ECS
+   `host.name`, an ECS `host.ip`, or both, including indexes where only
+   the IP field is mapped. A host from a log is merely a candidate.
+   Only a single candidate with an explicit matching
+   `SSH_ALLOWED_TARGETS` entry is eligible for read-only VM MCP
+   probing. When the log lacks a valid IP, try the hostname, and let
+   the VM worker resolve DNS and enforce SSH known_hosts.
+5. **Incident Room failure stage**: the `host-discovery` endpoint and
+   Evidence & MCP tab expose `failure_stage`, `index_probe`,
+   `index_pattern`, `sample_field_names`, exact query-window bounds,
+   timestamp skew, VM candidate result, and validated runtime service.
+   They distinguish query failure, parser mismatch, no service/time
+   match, missing host metadata, VM authorization/identity failure,
+   and verification success. A 200 HTTP response does not imply an
+   ES|QL data match.
+
+An allowlisted host and validated runtime identity still do **not**
+authorize writes: config repair, restart, reload and start remain
+subject to independent preflight, signed permit and human Approval.
+A mapping cannot be inferred by an LLM or promoted from RAG, log
+text or a manual incident chat message alone.
+
+Regression cases live in
+`tests/unit/test_elastic_mcp_wire_tool.py`. Live acceptance requires
+a fresh incident from the actual deployed configuration and should
+include the exact index, read-only ES|QL match, actual hostname/IP,
+working VM MCP, valid SSH allowlist and systemd unit.
