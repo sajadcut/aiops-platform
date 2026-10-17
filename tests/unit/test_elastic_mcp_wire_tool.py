@@ -312,3 +312,78 @@ async def test_elastic_host_discovery_retains_hostname_when_ip_missing(monkeypat
         assert discovered["candidates"][0]["ip_addresses"] == []
     finally:
         await client.close()
+
+
+def test_elastic_decodes_nested_esql_table_formats():
+    parser = ElasticsearchMCPClient._rows_from_payload
+    assert parser({"result": {"data": {
+        "columns": [{"name": "host.name"}, {"name": "service.name"}],
+        "values": [["gfp-host-01", "GFP_Backend"]]
+    }}}) == [{"host.name": "gfp-host-01", "service.name": "GFP_Backend"}]
+    assert parser({"results": [{"data": {
+        "columns": ["host.name"], "rows": [["gfp-host-02"]]
+    }}]}) == [{"host.name": "gfp-host-02"}]
+    assert parser({"rows": []}) == []
+
+
+@pytest.mark.asyncio
+async def test_configured_gfp_index_and_space_do_not_change_esql_tool_namespace(monkeypatch):
+    from domain.contracts.config import settings
+    monkeypatch.setattr(settings, "ELASTIC_AGENT_BUILDER_INDEX_PATTERN",
+                        "1m-digitaloperation-gfpapi-*")
+    monkeypatch.setattr(settings, "ELASTIC_AGENT_BUILDER_MCP_NAMESPACES",
+                        ["platform.core"])
+    client = ElasticsearchMCPClient(
+        server_url="http://kibana.test/s/mcp/api/agent_builder/mcp")
+    calls = []
+
+    async def fake_tool(name, arguments):
+        assert name == "platform_core_execute_esql"
+        calls.append(arguments["query"])
+        return {"structuredContent": {"rows": [{
+            "@timestamp": "2026-10-17T10:15:00Z", "host.name": "gfp-host-01",
+            "service.name": "GFP_Backend",
+        }]}}
+    monkeypatch.setattr(client, "call_tool", fake_tool)
+    try:
+        assert "/s/mcp/api/agent_builder/mcp" in client.server_url
+        assert "namespace=platform.core" in client.server_url
+        hosts = await client.discover_service_hosts(
+            "GFP_Backend", datetime(2026, 10, 17, 10, 0, tzinfo=timezone.utc))
+        assert calls
+        assert all(query.startswith("FROM 1m-digitaloperation-gfpapi-* | WHERE ")
+                   for query in calls)
+        assert hosts["status"] == "candidates_found"
+        assert hosts["index_pattern"] == "1m-digitaloperation-gfpapi-*"
+        assert hosts["candidates"][0]["hostname"] == "gfp-host-01"
+    finally:
+        await client.close()
+
+
+@pytest.mark.asyncio
+async def test_index_probe_distinguishes_wrong_service_filter_from_empty_index(monkeypatch):
+    from domain.contracts.config import settings
+    monkeypatch.setattr(settings, "ELASTIC_AGENT_BUILDER_INDEX_PATTERN",
+                        "1m-digitaloperation-gfpapi-*")
+    client = ElasticsearchMCPClient()
+    seen = []
+
+    async def fake_tool(name, arguments):
+        query = arguments["query"]
+        seen.append(query)
+        if query.endswith("| LIMIT 1"):
+            return {"structuredContent": {"result": {
+                "columns": ["@timestamp", "service.name"],
+                "values": [["2026-10-17T10:15:00Z", "gfpapi"]]
+            }}}
+        return {"structuredContent": {"rows": []}}
+    monkeypatch.setattr(client, "call_tool", fake_tool)
+    try:
+        report = await client.discover_service_hosts(
+            "GFP_Backend", datetime(2026, 10, 17, 10, 0, tzinfo=timezone.utc))
+        assert report["status"] == "index_has_rows_no_service_time_match"
+        assert report["index_probe"] == "has_rows"
+        assert report["candidates"] == []  # never bind host from index-only query
+        assert seen[-1] == "FROM 1m-digitaloperation-gfpapi-* | LIMIT 1"
+    finally:
+        await client.close()
