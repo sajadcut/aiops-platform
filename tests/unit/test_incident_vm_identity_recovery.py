@@ -436,3 +436,29 @@ async def test_live_recheck_rejects_mismatched_canonical_unit_id(monkeypatch):
         "GFP_Backend", [proof], context, connector=FakeVM(), force_live=True)
     assert binding is None
     assert diagnostic["status"] == "vm_mcp_live_identity_mismatch"
+
+
+@pytest.mark.asyncio
+async def test_vm_worker_service_status_returns_actual_systemd_id(monkeypatch):
+    from domain.contracts.config import settings
+    from integrations.vm.ssh_connector import SSHVMConnector
+    monkeypatch.setattr(settings, "SSH_ALLOWED_SERVICES",
+                        ["gfpapi", "GFP_Backend"])
+    connector = object.__new__(SSHVMConnector)
+    executed = []
+
+    async def fake_run(target, command):
+        executed.append((target, command))
+        if "systemctl show" in command:
+            return {"success": True, "exit_code": 0, "stdout":
+                    "Id=gfpapi.service\nLoadState=loaded\nActiveState=active\n"
+                    "SubState=running\nMainPID=222\n"}
+        raise AssertionError("Unexpected command")
+    monkeypatch.setattr(connector, "_run", fake_run)
+    reply = await connector.service_status("10.248.16.82", "GFP_Backend")
+    assert reply["success"] is True
+    assert reply["service"] == "GFP_Backend"
+    assert reply["unit_id"] == "gfpapi.service"
+    assert reply["active_state"] == "active"
+    assert len(executed) == 1
+    assert "--property=Id" in executed[0][1]
