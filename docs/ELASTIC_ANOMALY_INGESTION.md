@@ -209,6 +209,24 @@ recognized systemd state must all match before the read can become durable
 independent evidence. Every mutating action still requires separate signed
 authorization, policy and Approval.
 
+**Hostname-only Elastic logs:** if there is no valid `host.ip` but exactly one
+candidate has `host.name`, AIOps attempts the same bounded, read-only
+`service_status` call using the hostname itself. This is an SSH connection
+initiated **only by the trusted VM MCP worker**, not directly by the API/LLM.
+The exact hostname must be explicitly present in the VM MCP worker's
+`SSH_ALLOWED_TARGETS` configuration (e.g.
+`SSH_ALLOWED_TARGETS=["app01.internal.example","10.0.0.10"]`).
+For production SSH, its hostname and key must also match the configured
+`SSH_KNOWN_HOSTS`. The server must be resolvable **from the VM MCP worker**.
+The API does not auto-resolve arbitrary log hostnames to bypass the allowlist.
+
+The incident's `host-discovery` endpoint exposes the probe
+`verification_method` (`ip` or `hostname`) and a coded
+`verification_status` such as `candidate_hostname_not_allowlisted`,
+`vm_read_failed`, or `verified_read_only`; the Persian Incident Room shows
+the corresponding explanation. No result, mismatch, or SSH failure may grant
+an execution target.
+
 Sensitive ES|QL queries and result records stay excluded from HTTP/MCP logs;
 the incident API exposes only bounded counts and host identity metadata.
 A 200 response from Elastic MCP means tool transport succeeded, not that a
