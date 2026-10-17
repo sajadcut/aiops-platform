@@ -152,6 +152,25 @@ class ElasticsearchMCPClient(MCPClient):
                 return True
         return False
 
+    def _esql_payloads(self, result: dict[str, Any]) -> list[Any]:
+        """Prefer a real tabular response over metadata-only structuredContent.
+
+        Kibana may return metadata in structuredContent and the actual rows in
+        content[].text. Generic MCP json_content prioritizes structuredContent;
+        this Elastic-only adapter can safely inspect the alternate content
+        without sending its untrusted text to an LLM.
+        """
+        primary = self.json_content(result)
+        if any(self._rows_from_payload(value) or self._esql_empty_table(value)
+               for value in primary):
+            return primary
+        parts = result.get("content")
+        if isinstance(parts, list):
+            for part in parts[:10]:
+                if isinstance(part, dict) and self._rows_from_payload(part):
+                    return [part]
+        return primary
+
     async def health_check(self) -> bool:
         """Require the exact allowlisted Agent Builder tool, not just a live MCP route."""
         try:
@@ -265,7 +284,7 @@ class ElasticsearchMCPClient(MCPClient):
                             last_error = exc
                     if result is None:
                         continue
-                    payloads = self.json_content(result)
+                    payloads = self._esql_payloads(result)
                     for payload in payloads:
                         decoded = self._rows_from_payload(payload)
                         if not decoded:
@@ -341,7 +360,7 @@ class ElasticsearchMCPClient(MCPClient):
                     self.TOOL_EXECUTE_ESQL,
                     {"query": f"FROM {settings.ELASTIC_AGENT_BUILDER_INDEX_PATTERN.strip()} | LIMIT 1"},
                 )
-                envelopes = self.json_content(probe)
+                envelopes = self._esql_payloads(probe)
                 sample = [row for envelope in envelopes
                           for row in self._rows_from_payload(envelope)]
                 if sample:
