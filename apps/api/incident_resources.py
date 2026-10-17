@@ -123,6 +123,9 @@ async def get_host_discovery(incident_id: UUID):
         "not_requested": "not_requested",
         "not_recorded": "not_recorded",
     }.get(discovery_status, "unknown")
+    if (discovery_status == "verified_by_vm_mcp"
+            and source.get("mapping_status") == "mapping_conflict_or_unverified"):
+        failed_stage = "runtime_mapping_validation"
     return {
         "incident_id": str(incident_id),
         "status": discovery_status,
