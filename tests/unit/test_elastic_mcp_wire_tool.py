@@ -838,3 +838,87 @@ async def test_gfp_serilog_keeps_host_ip_and_verifies_allowlisted_ip_not_unliste
     assert seen_statuses == [("10.248.16.82", "GFP_Backend"),
                             ("10.248.16.82", "gfpapi")]
     assert discovery["verified_runtime_service"] == "gfpapi"
+
+
+@pytest.mark.asyncio
+async def test_api_process_allowlist_missing_even_when_vm_worker_config_is_correct(monkeypatch):
+    """No VM MCP call when this API process did not load its target policy."""
+    from apps.signal_gateway import SignalGateway
+    from domain.contracts.config import settings
+    from integrations.vm import mcp_client as vm_module
+
+    monkeypatch.setattr(settings, "VM_MCP_URL", "http://vm.test/mcp")
+    monkeypatch.setattr(settings, "SSH_ALLOWED_TARGETS", [])
+    class UnexpectedVM:
+        def __init__(self):
+            raise AssertionError("API must reject before sending worker probe")
+    monkeypatch.setattr(vm_module, "VMEdgeMCPClient", UnexpectedVM)
+    discovery = {"status": "candidates_found", "candidates": [{
+        "hostname": "apgfpdtnksa0101", "ip_addresses": ["10.248.16.82"],
+    }]}
+    assert await SignalGateway._verify_elastic_host_candidate(
+        "gfpapi", discovery) == []
+    candidate = discovery["candidates"][0]
+    assert candidate["verification_status"] == "candidate_ip_not_allowlisted"
+    assert candidate["control_plane_target_allowed"] is False
+    assert candidate["control_plane_allowlist_count"] == 0
+
+
+@pytest.mark.asyncio
+async def test_allowlisted_hostname_selected_if_ip_is_not_authorized(monkeypatch):
+    """Hostnames are not skipped simply because an unallowlisted IP exists."""
+    from apps.signal_gateway import SignalGateway
+    from domain.contracts.config import settings
+    from integrations.vm import mcp_client as vm_module
+
+    monkeypatch.setattr(settings, "VM_MCP_URL", "http://vm.test/mcp")
+    monkeypatch.setattr(settings, "SSH_ALLOWED_TARGETS", ["apgfpdtnksa0101"])
+    seen = []
+    class FakeVM:
+        async def service_status(self, target, service):
+            seen.append((target, service))
+            return {"success": True, "target": target, "service": service,
+                    "load_state": "loaded", "active_state": "active"}
+        async def close(self):
+            pass
+    monkeypatch.setattr(vm_module, "VMEdgeMCPClient", FakeVM)
+    discovery = {"status": "candidates_found", "candidates": [{
+        "hostname": "apgfpdtnksa0101", "ip_addresses": ["10.248.16.82"],
+    }]}
+    evidence = await SignalGateway._verify_elastic_host_candidate(
+        "gfpapi", discovery)
+    assert evidence
+    assert seen == [("apgfpdtnksa0101", "gfpapi")]
+    assert discovery["verified_target"] == "apgfpdtnksa0101"
+    assert discovery["candidates"][0]["verification_method"] == "hostname"
+    assert discovery["candidates"][0]["control_plane_allowlist_count"] == 1
+    assert discovery["candidates"][0]["control_plane_target_allowed"] is True
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("policy_error,code", [
+    ("vm_target_not_allowed", "vm_worker_target_not_allowlisted"),
+    ("vm_service_not_allowed", "vm_worker_service_not_allowlisted"),
+])
+async def test_vm_worker_policy_denial_is_not_misreported_as_ssh_failure(
+        monkeypatch, policy_error, code):
+    from apps.signal_gateway import SignalGateway
+    from domain.contracts.config import settings
+    from integrations.vm import mcp_client as vm_module
+
+    monkeypatch.setattr(settings, "VM_MCP_URL", "http://vm.test/mcp")
+    monkeypatch.setattr(settings, "SSH_ALLOWED_TARGETS", ["10.248.16.82"])
+    class RejectingVM:
+        async def service_status(self, target, service):
+            raise PermissionError(policy_error)
+        async def close(self):
+            pass
+    monkeypatch.setattr(vm_module, "VMEdgeMCPClient", RejectingVM)
+    discovery = {"status": "candidates_found", "candidates": [{
+        "hostname": "apgfpdtnksa0101", "ip_addresses": ["10.248.16.82"],
+    }]}
+    assert await SignalGateway._verify_elastic_host_candidate(
+        "gfpapi", discovery) == []
+    assert discovery["candidates"][0]["verification_status"] == code
+    assert discovery["candidates"][0]["control_plane_target_allowed"] is True
+    assert discovery["runtime_probe_count"] == 1
