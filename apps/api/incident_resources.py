@@ -123,6 +123,21 @@ async def get_host_discovery(incident_id: UUID):
         "not_requested": "not_requested",
         "not_recorded": "not_recorded",
     }.get(discovery_status, "unknown")
+    if discovery_status == "candidates_found":
+        failures = {str(candidate.get("verification_status") or "")
+                    for candidate in candidates}
+        if failures & {"candidate_hostname_not_allowlisted", "candidate_ip_not_allowlisted"}:
+            failed_stage = "vm_target_allowlist"
+        elif "candidate_hostname_invalid" in failures:
+            failed_stage = "candidate_host_validation"
+        elif "vm_mcp_not_configured" in failures:
+            failed_stage = "vm_mcp_configuration"
+        elif "vm_read_failed" in failures:
+            failed_stage = "vm_read_connection"
+        elif "vm_service_identity_not_confirmed" in failures:
+            failed_stage = "vm_service_identity"
+        elif "vm_result_malformed" in failures:
+            failed_stage = "vm_response_validation"
     if (discovery_status == "verified_by_vm_mcp"
             and source.get("mapping_status") == "mapping_conflict_or_unverified"):
         failed_stage = "runtime_mapping_validation"
