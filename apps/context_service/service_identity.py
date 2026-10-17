@@ -55,6 +55,63 @@ class ServiceIdentityResolver:
         text = " ".join(str(x or "")[:1000] for x in components)
         return KnowledgeTopologyResolver.extract_fqdns(text)
 
+    @staticmethod
+    def verified_runtime_alias_matches(
+        reported_service: str, runtime_service: str,
+        context: Mapping[str, Any] | None, evidence: Iterable[Mapping[str, Any]],
+    ) -> bool:
+        """Permit an alert-label/runtime-name mismatch only with direct VM evidence.
+
+        A mutable alert, RAG hit, or alias setting is never sufficient alone.
+        The persisted association has to match an actual successful, typed,
+        same-incident VM service_status observation and configured alias.
+        """
+        reported = str(reported_service or "").strip().casefold().removesuffix(".service")
+        runtime = str(runtime_service or "").strip().casefold().removesuffix(".service")
+        if not reported or not runtime:
+            return False
+        if reported == runtime:
+            return True
+        ctx = context if isinstance(context, Mapping) else {}
+        mapping = ctx.get("verified_runtime_mapping")
+        if not isinstance(mapping, Mapping):
+            return False
+        if (str(mapping.get("source_service") or "").casefold() != reported
+                or str(mapping.get("runtime_service") or "").casefold() != runtime
+                or mapping.get("verification") != "vm_mcp_service_status"):
+            return False
+        target = str(mapping.get("target") or "").strip().casefold()
+        ref = str(mapping.get("evidence_reference") or "")
+        if not target or not ref:
+            return False
+        from domain.contracts.config import settings
+        aliases = settings.ELASTIC_SERVICE_DISCOVERY_ALIASES or {}
+        if not isinstance(aliases, dict):
+            return False
+        configured = any(
+            (str(key).casefold() == reported and isinstance(values, list)
+             and any(str(value).casefold() == runtime for value in values))
+            or (str(key).casefold() == runtime and isinstance(values, list)
+                and any(str(value).casefold() == reported for value in values))
+            for key, values in aliases.items()
+        )
+        if not configured:
+            return False
+        for item in evidence:
+            if not isinstance(item, Mapping) or item.get("source") != "vm_mcp":
+                continue
+            if str(item.get("reference") or "") != ref:
+                continue
+            raw = item.get("raw_data")
+            if (isinstance(raw, Mapping) and raw.get("diagnostic") == "service_status"
+                    and raw.get("success") is True
+                    and str(raw.get("target") or "").strip().casefold() == target
+                    and str(raw.get("service") or "").strip().casefold().removesuffix(".service") == runtime
+                    and str(raw.get("source_service_label") or "").strip().casefold().removesuffix(".service") == reported
+                    and str(raw.get("load_state") or "").lower() == "loaded"):
+                return True
+        return False
+
     @classmethod
     def independently_verified(
         cls,
