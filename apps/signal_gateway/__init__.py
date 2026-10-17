@@ -126,8 +126,11 @@ class SignalGateway:
         return since, until, {
             "timestamp_skew_seconds": int(skew),
             "future_skew_window_seconds": max(0, int((until - now_utc).total_seconds())),
-            "time_window_status": ("future_skew_included" if until > now_utc else
-                                   "future_skew_capped" if skew > 0 else "current_time"),
+            "time_window_status": (
+                "future_skew_capped" if skew > cap else
+                "future_skew_included" if until > now_utc else
+                "current_time"
+            ),
             "window_from": since.isoformat(),
             "window_to": until.isoformat(),
         }
