@@ -129,8 +129,9 @@ class ElasticsearchMCPClient(MCPClient):
             if isinstance(item, dict) and ElasticsearchMCPClient._esql_empty_table(item, depth + 1):
                 return True
             if isinstance(item, list) and item and all(
+                    isinstance(value, dict) and
                     ElasticsearchMCPClient._esql_empty_table(value, depth + 1)
-                    for value in item if isinstance(value, dict)):
+                    for value in item):
                 return True
         return False
 
