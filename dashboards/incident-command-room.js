@@ -2458,6 +2458,8 @@
         candidate_hostname_invalid:'نام میزبان دریافتی معتبر نیست؛ اتصال انجام نشد',
         candidate_hostname_not_allowlisted:'نام میزبان در SSH_ALLOWED_TARGETS مجاز نیست؛ اتصال انجام نشد',
         candidate_ip_not_allowlisted:'IP در SSH_ALLOWED_TARGETS مجاز نیست؛ اتصال انجام نشد',
+        vm_worker_target_not_allowlisted:'مقصد در allowlist پردازش VM MCP مجاز نیست',
+        vm_worker_service_not_allowlisted:'نام unit در allowlist پردازش VM MCP مجاز نیست',
         vm_mcp_not_configured:'VM MCP برای بررسی مقصد تنظیم نشده است',
         vm_read_failed:'اتصال یا استعلام فقط‌خواندنی از VM MCP ناموفق بود',
         vm_service_identity_not_confirmed:'پاسخ سرور با هویت سرویس و مقصد مورد انتظار تطابق ندارد',
@@ -2468,6 +2470,8 @@
         candidate_hostname_invalid:'Invalid hostname; no connection attempted',
         candidate_hostname_not_allowlisted:'Hostname not in SSH_ALLOWED_TARGETS; no connection attempted',
         candidate_ip_not_allowlisted:'IP not in SSH_ALLOWED_TARGETS; no connection attempted',
+        vm_worker_target_not_allowlisted:'Target denied by VM MCP worker allowlist',
+        vm_worker_service_not_allowlisted:'Runtime service denied by VM MCP worker allowlist',
         vm_mcp_not_configured:'VM MCP is not configured',
         vm_read_failed:'Read-only VM connection or service check failed',
         vm_service_identity_not_confirmed:'VM returned mismatched service or target identity',
@@ -2480,10 +2484,15 @@
           (fa?'هنوز تأیید نشده':'Not yet verified');
         return '<li><strong>'+esc(x.hostname)+'</strong> · '+
           esc(fa?'تعداد شواهد: ':'Records: ')+esc(x.record_count)+
-          (method?' · '+esc(method):'')+' · '+esc(reason)+'</li>';
+          (method?' · '+esc(method):'')+
+          (x.verification_status==='candidate_hostname_not_allowlisted'||
+           x.verification_status==='candidate_ip_not_allowlisted'?
+           ' · '+esc(fa?'تعداد مقاصد مجاز در پردازش API: ':'API process allowed target count: ')+
+           esc(x.control_plane_allowlist_count??0):'')+
+          ' · '+esc(reason)+'</li>';
       }).join('');
-      const discoveryStagesFA={esql_query:'اجرای ES|QL',index_probe:'بررسی ایندکس',response_parsing:'پردازش پاسخ Elastic',index_or_service_lookup:'جست‌وجوی ایندکس/سرویس',service_or_time_filter:'فیلتر سرویس/زمان',host_metadata:'استخراج مشخصات میزبان',vm_identity_verification:'تأیید هویت VM MCP',vm_target_allowlist:'مجوز مقصد در SSH_ALLOWED_TARGETS',candidate_host_validation:'اعتبارسنجی نام میزبان',vm_mcp_configuration:'تنظیمات VM MCP',vm_read_connection:'اتصال یا استعلام زنده VM MCP',vm_service_identity:'تأیید نام unit و مقصد',vm_response_validation:'اعتبارسنجی پاسخ VM MCP',runtime_mapping_validation:'اعتبارسنجی نگاشت نام هشدار به unit',completed:'تکمیل‌شده'};
-      const discoveryStagesEN={esql_query:'ES|QL query',index_probe:'Index probe',response_parsing:'Elastic response parsing',index_or_service_lookup:'Index/service lookup',service_or_time_filter:'Service/time matching',host_metadata:'Host metadata',vm_identity_verification:'VM MCP identity check',vm_target_allowlist:'SSH_ALLOWED_TARGETS target authorization',candidate_host_validation:'Host candidate validation',vm_mcp_configuration:'VM MCP configuration',vm_read_connection:'Live VM MCP connection',vm_service_identity:'Runtime unit and target identity',vm_response_validation:'VM MCP response validation',runtime_mapping_validation:'Alert-label/runtime mapping verification',completed:'Completed'};
+      const discoveryStagesFA={esql_query:'اجرای ES|QL',index_probe:'بررسی ایندکس',response_parsing:'پردازش پاسخ Elastic',index_or_service_lookup:'جست‌وجوی ایندکس/سرویس',service_or_time_filter:'فیلتر سرویس/زمان',host_metadata:'استخراج مشخصات میزبان',vm_identity_verification:'تأیید هویت VM MCP',vm_target_allowlist:'مجوز مقصد در SSH_ALLOWED_TARGETS',control_plane_target_allowlist:'محدودیت SSH_ALLOWED_TARGETS در پردازش API',vm_worker_target_allowlist:'محدودیت مقصد در پردازش VM MCP',vm_worker_service_allowlist:'محدودیت unit در پردازش VM MCP',candidate_host_validation:'اعتبارسنجی نام میزبان',vm_mcp_configuration:'تنظیمات VM MCP',vm_read_connection:'اتصال یا استعلام زنده VM MCP',vm_service_identity:'تأیید نام unit و مقصد',vm_response_validation:'اعتبارسنجی پاسخ VM MCP',runtime_mapping_validation:'اعتبارسنجی نگاشت نام هشدار به unit',completed:'تکمیل‌شده'};
+      const discoveryStagesEN={esql_query:'ES|QL query',index_probe:'Index probe',response_parsing:'Elastic response parsing',index_or_service_lookup:'Index/service lookup',service_or_time_filter:'Service/time matching',host_metadata:'Host metadata',vm_identity_verification:'VM MCP identity check',vm_target_allowlist:'SSH_ALLOWED_TARGETS target authorization',control_plane_target_allowlist:'API process target allowlist',vm_worker_target_allowlist:'VM MCP worker target allowlist',vm_worker_service_allowlist:'VM MCP worker unit allowlist',candidate_host_validation:'Host candidate validation',vm_mcp_configuration:'VM MCP configuration',vm_read_connection:'Live VM MCP connection',vm_service_identity:'Runtime unit and target identity',vm_response_validation:'VM MCP response validation',runtime_mapping_validation:'Alert-label/runtime mapping verification',completed:'Completed'};
       const stageDetail=(fa?discoveryStagesFA:discoveryStagesEN)[discovery.failure_stage]||(fa?'نامشخص':'Unknown');
       const clockOffset=Number(discovery.timestamp_skew_seconds)||0;
       const indexProbeText=discovery.index_probe==='has_rows'?(fa?'ایندکس داده دارد':'Index has rows'):discovery.index_probe==='empty_index'?(fa?'ایندکس نمونه‌ای برنگرداند':'Index sample empty'):discovery.index_probe==='probe_failed'?(fa?'بررسی ایندکس شکست خورد':'Index probe failed'):discovery.index_probe==='unrecognized_response'?(fa?'قالب پاسخ ناشناخته':'Unknown response schema'):'';
