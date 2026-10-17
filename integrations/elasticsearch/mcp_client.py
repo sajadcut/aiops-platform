@@ -221,7 +221,7 @@ class ElasticsearchMCPClient(MCPClient):
                         keep = [quoted_time]
                         if "message" in available:
                             keep.append("message")
-                        keep.extend(f"`{value}`" for value in observed_hosts[:2])
+                        keep.extend(f"`{value}`" for value in observed_hosts[:4])
                         keep.append(f"`{field}`")
                         projections = (", ".join(dict.fromkeys(keep)),)
                     else:
@@ -299,7 +299,7 @@ class ElasticsearchMCPClient(MCPClient):
                 timestamp=timestamp,
                 service=str(service_value or item.get("service.name") or item.get("Properties.ServiceName.keyword") or item.get("Properties.ServiceName") or item.get("Properties.ApplicationName.keyword") or item.get("Properties.ApplicationName") or service),
                 level=str(item.get("level") or (item.get("log") or {}).get("level") or "info"),
-                message=str(item.get("message") or ""),
+                message=str(item.get("message") or item.get("Properties.LogEntry.Message") or ""),
                 source="elasticsearch",
                 raw_data=item,
             ))
