@@ -1312,8 +1312,8 @@
 | `apps/incident_vm_identity.py` | `incident_vm_context` | 34 | function | Merge incident context without suppressing contradictory trigger signals. | module |
 | `apps/incident_vm_identity.py` | `_trusted_signal` | 74 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/incident_vm_identity.py` | `vm_binding_diagnostic` | 100 | function | Coded reason for binding failure, usable in audit and dashboard. | module |
-| `apps/incident_vm_identity.py` | `resolve_vm_binding` | 172 | async function | Recheck the **candidate**, not a chat-supplied host; status may be failed. | module |
-| `apps/incident_vm_identity.py` | `vm_status_answer` | 235 | function | Only live service_status fields form a current-state assertion. | module |
+| `apps/incident_vm_identity.py` | `resolve_vm_binding` | 174 | async function | Recheck the **candidate**, not a chat-supplied host; status may be failed. | module |
+| `apps/incident_vm_identity.py` | `vm_status_answer` | 241 | function | Only live service_status fields form a current-state assertion. | module |
 | `apps/knowledge_incident_coverage.py` | `coverage_review_id` | 23 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/knowledge_incident_coverage.py` | `_safe` | 27 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/knowledge_incident_coverage.py` | `incident_coverage_document` | 31 | function | Use *recorded* incident fields and scoped refs, not arbitrary MCP output. | module |
