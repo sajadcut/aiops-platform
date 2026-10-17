@@ -246,3 +246,45 @@ matching host or application-to-VM binding was established.
 5. Confirm source event timestamps in the future do not move ES|QL search into
    the future. An empty result must not be presented as evidence of health.
 6. Obtain human Approval separately before any actual service change.
+
+### Deployment example: gfpapi logs in Kibana Space `mcp`
+
+Kibana **Space** and MCP tool **namespace** are different identifiers.
+The observed live MCP route is `/s/mcp/api/agent_builder/mcp`, with
+`?namespace=platform.core`, which exposes `platform_core_execute_esql`.
+Do **not** change the tool namespace to `mcp` merely because the Kibana
+Space is called `mcp`.
+
+For the gfpapi environment described by its operator, configure the actual
+control-plane process environment (this is environment-specific; the generic
+`.env.example` keeps the portable `logs-*` default):
+
+```dotenv
+ELASTICSEARCH_MCP_URL=http://10.248.34.169:5601/s/mcp/api/agent_builder/mcp
+ELASTIC_AGENT_BUILDER_MCP_NAMESPACES=["platform.core"]
+ELASTIC_AGENT_BUILDER_INDEX_PATTERN=1m-digitaloperation-gfpapi-*
+# Enable ONLY once verified that the two log names refer to the same service:
+# ELASTIC_SERVICE_DISCOVERY_ALIASES={"GFP_Backend":["gfpapi"]}
+```
+
+The index pattern is not hardcoded into the adapter, so deployments for
+.NET, Java, Python, Kubernetes or unrelated applications can configure their
+own real data view/index without changing source code.
+
+After restarting the API, run the **read-only** integration check:
+
+```bash
+python -m scripts.check_elastic_integration --service GFP_Backend
+```
+
+This prints the *effective* index pattern and selected Kibana MCP namespace.
+Incident Room also displays the effective index used by each fresh incident.
+A service search returning zero records now performs a single bounded
+`FROM <configured-index> | LIMIT 1` probe. When that probe finds rows but
+the service/time search does not, the result is
+`index_has_rows_no_service_time_match`, not a misleading generic
+`no_matching_logs`. Nested ES|QL result formats are normalized; unparseable
+response envelopes are labeled `response_format_unrecognized`.
+The index-only probe never identifies or authorizes a host. Follow-up
+`service_status` VM checks still require the existing allowlist and exact
+verified service identity.
