@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 555 | Dashboard JS files scanned: 8 | Symbols indexed: 6191**
+**Python files scanned: 555 | Dashboard JS files scanned: 8 | Symbols indexed: 6196**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -4174,6 +4174,11 @@
 | `tests/unit/test_elastic_mcp_wire_tool.py` | `test_configured_gfp_index_and_space_do_not_change_esql_tool_namespace.fake_tool` | 340 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_configured_gfp_index_and_space_do_not_change_esql_tool_namespace |
 | `tests/unit/test_elastic_mcp_wire_tool.py` | `test_index_probe_distinguishes_wrong_service_filter_from_empty_index` | 364 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_elastic_mcp_wire_tool.py` | `test_index_probe_distinguishes_wrong_service_filter_from_empty_index.fake_tool` | 371 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_index_probe_distinguishes_wrong_service_filter_from_empty_index |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_elastic_future_window_covers_clock_skew_but_is_bounded` | 393 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_elastic_host_ip_only_is_discovered_when_host_name_unmapped` | 415 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_elastic_host_ip_only_is_discovered_when_host_name_unmapped.fake_tool` | 418 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_elastic_host_ip_only_is_discovered_when_host_name_unmapped |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_explicit_reverse_elastic_alias_gets_used_in_esql` | 443 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_explicit_reverse_elastic_alias_gets_used_in_esql.fake_tool` | 449 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_explicit_reverse_elastic_alias_gets_used_in_esql |
 | `tests/unit/test_ephemeral_config_guard.py` | `test_ephemeral_script_has_valid_posix_syntax_and_only_trusted_static_code` | 18 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_ephemeral_config_guard.py` | `test_ephemeral_config_payload_cannot_inject_shell_syntax` | 40 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_ephemeral_config_guard.py` | `test_ephemeral_builder_rejects_untrusted_operation_or_metadata` | 62 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
