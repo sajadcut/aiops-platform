@@ -73,44 +73,61 @@ class ElasticsearchMCPClient(MCPClient):
 
     @staticmethod
     def _rows_from_payload(payload: Any) -> list[dict[str, Any]]:
-        """Normalize bounded Agent Builder ES|QL result envelopes.
+        """Decode bounded tabular ES|QL envelopes from Kibana Agent Builder MCP.
 
-        Kibana/MCP versions may nest ES|QL tabular data under result/data,
-        structuredContent/results or return column/value pairs. Never interpret
-        string contents as instructions or log their contents.
+        Some deployments return the tabular JSON as a nested *string* in
+        structuredContent.result or a content.text item rather than as an
+        object. Parsing a string is data-only; it is never executed and never
+        logged. Unrecognized formats remain non-authoritative.
         """
+        import json
+
         def decode(value: Any, depth: int) -> list[dict[str, Any]]:
-            if depth > 5 or not isinstance(value, dict):
+            if depth > 6:
+                return []
+            if isinstance(value, str):
+                candidate = value.strip()
+                if not (candidate.startswith("{") or candidate.startswith("[")):
+                    return []
+                if len(candidate) > 500_000:
+                    return []
+                try:
+                    return decode(json.loads(candidate), depth + 1)
+                except (ValueError, TypeError):
+                    return []
+            if isinstance(value, list):
+                rows: list[dict[str, Any]] = []
+                for item in value[:20]:
+                    rows.extend(decode(item, depth + 1))
+                    if len(rows) >= 500:
+                        break
+                return rows[:500]
+            if not isinstance(value, dict):
                 return []
             columns = value.get("columns")
             data_rows = value.get("values")
             if data_rows is None:
                 data_rows = value.get("rows")
             if isinstance(columns, list) and isinstance(data_rows, list):
-                names = [str(col.get("name") or "") if isinstance(col, dict) else str(col)
-                         for col in columns]
+                names = [
+                    str(column.get("name") or "") if isinstance(column, dict)
+                    else str(column)
+                    for column in columns[:100]
+                ]
                 return [
-                    ({name: row[i] if i < len(row) else None for i, name in enumerate(names)}
+                    ({name: row[i] if i < len(row) else None
+                      for i, name in enumerate(names)}
                      if isinstance(row, list) else row)
                     for row in data_rows[:500] if isinstance(row, (list, dict))
                 ]
             rows = value.get("rows")
             if isinstance(rows, list) and all(isinstance(row, dict) for row in rows):
                 return rows[:500]
-            for key in ("result", "data", "structuredContent", "results"):
-                nested = value.get(key)
-                if isinstance(nested, dict):
-                    decoded = decode(nested, depth + 1)
-                    if decoded:
-                        return decoded
-                elif isinstance(nested, list):
-                    decoded: list[dict[str, Any]] = []
-                    for child in nested[:10]:
-                        decoded.extend(decode(child, depth + 1))
-                        if len(decoded) >= 500:
-                            break
-                    if decoded:
-                        return decoded[:500]
+            for key in ("result", "data", "structuredContent", "results",
+                        "content", "json", "text", "output", "response"):
+                decoded = decode(value.get(key), depth + 1)
+                if decoded:
+                    return decoded
             return []
         return decode(payload, 0)
 
