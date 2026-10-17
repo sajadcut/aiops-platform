@@ -143,6 +143,9 @@ def vm_binding_diagnostic(service: str, evidence: list[dict],
             continue
         if normalized_service(raw.get("service")) != name:
             continue
+        observed_unit = normalized_service(raw.get("unit_id"))
+        if observed_unit and observed_unit != name:
+            continue
         target = _safe_target(raw.get("target"))
         if not target:
             continue
