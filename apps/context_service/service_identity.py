@@ -107,6 +107,8 @@ class ServiceIdentityResolver:
                     and raw.get("success") is True
                     and str(raw.get("target") or "").strip().casefold() == target
                     and str(raw.get("service") or "").strip().casefold().removesuffix(".service") == runtime
+                    and (not raw.get("unit_id") or
+                         str(raw.get("unit_id")).strip().casefold().removesuffix(".service") == runtime)
                     and str(raw.get("source_service_label") or "").strip().casefold().removesuffix(".service") == reported
                     and str(raw.get("load_state") or "").lower() == "loaded"):
                 return True
@@ -163,7 +165,11 @@ class ServiceIdentityResolver:
                 continue
             if str(raw.get("target") or "").strip().casefold() != target.casefold():
                 continue
-            if str(raw.get("service") or "").strip().casefold() == service.casefold():
+            if (str(raw.get("service") or "").strip().casefold().removesuffix(".service")
+                    == service.casefold().removesuffix(".service")
+                    and (not raw.get("unit_id") or
+                         str(raw.get("unit_id")).strip().casefold().removesuffix(".service")
+                         == service.casefold().removesuffix(".service"))):
                 return True
         return False
 
