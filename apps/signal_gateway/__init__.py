@@ -408,6 +408,44 @@ class SignalGateway:
                     connector.discover_service_hosts(str(signal.service), since, until),
                     timeout=max(3.0, min(20.0, float(settings.MCP_TIMEOUT_SECONDS))),
                 )
+                host_discovery["search_strategy"] = "incident_window"
+                # The latest alert may be triggered from old logs (e.g. a
+                # threshold based on a delayed pipeline). A 20-minute search
+                # is not sufficient evidence that no deployment host exists.
+                # Only re-search the EXACT reported service and explicit
+                # operator-configured aliases, never unfiltered index rows.
+                initial_status = str(host_discovery.get("status") or "unknown")
+                if (not host_discovery.get("candidates") and initial_status in {
+                    "no_matching_logs", "index_has_rows_no_service_time_match",
+                    "response_format_unrecognized", "no_host_metadata",
+                }):
+                    historical_start = now - timedelta(hours=6)
+                    historical_end = since
+                    if historical_end > historical_start + timedelta(minutes=1):
+                        try:
+                            historical = await asyncio.wait_for(
+                                connector.discover_service_hosts(
+                                    str(signal.service), historical_start, historical_end),
+                                timeout=max(3.0, min(20.0, float(settings.MCP_TIMEOUT_SECONDS))),
+                            )
+                            host_discovery["historical_lookup_status"] = str(
+                                historical.get("status") or "unknown")[:60]
+                            if historical.get("candidates"):
+                                historical["recent_lookup_status"] = initial_status
+                                historical["historical_lookup_status"] = str(
+                                    historical.get("status") or "unknown")[:60]
+                                historical["search_strategy"] = "bounded_historical"
+                                historical["historical_candidate_requires_live_verification"] = True
+                                historical["historical_window_from"] = historical_start.isoformat()
+                                historical["historical_window_to"] = historical_end.isoformat()
+                                host_discovery = historical
+                        except Exception as exc:
+                            host_discovery["historical_lookup_status"] = "query_failed"
+                            logger.warning(
+                                "elastic_historical_service_discovery_failed",
+                                service=str(signal.service)[:90],
+                                error_type=type(exc).__name__,
+                            )
             except Exception as exc:
                 host_discovery = {
                     "status": "query_failed", "error_type": type(exc).__name__[:60],
@@ -420,6 +458,13 @@ class SignalGateway:
                     except Exception:
                         logger.debug("elastic_host_discovery_client_close_failed")
             host_discovery.update(time_metadata)
+            if host_discovery.get("search_strategy") == "bounded_historical":
+                # Distinguish the actual scanned historical range from the
+                # incident-time bounds retained as original_* for the audit.
+                host_discovery["incident_window_from"] = time_metadata["window_from"]
+                host_discovery["incident_window_to"] = time_metadata["window_to"]
+                host_discovery["window_from"] = host_discovery["historical_window_from"]
+                host_discovery["window_to"] = host_discovery["historical_window_to"]
             host_verification_evidence = await SignalGateway._verify_elastic_host_candidate(
                 str(signal.service), host_discovery)
             runtime_service = str(host_discovery.get("verified_runtime_service") or "").strip()
