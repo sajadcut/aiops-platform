@@ -68,6 +68,7 @@ def vm_binding(service: str, evidence: list[dict], context: dict | None = None) 
     must be assessed separately from host identity. All writes perform fresh
     live preflight and high-risk authorization.
     """
+    from apps.context_service.service_identity import ServiceIdentityResolver
     ctx = context if isinstance(context, dict) else {}
     identity = ctx.get("service_identity") or {}
     if isinstance(identity, dict):
@@ -114,7 +115,11 @@ def vm_binding(service: str, evidence: list[dict], context: dict | None = None) 
         if isinstance(info, dict):
             notified_service = str(info.get("service") or "").lower().removesuffix(".service")
             notified_target = str(info.get("target_ip") or info.get("host_ip") or "").strip()
-            if (notified_service and notified_service != name) or (notified_target and notified_target != target):
+            if (notified_service and notified_service != name
+                    and not ServiceIdentityResolver.verified_runtime_alias_matches(
+                        notified_service, name, ctx, evidence)):
+                return None
+            if notified_target and notified_target != target:
                 return None
     return {
         "target": target, "service": name,
