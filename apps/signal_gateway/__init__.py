@@ -326,11 +326,15 @@ class SignalGateway:
                         logger.debug("elastic_host_discovery_client_close_failed")
             host_verification_evidence = await SignalGateway._verify_elastic_host_candidate(
                 str(signal.service), host_discovery)
+            sole_candidate = ((host_discovery.get("candidates") or [None])[0]
+                              if len(host_discovery.get("candidates") or []) == 1 else None)
             logger.info(
                 "elastic_ingest_host_discovery",
                 service=signal.service, status=host_discovery["status"],
                 candidate_count=len(host_discovery.get("candidates") or []),
                 result_count=host_discovery.get("result_count", 0),
+                verification_method=(sole_candidate or {}).get("verification_method"),
+                verification_status=(sole_candidate or {}).get("verification_status"),
             )
         return {
             "asset_context": resolution["asset_context"],
