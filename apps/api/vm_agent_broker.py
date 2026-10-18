@@ -28,7 +28,7 @@ MAX_FRAME = 1024 * 1024
 # approved write behind a slow read that may expire before it even starts.
 MAX_PENDING_PER_AGENT = 1
 MAX_RESULT_SECONDS = 190
-_EXEC_USERNAME = re.compile(r"[a-z_][a-z0-9_-]{0,31}\\Z")
+_EXEC_USERNAME = re.compile(r"[a-z_][a-z0-9_-]{0,31}$")
 WRITE_TOOLS = frozenset({"start_service", "restart_service", "reload_service", "config_change_apply"})
 
 
@@ -94,7 +94,7 @@ class OutboundAgentBroker:
                 password = credentials.get("password")
                 if (not isinstance(username, str) or not _EXEC_USERNAME.fullmatch(username)
                         or username == "root" or not isinstance(password, str)
-                        or not password or any(ch in password for ch in ("\\n", "\\r", "\\x00"))):
+                        or not password or any(ch in password for ch in ("\n", "\r", "\x00"))):
                     await socket.close(code=4403)
                     return
                 await socket.send_text(json.dumps({
