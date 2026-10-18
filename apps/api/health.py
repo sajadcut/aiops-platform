@@ -160,7 +160,12 @@ def _external_required_ready(external: dict) -> bool:
         required.append("jenkins_mcp")
     if settings.KUBERNETES_MCP_URL:
         required.append("kubernetes_mcp")
-    if vm_transport_configured():
+    # Agent-initiated WSS needs a READY API to establish the first session.
+    # Requiring all agents to be connected before exposing the API creates a
+    # bootstrap deadlock behind Kubernetes readiness-gated Services / proxies.
+    # Report per-host availability separately, but never gate the control
+    # plane's own readiness on its downstream outbound agents.
+    if vm_transport_configured() and settings.VM_EXECUTION_BACKEND != "agent_pull":
         required.append("vm_mcp")
     required.append("cognia")
     return all(bool((external.get(name) or {}).get("healthy")) for name in required)
