@@ -21,6 +21,9 @@ class LocalVMConnector(SSHVMConnector):
     """Run existing bounded VM diagnostics/repairs on this host, not over SSH."""
 
     source_name = "vm_agent"
+    # Root-owned fixed guard with on-host public signature verification;
+    # never sudo an arbitrary stdin-controlled POSIX shell on the agent.
+    uses_root_owned_config_guard = True
 
     @classmethod
     def _validate_runtime_security(cls) -> None:
