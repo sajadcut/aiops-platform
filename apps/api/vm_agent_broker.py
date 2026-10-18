@@ -155,8 +155,14 @@ class OutboundAgentBroker:
                     # A write is not allowed to start merely because a delayed
                     # WebSocket frame finally reached the VM. Reconfirm against
                     # the API's *local monotonic* deadline before authorizing it.
-                    if (not session.relative_deadlines
-                            or session.pending_tools.get(ident) not in WRITE_TOOLS
+                    if not session.relative_deadlines:
+                        await socket.close(code=1008)
+                        break
+                    # The result may arrive after API cancellation/timeout.
+                    # Ignore stale readiness without disconnecting a healthy VM.
+                    if ident not in session.pending:
+                        continue
+                    if (session.pending_tools.get(ident) not in WRITE_TOOLS
                             or ident in session.confirmed_writes):
                         await socket.close(code=1008)
                         break
