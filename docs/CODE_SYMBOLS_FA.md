@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 574 | Dashboard JS files scanned: 8 | Symbols indexed: 6531**
+**Python files scanned: 574 | Dashboard JS files scanned: 8 | Symbols indexed: 6549**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -672,13 +672,13 @@
 | `apps/api/chatbot.py` | `chatbot_history` | 121 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/chatbot.py` | `chatbot_action_decision` | 150 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/cognia_scope.py` | `reject_untrusted_knowledge_subject` | 8 | function | Reject caller-supplied Cognia ExternalSubject scope on public workflow APIs. | module |
-| `apps/api/config_change_execution.py` | `_fields` | 26 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/config_change_execution.py` | `_same_incident_candidate` | 57 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/config_change_execution.py` | `_audit` | 77 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/config_change_execution.py` | `validate_config_ticket` | 85 | async function | Reconstruct the candidate on MCP worker, prove staged vendor validation. | module |
-| `apps/api/config_change_execution.py` | `validate_config` | 187 | async function | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | module |
-| `apps/api/config_change_execution.py` | `execute_config` | 192 | async function | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | module |
-| `apps/api/config_change_execution.py` | `reject_pending_config` | 378 | async function | transition مربوط به Approval/Governance را اعمال می‌کند | module |
+| `apps/api/config_change_execution.py` | `_fields` | 27 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/config_change_execution.py` | `_same_incident_candidate` | 58 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/config_change_execution.py` | `_audit` | 78 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/config_change_execution.py` | `validate_config_ticket` | 86 | async function | Reconstruct the candidate on MCP worker, prove staged vendor validation. | module |
+| `apps/api/config_change_execution.py` | `validate_config` | 188 | async function | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | module |
+| `apps/api/config_change_execution.py` | `execute_config` | 193 | async function | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | module |
+| `apps/api/config_change_execution.py` | `reject_pending_config` | 396 | async function | transition مربوط به Approval/Governance را اعمال می‌کند | module |
 | `apps/api/config_change_review.py` | `ConfigReviewResponse` | 34 | class | کلاس | module |
 | `apps/api/config_change_review.py` | `_proposal` | 43 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/config_change_review.py` | `_hash` | 54 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
@@ -1057,7 +1057,8 @@
 | `apps/config_change_authorization.py` | `_check_claim` | 110 | function | Validate exact scope and signature; wall-clock check is mandatory by default. | module |
 | `apps/config_change_authorization.py` | `verify_claim` | 137 | function | For direct/legacy tools keep the original strict wall-clock expiry. | module |
 | `apps/config_change_authorization.py` | `rebase_authenticated_outbound_claim` | 142 | function | Bound an API-verified signed approval to the VM's *local* expiry. | module |
-| `apps/config_change_authorization.py` | `sign_root_guard` | 175 | function | Ed25519 root guard signature; VM stores only its verification public key. | module |
+| `apps/config_change_authorization.py` | `root_guard_apply_signing_status` | 178 | function | Safe, read-only verification of the local Ed25519 signing prerequisites. | module |
+| `apps/config_change_authorization.py` | `sign_root_guard` | 228 | function | Ed25519 root guard signature; VM stores only its verification public key. | module |
 | `apps/config_change_auto_queue.py` | `_verified_service_start_scope` | 26 | async function | Only a fresh read-only VM MCP check can extend a new ticket to Start. | module |
 | `apps/config_change_auto_queue.py` | `auto_queue_candidate` | 68 | function | Only existing, tightly validated hash-bound proposals can enter queue. | module |
 | `apps/config_change_auto_queue.py` | `auto_queue_prevalidation` | 88 | async function | Automatic *request*, never automatic Approval; record the exact blocker. | module |
@@ -2540,12 +2541,12 @@
 | `integrations/vm/general_config_review.py` | `_structural_line` | 51 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `integrations/vm/general_config_review.py` | `_remove_trailing_json_commas` | 73 | function | Only a lexical trailing comma outside JSON strings; never change values. | module |
 | `integrations/vm/general_config_review.py` | `local_config_review` | 100 | function | Review a known config source and generate only a deterministic JSON fix. | module |
-| `integrations/vm/governed_config_change.py` | `rebuild_nginx_candidate` | 30 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `integrations/vm/governed_config_change.py` | `rebuild_json_candidate` | 56 | function | Rebuild exact one-token JSON grammar correction, never values. | module |
-| `integrations/vm/governed_config_change.py` | `rebuild_xml_candidate` | 109 | function | Remove one unmatched EOF closing tag; never edit XML values or DTDs. | module |
-| `integrations/vm/governed_config_change.py` | `classify_config_guard_failure` | 154 | function | Use only fixed, operator-actionable codes; never reflect stderr. | module |
-| `integrations/vm/governed_config_change.py` | `run_governed_change` | 188 | async function | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | module |
-| `integrations/vm/governed_config_change.py` | `_start_after_approved_config_apply` | 485 | async function | Only the signed approval recovery scope authorizes a single systemd start. | module |
+| `integrations/vm/governed_config_change.py` | `rebuild_nginx_candidate` | 32 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `integrations/vm/governed_config_change.py` | `rebuild_json_candidate` | 58 | function | Rebuild exact one-token JSON grammar correction, never values. | module |
+| `integrations/vm/governed_config_change.py` | `rebuild_xml_candidate` | 111 | function | Remove one unmatched EOF closing tag; never edit XML values or DTDs. | module |
+| `integrations/vm/governed_config_change.py` | `classify_config_guard_failure` | 156 | function | Use only fixed, operator-actionable codes; never reflect stderr. | module |
+| `integrations/vm/governed_config_change.py` | `run_governed_change` | 190 | async function | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | module |
+| `integrations/vm/governed_config_change.py` | `_start_after_approved_config_apply` | 503 | async function | Only the signed approval recovery scope authorizes a single systemd start. | module |
 | `integrations/vm/iterative_json_repair.py` | `_quoted_offsets` | 18 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `integrations/vm/iterative_json_repair.py` | `_json_reply` | 35 | function | Strictly identify a JSON edit plan even with a fenced LLM response. | module |
 | `integrations/vm/iterative_json_repair.py` | `apply_edit_plan` | 49 | function | Apply only structural punctuation edits to the exact original bytes. | module |
@@ -6101,6 +6102,23 @@
 | `tests/unit/test_vm_agent_guarded_config.py` | `test_installed_agent_uses_signed_fixed_guard_and_not_root_shell.Connector.config_validate` | 49 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_installed_agent_uses_signed_fixed_guard_and_not_root_shell.Connector |
 | `tests/unit/test_vm_agent_guarded_config.py` | `test_installed_agent_uses_signed_fixed_guard_and_not_root_shell.Connector._run` | 56 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_installed_agent_uses_signed_fixed_guard_and_not_root_shell.Connector |
 | `tests/unit/test_vm_agent_guarded_config.py` | `test_installed_agent_uses_signed_fixed_guard_and_not_root_shell.Connector._sudo` | 59 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_installed_agent_uses_signed_fixed_guard_and_not_root_shell.Connector |
+| `tests/unit/test_vm_agent_guarded_config.py` | `test_root_guard_signer_preflight_detects_missing_mismatch_and_valid_key` | 89 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_agent_guarded_config.py` | `test_missing_signing_key_never_runs_privileged_apply` | 114 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_agent_guarded_config.py` | `test_missing_signing_key_never_runs_privileged_apply.Connector` | 123 | class | کلاس | test_missing_signing_key_never_runs_privileged_apply |
+| `tests/unit/test_vm_agent_guarded_config.py` | `test_missing_signing_key_never_runs_privileged_apply.Connector.config_validate` | 127 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_missing_signing_key_never_runs_privileged_apply.Connector |
+| `tests/unit/test_vm_agent_guarded_config.py` | `test_missing_signing_key_never_runs_privileged_apply.Connector._run` | 131 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_missing_signing_key_never_runs_privileged_apply.Connector |
+| `tests/unit/test_vm_agent_guarded_config.py` | `test_missing_signing_key_never_runs_privileged_apply.Connector._sudo` | 133 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_missing_signing_key_never_runs_privileged_apply.Connector |
+| `tests/unit/test_vm_agent_guarded_config.py` | `test_api_blocks_unready_agent_signer_before_consuming_approval` | 145 | async function | A valid isolated nginx -t is not enough to spend a one-use Approval. | module |
+| `tests/unit/test_vm_agent_guarded_config.py` | `test_api_blocks_unready_agent_signer_before_consuming_approval.Session` | 156 | class | کلاس | test_api_blocks_unready_agent_signer_before_consuming_approval |
+| `tests/unit/test_vm_agent_guarded_config.py` | `test_api_blocks_unready_agent_signer_before_consuming_approval.Session.__aenter__` | 157 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_api_blocks_unready_agent_signer_before_consuming_approval.Session |
+| `tests/unit/test_vm_agent_guarded_config.py` | `test_api_blocks_unready_agent_signer_before_consuming_approval.Session.__aexit__` | 158 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_api_blocks_unready_agent_signer_before_consuming_approval.Session |
+| `tests/unit/test_vm_agent_guarded_config.py` | `test_api_blocks_unready_agent_signer_before_consuming_approval.ApprovalStore` | 159 | class | کلاس | test_api_blocks_unready_agent_signer_before_consuming_approval |
+| `tests/unit/test_vm_agent_guarded_config.py` | `test_api_blocks_unready_agent_signer_before_consuming_approval.ApprovalStore.__init__` | 160 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_api_blocks_unready_agent_signer_before_consuming_approval.ApprovalStore |
+| `tests/unit/test_vm_agent_guarded_config.py` | `test_api_blocks_unready_agent_signer_before_consuming_approval.ApprovalStore.get` | 161 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_api_blocks_unready_agent_signer_before_consuming_approval.ApprovalStore |
+| `tests/unit/test_vm_agent_guarded_config.py` | `test_api_blocks_unready_agent_signer_before_consuming_approval.ApprovalStore.consume` | 162 | async method | transition مربوط به Approval/Governance را اعمال می‌کند | test_api_blocks_unready_agent_signer_before_consuming_approval.ApprovalStore |
+| `tests/unit/test_vm_agent_guarded_config.py` | `test_api_blocks_unready_agent_signer_before_consuming_approval.Agent` | 165 | class | کلاس | test_api_blocks_unready_agent_signer_before_consuming_approval |
+| `tests/unit/test_vm_agent_guarded_config.py` | `test_api_blocks_unready_agent_signer_before_consuming_approval.Agent.config_change_validate` | 166 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_api_blocks_unready_agent_signer_before_consuming_approval.Agent |
+| `tests/unit/test_vm_agent_guarded_config.py` | `test_api_blocks_unready_agent_signer_before_consuming_approval.matching` | 180 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_api_blocks_unready_agent_signer_before_consuming_approval |
 | `tests/unit/test_vm_agent_package_layout.py` | `test_vm_agent_entrypoint_and_every_deployment_asset_in_own_directory` | 16 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_vm_agent_package_layout.py` | `test_agent_configuration_template_is_private_and_agent_specific` | 31 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_vm_agent_package_layout.py` | `test_entrypoint_reads_0600_agent_env_alongside_it` | 48 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
