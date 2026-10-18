@@ -223,3 +223,61 @@ Python cannot guarantee cryptographic zeroization of in-memory string copies.
 The control-plane password remains in its operator-owned configuration and
 process memory by design, so a secret manager or systemd credentials is
 preferable when available. Credential delivery requires verified WSS TLS.
+
+
+
+## Agent-side TLS switch and dual text/JSON audit
+
+For the destination VM **10.248.16.82**, using API
+`10.248.41.67`, configure `/data/aiopsvmagent/agent.env` with:
+
+```env
+VM_AGENT_CONTROL_PLANE_WS_URL=wss://10.248.41.67/api/v1/vm-agents/connect
+# Recommended, requires CA/hostname or IP SAN
+VM_AGENT_TLS_VERIFY=True
+VM_AGENT_CA_BUNDLE_PATH=/etc/ssl/certs/internal-ca.pem
+
+LOG_DIR=/data/aiopsvmagent/logs
+LOG_LEVEL=INFO
+LOG_CONSOLE_ENABLED=True
+LOG_TEXT_FILE_ENABLED=True
+LOG_JSON_FILE_ENABLED=True
+LOG_TEXT_FILE=aiopsvmagent.log
+LOG_JSON_FILE=aiopsvmagent.json.log
+LOG_ROTATION_MODE=size
+LOG_MAX_BYTES=10485760
+LOG_BACKUP_COUNT=10
+LOG_UTC=True
+```
+
+**Exception for a disposable private test environment only**:
+
+```env
+VM_AGENT_TLS_VERIFY=False
+VM_AGENT_CA_BUNDLE_PATH=
+```
+
+This still requires the `wss://` scheme, but it disables validation of the
+remote API's TLS certificate and hostname. Since this transport delivers the
+per-host Linux sudo password at first connection, a man-in-the-middle can steal
+the password or impersonate the control plane. The Agent emits a clear
+`vm_agent_tls_peer_verification_disabled` warning. Prefer deploying your
+private CA PEM and keeping `VM_AGENT_TLS_VERIFY=True`.
+
+The Agent logs to both
+`/data/aiopsvmagent/logs/aiopsvmagent.log` (text)
+and `/data/aiopsvmagent/logs/aiopsvmagent.json.log` (JSON lines).
+
+Each application WebSocket request and response generates a separate record
+with UTC timestamp, log level, `trace_id` correlated to the command ID,
+target, tool, service, status, failure class, frame length and
+`response_time_ms`. Every rejected frame, reconnect, transport error,
+subprocess start, exit code and timeout is recorded too. Only non-sensitive
+**metadata** is logged; full frames, passwords, candidate file bodies,
+signed claims and stdout/stderr are intentionally omitted. JSON and text logs
+are rotated by size (10 MiB, 10 backups by default). The systemd service's
+User must own its `logs` directory (the installer provisions it).
+
+Use `journalctl -u vmmcpagent -f` for console diagnostics. A TCP
+handshake or accepted WSS connection is not proof of a valid sudo credential;
+test a pre-approved bounded action and independently verify host state.
