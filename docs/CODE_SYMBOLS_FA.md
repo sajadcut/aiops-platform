@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 574 | Dashboard JS files scanned: 8 | Symbols indexed: 6518**
+**Python files scanned: 574 | Dashboard JS files scanned: 8 | Symbols indexed: 6531**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -877,15 +877,15 @@
 | `apps/api/signals.py` | `ingest_zabbix_signal` | 274 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/vm_agent_broker.py` | `AgentDisconnected` | 36 | class | کلاس | module |
 | `apps/api/vm_agent_broker.py` | `AgentSession` | 41 | class | کلاس | module |
-| `apps/api/vm_agent_broker.py` | `AgentSession.fail_pending` | 53 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | AgentSession |
-| `apps/api/vm_agent_broker.py` | `OutboundAgentBroker` | 63 | class | کلاس | module |
-| `apps/api/vm_agent_broker.py` | `OutboundAgentBroker.__init__` | 64 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OutboundAgentBroker |
-| `apps/api/vm_agent_broker.py` | `OutboundAgentBroker.is_connected` | 68 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OutboundAgentBroker |
-| `apps/api/vm_agent_broker.py` | `OutboundAgentBroker.connect` | 72 | async method | Authenticate before accepting; reject duplicate host identities. | OutboundAgentBroker |
-| `apps/api/vm_agent_broker.py` | `OutboundAgentBroker.dispatch` | 208 | async method | Never retry an ambiguous write; surface UNKNOWN for reconciliation. | OutboundAgentBroker |
-| `apps/api/vm_agent_broker.py` | `OutboundAgentBroker._not_dispatched` | 294 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OutboundAgentBroker |
-| `apps/api/vm_agent_broker.py` | `OutboundAgentBroker.shutdown` | 303 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OutboundAgentBroker |
-| `apps/api/vm_agent_broker.py` | `OutboundAgentBroker._unavailable` | 315 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OutboundAgentBroker |
+| `apps/api/vm_agent_broker.py` | `AgentSession.fail_pending` | 54 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | AgentSession |
+| `apps/api/vm_agent_broker.py` | `OutboundAgentBroker` | 65 | class | کلاس | module |
+| `apps/api/vm_agent_broker.py` | `OutboundAgentBroker.__init__` | 66 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OutboundAgentBroker |
+| `apps/api/vm_agent_broker.py` | `OutboundAgentBroker.is_connected` | 70 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OutboundAgentBroker |
+| `apps/api/vm_agent_broker.py` | `OutboundAgentBroker.connect` | 74 | async method | Authenticate before accepting; reject duplicate host identities. | OutboundAgentBroker |
+| `apps/api/vm_agent_broker.py` | `OutboundAgentBroker.dispatch` | 221 | async method | Never retry an ambiguous write; surface UNKNOWN for reconciliation. | OutboundAgentBroker |
+| `apps/api/vm_agent_broker.py` | `OutboundAgentBroker._not_dispatched` | 310 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OutboundAgentBroker |
+| `apps/api/vm_agent_broker.py` | `OutboundAgentBroker.shutdown` | 319 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OutboundAgentBroker |
+| `apps/api/vm_agent_broker.py` | `OutboundAgentBroker._unavailable` | 331 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OutboundAgentBroker |
 | `apps/api/workflow.py` | `WorkflowRequest` | 18 | class | کلاس | module |
 | `apps/api/workflow.py` | `WorkflowResponse` | 25 | class | کلاس | module |
 | `apps/api/workflow.py` | `run_workflow` | 39 | async function | Compatibility analysis endpoint backed by the canonical durable E2E runtime. | module |
@@ -1054,8 +1054,10 @@
 | `apps/config_change_authorization.py` | `config_signing_ready` | 62 | function | Verify the actual signing identities, not just the unrelated fleet key. | module |
 | `apps/config_change_authorization.py` | `_message` | 88 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/config_change_authorization.py` | `create_claim` | 92 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
-| `apps/config_change_authorization.py` | `verify_claim` | 110 | function | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | module |
-| `apps/config_change_authorization.py` | `sign_root_guard` | 134 | function | Ed25519 root guard signature; VM stores only its verification public key. | module |
+| `apps/config_change_authorization.py` | `_check_claim` | 110 | function | Validate exact scope and signature; wall-clock check is mandatory by default. | module |
+| `apps/config_change_authorization.py` | `verify_claim` | 137 | function | For direct/legacy tools keep the original strict wall-clock expiry. | module |
+| `apps/config_change_authorization.py` | `rebase_authenticated_outbound_claim` | 142 | function | Bound an API-verified signed approval to the VM's *local* expiry. | module |
+| `apps/config_change_authorization.py` | `sign_root_guard` | 175 | function | Ed25519 root guard signature; VM stores only its verification public key. | module |
 | `apps/config_change_auto_queue.py` | `_verified_service_start_scope` | 26 | async function | Only a fresh read-only VM MCP check can extend a new ticket to Start. | module |
 | `apps/config_change_auto_queue.py` | `auto_queue_candidate` | 68 | function | Only existing, tightly validated hash-bound proposals can enter queue. | module |
 | `apps/config_change_auto_queue.py` | `auto_queue_prevalidation` | 88 | async function | Automatic *request*, never automatic Approval; record the exact blocker. | module |
@@ -6285,6 +6287,7 @@
 | `tests/unit/test_vm_outbound_agent.py` | `test_cancelled_in_flight_write_never_requeues_and_clears_pending` | 414 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_vm_outbound_agent.py` | `test_negotiated_relative_lease_write_requires_fresh_api_commit` | 438 | async function | A write cannot start until the API confirms its own monotonic deadline. | module |
 | `tests/unit/test_vm_outbound_agent.py` | `test_expired_relative_write_is_never_committed_by_api` | 477 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_outbound_agent.py` | `test_relative_config_claim_must_be_live_at_api_commit` | 512 | async function | No API commit if signed claim expires during network/queue delay. | module |
 | `tests/unit/test_vm_pull_review.py` | `test_pull_agent_connection_cannot_deadlock_api_readiness` | 16 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_vm_pull_review.py` | `test_write_failure_after_dispatch_never_claims_no_write` | 44 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_vm_pull_review.py` | `test_write_expiry_before_dispatch_is_not_started` | 58 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
@@ -6322,6 +6325,16 @@
 | `tests/unit/test_vm_pull_review.py` | `test_vm_relative_write_rejects_expired_commit_without_execution.FakeConnection.__aiter__.frames` | 287 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_vm_relative_write_rejects_expired_commit_without_execution.FakeConnection.__aiter__ |
 | `tests/unit/test_vm_pull_review.py` | `test_vm_relative_write_rejects_expired_commit_without_execution.FakeConnection.send` | 296 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_vm_relative_write_rejects_expired_commit_without_execution.FakeConnection |
 | `tests/unit/test_vm_pull_review.py` | `test_vm_relative_write_rejects_expired_commit_without_execution.stop` | 298 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_vm_relative_write_rejects_expired_commit_without_execution |
+| `tests/unit/test_vm_pull_review.py` | `test_relative_outbound_config_apply_rebases_only_valid_original_hmac` | 308 | function | VM is 4m37s ahead: its root guard still receives 55s VM-local proof. | module |
+| `tests/unit/test_vm_pull_review.py` | `test_agent_config_apply_commit_localizes_signed_expiry_only_when_authentic` | 354 | async function | Exercise actual WebSocket execute -> ready -> commit -> MCP boundary. | module |
+| `tests/unit/test_vm_pull_review.py` | `test_agent_config_apply_commit_localizes_signed_expiry_only_when_authentic.guarded_call` | 389 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_agent_config_apply_commit_localizes_signed_expiry_only_when_authentic |
+| `tests/unit/test_vm_pull_review.py` | `test_agent_config_apply_commit_localizes_signed_expiry_only_when_authentic.FakeConnection` | 404 | class | کلاس | test_agent_config_apply_commit_localizes_signed_expiry_only_when_authentic |
+| `tests/unit/test_vm_pull_review.py` | `test_agent_config_apply_commit_localizes_signed_expiry_only_when_authentic.FakeConnection.__aenter__` | 405 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_agent_config_apply_commit_localizes_signed_expiry_only_when_authentic.FakeConnection |
+| `tests/unit/test_vm_pull_review.py` | `test_agent_config_apply_commit_localizes_signed_expiry_only_when_authentic.FakeConnection.__aexit__` | 406 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_agent_config_apply_commit_localizes_signed_expiry_only_when_authentic.FakeConnection |
+| `tests/unit/test_vm_pull_review.py` | `test_agent_config_apply_commit_localizes_signed_expiry_only_when_authentic.FakeConnection.__aiter__` | 407 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_agent_config_apply_commit_localizes_signed_expiry_only_when_authentic.FakeConnection |
+| `tests/unit/test_vm_pull_review.py` | `test_agent_config_apply_commit_localizes_signed_expiry_only_when_authentic.FakeConnection.__aiter__.frames` | 408 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_agent_config_apply_commit_localizes_signed_expiry_only_when_authentic.FakeConnection.__aiter__ |
+| `tests/unit/test_vm_pull_review.py` | `test_agent_config_apply_commit_localizes_signed_expiry_only_when_authentic.FakeConnection.send` | 419 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_agent_config_apply_commit_localizes_signed_expiry_only_when_authentic.FakeConnection |
+| `tests/unit/test_vm_pull_review.py` | `test_agent_config_apply_commit_localizes_signed_expiry_only_when_authentic.stop` | 421 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_agent_config_apply_commit_localizes_signed_expiry_only_when_authentic |
 | `tests/unit/test_vm_recovery_advice.py` | `row` | 14 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_vm_recovery_advice.py` | `gfpapi_rows` | 25 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_vm_recovery_advice.py` | `trigger` | 37 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
