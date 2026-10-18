@@ -18,4 +18,7 @@ pyinstaller --clean --noconfirm --onedir \
   --collect-data certifi \
   --add-data '.env.example:.' \
   apps/vm_agent_runner.py
+# Settings reads .env.example relative to systemd WorkingDirectory. Package
+# a non-secret template OUTSIDE PyInstaller's _internal dir for frozen runs.
+cp .env.example dist/aiops-vm-agent/.env.example
 echo "Bundle: dist/aiops-vm-agent/ (must undergo Linux runtime acceptance)"
