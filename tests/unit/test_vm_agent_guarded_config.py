@@ -161,8 +161,10 @@ async def test_api_blocks_unready_agent_signer_before_consuming_approval(monkeyp
         async def get(self, approval_id): return approval
         async def consume(self, *args, **kwargs):
             raise AssertionError("Must NOT consume Approval before signer is ready")
+    validator_called = []
     class Agent:
         async def config_change_validate(self, target, **kwargs):
+            validator_called.append((target, kwargs))
             assert target == meta["target"]
             assert kwargs["original_sha256"] == meta["original_sha256"]
             return {
@@ -187,5 +189,5 @@ async def test_api_blocks_unready_agent_signer_before_consuming_approval(monkeyp
         await module.execute_config(
             uuid4(), identity=SimpleNamespace(subject="sre"),
         )
-    assert exc.value.status_code == 503
+    assert exc.value.status_code == 503, (exc.value.detail, validator_called)
     assert exc.value.detail == "config_guard_private_key_missing"
