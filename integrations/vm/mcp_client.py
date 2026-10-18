@@ -6,6 +6,11 @@ from domain.contracts.config import settings
 from integrations.mcp_client import MCPClient
 
 
+def vm_transport_configured() -> bool:
+    """A selected VM backend is configured; no implicit fallback to SSH."""
+    return bool(settings.VM_AGENT_ENDPOINTS) if settings.VM_EXECUTION_BACKEND == "agent" else bool(settings.VM_MCP_URL)
+
+
 class VMEdgeMCPClient(MCPClient):
     """MCP-only connector for VM/Edge diagnostics and governed remediation."""
 
