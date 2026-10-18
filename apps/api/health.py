@@ -19,7 +19,7 @@ from integrations.elasticsearch.mcp_client import ElasticsearchMCPClient
 from integrations.jenkins.mcp_client import JenkinsMCPClient
 from integrations.kubernetes.mcp_client import KubernetesMCPClient
 from integrations.prometheus.mcp_client import PrometheusMCPClient
-from integrations.vm.mcp_client import VMEdgeMCPClient
+from integrations.vm.mcp_client import VMEdgeMCPClient, vm_transport_configured
 from integrations.zabbix.mcp_client import ZabbixMCPClient
 
 router = APIRouter()
@@ -137,7 +137,7 @@ async def _probe_external() -> dict:
         connectors["jenkins_mcp"] = JenkinsMCPClient()
     if settings.KUBERNETES_MCP_URL:
         connectors["kubernetes_mcp"] = KubernetesMCPClient()
-    if settings.VM_MCP_URL:
+    if vm_transport_configured():
         connectors["vm_mcp"] = VMEdgeMCPClient()
     if settings.COGNIA_BASE_URL:
         try:
@@ -160,7 +160,7 @@ def _external_required_ready(external: dict) -> bool:
         required.append("jenkins_mcp")
     if settings.KUBERNETES_MCP_URL:
         required.append("kubernetes_mcp")
-    if settings.VM_MCP_URL:
+    if vm_transport_configured():
         required.append("vm_mcp")
     required.append("cognia")
     return all(bool((external.get(name) or {}).get("healthy")) for name in required)
