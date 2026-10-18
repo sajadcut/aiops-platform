@@ -402,3 +402,24 @@ For the negotiated `relative_monotonic_v2` two-phase commit **only**:
 Both API and the **installed Linux Agent executable** must be upgraded.
 Use a new human-approved change after independently checking the consumed
 approval's prior outcome and current file hash; NEVER auto-retry writes.
+
+
+## Read-only Root Guard signing preflight
+
+A successful isolated nginx vendor test is NOT proof that approved APPLY can
+construct its Ed25519 signature. The Agent process requires a host-specific
+AIOPS_CONFIG_GUARD_ED25519_PRIVATE_KEY and a matching regular, readable public
+verifier at /etc/aiops/config-change-verify.pem. The installer neither
+creates nor exposes the private key. Provision it via trusted systemd secret
+management, not Git, command-line arguments, web UI or support logs.
+
+For outbound Agents, read-only config_change_validate now reports
+apply_signing_ready separately from vendor syntax validation. Immediately
+before consuming a one-use Approval, the API revalidates the exact approved
+candidate and checks the Agent signing keypair. A missing seed, missing or
+invalid public verifier, or mismatched keypair produces HTTP 503 with a stable
+reason and preserves the Approval. The signed root guard, CAS, isolated vendor
+checks, rollback, and post-apply start restrictions remain mandatory.
+
+Deploy both API and the installed Linux Agent bundle. Never retry a consumed
+Approval automatically: first reconcile the live file hash and service state.
