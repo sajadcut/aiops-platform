@@ -12,6 +12,7 @@ on:
       - 'tests/unit/test_vm_local_agent_transport.py'
       - 'tests/unit/test_vm_agent_all_tools_parity.py'
       - 'tests/unit/test_vm_agent_ambiguous_apply.py'
+      - 'tests/unit/test_vm_agent_guarded_config.py'
       - 'tests/unit/test_mcp_server_contract.py'
       - '.github/workflows/vm-agent-transport.yml'
   pull_request:
@@ -25,6 +26,7 @@ on:
       - 'tests/unit/test_vm_local_agent_transport.py'
       - 'tests/unit/test_vm_agent_all_tools_parity.py'
       - 'tests/unit/test_vm_agent_ambiguous_apply.py'
+      - 'tests/unit/test_vm_agent_guarded_config.py'
       - 'tests/unit/test_mcp_server_contract.py'
       - '.github/workflows/vm-agent-transport.yml'
 
@@ -59,6 +61,7 @@ jobs:
             tests/unit/test_vm_local_agent_transport.py \
             tests/unit/test_vm_agent_all_tools_parity.py \
             tests/unit/test_vm_agent_ambiguous_apply.py \
+            tests/unit/test_vm_agent_guarded_config.py \
             tests/unit/test_mcp_server_contract.py \
             tests/security/test_vm_mcp_security.py \
             tests/security/test_vm_ssh_password_auth.py
