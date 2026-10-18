@@ -18,6 +18,7 @@ from domain.contracts.config import settings
 from domain.contracts.logging import logger
 
 _MAX_FRAME = 1024 * 1024
+_MAX_REPLAY_ENTRIES = 4096
 _TARGET = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.:-]{0,253}\Z")
 
 
@@ -32,6 +33,22 @@ def broker_url() -> str:
     if not target or not _TARGET.fullmatch(target):
         raise RuntimeError("vm_agent_target_invalid")
     return base.rstrip("/") + "/" + quote(target, safe="")
+
+
+_WRITE_TOOLS = frozenset({"start_service", "restart_service", "reload_service", "config_change_apply"})
+
+
+def _execution_failure(tool: str, reason: str, *, sent_to_executor: bool) -> dict:
+    """A write may already have completed even if its response cannot be sent."""
+    if tool in _WRITE_TOOLS:
+        if sent_to_executor:
+            return {"success": False, "status": "execution_outcome_unknown",
+                    "execution_outcome": "UNKNOWN",
+                    "reason": reason, "requires_independent_reconciliation": True,
+                    "production_write_performed": None}
+        return {"success": False, "status": reason,
+                "execution_outcome": "NOT_STARTED", "production_write_performed": False}
+    return {"success": False, "status": reason}
 
 
 async def run_outbound_forever() -> None:
@@ -51,7 +68,9 @@ async def run_outbound_forever() -> None:
     url = broker_url()
     context = ssl.create_default_context(cafile=settings.VM_AGENT_CA_BUNDLE_PATH or None)
     delay = 1
-    completed: deque[str] = deque(maxlen=2048)
+    # Retain all unexpired IDs. Never silently evict a still-valid command:
+    # doing so would permit replay of a completed write within its TTL.
+    completed: deque[tuple[str, int]] = deque()
     known: set[str] = set()
     while True:
         try:
@@ -88,17 +107,21 @@ async def run_outbound_forever() -> None:
                             or type(expires) is not int):
                         await socket.close(code=1008)
                         break
-                    # A duplicate ID is never executed again, even if its
-                    # prior response was lost on this process.
+                    # Retain every live ID until its execution deadline has
+                    # safely passed. On cache saturation reject new commands
+                    # rather than evict unexpired IDs (which permits replay).
+                    now = int(time.time())
+                    while completed and completed[0][1] < now:
+                        known.discard(completed.popleft()[0])
                     if ident in known:
-                        result = {"success": False, "status": "duplicate_request_refused"}
-                    elif expires < int(time.time()) or expires > int(time.time()) + 191:
-                        result = {"success": False, "status": "request_expired"}
+                        result = _execution_failure(tool, "duplicate_request_refused", sent_to_executor=True)
+                    elif expires < now or expires > now + 191:
+                        result = _execution_failure(tool, "request_expired", sent_to_executor=False)
+                    elif len(completed) >= _MAX_REPLAY_ENTRIES:
+                        result = _execution_failure(tool, "request_replay_guard_full", sent_to_executor=False)
                     else:
                         known.add(ident)
-                        if len(completed) == completed.maxlen:
-                            known.discard(completed.popleft())
-                        completed.append(ident)
+                        completed.append((ident, expires + 2))
                         try:
                             result = await _call("vm_agent", tool, args)
                         except Exception as exc:
@@ -107,13 +130,18 @@ async def run_outbound_forever() -> None:
                             logger.warning("vm_agent_outbound_operation_failed",
                                            target=settings.VM_AGENT_TARGET,
                                            tool=tool, error_type=type(exc).__name__)
-                            result = {"success": False, "status": "agent_execution_failed"}
+                            result = _execution_failure(tool, "agent_execution_failed", sent_to_executor=True)
                     payload = json.dumps({"type": "result", "id": ident, "result": result},
                                          separators=(",", ":"), default=str)
                     if len(payload.encode("utf-8")) > _MAX_FRAME:
+                        # The write may be fully committed even though its
+                        # response exceeded the transport cap. Never claim no
+                        # production change or invite a blind re-execution.
                         payload = json.dumps({
                             "type": "result", "id": ident,
-                            "result": {"success": False, "status": "agent_result_too_large"},
+                            "result": _execution_failure(
+                                tool, "agent_result_too_large",
+                                sent_to_executor=(ident in known)),
                         })
                     await socket.send(payload)
         except asyncio.CancelledError:

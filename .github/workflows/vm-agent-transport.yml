@@ -8,12 +8,14 @@ on:
       - 'integrations/http_transport.py'
       - 'apps/mcp_server/**'
       - 'apps/vm_agent_runner.py'
+      - 'apps/api/health.py'
       - 'vmmcpagent/**'
       - 'scripts/build-vm-agent.sh'
       - 'domain/contracts/config.py'
       - 'tests/unit/test_vm_local_agent_transport.py'
       - 'tests/unit/test_vm_agent_package_layout.py'
       - 'tests/unit/test_vm_outbound_agent.py'
+      - 'tests/unit/test_vm_pull_review.py'
       - 'tests/unit/test_vm_agent_all_tools_parity.py'
       - 'tests/unit/test_vm_agent_ambiguous_apply.py'
       - 'tests/unit/test_vm_agent_guarded_config.py'
@@ -26,12 +28,14 @@ on:
       - 'integrations/http_transport.py'
       - 'apps/mcp_server/**'
       - 'apps/vm_agent_runner.py'
+      - 'apps/api/health.py'
       - 'vmmcpagent/**'
       - 'scripts/build-vm-agent.sh'
       - 'domain/contracts/config.py'
       - 'tests/unit/test_vm_local_agent_transport.py'
       - 'tests/unit/test_vm_agent_package_layout.py'
       - 'tests/unit/test_vm_outbound_agent.py'
+      - 'tests/unit/test_vm_pull_review.py'
       - 'tests/unit/test_vm_agent_all_tools_parity.py'
       - 'tests/unit/test_vm_agent_ambiguous_apply.py'
       - 'tests/unit/test_vm_agent_guarded_config.py'
@@ -75,6 +79,7 @@ jobs:
             tests/unit/test_vm_local_agent_transport.py \
             tests/unit/test_vm_agent_package_layout.py \
             tests/unit/test_vm_outbound_agent.py \
+            tests/unit/test_vm_pull_review.py \
             tests/unit/test_vm_agent_all_tools_parity.py \
             tests/unit/test_vm_agent_ambiguous_apply.py \
             tests/unit/test_vm_agent_guarded_config.py \

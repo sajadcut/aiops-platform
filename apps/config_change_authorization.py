@@ -60,9 +60,26 @@ def candidate_encryption_key() -> bytes:
 
 
 def config_signing_ready() -> bool:
-    """Local readiness only. Never expose key bytes or report VM MCP readiness."""
+    """Verify the actual signing identities, not just the unrelated fleet key.
+
+    In agent modes every target's approval signature uses its own token.
+    Reporting ready when only MCP_BEARER_TOKEN is configured is misleading.
+    This check is local; it does not claim that an Agent is connected or that
+    an approved write can be executed.
+    """
+    from domain.contracts.config import settings
     try:
-        _key()
+        if settings.MCP_SERVER_PROVIDER == "vm_agent":
+            _key()
+        elif settings.VM_EXECUTION_BACKEND in {"agent", "agent_pull"}:
+            tokens = settings.VM_AGENT_TOKENS
+            if not tokens or (settings.VM_EXECUTION_BACKEND == "agent"
+                              and set(tokens) != set(settings.VM_AGENT_ENDPOINTS)):
+                return False
+            for target in tokens:
+                _key(target=target)
+        else:
+            _key()
     except PermissionError:
         return False
     return True

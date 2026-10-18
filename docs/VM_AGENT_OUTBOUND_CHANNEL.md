@@ -39,6 +39,22 @@ properly verified certificate and a reverse proxy that forwards WebSocket
 Upgrade. `VM_AGENT_TOKENS` keys are exact target identities; each VM has a
 different strong secret. No API-to-VM routes are needed.
 
+**Bootstrap and health:** the API's `/api/v1/health/ready` does not
+require connected outbound agents; otherwise readiness-gated ingress would
+prevent agents from establishing their first session. Agent connectivity is
+still reported independently as `vm_mcp` dependency health and through the
+authenticated `GET /api/v1/vm-agents/status` endpoint. Keep disconnected
+hosts visible and fail execution closed; do not mark them operationally healthy.
+
+**Write-result integrity:** after a mutable operation has reached an Agent,
+loss of the response, a caught local execution exception, a replayed request
+ID or an oversized response is reported as `UNKNOWN` and requires an
+independent state check. Expired/busy/not-connected requests which never
+reached the Agent are `NOT_STARTED`. Cancellation of the HTTP/API task
+does not roll back an in-flight VM write. All still-valid request IDs are
+retained in the Agent process; on replay-cache saturation new requests are
+rejected instead of forgetting IDs that could be replayed.
+
 **Important scaling constraint:** the current broker's sessions and pending
 results are **process-local**. For `agent_pull`, deploy one AIOps API worker
 and one API instance handling both Agent WebSocket sessions AND requests for

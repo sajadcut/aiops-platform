@@ -162,6 +162,13 @@ class OutboundAgentBroker:
                         tool=tool, request_id=request_id,
                         success=result.get("success") is True)
             return result
+        except asyncio.CancelledError:
+            # Client/API task cancellation does not cancel an already sent
+            # operation on the host. Audit its possibly committed outcome.
+            logger.warning("vm_outbound_dispatch_cancelled_unknown",
+                           target=target, tool=tool, request_id=request_id,
+                           requires_reconciliation=tool in WRITE_TOOLS)
+            raise
         except (asyncio.TimeoutError, RuntimeError, OSError, WebSocketDisconnect):
             logger.warning("vm_outbound_dispatch_unconfirmed", target=target,
                            tool=tool, request_id=request_id)
