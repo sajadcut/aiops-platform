@@ -167,12 +167,15 @@ class Settings(BaseSettings):
     VM_EXECUTION_BACKEND: str = Field(...)
     VM_AGENT_ENDPOINTS: Dict[str, str] = Field(...)
     VM_AGENT_TOKENS: Dict[str, str] = Field(..., repr=False)
+    # Operator-owned plaintext API config: never emit credentials in logs or responses.
+    VM_AGENT_EXECUTION_CREDENTIALS: Dict[str, Dict[str, str]] = Field(..., repr=False)
     VM_AGENT_BEARER_TOKEN: Optional[str] = Field(..., repr=False)
     VM_AGENT_CA_BUNDLE_PATH: Optional[str] = Field(...)
     VM_AGENT_CONTROL_PLANE_WS_URL: Optional[str] = Field(...)
     VM_AGENT_CONNECTION_MODE: str = Field(...)
     # Settings used only by a VM MCP process running directly on the target.
     VM_AGENT_TARGET: str = Field(...)
+    VM_AGENT_EXEC_USERNAME: str = Field(...)
     VM_AGENT_ALLOWED_SERVICES: List[str] = Field(...)
 
     ELASTICSEARCH_HOSTS: List[str] = Field(...)
