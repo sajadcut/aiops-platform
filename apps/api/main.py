@@ -331,6 +331,19 @@ def _validate_production_configuration() -> None:
                 errors.append("VM_AGENT_TOKENS must have exactly one token for every target")
         elif not settings.VM_AGENT_TOKENS:
             errors.append("VM_AGENT_TOKENS required for agent_pull backend")
+        if settings.VM_EXECUTION_BACKEND == "agent_pull":
+            credentials = settings.VM_AGENT_EXECUTION_CREDENTIALS
+            if set(credentials) != set(settings.VM_AGENT_TOKENS):
+                errors.append("VM_AGENT_EXECUTION_CREDENTIALS must match every agent_pull target")
+            import re
+            for target, item in credentials.items():
+                username = item.get("username") if isinstance(item, dict) else None
+                password = item.get("password") if isinstance(item, dict) else None
+                if (not isinstance(username, str)
+                        or not re.fullmatch(r"[a-z_][a-z0-9_-]{0,31}", username)
+                        or username == "root" or not isinstance(password, str)
+                        or not password or any(ch in password for ch in ("\\n", "\\r", "\\x00"))):
+                    errors.append("VM_AGENT_EXECUTION_CREDENTIALS contains invalid target account credentials")
         agent_secrets = list(settings.VM_AGENT_TOKENS.values())
         if (len(agent_secrets) != len(set(agent_secrets))
                 or any(len(str(secret).encode("utf-8")) < 32

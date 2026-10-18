@@ -27,6 +27,52 @@ class LocalVMConnector(SSHVMConnector):
     # Root-owned fixed guard with on-host public signature verification;
     # never sudo an arbitrary stdin-controlled POSIX shell on the agent.
     uses_root_owned_config_guard = True
+    # Only process memory; never persist API-delivered sudo credentials.
+    _session_sudo_password: Optional[str] = None
+
+    @classmethod
+    def execution_identity(cls) -> str:
+        if os.name != "posix":
+            raise RuntimeError("vm_agent_requires_linux_posix")
+        import pwd  # Linux only; preserve Windows Control Plane imports.
+        return pwd.getpwuid(os.geteuid()).pw_name
+
+    @classmethod
+    def set_session_credentials(cls, username: str, password: str) -> None:
+        expected = str(settings.VM_AGENT_EXEC_USERNAME or "").strip()
+        if not expected or username != expected or cls.execution_identity() != expected:
+            raise PermissionError("vm_agent_exec_username_mismatch")
+        if (not isinstance(password, str) or not password
+                or any(char in password for char in ("\n", "\r", "\x00"))):
+            raise PermissionError("vm_agent_sudo_password_invalid")
+        cls._session_sudo_password = password
+
+    @classmethod
+    def clear_session_credentials(cls) -> None:
+        cls._session_sudo_password = None
+
+    async def _sudo(self, target: str, fixed_command: str, *,
+                    stdin_data: Optional[str] = None) -> Dict[str, Any]:
+        self._validate_target(target)
+        # Reuse only trusted allowlisted sudo operations from SSHVMConnector.
+        password = type(self)._session_sudo_password
+        if password:
+            # Exactly one invocation, with a fresh sudo authentication.
+            # Never probe the same mutable action and then try it again.
+            payload = password + "\n" + (stdin_data if stdin_data is not None else "")
+            result = await self._run(
+                target, "sudo -k -S -p '' " + fixed_command, stdin_data=payload)
+            for field in ("stdout", "stderr"):
+                if field in result:
+                    result[field] = str(result[field]).replace(password, "[REDACTED]")
+            return result
+        # Legacy inbound/local NOPASSWD mode remains available without a
+        # transmitted credential; never attempt an interactive password prompt.
+        result = await self._run(
+            target, "sudo -n " + fixed_command, stdin_data=stdin_data)
+        if self._sudo_requires_password(result):
+            return {"success": False, "error": "vm_agent_sudo_credentials_not_provisioned"}
+        return result
 
     @classmethod
     def _validate_runtime_security(cls) -> None:
@@ -38,6 +84,10 @@ class LocalVMConnector(SSHVMConnector):
             raise RuntimeError("vm_agent_allowed_services_required")
         if settings.SSH_ENABLED:
             raise RuntimeError("vm_agent_must_not_enable_ssh")
+        if settings.VM_AGENT_CONNECTION_MODE == "outbound" and settings.APP_ENV == "production":
+            expected = str(settings.VM_AGENT_EXEC_USERNAME or "").strip()
+            if not expected or cls.execution_identity() != expected:
+                raise RuntimeError("vm_agent_runtime_exec_user_mismatch")
         if os.name != "posix":
             raise RuntimeError("vm_agent_requires_linux_posix")
         # A dedicated unprivileged systemd service account is essential; sudo

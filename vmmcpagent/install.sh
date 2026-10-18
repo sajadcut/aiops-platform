@@ -15,10 +15,24 @@ if [[ -e "$SRC/agent.env" || -e "$SRC/.env" ]]; then
 fi
 # Keep agent binaries/configuration and private runtime data below one root.
 DST="/data/aiopsvmagent"
-if ! id -u aiops-agent >/dev/null 2>&1 || ! getent group aiops-agent >/dev/null 2>&1; then
-  echo "Create the aiops-agent system account and group before installation" >&2
+# The service user is selected from agent.env, not from credentials
+# supplied over the network. Never execute sourced operator text as shell code.
+# If the file is not installed yet, read the bundled template.
+if [[ -L "$DST/agent.env" ]]; then
+  echo "Refusing symlinked agent.env" >&2; exit 4
+fi
+ACTOR_CONFIG="$DST/agent.env"
+if [[ ! -f "$ACTOR_CONFIG" ]]; then ACTOR_CONFIG="$SRC/agent.env.example"; fi
+ACTOR="$(sed -n 's/^VM_AGENT_EXEC_USERNAME=//p' "$ACTOR_CONFIG" | tail -n 1)"
+ACTOR="${ACTOR:-aiops-agent}"
+if [[ ! "$ACTOR" =~ ^[a-z_][a-z0-9_-]{0,31}$ ]] || [[ "$ACTOR" == root ]]; then
+  echo "Invalid VM_AGENT_EXEC_USERNAME in agent.env" >&2; exit 4
+fi
+if ! id -u "$ACTOR" >/dev/null 2>&1; then
+  echo "Create the configured VM_AGENT_EXEC_USERNAME account before installation" >&2
   exit 4
 fi
+ACTOR_GROUP="$(id -gn "$ACTOR")"
 if [[ -L "$DST" || ( -e "$DST" && ! -d "$DST" ) ]]; then
   echo "Agent installation directory must be a real directory" >&2
   exit 5
@@ -36,7 +50,7 @@ find "$DST" -mindepth 1 -maxdepth 1 \
   -exec chown -R root:root -- {} +
 # Candidate vault requires uid=aiops-agent and mode 0700 to pass its secure
 # directory checks. The same private owner is used for on-host log files.
-install -d -o aiops-agent -g aiops-agent -m 0700 \
+install -d -o "$ACTOR" -g "$ACTOR_GROUP" -m 0700 \
   "$DST/config-candidates" "$DST/logs"
 # Templates and binary may be world-readable; operator secrets may not.
 chmod 0755 "$DST/vmmcpagent"
@@ -47,6 +61,12 @@ else
 fi
 install -o root -g root -m 0750 "$DST/aiops-config-guard" /usr/local/sbin/aiops-config-guard
 install -o root -g root -m 0644 "$DST/vmmcpagent.service" /etc/systemd/system/vmmcpagent.service
+# systemd cannot expand User= from EnvironmentFile; install a root-owned
+# drop-in for the exact locally configured user instead.
+install -d -o root -g root -m 0755 /etc/systemd/system/vmmcpagent.service.d
+printf '[Service]\nUser=%s\nGroup=%s\n' "$ACTOR" "$ACTOR_GROUP" \
+  > /etc/systemd/system/vmmcpagent.service.d/10-execution-user.conf
+chmod 0644 /etc/systemd/system/vmmcpagent.service.d/10-execution-user.conf
 systemctl daemon-reload
 echo "Installed. Edit $DST/agent.env and configure:"
 echo " - VM_AGENT_TARGET, VM_AGENT_ALLOWED_SERVICES, VM_AGENT_BEARER_TOKEN"
