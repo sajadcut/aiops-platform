@@ -165,6 +165,8 @@ class Settings(BaseSettings):
     # Control Plane selection: keep existing SSH VM MCP and add per-target HTTPS agents.
     VM_EXECUTION_BACKEND: str = Field(...)
     VM_AGENT_ENDPOINTS: Dict[str, str] = Field(...)
+    VM_AGENT_TOKENS: Dict[str, str] = Field(..., repr=False)
+    VM_AGENT_BEARER_TOKEN: Optional[str] = Field(..., repr=False)
     VM_AGENT_CA_BUNDLE_PATH: Optional[str] = Field(...)
     # Settings used only by a VM MCP process running directly on the target.
     VM_AGENT_TARGET: str = Field(...)
