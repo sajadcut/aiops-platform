@@ -144,3 +144,38 @@ def test_installer_reapplies_traversable_mode_after_archive_copy(tmp_path):
     private_config.chmod(0o600)
     os.chmod(destination, 0o755)
     assert stat.S_IMODE(private_config.stat().st_mode) == 0o600
+
+
+def test_installer_makes_private_pyinstaller_runtime_readable_without_widening_secrets(tmp_path):
+    """A root/umask-077 build must work under the unprivileged systemd user."""
+    import os
+    import stat
+    import subprocess
+
+    root = tmp_path / "installed"
+    internal = root / "_internal"
+    nested = internal / "python"
+    nested.mkdir(parents=True)
+    lib = nested / "libpython3.12.so.1.0"
+    lib.write_bytes(b"test shared object")
+    lib.chmod(0o600)
+    internal.chmod(0o700)
+    nested.chmod(0o700)
+    secret = root / "agent.env"
+    secret.write_text("test-only-secret")
+    secret.chmod(0o600)
+
+    # Reproduce the narrow permission repair that install.sh applies.
+    subprocess.run(["chmod", "-R", "a+rX", str(internal)], check=True)
+    assert stat.S_IMODE(internal.stat().st_mode) == 0o755
+    assert stat.S_IMODE(nested.stat().st_mode) == 0o755
+    assert stat.S_IMODE(lib.stat().st_mode) == 0o644
+    assert stat.S_IMODE(secret.stat().st_mode) == 0o600
+
+    install = (AGENT / "install.sh").read_text()
+    assert '[[ -L "$DST/_internal" || ! -d "$DST/_internal" ]]' in install
+    assert 'chmod -R a+rX "$DST/_internal"' in install
+    assert 'chmod -R a+rX "$DST"' not in install
+    assert install.index('chmod -R a+rX "$DST/_internal"') > install.index(
+        'cp -a "$SRC/." "$DST/"'
+    )
