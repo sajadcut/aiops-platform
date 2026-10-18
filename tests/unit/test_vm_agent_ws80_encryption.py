@@ -134,3 +134,72 @@ def test_test_psk_requires_hex_32_bytes():
     for bad in (None, "", "aa", "zz" * 32, "aa" * 31, "aa" * 33):
         with pytest.raises(SecureChannelError):
             _key(bad)
+
+
+@pytest.mark.asyncio
+async def test_broker_provisions_encrypted_credential_and_routes_encrypted_mcp(monkeypatch):
+    from apps.api.vm_agent_broker import OutboundAgentBroker
+
+    token, psk = "T" * 48, "ab" * 32
+    target = "vm-01"
+    monkeypatch.setattr(settings, "APP_ENV", "test")
+    monkeypatch.setattr(settings, "VM_EXECUTION_BACKEND", "agent_pull")
+    monkeypatch.setattr(settings, "VM_AGENT_WS_TEST_MODE", True)
+    monkeypatch.setattr(settings, "VM_AGENT_TOKENS", {target: token})
+    monkeypatch.setattr(settings, "VM_AGENT_WS_TEST_KEYS", {target: psk})
+    monkeypatch.setattr(settings, "VM_AGENT_EXECUTION_CREDENTIALS", {
+        target: {"username": "opsbot", "password": "private-sudo-password"},
+    })
+    pair = Pair()
+
+    class BrokerSocket(Pair.API):
+        def __init__(self, owner):
+            super().__init__(owner)
+            self.headers = {"authorization": "Bearer " + token}
+            self.accepted = False
+            self.closed = None
+
+        async def accept(self):
+            self.accepted = True
+
+        async def close(self, code=1000):
+            self.closed = code
+            await self.pair.to_api.put(None)
+
+    api_socket = BrokerSocket(pair)
+    agent_socket = Pair.Agent(pair)
+    broker = OutboundAgentBroker()
+    task = asyncio.create_task(broker.connect(api_socket, target))
+    # Broker authorizes Bearer and sends a PSK challenge.
+    protected_agent = await asyncio.wait_for(secure_agent(agent_socket, target, psk), 1)
+    encrypted_credentials = await agent_socket.recv()
+    assert "private-sudo-password" not in encrypted_credentials
+    assert json.loads(encrypted_credentials)["type"] == "sealed"
+    credential = json.loads(protected_agent.cipher.decrypt(encrypted_credentials))
+    assert credential["type"] == "credentials"
+    assert credential["password"] == "private-sudo-password"
+    assert not broker.is_connected(target)
+    await protected_agent.send(json.dumps({
+        "type": "credentials_ack", "target": target,
+        "username": "opsbot", "ok": True,
+    }))
+    for _ in range(100):
+        if broker.is_connected(target):
+            break
+        await asyncio.sleep(0.001)
+    assert broker.is_connected(target)
+    request = asyncio.create_task(broker.dispatch(
+        target, "service_status", {"target": target, "service": "nginx"}
+    ))
+    encrypted_command = await asyncio.wait_for(agent_socket.recv(), 1)
+    assert "service_status" not in encrypted_command
+    command = json.loads(protected_agent.cipher.decrypt(encrypted_command))
+    assert command["tool"] == "service_status"
+    await protected_agent.send(json.dumps({
+        "type": "result", "id": command["id"],
+        "result": {"success": True, "active_state": "active"},
+    }))
+    assert (await request)["active_state"] == "active"
+    assert "private-sudo-password" not in "".join(pair.transmitted_api)
+    await api_socket.close()
+    await asyncio.wait_for(task, 1)
