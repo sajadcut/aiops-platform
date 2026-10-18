@@ -305,8 +305,11 @@ async def test_click_recheck_calls_only_readonly_service_status_and_writes_audit
     class Audit:
         def __init__(self, db): pass
         async def append(self, event): calls.append(("audit", event))
+        async def list(self, incident_id, limit):
+            return [item[1] for item in calls if item[0] == "audit"]
     async def scope(db, incident_id):
-        return (SimpleNamespace(service="gfpapi"), [vm_fact()],
+        return (SimpleNamespace(service="gfpapi", source="zabbix",
+                                summary="", context={}, status="open"), [vm_fact()],
                 incident_context(),
                 {"candidate": "10.248.16.82"})
     async def read_status(service, evidence, context, *, force_live):
@@ -314,7 +317,8 @@ async def test_click_recheck_calls_only_readonly_service_status_and_writes_audit
         return {"target": "10.248.16.82", "service": "gfpapi"}, {
             "live_observation": {"success": True, "target": "10.248.16.82",
                                  "service": "gfpapi", "active_state": "active",
-                                 "sub_state": "running", "result": "success"}}
+                                 "load_state": "loaded", "sub_state": "running",
+                                 "result": "success"}}
     monkeypatch.setattr(api, "AsyncSessionLocal", Db)
     async def isolated_followup(*args, **kwargs):
         return {"status": "isolated_test_no_database", "reassessed": False}
@@ -322,9 +326,14 @@ async def test_click_recheck_calls_only_readonly_service_status_and_writes_audit
     monkeypatch.setattr(api, "_incident_status_scope", scope)
     monkeypatch.setattr(api, "resolve_vm_binding", read_status)
     monkeypatch.setattr(api, "PostgreSQLAuditStore", Audit)
+    from integrations.vm import mcp_client
+    class ReadOnlyClient:
+        async def service_status(self, target, service):
+            return {"success": False, "target": target, "service": service}
+    monkeypatch.setattr(mcp_client, "VMEdgeMCPClient", ReadOnlyClient)
     result = await api.recheck_incident_service_status(
         UUID("11111111-1111-4111-8111-111111111111"),
-        identity=SimpleNamespace(subject="sre-test"),
+        identity=SimpleNamespace(subject="sre-test", roles=["sre"]),
     )
     assert result["status"] == "running"
     assert result["source"] == "vm_mcp_recheck"
@@ -462,3 +471,57 @@ async def test_vm_worker_service_status_returns_actual_systemd_id(monkeypatch):
     assert reply["active_state"] == "active"
     assert len(executed) == 1
     assert "--property=Id" in executed[0][1]
+
+
+@pytest.mark.asyncio
+async def test_live_identity_retains_strict_systemd_fields_for_recheck():
+    """Agent success must not become unknown after sanitized observation."""
+    from apps.incident_service.service_recovery_reconciliation import (
+        _bound_systemd_observation,
+    )
+
+    class Agent:
+        async def service_status(self, target, service):
+            return {
+                "success": True, "target": target, "service": service,
+                "unit_id": "nginx.service", "load_state": "loaded",
+                "active_state": "active", "sub_state": "running",
+                "main_pid": 9751, "restart_count": 2, "result": "success",
+                "stdout": "password=not-to-be-kept",
+            }
+
+    ctx = incident_context(service="nginx")
+    bound, diagnosis = await resolve_vm_binding(
+        "nginx", [], ctx, connector=Agent(), force_live=True,
+    )
+    assert bound is not None
+    assert diagnosis["status"] == "verified_from_live_vm_mcp"
+    evidence = diagnosis["live_observation"]
+    assert evidence["load_state"] == "loaded"
+    assert evidence["main_pid"] == 9751
+    assert evidence["restart_count"] == 2
+    assert "stdout" not in evidence
+    safe = _bound_systemd_observation(
+        evidence, target="10.248.16.82", service="nginx",
+    )
+    assert safe["active_state"] == "active"
+    assert safe["sub_state"] == "running"
+    assert safe["main_pid"] == 9751
+
+
+@pytest.mark.asyncio
+async def test_unloaded_live_service_cannot_be_misrepresented_as_loaded():
+    from apps.incident_service.service_recovery_reconciliation import (
+        _bound_systemd_observation,
+    )
+    class Agent:
+        async def service_status(self, target, service):
+            return {"success": True, "target": target, "service": service,
+                    "active_state": "inactive", "sub_state": "dead",
+                    "load_state": "not-found"}
+    binding, diagnosis = await resolve_vm_binding(
+        "nginx", [], incident_context(service="nginx"),
+        connector=Agent(), force_live=True,
+    )
+    assert binding is None
+    assert diagnosis["status"] == "vm_mcp_live_identity_mismatch"

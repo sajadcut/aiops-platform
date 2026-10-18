@@ -247,7 +247,15 @@ async def resolve_vm_binding(
             "success": True, "target": target, "service": name,
             "active_state": status,
             "sub_state": str(fresh.get("sub_state") or "")[:60],
+            "load_state": str(fresh.get("load_state") or "").lower()[:60],
             "result": str(fresh.get("result") or "")[:60],
+            # Keep the allowlisted systemd counters: dropping these fields
+            # made the next strict _bound_systemd_observation reject an
+            # otherwise verified Agent response and prevented stability checks.
+            **{
+                key: fresh[key] for key in ("restart_count", "main_pid")
+                if type(fresh.get(key)) is int and fresh[key] >= 0
+            },
         },
     }
 

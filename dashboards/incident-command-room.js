@@ -528,7 +528,11 @@
       Number(p.analysis_percent)<100&&completedStages<expectedStages;
     const crashed=Boolean((precheckFailed||p.failed_stage&&!p.current_stage)&&!awaiting&&!terminal);
     const hasEvents=Boolean(p.last_event_at);
-    if(state.historic || (!running && !awaiting && !hasEvents)){box.hidden=true;return;}
+    // Retain a truthful progress panel even when an older, completed
+    // incident has no persisted milestones. Hiding it looks like a broken UI;
+    // the empty bar means "not recorded", never pretend it is 100%.
+    if(state.historic || (!running && !awaiting && !hasEvents &&
+       !['paused','completed','failed'].includes(low(l.checkpoint_status)))){box.hidden=true;return;}
     box.hidden=false;
     const fa=state.language==='fa';
     const execution=(approval==='approved'||approval==='consumed') &&
@@ -550,7 +554,9 @@
     const spinner=$('#ic-analysis-spinner');
     if(spinner)spinner.hidden=awaiting||terminal||crashed||!running&&!(execution&&currentStage);
     const title=$('#ic-analysis-title'),detail=$('#ic-analysis-detail');
-    if(title)title.textContent=crashed?
+    if(title)title.textContent=(!hasEvents&&!running&&!awaiting)?
+      (fa?'مراحل تحلیل این رخداد ثبت نشده‌اند':'No recorded analysis milestones'):
+      crashed?
       (fa?'تحلیل با خطا در مرحلهٔ ':'Analysis failed during ')+phaseName(p.failed_stage):
       (activeAgent&&currentStage==='parallel_agents'&&activeLabel
       ?(fa?'در حال تحلیل: ':'Analyzing: ')+activeLabel
@@ -560,7 +566,10 @@
           'Workflow ended; some milestones were not recorded'):
         terminal?(fa?'بررسی رخداد تکمیل شده است':'Incident analysis finished'):
         fa?'در حال دریافت وضعیت تحلیل…':'Loading analysis progress…');
-    if(detail)detail.textContent=crashed?
+    if(detail)detail.textContent=(!hasEvents&&!running&&!awaiting)?
+      (fa?'تحلیل پایان یافته اما تاریخچهٔ پیشرفت این رخداد در ممیزی ثبت نشده است. درصد تخمینی نمایش داده نمی‌شود؛ رخدادهای جدید پس از اصلاح به‌صورت زنده ثبت می‌شوند.':
+       'Analysis has ended but no durable progress milestones were recorded for this incident. No estimated percentage is shown; new incidents will record milestones live.'):
+      crashed?
       (fa?'این مرحله ناموفق بوده و ادامهٔ بررسی باید از گزارش خطا پیگیری شود.':'This step failed; check the error report.'):
       awaiting?
       (fa?'تحلیل متوقف است؛ منتظر تصمیم انسانی':'Analysis is paused for human approval'):
@@ -584,9 +593,11 @@
       (fa?'پیشرفت مراحل اجرا و راستی‌آزمایی':'Execution and verification milestones'):
       (fa?'پیشرفت مراحل تحلیل':'Analysis milestones');
     const caution=$('#ic-flow-caution');
-    if(caution)caution.textContent=fa?
-      'این درصد فقط از مراحل واقعاً تکمیل‌شده است و تخمین زمان باقی‌مانده نیست.':
-      'Percentage is based on verified stage completion, not time remaining.';
+    if(caution)caution.textContent=p.milestone_source==='operational_audit'?
+      (fa?'این مراحل از ممیزی واقعی این رخداد بازسازی شده‌اند، نه از اتصال زندهٔ آن زمان. درصد فقط بر مبنای مراحل دارای سند محاسبه می‌شود.':
+       'Stages recovered from the actual incident audit, not the original live stream. Only documented completed stages count.'):
+      (fa?'این درصد فقط از مراحل واقعاً تکمیل‌شده است و تخمین زمان باقی‌مانده نیست.':
+       'Percentage is based on verified stage completion, not time remaining.');
     const timeline=[...Object.entries(p.stages||{}),...Object.entries(p.providers||{}),
       ...Object.entries(p.agents||{}).map(([key,v])=>['agent:'+key,v])]
       .filter(([_,v])=>v&&v.at)

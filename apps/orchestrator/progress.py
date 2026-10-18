@@ -7,6 +7,7 @@ is waiting on external MCP/LLM calls in another transaction/process.
 from __future__ import annotations
 
 import asyncio
+import os
 from datetime import datetime, timezone
 from typing import Any, Mapping
 from uuid import uuid4
@@ -45,9 +46,12 @@ async def emit_progress(incident_id: str | None, stage: str, status: str,
     """Best-effort progress, NOT durable operational decision evidence."""
     if not incident_id:
         return
-    # Unit tests use fake workflow/session objects; never attempt an unrelated
-    # production audit DB connection from those simulations.
-    if settings.APP_ENV == "test":
+    # APP_ENV=test is also the real, running Windows/Linux integration lab:
+    # dropping every event there silently freezes the Incident Room at 0%.
+    # Only isolated pytest unit simulations should skip the external DB
+    # observer by default. Integration tests can explicitly opt in by
+    # removing PYTEST_CURRENT_TEST while using their own stubbed DB.
+    if settings.APP_ENV == "test" and os.environ.get("PYTEST_CURRENT_TEST"):
         return
     record = progress_record(stage, status, detail=detail, provider=provider)
     try:
@@ -70,6 +74,36 @@ async def emit_progress(incident_id: str | None, stage: str, status: str,
     except Exception as exc:
         logger.warning("workflow_progress_record_failed", incident_id=str(incident_id),
                        stage=stage, error_type=type(exc).__name__)
+
+
+# These milestones are proven by *durable operational audit events*, not by
+# an estimated timeline. They are a read-only fallback for older incidents in
+# which APP_ENV=test suppressed all observer-specific workflow_progress writes.
+# Never infer execution success, recovery or human approval from an analysis
+# milestone. A partial history must remain a partial progress bar.
+_LEGACY_STAGE_EVENTS = {
+    "context_loaded": "context",
+    "triage_completed": "triage",
+    "specialist_analysis_completed": "parallel_agents",
+    "rca_completed": "rca",
+    "evaluation_completed": "evaluator",
+    "decision_made": "decision",
+}
+
+
+def _legacy_audit_progress_rows(events: list[Mapping[str, Any]]) -> list[dict]:
+    result = []
+    for row in events:
+        stage = _LEGACY_STAGE_EVENTS.get(str(row.get("event_type") or ""))
+        if not stage or str(row.get("status") or "").lower() not in {"recorded", "completed"}:
+            continue
+        # No audit message body, model output or sensitive metadata is copied
+        # into the public progress response.
+        result.append({
+            "metadata": {"stage": stage, "status": "completed"},
+            "created_at": row.get("created_at"),
+        })
+    return result
 
 
 def _safe_event(event: Mapping[str, Any]) -> dict | None:
@@ -178,9 +212,17 @@ def summarize_progress(events: list[Mapping[str, Any]], *, incident_status: str 
 async def load_progress(incident_id: str) -> dict:
     async with AsyncSessionLocal() as db:
         rows = (await db.execute(text("""
-            SELECT event_id, metadata, created_at FROM (
-              SELECT event_id, metadata, created_at FROM audit_events
-              WHERE incident_id=:incident_id AND event_type='workflow_progress'
+            SELECT event_id, event_type, status, metadata, created_at FROM (
+              SELECT event_id, event_type, status, metadata, created_at
+              FROM audit_events
+              WHERE incident_id=:incident_id AND (
+                  event_type='workflow_progress'
+                  OR event_type IN (
+                      'context_loaded', 'triage_completed',
+                      'specialist_analysis_completed', 'rca_completed',
+                      'evaluation_completed', 'decision_made'
+                  )
+              )
               ORDER BY created_at DESC, event_id DESC LIMIT 180
             ) e ORDER BY created_at, event_id
         """), {"incident_id": incident_id})).mappings().all()
@@ -194,8 +236,20 @@ async def load_progress(incident_id: str) -> dict:
         """), {"incident_id": incident_id})).mappings().first()
     if not status:
         return {}
-    return summarize_progress([dict(row) for row in rows],
-                              incident_status=str(status["incident_status"] or ""),
-                              checkpoint_status=str(status["checkpoint_status"] or ""),
-                              checkpoint_version=status["checkpoint_version"],
-                              approval_status=str(status["approval_status"] or ""))
+    present = [dict(row) for row in rows]
+    observed = [row for row in present if row["event_type"] == "workflow_progress"]
+    legacy = not observed
+    # Never mix historical inferred stages with real observer milestones.
+    # The fallback is derived from explicit durable audit records only.
+    summary = summarize_progress(
+        observed if observed else _legacy_audit_progress_rows(present),
+        incident_status=str(status["incident_status"] or ""),
+        checkpoint_status=str(status["checkpoint_status"] or ""),
+        checkpoint_version=status["checkpoint_version"],
+        approval_status=str(status["approval_status"] or ""),
+    )
+    summary["milestone_source"] = (
+        "operational_audit" if legacy and present else
+        "workflow_observer" if observed else "not_recorded"
+    )
+    return summary
