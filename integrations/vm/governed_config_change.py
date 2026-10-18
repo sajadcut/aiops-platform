@@ -417,6 +417,9 @@ async def run_governed_change(connector, *, action: str, target: str, service: s
         observed.get("success") is not True
         and observed.get("error") in {
             "ssh_stdin_pipe_closed", "ssh_command_timeout", "ssh_command_failed",
+            # The local transport has the same ambiguous write semantics as
+            # SSH: timeout/pipe loss can happen AFTER replacement completed.
+            "local_stdin_pipe_closed", "local_command_timeout", "local_command_failed",
         }
         and not output
     )
