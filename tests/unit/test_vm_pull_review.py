@@ -108,3 +108,42 @@ async def test_agent_exception_during_restart_returns_unknown_to_control_plane(m
     assert len(sent) == 1
     assert sent[0]["result"]["execution_outcome"] == "UNKNOWN"
     assert sent[0]["result"]["production_write_performed"] is None
+
+
+def test_agent_pull_signing_readiness_uses_per_host_keys_not_fleet_bearer(monkeypatch):
+    from apps.config_change_authorization import config_signing_ready
+    from apps.api.config_change_review import _review_progress
+
+    monkeypatch.setattr(settings, "MCP_SERVER_PROVIDER", "elasticsearch")
+    monkeypatch.setattr(settings, "VM_EXECUTION_BACKEND", "agent_pull")
+    monkeypatch.setattr(settings, "MCP_BEARER_TOKEN", "F" * 48)
+    monkeypatch.setattr(settings, "VM_AGENT_TOKENS", {})
+    assert config_signing_ready() is False
+    monkeypatch.setattr(settings, "VM_AGENT_TOKENS",
+                        {"vm01": "K" * 40, "vm02": "weak"})
+    assert config_signing_ready() is False
+    monkeypatch.setattr(settings, "VM_AGENT_TOKENS",
+                        {"vm01": "K" * 40, "vm02": "L" * 40})
+    assert config_signing_ready() is True
+
+    report = _review_progress(
+        status="approved", decision="request_change_approval",
+        proposal={"service": "nginx", "config_file": "/etc/nginx/nginx.conf",
+                  "validation_status": "UNVERIFIED"},
+        approval={"approval_id": "11111111-1111-4111-8111-111111111111",
+                  "status": "approved", "metadata": {"isolated_validation": True}},
+    )
+    prereqs = report["execution_prerequisites"]
+    assert prereqs["signing_source"] == "VM_AGENT_TOKENS"
+    assert prereqs["api_signing_key"] == "derived_from_agent_target_tokens"
+    assert prereqs["execution_ready"] is False
+    assert "K" * 40 not in repr(prereqs)
+    monkeypatch.setattr(settings, "VM_AGENT_TOKENS", {"vm01": "weak"})
+    blocked = _review_progress(
+        status="approved", decision="request_change_approval",
+        proposal={"service": "nginx", "config_file": "/etc/nginx/nginx.conf",
+                  "validation_status": "UNVERIFIED"},
+        approval={"approval_id": "11111111-1111-4111-8111-111111111111",
+                  "status": "approved", "metadata": {"isolated_validation": True}},
+    )
+    assert blocked["execution_prerequisites"]["api_signing_key"] == "missing_or_weak_agent_target_token"
