@@ -13,13 +13,31 @@ if [[ -e "$SRC/agent.env" || -e "$SRC/.env" ]]; then
   echo "Build unexpectedly contains secrets; refusing install" >&2
   exit 3
 fi
-DST="/opt/vmmcpagent"
+# Keep agent binaries/configuration and private runtime data below one root.
+DST="/data/aiopsvmagent"
+if ! id -u aiops-agent >/dev/null 2>&1 || ! getent group aiops-agent >/dev/null 2>&1; then
+  echo "Create the aiops-agent system account and group before installation" >&2
+  exit 4
+fi
+if [[ -L "$DST" || ( -e "$DST" && ! -d "$DST" ) ]]; then
+  echo "Agent installation directory must be a real directory" >&2
+  exit 5
+fi
 if [[ -e "$DST/agent.env" ]]; then
   echo "Existing $DST/agent.env will be preserved"
 fi
 install -d -o root -g root -m 0755 "$DST"
 cp -a "$SRC/." "$DST/"
-chown -R root:root "$DST"
+# Preserve ownership and ciphertext contents of existing agent runtime data on
+# upgrades. Only trusted package files are root-owned; data dirs are not.
+chown root:root "$DST"
+find "$DST" -mindepth 1 -maxdepth 1 \
+  ! -name 'agent.env' ! -name 'config-candidates' ! -name 'logs' \
+  -exec chown -R root:root -- {} +
+# Candidate vault requires uid=aiops-agent and mode 0700 to pass its secure
+# directory checks. The same private owner is used for on-host log files.
+install -d -o aiops-agent -g aiops-agent -m 0700 \
+  "$DST/config-candidates" "$DST/logs"
 # Templates and binary may be world-readable; operator secrets may not.
 chmod 0755 "$DST/vmmcpagent"
 if [[ ! -f "$DST/agent.env" ]]; then
@@ -30,7 +48,7 @@ fi
 install -o root -g root -m 0750 "$DST/aiops-config-guard" /usr/local/sbin/aiops-config-guard
 install -o root -g root -m 0644 "$DST/vmmcpagent.service" /etc/systemd/system/vmmcpagent.service
 systemctl daemon-reload
-echo "Installed. Edit /opt/vmmcpagent/agent.env and configure:"
+echo "Installed. Edit $DST/agent.env and configure:"
 echo " - VM_AGENT_TARGET, VM_AGENT_ALLOWED_SERVICES, VM_AGENT_BEARER_TOKEN"
 echo " - root-owned /etc/aiops/config-change-verify.pem and host-specific signing seed for APPLY"
 echo " - restricted sudoers and TLS reverse proxy. Service NOT automatically enabled."
