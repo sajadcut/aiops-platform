@@ -138,7 +138,8 @@ def _authorize(authorization: str | None, tool: str | None = None) -> str:
         raise HTTPException(status_code=503, detail="mcp_server_auth_required_in_production")
     if not settings.MCP_SERVER_REQUIRE_AUTH:
         return "mcp-anonymous-development"
-    token = settings.MCP_BEARER_TOKEN
+    token = (settings.VM_AGENT_BEARER_TOKEN if _provider() == "vm_agent"
+             else settings.MCP_BEARER_TOKEN)
     if not token:
         raise HTTPException(status_code=503, detail="mcp_control_plane_identity_not_configured")
     if not authorization or not hmac.compare_digest(authorization, f"Bearer {token}"):
@@ -252,7 +253,12 @@ def _validate_production_server() -> None:
     provider = _provider()
     if not settings.MCP_SERVER_REQUIRE_AUTH:
         errors.append("MCP_SERVER_REQUIRE_AUTH must be true")
-    if not settings.MCP_BEARER_TOKEN:
+    if provider == "vm_agent":
+        if not settings.VM_AGENT_BEARER_TOKEN or len(settings.VM_AGENT_BEARER_TOKEN.encode("utf-8")) < 32:
+            errors.append("VM_AGENT_BEARER_TOKEN must be at least 32 bytes")
+        if settings.VM_AGENT_BEARER_TOKEN == settings.MCP_BEARER_TOKEN:
+            errors.append("VM_AGENT_BEARER_TOKEN must differ from central MCP_BEARER_TOKEN")
+    elif not settings.MCP_BEARER_TOKEN:
         errors.append("MCP_BEARER_TOKEN is required as the fixed Control-Plane MCP API key")
     if provider in {"vm", "vm_agent"}:
         try:
