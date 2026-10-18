@@ -18,7 +18,7 @@ from apps.execution_service.tools.mock_executor import MockExecutorTool
 from apps.execution_service.tools.ssh_vm import SSHVMTool
 from apps.execution_service.tools.vm_telemetry import VMTelemetryTool
 from apps.execution_service.tools.kubernetes_mcp import KubernetesMCPTool
-from integrations.vm.mcp_client import VMEdgeMCPClient
+from integrations.vm.mcp_client import VMEdgeMCPClient, vm_transport_configured
 from integrations.kubernetes.mcp_client import KubernetesMCPClient
 from apps.database.vector_validation import validate_pgvector
 from database import AsyncSessionLocal
@@ -301,12 +301,21 @@ def _validate_production_configuration() -> None:
         errors.append("KUBERNETES_MCP_URL must use HTTP or HTTPS in production")
     if settings.VM_MCP_URL and not _is_http_or_https(settings.VM_MCP_URL):
         errors.append("VM_MCP_URL must use HTTP or HTTPS in production")
+    if settings.VM_EXECUTION_BACKEND == "agent":
+        if not settings.VM_AGENT_ENDPOINTS:
+            errors.append("VM_AGENT_ENDPOINTS required for agent backend")
+        for target, url in settings.VM_AGENT_ENDPOINTS.items():
+            parsed = urlparse(str(url))
+            if (not target or parsed.scheme.lower() != "https" or not parsed.netloc
+                    or parsed.username or parsed.password or parsed.query or parsed.fragment
+                    or not parsed.path.endswith("/mcp")):
+                errors.append("VM_AGENT_ENDPOINTS must use pinned HTTPS /mcp URLs without embedded credentials")
     if not settings.MCP_BEARER_TOKEN and not (settings.MCP_CLIENT_CERT_PATH and settings.MCP_CLIENT_KEY_PATH):
         errors.append("production MCP requires bearer identity or mTLS client certificate")
     if bool(settings.MCP_CLIENT_CERT_PATH) != bool(settings.MCP_CLIENT_KEY_PATH):
         errors.append("MCP client certificate and key must be configured together")
 
-    if settings.VM_MCP_URL or settings.KUBERNETES_MCP_URL:
+    if vm_transport_configured() or settings.KUBERNETES_MCP_URL:
         boundary = "VM/Kubernetes MCP Control-Plane identity"
         if not settings.MCP_BEARER_TOKEN:
             errors.append(f"{boundary} requires MCP_BEARER_TOKEN as the fixed API key")
@@ -354,7 +363,7 @@ async def startup_event():
     if settings.APP_ENV != "production" and tool_registry.get_tool("mock_executor") is None:
         tool_registry.register(MockExecutorTool())
 
-    if settings.VM_MCP_URL:
+    if vm_transport_configured():
         vm_connector = VMEdgeMCPClient()
         if tool_registry.get_tool("ssh_vm") is None:
             tool_registry.register(SSHVMTool(vm_connector))
