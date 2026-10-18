@@ -63,11 +63,16 @@ Use a dedicated unprivileged Linux service account (for example
 `aiops-agent`). No SSH daemon, SSH key or SSH password is needed by this
 backend. You can deploy either a Python virtualenv with the AIOps checkout,
 or build a **Python-runtime-bundled** `--onedir` executable on a matching
-Linux build machine using `scripts/build-vm-agent.sh` (install the project
+Linux build machine using `vmmcpagent/build.sh` (install the project
 requirements and PyInstaller on the build machine). The destination then
 needs only the bundled directory and system libraries compatible with the
 builder; it does not need a separately installed Python interpreter.
-The bundle recipe has not been validated on your private Linux hosts.
+The folder `vmmcpagent/` contains `connector.py`, `__main__.py`,
+`agent.env.example`, `vmmcpagent.service`, `aiops-config-guard`,
+`sudoers.example`, `build.sh`, `install.sh` and its own README. The
+built bundle includes the full **non-secret** Settings baseline at
+`/opt/vmmcpagent/.env.example` and the host-specific `agent.env` beside the
+binary. The bundle recipe has not been validated on private Linux hosts.
 
 Example private environment for the agent on the target:
 
@@ -90,41 +95,30 @@ if full-file repair needs the LLM gateway; agent-host network reachability to
 that gateway is then required. Candidate vaults live **on their worker** and
 must not be shared across SSH/agent transport switches mid-approval.
 
-Example systemd service (checkout + virtualenv):
+Example systemd service **is provided as a file**:
+[`vmmcpagent/vmmcpagent.service`](../vmmcpagent/vmmcpagent.service).
+It uses `WorkingDirectory=/opt/vmmcpagent`,
+`EnvironmentFile=/opt/vmmcpagent/agent.env` (mode 0600, root-owned)
+and `ExecStart=/opt/vmmcpagent/vmmcpagent`. For a source-based development
+install, run `python -m vmmcpagent` after copying
+`vmmcpagent/agent.env.example` to `vmmcpagent/agent.env`.
+The secrets remain local to the destination VM, not in the API checkout.
 
-```ini
-[Unit]
-Description=AIOps on-host VM agent (no SSH)
-After=network-online.target
-Wants=network-online.target
+Build and stage the standalone distribution:
 
-[Service]
-Type=simple
-User=aiops-agent
-Group=aiops-agent
-WorkingDirectory=/opt/aiops
-EnvironmentFile=/etc/aiops/agent.env
-# Option 1, checkout + virtualenv:
-ExecStart=/opt/aiops/.venv/bin/python -m apps.vm_agent_runner
-# Packaged runtime alternative: also set
-# WorkingDirectory=/opt/aiops-agent
-# ExecStart=/opt/aiops-agent/aiops-vm-agent
-# Place the non-secret .env.example alongside the packaged binary.
-Restart=on-failure
-RestartSec=5
-NoNewPrivileges=no
-PrivateTmp=true
-ProtectHome=true
-
-[Install]
-WantedBy=multi-user.target
+```bash
+bash vmmcpagent/build.sh
+# Copy dist/vmmcpagent/ and vmmcpagent/install.sh to destination VM.
+sudo bash vmmcpagent/install.sh /path/to/dist/vmmcpagent
+# Fill /opt/vmmcpagent/agent.env, configure host-specific identity and sudoers.
 ```
 
 ### Required privileges and protected configuration APPLY
 
 The **installed-agent** implementation uses the existing, root-owned
 `scripts/vm/aiops-config-guard` for `config_change_validate` and
-`config_change_apply`. Install it as `/usr/local/sbin/aiops-config-guard`
+`config_change_apply`. Install the file `vmmcpagent/aiops-config-guard` as
+`/usr/local/sbin/aiops-config-guard`
 owned by root and not writable by the agent account. It validates allowed
 paths/extensions, source/candidate hashes, vendor syntax and rollback; an
 approved APPLY additionally verifies an Ed25519 signature using the root-owned
@@ -140,7 +134,7 @@ guard, not passed as shell arguments or sent to the Control Plane.
 Example installation commands (run only after checking the contents):
 
 ```sh
-sudo install -o root -g root -m 0750 scripts/vm/aiops-config-guard /usr/local/sbin/aiops-config-guard
+sudo install -o root -g root -m 0750 vmmcpagent/aiops-config-guard /usr/local/sbin/aiops-config-guard
 sudo install -d -o root -g root -m 0755 /etc/aiops
 sudo install -o root -g root -m 0644 /secure/staged/config-change-verify.pem /etc/aiops/config-change-verify.pem
 ```
