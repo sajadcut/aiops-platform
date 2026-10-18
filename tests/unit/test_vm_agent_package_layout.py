@@ -94,6 +94,14 @@ def test_service_and_build_target_exact_same_agent_directory():
     assert "vmmcpagent/__main__.py" in build
     assert 'cp "$ROOT/vmmcpagent/agent.env.example" "$BUNDLE/agent.env.example"' in build
     assert 'cp "$ROOT/.env.example" "$BUNDLE/.env.example"' in build
+    # Regression: a root-owned unreadable default used to crash systemd with
+    # PermissionError('.env.example') when running as VM_AGENT_EXEC_USERNAME.
+    assert 'chmod 0644 "$BUNDLE/.env.example"' in build
+    assert 'chmod 0644 "$DST/.env.example"' in install
+    assert 'chmod 0755 "$DST"' in install
+    # Never widen permissions on the real credentials file.
+    assert 'chmod 0644 "$DST/agent.env"' not in install
+    assert 'install -o root -g root -m 0600 "$DST/agent.env.example" "$DST/agent.env"' in install
     assert "SRC/agent.env.example" in install
     assert 'DST="/data/aiopsvmagent"' in install
     assert '"$DST/config-candidates" "$DST/logs"' in install
