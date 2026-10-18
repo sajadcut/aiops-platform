@@ -135,3 +135,42 @@ def test_individual_agents_are_live_observations_not_auto_incremented_percent():
     # An arbitrary registry/model string cannot control UI markup or stage map.
     with pytest.raises(ValueError):
         progress_record("agent:<script>alert(1)</script>", "started")
+
+
+@pytest.mark.asyncio
+async def test_test_environment_live_agent_progress_is_not_suppressed(monkeypatch):
+    """APP_ENV=test is a real VM lab; only pytest's isolated cases bypass DB."""
+    from unittest.mock import AsyncMock
+    from types import SimpleNamespace
+    from apps.orchestrator import progress as module
+    from domain.contracts.config import settings
+
+    events = []
+    class DummySession:
+        async def __aenter__(self): return self
+        async def __aexit__(self, *args): return False
+    class Store:
+        def __init__(self, db): pass
+        async def append(self, event): events.append(event)
+    monkeypatch.setattr(settings, "APP_ENV", "test")
+    monkeypatch.delenv("PYTEST_CURRENT_TEST", raising=False)
+    monkeypatch.setattr(module, "AsyncSessionLocal", lambda: DummySession())
+    monkeypatch.setattr(module, "PostgreSQLAuditStore", Store)
+    await module.emit_progress("incident-live-lab", "context", "started")
+    await module.emit_progress("incident-live-lab", "context", "completed")
+    assert [row["status"] for row in events] == ["started", "completed"]
+    assert all(row["event_type"] == "workflow_progress" for row in events)
+    assert all(row["incident_id"] == "incident-live-lab" for row in events)
+
+
+@pytest.mark.asyncio
+async def test_pytest_simulation_skips_optional_live_progress_db(monkeypatch):
+    from apps.orchestrator import progress as module
+    from domain.contracts.config import settings
+
+    monkeypatch.setattr(settings, "APP_ENV", "test")
+    monkeypatch.setenv("PYTEST_CURRENT_TEST", "simulated/test")
+    def prohibited():
+        raise AssertionError("unit simulation must not open a live DB")
+    monkeypatch.setattr(module, "AsyncSessionLocal", prohibited)
+    await module.emit_progress("simulation", "context", "started")
