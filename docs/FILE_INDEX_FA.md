@@ -3,7 +3,7 @@
 > این فایل فهرست فایل‌به‌فایل repository است. توضیح معماری و flow در `CODEBASE_GUIDE_FA.md` آمده است.
 > این فایل با `scripts/generate_file_index_fa.py` ساخته و در CI کنترل می‌شود.
 
-**تعداد فایل‌های track‌شده و پوشش‌داده‌شده: 711**
+**تعداد فایل‌های track‌شده و پوشش‌داده‌شده: 715**
 
 | Path | Type | Purpose | Called By | Calls/Depends On | Runtime/Test/Docs | Notes |
 |---|---|---|---|---|---|---|
@@ -102,6 +102,7 @@
 | `apps/api/runbooks.py` | Python | Route/API سطح کنترل پلتفرم | FastAPI / Dashboard / clients | services, security, database | Runtime | مرز HTTP و RBAC |
 | `apps/api/service_catalog.py` | Python | Route/API سطح کنترل پلتفرم | FastAPI / Dashboard / clients | services, security, database | Runtime | مرز HTTP و RBAC |
 | `apps/api/signals.py` | Python | Route/API سطح کنترل پلتفرم | FastAPI / Dashboard / clients | services, security, database | Runtime | مرز HTTP و RBAC |
+| `apps/api/vm_agent_broker.py` | Python | Route/API سطح کنترل پلتفرم | FastAPI / Dashboard / clients | services, security, database | Runtime | مرز HTTP و RBAC |
 | `apps/api/workflow.py` | Python | Route/API سطح کنترل پلتفرم | FastAPI / Dashboard / clients | services, security, database | Runtime | مرز HTTP و RBAC |
 | `apps/approval_service/__init__.py` | Python | Approval: منطق و persistence Approval با expiry و transition | Workflow/API execution | PostgreSQL/audit | Runtime | security gate قبل از execution |
 | `apps/approval_service/binding.py` | Python | Approval: منطق و persistence Approval با expiry و transition | Workflow/API execution | PostgreSQL/audit | Runtime | security gate قبل از execution |
@@ -310,6 +311,7 @@
 | `docs/SERVICE_TOPOLOGY_KNOWLEDGE.md` | Docs | مستند معماری/عملیات/وضعیت پروژه | تیم | کد و MASTER | Docs | SSoT نیست مگر MASTER root |
 | `docs/UNIVERSAL_LLM_CONFIG_SYNTAX.md` | Docs | مستند معماری/عملیات/وضعیت پروژه | تیم | کد و MASTER | Docs | SSoT نیست مگر MASTER root |
 | `docs/UPSTREAM_MCP_PROVIDERS.md` | Docs | مستند معماری/عملیات/وضعیت پروژه | تیم | کد و MASTER | Docs | SSoT نیست مگر MASTER root |
+| `docs/VM_AGENT_OUTBOUND_CHANNEL.md` | Docs | مستند معماری/عملیات/وضعیت پروژه | تیم | کد و MASTER | Docs | SSoT نیست مگر MASTER root |
 | `docs/VM_AGENT_TRANSPORT.md` | Docs | مستند معماری/عملیات/وضعیت پروژه | تیم | کد و MASTER | Docs | SSoT نیست مگر MASTER root |
 | `docs/VM_REMEDIATION.md` | Docs | مستند معماری/عملیات/وضعیت پروژه | تیم | کد و MASTER | Docs | SSoT نیست مگر MASTER root |
 | `docs/ZABBIX_SIGNAL_LIFECYCLE.md` | Docs | مستند معماری/عملیات/وضعیت پروژه | تیم | کد و MASTER | Docs | SSoT نیست مگر MASTER root |
@@ -698,6 +700,7 @@
 | `tests/unit/test_vm_execution_boundary.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_vm_guest_engine.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_vm_local_agent_transport.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
+| `tests/unit/test_vm_outbound_agent.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_vm_recovery_advice.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_vm_symptom_verification.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_vm_systemd_auto_diagnostics.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
@@ -716,5 +719,6 @@
 | `vmmcpagent/build.sh` | File | فایل پروژه | — | — | Other |  |
 | `vmmcpagent/connector.py` | File | فایل پروژه | — | — | Other |  |
 | `vmmcpagent/install.sh` | File | فایل پروژه | — | — | Other |  |
+| `vmmcpagent/outbound.py` | File | فایل پروژه | — | — | Other |  |
 | `vmmcpagent/sudoers.example` | File | فایل پروژه | — | — | Other |  |
 | `vmmcpagent/vmmcpagent.service` | File | فایل پروژه | — | — | Other |  |
