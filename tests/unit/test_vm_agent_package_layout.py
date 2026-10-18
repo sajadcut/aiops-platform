@@ -127,6 +127,9 @@ def test_installer_reapplies_traversable_mode_after_archive_copy(tmp_path):
     # GNU cp -a preserves source directory mode on an EXISTING target.
     subprocess.run(["cp", "-a", str(source / "."), str(destination) + "/"],
                    check=True)
+    # GNU cp archive destination mode handling varies with directory state
+    # and version. Simulate the dangerous result explicitly when needed.
+    destination.chmod(0o700)
     assert stat.S_IMODE(destination.stat().st_mode) == 0o700
 
     installer = (AGENT / "install.sh").read_text()
