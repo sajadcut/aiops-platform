@@ -20,6 +20,7 @@ from apps.rag_service import KnowledgeRAGService
 from apps.signal_gateway.correlation import build_correlation_identity
 from apps.signal_gateway.received_signal import capture_received_signal
 from integrations.zabbix.webhook_contract import normalize_zabbix_payload, zabbix_event_time, zabbix_tags
+from integrations.vm.mcp_client import vm_transport_configured
 from domain.contracts.config import settings
 from domain.contracts.logging import logger
 
