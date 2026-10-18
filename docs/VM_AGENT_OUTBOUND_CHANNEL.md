@@ -93,9 +93,11 @@ exponential backoff. Heartbeats rely on WebSocket Ping/Pong.
 - Each request has an unpredictable ID, expires in at most ~190 seconds, and
   is executed at most once **per running agent process**. There is no
   automatic replay/retry of mutable operations after connection loss.
-- Disconnect, missing agents, ambiguous timeout or lost write response return
-  `execution_outcome_unknown` for writes; independent reconciliation is
-  required before any new operator-approved attempt. Reads fail closed.
+- A missing agent or busy channel **before dispatch** returns `NOT_STARTED`
+  for writes; no command was sent. A disconnect, ambiguous timeout or lost
+  response **after dispatch** returns `execution_outcome_unknown` for writes;
+  independent reconciliation is required before any new operator-approved
+  attempt. Reads fail closed. No more than one operation is in flight per VM.
 - A restart does not provide durable exactly-once execution history. Do not
   claim distributed transaction guarantees or production parity from unit
   tests alone. Operator approvals are still required upstream.
@@ -116,6 +118,10 @@ exponential backoff. Heartbeats rely on WebSocket Ping/Pong.
 6. Verify legacy `ssh` and `agent` modes still operate.
 7. Before scaling API horizontally, replace process-local broker with a
    distributed session routing and durable command journal.
+
+The authenticated operator endpoint `GET /api/v1/vm-agents/status` reports
+per-host connection state without exposing bearer tokens. Permission
+`read:incident` is required.
 
 Unit regressions: `tests/unit/test_vm_outbound_agent.py`. Dedicated CI:
 `vm-agent-transport`. These are not substitutes for on-host validation.
