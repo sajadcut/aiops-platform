@@ -1,6 +1,17 @@
 # vmmcpagent — SSH-free VM MCP agent (Puppet-style outbound WSS supported)
 
 This directory contains the **installed, on-target** VM execution agent.
+In outbound mode, set `VM_AGENT_EXEC_USERNAME` in the target's
+`/data/aiopsvmagent/agent.env`. It must name the actual existing Linux
+account that the Agent's systemd service runs as. The installer generates a
+root-owned `10-execution-user.conf` drop-in; rerun the installer and restart
+the unit after changing that username. Provision the username/password on
+the API **only** through `VM_AGENT_EXECUTION_CREDENTIALS` keyed by the same
+`VM_AGENT_TARGET` as `VM_AGENT_TOKENS`. The API delivers it on the initial
+authenticated WSS connection and the Agent retains the password only in
+memory for scoped password-required sudo actions. No password belongs in
+`agent.env`. See [configuration examples](../docs/VM_AGENT_OUTBOUND_CHANNEL.md).
+
 The existing VM MCP SSH backend is intentionally retained. The API selects
 `VM_EXECUTION_BACKEND=ssh`, `agent` (inbound HTTPS) or `agent_pull` (Puppet-style
 outbound persistent WebSocket). The on-host template defaults to outbound mode.
