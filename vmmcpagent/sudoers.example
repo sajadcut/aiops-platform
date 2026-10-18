@@ -1,8 +1,10 @@
 # EXAMPLE ONLY — review and adapt to the approved systemd services.
 # Install through visudo validation, as root, on the destination Linux host.
+# Replace aiops-agent with VM_AGENT_EXEC_USERNAME in the target agent.env.
+# PASSWD requires sudo -S authentication using the Agent session credential.
 # The fixed root-owned helper checks an approved Ed25519 claim, path and hashes.
 # Replace /usr/bin/systemctl with the exact absolute path on this host.
 # Never grant /bin/sh, arbitrary commands or NOPASSWD: ALL.
 Cmnd_Alias AIOPS_CONFIG_GUARD = /usr/local/sbin/aiops-config-guard *
 Cmnd_Alias AIOPS_SERVICE_CONTROL = /usr/bin/systemctl start nginx, /usr/bin/systemctl restart nginx, /usr/bin/systemctl reload nginx, /usr/bin/systemctl start gfpapi, /usr/bin/systemctl restart gfpapi, /usr/bin/systemctl reload gfpapi
-aiops-agent ALL=(root) NOPASSWD: AIOPS_CONFIG_GUARD, AIOPS_SERVICE_CONTROL
+aiops-agent ALL=(root) PASSWD: AIOPS_CONFIG_GUARD, AIOPS_SERVICE_CONTROL
