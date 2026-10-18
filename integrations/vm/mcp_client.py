@@ -8,6 +8,8 @@ from integrations.mcp_client import MCPClient
 
 def vm_transport_configured() -> bool:
     """A selected VM backend is configured; no implicit fallback to SSH."""
+    if settings.VM_EXECUTION_BACKEND == "agent_pull":
+        return bool(settings.VM_AGENT_TOKENS)
     return bool(settings.VM_AGENT_ENDPOINTS) if settings.VM_EXECUTION_BACKEND == "agent" else bool(settings.VM_MCP_URL)
 
 
@@ -33,7 +35,16 @@ class VMEdgeMCPClient(MCPClient):
         # The default client routes EACH operation based on its exact target.
         self._endpoint_direct = server_url is not None
         agent_token = None
-        if self._backend == "agent":
+        if self._backend == "agent_pull":
+            # The dummy URL is never used; all calls route through the local
+            # authenticated WebSocket broker instead of outbound HTTP from API.
+            if not settings.VM_AGENT_TOKENS:
+                raise ValueError("vm_agent_tokens_not_configured")
+            if server_url is not None or agent_target is not None:
+                raise PermissionError("agent_pull_does_not_accept_endpoint_override")
+            url = "http://127.0.0.1:1/agent-pull-no-http"
+            self.EXPECTED_SERVER_NAME = "aiops-vm-agent-mcp"
+        elif self._backend == "agent":
             if not settings.VM_AGENT_ENDPOINTS:
                 raise ValueError("vm_agent_endpoints_not_configured")
             selected_target = agent_target or next(iter(settings.VM_AGENT_ENDPOINTS))
@@ -82,6 +93,14 @@ class VMEdgeMCPClient(MCPClient):
         }
 
     async def initialize(self) -> Dict[str, Any]:
+        if self._backend == "agent_pull":
+            from apps.api.vm_agent_broker import broker
+            if not any(broker.is_connected(target) for target in settings.VM_AGENT_TOKENS):
+                raise RuntimeError("vm_outbound_agents_unavailable")
+            self._initialized = True
+            self._identity_validated = True
+            return {"protocolVersion": self.protocol_version,
+                    "serverInfo": {"name": "aiops-vm-agent-mcp"}}
         if self._initialized and self._identity_validated:
             return {"protocolVersion": self.negotiated_protocol_version}
         init_result = await super().initialize()
@@ -96,6 +115,11 @@ class VMEdgeMCPClient(MCPClient):
         return init_result
 
     async def health_check(self) -> bool:
+        if self._backend == "agent_pull":
+            from apps.api.vm_agent_broker import broker
+            return bool(settings.VM_AGENT_TOKENS) and all(
+                broker.is_connected(target) for target in settings.VM_AGENT_TOKENS
+            )
         if self._backend != "agent" or self._endpoint_direct:
             return await super().health_check()
 
@@ -117,6 +141,12 @@ class VMEdgeMCPClient(MCPClient):
         return bool(outcomes) and all(value is True for value in outcomes)
 
     async def _invoke(self, name: str, target: str, **params: Any) -> Dict[str, Any]:
+        if self._backend == "agent_pull":
+            from apps.api.vm_agent_broker import broker
+            return await broker.dispatch(
+                target, name, {"target": target, **params},
+                timeout=self.tool_timeout_seconds.get(name, settings.MCP_TIMEOUT_SECONDS),
+            )
         if self._backend == "agent" and not self._endpoint_direct:
             # No target supplied by an alarm, chatbot or LLM can select its own
             # URL. Only this operator-managed target-to-endpoint map can route.
