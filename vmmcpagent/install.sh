@@ -61,7 +61,7 @@ install -o root -g root -m 0644 "$DST/vmmcpagent.service" /etc/systemd/system/vm
 # systemd cannot expand User= from EnvironmentFile; install a root-owned
 # drop-in for the exact locally configured user instead.
 install -d -o root -g root -m 0755 /etc/systemd/system/vmmcpagent.service.d
-printf '[Service]\\nUser=%s\\nGroup=%s\\n' "$ACTOR" "$ACTOR_GROUP" \
+printf '[Service]\nUser=%s\nGroup=%s\n' "$ACTOR" "$ACTOR_GROUP" \
   > /etc/systemd/system/vmmcpagent.service.d/10-execution-user.conf
 chmod 0644 /etc/systemd/system/vmmcpagent.service.d/10-execution-user.conf
 systemctl daemon-reload
