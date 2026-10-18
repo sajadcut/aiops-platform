@@ -210,7 +210,8 @@ async def test_agent_bootstrap_ack_is_password_free_and_password_cleared_on_disc
     with pytest.raises(asyncio.CancelledError):
         await outbound.run_outbound_forever()
     assert messages[0] == {"type": "credentials_ack", "ok": True, "target": "vm-01",
-                           "username": "opsbot"}
+                           "username": "opsbot",
+                           "lease_protocol": "relative_monotonic_v2"}
     assert messages[1]["result"]["success"] is True
     assert "sudo-secret-one" not in json.dumps(messages)
     assert LocalVMConnector._session_sudo_password is None
