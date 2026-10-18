@@ -387,3 +387,23 @@ async def test_on_host_agent_executes_once_and_rejects_replay_after_reconnect(pu
         assert "Bearer " + "A" * 40 == kwargs["additional_headers"]["Authorization"]
         assert "A" * 40 not in args[0]
         assert kwargs["ssl"].verify_mode != 0
+
+
+def test_pull_mode_approval_signatures_are_per_target_and_host_verifiable(pull, monkeypatch):
+    import uuid
+    from apps.config_change_authorization import create_claim, verify_claim
+    monkeypatch.setattr(settings, "MCP_SERVER_PROVIDER", "elasticsearch")
+    claims, signed = create_claim(
+        approval_id=str(uuid.uuid4()), incident_id=str(uuid.uuid4()),
+        target="vm-01", service="nginx",
+        config_file="/etc/nginx/nginx.conf",
+        original_sha256="a" * 64, candidate_sha256="b" * 64,
+        proposed_change="remove_extra_opening_brace",
+    )
+    verify_claim(claims, signed, target="vm-01", service="nginx")
+    monkeypatch.setattr(settings, "MCP_SERVER_PROVIDER", "vm_agent")
+    monkeypatch.setattr(settings, "VM_AGENT_BEARER_TOKEN", "A" * 40)
+    verify_claim(claims, signed, target="vm-01", service="nginx")
+    monkeypatch.setattr(settings, "VM_AGENT_BEARER_TOKEN", "B" * 40)
+    with pytest.raises(PermissionError):
+        verify_claim(claims, signed, target="vm-01", service="nginx")
