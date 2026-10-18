@@ -147,3 +147,59 @@ def test_agent_pull_signing_readiness_uses_per_host_keys_not_fleet_bearer(monkey
                   "status": "approved", "metadata": {"isolated_validation": True}},
     )
     assert blocked["execution_prerequisites"]["api_signing_key"] == "missing_or_weak_agent_target_token"
+
+
+@pytest.mark.asyncio
+async def test_replay_cache_never_evicts_unexpired_write_ids(monkeypatch):
+    import uuid
+    import websockets.asyncio.client as client_lib
+    from apps.mcp_server import main as mcp
+    from vmmcpagent import connector, outbound
+
+    monkeypatch.setattr(settings, "VM_AGENT_TARGET", "vm-01")
+    monkeypatch.setattr(settings, "VM_AGENT_CONTROL_PLANE_WS_URL",
+                        "wss://aiops.example.internal/api/v1/vm-agents/connect")
+    monkeypatch.setattr(settings, "VM_AGENT_BEARER_TOKEN", "A" * 40)
+    monkeypatch.setattr(settings, "MCP_SERVER_REQUIRE_AUTH", True)
+    monkeypatch.setattr(settings, "SSH_ENABLED", False)
+    monkeypatch.setattr(settings, "VM_AGENT_CA_BUNDLE_PATH", None)
+    monkeypatch.setattr(connector, "LocalVMConnector", lambda: object())
+    monkeypatch.setattr(outbound, "_MAX_REPLAY_ENTRIES", 1)
+    invoked = AsyncMock(return_value={"success": True})
+    monkeypatch.setattr(mcp, "_call", invoked)
+
+    expiry = int(time.time()) + 60
+    ids = [str(uuid.uuid4()), str(uuid.uuid4())]
+    def command(ident):
+        return json.dumps({
+            "type": "execute", "id": ident, "target": "vm-01",
+            "tool": "restart_service",
+            "arguments": {"target": "vm-01", "service": "nginx",
+                          "approval_id": "approval-123", "incident_id": "incident-123"},
+            "expires_at": expiry,
+        })
+    sent = []
+
+    class FakeConnection:
+        async def __aenter__(self): return self
+        async def __aexit__(self, *args): return None
+        def __aiter__(self):
+            async def frames():
+                yield command(ids[0])
+                yield command(ids[1])
+                yield command(ids[0])  # still live; replay must be refused
+            return frames()
+        async def send(self, payload): sent.append(json.loads(payload))
+
+    monkeypatch.setattr(client_lib, "connect", lambda *a, **kw: FakeConnection())
+    async def end_loop(_delay): raise asyncio.CancelledError()
+    monkeypatch.setattr(outbound.asyncio, "sleep", end_loop)
+    with pytest.raises(asyncio.CancelledError):
+        await outbound.run_outbound_forever()
+
+    assert invoked.await_count == 1
+    assert sent[0]["result"]["success"] is True
+    assert sent[1]["result"]["execution_outcome"] == "NOT_STARTED"
+    assert sent[1]["result"]["status"] == "request_replay_guard_full"
+    assert sent[2]["result"]["execution_outcome"] == "UNKNOWN"
+    assert sent[2]["result"]["reason"] == "duplicate_request_refused"
