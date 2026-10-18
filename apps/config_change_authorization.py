@@ -107,7 +107,9 @@ def create_claim(*, approval_id: str, incident_id: str, target: str, service: st
     return claims, hmac.new(_key(target=target), _message(claims), hashlib.sha256).hexdigest()
 
 
-def verify_claim(claims: dict, signature: str, *, target: str, service: str) -> None:
+def _check_claim(claims: dict, signature: str, *, target: str, service: str,
+                 check_local_expiry: bool = True) -> None:
+    """Validate exact scope and signature; wall-clock check is mandatory by default."""
     if not isinstance(claims, dict) or not isinstance(signature, str):
         raise PermissionError("config_execution_claim_missing")
     required = {
@@ -122,13 +124,52 @@ def verify_claim(claims: dict, signature: str, *, target: str, service: str) -> 
     if claims.get("version") != 1 or claims.get("target") != target or claims.get("service") != service:
         raise PermissionError("config_execution_claim_scope")
     expiry = claims.get("expires")
-    if type(expiry) is not int or not int(time.time()) <= expiry <= int(time.time()) + 60:
+    if type(expiry) is not int or (check_local_expiry and
+            not int(time.time()) <= expiry <= int(time.time()) + 60):
         raise PermissionError("config_execution_claim_expired")
     if not re.fullmatch(r"[0-9a-f]{64}", signature):
         raise PermissionError("config_execution_claim_signature_invalid")
     signed = hmac.new(_key(target=target), _message(claims), hashlib.sha256).hexdigest()
     if not hmac.compare_digest(signed, signature):
         raise PermissionError("config_execution_claim_signature_invalid")
+
+
+def verify_claim(claims: dict, signature: str, *, target: str, service: str) -> None:
+    """For direct/legacy tools keep the original strict wall-clock expiry."""
+    _check_claim(claims, signature, target=target, service=service)
+
+
+def rebase_authenticated_outbound_claim(
+    claims: dict, signature: str, *, target: str, service: str,
+    remaining_seconds: float,
+) -> tuple[dict, str]:
+    """Bound an API-verified signed approval to the VM's *local* expiry.
+
+    ONLY call this after an authenticated outbound-v2 execute_commit was
+    received within the VM's monotonic deadline. The API broker verifies
+    original expiry on its own clock at dispatch AND commit. Revalidating
+    the original HMAC here cannot depend on a different machine's clock.
+
+    Reissued HMAC preserves every approved scope field; only the absolute
+    expiry is translated for local Root Guard enforcement. Legacy/inbound
+    calls continue to use strict verify_claim and cannot opt into rebasing.
+    """
+    import math
+    if (not isinstance(remaining_seconds, (int, float))
+            or not math.isfinite(remaining_seconds)
+            or remaining_seconds <= 0 or remaining_seconds > 191):
+        raise PermissionError("config_execution_lease_expired")
+    _check_claim(claims, signature, target=target, service=service,
+                 check_local_expiry=False)
+    valid_for = min(55, max(1, math.ceil(remaining_seconds)))
+    rebased = {**claims, "expires": int(time.time()) + valid_for}
+    local_signature = hmac.new(
+        _key(target=target), _message(rebased), hashlib.sha256,
+    ).hexdigest()
+    # The ordinary verifier (and subsequent fixed root guard) enforce time
+    # on the VM's clock; do not return a claim bypassing strict validation.
+    verify_claim(rebased, local_signature, target=target, service=service)
+    return rebased, local_signature
 
 
 def sign_root_guard(claims: dict) -> str:
