@@ -8,6 +8,11 @@ if [[ -z "$SRC" || ! -f "$SRC/vmmcpagent" || ! -f "$SRC/agent.env.example" ]]; t
   echo "Usage: sudo bash vmmcpagent/install.sh /path/to/dist/vmmcpagent" >&2
   exit 2
 fi
+# Do not accept a pre-populated secret from an install artifact.
+if [[ -e "$SRC/agent.env" || -e "$SRC/.env" ]]; then
+  echo "Build unexpectedly contains secrets; refusing install" >&2
+  exit 3
+fi
 DST="/opt/vmmcpagent"
 if [[ -e "$DST/agent.env" ]]; then
   echo "Existing $DST/agent.env will be preserved"
