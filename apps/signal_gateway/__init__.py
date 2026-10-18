@@ -264,7 +264,7 @@ class SignalGateway:
             return []
         candidate["control_plane_target_allowed"] = True
         candidate["verification_target"] = target
-        from integrations.vm.mcp_client import VMEdgeMCPClient, vm_transport_configured
+        from integrations.vm.mcp_client import VMEdgeMCPClient
         client = None
         attempted: list[str] = []
         try:
