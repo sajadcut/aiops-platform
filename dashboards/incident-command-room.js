@@ -593,9 +593,11 @@
       (fa?'پیشرفت مراحل اجرا و راستی‌آزمایی':'Execution and verification milestones'):
       (fa?'پیشرفت مراحل تحلیل':'Analysis milestones');
     const caution=$('#ic-flow-caution');
-    if(caution)caution.textContent=fa?
-      'این درصد فقط از مراحل واقعاً تکمیل‌شده است و تخمین زمان باقی‌مانده نیست.':
-      'Percentage is based on verified stage completion, not time remaining.';
+    if(caution)caution.textContent=p.milestone_source==='operational_audit'?
+      (fa?'این مراحل از ممیزی واقعی این رخداد بازسازی شده‌اند، نه از اتصال زندهٔ آن زمان. درصد فقط بر مبنای مراحل دارای سند محاسبه می‌شود.':
+       'Stages recovered from the actual incident audit, not the original live stream. Only documented completed stages count.'):
+      (fa?'این درصد فقط از مراحل واقعاً تکمیل‌شده است و تخمین زمان باقی‌مانده نیست.':
+       'Percentage is based on verified stage completion, not time remaining.');
     const timeline=[...Object.entries(p.stages||{}),...Object.entries(p.providers||{}),
       ...Object.entries(p.agents||{}).map(([key,v])=>['agent:'+key,v])]
       .filter(([_,v])=>v&&v.at)
