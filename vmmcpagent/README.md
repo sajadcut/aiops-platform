@@ -20,7 +20,10 @@ The existing VM MCP SSH backend is intentionally retained. The API selects
 The built Linux directory `dist/vmmcpagent/` also contains the shared,
 **non-secret** `.env.example` baseline needed by the existing AIOps
 configuration schema. Operator-owned secrets live **only** in `agent.env`,
-next to the agent executable. Do not commit that file.
+next to the agent executable. The installed agent defaults to
+`/data/aiopsvmagent/` for binary, settings, encrypted config candidates and
+logs. Do not commit the private settings file. Root-owned security helpers
+and verification keys remain in their system locations.
 
 ## Run directly from a source checkout
 
@@ -40,8 +43,10 @@ bash vmmcpagent/build.sh
 
 Copy `dist/vmmcpagent/` and the installer onto the destination, and run
 `sudo bash vmmcpagent/install.sh /path/to/dist/vmmcpagent`. The installer
-creates `/opt/vmmcpagent/agent.env` mode `0600` if absent and **does not**
-enable the service. Before starting, provide `VM_AGENT_TARGET`, per-host
+creates `/data/aiopsvmagent/agent.env` mode `0600` if absent,
+provisions `/data/aiopsvmagent/config-candidates` and
+`/data/aiopsvmagent/logs` owned by `aiops-agent` with mode `0700`,
+and **does not** enable the service. Before starting, provide `VM_AGENT_TARGET`, per-host
 `VM_AGENT_BEARER_TOKEN`, and the service allowlist in that config. The
 `aiops-agent` system user/group must already exist. Configure the public
 verification key at `/etc/aiops/config-change-verify.pem`, and a **distinct**
