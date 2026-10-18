@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 574 | Dashboard JS files scanned: 8 | Symbols indexed: 6477**
+**Python files scanned: 574 | Dashboard JS files scanned: 8 | Symbols indexed: 6496**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -875,17 +875,17 @@
 | `apps/api/signals.py` | `ingest_prometheus_alertmanager` | 245 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/signals.py` | `ingest_prometheus_signal` | 254 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/signals.py` | `ingest_zabbix_signal` | 274 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/vm_agent_broker.py` | `AgentDisconnected` | 35 | class | کلاس | module |
-| `apps/api/vm_agent_broker.py` | `AgentSession` | 40 | class | کلاس | module |
-| `apps/api/vm_agent_broker.py` | `AgentSession.fail_pending` | 48 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | AgentSession |
-| `apps/api/vm_agent_broker.py` | `OutboundAgentBroker` | 55 | class | کلاس | module |
-| `apps/api/vm_agent_broker.py` | `OutboundAgentBroker.__init__` | 56 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OutboundAgentBroker |
-| `apps/api/vm_agent_broker.py` | `OutboundAgentBroker.is_connected` | 60 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OutboundAgentBroker |
-| `apps/api/vm_agent_broker.py` | `OutboundAgentBroker.connect` | 64 | async method | Authenticate before accepting; reject duplicate host identities. | OutboundAgentBroker |
-| `apps/api/vm_agent_broker.py` | `OutboundAgentBroker.dispatch` | 167 | async method | Never retry an ambiguous write; surface UNKNOWN for reconciliation. | OutboundAgentBroker |
-| `apps/api/vm_agent_broker.py` | `OutboundAgentBroker._not_dispatched` | 239 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OutboundAgentBroker |
-| `apps/api/vm_agent_broker.py` | `OutboundAgentBroker.shutdown` | 248 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OutboundAgentBroker |
-| `apps/api/vm_agent_broker.py` | `OutboundAgentBroker._unavailable` | 260 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OutboundAgentBroker |
+| `apps/api/vm_agent_broker.py` | `AgentDisconnected` | 36 | class | کلاس | module |
+| `apps/api/vm_agent_broker.py` | `AgentSession` | 41 | class | کلاس | module |
+| `apps/api/vm_agent_broker.py` | `AgentSession.fail_pending` | 53 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | AgentSession |
+| `apps/api/vm_agent_broker.py` | `OutboundAgentBroker` | 63 | class | کلاس | module |
+| `apps/api/vm_agent_broker.py` | `OutboundAgentBroker.__init__` | 64 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OutboundAgentBroker |
+| `apps/api/vm_agent_broker.py` | `OutboundAgentBroker.is_connected` | 68 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OutboundAgentBroker |
+| `apps/api/vm_agent_broker.py` | `OutboundAgentBroker.connect` | 72 | async method | Authenticate before accepting; reject duplicate host identities. | OutboundAgentBroker |
+| `apps/api/vm_agent_broker.py` | `OutboundAgentBroker.dispatch` | 208 | async method | Never retry an ambiguous write; surface UNKNOWN for reconciliation. | OutboundAgentBroker |
+| `apps/api/vm_agent_broker.py` | `OutboundAgentBroker._not_dispatched` | 294 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OutboundAgentBroker |
+| `apps/api/vm_agent_broker.py` | `OutboundAgentBroker.shutdown` | 303 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OutboundAgentBroker |
+| `apps/api/vm_agent_broker.py` | `OutboundAgentBroker._unavailable` | 315 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OutboundAgentBroker |
 | `apps/api/workflow.py` | `WorkflowRequest` | 18 | class | کلاس | module |
 | `apps/api/workflow.py` | `WorkflowResponse` | 25 | class | کلاس | module |
 | `apps/api/workflow.py` | `run_workflow` | 39 | async function | Compatibility analysis endpoint backed by the canonical durable E2E runtime. | module |
@@ -6103,8 +6103,8 @@
 | `tests/unit/test_vm_agent_sudo_credentials.py` | `test_agent_bootstrap_ack_is_password_free_and_password_cleared_on_disconnect.Socket.__aiter__.stream` | 202 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_agent_bootstrap_ack_is_password_free_and_password_cleared_on_disconnect.Socket.__aiter__ |
 | `tests/unit/test_vm_agent_sudo_credentials.py` | `test_agent_bootstrap_ack_is_password_free_and_password_cleared_on_disconnect.Socket.send` | 205 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_agent_bootstrap_ack_is_password_free_and_password_cleared_on_disconnect.Socket |
 | `tests/unit/test_vm_agent_sudo_credentials.py` | `test_agent_bootstrap_ack_is_password_free_and_password_cleared_on_disconnect.stop` | 208 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_agent_bootstrap_ack_is_password_free_and_password_cleared_on_disconnect |
-| `tests/unit/test_vm_agent_sudo_credentials.py` | `test_package_has_safe_execution_username_and_dynamic_systemd_user` | 219 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_vm_agent_sudo_credentials.py` | `test_api_production_requires_one_username_password_for_each_target` | 231 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_agent_sudo_credentials.py` | `test_package_has_safe_execution_username_and_dynamic_systemd_user` | 220 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_agent_sudo_credentials.py` | `test_api_production_requires_one_username_password_for_each_target` | 232 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_vm_agent_ws80_encryption.py` | `Pair` | 16 | class | کلاس | module |
 | `tests/unit/test_vm_agent_ws80_encryption.py` | `Pair.__init__` | 17 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | Pair |
 | `tests/unit/test_vm_agent_ws80_encryption.py` | `Pair.API` | 23 | class | کلاس | Pair |
@@ -6234,33 +6234,35 @@
 | `tests/unit/test_vm_outbound_agent.py` | `FakeSocket.result` | 53 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeSocket |
 | `tests/unit/test_vm_outbound_agent.py` | `_connected` | 59 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_vm_outbound_agent.py` | `test_agent_initiates_authenticated_session_and_tool_result` | 70 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_vm_outbound_agent.py` | `test_wrong_token_and_unknown_target_never_accept` | 91 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_vm_outbound_agent.py` | `test_duplicate_connection_does_not_take_over_authenticated_host` | 103 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_vm_outbound_agent.py` | `test_disconnect_while_write_pending_is_unknown_without_retry` | 115 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_vm_outbound_agent.py` | `test_missing_agent_write_unknown_and_read_fails_closed` | 136 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_vm_outbound_agent.py` | `test_client_routes_all_tools_to_broker_without_agent_http` | 159 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_vm_outbound_agent.py` | `test_outbound_wss_url_must_be_verified_fixed_api_path` | 178 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_vm_outbound_agent.py` | `test_source_agent_defaults_to_no_inbound_port` | 191 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_vm_outbound_agent.py` | `test_busy_agent_rejects_second_write_before_send` | 205 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_vm_outbound_agent.py` | `test_late_or_forged_reply_cannot_satisfy_pending_id` | 228 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_vm_outbound_agent.py` | `test_broker_shutdown_closes_sessions_and_unblocks_pending_write` | 248 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_vm_outbound_agent.py` | `test_backend_enum_accepts_pull_but_refuses_arbitrary_mode` | 265 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_vm_outbound_agent.py` | `test_outbound_runner_does_not_bind_uvicorn_listener` | 272 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_vm_outbound_agent.py` | `test_outbound_runner_does_not_bind_uvicorn_listener.forbidden_listener` | 288 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_outbound_runner_does_not_bind_uvicorn_listener |
-| `tests/unit/test_vm_outbound_agent.py` | `test_operator_connection_status_endpoint_requires_permission` | 296 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_vm_outbound_agent.py` | `test_outbound_broker_rejects_unsigned_or_unscoped_write` | 308 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_vm_outbound_agent.py` | `test_on_host_agent_executes_once_and_rejects_replay_after_reconnect` | 325 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_vm_outbound_agent.py` | `test_on_host_agent_executes_once_and_rejects_replay_after_reconnect.AgentSocket` | 347 | class | کلاس | test_on_host_agent_executes_once_and_rejects_replay_after_reconnect |
-| `tests/unit/test_vm_outbound_agent.py` | `test_on_host_agent_executes_once_and_rejects_replay_after_reconnect.AgentSocket.__aiter__` | 348 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_on_host_agent_executes_once_and_rejects_replay_after_reconnect.AgentSocket |
-| `tests/unit/test_vm_outbound_agent.py` | `test_on_host_agent_executes_once_and_rejects_replay_after_reconnect.AgentSocket.__aiter__.messages` | 349 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_on_host_agent_executes_once_and_rejects_replay_after_reconnect.AgentSocket.__aiter__ |
-| `tests/unit/test_vm_outbound_agent.py` | `test_on_host_agent_executes_once_and_rejects_replay_after_reconnect.AgentSocket.send` | 353 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_on_host_agent_executes_once_and_rejects_replay_after_reconnect.AgentSocket |
-| `tests/unit/test_vm_outbound_agent.py` | `test_on_host_agent_executes_once_and_rejects_replay_after_reconnect.FakeConnect` | 356 | class | کلاس | test_on_host_agent_executes_once_and_rejects_replay_after_reconnect |
-| `tests/unit/test_vm_outbound_agent.py` | `test_on_host_agent_executes_once_and_rejects_replay_after_reconnect.FakeConnect.__aenter__` | 357 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_on_host_agent_executes_once_and_rejects_replay_after_reconnect.FakeConnect |
-| `tests/unit/test_vm_outbound_agent.py` | `test_on_host_agent_executes_once_and_rejects_replay_after_reconnect.FakeConnect.__aexit__` | 360 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_on_host_agent_executes_once_and_rejects_replay_after_reconnect.FakeConnect |
-| `tests/unit/test_vm_outbound_agent.py` | `test_on_host_agent_executes_once_and_rejects_replay_after_reconnect.connect` | 363 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_on_host_agent_executes_once_and_rejects_replay_after_reconnect |
-| `tests/unit/test_vm_outbound_agent.py` | `test_on_host_agent_executes_once_and_rejects_replay_after_reconnect.terminate_after_reconnect` | 369 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_on_host_agent_executes_once_and_rejects_replay_after_reconnect |
-| `tests/unit/test_vm_outbound_agent.py` | `test_pull_mode_approval_signatures_are_per_target_and_host_verifiable` | 392 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_vm_outbound_agent.py` | `test_cancelled_in_flight_write_never_requeues_and_clears_pending` | 413 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_outbound_agent.py` | `test_wrong_token_and_unknown_target_never_accept` | 92 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_outbound_agent.py` | `test_duplicate_connection_does_not_take_over_authenticated_host` | 104 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_outbound_agent.py` | `test_disconnect_while_write_pending_is_unknown_without_retry` | 116 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_outbound_agent.py` | `test_missing_agent_write_unknown_and_read_fails_closed` | 137 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_outbound_agent.py` | `test_client_routes_all_tools_to_broker_without_agent_http` | 160 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_outbound_agent.py` | `test_outbound_wss_url_must_be_verified_fixed_api_path` | 179 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_outbound_agent.py` | `test_source_agent_defaults_to_no_inbound_port` | 192 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_outbound_agent.py` | `test_busy_agent_rejects_second_write_before_send` | 206 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_outbound_agent.py` | `test_late_or_forged_reply_cannot_satisfy_pending_id` | 229 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_outbound_agent.py` | `test_broker_shutdown_closes_sessions_and_unblocks_pending_write` | 249 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_outbound_agent.py` | `test_backend_enum_accepts_pull_but_refuses_arbitrary_mode` | 266 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_outbound_agent.py` | `test_outbound_runner_does_not_bind_uvicorn_listener` | 273 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_outbound_agent.py` | `test_outbound_runner_does_not_bind_uvicorn_listener.forbidden_listener` | 289 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_outbound_runner_does_not_bind_uvicorn_listener |
+| `tests/unit/test_vm_outbound_agent.py` | `test_operator_connection_status_endpoint_requires_permission` | 297 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_outbound_agent.py` | `test_outbound_broker_rejects_unsigned_or_unscoped_write` | 309 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_outbound_agent.py` | `test_on_host_agent_executes_once_and_rejects_replay_after_reconnect` | 326 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_outbound_agent.py` | `test_on_host_agent_executes_once_and_rejects_replay_after_reconnect.AgentSocket` | 348 | class | کلاس | test_on_host_agent_executes_once_and_rejects_replay_after_reconnect |
+| `tests/unit/test_vm_outbound_agent.py` | `test_on_host_agent_executes_once_and_rejects_replay_after_reconnect.AgentSocket.__aiter__` | 349 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_on_host_agent_executes_once_and_rejects_replay_after_reconnect.AgentSocket |
+| `tests/unit/test_vm_outbound_agent.py` | `test_on_host_agent_executes_once_and_rejects_replay_after_reconnect.AgentSocket.__aiter__.messages` | 350 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_on_host_agent_executes_once_and_rejects_replay_after_reconnect.AgentSocket.__aiter__ |
+| `tests/unit/test_vm_outbound_agent.py` | `test_on_host_agent_executes_once_and_rejects_replay_after_reconnect.AgentSocket.send` | 354 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_on_host_agent_executes_once_and_rejects_replay_after_reconnect.AgentSocket |
+| `tests/unit/test_vm_outbound_agent.py` | `test_on_host_agent_executes_once_and_rejects_replay_after_reconnect.FakeConnect` | 357 | class | کلاس | test_on_host_agent_executes_once_and_rejects_replay_after_reconnect |
+| `tests/unit/test_vm_outbound_agent.py` | `test_on_host_agent_executes_once_and_rejects_replay_after_reconnect.FakeConnect.__aenter__` | 358 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_on_host_agent_executes_once_and_rejects_replay_after_reconnect.FakeConnect |
+| `tests/unit/test_vm_outbound_agent.py` | `test_on_host_agent_executes_once_and_rejects_replay_after_reconnect.FakeConnect.__aexit__` | 361 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_on_host_agent_executes_once_and_rejects_replay_after_reconnect.FakeConnect |
+| `tests/unit/test_vm_outbound_agent.py` | `test_on_host_agent_executes_once_and_rejects_replay_after_reconnect.connect` | 364 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_on_host_agent_executes_once_and_rejects_replay_after_reconnect |
+| `tests/unit/test_vm_outbound_agent.py` | `test_on_host_agent_executes_once_and_rejects_replay_after_reconnect.terminate_after_reconnect` | 370 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_on_host_agent_executes_once_and_rejects_replay_after_reconnect |
+| `tests/unit/test_vm_outbound_agent.py` | `test_pull_mode_approval_signatures_are_per_target_and_host_verifiable` | 393 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_outbound_agent.py` | `test_cancelled_in_flight_write_never_requeues_and_clears_pending` | 414 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_outbound_agent.py` | `test_negotiated_relative_lease_write_requires_fresh_api_commit` | 438 | async function | A write cannot start until the API confirms its own monotonic deadline. | module |
+| `tests/unit/test_vm_outbound_agent.py` | `test_expired_relative_write_is_never_committed_by_api` | 477 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_vm_pull_review.py` | `test_pull_agent_connection_cannot_deadlock_api_readiness` | 16 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_vm_pull_review.py` | `test_write_failure_after_dispatch_never_claims_no_write` | 44 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_vm_pull_review.py` | `test_write_expiry_before_dispatch_is_not_started` | 58 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
@@ -6282,6 +6284,22 @@
 | `tests/unit/test_vm_pull_review.py` | `test_replay_cache_never_evicts_unexpired_write_ids.FakeConnection.__aiter__.frames` | 187 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_replay_cache_never_evicts_unexpired_write_ids.FakeConnection.__aiter__ |
 | `tests/unit/test_vm_pull_review.py` | `test_replay_cache_never_evicts_unexpired_write_ids.FakeConnection.send` | 192 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_replay_cache_never_evicts_unexpired_write_ids.FakeConnection |
 | `tests/unit/test_vm_pull_review.py` | `test_replay_cache_never_evicts_unexpired_write_ids.end_loop` | 195 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_replay_cache_never_evicts_unexpired_write_ids |
+| `tests/unit/test_vm_pull_review.py` | `test_vm_relative_monotonic_lease_ignores_wall_clock_skew` | 209 | async function | v2 works when the VM wall clock is far from the API wall clock. | module |
+| `tests/unit/test_vm_pull_review.py` | `test_vm_relative_monotonic_lease_ignores_wall_clock_skew.FakeConnection` | 239 | class | کلاس | test_vm_relative_monotonic_lease_ignores_wall_clock_skew |
+| `tests/unit/test_vm_pull_review.py` | `test_vm_relative_monotonic_lease_ignores_wall_clock_skew.FakeConnection.__aenter__` | 240 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_vm_relative_monotonic_lease_ignores_wall_clock_skew.FakeConnection |
+| `tests/unit/test_vm_pull_review.py` | `test_vm_relative_monotonic_lease_ignores_wall_clock_skew.FakeConnection.__aexit__` | 241 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_vm_relative_monotonic_lease_ignores_wall_clock_skew.FakeConnection |
+| `tests/unit/test_vm_pull_review.py` | `test_vm_relative_monotonic_lease_ignores_wall_clock_skew.FakeConnection.__aiter__` | 242 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_vm_relative_monotonic_lease_ignores_wall_clock_skew.FakeConnection |
+| `tests/unit/test_vm_pull_review.py` | `test_vm_relative_monotonic_lease_ignores_wall_clock_skew.FakeConnection.__aiter__.frames` | 243 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_vm_relative_monotonic_lease_ignores_wall_clock_skew.FakeConnection.__aiter__ |
+| `tests/unit/test_vm_pull_review.py` | `test_vm_relative_monotonic_lease_ignores_wall_clock_skew.FakeConnection.send` | 248 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_vm_relative_monotonic_lease_ignores_wall_clock_skew.FakeConnection |
+| `tests/unit/test_vm_pull_review.py` | `test_vm_relative_monotonic_lease_ignores_wall_clock_skew.stop` | 251 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_vm_relative_monotonic_lease_ignores_wall_clock_skew |
+| `tests/unit/test_vm_pull_review.py` | `test_vm_relative_write_rejects_expired_commit_without_execution` | 262 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_pull_review.py` | `test_vm_relative_write_rejects_expired_commit_without_execution.FakeConnection` | 283 | class | کلاس | test_vm_relative_write_rejects_expired_commit_without_execution |
+| `tests/unit/test_vm_pull_review.py` | `test_vm_relative_write_rejects_expired_commit_without_execution.FakeConnection.__aenter__` | 284 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_vm_relative_write_rejects_expired_commit_without_execution.FakeConnection |
+| `tests/unit/test_vm_pull_review.py` | `test_vm_relative_write_rejects_expired_commit_without_execution.FakeConnection.__aexit__` | 285 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_vm_relative_write_rejects_expired_commit_without_execution.FakeConnection |
+| `tests/unit/test_vm_pull_review.py` | `test_vm_relative_write_rejects_expired_commit_without_execution.FakeConnection.__aiter__` | 286 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_vm_relative_write_rejects_expired_commit_without_execution.FakeConnection |
+| `tests/unit/test_vm_pull_review.py` | `test_vm_relative_write_rejects_expired_commit_without_execution.FakeConnection.__aiter__.frames` | 287 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_vm_relative_write_rejects_expired_commit_without_execution.FakeConnection.__aiter__ |
+| `tests/unit/test_vm_pull_review.py` | `test_vm_relative_write_rejects_expired_commit_without_execution.FakeConnection.send` | 296 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_vm_relative_write_rejects_expired_commit_without_execution.FakeConnection |
+| `tests/unit/test_vm_pull_review.py` | `test_vm_relative_write_rejects_expired_commit_without_execution.stop` | 298 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_vm_relative_write_rejects_expired_commit_without_execution |
 | `tests/unit/test_vm_recovery_advice.py` | `row` | 14 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_vm_recovery_advice.py` | `gfpapi_rows` | 25 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_vm_recovery_advice.py` | `trigger` | 37 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
@@ -6480,7 +6498,8 @@
 | `vmmcpagent/connector.py` | `LocalVMConnector._validate_target` | 103 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | LocalVMConnector |
 | `vmmcpagent/connector.py` | `LocalVMConnector._validate_service` | 109 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | LocalVMConnector |
 | `vmmcpagent/connector.py` | `LocalVMConnector._run` | 115 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | LocalVMConnector |
-| `vmmcpagent/outbound.py` | `broker_url` | 28 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `vmmcpagent/outbound.py` | `outbound_tls_context` | 48 | function | Explicitly configurable peer validation; never downgrade WSS to ws://. | module |
-| `vmmcpagent/outbound.py` | `_execution_failure` | 65 | function | A write may already have completed even if its response cannot be sent. | module |
-| `vmmcpagent/outbound.py` | `run_outbound_forever` | 78 | async function | Reconnect with bounded backoff, but NEVER resend an interrupted write. | module |
+| `vmmcpagent/outbound.py` | `_monotonic_time` | 27 | function | Host-local elapsed-time clock; never compare wall clocks across VMs. | module |
+| `vmmcpagent/outbound.py` | `broker_url` | 34 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `vmmcpagent/outbound.py` | `outbound_tls_context` | 54 | function | Explicitly configurable peer validation; never downgrade WSS to ws://. | module |
+| `vmmcpagent/outbound.py` | `_execution_failure` | 71 | function | A write may already have completed even if its response cannot be sent. | module |
+| `vmmcpagent/outbound.py` | `run_outbound_forever` | 84 | async function | Reconnect with bounded backoff, but NEVER resend an interrupted write. | module |
