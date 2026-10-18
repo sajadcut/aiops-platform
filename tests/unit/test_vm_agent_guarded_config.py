@@ -139,3 +139,50 @@ async def test_missing_signing_key_never_runs_privileged_apply(monkeypatch):
     assert result["status"] == "config_guard_request_rejected"
     assert result["failure_reason"] == "config_guard_private_key_missing"
     assert result["production_write_performed"] is False
+
+
+@pytest.mark.asyncio
+async def test_api_blocks_unready_agent_signer_before_consuming_approval(monkeypatch):
+    """A valid isolated nginx -t is not enough to spend a one-use Approval."""
+    from types import SimpleNamespace
+    from fastapi import HTTPException
+    from apps.api import config_change_execution as module
+
+    approval = {"status": "approved", "incident_id": str(uuid4())}
+    meta = {**VALUES, "target": "vm-local-01"}
+    class Session:
+        async def __aenter__(self): return self
+        async def __aexit__(self, *args): return False
+    class ApprovalStore:
+        def __init__(self, db): pass
+        async def get(self, approval_id): return approval
+        async def consume(self, *args, **kwargs):
+            raise AssertionError("Must NOT consume Approval before signer is ready")
+    class Agent:
+        async def config_change_validate(self, target, **kwargs):
+            assert target == meta["target"]
+            assert kwargs["original_sha256"] == meta["original_sha256"]
+            return {
+                "success": True, "status": "isolated_vendor_validation_passed",
+                "isolated_validation": True, "production_write_performed": False,
+                "original_sha256": meta["original_sha256"],
+                "candidate_sha256": meta["candidate_sha256"],
+                "validation_scope":
+                    "nginx_mount_namespace_staged_etc_nginx_live_external_read_dependencies",
+                "apply_signing_ready": False,
+                "apply_signing_status": "config_guard_private_key_missing",
+            }
+    async def matching(db, record, metadata):
+        return True
+    monkeypatch.setattr(settings, "VM_EXECUTION_BACKEND", "agent_pull")
+    monkeypatch.setattr(module, "AsyncSessionLocal", Session)
+    monkeypatch.setattr(module, "PostgreSQLApprovalStore", ApprovalStore)
+    monkeypatch.setattr(module, "_fields", lambda record: meta)
+    monkeypatch.setattr(module, "_same_incident_candidate", matching)
+    monkeypatch.setattr(module, "VMEdgeMCPClient", Agent)
+    with pytest.raises(HTTPException) as exc:
+        await module.execute_config(
+            uuid4(), identity=SimpleNamespace(subject="sre"),
+        )
+    assert exc.value.status_code == 503
+    assert exc.value.detail == "config_guard_private_key_missing"
