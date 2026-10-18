@@ -44,6 +44,15 @@ def configure_agent_environment() -> Path:
 def main() -> None:
     configure_agent_environment()
     from domain.contracts.config import settings
+    from domain.contracts.logging import configure_logging, logger
+    # The on-host process is a different executable from the central API.
+    # Both rotating file handlers MUST be initialized for the Agent itself.
+    if not (settings.LOG_TEXT_FILE_ENABLED and settings.LOG_JSON_FILE_ENABLED):
+        raise RuntimeError("vm_agent_requires_dual_text_json_audit_logs")
+    configure_logging()
+    logger.info("vm_agent_starting", target=settings.VM_AGENT_TARGET,
+                log_dir=settings.LOG_DIR, log_level=settings.LOG_LEVEL,
+                text_file=settings.LOG_TEXT_FILE, json_file=settings.LOG_JSON_FILE)
     if settings.MCP_SERVER_PROVIDER != "vm_agent":
         raise RuntimeError("vm_agent_runner_requires_vm_agent_provider")
     if settings.SSH_ENABLED:
