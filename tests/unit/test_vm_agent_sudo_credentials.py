@@ -132,8 +132,6 @@ async def test_sudo_fallback_passes_password_on_stdin_and_redacts_output(provisi
 
     async def fake_run(target, command, *, stdin_data=None):
         commands.append((target, command, stdin_data))
-        if len(commands) == 1:
-            return {"success": False, "stderr": "sudo: a password is required"}
         return {"success": True, "stdout": "secret-do-not-echo",
                 "stderr": "secret-do-not-echo", "exit_code": 0}
 
@@ -144,10 +142,10 @@ async def test_sudo_fallback_passes_password_on_stdin_and_redacts_output(provisi
             stdin_data="config-data")
         assert result["stdout"] == "[REDACTED]"
         assert result["stderr"] == "[REDACTED]"
-        assert commands[0] == ("vm-01", "sudo -n /usr/bin/systemctl restart nginx", "config-data")
-        assert commands[1][1] == "sudo -k -S -p '' /usr/bin/systemctl restart nginx"
-        assert commands[1][2] == "secret-do-not-echo\nconfig-data"
-        assert "secret-do-not-echo" not in commands[1][1]
+        assert len(commands) == 1
+        assert commands[0][1] == "sudo -k -S -p '' /usr/bin/systemctl restart nginx"
+        assert commands[0][2] == "secret-do-not-echo\nconfig-data"
+        assert "secret-do-not-echo" not in commands[0][1]
     finally:
         LocalVMConnector.clear_session_credentials()
 
