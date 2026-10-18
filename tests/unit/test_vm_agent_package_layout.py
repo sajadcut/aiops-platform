@@ -37,6 +37,8 @@ def test_agent_configuration_template_is_private_and_agent_specific():
     assert "SSH_ENABLED=False" in template
     assert "APP_ENV=production" in template
     assert "VM_AGENT_BIND_PORT=9105" in template
+    assert "AIOPS_CONFIG_CANDIDATE_DIRECTORY=/data/aiopsvmagent/config-candidates" in template
+    assert "LOG_DIR=/data/aiopsvmagent/logs" in template
     assert "VM_AGENT_BEARER_TOKEN=\n" in template
     assert "MCP_BEARER_TOKEN=\n" in template
     ignored = (ROOT / ".gitignore").read_text()
@@ -86,13 +88,17 @@ def test_service_and_build_target_exact_same_agent_directory():
     unit = (AGENT / "vmmcpagent.service").read_text()
     build = (AGENT / "build.sh").read_text()
     install = (AGENT / "install.sh").read_text()
-    assert "WorkingDirectory=/opt/vmmcpagent" in unit
-    assert "EnvironmentFile=/opt/vmmcpagent/agent.env" in unit
-    assert "ExecStart=/opt/vmmcpagent/vmmcpagent" in unit
+    assert "WorkingDirectory=/data/aiopsvmagent" in unit
+    assert "EnvironmentFile=/data/aiopsvmagent/agent.env" in unit
+    assert "ExecStart=/data/aiopsvmagent/vmmcpagent" in unit
     assert "vmmcpagent/__main__.py" in build
     assert 'cp "$ROOT/vmmcpagent/agent.env.example" "$BUNDLE/agent.env.example"' in build
     assert 'cp "$ROOT/.env.example" "$BUNDLE/.env.example"' in build
     assert "SRC/agent.env.example" in install
+    assert 'DST="/data/aiopsvmagent"' in install
+    assert '"$DST/config-candidates" "$DST/logs"' in install
+    assert "install -d -o aiops-agent -g aiops-agent -m 0700" in install
+    assert "! -name 'config-candidates' ! -name 'logs'" in install
     assert "chmod 0600" in install
     assert "systemctl daemon-reload" in install
     assert "systemctl enable --now" not in install
