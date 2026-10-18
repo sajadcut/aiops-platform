@@ -21,6 +21,10 @@ def agent_settings(monkeypatch):
         "vm-01": "https://vm-01.example.internal/mcp",
         "vm-02": "https://vm-02.example.internal/mcp",
     })
+    monkeypatch.setattr(settings, "VM_AGENT_TOKENS", {
+        "vm-01": "A" * 40, "vm-02": "B" * 40,
+    })
+    monkeypatch.setattr(settings, "VM_AGENT_BEARER_TOKEN", "A" * 40)
 
 
 def test_agent_has_complete_vm_tool_contract():
@@ -64,7 +68,7 @@ async def test_api_routes_to_configured_target_and_never_falls_back(agent_settin
     observed = []
 
     async def fake_call_tool(self, name, args):
-        observed.append((self.server_url, self.EXPECTED_SERVER_NAME, name, args.copy()))
+        observed.append((self.server_url, self.EXPECTED_SERVER_NAME, self.bearer_token, name, args.copy()))
         return {"content": [{"success": True, "target": args["target"]}]}
 
     monkeypatch.setattr(MCPClient, "call_tool", fake_call_tool)
@@ -75,6 +79,7 @@ async def test_api_routes_to_configured_target_and_never_falls_back(agent_settin
     assert observed == [(
         "https://vm-02.example.internal/mcp",
         "aiops-vm-agent-mcp",
+        "B" * 40,
         "service_status",
         {"target": "vm-02", "service": "nginx"},
     )]
@@ -89,3 +94,20 @@ def test_transport_switch_preserves_legacy_ssh_mode(agent_settings, monkeypatch)
     client = VMEdgeMCPClient()
     assert client.server_url == "http://localhost:9105/mcp"
     assert client.EXPECTED_SERVER_NAME == "aiops-vm-mcp"
+
+
+def test_agent_claim_key_is_isolated_from_other_targets(agent_settings, monkeypatch):
+    from apps.config_change_authorization import create_claim, verify_claim
+    monkeypatch.setattr(settings, "MCP_SERVER_PROVIDER", "elasticsearch")
+    claims, signature = create_claim(
+        approval_id="approved-1", incident_id="incident-1", target="vm-01",
+        service="nginx", config_file="/etc/nginx/nginx.conf",
+        original_sha256="a" * 64, candidate_sha256="b" * 64,
+        proposed_change="remove_extra_opening_brace",
+    )
+    monkeypatch.setattr(settings, "MCP_SERVER_PROVIDER", "vm_agent")
+    monkeypatch.setattr(settings, "VM_AGENT_BEARER_TOKEN", "A" * 40)
+    verify_claim(claims, signature, target="vm-01", service="nginx")
+    monkeypatch.setattr(settings, "VM_AGENT_BEARER_TOKEN", "B" * 40)
+    with pytest.raises(PermissionError, match="config_execution_claim_signature_invalid"):
+        verify_claim(claims, signature, target="vm-01", service="nginx")
