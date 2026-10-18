@@ -95,6 +95,27 @@ class VMEdgeMCPClient(MCPClient):
         self._identity_validated = True
         return init_result
 
+    async def health_check(self) -> bool:
+        if self._backend != "agent" or self._endpoint_direct:
+            return await super().health_check()
+
+        # A single healthy agent must not make all registered destinations
+        # appear healthy in API readiness. Check each pinned endpoint.
+        import asyncio
+
+        async def probe(target: str, endpoint: str) -> bool:
+            worker = VMEdgeMCPClient(server_url=endpoint, agent_target=target)
+            try:
+                return await worker.health_check()
+            finally:
+                await worker.close()
+
+        outcomes = await asyncio.gather(
+            *(probe(target, url) for target, url in settings.VM_AGENT_ENDPOINTS.items()),
+            return_exceptions=True,
+        )
+        return bool(outcomes) and all(value is True for value in outcomes)
+
     async def _invoke(self, name: str, target: str, **params: Any) -> Dict[str, Any]:
         if self._backend == "agent" and not self._endpoint_direct:
             # No target supplied by an alarm, chatbot or LLM can select its own
