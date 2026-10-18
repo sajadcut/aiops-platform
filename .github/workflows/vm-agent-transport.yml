@@ -16,6 +16,7 @@ on:
       - 'tests/unit/test_vm_agent_package_layout.py'
       - 'tests/unit/test_vm_outbound_agent.py'
       - 'tests/unit/test_vm_pull_review.py'
+      - 'tests/unit/test_vm_agent_sudo_credentials.py'
       - 'tests/unit/test_vm_agent_all_tools_parity.py'
       - 'tests/unit/test_vm_agent_ambiguous_apply.py'
       - 'tests/unit/test_vm_agent_guarded_config.py'
@@ -36,6 +37,7 @@ on:
       - 'tests/unit/test_vm_agent_package_layout.py'
       - 'tests/unit/test_vm_outbound_agent.py'
       - 'tests/unit/test_vm_pull_review.py'
+      - 'tests/unit/test_vm_agent_sudo_credentials.py'
       - 'tests/unit/test_vm_agent_all_tools_parity.py'
       - 'tests/unit/test_vm_agent_ambiguous_apply.py'
       - 'tests/unit/test_vm_agent_guarded_config.py'
@@ -80,6 +82,7 @@ jobs:
             tests/unit/test_vm_agent_package_layout.py \
             tests/unit/test_vm_outbound_agent.py \
             tests/unit/test_vm_pull_review.py \
+            tests/unit/test_vm_agent_sudo_credentials.py \
             tests/unit/test_vm_agent_all_tools_parity.py \
             tests/unit/test_vm_agent_ambiguous_apply.py \
             tests/unit/test_vm_agent_guarded_config.py \
