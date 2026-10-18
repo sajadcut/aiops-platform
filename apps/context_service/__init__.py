@@ -11,7 +11,7 @@ from domain.schemas import IncidentCreate
 from integrations.cognia import CogniaAPIError, CogniaConfigurationError, CogniaContractError
 from integrations.elasticsearch.mcp_client import ElasticsearchMCPClient
 from integrations.prometheus.mcp_client import PrometheusMCPClient
-from integrations.vm.mcp_client import VMEdgeMCPClient
+from integrations.vm.mcp_client import VMEdgeMCPClient, vm_transport_configured
 from integrations.zabbix.mcp_client import ZabbixMCPClient
 from integrations.kubernetes.mcp_client import KubernetesMCPClient
 
@@ -45,7 +45,7 @@ class ContextBuilder:
         if collector is not None:
             self.collector = collector
             return
-        vm = VMEdgeMCPClient() if settings.VM_MCP_URL else None
+        vm = VMEdgeMCPClient() if vm_transport_configured() else None
         kubernetes = KubernetesMCPClient() if settings.KUBERNETES_MCP_URL else None
         self.collector = EvidenceCollector(
             zabbix=ZabbixMCPClient(),

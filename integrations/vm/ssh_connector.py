@@ -150,6 +150,12 @@ class SSHVMConnector:
                 and any(command.startswith(prefix + action + " ")
                         for prefix in permitted for action in ("apply", "validate"))):
             return max(self.timeout + 5, 60)
+        # Local agent root guard uses a bounded, root-owned executable rather
+        # than sudo /bin/sh -s. Its isolated validator and atomic CAS may take
+        # longer than the SSH connection timeout, but remain bounded.
+        if (command.startswith("sudo -n /usr/local/sbin/aiops-config-guard ")
+                or command.startswith("sudo -k -S -p '' /usr/local/sbin/aiops-config-guard ")):
+            return max(self.timeout + 5, 180)
         return self.timeout + 5
 
     async def _run_key(self, target: str, command: str, *, stdin_data: Optional[str] = None) -> Dict[str, Any]:

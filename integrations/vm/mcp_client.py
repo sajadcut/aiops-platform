@@ -6,6 +6,11 @@ from domain.contracts.config import settings
 from integrations.mcp_client import MCPClient
 
 
+def vm_transport_configured() -> bool:
+    """A selected VM backend is configured; no implicit fallback to SSH."""
+    return bool(settings.VM_AGENT_ENDPOINTS) if settings.VM_EXECUTION_BACKEND == "agent" else bool(settings.VM_MCP_URL)
+
+
 class VMEdgeMCPClient(MCPClient):
     """MCP-only connector for VM/Edge diagnostics and governed remediation."""
 
@@ -21,18 +26,41 @@ class VMEdgeMCPClient(MCPClient):
     }
     WRITE_TOOLS = {"restart_service", "reload_service", "start_service", "config_change_apply"}
 
-    def __init__(self, server_url: Optional[str] = None):
-        url = server_url or settings.VM_MCP_URL
+    def __init__(self, server_url: Optional[str] = None, *,
+                 agent_target: Optional[str] = None):
+        self._backend = settings.VM_EXECUTION_BACKEND
+        # An explicit server_url is a pinned endpoint used by the agent router.
+        # The default client routes EACH operation based on its exact target.
+        self._endpoint_direct = server_url is not None
+        agent_token = None
+        if self._backend == "agent":
+            if not settings.VM_AGENT_ENDPOINTS:
+                raise ValueError("vm_agent_endpoints_not_configured")
+            selected_target = agent_target or next(iter(settings.VM_AGENT_ENDPOINTS))
+            if agent_target and settings.VM_AGENT_ENDPOINTS.get(agent_target) != server_url:
+                raise PermissionError("vm_agent_endpoint_binding_invalid")
+            if server_url is not None and agent_target is None:
+                raise PermissionError("vm_agent_target_binding_required")
+            agent_token = settings.VM_AGENT_TOKENS.get(selected_target)
+            if not agent_token:
+                raise PermissionError("vm_agent_token_not_configured")
+            url = server_url or settings.VM_AGENT_ENDPOINTS[selected_target]
+            self.EXPECTED_SERVER_NAME = "aiops-vm-agent-mcp"
+        else:
+            url = server_url or settings.VM_MCP_URL
         if not url:
             raise ValueError("vm_mcp_url_not_configured")
         self._identity_validated = False
         super().__init__(
             url, "vm-edge", allowed_tools=self.READ_TOOLS | self.WRITE_TOOLS,
             write_tools=self.WRITE_TOOLS, protocol_version=settings.MCP_PROTOCOL_VERSION,
-            timeout=settings.MCP_TIMEOUT_SECONDS, bearer_token=settings.MCP_BEARER_TOKEN,
-            write_bearer_token=settings.MCP_BEARER_TOKEN,
+            timeout=settings.MCP_TIMEOUT_SECONDS,
+            bearer_token=agent_token if self._backend == "agent" else settings.MCP_BEARER_TOKEN,
+            write_bearer_token=agent_token if self._backend == "agent" else settings.MCP_BEARER_TOKEN,
             client_cert_path=settings.MCP_CLIENT_CERT_PATH,
             client_key_path=settings.MCP_CLIENT_KEY_PATH,
+            verify_tls=self._backend == "agent",
+            tls_ca_bundle_path=settings.VM_AGENT_CA_BUNDLE_PATH if self._backend == "agent" else None,
         )
         # Full-file repair runs a bounded LLM call on the trusted MCP worker.
         # Use one longer read, not three 20-second HTTP retries: a lost
@@ -67,7 +95,39 @@ class VMEdgeMCPClient(MCPClient):
         self._identity_validated = True
         return init_result
 
+    async def health_check(self) -> bool:
+        if self._backend != "agent" or self._endpoint_direct:
+            return await super().health_check()
+
+        # A single healthy agent must not make all registered destinations
+        # appear healthy in API readiness. Check each pinned endpoint.
+        import asyncio
+
+        async def probe(target: str, endpoint: str) -> bool:
+            worker = VMEdgeMCPClient(server_url=endpoint, agent_target=target)
+            try:
+                return await worker.health_check()
+            finally:
+                await worker.close()
+
+        outcomes = await asyncio.gather(
+            *(probe(target, url) for target, url in settings.VM_AGENT_ENDPOINTS.items()),
+            return_exceptions=True,
+        )
+        return bool(outcomes) and all(value is True for value in outcomes)
+
     async def _invoke(self, name: str, target: str, **params: Any) -> Dict[str, Any]:
+        if self._backend == "agent" and not self._endpoint_direct:
+            # No target supplied by an alarm, chatbot or LLM can select its own
+            # URL. Only this operator-managed target-to-endpoint map can route.
+            endpoint = settings.VM_AGENT_ENDPOINTS.get(target)
+            if not endpoint:
+                raise PermissionError("vm_target_not_allowed")
+            worker = VMEdgeMCPClient(server_url=endpoint, agent_target=target)
+            try:
+                return await worker._invoke(name, target, **params)
+            finally:
+                await worker.close()
         result = await self.call_tool(name, {"target": target, **params})
         if isinstance(result.get("content"), list) and result["content"]:
             first = result["content"][0]

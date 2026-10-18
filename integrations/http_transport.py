@@ -254,12 +254,12 @@ def insecure_sync_client(*, component: str = "outbound_http", **kwargs: Any) -> 
 
 
 
-def verified_async_client(*, component: str = "verified_health_probe", **kwargs: Any) -> Any:
+def verified_async_client(*, component: str = "verified_health_probe", ca_bundle_path: Optional[str] = None, **kwargs: Any) -> Any:
     """Use authenticated TLS for incident HTTP health probes.
 
     Unlike the legacy internal MCP transport, a newly configured HTTPS health
     check must validate the destination certificate and hostname.
     """
-    kwargs["verify"] = True
+    kwargs["verify"] = ca_bundle_path or True
     client = httpx.AsyncClient(**kwargs)
     return _TimedAsyncClient(client, component)

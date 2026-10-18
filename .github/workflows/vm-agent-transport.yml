@@ -1,0 +1,80 @@
+name: vm-agent-transport
+
+on:
+  push:
+    paths:
+      - 'integrations/vm/**'
+      - 'integrations/mcp_client.py'
+      - 'integrations/http_transport.py'
+      - 'apps/mcp_server/**'
+      - 'apps/vm_agent_runner.py'
+      - 'vmmcpagent/**'
+      - 'scripts/build-vm-agent.sh'
+      - 'domain/contracts/config.py'
+      - 'tests/unit/test_vm_local_agent_transport.py'
+      - 'tests/unit/test_vm_agent_package_layout.py'
+      - 'tests/unit/test_vm_agent_all_tools_parity.py'
+      - 'tests/unit/test_vm_agent_ambiguous_apply.py'
+      - 'tests/unit/test_vm_agent_guarded_config.py'
+      - 'tests/unit/test_mcp_server_contract.py'
+      - '.github/workflows/vm-agent-transport.yml'
+  pull_request:
+    paths:
+      - 'integrations/vm/**'
+      - 'integrations/mcp_client.py'
+      - 'integrations/http_transport.py'
+      - 'apps/mcp_server/**'
+      - 'apps/vm_agent_runner.py'
+      - 'vmmcpagent/**'
+      - 'scripts/build-vm-agent.sh'
+      - 'domain/contracts/config.py'
+      - 'tests/unit/test_vm_local_agent_transport.py'
+      - 'tests/unit/test_vm_agent_package_layout.py'
+      - 'tests/unit/test_vm_agent_all_tools_parity.py'
+      - 'tests/unit/test_vm_agent_ambiguous_apply.py'
+      - 'tests/unit/test_vm_agent_guarded_config.py'
+      - 'tests/unit/test_mcp_server_contract.py'
+      - '.github/workflows/vm-agent-transport.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  contract-and-security:
+    runs-on: ubuntu-latest
+    env:
+      PYTHONPATH: ${{ github.workspace }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - name: Configure isolated test runtime
+        shell: bash
+        run: |
+          cp .env.example .env
+          sed -i 's/^APP_ENV=development$/APP_ENV=test/' .env
+      - name: Install runtime and test dependencies
+        run: |
+          python -m pip install -r requirements.txt -r requirements-dev.txt
+          python -m pip check
+      - name: Validate package shell scripts and restricted config guard syntax
+        shell: bash
+        run: |
+          bash -n vmmcpagent/build.sh vmmcpagent/install.sh scripts/build-vm-agent.sh
+          sh -n vmmcpagent/aiops-config-guard
+          cmp -s vmmcpagent/aiops-config-guard scripts/vm/aiops-config-guard
+      - name: Compile implementation and tests
+        run: python -m compileall -q integrations/vm apps/mcp_server apps/vm_agent_runner.py vmmcpagent tests/unit/test_vm_local_agent_transport.py tests/unit/test_vm_agent_package_layout.py
+      - name: Validate VM MCP SSH and local-agent parity
+        run: |
+          python -m pytest -q \
+            tests/unit/test_vm_local_agent_transport.py \
+            tests/unit/test_vm_agent_package_layout.py \
+            tests/unit/test_vm_agent_all_tools_parity.py \
+            tests/unit/test_vm_agent_ambiguous_apply.py \
+            tests/unit/test_vm_agent_guarded_config.py \
+            tests/unit/test_mcp_server_contract.py \
+            tests/security/test_vm_mcp_security.py \
+            tests/security/test_vm_ssh_password_auth.py

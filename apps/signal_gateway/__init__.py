@@ -20,6 +20,7 @@ from apps.rag_service import KnowledgeRAGService
 from apps.signal_gateway.correlation import build_correlation_identity
 from apps.signal_gateway.received_signal import capture_received_signal
 from integrations.zabbix.webhook_contract import normalize_zabbix_payload, zabbix_event_time, zabbix_tags
+from integrations.vm.mcp_client import vm_transport_configured
 from domain.contracts.config import settings
 from domain.contracts.logging import logger
 
@@ -187,7 +188,7 @@ class SignalGateway:
         if len(candidates) != 1:
             return []
         candidate = candidates[0]
-        if not settings.VM_MCP_URL:
+        if not vm_transport_configured():
             candidate["verification_status"] = "vm_mcp_not_configured"
             return []
 
@@ -200,7 +201,10 @@ class SignalGateway:
         import re
         allowed = {
             str(item).strip().casefold(): str(item).strip()
-            for item in settings.SSH_ALLOWED_TARGETS if str(item).strip()
+            for item in (settings.VM_AGENT_ENDPOINTS.keys()
+                         if settings.VM_EXECUTION_BACKEND == "agent"
+                         else settings.SSH_ALLOWED_TARGETS)
+            if str(item).strip()
         }
         raw_ips = candidate.get("ip_addresses") or []
         if isinstance(raw_ips, str):

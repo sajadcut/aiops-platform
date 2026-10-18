@@ -22,3 +22,12 @@ Thumbs.db
 # Local Windows start/stop runtime state and per-machine VM MCP config
 .runtime/
 start-all.local.ps1
+
+# Installed VM MCP agent secrets and local build outputs
+vmmcpagent/agent.env
+vmmcpagent/agent.env.*
+!vmmcpagent/agent.env.example
+vmmcpagent/.env
+dist/
+build/
+*.spec

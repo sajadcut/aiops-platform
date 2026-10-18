@@ -15,6 +15,7 @@ from integrations.elasticsearch.client import ElasticsearchClient
 from integrations.kubernetes.client import KubernetesEvidenceClient
 from integrations.prometheus.client import PrometheusClient
 from integrations.vm.ssh_connector import SSHVMConnector
+from vmmcpagent.connector import LocalVMConnector
 from integrations.vm.governed_config_change import run_governed_change
 from apps.config_change_authorization import verify_claim
 
@@ -110,6 +111,11 @@ _TOOL_SCHEMAS: Dict[str, Dict[str, Dict[str, Any]]] = {
 }
 
 
+# The on-host agent exposes the identical bounded VM MCP tool contract.
+# Never add a generic command/shell tool to either provider.
+_TOOL_SCHEMAS["vm_agent"] = _TOOL_SCHEMAS["vm"]
+
+
 def _provider() -> str:
     provider = settings.MCP_SERVER_PROVIDER.strip().lower()
     if provider not in _TOOL_SCHEMAS:
@@ -132,7 +138,8 @@ def _authorize(authorization: str | None, tool: str | None = None) -> str:
         raise HTTPException(status_code=503, detail="mcp_server_auth_required_in_production")
     if not settings.MCP_SERVER_REQUIRE_AUTH:
         return "mcp-anonymous-development"
-    token = settings.MCP_BEARER_TOKEN
+    token = (settings.VM_AGENT_BEARER_TOKEN if _provider() == "vm_agent"
+             else settings.MCP_BEARER_TOKEN)
     if not token:
         raise HTTPException(status_code=503, detail="mcp_control_plane_identity_not_configured")
     if not authorization or not hmac.compare_digest(authorization, f"Bearer {token}"):
@@ -175,7 +182,7 @@ async def _call(provider: str, tool: str, args: Dict[str, Any]) -> Any:
             resource=resource,
         )
 
-    connector = SSHVMConnector()
+    connector = LocalVMConnector() if provider == "vm_agent" else SSHVMConnector()
     target = str(args.get("target") or "").strip()
     if not target:
         raise ValueError("target_required")
@@ -246,11 +253,16 @@ def _validate_production_server() -> None:
     provider = _provider()
     if not settings.MCP_SERVER_REQUIRE_AUTH:
         errors.append("MCP_SERVER_REQUIRE_AUTH must be true")
-    if not settings.MCP_BEARER_TOKEN:
+    if provider == "vm_agent":
+        if not settings.VM_AGENT_BEARER_TOKEN or len(settings.VM_AGENT_BEARER_TOKEN.encode("utf-8")) < 32:
+            errors.append("VM_AGENT_BEARER_TOKEN must be at least 32 bytes")
+        if settings.VM_AGENT_BEARER_TOKEN == settings.MCP_BEARER_TOKEN:
+            errors.append("VM_AGENT_BEARER_TOKEN must differ from central MCP_BEARER_TOKEN")
+    elif not settings.MCP_BEARER_TOKEN:
         errors.append("MCP_BEARER_TOKEN is required as the fixed Control-Plane MCP API key")
-    if provider == "vm":
+    if provider in {"vm", "vm_agent"}:
         try:
-            SSHVMConnector()
+            SSHVMConnector() if provider == "vm" else LocalVMConnector()
         except Exception as exc:
             errors.append(str(exc))
     if errors:
@@ -282,7 +294,7 @@ async def mcp(
     provider = _provider()
     if rpc.method == "initialize":
         http_request.state.identity_subject = _authorize(authorization)
-        return {"jsonrpc": "2.0", "id": rpc.id, "result": {"protocolVersion": settings.MCP_PROTOCOL_VERSION, "capabilities": {"tools": {"listChanged": False}}, "serverInfo": {"name": f"aiops-{provider}-mcp", "version": settings.APP_VERSION}}}
+        return {"jsonrpc": "2.0", "id": rpc.id, "result": {"protocolVersion": settings.MCP_PROTOCOL_VERSION, "capabilities": {"tools": {"listChanged": False}}, "serverInfo": {"name": ("aiops-vm-agent-mcp" if provider == "vm_agent" else f"aiops-{provider}-mcp"), "version": settings.APP_VERSION}}}
     if rpc.method == "notifications/initialized":
         http_request.state.identity_subject = _authorize(authorization)
         return {"jsonrpc": "2.0", "id": rpc.id, "result": {}}

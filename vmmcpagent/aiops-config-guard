@@ -1,0 +1,182 @@
+#!/bin/sh
+# Root-owned bounded config guard for registered validation profiles. Narrow sudo only.
+# this exact binary only, never NOPASSWD for an unrestricted shell.
+set -eu
+umask 077
+action=$1
+service=$2
+file=$3
+expected_source=$4
+expected_candidate=$5
+if [ "$(id -u)" != 0 ]; then exit 41; fi
+if [ "$action" = apply ]; then
+  [ "$#" -eq 10 ] || exit 41
+else
+  [ "$#" -eq 5 ] || exit 41
+fi
+# Select the fixed, proven validation profile; never execute a validator
+# string, path or command supplied by the user or an LLM.
+case "$service" in *[!a-zA-Z0-9@_.:-]*|"") exit 41 ;; esac
+profile=""
+case "$action:$service:$file" in
+  validate:nginx:/etc/nginx/*.conf|apply:nginx:/etc/nginx/*.conf) profile="nginx" ;;
+esac
+if [ -z "$profile" ]; then
+  case "$action" in validate|apply) ;; *) exit 41 ;; esac
+  case "$file" in
+    /etc/*.json|/opt/*.json|/srv/*.json|/data/*.json|/usr/local/etc/*.json|/usr/local/tomcat/*.json)
+      profile="json_syntax"
+      ;;
+    /etc/*.xml|/opt/*.xml|/srv/*.xml|/data/*.xml|/usr/local/etc/*.xml|/usr/local/tomcat/*.xml)
+      profile="xml_syntax"
+      ;;
+    *) exit 41 ;;
+  esac
+fi
+case "$file" in
+  /etc/shadow|/etc/ssh/*|/etc/ssl/*|/etc/pki/*|/etc/security/*|/opt/secrets/*|/run/*|/proc/*|/sys/*|/dev/*) exit 41 ;;
+esac
+# Confidential filenames and device aliases are never permissible change
+# targets even when located below a generic application config root.
+case "$file" in *secret*|*password*|*credential*|*private*|*.key) exit 41 ;; esac
+case "$file" in *"/../"*|*"/./"*|*" "*|*"	"*|*"
+"*) exit 41 ;; esac
+for hash in "$expected_source" "$expected_candidate"; do
+  case "$hash" in *[!0123456789abcdef]*|"") exit 41 ;; esac
+  [ "$(printf '%s' "$hash" | wc -c)" -eq 64 ] || exit 41
+done
+if [ "$action" = apply ]; then
+  approval=$6
+  incident=$7
+  target=$8
+  expires=$9
+  signature=$(printf '%s' "${10}")
+  case "$approval:$incident:$target:$expires" in *[!a-zA-Z0-9.:-]*|"") exit 41 ;; esac
+  # Ed25519 signature is RFC4648 base64, including + / and =.
+  # Its exact decoded length is verified below; the SSH command shell-quotes it.
+  [ "$(printf '%s' "$signature" | wc -c)" -eq 88 ] || exit 41
+  [ "$expires" -ge "$(date +%s)" ] && [ "$expires" -le "$(($(date +%s) + 60))" ] || exit 41
+  # Verification uses ONLY an Ed25519 public key. No private signing secret
+  # exists on the VM and no secret can leak through process arguments.
+  pubkey=/etc/aiops/config-change-verify.pem
+  [ -f "$pubkey" ] && [ ! -L "$pubkey" ] || exit 41
+  verify_dir=$(mktemp -d /var/tmp/aiops-config-auth.XXXXXXXX) || exit 41
+  chmod 700 "$verify_dir"
+  trap 'rm -rf -- "$verify_dir"' EXIT HUP INT TERM
+  printf 'v1|apply|%s|%s|%s|%s|%s|%s|%s|%s' \
+    "$service" "$file" "$expected_source" "$expected_candidate" \
+    "$approval" "$incident" "$target" "$expires" > "$verify_dir/message"
+  printf '%s' "$signature" | base64 -d > "$verify_dir/signature" || exit 41
+  [ "$(stat -c %s "$verify_dir/signature")" -eq 64 ] || exit 41
+  openssl pkeyutl -verify -pubin -inkey "$pubkey" -rawin \
+    -in "$verify_dir/message" -sigfile "$verify_dir/signature" \
+    >/dev/null 2>&1 || exit 41
+  rm -rf -- "$verify_dir"
+  trap - EXIT HUP INT TERM
+fi
+[ -f "$file" ] && [ ! -L "$file" ] && [ "$(readlink -f -- "$file")" = "$file" ] || exit 42
+command -v flock >/dev/null && command -v sha256sum >/dev/null || exit 42
+if [ "$profile" = nginx ]; then
+  [ -x /usr/sbin/nginx ] && command -v unshare >/dev/null && command -v mount >/dev/null || exit 42
+  [ "$(du -sk /etc/nginx | cut -f1)" -le 51200 ] || exit 42
+elif [ "$profile" = json_syntax ]; then
+  # jq is a fixed grammar validator, not a JSON semantics or startup check.
+  command -v jq >/dev/null || exit 42
+else
+  command -v xmllint >/dev/null || exit 42
+fi
+[ "$(stat -c %s -- "$file")" -le 262144 ] || exit 42
+stage=$(mktemp -d /var/tmp/aiops-config-guard.XXXXXXXX) || exit 42
+chmod 700 "$stage"
+new=""
+cleanup() {
+  [ -z "$new" ] || rm -f -- "$new"
+  rm -rf -- "$stage"
+}
+trap cleanup EXIT HUP INT TERM
+# Candidate bytes arrive only through authenticated SSH stdin, never argv.
+cat > "$stage/candidate"
+[ "$(stat -c %s "$stage/candidate")" -le 262144 ] || exit 42
+[ "$(sha256sum "$stage/candidate" | cut -d ' ' -f1)" = "$expected_candidate" ] || exit 43
+if [ "$action" = apply ]; then
+  exec 9>/run/lock/aiops-config-guard.lock
+  flock -x -w 15 9 || exit 44
+  # The signed ticket is single-use even if the patch subsequently rolls
+  # back and the original source hash becomes available again.
+  claim_dir=/var/lib/aiops/config-claims
+  mkdir -p -m 0700 -- "$claim_dir"
+  chmod 0700 "$claim_dir"
+  case "$approval" in *[!0123456789abcdef-]*|"") exit 41 ;; esac
+  [ ! -e "$claim_dir/$approval" ] || exit 44
+  ( umask 077; set -C; printf '%s\n' "$incident" > "$claim_dir/$approval" ) || exit 44
+fi
+[ "$(sha256sum "$file" | cut -d ' ' -f1)" = "$expected_source" ] || exit 45
+if [ "$profile" = nginx ]; then
+  cp -a -- /etc/nginx "$stage/tree" || exit 46
+  relative=$(printf '%s' "$file" | sed 's@^/etc/nginx/@@')
+  [ -f "$stage/tree/$relative" ] && [ ! -L "$stage/tree/$relative" ] || exit 46
+  cp -- "$stage/candidate" "$stage/tree/$relative"
+  # Distinguish environment restrictions from a genuinely invalid candidate.
+  # Never fall back to writing production just to validate a proposal.
+  unshare -m --propagation private -- /bin/true >/dev/null 2>&1 || exit 50
+  set +e
+  unshare -m --propagation private -- /bin/sh -c '
+    set -eu
+    mount --bind "$1" /etc/nginx >/dev/null 2>&1 || exit 51
+    mount -o remount,bind,ro /etc/nginx >/dev/null 2>&1 || exit 51
+    /usr/sbin/nginx -t -c "$2" >/dev/null 2>&1 || exit 47
+  ' guard "$stage/tree" "$file" >/dev/null 2>&1
+  validation_rc=$?
+  set -e
+  [ "$validation_rc" -eq 0 ] || exit "$validation_rc"
+elif [ "$profile" = json_syntax ]; then
+  # Bounded syntax proof only; never proof of application/runtime semantics.
+  jq empty "$stage/candidate" >/dev/null 2>&1 || exit 47
+else
+  # Disable network fetches and reject all DTD/entity definitions.
+  ! grep -Eiq '<!(DOCTYPE|ENTITY)' "$stage/candidate" || exit 47
+  xmllint --nonet --noout "$stage/candidate" >/dev/null 2>&1 || exit 47
+fi
+if [ "$action" = validate ]; then
+  printf 'VALIDATED\n'
+  exit 0
+fi
+[ "$(sha256sum "$file" | cut -d ' ' -f1)" = "$expected_source" ] || exit 45
+backup_dir=/var/lib/aiops/config-backups
+mkdir -p -m 0700 -- "$backup_dir"
+chmod 0700 "$backup_dir"
+backup=$(mktemp "$backup_dir/backup.XXXXXXXX")
+cp -a -- "$file" "$backup"
+new=$(mktemp "$(dirname "$file")/.aiops-config.XXXXXXXX")
+cp -a -- "$file" "$new"
+cat "$stage/candidate" > "$new"
+[ "$(sha256sum "$new" | cut -d ' ' -f1)" = "$expected_candidate" ] || exit 43
+[ "$(sha256sum "$file" | cut -d ' ' -f1)" = "$expected_source" ] || exit 45
+mv -f -- "$new" "$file"
+new=""
+postcheck="failed"
+if [ "$profile" = nginx ]; then
+  if /usr/sbin/nginx -t -c "$file" >/dev/null 2>&1; then postcheck="passed"; fi
+elif [ "$profile" = json_syntax ]; then
+  if jq empty "$file" >/dev/null 2>&1; then postcheck="passed"; fi
+else
+  if ! grep -Eiq '<!(DOCTYPE|ENTITY)' "$file" &&
+     xmllint --nonet --noout "$file" >/dev/null 2>&1; then
+    postcheck="passed"
+  fi
+fi
+if [ "$postcheck" = passed ] &&
+   [ "$(sha256sum "$file" | cut -d ' ' -f1)" = "$expected_candidate" ]; then
+  printf 'APPLIED_VERIFIED\n'
+  exit 0
+fi
+new=$(mktemp "$(dirname "$file")/.aiops-rollback.XXXXXXXX")
+cp -a -- "$backup" "$new"
+mv -f -- "$new" "$file"
+new=""
+if [ "$(sha256sum "$file" | cut -d ' ' -f1)" = "$expected_source" ]; then
+  printf 'ROLLED_BACK\n'
+  exit 48
+fi
+printf 'ROLLBACK_FAILED\n'
+exit 49

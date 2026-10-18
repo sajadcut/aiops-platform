@@ -162,6 +162,15 @@ class Settings(BaseSettings):
     PROMETHEUS_ALERT_CONTEXT_LOOKAHEAD_SECONDS: int = Field(..., ge=0, le=3600)
     KUBERNETES_MCP_URL: Optional[str] = Field(...)
     VM_MCP_URL: Optional[str] = Field(...)
+    # Control Plane selection: keep existing SSH VM MCP and add per-target HTTPS agents.
+    VM_EXECUTION_BACKEND: str = Field(...)
+    VM_AGENT_ENDPOINTS: Dict[str, str] = Field(...)
+    VM_AGENT_TOKENS: Dict[str, str] = Field(..., repr=False)
+    VM_AGENT_BEARER_TOKEN: Optional[str] = Field(..., repr=False)
+    VM_AGENT_CA_BUNDLE_PATH: Optional[str] = Field(...)
+    # Settings used only by a VM MCP process running directly on the target.
+    VM_AGENT_TARGET: str = Field(...)
+    VM_AGENT_ALLOWED_SERVICES: List[str] = Field(...)
 
     ELASTICSEARCH_HOSTS: List[str] = Field(...)
     ELASTICSEARCH_USERNAME: Optional[str] = Field(...)
@@ -202,6 +211,14 @@ class Settings(BaseSettings):
         if normalized not in {"development", "test", "production"}:
             raise ValueError("APP_ENV must be development, test, or production")
         return normalized
+
+    @field_validator("VM_EXECUTION_BACKEND")
+    @classmethod
+    def validate_vm_execution_backend(cls, value: str) -> str:
+        backend = str(value or "").strip().lower()
+        if backend not in {"ssh", "agent"}:
+            raise ValueError("VM_EXECUTION_BACKEND must be ssh or agent")
+        return backend
 
     @field_validator("SSH_AUTH_MODE")
     @classmethod
