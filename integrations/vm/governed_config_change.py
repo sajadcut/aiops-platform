@@ -1,6 +1,6 @@
 """Trusted VM MCP worker for bounded hash-bound configuration operations.
 
-Full source and candidate bytes stay in this process and SSH stdin. Neither
+Full source and candidate bytes stay in the trusted worker and guarded stdin. Neither
 payload is returned to API, LLM, audit, checkpoints, or browser.
 """
 from __future__ import annotations
@@ -8,10 +8,11 @@ import base64
 import hashlib
 import json
 import re
+import shlex
 import xml.etree.ElementTree as ET
 
 from domain.contracts.logging import logger
-from apps.config_change_authorization import verify_claim
+from apps.config_change_authorization import verify_claim, sign_root_guard
 from integrations.vm.ephemeral_config_guard import build_ephemeral_guard
 from integrations.vm.config_candidate_vault import load_candidate, CandidateUnavailable
 from integrations.vm.general_config_review import checked_config_path, remote_config_read_command, _remove_trailing_json_commas
@@ -359,21 +360,36 @@ async def run_governed_change(connector, *, action: str, target: str, service: s
                  else "jq empty (JSON syntax only; application semantics unverified)"
                  if json_profile else "xmllint --nonet --noout (XML syntax only)")
 
-    # The only executable material is our versioned, fixed POSIX program.
-    # It travels over encrypted SSH stdin with the hash-bound candidate;
-    # no VM-side helper, Python, deploy step or LLM-built root command.
-    # A sudo-capable SSH identity is required, just as when the operator
-    # manually uses sudo/su. Only this fixed command is generated.
+    # The SSH worker preserves its current ephemeral fixed guard. On-host
+    # agents MUST use the pre-installed root-owned, signed verification helper
+    # so a compromised unprivileged agent cannot obtain arbitrary root shell.
     try:
-        command, script = build_ephemeral_guard(
-            action=action,
-            profile=("nginx" if nginx_profile else "json_syntax" if json_profile
-                     else "xml_syntax"),
-            path=path, original_sha256=original_sha256,
-            candidate_sha256=candidate_sha256, candidate=candidate,
-            approval_id=execution_claims["approval_id"] if action == "apply" else None,
-        )
-    except ValueError:
+        if getattr(connector, "uses_root_owned_config_guard", False):
+            guard_args = [
+                action, name, path, original_sha256, candidate_sha256,
+            ]
+            if action == "apply":
+                guard_args += [
+                    execution_claims["approval_id"],
+                    execution_claims["incident_id"],
+                    execution_claims["target"],
+                    str(execution_claims["expires"]),
+                    sign_root_guard(execution_claims),
+                ]
+            command = "/usr/local/sbin/aiops-config-guard " + " ".join(
+                shlex.quote(str(value)) for value in guard_args
+            )
+            script = candidate
+        else:
+            command, script = build_ephemeral_guard(
+                action=action,
+                profile=("nginx" if nginx_profile else "json_syntax" if json_profile
+                         else "xml_syntax"),
+                path=path, original_sha256=original_sha256,
+                candidate_sha256=candidate_sha256, candidate=candidate,
+                approval_id=execution_claims["approval_id"] if action == "apply" else None,
+            )
+    except (ValueError, PermissionError):
         return {"success": False, "status": "config_guard_request_rejected",
                 "isolated_validation": False, "production_write_performed": False}
     logger.info(
