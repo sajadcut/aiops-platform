@@ -172,6 +172,59 @@ def rebase_authenticated_outbound_claim(
     return rebased, local_signature
 
 
+_ROOT_GUARD_VERIFY_PEM = "/etc/aiops/config-change-verify.pem"
+
+
+def root_guard_apply_signing_status() -> tuple[bool, str]:
+    """Safe, read-only verification of the local Ed25519 signing prerequisites.
+
+    Syntax validation does not establish that an approved APPLY can be signed.
+    Never transmit a key or a probe signature over MCP, and never follow
+    symlinks in the installed root-owned public verifier.
+    """
+    import base64
+    import stat
+    from pathlib import Path
+    from cryptography.exceptions import InvalidSignature
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import (
+        Ed25519PrivateKey, Ed25519PublicKey,
+    )
+    from cryptography.hazmat.primitives.serialization import load_pem_public_key
+
+    try:
+        seed = base64.b64decode(
+            os.environ.get("AIOPS_CONFIG_GUARD_ED25519_PRIVATE_KEY", ""),
+            validate=True,
+        )
+        if len(seed) != 32:
+            raise ValueError("wrong_key_size")
+        private = Ed25519PrivateKey.from_private_bytes(seed)
+    except (ValueError, TypeError):
+        return False, "config_guard_private_key_missing"
+
+    verifier = Path(_ROOT_GUARD_VERIFY_PEM)
+    try:
+        stat_result = verifier.lstat()
+        if not stat.S_ISREG(stat_result.st_mode):
+            return False, "config_guard_verify_key_invalid"
+        pem = verifier.read_bytes()
+        if len(pem) > 8192:
+            return False, "config_guard_verify_key_invalid"
+        public = load_pem_public_key(pem)
+        if not isinstance(public, Ed25519PublicKey):
+            return False, "config_guard_verify_key_invalid"
+        challenge = b"aiops/config-change-guard/preflight/v1"
+        try:
+            public.verify(private.sign(challenge), challenge)
+        except InvalidSignature:
+            return False, "config_guard_keypair_mismatch"
+    except FileNotFoundError:
+        return False, "config_guard_verify_key_missing"
+    except (OSError, ValueError, TypeError):
+        return False, "config_guard_verify_key_invalid"
+    return True, "ready"
+
+
 def sign_root_guard(claims: dict) -> str:
     """Ed25519 root guard signature; VM stores only its verification public key.
 
