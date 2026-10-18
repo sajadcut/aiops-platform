@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import asyncio
 import os
-import pwd
 import re
 import signal
 import time
@@ -35,6 +34,7 @@ class LocalVMConnector(SSHVMConnector):
     def execution_identity(cls) -> str:
         if os.name != "posix":
             raise RuntimeError("vm_agent_requires_linux_posix")
+        import pwd  # Linux only; preserve Windows Control Plane imports.
         return pwd.getpwuid(os.geteuid()).pw_name
 
     @classmethod
