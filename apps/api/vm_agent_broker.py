@@ -1,0 +1,172 @@
+"""Authenticated, target-bound, outbound-agent WebSocket broker.
+
+The agent initiates the connection. Only the API execution path may dispatch
+allowlisted MCP tools; this module exposes no arbitrary command runner.
+Connections are deliberately process-local: deploy a SINGLE API worker for
+agent_pull until a distributed broker is introduced. Missing sessions fail
+closed; no SSH or HTTP-agent fallback is attempted.
+"""
+from __future__ import annotations
+
+import asyncio
+import hmac
+import json
+import time
+from dataclasses import dataclass, field
+from typing import Any
+from uuid import uuid4
+
+from fastapi import WebSocket
+from starlette.websockets import WebSocketDisconnect
+
+from domain.contracts.config import settings
+from domain.contracts.logging import logger
+
+MAX_FRAME = 1024 * 1024
+MAX_PENDING_PER_AGENT = 16
+MAX_RESULT_SECONDS = 190
+WRITE_TOOLS = frozenset({"start_service", "restart_service", "reload_service", "config_change_apply"})
+
+
+class AgentDisconnected(RuntimeError):
+    pass
+
+
+@dataclass
+class AgentSession:
+    target: str
+    socket: WebSocket
+    connected_at: float = field(default_factory=time.monotonic)
+    pending: dict[str, asyncio.Future] = field(default_factory=dict)
+    sending: asyncio.Lock = field(default_factory=asyncio.Lock)
+
+    def fail_pending(self) -> None:
+        for future in self.pending.values():
+            if not future.done():
+                future.set_exception(AgentDisconnected("agent_channel_disconnected"))
+        self.pending.clear()
+
+
+class OutboundAgentBroker:
+    def __init__(self) -> None:
+        self.sessions: dict[str, AgentSession] = {}
+        self.lock = asyncio.Lock()
+
+    def is_connected(self, target: str) -> bool:
+        return target in self.sessions
+
+    async def connect(self, socket: WebSocket, target: str) -> None:
+        """Authenticate before accepting; reject duplicate host identities."""
+        if settings.VM_EXECUTION_BACKEND != "agent_pull":
+            await socket.close(code=4403)
+            return
+        secret = settings.VM_AGENT_TOKENS.get(target)
+        auth = socket.headers.get("authorization", "")
+        # Never accept a browser cookie, URL token, or an identity not explicitly
+        # configured by the operator.
+        if (not secret or len(secret.encode("utf-8")) < 32
+                or not hmac.compare_digest(auth, "Bearer " + secret)):
+            await socket.close(code=4401)
+            return
+        async with self.lock:
+            if target in self.sessions:
+                await socket.close(code=4409)
+                return
+            await socket.accept()
+            session = AgentSession(target, socket)
+            self.sessions[target] = session
+        logger.info("vm_outbound_agent_connected", target=target)
+        try:
+            while True:
+                data = await socket.receive_text()
+                if len(data.encode("utf-8")) > MAX_FRAME:
+                    await socket.close(code=1009)
+                    break
+                try:
+                    payload = json.loads(data)
+                except (ValueError, TypeError):
+                    await socket.close(code=1003)
+                    break
+                if not isinstance(payload, dict) or payload.get("type") != "result":
+                    await socket.close(code=1008)
+                    break
+                ident = payload.get("id")
+                # A request ID belongs solely to its own authenticated
+                # session. Unknown/late result IDs are never applied.
+                if not isinstance(ident, str) or ident not in session.pending:
+                    continue
+                result = payload.get("result")
+                if not isinstance(result, dict):
+                    await socket.close(code=1008)
+                    break
+                future = session.pending.pop(ident)
+                if not future.done():
+                    future.set_result(result)
+        except (WebSocketDisconnect, RuntimeError):
+            pass
+        finally:
+            async with self.lock:
+                if self.sessions.get(target) is session:
+                    self.sessions.pop(target, None)
+            session.fail_pending()
+            logger.info("vm_outbound_agent_disconnected", target=target)
+
+    async def dispatch(self, target: str, tool: str, args: dict[str, Any],
+                       *, timeout: float = 30) -> dict[str, Any]:
+        """Never retry an ambiguous write; surface UNKNOWN for reconciliation."""
+        from integrations.vm.mcp_client import VMEdgeMCPClient
+
+        if settings.VM_EXECUTION_BACKEND != "agent_pull":
+            raise PermissionError("vm_agent_pull_not_enabled")
+        if target not in settings.VM_AGENT_TOKENS:
+            raise PermissionError("vm_target_not_allowed")
+        if tool not in VMEdgeMCPClient.READ_TOOLS | VMEdgeMCPClient.WRITE_TOOLS:
+            raise PermissionError("vm_agent_tool_not_allowed")
+        if args.get("target") != target:
+            raise PermissionError("vm_agent_target_binding_invalid")
+        session = self.sessions.get(target)
+        if session is None:
+            return self._unavailable(tool, "agent_not_connected")
+        if len(session.pending) >= MAX_PENDING_PER_AGENT:
+            return self._unavailable(tool, "agent_queue_full")
+        deadline_seconds = min(max(float(timeout), 1), MAX_RESULT_SECONDS)
+        request_id = str(uuid4())
+        future = asyncio.get_running_loop().create_future()
+        session.pending[request_id] = future
+        message = {
+            "type": "execute", "id": request_id, "target": target,
+            "tool": tool, "arguments": args,
+            "expires_at": int(time.time() + deadline_seconds),
+        }
+        try:
+            async with session.sending:
+                if self.sessions.get(target) is not session:
+                    raise AgentDisconnected("agent_session_replaced")
+                await session.socket.send_text(json.dumps(message, separators=(",", ":")))
+            return await asyncio.wait_for(future, timeout=deadline_seconds)
+        except (asyncio.TimeoutError, AgentDisconnected, OSError, WebSocketDisconnect):
+            return self._unavailable(tool, "agent_result_unconfirmed")
+        finally:
+            session.pending.pop(request_id, None)
+            # Consume possible disconnect exception if the result was abandoned.
+            if future.done() and not future.cancelled():
+                try:
+                    future.exception()
+                except (AgentDisconnected, asyncio.CancelledError):
+                    pass
+            elif not future.done():
+                future.cancel()
+
+    @staticmethod
+    def _unavailable(tool: str, cause: str) -> dict[str, Any]:
+        if tool in WRITE_TOOLS:
+            return {
+                "success": False, "status": "execution_outcome_unknown",
+                "execution_outcome": "UNKNOWN",
+                "reason": cause, "requires_independent_reconciliation": True,
+                "production_write_performed": None,
+            }
+        raise AgentDisconnected(cause)
+
+
+broker = OutboundAgentBroker()
