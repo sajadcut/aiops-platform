@@ -319,3 +319,71 @@ async def test_outbound_broker_rejects_unsigned_or_unscoped_write(pull):
     assert socket.outbound.empty()
     await socket.inbound.put(None)
     await task
+
+
+@pytest.mark.asyncio
+async def test_on_host_agent_executes_once_and_rejects_replay_after_reconnect(pull, monkeypatch):
+    import uuid
+    from apps.mcp_server import main as mcp_server
+    from vmmcpagent import connector, outbound
+    import websockets.asyncio.client as client_lib
+
+    monkeypatch.setattr(settings, "VM_AGENT_BEARER_TOKEN", "A" * 40)
+    monkeypatch.setattr(settings, "SSH_ENABLED", False)
+    monkeypatch.setattr(settings, "MCP_SERVER_REQUIRE_AUTH", True)
+    monkeypatch.setattr(connector, "LocalVMConnector", lambda: object())
+    invoked = AsyncMock(return_value={"success": True, "active_state": "active"})
+    monkeypatch.setattr(mcp_server, "_call", invoked)
+    request_id = str(uuid.uuid4())
+    request = json.dumps({
+        "type": "execute", "id": request_id, "tool": "service_status",
+        "target": "vm-01",
+        "arguments": {"target": "vm-01", "service": "nginx"},
+        "expires_at": int(time.time()) + 60,
+    })
+    sent = []
+    connection_args = []
+
+    class AgentSocket:
+        def __aiter__(self):
+            async def messages():
+                yield request
+            return messages()
+
+        async def send(self, payload):
+            sent.append(json.loads(payload))
+
+    class FakeConnect:
+        async def __aenter__(self):
+            return AgentSocket()
+
+        async def __aexit__(self, *args):
+            return False
+
+    def connect(*args, **kwargs):
+        connection_args.append((args, kwargs))
+        return FakeConnect()
+
+    monkeypatch.setattr(client_lib, "connect", connect)
+    calls = 0
+    async def terminate_after_reconnect(seconds):
+        nonlocal calls
+        calls += 1
+        if calls == 2:
+            raise asyncio.CancelledError()
+
+    monkeypatch.setattr(outbound.asyncio, "sleep", terminate_after_reconnect)
+    with pytest.raises(asyncio.CancelledError):
+        await outbound.run_outbound_forever()
+
+    invoked.assert_awaited_once_with(
+        "vm_agent", "service_status", {"target": "vm-01", "service": "nginx"}
+    )
+    assert sent[0]["result"]["success"] is True
+    assert sent[1]["result"]["status"] == "duplicate_request_refused"
+    assert len(connection_args) == 2
+    for args, kwargs in connection_args:
+        assert args[0] == "wss://aiops.internal/api/v1/vm-agents/connect/vm-01"
+        assert "Bearer " + "A" * 40 == kwargs["additional_headers"]["Authorization"]
+        assert "A" * 40 not in args[0]
+        assert kwargs["ssl"].verify_mode != 0
