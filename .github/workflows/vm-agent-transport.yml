@@ -55,6 +55,7 @@ jobs:
         run: |
           python -m pytest -q \
             tests/unit/test_vm_local_agent_transport.py \
+            tests/unit/test_vm_agent_all_tools_parity.py \
             tests/unit/test_mcp_server_contract.py \
             tests/security/test_vm_mcp_security.py \
             tests/security/test_vm_ssh_password_auth.py
